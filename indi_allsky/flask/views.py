@@ -5369,7 +5369,7 @@ class TimelapseImageView(TemplateView):
         context['title'] = self.title
         context['file_view'] = self.file_view
 
-        image_id = int(request.args.get('id', 0))
+        image_id = int(request.args.get('id', -1))
 
         context['image_id'] = image_id
 
@@ -5463,7 +5463,7 @@ class TimelapseVideoView(TemplateView):
         context['title'] = self.title
         context['file_view'] = self.file_view
 
-        video_id = int(request.args.get('id', 0))
+        video_id = int(request.args.get('id', -1))
 
         context['video_id'] = video_id
 
