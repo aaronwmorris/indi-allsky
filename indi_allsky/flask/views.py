@@ -5467,29 +5467,16 @@ class TimelapseVideoView(TemplateView):
         context['file_view'] = self.file_view
 
         camera_id = int(request.args.get('camera', 0))
-        night = int(request.args.get('night', 1))
-        dayDate_str = str(request.args.get('date', ''))
+        video_id = int(request.args.get('id', 0))
 
         context['camera_id'] = camera_id
-        context['night'] = night
-        context['dayDate'] = dayDate_str
-
-
-        try:
-            dayDate = datetime.strptime(dayDate_str, '%Y%m%d').date()
-        except ValueError:
-            app.logger.error('Invalid date format')
-            context['timeofday'] = 'Invalid date format'
-            context['dayDate_full'] = 'Video not found'
-            context['video_url'] = ''
-            return context
+        context['video_id'] = video_id
 
 
         video_q = self.model.query\
             .join(self.model.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .filter(self.model.dayDate == dayDate)\
-            .filter(self.model.night == bool(night))
+            .filter(self.model.id == video_id)
 
 
         local = True  # default to local assets
