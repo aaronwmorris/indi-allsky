@@ -5,12 +5,18 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
+canvas {
+    width: 100%;
+    height: auto;
+}
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/clipboard.min.js') }}"></script>
 <script type="text/javascript">
+var fullscreen = false;  //initial state
 var camera_id = {{ camera_id }};
 var image_id = {{ image_id }};
 var file_view = "{{ file_view }}";
+var image_url = "{{ image_url }}";
 </script>
 {% endblock %}
 
@@ -21,7 +27,7 @@ var file_view = "{{ file_view }}";
 
 <div class="row">
     <div class="col-sm-12">
-        <img width="100%" src="{{ image_url }}">
+        <canvas id="canvas"></canvas>
     </div>
 </div>
 
@@ -33,8 +39,90 @@ var file_view = "{{ file_view }}";
 </div>
 
 <script>
+
+function showImage(url) {
+    console.log('Showing image ' + url);
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    var img = new Image();
+    img.src = url;
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio = canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        //context.imageSmoothingEnabled = false;
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+    };
+}
+
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    $(window).on("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    showImage(image_url);
+}
+setResizeHandler(resize_callback, 500);
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
+
+
 function init() {
     new ClipboardJS('.copy-clipboard');
+
+    showImage(image_url);
 
     $('#permalink').html(
         $('<button />', {
@@ -56,6 +144,10 @@ function init() {
 }
 
 $( document ).ready(function() {
+    $('#canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
     init();
 });
 </script>
