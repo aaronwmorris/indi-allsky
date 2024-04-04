@@ -5369,10 +5369,8 @@ class TimelapseImageView(TemplateView):
         context['title'] = self.title
         context['file_view'] = self.file_view
 
-        camera_id = int(request.args.get('camera', 0))
         image_id = int(request.args.get('id', 0))
 
-        context['camera_id'] = camera_id
         context['image_id'] = image_id
 
 
@@ -5382,7 +5380,6 @@ class TimelapseImageView(TemplateView):
 
         image_q = self.model.query\
             .join(self.model.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(self.model.id == image_id)
 
 
@@ -5466,16 +5463,13 @@ class TimelapseVideoView(TemplateView):
         context['title'] = self.title
         context['file_view'] = self.file_view
 
-        camera_id = int(request.args.get('camera', 0))
         video_id = int(request.args.get('id', 0))
 
-        context['camera_id'] = camera_id
         context['video_id'] = video_id
 
 
         video_q = self.model.query\
             .join(self.model.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(self.model.id == video_id)
 
 

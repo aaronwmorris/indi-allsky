@@ -8,8 +8,7 @@
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/clipboard.min.js') }}"></script>
 <script type="text/javascript">
-var camera_id = {{ camera_id }};
-var night = {{ night }};
+var video_id = video_id;
 var dayDate = "{{ dayDate }}";
 var file_view = "{{ file_view }}";
 </script>
@@ -42,7 +41,7 @@ function init() {
     $('#permalink').html(
         $('<button />', {
             'class' : "badge pill bg-primary copy-clipboard",
-            'data-clipboard-text' : "{{ url_for(file_view, _external=True) }}?camera=" + camera_id + "&night=" + Number(night) + "&date=" + dayDate,
+            'data-clipboard-text' : "{{ url_for(file_view, _external=True) }}?id=" + video_id,
         }).text('Copy Link to Clipboard')
     );
     $('#download').html(

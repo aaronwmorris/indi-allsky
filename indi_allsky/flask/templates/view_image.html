@@ -13,7 +13,6 @@ canvas {
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/clipboard.min.js') }}"></script>
 <script type="text/javascript">
 var fullscreen = false;  //initial state
-var camera_id = {{ camera_id }};
 var image_id = {{ image_id }};
 var file_view = "{{ file_view }}";
 var image_url = "{{ image_url }}";
@@ -127,7 +126,7 @@ function init() {
     $('#permalink').html(
         $('<button />', {
             'class' : "badge pill bg-primary copy-clipboard",
-            'data-clipboard-text' : "{{ url_for(file_view, _external=True) }}?camera=" + camera_id + "&id=" + image_id,
+            'data-clipboard-text' : "{{ url_for(file_view, _external=True) }}?id=" + image_id,
         }).text('Copy Link to Clipboard')
     );
     $('#download').html(
