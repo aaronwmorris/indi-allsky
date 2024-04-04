@@ -61,6 +61,7 @@ class IndiAllskyScnr(object):
 
         start = time.time()
 
+        # casting to uint16 (for uint8 data) to fix the magenta cast caused by overflows
         m = numpy.add(r.astype(numpy.uint16), b.astype(numpy.uint16)) * 0.5
         g = numpy.minimum(g, m.astype(numpy.uint8))
 

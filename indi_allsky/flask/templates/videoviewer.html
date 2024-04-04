@@ -57,7 +57,7 @@ var youtube__enable = {{ youtube__enable }};
         </div>
         <div class="col-sm-1">
             {% if current_user.is_authenticated or login_disabled %}
-            <a href="{{ url_for('indi_allsky.timelapse_view') }}" class="text-decoration-none link-info">
+            <a href="{{ url_for('indi_allsky.generate_view') }}" class="text-decoration-none link-info">
                 <span class="badge pill bg-success">Generate</span>
             </a>
             {% endif %}
@@ -169,14 +169,14 @@ function populate_videos(video_list) {
 
         if (item['night']) {
             $('<div />', {
-                'text'  : item['dayDate'] + " (Night)",
+                'text'  : item['dayDate_long'] + " (Night)",
                 'style' : "font-size:12px;font-weight:bold",
             }).appendTo(datetime_div);
 
 
             // Link to keogram image
             var kl_a = $('<a />', {
-                'href'   : item['keogram'],
+                'href'   : "{{ url_for('indi_allsky.keogram_image_view')}}?camera={{ camera_id }}&id=" + item['keogram_id'],
                 'target' : "_blank",
                 'rel'    : "noopener noreferrer",
                 'class'  : "text-decoration-none link-warning",
@@ -192,7 +192,7 @@ function populate_videos(video_list) {
             // Link to star trail image
             if (item['startrail'] != 'None') {
                 var st_a = $('<a />', {
-                    'href'   : item['startrail'],
+                    'href'   : "{{ url_for('indi_allsky.startrail_image_view')}}?camera={{ camera_id }}&id=" + item['startrail_id'],
                     'target' : "_blank",
                     'rel'    : "noopener noreferrer",
                     'class'  : "text-decoration-none link-warning",
@@ -210,7 +210,7 @@ function populate_videos(video_list) {
             // Link to panorama timelapse
             if (item['panorama_timelapse'] != 'None') {
                 var p_a = $('<a />', {
-                    'href'   : item['panorama_timelapse'],
+                    'href'   : "{{ url_for('indi_allsky.panorama_video_view')}}?camera={{ camera_id }}&night=" + Number(item['night']) + "&date=" + item['dayDate'],
                     'target' : "_blank",
                     'rel'    : "noopener noreferrer",
                     'class'  : "text-decoration-none link-warning",
@@ -250,14 +250,14 @@ function populate_videos(video_list) {
 
         } else {
             $('<div />', {
-                'text'  : item['dayDate'] + " (Day)",
+                'text'  : item['dayDate_long'] + " (Day)",
                 'style' : "font-size:12px;font-weight:bold",
             }).appendTo(datetime_div);
 
 
             // Link to keogram image
             var kl_a = $('<a />', {
-                'href'   : item['keogram'],
+                'href'   : "{{ url_for('indi_allsky.keogram_image_view')}}?camera={{ camera_id }}&id=" + item['keogram_id'],
                 'target' : "_blank",
                 'rel'    : "noopener noreferrer",
                 'class'  : "text-decoration-none link-warning",
@@ -273,7 +273,7 @@ function populate_videos(video_list) {
             // Link to panorama timelapse
             if (item['panorama_timelapse'] != 'None') {
                 var p_a = $('<a />', {
-                    'href'   : item['panorama_timelapse'],
+                    'href'   : "{{ url_for('indi_allsky.panorama_video_view')}}?camera={{ camera_id }}&night=" + Number(item['night']) + "&date=" + item['dayDate'],
                     'target' : "_blank",
                     'rel'    : "noopener noreferrer",
                     'class'  : "text-decoration-none link-warning",
@@ -309,7 +309,7 @@ function populate_videos(video_list) {
                 if (item['startrail_timelapse'] != 'None') {
                     // Link to Star trail timelapse
                     var st_tl_a = $('<a />', {
-                        'href'   : item['startrail_timelapse'],
+                        'href'   : "{{ url_for('indi_allsky.startrail_video_view')}}?camera={{ camera_id }}&night=" + Number(item['night']) + "&date=" + item['dayDate'],
                         'target' : "_blank",
                         'rel'    : "noopener noreferrer",
                     }).appendTo(startrail_div);
@@ -382,7 +382,7 @@ function populate_videos(video_list) {
 
 
         var k_a = $('<a />', {
-            'href'   : item['url'],
+            'href'   : "{{ url_for('indi_allsky.timelapse_video_view')}}?camera={{ camera_id }}&night=" + Number(item['night']) + "&date=" + item['dayDate'],
             'target' : "_blank",
             'rel'    : "noopener noreferrer",
         }).appendTo(keogram_div);

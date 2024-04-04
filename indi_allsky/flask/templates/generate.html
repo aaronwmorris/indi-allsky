@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}indi-allsky: Generate Timelapse{% endblock %}
+{% block title %}indi-allsky: Generate{% endblock %}
 
 {% block head %}
 <meta charset="UTF-8">
@@ -181,7 +181,7 @@ $('#form_timelapsegen').on('submit', function() {
 
     $.ajax({
         type: "POST",
-        url: "{{ url_for('indi_allsky.ajax_timelapse_view') }}",
+        url: "{{ url_for('indi_allsky.ajax_generate_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){

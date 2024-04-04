@@ -354,7 +354,7 @@ class LatestThumbnailRedirect(LatestImageRedirect):
         return latest_thumbnail_entry
 
 
-class PanoramaView(IndexView):
+class LatestPanoramaView(IndexView):
     title = 'Panorama'
     latest_image_view = 'indi_allsky.js_latest_panorama_view'
 
@@ -364,7 +364,7 @@ class JsonLatestPanoramaView(JsonLatestImageView):
     latest_image_t = 'images/panorama.{0}'
 
 
-class RawImageView(IndexView):
+class LatestRawImageView(IndexView):
     title = 'RAW Image'
     latest_image_view = 'indi_allsky.js_latest_rawimage_view'
 
@@ -2098,6 +2098,8 @@ class ImageViewerView(FormView):
     def get_context(self):
         context = super(ImageViewerView, self).get_context()
 
+        context['camera_id'] = session['camera_id']
+
         form_data = {
             'YEAR_SELECT'  : None,
             'MONTH_SELECT' : None,
@@ -2421,6 +2423,8 @@ class AjaxGalleryViewerView(BaseView):
 class VideoViewerView(FormView):
     def get_context(self):
         context = super(VideoViewerView, self).get_context()
+
+        context['camera_id'] = session['camera_id']
 
         context['youtube__enable'] = int(self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', 0))
 
@@ -5353,6 +5357,195 @@ class CameraSimulatorView(TemplateView):
         return context
 
 
+class TimelapseImageView(TemplateView):
+    model = IndiAllSkyDbImageTable
+    title = 'Timelapse Image'
+    file_view = 'indi_allsky.timelapse_image_view'
+
+
+    def get_context(self):
+        context = super(TimelapseImageView, self).get_context()
+
+        context['title'] = self.title
+        context['file_view'] = self.file_view
+
+        camera_id = int(request.args.get('camera', 0))
+        image_id = int(request.args.get('id', 0))
+
+        context['camera_id'] = camera_id
+        context['image_id'] = image_id
+
+
+        #createDate = datetime.fromtimestamp(timestamp)
+        #app.logger.info('Timestamp date: %s', createDate)
+
+
+        image_q = self.model.query\
+            .join(self.model.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(self.model.id == image_id)
+
+
+        local = True  # default to local assets
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+                # Do not serve local assets
+                image_q = image_q\
+                    .filter(
+                        or_(
+                            self.model.remote_url != sa_null(),
+                            self.model.s3_key != sa_null(),
+                        )
+                    )
+
+        #app.logger.info('SQL: %s', str(image_q))
+
+        try:
+            image = image_q.one()
+        except NoResultFound:
+            app.logger.error('Image not found')
+            context['timeofday'] = ''
+            context['createDate_full'] = 'Image not found'
+            context['image_url'] = ''
+            return context
+
+
+        # Set session camera
+        session['camera_id'] = image.camera_id
+
+
+        if image.night:
+            context['timeofday'] = 'Night'
+        else:
+            context['timeofday'] = 'Day'
+
+        context['createDate_full'] = image.createDate.strftime('%B %d, %Y - %H:%M:%S')
+        context['image_url'] = image.getUrl(s3_prefix=self.s3_prefix, local=local)
+
+
+        return context
+
+
+class PanoramaImageView(TimelapseImageView):
+    model = IndiAllSkyDbPanoramaImageTable
+    title = 'Panorama Image'
+    file_view = 'indi_allsky.panorama_image_view'
+
+
+class KeogramImageView(TimelapseImageView):
+    model = IndiAllSkyDbKeogramTable
+    title = 'Keogram'
+    file_view = 'indi_allsky.keogram_image_view'
+
+
+class StartrailImageView(TimelapseImageView):
+    model = IndiAllSkyDbStarTrailsTable
+    title = 'Startrail Image'
+    file_view = 'indi_allsky.startrail_image_view'
+
+
+class RawImageView(TimelapseImageView):
+    model = IndiAllSkyDbRawImageTable
+    title = 'RAW Image'
+    file_view = 'indi_allsky.raw_image_view'
+
+
+class TimelapseVideoView(TemplateView):
+    model = IndiAllSkyDbVideoTable
+    title = 'Timelapse Video'
+    file_view = 'indi_allsky.timelapse_video_view'
+
+
+    def get_context(self):
+        context = super(TimelapseVideoView, self).get_context()
+
+        context['title'] = self.title
+        context['file_view'] = self.file_view
+
+        camera_id = int(request.args.get('camera', 0))
+        night = int(request.args.get('night', 1))
+        dayDate_str = str(request.args.get('date', ''))
+
+        context['camera_id'] = camera_id
+        context['night'] = night
+        context['dayDate'] = dayDate_str
+
+
+        try:
+            dayDate = datetime.strptime(dayDate_str, '%Y%m%d').date()
+        except ValueError:
+            app.logger.error('Invalid date format')
+            context['timeofday'] = 'Invalid date format'
+            context['dayDate_full'] = 'Video not found'
+            context['video_url'] = ''
+            return context
+
+
+        video_q = self.model.query\
+            .join(self.model.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(self.model.dayDate == dayDate)\
+            .filter(self.model.night == bool(night))
+
+
+        local = True  # default to local assets
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+                # Do not serve local assets
+                video_q = video_q\
+                    .filter(
+                        or_(
+                            self.model.remote_url != sa_null(),
+                            self.model.s3_key != sa_null(),
+                        )
+                    )
+
+        try:
+            video = video_q.one()
+        except NoResultFound:
+            app.logger.error('Video not found')
+            context['timeofday'] = ''
+            context['dayDate_full'] = 'Video not found'
+            context['video_url'] = ''
+            return context
+
+
+        # Set session camera
+        session['camera_id'] = video.camera_id
+
+
+        if video.night:
+            context['timeofday'] = 'Night'
+        else:
+            context['timeofday'] = 'Day'
+
+        context['dayDate_full'] = video.dayDate.strftime('%B %d, %Y')
+        context['video_url'] = video.getUrl(s3_prefix=self.s3_prefix, local=local)
+
+
+        return context
+
+
+class StartrailVideoView(TimelapseVideoView):
+    model = IndiAllSkyDbStarTrailsVideoTable
+    title = 'Startrail Video'
+    file_view = 'indi_allsky.startrail_video_view'
+
+
+class PanoramaVideoView(TimelapseVideoView):
+    model = IndiAllSkyDbPanoramaVideoTable
+    title = 'Panorama Video'
+    file_view = 'indi_allsky.panorama_video_view'
+
+
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
@@ -5745,10 +5938,10 @@ def images_folder(path):
 
 bp_allsky.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp_allsky.add_url_rule('/js/latest', view_func=JsonLatestImageView.as_view('js_latest_image_view'))
-bp_allsky.add_url_rule('/panorama', view_func=PanoramaView.as_view('panorama_view', template_name='index.html'))
-bp_allsky.add_url_rule('/js/panorama', view_func=JsonLatestPanoramaView.as_view('js_latest_panorama_view'))
-bp_allsky.add_url_rule('/raw', view_func=RawImageView.as_view('rawimage_view', template_name='index.html'))
-bp_allsky.add_url_rule('/js/rawimage', view_func=JsonLatestRawImageView.as_view('js_latest_rawimage_view'))
+bp_allsky.add_url_rule('/panorama', view_func=LatestPanoramaView.as_view('latest_panorama_view', template_name='index.html'))
+bp_allsky.add_url_rule('/js/latest_panorama', view_func=JsonLatestPanoramaView.as_view('js_latest_panorama_view'))
+bp_allsky.add_url_rule('/raw', view_func=LatestRawImageView.as_view('latest_rawimage_view', template_name='index.html'))
+bp_allsky.add_url_rule('/js/latest_rawimage', view_func=JsonLatestRawImageView.as_view('js_latest_rawimage_view'))
 
 bp_allsky.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp_allsky.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
@@ -5772,8 +5965,18 @@ bp_allsky.add_url_rule('/ajax/gallery', view_func=AjaxGalleryViewerView.as_view(
 bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
 bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
 
-bp_allsky.add_url_rule('/timelapse', view_func=TimelapseGeneratorView.as_view('timelapse_view', template_name='timelapse.html'))
-bp_allsky.add_url_rule('/ajax/timelapse', view_func=AjaxTimelapseGeneratorView.as_view('ajax_timelapse_view'))
+bp_allsky.add_url_rule('/view_image', view_func=TimelapseImageView.as_view('timelapse_image_view', template_name='view_image.html'))
+bp_allsky.add_url_rule('/view_panorama', view_func=PanoramaImageView.as_view('panorama_image_view', template_name='view_image.html'))
+bp_allsky.add_url_rule('/view_startrail', view_func=StartrailImageView.as_view('startrail_image_view', template_name='view_image.html'))
+bp_allsky.add_url_rule('/view_keogram', view_func=KeogramImageView.as_view('keogram_image_view', template_name='view_image.html'))
+bp_allsky.add_url_rule('/view_raw', view_func=RawImageView.as_view('raw_image_view', template_name='view_image.html'))
+
+bp_allsky.add_url_rule('/watch_timelapse', view_func=TimelapseVideoView.as_view('timelapse_video_view', template_name='watch_video.html'))
+bp_allsky.add_url_rule('/watch_startrail', view_func=StartrailVideoView.as_view('startrail_video_view', template_name='watch_video.html'))
+bp_allsky.add_url_rule('/watch_panorama', view_func=PanoramaVideoView.as_view('panorama_video_view', template_name='watch_video.html'))
+
+bp_allsky.add_url_rule('/generate', view_func=TimelapseGeneratorView.as_view('generate_view', template_name='generate.html'))
+bp_allsky.add_url_rule('/ajax/generate', view_func=AjaxTimelapseGeneratorView.as_view('ajax_generate_view'))
 
 bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp_allsky.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
