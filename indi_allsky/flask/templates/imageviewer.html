@@ -605,7 +605,7 @@ function init() {
         if (image_index > -1) {
             $('#img_download').html(
                 $('<a />', {
-                    'href'   : "{{ url_for('indi_allsky.timelapse_image_view')}}?camera={{ camera_id }}&id=" + image_data[image_index]['id'],
+                    'href'   : "{{ url_for('indi_allsky.timelapse_image_view')}}?id=" + image_data[image_index]['id'],
                     'target' : '_blank',
                     'rel'    : 'noopener noreferrer',
                 }).html(
@@ -660,9 +660,9 @@ function init() {
                 $('#fits_download').html(
                     $('<a />', {
                         'href'   : image_data[image_index]['fits'],
-                        'target' : '_blank',
                         'rel'    : 'noopener noreferrer',
                         'class'  : "text-decoration-none link-warning",
+                        'download' : '',
                     }).html(
                         $('<span />', {
                             'text'  : 'FITS',
@@ -693,7 +693,7 @@ function init() {
             if (image_data[image_index]['raw']) {
                 $('#raw_download').html(
                     $('<a />', {
-                        'href'   : "{{ url_for('indi_allsky.raw_image_view')}}?camera={{ camera_id }}&id=" + image_data[image_index]['raw_id'],
+                        'href'   : "{{ url_for('indi_allsky.raw_image_view')}}?id=" + image_data[image_index]['raw_id'],
                         'target' : '_blank',
                         'rel'    : 'noopener noreferrer',
                         'class'  : "text-decoration-none link-warning",
@@ -712,7 +712,7 @@ function init() {
             if (image_data[image_index]['panorama']) {
                 $('#panorama_download').html(
                     $('<a />', {
-                        'href'   : "{{ url_for('indi_allsky.panorama_image_view')}}?camera={{ camera_id }}&id=" + image_data[image_index]['panorama_id'],
+                        'href'   : "{{ url_for('indi_allsky.panorama_image_view')}}?id=" + image_data[image_index]['panorama_id'],
                         'target' : '_blank',
                         'rel'    : 'noopener noreferrer',
                         'class'  : "text-decoration-none link-warning",
