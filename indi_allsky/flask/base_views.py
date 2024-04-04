@@ -212,6 +212,47 @@ class BaseView(View):
             self.sun_set_date = None
 
 
+    def _load_detection_mask(self):
+        import cv2
+
+        detect_mask = self.indi_allsky_config.get('DETECT_MASK', '')
+
+        if not detect_mask:
+            app.logger.warning('No detection mask defined')
+            return
+
+
+        detect_mask_p = Path(detect_mask)
+
+        try:
+            if not detect_mask_p.exists():
+                app.logger.error('%s does not exist', detect_mask_p)
+                return
+
+
+            if not detect_mask_p.is_file():
+                app.logger.error('%s is not a file', detect_mask_p)
+                return
+
+        except PermissionError as e:
+            app.logger.error(str(e))
+            return
+
+        mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)  # mono
+        if isinstance(mask_data, type(None)):
+            app.logger.error('%s is not a valid image', detect_mask_p)
+            return
+
+
+        app.logger.info('Loaded detection mask: %s', detect_mask_p)
+
+        ### any compression artifacts will be set to black
+        #mask_data[mask_data < 255] = 0  # did not quite work
+
+
+        return mask_data
+
+
 class TemplateView(BaseView):
     def __init__(self, template_name, **kwargs):
         super(TemplateView, self).__init__(**kwargs)

@@ -1026,13 +1026,31 @@ class JsonChartView(JsonView):
         #mask = numpy.zeros(image_data.shape[:2], numpy.uint8)
         numpy_mask = numpy.full(image_data.shape[:2], True, numpy.bool_)
 
-        x1 = int((image_width / 2) - (image_width / 4))
-        y1 = int((image_height / 2) - (image_height / 4))
-        x2 = int((image_width / 2) + (image_width / 4))
-        y2 = int((image_height / 2) + (image_height / 4))
 
-        #mask[y1:y2, x1:x2] = 255
-        numpy_mask[y1:y2, x1:x2] = False
+        _sqm_mask = self._load_detection_mask()
+
+        if isinstance(_sqm_mask, type(None)):
+            sqm_roi = self.indi_allsky_config.get('SQM_ROI', [])
+
+            try:
+                x1 = int(sqm_roi[0] / self.bin_v.value)
+                y1 = int(sqm_roi[1] / self.bin_v.value)
+                x2 = int(sqm_roi[2] / self.bin_v.value)
+                y2 = int(sqm_roi[3] / self.bin_v.value)
+            except IndexError:
+                sqm_fov_div = self.indi_allsky_config.get('SQM_FOV_DIV', 4)
+                x1 = int((image_width / 2) - (image_width / sqm_fov_div))
+                y1 = int((image_height / 2) - (image_height / sqm_fov_div))
+                x2 = int((image_width / 2) + (image_width / sqm_fov_div))
+                y2 = int((image_height / 2) + (image_height / sqm_fov_div))
+
+
+            #mask[y1:y2, x1:x2] = 255
+            # True values will be masked
+            numpy_mask[y1:y2, x1:x2] = False
+        else:
+            # True values will be masked
+            numpy_mask = _sqm_mask == 0
 
 
         if len(image_data.shape) == 2:
