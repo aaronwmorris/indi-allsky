@@ -646,7 +646,7 @@ class JsonImageLoopView(JsonView):
         if not timestamp:
             timestamp = int(datetime.timestamp(self.camera_now))
 
-        ts_dt = datetime.fromtimestamp(timestamp)
+        ts_dt = datetime.fromtimestamp(timestamp + 3)  # allow some jitter
 
         # sanity check
         if history_seconds > 86400:
@@ -870,7 +870,7 @@ class JsonChartView(JsonView):
         if not timestamp:
             timestamp = int(datetime.timestamp(self.camera_now))
 
-        ts_dt = datetime.fromtimestamp(timestamp)
+        ts_dt = datetime.fromtimestamp(timestamp + 3)  # allow some jitter
 
         # safety, limit history to 1 day
         if history_seconds > 86400:
@@ -982,7 +982,7 @@ class JsonChartView(JsonView):
 
 
         # build last image histogram
-        now_minus_seconds = self.camera_now - timedelta(seconds=history_seconds)
+        now_minus_seconds = ts_dt - timedelta(seconds=history_seconds)
 
         latest_image = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
@@ -990,6 +990,7 @@ class JsonChartView(JsonView):
                 and_(
                     IndiAllSkyDbCameraTable.id == session['camera_id'],
                     IndiAllSkyDbImageTable.createDate > now_minus_seconds,
+                    IndiAllSkyDbImageTable.createDate < ts_dt,
                 )
             )\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
