@@ -660,9 +660,9 @@ function init() {
                 $('#fits_download').html(
                     $('<a />', {
                         'href'   : image_data[image_index]['fits'],
-                        'target' : '_blank',
                         'rel'    : 'noopener noreferrer',
                         'class'  : "text-decoration-none link-warning",
+                        'download' : '',
                     }).html(
                         $('<span />', {
                             'text'  : 'FITS',
