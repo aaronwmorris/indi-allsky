@@ -5379,7 +5379,6 @@ class TimelapseImageView(TemplateView):
 
 
         image_q = self.model.query\
-            .join(self.model.camera)\
             .filter(self.model.id == image_id)
 
 
@@ -5469,7 +5468,6 @@ class TimelapseVideoView(TemplateView):
 
 
         video_q = self.model.query\
-            .join(self.model.camera)\
             .filter(self.model.id == video_id)
 
 
