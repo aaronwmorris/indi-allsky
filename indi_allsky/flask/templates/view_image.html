@@ -124,10 +124,12 @@ function init() {
     showImage(image_url);
 
     $('#permalink').html(
-        $('<button />', {
+        $('<span />', {
+            'text'  : "Copy Link to Clipboard",
             'class' : "badge pill bg-primary copy-clipboard",
+            'style' : "cursor: pointer;",
             'data-clipboard-text' : "{{ url_for(file_view, _external=True) }}?id=" + image_id,
-        }).text('Copy Link to Clipboard')
+        })
     );
     $('#download').html(
         $('<a />', {

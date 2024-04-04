@@ -39,10 +39,12 @@ function init() {
     new ClipboardJS('.copy-clipboard');
 
     $('#permalink').html(
-        $('<button />', {
+        $('<span />', {
+            'text' : "Copy Link to Clipboard",
             'class' : "badge pill bg-primary copy-clipboard",
+            'style' : "cursor: pointer;",
             'data-clipboard-text' : "{{ url_for(file_view, _external=True) }}?id=" + video_id,
-        }).text('Copy Link to Clipboard')
+        })
     );
     $('#download').html(
         $('<a />', {

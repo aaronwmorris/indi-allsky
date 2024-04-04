@@ -398,10 +398,12 @@ function show_simulation() {
 
     // Add Loop here link
     $('#permalink').html(
-        $('<button />', {
+        $('<span />', {
+            'text' : "Copy Permalink to Clipboard",
             'class' : "badge pill bg-primary copy-clipboard",
+            'style' : "cursor: pointer;",
             'data-clipboard-text' : "{{ url_for('indi_allsky.camera_simulator_view', _external=True) }}?lens=" + $("#LENS_SELECT").val() + "&sensor=" + $("#SENSOR_SELECT").val() + "&offset_x=" + $("#OFFSET_X").val() + "&offset_y=" + $("#OFFSET_Y").val(),
-        }).text('Copy Permalink to Clipboard')
+        })
     );
 
 
