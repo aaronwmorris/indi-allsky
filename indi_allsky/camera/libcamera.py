@@ -618,7 +618,7 @@ class IndiClientLibCameraGeneric(IndiClient):
         return self._temp_val
 
 
-    def setCcdTemperature(self, *args):
+    def setCcdTemperature(self, *args, **kwargs):
         # not supported
         pass
 
