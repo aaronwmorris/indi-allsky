@@ -481,6 +481,21 @@ class IndiClient(PyIndi.BaseClient):
         self.configureDevice(self.ccd_device, frame_config)
 
 
+    def setCcdScopeInfo(self, focal_length, focal_ratio):
+        aperture = focal_length / focal_ratio
+
+        scope_info_config = {
+            "PROPERTIES" : {
+                "SCOPE_INFO" : {
+                    "FOCAL_LENGTH" : round(focal_length, 2),
+                    "APERTURE" : round(aperture, 2),
+                }
+            }
+        }
+
+        self.configureDevice(self.ccd_device, scope_info_config)
+
+
     def getDeviceProperties(self, device):
         properties = dict()
 

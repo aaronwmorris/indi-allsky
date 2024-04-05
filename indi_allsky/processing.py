@@ -351,8 +351,6 @@ class ImageProcessor(object):
             hdulist[0].header['EXTEND'] = True
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'jpg'
-            hdulist[0].header['FOCALLEN'] = 10  # smallest possible value
-            hdulist[0].header['APTDIA'] = 10  # smallest possible value
             hdulist[0].header['EXPTIME'] = float(exposure)
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
@@ -364,6 +362,12 @@ class ImageProcessor(object):
             hdulist[0].header['RA'] = self.ra_v.value
             hdulist[0].header['DEC'] = self.dec_v.value
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+
+
+            aperture = camera.lensFocalLength / camera.lensFocalRatio
+            hdulist[0].header['FOCALLEN'] = round(camera.lensFocalLength, 2)
+            hdulist[0].header['APTDIA'] = round(aperture, 2)
+
 
             if camera.owner:
                 hdulist[0].header['ORIGIN'] = camera.owner
@@ -391,8 +395,6 @@ class ImageProcessor(object):
             hdulist[0].header['EXTEND'] = True
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'png'
-            hdulist[0].header['FOCALLEN'] = 10  # smallest possible value
-            hdulist[0].header['APTDIA'] = 10  # smallest possible value
             hdulist[0].header['EXPTIME'] = float(exposure)
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
@@ -404,6 +406,12 @@ class ImageProcessor(object):
             hdulist[0].header['RA'] = self.ra_v.value
             hdulist[0].header['DEC'] = self.dec_v.value
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+
+
+            aperture = camera.lensFocalLength / camera.lensFocalRatio
+            hdulist[0].header['FOCALLEN'] = round(camera.lensFocalLength, 2)
+            hdulist[0].header['APTDIA'] = round(aperture, 2)
+
 
             if camera.owner:
                 hdulist[0].header['ORIGIN'] = camera.owner
@@ -427,8 +435,6 @@ class ImageProcessor(object):
             hdulist[0].header['EXTEND'] = True
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'libcamera'
-            hdulist[0].header['FOCALLEN'] = 10  # smallest possible value
-            hdulist[0].header['APTDIA'] = 10  # smallest possible value
             hdulist[0].header['EXPTIME'] = float(exposure)
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
@@ -440,6 +446,12 @@ class ImageProcessor(object):
             hdulist[0].header['RA'] = self.ra_v.value
             hdulist[0].header['DEC'] = self.dec_v.value
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+
+
+            aperture = camera.lensFocalLength / camera.lensFocalRatio
+            hdulist[0].header['FOCALLEN'] = round(camera.lensFocalLength, 2)
+            hdulist[0].header['APTDIA'] = round(aperture, 2)
+
 
             if camera.owner:
                 hdulist[0].header['ORIGIN'] = camera.owner
