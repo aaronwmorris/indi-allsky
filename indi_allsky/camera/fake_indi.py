@@ -334,7 +334,7 @@ class FakeIndiClient(object):
         return True
 
 
-    def setCcdTemperature(self, *args):
+    def setCcdTemperature(self, *args, **kwargs):
         # does nothing
         return True
 

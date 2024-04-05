@@ -731,6 +731,12 @@ class CaptureWorker(Process):
             logger.warning('Unable to set CCD_FRAME_TYPE to Light')
 
 
+        try:
+            self.indiclient.setCcdScopeInfo(camera.lensFocalLength, camera.lensFocalRatio)
+        except TimeOutException:
+            logger.warning('Unable to set SCOPE_INFO')
+
+
         # save config to defaults (disabled)
         #self.indiclient.saveCcdConfig()
 
