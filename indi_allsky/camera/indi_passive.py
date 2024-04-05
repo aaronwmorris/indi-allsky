@@ -114,7 +114,6 @@ class IndiClientPassive(IndiClient):
     def configureCcdDevice(self, *args, **kwargs):
         pass
 
-
     def configureTelescopeDevice(self, *args, **kwargs):
         pass
 
@@ -133,8 +132,10 @@ class IndiClientPassive(IndiClient):
     def disableCcdCooler(self):
         pass
 
-
     def setCcdTemperature(self, *args, **kwargs):
+        pass
+
+    def setCcdScopeInfo(self, *args):
         pass
 
 
