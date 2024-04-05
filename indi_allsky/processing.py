@@ -328,6 +328,12 @@ class ImageProcessor(object):
             #logger.info('Initial HDU Header = %s', pformat(hdulist[0].header))
             image_bitpix = hdulist[0].header['BITPIX']
             image_bayerpat = hdulist[0].header.get('BAYERPAT')
+
+            # older versions of indi (<= 2.0.6) do not allow focal lengths lower than 10mm
+            # so we are just going to set this manually
+            aperture = camera.lensFocalLength / camera.lensFocalRatio
+            hdulist[0].header['FOCALLEN'] = round(camera.lensFocalLength, 2)
+            hdulist[0].header['APTDIA'] = round(aperture, 2)
         elif filename_p.suffix in ['.jpg', '.jpeg']:
             try:
                 with Image.open(str(filename_p)) as img:
