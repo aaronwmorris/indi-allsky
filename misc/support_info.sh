@@ -75,6 +75,10 @@ ALLSKY_DIRECTORY=$PWD
 cd "$OLDPWD"
 
 
+# go ahead and prompt for password
+sudo true
+
+
 echo "#################################"
 echo "### indi-allsky support info  ###"
 echo "#################################"
@@ -91,16 +95,29 @@ echo "CPUs: $CPU_TOTAL"
 echo "Memory: $MEM_TOTAL kB"
 echo
 echo "System: $SYSTEM_MODEL"
+
 echo
 uname -a
+
 echo
 echo "Uptime"
 uptime
+
+echo
+echo "Memory"
+free
+
 echo
 echo "Filesystems"
 df -k
+
+echo
+echo "sysctl info"
+sudo sysctl vm.swappiness
+
 echo
 echo "system python: $(python3 -V)"
+
 echo
 echo "indiserver: $INDISERVER"
 echo
