@@ -4302,7 +4302,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
     SENSOR_SELECT_choices = {
         'Small' : (
             ('imx219', 'IMX219 - 1/4" - Camera Module 2'),
-            ('imx415', 'IMX415 - 1/2.8" - SV205C'),
+            ('imx415_sv205', 'SV205C - 1/2.8" (IMX415)'),
             ('ov5647', 'OV5647 - 1/4" - Camera Module 1'),
         ),
         'Medium - 6mm Class' : (
@@ -4314,6 +4314,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
             ('imx296', 'IMX296 - 1/2.9" - Global Shutter'),
             ('imx307', 'IMX307 - 1/2.8" - SV105C'),
             ('imx327', 'IMX327 - 1/2.8"'),
+            ('imx415', 'IMX415 - 1/2.8"'),
             ('imx462', 'IMX462 - 1/2.8"'),
             ('imx662', 'IMX662 - 1/2.8"'),
             ('imx715', 'IMX715 - 1/2.8"'),
