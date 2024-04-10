@@ -869,37 +869,37 @@ class VideoWorker(Process):
             if i % 100 == 0:
                 logger.info('Processed %d of %d images', i, image_count)
 
-            p_entry = Path(entry.getFilesystemPath())
+            image_file_p = Path(entry.getFilesystemPath())
 
-            if not p_entry.exists():
-                logger.error('File not found: %s', p_entry)
+            if not image_file_p.exists():
+                logger.error('File not found: %s', image_file_p)
                 continue
 
-            if p_entry.stat().st_size == 0:
+            if image_file_p.stat().st_size == 0:
                 continue
 
 
             #logger.info('Reading file: %s', p_entry)
-            if p_entry.suffix in ('.png',):
+            if image_file_p.suffix in ('.png',):
                 # opencv is faster than Pillow with PNG
-                image = cv2.imread(str(p_entry), cv2.IMREAD_COLOR)
+                image_data = cv2.imread(str(image_file_p), cv2.IMREAD_COLOR)
 
-                if isinstance(image, type(None)):
-                    logger.error('Unable to read %s', p_entry)
+                if isinstance(image_data, type(None)):
+                    logger.error('Unable to read %s', image_file_p)
                     continue
             else:
                 try:
-                    with Image.open(str(p_entry)) as img:
-                        image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+                    with Image.open(str(image_file_p)) as img:
+                        image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
                 except PIL.UnidentifiedImageError:
-                    logger.error('Unable to read %s', p_entry)
+                    logger.error('Unable to read %s', image_file_p)
                     continue
 
 
-            kg.processImage(p_entry, image)
+            kg.processImage(image_file_p, image_data)
 
             if night:
-                stg.processImage(p_entry, image)
+                stg.processImage(image_file_p, image_data)
 
 
         kg.finalize(keogram_file, camera)
