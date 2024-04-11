@@ -21,8 +21,12 @@ logger = logging
 
 class StarTrailGenerator(object):
 
+    _distanceThreshold = 10
+
+
     def __init__(self):
         self._max_adu = 65
+        self._min_stars = 0
         self._mask_threshold = 190
         self._pixel_cutoff_threshold = 1.0
         self._latitude = 0.0
@@ -49,6 +53,28 @@ class StarTrailGenerator(object):
         self.moon = ephem.Moon()
 
 
+        # start with a black image
+        star_template = numpy.zeros([15, 15], dtype=numpy.uint8)
+
+        # draw a white circle
+        cv2.circle(
+            img=star_template,
+            center=(7, 7),
+            radius=3,
+            color=(255, 255, 255),
+            thickness=cv2.FILLED,
+        )
+
+        # blur circle to simulate a star
+        self.star_template = cv2.blur(
+            src=star_template,
+            ksize=(2, 2),
+        )
+
+        self.star_template_w, self.star_template_h = self.star_template.shape[::-1]
+
+
+
     @property
     def max_adu(self):
         return self._max_adu
@@ -56,6 +82,14 @@ class StarTrailGenerator(object):
     @max_adu.setter
     def max_adu(self, new_max):
         self._max_adu = int(new_max)
+
+    @property
+    def min_stars(self):
+        return self._min_stars
+
+    @min_stars.setter
+    def min_stars(self, new_min):
+        self._min_stars = int(new_min)
 
     @property
     def mask_threshold(self):
@@ -230,6 +264,7 @@ class StarTrailGenerator(object):
             self.excluded_images += 1
             return
 
+
         #logger.info(' Image brightness: %0.2f', m_avg)
 
         pixels_above_cutoff = (image_gray > self.mask_threshold).sum()
@@ -237,6 +272,16 @@ class StarTrailGenerator(object):
             logger.warning(' Excluding image due to pixel cutoff: %d', pixels_above_cutoff)
             self.excluded_images += 1
             return
+
+
+        if self.min_stars > 0:
+            stars = self.detectObjects(image_gray)
+
+            if stars < self.min_stars:
+                logger.warning(' Excluding image due to stars: %d', stars)
+                self.excluded_images += 1
+                return
+
 
         self.trail_count += 1
 
@@ -258,6 +303,42 @@ class StarTrailGenerator(object):
         logger.warning('Creating %s', outfile)
         trail_image_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
         trail_image_rgb.save(str(outfile), quality=90)
+
+
+    def detectObjects(self, original_data):
+        masked_img = cv2.bitwise_and(original_data, original_data, mask=self._sqm_mask)
+
+        if len(original_data.shape) == 2:
+            # gray scale or bayered
+            grey_img = masked_img
+        else:
+            # assume color
+            grey_img = cv2.cvtColor(masked_img, cv2.COLOR_BGR2GRAY)
+
+
+        #sep_start = time.time()
+
+
+        result = cv2.matchTemplate(grey_img, self.star_template, cv2.TM_CCOEFF_NORMED)
+        result_filter = numpy.where(result >= self._detectionThreshold)
+
+        blobs = list()
+        for pt in zip(*result_filter[::-1]):
+            for blob in blobs:
+                if (abs(pt[0] - blob[0]) < self._distanceThreshold) and (abs(pt[1] - blob[1]) < self._distanceThreshold):
+                    break
+
+            else:
+                # if none of the points are under the distance threshold, then add it
+                blobs.append(pt)
+
+
+        #sep_elapsed_s = time.time() - sep_start
+        #logger.info('Star detection in %0.4f s', sep_elapsed_s)
+
+        logger.info('Found %d objects', len(blobs))
+
+        return blobs
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
@@ -327,6 +408,13 @@ if __name__ == "__main__":
         default=65,
     )
     argparser.add_argument(
+        '--min_stars',
+        '-s',
+        help='minimum stars [default: 0]',
+        type=int,
+        default=0,
+    )
+    argparser.add_argument(
         '--mask_threshold',
         '-m',
         help='mask threshold [default: 190]',
@@ -376,6 +464,7 @@ if __name__ == "__main__":
 
     sg = StarTrailGenerator()
     sg.max_adu = args.max_adu
+    sg.min_stars = args.min_stars
     sg.mask_threshold = args.mask_threshold
     sg.pixel_cutoff_threshold = args.pixel_cutoff_threshold
     sg.latitude = args.latitude
