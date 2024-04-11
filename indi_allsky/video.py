@@ -849,7 +849,7 @@ class VideoWorker(Process):
             self.bin_v,
             mask=self._detection_mask,
         )
-        stg.max_brightness = self.config['STARTRAILS_MAX_ADU']
+        stg.max_adu = self.config['STARTRAILS_MAX_ADU']
         stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
         stg.pixel_cutoff_threshold = self.config['STARTRAILS_PIXEL_THOLD']
         stg.latitude = camera.latitude

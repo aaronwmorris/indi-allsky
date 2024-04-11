@@ -25,7 +25,7 @@ class StarTrailGenerator(object):
         self.config = config
         self.bin_v = bin_v
 
-        self._max_brightness = 50
+        self._max_adu = 50
         self._mask_threshold = 190
         self._pixel_cutoff_threshold = 1.0
 
@@ -78,12 +78,12 @@ class StarTrailGenerator(object):
 
 
     @property
-    def max_brightness(self):
-        return self._max_brightness
+    def max_adu(self):
+        return self._max_adu
 
-    @max_brightness.setter
-    def max_brightness(self, new_max):
-        self._max_brightness = int(new_max)
+    @max_adu.setter
+    def max_adu(self, new_max):
+        self._max_adu = int(new_max)
 
 
     @property
@@ -292,7 +292,7 @@ class StarTrailGenerator(object):
             return
 
 
-        if m_avg > self.max_brightness:
+        if m_avg > self.max_adu:
             #logger.warning(' Excluding image due to brightness: %0.2f', m_avg)
             self.excluded_images += 1
             return
