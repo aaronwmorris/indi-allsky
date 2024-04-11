@@ -1,6 +1,6 @@
 import cv2
 import numpy
-import PIL
+#import PIL
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -84,34 +84,35 @@ class KeogramGenerator(object):
         pass  # read only
 
 
-    def generate(self, outfile, file_list):
-        # Exclude empty files
-        file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
+    ### To be removed
+    #def generate(self, outfile, file_list):
+    #    # Exclude empty files
+    #    file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
 
-        # Sort by timestamp
-        file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
-
-
-        processing_start = time.time()
-
-        for filename in file_list_ordered:
-            logger.info('Reading file: %s', filename)
-
-            try:
-                with Image.open(str(filename)) as img:
-                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-            except PIL.UnidentifiedImageError:
-                logger.error('Unable to read %s', filename)
-                continue
+    #    # Sort by timestamp
+    #    file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
 
 
-            self.processImage(filename, image)
+    #    processing_start = time.time()
+
+    #    for filename in file_list_ordered:
+    #        logger.info('Reading file: %s', filename)
+
+    #        try:
+    #            with Image.open(str(filename)) as img:
+    #                image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+    #        except PIL.UnidentifiedImageError:
+    #            logger.error('Unable to read %s', filename)
+    #            continue
 
 
-        self.finalize(outfile)
+    #        self.processImage(filename, image)
 
-        processing_elapsed_s = time.time() - processing_start
-        logger.warning('Total keogram processing in %0.1f s', processing_elapsed_s)
+
+    #    self.finalize(outfile)
+
+    #    processing_elapsed_s = time.time() - processing_start
+    #    logger.warning('Total keogram processing in %0.1f s', processing_elapsed_s)
 
 
     def processImage(self, filename, image):

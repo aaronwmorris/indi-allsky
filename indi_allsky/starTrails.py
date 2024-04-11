@@ -5,7 +5,7 @@ import math
 import numpy
 from datetime import datetime
 from datetime import timezone
-import PIL
+#import PIL
 from PIL import Image
 import piexif
 import time
@@ -83,7 +83,8 @@ class StarTrailGenerator(object):
 
     @max_brightness.setter
     def max_brightness(self, new_max):
-        self._max_brightness = new_max
+        self._max_brightness = int(new_max)
+
 
     @property
     def mask_threshold(self):
@@ -91,7 +92,7 @@ class StarTrailGenerator(object):
 
     @mask_threshold.setter
     def mask_threshold(self, new_thold):
-        self._mask_threshold = new_thold
+        self._mask_threshold = int(new_thold)
 
     @property
     def pixel_cutoff_threshold(self):
@@ -99,7 +100,7 @@ class StarTrailGenerator(object):
 
     @pixel_cutoff_threshold.setter
     def pixel_cutoff_threshold(self, new_thold):
-        self._pixel_cutoff_threshold = new_thold
+        self._pixel_cutoff_threshold = float(new_thold)
 
     @property
     def timelapse_frame_count(self):
@@ -185,35 +186,36 @@ class StarTrailGenerator(object):
 
 
 
-    def generate(self, outfile, file_list):
-        # Exclude empty files
-        file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
+    ### To be removed
+    #def generate(self, outfile, file_list):
+    #    # Exclude empty files
+    #    file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
 
-        # Sort by timestamp
-        file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
-
-
-        processing_start = time.time()
-
-        for file_p in file_list_ordered:
-            logger.info('Reading file: %s', file_p)
-
-            try:
-                with Image.open(str(file_p)) as img:
-                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-            except PIL.UnidentifiedImageError:
-                logger.error('Unable to read %s', file_p)
-                continue
+    #    # Sort by timestamp
+    #    file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
 
 
-            self.processImage(file_p, image)
+    #    processing_start = time.time()
+
+    #    for file_p in file_list_ordered:
+    #        logger.info('Reading file: %s', file_p)
+
+    #        try:
+    #            with Image.open(str(file_p)) as img:
+    #                image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+    #        except PIL.UnidentifiedImageError:
+    #            logger.error('Unable to read %s', file_p)
+    #            continue
 
 
-        self.finalize(outfile)
+    #        self.processImage(file_p, image)
 
 
-        processing_elapsed_s = time.time() - processing_start
-        logger.warning('Total star trail processing in %0.1f s', processing_elapsed_s)
+    #    self.finalize(outfile)
+
+
+    #    processing_elapsed_s = time.time() - processing_start
+    #    logger.warning('Total star trail processing in %0.1f s', processing_elapsed_s)
 
 
     def processImage(self, file_p, image):
