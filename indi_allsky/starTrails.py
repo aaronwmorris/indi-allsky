@@ -14,6 +14,8 @@ import tempfile
 import ephem
 import logging
 
+from .stars import IndiAllSkyStars
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -28,6 +30,9 @@ class StarTrailGenerator(object):
         self._max_adu = 50
         self._mask_threshold = 190
         self._pixel_cutoff_threshold = 1.0
+
+        self._min_stars = 0
+        self._stars_detect = None  # instantiated later
 
         self._latitude = 0.0
         self._longitude = 0.0
@@ -82,9 +87,8 @@ class StarTrailGenerator(object):
         return self._max_adu
 
     @max_adu.setter
-    def max_adu(self, new_max):
-        self._max_adu = int(new_max)
-
+    def max_adu(self, new_max_adu):
+        self._max_adu = int(new_max_adu)
 
     @property
     def mask_threshold(self):
@@ -101,6 +105,14 @@ class StarTrailGenerator(object):
     @pixel_cutoff_threshold.setter
     def pixel_cutoff_threshold(self, new_thold):
         self._pixel_cutoff_threshold = float(new_thold)
+
+    @property
+    def min_stars(self):
+        return self._min_stars
+
+    @min_stars.setter
+    def min_stars(self, new_min_stars):
+        self._min_stars = int(new_min_stars)
 
     @property
     def timelapse_frame_count(self):
@@ -218,7 +230,7 @@ class StarTrailGenerator(object):
     #    logger.warning('Total star trail processing in %0.1f s', processing_elapsed_s)
 
 
-    def processImage(self, file_p, image):
+    def processImage(self, file_p, image, adu=None, stars=None):
         image_processing_start = time.time()
 
         image_height, image_width = image.shape[:2]
@@ -247,6 +259,9 @@ class StarTrailGenerator(object):
         if isinstance(self._sqm_mask, type(None)):
             self._generateSqmMask(image)
 
+        if isinstance(self._stars_detect, type(None)):
+            self._stars_detect = IndiAllSkyStars(self.config, self.bin_v, mask=self._sqm_mask)
+
 
         # need grayscale image for mask generation
         if len(image.shape) == 2:
@@ -255,7 +270,10 @@ class StarTrailGenerator(object):
             image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
-        m_avg = cv2.mean(image_gray, mask=self._sqm_mask)[0]
+        if not isinstance(adu, type(None)):
+            m_avg = adu
+        else:
+            m_avg = cv2.mean(image_gray, mask=self._sqm_mask)[0]
 
 
         if m_avg < self.placeholder_adu:
@@ -306,6 +324,16 @@ class StarTrailGenerator(object):
             return
 
         self.trail_count += 1
+
+
+        if self.min_stars > 0:
+            if not isinstance(stars, type(None)):
+                stars = self._stars_detect.detectObjects(image_gray)
+
+            if stars < self.min_stars:
+                #logger.warning(' Excluding image due to stars: %d', stars)
+                self.excluded_images += 1
+                return
 
 
         ### Here is the magic

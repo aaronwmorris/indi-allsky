@@ -26,9 +26,11 @@ class StarTrailGenerator(object):
 
     def __init__(self):
         self._max_adu = 65
-        self._min_stars = 0
         self._mask_threshold = 190
         self._pixel_cutoff_threshold = 1.0
+
+        self._min_stars = 0
+
         self._latitude = 0.0
         self._longitude = 0.0
         self._sun_alt_threshold = -15.0
@@ -80,16 +82,8 @@ class StarTrailGenerator(object):
         return self._max_adu
 
     @max_adu.setter
-    def max_adu(self, new_max):
-        self._max_adu = int(new_max)
-
-    @property
-    def min_stars(self):
-        return self._min_stars
-
-    @min_stars.setter
-    def min_stars(self, new_min):
-        self._min_stars = int(new_min)
+    def max_adu(self, new_max_adu):
+        self._max_adu = int(new_max_adu)
 
     @property
     def mask_threshold(self):
@@ -106,6 +100,14 @@ class StarTrailGenerator(object):
     @pixel_cutoff_threshold.setter
     def pixel_cutoff_threshold(self, new_thold):
         self._pixel_cutoff_threshold = float(new_thold)
+
+    @property
+    def min_stars(self):
+        return self._min_stars
+
+    @min_stars.setter
+    def min_stars(self, new_min_stars):
+        self._min_stars = int(new_min_stars)
 
     @property
     def latitude(self):

@@ -154,7 +154,7 @@ class ImageProcessor(object):
         self._stretch = IndiAllSkyStretch(self.config, self.bin_v, self.night_v, self.moonmode_v, mask=self._detection_mask)
         self._orb = IndiAllskyOrbGenerator(self.config)
         self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
-        self._stars = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
+        self._stars_detect = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
         self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)
         self._scnr = IndiAllskyScnr(self.config)
@@ -1147,7 +1147,7 @@ class ImageProcessor(object):
             i_ref['stars'] = list()
             return
 
-        i_ref['stars'] = self._stars.detectObjects(self.image)
+        i_ref['stars'] = self._stars_detect.detectObjects(self.image)
 
 
     def drawDetections(self):
