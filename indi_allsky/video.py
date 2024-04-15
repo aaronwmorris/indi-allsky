@@ -864,6 +864,8 @@ class VideoWorker(Process):
             stg.moon_alt_threshold = self.config['STARTRAILS_MOON_ALT_THOLD']
             stg.moon_phase_threshold = self.config['STARTRAILS_MOON_PHASE_THOLD']
 
+        if not self.config.get('STARTRAILS_USE_DB_DATA', True):
+            logger.warning('Recalculating values for ADU and Star counts')
 
         # Files are presorted from the DB
         for i, entry in enumerate(files_entries):
