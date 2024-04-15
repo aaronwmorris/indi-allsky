@@ -330,8 +330,8 @@ class StarTrailGenerator(object):
             if not isinstance(stars, type(None)):
                 stars = self._stars_detect.detectObjects(image_gray)
 
-            if stars < self.min_stars:
-                #logger.warning(' Excluding image due to stars: %d', stars)
+            if len(stars) < self.min_stars:
+                #logger.warning(' Excluding image due to stars: %d', len(stars))
                 self.excluded_images += 1
                 return
 
