@@ -270,10 +270,10 @@ class StarTrailGenerator(object):
             image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
-        if not isinstance(adu, type(None)):
-            m_avg = adu
-        else:
+        if isinstance(adu, type(None)):
             m_avg = cv2.mean(image_gray, mask=self._sqm_mask)[0]
+        else:
+            m_avg = adu
 
 
         if m_avg < self.placeholder_adu:
@@ -327,7 +327,7 @@ class StarTrailGenerator(object):
 
 
         if self.min_stars > 0:
-            if not isinstance(stars, type(None)):
+            if isinstance(stars, type(None)):
                 stars = self._stars_detect.detectObjects(image_gray)
 
             if len(stars) < self.min_stars:
