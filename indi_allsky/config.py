@@ -133,12 +133,14 @@ class IndiAllSkyConfigBase(object):
         "STARTRAILS_MAX_ADU"    : 65,
         "STARTRAILS_MASK_THOLD" : 190,
         "STARTRAILS_PIXEL_THOLD": 1.0,
+        "STARTRAILS_MIN_STARS"  : 0,
         "STARTRAILS_TIMELAPSE"  : True,
         "STARTRAILS_TIMELAPSE_MINFRAMES" : 250,
         "STARTRAILS_SUN_ALT_THOLD"       : -15.0,
         "STARTRAILS_MOONMODE_THOLD"      : True,
         "STARTRAILS_MOON_ALT_THOLD"      : 91.0,
         "STARTRAILS_MOON_PHASE_THOLD"    : 101.0,
+        "STARTRAILS_USE_DB_DATA"         : True,
         "IMAGE_EXIF_PRIVACY" : False,
         "IMAGE_FILE_TYPE" : "jpg",  # jpg, png, or tif
         "IMAGE_FILE_COMPRESSION" : {

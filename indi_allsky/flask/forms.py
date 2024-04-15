@@ -796,6 +796,14 @@ def STARTRAILS_PIXEL_THOLD_validator(form, field):
         raise ValidationError('Star Trails Pixel Threshold must be 100 or less')
 
 
+def STARTRAILS_MIN_STARS_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Minimum stars must be greater than 0')
+
+
 def STARTRAILS_TIMELAPSE_MINFRAMES_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -2406,8 +2414,10 @@ class IndiAllskyConfigForm(FlaskForm):
     STARTRAILS_MAX_ADU               = IntegerField('Star Trails Max ADU', validators=[DataRequired(), STARTRAILS_MAX_ADU_validator])
     STARTRAILS_MASK_THOLD            = IntegerField('Star Trails Mask Threshold ADU', validators=[DataRequired(), STARTRAILS_MASK_THOLD_validator])
     STARTRAILS_PIXEL_THOLD           = FloatField('Star Trails Pixel Threshold', validators=[STARTRAILS_PIXEL_THOLD_validator])
+    STARTRAILS_MIN_STARS             = IntegerField('Star Trails Minimum Stars', validators=[STARTRAILS_MIN_STARS_validator])
     STARTRAILS_TIMELAPSE             = BooleanField('Star Trails Timelapse')
     STARTRAILS_TIMELAPSE_MINFRAMES   = IntegerField('Star Trails Timelapse Minimum Frames', validators=[DataRequired(), STARTRAILS_TIMELAPSE_MINFRAMES_validator])
+    STARTRAILS_USE_DB_DATA           = BooleanField('Star Trails Use Existing Data')
     IMAGE_EXIF_PRIVACY               = BooleanField('Enable EXIF Privacy')
     IMAGE_FILE_TYPE                  = SelectField('Image file type', choices=IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_FILE_TYPE_validator])
     IMAGE_FILE_COMPRESSION__JPG      = IntegerField('JPEG Quality', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__JPG_validator])

@@ -2200,6 +2200,34 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MIN_STARS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_MIN_STARS(class='form-control bg-secondary') }}
+            <div id="STARTRAILS_MIN_STARS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Minimum detected stars to include image</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS_USE_DB_DATA.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.STARTRAILS_USE_DB_DATA(class='form-check-input') }}
+                <div id="STARTRAILS_USE_DB_DATA-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Reuse existing detected ADU and Star data for each image.  You may disable this if the detection mask has changed since the ADU and Star information was detected.</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.STARTRAILS_TIMELAPSE.label }}
         </div>
         <div class="col-sm-2">
@@ -2210,7 +2238,6 @@
         </div>
         <div class="col-sm-8">Generate star trails timelapse</div>
     </div>
-
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3928,6 +3955,7 @@ const field_names = [
     'STARTRAILS_MAX_ADU',
     'STARTRAILS_MASK_THOLD',
     'STARTRAILS_PIXEL_THOLD',
+    'STARTRAILS_MIN_STARS',
     'STARTRAILS_TIMELAPSE_MINFRAMES',
     'STARTRAILS_SUN_ALT_THOLD',
     'STARTRAILS_MOON_ALT_THOLD',
@@ -4106,6 +4134,7 @@ const checkbox_field_names = [
     'IMAGE_STRETCH__DAYTIME',
     'KEOGRAM_LABEL',
     'STARTRAILS_MOONMODE_THOLD',
+    'STARTRAILS_USE_DB_DATA',
     'STARTRAILS_TIMELAPSE',
     'IMAGE_EXIF_PRIVACY',
     'IMAGE_FLIP_V',

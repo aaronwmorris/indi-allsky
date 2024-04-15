@@ -852,6 +852,7 @@ class VideoWorker(Process):
         stg.max_adu = self.config['STARTRAILS_MAX_ADU']
         stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
         stg.pixel_cutoff_threshold = self.config['STARTRAILS_PIXEL_THOLD']
+        stg.min_stars = self.config.get('STARTRAILS_MIN_STARS', 0)
         stg.latitude = camera.latitude
         stg.longitude = camera.longitude
         stg.sun_alt_threshold = self.config['STARTRAILS_SUN_ALT_THOLD']
@@ -899,7 +900,13 @@ class VideoWorker(Process):
             kg.processImage(image_file_p, image_data)
 
             if night:
-                stg.processImage(image_file_p, image_data)
+                if self.config.get('STARTRAILS_USE_DB_DATA', True):
+                    adu = entry.adu
+                    stars = entry.stars  # can be None
+                else:
+                    adu, stars = None, None
+
+                stg.processImage(image_file_p, image_data, adu=adu, stars=stars)
 
 
         kg.finalize(keogram_file, camera)
