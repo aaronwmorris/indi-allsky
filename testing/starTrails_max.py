@@ -30,6 +30,7 @@ class StarTrailGenerator(object):
         self._pixel_cutoff_threshold = 1.0
 
         self._min_stars = 0
+        self._detectionThreshold = 0.6
 
         self._latitude = 0.0
         self._longitude = 0.0
@@ -157,6 +158,7 @@ class StarTrailGenerator(object):
         logger.warning('Max ADU: %d', self.max_adu)
         logger.warning('Mask threshold: %d', self.mask_threshold)
         logger.warning('Mask threshold %%: %0.1f', self.pixel_cutoff_threshold)
+        logger.warning('Min stars: %d', self.min_stars)
         logger.warning('Latitude configured for %0.1f', self.latitude)
         logger.warning('Longitude configured for %0.1f', self.longitude)
         logger.warning('Sun altitude threshold: %0.1f', self.sun_alt_threshold)
