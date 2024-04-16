@@ -762,6 +762,8 @@ class VideoWorker(Process):
         kg.angle = self.config['KEOGRAM_ANGLE']
         kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
         kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
+        kg.crop_top = self.config.get('KEOGRAM_CROP_TOP', 0)
+        kg.crop_bottom = self.config.get('KEOGRAM_CROP_BOTTOM', 0)
 
 
         keogram_metadata = {

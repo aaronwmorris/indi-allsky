@@ -32,6 +32,9 @@ class KeogramGenerator(object):
         self._v_scale_factor = 100
         self._h_scale_factor = 100
 
+        self._crop_top = 0
+        self._crop_bottom = 0
+
         self.original_width = None
         self.original_height = None
 
@@ -73,6 +76,24 @@ class KeogramGenerator(object):
     @h_scale_factor.setter
     def h_scale_factor(self, new_factor):
         self._h_scale_factor = int(new_factor)
+
+
+    @property
+    def crop_top(self):
+        return self._crop_top
+
+    @crop_top.setter
+    def crop_top(self, new_crop):
+        self._crop_top = int(new_crop)
+
+
+    @property
+    def crop_bottom(self):
+        return self._crop_bottom
+
+    @crop_bottom.setter
+    def crop_bottom(self, new_crop):
+        self._crop_bottom = int(new_crop)
 
 
     @property
@@ -165,12 +186,36 @@ class KeogramGenerator(object):
 
         # trim off the top and bottom bars
         keogram_trimmed = self.trimEdges(self.keogram_data)
+        trimmed_height, trimmed_width = keogram_trimmed.shape[:2]
+
+
+        # crop keogram
+        if self.crop_top:
+            crop_top_px = int(trimmed_height * self.crop_top / 100)
+            logger.warning('Cropping %d px from top of keogram', crop_top_px)
+        else:
+            crop_top_px = 0
+
+
+        if self.crop_bottom:
+            crop_bottom_px = int(trimmed_height * self.crop_bottom / 100)
+            logger.warning('Cropping %d px from bottom of keogram', crop_bottom_px)
+        else:
+            crop_bottom_px = 0
+
+
+        keogram_cropped = keogram_trimmed[
+            crop_top_px:trimmed_height - crop_bottom_px,
+            0:trimmed_width,  # keep width
+        ]
+
+        cropped_height, cropped_width = keogram_cropped.shape[:2]
+
 
         # scale horizontal size
-        trimmed_height, trimmed_width = keogram_trimmed.shape[:2]
-        new_width = int(trimmed_width * self.h_scale_factor / 100)
-        new_height = int(trimmed_height * self.v_scale_factor / 100)
-        self.keogram_final = cv2.resize(keogram_trimmed, (new_width, new_height), interpolation=cv2.INTER_AREA)
+        new_width = int(cropped_width * self.h_scale_factor / 100)
+        new_height = int(cropped_height * self.v_scale_factor / 100)
+        self.keogram_final = cv2.resize(keogram_cropped, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
         # apply time labels
