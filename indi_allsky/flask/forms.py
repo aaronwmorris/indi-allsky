@@ -769,6 +769,18 @@ def KEOGRAM_V_SCALE_validator(form, field):
         raise ValidationError('Keogram Verticle Scaling factor must be 100 or less')
 
 
+def KEOGRAM_CROP_TOP_validator(form, field):
+    if field.data < 0:
+        raise ValidationError('Keogram Crop percent must be 0 or greater')
+
+    if field.data > 49:
+        raise ValidationError('Keogram crop percent must be 49 or less')
+
+
+def KEOGRAM_CROP_BOTTOM_validator(*args):
+    KEOGRAM_CROP_TOP_validator(*args)
+
+
 def STARTRAILS_MAX_ADU_validator(form, field):
     if field.data <= 0:
         raise ValidationError('Star Trails Max ADU must be greater than 0')
@@ -2406,6 +2418,8 @@ class IndiAllskyConfigForm(FlaskForm):
     KEOGRAM_ANGLE                    = FloatField('Keogram Rotation Angle', validators=[KEOGRAM_ANGLE_validator])
     KEOGRAM_H_SCALE                  = IntegerField('Keogram Horizontal Scaling', validators=[DataRequired(), KEOGRAM_H_SCALE_validator])
     KEOGRAM_V_SCALE                  = IntegerField('Keogram Vertical Scaling', validators=[DataRequired(), KEOGRAM_V_SCALE_validator])
+    KEOGRAM_CROP_TOP                 = IntegerField('Keogram Crop Top (%)', validators=[KEOGRAM_CROP_TOP_validator])
+    KEOGRAM_CROP_BOTTOM              = IntegerField('Keogram Crop Bottom (%)', validators=[KEOGRAM_CROP_BOTTOM_validator])
     KEOGRAM_LABEL                    = BooleanField('Label Keogram')
     STARTRAILS_SUN_ALT_THOLD         = FloatField('Star Trails Max Sun Altitude', validators=[DataRequired(), STARTRAILS_SUN_ALT_THOLD_validator])
     STARTRAILS_MOONMODE_THOLD        = BooleanField('Star Trails Exclude Moon Mode')

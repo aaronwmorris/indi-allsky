@@ -126,10 +126,12 @@ class IndiAllSkyConfigBase(object):
             "MOONMODE"       : False,
             "DAYTIME"        : False,
         },
-        "KEOGRAM_ANGLE"    : 0,
-        "KEOGRAM_H_SCALE"  : 100,
-        "KEOGRAM_V_SCALE"  : 33,
-        "KEOGRAM_LABEL"    : True,
+        "KEOGRAM_ANGLE"         : 0,
+        "KEOGRAM_H_SCALE"       : 100,
+        "KEOGRAM_V_SCALE"       : 33,
+        "KEOGRAM_CROP_TOP"      : 0,  # percent
+        "KEOGRAM_CROP_BOTTOM"   : 0,  # percent
+        "KEOGRAM_LABEL"         : True,
         "STARTRAILS_MAX_ADU"    : 65,
         "STARTRAILS_MASK_THOLD" : 190,
         "STARTRAILS_PIXEL_THOLD": 1.0,
