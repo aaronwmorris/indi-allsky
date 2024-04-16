@@ -904,11 +904,11 @@ class VideoWorker(Process):
             if night:
                 if self.config.get('STARTRAILS_USE_DB_DATA', True):
                     adu = entry.adu
-                    stars = entry.stars  # can be None
+                    star_count = entry.stars  # can be None
                 else:
-                    adu, stars = None, None
+                    adu, star_count = None, None
 
-                stg.processImage(image_file_p, image_data, adu=adu, stars=stars)
+                stg.processImage(image_file_p, image_data, adu=adu, star_count=star_count)
 
 
         kg.finalize(keogram_file, camera)

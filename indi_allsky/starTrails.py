@@ -230,7 +230,7 @@ class StarTrailGenerator(object):
     #    logger.warning('Total star trail processing in %0.1f s', processing_elapsed_s)
 
 
-    def processImage(self, file_p, image, adu=None, stars=None):
+    def processImage(self, file_p, image, adu=None, star_count=None):
         image_processing_start = time.time()
 
         image_height, image_width = image.shape[:2]
@@ -327,11 +327,11 @@ class StarTrailGenerator(object):
 
 
         if self.min_stars > 0:
-            if isinstance(stars, type(None)):
-                stars = self._stars_detect.detectObjects(image_gray)
+            if isinstance(star_count, type(None)):
+                star_count = len(self._stars_detect.detectObjects(image_gray))
 
-            if len(stars) < self.min_stars:
-                #logger.warning(' Excluding image due to stars: %d', len(stars))
+            if star_count < self.min_stars:
+                #logger.warning(' Excluding image due to stars: %d', star_count)
                 self.excluded_images += 1
                 return
 
