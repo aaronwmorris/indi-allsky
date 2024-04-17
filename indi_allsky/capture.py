@@ -114,6 +114,8 @@ class CaptureWorker(Process):
         self.camera_name = None
         self.camera_server = None
 
+        self.indi_config = self.config.get('INDI_CONFIG_DEFAULTS', {})
+
         self.focus_mode = self.config.get('FOCUS_MODE', False)  # focus mode takes images as fast as possible
 
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
@@ -618,8 +620,7 @@ class CaptureWorker(Process):
 
 
         # configuration needs to be performed before getting CCD_INFO
-        # which queries the exposure control
-        self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
+        self.indiclient.configureCcdDevice(self.indi_config)  # night config by default
 
 
         # Get Properties
@@ -941,10 +942,10 @@ class CaptureWorker(Process):
             # There is a bug in the ASI120M* camera that causes exposures to fail on gain changes
             # The indi_asi_ccd server will switch the camera to 8-bit mode to try to correct
             if self.camera_name.startswith('ZWO CCD ASI120'):
-                self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
+                self.indiclient.configureCcdDevice(self.indi_config)
         elif self.camera_server in ['indi_asi_single_ccd']:
             if self.camera_name.startswith('ZWO ASI120'):
-                self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
+                self.indiclient.configureCcdDevice(self.indi_config)
 
 
     def getSensorTemperature(self):
@@ -1164,6 +1165,8 @@ class CaptureWorker(Process):
 
 
         if self.night:
+            self.indi_config = self.config['INDI_CONFIG_DEFAULTS']
+
             # cooling
             if self.config.get('CCD_COOLING'):
                 ccd_temp = self.config.get('CCD_TEMP', 15.0)
@@ -1181,10 +1184,19 @@ class CaptureWorker(Process):
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
         else:
             logger.warning('Change to day')
+
+            if self.config.get('INDI_CONFIG_DAY', {}):
+                self.indi_config = self.config['INDI_CONFIG_DAY']
+            else:
+                self.indi_config = self.config['INDI_CONFIG_DEFAULTS']
+
             self.indiclient.disableCcdCooler()
             self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
             self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
+
+        # update CCD config
+        self.indiclient.configureCcdDevice(self.indi_config)
 
 
         # Update shared values

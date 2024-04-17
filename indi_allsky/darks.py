@@ -85,6 +85,8 @@ class IndiAllSkyDarks(object):
         self.camera_server = None
         self.ccd_info = None
 
+        self.indi_config = self.config.get('INDI_CONFIG_DEFAULTS', {})
+
         self.exposure_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
@@ -296,7 +298,7 @@ class IndiAllSkyDarks(object):
         # set BLOB mode to BLOB_ALSO
         self.indiclient.updateCcdBlobMode()
 
-        self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
+        self.indiclient.configureCcdDevice(self.indi_config)  # night config by default
 
 
         try:
@@ -657,10 +659,10 @@ class IndiAllSkyDarks(object):
             # There is a bug in the ASI120M* camera that causes exposures to fail on gain changes
             # The indi_asi_ccd server will switch the camera to 8-bit mode to try to correct
             if self.camera_name.startswith('ZWO CCD ASI120'):
-                self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
+                self.indiclient.configureCcdDevice(self.indi_config)
         elif self.camera_server in ['indi_asi_single_ccd']:
             if self.camera_name.startswith('ZWO ASI120'):
-                self.indiclient.configureCcdDevice(self.config['INDI_CONFIG_DEFAULTS'])
+                self.indiclient.configureCcdDevice(self.indi_config)
 
 
     @staticmethod
@@ -747,6 +749,15 @@ class IndiAllSkyDarks(object):
             time.sleep(8.0)
 
 
+            # update CCD config
+            if self.config.get('INDI_CONFIG_DAY', {}):
+                self.indi_config = self.config['INDI_CONFIG_DAY']
+            else:
+                self.indi_config = self.config['INDI_CONFIG_DEFAULTS']
+
+            self.indiclient.configureCcdDevice(self.indi_config)
+
+
             ### DAY DARKS ###
             day_params = (self.config['CCD_CONFIG']['DAY']['GAIN'], self.config['CCD_CONFIG']['DAY']['BINNING'])
             if day_params not in night_darks_odict.keys():
@@ -786,6 +797,11 @@ class IndiAllSkyDarks(object):
             remaining_configs -= 1  # skip daytime
 
             time.sleep(8.0)
+
+
+        # update CCD config
+        self.indi_config = self.config['INDI_CONFIG_DEFAULTS']
+        self.indiclient.configureCcdDevice(self.indi_config)
 
 
         total_exposures = len(dark_exposures) * remaining_configs
