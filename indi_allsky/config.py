@@ -64,6 +64,7 @@ class IndiAllSkyConfigBase(object):
             "PROPERTIES" : {},
             "TEXT" : {},
         },
+        "INDI_CONFIG_DAY" : {},
         "CCD_EXPOSURE_MAX"     : 15.00000,
         "CCD_EXPOSURE_DEF"     : 0.0,
         "CCD_EXPOSURE_MIN"     : 0.0,
