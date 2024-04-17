@@ -1,6 +1,6 @@
 import cv2
 import numpy
-import PIL
+#import PIL
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -31,6 +31,9 @@ class KeogramGenerator(object):
         self._angle = self.config['KEOGRAM_ANGLE']
         self._v_scale_factor = 100
         self._h_scale_factor = 100
+
+        self._crop_top = 0
+        self._crop_bottom = 0
 
         self.original_width = None
         self.original_height = None
@@ -76,6 +79,24 @@ class KeogramGenerator(object):
 
 
     @property
+    def crop_top(self):
+        return self._crop_top
+
+    @crop_top.setter
+    def crop_top(self, new_crop):
+        self._crop_top = int(new_crop)
+
+
+    @property
+    def crop_bottom(self):
+        return self._crop_bottom
+
+    @crop_bottom.setter
+    def crop_bottom(self, new_crop):
+        self._crop_bottom = int(new_crop)
+
+
+    @property
     def shape(self):
         return self.keogram_final.shape
 
@@ -84,34 +105,35 @@ class KeogramGenerator(object):
         pass  # read only
 
 
-    def generate(self, outfile, file_list):
-        # Exclude empty files
-        file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
+    ### To be removed
+    #def generate(self, outfile, file_list):
+    #    # Exclude empty files
+    #    file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
 
-        # Sort by timestamp
-        file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
-
-
-        processing_start = time.time()
-
-        for filename in file_list_ordered:
-            logger.info('Reading file: %s', filename)
-
-            try:
-                with Image.open(str(filename)) as img:
-                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-            except PIL.UnidentifiedImageError:
-                logger.error('Unable to read %s', filename)
-                continue
+    #    # Sort by timestamp
+    #    file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
 
 
-            self.processImage(filename, image)
+    #    processing_start = time.time()
+
+    #    for filename in file_list_ordered:
+    #        logger.info('Reading file: %s', filename)
+
+    #        try:
+    #            with Image.open(str(filename)) as img:
+    #                image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+    #        except PIL.UnidentifiedImageError:
+    #            logger.error('Unable to read %s', filename)
+    #            continue
 
 
-        self.finalize(outfile)
+    #        self.processImage(filename, image)
 
-        processing_elapsed_s = time.time() - processing_start
-        logger.warning('Total keogram processing in %0.1f s', processing_elapsed_s)
+
+    #    self.finalize(outfile)
+
+    #    processing_elapsed_s = time.time() - processing_start
+    #    logger.warning('Total keogram processing in %0.1f s', processing_elapsed_s)
 
 
     def processImage(self, filename, image):
@@ -164,12 +186,36 @@ class KeogramGenerator(object):
 
         # trim off the top and bottom bars
         keogram_trimmed = self.trimEdges(self.keogram_data)
+        trimmed_height, trimmed_width = keogram_trimmed.shape[:2]
+
+
+        # crop keogram
+        if self.crop_top:
+            crop_top_px = int(trimmed_height * self.crop_top / 100)
+            logger.warning('Cropping %d px from top of keogram', crop_top_px)
+        else:
+            crop_top_px = 0
+
+
+        if self.crop_bottom:
+            crop_bottom_px = int(trimmed_height * self.crop_bottom / 100)
+            logger.warning('Cropping %d px from bottom of keogram', crop_bottom_px)
+        else:
+            crop_bottom_px = 0
+
+
+        keogram_cropped = keogram_trimmed[
+            crop_top_px:trimmed_height - crop_bottom_px,
+            0:trimmed_width,  # keep width
+        ]
+
+        cropped_height, cropped_width = keogram_cropped.shape[:2]
+
 
         # scale horizontal size
-        trimmed_height, trimmed_width = keogram_trimmed.shape[:2]
-        new_width = int(trimmed_width * self.h_scale_factor / 100)
-        new_height = int(trimmed_height * self.v_scale_factor / 100)
-        self.keogram_final = cv2.resize(keogram_trimmed, (new_width, new_height), interpolation=cv2.INTER_AREA)
+        new_width = int(cropped_width * self.h_scale_factor / 100)
+        new_height = int(cropped_height * self.v_scale_factor / 100)
+        self.keogram_final = cv2.resize(keogram_cropped, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
         # apply time labels

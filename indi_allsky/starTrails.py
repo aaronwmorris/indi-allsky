@@ -5,7 +5,7 @@ import math
 import numpy
 from datetime import datetime
 from datetime import timezone
-import PIL
+#import PIL
 from PIL import Image
 import piexif
 import time
@@ -13,6 +13,8 @@ from pathlib import Path
 import tempfile
 import ephem
 import logging
+
+from .stars import IndiAllSkyStars
 
 
 logger = logging.getLogger('indi_allsky')
@@ -25,9 +27,12 @@ class StarTrailGenerator(object):
         self.config = config
         self.bin_v = bin_v
 
-        self._max_brightness = 50
+        self._max_adu = 50
         self._mask_threshold = 190
         self._pixel_cutoff_threshold = 1.0
+
+        self._min_stars = 0
+        self._stars_detect = None  # instantiated later
 
         self._latitude = 0.0
         self._longitude = 0.0
@@ -78,12 +83,12 @@ class StarTrailGenerator(object):
 
 
     @property
-    def max_brightness(self):
-        return self._max_brightness
+    def max_adu(self):
+        return self._max_adu
 
-    @max_brightness.setter
-    def max_brightness(self, new_max):
-        self._max_brightness = new_max
+    @max_adu.setter
+    def max_adu(self, new_max_adu):
+        self._max_adu = int(new_max_adu)
 
     @property
     def mask_threshold(self):
@@ -91,7 +96,7 @@ class StarTrailGenerator(object):
 
     @mask_threshold.setter
     def mask_threshold(self, new_thold):
-        self._mask_threshold = new_thold
+        self._mask_threshold = int(new_thold)
 
     @property
     def pixel_cutoff_threshold(self):
@@ -99,7 +104,15 @@ class StarTrailGenerator(object):
 
     @pixel_cutoff_threshold.setter
     def pixel_cutoff_threshold(self, new_thold):
-        self._pixel_cutoff_threshold = new_thold
+        self._pixel_cutoff_threshold = float(new_thold)
+
+    @property
+    def min_stars(self):
+        return self._min_stars
+
+    @min_stars.setter
+    def min_stars(self, new_min_stars):
+        self._min_stars = int(new_min_stars)
 
     @property
     def timelapse_frame_count(self):
@@ -185,38 +198,39 @@ class StarTrailGenerator(object):
 
 
 
-    def generate(self, outfile, file_list):
-        # Exclude empty files
-        file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
+    ### To be removed
+    #def generate(self, outfile, file_list):
+    #    # Exclude empty files
+    #    file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
 
-        # Sort by timestamp
-        file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
-
-
-        processing_start = time.time()
-
-        for file_p in file_list_ordered:
-            logger.info('Reading file: %s', file_p)
-
-            try:
-                with Image.open(str(file_p)) as img:
-                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-            except PIL.UnidentifiedImageError:
-                logger.error('Unable to read %s', file_p)
-                continue
+    #    # Sort by timestamp
+    #    file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
 
 
-            self.processImage(file_p, image)
+    #    processing_start = time.time()
+
+    #    for file_p in file_list_ordered:
+    #        logger.info('Reading file: %s', file_p)
+
+    #        try:
+    #            with Image.open(str(file_p)) as img:
+    #                image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+    #        except PIL.UnidentifiedImageError:
+    #            logger.error('Unable to read %s', file_p)
+    #            continue
 
 
-        self.finalize(outfile)
+    #        self.processImage(file_p, image)
 
 
-        processing_elapsed_s = time.time() - processing_start
-        logger.warning('Total star trail processing in %0.1f s', processing_elapsed_s)
+    #    self.finalize(outfile)
 
 
-    def processImage(self, file_p, image):
+    #    processing_elapsed_s = time.time() - processing_start
+    #    logger.warning('Total star trail processing in %0.1f s', processing_elapsed_s)
+
+
+    def processImage(self, file_p, image, adu=None, star_count=None):
         image_processing_start = time.time()
 
         image_height, image_width = image.shape[:2]
@@ -245,6 +259,9 @@ class StarTrailGenerator(object):
         if isinstance(self._sqm_mask, type(None)):
             self._generateSqmMask(image)
 
+        if isinstance(self._stars_detect, type(None)):
+            self._stars_detect = IndiAllSkyStars(self.config, self.bin_v, mask=self._sqm_mask)
+
 
         # need grayscale image for mask generation
         if len(image.shape) == 2:
@@ -253,7 +270,10 @@ class StarTrailGenerator(object):
             image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
-        m_avg = cv2.mean(image_gray, mask=self._sqm_mask)[0]
+        if isinstance(adu, type(None)):
+            m_avg = cv2.mean(image_gray, mask=self._sqm_mask)[0]
+        else:
+            m_avg = adu
 
 
         if m_avg < self.placeholder_adu:
@@ -290,7 +310,7 @@ class StarTrailGenerator(object):
             return
 
 
-        if m_avg > self.max_brightness:
+        if m_avg > self.max_adu:
             #logger.warning(' Excluding image due to brightness: %0.2f', m_avg)
             self.excluded_images += 1
             return
@@ -304,6 +324,16 @@ class StarTrailGenerator(object):
             return
 
         self.trail_count += 1
+
+
+        if self.min_stars > 0:
+            if isinstance(star_count, type(None)):
+                star_count = len(self._stars_detect.detectObjects(image_gray))
+
+            if star_count < self.min_stars:
+                #logger.warning(' Excluding image due to stars: %d', star_count)
+                self.excluded_images += 1
+                return
 
 
         ### Here is the magic

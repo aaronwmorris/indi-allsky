@@ -769,6 +769,18 @@ def KEOGRAM_V_SCALE_validator(form, field):
         raise ValidationError('Keogram Verticle Scaling factor must be 100 or less')
 
 
+def KEOGRAM_CROP_TOP_validator(form, field):
+    if field.data < 0:
+        raise ValidationError('Keogram Crop percent must be 0 or greater')
+
+    if field.data > 49:
+        raise ValidationError('Keogram crop percent must be 49 or less')
+
+
+def KEOGRAM_CROP_BOTTOM_validator(*args):
+    KEOGRAM_CROP_TOP_validator(*args)
+
+
 def STARTRAILS_MAX_ADU_validator(form, field):
     if field.data <= 0:
         raise ValidationError('Star Trails Max ADU must be greater than 0')
@@ -794,6 +806,14 @@ def STARTRAILS_PIXEL_THOLD_validator(form, field):
 
     if field.data > 100:
         raise ValidationError('Star Trails Pixel Threshold must be 100 or less')
+
+
+def STARTRAILS_MIN_STARS_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Minimum stars must be greater than 0')
 
 
 def STARTRAILS_TIMELAPSE_MINFRAMES_validator(form, field):
@@ -2398,6 +2418,8 @@ class IndiAllskyConfigForm(FlaskForm):
     KEOGRAM_ANGLE                    = FloatField('Keogram Rotation Angle', validators=[KEOGRAM_ANGLE_validator])
     KEOGRAM_H_SCALE                  = IntegerField('Keogram Horizontal Scaling', validators=[DataRequired(), KEOGRAM_H_SCALE_validator])
     KEOGRAM_V_SCALE                  = IntegerField('Keogram Vertical Scaling', validators=[DataRequired(), KEOGRAM_V_SCALE_validator])
+    KEOGRAM_CROP_TOP                 = IntegerField('Keogram Crop Top (%)', validators=[KEOGRAM_CROP_TOP_validator])
+    KEOGRAM_CROP_BOTTOM              = IntegerField('Keogram Crop Bottom (%)', validators=[KEOGRAM_CROP_BOTTOM_validator])
     KEOGRAM_LABEL                    = BooleanField('Label Keogram')
     STARTRAILS_SUN_ALT_THOLD         = FloatField('Star Trails Max Sun Altitude', validators=[DataRequired(), STARTRAILS_SUN_ALT_THOLD_validator])
     STARTRAILS_MOONMODE_THOLD        = BooleanField('Star Trails Exclude Moon Mode')
@@ -2406,8 +2428,10 @@ class IndiAllskyConfigForm(FlaskForm):
     STARTRAILS_MAX_ADU               = IntegerField('Star Trails Max ADU', validators=[DataRequired(), STARTRAILS_MAX_ADU_validator])
     STARTRAILS_MASK_THOLD            = IntegerField('Star Trails Mask Threshold ADU', validators=[DataRequired(), STARTRAILS_MASK_THOLD_validator])
     STARTRAILS_PIXEL_THOLD           = FloatField('Star Trails Pixel Threshold', validators=[STARTRAILS_PIXEL_THOLD_validator])
+    STARTRAILS_MIN_STARS             = IntegerField('Star Trails Minimum Stars', validators=[STARTRAILS_MIN_STARS_validator])
     STARTRAILS_TIMELAPSE             = BooleanField('Star Trails Timelapse')
     STARTRAILS_TIMELAPSE_MINFRAMES   = IntegerField('Star Trails Timelapse Minimum Frames', validators=[DataRequired(), STARTRAILS_TIMELAPSE_MINFRAMES_validator])
+    STARTRAILS_USE_DB_DATA           = BooleanField('Star Trails Use Existing Data')
     IMAGE_EXIF_PRIVACY               = BooleanField('Enable EXIF Privacy')
     IMAGE_FILE_TYPE                  = SelectField('Image file type', choices=IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_FILE_TYPE_validator])
     IMAGE_FILE_COMPRESSION__JPG      = IntegerField('JPEG Quality', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__JPG_validator])
@@ -4302,16 +4326,19 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
     SENSOR_SELECT_choices = {
         'Small' : (
             ('imx219', 'IMX219 - 1/4" - Camera Module 2'),
-            ('imx415', 'IMX415 - 1/2.8" - SV205C'),
+            ('imx415_sv205', 'SV205C - 1/2.8" (IMX415)'),
             ('ov5647', 'OV5647 - 1/4" - Camera Module 1'),
         ),
         'Medium - 6mm Class' : (
             ('ar0130', 'ASI120 - 1/3" - AR0130CS'),
             ('imx224', 'IMX224 - 1/3"'),
+            ('imx273', 'IMX273 - 1/2.9"'),
             ('imx287', 'IMX287 - 1/2.9"'),
             ('imx290', 'IMX290 - 1/2.8"'),
             ('imx296', 'IMX296 - 1/2.9" - Global Shutter'),
             ('imx307', 'IMX307 - 1/2.8" - SV105C'),
+            ('imx327', 'IMX327 - 1/2.8"'),
+            ('imx415', 'IMX415 - 1/2.8"'),
             ('imx462', 'IMX462 - 1/2.8"'),
             ('imx662', 'IMX662 - 1/2.8"'),
             ('imx715', 'IMX715 - 1/2.8"'),
@@ -4324,13 +4351,18 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
             ('imx708', 'IMX708 - 1/2.43" - Camera Module 3'),
         ),
         'Medium - 8mm Class' : (
+            ('imx185', 'IMX185 - 1/1.9"'),
             ('imx378', 'IMX378 - 1/2.3"'),
             ('imx385', 'IMX385 - 1/1.9"'),
             ('imx477', 'IMX477 - 1/2.3" - HQ Camera'),
-            ('icx205', 'ICX205AL - 1/2" - SX Superstar'),
+            ('icx205al', 'ICX205AL - 1/2" - SX Superstar'),
+            ('mt9t001', 'MT9T001 - 1/2"'),
         ),
         'Medium - 9mm Class' : (
+            ('icx274al', 'ICX274AL - 1/1.8"'),
             ('imx178', 'IMX178 - 1/1.8"'),
+            ('imx252', 'IMX252 - 1/1.8"'),
+            ('imx265', 'IMX265 - 1/1.8"'),
             ('imx464', 'IMX464 - 1/1.8" - POA Neptune-C II'),
             ('imx664', 'IMX664 - 1/1.8" - POA Neptune 664C'),
             ('imx678', 'IMX678 - 1/1.8"'),
@@ -4339,17 +4371,23 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         'Large' : (
             ('imx174', 'IMX174 - 1/1.2"'),
             ('imx183', 'IMX183 - 1"'),
+            ('imx253', 'IMX253 - 1.1"'),
             ('imx249', 'IMX249 - 1/1.2" - POA Xena-M'),
+            ('imx250', 'IMX250 - 2/3"'),
+            ('imx264', 'IMX264 - 2/3"'),
+            ('imx304', 'IMX304 - 1.1"'),
             ('imx429', 'IMX429 - 2/3" - POA Apollo-M MINI'),
             ('imx432', 'IMX432 - 1.1"'),
             ('imx482', 'IMX482 - 1/1.2"'),
             ('imx485', 'IMX485 - 1/1.2"'),
             ('imx533', 'IMX533 - 1"'),
             ('imx585', 'IMX585 - 1/1.2"'),
-            ('icx825', 'ICX825AL - 2/3" - SX ULTRASTAR PRO'),
+            ('icx825al', 'ICX825AL - 2/3" - SX ULTRASTAR PRO'),
         ),
         'Extra Large' : (
+            ('imx269', 'IMX269 - 4/3"'),
             ('imx294', 'IMX294 - 4/3"'),
+            ('imx410', 'IMX410 - Full Frame - ASI2400'),
             ('imx455', 'IMX455 - Full Frame - ASI6200'),
             ('imx571', 'IMX571 - APS-C - ASI2600'),
         ),
@@ -4369,6 +4407,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         ('m12_f2.0_1.8mm_1-2.5', 'M12 1.8mm ƒ/2.0 - 180° - 1/2.5" ∅6.9mm'),
         ('m12_f2.0_2.1mm_1-2.7', 'M12 2.1mm ƒ/2.0 - 170° - 1/2.7" ∅6.7mm'),
         ('meike_f2.8_3.5mm_4-3', 'Meike 3.5mm ƒ/2.8 Fisheye - 220° - 4/3" ∅12.5mm'),
+        ('custom_f7_5.8mm_m42', 'Custom 5.8mm ƒ/7 - 174° - ∅17.3mm'),
     )
 
     SENSOR_SELECT     = SelectField('Sensor', choices=SENSOR_SELECT_choices)

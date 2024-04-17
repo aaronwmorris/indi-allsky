@@ -28,11 +28,11 @@ class IndiAllSkyStars(object):
 
 
         # start with a black image
-        template = numpy.zeros([15, 15], dtype=numpy.uint8)
+        star_template = numpy.zeros([15, 15], dtype=numpy.uint8)
 
         # draw a white circle
         cv2.circle(
-            img=template,
+            img=star_template,
             center=(7, 7),
             radius=3,
             color=(255, 255, 255),
@@ -41,7 +41,7 @@ class IndiAllSkyStars(object):
 
         # blur circle to simulate a star
         self.star_template = cv2.blur(
-            src=template,
+            src=star_template,
             ksize=(2, 2),
         )
 

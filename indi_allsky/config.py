@@ -126,19 +126,23 @@ class IndiAllSkyConfigBase(object):
             "MOONMODE"       : False,
             "DAYTIME"        : False,
         },
-        "KEOGRAM_ANGLE"    : 0,
-        "KEOGRAM_H_SCALE"  : 100,
-        "KEOGRAM_V_SCALE"  : 33,
-        "KEOGRAM_LABEL"    : True,
+        "KEOGRAM_ANGLE"         : 0,
+        "KEOGRAM_H_SCALE"       : 100,
+        "KEOGRAM_V_SCALE"       : 33,
+        "KEOGRAM_CROP_TOP"      : 0,  # percent
+        "KEOGRAM_CROP_BOTTOM"   : 0,  # percent
+        "KEOGRAM_LABEL"         : True,
         "STARTRAILS_MAX_ADU"    : 65,
         "STARTRAILS_MASK_THOLD" : 190,
         "STARTRAILS_PIXEL_THOLD": 1.0,
+        "STARTRAILS_MIN_STARS"  : 0,
         "STARTRAILS_TIMELAPSE"  : True,
         "STARTRAILS_TIMELAPSE_MINFRAMES" : 250,
         "STARTRAILS_SUN_ALT_THOLD"       : -15.0,
         "STARTRAILS_MOONMODE_THOLD"      : True,
         "STARTRAILS_MOON_ALT_THOLD"      : 91.0,
         "STARTRAILS_MOON_PHASE_THOLD"    : 101.0,
+        "STARTRAILS_USE_DB_DATA"         : True,
         "IMAGE_EXIF_PRIVACY" : False,
         "IMAGE_FILE_TYPE" : "jpg",  # jpg, png, or tif
         "IMAGE_FILE_COMPRESSION" : {

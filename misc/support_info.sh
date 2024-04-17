@@ -85,6 +85,7 @@ echo "#################################"
 
 sleep 3
 
+echo "\`\`\`"  # markdown
 echo
 echo "Distribution: $DISTRO_ID"
 echo "Release: $DISTRO_VERSION_ID"
@@ -251,6 +252,7 @@ else
     echo
 fi
 
+echo "\`\`\`"  # markdown
 echo "#################################"
 echo "###     end support info      ###"
 echo "#################################"

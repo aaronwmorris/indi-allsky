@@ -762,6 +762,8 @@ class VideoWorker(Process):
         kg.angle = self.config['KEOGRAM_ANGLE']
         kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
         kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
+        kg.crop_top = self.config.get('KEOGRAM_CROP_TOP', 0)
+        kg.crop_bottom = self.config.get('KEOGRAM_CROP_BOTTOM', 0)
 
 
         keogram_metadata = {
@@ -849,9 +851,10 @@ class VideoWorker(Process):
             self.bin_v,
             mask=self._detection_mask,
         )
-        stg.max_brightness = self.config['STARTRAILS_MAX_ADU']
+        stg.max_adu = self.config['STARTRAILS_MAX_ADU']
         stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
         stg.pixel_cutoff_threshold = self.config['STARTRAILS_PIXEL_THOLD']
+        stg.min_stars = self.config.get('STARTRAILS_MIN_STARS', 0)
         stg.latitude = camera.latitude
         stg.longitude = camera.longitude
         stg.sun_alt_threshold = self.config['STARTRAILS_SUN_ALT_THOLD']
@@ -863,43 +866,53 @@ class VideoWorker(Process):
             stg.moon_alt_threshold = self.config['STARTRAILS_MOON_ALT_THOLD']
             stg.moon_phase_threshold = self.config['STARTRAILS_MOON_PHASE_THOLD']
 
+        if self.config.get('STARTRAILS_USE_DB_DATA', True):
+            logger.warning('Re-using image data for ADU and Star counts')
+        else:
+            logger.warning('Recalculating values for ADU and Star counts')
 
         # Files are presorted from the DB
         for i, entry in enumerate(files_entries):
             if i % 100 == 0:
                 logger.info('Processed %d of %d images', i, image_count)
 
-            p_entry = Path(entry.getFilesystemPath())
+            image_file_p = Path(entry.getFilesystemPath())
 
-            if not p_entry.exists():
-                logger.error('File not found: %s', p_entry)
+            if not image_file_p.exists():
+                logger.error('File not found: %s', image_file_p)
                 continue
 
-            if p_entry.stat().st_size == 0:
+            if image_file_p.stat().st_size == 0:
                 continue
 
 
             #logger.info('Reading file: %s', p_entry)
-            if p_entry.suffix in ('.png',):
+            if image_file_p.suffix in ('.png',):
                 # opencv is faster than Pillow with PNG
-                image = cv2.imread(str(p_entry), cv2.IMREAD_COLOR)
+                image_data = cv2.imread(str(image_file_p), cv2.IMREAD_COLOR)
 
-                if isinstance(image, type(None)):
-                    logger.error('Unable to read %s', p_entry)
+                if isinstance(image_data, type(None)):
+                    logger.error('Unable to read %s', image_file_p)
                     continue
             else:
                 try:
-                    with Image.open(str(p_entry)) as img:
-                        image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+                    with Image.open(str(image_file_p)) as img:
+                        image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
                 except PIL.UnidentifiedImageError:
-                    logger.error('Unable to read %s', p_entry)
+                    logger.error('Unable to read %s', image_file_p)
                     continue
 
 
-            kg.processImage(p_entry, image)
+            kg.processImage(image_file_p, image_data)
 
             if night:
-                stg.processImage(p_entry, image)
+                if self.config.get('STARTRAILS_USE_DB_DATA', True):
+                    adu = entry.adu
+                    star_count = entry.stars  # can be None
+                else:
+                    adu, star_count = None, None
+
+                stg.processImage(image_file_p, image_data, adu=adu, star_count=star_count)
 
 
         kg.finalize(keogram_file, camera)
