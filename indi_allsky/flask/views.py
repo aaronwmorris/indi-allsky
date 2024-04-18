@@ -1536,9 +1536,13 @@ class ConfigView(FormView):
         filetransfer__libcurl_options = self.indi_allsky_config.get('FILETRANSFER', {}).get('LIBCURL_OPTIONS', {})
         form_data['FILETRANSFER__LIBCURL_OPTIONS'] = json.dumps(filetransfer__libcurl_options, indent=4)
 
+
         # INDI config as json text
         indi_config_defaults = self.indi_allsky_config.get('INDI_CONFIG_DEFAULTS', {})
         form_data['INDI_CONFIG_DEFAULTS'] = json.dumps(indi_config_defaults, indent=4)
+
+        indi_config_day = self.indi_allsky_config.get('INDI_CONFIG_DAY', {})
+        form_data['INDI_CONFIG_DAY'] = json.dumps(indi_config_day, indent=4)
 
 
         # populated from flask config
@@ -1950,6 +1954,7 @@ class AjaxConfigView(BaseView):
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
+        self.indi_allsky_config['INDI_CONFIG_DAY']                      = json.loads(str(request.json['INDI_CONFIG_DAY']))
         self.indi_allsky_config['ENCRYPT_PASSWORDS']                    = bool(request.json['ENCRYPT_PASSWORDS'])
 
         # Not a config option

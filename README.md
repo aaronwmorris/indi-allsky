@@ -6,11 +6,12 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 
 ## New Features
+* Use star metrics (in addition to ADU) for star trails generation
 * Generate thumbnails to reduce load time in Timelapse view
 * Panorama timelapse generation
+* Fish-eye to Panoramic perspective
 * Upload timelapse videos directly to YouTube
 * Cardinal direction labels
-* Fish-eye to Panoramic perspective
 * Satellite tracking and visibility info
 * Wildfire smoke reporting *(North America only)*
 * Aurora prediction and Kp-index reporting

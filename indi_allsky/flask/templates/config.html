@@ -526,6 +526,23 @@
         </div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.INDI_CONFIG_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-6">
+            {{ form_config.INDI_CONFIG_DAY(class='form-control bg-secondary', rows='4') }}
+            <div id="INDI_CONFIG_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            <div>Day specific configuration.</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> If no config is defined, the night config is used.</div>
+        </div>
+    </div>
+
+
 </div><!-- end camera tab -->
 <div class="tab-pane fade" id="nav-image" role="tabpanel" aria-labelledby="nav-image-tab">
 
@@ -4134,6 +4151,7 @@ const field_names = [
     'PYCURL_CAMERA__USERNAME',
     'PYCURL_CAMERA__PASSWORD',
     'INDI_CONFIG_DEFAULTS',
+    'INDI_CONFIG_DAY',
     'CONFIG_NOTE',
 ];
 

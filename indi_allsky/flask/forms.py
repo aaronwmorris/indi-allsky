@@ -2099,13 +2099,9 @@ def INDI_CONFIG_DEFAULTS_validator(form, field):
             if not isinstance(v[k2], list):
                 raise ValidationError('Switch {0:s} "{1:s}" value must be a list'.format(k, k2))
 
-            #if k2 == 'on':
-            #    if len(v[k2]) == 0:
-            #        raise ValidationError('Switch {0:s} "on" value have at least one item'.format(k))
 
-
-        #if 'on' not in v.keys():
-        #    raise ValidationError('Switch {0:s} requires at least one "on" key'.format(k))
+def INDI_CONFIG_DAY_validator(*args):
+    INDI_CONFIG_DEFAULTS_validator(*args)
 
 
 class IndiAllskyConfigForm(FlaskForm):
@@ -2628,7 +2624,8 @@ class IndiAllskyConfigForm(FlaskForm):
     PYCURL_CAMERA__URL               = StringField('pyCurl Camera URL', validators=[PYCURL_CAMERA__URL_validator])
     PYCURL_CAMERA__USERNAME          = StringField('Username', validators=[PYCURL_CAMERA__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
     PYCURL_CAMERA__PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[PYCURL_CAMERA__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
-    INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Configuration', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
+    INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
+    INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
     RELOAD_ON_SAVE                   = BooleanField('Reload on Save')
     CONFIG_NOTE                      = StringField('Config Note')
