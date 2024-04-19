@@ -152,6 +152,10 @@ echo "video device Permissions"
 ls -l /dev/video* || true
 echo
 
+echo "v4l info"
+v4l2-ctl --list-devices || true
+echo
+
 echo "Module info"
 lsmod
 echo
