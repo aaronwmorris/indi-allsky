@@ -1,6 +1,6 @@
 
 # docker- prefix due to files in docker/ folder
-FROM docker-indi.base as indi.allsky.base
+FROM docker_indi.base as indi.allsky.base
 
 ARG DEBIAN_FRONTEND=noninteractive
 
