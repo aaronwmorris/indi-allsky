@@ -1034,10 +1034,10 @@ class JsonChartView(JsonView):
             sqm_roi = self.indi_allsky_config.get('SQM_ROI', [])
 
             try:
-                x1 = int(sqm_roi[0] / self.bin_v.value)
-                y1 = int(sqm_roi[1] / self.bin_v.value)
-                x2 = int(sqm_roi[2] / self.bin_v.value)
-                y2 = int(sqm_roi[3] / self.bin_v.value)
+                x1 = sqm_roi[0]  # these values may be invalid due to binning
+                y1 = sqm_roi[1]
+                x2 = sqm_roi[2]
+                y2 = sqm_roi[3]
             except IndexError:
                 sqm_fov_div = self.indi_allsky_config.get('SQM_FOV_DIV', 4)
                 x1 = int((image_width / 2) - (image_width / sqm_fov_div))
