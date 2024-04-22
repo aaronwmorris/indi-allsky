@@ -32,11 +32,8 @@ async function loop() {
     console.log('Starting loop');
 
     while(json_data['latest_image']['url'] == null) {
-        $('#message').html(json_data['latest_image']['message']);
         await sleep(100);
     }
-
-    $('#message').css({'display' : 'none'});
 
     showImage(json_data['latest_image']);
 
@@ -91,9 +88,11 @@ function loadJS(url, data, onDone, onError) {
         data: data,
         success: function(data){
             json_data = data
+            $('#message').text(json_data['latest_image']['message']);
         },
         error: function(data){
             onError(data.status);
+            $('#message').text('Error loading data.  Please check the logs.');
         },
     });
 

@@ -35,8 +35,6 @@ async function loop() {
         await sleep(100);
     }
 
-    $('#message').css({'display' : 'none'});
-
     // prevent concurrent updates to list
     var image_list_copy = JSON.parse(JSON.stringify(json_data['image_list']));
 
@@ -120,9 +118,12 @@ function loadJS(url, data, onDone, onError) {
         data: data,
         success: function(data){
             json_data = data
+            $('#message').text('');
         },
         error: function(data){
             onError(data.status);
+            $('#message').text('Error loading data.  Please check the logs.');
+
         },
     });
 

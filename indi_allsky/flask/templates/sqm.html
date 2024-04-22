@@ -32,8 +32,6 @@ async function loop() {
         await sleep(100);
     }
 
-    $('#message').css({'display' : 'none'});
-
     showImage(json_data['image_list'][0]);
 
     setTimeout(loop, refreshInterval);
@@ -168,9 +166,11 @@ function loadJS(url, data, onDone, onError) {
         data: data,
         success: function(data){
             json_data = data
+            $('#message').text('');
         },
         error: function(data){
             onError(data.status);
+            $('#message').text('Error loading data.  Please check the logs.');
         },
     });
 
