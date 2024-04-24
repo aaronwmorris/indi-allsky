@@ -12,7 +12,7 @@ Pillow
 bottleneck
 ephem
 # https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
-gunicorn[gthread] >= 21.2.0
+gunicorn[gthread] >= 22.0.0
 inotify
 psutil
 Flask >= 3.0.0

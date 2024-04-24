@@ -2545,6 +2545,8 @@ class SystemInfoView(TemplateView):
         import flask
         import numpy
         import cv2
+        import gunicorn
+        import cryptography
 
         try:
             import pycurl
@@ -2624,6 +2626,8 @@ class SystemInfoView(TemplateView):
         context['python_version'] = platform.python_version()
         context['python_platform'] = platform.machine()
 
+        context['gunicorn_version'] = str(getattr(gunicorn, '__version__', -1))
+        context['cryptography_version'] = str(getattr(cryptography, '__version__', -1))
         context['cv2_version'] = str(getattr(cv2, '__version__', -1))
         context['ephem_version'] = str(getattr(ephem, '__version__', -1))
         context['numpy_version'] = str(getattr(numpy, '__version__', -1))
