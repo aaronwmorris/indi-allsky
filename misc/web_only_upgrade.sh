@@ -210,21 +210,6 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
         VIRTUALENV_REQ=requirements/requirements_latest.txt
     fi
 
-elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "18.04" ]]; then
-    PYTHON_BIN=python3.8
-
-    if [ "$CPU_ARCH" == "armv7l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
-    elif [ "$CPU_ARCH" == "i686" ]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
-    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
-    elif [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "32" ]]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
-    else
-        VIRTUALENV_REQ=requirements/requirements_latest.txt
-    fi
-
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1

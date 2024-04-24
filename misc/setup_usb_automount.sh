@@ -143,15 +143,6 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
         exfat-utils \
         dosfstools
 
-elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "18.04" ]]; then
-
-    sudo apt-get update
-    sudo apt-get -y install \
-        udisks2 \
-        udiskie \
-        exfat-utils \
-        dosfstools
-
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
