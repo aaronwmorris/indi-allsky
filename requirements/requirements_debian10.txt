@@ -40,7 +40,7 @@ imageio-ffmpeg
 #imagecodecs
 #rawpy  # not needed
 pygifsicle
-gunicorn[gthread] >= 21.2.0
+gunicorn[gthread] >= 22.0.0
 inotify
 psutil
 # Last version supporting Python 3.7

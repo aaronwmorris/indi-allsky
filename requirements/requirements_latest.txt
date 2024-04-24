@@ -28,7 +28,7 @@ imageio-ffmpeg
 cython
 rawpy
 pygifsicle
-gunicorn[gthread] >= 21.2.0
+gunicorn[gthread] >= 22.0.0
 inotify
 psutil
 Flask >= 3.0.0
