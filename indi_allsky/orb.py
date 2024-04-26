@@ -372,7 +372,7 @@ class IndiAllskyOrbGenerator(object):
 
 
         if self.retrograde:
-            ha_deg -= 360
+            ha_deg = 360 - ha_deg
 
 
         if ha_deg < -180:
@@ -665,7 +665,7 @@ class IndiAllskyOrbGenerator(object):
 
 
         if self.retrograde:
-            az_deg -= 360
+            az_deg = 360 - az_deg
 
 
         # For now, I am too lazy to fix the calculations below (pulled from hour angle code)
