@@ -253,6 +253,8 @@ class IndiAllSkyConfigBase(object):
             "RADIUS"         : 9,
             "SUN_COLOR"      : [200, 200, 0],
             "MOON_COLOR"     : [128, 128, 128],
+            "AZ_OFFSET"      : 0.0,
+            "RETROGRADE"     : False,
         },
         "UPLOAD_WORKERS" : 2,
         "FILETRANSFER" : {
