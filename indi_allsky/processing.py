@@ -1843,12 +1843,17 @@ class ImageProcessor(object):
 
         ### ORBS
         orb_mode = self.config.get('ORB_PROPERTIES', {}).get('MODE', 'ha')
+
+        self._orb.text_color_rgb = self.text_color_rgb
+        self._orb.sun_color_rgb = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
+        self._orb.moon_color_rgb = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
+
         if orb_mode == 'ha':
-            self._orb.drawOrbsHourAngle_opencv(self.image, utcnow, self.text_color_bgr, obs, sun, moon)
+            self._orb.drawOrbsHourAngle_opencv(self.image, utcnow, obs, sun, moon)
         elif orb_mode == 'az':
-            self._orb.drawOrbsAzimuth_opencv(self.image, utcnow, self.text_color_bgr, obs, sun, moon)
+            self._orb.drawOrbsAzimuth_opencv(self.image, utcnow, obs, sun, moon)
         elif orb_mode == 'alt':
-            self._orb.drawOrbsAltitude_opencv(self.image, utcnow, self.text_color_bgr, obs, sun, moon)
+            self._orb.drawOrbsAltitude_opencv(self.image, utcnow, obs, sun, moon)
         elif orb_mode == 'off':
             # orbs disabled
             pass

@@ -16,8 +16,90 @@ class IndiAllskyOrbGenerator(object):
     def __init__(self, config):
         self.config = config
 
+        self._text_color_rgb = [255, 255, 255]
+        self._sun_color_rgb = [255, 255, 255]
+        self._moon_color_rgb = [255, 255, 255]
 
-    def drawOrbsHourAngle_opencv(self, data_bytes, utcnow, color_bgr, obs, sun, moon):
+
+    @property
+    def text_color_rgb(self):
+        return self._text_color_rgb
+
+    @text_color_rgb.setter
+    def text_color_rgb(self, x):
+        if len(x) != 3:
+            logger.error('Color format error')
+            return
+
+        self._text_color_rgb = [int(x[0]), int(x[1]), int(x[2])]
+
+
+    @property
+    def text_color_bgr(self):
+        return [self._text_color_rgb[2], self._text_color_rgb[1], self._text_color_rgb[0]]  # reversed
+
+    @text_color_bgr.setter
+    def text_color_bgr(self, x):
+        if len(x) != 3:
+            logger.error('Color format error')
+            return
+
+        self._text_color_rgb = [int(x[2]), int(x[1]), int(x[0])]  # reversed
+
+
+    @property
+    def sun_color_rgb(self):
+        return self._sun_color_rgb
+
+    @sun_color_rgb.setter
+    def sun_color_rgb(self, x):
+        if len(x) != 3:
+            logger.error('Color format error')
+            return
+
+        self._sun_color_rgb = [int(x[0]), int(x[1]), int(x[2])]
+
+
+    @property
+    def sun_color_bgr(self):
+        return [self._sun_color_rgb[2], self._sun_color_rgb[1], self._sun_color_rgb[0]]  # reversed
+
+    @sun_color_bgr.setter
+    def sun_color_bgr(self, x):
+        if len(x) != 3:
+            logger.error('Color format error')
+            return
+
+        self._sun_color_rgb = [int(x[2]), int(x[1]), int(x[0])]  # reversed
+
+
+    @property
+    def moon_color_rgb(self):
+        return self._moon_color_rgb
+
+    @moon_color_rgb.setter
+    def moon_color_rgb(self, x):
+        if len(x) != 3:
+            logger.error('Color format error')
+            return
+
+        self._moon_color_rgb = [int(x[0]), int(x[1]), int(x[2])]
+
+
+    @property
+    def moon_color_bgr(self):
+        return [self._moon_color_rgb[2], self._moon_color_rgb[1], self._moon_color_rgb[0]]  # reversed
+
+    @moon_color_bgr.setter
+    def moon_color_bgr(self, x):
+        if len(x) != 3:
+            logger.error('Color format error')
+            return
+
+        self._moon_color_rgb = [int(x[2]), int(x[1]), int(x[0])]  # reversed
+
+
+    def drawOrbsHourAngle_opencv(self, data_bytes, utcnow, obs, sun, moon):
         image_height, image_width = data_bytes.shape[:2]
 
         obs.date = utcnow
@@ -30,19 +112,10 @@ class IndiAllskyOrbGenerator(object):
 
 
         # Sun
-        sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
-        sun_color_bgr.reverse()
-
-        self.drawEdgeCircle_opencv(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
-
+        self.drawEdgeCircle_opencv(data_bytes, (sunOrbX, sunOrbY), self.sun_color_bgr)
 
         # Moon
-        moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
-        moon_color_bgr.reverse()
-
-        self.drawEdgeCircle_opencv(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
-
-
+        self.drawEdgeCircle_opencv(data_bytes, (moonOrbX, moonOrbY), self.moon_color_bgr)
 
 
         obs.date = utcnow  # reset
@@ -225,7 +298,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunNightDayX, sunNightDayY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine_opencv(data_bytes, (sunNightDayX, sunNightDayY), color_bgr)
+            self.drawEdgeLine_opencv(data_bytes, (sunNightDayX, sunNightDayY), self.text_color_bgr)
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -246,7 +319,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunDayNightX, sunDayNightY = self.getOrbHourAngleXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine_opencv(data_bytes, (sunDayNightX, sunDayNightY), color_bgr)
+            self.drawEdgeLine_opencv(data_bytes, (sunDayNightX, sunDayNightY), self.text_color_bgr)
         except ephem.AlwaysUpError:
             # northern hemisphere
             pass
@@ -311,7 +384,7 @@ class IndiAllskyOrbGenerator(object):
         return int(x), int(y)
 
 
-    def drawOrbsAzimuth_opencv(self, data_bytes, utcnow, color_bgr, obs, sun, moon):
+    def drawOrbsAzimuth_opencv(self, data_bytes, utcnow, obs, sun, moon):
         image_height, image_width = data_bytes.shape[:2]
 
         obs.date = utcnow
@@ -324,17 +397,10 @@ class IndiAllskyOrbGenerator(object):
 
 
         # Sun
-        sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
-        sun_color_bgr.reverse()
-
-        self.drawEdgeCircle_opencv(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
-
+        self.drawEdgeCircle_opencv(data_bytes, (sunOrbX, sunOrbY), self.sun_color_bgr)
 
         # Moon
-        moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
-        moon_color_bgr.reverse()
-
-        self.drawEdgeCircle_opencv(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
+        self.drawEdgeCircle_opencv(data_bytes, (moonOrbX, moonOrbY), self.moon_color_bgr)
 
 
         obs.date = utcnow  # reset
@@ -517,7 +583,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunNightDayX, sunNightDayY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine_opencv(data_bytes, (sunNightDayX, sunNightDayY), color_bgr)
+            self.drawEdgeLine_opencv(data_bytes, (sunNightDayX, sunNightDayY), self.text_color_bgr)
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -538,7 +604,7 @@ class IndiAllskyOrbGenerator(object):
             sun.compute(obs)
             sunDayNightX, sunDayNightY = self.getOrbAzimuthXY(sun, obs, (image_height, image_width))
 
-            self.drawEdgeLine_opencv(data_bytes, (sunDayNightX, sunDayNightY), color_bgr)
+            self.drawEdgeLine_opencv(data_bytes, (sunDayNightX, sunDayNightY), self.text_color_bgr)
         except ephem.NeverUpError:
             # northern hemisphere
             pass
@@ -602,7 +668,7 @@ class IndiAllskyOrbGenerator(object):
         return int(x), int(y)
 
 
-    def drawOrbsAltitude_opencv(self, data_bytes, utcnow, color_bgr, obs, sun, moon):
+    def drawOrbsAltitude_opencv(self, data_bytes, utcnow, obs, sun, moon):
         image_height, image_width = data_bytes.shape[:2]
 
         obs.date = utcnow
@@ -615,17 +681,11 @@ class IndiAllskyOrbGenerator(object):
 
 
         # Sun
-        sun_color_bgr = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
-        sun_color_bgr.reverse()
-
-        self.drawEdgeCircle_opencv(data_bytes, (sunOrbX, sunOrbY), sun_color_bgr)
+        self.drawEdgeCircle_opencv(data_bytes, (sunOrbX, sunOrbY), self.sun_color_bgr)
 
 
         # Moon
-        moon_color_bgr = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
-        moon_color_bgr.reverse()
-
-        self.drawEdgeCircle_opencv(data_bytes, (moonOrbX, moonOrbY), moon_color_bgr)
+        self.drawEdgeCircle_opencv(data_bytes, (moonOrbX, moonOrbY), self.moon_color_bgr)
 
 
         # Sunrise
@@ -693,14 +753,14 @@ class IndiAllskyOrbGenerator(object):
         sunNightDayY = self.remap(self.config['NIGHT_SUN_ALT_DEG'], -90.0, 90.0, 0.0, image_height)
         sunNightDayY = image_height - sunNightDayY  # need to map from the top down
 
-        self.drawEdgeLine_opencv(data_bytes, (sunNightDayX, int(sunNightDayY)), color_bgr)
+        self.drawEdgeLine_opencv(data_bytes, (sunNightDayX, int(sunNightDayY)), self.text_color_bgr)
 
 
         # Day/Night
         sunDayNightX = 0
         sunDayNightY = sunNightDayY  # reuse
 
-        self.drawEdgeLine_opencv(data_bytes, (sunDayNightX, int(sunDayNightY)), color_bgr)
+        self.drawEdgeLine_opencv(data_bytes, (sunDayNightX, int(sunDayNightY)), self.text_color_bgr)
 
 
     def getOrbAltitudeXY(self, skyObj, obs, image_size, utcnow):
@@ -781,7 +841,6 @@ class IndiAllskyOrbGenerator(object):
             thickness=self.line_thickness,
             lineType=lineType,
         )
-
 
 
     def remap(self, x, in_min, in_max, out_min, out_max):
