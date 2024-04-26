@@ -1418,11 +1418,11 @@ def ORB_PROPERTIES__AZ_OFFSET_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
-    if field.data < -360:
-        raise ValidationError('Azimuth Offset must be greater than -360')
+    if field.data < -180:
+        raise ValidationError('Azimuth Offset must be greater than -180')
 
-    if field.data > 360:
-        raise ValidationError('Azimuth Offset must be less than 360')
+    if field.data > 180:
+        raise ValidationError('Azimuth Offset must be less than 180')
 
 
 def UPLOAD_WORKERS_validator(form, field):
