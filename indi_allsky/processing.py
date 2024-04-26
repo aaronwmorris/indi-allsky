@@ -1844,9 +1844,10 @@ class ImageProcessor(object):
         ### ORBS
         orb_mode = self.config.get('ORB_PROPERTIES', {}).get('MODE', 'ha')
 
+        self._orb.sun_alt_deg = self.config['NIGHT_SUN_ALT_DEG']
         self._orb.text_color_rgb = self.text_color_rgb
-        self._orb.sun_color_rgb = list(self.config['ORB_PROPERTIES']['SUN_COLOR'])
-        self._orb.moon_color_rgb = list(self.config['ORB_PROPERTIES']['MOON_COLOR'])
+        self._orb.sun_color_rgb = self.config['ORB_PROPERTIES']['SUN_COLOR']
+        self._orb.moon_color_rgb = self.config['ORB_PROPERTIES']['MOON_COLOR']
 
         if orb_mode == 'ha':
             self._orb.drawOrbsHourAngle_opencv(self.image, utcnow, obs, sun, moon)

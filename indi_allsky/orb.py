@@ -16,9 +16,20 @@ class IndiAllskyOrbGenerator(object):
     def __init__(self, config):
         self.config = config
 
+        self._sun_alt_deg = -6.0
+
         self._text_color_rgb = [255, 255, 255]
         self._sun_color_rgb = [255, 255, 255]
         self._moon_color_rgb = [255, 255, 255]
+
+
+    @property
+    def sun_alt_deg(self):
+        return self._sun_alt_deg
+
+    @sun_alt_deg.setter
+    def sun_alt_deg(self, new_alt):
+        self._sun_alt_deg = float(new_alt)
 
 
     @property
@@ -291,7 +302,7 @@ class IndiAllskyOrbGenerator(object):
 
         # Night/Day boundary
         try:
-            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            obs.horizon = math.radians(self.sun_alt_deg)
             sun_nightDay_date = obs.next_rising(sun, use_center=True)
 
             obs.date = sun_nightDay_date
@@ -312,7 +323,7 @@ class IndiAllskyOrbGenerator(object):
 
         # Day/Night boundary
         try:
-            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            obs.horizon = math.radians(self.sun_alt_deg)
             sun_dayNight_date = obs.next_setting(sun, use_center=True)
 
             obs.date = sun_dayNight_date
@@ -576,7 +587,7 @@ class IndiAllskyOrbGenerator(object):
 
         # Night/Day
         try:
-            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            obs.horizon = math.radians(self.sun_alt_deg)
             sun_nightDay_date = obs.next_rising(sun, use_center=True)
 
             obs.date = sun_nightDay_date
@@ -597,7 +608,7 @@ class IndiAllskyOrbGenerator(object):
 
         # Day/Night
         try:
-            obs.horizon = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+            obs.horizon = math.radians(self.sun_alt_deg)
             sun_dayNight_date = obs.next_setting(sun, use_center=True)
 
             obs.date = sun_dayNight_date
@@ -750,7 +761,7 @@ class IndiAllskyOrbGenerator(object):
 
         # Night/Day
         sunNightDayX = image_width
-        sunNightDayY = self.remap(self.config['NIGHT_SUN_ALT_DEG'], -90.0, 90.0, 0.0, image_height)
+        sunNightDayY = self.remap(self.sun_alt_deg, -90.0, 90.0, 0.0, image_height)
         sunNightDayY = image_height - sunNightDayY  # need to map from the top down
 
         self.drawEdgeLine_opencv(data_bytes, (sunNightDayX, int(sunNightDayY)), self.text_color_bgr)
