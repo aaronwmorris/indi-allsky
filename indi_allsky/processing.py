@@ -152,13 +152,20 @@ class ImageProcessor(object):
         self.image_list = [None]  # element will be removed on first image
 
         self._stretch = IndiAllSkyStretch(self.config, self.bin_v, self.night_v, self.moonmode_v, mask=self._detection_mask)
-        self._orb = IndiAllskyOrbGenerator(self.config)
+
         self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
         self._stars_detect = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
         self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)
         self._scnr = IndiAllskyScnr(self.config)
         self._cardinal_dirs_label = IndiAllskyCardinalDirsLabel(self.config)
+
+        self._orb = IndiAllskyOrbGenerator(self.config)
+        self._orb.sun_alt_deg = self.config['NIGHT_SUN_ALT_DEG']
+        self._orb.azimuth_offset = self.config['ORB_PROPERTIES'].get('AZ_OFFSET', 0.0)
+        self._orb.retrograde = self.config['ORB_PROPERTIES'].get('RETROGRADE', False)
+        self._orb.sun_color_rgb = self.config['ORB_PROPERTIES']['SUN_COLOR']
+        self._orb.moon_color_rgb = self.config['ORB_PROPERTIES']['MOON_COLOR']
 
         self._stacker = IndiAllskyStacker(self.config, self.bin_v, mask=self._detection_mask)
         self._stacker.detection_sigma = self.config.get('IMAGE_ALIGN_DETECTSIGMA', 5)
@@ -1844,10 +1851,7 @@ class ImageProcessor(object):
         ### ORBS
         orb_mode = self.config.get('ORB_PROPERTIES', {}).get('MODE', 'ha')
 
-        self._orb.sun_alt_deg = self.config['NIGHT_SUN_ALT_DEG']
         self._orb.text_color_rgb = self.text_color_rgb
-        self._orb.sun_color_rgb = self.config['ORB_PROPERTIES']['SUN_COLOR']
-        self._orb.moon_color_rgb = self.config['ORB_PROPERTIES']['MOON_COLOR']
 
         if orb_mode == 'ha':
             self._orb.drawOrbsHourAngle_opencv(self.image, utcnow, obs, sun, moon)

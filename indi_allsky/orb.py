@@ -17,7 +17,7 @@ class IndiAllskyOrbGenerator(object):
         self.config = config
 
         self._sun_alt_deg = -6.0
-        self._azimuth_offset = 40.0
+        self._azimuth_offset = 0.0
         self._retrograde = False
 
         self._text_color_rgb = [255, 255, 255]
