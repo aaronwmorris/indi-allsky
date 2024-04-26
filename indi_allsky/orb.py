@@ -17,6 +17,8 @@ class IndiAllskyOrbGenerator(object):
         self.config = config
 
         self._sun_alt_deg = -6.0
+        self._azimuth_offset = 40.0
+        self._retrograde = False
 
         self._text_color_rgb = [255, 255, 255]
         self._sun_color_rgb = [255, 255, 255]
@@ -30,6 +32,24 @@ class IndiAllskyOrbGenerator(object):
     @sun_alt_deg.setter
     def sun_alt_deg(self, new_alt):
         self._sun_alt_deg = float(new_alt)
+
+
+    @property
+    def azimuth_offset(self):
+        return self._azimuth_offset
+
+    @azimuth_offset.setter
+    def azimuth_offset(self, new_az_offset):
+        self._azimuth_offset = float(new_az_offset)
+
+
+    @property
+    def retrograde(self):
+        return self._retrograde
+
+    @retrograde.setter
+    def retrograde(self, new_retrograde):
+        self._retrograde = bool(new_retrograde)
 
 
     @property
@@ -346,12 +366,22 @@ class IndiAllskyOrbGenerator(object):
         ha_rad = obs.sidereal_time() - skyObj.ra
         ha_deg = math.degrees(ha_rad)
 
+
+        # add azimuth offset
+        ha_deg += self.azimuth_offset
+
+
+        if self.retrograde:
+            ha_deg -= 360
+
+
         if ha_deg < -180:
             ha_deg = 360 + ha_deg
         elif ha_deg > 180:
             ha_deg = -360 + ha_deg
         else:
             pass
+
 
         #logger.info('%s hour angle: %0.2f @ %s', skyObj.name, ha_deg, obs.date)
 
@@ -630,6 +660,14 @@ class IndiAllskyOrbGenerator(object):
         az_deg = math.degrees(skyObj.az)
 
 
+        # add azimuth offset
+        az_deg += self.azimuth_offset
+
+
+        if self.retrograde:
+            az_deg -= 360
+
+
         # For now, I am too lazy to fix the calculations below (pulled from hour angle code)
         if az_deg < 180:
             az_deg = az_deg * -1
@@ -778,6 +816,8 @@ class IndiAllskyOrbGenerator(object):
         image_height, image_width = image_size
 
         alt_deg = math.degrees(skyObj.alt)
+        # do not offset azimuth
+        # do not reverse motion
 
         skyObj_transit_date = obs.next_transit(skyObj).datetime()
         skyObj_transit_delta = skyObj_transit_date - utcnow.replace(tzinfo=None)
