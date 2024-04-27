@@ -1703,12 +1703,12 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.IMAGE_FITS_PRE_DARK.label }}
+            {{ form_config.IMAGE_SAVE_FITS_PRE_DARK.label }}
         </div>
         <div class="col-sm-2">
             <div class="form-switch">
-                {{ form_config.IMAGE_FITS_PRE_DARK(class='form-check-input') }}
-                <div id="IMAGE_FITS_PRE_DARK-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                {{ form_config.IMAGE_SAVE_FITS_PRE_DARK(class='form-check-input') }}
+                <div id="IMAGE_SAVE_FITS_PRE_DARK-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">Save FITS files before subtracting dark calibration</div>
@@ -4245,7 +4245,7 @@ const checkbox_field_names = [
     'IMAGE_STACK_ALIGN',
     'IMAGE_STACK_SPLIT',
     'IMAGE_CALIBRATE_DARK',
-    'IMAGE_FITS_PRE_DARK',
+    'IMAGE_SAVE_FITS_PRE_DARK',
     'THUMBNAILS__IMAGES_AUTO',
     'NIGHT_GRAYSCALE',
     'DAYTIME_GRAYSCALE',

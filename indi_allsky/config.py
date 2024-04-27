@@ -183,7 +183,7 @@ class IndiAllSkyConfigBase(object):
             "MODULUS"  : 2,
         },
         "IMAGE_SAVE_FITS"     : False,
-        "IMAGE_FITS_PRE_DARK" : False,
+        "IMAGE_SAVE_FITS_PRE_DARK" : False,
         "IMAGE_EXPORT_RAW"    : "",  # png or tif (or empty)
         "IMAGE_EXPORT_FOLDER" : "/var/www/html/allsky/images/export",
         "IMAGE_EXPORT_FLIP_V" : False,

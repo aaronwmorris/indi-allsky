@@ -358,7 +358,7 @@ class ImageWorker(Process):
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
-            if self.config.get('IMAGE_FITS_PRE_DARK'):
+            if self.config.get('IMAGE_SAVE_FITS_PRE_DARK'):
                 logger.warning('Saving FITS without dark frame calibration')
                 self.write_fit(i_ref, camera)
 
@@ -370,7 +370,7 @@ class ImageWorker(Process):
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
-            if not self.config.get('IMAGE_FITS_PRE_DARK'):
+            if not self.config.get('IMAGE_SAVE_FITS_PRE_DARK'):
                 self.write_fit(i_ref, camera)
 
 
