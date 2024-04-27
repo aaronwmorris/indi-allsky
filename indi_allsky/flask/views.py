@@ -4538,6 +4538,7 @@ class ImageProcessingView(TemplateView):
             'FISH2PANO__ROTATE_ANGLE'        : self.indi_allsky_config.get('FISH2PANO', {}).get('ROTATE_ANGLE', 0),
             'FISH2PANO__SCALE'               : self.indi_allsky_config.get('FISH2PANO', {}).get('SCALE', 0.3),
             'PROCESSING_SPLIT_SCREEN'        : False,
+            'IMAGE_CALIBRATE_DARK'           : False,  # darks are almost always already applied
         }
 
         # SQM_ROI
@@ -4585,6 +4586,7 @@ class JsonImageProcessingView(JsonView):
 
     def dispatch_request(self):
         import cv2
+        from astropy.io import fits
         from PIL import Image
 
 
@@ -4626,6 +4628,7 @@ class JsonImageProcessingView(JsonView):
         p_config = self.indi_allsky_config.copy()
 
         p_config['CCD_BIT_DEPTH']                        = int(request.json['CCD_BIT_DEPTH'])
+        p_config['IMAGE_CALIBRATE_DARK']                 = bool(request.json['IMAGE_CALIBRATE_DARK'])
         p_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
         p_config['CONTRAST_ENHANCE_16BIT']               = bool(request.json['CONTRAST_ENHANCE_16BIT'])
         p_config['CLAHE_CLIPLIMIT']                      = float(request.json['CLAHE_CLIPLIMIT'])
@@ -4675,8 +4678,16 @@ class JsonImageProcessingView(JsonView):
             p_config['SQM_ROI'] = []
 
 
+        hdulist = fits.open(filename_p)
 
+        exposure = float(hdulist[0].header['EXPTIME'])
+        gain_v = Value('i', int(hdulist[0].header['GAIN']))
+        bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
+        sensortemp_v = Value('f', float(hdulist[0].header.get('CCD-TEMP', 0)))
         night_v = Value('i', 1)  # using night values for processing
+
+        hdulist.close()
+
         moonmode_v = Value('i', 0)
         image_processor = ImageProcessor(
             p_config,
@@ -4686,9 +4697,9 @@ class JsonImageProcessingView(JsonView):
             None,  # ra_v
             None,  # dec_v
             None,  # exposure_v
-            None,  # gain_v
-            None,  # bin_v
-            None,  # sensortemp_v
+            gain_v,
+            bin_v,
+            sensortemp_v,
             night_v,
             moonmode_v,
             {},    # astrometric_data
@@ -4702,8 +4713,10 @@ class JsonImageProcessingView(JsonView):
         if disable_processing:
             # just return original image with no processing
 
-            i_ref = image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
-            i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)
+            i_ref = image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
+
+
+            i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)  # performs what calibrate() would do
 
 
             image_processor.stack()  # this populates self.image
@@ -4737,9 +4750,6 @@ class JsonImageProcessingView(JsonView):
 
         else:
             if p_config['IMAGE_STACK_COUNT'] > 1:
-                i_ref = image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
-                i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)
-
                 fits_image_query = IndiAllSkyDbFitsImageTable.query\
                     .join(IndiAllSkyDbFitsImageTable.camera)\
                     .filter(IndiAllSkyDbCameraTable.id == camera_id)\
@@ -4748,14 +4758,20 @@ class JsonImageProcessingView(JsonView):
                     .limit(p_config['IMAGE_STACK_COUNT'] - 1)
 
                 for f_image in fits_image_query:
-                    i_ref = image_processor.add(f_image.getFilesystemPath(), 0.0, datetime.now(), 0.0, f_image.camera)
-                    i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)
+                    alt_hdulist = fits.open(filename_p)
+                    alt_exposure = float(alt_hdulist[0].header['EXPTIME'])
+                    alt_hdulist.close()
+
+                    i_ref = image_processor.add(f_image.getFilesystemPath(), alt_exposure, datetime.now(), 0.0, f_image.camera)
+                    image_processor._calibrate(i_ref)
 
                 message_list.append('Stacked {0:d} images'.format(p_config['IMAGE_STACK_COUNT']))
-            else:
-                i_ref = image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
-                i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)
 
+
+            # add image after preloading other images
+            image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
+
+            image_processor.calibrate()  # sets opencv_data
 
             image_processor.stack()  # this populates self.image
 

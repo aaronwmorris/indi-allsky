@@ -648,6 +648,11 @@ class ImageProcessor(object):
 
     def calibrate(self, libcamera_black_level=None):
         i_ref = self.getLatestImage()
+        self._calibrate(i_ref, libcamera_black_level=libcamera_black_level)
+
+
+    def _calibrate(self, i_ref, libcamera_black_level=None):
+        # need this to be able to apply calibration frames to images other than the latest
 
         if not self.config.get('IMAGE_CALIBRATE_DARK', True):
             # disable dark frame calibration
@@ -662,7 +667,7 @@ class ImageProcessor(object):
 
 
         try:
-            calibrated_data = self._calibrate(i_ref['hdulist'][0].data, i_ref['exposure'], i_ref['camera_id'], i_ref['image_bitpix'])
+            calibrated_data = self._apply_calibration(i_ref['hdulist'][0].data, i_ref['exposure'], i_ref['camera_id'], i_ref['image_bitpix'])
             i_ref['hdulist'][0].data = calibrated_data
 
             i_ref['calibrated'] = True
@@ -685,7 +690,7 @@ class ImageProcessor(object):
         i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
 
 
-    def _calibrate(self, data, exposure, camera_id, image_bitpix):
+    def _apply_calibration(self, data, exposure, camera_id, image_bitpix):
         from astropy.io import fits
 
         # pick a bad pixel map that is closest to the exposure and temperature

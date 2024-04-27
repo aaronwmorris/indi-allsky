@@ -4295,6 +4295,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     DISABLE_PROCESSING               = BooleanField('Disable processing')
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
     FITS_ID                          = HiddenField('FITS ID', validators=[DataRequired()])
+    IMAGE_CALIBRATE_DARK             = BooleanField('Dark Frame Calibration')
     CCD_BIT_DEPTH                    = SelectField('Camera Bit Depth', choices=IndiAllskyConfigForm.CCD_BIT_DEPTH_choices, validators=[CCD_BIT_DEPTH_validator])
     NIGHT_CONTRAST_ENHANCE           = BooleanField('Contrast Enhance')
     CONTRAST_ENHANCE_16BIT           = BooleanField('16-bit Contrast Enhance')
