@@ -1407,8 +1407,22 @@ def ORB_PROPERTIES__MODE_validator(form, field):
 
 
 def ORB_PROPERTIES__RADIUS_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
     if field.data < 1:
         raise ValidationError('Orb radius must be 1 or more')
+
+
+def ORB_PROPERTIES__AZ_OFFSET_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < -180:
+        raise ValidationError('Azimuth Offset must be greater than -180')
+
+    if field.data > 180:
+        raise ValidationError('Azimuth Offset must be less than 180')
 
 
 def UPLOAD_WORKERS_validator(form, field):
@@ -2518,6 +2532,8 @@ class IndiAllskyConfigForm(FlaskForm):
     ORB_PROPERTIES__RADIUS           = IntegerField('Orb Radius', validators=[DataRequired(), ORB_PROPERTIES__RADIUS_validator])
     ORB_PROPERTIES__SUN_COLOR        = StringField('Sun Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     ORB_PROPERTIES__MOON_COLOR       = StringField('Moon Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
+    ORB_PROPERTIES__AZ_OFFSET        = FloatField('Azimuth Offset', validators=[ORB_PROPERTIES__AZ_OFFSET_validator])
+    ORB_PROPERTIES__RETROGRADE       = BooleanField('Reverse Orb Motion')
     UPLOAD_WORKERS                   = IntegerField('Upload Workers', validators=[DataRequired(), UPLOAD_WORKERS_validator])
     FILETRANSFER__CLASSNAME          = SelectField('Protocol', choices=FILETRANSFER__CLASSNAME_choices, validators=[DataRequired(), FILETRANSFER__CLASSNAME_validator])
     FILETRANSFER__HOST               = StringField('Host', validators=[FILETRANSFER__HOST_validator])

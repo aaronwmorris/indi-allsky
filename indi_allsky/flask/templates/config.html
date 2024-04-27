@@ -1575,6 +1575,32 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__AZ_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__AZ_OFFSET(class='form-control bg-secondary') }}
+            <div id="ORB_PROPERTIES__AZ_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ORB_PROPERTIES__RETROGRADE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ORB_PROPERTIES__RETROGRADE(class='form-check-input') }}
+                <div id="ORB_PROPERTIES__RETROGRADE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Reversing the direction also flips the orbs position horizontally</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.ORB_PROPERTIES__SUN_COLOR.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -4071,6 +4097,7 @@ const field_names = [
     'ORB_PROPERTIES__RADIUS',
     'ORB_PROPERTIES__SUN_COLOR',
     'ORB_PROPERTIES__MOON_COLOR',
+    'ORB_PROPERTIES__AZ_OFFSET',
     'UPLOAD_WORKERS',
     'FILETRANSFER__CLASSNAME',
     'FILETRANSFER__HOST',
@@ -4197,6 +4224,7 @@ const checkbox_field_names = [
     'CARDINAL_DIRS__SWAP_NS',
     'CARDINAL_DIRS__SWAP_EW',
     'CARDINAL_DIRS__OUTLINE_CIRCLE',
+    'ORB_PROPERTIES__RETROGRADE',
     'FILETRANSFER__CERT_BYPASS',
     'FILETRANSFER__UPLOAD_METADATA',
     'FILETRANSFER__UPLOAD_VIDEO',
