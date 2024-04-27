@@ -649,10 +649,17 @@ class ImageProcessor(object):
     def calibrate(self, libcamera_black_level=None):
         i_ref = self.getLatestImage()
 
+        if not self.config.get('IMAGE_CALIBRATE_DARK', True):
+            # disable dark frame calibration
+            i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
+            return
+
+
         if i_ref['calibrated']:
             # already calibrated
             i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
             return
+
 
         try:
             calibrated_data = self._calibrate(i_ref['hdulist'][0].data, i_ref['exposure'], i_ref['camera_id'], i_ref['image_bitpix'])

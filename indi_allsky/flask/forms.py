@@ -2442,7 +2442,7 @@ class IndiAllskyConfigForm(FlaskForm):
     STARTRAILS_TIMELAPSE             = BooleanField('Star Trails Timelapse')
     STARTRAILS_TIMELAPSE_MINFRAMES   = IntegerField('Star Trails Timelapse Minimum Frames', validators=[DataRequired(), STARTRAILS_TIMELAPSE_MINFRAMES_validator])
     STARTRAILS_USE_DB_DATA           = BooleanField('Star Trails Use Existing Data')
-    IMAGE_CALIBRATE_DARK             = BooleanField('Apply Dark Calibartion Frames')
+    IMAGE_CALIBRATE_DARK             = BooleanField('Apply Dark Calibration Frames')
     IMAGE_FITS_PRE_DARK              = BooleanField('Save FITS Pre-Calibration')
     IMAGE_EXIF_PRIVACY               = BooleanField('Enable EXIF Privacy')
     IMAGE_FILE_TYPE                  = SelectField('Image file type', choices=IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_FILE_TYPE_validator])

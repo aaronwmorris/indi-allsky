@@ -357,16 +357,21 @@ class ImageWorker(Process):
         self.image_count += 1
 
 
+        if self.config.get('IMAGE_SAVE_FITS'):
+            if self.config.get('IMAGE_FITS_PRE_DARK'):
+                logger.warning('Saving FITS without dark frame calibration')
+                self.write_fit(i_ref, camera)
+
+
         # use original value if not defined
         libcamera_black_level = i_ref.get('libcamera_black_level', libcamera_black_level)
-
 
         self.image_processor.calibrate(libcamera_black_level=libcamera_black_level)
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
-            i_ref = self.image_processor.getLatestImage()
-            self.write_fit(i_ref, camera)
+            if not self.config.get('IMAGE_FITS_PRE_DARK'):
+                self.write_fit(i_ref, camera)
 
 
         self.image_processor.calculateSqm()
