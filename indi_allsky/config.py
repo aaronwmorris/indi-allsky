@@ -144,7 +144,8 @@ class IndiAllSkyConfigBase(object):
         "STARTRAILS_MOON_ALT_THOLD"      : 91.0,
         "STARTRAILS_MOON_PHASE_THOLD"    : 101.0,
         "STARTRAILS_USE_DB_DATA"         : True,
-        "IMAGE_EXIF_PRIVACY" : False,
+        "IMAGE_CALIBRATE_DARK"  : True,
+        "IMAGE_EXIF_PRIVACY"    : False,
         "IMAGE_FILE_TYPE" : "jpg",  # jpg, png, or tif
         "IMAGE_FILE_COMPRESSION" : {
             "jpg"   : 90,
@@ -182,6 +183,7 @@ class IndiAllSkyConfigBase(object):
             "MODULUS"  : 2,
         },
         "IMAGE_SAVE_FITS"     : False,
+        "IMAGE_FITS_PRE_DARK" : False,
         "IMAGE_EXPORT_RAW"    : "",  # png or tif (or empty)
         "IMAGE_EXPORT_FOLDER" : "/var/www/html/allsky/images/export",
         "IMAGE_EXPORT_FLIP_V" : False,
