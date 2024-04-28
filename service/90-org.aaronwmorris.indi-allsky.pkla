@@ -4,12 +4,11 @@ Action=org.freedesktop.login1.power-off;org.freedesktop.login1.power-off-multipl
 ResultActive=yes
 ResultAny=yes
 
-# No current functionality requires privileged access to manage network interfaces
-#[Allow indi-allsky user to manage network]
-#Identity=unix-user:%ALLSKY_USER%
-#Action=org.freedesktop.NetworkManager.enable-disable-wifi;org.freedesktop.NetworkManager.network-control;org.freedesktop.NetworkManager.wifi.share.protected;org.freedesktop.NetworkManager.settings.modify.system;org.freedesktop.NetworkManager.wifi.scan;org.freedesktop.NetworkManager.settings.modify.own
-#ResultActive=yes
-#ResultAny=yes
+[Allow indi-allsky user to manage network]
+Identity=unix-user:%ALLSKY_USER%
+Action=org.freedesktop.NetworkManager.enable-disable-wifi;org.freedesktop.NetworkManager.network-control;org.freedesktop.NetworkManager.wifi.share.protected;org.freedesktop.NetworkManager.settings.modify.system;org.freedesktop.NetworkManager.wifi.scan;org.freedesktop.NetworkManager.settings.modify.own
+ResultActive=yes
+ResultAny=yes
 
 [Allow indi-allsky user to mount USB disks]
 Identity=unix-user:%ALLSKY_USER%
