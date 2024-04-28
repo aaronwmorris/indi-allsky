@@ -1189,6 +1189,8 @@ class ConfigView(FormView):
             'STARTRAILS_TIMELAPSE'           : self.indi_allsky_config.get('STARTRAILS_TIMELAPSE', True),
             'STARTRAILS_TIMELAPSE_MINFRAMES' : self.indi_allsky_config.get('STARTRAILS_TIMELAPSE_MINFRAMES', 250),
             'STARTRAILS_USE_DB_DATA'         : self.indi_allsky_config.get('STARTRAILS_USE_DB_DATA', True),
+            'IMAGE_CALIBRATE_DARK'           : self.indi_allsky_config.get('IMAGE_CALIBRATE_DARK', True),
+            'IMAGE_SAVE_FITS_PRE_DARK'       : self.indi_allsky_config.get('IMAGE_SAVE_FITS_PRE_DARK', False),
             'IMAGE_EXIF_PRIVACY'             : self.indi_allsky_config.get('IMAGE_EXIF_PRIVACY', False),
             'IMAGE_FILE_TYPE'                : self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'),
             'IMAGE_FILE_COMPRESSION__JPG'    : self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('jpg', 90),
@@ -1768,6 +1770,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['STARTRAILS_TIMELAPSE']                 = bool(request.json['STARTRAILS_TIMELAPSE'])
         self.indi_allsky_config['STARTRAILS_TIMELAPSE_MINFRAMES']       = int(request.json['STARTRAILS_TIMELAPSE_MINFRAMES'])
         self.indi_allsky_config['STARTRAILS_USE_DB_DATA']               = bool(request.json['STARTRAILS_USE_DB_DATA'])
+        self.indi_allsky_config['IMAGE_CALIBRATE_DARK']                 = bool(request.json['IMAGE_CALIBRATE_DARK'])
+        self.indi_allsky_config['IMAGE_SAVE_FITS_PRE_DARK']             = bool(request.json['IMAGE_SAVE_FITS_PRE_DARK'])
         self.indi_allsky_config['IMAGE_EXIF_PRIVACY']                   = bool(request.json['IMAGE_EXIF_PRIVACY'])
         self.indi_allsky_config['IMAGE_FILE_TYPE']                      = str(request.json['IMAGE_FILE_TYPE'])
         self.indi_allsky_config['IMAGE_FILE_COMPRESSION']['jpg']        = int(request.json['IMAGE_FILE_COMPRESSION__JPG'])
@@ -4534,6 +4538,7 @@ class ImageProcessingView(TemplateView):
             'FISH2PANO__ROTATE_ANGLE'        : self.indi_allsky_config.get('FISH2PANO', {}).get('ROTATE_ANGLE', 0),
             'FISH2PANO__SCALE'               : self.indi_allsky_config.get('FISH2PANO', {}).get('SCALE', 0.3),
             'PROCESSING_SPLIT_SCREEN'        : False,
+            'IMAGE_CALIBRATE_DARK'           : False,  # darks are almost always already applied
         }
 
         # SQM_ROI
@@ -4581,6 +4586,7 @@ class JsonImageProcessingView(JsonView):
 
     def dispatch_request(self):
         import cv2
+        from astropy.io import fits
         from PIL import Image
 
 
@@ -4622,6 +4628,7 @@ class JsonImageProcessingView(JsonView):
         p_config = self.indi_allsky_config.copy()
 
         p_config['CCD_BIT_DEPTH']                        = int(request.json['CCD_BIT_DEPTH'])
+        p_config['IMAGE_CALIBRATE_DARK']                 = bool(request.json['IMAGE_CALIBRATE_DARK'])
         p_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
         p_config['CONTRAST_ENHANCE_16BIT']               = bool(request.json['CONTRAST_ENHANCE_16BIT'])
         p_config['CLAHE_CLIPLIMIT']                      = float(request.json['CLAHE_CLIPLIMIT'])
@@ -4671,8 +4678,16 @@ class JsonImageProcessingView(JsonView):
             p_config['SQM_ROI'] = []
 
 
+        hdulist = fits.open(filename_p)
 
+        exposure = float(hdulist[0].header['EXPTIME'])
+        gain_v = Value('i', int(hdulist[0].header['GAIN']))
+        bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
+        sensortemp_v = Value('f', float(hdulist[0].header.get('CCD-TEMP', 0)))
         night_v = Value('i', 1)  # using night values for processing
+
+        hdulist.close()
+
         moonmode_v = Value('i', 0)
         image_processor = ImageProcessor(
             p_config,
@@ -4682,9 +4697,9 @@ class JsonImageProcessingView(JsonView):
             None,  # ra_v
             None,  # dec_v
             None,  # exposure_v
-            None,  # gain_v
-            None,  # bin_v
-            None,  # sensortemp_v
+            gain_v,
+            bin_v,
+            sensortemp_v,
             night_v,
             moonmode_v,
             {},    # astrometric_data
@@ -4698,8 +4713,10 @@ class JsonImageProcessingView(JsonView):
         if disable_processing:
             # just return original image with no processing
 
-            i_ref = image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
-            i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)
+            i_ref = image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
+
+
+            i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)  # performs what calibrate() would do
 
 
             image_processor.stack()  # this populates self.image
@@ -4733,9 +4750,6 @@ class JsonImageProcessingView(JsonView):
 
         else:
             if p_config['IMAGE_STACK_COUNT'] > 1:
-                i_ref = image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
-                i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)
-
                 fits_image_query = IndiAllSkyDbFitsImageTable.query\
                     .join(IndiAllSkyDbFitsImageTable.camera)\
                     .filter(IndiAllSkyDbCameraTable.id == camera_id)\
@@ -4744,14 +4758,20 @@ class JsonImageProcessingView(JsonView):
                     .limit(p_config['IMAGE_STACK_COUNT'] - 1)
 
                 for f_image in fits_image_query:
-                    i_ref = image_processor.add(f_image.getFilesystemPath(), 0.0, datetime.now(), 0.0, f_image.camera)
-                    i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)
+                    alt_hdulist = fits.open(filename_p)
+                    alt_exposure = float(alt_hdulist[0].header['EXPTIME'])
+                    alt_hdulist.close()
+
+                    i_ref = image_processor.add(f_image.getFilesystemPath(), alt_exposure, datetime.now(), 0.0, f_image.camera)
+                    image_processor._calibrate(i_ref)
 
                 message_list.append('Stacked {0:d} images'.format(p_config['IMAGE_STACK_COUNT']))
-            else:
-                i_ref = image_processor.add(filename_p, 0.0, datetime.now(), 0.0, fits_entry.camera)
-                i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)
 
+
+            # add image after preloading other images
+            image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
+
+            image_processor.calibrate()  # sets opencv_data
 
             image_processor.stack()  # this populates self.image
 
@@ -5188,9 +5208,6 @@ class CameraLensView(TemplateView):
 
         context['camera'] = camera
 
-        camera_diagonal = math.hypot(camera.width, camera.height)
-        context['camera_diagonal'] = camera_diagonal
-
         context['camera_cfa'] = constants.CFA_MAP_STR[camera.cfa]
         context['lensAperture'] = camera.lensFocalLength / camera.lensFocalRatio
 
@@ -5208,6 +5225,7 @@ class CameraLensView(TemplateView):
         context['arcsec_pixel'] = arcsec_pixel
         context['dms_pixel'] = self.decdeg2dms(arcsec_pixel / 3600.0)
         context['arcsec_um'] = arcsec_pixel / camera.pixelSize
+        context['deg2_px'] = (arcsec_pixel / 3600) ** 2
 
 
         image_circle_diameter = int(camera.lensImageCircle)  # might be null
@@ -5225,6 +5243,7 @@ class CameraLensView(TemplateView):
         else:
             arcsec_fov_height = camera.height * arcsec_pixel
 
+        camera_diagonal = math.hypot(camera.width, camera.height)  # this cannot be used to calculate distance
         if image_circle_diameter <= camera_diagonal:
             arcsec_fov_diagonal = image_circle_diameter * arcsec_pixel
         else:
