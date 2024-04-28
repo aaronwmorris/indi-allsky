@@ -655,7 +655,7 @@ class ImageProcessor(object):
         # need this to be able to apply calibration frames to images other than the latest
 
         if not self.config.get('IMAGE_CALIBRATE_DARK', True):
-            # disable dark frame calibration
+            logger.warning('Dark frame calibration disabled')
             i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
             return
 
