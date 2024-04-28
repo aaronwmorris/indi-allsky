@@ -5208,9 +5208,6 @@ class CameraLensView(TemplateView):
 
         context['camera'] = camera
 
-        camera_diagonal = math.hypot(camera.width, camera.height)
-        context['camera_diagonal'] = camera_diagonal
-
         context['camera_cfa'] = constants.CFA_MAP_STR[camera.cfa]
         context['lensAperture'] = camera.lensFocalLength / camera.lensFocalRatio
 
@@ -5245,6 +5242,7 @@ class CameraLensView(TemplateView):
         else:
             arcsec_fov_height = camera.height * arcsec_pixel
 
+        camera_diagonal = math.hypot(camera.width, camera.height)  # this cannot be used to calculate distance
         if image_circle_diameter <= camera_diagonal:
             arcsec_fov_diagonal = image_circle_diameter * arcsec_pixel
         else:
