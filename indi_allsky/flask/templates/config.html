@@ -4,7 +4,7 @@
 
 {% block head %}
 <style>
-#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab {
+#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab {
 	width: 150px;
 	margin-top: 10px;
 	margin-right: 5px;
@@ -24,6 +24,7 @@
     <button class="nav-link link-info bg-dark" id="nav-location-tab" data-bs-toggle="tab" data-bs-target="#nav-location" type="button" role="tab" aria-controls="nav-location" aria-selected="false">Location</button>
     <button class="nav-link link-warning bg-dark" id="nav-admin-tab" data-bs-toggle="tab" data-bs-target="#nav-admin" type="button" role="tab" aria-controls="nav-admin" aria-selected="false">Admin</button>
     <button class="nav-link link-primary bg-dark" id="nav-filetransfer-tab" data-bs-toggle="tab" data-bs-target="#nav-filetransfer" type="button" role="tab" aria-controls="nav-filetransfer" aria-selected="false">File Transfer</button>
+    <button class="nav-link link-info bg-dark" id="nav-mqtt-tab" data-bs-toggle="tab" data-bs-target="#nav-mqtt" type="button" role="tab" aria-controls="nav-mqtt" aria-selected="false">MQTT</button>
     <button class="nav-link link-danger bg-dark" id="nav-youtube-tab" data-bs-toggle="tab" data-bs-target="#nav-youtube" type="button" role="tab" aria-controls="nav-youtube" aria-selected="false">YouTube</button>
     <button class="nav-link link-secondary bg-dark" id="nav-s3-tab" data-bs-toggle="tab" data-bs-target="#nav-s3" type="button" role="tab" aria-controls="nav-s3" aria-selected="false">Object Storage</button>
     <button class="nav-link link-light bg-dark" id="nav-syncapi-tab" data-bs-toggle="tab" data-bs-target="#nav-syncapi" type="button" role="tab" aria-controls="nav-syncapi" aria-selected="false">SyncAPI</button>
@@ -3166,6 +3167,9 @@
         </div>
         <div class="col-sm-8">Enable Allsky EndOfNight uploads</div>
     </div>
+
+</div><!-- end filetransfer tab -->
+<div class="tab-pane fade" id="nav-mqtt" role="tabpanel" aria-labelledby="nav-mqtt-tab">
 
     <hr>
 
