@@ -3285,6 +3285,21 @@
         <div class="col-sm-8">Bypass certificate validation</div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__PUBLISH_IMAGE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.MQTTPUBLISH__PUBLISH_IMAGE(class='form-check-input') }}
+                <div id="MQTTPUBLISH__PUBLISH_IMAGE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
 </div><!-- end filetransfer tab -->
 <div class="tab-pane fade" id="nav-youtube" role="tabpanel" aria-labelledby="nav-youtube-tab">
 
@@ -4271,6 +4286,7 @@ const checkbox_field_names = [
     'MQTTPUBLISH__ENABLE',
     'MQTTPUBLISH__TLS',
     'MQTTPUBLISH__CERT_BYPASS',
+    'MQTTPUBLISH__PUBLISH_IMAGE',
     'SYNCAPI__ENABLE',
     'SYNCAPI__CERT_BYPASS',
     'SYNCAPI__POST_S3',
