@@ -328,6 +328,7 @@ class IndiAllSkyConfigBase(object):
             "QOS"                    : 0,  # 0, 1, or 2
             "TLS"                    : True,
             "CERT_BYPASS"            : True,
+            "PUBLISH_IMAGE"          : True,
         },
         "SYNCAPI" : {
             "ENABLE"                 : False,
