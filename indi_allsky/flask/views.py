@@ -669,6 +669,7 @@ class JsonImageLoopView(JsonView):
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
+                    self.model.exclude == sa_false(),
                     self.model.createDate > ts_minus_seconds,
                     self.model.createDate < loop_dt,
                 )
@@ -739,6 +740,7 @@ class JsonImageLoopView(JsonView):
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
+                    self.model.exclude == sa_false(),
                     self.model.createDate > ts_minus_minutes,
                     self.model.createDate < ts_dt,
                 )
@@ -768,6 +770,7 @@ class JsonImageLoopView(JsonView):
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == camera_id,
+                    self.model.exclude == sa_false(),
                     self.model.createDate > ts_minus_minutes,
                     self.model.createDate < ts_dt,
                 )

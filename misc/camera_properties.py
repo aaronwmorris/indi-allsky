@@ -134,6 +134,7 @@ class IndiProperties(PyIndi.BaseClient):
             print('#########################################')
             print('########## Start properties #############')
             print('#########################################')
+            print('```')  # github formatting
 
             prop_dict = self.getDeviceProperties(device_ccd)
             for k, v in prop_dict.items():
@@ -145,6 +146,7 @@ class IndiProperties(PyIndi.BaseClient):
                     for k3, v3 in v2.items():
                         print('    {0}: {1}'.format(k3, v3))
 
+            print('```')  # github formatting
             print('#########################################')
             print('########### End properties ##############')
             print('#########################################')
