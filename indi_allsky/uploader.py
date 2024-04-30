@@ -291,6 +291,7 @@ class FileUploader(Thread):
                 'base_topic'  : self.config['MQTTPUBLISH']['BASE_TOPIC'],
                 'qos'         : self.config['MQTTPUBLISH']['QOS'],
                 'mq_data'     : metadata,
+                'publish_image' : self.config['MQTTPUBLISH'].get('PUBLISH_IMAGE', True),
             }
 
             try:

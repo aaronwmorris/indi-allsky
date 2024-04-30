@@ -75,6 +75,7 @@ class paho_mqtt(GenericFileTransfer):
         qos        = kwargs['qos']
         mq_data    = kwargs['mq_data']
         image_topic = kwargs['image_topic']
+        publish_image = kwargs['publish_image']
 
         local_file_p = Path(local_file)
 
@@ -82,13 +83,14 @@ class paho_mqtt(GenericFileTransfer):
         message_list = list()
 
         # publish image
-        with io.open(local_file_p, 'rb') as f_localfile:
-            message_list.append({
-                'topic'    : '/'.join((base_topic, image_topic)),
-                'payload'  : f_localfile.read(),  # this requires paho-mqtt >= v2.0.0
-                'qos'      : qos,
-                'retain'   : True,
-            })
+        if publish_image:
+            with io.open(local_file_p, 'rb') as f_localfile:
+                message_list.append({
+                    'topic'    : '/'.join((base_topic, image_topic)),
+                    'payload'  : f_localfile.read(),  # this requires paho-mqtt >= v2.0.0
+                    'qos'      : qos,
+                    'retain'   : True,
+                })
 
 
         for k, v in mq_data.items():
