@@ -106,7 +106,7 @@ class oci_storage(GenericFileTransfer):
                 self.client.put_object(
                     namespace,
                     bucket,
-                    key,
+                    str(key),
                     f_localfile,
                     **upload_kwargs,
                 )
@@ -127,4 +127,34 @@ class oci_storage(GenericFileTransfer):
         local_file_size = local_file_p.stat().st_size
         logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
 
+
+    def delete(self, *args, **kwargs):
+        super(oci_storage, self).delete(*args, **kwargs)
+
+        bucket = kwargs['bucket']
+        key = kwargs['key']
+        namespace = kwargs['namespace']
+
+
+        try:
+            self.client.delete_object(
+                namespace,
+                bucket,
+                str(key),
+            )
+        except socket.gaierror as e:
+            raise ConnectionFailure(str(e)) from e
+        except socket.timeout as e:
+            raise ConnectionFailure(str(e)) from e
+        except ConnectionRefusedError as e:
+            raise ConnectionFailure(str(e)) from e
+        except requests.exceptions.ConnectTimeout as e:
+            raise ConnectionFailure(str(e)) from e
+        except requests.exceptions.ConnectionError as e:
+            raise ConnectionFailure(str(e)) from e
+        except requests.exceptions.ReadTimeout as e:
+            raise ConnectionFailure(str(e)) from e
+
+
+        logger.info('S3 object deleted: %s', key)
 

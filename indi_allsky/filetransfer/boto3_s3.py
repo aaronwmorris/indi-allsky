@@ -146,3 +146,40 @@ class boto3_s3(GenericFileTransfer):
         logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
 
 
+    def delete(self, *args, **kwargs):
+        super(boto3_s3, self).delete(*args, **kwargs)
+
+        import botocore.exceptions
+        import boto3.exceptions
+
+
+        bucket = kwargs['bucket']
+        key = kwargs['key']
+
+        try:
+            self.client.delete_object(
+                Bucket=bucket,
+                Key=str(key),
+            )
+        except socket.gaierror as e:
+            raise ConnectionFailure(str(e)) from e
+        except socket.timeout as e:
+            raise ConnectionFailure(str(e)) from e
+        except ConnectionRefusedError as e:
+            raise ConnectionFailure(str(e)) from e
+        except botocore.exceptions.ConnectTimeoutError as e:
+            raise ConnectionFailure(str(e)) from e
+        except urllib3.exceptions.ReadTimeoutError as e:
+            raise ConnectionFailure(str(e)) from e
+        except urllib3.exceptions.NewConnectionError as e:
+            raise ConnectionFailure(str(e)) from e
+        except botocore.exceptions.ReadTimeoutError as e:
+            raise ConnectionFailure(str(e)) from e
+        except botocore.exceptions.EndpointConnectionError as e:
+            raise ConnectionFailure(str(e)) from e
+        except boto3.exceptions.S3UploadFailedError as e:
+            raise TransferFailure(str(e)) from e
+
+
+        logger.info('S3 object deleted: %s', key)
+
