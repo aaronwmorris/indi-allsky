@@ -958,7 +958,7 @@ class VideoWorker(Process):
             'camera_uuid': camera.uuid,
         }
 
-        keogram_thumbnail_entry = self._miscDb.addThumbnail(
+        keogram_thumbnail_entry = self._miscDb.addThumbnailTimelapse(
             keogram_entry,
             keogram_metadata,
             camera.id,
@@ -988,7 +988,7 @@ class VideoWorker(Process):
                 'camera_uuid': camera.uuid,
             }
 
-            startrail_thumbnail_entry = self._miscDb.addThumbnail(
+            startrail_thumbnail_entry = self._miscDb.addThumbnailTimelapse(
                 startrail_entry,
                 startrail_metadata,
                 camera.id,
