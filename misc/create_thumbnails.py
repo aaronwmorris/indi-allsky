@@ -100,9 +100,9 @@ class CreateThumbnails(object):
                 'camera_uuid': keogram_entry.camera.uuid,
             }
 
-            self._miscDb.addThumbnailTimelapse(
+            self._miscDb.addThumbnail(
                 keogram_entry,
-                {},  # keogram metadata not used
+                {'type' : constants.KEOGRAM},  # keogram metadata not fully populated
                 keogram_entry.camera_id,
                 keogram_thumbnail_metadata,
                 new_width=self.thumbnail_keogram_width,
@@ -123,9 +123,9 @@ class CreateThumbnails(object):
                 'camera_uuid': startrail_entry.camera.uuid,
             }
 
-            self._miscDb.addThumbnailTimelapse(
+            self._miscDb.addThumbnail(
                 startrail_entry,
-                {},  # startrail metadata not used
+                {'type' : constants.STARTRAIL},  # startrail metadata not fully populated
                 startrail_entry.camera_id,
                 startrail_thumbnail_metadata,
                 new_width=self.thumbnail_startrail_width,
@@ -146,9 +146,9 @@ class CreateThumbnails(object):
                 'camera_uuid': image_entry.camera.uuid,
             }
 
-            self._miscDb.addThumbnailImage(
+            self._miscDb.addThumbnail(
                 image_entry,
-                {},  # image metadata not used
+                {'type' : constants.IMAGE},  # image metadata not fully populated
                 image_entry.camera_id,
                 image_thumbnail_metadata,
             )

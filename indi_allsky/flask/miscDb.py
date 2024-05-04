@@ -34,6 +34,7 @@ from .models import IndiAllSkyDbStateTable
 
 from sqlalchemy.orm.exc import NoResultFound
 
+from .. import constants
 #from ..exceptions import BadImage
 
 logger = logging.getLogger('indi_allsky')
@@ -948,7 +949,7 @@ class miscDb(object):
         db.session.commit()
 
 
-    def addThumbnailImage(self, entry, entry_metadata, camera_id, thumbnail_metadata, new_width=150, numpy_data=None):
+    def addThumbnail(self, entry, entry_metadata, camera_id, thumbnail_metadata, new_width=150, numpy_data=None):
         if entry.thumbnail_uuid:
             return
 
@@ -968,110 +969,24 @@ class miscDb(object):
 
         thumbnail_uuid_str = str(uuid.uuid4())
 
-        thumbnail_dir_p = self.image_dir.joinpath(
-            'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
-            'subs',
-            dayDate.strftime('%Y%m%d'),
-            'thumbnails',
-            createDate.strftime('%d_%H'),
-        )
-        thumbnail_filename_p = thumbnail_dir_p.joinpath(
-            '{0:s}.jpg'.format(thumbnail_uuid_str),
-        )
 
-        logger.info('Adding thumbnail to DB: %s', thumbnail_filename_p)
-
-        if not thumbnail_dir_p.exists():
-            thumbnail_dir_p.mkdir(mode=0o755, parents=True)
-
-
-        if isinstance(numpy_data, type(None)):
-            # use file on filesystem
-            filename_p = Path(entry.getFilesystemPath())
-
-            if not filename_p.exists():
-                logger.error('Cannot create thumbnail: File not found: %s', filename_p)
-                return
-
-            try:
-                img = Image.open(str(filename_p))
-            except PIL.UnidentifiedImageError:
-                logger.error('Cannot create thumbnail:  Bad Image')
-                return
+        if entry_metadata['type'] in (constants.IMAGE,):
+            thumbnail_dir_p = self.image_dir.joinpath(
+                'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
+                'subs',
+                dayDate.strftime('%Y%m%d'),
+                'thumbnails',
+                createDate.strftime('%d_%H'),
+            )
         else:
-            img = Image.fromarray(cv2.cvtColor(numpy_data, cv2.COLOR_BGR2RGB))
+            thumbnail_dir_p = self.image_dir.joinpath(
+                'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
+                'timelapse',
+                dayDate.strftime('%Y%m%d'),
+                'thumbnails',
+            )
 
 
-        width, height = img.size
-
-        if new_width < width:
-            scale = new_width / width
-            new_height = int(height * scale)
-
-            thumbnail_data = img.resize((new_width, new_height))
-        else:
-            # keep the same dimensions
-            thumbnail_data = img
-            new_width = width
-            new_height = height
-
-
-        # insert new metadata
-        entry_metadata['thumbnail_uuid'] = thumbnail_uuid_str
-        thumbnail_metadata['uuid'] = thumbnail_uuid_str
-        thumbnail_metadata['dayDate'] = dayDate.strftime('%Y%m%d')
-        thumbnail_metadata['width'] = new_width
-        thumbnail_metadata['height'] = new_height
-
-
-        thumbnail_data.save(str(thumbnail_filename_p), quality=75)
-
-
-        thumbnail_entry = IndiAllSkyDbThumbnailTable(
-            uuid=thumbnail_uuid_str,
-            filename=str(thumbnail_filename_p.relative_to(self.image_dir)),
-            createDate=createDate,
-            width=new_width,
-            height=new_height,
-            camera_id=camera_id,
-            data=thumbnail_metadata.get('data', {}),
-            s3_key=thumbnail_metadata.get('s3_key'),
-            remote_url=thumbnail_metadata.get('remote_url'),
-        )
-
-        db.session.add(thumbnail_entry)
-        entry.thumbnail_uuid = thumbnail_uuid_str
-        db.session.commit()
-
-        return thumbnail_entry
-
-
-    def addThumbnailTimelapse(self, entry, entry_metadata, camera_id, thumbnail_metadata, new_width=150, numpy_data=None):
-        if entry.thumbnail_uuid:
-            return
-
-
-        if isinstance(thumbnail_metadata['createDate'], (int, float)):
-            createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
-        else:
-            createDate = thumbnail_metadata['createDate']
-
-
-        if thumbnail_metadata['night']:
-            # day date for night is offset by 12 hours
-            dayDate = (createDate - timedelta(hours=12)).date()
-        else:
-            dayDate = createDate.date()
-
-
-        thumbnail_uuid_str = str(uuid.uuid4())
-
-        thumbnail_dir_p = self.image_dir.joinpath(
-            'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
-            'timelapse',
-            dayDate.strftime('%Y%m%d'),
-            'thumbnails',
-        )
         thumbnail_filename_p = thumbnail_dir_p.joinpath(
             '{0:s}.jpg'.format(thumbnail_uuid_str),
         )
@@ -1147,7 +1062,7 @@ class miscDb(object):
         if not self.config.get('THUMBNAILS', {}).get('IMAGES_AUTO', True):
             return
 
-        return self.addThumbnailImage(*args, **kwargs)
+        return self.addThumbnail(*args, **kwargs)
 
 
     def addThumbnail_remote(self, filename, camera_id, thumbnail_metadata):
