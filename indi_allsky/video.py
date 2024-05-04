@@ -260,7 +260,7 @@ class VideoWorker(Process):
             return
 
 
-        vid_folder = self._getVideoFolder(d_dayDate, night, camera)
+        vid_folder = self._getVideoFolder(d_dayDate, camera)
 
         video_file = vid_folder.joinpath(
             'allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
@@ -447,7 +447,7 @@ class VideoWorker(Process):
             return
 
 
-        vid_folder = self._getVideoFolder(d_dayDate, night, camera)
+        vid_folder = self._getVideoFolder(d_dayDate, camera)
 
         video_file = vid_folder.joinpath(
             'allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
@@ -635,7 +635,7 @@ class VideoWorker(Process):
             return
 
 
-        vid_folder = self._getVideoFolder(d_dayDate, night, camera)
+        vid_folder = self._getVideoFolder(d_dayDate, camera)
 
         keogram_file = vid_folder.joinpath(
             'allsky-keogram_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
@@ -1494,14 +1494,8 @@ class VideoWorker(Process):
         task.setSuccess('Expired data')
 
 
-    def _getVideoFolder(self, video_date, night, camera):
-        if night:
-            # videos should be written to previous day's folder until noon
-            day_ref = video_date - timedelta(hours=12)
-        else:
-            # videos should be written to current day's folder
-            day_ref = video_date
-
+    def _getVideoFolder(self, video_date, camera):
+        day_ref = video_date
 
         video_folder = self.image_dir.joinpath(
             'ccd_{0:s}'.format(camera.uuid),
