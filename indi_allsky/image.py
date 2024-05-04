@@ -979,7 +979,7 @@ class ImageWorker(Process):
 
         date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
         # raw light
-        folder = self.getImageFolder(i_ref['exp_date'], camera)
+        folder = self._getImageFolder(i_ref['exp_date'], camera)
         filename = folder.joinpath(self.filename_t.format(
             i_ref['camera_id'],
             date_str,
@@ -1308,7 +1308,7 @@ class ImageWorker(Process):
 
 
         ### Write the timelapse file
-        folder = self.getImageFolder(i_ref['exp_date'], camera)
+        folder = self._getImageFolder(i_ref['exp_date'], camera)
 
         date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
         filename = folder.joinpath(self.filename_t.format(i_ref['camera_id'], date_str, self.config['IMAGE_FILE_TYPE']))
@@ -1368,7 +1368,7 @@ class ImageWorker(Process):
         indi_allsky_status_p.chmod(0o644)
 
 
-    def getImageFolder(self, exp_date, camera):
+    def _getImageFolder(self, exp_date, camera):
         if self.night_v.value:
             # images should be written to previous day's folder until noon
             day_ref = exp_date - timedelta(hours=12)
@@ -1462,7 +1462,7 @@ class ImageWorker(Process):
 
 
         ### Write the panorama file
-        folder = self.getImageFolder(i_ref['exp_date'], camera)
+        folder = self._getImageFolder(i_ref['exp_date'], camera)
 
 
         panorama_filename_t = 'panorama_{0:s}'.format(self.filename_t)

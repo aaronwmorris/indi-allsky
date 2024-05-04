@@ -1258,19 +1258,11 @@ class CaptureWorker(Process):
             .one()
 
 
-        img_folder = self.image_dir.joinpath(
-            'ccd_{0:s}'.format(camera.uuid),
-            'subs',
-            '{0:s}'.format(timespec),
-            'day',
-        )
-
         logger.warning('Generating day time timelapse for %s camera %d', timespec, camera.id)
 
         video_jobdata = {
             'action'      : 'generateVideo',
             'timespec'    : timespec,
-            'img_folder'  : str(img_folder),
             'night'       : False,
             'camera_id'   : camera.id,
         }
@@ -1290,7 +1282,6 @@ class CaptureWorker(Process):
             panorama_video_jobdata = {
                 'action'      : 'generatePanoramaVideo',
                 'timespec'    : timespec,
-                'img_folder'  : str(img_folder),
                 'night'       : False,
                 'camera_id'   : camera.id,
             }
@@ -1317,19 +1308,11 @@ class CaptureWorker(Process):
             .one()
 
 
-        img_folder = self.image_dir.joinpath(
-            'ccd_{0:s}'.format(camera.uuid),
-            'subs',
-            '{0:s}'.format(timespec),
-            'night',
-        )
-
         logger.warning('Generating night time timelapse for %s camera %d', timespec, camera.id)
 
         video_jobdata = {
             'action'      : 'generateVideo',
             'timespec'    : timespec,
-            'img_folder'  : str(img_folder),
             'night'       : True,
             'camera_id'   : camera.id,
         }
@@ -1349,7 +1332,6 @@ class CaptureWorker(Process):
             panorama_video_jobdata = {
                 'action'      : 'generatePanoramaVideo',
                 'timespec'    : timespec,
-                'img_folder'  : str(img_folder),
                 'night'       : True,
                 'camera_id'   : camera.id,
             }
@@ -1376,19 +1358,11 @@ class CaptureWorker(Process):
             .one()
 
 
-        img_day_folder = self.image_dir.joinpath(
-            'ccd_{0:s}'.format(camera.uuid),
-            'timelapse',
-            '{0:s}'.format(timespec),
-            'night',
-        )
-
         logger.warning('Generating night time keogram for %s camera %d', timespec, camera.id)
 
         jobdata = {
             'action'      : 'generateKeogramStarTrails',
             'timespec'    : timespec,
-            'img_folder'  : str(img_day_folder),
             'night'       : True,
             'camera_id'   : camera.id,
         }
@@ -1415,19 +1389,11 @@ class CaptureWorker(Process):
             .one()
 
 
-        img_day_folder = self.image_dir.joinpath(
-            'ccd_{0:s}'.format(camera.uuid),
-            'timelapse',
-            '{0:s}'.format(timespec),
-            'day',
-        )
-
         logger.warning('Generating day time keogram for %s camera %d', timespec, camera.id)
 
         jobdata = {
             'action'      : 'generateKeogramStarTrails',
             'timespec'    : timespec,
-            'img_folder'  : str(img_day_folder),
             'night'       : False,
             'camera_id'   : camera.id,
         }
@@ -1477,7 +1443,6 @@ class CaptureWorker(Process):
         # This will delete old images from the filesystem and DB
         jobdata = {
             'action'       : 'uploadAllskyEndOfNight',
-            'img_folder'   : str(self.image_dir),  # not needed
             'timespec'     : None,  # Not needed
             'night'        : True,
             'camera_id'    : camera.id,
@@ -1504,7 +1469,6 @@ class CaptureWorker(Process):
         # This will delete old images from the filesystem and DB
         jobdata = {
             'action'       : 'expireData',
-            'img_folder'   : str(self.image_dir),
             'timespec'     : None,  # Not needed
             'night'        : None,  # Not needed
             'camera_id'    : camera.id,

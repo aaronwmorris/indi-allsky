@@ -208,7 +208,6 @@ class VideoWorker(Process):
 
         action = task.data['action']
         timespec = task.data['timespec']
-        img_folder = Path(task.data['img_folder'])
         night = task.data['night']
         camera_id = task.data['camera_id']
 
@@ -228,17 +227,11 @@ class VideoWorker(Process):
             return
 
 
-        if not img_folder.exists():
-            logger.error('Image folder does not exist: %s', img_folder)
-            task.setFailed('Image folder does not exist: {0:s}'.format(str(img_folder)))
-            return
-
-
         # perform the action
-        action_method(task, timespec, img_folder, night, camera)
+        action_method(task, timespec, night, camera)
 
 
-    def generateVideo(self, task, timespec, img_folder, night, camera):
+    def generateVideo(self, task, timespec, night, camera):
         task.setRunning()
 
         now = datetime.now()
@@ -267,7 +260,9 @@ class VideoWorker(Process):
             return
 
 
-        video_file = img_folder.parent.joinpath(
+        vid_folder = self._getVideoFolder(d_dayDate, night, camera)
+
+        video_file = vid_folder.joinpath(
             'allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
                 camera.id,
                 timespec,
@@ -423,7 +418,7 @@ class VideoWorker(Process):
         self._miscUpload.youtube_upload_video(video_entry, video_metadata)
 
 
-    def generatePanoramaVideo(self, task, timespec, img_folder, night, camera):
+    def generatePanoramaVideo(self, task, timespec, night, camera):
         task.setRunning()
 
         now = datetime.now()
@@ -452,7 +447,9 @@ class VideoWorker(Process):
             return
 
 
-        video_file = img_folder.parent.joinpath(
+        vid_folder = self._getVideoFolder(d_dayDate, night, camera)
+
+        video_file = vid_folder.joinpath(
             'allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
                 camera.id,
                 timespec,
@@ -609,7 +606,7 @@ class VideoWorker(Process):
         self._miscUpload.youtube_upload_panorama_video(video_entry, video_metadata)
 
 
-    def generateKeogramStarTrails(self, task, timespec, img_folder, night, camera):
+    def generateKeogramStarTrails(self, task, timespec, night, camera):
         task.setRunning()
 
         now = datetime.now()
@@ -638,7 +635,9 @@ class VideoWorker(Process):
             return
 
 
-        keogram_file = img_folder.parent.joinpath(
+        vid_folder = self._getVideoFolder(d_dayDate, night, camera)
+
+        keogram_file = vid_folder.joinpath(
             'allsky-keogram_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
                 camera.id,
                 timespec,
@@ -647,7 +646,7 @@ class VideoWorker(Process):
             )
         )
 
-        startrail_file = img_folder.parent.joinpath(
+        startrail_file = vid_folder.joinpath(
             'allsky-startrail_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
                 camera.id,
                 timespec,
@@ -656,7 +655,7 @@ class VideoWorker(Process):
             )
         )
 
-        startrail_video_file = img_folder.parent.joinpath(
+        startrail_video_file = vid_folder.joinpath(
             'allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
                 camera.id,
                 timespec,
@@ -1093,7 +1092,7 @@ class VideoWorker(Process):
         task.setSuccess('Generated keogram and/or star trail')
 
 
-    def uploadAllskyEndOfNight(self, task, timespec, img_folder, night, camera):
+    def uploadAllskyEndOfNight(self, task, timespec, night, camera):
         task.setRunning()
 
         if not night:
@@ -1201,7 +1200,7 @@ class VideoWorker(Process):
         task.setSuccess('Uploaded EndOfNight data')
 
 
-    def systemHealthCheck(self, task, timespec, img_folder, night, camera):
+    def systemHealthCheck(self, task, timespec, night, camera):
         task.setRunning()
 
         # check filesystems
@@ -1246,7 +1245,7 @@ class VideoWorker(Process):
         task.setSuccess('Health check complete')
 
 
-    def updateAuroraData(self, task, timespec, img_folder, night, camera):
+    def updateAuroraData(self, task, timespec, night, camera):
         task.setRunning()
 
         aurora = IndiAllskyAuroraUpdate(self.config)
@@ -1255,7 +1254,7 @@ class VideoWorker(Process):
         task.setSuccess('Aurora data updated')
 
 
-    def updateSmokeData(self, task, timespec, img_folder, night, camera):
+    def updateSmokeData(self, task, timespec, night, camera):
         task.setRunning()
 
         smoke = IndiAllskySmokeUpdate(self.config)
@@ -1264,7 +1263,7 @@ class VideoWorker(Process):
         task.setSuccess('Smoke data updated')
 
 
-    def updateSatelliteTleData(self, task, timespec, img_folder, night, camera):
+    def updateSatelliteTleData(self, task, timespec, night, camera):
         task.setRunning()
 
         satellite = IndiAllskyUpdateSatelliteData(self.config)
@@ -1273,7 +1272,7 @@ class VideoWorker(Process):
         task.setSuccess('Satellite data updated')
 
 
-    def expireData(self, task, timespec, img_folder, night, camera):
+    def expireData(self, task, timespec, night, camera):
         task.setRunning()
 
 
@@ -1479,7 +1478,7 @@ class VideoWorker(Process):
 
         # Remove empty folders
         dir_list = list()
-        self._getFolderFolders(img_folder, dir_list)
+        self._getFolderFolders(self.image_dir, dir_list)
 
         empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
         for d in empty_dirs:
@@ -1493,6 +1492,28 @@ class VideoWorker(Process):
                 logger.error('Cannot remove folder: %s', str(e))
 
         task.setSuccess('Expired data')
+
+
+    def _getVideoFolder(self, video_date, night, camera):
+        if night:
+            # videos should be written to previous day's folder until noon
+            day_ref = video_date - timedelta(hours=12)
+        else:
+            # videos should be written to current day's folder
+            day_ref = video_date
+
+
+        video_folder = self.image_dir.joinpath(
+            'ccd_{0:s}'.format(camera.uuid),
+            'timelapse',
+            '{0:s}'.format(day_ref.strftime('%Y%m%d')),
+        )
+
+
+        if not video_folder.exists():
+            video_folder.mkdir(mode=0o755, parents=True)
+
+        return video_folder
 
 
     def _getFolderFilesByExt(self, folder, file_list, extension_list=None):

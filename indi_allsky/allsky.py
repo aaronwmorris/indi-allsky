@@ -630,7 +630,6 @@ class IndiAllSky(object):
         # This will delete old images from the filesystem and DB
         jobdata = {
             'action'       : 'systemHealthCheck',
-            'img_folder'   : str(self.image_dir),  # not needed
             'timespec'     : None,  # Not needed
             'night'        : None,  # Not needed
             'camera_id'    : None,  # Not needed
@@ -1241,7 +1240,6 @@ class IndiAllSky(object):
         for camera in active_cameras:
             jobdata = {
                 'action'       : 'updateAuroraData',
-                'img_folder'   : str(self.image_dir),
                 'timespec'     : None,  # Not needed
                 'night'        : None,  # Not needed
                 'camera_id'    : camera.id,
@@ -1268,7 +1266,6 @@ class IndiAllSky(object):
         for camera in active_cameras:
             jobdata = {
                 'action'       : 'updateSmokeData',
-                'img_folder'   : str(self.image_dir),
                 'timespec'     : None,  # Not needed
                 'night'        : None,  # Not needed
                 'camera_id'    : camera.id,
@@ -1288,7 +1285,6 @@ class IndiAllSky(object):
     def _updateSatelliteTleData(self, task_state=TaskQueueState.QUEUED):
         jobdata = {
             'action'       : 'updateSatelliteTleData',
-            'img_folder'   : str(self.image_dir),
             'timespec'     : None,  # Not needed
             'night'        : None,  # Not needed
             'camera_id'    : None,  # Not needed
