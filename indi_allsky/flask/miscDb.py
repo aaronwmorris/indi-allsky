@@ -1096,7 +1096,7 @@ class miscDb(object):
             uuid=thumbnail_metadata['uuid'],
             filename=str(filename_p),
             createDate=createDate,
-            origin=thumbnail_metadata['origin'],
+            origin=thumbnail_metadata.get('origin', -1),  # remote might not send data
             width=thumbnail_metadata['width'],
             height=thumbnail_metadata['height'],
             camera_id=camera_id,
