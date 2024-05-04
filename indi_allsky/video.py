@@ -266,7 +266,15 @@ class VideoWorker(Process):
             task.setFailed('Invalid codec in config, timelapse generation failed')
             return
 
-        video_file = img_folder.parent.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, video_format))
+
+        video_file = img_folder.parent.joinpath(
+            'allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+                camera.id,
+                timespec,
+                timeofday,
+                video_format,
+            )
+        )
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
@@ -443,7 +451,15 @@ class VideoWorker(Process):
             task.setFailed('Invalid codec in config, timelapse generation failed')
             return
 
-        video_file = img_folder.parent.joinpath('allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, video_format))
+
+        video_file = img_folder.parent.joinpath(
+            'allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+                camera.id,
+                timespec,
+                timeofday,
+                video_format,
+            )
+        )
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
