@@ -102,16 +102,12 @@ class ExpireImages(object):
         cutoff_age_images_date = cutoff_age_images.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_images = IndiAllSkyDbImageTable.query\
-            .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbImageTable.dayDate < cutoff_age_images_date)
         old_fits_images = IndiAllSkyDbFitsImageTable.query\
-            .join(IndiAllSkyDbFitsImageTable.camera)\
             .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_date)
         old_raw_images = IndiAllSkyDbRawImageTable.query\
-            .join(IndiAllSkyDbRawImageTable.camera)\
             .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)
         old_panorama_images = IndiAllSkyDbPanoramaImageTable.query\
-            .join(IndiAllSkyDbPanoramaImageTable.camera)\
             .filter(IndiAllSkyDbPanoramaImageTable.dayDate < cutoff_age_images_date)
 
 
@@ -119,19 +115,14 @@ class ExpireImages(object):
         cutoff_age_timelapse_date = cutoff_age_timelapse.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_videos = IndiAllSkyDbVideoTable.query\
-            .join(IndiAllSkyDbVideoTable.camera)\
             .filter(IndiAllSkyDbVideoTable.dayDate < cutoff_age_timelapse_date)
         old_keograms = IndiAllSkyDbKeogramTable.query\
-            .join(IndiAllSkyDbKeogramTable.camera)\
             .filter(IndiAllSkyDbKeogramTable.dayDate < cutoff_age_timelapse_date)
         old_startrails = IndiAllSkyDbStarTrailsTable.query\
-            .join(IndiAllSkyDbStarTrailsTable.camera)\
             .filter(IndiAllSkyDbStarTrailsTable.dayDate < cutoff_age_timelapse_date)
         old_startrails_videos = IndiAllSkyDbStarTrailsVideoTable.query\
-            .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
             .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate < cutoff_age_timelapse_date)
         old_panorama_videos = IndiAllSkyDbPanoramaVideoTable.query\
-            .join(IndiAllSkyDbPanoramaVideoTable.camera)\
             .filter(IndiAllSkyDbPanoramaVideoTable.dayDate < cutoff_age_timelapse_date)
 
 
