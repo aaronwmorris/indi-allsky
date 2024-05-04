@@ -49,7 +49,7 @@ logger.addHandler(LOG_HANDLER_STREAM)
 
 
 
-class FlushImages(object):
+class ExpireImages(object):
 
     def __init__(self):
         try:
@@ -338,8 +338,8 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
 
-    fi = FlushImages()
-    fi.image_days = args.days
-    fi.video_days = args.timelapse_days
+    ei = ExpireImages()
+    ei.image_days = args.days
+    ei.video_days = args.timelapse_days
 
-    fi.main()
+    ei.main()
