@@ -679,6 +679,7 @@ class ImageWorker(Process):
 
             image_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
+                'origin'     : constants.IMAGE,
                 'createDate' : exp_date.timestamp(),
                 'utc_offset' : exp_date.astimezone().utcoffset().total_seconds(),
                 'night'      : bool(self.night_v.value),

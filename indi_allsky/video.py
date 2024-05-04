@@ -952,6 +952,7 @@ class VideoWorker(Process):
 
         keogram_thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
+            'origin'     : constants.KEOGRAM,
             'createDate' : now.timestamp(),
             'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'night'      : night,
@@ -982,6 +983,7 @@ class VideoWorker(Process):
 
             startrail_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
+                'origin'     : constants.STARTRAIL,
                 'createDate' : now.timestamp(),
                 'utc_offset' : now.astimezone().utcoffset().total_seconds(),
                 'night'      : night,
