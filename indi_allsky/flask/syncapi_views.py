@@ -17,7 +17,7 @@ from flask import current_app as app
 
 #from flask_login import login_required
 
-#from .. import constants
+from .. import constants
 
 from .base_views import BaseView
 
@@ -650,15 +650,30 @@ class SyncApiThumbnailView(SyncApiBaseView):
         dayDate = datetime.strptime(thumbnail_metadata['dayDate'], '%Y%m%d').date()  # we do not really care about this
 
 
-        folder = self.image_dir.joinpath(
-            'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
-            'thumbnails',
-            dayDate.strftime('%Y%m%d'),
-            camera_createDate.strftime('%d_%H'),
-        )
+        if thumbnail_metadata.get('origin', -1) in (
+            -1,
+            constants.IMAGE,
+            constants.PANORAMA_IMAGE,
+            constants.RAW_IMAGE,
+            constants.FITS_IMAGE,
+        ):
+            thumbnail_dir_p = self.image_dir.joinpath(
+                'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
+                'subs',
+                dayDate.strftime('%Y%m%d'),
+                'thumbnails',
+                camera_createDate.strftime('%d_%H'),
+            )
+        else:
+            thumbnail_dir_p = self.image_dir.joinpath(
+                'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
+                'timelapse',
+                dayDate.strftime('%Y%m%d'),
+                'thumbnails',
+            )
 
 
-        thumbnail_file_p = folder.joinpath(self.filename_t.format(thumbnail_metadata['uuid'], tmp_file_p.suffix))  # suffix includes dot
+        thumbnail_file_p = thumbnail_dir_p.joinpath(self.filename_t.format(thumbnail_metadata['uuid'], tmp_file_p.suffix))  # suffix includes dot
 
 
         if not thumbnail_file_p.exists():

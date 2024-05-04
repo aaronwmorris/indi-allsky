@@ -970,7 +970,12 @@ class miscDb(object):
         thumbnail_uuid_str = str(uuid.uuid4())
 
 
-        if entry_metadata['type'] in (constants.IMAGE,):
+        if thumbnail_metadata['origin'] in (
+            constants.IMAGE,
+            constants.PANORAMA_IMAGE,
+            constants.RAW_IMAGE,
+            constants.FITS_IMAGE,
+        ):
             thumbnail_dir_p = self.image_dir.joinpath(
                 'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
                 'subs',
