@@ -184,7 +184,15 @@ class SyncApiBaseView(BaseView):
         else:
             timeofday_str = 'day'
 
-        filename_p = date_folder.joinpath(self.filename_t.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, tmp_file_p.suffix))  # suffix includes dot
+        filename_p = date_folder.joinpath(
+            self.filename_t.format(
+                camera.id,
+                'timelapse',
+                d_dayDate.strftime('%Y%m%d'),
+                timeofday_str,
+                tmp_file_p.suffix,  # suffix includes dot
+            )
+        )
 
         if not filename_p.exists():
             try:
@@ -539,12 +547,19 @@ class SyncApiImageView(SyncApiBaseView):
             day_ref = exp_date
             timeofday_str = 'day'
 
-        hour_str = exp_date.strftime('%d_%H')
 
-        day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
+        day_folder = self.image_dir.joinpath(
+            'ccd_{0:s}'.format(camera.uuid),
+            'subs',
+            '{0:s}'.format(day_ref.strftime('%Y%m%d')),
+            timeofday_str,
+        )
 
         if not day_folder.exists():
             day_folder.mkdir(mode=0o755, parents=True)
+
+
+        hour_str = exp_date.strftime('%d_%H')
 
         hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
         if not hour_folder.exists():

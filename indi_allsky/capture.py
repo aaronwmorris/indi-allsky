@@ -1366,7 +1366,12 @@ class CaptureWorker(Process):
             .one()
 
 
-        img_day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), 'night')
+        img_day_folder = self.image_dir.joinpath(
+            'ccd_{0:s}'.format(camera.uuid),
+            'timelapse',
+            '{0:s}'.format(timespec),
+            'night',
+        )
 
         logger.warning('Generating night time keogram for %s camera %d', timespec, camera.id)
 
@@ -1400,7 +1405,12 @@ class CaptureWorker(Process):
             .one()
 
 
-        img_day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), 'day')
+        img_day_folder = self.image_dir.joinpath(
+            'ccd_{0:s}'.format(camera.uuid),
+            'timelapse',
+            '{0:s}'.format(timespec),
+            'day',
+        )
 
         logger.warning('Generating day time keogram for %s camera %d', timespec, camera.id)
 

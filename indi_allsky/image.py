@@ -488,7 +488,7 @@ class ImageWorker(Process):
 
 
         if self.config.get('IMAGE_EXPORT_RAW'):
-            self.export_raw_image(i_ref, jpeg_exif=jpeg_exif)
+            self.export_raw_image(i_ref, camera, jpeg_exif=jpeg_exif)
 
 
         # Calculate ADU before stretch
@@ -1041,7 +1041,7 @@ class ImageWorker(Process):
         self._miscUpload.s3_upload_fits(fits_entry, fits_metadata)
 
 
-    def export_raw_image(self, i_ref, jpeg_exif=None):
+    def export_raw_image(self, i_ref, camera, jpeg_exif=None):
         if not self.config.get('IMAGE_EXPORT_RAW'):
             return
 
@@ -1135,18 +1135,25 @@ class ImageWorker(Process):
             day_ref = i_ref['exp_date']
             timeofday_str = 'day'
 
-        date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
 
-        hour_str = i_ref['exp_date'].strftime('%d_%H')
+        day_folder = export_dir.joinpath(
+            'ccd_{0:s}'.format(camera.uuid),
+            '{0:s}'.format(day_ref.strftime('%Y%m%d')),
+            timeofday_str,
+        )
 
-        day_folder = export_dir.joinpath('{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
         if not day_folder.exists():
             day_folder.mkdir(mode=0o755, parents=True)
+
+
+        hour_str = i_ref['exp_date'].strftime('%d_%H')
 
         hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
         if not hour_folder.exists():
             hour_folder.mkdir(mode=0o755)
 
+
+        date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
 
         raw_filename_t = 'raw_{0:s}'.format(self.filename_t)
         filename = hour_folder.joinpath(raw_filename_t.format(
@@ -1370,11 +1377,18 @@ class ImageWorker(Process):
             day_ref = exp_date
             timeofday_str = 'day'
 
-        hour_str = exp_date.strftime('%d_%H')
 
-        day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
+        day_folder = self.image_dir.joinpath(
+            'ccd_{0:s}'.format(camera.uuid),
+            'subs',
+            '{0:s}'.format(day_ref.strftime('%Y%m%d')),
+            timeofday_str,
+        )
+
         if not day_folder.exists():
             day_folder.mkdir(mode=0o755, parents=True)
+
+        hour_str = exp_date.strftime('%d_%H')
 
         hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
         if not hour_folder.exists():

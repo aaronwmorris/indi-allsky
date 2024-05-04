@@ -622,9 +622,32 @@ class VideoWorker(Process):
             return
 
 
-        keogram_file = img_folder.parent.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, self.config['IMAGE_FILE_TYPE']))
-        startrail_file = img_folder.parent.joinpath('allsky-startrail_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, self.config['IMAGE_FILE_TYPE']))
-        startrail_video_file = img_folder.parent.joinpath('allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, video_format))
+        keogram_file = img_folder.parent.joinpath(
+            'allsky-keogram_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+                camera.id,
+                timespec,
+                timeofday,
+                self.config['IMAGE_FILE_TYPE'],
+            )
+        )
+
+        startrail_file = img_folder.parent.joinpath(
+            'allsky-startrail_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+                camera.id,
+                timespec,
+                timeofday,
+                self.config['IMAGE_FILE_TYPE'],
+            )
+        )
+
+        startrail_video_file = img_folder.parent.joinpath(
+            'allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+                camera.id,
+                timespec,
+                timeofday,
+                video_format,
+            )
+        )
 
         if keogram_file.exists():
             logger.warning('Keogram is already generated: %s', keogram_file)
