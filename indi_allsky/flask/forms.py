@@ -4383,9 +4383,11 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
             ('imx464', 'IMX464 - 1/1.8" - POA Neptune-C II'),
             ('imx664', 'IMX664 - 1/1.8" - POA Neptune 664C'),
             ('imx678', 'IMX678 - 1/1.8"'),
+            ('imx682', 'IMX682 - 1/1.7" - 64MP Hawkeye'),
             ('sc2210', 'SC2210 - 1/1.8" - ASI220'),
         ),
         'Medium - 10-13mm Class' : (
+            ('ov64a40', 'OV64A40 - 1/1.32 - 64MP OwlSight'),
             ('imx250', 'IMX250 - 2/3"'),
             ('imx264', 'IMX264 - 2/3"'),
             ('imx429', 'IMX429 - 2/3" - POA Apollo-M MINI'),
@@ -4398,8 +4400,9 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         'Large' : (
             ('imx174', 'IMX174 - 1/1.2"'),
             ('imx183', 'IMX183 - 1"'),
-            ('imx253', 'IMX253 - 1.1"'),
             ('imx249', 'IMX249 - 1/1.2" - POA Xena-M'),
+            ('imx253', 'IMX253 - 1.1"'),
+            ('imx283', 'IMX283 - 1" - Arducam Klarity'),
             ('imx304', 'IMX304 - 1.1"'),
             ('imx432', 'IMX432 - 1.1"'),
             ('imx533', 'IMX533 - 1"'),
