@@ -4128,20 +4128,11 @@ class AjaxTimelapseGeneratorView(BaseView):
                 timeofday_str = 'day'
 
 
-            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-
-            img_day_folder = image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), timeofday_str)
-            if not img_day_folder.exists():
-                # try legacy folder
-                img_day_folder = image_dir.joinpath('{0:s}'.format(timespec), timeofday_str)
-
-
             app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata_video = {
                 'action'      : 'generateVideo',
                 'timespec'    : timespec,
-                'img_folder'  : str(img_day_folder),
                 'night'       : night,
                 'camera_id'   : camera.id,
             }
@@ -4149,7 +4140,6 @@ class AjaxTimelapseGeneratorView(BaseView):
             jobdata_kst = {
                 'action'      : 'generateKeogramStarTrails',
                 'timespec'    : timespec,
-                'img_folder'  : str(img_day_folder),
                 'night'       : night,
                 'camera_id'   : camera.id,
             }
@@ -4175,7 +4165,6 @@ class AjaxTimelapseGeneratorView(BaseView):
                 jobdata_panorama_video = {
                     'action'      : 'generatePanoramaVideo',
                     'timespec'    : timespec,
-                    'img_folder'  : str(img_day_folder),
                     'night'       : night,
                     'camera_id'   : camera.id,
                 }
@@ -4207,20 +4196,11 @@ class AjaxTimelapseGeneratorView(BaseView):
                 timeofday_str = 'day'
 
 
-            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-
-            img_day_folder = image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), timeofday_str)
-            if not img_day_folder.exists():
-                # try legacy folder
-                img_day_folder = image_dir.joinpath('{0:s}'.format(timespec), timeofday_str)
-
-
             app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata = {
                 'action'      : 'generateVideo',
                 'timespec'    : timespec,
-                'img_folder'  : str(img_day_folder),
                 'night'       : night,
                 'camera_id'   : camera.id,
             }
@@ -4256,20 +4236,11 @@ class AjaxTimelapseGeneratorView(BaseView):
                 timeofday_str = 'day'
 
 
-            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-
-            img_day_folder = image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), timeofday_str)
-            if not img_day_folder.exists():
-                # try legacy folder
-                img_day_folder = image_dir.joinpath('{0:s}'.format(timespec), timeofday_str)
-
-
             app.logger.warning('Generating %s time panorama timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata = {
                 'action'      : 'generatePanoramaVideo',
                 'timespec'    : timespec,
-                'img_folder'  : str(img_day_folder),
                 'night'       : night,
                 'camera_id'   : camera.id,
             }
@@ -4297,20 +4268,11 @@ class AjaxTimelapseGeneratorView(BaseView):
                 timeofday_str = 'day'
 
 
-            image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-
-            img_day_folder = image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(timespec), timeofday_str)
-            if not img_day_folder.exists():
-                # try legacy folder
-                img_day_folder = image_dir.joinpath('{0:s}'.format(timespec), timeofday_str)
-
-
             app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata = {
                 'action'      : 'generateKeogramStarTrails',
                 'timespec'    : timespec,
-                'img_folder'  : str(img_day_folder),
                 'night'       : night,
                 'camera_id'   : camera.id,
             }
@@ -4335,7 +4297,6 @@ class AjaxTimelapseGeneratorView(BaseView):
             jobdata = {
                 'action'      : 'uploadAllskyEndOfNight',
                 'timespec'    : None,  # not needed
-                'img_folder'  : '',  # not needed
                 'night'       : True,
                 'camera_id'   : camera.id,
             }
