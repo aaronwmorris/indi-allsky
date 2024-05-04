@@ -64,6 +64,7 @@ class gcp_storage(GenericFileTransfer):
     def put(self, *args, **kwargs):
         super(gcp_storage, self).put(*args, **kwargs)
 
+
         local_file = kwargs['local_file']
         bucket = kwargs['bucket']
         key = kwargs['key']
@@ -74,8 +75,8 @@ class gcp_storage(GenericFileTransfer):
         local_file_p = Path(local_file)
 
 
-        bucket = self.client.bucket(bucket)
-        blob = bucket.blob(key)
+        gcp_bucket = self.client.bucket(bucket)
+        blob = gcp_bucket.blob(key)
 
 
         #extra_args = dict()
@@ -136,4 +137,47 @@ class gcp_storage(GenericFileTransfer):
         local_file_size = local_file_p.stat().st_size
         logger.info('File transferred in %0.4f s (%0.2f kB/s)', upload_elapsed_s, local_file_size / upload_elapsed_s / 1024)
 
+
+    def delete(self, *args, **kwargs):
+        super(gcp_storage, self).delete(*args, **kwargs)
+
+        import google.api_core.exceptions
+
+
+        # delete file
+        bucket = kwargs['bucket']
+        key = kwargs['key']
+
+
+        gcp_bucket = self.client.bucket(bucket)
+        blob = gcp_bucket.blob(key)
+
+
+        delete_kwargs = {
+            'timeout'               : (self.connect_timeout, self.timeout),
+            'retry'                 : None,
+        }
+
+
+        try:
+            blob.delete(
+                **delete_kwargs,
+            )
+        except google.api_core.exceptions.NotFound:
+            logger.error('S3 file not found')
+        except socket.gaierror as e:
+            raise ConnectionFailure(str(e)) from e
+        except socket.timeout as e:
+            raise ConnectionFailure(str(e)) from e
+        except ConnectionRefusedError as e:
+            raise ConnectionFailure(str(e)) from e
+        except requests.exceptions.ConnectTimeout as e:
+            raise ConnectionFailure(str(e)) from e
+        except requests.exceptions.ConnectionError as e:
+            raise ConnectionFailure(str(e)) from e
+        except requests.exceptions.ReadTimeout as e:
+            raise ConnectionFailure(str(e)) from e
+
+
+        logger.info('S3 object deleted: %s', key)
 

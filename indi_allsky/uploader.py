@@ -162,6 +162,8 @@ class FileUploader(Thread):
 
         local_file = task.data.get('local_file')
 
+        s3_key = task.data.get('s3_key')
+
         entry_model = task.data.get('model')
         entry_id = task.data.get('id')
 
@@ -193,6 +195,9 @@ class FileUploader(Thread):
 
             local_file_p = Path(entry.getFilesystemPath())
 
+        elif s3_key:
+            # This is for removing s3 entries
+            pass
 
         elif local_file:
             # use given file name
@@ -251,8 +256,8 @@ class FileUploader(Thread):
             put_kwargs = {
                 'local_file'    : local_file_p,
                 'bucket'        : self.config['S3UPLOAD']['BUCKET'],
-                'namespace'     : self.config['S3UPLOAD'].get('NAMESPACE', ''),
-                'key'           : str(s3_key),
+                'namespace'     : self.config['S3UPLOAD'].get('NAMESPACE', ''),  # oci
+                'key'           : s3_key,
                 'storage_class' : self.config['S3UPLOAD']['STORAGE_CLASS'],
                 'acl'           : self.config['S3UPLOAD']['ACL'],
                 'metadata'      : metadata,
@@ -267,6 +272,42 @@ class FileUploader(Thread):
 
 
             client = client_class(self.config)
+            client.connect_timeout = self.config.get('S3UPLOAD', {}).get('CONNECT_TIMEOUT', 10)
+            client.timeout = self.config.get('S3UPLOAD', {}).get('TIMEOUT', 60)
+
+
+            if self.config['S3UPLOAD']['PORT']:
+                client.port = self.config['S3UPLOAD']['PORT']
+
+
+        elif action == constants.DELETE_S3:
+            connect_kwargs = {
+                'username'     : '*',  # not logging access key
+                'access_key'   : self.config['S3UPLOAD']['ACCESS_KEY'],
+                'secret_key'   : self.config['S3UPLOAD']['SECRET_KEY'],
+                'creds_file'   : self.config['S3UPLOAD'].get('CREDS_FILE'),
+                'region'       : self.config['S3UPLOAD']['REGION'],
+                'hostname'     : self.config['S3UPLOAD']['HOST'],  # endpoint_url
+                'tls'          : self.config['S3UPLOAD']['TLS'],
+                'cert_bypass'  : self.config['S3UPLOAD']['CERT_BYPASS'],
+            }
+
+            put_kwargs = {
+                'local_file'    : s3_key,  # compatibility
+                'bucket'        : self.config['S3UPLOAD']['BUCKET'],
+                'namespace'     : self.config['S3UPLOAD'].get('NAMESPACE', ''),  # oci
+                'key'           : s3_key,
+            }
+
+            try:
+                client_class = getattr(filetransfer, self.config['S3UPLOAD']['CLASSNAME'])
+            except AttributeError:
+                logger.error('Unknown filetransfer class: %s', self.config['S3UPLOAD']['CLASSNAME'])
+                task.setFailed('Unknown filetransfer class: {0:s}'.format(self.config['S3UPLOAD']['CLASSNAME']))
+                return
+
+
+            client = client_class(self.config, delete=True)
             client.connect_timeout = self.config.get('S3UPLOAD', {}).get('CONNECT_TIMEOUT', 10)
             client.timeout = self.config.get('S3UPLOAD', {}).get('TIMEOUT', 60)
 
