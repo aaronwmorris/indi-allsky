@@ -1381,7 +1381,7 @@ class ImageWorker(Process):
 
         day_folder = self.image_dir.joinpath(
             'ccd_{0:s}'.format(camera.uuid),
-            'subs',
+            'subframes',
             '{0:s}'.format(day_ref.strftime('%Y%m%d')),
             timeofday_str,
         )

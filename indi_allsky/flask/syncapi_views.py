@@ -550,7 +550,7 @@ class SyncApiImageView(SyncApiBaseView):
 
         day_folder = self.image_dir.joinpath(
             'ccd_{0:s}'.format(camera.uuid),
-            'subs',
+            'subframes',
             '{0:s}'.format(day_ref.strftime('%Y%m%d')),
             timeofday_str,
         )
@@ -659,7 +659,7 @@ class SyncApiThumbnailView(SyncApiBaseView):
         ):
             thumbnail_dir_p = self.image_dir.joinpath(
                 'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
-                'subs',
+                'subframes',
                 dayDate.strftime('%Y%m%d'),
                 'thumbnails',
                 camera_createDate.strftime('%d_%H'),

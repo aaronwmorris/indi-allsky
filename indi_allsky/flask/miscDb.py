@@ -978,7 +978,7 @@ class miscDb(object):
         ):
             thumbnail_dir_p = self.image_dir.joinpath(
                 'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
-                'subs',
+                'subframes',
                 dayDate.strftime('%Y%m%d'),
                 'thumbnails',
                 createDate.strftime('%d_%H'),
