@@ -975,16 +975,20 @@ class miscDb(object):
         if thumbnail_metadata['origin'] in (
             constants.IMAGE,
             constants.PANORAMA_IMAGE,
-            constants.RAW_IMAGE,
-            constants.FITS_IMAGE,
         ):
+            if thumbnail_metadata['origin'] == constants.PANORAMA_IMAGE:
+                type_folder = 'panoramas'
+            else:
+                # constants.IMAGE
+                type_folder = 'exposures'
+
             thumbnail_dir_p = self.image_dir.joinpath(
                 'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
-                'subframes',
+                type_folder,
                 dayDate.strftime('%Y%m%d'),
                 timeofday,
-                'thumbnails',
                 createDate.strftime('%d_%H'),
+                'thumbnails',
             )
         else:
             thumbnail_dir_p = self.image_dir.joinpath(

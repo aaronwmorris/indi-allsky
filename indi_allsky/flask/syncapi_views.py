@@ -468,6 +468,7 @@ class SyncApiImageView(SyncApiBaseView):
     model = IndiAllSkyDbImageTable
     filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
     add_function = 'addImage'
+    type_folder = 'exposures'
 
 
     def processPost(self, camera, image_metadata, tmp_file_p, overwrite=False):
@@ -550,7 +551,7 @@ class SyncApiImageView(SyncApiBaseView):
 
         day_folder = self.image_dir.joinpath(
             'ccd_{0:s}'.format(camera.uuid),
-            'subframes',
+            self.type_folder,
             '{0:s}'.format(day_ref.strftime('%Y%m%d')),
             timeofday_str,
         )
@@ -606,8 +607,7 @@ class SyncApiRawImageView(SyncApiImageView):  # image parent
     model = IndiAllSkyDbRawImageTable
     filename_t = 'raw_ccd{0:d}_{1:s}{2:s}'
     add_function = 'addRawImage'
-
-    # fixme need processImage/getImageFolder function for export folder
+    type_folder = 'export'  # fixme need processImage/getImageFolder function for export folder
 
 
 class SyncApiFitsImageView(SyncApiImageView):  # image parent
@@ -616,6 +616,7 @@ class SyncApiFitsImageView(SyncApiImageView):  # image parent
     model = IndiAllSkyDbFitsImageTable
     filename_t = 'ccd{0:d}_{1:s}{2:s}'
     add_function = 'addFitsImage'
+    type_folder = 'fits'
 
 
 class SyncApiPanoramaImageView(SyncApiImageView):  # image parent
@@ -624,6 +625,7 @@ class SyncApiPanoramaImageView(SyncApiImageView):  # image parent
     model = IndiAllSkyDbPanoramaImageTable
     filename_t = 'panorama_ccd{0:d}_{1:s}{2:s}'
     add_function = 'addPanoramaImage'
+    type_folder = 'panoramas'
 
 
 class SyncApiPanoramaVideoView(SyncApiBaseView):
@@ -662,18 +664,17 @@ class SyncApiThumbnailView(SyncApiBaseView):
             -1,
             constants.IMAGE,
             constants.PANORAMA_IMAGE,
-            constants.RAW_IMAGE,
-            constants.FITS_IMAGE,
         ):
             thumbnail_dir_p = self.image_dir.joinpath(
                 'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
-                'subframes',
+                self.type_folder,
                 dayDate.strftime('%Y%m%d'),
                 timeofday,
-                'thumbnails',
                 camera_createDate.strftime('%d_%H'),
+                'thumbnails',
             )
         else:
+            # constants.KEOGRAM and constants.STARTRAIL
             thumbnail_dir_p = self.image_dir.joinpath(
                 'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
                 'timelapse',
