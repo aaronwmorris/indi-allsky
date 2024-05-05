@@ -963,8 +963,10 @@ class miscDb(object):
         if thumbnail_metadata['night']:
             # day date for night is offset by 12 hours
             dayDate = (createDate - timedelta(hours=12)).date()
+            timeofday = 'night'
         else:
             dayDate = createDate.date()
+            timeofday = 'day'
 
 
         thumbnail_uuid_str = str(uuid.uuid4())
@@ -980,6 +982,7 @@ class miscDb(object):
                 'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
                 'subframes',
                 dayDate.strftime('%Y%m%d'),
+                timeofday,
                 'thumbnails',
                 createDate.strftime('%d_%H'),
             )

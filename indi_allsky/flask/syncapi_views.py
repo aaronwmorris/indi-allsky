@@ -647,7 +647,15 @@ class SyncApiThumbnailView(SyncApiBaseView):
         thumbnail_metadata['createDate'] += (thumbnail_metadata['utc_offset'] - datetime.now().astimezone().utcoffset().total_seconds())
 
         camera_createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
-        dayDate = datetime.strptime(thumbnail_metadata['dayDate'], '%Y%m%d').date()  # we do not really care about this
+
+
+        if thumbnail_metadata['night']:
+            # day date for night is offset by 12 hours
+            dayDate = (camera_createDate - timedelta(hours=12)).date()
+            timeofday = 'night'
+        else:
+            dayDate = camera_createDate.date()
+            timeofday = 'day'
 
 
         if thumbnail_metadata.get('origin', -1) in (
@@ -661,6 +669,7 @@ class SyncApiThumbnailView(SyncApiBaseView):
                 'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
                 'subframes',
                 dayDate.strftime('%Y%m%d'),
+                timeofday,
                 'thumbnails',
                 camera_createDate.strftime('%d_%H'),
             )
