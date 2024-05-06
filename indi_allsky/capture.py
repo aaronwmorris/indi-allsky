@@ -1131,6 +1131,7 @@ class CaptureWorker(Process):
         task_setlocation = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.MAIN,
             state=TaskQueueState.MANUAL,
+            priority=100,
             data={
                 'action'      : 'setlocation',
                 'camera_id'   : self.camera_id,

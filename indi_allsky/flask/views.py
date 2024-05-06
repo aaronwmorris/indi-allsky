@@ -2069,6 +2069,7 @@ class AjaxConfigView(BaseView):
             task_reload = IndiAllSkyDbTaskQueueTable(
                 queue=TaskQueueQueue.MAIN,
                 state=TaskQueueState.MANUAL,
+                priority=100,
                 data={'action' : 'reload'},
             )
 
@@ -2122,6 +2123,7 @@ class AjaxSetTimeView(BaseView):
         task_settime = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.MAIN,
             state=TaskQueueState.MANUAL,
+            priority=100,
             data={
                 'action'      : 'settime',
                 'time_offset' : time_offset,
@@ -3080,6 +3082,7 @@ class AjaxSystemInfoView(BaseView):
                 task_reload = IndiAllSkyDbTaskQueueTable(
                     queue=TaskQueueQueue.MAIN,
                     state=TaskQueueState.MANUAL,
+                    priority=100,
                     data={'action' : 'reload'},
                 )
 
@@ -4148,11 +4151,13 @@ class AjaxTimelapseGeneratorView(BaseView):
             task_video = IndiAllSkyDbTaskQueueTable(
                 queue=TaskQueueQueue.VIDEO,
                 state=TaskQueueState.MANUAL,
+                priority=100,
                 data=jobdata_video,
             )
             task_kst = IndiAllSkyDbTaskQueueTable(
                 queue=TaskQueueQueue.VIDEO,
                 state=TaskQueueState.MANUAL,
+                priority=100,
                 data=jobdata_kst,
             )
 
@@ -4172,6 +4177,7 @@ class AjaxTimelapseGeneratorView(BaseView):
                 task_panorama_video = IndiAllSkyDbTaskQueueTable(
                     queue=TaskQueueQueue.VIDEO,
                     state=TaskQueueState.MANUAL,
+                    priority=100,
                     data=jobdata_panorama_video,
                 )
 
@@ -4208,6 +4214,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             task = IndiAllSkyDbTaskQueueTable(
                 queue=TaskQueueQueue.VIDEO,
                 state=TaskQueueState.MANUAL,
+                priority=100,
                 data=jobdata,
             )
             db.session.add(task)
@@ -4248,6 +4255,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             task = IndiAllSkyDbTaskQueueTable(
                 queue=TaskQueueQueue.VIDEO,
                 state=TaskQueueState.MANUAL,
+                priority=100,
                 data=jobdata,
             )
             db.session.add(task)
@@ -4280,6 +4288,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             task = IndiAllSkyDbTaskQueueTable(
                 queue=TaskQueueQueue.VIDEO,
                 state=TaskQueueState.MANUAL,
+                priority=100,
                 data=jobdata,
             )
             db.session.add(task)
@@ -4304,6 +4313,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             task = IndiAllSkyDbTaskQueueTable(
                 queue=TaskQueueQueue.VIDEO,
                 state=TaskQueueState.MANUAL,
+                priority=100,
                 data=jobdata,
             )
             db.session.add(task)
@@ -5348,6 +5358,7 @@ class AjaxUploadYoutubeView(BaseView):
         upload_task = IndiAllSkyDbTaskQueueTable(
             queue=TaskQueueQueue.UPLOAD,
             state=TaskQueueState.MANUAL,
+            priority=100,
             data=jobdata,
         )
 

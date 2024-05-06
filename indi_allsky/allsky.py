@@ -1119,7 +1119,10 @@ class IndiAllSky(object):
                     IndiAllSkyDbTaskQueueTable.queue == TaskQueueQueue.UPLOAD,
                 )
             )\
-            .order_by(IndiAllSkyDbTaskQueueTable.createDate.asc())
+            .order_by(
+                IndiAllSkyDbTaskQueueTable.priority.asc(),  # lower value, higher priority
+                IndiAllSkyDbTaskQueueTable.createDate.asc(),
+            )
 
 
         reload_received = False
