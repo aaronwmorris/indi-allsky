@@ -210,6 +210,7 @@ class IndiAllSkyDbThumbnailTable(IndiAllSkyDbFileBase):
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
+    origin = db.Column(db.Integer, nullable=True, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     data = db.Column(db.JSON, index=True)
@@ -589,6 +590,7 @@ class IndiAllSkyDbTaskQueueTable(db.Model):
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     state = db.Column(db.Enum(TaskQueueState, length=20, native_enum=False), nullable=False, index=True)
     queue = db.Column(db.Enum(TaskQueueQueue, length=20, native_enum=False), nullable=False, index=True)
+    priority = db.Column(db.Integer, nullable=True, index=True)  # lower value, higher priority (NULL is less than numbers for sqlite and mysql, higher for postgres)
     data = db.Column(db.JSON)
     result = db.Column(db.String(length=255), nullable=True)
 

@@ -208,7 +208,6 @@ class VideoWorker(Process):
 
         action = task.data['action']
         timespec = task.data['timespec']
-        img_folder = Path(task.data['img_folder'])
         night = task.data['night']
         camera_id = task.data['camera_id']
 
@@ -228,17 +227,11 @@ class VideoWorker(Process):
             return
 
 
-        if not img_folder.exists():
-            logger.error('Image folder does not exist: %s', img_folder)
-            task.setFailed('Image folder does not exist: {0:s}'.format(str(img_folder)))
-            return
-
-
         # perform the action
-        action_method(task, timespec, img_folder, night, camera)
+        action_method(task, timespec, night, camera)
 
 
-    def generateVideo(self, task, timespec, img_folder, night, camera):
+    def generateVideo(self, task, timespec, night, camera):
         task.setRunning()
 
         now = datetime.now()
@@ -266,7 +259,17 @@ class VideoWorker(Process):
             task.setFailed('Invalid codec in config, timelapse generation failed')
             return
 
-        video_file = img_folder.parent.joinpath('allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, video_format))
+
+        vid_folder = self._getVideoFolder(d_dayDate, camera)
+
+        video_file = vid_folder.joinpath(
+            'allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+                camera.id,
+                timespec,
+                timeofday,
+                video_format,
+            )
+        )
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
@@ -415,7 +418,7 @@ class VideoWorker(Process):
         self._miscUpload.youtube_upload_video(video_entry, video_metadata)
 
 
-    def generatePanoramaVideo(self, task, timespec, img_folder, night, camera):
+    def generatePanoramaVideo(self, task, timespec, night, camera):
         task.setRunning()
 
         now = datetime.now()
@@ -443,7 +446,17 @@ class VideoWorker(Process):
             task.setFailed('Invalid codec in config, timelapse generation failed')
             return
 
-        video_file = img_folder.parent.joinpath('allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, video_format))
+
+        vid_folder = self._getVideoFolder(d_dayDate, camera)
+
+        video_file = vid_folder.joinpath(
+            'allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+                camera.id,
+                timespec,
+                timeofday,
+                video_format,
+            )
+        )
 
         if video_file.exists():
             logger.warning('Video is already generated: %s', video_file)
@@ -593,7 +606,7 @@ class VideoWorker(Process):
         self._miscUpload.youtube_upload_panorama_video(video_entry, video_metadata)
 
 
-    def generateKeogramStarTrails(self, task, timespec, img_folder, night, camera):
+    def generateKeogramStarTrails(self, task, timespec, night, camera):
         task.setRunning()
 
         now = datetime.now()
@@ -622,9 +635,34 @@ class VideoWorker(Process):
             return
 
 
-        keogram_file = img_folder.parent.joinpath('allsky-keogram_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, self.config['IMAGE_FILE_TYPE']))
-        startrail_file = img_folder.parent.joinpath('allsky-startrail_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, self.config['IMAGE_FILE_TYPE']))
-        startrail_video_file = img_folder.parent.joinpath('allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(camera.id, timespec, timeofday, video_format))
+        vid_folder = self._getVideoFolder(d_dayDate, camera)
+
+        keogram_file = vid_folder.joinpath(
+            'allsky-keogram_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+                camera.id,
+                timespec,
+                timeofday,
+                self.config['IMAGE_FILE_TYPE'],
+            )
+        )
+
+        startrail_file = vid_folder.joinpath(
+            'allsky-startrail_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+                camera.id,
+                timespec,
+                timeofday,
+                self.config['IMAGE_FILE_TYPE'],
+            )
+        )
+
+        startrail_video_file = vid_folder.joinpath(
+            'allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+                camera.id,
+                timespec,
+                timeofday,
+                video_format,
+            )
+        )
 
         if keogram_file.exists():
             logger.warning('Keogram is already generated: %s', keogram_file)
@@ -929,6 +967,7 @@ class VideoWorker(Process):
 
         keogram_thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
+            'origin'     : constants.KEOGRAM,
             'createDate' : now.timestamp(),
             'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'night'      : night,
@@ -959,6 +998,7 @@ class VideoWorker(Process):
 
             startrail_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
+                'origin'     : constants.STARTRAIL,
                 'createDate' : now.timestamp(),
                 'utc_offset' : now.astimezone().utcoffset().total_seconds(),
                 'night'      : night,
@@ -1052,7 +1092,7 @@ class VideoWorker(Process):
         task.setSuccess('Generated keogram and/or star trail')
 
 
-    def uploadAllskyEndOfNight(self, task, timespec, img_folder, night, camera):
+    def uploadAllskyEndOfNight(self, task, timespec, night, camera):
         task.setRunning()
 
         if not night:
@@ -1160,7 +1200,7 @@ class VideoWorker(Process):
         task.setSuccess('Uploaded EndOfNight data')
 
 
-    def systemHealthCheck(self, task, timespec, img_folder, night, camera):
+    def systemHealthCheck(self, task, timespec, night, camera):
         task.setRunning()
 
         # check filesystems
@@ -1205,7 +1245,7 @@ class VideoWorker(Process):
         task.setSuccess('Health check complete')
 
 
-    def updateAuroraData(self, task, timespec, img_folder, night, camera):
+    def updateAuroraData(self, task, timespec, night, camera):
         task.setRunning()
 
         aurora = IndiAllskyAuroraUpdate(self.config)
@@ -1214,7 +1254,7 @@ class VideoWorker(Process):
         task.setSuccess('Aurora data updated')
 
 
-    def updateSmokeData(self, task, timespec, img_folder, night, camera):
+    def updateSmokeData(self, task, timespec, night, camera):
         task.setRunning()
 
         smoke = IndiAllskySmokeUpdate(self.config)
@@ -1223,7 +1263,7 @@ class VideoWorker(Process):
         task.setSuccess('Smoke data updated')
 
 
-    def updateSatelliteTleData(self, task, timespec, img_folder, night, camera):
+    def updateSatelliteTleData(self, task, timespec, night, camera):
         task.setRunning()
 
         satellite = IndiAllskyUpdateSatelliteData(self.config)
@@ -1232,7 +1272,7 @@ class VideoWorker(Process):
         task.setSuccess('Satellite data updated')
 
 
-    def expireData(self, task, timespec, img_folder, night, camera):
+    def expireData(self, task, timespec, night, camera):
         task.setRunning()
 
 
@@ -1438,7 +1478,7 @@ class VideoWorker(Process):
 
         # Remove empty folders
         dir_list = list()
-        self._getFolderFolders(img_folder, dir_list)
+        self._getFolderFolders(self.image_dir, dir_list)
 
         empty_dirs = filter(lambda p: not any(p.iterdir()), dir_list)
         for d in empty_dirs:
@@ -1452,6 +1492,22 @@ class VideoWorker(Process):
                 logger.error('Cannot remove folder: %s', str(e))
 
         task.setSuccess('Expired data')
+
+
+    def _getVideoFolder(self, video_date, camera):
+        day_ref = video_date
+
+        video_folder = self.image_dir.joinpath(
+            'ccd_{0:s}'.format(camera.uuid),
+            'timelapse',
+            '{0:s}'.format(day_ref.strftime('%Y%m%d')),
+        )
+
+
+        if not video_folder.exists():
+            video_folder.mkdir(mode=0o755, parents=True)
+
+        return video_folder
 
 
     def _getFolderFilesByExt(self, folder, file_list, extension_list=None):

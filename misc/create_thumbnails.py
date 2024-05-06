@@ -94,6 +94,7 @@ class CreateThumbnails(object):
 
             keogram_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
+                'origin'     : constants.KEOGRAM,
                 'createDate' : keogram_entry.createDate.timestamp(),
                 'night'      : keogram_entry.night,
                 'camera_uuid': keogram_entry.camera.uuid,
@@ -101,7 +102,7 @@ class CreateThumbnails(object):
 
             self._miscDb.addThumbnail(
                 keogram_entry,
-                {},  # keogram metadata not used
+                {'type' : constants.KEOGRAM},  # keogram metadata not fully populated
                 keogram_entry.camera_id,
                 keogram_thumbnail_metadata,
                 new_width=self.thumbnail_keogram_width,
@@ -116,6 +117,7 @@ class CreateThumbnails(object):
 
             startrail_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
+                'origin'     : constants.STARTRAIL,
                 'createDate' : startrail_entry.createDate.timestamp(),
                 'night'      : startrail_entry.night,
                 'camera_uuid': startrail_entry.camera.uuid,
@@ -123,7 +125,7 @@ class CreateThumbnails(object):
 
             self._miscDb.addThumbnail(
                 startrail_entry,
-                {},  # startrail metadata not used
+                {'type' : constants.STARTRAIL},  # startrail metadata not fully populated
                 startrail_entry.camera_id,
                 startrail_thumbnail_metadata,
                 new_width=self.thumbnail_startrail_width,
@@ -138,6 +140,7 @@ class CreateThumbnails(object):
 
             image_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
+                'origin'     : constants.IMAGE,
                 'createDate' : image_entry.createDate.timestamp(),
                 'night'      : image_entry.night,
                 'camera_uuid': image_entry.camera.uuid,
@@ -145,7 +148,7 @@ class CreateThumbnails(object):
 
             self._miscDb.addThumbnail(
                 image_entry,
-                {},  # image metadata not used
+                {'type' : constants.IMAGE},  # image metadata not fully populated
                 image_entry.camera_id,
                 image_thumbnail_metadata,
             )

@@ -17,7 +17,7 @@ from flask import current_app as app
 
 #from flask_login import login_required
 
-#from .. import constants
+from .. import constants
 
 from .base_views import BaseView
 
@@ -184,7 +184,15 @@ class SyncApiBaseView(BaseView):
         else:
             timeofday_str = 'day'
 
-        filename_p = date_folder.joinpath(self.filename_t.format(camera.id, d_dayDate.strftime('%Y%m%d'), timeofday_str, tmp_file_p.suffix))  # suffix includes dot
+        filename_p = date_folder.joinpath(
+            self.filename_t.format(
+                camera.id,
+                'timelapse',
+                d_dayDate.strftime('%Y%m%d'),
+                timeofday_str,
+                tmp_file_p.suffix,  # suffix includes dot
+            )
+        )
 
         if not filename_p.exists():
             try:
@@ -460,6 +468,7 @@ class SyncApiImageView(SyncApiBaseView):
     model = IndiAllSkyDbImageTable
     filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
     add_function = 'addImage'
+    type_folder = 'exposures'
 
 
     def processPost(self, camera, image_metadata, tmp_file_p, overwrite=False):
@@ -539,12 +548,19 @@ class SyncApiImageView(SyncApiBaseView):
             day_ref = exp_date
             timeofday_str = 'day'
 
-        hour_str = exp_date.strftime('%d_%H')
 
-        day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
+        day_folder = self.image_dir.joinpath(
+            'ccd_{0:s}'.format(camera.uuid),
+            self.type_folder,
+            '{0:s}'.format(day_ref.strftime('%Y%m%d')),
+            timeofday_str,
+        )
 
         if not day_folder.exists():
             day_folder.mkdir(mode=0o755, parents=True)
+
+
+        hour_str = exp_date.strftime('%d_%H')
 
         hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
         if not hour_folder.exists():
@@ -591,8 +607,7 @@ class SyncApiRawImageView(SyncApiImageView):  # image parent
     model = IndiAllSkyDbRawImageTable
     filename_t = 'raw_ccd{0:d}_{1:s}{2:s}'
     add_function = 'addRawImage'
-
-    # fixme need processImage/getImageFolder function for export folder
+    type_folder = 'export'  # fixme need processImage/getImageFolder function for export folder
 
 
 class SyncApiFitsImageView(SyncApiImageView):  # image parent
@@ -601,6 +616,7 @@ class SyncApiFitsImageView(SyncApiImageView):  # image parent
     model = IndiAllSkyDbFitsImageTable
     filename_t = 'ccd{0:d}_{1:s}{2:s}'
     add_function = 'addFitsImage'
+    type_folder = 'fits'
 
 
 class SyncApiPanoramaImageView(SyncApiImageView):  # image parent
@@ -609,6 +625,7 @@ class SyncApiPanoramaImageView(SyncApiImageView):  # image parent
     model = IndiAllSkyDbPanoramaImageTable
     filename_t = 'panorama_ccd{0:d}_{1:s}{2:s}'
     add_function = 'addPanoramaImage'
+    type_folder = 'panoramas'
 
 
 class SyncApiPanoramaVideoView(SyncApiBaseView):
@@ -632,18 +649,48 @@ class SyncApiThumbnailView(SyncApiBaseView):
         thumbnail_metadata['createDate'] += (thumbnail_metadata['utc_offset'] - datetime.now().astimezone().utcoffset().total_seconds())
 
         camera_createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
-        dayDate = datetime.strptime(thumbnail_metadata['dayDate'], '%Y%m%d').date()  # we do not really care about this
 
 
-        folder = self.image_dir.joinpath(
-            'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
-            'thumbnails',
-            dayDate.strftime('%Y%m%d'),
-            camera_createDate.strftime('%d_%H'),
-        )
+        if thumbnail_metadata['night']:
+            # day date for night is offset by 12 hours
+            dayDate = (camera_createDate - timedelta(hours=12)).date()
+            timeofday = 'night'
+        else:
+            dayDate = camera_createDate.date()
+            timeofday = 'day'
 
 
-        thumbnail_file_p = folder.joinpath(self.filename_t.format(thumbnail_metadata['uuid'], tmp_file_p.suffix))  # suffix includes dot
+        if thumbnail_metadata.get('origin', -1) in (
+            -1,
+            constants.IMAGE,
+            constants.PANORAMA_IMAGE,
+        ):
+
+            if thumbnail_metadata.get('origin', -1) == constants.PANORAMA_IMAGE:
+                type_folder = 'panoramas'
+            else:
+                type_folder = 'exposures'
+
+
+            thumbnail_dir_p = self.image_dir.joinpath(
+                'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
+                type_folder,
+                dayDate.strftime('%Y%m%d'),
+                timeofday,
+                camera_createDate.strftime('%d_%H'),
+                'thumbnails',
+            )
+        else:
+            # constants.KEOGRAM and constants.STARTRAIL
+            thumbnail_dir_p = self.image_dir.joinpath(
+                'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
+                'timelapse',
+                dayDate.strftime('%Y%m%d'),
+                'thumbnails',
+            )
+
+
+        thumbnail_file_p = thumbnail_dir_p.joinpath(self.filename_t.format(thumbnail_metadata['uuid'], tmp_file_p.suffix))  # suffix includes dot
 
 
         if not thumbnail_file_p.exists():

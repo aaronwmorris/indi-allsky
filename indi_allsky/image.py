@@ -488,7 +488,7 @@ class ImageWorker(Process):
 
 
         if self.config.get('IMAGE_EXPORT_RAW'):
-            self.export_raw_image(i_ref, jpeg_exif=jpeg_exif)
+            self.export_raw_image(i_ref, camera, jpeg_exif=jpeg_exif)
 
 
         # Calculate ADU before stretch
@@ -679,13 +679,14 @@ class ImageWorker(Process):
 
             image_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
+                'origin'     : constants.IMAGE,
                 'createDate' : exp_date.timestamp(),
                 'utc_offset' : exp_date.astimezone().utcoffset().total_seconds(),
                 'night'      : bool(self.night_v.value),
                 'camera_uuid': camera.uuid,
             }
 
-            image_thumbnail_entry = self._miscDb.addThumbnailImagesAuto(
+            image_thumbnail_entry = self._miscDb.addThumbnailImageAuto(
                 image_entry,
                 image_metadata,
                 camera.id,
@@ -978,7 +979,7 @@ class ImageWorker(Process):
 
         date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
         # raw light
-        folder = self.getImageFolder(i_ref['exp_date'], camera)
+        folder = self._getImageFolder(i_ref['exp_date'], camera, 'fits')
         filename = folder.joinpath(self.filename_t.format(
             i_ref['camera_id'],
             date_str,
@@ -1041,7 +1042,7 @@ class ImageWorker(Process):
         self._miscUpload.s3_upload_fits(fits_entry, fits_metadata)
 
 
-    def export_raw_image(self, i_ref, jpeg_exif=None):
+    def export_raw_image(self, i_ref, camera, jpeg_exif=None):
         if not self.config.get('IMAGE_EXPORT_RAW'):
             return
 
@@ -1135,18 +1136,25 @@ class ImageWorker(Process):
             day_ref = i_ref['exp_date']
             timeofday_str = 'day'
 
-        date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
 
-        hour_str = i_ref['exp_date'].strftime('%d_%H')
+        day_folder = export_dir.joinpath(
+            'ccd_{0:s}'.format(camera.uuid),
+            '{0:s}'.format(day_ref.strftime('%Y%m%d')),
+            timeofday_str,
+        )
 
-        day_folder = export_dir.joinpath('{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
         if not day_folder.exists():
             day_folder.mkdir(mode=0o755, parents=True)
+
+
+        hour_str = i_ref['exp_date'].strftime('%d_%H')
 
         hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
         if not hour_folder.exists():
             hour_folder.mkdir(mode=0o755)
 
+
+        date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
 
         raw_filename_t = 'raw_{0:s}'.format(self.filename_t)
         filename = hour_folder.joinpath(raw_filename_t.format(
@@ -1300,7 +1308,7 @@ class ImageWorker(Process):
 
 
         ### Write the timelapse file
-        folder = self.getImageFolder(i_ref['exp_date'], camera)
+        folder = self._getImageFolder(i_ref['exp_date'], camera, 'exposures')
 
         date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
         filename = folder.joinpath(self.filename_t.format(i_ref['camera_id'], date_str, self.config['IMAGE_FILE_TYPE']))
@@ -1360,7 +1368,7 @@ class ImageWorker(Process):
         indi_allsky_status_p.chmod(0o644)
 
 
-    def getImageFolder(self, exp_date, camera):
+    def _getImageFolder(self, exp_date, camera, type_folder):
         if self.night_v.value:
             # images should be written to previous day's folder until noon
             day_ref = exp_date - timedelta(hours=12)
@@ -1370,11 +1378,18 @@ class ImageWorker(Process):
             day_ref = exp_date
             timeofday_str = 'day'
 
-        hour_str = exp_date.strftime('%d_%H')
 
-        day_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), '{0:s}'.format(day_ref.strftime('%Y%m%d')), timeofday_str)
+        day_folder = self.image_dir.joinpath(
+            'ccd_{0:s}'.format(camera.uuid),
+            type_folder,
+            '{0:s}'.format(day_ref.strftime('%Y%m%d')),
+            timeofday_str,
+        )
+
         if not day_folder.exists():
             day_folder.mkdir(mode=0o755, parents=True)
+
+        hour_str = exp_date.strftime('%d_%H')
 
         hour_folder = day_folder.joinpath('{0:s}'.format(hour_str))
         if not hour_folder.exists():
@@ -1447,7 +1462,7 @@ class ImageWorker(Process):
 
 
         ### Write the panorama file
-        folder = self.getImageFolder(i_ref['exp_date'], camera)
+        folder = self._getImageFolder(i_ref['exp_date'], camera, 'panoramas')
 
 
         panorama_filename_t = 'panorama_{0:s}'.format(self.filename_t)

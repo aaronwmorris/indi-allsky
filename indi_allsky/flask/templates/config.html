@@ -82,7 +82,10 @@
             {{ form_config.INDI_CAMERA_NAME(class='form-control bg-secondary') }}
             <div id="INDI_CAMERA_NAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7">Leave blank to select first detected camera</div>
+        <div class="col-sm-7">
+            <div>Leave blank to select first detected camera</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Do not use this field unless you know what you are doing</div>
+        </div>
     </div>
 
     <hr>

@@ -34,6 +34,7 @@ from .models import IndiAllSkyDbStateTable
 
 from sqlalchemy.orm.exc import NoResultFound
 
+from .. import constants
 #from ..exceptions import BadImage
 
 logger = logging.getLogger('indi_allsky')
@@ -962,18 +963,42 @@ class miscDb(object):
         if thumbnail_metadata['night']:
             # day date for night is offset by 12 hours
             dayDate = (createDate - timedelta(hours=12)).date()
+            timeofday = 'night'
         else:
             dayDate = createDate.date()
+            timeofday = 'day'
 
 
         thumbnail_uuid_str = str(uuid.uuid4())
 
-        thumbnail_dir_p = self.image_dir.joinpath(
-            'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
-            'thumbnails',
-            dayDate.strftime('%Y%m%d'),
-            createDate.strftime('%d_%H'),
-        )
+
+        if thumbnail_metadata['origin'] in (
+            constants.IMAGE,
+            constants.PANORAMA_IMAGE,
+        ):
+            if thumbnail_metadata['origin'] == constants.PANORAMA_IMAGE:
+                type_folder = 'panoramas'
+            else:
+                # constants.IMAGE
+                type_folder = 'exposures'
+
+            thumbnail_dir_p = self.image_dir.joinpath(
+                'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
+                type_folder,
+                dayDate.strftime('%Y%m%d'),
+                timeofday,
+                createDate.strftime('%d_%H'),
+                'thumbnails',
+            )
+        else:
+            thumbnail_dir_p = self.image_dir.joinpath(
+                'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
+                'timelapse',
+                dayDate.strftime('%Y%m%d'),
+                'thumbnails',
+            )
+
+
         thumbnail_filename_p = thumbnail_dir_p.joinpath(
             '{0:s}.jpg'.format(thumbnail_uuid_str),
         )
@@ -1030,6 +1055,7 @@ class miscDb(object):
             uuid=thumbnail_uuid_str,
             filename=str(thumbnail_filename_p.relative_to(self.image_dir)),
             createDate=createDate,
+            origin=thumbnail_metadata['origin'],
             width=new_width,
             height=new_height,
             camera_id=camera_id,
@@ -1045,7 +1071,7 @@ class miscDb(object):
         return thumbnail_entry
 
 
-    def addThumbnailImagesAuto(self, *args, **kwargs):
+    def addThumbnailImageAuto(self, *args, **kwargs):
         if not self.config.get('THUMBNAILS', {}).get('IMAGES_AUTO', True):
             return
 
@@ -1082,6 +1108,7 @@ class miscDb(object):
             uuid=thumbnail_metadata['uuid'],
             filename=str(filename_p),
             createDate=createDate,
+            origin=thumbnail_metadata.get('origin', -1),  # remote might not send data
             width=thumbnail_metadata['width'],
             height=thumbnail_metadata['height'],
             camera_id=camera_id,
