@@ -665,9 +665,16 @@ class SyncApiThumbnailView(SyncApiBaseView):
             constants.IMAGE,
             constants.PANORAMA_IMAGE,
         ):
+
+            if thumbnail_metadata.get('origin', -1) == constants.PANORAMA_IMAGE:
+                type_folder = 'panoramas'
+            else:
+                type_folder = 'exposures'
+
+
             thumbnail_dir_p = self.image_dir.joinpath(
                 'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
-                self.type_folder,
+                type_folder,
                 dayDate.strftime('%Y%m%d'),
                 timeofday,
                 camera_createDate.strftime('%d_%H'),
