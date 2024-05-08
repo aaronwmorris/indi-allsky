@@ -131,6 +131,13 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         network-manager \
         tzdata
 
+elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        network-manager \
+        tzdata
+
 elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
 
     sudo apt-get update
@@ -217,6 +224,7 @@ TMP8=$(mktemp)
 sed \
  -e "s|%ALLSKY_USER%|$USER|g" \
  "${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla" > "$TMP8"
+
 
 sudo cp -f "$TMP8" "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
 sudo chown root:root "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"

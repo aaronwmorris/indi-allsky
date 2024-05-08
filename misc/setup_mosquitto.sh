@@ -132,6 +132,18 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         whiptail \
         ca-certificates
 
+elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
+    #MOSQUITTO_USER=mosquitto
+    MOSQUITTO_GROUP=mosquitto
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        mosquitto \
+        mosquitto-clients \
+        mosquitto-dev \
+        whiptail \
+        ca-certificates
+
 elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
