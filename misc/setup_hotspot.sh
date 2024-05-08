@@ -220,17 +220,33 @@ sleep 3
 
 
 echo "**** Setup policy kit permissions ****"
-TMP8=$(mktemp)
-sed \
- -e "s|%ALLSKY_USER%|$USER|g" \
- "${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla" > "$TMP8"
+TMP_POLKIT=$(mktemp)
 
+if [ -d "/etc/polkit-1/rules.d" ]; then
+    sed \
+     -e "s|%ALLSKY_USER%|$USER|g" \
+     "${ALLSKY_DIRECTORY}/service/90-indi-allsky.rules" > "$TMP_POLKIT"
 
-sudo cp -f "$TMP8" "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
-sudo chown root:root "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
-sudo chmod 644 "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
-[[ -f "$TMP8" ]] && rm -f "$TMP8"
+    sudo cp -f "$TMP_POLKIT" "/etc/polkit-1/rules.d/90-indi-allsky.rules"
+    sudo chown root:root "/etc/polkit-1/rules.d/90-indi-allsky.rules"
+    sudo chmod 644 "/etc/polkit-1/rules.d/90-indi-allsky.rules"
 
+    # remove legacy config
+    if sudo test -f "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"; then
+        sudo rm -f "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+    fi
+else
+    # legacy pkla
+    sed \
+     -e "s|%ALLSKY_USER%|$USER|g" \
+     "${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla" > "$TMP_POLKIT"
+
+    sudo cp -f "$TMP_POLKIT" "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+    sudo chown root:root "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+    sudo chmod 644 "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+fi
+
+[[ -f "$TMP_POLKIT" ]] && rm -f "$TMP_POLKIT"
 
 
 if [[ -f "/etc/dhcpcd.conf" ]]; then
