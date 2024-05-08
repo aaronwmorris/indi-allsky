@@ -432,6 +432,55 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         zlib1g-dev
 
 
+elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
+    BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
+    for p in $BLOCKING_PACKAGES; do
+        if dpkg -s "$p" >/dev/null 2>&1; then
+            echo
+            echo
+            echo "Package $p needs to be uninstalled"
+            echo
+            exit 1
+        fi
+    done
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        git \
+        ca-certificates \
+        cmake \
+        fxload \
+        pkg-config \
+        libavcodec-dev \
+        libavdevice-dev \
+        libboost-dev \
+        libboost-regex-dev \
+        libcfitsio-dev \
+        libcurl4-gnutls-dev \
+        libdc1394-dev \
+        libev-dev \
+        libfftw3-dev \
+        libftdi1-dev \
+        libftdi-dev \
+        libgmock-dev \
+        libgphoto2-dev \
+        libgps-dev \
+        libgsl-dev \
+        libjpeg-dev \
+        liblimesuite-dev \
+        libnova-dev \
+        libraw-dev \
+        librtlsdr-dev \
+        libtheora-dev \
+        libtiff-dev \
+        libusb-1.0-0-dev \
+        libnutclient-dev \
+        libzmq3-dev \
+        libahp-gt-dev \
+        zlib1g-dev
+
+
 elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
@@ -479,7 +528,6 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
         libzmq3-dev \
         zlib1g-dev
 
-        #libahp-gt-dev \  # for 24.04
 
 elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
