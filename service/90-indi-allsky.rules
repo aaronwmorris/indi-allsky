@@ -1,0 +1,60 @@
+polkit.addRule(function(action, subject) {
+    // Allow indi-allsky user to shutdown
+    const shutdown_reboot_actions = [
+        "org.freedesktop.login1.power-off",
+        "org.freedesktop.login1.power-off-multiple-sessions",
+        "org.freedesktop.login1.reboot",
+        "org.freedesktop.login1.reboot-multiple-sessionsaction.id",
+    ];
+
+    if (shutdown_reboot_actions.indexOf(action.id) > -1) {
+        if (subject.user == "%ALLSKY_USER%") {
+            return polkit.Result.YES;
+        }
+    }
+
+
+    // Allow indi-allsky user to manage network
+    const network_actions = [
+        "org.freedesktop.NetworkManager.enable-disable-wifi",
+        "org.freedesktop.NetworkManager.network-control",
+        "org.freedesktop.NetworkManager.wifi.share.protected",
+        "org.freedesktop.NetworkManager.settings.modify.system",
+        "org.freedesktop.NetworkManager.wifi.scan",
+        "org.freedesktop.NetworkManager.settings.modify.own",
+    ];
+
+    if (network_actions.indexOf(action.id) > -1) {
+        if (subject.user == "%ALLSKY_USER%") {
+            return polkit.Result.YES;
+        }
+    }
+
+
+    // Allow indi-allsky user to mount USB disks
+    const mount_usb_actions = [
+        "org.freedesktop.udisks2.filesystem-mount-system",
+        "org.freedesktop.udisks2.filesystem-mount",
+        "org.freedesktop.udisks2.filesystem-mount-other-seat",
+    ];
+
+    if (mount_usb_actions.indexOf(action.id) > -1) {
+        if (subject.user == "%ALLSKY_USER%") {
+            return polkit.Result.YES;
+        }
+    }
+
+
+    // Allow indi-allsky user to set system time
+    const set_time_actions = [
+        "org.freedesktop.timedate1.set-time",
+        "org.freedesktop.timedate1.set-timezone",
+        "org.freedesktop.timedate1.set-ntp",
+    ];
+
+    if (set_time_actions.indexOf(action.id) > -1) {
+        if (subject.user == "%ALLSKY_USER%") {
+            return polkit.Result.YES;
+        }
+    }
+});

@@ -125,6 +125,15 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         exfat-utils \
         dosfstools
 
+elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        udisks2 \
+        udiskie \
+        exfatprogs \
+        dosfstools
+
 elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
 
     sudo apt-get update
@@ -158,16 +167,33 @@ cd "$OLDPWD"
 
 
 echo "**** Setup policy kit permissions ****"
-TMP8=$(mktemp)
-sed \
- -e "s|%ALLSKY_USER%|$USER|g" \
- "${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla" > "$TMP8"
+TMP_POLKIT=$(mktemp)
 
-sudo cp -f "$TMP8" "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
-sudo chown root:root "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
-sudo chmod 644 "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
-[[ -f "$TMP8" ]] && rm -f "$TMP8"
+if [ -d "/etc/polkit-1/rules.d" ]; then
+    sed \
+     -e "s|%ALLSKY_USER%|$USER|g" \
+     "${ALLSKY_DIRECTORY}/service/90-indi-allsky.rules" > "$TMP_POLKIT"
 
+    sudo cp -f "$TMP_POLKIT" "/etc/polkit-1/rules.d/90-indi-allsky.rules"
+    sudo chown root:root "/etc/polkit-1/rules.d/90-indi-allsky.rules"
+    sudo chmod 644 "/etc/polkit-1/rules.d/90-indi-allsky.rules"
+
+    # remove legacy config
+    if sudo test -f "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"; then
+        sudo rm -f "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+    fi
+else
+    # legacy pkla
+    sed \
+     -e "s|%ALLSKY_USER%|$USER|g" \
+     "${ALLSKY_DIRECTORY}/service/90-org.aaronwmorris.indi-allsky.pkla" > "$TMP_POLKIT"
+
+    sudo cp -f "$TMP_POLKIT" "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+    sudo chown root:root "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+    sudo chmod 644 "/etc/polkit-1/localauthority/50-local.d/90-org.aaronwmorris.indi-allsky.pkla"
+fi
+
+[[ -f "$TMP_POLKIT" ]] && rm -f "$TMP_POLKIT"
 
 
 # create users systemd folder

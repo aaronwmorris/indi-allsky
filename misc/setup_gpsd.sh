@@ -125,6 +125,13 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         gpsd-tools \
         gpsd-clients
 
+elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
+    sudo apt-get update
+    sudo apt-get -y install \
+        telnet \
+        gpsd \
+        gpsd-clients
+
 elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \

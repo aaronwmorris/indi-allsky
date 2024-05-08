@@ -3126,7 +3126,13 @@ class AjaxSystemInfoView(BaseView):
         elif service == 'system':
             if command == 'reboot':
                 # allowing rebooting from non-admin networks for now
-                r = self.rebootSystemd()
+                try:
+                    r = self.rebootSystemd()
+                except dbus.exceptions.DBusException as e:
+                    json_data = {
+                        'form_global' : [str(e)],
+                    }
+                    return jsonify(json_data), 400
             elif command == 'poweroff':
                 if not self.verify_admin_network():
                     json_data = {
@@ -3134,8 +3140,13 @@ class AjaxSystemInfoView(BaseView):
                     }
                     return jsonify(json_data), 400
 
-                r = self.poweroffSystemd()
-
+                try:
+                    r = self.poweroffSystemd()
+                except dbus.exceptions.DBusException as e:
+                    json_data = {
+                        'form_global' : [str(e)],
+                    }
+                    return jsonify(json_data), 400
             elif command == 'validate_db':
                 message_list = self.validateDbEntries()
 
