@@ -3287,62 +3287,65 @@ class AjaxSystemInfoView(BaseView):
 
 
     def flushImages(self, camera_id):
-        file_count = 0
-
         ### Images
         image_query = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)
-
-        file_count += image_query.count()
-
-        for i in image_query:
-            i.deleteAsset()
-            db.session.delete(i)
-
-        db.session.commit()
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
         ### FITS Images
         fits_image_query = IndiAllSkyDbFitsImageTable.query\
             .join(IndiAllSkyDbFitsImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)
-
-        file_count += fits_image_query.count()
-
-        for i in fits_image_query:
-            i.deleteAsset()
-            db.session.delete(i)
-
-        db.session.commit()
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())
 
 
         ### RAW Images
         raw_image_query = IndiAllSkyDbRawImageTable.query\
             .join(IndiAllSkyDbRawImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)
-
-        file_count += raw_image_query.count()
-
-        for i in raw_image_query:
-            i.deleteAsset()
-            db.session.delete(i)
-
-        db.session.commit()
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbRawImageTable.createDate.asc())
 
 
         ### Panorama Images
         panorama_image_query = IndiAllSkyDbPanoramaImageTable.query\
             .join(IndiAllSkyDbPanoramaImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
+
+        file_count = image_query.count()
+        file_count += fits_image_query.count()
+        file_count += raw_image_query.count()
         file_count += panorama_image_query.count()
 
-        for p in panorama_image_query:
-            p.deleteAsset()
-            db.session.delete(p)
 
-        db.session.commit()
+        ### Getting IDs first then deleting each file is faster than deleting all files with
+        ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
+        ### to recache after every delete which cause a 1-5 second lag for each delete
+
+        image_id_list = list()
+        for entry in image_query:
+            image_id_list.append(entry.id)
+
+        fits_id_list = list()
+        for entry in fits_image_query:
+            fits_id_list.append(entry.id)
+
+        raw_id_list = list()
+        for entry in raw_image_query:
+            raw_id_list.append(entry.id)
+
+        panorama_image_id_list = list()
+        for entry in panorama_image_query:
+            panorama_image_id_list.append(entry.id)
+
+
+        self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
+        self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
+        self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
+        self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
 
 
         return file_count
@@ -3351,23 +3354,28 @@ class AjaxSystemInfoView(BaseView):
     def flushTimelapses(self, camera_id):
         video_query = IndiAllSkyDbVideoTable.query\
             .join(IndiAllSkyDbVideoTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbVideoTable.createDate.asc())
 
         keogram_query = IndiAllSkyDbKeogramTable.query\
             .join(IndiAllSkyDbKeogramTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbKeogramTable.createDate.asc())
 
         startrail_query = IndiAllSkyDbStarTrailsTable.query\
             .join(IndiAllSkyDbStarTrailsTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())
 
         startrail_video_query = IndiAllSkyDbStarTrailsVideoTable.query\
             .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())
 
         panorama_video_query = IndiAllSkyDbPanoramaVideoTable.query\
             .join(IndiAllSkyDbPanoramaVideoTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbPanoramaVideoTable.createDate.asc())
 
         video_count = video_query.count()
         keogram_count = keogram_query.count()
@@ -3378,165 +3386,172 @@ class AjaxSystemInfoView(BaseView):
         file_count = video_count + keogram_count + startrail_count + startrail_video_count + panorama_video_count
 
 
-        # videos
-        for v in video_query:
-            v.deleteAsset()
-            db.session.delete(v)
+        ### Getting IDs first then deleting each file is faster than deleting all files with
+        ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
+        ### to recache after every delete which cause a 1-5 second lag for each delete
 
-        db.session.commit()
+        video_id_list = list()
+        for entry in video_query:
+            video_id_list.append(entry.id)
 
+        keogram_id_list = list()
+        for entry in keogram_query:
+            keogram_id_list.append(entry.id)
 
-        # keograms
-        for k in keogram_query:
-            k.deleteAsset()
-            db.session.delete(k)
+        startrail_image_id_list = list()
+        for entry in startrail_query:
+            startrail_image_id_list.append(entry.id)
 
-        db.session.commit()
+        startrail_video_id_list = list()
+        for entry in startrail_video_query:
+            startrail_video_id_list.append(entry.id)
 
-
-        # startrails
-        for s in startrail_query:
-            s.deleteAsset()
-            db.session.delete(s)
-
-        db.session.commit()
-
-
-        # startrail videos
-        for sv in startrail_video_query:
-            sv.deleteAsset()
-            db.session.delete(sv)
-
-        db.session.commit()
+        panorama_video_id_list = list()
+        for entry in panorama_video_query:
+            panorama_video_id_list.append(entry.id)
 
 
-        # panorama videos
-        for pv in panorama_video_query:
-            pv.deleteAsset()
-            db.session.delete(pv)
-
-        db.session.commit()
+        self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
+        self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
+        self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
+        self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
+        self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
 
 
         return file_count
 
 
     def flushDaytime(self, camera_id):
-        file_count = 0
-
         ### Images
         image_query = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .filter(IndiAllSkyDbImageTable.night == sa_false())
-
-        file_count += image_query.count()
-
-        for i in image_query:
-            i.deleteAsset()
-            db.session.delete(i)
-
-        db.session.commit()
+            .filter(IndiAllSkyDbImageTable.night == sa_false())\
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
         ### FITS Images
         fits_image_query = IndiAllSkyDbFitsImageTable.query\
             .join(IndiAllSkyDbFitsImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .filter(IndiAllSkyDbFitsImageTable.night == sa_false())
-
-        file_count += fits_image_query.count()
-
-        for i in fits_image_query:
-            i.deleteAsset()
-            db.session.delete(i)
-
-        db.session.commit()
+            .filter(IndiAllSkyDbFitsImageTable.night == sa_false())\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())
 
 
         ### RAW Images
         raw_image_query = IndiAllSkyDbRawImageTable.query\
             .join(IndiAllSkyDbRawImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .filter(IndiAllSkyDbRawImageTable.night == sa_false())
-
-        file_count += raw_image_query.count()
-
-        for i in raw_image_query:
-            i.deleteAsset()
-            db.session.delete(i)
-
-        db.session.commit()
+            .filter(IndiAllSkyDbRawImageTable.night == sa_false())\
+            .order_by(IndiAllSkyDbRawImageTable.createDate.asc())
 
 
         ### Panorama Images
         panorama_image_query = IndiAllSkyDbPanoramaImageTable.query\
             .join(IndiAllSkyDbPanoramaImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .filter(IndiAllSkyDbPanoramaImageTable.night == sa_false())
-
-        file_count += panorama_image_query.count()
-
-        for i in panorama_image_query:
-            i.deleteAsset()
-            db.session.delete(i)
-
-        db.session.commit()
+            .filter(IndiAllSkyDbPanoramaImageTable.night == sa_false())\
+            .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
 
         ### Timelapses
         video_query = IndiAllSkyDbVideoTable.query\
             .join(IndiAllSkyDbVideoTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .filter(IndiAllSkyDbVideoTable.night == sa_false())
-
-
-        file_count += video_query.count()
-
-        for v in video_query:
-            v.deleteAsset()
-            db.session.delete(v)
-
-        db.session.commit()
+            .filter(IndiAllSkyDbVideoTable.night == sa_false())\
+            .order_by(IndiAllSkyDbVideoTable.createDate.asc())
 
 
         ### Keograms
         keogram_query = IndiAllSkyDbKeogramTable.query\
             .join(IndiAllSkyDbKeogramTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .filter(IndiAllSkyDbKeogramTable.night == sa_false())
-
-        file_count += keogram_query.count()
-
-
-        for k in keogram_query:
-            k.deleteAsset()
-            db.session.delete(k)
-
-        db.session.commit()
+            .filter(IndiAllSkyDbKeogramTable.night == sa_false())\
+            .order_by(IndiAllSkyDbKeogramTable.createDate.asc())
 
 
         ### Panorama Videos
         panorama_video_query = IndiAllSkyDbPanoramaVideoTable.query\
             .join(IndiAllSkyDbPanoramaVideoTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .filter(IndiAllSkyDbPanoramaVideoTable.night == sa_false())
-
-        file_count += panorama_video_query.count()
-
-
-        for pv in panorama_video_query:
-            pv.deleteAsset()
-            db.session.delete(pv)
-
-        db.session.commit()
-
+            .filter(IndiAllSkyDbPanoramaVideoTable.night == sa_false())\
+            .order_by(IndiAllSkyDbPanoramaVideoTable.createDate.asc())
 
         ## no startrails
         ## no startrail videos
 
 
+        file_count = image_query.count()
+        file_count += fits_image_query.count()
+        file_count += raw_image_query.count()
+        file_count += panorama_image_query.count()
+        file_count += video_query.count()
+        file_count += keogram_query.count()
+        file_count += panorama_video_query.count()
+
+
+        ### Getting IDs first then deleting each file is faster than deleting all files with
+        ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
+        ### to recache after every delete which cause a 1-5 second lag for each delete
+
+        image_id_list = list()
+        for entry in image_query:
+            image_id_list.append(entry.id)
+
+        fits_id_list = list()
+        for entry in fits_image_query:
+            fits_id_list.append(entry.id)
+
+        raw_id_list = list()
+        for entry in raw_image_query:
+            raw_id_list.append(entry.id)
+
+        panorama_image_id_list = list()
+        for entry in panorama_image_query:
+            panorama_image_id_list.append(entry.id)
+
+
+        video_id_list = list()
+        for entry in video_query:
+            video_id_list.append(entry.id)
+
+        keogram_id_list = list()
+        for entry in keogram_query:
+            keogram_id_list.append(entry.id)
+
+        panorama_video_id_list = list()
+        for entry in panorama_video_query:
+            panorama_video_id_list.append(entry.id)
+
+
+        self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
+        self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
+        self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
+        self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
+        self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
+        self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
+        self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
+
+
         return file_count
+
+
+    def _deleteAssets(self, table, entry_id_list):
+        for entry_id in entry_id_list:
+            entry = table.query\
+                .filter(table.id == entry_id)\
+                .one()
+
+            app.logger.info('Removing old %s entry: %s', entry.__class__.__name__, entry.filename)
+
+            try:
+                entry.deleteAsset()
+            except OSError as e:
+                app.logger.error('Cannot remove file: %s', str(e))
+                continue
+
+            db.session.delete(entry)
+            db.session.commit()
 
 
     def validateDbEntries(self):
@@ -3995,25 +4010,27 @@ class AjaxTimelapseGeneratorView(BaseView):
             if video_entry:
                 video_entry.deleteAsset()
                 db.session.delete(video_entry)
+                db.session.commit()
 
             if keogram_entry:
                 keogram_entry.deleteAsset()
                 db.session.delete(keogram_entry)
+                db.session.commit()
 
             if startrail_entry:
                 startrail_entry.deleteAsset()
                 db.session.delete(startrail_entry)
+                db.session.commit()
 
             if startrail_video_entry:
                 startrail_video_entry.deleteAsset()
                 db.session.delete(startrail_video_entry)
+                db.session.commit()
 
             if panorama_video_entry:
                 panorama_video_entry.deleteAsset()
                 db.session.delete(panorama_video_entry)
-
-
-            db.session.commit()
+                db.session.commit()
 
 
             message = {
@@ -4038,9 +4055,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             if video_entry:
                 video_entry.deleteAsset()
                 db.session.delete(video_entry)
-
-
-            db.session.commit()
+                db.session.commit()
 
 
             message = {
@@ -4064,9 +4079,7 @@ class AjaxTimelapseGeneratorView(BaseView):
             if panorama_video_entry:
                 panorama_video_entry.deleteAsset()
                 db.session.delete(panorama_video_entry)
-
-
-            db.session.commit()
+                db.session.commit()
 
 
             message = {
@@ -4113,17 +4126,17 @@ class AjaxTimelapseGeneratorView(BaseView):
             if keogram_entry:
                 keogram_entry.deleteAsset()
                 db.session.delete(keogram_entry)
+                db.session.commit()
 
             if startrail_entry:
                 startrail_entry.deleteAsset()
                 db.session.delete(startrail_entry)
+                db.session.commit()
 
             if startrail_video_entry:
                 startrail_video_entry.deleteAsset()
                 db.session.delete(startrail_video_entry)
-
-
-            db.session.commit()
+                db.session.commit()
 
 
             message = {
@@ -4345,7 +4358,8 @@ class AjaxTimelapseGeneratorView(BaseView):
                         IndiAllSkyDbImageTable.dayDate == day_date,
                         IndiAllSkyDbImageTable.night == night,
                     )
-                )
+                )\
+                .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
             panorama_list = IndiAllSkyDbPanoramaImageTable.query\
                 .join(IndiAllSkyDbPanoramaImageTable.camera)\
@@ -4355,25 +4369,33 @@ class AjaxTimelapseGeneratorView(BaseView):
                         IndiAllSkyDbPanoramaImageTable.dayDate == day_date,
                         IndiAllSkyDbPanoramaImageTable.night == night,
                     )
-                )
+                )\
+                .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
 
-            x = 0
-            for i in image_list:
-                x += 1
-                i.deleteAsset()
-                db.session.delete(i)
-
-            for p in panorama_list:
-                x += 1
-                p.deleteAsset()
-                db.session.delete(p)
+            image_count = image_list.count()
+            image_count += panorama_list.count()
 
 
-            db.session.commit()
+            ### Getting IDs first then deleting each file is faster than deleting all files with
+            ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
+            ### to recache after every delete which cause a 1-5 second lag for each delete
+
+            image_id_list = list()
+            for entry in image_id_list:
+                image_id_list.append(entry.id)
+
+            panorama_image_id_list = list()
+            for entry in panorama_image_id_list:
+                panorama_image_id_list.append(entry.id)
+
+
+            self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
+            self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
+
 
             message = {
-                'success-message' : '{0:d} images deleted'.format(x),
+                'success-message' : '{0:d} images deleted'.format(image_count),
             }
             return jsonify(message)
         else:
@@ -4382,6 +4404,24 @@ class AjaxTimelapseGeneratorView(BaseView):
                 'error-message' : 'Invalid'
             }
             return jsonify(message), 400
+
+
+    def _deleteAssets(self, table, entry_id_list):
+        for entry_id in entry_id_list:
+            entry = table.query\
+                .filter(table.id == entry_id)\
+                .one()
+
+            app.logger.info('Removing old %s entry: %s', entry.__class__.__name__, entry.filename)
+
+            try:
+                entry.deleteAsset()
+            except OSError as e:
+                app.logger.error('Cannot remove file: %s', str(e))
+                continue
+
+            db.session.delete(entry)
+            db.session.commit()
 
 
 class FocusView(TemplateView):
