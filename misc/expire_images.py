@@ -150,7 +150,7 @@ class ExpireImages(object):
         logger.info('Proceeding in 10 seconds')
 
         time.sleep(10)
-        logger.warning('Deleting...')
+        logger.info('Building id lists...')
 
 
         ### Getting IDs first then deleting each file is faster than deleting all files with
@@ -206,6 +206,8 @@ class ExpireImages(object):
         for entry in old_panorama_videos:
             panorama_video_id_list.append(entry.id)
 
+
+        logger.warning('Deleting...')
 
         # catch signals to perform cleaner shutdown
         signal.signal(signal.SIGINT, self.sigint_handler_main)
