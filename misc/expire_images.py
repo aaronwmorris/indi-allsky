@@ -234,7 +234,7 @@ class ExpireImages(object):
                 .filter(table.id == entry_id)\
                 .one()
 
-            logger.info('Removing old %s entry: %s', table.__class__.__name__, entry.filename)
+            logger.info('Removing old %s entry: %s', entry.__class__.__name__, entry.filename)
 
             try:
                 entry.deleteAsset()
