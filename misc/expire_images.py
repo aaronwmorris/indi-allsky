@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
+import signal
 import logging
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -72,6 +73,9 @@ class ExpireImages(object):
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
 
+        self._shutdown = False
+
+
     @property
     def image_days(self):
         return self._image_days
@@ -88,6 +92,14 @@ class ExpireImages(object):
     @video_days.setter
     def video_days(self, new_video_days):
         self._video_days = int(new_video_days)
+
+
+    def sigint_handler_main(self, signum, frame):
+        logger.warning('Caught INT signal, shutting down')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
 
 
     def main(self):
@@ -195,6 +207,8 @@ class ExpireImages(object):
             panorama_video_id_list.append(entry.id)
 
 
+        # catch signals to perform cleaner shutdown
+        signal.signal(signal.SIGINT, self.sigint_handler_main)
 
         self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
         self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
@@ -240,6 +254,10 @@ class ExpireImages(object):
 
             db.session.delete(entry)
             db.session.commit()
+
+
+            if self._shutdown:
+                sys.exit(1)
 
 
     def _getFolderFolders(self, folder, dir_list):
