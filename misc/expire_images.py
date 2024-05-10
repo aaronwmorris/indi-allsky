@@ -138,6 +138,7 @@ class ExpireImages(object):
         logger.info('Proceeding in 10 seconds')
 
         time.sleep(10)
+        logger.warning('Deleting...')
 
 
         # images
