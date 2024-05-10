@@ -157,51 +157,39 @@ class ExpireImages(object):
         ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
         ### to recache after every delete which cause a 1-5 second lag for each delete
 
-        # images
         image_id_list = list()
         for entry in old_images:
             image_id_list.append(entry.id)
 
-        # fits images
         fits_id_list = list()
         for entry in old_fits_images:
             fits_id_list.append(entry.id)
 
-        # raw images
         raw_id_list = list()
         for entry in old_raw_images:
             raw_id_list.append(entry.id)
 
-        # panorama images
         panorama_image_id_list = list()
         for entry in old_panorama_images:
             panorama_image_id_list.append(entry.id)
 
 
-        # videos
         video_id_list = list()
         for entry in old_videos:
             video_id_list.append(entry.id)
 
-        # keograms
         keogram_id_list = list()
         for entry in old_keograms:
             keogram_id_list.append(entry.id)
 
-
-        # star trails
         startrail_image_id_list = list()
         for entry in old_startrails:
             startrail_image_id_list.append(entry.id)
 
-
-        # star trails video
         startrail_video_id_list = list()
         for entry in old_startrails_videos:
             startrail_video_id_list.append(entry.id)
 
-
-        # panorama video
         panorama_video_id_list = list()
         for entry in old_panorama_videos:
             panorama_video_id_list.append(entry.id)
