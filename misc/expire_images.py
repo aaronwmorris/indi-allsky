@@ -141,148 +141,71 @@ class ExpireImages(object):
         logger.warning('Deleting...')
 
 
+        ### Getting IDs first then deleting each file is faster than deleting all files with
+        ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
+        ### to recache after every delete which cause a 1-5 second lag for each delete
+
         # images
-        for file_entry in old_images:
-            logger.info('Removing old image: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
-
+        image_id_list = list()
+        for entry in old_images:
+            image_id_list.append(entry.id)
 
         # fits images
-        for file_entry in old_fits_images:
-            logger.info('Removing old image: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
-
+        fits_id_list = list()
+        for entry in old_fits_images:
+            fits_id_list.append(entry.id)
 
         # raw images
-        for file_entry in old_raw_images:
-            logger.info('Removing old image: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
-
+        raw_id_list = list()
+        for entry in old_raw_images:
+            raw_id_list.append(entry.id)
 
         # panorama images
-        for file_entry in old_panorama_images:
-            logger.info('Removing old panorama: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
+        panorama_image_id_list = list()
+        for entry in old_panorama_images:
+            panorama_image_id_list.append(entry.id)
 
 
         # videos
-        for file_entry in old_videos:
-            logger.info('Removing old video: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
-
+        video_id_list = list()
+        for entry in old_videos:
+            video_id_list.append(entry.id)
 
         # keograms
-        for file_entry in old_keograms:
-            logger.info('Removing old keogram: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
+        keogram_id_list = list()
+        for entry in old_keograms:
+            keogram_id_list.append(entry.id)
 
 
         # star trails
-        for file_entry in old_startrails:
-            logger.info('Removing old star trails: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
+        startrail_image_id_list = list()
+        for entry in old_startrails:
+            startrail_image_id_list.append(entry.id)
 
 
         # star trails video
-        for file_entry in old_startrails_videos:
-            logger.info('Removing old star trails video: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
+        startrail_video_id_list = list()
+        for entry in old_startrails_videos:
+            startrail_video_id_list.append(entry.id)
 
 
         # panorama video
-        for file_entry in old_panorama_videos:
-            logger.info('Removing old panorama video: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
+        panorama_video_id_list = list()
+        for entry in old_panorama_videos:
+            panorama_video_id_list.append(entry.id)
 
 
-        db.session.commit()
+
+        self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
+        self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
+        self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
+        self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
+        self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
+        self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
+        self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
+        self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
+        self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
+
 
 
         # Remove empty folders
@@ -299,6 +222,24 @@ class ExpireImages(object):
                 logger.error('Cannot remove folder: %s', str(e))
             except PermissionError as e:
                 logger.error('Cannot remove folder: %s', str(e))
+
+
+    def _deleteAssets(self, table, entry_id_list):
+        for entry_id in entry_id_list:
+            entry = table.query\
+                .filter(table.id == entry_id)\
+                .one()
+
+            logger.info('Removing old %s entry: %s', table.__class__.__name__, entry.filename)
+
+            try:
+                entry.deleteAsset()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+                continue
+
+            db.session.delete(entry)
+            db.session.commit()
 
 
     def _getFolderFolders(self, folder, dir_list):
