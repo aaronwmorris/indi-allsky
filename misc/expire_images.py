@@ -114,28 +114,37 @@ class ExpireImages(object):
         cutoff_age_images_date = cutoff_age_images.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_images = IndiAllSkyDbImageTable.query\
-            .filter(IndiAllSkyDbImageTable.dayDate < cutoff_age_images_date)
+            .filter(IndiAllSkyDbImageTable.dayDate < cutoff_age_images_date)\
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
         old_fits_images = IndiAllSkyDbFitsImageTable.query\
-            .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_date)
+            .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_date)\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())
         old_raw_images = IndiAllSkyDbRawImageTable.query\
-            .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)
+            .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)\
+            .order_by(IndiAllSkyDbRawImageTable.createDate.asc())
         old_panorama_images = IndiAllSkyDbPanoramaImageTable.query\
-            .filter(IndiAllSkyDbPanoramaImageTable.dayDate < cutoff_age_images_date)
+            .filter(IndiAllSkyDbPanoramaImageTable.dayDate < cutoff_age_images_date)\
+            .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
 
         cutoff_age_timelapse = datetime.now() - timedelta(days=self.video_days)
         cutoff_age_timelapse_date = cutoff_age_timelapse.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_videos = IndiAllSkyDbVideoTable.query\
-            .filter(IndiAllSkyDbVideoTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbVideoTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbVideoTable.createDate.asc())
         old_keograms = IndiAllSkyDbKeogramTable.query\
-            .filter(IndiAllSkyDbKeogramTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbKeogramTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbKeogramTable.createDate.asc())
         old_startrails = IndiAllSkyDbStarTrailsTable.query\
-            .filter(IndiAllSkyDbStarTrailsTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbStarTrailsTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())
         old_startrails_videos = IndiAllSkyDbStarTrailsVideoTable.query\
-            .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())
         old_panorama_videos = IndiAllSkyDbPanoramaVideoTable.query\
-            .filter(IndiAllSkyDbPanoramaVideoTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbPanoramaVideoTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbPanoramaVideoTable.createDate.asc())
 
 
         logger.warning('Found %d expired images to delete', old_images.count())
@@ -196,6 +205,8 @@ class ExpireImages(object):
 
 
         logger.warning('Deleting...')
+        time.sleep(3)
+
 
         # catch signals to perform cleaner shutdown
         signal.signal(signal.SIGINT, self.sigint_handler_main)

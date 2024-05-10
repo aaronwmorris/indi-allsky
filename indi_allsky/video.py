@@ -1283,19 +1283,23 @@ class VideoWorker(Process):
         old_images = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(IndiAllSkyDbImageTable.dayDate < cutoff_age_images_date)
+            .filter(IndiAllSkyDbImageTable.dayDate < cutoff_age_images_date)\
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
         old_fits_images = IndiAllSkyDbFitsImageTable.query\
             .join(IndiAllSkyDbFitsImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_date)
+            .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_date)\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())
         old_raw_images = IndiAllSkyDbRawImageTable.query\
             .join(IndiAllSkyDbRawImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)
+            .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)\
+            .order_by(IndiAllSkyDbRawImageTable.createDate.asc())
         old_panorama_images = IndiAllSkyDbPanoramaImageTable.query\
             .join(IndiAllSkyDbPanoramaImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(IndiAllSkyDbPanoramaImageTable.dayDate < cutoff_age_images_date)
+            .filter(IndiAllSkyDbPanoramaImageTable.dayDate < cutoff_age_images_date)\
+            .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
 
         cutoff_age_timelapse = datetime.now() - timedelta(days=self.config.get('TIMELAPSE_EXPIRE_DAYS', 365))
@@ -1304,23 +1308,28 @@ class VideoWorker(Process):
         old_videos = IndiAllSkyDbVideoTable.query\
             .join(IndiAllSkyDbVideoTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(IndiAllSkyDbVideoTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbVideoTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbVideoTable.createDate.asc())
         old_keograms = IndiAllSkyDbKeogramTable.query\
             .join(IndiAllSkyDbKeogramTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(IndiAllSkyDbKeogramTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbKeogramTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbKeogramTable.createDate.asc())
         old_startrails = IndiAllSkyDbStarTrailsTable.query\
             .join(IndiAllSkyDbStarTrailsTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(IndiAllSkyDbStarTrailsTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbStarTrailsTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())
         old_startrails_videos = IndiAllSkyDbStarTrailsVideoTable.query\
             .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())
         old_panorama_videos = IndiAllSkyDbPanoramaVideoTable.query\
             .join(IndiAllSkyDbPanoramaVideoTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(IndiAllSkyDbPanoramaVideoTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbPanoramaVideoTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbPanoramaVideoTable.createDate.asc())
 
 
         ### Getting IDs first then deleting each file is faster than deleting all files with
