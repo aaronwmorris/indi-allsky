@@ -4355,6 +4355,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
             ('imx287', 'IMX287 - 1/2.9"'),
             ('imx290', 'IMX290 - 1/2.8"'),
             ('imx296', 'IMX296 - 1/2.9" - Global Shutter'),
+            ('imx298', 'IMX298 - 1/2.8"'),
             ('imx307', 'IMX307 - 1/2.8" - SV105C'),
             ('imx327', 'IMX327 - 1/2.8"'),
             ('imx415', 'IMX415 - 1/2.8"'),
