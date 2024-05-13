@@ -6,6 +6,7 @@ from .libcamera import IndiClientLibCameraOv5647 as libcamera_ov5647
 from .libcamera import IndiClientLibCameraImx219 as libcamera_imx219
 from .libcamera import IndiClientLibCameraImx519 as libcamera_imx519
 from .libcamera import IndiClientLibCamera64mpHawkeye as libcamera_64mp_hawkeye
+from .libcamera import IndiClientLibCameraOv64a40OwlSight as libcamera_64mp_owlsight
 from .libcamera import IndiClientLibCameraImx708 as libcamera_imx708
 from .libcamera import IndiClientLibCameraImx296 as libcamera_imx296_gs
 from .libcamera import IndiClientLibCameraImx290 as libcamera_imx290
@@ -21,6 +22,7 @@ __all__ = (
     'libcamera_imx219',
     'libcamera_imx519',
     'libcamera_64mp_hawkeye',
+    'libcamera_64mp_owlsight',
     'libcamera_imx708',
     'libcamera_imx296_gs',
     'libcamera_imx290',
