@@ -924,3 +924,27 @@ class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
             2 : '--mode 1280:720:12',  # cropped
         }
 
+
+class IndiClientLibCameraImx298(IndiClientLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx298, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_imx298'
+
+        self.camera_info = {
+            'width'         : 4640,
+            'height'        : 3472,
+            'pixel'         : 1.12,
+            'min_gain'      : 1,
+            'max_gain'      : 16,  # unverified
+            'min_exposure'  : 0.0001,
+            'max_exposure'  : 200.0,
+            'cfa'           : 'RGGB',  # unverified
+            'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            1 : '',
+        }
+
