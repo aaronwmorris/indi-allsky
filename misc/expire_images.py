@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
+import signal
 import logging
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -72,6 +73,9 @@ class ExpireImages(object):
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
 
+        self._shutdown = False
+
+
     @property
     def image_days(self):
         return self._image_days
@@ -90,6 +94,14 @@ class ExpireImages(object):
         self._video_days = int(new_video_days)
 
 
+    def sigint_handler_main(self, signum, frame):
+        logger.warning('Caught INT signal, shutting down')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
+
+
     def main(self):
         logger.info('Cutoff for images: %d days', self.image_days)
         logger.info('Cutoff for videos: %d days', self.video_days)
@@ -102,28 +114,37 @@ class ExpireImages(object):
         cutoff_age_images_date = cutoff_age_images.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_images = IndiAllSkyDbImageTable.query\
-            .filter(IndiAllSkyDbImageTable.dayDate < cutoff_age_images_date)
+            .filter(IndiAllSkyDbImageTable.dayDate < cutoff_age_images_date)\
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
         old_fits_images = IndiAllSkyDbFitsImageTable.query\
-            .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_date)
+            .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_date)\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())
         old_raw_images = IndiAllSkyDbRawImageTable.query\
-            .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)
+            .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)\
+            .order_by(IndiAllSkyDbRawImageTable.createDate.asc())
         old_panorama_images = IndiAllSkyDbPanoramaImageTable.query\
-            .filter(IndiAllSkyDbPanoramaImageTable.dayDate < cutoff_age_images_date)
+            .filter(IndiAllSkyDbPanoramaImageTable.dayDate < cutoff_age_images_date)\
+            .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
 
         cutoff_age_timelapse = datetime.now() - timedelta(days=self.video_days)
         cutoff_age_timelapse_date = cutoff_age_timelapse.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_videos = IndiAllSkyDbVideoTable.query\
-            .filter(IndiAllSkyDbVideoTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbVideoTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbVideoTable.createDate.asc())
         old_keograms = IndiAllSkyDbKeogramTable.query\
-            .filter(IndiAllSkyDbKeogramTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbKeogramTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbKeogramTable.createDate.asc())
         old_startrails = IndiAllSkyDbStarTrailsTable.query\
-            .filter(IndiAllSkyDbStarTrailsTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbStarTrailsTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbStarTrailsTable.createDate.asc())
         old_startrails_videos = IndiAllSkyDbStarTrailsVideoTable.query\
-            .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbStarTrailsVideoTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbStarTrailsVideoTable.createDate.asc())
         old_panorama_videos = IndiAllSkyDbPanoramaVideoTable.query\
-            .filter(IndiAllSkyDbPanoramaVideoTable.dayDate < cutoff_age_timelapse_date)
+            .filter(IndiAllSkyDbPanoramaVideoTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbPanoramaVideoTable.createDate.asc())
 
 
         logger.warning('Found %d expired images to delete', old_images.count())
@@ -138,150 +159,68 @@ class ExpireImages(object):
         logger.info('Proceeding in 10 seconds')
 
         time.sleep(10)
+        logger.info('Building id lists...')
 
 
-        # images
-        for file_entry in old_images:
-            logger.info('Removing old image: %s', file_entry.filename)
+        ### Getting IDs first then deleting each file is faster than deleting all files with
+        ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
+        ### to recache after every delete which cause a 1-5 second lag for each delete
 
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
+        image_id_list = list()
+        for entry in old_images:
+            image_id_list.append(entry.id)
 
-            db.session.delete(file_entry)
+        fits_id_list = list()
+        for entry in old_fits_images:
+            fits_id_list.append(entry.id)
 
+        raw_id_list = list()
+        for entry in old_raw_images:
+            raw_id_list.append(entry.id)
 
-        db.session.commit()
-
-
-        # fits images
-        for file_entry in old_fits_images:
-            logger.info('Removing old image: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
+        panorama_image_id_list = list()
+        for entry in old_panorama_images:
+            panorama_image_id_list.append(entry.id)
 
 
-        db.session.commit()
+        video_id_list = list()
+        for entry in old_videos:
+            video_id_list.append(entry.id)
+
+        keogram_id_list = list()
+        for entry in old_keograms:
+            keogram_id_list.append(entry.id)
+
+        startrail_image_id_list = list()
+        for entry in old_startrails:
+            startrail_image_id_list.append(entry.id)
+
+        startrail_video_id_list = list()
+        for entry in old_startrails_videos:
+            startrail_video_id_list.append(entry.id)
+
+        panorama_video_id_list = list()
+        for entry in old_panorama_videos:
+            panorama_video_id_list.append(entry.id)
 
 
-        # raw images
-        for file_entry in old_raw_images:
-            logger.info('Removing old image: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
+        logger.warning('Deleting...')
+        time.sleep(3)
 
 
-        db.session.commit()
+        # catch signals to perform cleaner shutdown
+        signal.signal(signal.SIGINT, self.sigint_handler_main)
 
+        self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
+        self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
+        self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
+        self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
+        self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
+        self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
+        self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
+        self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
+        self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
 
-        # panorama images
-        for file_entry in old_panorama_images:
-            logger.info('Removing old panorama: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
-
-
-        # videos
-        for file_entry in old_videos:
-            logger.info('Removing old video: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
-
-
-        # keograms
-        for file_entry in old_keograms:
-            logger.info('Removing old keogram: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
-
-
-        # star trails
-        for file_entry in old_startrails:
-            logger.info('Removing old star trails: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
-
-
-        # star trails video
-        for file_entry in old_startrails_videos:
-            logger.info('Removing old star trails video: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
-
-
-        # panorama video
-        for file_entry in old_panorama_videos:
-            logger.info('Removing old panorama video: %s', file_entry.filename)
-
-            try:
-                file_entry.deleteAsset()
-            except OSError as e:
-                logger.error('Cannot remove file: %s', str(e))
-                continue
-
-            db.session.delete(file_entry)
-
-
-        db.session.commit()
 
 
         # Remove empty folders
@@ -298,6 +237,28 @@ class ExpireImages(object):
                 logger.error('Cannot remove folder: %s', str(e))
             except PermissionError as e:
                 logger.error('Cannot remove folder: %s', str(e))
+
+
+    def _deleteAssets(self, table, entry_id_list):
+        for entry_id in entry_id_list:
+            entry = table.query\
+                .filter(table.id == entry_id)\
+                .one()
+
+            logger.info('Removing old %s entry: %s', entry.__class__.__name__, entry.filename)
+
+            try:
+                entry.deleteAsset()
+            except OSError as e:
+                logger.error('Cannot remove file: %s', str(e))
+                continue
+
+            db.session.delete(entry)
+            db.session.commit()
+
+
+            if self._shutdown:
+                sys.exit(1)
 
 
     def _getFolderFolders(self, folder, dir_list):

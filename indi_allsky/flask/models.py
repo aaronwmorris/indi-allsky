@@ -229,6 +229,10 @@ class IndiAllSkyDbThumbnailTable(IndiAllSkyDbFileBase):
         return None
 
 
+    def deleteAsset(self):
+        self.deleteFile()
+
+
 class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     __tablename__ = 'image'
 

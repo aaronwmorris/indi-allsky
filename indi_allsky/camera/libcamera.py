@@ -793,6 +793,33 @@ class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
         }
 
 
+class IndiClientLibCameraOv64a40OwlSight(IndiClientLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraOv64a40OwlSight, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_64mp_owlsight'
+
+        self.camera_info = {
+            'width'         : 9152,
+            'height'        : 6944,
+            'pixel'         : 1.008,
+            'min_gain'      : 1,
+            'max_gain'      : 16,  # verified
+            'min_exposure'  : 0.0001,
+            'max_exposure'  : 200.0,  # capable of more
+            'cfa'           : 'RGGB',  # unverified
+            'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            1 : '',
+            #1 : '--mode 9152:6944',  # unverified
+            #2 : '--mode 4624:3472',
+            #4 : '--mode 2312:1736',
+        }
+
+
 class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
@@ -895,5 +922,29 @@ class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
             #1 : '--mode 1920:1080:12',
             1 : '',
             2 : '--mode 1280:720:12',  # cropped
+        }
+
+
+class IndiClientLibCameraImx298(IndiClientLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx298, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_imx298'
+
+        self.camera_info = {
+            'width'         : 4640,
+            'height'        : 3472,
+            'pixel'         : 1.12,
+            'min_gain'      : 1,
+            'max_gain'      : 16,  # unverified
+            'min_exposure'  : 0.0001,
+            'max_exposure'  : 200.0,
+            'cfa'           : 'RGGB',  # unverified
+            'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            1 : '',
         }
 
