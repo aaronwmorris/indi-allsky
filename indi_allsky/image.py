@@ -614,6 +614,11 @@ class ImageWorker(Process):
             if not self.image_count % self.config.get('FISH2PANO', {}).get('MODULUS', 4):
                 pano_data = self.image_processor.fish2pano()
 
+
+                if self.config.get('FISH2PANO', {}).get('FLIP_H'):
+                    pano_data = self.image_processor._flip(pano_data, 1)
+
+
                 self.write_panorama_img(pano_data, i_ref, camera, jpeg_exif=jpeg_exif)
 
 

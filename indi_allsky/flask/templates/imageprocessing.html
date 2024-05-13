@@ -534,6 +534,19 @@ var fullscreen = false;  //initial state
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__FLIP_H.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.FISH2PANO__FLIP_H(class='form-check-input') }}
+                <div id="FISH2PANO__FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_image_processing.FISH2PANO__SCALE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -739,6 +752,7 @@ const checkbox_field_names = [
     'IMAGE_FLIP_H',
     //'PROCESSING_SPLIT_SCREEN',
     'FISH2PANO__ENABLE',
+    'FISH2PANO__FLIP_H',
 ];
 
 var fields = {};

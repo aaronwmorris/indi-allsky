@@ -181,6 +181,7 @@ class IndiAllSkyConfigBase(object):
             "ROTATE_ANGLE" : 0,
             "SCALE"    : 0.5,
             "MODULUS"  : 2,
+            "FLIP_H"   : False,
         },
         "IMAGE_SAVE_FITS"     : False,
         "IMAGE_SAVE_FITS_PRE_DARK" : False,

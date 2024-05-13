@@ -2480,6 +2480,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FISH2PANO__ROTATE_ANGLE          = IntegerField('Rotation Angle', validators=[FISH2PANO__ROTATE_ANGLE_validator])
     FISH2PANO__SCALE                 = FloatField('Scale', validators=[FISH2PANO__SCALE_validator])
     FISH2PANO__MODULUS               = IntegerField('Modulus', validators=[DataRequired(), FISH2PANO__MODULUS_validator])
+    FISH2PANO__FLIP_H                = BooleanField('Flip Horizontally')
     IMAGE_SAVE_FITS                  = BooleanField('Save FITS data')
     NIGHT_GRAYSCALE                  = BooleanField('Save in Grayscale at Night')
     DAYTIME_GRAYSCALE                = BooleanField('Save in Grayscale during Day')
@@ -4337,6 +4338,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     FISH2PANO__OFFSET_Y              = IntegerField('Y Offset', validators=[FISH2PANO__OFFSET_Y_validator])
     FISH2PANO__ROTATE_ANGLE          = IntegerField('Rotation Angle', validators=[FISH2PANO__ROTATE_ANGLE_validator])
     FISH2PANO__SCALE                 = FloatField('Scale', validators=[FISH2PANO__SCALE_validator])
+    FISH2PANO__FLIP_H                = BooleanField('Flip Horizontally')
     #IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     PROCESSING_SPLIT_SCREEN          = BooleanField('Split screen')
 

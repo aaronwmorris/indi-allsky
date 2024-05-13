@@ -1221,6 +1221,7 @@ class ConfigView(FormView):
             'FISH2PANO__ROTATE_ANGLE'        : self.indi_allsky_config.get('FISH2PANO', {}).get('ROTATE_ANGLE', 0),
             'FISH2PANO__SCALE'               : self.indi_allsky_config.get('FISH2PANO', {}).get('SCALE', 0.5),
             'FISH2PANO__MODULUS'             : self.indi_allsky_config.get('FISH2PANO', {}).get('MODULUS', 2),
+            'FISH2PANO__FLIP_H'              : self.indi_allsky_config.get('FISH2PANO', {}).get('FLIP_H', False),
             'IMAGE_SAVE_FITS'                : self.indi_allsky_config.get('IMAGE_SAVE_FITS', False),
             'NIGHT_GRAYSCALE'                : self.indi_allsky_config.get('NIGHT_GRAYSCALE', False),
             'DAYTIME_GRAYSCALE'              : self.indi_allsky_config.get('DAYTIME_GRAYSCALE', False),
@@ -1805,6 +1806,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FISH2PANO']['ROTATE_ANGLE']            = int(request.json['FISH2PANO__ROTATE_ANGLE'])
         self.indi_allsky_config['FISH2PANO']['SCALE']                   = float(request.json['FISH2PANO__SCALE'])
         self.indi_allsky_config['FISH2PANO']['MODULUS']                 = int(request.json['FISH2PANO__MODULUS'])
+        self.indi_allsky_config['FISH2PANO']['FLIP_H']                  = bool(request.json['FISH2PANO__FLIP_H'])
         self.indi_allsky_config['IMAGE_SAVE_FITS']                      = bool(request.json['IMAGE_SAVE_FITS'])
         self.indi_allsky_config['NIGHT_GRAYSCALE']                      = bool(request.json['NIGHT_GRAYSCALE'])
         self.indi_allsky_config['DAYTIME_GRAYSCALE']                    = bool(request.json['DAYTIME_GRAYSCALE'])
@@ -4564,6 +4566,7 @@ class ImageProcessingView(TemplateView):
             'FISH2PANO__OFFSET_Y'            : self.indi_allsky_config.get('FISH2PANO', {}).get('OFFSET_Y', 0),
             'FISH2PANO__ROTATE_ANGLE'        : self.indi_allsky_config.get('FISH2PANO', {}).get('ROTATE_ANGLE', 0),
             'FISH2PANO__SCALE'               : self.indi_allsky_config.get('FISH2PANO', {}).get('SCALE', 0.3),
+            'FISH2PANO__FLIP_H'              : self.indi_allsky_config.get('FISH2PANO', {}).get('FLIP_H', False),
             'PROCESSING_SPLIT_SCREEN'        : False,
             'IMAGE_CALIBRATE_DARK'           : False,  # darks are almost always already applied
         }
@@ -4689,6 +4692,7 @@ class JsonImageProcessingView(JsonView):
         p_config['FISH2PANO']['OFFSET_Y']                = int(request.json['FISH2PANO__OFFSET_Y'])
         p_config['FISH2PANO']['ROTATE_ANGLE']            = int(request.json['FISH2PANO__ROTATE_ANGLE'])
         p_config['FISH2PANO']['SCALE']                   = float(request.json['FISH2PANO__SCALE'])
+        p_config['FISH2PANO']['FLIP_H']                  = bool(request.json['FISH2PANO__FLIP_H'])
         p_config['PROCESSING_SPLIT_SCREEN']              = bool(request.json.get('PROCESSING_SPLIT_SCREEN', False))
 
 
@@ -4866,7 +4870,14 @@ class JsonImageProcessingView(JsonView):
 
 
             if p_config.get('FISH2PANO', {}).get('ENABLE'):
-                image_processor.image = image_processor.fish2pano()
+                pano_data = image_processor.fish2pano()
+
+
+                if p_config.get('FISH2PANO', {}).get('FLIP_H'):
+                    pano_data = image_processor._flip(pano_data, 1)
+
+
+                image_processor.image = pano_data
 
 
         processing_elapsed_s = time.time() - processing_start

@@ -2416,6 +2416,19 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.FISH2PANO__FLIP_H.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FISH2PANO__FLIP_H(class='form-check-input') }}
+                <div id="FISH2PANO__FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.FISH2PANO__SCALE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -4261,6 +4274,7 @@ const checkbox_field_names = [
     'IMAGE_CIRCLE_MASK__ENABLE',
     'IMAGE_CIRCLE_MASK__OUTLINE',
     'FISH2PANO__ENABLE',
+    'FISH2PANO__FLIP_H',
     'IMAGE_EXPORT_FLIP_V',
     'IMAGE_EXPORT_FLIP_H',
     'IMAGE_SAVE_FITS',
