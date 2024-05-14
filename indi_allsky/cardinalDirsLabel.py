@@ -407,7 +407,15 @@ class IndiAllskyCardinalDirsLabel(object):
             angle = dir_az
 
 
-        return int(angle / 360 * width), height - self.panorama_bottom_offset
+        x = int(angle / 360 * width)
+        y = height - self.panorama_bottom_offset
+
+
+        if self.config.get('FISH2PANO', {}).get('FLIP_H'):
+            x = width - x
+
+
+        return x, y
 
 
     def panorama_label_opencv(self, image, coord_dict):
