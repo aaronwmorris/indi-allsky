@@ -2648,6 +2648,9 @@ class ImageProcessor(object):
 
 
     def fish2pano_cardinal_dirs_label(self, pano_data):
+        if not self.config.get('CARDINAL_DIRS', {}).get('ENABLE'):
+            return pano_data
+
         return self._cardinal_dirs_label.panorama_label(pano_data)
 
 
