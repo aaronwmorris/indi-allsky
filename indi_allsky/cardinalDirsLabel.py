@@ -28,6 +28,7 @@ class IndiAllskyCardinalDirsLabel(object):
         self.left_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_LEFT', 15)
         self.right_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_RIGHT', 15)
         self.bottom_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_BOTTOM', 15)
+        self.panorama_bottom_offset = self.config.get('FISH2PANO', {}).get('DIRS_OFFSET_BOTTOM', 50)
 
 
         self._az = 0
@@ -361,3 +362,95 @@ class IndiAllskyCardinalDirsLabel(object):
             color=color_bgr,
             thickness=1,
         )
+
+
+    def panorama_label(self, image):
+        height, width = image.shape[:2]
+
+
+        coord_dict = dict()
+
+        if self.NORTH_CHAR:
+            coord_dict[self.NORTH_CHAR] = self.findPanoramaCoordinate(image, self.az)
+
+        if self.WEST_CHAR:
+            coord_dict[self.WEST_CHAR]  = self.findPanoramaCoordinate(image, self.az - 90)
+
+        if self.SOUTH_CHAR:
+            coord_dict[self.SOUTH_CHAR] = self.findPanoramaCoordinate(image, self.az + 180)
+
+        if self.EAST_CHAR:
+            coord_dict[self.EAST_CHAR]  = self.findPanoramaCoordinate(image, self.az + 90)
+
+
+        #logger.info('Panorama coords: %s', str(coord_dict))
+
+
+        image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
+
+        if image_label_system == 'opencv':
+            #return self.applyLabels_opencv(image, coord_dict)
+            return self.panorama_label_opencv(image, coord_dict)
+        else:
+            # pillow is default
+            return self.panorama_label_pillow(image, coord_dict)
+
+
+    def findPanoramaCoordinate(self, image, dir_az):
+        height, width = image.shape[:2]
+
+        if dir_az >= 360:
+            angle = dir_az - 360
+        elif dir_az < 0:
+            angle = dir_az + 360
+        else:
+            angle = dir_az
+
+
+        return int(angle / 360 * width), height - self.panorama_bottom_offset
+
+
+    def panorama_label_opencv(self, image, coord_dict):
+        height, width = image.shape[:2]
+
+        fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
+        lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
+
+        color_bgr = list(self.config['CARDINAL_DIRS']['FONT_COLOR'])
+        color_bgr.reverse()
+
+        logger.info('Applying cardinal directions to panorama')
+
+        for k, v in coord_dict.items():
+            x, y = v
+
+
+            if x < self.left_offset:
+                x = self.left_offset
+            elif x > width - self.right_offset:
+                x = width - self.right_offset
+
+
+            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+                cv2.putText(
+                    img=image,
+                    text=k,
+                    org=(x, y),
+                    fontFace=fontFace,
+                    color=(0, 0, 0),
+                    lineType=lineType,
+                    fontScale=self.config.get('FISH2PANO', {}).get('OPENCV_FONT_SCALE', 1.6),
+                    thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+                )  # black outline
+            cv2.putText(
+                img=image,
+                text=k,
+                org=(x, y),
+                fontFace=fontFace,
+                color=tuple(color_bgr),
+                lineType=lineType,
+                fontScale=self.config.get('FISH2PANO', {}).get('OPENCV_FONT_SCALE', 1.6),
+                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+            )
+
+        return image
