@@ -1218,7 +1218,7 @@ class ConfigView(FormView):
             'FISH2PANO__DIAMETER'            : self.indi_allsky_config.get('FISH2PANO', {}).get('DIAMETER', 3000),
             'FISH2PANO__OFFSET_X'            : self.indi_allsky_config.get('FISH2PANO', {}).get('OFFSET_X', 0),
             'FISH2PANO__OFFSET_Y'            : self.indi_allsky_config.get('FISH2PANO', {}).get('OFFSET_Y', 0),
-            'FISH2PANO__ROTATE_ANGLE'        : self.indi_allsky_config.get('FISH2PANO', {}).get('ROTATE_ANGLE', 0),
+            'FISH2PANO__ROTATE_ANGLE'        : self.indi_allsky_config.get('FISH2PANO', {}).get('ROTATE_ANGLE', -90),
             'FISH2PANO__SCALE'               : self.indi_allsky_config.get('FISH2PANO', {}).get('SCALE', 0.5),
             'FISH2PANO__MODULUS'             : self.indi_allsky_config.get('FISH2PANO', {}).get('MODULUS', 2),
             'FISH2PANO__FLIP_H'              : self.indi_allsky_config.get('FISH2PANO', {}).get('FLIP_H', False),
