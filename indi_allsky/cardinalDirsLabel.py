@@ -447,7 +447,7 @@ class IndiAllskyCardinalDirsLabel(object):
                     fontFace=fontFace,
                     color=(0, 0, 0),
                     lineType=lineType,
-                    fontScale=self.config.get('FISH2PANO', {}).get('OPENCV_FONT_SCALE', 1.6),
+                    fontScale=self.config.get('FISH2PANO', {}).get('OPENCV_FONT_SCALE', 0.8),
                     thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
                 )  # black outline
             cv2.putText(
@@ -457,7 +457,7 @@ class IndiAllskyCardinalDirsLabel(object):
                 fontFace=fontFace,
                 color=tuple(color_bgr),
                 lineType=lineType,
-                fontScale=self.config.get('FISH2PANO', {}).get('OPENCV_FONT_SCALE', 1.6),
+                fontScale=self.config.get('FISH2PANO', {}).get('OPENCV_FONT_SCALE', 0.8),
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
             )
 
@@ -475,7 +475,7 @@ class IndiAllskyCardinalDirsLabel(object):
             pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
 
 
-        pillow_font_size = self.config.get('FISH2PANO', {}).get('PIL_FONT_SIZE', 60)
+        pillow_font_size = self.config.get('FISH2PANO', {}).get('PIL_FONT_SIZE', 30)
 
         font = ImageFont.truetype(str(pillow_font_file_p), pillow_font_size)
         draw = ImageDraw.Draw(img_rgb)
