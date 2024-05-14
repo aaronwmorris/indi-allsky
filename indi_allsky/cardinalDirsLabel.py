@@ -370,17 +370,18 @@ class IndiAllskyCardinalDirsLabel(object):
 
         coord_dict = dict()
 
+        # the starting position of the panorama is 90 degrees clockwise
         if self.NORTH_CHAR:
-            coord_dict[self.NORTH_CHAR] = self.findPanoramaCoordinate(image, self.az)
-
-        if self.WEST_CHAR:
-            coord_dict[self.WEST_CHAR]  = self.findPanoramaCoordinate(image, self.az - 90)
-
-        if self.SOUTH_CHAR:
-            coord_dict[self.SOUTH_CHAR] = self.findPanoramaCoordinate(image, self.az + 180)
+            coord_dict[self.NORTH_CHAR]  = self.findPanoramaCoordinate(image, self.az - 90)
 
         if self.EAST_CHAR:
-            coord_dict[self.EAST_CHAR]  = self.findPanoramaCoordinate(image, self.az + 90)
+            coord_dict[self.EAST_CHAR] = self.findPanoramaCoordinate(image, self.az)
+
+        if self.WEST_CHAR:
+            coord_dict[self.WEST_CHAR] = self.findPanoramaCoordinate(image, self.az + 180)
+
+        if self.SOUTH_CHAR:
+            coord_dict[self.SOUTH_CHAR]  = self.findPanoramaCoordinate(image, self.az + 90)
 
 
         #logger.info('Panorama coords: %s', str(coord_dict))
