@@ -183,7 +183,7 @@ class IndiAllSkyConfigBase(object):
             "MODULUS"  : 2,
             "FLIP_H"   : False,
             "ENABLE_CARDINAL_DIRS" : True,
-            "DIRS_OFFSET_BOTTOM"   : 100,
+            "DIRS_OFFSET_BOTTOM"   : 25,
             "OPENCV_FONT_SCALE"    : 0.8,
             "PIL_FONT_SIZE"        : 30,
         },
