@@ -454,3 +454,59 @@ class IndiAllskyCardinalDirsLabel(object):
             )
 
         return image
+
+
+    def panorama_label_pillow(self, image, coord_dict):
+        img_rgb = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        width, height  = img_rgb.size  # backwards from opencv
+
+
+        if self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'] == 'custom':
+            pillow_font_file_p = Path(self.config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM'])
+        else:
+            pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
+
+
+        pillow_font_size = self.config.get('FISH2PANO', {}).get('PIL_FONT_SIZE', 60)
+
+        font = ImageFont.truetype(str(pillow_font_file_p), pillow_font_size)
+        draw = ImageDraw.Draw(img_rgb)
+
+        color_rgb = list(self.config['CARDINAL_DIRS']['FONT_COLOR'])  # RGB for pillow
+
+
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            # black outline
+            stroke_width = 4
+        else:
+            stroke_width = 0
+
+
+        for k, v in coord_dict.items():
+            x, y = v
+
+            if x < self.left_offset:
+                x = self.left_offset
+            elif x > width - self.right_offset:
+                x = width - self.right_offset
+
+            if y < self.top_offset:
+                y = self.top_offset
+            elif y > height - self.bottom_offset:
+                y = height - self.bottom_offset
+
+
+            draw.text(
+                (x, y),
+                k,
+                fill=tuple(color_rgb),
+                font=font,
+                stroke_width=stroke_width,
+                stroke_fill=(0, 0, 0),
+                anchor='mm',  # middle-middle
+            )
+
+
+        # convert back to numpy array
+        return cv2.cvtColor(numpy.array(img_rgb), cv2.COLOR_RGB2BGR)
+
