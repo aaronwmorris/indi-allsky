@@ -4534,6 +4534,17 @@ $('#WEB_NONLOCAL_IMAGES').on('change', function() {
     }
 });
 
+// cardinal dirs
+$('#CARDINAL_DIRS__ENABLE').on('change', function() {
+    if ($('#CARDINAL_DIRS__ENABLE').prop('checked')) {
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').removeAttr('disabled');
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', true);
+    } else {
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', false);
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').attr('disabled', true);
+    }
+});
+
 
 $( document ).ready(function() {
     // Daytime timelapse
@@ -4596,6 +4607,15 @@ $( document ).ready(function() {
     } else {
         $('#WEB_LOCAL_IMAGES_ADMIN').prop('checked', false);
         $('#WEB_LOCAL_IMAGES_ADMIN').attr('disabled', true);
+    }
+
+    // cardinal dirs
+    if ($('#CARDINAL_DIRS__ENABLE').prop('checked')) {
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').removeAttr('disabled');
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', true);
+    } else {
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', false);
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').attr('disabled', true);
     }
 });
 
