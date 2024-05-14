@@ -24,11 +24,14 @@ class IndiAllskyCardinalDirsLabel(object):
         self.x_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_X', 0)
         self.y_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_Y', 0)
 
+
         self.top_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_TOP', 15)
         self.left_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_LEFT', 15)
         self.right_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_RIGHT', 15)
         self.bottom_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_BOTTOM', 15)
         self.panorama_bottom_offset = self.config.get('FISH2PANO', {}).get('DIRS_OFFSET_BOTTOM', 50)
+
+        self.panorama_rotate_angle = self.config.get('FISH2PANO', {}).get('ROTATE_ANGLE', 0)
 
 
         self._az = 0
@@ -399,6 +402,8 @@ class IndiAllskyCardinalDirsLabel(object):
 
     def findPanoramaCoordinate(self, image, dir_az):
         height, width = image.shape[:2]
+
+        dir_az -= self.panorama_rotate_angle
 
         if dir_az >= 360:
             angle = dir_az - 360
