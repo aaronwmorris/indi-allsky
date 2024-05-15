@@ -2411,7 +2411,22 @@
         </div>
         <div class="col-sm-8">
             <div>Min: -180, Max: 180 - Image rotation for panorama</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> The starting point of the panorama is 90 degrees clockwise</div>
+            <div>-90 will make the bottom of the image the center of the panorama</div>
         </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__FLIP_H.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FISH2PANO__FLIP_H(class='form-check-input') }}
+                <div id="FISH2PANO__FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
     <div class="form-group row">
@@ -2438,6 +2453,59 @@
         <div class="col-sm-8">
             <div>Generate panorama every # images</div>
             <div>The conversion process can be slow.  Ensure your system is fast enough if you lower this number.</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__ENABLE_CARDINAL_DIRS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FISH2PANO__ENABLE_CARDINAL_DIRS(class='form-check-input') }}
+                <div id="FISH2PANO__ENABLE_CARDINAL_DIRS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Disabling Cardinal Directions (Image Tab) will also disable here</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__DIRS_OFFSET_BOTTOM.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__DIRS_OFFSET_BOTTOM(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__DIRS_OFFSET_BOTTOM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__OPENCV_FONT_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__OPENCV_FONT_SCALE(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__OPENCV_FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__PIL_FONT_SIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FISH2PANO__PIL_FONT_SIZE(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
         </div>
     </div>
 
@@ -4102,6 +4170,9 @@ const field_names = [
     'FISH2PANO__ROTATE_ANGLE',
     'FISH2PANO__SCALE',
     'FISH2PANO__MODULUS',
+    'FISH2PANO__DIRS_OFFSET_BOTTOM',
+    'FISH2PANO__OPENCV_FONT_SCALE',
+    'FISH2PANO__PIL_FONT_SIZE',
     'IMAGE_EXPORT_RAW',
     'IMAGE_EXPORT_FOLDER',
     'IMAGE_STACK_METHOD',
@@ -4261,6 +4332,8 @@ const checkbox_field_names = [
     'IMAGE_CIRCLE_MASK__ENABLE',
     'IMAGE_CIRCLE_MASK__OUTLINE',
     'FISH2PANO__ENABLE',
+    'FISH2PANO__FLIP_H',
+    'FISH2PANO__ENABLE_CARDINAL_DIRS',
     'IMAGE_EXPORT_FLIP_V',
     'IMAGE_EXPORT_FLIP_H',
     'IMAGE_SAVE_FITS',
@@ -4463,6 +4536,17 @@ $('#WEB_NONLOCAL_IMAGES').on('change', function() {
     }
 });
 
+// cardinal dirs
+$('#CARDINAL_DIRS__ENABLE').on('change', function() {
+    if ($('#CARDINAL_DIRS__ENABLE').prop('checked')) {
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').removeAttr('disabled');
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', true);
+    } else {
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', false);
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').attr('disabled', true);
+    }
+});
+
 
 $( document ).ready(function() {
     // Daytime timelapse
@@ -4525,6 +4609,15 @@ $( document ).ready(function() {
     } else {
         $('#WEB_LOCAL_IMAGES_ADMIN').prop('checked', false);
         $('#WEB_LOCAL_IMAGES_ADMIN').attr('disabled', true);
+    }
+
+    // cardinal dirs
+    if ($('#CARDINAL_DIRS__ENABLE').prop('checked')) {
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').removeAttr('disabled');
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', true);
+    } else {
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', false);
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').attr('disabled', true);
     }
 });
 

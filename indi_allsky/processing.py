@@ -2647,6 +2647,13 @@ class ImageProcessor(object):
         return self.fish2pano_module()
 
 
+    def fish2pano_cardinal_dirs_label(self, pano_data):
+        if not self.config.get('CARDINAL_DIRS', {}).get('ENABLE'):
+            return pano_data
+
+        return self._cardinal_dirs_label.panorama_label(pano_data)
+
+
     def _load_detection_mask(self):
         detect_mask = self.config.get('DETECT_MASK', '')
 

@@ -24,10 +24,14 @@ class IndiAllskyCardinalDirsLabel(object):
         self.x_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_X', 0)
         self.y_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_Y', 0)
 
+
         self.top_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_TOP', 15)
         self.left_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_LEFT', 15)
         self.right_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_RIGHT', 15)
         self.bottom_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_BOTTOM', 15)
+        self.panorama_bottom_offset = self.config.get('FISH2PANO', {}).get('DIRS_OFFSET_BOTTOM', 50)
+
+        self.panorama_rotate_angle = self.config.get('FISH2PANO', {}).get('ROTATE_ANGLE', 0)
 
 
         self._az = 0
@@ -361,3 +365,162 @@ class IndiAllskyCardinalDirsLabel(object):
             color=color_bgr,
             thickness=1,
         )
+
+
+    def panorama_label(self, image):
+        height, width = image.shape[:2]
+
+
+        coord_dict = dict()
+
+        # the starting position of the panorama is 90 degrees clockwise
+        if self.NORTH_CHAR:
+            coord_dict[self.NORTH_CHAR]  = self.findPanoramaCoordinate(image, self.az - 90)
+
+        if self.EAST_CHAR:
+            coord_dict[self.EAST_CHAR] = self.findPanoramaCoordinate(image, self.az)
+
+        if self.WEST_CHAR:
+            coord_dict[self.WEST_CHAR] = self.findPanoramaCoordinate(image, self.az + 180)
+
+        if self.SOUTH_CHAR:
+            coord_dict[self.SOUTH_CHAR]  = self.findPanoramaCoordinate(image, self.az + 90)
+
+
+        #logger.info('Panorama coords: %s', str(coord_dict))
+
+
+        image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
+
+        if image_label_system == 'opencv':
+            #return self.applyLabels_opencv(image, coord_dict)
+            return self.panorama_label_opencv(image, coord_dict)
+        else:
+            # pillow is default
+            return self.panorama_label_pillow(image, coord_dict)
+
+
+    def findPanoramaCoordinate(self, image, dir_az):
+        height, width = image.shape[:2]
+
+        dir_az -= self.panorama_rotate_angle
+
+        if dir_az >= 360:
+            angle = dir_az - 360
+        elif dir_az < 0:
+            angle = dir_az + 360
+        else:
+            angle = dir_az
+
+
+        x = int(angle / 360 * width)
+        y = height - self.panorama_bottom_offset
+
+
+        if self.config.get('FISH2PANO', {}).get('FLIP_H'):
+            x = width - x
+
+
+        return x, y
+
+
+    def panorama_label_opencv(self, image, coord_dict):
+        height, width = image.shape[:2]
+
+        fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
+        lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
+
+        color_bgr = list(self.config['CARDINAL_DIRS']['FONT_COLOR'])
+        color_bgr.reverse()
+
+        logger.info('Applying cardinal directions to panorama')
+
+        for k, v in coord_dict.items():
+            x, y = v
+
+
+            if x < self.left_offset:
+                x = self.left_offset
+            elif x > width - self.right_offset:
+                x = width - self.right_offset
+
+
+            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+                cv2.putText(
+                    img=image,
+                    text=k,
+                    org=(x, y),
+                    fontFace=fontFace,
+                    color=(0, 0, 0),
+                    lineType=lineType,
+                    fontScale=self.config.get('FISH2PANO', {}).get('OPENCV_FONT_SCALE', 0.8),
+                    thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+                )  # black outline
+            cv2.putText(
+                img=image,
+                text=k,
+                org=(x, y),
+                fontFace=fontFace,
+                color=tuple(color_bgr),
+                lineType=lineType,
+                fontScale=self.config.get('FISH2PANO', {}).get('OPENCV_FONT_SCALE', 0.8),
+                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+            )
+
+        return image
+
+
+    def panorama_label_pillow(self, image, coord_dict):
+        img_rgb = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        width, height  = img_rgb.size  # backwards from opencv
+
+
+        if self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'] == 'custom':
+            pillow_font_file_p = Path(self.config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM'])
+        else:
+            pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
+
+
+        pillow_font_size = self.config.get('FISH2PANO', {}).get('PIL_FONT_SIZE', 30)
+
+        font = ImageFont.truetype(str(pillow_font_file_p), pillow_font_size)
+        draw = ImageDraw.Draw(img_rgb)
+
+        color_rgb = list(self.config['CARDINAL_DIRS']['FONT_COLOR'])  # RGB for pillow
+
+
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            # black outline
+            stroke_width = 4
+        else:
+            stroke_width = 0
+
+
+        for k, v in coord_dict.items():
+            x, y = v
+
+            if x < self.left_offset:
+                x = self.left_offset
+            elif x > width - self.right_offset:
+                x = width - self.right_offset
+
+            if y < self.top_offset:
+                y = self.top_offset
+            elif y > height - self.bottom_offset:
+                y = height - self.bottom_offset
+
+
+            draw.text(
+                (x, y),
+                k,
+                fill=tuple(color_rgb),
+                font=font,
+                stroke_width=stroke_width,
+                stroke_fill=(0, 0, 0),
+                anchor='mm',  # middle-middle
+            )
+
+
+        # convert back to numpy array
+        return cv2.cvtColor(numpy.array(img_rgb), cv2.COLOR_RGB2BGR)
+
