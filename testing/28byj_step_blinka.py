@@ -7,40 +7,47 @@ import digitalio
 import logging
 
 
+IN1 = board.D17
+IN2 = board.D18
+IN3 = board.D27
+IN4 = board.D22
+
+
 logging.basicConfig(level=logging.INFO)
 logger = logging
 
 
 class Stepper(object):
     SEQ = [
-        [1, 0, 0, 1],
         [1, 0, 0, 0],
         [1, 1, 0, 0],
         [0, 1, 0, 0],
         [0, 1, 1, 0],
         [0, 0, 1, 0],
         [0, 0, 1, 1],
-        [0, 0, 0, 1]
+        [0, 0, 0, 1],
+        [1, 0, 0, 1],
     ]
 
 
     def __init__(self):
-        self.IN1 = digitalio.DigitalInOut(board.D17)
-        self.IN2 = digitalio.DigitalInOut(board.D18)
-        self.IN3 = digitalio.DigitalInOut(board.D27)
-        self.IN4 = digitalio.DigitalInOut(board.D22)
+        self.pins = [
+            digitalio.DigitalInOut(IN1),
+            digitalio.DigitalInOut(IN2),
+            digitalio.DigitalInOut(IN3),
+            digitalio.DigitalInOut(IN4),
+        ]
 
-        self.IN1.direction = digitalio.Direction.OUTPUT
-        self.IN2.direction = digitalio.Direction.OUTPUT
-        self.IN3.direction = digitalio.Direction.OUTPUT
-        self.IN4.direction = digitalio.Direction.OUTPUT
+        for pin in self.pins:
+            # set all pins to output
+            pin.direction = digitalio.Direction.OUTPUT
 
 
     def set_step(self, w1, w2, w3, w4):
-        self.IN1.value = w1
-        self.IN2.value = w2
-        self.IN3.value = w3
-        self.IN4.value = w4
+        self.pins[0].value = w1
+        self.pins[1].value = w2
+        self.pins[2].value = w3
+        self.pins[3].value = w4
 
 
     def step(self, steps, direction):
@@ -50,12 +57,14 @@ class Stepper(object):
             seq = self.SEQ[::-1]
 
         for i in range(steps):
-            for j in range(8):
-                self.set_step(*seq[j])
+            for j in seq:
+                self.set_step(*j)
                 time.sleep(0.005)
 
 
     def control_motor(self, stdscr):
+        self.set_step(0, 0, 0, 0)  # reset
+
         stdscr.clear()
         stdscr.addstr("Use up and down arrow keys")
         stdscr.refresh()
@@ -69,6 +78,9 @@ class Stepper(object):
             elif key == ord('q'):
                 break
 
+            time.sleep(0.005)
+
+        self.set_step(0, 0, 0, 0)  # reset
 
 
 if __name__ == "__main__":
