@@ -22,11 +22,11 @@ class focuser_28byj(FocuserBase):
     )
 
 
-    STEP_LENGTH = {
-        'short'    : 1,
-        'medium'   : 5,
-        'long'     : 10,
-        'verylong' : 100,
+    STEP_DEGREES = {
+        10 : 15,
+        20 : 30,
+        45 : 64,
+        90 : 128,
     }
 
 
@@ -50,9 +50,9 @@ class focuser_28byj(FocuserBase):
             pin.direction = digitalio.Direction.OUTPUT
 
 
-    def move(self, direction, step_length):
+    def move(self, direction, degrees):
         self.set_step(0, 0, 0, 0)  # reset
-        self.step(direction, self.STEP_LENGTH[step_length])
+        self.step(direction, self.STEP_DEGREES[degrees])
         self.set_step(0, 0, 0, 0)  # reset
 
 

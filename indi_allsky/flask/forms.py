@@ -4382,15 +4382,15 @@ class IndiAllskyImageExcludeForm(FlaskForm):
 
 
 class IndiAllskyFocusControllerForm(FlaskForm):
-    STEP_SELECT_choices = (
-        ('short', 'Short'),
-        ('medium', 'Medium'),
-        ('long', 'Long'),
-        ('verylong', 'Very Long'),
+    STEP_DEGREES_choices = (
+        (10, '10 Degrees'),
+        (20, '20 Degrees'),
+        (45, '45 Degrees'),
+        (90, '90 Degrees'),
     )
 
-    DIRECTION         = StringField('Direction')
-    STEP_SELECT       = SelectField('Steps', choices=STEP_SELECT_choices, default=STEP_SELECT_choices[1][0], validators=[])
+    DIRECTION           = StringField('Direction')
+    STEP_DEGREES        = SelectField('Degrees', choices=STEP_DEGREES_choices, default=STEP_DEGREES_choices[2][0], validators=[])
 
 
 class IndiAllskyImageProcessingForm(FlaskForm):
