@@ -154,10 +154,11 @@ function focuserMove(direction, step) {
             $('#FOCUS_CW').prop("disabled", false);
         },
         error: function(json_data){
-            $('#FOCUS_CCW').addClass("btn-primary");
-            $('#FOCUS_CW').addClass("btn-danger");
-            $('#FOCUS_CCW').prop("disabled", false);
-            $('#FOCUS_CW').prop("disabled", false);
+            // Leave disabled on errors
+            //$('#FOCUS_CCW').addClass("btn-primary");
+            //$('#FOCUS_CW').addClass("btn-danger");
+            //$('#FOCUS_CCW').prop("disabled", false);
+            //$('#FOCUS_CW').prop("disabled", false);
         },
     });
 }
@@ -260,9 +261,9 @@ function closeFullscreen() {
 </div>
 
 <div id="focus_controller_div" class="row justify-content-center" style="display: none;">
-    <div class="col-sm-1"><button id="FOCUS_CCW" class="btn btn-primary">-</button></div>
+    <div class="col-sm-1"><button id="FOCUS_CCW" class="btn btn-primary">Focus -</button></div>
     <div class="col-sm-2">{{ form_focuscontroller.STEP_SELECT(class='form-select bg-secondary') }}</div>
-    <div class="col-sm-1"><button id="FOCUS_CW" class="btn btn-danger">+</button></div>
+    <div class="col-sm-1"><button id="FOCUS_CW" class="btn btn-danger">Focus +</button></div>
 </div>
 
 
