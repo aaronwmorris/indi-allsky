@@ -17,58 +17,12 @@ var json_data = {
     'blur_score' : 0.0,
     'focus_mode' : false,
 };
+var focuser_device = true;
 var focus_data = [];
 var refreshInterval = 5000;
 var zoom = 2;  // 2 is no zoom
 var blur_score = 0.0
 var fullscreen = false;  //initial state
-
-function init() {
-    ctx_focus = $('#focus-chart')[0].getContext('2d');
-    focus_chart = new Chart(ctx_focus, {
-        type: "line",
-        data: {
-            datasets: [{
-                label: 'Focus',
-                pointRadius: 3,
-                backgroundColor: "rgba(192, 0, 0, 1)",
-                borderColor: "rgba(128, 0, 0, 1)",
-                tension: 0.1,
-                data: []
-            }],
-        },
-        options: {
-            plugins: {
-                legend: {
-                    display: false
-                },
-            },
-            animation : false,
-            scales: {
-                x: {
-                    grid: {
-                        display: true,
-                        color: 'rgba(75, 75, 75, 1)',
-                    },
-                    ticks: {
-                        display: false
-                    }
-                },
-                y: {
-                    beginAtZero:true,
-                    grid: {
-                        display: true,
-                        color: 'rgba(75, 75, 75, 1)',
-                        stacked: true,
-                    },
-                },
-            }
-        }
-    });
-
-    loadNextImage();
-    loop();
-}
 
 async function loop() {
     console.log('Starting loop');
@@ -182,6 +136,27 @@ function loadJS(url, data, onDone, onError) {
 }
 
 
+function focuserMove(direction, step) {
+    var data = {
+        "DIRECTION" : direction,
+        "STEP_SELECT" : step,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.focus_controller_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        success: function(json_data){
+            //pass
+        },
+        error: function(json_data){
+            //pass
+        },
+    });
+}
+
+
 function setResizeHandler(callback, timeout) {
     var timer_id = undefined;
     $(window).on("resize", function() {
@@ -236,14 +211,6 @@ function closeFullscreen() {
 
 
 
-$( document ).ready(function() {
-    $('#image-canvas').on("click", function() {
-        goFullscreen(this);
-    });
-
-    init();
-});
-
 </script>
 {% endblock %}
 
@@ -286,6 +253,12 @@ $( document ).ready(function() {
     <div>
 </div>
 
+<div class="row justify-content-center">
+        <div class="col-sm-1"><button id="FOCUS_CCW" class="btn btn-primary">-</button></div>
+        <div class="col-sm-2">{{ form_focuscontroller.STEP_SELECT(class='form-select bg-secondary') }}</div>
+        <div class="col-sm-1"><button id="FOCUS_CW" class="btn btn-danger">+</button></div>
+</div>
+
 
 <script>
 $("#REFRESH_SELECT").on("change", function() {
@@ -299,6 +272,72 @@ $("#ZOOM_SELECT").on("change", function() {
 
     focus_data = [];  // remove existing focus score on zoom change
 });
+
+$("#FOCUS_CCW").on("click", function() {
+    focuserMove(false, $('#STEP_SELECT').val());
+});
+
+$("#FOCUS_CW").on("click", function() {
+    focuserMove(true, $('#STEP_SELECT').val());
+});
+
+
+function init() {
+    ctx_focus = $('#focus-chart')[0].getContext('2d');
+    focus_chart = new Chart(ctx_focus, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'Focus',
+                pointRadius: 3,
+                backgroundColor: "rgba(192, 0, 0, 1)",
+                borderColor: "rgba(128, 0, 0, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: false
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                    ticks: {
+                        display: false
+                    }
+                },
+                y: {
+                    beginAtZero:true,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: true,
+                    },
+                },
+            }
+        }
+    });
+
+    loadNextImage();
+    loop();
+}
+
+
+$( document ).ready(function() {
+    $('#image-canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
+    init();
+});
+
 </script>
 
 

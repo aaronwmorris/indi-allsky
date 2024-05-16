@@ -10,7 +10,7 @@ class IndiAllSkyFocuser(object):
         self.config = config
 
         focuser_class = getattr(focusers, self.config.get('FOCUSER', {}).get('CLASSNAME', 'NotConfigured'))
-        self.__focuser = focuser_class()
+        self.__focuser = focuser_class(self.config)
 
 
     @property
@@ -18,4 +18,6 @@ class IndiAllSkyFocuser(object):
         return self.__focuser
 
 
+    def move(self, direction, step):
+        self.focuser.move(direction, step)
 

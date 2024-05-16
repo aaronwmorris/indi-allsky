@@ -3,7 +3,7 @@ import digitalio
 import time
 import logging
 
-from focuserBase import FocuserBase
+from .focuserBase import FocuserBase
 
 logger = logging.getLogger('indi_allsky')
 

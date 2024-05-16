@@ -4455,6 +4455,7 @@ class FocusView(TemplateView):
         context = super(FocusView, self).get_context()
 
         context['form_focus'] = IndiAllskyFocusForm()
+        context['form_focuscontroller'] = IndiAllskyFocusControllerForm()
 
         return context
 
@@ -4558,9 +4559,10 @@ class AjaxFocusControllerView(BaseView):
         step = str(request.json['STEP_SELECT'])
 
 
-        focus = IndiAllSkyFocuser()
+        focus = IndiAllSkyFocuser(self.indi_allsky_config)
         focus.move(direction, step)
 
+        return jsonify({})
 
 
 class ImageProcessingView(TemplateView):
@@ -6121,6 +6123,7 @@ bp_allsky.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_
 
 bp_allsky.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
 bp_allsky.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
+bp_allsky.add_url_rule('/ajax/focuscontroller', view_func=AjaxFocusControllerView.as_view('focus_controller_view'))
 
 bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
 bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
