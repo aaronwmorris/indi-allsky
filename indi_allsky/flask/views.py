@@ -4455,6 +4455,8 @@ class FocusView(TemplateView):
         context = super(FocusView, self).get_context()
 
         context['form_focus'] = IndiAllskyFocusForm()
+
+        context['focuser_device'] = int(bool(self.indi_allsky_config.get('FOCUSER', {}).get('CLASSNAME')))
         context['form_focuscontroller'] = IndiAllskyFocusControllerForm()
 
         return context

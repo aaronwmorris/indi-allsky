@@ -17,7 +17,7 @@ var json_data = {
     'blur_score' : 0.0,
     'focus_mode' : false,
 };
-var focuser_device = true;
+var focuser_device = {{ focuser_device }};
 var focus_data = [];
 var refreshInterval = 5000;
 var zoom = 2;  // 2 is no zoom
@@ -259,10 +259,10 @@ function closeFullscreen() {
     <div>
 </div>
 
-<div class="row justify-content-center">
-        <div class="col-sm-1"><button id="FOCUS_CCW" class="btn btn-primary">-</button></div>
-        <div class="col-sm-2">{{ form_focuscontroller.STEP_SELECT(class='form-select bg-secondary') }}</div>
-        <div class="col-sm-1"><button id="FOCUS_CW" class="btn btn-danger">+</button></div>
+<div id="focus_controller_div" class="row justify-content-center" style="display: none;">
+    <div class="col-sm-1"><button id="FOCUS_CCW" class="btn btn-primary">-</button></div>
+    <div class="col-sm-2">{{ form_focuscontroller.STEP_SELECT(class='form-select bg-secondary') }}</div>
+    <div class="col-sm-1"><button id="FOCUS_CW" class="btn btn-danger">+</button></div>
 </div>
 
 
@@ -297,6 +297,11 @@ $("#FOCUS_CW").on("click", function() {
 
 
 function init() {
+    if (focuser_device) {
+        $('#focus_controller_div').css({'display' : 'flex'});
+    };
+
+
     ctx_focus = $('#focus-chart')[0].getContext('2d');
     focus_chart = new Chart(ctx_focus, {
         type: "line",
