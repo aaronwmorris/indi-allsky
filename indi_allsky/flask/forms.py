@@ -4383,10 +4383,12 @@ class IndiAllskyImageExcludeForm(FlaskForm):
 
 class IndiAllskyFocusControllerForm(FlaskForm):
     STEP_DEGREES_choices = (
-        (10, '10 Degrees'),
-        (20, '20 Degrees'),
+        (6, '6 degrees'),
+        (12, '12 Degrees'),
+        (24, '24 Degrees'),
         (45, '45 Degrees'),
         (90, '90 Degrees'),
+        (180, '180 Degrees'),
     )
 
     DIRECTION           = StringField('Direction')
