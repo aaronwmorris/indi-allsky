@@ -148,10 +148,16 @@ function focuserMove(direction, step) {
         contentType: "application/json",
         data: JSON.stringify(data),
         success: function(json_data){
-            //pass
+            $('#FOCUS_CCW').addClass("btn-primary");
+            $('#FOCUS_CW').addClass("btn-danger");
+            $('#FOCUS_CCW').prop("disabled", false);
+            $('#FOCUS_CW').prop("disabled", false);
         },
         error: function(json_data){
-            //pass
+            $('#FOCUS_CCW').addClass("btn-primary");
+            $('#FOCUS_CW').addClass("btn-danger");
+            $('#FOCUS_CCW').prop("disabled", false);
+            $('#FOCUS_CW').prop("disabled", false);
         },
     });
 }
@@ -274,10 +280,18 @@ $("#ZOOM_SELECT").on("change", function() {
 });
 
 $("#FOCUS_CCW").on("click", function() {
+    $('#FOCUS_CCW').prop("disabled", true);
+    $('#FOCUS_CW').prop("disabled", true);
+    $('#FOCUS_CCW').removeClass("btn-primary");
+    $('#FOCUS_CW').removeClass("btn-danger");
     focuserMove(false, $('#STEP_SELECT').val());
 });
 
 $("#FOCUS_CW").on("click", function() {
+    $('#FOCUS_CCW').prop("disabled", true);
+    $('#FOCUS_CW').prop("disabled", true);
+    $('#FOCUS_CCW').removeClass("btn-primary");
+    $('#FOCUS_CW').removeClass("btn-danger");
     focuserMove(true, $('#STEP_SELECT').val());
 });
 
