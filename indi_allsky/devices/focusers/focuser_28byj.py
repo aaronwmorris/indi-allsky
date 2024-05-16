@@ -65,9 +65,9 @@ class focuser_28byj(FocuserBase):
 
     def step(self, direction, steps):
         if direction:  # CW
-            seq = self.SEQ
-        else:  # CCW
             seq = self.SEQ[::-1]
+        else:  # CCW
+            seq = self.SEQ
 
 
         for i in range(steps):

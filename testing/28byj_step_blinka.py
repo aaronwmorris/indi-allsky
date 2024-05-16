@@ -50,11 +50,11 @@ class Stepper(object):
         self.pins[3].value = w4
 
 
-    def step(self, steps, direction):
+    def step(self, direction, steps):
         if direction == 'cw':
-            seq = self.SEQ
-        elif direction == 'ccw':
             seq = self.SEQ[::-1]
+        elif direction == 'ccw':
+            seq = self.SEQ
 
         for i in range(steps):
             for j in seq:
@@ -72,9 +72,9 @@ class Stepper(object):
         while True:
             key = stdscr.getch()
             if key == curses.KEY_UP:
-                self.step(10, 'cw')
+                self.step('cw', 10)
             elif key == curses.KEY_DOWN:
-                self.step(10, 'ccw')
+                self.step('ccw', 10)
             elif key == ord('q'):
                 break
 
