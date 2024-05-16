@@ -91,6 +91,7 @@ from .forms import IndiAllskyUserInfoForm
 from .forms import IndiAllskyImageExcludeForm
 from .forms import IndiAllskyImageProcessingForm
 from .forms import IndiAllskyCameraSimulatorForm
+from .forms import IndiAllskyFocusControllerForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -4525,6 +4526,41 @@ class JsonFocusView(JsonView):
 
 
         return jsonify(json_data)
+
+
+class AjaxFocusControllerView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+
+    def __init__(self, **kwargs):
+        super(AjaxFocusControllerView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        from ..focuser import IndiAllSkyFocuser
+
+        form_focuscontroller = IndiAllskyFocusControllerForm(data=request.json)
+
+        if not form_focuscontroller.validate():
+            form_errors = form_focuscontroller.errors  # this must be a property
+            return jsonify(form_errors), 400
+
+
+        if not self.verify_admin_network():
+            json_data = {
+                'form_global' : ['Request not from admin network (flask.json)'],
+            }
+            return jsonify(json_data), 400
+
+
+        direction = bool(request.json['DIRECTION'])
+        step = str(request.json['STEP_SELECT'])
+
+
+        focus = IndiAllSkyFocuser()
+        focus.move(direction, step)
+
 
 
 class ImageProcessingView(TemplateView):

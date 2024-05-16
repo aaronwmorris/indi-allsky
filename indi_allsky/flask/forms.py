@@ -4381,6 +4381,18 @@ class IndiAllskyImageExcludeForm(FlaskForm):
         super(IndiAllskyImageExcludeForm, self).__init__(*args, **kwargs)
 
 
+class IndiAllskyFocusControllerForm(FlaskForm):
+    STEP_SELECT_choices = (
+        ('short', 'Short'),
+        ('medium', 'Medium'),
+        ('long', 'Long'),
+        ('verylong', 'Very Long'),
+    )
+
+    DIRECTION         = BooleanField('Direction')
+    STEP_SELECT       = SelectField('Steps', choices=STEP_SELECT_choices, default=STEP_SELECT_choices[1][0], validators=[])
+
+
 class IndiAllskyImageProcessingForm(FlaskForm):
     DISABLE_PROCESSING               = BooleanField('Disable processing')
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
