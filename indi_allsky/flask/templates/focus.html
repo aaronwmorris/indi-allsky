@@ -281,6 +281,7 @@ $("#ZOOM_SELECT").on("change", function() {
 });
 
 $("#FOCUS_CCW").on("click", function() {
+    console.log('Focus CCW');
     $('#FOCUS_CCW').prop("disabled", true);
     $('#FOCUS_CW').prop("disabled", true);
     $('#FOCUS_CCW').removeClass("btn-primary");
@@ -289,6 +290,7 @@ $("#FOCUS_CCW").on("click", function() {
 });
 
 $("#FOCUS_CW").on("click", function() {
+    console.log('Focus CW');
     $('#FOCUS_CCW').prop("disabled", true);
     $('#FOCUS_CW').prop("disabled", true);
     $('#FOCUS_CCW').removeClass("btn-primary");
