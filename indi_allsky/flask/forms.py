@@ -2065,6 +2065,27 @@ def PYCURL_CAMERA__URL_validator(form, field):
         return
 
 
+def FOCUSER__CLASSNAME_validator(form, field):
+    if not field.data:
+        return
+
+    class_regex = r'^[a-zA-Z0-9_\-]+$'
+
+    if not re.search(class_regex, field.data):
+        raise ValidationError('Invalid focuser class syntax')
+
+
+def DEVICE_PIN_NAME_validator(form, field):
+    if not field.data:
+        return
+
+
+    class_regex = r'^[a-zA-Z0-9_\-]+$'
+
+    if not re.search(class_regex, field.data):
+        raise ValidationError('Invalid PIN name')
+
+
 def INDI_CONFIG_DEFAULTS_validator(form, field):
     try:
         json_data = json.loads(field.data)
@@ -2340,6 +2361,11 @@ class IndiAllskyConfigForm(FlaskForm):
         ('private', 'Private'),
         ('public', 'Public'),
         ('unlisted', 'Unlisted'),
+    )
+
+    FOCUSER__CLASSNAME_choices = (
+        ('', 'None'),
+        ('blinka_focuser_28byj', '28BYJ-48 Stepper - GPIO'),
     )
 
 
@@ -2650,6 +2676,11 @@ class IndiAllskyConfigForm(FlaskForm):
     PYCURL_CAMERA__URL               = StringField('pyCurl Camera URL', validators=[PYCURL_CAMERA__URL_validator])
     PYCURL_CAMERA__USERNAME          = StringField('Username', validators=[PYCURL_CAMERA__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
     PYCURL_CAMERA__PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[PYCURL_CAMERA__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
+    FOCUSER__CLASSNAME               = SelectField('Focuser Class', choices=FOCUSER__CLASSNAME_choices, validators=[FOCUSER__CLASSNAME_validator])
+    FOCUSER__GPIO_PIN_1              = StringField('GPIO Pin 1', validators=[DEVICE_PIN_NAME_validator])
+    FOCUSER__GPIO_PIN_2              = StringField('GPIO Pin 2', validators=[DEVICE_PIN_NAME_validator])
+    FOCUSER__GPIO_PIN_3              = StringField('GPIO Pin 3', validators=[DEVICE_PIN_NAME_validator])
+    FOCUSER__GPIO_PIN_4              = StringField('GPIO Pin 4', validators=[DEVICE_PIN_NAME_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
@@ -2695,6 +2726,57 @@ class IndiAllskyConfigForm(FlaskForm):
         if mod_image_crop_y:
             self.IMAGE_CROP_ROI_Y2.errors.append('Y coordinates must be divisible by 2')
             result = False
+
+
+        # focuser
+        if self.FOCUSER__CLASSNAME:
+            if self.FOCUSER__CLASSNAME.data.startswith('blinka_'):
+                try:
+                    import board
+
+                    if self.FOCUSER__GPIO_PIN_1.data:
+                        try:
+                            getattr(board, self.FOCUSER__GPIO_PIN_1.data)
+                        except AttributeError:
+                            self.FOCUSER__GPIO_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.FOCUSER__GPIO_PIN_1.data))
+                            result = False
+                    else:
+                        self.FOCUSER__GPIO_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                    if self.FOCUSER__GPIO_PIN_2.data:
+                        try:
+                            getattr(board, self.FOCUSER__GPIO_PIN_2.data)
+                        except AttributeError:
+                            self.FOCUSER__GPIO_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.FOCUSER__GPIO_PIN_2.data))
+                            result = False
+                    else:
+                        self.FOCUSER__GPIO_PIN_2.errors.append('PIN must be defined')
+                        result = False
+
+                    if self.FOCUSER__GPIO_PIN_3.data:
+                        try:
+                            getattr(board, self.FOCUSER__GPIO_PIN_3.data)
+                        except AttributeError:
+                            self.FOCUSER__GPIO_PIN_3.errors.append('PIN {0:s} not valid for your system'.format(self.FOCUSER__GPIO_PIN_3.data))
+                            result = False
+                    else:
+                        self.FOCUSER__GPIO_PIN_3.errors.append('PIN must be defined')
+                        result = False
+
+                    if self.FOCUSER__GPIO_PIN_4.data:
+                        try:
+                            getattr(board, self.FOCUSER__GPIO_PIN_4.data)
+                        except AttributeError:
+                            self.FOCUSER__GPIO_PIN_4.errors.append('PIN {0:s} not valid for your system'.format(self.FOCUSER__GPIO_PIN_4.data))
+                            result = False
+                    else:
+                        self.FOCUSER__GPIO_PIN_4.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.FOCUSER__CLASSNAME.errors.append('Adafruit-Blinka python module not installed')
+                    result = False
 
 
         return result

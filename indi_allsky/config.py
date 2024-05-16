@@ -377,6 +377,14 @@ class IndiAllSkyConfigBase(object):
             "PASSWORD"               : "",
             "PASSWORD_E"             : "",
         },
+        "FOCUSER" : {
+            "ENABLE"                 : False,
+            "CLASSNAME"              : "",
+            "GPIO_PIN_1"             : "D17",
+            "GPIO_PIN_2"             : "D18",
+            "GPIO_PIN_3"             : "D27",
+            "GPIO_PIN_4"             : "D22",
+        },
     })
 
 
