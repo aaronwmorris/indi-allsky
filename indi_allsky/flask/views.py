@@ -4557,12 +4557,13 @@ class AjaxFocusControllerView(BaseView):
             return jsonify(json_data), 400
 
 
-        direction = bool(request.json['DIRECTION'])
+        direction = str(request.json['DIRECTION'])
         step = str(request.json['STEP_SELECT'])
 
+        app.logger.info('Focusing: {0:s}', direction)
 
-        focus = IndiAllSkyFocuser(self.indi_allsky_config)
-        focus.move(direction, step)
+        focuser = IndiAllSkyFocuser(self.indi_allsky_config)
+        focuser.move(direction, step)
 
         return jsonify({})
 

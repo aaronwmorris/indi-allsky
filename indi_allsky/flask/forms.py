@@ -4389,7 +4389,7 @@ class IndiAllskyFocusControllerForm(FlaskForm):
         ('verylong', 'Very Long'),
     )
 
-    DIRECTION         = BooleanField('Direction')
+    DIRECTION         = StringField('Direction')
     STEP_SELECT       = SelectField('Steps', choices=STEP_SELECT_choices, default=STEP_SELECT_choices[1][0], validators=[])
 
 

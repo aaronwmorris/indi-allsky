@@ -286,7 +286,7 @@ $("#FOCUS_CCW").on("click", function() {
     $('#FOCUS_CW').prop("disabled", true);
     $('#FOCUS_CCW').removeClass("btn-primary");
     $('#FOCUS_CW').removeClass("btn-danger");
-    focuserMove(false, $('#STEP_SELECT').val());
+    focuserMove('ccw', $('#STEP_SELECT').val());
 });
 
 $("#FOCUS_CW").on("click", function() {
@@ -295,7 +295,7 @@ $("#FOCUS_CW").on("click", function() {
     $('#FOCUS_CW').prop("disabled", true);
     $('#FOCUS_CCW').removeClass("btn-primary");
     $('#FOCUS_CW').removeClass("btn-danger");
-    focuserMove(true, $('#STEP_SELECT').val());
+    focuserMove('cw', $('#STEP_SELECT').val());
 });
 
 
