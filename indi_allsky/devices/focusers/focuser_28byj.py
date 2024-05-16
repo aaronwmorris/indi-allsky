@@ -23,8 +23,8 @@ class focuser_28byj(FocuserBase):
 
 
     STEP_DEGREES = {
-        10 : 15,
-        20 : 30,
+        10 : 14,
+        20 : 28,
         45 : 64,
         90 : 128,
     }
