@@ -61,10 +61,9 @@ class focuser_28byj_64(FocuserBase):
         self.set_step(0, 0, 0, 0)  # reset
 
         if direction == 'ccw':
-            #steps *= -1  # negative for CCW
-            degrees *= -1
+            steps *= -1  # negative for CCW
 
-        return degrees
+        return steps
 
 
     def set_step(self, w1, w2, w3, w4):

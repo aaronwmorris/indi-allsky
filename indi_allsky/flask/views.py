@@ -4563,10 +4563,10 @@ class AjaxFocusControllerView(BaseView):
         app.logger.info('Focusing: {0:s}', direction)
 
         focuser = IndiAllSkyFocuser(self.indi_allsky_config)
-        deg_offset = focuser.move(direction, degrees)
+        steps_offset = focuser.move(direction, degrees)
 
         r = {
-            'degrees' : deg_offset,
+            'steps' : steps_offset,
         }
 
         return jsonify(r)
