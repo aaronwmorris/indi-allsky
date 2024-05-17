@@ -8,7 +8,8 @@ from .focuserBase import FocuserBase
 logger = logging.getLogger('indi_allsky')
 
 
-class focuser_28byj(FocuserBase):
+class focuser_28byj_64(FocuserBase):
+    # 1/64 ratio
 
     SEQ = (
         (1, 0, 0, 0),
@@ -33,7 +34,7 @@ class focuser_28byj(FocuserBase):
 
 
     def __init__(self, *args, **kwargs):
-        super(focuser_28byj, self).__init__(*args, **kwargs)
+        super(focuser_28byj_16, self).__init__(*args, **kwargs)
 
         pin1 = getattr(board, self.config.get('FOCUSER', {}).get('GPIO_PIN_1', 'notdefined'))
         pin2 = getattr(board, self.config.get('FOCUSER', {}).get('GPIO_PIN_2', 'notdefined'))
@@ -76,4 +77,19 @@ class focuser_28byj(FocuserBase):
             for j in seq:
                 self.set_step(*j)
                 time.sleep(0.005)
+
+
+class focuser_28byj_16(focuser_28byj_64):
+    # 1/16 ratio
+
+    ### untested
+    STEP_DEGREES = {
+        6   : 2,
+        12  : 4,
+        24  : 9,
+        45  : 16,
+        90  : 32,
+        180 : 64,
+    }
+
 

@@ -2365,7 +2365,8 @@ class IndiAllskyConfigForm(FlaskForm):
 
     FOCUSER__CLASSNAME_choices = (
         ('', 'None'),
-        ('blinka_focuser_28byj', '28BYJ-48 Stepper - GPIO'),
+        ('blinka_focuser_28byj_64', '28BYJ-48 Stepper (1/64) - GPIO'),
+        ('blinka_focuser_28byj_16', '28BYJ-48 Stepper (1/16) - GPIO'),
     )
 
 
