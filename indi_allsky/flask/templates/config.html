@@ -4026,6 +4026,10 @@
 <div class="tab-pane fade" id="nav-devices" role="tabpanel" aria-labelledby="nav-devices-tab">
     <hr>
 
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> Hardware Device support requires the Adafruit-Blinka module</div>
+
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.FOCUSER__CLASSNAME.label(class='col-form-label') }}
@@ -4035,6 +4039,7 @@
             <div id="FOCUSER__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-7">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Focuser-Device" class="text-decoration-none link-info" target="_blank">Focuser Wiki</a></div>
         </div>
     </div>
 
