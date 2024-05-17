@@ -1048,6 +1048,7 @@ class ImageWorker(Process):
         tmpfile_p.unlink()
 
         self._miscUpload.s3_upload_fits(fits_entry, fits_metadata)
+        self._miscUpload.upload_fits_image(fits_entry)
 
 
     def export_raw_image(self, i_ref, camera, jpeg_exif=None):
@@ -1226,6 +1227,7 @@ class ImageWorker(Process):
         #os.utime(str(filename), (i_ref['exp_date'].timestamp(), i_ref['exp_date'].timestamp()))
 
         self._miscUpload.s3_upload_raw(raw_entry, raw_metadata)
+        self._miscUpload.upload_raw_image(raw_entry)
 
 
     def write_mask_base_img(self, data):

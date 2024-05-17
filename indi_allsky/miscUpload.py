@@ -356,6 +356,92 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
+    def upload_raw_image(self, raw_image_entry):
+        ### Upload RAW image
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_RAW'):
+            #logger.warning('RAW image uploading disabled')
+            return
+
+
+        now = datetime.now()
+
+        # Parameters for string formatting
+        file_data_dict = {
+            'timestamp'    : now,
+            'ts'           : now,  # shortcut
+            'camera_uuid'  : raw_image_entry.camera.uuid,
+        }
+
+
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_RAW_FOLDER'].format(**file_data_dict)
+
+
+        raw_image_file_p = Path(raw_image_entry.getFilesystemPath())
+        remote_file_p = Path(remote_dir).joinpath(raw_image_file_p.name)
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_UPLOAD,
+            'model'       : raw_image_entry.__class__.__name__,
+            'id'          : raw_image_entry.id,
+            'remote_file' : str(remote_file_p),
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
+
+
+    def upload_fits_image(self, fits_image_entry):
+        ### Upload RAW image
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_FITS'):
+            #logger.warning('FITS image uploading disabled')
+            return
+
+
+        now = datetime.now()
+
+        # Parameters for string formatting
+        file_data_dict = {
+            'timestamp'    : now,
+            'ts'           : now,  # shortcut
+            'camera_uuid'  : fits_image_entry.camera.uuid,
+        }
+
+
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_FITS_FOLDER'].format(**file_data_dict)
+
+
+        raw_image_file_p = Path(fits_image_entry.getFilesystemPath())
+        remote_file_p = Path(remote_dir).joinpath(raw_image_file_p.name)
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_UPLOAD,
+            'model'       : fits_image_entry.__class__.__name__,
+            'id'          : fits_image_entry.id,
+            'remote_file' : str(remote_file_p),
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
+
+
     def mqtt_publish_image(self, upload_filename, image_topic, mq_data):
         if not self.config.get('MQTTPUBLISH', {}).get('ENABLE'):
             #logger.warning('MQ publishing disabled')
