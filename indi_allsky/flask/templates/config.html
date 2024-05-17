@@ -4,7 +4,7 @@
 
 {% block head %}
 <style>
-#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab {
+#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab {
 	width: 150px;
 	margin-top: 10px;
 	margin-right: 5px;
@@ -28,6 +28,7 @@
     <button class="nav-link link-danger bg-dark" id="nav-youtube-tab" data-bs-toggle="tab" data-bs-target="#nav-youtube" type="button" role="tab" aria-controls="nav-youtube" aria-selected="false">YouTube</button>
     <button class="nav-link link-secondary bg-dark" id="nav-s3-tab" data-bs-toggle="tab" data-bs-target="#nav-s3" type="button" role="tab" aria-controls="nav-s3" aria-selected="false">Object Storage</button>
     <button class="nav-link link-light bg-dark" id="nav-syncapi-tab" data-bs-toggle="tab" data-bs-target="#nav-syncapi" type="button" role="tab" aria-controls="nav-syncapi" aria-selected="false">SyncAPI</button>
+    <button class="nav-link link-danger bg-dark" id="nav-devices-tab" data-bs-toggle="tab" data-bs-target="#nav-devices" type="button" role="tab" aria-controls="nav-devices" aria-selected="false">Devices</button>
   </div>
 </nav>
 
@@ -692,6 +693,7 @@
             <div>Perform CLAHE in 16-bit mode (early in order of operations)</div>
             <div>Increase the clip limit in 16-bit mode by 3-4 times for similiar results</div>
             <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Requires 2GB of RAM for images over 3000x1500 (for 16-bit mode)</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> The 16-bit version of this algorithm has a bug that can cause weird colors</div>
         </div>
     </div>
 
@@ -4020,6 +4022,81 @@
     </div>
 
 </div><!-- end syncapi tab -->
+
+<div class="tab-pane fade" id="nav-devices" role="tabpanel" aria-labelledby="nav-devices-tab">
+    <hr>
+
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> Hardware Device support requires the Adafruit-Blinka module</div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.FOCUSER__CLASSNAME(class='form-select bg-secondary') }}
+            <div id="FOCUSER__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Focuser-Device" class="text-decoration-none link-info" target="_blank">Focuser Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_1(class='form-control bg-secondary') }}
+            <div id="FOCUSER__GPIO_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D17</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_2.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_2(class='form-control bg-secondary') }}
+            <div id="FOCUSER__GPIO_PIN_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D18</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_3.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_3(class='form-control bg-secondary') }}
+            <div id="FOCUSER__GPIO_PIN_3-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D27</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_4.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_4(class='form-control bg-secondary') }}
+            <div id="FOCUSER__GPIO_PIN_4-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D22</div>
+        </div>
+    </div>
+
+</div><!-- end devices tab -->
+
 </div>
 
 
@@ -4298,6 +4375,11 @@ const field_names = [
     'PYCURL_CAMERA__URL',
     'PYCURL_CAMERA__USERNAME',
     'PYCURL_CAMERA__PASSWORD',
+    'FOCUSER__CLASSNAME',
+    'FOCUSER__GPIO_PIN_1',
+    'FOCUSER__GPIO_PIN_2',
+    'FOCUSER__GPIO_PIN_3',
+    'FOCUSER__GPIO_PIN_4',
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',

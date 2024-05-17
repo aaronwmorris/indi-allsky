@@ -17,58 +17,14 @@ var json_data = {
     'blur_score' : 0.0,
     'focus_mode' : false,
 };
+var focuser_device = {{ focuser_device }};
 var focus_data = [];
 var refreshInterval = 5000;
 var zoom = 2;  // 2 is no zoom
 var blur_score = 0.0
 var fullscreen = false;  //initial state
+var steps_offset = 0;
 
-function init() {
-    ctx_focus = $('#focus-chart')[0].getContext('2d');
-    focus_chart = new Chart(ctx_focus, {
-        type: "line",
-        data: {
-            datasets: [{
-                label: 'Focus',
-                pointRadius: 3,
-                backgroundColor: "rgba(192, 0, 0, 1)",
-                borderColor: "rgba(128, 0, 0, 1)",
-                tension: 0.1,
-                data: []
-            }],
-        },
-        options: {
-            plugins: {
-                legend: {
-                    display: false
-                },
-            },
-            animation : false,
-            scales: {
-                x: {
-                    grid: {
-                        display: true,
-                        color: 'rgba(75, 75, 75, 1)',
-                    },
-                    ticks: {
-                        display: false
-                    }
-                },
-                y: {
-                    beginAtZero:true,
-                    grid: {
-                        display: true,
-                        color: 'rgba(75, 75, 75, 1)',
-                        stacked: true,
-                    },
-                },
-            }
-        }
-    });
-
-    loadNextImage();
-    loop();
-}
 
 async function loop() {
     console.log('Starting loop');
@@ -182,6 +138,38 @@ function loadJS(url, data, onDone, onError) {
 }
 
 
+function focuserMove(direction, degrees) {
+    var data = {
+        "DIRECTION" : direction,
+        "STEP_DEGREES" : degrees,
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.focus_controller_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        success: function(json_data){
+            $('#FOCUS_CCW').addClass("btn-primary");
+            $('#FOCUS_CW').addClass("btn-danger");
+            $('#FOCUS_CCW').prop("disabled", false);
+            $('#FOCUS_CW').prop("disabled", false);
+
+            steps_offset += json_data['steps'];
+
+            $('#offset_div').text(steps_offset + " Steps Offset");
+        },
+        error: function(json_data){
+            // Leave disabled on errors
+            //$('#FOCUS_CCW').addClass("btn-primary");
+            //$('#FOCUS_CW').addClass("btn-danger");
+            //$('#FOCUS_CCW').prop("disabled", false);
+            //$('#FOCUS_CW').prop("disabled", false);
+        },
+    });
+}
+
+
 function setResizeHandler(callback, timeout) {
     var timer_id = undefined;
     $(window).on("resize", function() {
@@ -236,14 +224,6 @@ function closeFullscreen() {
 
 
 
-$( document ).ready(function() {
-    $('#image-canvas').on("click", function() {
-        goFullscreen(this);
-    });
-
-    init();
-});
-
 </script>
 {% endblock %}
 
@@ -286,6 +266,15 @@ $( document ).ready(function() {
     <div>
 </div>
 
+<div id="focus_controller_div" class="row justify-content-center" style="display: none;">
+    <div class="col-sm-1"><button id="FOCUS_CCW" class="btn btn-primary">Focus<br>-</button></div>
+    <div class="col-sm-2">
+        <div>{{ form_focuscontroller.STEP_DEGREES(class='form-select bg-secondary') }}</div>
+        <div id="offset_div">0 Steps Offset</div>
+    </div>
+    <div class="col-sm-1"><button id="FOCUS_CW" class="btn btn-danger">Focus<br>+</button></div>
+</div>
+
 
 <script>
 $("#REFRESH_SELECT").on("change", function() {
@@ -299,6 +288,87 @@ $("#ZOOM_SELECT").on("change", function() {
 
     focus_data = [];  // remove existing focus score on zoom change
 });
+
+$("#FOCUS_CCW").on("click", function() {
+    console.log('Focus CCW');
+    $('#FOCUS_CCW').prop("disabled", true);
+    $('#FOCUS_CW').prop("disabled", true);
+    $('#FOCUS_CCW').removeClass("btn-primary");
+    $('#FOCUS_CW').removeClass("btn-danger");
+    focuserMove('ccw', $('#STEP_DEGREES').val());
+});
+
+$("#FOCUS_CW").on("click", function() {
+    console.log('Focus CW');
+    $('#FOCUS_CCW').prop("disabled", true);
+    $('#FOCUS_CW').prop("disabled", true);
+    $('#FOCUS_CCW').removeClass("btn-primary");
+    $('#FOCUS_CW').removeClass("btn-danger");
+    focuserMove('cw', $('#STEP_DEGREES').val());
+});
+
+
+function init() {
+    if (focuser_device) {
+        $('#focus_controller_div').css({'display' : 'flex'});
+    };
+
+
+    ctx_focus = $('#focus-chart')[0].getContext('2d');
+    focus_chart = new Chart(ctx_focus, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'Focus',
+                pointRadius: 3,
+                backgroundColor: "rgba(192, 0, 0, 1)",
+                borderColor: "rgba(128, 0, 0, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: false
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                    ticks: {
+                        display: false
+                    }
+                },
+                y: {
+                    beginAtZero:true,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: true,
+                    },
+                },
+            }
+        }
+    });
+
+    loadNextImage();
+    loop();
+}
+
+
+$( document ).ready(function() {
+    $('#image-canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
+    init();
+});
+
 </script>
 
 

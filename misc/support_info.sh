@@ -252,10 +252,13 @@ if [ -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
     echo "virtualenv python modules"
     pip freeze
 
+    echo "\`\`\`"  # markdown
+
     echo
     echo "indi-allsky config (passwords redacted)"
     INDI_ALLSKY_CONFIG=$("${ALLSKY_DIRECTORY}/config.py" dump)
 
+    echo "\`\`\`json"  # markdown
     # Remove all secrets from config
     echo "$INDI_ALLSKY_CONFIG" | jq --arg redacted "REDACTED" '.FILETRANSFER.PASSWORD = $redacted | .FILETRANSFER.PASSWORD_E = $redacted | .S3UPLOAD.SECRET_KEY = $redacted | .S3UPLOAD.SECRET_KEY_E = $redacted | .MQTTPUBLISH.PASSWORD = $redacted | .MQTTPUBLISH.PASSWORD_E = $redacted | .SYNCAPI.APIKEY = $redacted | .SYNCAPI.APIKEY_E = $redacted | .PYCURL_CAMERA.PASSWORD = $redacted | .PYCURL_CAMERA.PASSWORD_E = $redacted'
 

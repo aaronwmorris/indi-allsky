@@ -91,6 +91,7 @@ from .forms import IndiAllskyUserInfoForm
 from .forms import IndiAllskyImageExcludeForm
 from .forms import IndiAllskyImageProcessingForm
 from .forms import IndiAllskyCameraSimulatorForm
+from .forms import IndiAllskyFocusControllerForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -1375,6 +1376,11 @@ class ConfigView(FormView):
             'PYCURL_CAMERA__URL'             : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('URL', ''),
             'PYCURL_CAMERA__USERNAME'        : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('USERNAME', ''),
             'PYCURL_CAMERA__PASSWORD'        : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('PASSWORD', ''),
+            'FOCUSER__CLASSNAME'             : self.indi_allsky_config.get('FOCUSER', {}).get('CLASSNAME', ''),
+            'FOCUSER__GPIO_PIN_1'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_1', 'D17'),
+            'FOCUSER__GPIO_PIN_2'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_2', 'D18'),
+            'FOCUSER__GPIO_PIN_3'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_3', 'D27'),
+            'FOCUSER__GPIO_PIN_4'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_4', 'D22'),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -1680,6 +1686,9 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('PYCURL_CAMERA'):
             self.indi_allsky_config['PYCURL_CAMERA'] = {}
 
+        if not self.indi_allsky_config.get('FOCUSER'):
+            self.indi_allsky_config['FOCUSER'] = {}
+
         if not self.indi_allsky_config.get('THUMBNAILS'):
             self.indi_allsky_config['THUMBNAILS'] = {}
 
@@ -1974,6 +1983,11 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['PYCURL_CAMERA']['URL']                 = str(request.json['PYCURL_CAMERA__URL'])
         self.indi_allsky_config['PYCURL_CAMERA']['USERNAME']            = str(request.json['PYCURL_CAMERA__USERNAME'])
         self.indi_allsky_config['PYCURL_CAMERA']['PASSWORD']            = str(request.json['PYCURL_CAMERA__PASSWORD'])
+        self.indi_allsky_config['FOCUSER']['CLASSNAME']                 = str(request.json['FOCUSER__CLASSNAME'])
+        self.indi_allsky_config['FOCUSER']['GPIO_PIN_1']                = str(request.json['FOCUSER__GPIO_PIN_1'])
+        self.indi_allsky_config['FOCUSER']['GPIO_PIN_2']                = str(request.json['FOCUSER__GPIO_PIN_2'])
+        self.indi_allsky_config['FOCUSER']['GPIO_PIN_3']                = str(request.json['FOCUSER__GPIO_PIN_3'])
+        self.indi_allsky_config['FOCUSER']['GPIO_PIN_4']                = str(request.json['FOCUSER__GPIO_PIN_4'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
@@ -4442,6 +4456,9 @@ class FocusView(TemplateView):
 
         context['form_focus'] = IndiAllskyFocusForm()
 
+        context['focuser_device'] = int(bool(self.indi_allsky_config.get('FOCUSER', {}).get('CLASSNAME')))
+        context['form_focuscontroller'] = IndiAllskyFocusControllerForm()
+
         return context
 
 
@@ -4512,6 +4529,47 @@ class JsonFocusView(JsonView):
 
 
         return jsonify(json_data)
+
+
+class AjaxFocusControllerView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+
+    def __init__(self, **kwargs):
+        super(AjaxFocusControllerView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        from ..focuser import IndiAllSkyFocuser
+
+        form_focuscontroller = IndiAllskyFocusControllerForm(data=request.json)
+
+        if not form_focuscontroller.validate():
+            form_errors = form_focuscontroller.errors  # this must be a property
+            return jsonify(form_errors), 400
+
+
+        if not self.verify_admin_network():
+            json_data = {
+                'form_global' : ['Request not from admin network (flask.json)'],
+            }
+            return jsonify(json_data), 400
+
+
+        direction = str(request.json['DIRECTION'])
+        degrees = int(request.json['STEP_DEGREES'])
+
+        app.logger.info('Focusing: {0:s}', direction)
+
+        focuser = IndiAllSkyFocuser(self.indi_allsky_config)
+        steps_offset = focuser.move(direction, degrees)
+
+        r = {
+            'steps' : steps_offset,
+        }
+
+        return jsonify(r)
 
 
 class ImageProcessingView(TemplateView):
@@ -6072,6 +6130,7 @@ bp_allsky.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_
 
 bp_allsky.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
 bp_allsky.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
+bp_allsky.add_url_rule('/ajax/focuscontroller', view_func=AjaxFocusControllerView.as_view('focus_controller_view'))
 
 bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
 bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
