@@ -19,5 +19,5 @@ class IndiAllSkyFocuser(object):
 
 
     def move(self, direction, step):
-        self.focuser.move(direction, step)
+        return self.focuser.move(direction, step)
 
