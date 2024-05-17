@@ -68,6 +68,7 @@ WEB_NAME="${INDIALLSKY_WEB_NAME:-}"
 WEB_EMAIL="${INDIALLSKY_WEB_EMAIL:-}"
 
 OPTIONAL_PYTHON_MODULES="${INDIALLSKY_OPTIONAL_PYTHON_MODULES:-false}"
+GPIO_PYTHON_MODULES="${INDIALLSKY_GPIO_PYTHON_MODULES:-false}"
 
 PYINDI_2_0_4="git+https://github.com/indilib/pyindi-client.git@6f8fa80#egg=pyindi-client"
 PYINDI_2_0_0="git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
@@ -1815,6 +1816,8 @@ else
     exit 1
 fi
 
+VIRTUALENV_REQ_GPIO=requirements/requirements_gpio.txt
+
 
 if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
     echo
@@ -1881,6 +1884,9 @@ if whiptail --title "Optional Python Modules" --yesno "Would you like to install
     OPTIONAL_PYTHON_MODULES=true
 fi
 
+if whiptail --title "GPIO Python Modules" --yesno "Would you like to install GPIO python modules? (Hardware device support)" 0 0 --defaultno; then
+    GPIO_PYTHON_MODULES=true
+fi
 
 # shellcheck source=/dev/null
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
@@ -1888,11 +1894,17 @@ source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 pip3 install --upgrade pip setuptools wheel
 
 
+PIP_REQ_ARGS=("-r" "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}")
+
 if [ "${OPTIONAL_PYTHON_MODULES}" == "true" ]; then
-    pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}" -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_OPT}"
-else
-    pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
+    PIP_REQ_ARGS+=("-r" "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_OPT}")
 fi
+
+if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
+    PIP_REQ_ARGS+=("-r" "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_GPIO}")
+fi
+
+pip3 install "${PIP_REQ_ARGS[@]}"
 
 
 # some modules do not have their prerequisites set
