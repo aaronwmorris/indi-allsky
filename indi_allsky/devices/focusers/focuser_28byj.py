@@ -34,7 +34,7 @@ class focuser_28byj_64(FocuserBase):
 
 
     def __init__(self, *args, **kwargs):
-        super(focuser_28byj_16, self).__init__(*args, **kwargs)
+        super(focuser_28byj_64, self).__init__(*args, **kwargs)
 
         pin1 = getattr(board, self.config.get('FOCUSER', {}).get('GPIO_PIN_1', 'notdefined'))
         pin2 = getattr(board, self.config.get('FOCUSER', {}).get('GPIO_PIN_2', 'notdefined'))
