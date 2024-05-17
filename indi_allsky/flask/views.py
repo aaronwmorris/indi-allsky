@@ -1300,6 +1300,8 @@ class ConfigView(FormView):
             'FILETRANSFER__REMOTE_PANORAMA_FOLDER'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_FOLDER', '/home/allsky/upload/allsky'),
             'FILETRANSFER__REMOTE_METADATA_NAME'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_METADATA_NAME', 'latest_metadata.json'),
             'FILETRANSFER__REMOTE_METADATA_FOLDER'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_METADATA_FOLDER', '/home/allsky/upload/allsky'),
+            'FILETRANSFER__REMOTE_RAW_FOLDER'         : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_RAW_FOLDER', '/home/allsky/upload/allsky/export'),
+            'FILETRANSFER__REMOTE_FITS_FOLDER'        : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_FITS_FOLDER', '/home/allsky/upload/allsky/fits'),
             'FILETRANSFER__REMOTE_VIDEO_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos'),
             'FILETRANSFER__REMOTE_KEOGRAM_FOLDER'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_KEOGRAM_FOLDER', '/home/allsky/upload/allsky/keograms'),
             'FILETRANSFER__REMOTE_STARTRAIL_FOLDER'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_FOLDER', '/home/allsky/upload/allsky/startrails'),
@@ -1309,6 +1311,8 @@ class ConfigView(FormView):
             'FILETRANSFER__UPLOAD_IMAGE'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE', 0),
             'FILETRANSFER__UPLOAD_PANORAMA'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA', 0),
             'FILETRANSFER__UPLOAD_METADATA'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_METADATA', False),
+            'FILETRANSFER__UPLOAD_RAW'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_RAW', False),
+            'FILETRANSFER__UPLOAD_FITS'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_FITS', False),
             'FILETRANSFER__UPLOAD_VIDEO'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO', False),
             'FILETRANSFER__UPLOAD_KEOGRAM'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM', False),
             'FILETRANSFER__UPLOAD_STARTRAIL' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL', False),
@@ -1897,6 +1901,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['REMOTE_PANORAMA_FOLDER']   = str(request.json['FILETRANSFER__REMOTE_PANORAMA_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_METADATA_NAME']     = str(request.json['FILETRANSFER__REMOTE_METADATA_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_METADATA_FOLDER']   = str(request.json['FILETRANSFER__REMOTE_METADATA_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_RAW_FOLDER']        = str(request.json['FILETRANSFER__REMOTE_RAW_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_FITS_FOLDER']       = str(request.json['FILETRANSFER__REMOTE_FITS_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_VIDEO_FOLDER']      = str(request.json['FILETRANSFER__REMOTE_VIDEO_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER']    = str(request.json['FILETRANSFER__REMOTE_KEOGRAM_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_STARTRAIL_FOLDER']  = str(request.json['FILETRANSFER__REMOTE_STARTRAIL_FOLDER'])
@@ -1907,6 +1913,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_PANORAMA']      = int(request.json['FILETRANSFER__UPLOAD_PANORAMA'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_METADATA']      = bool(request.json['FILETRANSFER__UPLOAD_METADATA'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_VIDEO']         = bool(request.json['FILETRANSFER__UPLOAD_VIDEO'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_RAW']           = bool(request.json['FILETRANSFER__UPLOAD_RAW'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_FITS']          = bool(request.json['FILETRANSFER__UPLOAD_FITS'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_KEOGRAM']       = bool(request.json['FILETRANSFER__UPLOAD_KEOGRAM'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL']     = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL_VIDEO'] = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL_VIDEO'])
