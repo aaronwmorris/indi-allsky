@@ -23,6 +23,8 @@ var refreshInterval = 5000;
 var zoom = 2;  // 2 is no zoom
 var blur_score = 0.0
 var fullscreen = false;  //initial state
+var degrees_offset = 0;
+
 
 async function loop() {
     console.log('Starting loop');
@@ -152,6 +154,10 @@ function focuserMove(direction, degrees) {
             $('#FOCUS_CW').addClass("btn-danger");
             $('#FOCUS_CCW').prop("disabled", false);
             $('#FOCUS_CW').prop("disabled", false);
+
+            degrees_offset += json_data['degrees'];
+
+            $('#offset_div').text(degrees_offset + " Degrees Offset");
         },
         error: function(json_data){
             // Leave disabled on errors
@@ -262,7 +268,10 @@ function closeFullscreen() {
 
 <div id="focus_controller_div" class="row justify-content-center" style="display: none;">
     <div class="col-sm-1"><button id="FOCUS_CCW" class="btn btn-primary">Focus -</button></div>
-    <div class="col-sm-2">{{ form_focuscontroller.STEP_DEGREES(class='form-select bg-secondary') }}</div>
+    <div class="col-sm-2">
+        <div>{{ form_focuscontroller.STEP_DEGREES(class='form-select bg-secondary') }}</div>
+        <div id="offset_div">0 Degrees Offset</div>
+    </div>
     <div class="col-sm-1"><button id="FOCUS_CW" class="btn btn-danger">Focus +</button></div>
 </div>
 

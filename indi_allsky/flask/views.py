@@ -4563,9 +4563,13 @@ class AjaxFocusControllerView(BaseView):
         app.logger.info('Focusing: {0:s}', direction)
 
         focuser = IndiAllSkyFocuser(self.indi_allsky_config)
-        focuser.move(direction, degrees)
+        deg_offset = focuser.move(direction, degrees)
 
-        return jsonify({})
+        r = {
+            'degrees' : deg_offset,
+        }
+
+        return jsonify(r)
 
 
 class ImageProcessingView(TemplateView):
