@@ -2858,7 +2858,7 @@ class SystemInfoView(TemplateView):
         temp_info = psutil.sensors_temperatures()
 
         temp_list = list()
-        for t_key in temp_info.keys():
+        for t_key in sorted(temp_info):  # always return the keys in the same order
             for i, t in enumerate(temp_info[t_key]):
                 if self.indi_allsky_config.get('TEMP_DISPLAY') == 'f':
                     current_temp = ((t.current * 9.0 ) / 5.0) + 32
