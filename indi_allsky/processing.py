@@ -1978,6 +1978,11 @@ class ImageProcessor(object):
         }
 
 
+        # sensor data
+        for slot, sensor_v in enumerate(self.sensors_va):
+            label_data['sensor_slot_{0:d}'.format(slot)] = sensor_v
+
+
         # stacking data
         if self.night_v.value and not self.moonmode_v.value:
             if self.config.get('IMAGE_STACK_COUNT', 1) > 1:
