@@ -91,7 +91,7 @@ class IndiAllSkyDarks(object):
         self.exposure_av = Array('f', [-1.0])
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
-        self.sensors_av = Array('f', [0.0])
+        self.sensors_av = Array('f', [0.0])  # 0 ccd_temp
 
         self.night_v = Value('i', 1)  # bogus initial value
 
