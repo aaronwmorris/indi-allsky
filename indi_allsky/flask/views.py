@@ -18,6 +18,7 @@ from pprint import pformat  # noqa: F401
 from passlib.hash import argon2
 
 from multiprocessing import Value
+from multiprocessing import Array
 
 from ..version import __version__
 from .. import constants
@@ -4788,7 +4789,7 @@ class JsonImageProcessingView(JsonView):
         exposure = float(hdulist[0].header['EXPTIME'])
         gain_v = Value('i', int(hdulist[0].header['GAIN']))
         bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
-        sensortemp_v = Value('f', float(hdulist[0].header.get('CCD-TEMP', 0)))
+        sensors_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         night_v = Value('i', 1)  # using night values for processing
 
         hdulist.close()
@@ -4796,15 +4797,10 @@ class JsonImageProcessingView(JsonView):
         moonmode_v = Value('i', 0)
         image_processor = ImageProcessor(
             p_config,
-            None,  # latitude_v
-            None,  # longitude_v
-            None,  # elevation_v
-            None,  # ra_v
-            None,  # dec_v
-            None,  # exposure_v
+            None,  # position_av
             gain_v,
             bin_v,
-            sensortemp_v,
+            sensors_av,
             night_v,
             moonmode_v,
             {},    # astrometric_data

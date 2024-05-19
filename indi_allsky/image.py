@@ -71,10 +71,7 @@ class ImageWorker(Process):
         image_q,
         upload_q,
         position_av,
-        exposure_v,
-        exposure_min_v,
-        exposure_min_day_v,
-        exposure_max_v,
+        exposure_av,
         gain_v,
         bin_v,
         sensors_av,
@@ -93,10 +90,7 @@ class ImageWorker(Process):
 
         self.position_av = position_av  # lat, long, elev, ra, dec
 
-        self.exposure_v = exposure_v
-        self.exposure_min_v = exposure_min_v
-        self.exposure_min_day_v = exposure_min_day_v
-        self.exposure_max_v = exposure_max_v
+        self.exposure_av = exposure_av  # current, min night, min day, max
         self.gain_v = gain_v
         self.bin_v = bin_v
         self.sensors_av = sensors_av  # 0 ccd_temp
@@ -152,7 +146,6 @@ class ImageWorker(Process):
         self.image_processor = ImageProcessor(
             self.config,
             position_av,
-            exposure_v,
             gain_v,
             bin_v,
             sensors_av,
@@ -1531,10 +1524,10 @@ class ImageWorker(Process):
 
         if self.night_v.value:
             target_adu = self.config['TARGET_ADU']
-            exposure_min = self.exposure_min_v.value
+            exposure_min = self.exposure_av[1]
         else:
             target_adu = self.config['TARGET_ADU_DAY']
-            exposure_min = self.exposure_min_day_v.value
+            exposure_min = self.exposure_av[2]
 
 
         # Brightness when the sun is in view (very short exposures) can change drastically when clouds pass through the view
@@ -1619,12 +1612,12 @@ class ImageWorker(Process):
         # Do not exceed the limits
         if new_exposure < exposure_min:
             new_exposure = float(exposure_min)
-        elif new_exposure > self.exposure_max_v.value:
-            new_exposure = float(self.exposure_max_v.value)
+        elif new_exposure > self.exposure_av[3]:
+            new_exposure = float(self.exposure_av[3])
 
 
         logger.warning('New calculated exposure: %0.8f', new_exposure)
-        with self.exposure_v.get_lock():
-            self.exposure_v.value = new_exposure
+        with self.exposure_av.get_lock():
+            self.exposure_av[0] = new_exposure
 
 

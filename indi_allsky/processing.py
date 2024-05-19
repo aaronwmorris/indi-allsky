@@ -91,7 +91,6 @@ class ImageProcessor(object):
         self,
         config,
         position_av,
-        exposure_v,
         gain_v,
         bin_v,
         sensors_av,
@@ -103,7 +102,6 @@ class ImageProcessor(object):
 
         self.position_av = position_av  # lat, long, elev, ra, dec
 
-        self.exposure_v = exposure_v
         self.gain_v = gain_v
         self.bin_v = bin_v
         self.sensors_av = sensors_av  # 0 ccd_temp

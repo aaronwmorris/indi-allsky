@@ -120,10 +120,13 @@ class IndiAllSky(object):
 
         self.sensors_av = Array('f', [0.0 for x in range(10)])
 
-        self.exposure_v = Value('f', -1.0)  # this must be -1.0 to indicate unset
-        self.exposure_min_v = Value('f', -1.0)
-        self.exposure_min_day_v = Value('f', -1.0)
-        self.exposure_max_v = Value('f', -1.0)
+        self.exposure_av = Array('f', [
+            -1.0,  # current exposure - these must be -1.0 to indicate unset
+            -1.0,  # night minimum
+            -1.0,  # day minimum
+            -1.0,  # maximum
+        ])
+
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.night_v = Value('i', -1)  # bogus initial value
@@ -300,10 +303,7 @@ class IndiAllSky(object):
             self.video_q,
             self.upload_q,
             self.position_av,
-            self.exposure_v,
-            self.exposure_min_v,
-            self.exposure_min_day_v,
-            self.exposure_max_v,
+            self.exposure_av,
             self.gain_v,
             self.bin_v,
             self.sensors_av,
@@ -355,10 +355,7 @@ class IndiAllSky(object):
             self.image_q,
             self.upload_q,
             self.position_av,
-            self.exposure_v,
-            self.exposure_min_v,
-            self.exposure_min_day_v,
-            self.exposure_max_v,
+            self.exposure_av,
             self.gain_v,
             self.bin_v,
             self.sensors_av,

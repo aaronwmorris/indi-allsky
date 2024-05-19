@@ -88,7 +88,7 @@ class IndiAllSkyDarks(object):
 
         self.indi_config = self.config.get('INDI_CONFIG_DEFAULTS', {})
 
-        self.exposure_v = Value('f', -1.0)
+        self.exposure_av = Array('f', [-1.0])
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.sensors_av = Array('f', [0.0])
