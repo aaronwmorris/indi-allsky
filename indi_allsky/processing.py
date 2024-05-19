@@ -90,32 +90,23 @@ class ImageProcessor(object):
     def __init__(
         self,
         config,
-        latitude_v,
-        longitude_v,
-        elevation_v,
-        ra_v,
-        dec_v,
+        position_av,
         exposure_v,
         gain_v,
         bin_v,
-        sensortemp_v,
+        sensors_av,
         night_v,
         moonmode_v,
         astrometric_data,
     ):
         self.config = config
 
-        self.latitude_v = latitude_v
-        self.longitude_v = longitude_v
-        self.elevation_v = elevation_v
-
-        self.ra_v = ra_v
-        self.dec_v = dec_v
+        self.position_av = position_av  # lat, long, elev, ra, dec
 
         self.exposure_v = exposure_v
         self.gain_v = gain_v
         self.bin_v = bin_v
-        self.sensortemp_v = sensortemp_v
+        self.sensors_av = sensors_av  # 0 ccd_temp
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
@@ -368,12 +359,12 @@ class ImageProcessor(object):
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
-            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['CCD-TEMP'] = self.sensors_av.value[0]
             hdulist[0].header['BITPIX'] = 8
-            hdulist[0].header['SITELAT'] = self.latitude_v.value
-            hdulist[0].header['SITELONG'] = self.longitude_v.value
-            hdulist[0].header['RA'] = self.ra_v.value
-            hdulist[0].header['DEC'] = self.dec_v.value
+            hdulist[0].header['SITELAT'] = self.position_av.value[0]
+            hdulist[0].header['SITELONG'] = self.position_av.value[1]
+            hdulist[0].header['RA'] = self.position_av.value[3]
+            hdulist[0].header['DEC'] = self.position_av.value[4]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
 
 
@@ -412,12 +403,12 @@ class ImageProcessor(object):
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
-            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['CCD-TEMP'] = self.sensors_av.value[0]
             hdulist[0].header['BITPIX'] = 8
-            hdulist[0].header['SITELAT'] = self.latitude_v.value
-            hdulist[0].header['SITELONG'] = self.longitude_v.value
-            hdulist[0].header['RA'] = self.ra_v.value
-            hdulist[0].header['DEC'] = self.dec_v.value
+            hdulist[0].header['SITELAT'] = self.position_av.value[0]
+            hdulist[0].header['SITELONG'] = self.position_av.value[1]
+            hdulist[0].header['RA'] = self.position_av.value[3]
+            hdulist[0].header['DEC'] = self.position_av.value[4]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
 
 
@@ -452,12 +443,12 @@ class ImageProcessor(object):
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
-            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['CCD-TEMP'] = self.sensors_av.value[0]
             hdulist[0].header['BITPIX'] = 16
-            hdulist[0].header['SITELAT'] = self.latitude_v.value
-            hdulist[0].header['SITELONG'] = self.longitude_v.value
-            hdulist[0].header['RA'] = self.ra_v.value
-            hdulist[0].header['DEC'] = self.dec_v.value
+            hdulist[0].header['SITELAT'] = self.position_av.value[0]
+            hdulist[0].header['SITELONG'] = self.position_av.value[1]
+            hdulist[0].header['RA'] = self.position_av.value[3]
+            hdulist[0].header['DEC'] = self.position_av.value[4]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
 
 
@@ -694,7 +685,7 @@ class ImageProcessor(object):
         from astropy.io import fits
 
         # pick a bad pixel map that is closest to the exposure and temperature
-        logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
+        logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensors_av.value[0])
         bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
             .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
             .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
@@ -702,8 +693,8 @@ class ImageProcessor(object):
             .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
             .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
             .filter(IndiAllSkyDbBadPixelMapTable.exposure >= exposure)\
-            .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensortemp_v.value)\
-            .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensortemp_v.value + self.dark_temperature_range))\
+            .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensors_av.value[0])\
+            .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensors_av.value[0] + self.dark_temperature_range))\
             .order_by(
                 IndiAllSkyDbBadPixelMapTable.exposure.asc(),
                 IndiAllSkyDbBadPixelMapTable.temp.asc(),
@@ -712,7 +703,7 @@ class ImageProcessor(object):
             .first()
 
         if not bpm_entry:
-            logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensortemp_v.value)
+            logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensors_av.value[0])
 
             # pick a bad pixel map that matches the exposure at the hightest temperature found
             bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
@@ -738,12 +729,12 @@ class ImageProcessor(object):
                     float(exposure),
                     self.gain_v.value,
                     self.bin_v.value,
-                    self.sensortemp_v.value,
+                    self.sensors_av.value[0],
                 )
 
 
         # pick a dark frame that is closest to the exposure and temperature
-        logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
+        logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensors_av.value[0])
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
@@ -751,8 +742,8 @@ class ImageProcessor(object):
             .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
             .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
             .filter(IndiAllSkyDbDarkFrameTable.exposure >= exposure)\
-            .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensortemp_v.value)\
-            .filter(IndiAllSkyDbDarkFrameTable.temp <= (self.sensortemp_v.value + self.dark_temperature_range))\
+            .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensors_av.value[0])\
+            .filter(IndiAllSkyDbDarkFrameTable.temp <= (self.sensors_av.value[0] + self.dark_temperature_range))\
             .order_by(
                 IndiAllSkyDbDarkFrameTable.exposure.asc(),
                 IndiAllSkyDbDarkFrameTable.temp.asc(),
@@ -761,7 +752,7 @@ class ImageProcessor(object):
             .first()
 
         if not dark_frame_entry:
-            logger.warning('Temperature matched dark not found: %0.2fc', self.sensortemp_v.value)
+            logger.warning('Temperature matched dark not found: %0.2fc', self.sensors_av.value[0])
 
             # pick a dark frame that matches the exposure at the hightest temperature found
             dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
@@ -787,7 +778,7 @@ class ImageProcessor(object):
                     float(exposure),
                     self.gain_v.value,
                     self.bin_v.value,
-                    self.sensortemp_v.value,
+                    self.sensors_av.value[0],
                 )
 
                 raise CalibrationNotFound('Dark not found')
@@ -1602,8 +1593,8 @@ class ImageProcessor(object):
         #utcnow = datetime.now(tz=timezone.utc) - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.longitude_v.value)
-        obs.lat = math.radians(self.latitude_v.value)
+        obs.lon = math.radians(self.position_av.value[1])
+        obs.lat = math.radians(self.position_av.value[0])
         obs.elevation = self.elevation_v.value
 
 
@@ -1845,8 +1836,8 @@ class ImageProcessor(object):
         #utcnow = datetime.now(tz=timezone.utc) - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.longitude_v.value)
-        obs.lat = math.radians(self.latitude_v.value)
+        obs.lon = math.radians(self.position_av.value[1])
+        obs.lat = math.radians(self.position_av.value[0])
         obs.elevation = self.elevation_v.value
 
 
@@ -1909,13 +1900,13 @@ class ImageProcessor(object):
 
 
         if self.config.get('TEMP_DISPLAY') == 'f':
-            sensortemp = ((self.sensortemp_v.value * 9.0) / 5.0) + 32
+            ccd_temp = ((self.sensors_av.value[0] * 9.0) / 5.0) + 32
             temp_unit = 'F'
         elif self.config.get('TEMP_DISPLAY') == 'k':
-            sensortemp = self.sensortemp_v.value + 273.15
+            ccd_temp = self.sensors_av.value[0] + 273.15
             temp_unit = 'K'
         else:
-            sensortemp = self.sensortemp_v.value
+            ccd_temp = self.sensors_av.value[0]
             temp_unit = 'C'
 
 
@@ -1942,7 +1933,7 @@ class ImageProcessor(object):
             'day_date'     : i_ref['day_date'],
             'rational_exp' : rational_exp,
             'gain'         : self.gain_v.value,
-            'temp'         : sensortemp,  # hershey fonts do not support degree symbol
+            'temp'         : ccd_temp,  # hershey fonts do not support degree symbol
             'temp_unit'    : temp_unit,
             'sqm'          : i_ref['sqm_value'],
             'stars'        : len(i_ref['stars']),
@@ -1980,9 +1971,9 @@ class ImageProcessor(object):
             'tiangong_up'       : self.astrometric_data['tiangong_up'],
             'tiangong_next_h'   : self.astrometric_data['tiangong_next_h'],
             'tiangong_next_alt' : self.astrometric_data['tiangong_next_alt'],
-            'latitude'     : self.latitude_v.value,
-            'longitude'    : self.longitude_v.value,
-            'elevation'    : self.elevation_v.value,
+            'latitude'     : self.position_av.value[0],
+            'longitude'    : self.position_av.value[1],
+            'elevation'    : int(self.position_av.value[2]),
             'sidereal_time'        : self.astrometric_data['sidereal_time'],
             'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
             'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),
@@ -2174,13 +2165,13 @@ class ImageProcessor(object):
 
 
         if self.config.get('TEMP_DISPLAY') == 'f':
-            sensortemp = ((self.sensortemp_v.value * 9.0) / 5.0) + 32
+            ccd_temp = ((self.sensors_av.value[0] * 9.0) / 5.0) + 32
             temp_unit = 'F'
         elif self.config.get('TEMP_DISPLAY') == 'k':
-            sensortemp = self.sensortemp_v.value + 273.15
+            ccd_temp = self.sensors_av.value[0] + 273.15
             temp_unit = 'K'
         else:
-            sensortemp = self.sensortemp_v.value
+            ccd_temp = self.sensors_av.value[0]
             temp_unit = 'C'
 
 
@@ -2207,7 +2198,7 @@ class ImageProcessor(object):
             'day_date'     : i_ref['day_date'],
             'rational_exp' : rational_exp,
             'gain'         : self.gain_v.value,
-            'temp'         : sensortemp,  # hershey fonts do not support degree symbol
+            'temp'         : ccd_temp,  # hershey fonts do not support degree symbol
             'temp_unit'    : temp_unit,
             'sqm'          : i_ref['sqm_value'],
             'stars'        : len(i_ref['stars']),
@@ -2245,9 +2236,9 @@ class ImageProcessor(object):
             'tiangong_up'       : self.astrometric_data['tiangong_up'],
             'tiangong_next_h'   : self.astrometric_data['tiangong_next_h'],
             'tiangong_next_alt' : self.astrometric_data['tiangong_next_alt'],
-            'latitude'     : self.latitude_v.value,
-            'longitude'    : self.longitude_v.value,
-            'elevation'    : self.elevation_v.value,
+            'latitude'     : self.position_av.value[0],
+            'longitude'    : self.position_av.value[1],
+            'elevation'    : int(self.position_av.value[2]),
             'sidereal_time'        : self.astrometric_data['sidereal_time'],
             'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
             'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),

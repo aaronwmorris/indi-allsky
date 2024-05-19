@@ -70,18 +70,14 @@ class ImageWorker(Process):
         error_q,
         image_q,
         upload_q,
-        latitude_v,
-        longitude_v,
-        elevation_v,
-        ra_v,
-        dec_v,
+        position_av,
         exposure_v,
         exposure_min_v,
         exposure_min_day_v,
         exposure_max_v,
         gain_v,
         bin_v,
-        sensortemp_v,
+        sensors_av,
         night_v,
         moonmode_v,
     ):
@@ -95,12 +91,7 @@ class ImageWorker(Process):
         self.image_q = image_q
         self.upload_q = upload_q
 
-        self.latitude_v = latitude_v
-        self.longitude_v = longitude_v
-        self.elevation_v = elevation_v
-
-        self.ra_v = ra_v
-        self.dec_v = dec_v
+        self.position_av = position_av  # lat, long, elev, ra, dec
 
         self.exposure_v = exposure_v
         self.exposure_min_v = exposure_min_v
@@ -108,7 +99,7 @@ class ImageWorker(Process):
         self.exposure_max_v = exposure_max_v
         self.gain_v = gain_v
         self.bin_v = bin_v
-        self.sensortemp_v = sensortemp_v
+        self.sensors_av = sensors_av  # 0 ccd_temp
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
@@ -160,15 +151,11 @@ class ImageWorker(Process):
 
         self.image_processor = ImageProcessor(
             self.config,
-            latitude_v,
-            longitude_v,
-            elevation_v,
-            ra_v,
-            dec_v,
+            position_av,
             exposure_v,
             gain_v,
             bin_v,
-            sensortemp_v,
+            sensors_av,
             night_v,
             moonmode_v,
             self.astrometric_data,
@@ -419,9 +406,9 @@ class ImageWorker(Process):
         }
 
 
-        if self.sensortemp_v.value > -150:
+        if self.sensors_av.value[0] > -150:
             # Add temperature data
-            temperature_frac = Fraction(self.sensortemp_v.value).limit_denominator()
+            temperature_frac = Fraction(self.sensors_av.value[0]).limit_denominator()
             exif_ifd[piexif.ExifIFD.Temperature] = (temperature_frac.numerator, temperature_frac.denominator)
 
 
@@ -656,7 +643,7 @@ class ImageWorker(Process):
                 'exp_elapsed'     : exp_elapsed,
                 'gain'            : self.gain_v.value,
                 'binmode'         : self.bin_v.value,
-                'temp'            : self.sensortemp_v.value,
+                'temp'            : self.sensors_av.value[0],
                 'adu'             : adu,
                 'stable'          : self.target_adu_found,
                 'moonmode'        : bool(self.moonmode_v.value),
@@ -717,7 +704,7 @@ class ImageWorker(Process):
                 'exposure' : round(exposure, 6),
                 'gain'     : self.gain_v.value,
                 'bin'      : self.bin_v.value,
-                'temp'     : round(self.sensortemp_v.value, 1),
+                'temp'     : round(self.sensors_av.value[0], 1),
                 'sunalt'   : round(self.astrometric_data['sun_alt'], 1),
                 'moonalt'  : round(self.astrometric_data['moon_alt'], 1),
                 'moonphase': round(self.astrometric_data['moon_phase'], 1),
@@ -725,9 +712,9 @@ class ImageWorker(Process):
                 'night'    : bool(self.night_v.value),
                 'sqm'      : round(i_ref['sqm_value'], 1),
                 'stars'    : len(i_ref['stars']),
-                'latitude' : round(self.latitude_v.value, 3),
-                'longitude': round(self.longitude_v.value, 3),
-                'elevation': self.elevation_v.value,
+                'latitude' : round(self.position_av.value[0], 3),
+                'longitude': round(self.position_av.value[1], 3),
+                'elevation': int(self.position_av.value[2]),
                 'kpindex'  : round(i_ref['kpindex'], 2),
                 'ovation_max'  : int(i_ref['ovation_max']),
                 'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
@@ -856,7 +843,7 @@ class ImageWorker(Process):
             'type'                : constants.METADATA,
             'device'              : i_ref['camera_name'],
             'night'               : self.night_v.value,
-            'temp'                : self.sensortemp_v.value,
+            'temp'                : self.sensors_av.value[0],
             'gain'                : self.gain_v.value,
             'exposure'            : i_ref['exposure'],
             'stable_exposure'     : int(self.target_adu_found),
@@ -871,9 +858,9 @@ class ImageWorker(Process):
             'utc_offset'          : i_ref['exp_date'].astimezone().utcoffset().total_seconds(),
             'sqm_data'            : self.getSqmData(i_ref['camera_id']),
             'stars_data'          : self.getStarsData(i_ref['camera_id']),
-            'latitude'            : self.latitude_v.value,
-            'longitude'           : self.longitude_v.value,
-            'elevation'           : self.elevation_v.value,
+            'latitude'            : self.position_av.value[0],
+            'longitude'           : self.position_av.value[1],
+            'elevation'           : int(self.position_av.value[2]),
             'sidereal_time'       : self.astrometric_data['sidereal_time'],
             'kpindex'             : i_ref['kpindex'],
             'ovation_max'         : i_ref['ovation_max'],
@@ -1351,7 +1338,7 @@ class ImageWorker(Process):
             'class'               : 'ccd',
             'device'              : i_ref['camera_name'],
             'night'               : self.night_v.value,
-            'temp'                : self.sensortemp_v.value,
+            'temp'                : self.sensors_av.value[0],
             'gain'                : self.gain_v.value,
             'exposure'            : i_ref['exposure'],
             'stable_exposure'     : int(self.target_adu_found),
@@ -1362,9 +1349,9 @@ class ImageWorker(Process):
             'sqm'                 : i_ref['sqm_value'],
             'stars'               : len(i_ref['stars']),
             'time'                : i_ref['exp_date'].strftime('%s'),
-            'latitude'            : self.latitude_v.value,
-            'longitude'           : self.longitude_v.value,
-            'elevation'           : self.elevation_v.value,
+            'latitude'            : self.position_av.value[0],
+            'longitude'           : self.position_av.value[1],
+            'elevation'           : int(self.position_av.value[2]),
         }
 
 

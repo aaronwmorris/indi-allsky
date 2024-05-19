@@ -15,6 +15,7 @@ import logging
 import queue
 from multiprocessing import Queue
 from multiprocessing import Value
+from multiprocessing import Array
 
 from .version import __version__
 from .version import __config_level__
@@ -109,12 +110,15 @@ class IndiAllSky(object):
         self.sat_data_tasks_time = time.time()  # run asap
 
 
-        self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
-        self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
-        self.elevation_v = Value('i', int(self.config.get('LOCATION_ELEVATION', 300)))
+        self.position_av = Array('f', [
+            float(self.config['LOCATION_LATITUDE']),
+            float(self.config['LOCATION_LONGITUDE']),
+            float(self.config.get('LOCATION_ELEVATION', 300)),
+            0.0,  # Ra
+            0.0,  # Dec
+        ])
 
-        self.ra_v = Value('f', 0.0)
-        self.dec_v = Value('f', 0.0)
+        self.sensors_av = Array('f', [0.0 for x in range(10)])
 
         self.exposure_v = Value('f', -1.0)  # this must be -1.0 to indicate unset
         self.exposure_min_v = Value('f', -1.0)
@@ -122,7 +126,6 @@ class IndiAllSky(object):
         self.exposure_max_v = Value('f', -1.0)
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
-        self.sensortemp_v = Value('f', 0)
         self.night_v = Value('i', -1)  # bogus initial value
         self.moonmode_v = Value('i', -1)  # bogus initial value
 
@@ -296,18 +299,14 @@ class IndiAllSky(object):
             self.image_q,
             self.video_q,
             self.upload_q,
-            self.latitude_v,
-            self.longitude_v,
-            self.elevation_v,
-            self.ra_v,
-            self.dec_v,
+            self.position_av,
             self.exposure_v,
             self.exposure_min_v,
             self.exposure_min_day_v,
             self.exposure_max_v,
             self.gain_v,
             self.bin_v,
-            self.sensortemp_v,
+            self.sensors_av,
             self.night_v,
             self.moonmode_v,
         )
@@ -355,18 +354,14 @@ class IndiAllSky(object):
             self.image_error_q,
             self.image_q,
             self.upload_q,
-            self.latitude_v,
-            self.longitude_v,
-            self.elevation_v,
-            self.ra_v,
-            self.dec_v,
+            self.position_av,
             self.exposure_v,
             self.exposure_min_v,
             self.exposure_min_day_v,
             self.exposure_max_v,
             self.gain_v,
             self.bin_v,
-            self.sensortemp_v,
+            self.sensors_av,
             self.night_v,
             self.moonmode_v,
         )
@@ -426,9 +421,6 @@ class IndiAllSky(object):
             self.video_error_q,
             self.video_q,
             self.upload_q,
-            self.latitude_v,
-            self.longitude_v,
-            self.elevation_v,
             self.bin_v,
         )
         self.video_worker.start()

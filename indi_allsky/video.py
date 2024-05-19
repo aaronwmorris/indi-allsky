@@ -82,9 +82,6 @@ class VideoWorker(Process):
         error_q,
         video_q,
         upload_q,
-        latitude_v,
-        longitude_v,
-        elevation_v,
         bin_v,
     ):
         super(VideoWorker, self).__init__()
@@ -99,9 +96,6 @@ class VideoWorker(Process):
         self.video_q = video_q
         self.upload_q = upload_q
 
-        self.latitude_v = latitude_v
-        self.longitude_v = longitude_v
-        self.elevation_v = elevation_v
         self.bin_v = bin_v
 
         self._miscDb = miscDb(self.config)
