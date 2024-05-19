@@ -589,8 +589,8 @@ class CaptureWorker(Process):
                 },
                 'PROPERTIES' : {
                     'GEOGRAPHIC_COORD' : {
-                        'LAT' : self.position_av.value[0],
-                        'LONG' : self.position_av.value[1],
+                        'LAT' : self.position_av[0],
+                        'LONG' : self.position_av[1],
                     },
                 },
             }
@@ -664,9 +664,9 @@ class CaptureWorker(Process):
             'cfa'         : constants.CFA_STR_MAP[cfa_pattern],
 
             'location'    : self.config['LOCATION_NAME'],
-            'latitude'    : self.position_av.value[0],
-            'longitude'   : self.position_av.value[1],
-            'elevation'   : int(self.position_av.value[2]),
+            'latitude'    : self.position_av[0],
+            'longitude'   : self.position_av[1],
+            'elevation'   : int(self.position_av[2]),
 
             'tz'          : str(now.astimezone().tzinfo),
             'utc_offset'  : now.astimezone().utcoffset().total_seconds(),
@@ -951,7 +951,7 @@ class CaptureWorker(Process):
         temp_val_f = float(temp_val)
 
         with self.sensors_av.get_lock():
-            self.sensors_av.value[0] = temp_val_f
+            self.sensors_av[0] = temp_val_f
 
 
         return temp_val_f
@@ -1061,13 +1061,13 @@ class CaptureWorker(Process):
 
 
         # need 1/10 degree difference before updating location
-        if abs(gps_lat - self.position_av.value[0]) > 0.1:
+        if abs(gps_lat - self.position_av[0]) > 0.1:
             self.updateConfigLocation(gps_lat, gps_long, gps_elev)
             update_position = True
-        elif abs(gps_long - self.position_av.value[1]) > 0.1:
+        elif abs(gps_long - self.position_av[1]) > 0.1:
             self.updateConfigLocation(gps_lat, gps_long, gps_elev)
             update_position = True
-        elif abs(gps_elev - self.position_av.value[2]) > 30:
+        elif abs(gps_elev - self.position_av[2]) > 30:
             self.updateConfigLocation(gps_lat, gps_long, gps_elev)
             update_position = True
 
@@ -1075,9 +1075,9 @@ class CaptureWorker(Process):
         if update_position:
             # Update shared values
             with self.position_av.get_lock():
-                self.position_av.value[0] = float(gps_lat)
-                self.position_av.value[1] = float(gps_long)
-                self.position_av.value[2] = float(gps_elev)
+                self.position_av[0] = float(gps_lat)
+                self.position_av[1] = float(gps_long)
+                self.position_av[2] = float(gps_elev)
 
 
             self.reparkTelescope()
@@ -1093,11 +1093,9 @@ class CaptureWorker(Process):
         ra, dec = self.indiclient.getTelescopeRaDec()
 
         # Update shared values
-        with self.ra_v.get_lock():
-            self.ra_v.value = ra
-
-        with self.dec_v.get_lock():
-            self.dec_v.value = dec
+        with self.position_av.get_lock():
+            self.position_av[3] = ra
+            self.position_av[4] = dec
 
 
         return ra, dec
@@ -1133,7 +1131,7 @@ class CaptureWorker(Process):
             return
 
         self.indiclient.unparkTelescope()
-        self.indiclient.setTelescopeParkPosition(0.0, self.position_av.value[0])
+        self.indiclient.setTelescopeParkPosition(0.0, self.position_av[0])
         self.indiclient.parkTelescope()
 
 
@@ -1194,9 +1192,9 @@ class CaptureWorker(Process):
 
     def detectNight(self):
         obs = ephem.Observer()
-        obs.lon = math.radians(self.position_av.value[1])
-        obs.lat = math.radians(self.position_av.value[0])
-        obs.elevation = self.position_av.value[2]
+        obs.lon = math.radians(self.position_av[1])
+        obs.lat = math.radians(self.position_av[0])
+        obs.elevation = self.position_av[2]
         obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 
         sun = ephem.Sun()
@@ -1210,9 +1208,9 @@ class CaptureWorker(Process):
     def detectMoonMode(self):
         # detectNight() should be run first
         obs = ephem.Observer()
-        obs.lon = math.radians(self.position_av.value[1])
-        obs.lat = math.radians(self.position_av.value[0])
-        obs.elevation = self.position_av.value[2]
+        obs.lon = math.radians(self.position_av[1])
+        obs.lat = math.radians(self.position_av[0])
+        obs.elevation = self.position_av[2]
         obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 
         moon = ephem.Moon()
