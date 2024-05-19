@@ -1978,9 +1978,22 @@ class ImageProcessor(object):
         }
 
 
-        # sensor data
-        for slot, sensor_v in enumerate(self.sensors_va):
-            label_data['sensor_slot_{0:d}'.format(slot)] = sensor_v
+        # sensor temperature data
+        for slot in range(20):
+            if self.config.get('TEMP_DISPLAY') == 'f':
+                slot_temp = ((self.sensors_av[slot] * 9.0) / 5.0) + 32
+            elif self.config.get('TEMP_DISPLAY') == 'k':
+                slot_temp = self.sensors_av[slot] + 273.15
+            else:
+                slot_temp = self.sensors_av[slot]
+
+
+            label_data['sensor_slot_{0:d}'.format(slot)] = slot_temp
+
+
+        # sensor non-temperature data
+        for slot in range(20, 30):
+            label_data['sensor_slot_{0:d}'.format(slot)] = self.sensors_av[slot]
 
 
         # stacking data

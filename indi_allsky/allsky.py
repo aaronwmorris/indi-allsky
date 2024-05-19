@@ -118,7 +118,12 @@ class IndiAllSky(object):
             0.0,  # Dec
         ])
 
-        self.sensors_av = Array('f', [0.0 for x in range(20)])  # 0 ccd_temp, 1-9 are reserved for system temps
+
+        # 0 ccd_temp
+        # 1-9 reserved for system temperatures
+        # 10-19 temperature values which may be converted to Fahrenheit
+        # 20-29 non-temp values (humidity, wind, etc)
+        self.sensors_av = Array('f', [0.0 for x in range(30)])
 
         self.exposure_av = Array('f', [
             -1.0,  # current exposure - these must be -1.0 to indicate unset
