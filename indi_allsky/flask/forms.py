@@ -620,6 +620,16 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'stretch_m1_stddevs' : 0.0,
     }
 
+
+    for x in range(30):
+        # temperature sensors
+        test_data['sensors_temp_{0:d}'.format(x)] = 0.0
+
+    for x in range(20):
+        # other sensors
+        test_data['sensors_misc_{0:d}'.format(x)] = 0.0
+
+
     try:
         field.data.format(**test_data)
     except KeyError as e:
