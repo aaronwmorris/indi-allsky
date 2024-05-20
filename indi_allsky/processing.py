@@ -1904,6 +1904,31 @@ class ImageProcessor(object):
 
         image_label = image_label_tmpl.format(**label_data)  # fill in the data
 
+
+        # Add moon mode indicator
+        if self.moonmode_v.value:
+            image_label += '\n* Moon Mode *'
+
+
+        # Add eclipse indicator
+        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_v.value:
+            # Lunar eclipse (earth's penumbra is large)
+            image_label += '\n* LUNAR ECLIPSE *'
+
+        if self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
+            # Solar eclipse
+            image_label += '\n* SOLAR ECLIPSE *'
+
+
+        # add extra text to image
+        extra_text_lines = self.get_extra_text()
+        if extra_text_lines:
+            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
+
+            for line in extra_text_lines:
+                image_label += '\n{0:s}'.format(line)
+
+
         return image_label
 
 
@@ -2044,62 +2069,6 @@ class ImageProcessor(object):
             self._text_next_line()
 
 
-        # Add moon mode indicator
-        if self.moonmode_v.value:
-            self.drawText_opencv(
-                self.image,
-                '* Moon Mode *',
-                tuple(self.text_xy),
-                tuple(self.text_color_bgr),
-            )
-
-            self._text_next_line()
-
-
-        # Add eclipse indicator
-        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_v.value:
-            # Lunar eclipse (earth's penumbra is large)
-            self.drawText_opencv(
-                self.image,
-                '* LUNAR ECLIPSE *',
-                tuple(self.text_xy),
-                tuple(self.text_color_bgr),
-            )
-
-            self._text_next_line()
-
-        elif self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
-            # Solar eclipse
-            self.drawText_opencv(
-                self.image,
-                '* SOLAR ECLIPSE *',
-                tuple(self.text_xy),
-                tuple(self.text_color_bgr),
-            )
-
-            self._text_next_line()
-
-
-        # add extra text to image
-        extra_text_lines = self.get_extra_text()
-        if extra_text_lines:
-            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
-
-            for line in extra_text_lines:
-                if line.startswith('#'):
-                    self._processLabelComment(line)
-                    continue
-
-                self.drawText_opencv(
-                    self.image,
-                    line,
-                    tuple(self.text_xy),
-                    tuple(self.text_color_bgr),
-                )
-
-                self._text_next_line()
-
-
     def drawText_opencv(self, data, text, pt, color_bgr):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
@@ -2193,74 +2162,6 @@ class ImageProcessor(object):
             )
 
             self._text_next_line()
-
-
-        # Add moon mode indicator
-        if self.moonmode_v.value:
-            self.drawText_pillow(
-                draw,
-                '* Moon Mode *',
-                pillow_font_file_p,
-                self.text_size_pillow,
-                tuple(self.text_xy),
-                tuple(self.text_color_rgb),
-                anchor=self.text_anchor_pillow,
-            )
-
-            self._text_next_line()
-
-
-        # Add eclipse indicator
-        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_v.value:
-            # Lunar eclipse (earth's penumbra is large)
-            self.drawText_pillow(
-                draw,
-                '* LUNAR ECLIPSE *',
-                pillow_font_file_p,
-                self.text_size_pillow,
-                tuple(self.text_xy),
-                tuple(self.text_color_rgb),
-                anchor=self.text_anchor_pillow,
-            )
-
-            self._text_next_line()
-
-        elif self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
-            # Solar eclipse
-            self.drawText_pillow(
-                draw,
-                '* SOLAR ECLIPSE *',
-                pillow_font_file_p,
-                self.text_size_pillow,
-                tuple(self.text_xy),
-                tuple(self.text_color_rgb),
-                anchor=self.text_anchor_pillow,
-            )
-
-            self._text_next_line()
-
-
-        # add extra text to image
-        extra_text_lines = self.get_extra_text()
-        if extra_text_lines:
-            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
-
-            for line in extra_text_lines:
-                if line.startswith('#'):
-                    self._processLabelComment(line)
-                    continue
-
-                self.drawText_pillow(
-                    draw,
-                    line,
-                    pillow_font_file_p,
-                    self.text_size_pillow,
-                    tuple(self.text_xy),
-                    tuple(self.text_color_rgb),
-                    anchor=self.text_anchor_pillow,
-                )
-
-                self._text_next_line()
 
 
         # convert back to numpy array
