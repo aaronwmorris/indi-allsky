@@ -74,7 +74,8 @@ class ImageWorker(Process):
         exposure_av,
         gain_v,
         bin_v,
-        sensors_av,
+        sensors_temp_av,
+        sensors_misc_av,
         night_v,
         moonmode_v,
     ):
@@ -93,7 +94,8 @@ class ImageWorker(Process):
         self.exposure_av = exposure_av  # current, min night, min day, max
         self.gain_v = gain_v
         self.bin_v = bin_v
-        self.sensors_av = sensors_av  # 0 ccd_temp
+        self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
+        self.sensors_misc_av = sensors_misc_av
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
@@ -145,12 +147,13 @@ class ImageWorker(Process):
 
         self.image_processor = ImageProcessor(
             self.config,
-            position_av,
-            gain_v,
-            bin_v,
-            sensors_av,
-            night_v,
-            moonmode_v,
+            self.position_av,
+            self.gain_v,
+            self.bin_v,
+            self.sensors_temp_av,
+            self.sensors_misc_av,
+            self.night_v,
+            self.moonmode_v,
             self.astrometric_data,
         )
 
@@ -399,9 +402,9 @@ class ImageWorker(Process):
         }
 
 
-        if self.sensors_av[0] > -150:
+        if self.sensors_temp_av[0] > -150:
             # Add temperature data
-            temperature_frac = Fraction(self.sensors_av[0]).limit_denominator()
+            temperature_frac = Fraction(self.sensors_temp_av[0]).limit_denominator()
             exif_ifd[piexif.ExifIFD.Temperature] = (temperature_frac.numerator, temperature_frac.denominator)
 
 
@@ -636,7 +639,7 @@ class ImageWorker(Process):
                 'exp_elapsed'     : exp_elapsed,
                 'gain'            : self.gain_v.value,
                 'binmode'         : self.bin_v.value,
-                'temp'            : self.sensors_av[0],
+                'temp'            : self.sensors_temp_av[0],
                 'adu'             : adu,
                 'stable'          : self.target_adu_found,
                 'moonmode'        : bool(self.moonmode_v.value),
@@ -697,7 +700,7 @@ class ImageWorker(Process):
                 'exposure' : round(exposure, 6),
                 'gain'     : self.gain_v.value,
                 'bin'      : self.bin_v.value,
-                'temp'     : round(self.sensors_av[0], 1),
+                'temp'     : round(self.sensors_temp_av[0], 1),
                 'sunalt'   : round(self.astrometric_data['sun_alt'], 1),
                 'moonalt'  : round(self.astrometric_data['moon_alt'], 1),
                 'moonphase': round(self.astrometric_data['moon_phase'], 1),
@@ -784,9 +787,9 @@ class ImageWorker(Process):
 
 
                     # update share array
-                    with self.sensors_av.get_lock():
+                    with self.sensors_temp_av.get_lock():
                         # index 0 is always ccd_temp
-                        self.sensors_av[i + 1] = current_temp
+                        self.sensors_temp_av[i + 1] = current_temp
 
 
             if new_filename:
@@ -842,7 +845,7 @@ class ImageWorker(Process):
             'type'                : constants.METADATA,
             'device'              : i_ref['camera_name'],
             'night'               : self.night_v.value,
-            'temp'                : self.sensors_av[0],
+            'temp'                : self.sensors_temp_av[0],
             'gain'                : self.gain_v.value,
             'exposure'            : i_ref['exposure'],
             'stable_exposure'     : int(self.target_adu_found),
@@ -1337,7 +1340,7 @@ class ImageWorker(Process):
             'class'               : 'ccd',
             'device'              : i_ref['camera_name'],
             'night'               : self.night_v.value,
-            'temp'                : self.sensors_av[0],
+            'temp'                : self.sensors_temp_av[0],
             'gain'                : self.gain_v.value,
             'exposure'            : i_ref['exposure'],
             'stable_exposure'     : int(self.target_adu_found),
