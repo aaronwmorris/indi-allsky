@@ -156,6 +156,10 @@ class IndiAllSky(object):
         self.video_worker = None
         self.video_worker_idx = 0
 
+        self.sensor_worker = None
+        self.sensor_error_q = Queue()
+        self.sensor_worker_idx = 0
+
         self.upload_q = Queue()
         self.upload_worker_list = []
         self.upload_worker_idx = 0
@@ -461,6 +465,58 @@ class IndiAllSky(object):
         self.video_worker.join()
 
 
+    def _startSensorWorker(self):
+        from .sensor import SensorWorker
+
+        if self.sensor_worker:
+            if self.sensor_worker.is_alive():
+                return
+
+
+            try:
+                sensor_error, sensor_traceback = self.sensor_error_q.get_nowait()
+                for line in sensor_traceback.split('\n'):
+                    logger.error('Sensor worker exception: %s', line)
+            except queue.Empty:
+                pass
+
+
+        self.sensor_worker_idx += 1
+
+        logger.info('Starting Sensor-%d worker', self.sensor_worker_idx)
+        self.sensor_worker = SensorWorker(
+            self.sensor_worker_idx,
+            self.config,
+            self.sensor_error_q,
+            self.sensors_user_av,
+        )
+        self.sensor_worker.start()
+
+
+        if self.sensor_worker_idx % 10 == 0:
+            # notify if worker is restarted more than 10 times
+            with app.app_context():
+                self._miscDb.addNotification(
+                    NotificationCategory.WORKER,
+                    'SensorWorker',
+                    'WARNING: SensorWorker was restarted more than 10 times',
+                    expire=timedelta(hours=2),
+                )
+
+
+    def _stopSensorWorker(self):
+        if not self.sensor_worker:
+            return
+
+        if not self.sensor_worker.is_alive():
+            return
+
+        logger.info('Stopping Sensor worker')
+
+        self.sensor_worker.stop()
+        self.sensor_worker.join()
+
+
     def _startFileUploadWorkers(self):
         for upload_worker_dict in self.upload_worker_list:
             self._fileUploadWorkerStart(upload_worker_dict)
@@ -553,6 +609,7 @@ class IndiAllSky(object):
                 self._stopCaptureWorker()  # stop this first so image queue is cleared out
                 self._stopImageWorker()
                 self._stopVideoWorker()
+                self._stopSensorWorker()
                 self._stopFileUploadWorkers()
 
 
@@ -574,6 +631,7 @@ class IndiAllSky(object):
                 self._stopCaptureWorker()  # stop this first so image queue is cleared out
                 self._stopImageWorker()
                 self._stopVideoWorker()
+                self._stopSensorWorker()
                 self._stopFileUploadWorkers()
                 # processes will start at the next loop
 
@@ -588,6 +646,7 @@ class IndiAllSky(object):
             self._startCaptureWorker()
             self._startImageWorker()
             self._startVideoWorker()
+            self._startSensorWorker()
             self._startFileUploadWorkers()
 
 
