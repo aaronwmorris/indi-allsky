@@ -1899,15 +1899,15 @@ class ImageProcessor(object):
             else:
                 sensor_temp = data
 
-            label_data['sensors_temp_{0:d}'.format(x)] = sensor_temp
+            label_data['sensor_temp_{0:d}'.format(x)] = sensor_temp
 
 
         # 0 == ccd_temp
-        label_data['temp'] = label_data['sensors_temp_0']
+        label_data['temp'] = label_data['sensor_temp_0']
 
 
         for x, sensor_data in enumerate(self.sensors_user_av):
-            label_data['sensors_user_{0:d}'.format(x)] = sensor_data
+            label_data['sensor_user_{0:d}'.format(x)] = sensor_data
 
 
         image_label = image_label_tmpl.format(**label_data)  # fill in the data
