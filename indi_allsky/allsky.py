@@ -120,12 +120,12 @@ class IndiAllSky(object):
 
 
         # 0 ccd_temp
-        # 1-19 reserved for system temperatures
-        # 20-29 temperature values which may be converted to Fahrenheit
-        self.sensors_temp_av = Array('f', [0.0 for x in range(30)])
+        # 1-9 reserved
+        # 10-29 system temperatures
+        self.sensors_temp_av = Array('f', [-273.15 for x in range(30)])
 
-        # other sensors (humidity, wind, sqm, etc)
-        self.sensors_misc_av = Array('f', [0.0 for x in range(20)])
+        # sensors (temp, humidity, wind, sqm, etc)
+        self.sensors_user_av = Array('f', [0.0 for x in range(30)])
 
         self.exposure_av = Array('f', [
             -1.0,  # current exposure - these must be -1.0 to indicate unset
@@ -314,7 +314,7 @@ class IndiAllSky(object):
             self.gain_v,
             self.bin_v,
             self.sensors_temp_av,
-            self.sensors_misc_av,
+            self.sensors_user_av,
             self.night_v,
             self.moonmode_v,
         )
@@ -367,7 +367,7 @@ class IndiAllSky(object):
             self.gain_v,
             self.bin_v,
             self.sensors_temp_av,
-            self.sensors_misc_av,
+            self.sensors_user_av,
             self.night_v,
             self.moonmode_v,
         )

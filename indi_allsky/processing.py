@@ -94,7 +94,7 @@ class ImageProcessor(object):
         gain_v,
         bin_v,
         sensors_temp_av,
-        sensors_misc_av,
+        sensors_user_av,
         night_v,
         moonmode_v,
         astrometric_data,
@@ -106,7 +106,7 @@ class ImageProcessor(object):
         self.gain_v = gain_v
         self.bin_v = bin_v
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
-        self.sensors_misc_av = sensors_misc_av
+        self.sensors_user_av = sensors_user_av
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
@@ -1783,13 +1783,10 @@ class ImageProcessor(object):
 
 
         if self.config.get('TEMP_DISPLAY') == 'f':
-            ccd_temp = ((self.sensors_temp_av[0] * 9.0) / 5.0) + 32
             temp_unit = 'F'
         elif self.config.get('TEMP_DISPLAY') == 'k':
-            ccd_temp = self.sensors_temp_av[0] + 273.15
             temp_unit = 'K'
         else:
-            ccd_temp = self.sensors_temp_av[0]
             temp_unit = 'C'
 
 
@@ -1816,7 +1813,6 @@ class ImageProcessor(object):
             'day_date'     : i_ref['day_date'],
             'rational_exp' : rational_exp,
             'gain'         : self.gain_v.value,
-            'temp'         : ccd_temp,  # hershey fonts do not support degree symbol
             'temp_unit'    : temp_unit,
             'sqm'          : i_ref['sqm_value'],
             'stars'        : len(i_ref['stars']),
@@ -1895,11 +1891,23 @@ class ImageProcessor(object):
             label_data['stretch'] = 'Off'
 
 
-        for x, sensor in enumerate(self.sensors_temp_av):
-            label_data['sensors_temp_{0:d}'.format(x)] = sensor
+        for x, data in enumerate(self.sensors_temp_av):
+            if self.config.get('TEMP_DISPLAY') == 'f':
+                sensor_temp = ((data * 9.0) / 5.0) + 32
+            elif self.config.get('TEMP_DISPLAY') == 'k':
+                sensor_temp = data + 273.15
+            else:
+                sensor_temp = data
 
-        for x, sensor in enumerate(self.sensors_misc_av):
-            label_data['sensors_misc_{0:d}'.format(x)] = sensor
+            label_data['sensors_temp_{0:d}'.format(x)] = sensor_temp
+
+
+        # 0 == ccd_temp
+        label_data['temp'] = label_data['sensors_temp_0']
+
+
+        for x, sensor_data in enumerate(self.sensors_user_av):
+            label_data['sensors_user_{0:d}'.format(x)] = sensor_data
 
 
         image_label = image_label_tmpl.format(**label_data)  # fill in the data

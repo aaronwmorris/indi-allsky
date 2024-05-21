@@ -64,7 +64,7 @@ class CaptureWorker(Process):
         gain_v,
         bin_v,
         sensors_temp_av,
-        sensors_misc_av,
+        sensors_user_av,
         night_v,
         moonmode_v,
     ):
@@ -87,7 +87,7 @@ class CaptureWorker(Process):
         self.gain_v = gain_v
         self.bin_v = bin_v
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
-        self.sensors_misc_av = sensors_misc_av
+        self.sensors_user_av = sensors_user_av
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
