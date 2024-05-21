@@ -762,14 +762,15 @@ class ImageWorker(Process):
             # publish temperature info
             temp_info = psutil.sensors_temperatures()
 
+            z = 0  # need index for shared sensor values
             for t_key in sorted(temp_info):  # always return the keys in the same order
                 for i, t in enumerate(temp_info[t_key]):
                     if self.config.get('TEMP_DISPLAY') == 'f':
-                        current_temp = round(((t.current * 9.0 ) / 5.0) + 32, 1)
+                        current_temp = ((float(t.current) * 9.0 ) / 5.0) + 32
                     elif self.config.get('TEMP_DISPLAY') == 'k':
-                        current_temp = round(t.current + 273.15, 1)
+                        current_temp = float(t.current) + 273.15
                     else:
-                        current_temp = round(float(t.current), 1)
+                        current_temp = float(t.current)
 
 
                     if not t.label:
@@ -783,13 +784,15 @@ class ImageWorker(Process):
                     # no spaces, etc in topics
                     topic_sub = re.sub(r'[#+\$\*\>\.\ ]', '_', topic)
 
-                    mqtt_data[topic_sub] = current_temp
+                    mqtt_data[topic_sub] = round(current_temp, 1)
 
 
                     # update share array
                     with self.sensors_temp_av.get_lock():
                         # index 0 is always ccd_temp
-                        self.sensors_temp_av[i + 1] = current_temp
+                        self.sensors_temp_av[z + 10] = current_temp  # 0-9 are reserved
+
+                    z += 1
 
 
             if new_filename:
