@@ -43,7 +43,7 @@ class DewHeaterPwm(DewHeaterBase):
 
         logger.warning('Set dew heater state: %d%%', new_state_i)
 
-        d = (2 ** 16) * new_state_i / 100
+        d = ((2 ** 16) - 1) * new_state_i / 100
         self.pwm.duty_cycle = d
 
         self._state = new_state_i
