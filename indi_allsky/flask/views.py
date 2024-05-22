@@ -1386,9 +1386,10 @@ class ConfigView(FormView):
             'FOCUSER__GPIO_PIN_2'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_2', 'D18'),
             'FOCUSER__GPIO_PIN_3'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_3', 'D27'),
             'FOCUSER__GPIO_PIN_4'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_4', 'D22'),
-            'DEWHEATER__CLASSNAME'           : self.indi_allsky_config.get('DEWHEATER', {}).get('CLASSNAME', ''),
-            'DEWHEATER__PIN_1'               : self.indi_allsky_config.get('DEWHEATER', {}).get('PIN_1', 'D12'),
-            'DEWHEATER__ENABLE_DAY'          : self.indi_allsky_config.get('DEWHEATER', {}).get('ENABLE_DAY', False),
+            'DEW_HEATER__CLASSNAME'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('CLASSNAME', ''),
+            'DEW_HEATER__PIN_1'              : self.indi_allsky_config.get('DEW_HEATER', {}).get('PIN_1', 'D12'),
+            'DEW_HEATER__ENABLE_DAY'         : self.indi_allsky_config.get('DEW_HEATER', {}).get('ENABLE_DAY', False),
+            'DEW_HEATER__LEVEL_DEF'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_DEF', 25),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -1697,8 +1698,8 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('FOCUSER'):
             self.indi_allsky_config['FOCUSER'] = {}
 
-        if not self.indi_allsky_config.get('DEWHEATER'):
-            self.indi_allsky_config['DEWHEATER'] = {}
+        if not self.indi_allsky_config.get('DEW_HEATER'):
+            self.indi_allsky_config['DEW_HEATER'] = {}
 
         if not self.indi_allsky_config.get('THUMBNAILS'):
             self.indi_allsky_config['THUMBNAILS'] = {}
@@ -2003,9 +2004,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_2']                = str(request.json['FOCUSER__GPIO_PIN_2'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_3']                = str(request.json['FOCUSER__GPIO_PIN_3'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_4']                = str(request.json['FOCUSER__GPIO_PIN_4'])
-        self.indi_allsky_config['DEWHEATER']['CLASSNAME']               = str(request.json['DEWHEATER__CLASSNAME'])
-        self.indi_allsky_config['DEWHEATER']['PIN_1']                   = str(request.json['DEWHEATER__PIN_1'])
-        self.indi_allsky_config['DEWHEATER']['ENABLE_DAY']              = bool(request.json['DEWHEATER__ENABLE_DAY'])
+        self.indi_allsky_config['DEW_HEATER']['CLASSNAME']              = str(request.json['DEW_HEATER__CLASSNAME'])
+        self.indi_allsky_config['DEW_HEATER']['PIN_1']                  = str(request.json['DEW_HEATER__PIN_1'])
+        self.indi_allsky_config['DEW_HEATER']['ENABLE_DAY']             = bool(request.json['DEW_HEATER__ENABLE_DAY'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))

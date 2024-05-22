@@ -2085,7 +2085,7 @@ def FOCUSER__CLASSNAME_validator(form, field):
         raise ValidationError('Invalid focuser class syntax')
 
 
-def DEWHEATER__CLASSNAME_validator(form, field):
+def DEW_HEATER__CLASSNAME_validator(form, field):
     if not field.data:
         return
 
@@ -2093,6 +2093,17 @@ def DEWHEATER__CLASSNAME_validator(form, field):
 
     if not re.search(class_regex, field.data):
         raise ValidationError('Invalid dew heaterclass syntax')
+
+
+def DEW_HEATER__LEVEL_DEF_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid category number')
+
+    if field.data < 0:
+        raise ValidationError('Level must be 0 or greater')
+
+    if field.data > 100:
+        raise ValidationError('Level must be 100 or less')
 
 
 def DEVICE_PIN_NAME_validator(form, field):
@@ -2389,7 +2400,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_focuser_28byj_16', '28BYJ-48 Stepper (1/16) - GPIO'),
     )
 
-    DEWHEATER__CLASSNAME_choices = (
+    DEW_HEATER__CLASSNAME_choices = (
         ('', 'None'),
         ('dew_heater_pwm', 'Dew Heater (PWM)'),
     )
@@ -2711,9 +2722,10 @@ class IndiAllskyConfigForm(FlaskForm):
     FOCUSER__GPIO_PIN_2              = StringField('GPIO Pin 2', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_3              = StringField('GPIO Pin 3', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_4              = StringField('GPIO Pin 4', validators=[DEVICE_PIN_NAME_validator])
-    DEWHEATER__CLASSNAME             = SelectField('Dew Heater Class', choices=DEWHEATER__CLASSNAME_choices, validators=[DEWHEATER__CLASSNAME_validator])
-    DEWHEATER__ENABLE_DAY            = BooleanField('Enable Daytime')
-    DEWHEATER__PIN_1                 = StringField('GPIO Pin 1', validators=[DEVICE_PIN_NAME_validator])
+    DEW_HEATER__CLASSNAME            = SelectField('Dew Heater Class', choices=DEW_HEATER__CLASSNAME_choices, validators=[DEW_HEATER__CLASSNAME_validator])
+    DEW_HEATER__ENABLE_DAY           = BooleanField('Enable Daytime')
+    DEW_HEATER__PIN_1                = StringField('GPIO Pin 1', validators=[DEVICE_PIN_NAME_validator])
+    DEW_HEATER__LEVEL_DEF            = IntegerField('Default Level', validators=[DEW_HEATER__LEVEL_DEF_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
@@ -2762,7 +2774,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
         # focuser
-        if self.FOCUSER__CLASSNAME:
+        if self.FOCUSER__CLASSNAME.data:
             if self.FOCUSER__CLASSNAME.data.startswith('blinka_'):
                 try:
                     import board
@@ -2810,6 +2822,26 @@ class IndiAllskyConfigForm(FlaskForm):
                 except ImportError:
                     self.FOCUSER__CLASSNAME.errors.append('Adafruit-Blinka python module not installed')
                     result = False
+
+
+        # dew_heater
+        if self.DEW_HEATER__CLASSNAME.data:
+            try:
+                import board
+
+                if self.DEW_HEATER__PIN_1.data:
+                    try:
+                        getattr(board, self.DEW_HEATER__PIN_1.data)
+                    except AttributeError:
+                        self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                        result = False
+                else:
+                    self.DEW_HEATER__PIN_1.errors.append('PIN must be defined')
+                    result = False
+
+            except ImportError:
+                self.DEW_HEATER__CLASSNAME.errors.append('Adafruit-Blinka python module not installed')
+                result = False
 
 
         return result
