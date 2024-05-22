@@ -123,4 +123,4 @@ class SensorWorker(Thread):
 
 
         else:
-            self.dew_heater = dew_heaters.dew_heater_fake(self.config)
+            self.dew_heater = dew_heaters.dew_heater_simulator(self.config)
