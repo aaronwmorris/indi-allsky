@@ -19,15 +19,12 @@ class DewHeaterPwm(DewHeaterBase):
 
         self.pwm = pwmio.PWMOut(pwm_pin)
 
-
-        logger.info('Setting initial state of dew heater to OFF')
-        self.__duty_cycle = 0
-        self.pwm.duty_cycle = 0
+        self._duty_cycle = None
 
 
     @property
     def duty_cycle(self):
-        return self.__duty_cycle
+        return self._duty_cycle
 
 
     @duty_cycle.setter
@@ -49,7 +46,7 @@ class DewHeaterPwm(DewHeaterBase):
         d = (2 ** 16) * new_duty_cycle_i / 100
         self.pwm.duty_cycle = d
 
-        self.__duty_cycle = new_duty_cycle_i
+        self._duty_cycle = new_duty_cycle_i
 
 
     def disable(self):

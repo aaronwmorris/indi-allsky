@@ -12,19 +12,19 @@ class DewHeaterSimulator(DewHeaterBase):
     def __init__(self, *args, **kwargs):
         super(DewHeaterSimulator, self).__init__(*args, **kwargs)
 
-        logger.info('Setting initial state of dew heater to OFF (fake)')
-        self.__duty_cycle = 0
+        self._duty_cycle = None
 
 
     @property
     def duty_cycle(self):
-        return self.__duty_cycle
+        return self._duty_cycle
 
 
     @duty_cycle.setter
     def duty_cycle(self, new_duty_cycle):
-        logger.warning('Set dew heater state: %d%% (fake)', int(new_duty_cycle))
-        pass
+        new_duty_cycle_i = int(new_duty_cycle)
+        logger.warning('Set dew heater state: %d%% (fake)', new_duty_cycle_i)
+        self._duty_cycle = new_duty_cycle_i
 
 
     def disable(self):
