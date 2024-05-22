@@ -29,6 +29,7 @@ class SensorWorker(Thread):
 
         self.sensors_user_av = sensors_user_av
         self.night_v = night_v
+        self.night = False
 
         self.dew_heater = None
 
@@ -66,10 +67,8 @@ class SensorWorker(Thread):
     def saferun(self):
         #raise Exception('Test exception handling in worker')
 
-        dew_heater_classname = self.config.get('DEW_HEATER', {}).get('CLASSNAME')
-        if dew_heater_classname:
-            dh = getattr(dew_heaters, dew_heater_classname)
-            self.dew_heater = dh(self.config)
+
+        self.init_dew_heater()
 
 
         while True:
@@ -89,5 +88,34 @@ class SensorWorker(Thread):
             self.next_run = now + self.next_run_offset
 
             # do interesting stuff here
+            if self.night != bool(self.night_v.value):
+                self.night = bool(self.night_v.value)
+                self.night_day_change()
 
 
+    def night_day_change(self):
+        # changing modes here
+        if self.night:
+            # night time
+            pass
+
+        else:
+            # day time
+            pass
+
+
+    def init_dew_heater(self):
+        dew_heater_classname = self.config.get('DEW_HEATER', {}).get('CLASSNAME')
+        if dew_heater_classname:
+            dh = getattr(dew_heaters, dew_heater_classname)
+            self.dew_heater = dh(self.config)
+
+            if self.night_v.value:
+                self.dew_heater.duty_cycle = self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 33)
+            else:
+                if self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
+                    self.dew_heater.duty_cycle = self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 33)
+
+
+        else:
+            self.dew_heater = dew_heaters.dew_heater_fake(self.config)
