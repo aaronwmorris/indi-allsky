@@ -2403,7 +2403,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__CLASSNAME_choices = (
         ('', 'None'),
         ('blinka_dew_heater_pwm_high', 'Dew Heater (PWM)'),
-        ('blinka_dew_heater_digital_high', 'Dew Heater (PWM)'),
+        ('blinka_dew_heater_digital_high', 'Dew Heater (Digital)'),
     )
 
 
