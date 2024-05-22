@@ -392,7 +392,7 @@ class IndiAllSkyConfigBase(object):
             "CLASSNAME"              : "",
             "ENABLE_DAY"             : False,
             "PIN_1"                  : "D12",
-            "LEVEL_DEF"              : "25",
+            "LEVEL_DEF"              : "100",
         },
     })
 
