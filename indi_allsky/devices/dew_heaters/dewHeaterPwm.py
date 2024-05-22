@@ -19,35 +19,35 @@ class DewHeaterPwm(DewHeaterBase):
 
         self.pwm = pwmio.PWMOut(pwm_pin)
 
-        self._duty_cycle = None
+        self._state = None
 
 
     @property
-    def duty_cycle(self):
-        return self._duty_cycle
+    def state(self):
+        return self._state
 
 
-    @duty_cycle.setter
-    def duty_cycle(self, new_duty_cycle):
+    @state.setter
+    def state(self, new_state):
         # duty cycle must be a percentage between 0 and 100
-        new_duty_cycle_i = int(new_duty_cycle)
+        new_state_i = int(new_state)
 
-        if new_duty_cycle_i < 0:
+        if new_state_i < 0:
             logger.error('Duty cycle must be 0 or greater')
             return
 
-        if new_duty_cycle_i > 100:
+        if new_state_i > 100:
             logger.error('Duty cycle must be 100 or less')
             return
 
 
-        logger.warning('Set dew heater state: %d%%', new_duty_cycle_i)
+        logger.warning('Set dew heater state: %d%%', new_state_i)
 
-        d = (2 ** 16) * new_duty_cycle_i / 100
+        d = (2 ** 16) * new_state_i / 100
         self.pwm.duty_cycle = d
 
-        self._duty_cycle = new_duty_cycle_i
+        self._state = new_state_i
 
 
     def disable(self):
-        self.duty_cycle = 0
+        self.state = 0

@@ -20,29 +20,29 @@ class DewHeaterDigital(DewHeaterBase):
         self.pin = digitalio.DigitalInOut(pin1)
         self.pin.direction = digitalio.Direction.OUTPUT
 
-        self._duty_cycle = None
+        self._state = None
 
 
     @property
-    def duty_cycle(self):
-        return self._duty_cycle
+    def state(self):
+        return self._state
 
 
-    @duty_cycle.setter
-    def duty_cycle(self, new_duty_cycle):
+    @state.setter
+    def state(self, new_state):
         # any positive value is ON
-        new_duty_cycle_b = bool(new_duty_cycle)
+        new_state_b = bool(new_state)
 
-        if new_duty_cycle_b:
+        if new_state_b:
             logger.warning('Set dew heater state: 100%')
             self.pin.value = 1
-            self._duty_cycle = 100
+            self._state = 100
         else:
             logger.warning('Set dew heater state: 0%')
             self.pin.value = 0
-            self._duty_cycle = 0
+            self._state = 0
 
 
     def disable(self):
-        self.duty_cycle = 0
+        self.state = 0
 

@@ -97,13 +97,13 @@ class SensorWorker(Thread):
         # changing modes here
         if self.night:
             # night time
-            if not self.dew_heater.duty_cycle:
+            if not self.dew_heater.state:
                 self.set_dew_heater(self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100))
 
         else:
             # day time
             if self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
-                if not self.dew_heater.duty_cycle:
+                if not self.dew_heater.state:
                     self.set_dew_heater(self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100))
             else:
                 self.set_dew_heater(0)
@@ -129,9 +129,9 @@ class SensorWorker(Thread):
 
 
 
-    def set_dew_heater(self, duty_cycle):
-        self.dew_heater.duty_cycle = int(duty_cycle)
+    def set_dew_heater(self, state):
+        self.dew_heater.state = int(state)
 
         with self.sensors_user_av.get_lock():
-            self.sensors_user_av[0] = float(self.dew_heater.duty_cycle)
+            self.sensors_user_av[0] = float(self.dew_heater.state)
 
