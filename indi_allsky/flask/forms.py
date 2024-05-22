@@ -618,6 +618,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'stretch' : 'Off',
         'stretch_m1_gamma' : 0.0,
         'stretch_m1_stddevs' : 0.0,
+        'dew_heater_status' : '',
     }
 
 
