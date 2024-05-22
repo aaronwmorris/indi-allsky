@@ -1910,6 +1910,13 @@ class ImageProcessor(object):
             label_data['sensor_user_{0:d}'.format(x)] = sensor_data
 
 
+        # dew heater
+        if self.sensors_user_av[0]:
+            label_data['dew_heater_status'] = 'On'
+        else:
+            label_data['dew_heater_status'] = 'Off'
+
+
         image_label = image_label_tmpl.format(**label_data)  # fill in the data
 
 
