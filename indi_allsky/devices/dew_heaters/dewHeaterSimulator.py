@@ -22,9 +22,8 @@ class DewHeaterSimulator(DewHeaterBase):
 
     @duty_cycle.setter
     def duty_cycle(self, new_duty_cycle):
-        new_duty_cycle_i = int(new_duty_cycle)
-        logger.warning('Set dew heater state: %d%% (fake)', new_duty_cycle_i)
-        self._duty_cycle = new_duty_cycle_i
+        #logger.warning('Set dew heater state: %d%% (fake)', int(new_duty_cycle))
+        self._duty_cycle = 0  # 0 is intentional
 
 
     def disable(self):
