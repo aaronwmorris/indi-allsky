@@ -9,10 +9,10 @@ from .dewHeaterBase import DewHeaterBase
 logger = logging.getLogger('indi_allsky')
 
 
-class dewHeaterPwmHigh(DewHeaterBase):
+class dewHeaterPwm(DewHeaterBase):
 
     def __init__(self, *args, **kwargs):
-        super(dewHeaterPwmHigh, super).__init__(*args, **kwargs)
+        super(dewHeaterPwm, super).__init__(*args, **kwargs)
 
         pwm_pin = getattr(board, self.config.get('DEW_HEATER', {}).get('PIN_1', 'notdefined'))
 

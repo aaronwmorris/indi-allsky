@@ -9,10 +9,10 @@ from .dewHeaterBase import DewHeaterBase
 logger = logging.getLogger('indi_allsky')
 
 
-class dewHeaterDigitalHigh(DewHeaterBase):
+class dewHeaterDigital(DewHeaterBase):
 
     def __init__(self, *args, **kwargs):
-        super(dewHeaterDigitalHigh, super).__init__(*args, **kwargs)
+        super(dewHeaterDigital, super).__init__(*args, **kwargs)
 
         pin1 = getattr(board, self.config.get('DEW_HEATER', {}).get('PIN_1', 'notdefined'))
 
