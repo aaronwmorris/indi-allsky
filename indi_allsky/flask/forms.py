@@ -2402,7 +2402,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
     DEW_HEATER__CLASSNAME_choices = (
         ('', 'None'),
-        ('dew_heater_pwm', 'Dew Heater (PWM)'),
+        ('blinka_dew_heater_pwm', 'Dew Heater (PWM)'),
     )
 
 
@@ -2826,22 +2826,23 @@ class IndiAllskyConfigForm(FlaskForm):
 
         # dew_heater
         if self.DEW_HEATER__CLASSNAME.data:
-            try:
-                import board
+            if self.DEW_HEATER__CLASSNAME.data.startswith('blinka_'):
+                try:
+                    import board
 
-                if self.DEW_HEATER__PIN_1.data:
-                    try:
-                        getattr(board, self.DEW_HEATER__PIN_1.data)
-                    except AttributeError:
-                        self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                    if self.DEW_HEATER__PIN_1.data:
+                        try:
+                            getattr(board, self.DEW_HEATER__PIN_1.data)
+                        except AttributeError:
+                            self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                            result = False
+                    else:
+                        self.DEW_HEATER__PIN_1.errors.append('PIN must be defined')
                         result = False
-                else:
-                    self.DEW_HEATER__PIN_1.errors.append('PIN must be defined')
-                    result = False
 
-            except ImportError:
-                self.DEW_HEATER__CLASSNAME.errors.append('Adafruit-Blinka python module not installed')
-                result = False
+                except ImportError:
+                    self.DEW_HEATER__CLASSNAME.errors.append('Adafruit-Blinka python module not installed')
+                    result = False
 
 
         return result

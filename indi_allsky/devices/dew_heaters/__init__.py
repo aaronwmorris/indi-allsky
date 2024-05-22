@@ -1,5 +1,5 @@
-from .dewHeaterPwm import DewHeaterPwm as dew_heater_pwm
+from .dewHeaterPwm import DewHeaterPwm as blinka_dew_heater_pwm
 
 __all__ = (
-    'dew_heater_pwm',
+    'blinka_dew_heater_pwm',
 )
