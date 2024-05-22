@@ -16,6 +16,7 @@ class SensorWorker(Thread):
         config,
         error_q,
         sensors_user_av,
+        night_v,
     ):
         super(SensorWorker, self).__init__()
 
@@ -23,7 +24,11 @@ class SensorWorker(Thread):
 
         self.config = config
         self.error_q = error_q
+
         self.sensors_user_av = sensors_user_av
+        self.night_v = night_v
+
+        self.dew_heater = None
 
         self.next_run = time.time()  # run immediately
         self.next_run_offset = 59
@@ -59,8 +64,12 @@ class SensorWorker(Thread):
     def saferun(self):
         #raise Exception('Test exception handling in worker')
 
+        if self.config.get('DEW_HEATER', {}).get('ENABLE'):
+            pass
+
+
         while True:
-            time.sleep(3)  # prime number
+            time.sleep(3)
 
             if self.stopped():
                 logger.warning('Goodbye')

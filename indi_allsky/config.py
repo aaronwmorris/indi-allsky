@@ -389,6 +389,13 @@ class IndiAllSkyConfigBase(object):
             "GPIO_PIN_3"             : "D27",
             "GPIO_PIN_4"             : "D22",
         },
+        "DEW_HEATER" : {
+            "ENABLE"                 : False,
+            "CLASSNAME"              : "",
+            "ENABLE_DAY"             : False,
+            "PIN_1"                  : "D12",
+            "LEVEL_DEF"              : "25",
+        },
     })
 
 

@@ -121,11 +121,13 @@ class IndiAllSky(object):
 
         ### temperature values in this array should always be in Celcius
         # 0 ccd_temp
-        # 1-9 reserved
+        # 1-9 reserved for future use
         # 10-29 system temperatures
         self.sensors_temp_av = Array('f', [-273.15 for x in range(30)])
 
         # sensors (temp, humidity, wind, sqm, etc)
+        # 0 dew heater level
+        # 1-9 reserved for future use
         self.sensors_user_av = Array('f', [0.0 for x in range(30)])
 
         self.exposure_av = Array('f', [
@@ -489,6 +491,7 @@ class IndiAllSky(object):
             self.config,
             self.sensor_error_q,
             self.sensors_user_av,
+            self.night_v,
         )
         self.sensor_worker.start()
 
