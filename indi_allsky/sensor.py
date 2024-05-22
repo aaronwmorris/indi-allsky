@@ -6,6 +6,8 @@ from threading import Thread
 #import queue
 import threading
 
+from .devices import dew_heaters
+
 logger = logging.getLogger('indi_allsky')
 
 
@@ -64,8 +66,10 @@ class SensorWorker(Thread):
     def saferun(self):
         #raise Exception('Test exception handling in worker')
 
-        if self.config.get('DEW_HEATER', {}).get('ENABLE'):
-            pass
+        dew_heater_classname = self.config.get('DEW_HEATER', {}).get('CLASSNAME')
+        if dew_heater_classname:
+            dh = getattr(dew_heaters, dew_heater_classname)
+            self.dew_heater = dh(self.config)
 
 
         while True:

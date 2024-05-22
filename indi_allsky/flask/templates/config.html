@@ -4145,6 +4145,47 @@
         </div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEWHEATER__CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.DEWHEATER__CLASSNAME(class='form-select bg-secondary') }}
+            <div id="DEWHEATER__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEWHEATER__PIN_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEWHEATER__PIN_1(class='form-control bg-secondary') }}
+            <div id="DEWHEATER__PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D12</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEWHEATER__ENABLE_DAY.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DEWHEATER__ENABLE_DAY(class='form-check-input') }}
+                <div id="DEWHEATER__ENABLE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
 </div><!-- end devices tab -->
 
 </div>
@@ -4432,6 +4473,8 @@ const field_names = [
     'FOCUSER__GPIO_PIN_2',
     'FOCUSER__GPIO_PIN_3',
     'FOCUSER__GPIO_PIN_4',
+    'DEWHEATER__CLASSNAME',
+    'DEWHEATER__PIN_1',
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',
@@ -4515,6 +4558,7 @@ const checkbox_field_names = [
     'YOUTUBE__UPLOAD_PANORAMA_VIDEO',
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
+    'DEWHEATER__ENABLE_DAY',
     'WEB_NONLOCAL_IMAGES',
     'WEB_LOCAL_IMAGES_ADMIN',
     'RELOAD_ON_SAVE',

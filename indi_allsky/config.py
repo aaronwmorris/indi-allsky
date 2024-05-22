@@ -382,7 +382,6 @@ class IndiAllSkyConfigBase(object):
             "PASSWORD_E"             : "",
         },
         "FOCUSER" : {
-            "ENABLE"                 : False,
             "CLASSNAME"              : "",
             "GPIO_PIN_1"             : "D17",
             "GPIO_PIN_2"             : "D18",
@@ -390,7 +389,6 @@ class IndiAllSkyConfigBase(object):
             "GPIO_PIN_4"             : "D22",
         },
         "DEW_HEATER" : {
-            "ENABLE"                 : False,
             "CLASSNAME"              : "",
             "ENABLE_DAY"             : False,
             "PIN_1"                  : "D12",
