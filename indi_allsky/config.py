@@ -394,6 +394,11 @@ class IndiAllSkyConfigBase(object):
             "PIN_1"                  : "D12",
             "LEVEL_DEF"              : "100",
         },
+        "TEMP_SENSOR" : {
+            "CLASSNAME"              : "",
+            "PIN_1"                  : "D5",
+            "VAR_SLOT"               : 10,
+        },
     })
 
 

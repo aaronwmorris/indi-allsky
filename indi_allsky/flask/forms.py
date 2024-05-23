@@ -2083,7 +2083,7 @@ def FOCUSER__CLASSNAME_validator(form, field):
     class_regex = r'^[a-zA-Z0-9_\-]+$'
 
     if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid focuser class syntax')
+        raise ValidationError('Invalid class syntax')
 
 
 def DEW_HEATER__CLASSNAME_validator(form, field):
@@ -2093,18 +2093,42 @@ def DEW_HEATER__CLASSNAME_validator(form, field):
     class_regex = r'^[a-zA-Z0-9_\-]+$'
 
     if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid dew heaterclass syntax')
+        raise ValidationError('Invalid class syntax')
 
 
 def DEW_HEATER__LEVEL_DEF_validator(form, field):
     if not isinstance(field.data, int):
-        raise ValidationError('Please enter a valid category number')
+        raise ValidationError('Please enter a valid number')
 
     if field.data < 0:
         raise ValidationError('Level must be 0 or greater')
 
     if field.data > 100:
         raise ValidationError('Level must be 100 or less')
+
+
+def TEMP_SENSOR__CLASSNAME_validator(form, field):
+    if not field.data:
+        return
+
+    class_regex = r'^[a-zA-Z0-9_\-]+$'
+
+    if not re.search(class_regex, field.data):
+        raise ValidationError('Invalid class syntax')
+
+
+def SENSOR_USER_VAR_SLOT_validator(form, field):
+    try:
+        slot_i = int(field.data)
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
+    if slot_i < 10:
+        raise ValidationError('Slot must be 10 or greater')
+
+    if slot_i > 30:
+        raise ValidationError('Slot must be 30 or less')
 
 
 def DEVICE_PIN_NAME_validator(form, field):
@@ -2405,6 +2429,33 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'None'),
         ('blinka_dew_heater_digital', 'Dew Heater - Standard'),
         ('blinka_dew_heater_pwm', 'Dew Heater - PWM'),
+    )
+
+    TEMP_SENSOR__CLASSNAME_choices = (
+        ('', 'None'),
+    )
+
+    SENSOR_USER_VAR_SLOT_choices = (
+        ('10', '10'),
+        ('11', '11'),
+        ('12', '12'),
+        ('13', '13'),
+        ('14', '14'),
+        ('15', '15'),
+        ('16', '16'),
+        ('17', '17'),
+        ('18', '18'),
+        ('19', '19'),
+        ('20', '20'),
+        ('21', '21'),
+        ('22', '22'),
+        ('23', '23'),
+        ('24', '24'),
+        ('25', '25'),
+        ('26', '26'),
+        ('27', '27'),
+        ('28', '28'),
+        ('29', '29'),
     )
 
 
@@ -2728,6 +2779,9 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__ENABLE_DAY           = BooleanField('Enable Daytime')
     DEW_HEATER__PIN_1                = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
     DEW_HEATER__LEVEL_DEF            = IntegerField('Default Level', validators=[DEW_HEATER__LEVEL_DEF_validator])
+    TEMP_SENSOR__CLASSNAME           = SelectField('Temp Sensor Class', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
+    TEMP_SENSOR__PIN_1               = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    TEMP_SENSOR__VAR_SLOT            = SelectField('Sensor Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
