@@ -7,6 +7,8 @@ from threading import Thread
 import threading
 
 from .devices import dew_heaters
+from .devices import temp_sensors
+from .devices.exceptions import TemperatureReadException
 
 logger = logging.getLogger('indi_allsky')
 
@@ -32,6 +34,7 @@ class SensorWorker(Thread):
         self.night = False
 
         self.dew_heater = None
+        self.temp_sensor = None
 
         self.next_run = time.time()  # run immediately
         self.next_run_offset = 59
@@ -69,6 +72,7 @@ class SensorWorker(Thread):
 
 
         self.init_dew_heater()
+        self.init_temp_sensor()
 
 
         while True:
@@ -134,4 +138,14 @@ class SensorWorker(Thread):
 
         with self.sensors_user_av.get_lock():
             self.sensors_user_av[0] = float(self.dew_heater.state)
+
+
+    def init_temp_sensor(self):
+        temp_sensor_classname = self.config.get('DEW_HEATER', {}).get('CLASSNAME')
+        if temp_sensor_classname:
+            ts = getattr(temp_sensors, temp_sensor_classname)
+            self.temp_sensor = ts(self.config)
+        else:
+            self.temp_sensor = temp_sensors.temp_sensor_simulator(self.config)
+
 
