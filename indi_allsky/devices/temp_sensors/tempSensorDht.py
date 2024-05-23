@@ -11,7 +11,7 @@ class TempSensorDht22(TempSensorBase):
     dht_classname = 'DHT22'
 
     def __init__(self, *args, **kwargs):
-        super(TempSensorDht11, self).__init__(*args, **kwargs)
+        super(TempSensorDht22, self).__init__(*args, **kwargs)
 
         import board
         import Adafruit_DHT
