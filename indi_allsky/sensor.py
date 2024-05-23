@@ -91,6 +91,13 @@ class SensorWorker(Thread):
             # set next run
             self.next_run = now + self.next_run_offset
 
+
+            try:
+                self.temp_sensor.update()
+            except TemperatureReadException as e:
+                logger.error('TemperatureReadException: {0:s}'.format(str(e)))
+
+
             # do interesting stuff here
             if self.night != bool(self.night_v.value):
                 self.night = bool(self.night_v.value)

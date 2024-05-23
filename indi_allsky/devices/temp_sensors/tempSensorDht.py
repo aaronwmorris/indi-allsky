@@ -18,6 +18,7 @@ class TempSensorDht22(TempSensorBase):
 
         pin1 = getattr(board, self.config.get('TEMP_SENSOR', {}).get('PIN_1', 'notdefined'))
 
+        logger.warning('Initializing %s temperature device', self.dht_classname)
         dht_class = getattr(Adafruit_DHT, self.dht_classname)
         self.dht = dht_class(pin1, use_pulseio=False)
 
@@ -29,6 +30,9 @@ class TempSensorDht22(TempSensorBase):
             humidity = self.dht.humidity
         except RuntimeError as e:
             raise TemperatureReadException(str(e)) from e
+
+
+        logger.info('Temperature device: temp %0.1f, humidity %0.1f%%')
 
 
         if self.config.get('TEMP_DISPLAY') == 'f':
