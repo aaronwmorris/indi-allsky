@@ -148,7 +148,7 @@ class SensorWorker(Thread):
 
 
     def init_temp_sensor(self):
-        temp_sensor_classname = self.config.get('DEW_HEATER', {}).get('CLASSNAME')
+        temp_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('CLASSNAME')
         if temp_sensor_classname:
             ts = getattr(temp_sensors, temp_sensor_classname)
             self.temp_sensor = ts(self.config)
