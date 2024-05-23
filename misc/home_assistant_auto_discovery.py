@@ -363,7 +363,7 @@ class HADiscovery(object):
 
         temp_info = psutil.sensors_temperatures()
 
-        for t_key in temp_info.keys():
+        for t_key in sorted(temp_info):  # always return the keys in the same order
             for i, t in enumerate(temp_info[t_key]):
                 if not t.label:
                     # use index for label name

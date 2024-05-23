@@ -18,6 +18,7 @@ from pprint import pformat  # noqa: F401
 from passlib.hash import argon2
 
 from multiprocessing import Value
+from multiprocessing import Array
 
 from ..version import __version__
 from .. import constants
@@ -1385,6 +1386,10 @@ class ConfigView(FormView):
             'FOCUSER__GPIO_PIN_2'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_2', 'D18'),
             'FOCUSER__GPIO_PIN_3'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_3', 'D27'),
             'FOCUSER__GPIO_PIN_4'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_4', 'D22'),
+            'DEW_HEATER__CLASSNAME'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('CLASSNAME', ''),
+            'DEW_HEATER__PIN_1'              : self.indi_allsky_config.get('DEW_HEATER', {}).get('PIN_1', 'D12'),
+            'DEW_HEATER__ENABLE_DAY'         : self.indi_allsky_config.get('DEW_HEATER', {}).get('ENABLE_DAY', False),
+            'DEW_HEATER__LEVEL_DEF'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -1693,6 +1698,9 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('FOCUSER'):
             self.indi_allsky_config['FOCUSER'] = {}
 
+        if not self.indi_allsky_config.get('DEW_HEATER'):
+            self.indi_allsky_config['DEW_HEATER'] = {}
+
         if not self.indi_allsky_config.get('THUMBNAILS'):
             self.indi_allsky_config['THUMBNAILS'] = {}
 
@@ -1996,6 +2004,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_2']                = str(request.json['FOCUSER__GPIO_PIN_2'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_3']                = str(request.json['FOCUSER__GPIO_PIN_3'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_4']                = str(request.json['FOCUSER__GPIO_PIN_4'])
+        self.indi_allsky_config['DEW_HEATER']['CLASSNAME']              = str(request.json['DEW_HEATER__CLASSNAME'])
+        self.indi_allsky_config['DEW_HEATER']['PIN_1']                  = str(request.json['DEW_HEATER__PIN_1'])
+        self.indi_allsky_config['DEW_HEATER']['ENABLE_DAY']             = bool(request.json['DEW_HEATER__ENABLE_DAY'])
+        self.indi_allsky_config['DEW_HEATER']['LEVEL_DEF']              = int(request.json['DEW_HEATER__LEVEL_DEF'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
@@ -2857,7 +2869,7 @@ class SystemInfoView(TemplateView):
         temp_info = psutil.sensors_temperatures()
 
         temp_list = list()
-        for t_key in temp_info.keys():
+        for t_key in sorted(temp_info):  # always return the keys in the same order
             for i, t in enumerate(temp_info[t_key]):
                 if self.indi_allsky_config.get('TEMP_DISPLAY') == 'f':
                     current_temp = ((t.current * 9.0 ) / 5.0) + 32
@@ -4788,7 +4800,7 @@ class JsonImageProcessingView(JsonView):
         exposure = float(hdulist[0].header['EXPTIME'])
         gain_v = Value('i', int(hdulist[0].header['GAIN']))
         bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
-        sensortemp_v = Value('f', float(hdulist[0].header.get('CCD-TEMP', 0)))
+        sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         night_v = Value('i', 1)  # using night values for processing
 
         hdulist.close()
@@ -4796,15 +4808,10 @@ class JsonImageProcessingView(JsonView):
         moonmode_v = Value('i', 0)
         image_processor = ImageProcessor(
             p_config,
-            None,  # latitude_v
-            None,  # longitude_v
-            None,  # elevation_v
-            None,  # ra_v
-            None,  # dec_v
-            None,  # exposure_v
+            None,  # position_av
             gain_v,
             bin_v,
-            sensortemp_v,
+            sensors_temp_av,
             night_v,
             moonmode_v,
             {},    # astrometric_data

@@ -618,7 +618,18 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'stretch' : 'Off',
         'stretch_m1_gamma' : 0.0,
         'stretch_m1_stddevs' : 0.0,
+        'dew_heater_status' : '',
     }
+
+
+    for x in range(30):
+        # temperature sensors
+        test_data['sensor_temp_{0:d}'.format(x)] = 0.0
+
+    for x in range(30):
+        # other sensors
+        test_data['sensor_user_{0:d}'.format(x)] = 0.0
+
 
     try:
         field.data.format(**test_data)
@@ -2075,6 +2086,27 @@ def FOCUSER__CLASSNAME_validator(form, field):
         raise ValidationError('Invalid focuser class syntax')
 
 
+def DEW_HEATER__CLASSNAME_validator(form, field):
+    if not field.data:
+        return
+
+    class_regex = r'^[a-zA-Z0-9_\-]+$'
+
+    if not re.search(class_regex, field.data):
+        raise ValidationError('Invalid dew heaterclass syntax')
+
+
+def DEW_HEATER__LEVEL_DEF_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid category number')
+
+    if field.data < 0:
+        raise ValidationError('Level must be 0 or greater')
+
+    if field.data > 100:
+        raise ValidationError('Level must be 100 or less')
+
+
 def DEVICE_PIN_NAME_validator(form, field):
     if not field.data:
         return
@@ -2367,6 +2399,12 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'None'),
         ('blinka_focuser_28byj_64', '28BYJ-48 Stepper (1/64) - GPIO'),
         ('blinka_focuser_28byj_16', '28BYJ-48 Stepper (1/16) - GPIO'),
+    )
+
+    DEW_HEATER__CLASSNAME_choices = (
+        ('', 'None'),
+        ('blinka_dew_heater_digital', 'Dew Heater - Standard'),
+        ('blinka_dew_heater_pwm', 'Dew Heater - PWM'),
     )
 
 
@@ -2686,6 +2724,10 @@ class IndiAllskyConfigForm(FlaskForm):
     FOCUSER__GPIO_PIN_2              = StringField('GPIO Pin 2', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_3              = StringField('GPIO Pin 3', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_4              = StringField('GPIO Pin 4', validators=[DEVICE_PIN_NAME_validator])
+    DEW_HEATER__CLASSNAME            = SelectField('Dew Heater Class', choices=DEW_HEATER__CLASSNAME_choices, validators=[DEW_HEATER__CLASSNAME_validator])
+    DEW_HEATER__ENABLE_DAY           = BooleanField('Enable Daytime')
+    DEW_HEATER__PIN_1                = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    DEW_HEATER__LEVEL_DEF            = IntegerField('Default Level', validators=[DEW_HEATER__LEVEL_DEF_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
@@ -2734,7 +2776,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
         # focuser
-        if self.FOCUSER__CLASSNAME:
+        if self.FOCUSER__CLASSNAME.data:
             if self.FOCUSER__CLASSNAME.data.startswith('blinka_'):
                 try:
                     import board
@@ -2781,6 +2823,27 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except ImportError:
                     self.FOCUSER__CLASSNAME.errors.append('Adafruit-Blinka python module not installed')
+                    result = False
+
+
+        # dew_heater
+        if self.DEW_HEATER__CLASSNAME.data:
+            if self.DEW_HEATER__CLASSNAME.data.startswith('blinka_'):
+                try:
+                    import board
+
+                    if self.DEW_HEATER__PIN_1.data:
+                        try:
+                            getattr(board, self.DEW_HEATER__PIN_1.data)
+                        except AttributeError:
+                            self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                            result = False
+                    else:
+                        self.DEW_HEATER__PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.DEW_HEATER__CLASSNAME.errors.append('Adafruit-Blinka python module not installed')
                     result = False
 
 

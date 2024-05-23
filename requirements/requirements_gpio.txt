@@ -1,1 +1,5 @@
 Adafruit-Blinka
+gpiod
+
+### Rpi5
+#rpi-lgpio

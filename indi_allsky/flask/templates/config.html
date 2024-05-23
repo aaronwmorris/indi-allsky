@@ -4145,6 +4145,61 @@
         </div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.DEW_HEATER__CLASSNAME(class='form-select bg-secondary') }}
+            <div id="DEW_HEATER__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Dew-Heater-Support" class="text-decoration-none link-info" target="_blank">Dew Heater Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__PIN_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__PIN_1(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D12</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_DEF.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_DEF(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__LEVEL_DEF-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default duty cycle of PWM</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__ENABLE_DAY.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DEW_HEATER__ENABLE_DAY(class='form-check-input') }}
+                <div id="DEW_HEATER__ENABLE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
 </div><!-- end devices tab -->
 
 </div>
@@ -4432,6 +4487,9 @@ const field_names = [
     'FOCUSER__GPIO_PIN_2',
     'FOCUSER__GPIO_PIN_3',
     'FOCUSER__GPIO_PIN_4',
+    'DEW_HEATER__CLASSNAME',
+    'DEW_HEATER__PIN_1',
+    'DEW_HEATER__LEVEL_DEF',
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',
@@ -4515,6 +4573,7 @@ const checkbox_field_names = [
     'YOUTUBE__UPLOAD_PANORAMA_VIDEO',
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
+    'DEW_HEATER__ENABLE_DAY',
     'WEB_NONLOCAL_IMAGES',
     'WEB_LOCAL_IMAGES_ADMIN',
     'RELOAD_ON_SAVE',

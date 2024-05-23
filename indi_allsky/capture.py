@@ -59,18 +59,12 @@ class CaptureWorker(Process):
         image_q,
         video_q,
         upload_q,
-        latitude_v,
-        longitude_v,
-        elevation_v,
-        ra_v,
-        dec_v,
-        exposure_v,
-        exposure_min_v,
-        exposure_min_day_v,
-        exposure_max_v,
+        position_av,
+        exposure_av,
         gain_v,
         bin_v,
-        sensortemp_v,
+        sensors_temp_av,
+        sensors_user_av,
         night_v,
         moonmode_v,
     ):
@@ -86,20 +80,14 @@ class CaptureWorker(Process):
         self.video_q = video_q
         self.upload_q = upload_q
 
-        self.latitude_v = latitude_v
-        self.longitude_v = longitude_v
-        self.elevation_v = elevation_v
+        self.position_av = position_av  # lat, long, elev, ra, dec
 
-        self.ra_v = ra_v
-        self.dec_v = dec_v
+        self.exposure_av = exposure_av  # current, min night, min day, max
 
-        self.exposure_v = exposure_v
-        self.exposure_min_v = exposure_min_v
-        self.exposure_min_day_v = exposure_min_day_v
-        self.exposure_max_v = exposure_max_v
         self.gain_v = gain_v
         self.bin_v = bin_v
-        self.sensortemp_v = sensortemp_v
+        self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
+        self.sensors_user_av = sensors_user_av
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
@@ -344,7 +332,7 @@ class CaptureWorker(Process):
 
                     if waiting_for_frame:
                         frame_elapsed = now - frame_start_time
-                        frame_delta = frame_elapsed - self.exposure_v.value
+                        frame_delta = frame_elapsed - self.exposure_av[0]
 
                         waiting_for_frame = False
 
@@ -352,11 +340,11 @@ class CaptureWorker(Process):
 
 
                         if frame_delta < -1:
-                            logger.error('%0.4fs EXPOSURE RECEIVED IN %0.4fs.  POSSIBLE CAMERA PROBLEM.', self.exposure_v.value, frame_elapsed)
+                            logger.error('%0.4fs EXPOSURE RECEIVED IN %0.4fs.  POSSIBLE CAMERA PROBLEM.', self.exposure_av[0], frame_elapsed)
                             self._miscDb.addNotification(
                                 NotificationCategory.CAMERA,
                                 'exposure_delta',
-                                '{0:0.1f}s exposure received in {1:0.1f}s.  Possible camera problem.'.format(self.exposure_v.value, frame_elapsed),
+                                '{0:0.1f}s exposure received in {1:0.1f}s.  Possible camera problem.'.format(self.exposure_av[0], frame_elapsed),
                                 expire=timedelta(minutes=60),
                             )
 
@@ -417,7 +405,7 @@ class CaptureWorker(Process):
 
                         frame_start_time = now
 
-                        self.shoot(self.exposure_v.value, sync=False)
+                        self.shoot(self.exposure_av[0], sync=False)
                         camera_ready = False
                         waiting_for_frame = True
 
@@ -472,11 +460,7 @@ class CaptureWorker(Process):
         self.indiclient = camera_interface(
             self.config,
             self.image_q,
-            self.latitude_v,
-            self.longitude_v,
-            self.elevation_v,
-            self.ra_v,
-            self.dec_v,
+            self.position_av,
             self.gain_v,
             self.bin_v,
             self.night_v,
@@ -602,8 +586,8 @@ class CaptureWorker(Process):
                 },
                 'PROPERTIES' : {
                     'GEOGRAPHIC_COORD' : {
-                        'LAT' : self.latitude_v.value,
-                        'LONG' : self.longitude_v.value,
+                        'LAT' : self.position_av[0],
+                        'LONG' : self.position_av[1],
                     },
                 },
             }
@@ -677,9 +661,9 @@ class CaptureWorker(Process):
             'cfa'         : constants.CFA_STR_MAP[cfa_pattern],
 
             'location'    : self.config['LOCATION_NAME'],
-            'latitude'    : self.latitude_v.value,
-            'longitude'   : self.longitude_v.value,
-            'elevation'   : self.elevation_v.value,
+            'latitude'    : self.position_av[0],
+            'longitude'   : self.position_av[1],
+            'elevation'   : int(self.position_av[2]),
 
             'tz'          : str(now.astimezone().tzinfo),
             'utc_offset'  : now.astimezone().utcoffset().total_seconds(),
@@ -751,39 +735,39 @@ class CaptureWorker(Process):
 
 
         if not self.config.get('CCD_EXPOSURE_MIN_DAY'):
-            with self.exposure_min_day_v.get_lock():
-                self.exposure_min_day_v.value = ccd_min_exp
+            with self.exposure_av.get_lock():
+                self.exposure_av[2] = ccd_min_exp
         elif self.config.get('CCD_EXPOSURE_MIN_DAY') > ccd_min_exp:
-            with self.exposure_min_day_v.get_lock():
-                self.exposure_min_day_v.value = float(self.config.get('CCD_EXPOSURE_MIN_DAY'))
+            with self.exposure_av.get_lock():
+                self.exposure_av[2] = float(self.config.get('CCD_EXPOSURE_MIN_DAY'))
         elif self.config.get('CCD_EXPOSURE_MIN_DAY') < ccd_min_exp:
             logger.warning(
                 'Minimum exposure (day) %0.8f too low, increasing to %0.8f',
                 self.config.get('CCD_EXPOSURE_MIN_DAY'),
                 ccd_min_exp,
             )
-            with self.exposure_min_day_v.get_lock():
-                self.exposure_min_day_v.value = ccd_min_exp
+            with self.exposure_av.get_lock():
+                self.exposure_av[2] = ccd_min_exp
 
-        logger.info('Minimum CCD exposure: %0.8f (day)', self.exposure_min_day_v.value)
+        logger.info('Minimum CCD exposure: %0.8f (day)', self.exposure_av[2])
 
 
         if not self.config.get('CCD_EXPOSURE_MIN'):
-            with self.exposure_min_v.get_lock():
-                self.exposure_min_v.value = ccd_min_exp
+            with self.exposure_av.get_lock():
+                self.exposure_av[1] = ccd_min_exp
         elif self.config.get('CCD_EXPOSURE_MIN') > ccd_min_exp:
-            with self.exposure_min_v.get_lock():
-                self.exposure_min_v.value = float(self.config.get('CCD_EXPOSURE_MIN'))
+            with self.exposure_av.get_lock():
+                self.exposure_av[1] = float(self.config.get('CCD_EXPOSURE_MIN'))
         elif self.config.get('CCD_EXPOSURE_MIN') < ccd_min_exp:
             logger.warning(
                 'Minimum exposure (night) %0.8f too low, increasing to %0.8f',
                 self.config.get('CCD_EXPOSURE_MIN'),
                 ccd_min_exp,
             )
-            with self.exposure_min_v.get_lock():
-                self.exposure_min_v.value = ccd_min_exp
+            with self.exposure_av.get_lock():
+                self.exposure_av[1] = ccd_min_exp
 
-        logger.info('Minimum CCD exposure: %0.8f (night)', self.exposure_min_v.value)
+        logger.info('Minimum CCD exposure: %0.8f (night)', self.exposure_av[1])
 
 
         # set maximum exposure
@@ -800,11 +784,11 @@ class CaptureWorker(Process):
             maximum_exposure = ccd_max_exp
 
 
-        with self.exposure_max_v.get_lock():
-            self.exposure_max_v.value = maximum_exposure
+        with self.exposure_av.get_lock():
+            self.exposure_av[3] = maximum_exposure
 
 
-        logger.info('Maximum CCD exposure: %0.8f', self.exposure_max_v.value)
+        logger.info('Maximum CCD exposure: %0.8f', self.exposure_av[3])
 
 
         # set default exposure
@@ -826,7 +810,7 @@ class CaptureWorker(Process):
                 ccd_exposure_default = float(last_image.exposure)
                 logger.warning('Reusing last stable exposure: %0.6f', ccd_exposure_default)
             else:
-                #ccd_exposure_default = self.exposure_min_v.value
+                #ccd_exposure_default = self.exposure_av[1]
                 ccd_exposure_default = 0.01  # this should give better results for many cameras
 
 
@@ -837,10 +821,10 @@ class CaptureWorker(Process):
             ccd_exposure_default = ccd_min_exp
 
 
-        if self.exposure_v.value == -1.0:
+        if self.exposure_av[0] == -1.0:
             # only set this on first start
-            with self.exposure_v.get_lock():
-                self.exposure_v.value = ccd_exposure_default
+            with self.exposure_av.get_lock():
+                self.exposure_av[0] = ccd_exposure_default
 
 
         logger.info('Default CCD exposure: {0:0.8f}'.format(ccd_exposure_default))
@@ -963,8 +947,8 @@ class CaptureWorker(Process):
 
         temp_val_f = float(temp_val)
 
-        with self.sensortemp_v.get_lock():
-            self.sensortemp_v.value = temp_val_f
+        with self.sensors_temp_av.get_lock():
+            self.sensors_temp_av[0] = temp_val_f
 
 
         return temp_val_f
@@ -1074,27 +1058,23 @@ class CaptureWorker(Process):
 
 
         # need 1/10 degree difference before updating location
-        if abs(gps_lat - self.latitude_v.value) > 0.1:
+        if abs(gps_lat - self.position_av[0]) > 0.1:
             self.updateConfigLocation(gps_lat, gps_long, gps_elev)
             update_position = True
-        elif abs(gps_long - self.longitude_v.value) > 0.1:
+        elif abs(gps_long - self.position_av[1]) > 0.1:
             self.updateConfigLocation(gps_lat, gps_long, gps_elev)
             update_position = True
-        elif abs(gps_elev - self.elevation_v.value) > 30:
+        elif abs(gps_elev - self.position_av[2]) > 30:
             self.updateConfigLocation(gps_lat, gps_long, gps_elev)
             update_position = True
 
 
         if update_position:
             # Update shared values
-            with self.latitude_v.get_lock():
-                self.latitude_v.value = float(gps_lat)
-
-            with self.longitude_v.get_lock():
-                self.longitude_v.value = float(gps_long)
-
-            with self.elevation_v.get_lock():
-                self.elevation_v.value = int(gps_elev)
+            with self.position_av.get_lock():
+                self.position_av[0] = float(gps_lat)
+                self.position_av[1] = float(gps_long)
+                self.position_av[2] = float(gps_elev)
 
 
             self.reparkTelescope()
@@ -1110,11 +1090,9 @@ class CaptureWorker(Process):
         ra, dec = self.indiclient.getTelescopeRaDec()
 
         # Update shared values
-        with self.ra_v.get_lock():
-            self.ra_v.value = ra
-
-        with self.dec_v.get_lock():
-            self.dec_v.value = dec
+        with self.position_av.get_lock():
+            self.position_av[3] = ra
+            self.position_av[4] = dec
 
 
         return ra, dec
@@ -1150,7 +1128,7 @@ class CaptureWorker(Process):
             return
 
         self.indiclient.unparkTelescope()
-        self.indiclient.setTelescopeParkPosition(0.0, self.latitude_v.value)
+        self.indiclient.setTelescopeParkPosition(0.0, self.position_av[0])
         self.indiclient.parkTelescope()
 
 
@@ -1211,9 +1189,9 @@ class CaptureWorker(Process):
 
     def detectNight(self):
         obs = ephem.Observer()
-        obs.lon = math.radians(self.longitude_v.value)
-        obs.lat = math.radians(self.latitude_v.value)
-        obs.elevation = self.elevation_v.value
+        obs.lon = math.radians(self.position_av[1])
+        obs.lat = math.radians(self.position_av[0])
+        obs.elevation = self.position_av[2]
         obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 
         sun = ephem.Sun()
@@ -1227,9 +1205,9 @@ class CaptureWorker(Process):
     def detectMoonMode(self):
         # detectNight() should be run first
         obs = ephem.Observer()
-        obs.lon = math.radians(self.longitude_v.value)
-        obs.lat = math.radians(self.latitude_v.value)
-        obs.elevation = self.elevation_v.value
+        obs.lon = math.radians(self.position_av[1])
+        obs.lat = math.radians(self.position_av[0])
+        obs.elevation = self.position_av[2]
         obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 
         moon = ephem.Moon()

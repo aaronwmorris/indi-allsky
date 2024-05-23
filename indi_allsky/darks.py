@@ -15,6 +15,7 @@ import numpy
 
 from multiprocessing import Queue
 from multiprocessing import Value
+from multiprocessing import Array
 
 from .exceptions import TimeOutException
 from .exceptions import TemperatureException
@@ -87,19 +88,21 @@ class IndiAllSkyDarks(object):
 
         self.indi_config = self.config.get('INDI_CONFIG_DEFAULTS', {})
 
-        self.exposure_v = Value('f', -1.0)
+        self.exposure_av = Array('f', [-1.0])
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
-        self.sensortemp_v = Value('f', 0)
+        self.sensors_temp_av = Array('f', [0.0])  # 0 ccd_temp
 
         self.night_v = Value('i', 1)  # bogus initial value
 
         # not used, but required
-        self.latitude_v = Value('f', float(self.config['LOCATION_LATITUDE']))
-        self.longitude_v = Value('f', float(self.config['LOCATION_LONGITUDE']))
-        self.elevation_v = Value('f', float(self.config.get('LOCATION_ELEVATION', 300.0)))
-        self.ra_v = Value('f', 0.0)
-        self.dec_v = Value('f', 0.0)
+        self.position_av = Array('f', [
+            float(self.config['LOCATION_LATITUDE']),
+            float(self.config['LOCATION_LONGITUDE']),
+            float(self.config.get('LOCATION_ELEVATION', 300.0)),
+            0.0,  # Ra
+            0.0,  # Dec
+        ])
 
         self._miscDb = miscDb(self.config)
 
@@ -185,11 +188,7 @@ class IndiAllSkyDarks(object):
         self.indiclient = camera_interface(
             self.config,
             self.image_q,
-            self.latitude_v,
-            self.longitude_v,
-            self.elevation_v,
-            self.ra_v,
-            self.dec_v,
+            self.position_av,
             self.gain_v,
             self.bin_v,
             self.night_v,
@@ -272,9 +271,9 @@ class IndiAllSkyDarks(object):
             'cfa'         : constants.CFA_STR_MAP[cfa_pattern],
 
             'location'    : self.config['LOCATION_NAME'],
-            'latitude'    : self.latitude_v.value,
-            'longitude'   : self.longitude_v.value,
-            'elevation'   : self.elevation_v.value,
+            'latitude'    : self.position_av[0],
+            'longitude'   : self.position_av[1],
+            'elevation'   : int(self.position_av[2]),
 
             'owner'           : self.config['OWNER'],
             'lensName'        : self.config['LENS_NAME'],
@@ -420,7 +419,7 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
-            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
             hdulist[0].header['BITPIX'] = 8
         elif filename_p.suffix in ['.png']:
             try:
@@ -445,7 +444,7 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
-            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
             hdulist[0].header['BITPIX'] = 8
         elif filename_p.suffix in ['.dng']:
             if not rawpy:
@@ -471,7 +470,7 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
-            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
             hdulist[0].header['BITPIX'] = 16
 
             if self.config.get('CFA_PATTERN'):
@@ -532,7 +531,7 @@ class IndiAllSkyDarks(object):
         self._pre_run_tasks()
 
         self.getSensorTemperature()
-        next_temp_thold = self.sensortemp_v.value - self.temp_delta
+        next_temp_thold = self.sensors_temp_av[0] - self.temp_delta
 
         # get first set of images
         self._run(IndiAllSkyDarksAverage)
@@ -543,7 +542,7 @@ class IndiAllSkyDarks(object):
 
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
-            if self.sensortemp_v.value > next_temp_thold:
+            if self.sensors_temp_av[0] > next_temp_thold:
                 time.sleep(20.0)
                 continue
 
@@ -589,7 +588,7 @@ class IndiAllSkyDarks(object):
         self._pre_run_tasks()
 
         self.getSensorTemperature()
-        next_temp_thold = self.sensortemp_v.value - self.temp_delta
+        next_temp_thold = self.sensors_temp_av[0] - self.temp_delta
 
         # get first set of images
         self._run(IndiAllSkyDarksSigmaClip)
@@ -600,7 +599,7 @@ class IndiAllSkyDarks(object):
 
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
-            if self.sensortemp_v.value > next_temp_thold:
+            if self.sensors_temp_av[0] > next_temp_thold:
                 time.sleep(20.0)
                 continue
 
@@ -902,7 +901,7 @@ class IndiAllSkyDarks(object):
             logger.info('Image average adu: %0.2f', m_avg)
 
             self.getSensorTemperature()
-            logger.info('Sensor temperature: %0.2f', self.sensortemp_v.value)
+            logger.info('Sensor temperature: %0.2f', self.sensors_temp_av[0])
 
             i += 1  # increment
 
@@ -916,7 +915,7 @@ class IndiAllSkyDarks(object):
             int(exposure),
             self.gain_v.value,
             self.bin_v.value,
-            int(self.sensortemp_v.value),
+            int(self.sensors_temp_av[0]),
             date_str,
         )
         bpm_filename = bpm_filename_t.format(
@@ -925,7 +924,7 @@ class IndiAllSkyDarks(object):
             int(exposure),
             self.gain_v.value,
             self.bin_v.value,
-            int(self.sensortemp_v.value),
+            int(self.sensors_temp_av[0]),
             date_str,
         )
 
@@ -947,7 +946,7 @@ class IndiAllSkyDarks(object):
             'exposure'   : exposure_f,
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
-            'temp'       : self.sensortemp_v.value,
+            'temp'       : self.sensors_temp_av[0],
             'adu'        : bpm_adu_avg,
             'height'     : image_height,
             'width'      : image_width,
@@ -963,7 +962,7 @@ class IndiAllSkyDarks(object):
             'exposure'   : exposure_f,
             'gain'       : self.gain_v.value,
             'binmode'    : self.bin_v.value,
-            'temp'       : self.sensortemp_v.value,
+            'temp'       : self.sensors_temp_av[0],
             'adu'        : dark_adu_avg,
             'height'     : image_height,
             'width'      : image_width,
@@ -1039,8 +1038,8 @@ class IndiAllSkyDarks(object):
 
         temp_val_f = float(temp_val)
 
-        with self.sensortemp_v.get_lock():
-            self.sensortemp_v.value = temp_val_f
+        with self.sensors_temp_av.get_lock():
+            self.sensors_temp_av[0] = temp_val_f
 
 
         return temp_val_f

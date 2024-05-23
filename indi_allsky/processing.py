@@ -90,32 +90,23 @@ class ImageProcessor(object):
     def __init__(
         self,
         config,
-        latitude_v,
-        longitude_v,
-        elevation_v,
-        ra_v,
-        dec_v,
-        exposure_v,
+        position_av,
         gain_v,
         bin_v,
-        sensortemp_v,
+        sensors_temp_av,
+        sensors_user_av,
         night_v,
         moonmode_v,
         astrometric_data,
     ):
         self.config = config
 
-        self.latitude_v = latitude_v
-        self.longitude_v = longitude_v
-        self.elevation_v = elevation_v
+        self.position_av = position_av  # lat, long, elev, ra, dec
 
-        self.ra_v = ra_v
-        self.dec_v = dec_v
-
-        self.exposure_v = exposure_v
         self.gain_v = gain_v
         self.bin_v = bin_v
-        self.sensortemp_v = sensortemp_v
+        self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
+        self.sensors_user_av = sensors_user_av
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
@@ -368,12 +359,12 @@ class ImageProcessor(object):
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
-            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
             hdulist[0].header['BITPIX'] = 8
-            hdulist[0].header['SITELAT'] = self.latitude_v.value
-            hdulist[0].header['SITELONG'] = self.longitude_v.value
-            hdulist[0].header['RA'] = self.ra_v.value
-            hdulist[0].header['DEC'] = self.dec_v.value
+            hdulist[0].header['SITELAT'] = self.position_av[0]
+            hdulist[0].header['SITELONG'] = self.position_av[1]
+            hdulist[0].header['RA'] = self.position_av[3]
+            hdulist[0].header['DEC'] = self.position_av[4]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
 
 
@@ -412,12 +403,12 @@ class ImageProcessor(object):
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
-            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
             hdulist[0].header['BITPIX'] = 8
-            hdulist[0].header['SITELAT'] = self.latitude_v.value
-            hdulist[0].header['SITELONG'] = self.longitude_v.value
-            hdulist[0].header['RA'] = self.ra_v.value
-            hdulist[0].header['DEC'] = self.dec_v.value
+            hdulist[0].header['SITELAT'] = self.position_av[0]
+            hdulist[0].header['SITELONG'] = self.position_av[1]
+            hdulist[0].header['RA'] = self.position_av[3]
+            hdulist[0].header['DEC'] = self.position_av[4]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
 
 
@@ -452,12 +443,12 @@ class ImageProcessor(object):
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
-            hdulist[0].header['CCD-TEMP'] = self.sensortemp_v.value
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
             hdulist[0].header['BITPIX'] = 16
-            hdulist[0].header['SITELAT'] = self.latitude_v.value
-            hdulist[0].header['SITELONG'] = self.longitude_v.value
-            hdulist[0].header['RA'] = self.ra_v.value
-            hdulist[0].header['DEC'] = self.dec_v.value
+            hdulist[0].header['SITELAT'] = self.position_av[0]
+            hdulist[0].header['SITELONG'] = self.position_av[1]
+            hdulist[0].header['RA'] = self.position_av[3]
+            hdulist[0].header['DEC'] = self.position_av[4]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
 
 
@@ -694,7 +685,7 @@ class ImageProcessor(object):
         from astropy.io import fits
 
         # pick a bad pixel map that is closest to the exposure and temperature
-        logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
+        logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensors_temp_av[0])
         bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
             .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
             .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
@@ -702,8 +693,8 @@ class ImageProcessor(object):
             .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
             .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
             .filter(IndiAllSkyDbBadPixelMapTable.exposure >= exposure)\
-            .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensortemp_v.value)\
-            .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensortemp_v.value + self.dark_temperature_range))\
+            .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensors_temp_av[0])\
+            .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
             .order_by(
                 IndiAllSkyDbBadPixelMapTable.exposure.asc(),
                 IndiAllSkyDbBadPixelMapTable.temp.asc(),
@@ -712,7 +703,7 @@ class ImageProcessor(object):
             .first()
 
         if not bpm_entry:
-            logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensortemp_v.value)
+            logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensors_temp_av[0])
 
             # pick a bad pixel map that matches the exposure at the hightest temperature found
             bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
@@ -738,12 +729,12 @@ class ImageProcessor(object):
                     float(exposure),
                     self.gain_v.value,
                     self.bin_v.value,
-                    self.sensortemp_v.value,
+                    self.sensors_temp_av[0],
                 )
 
 
         # pick a dark frame that is closest to the exposure and temperature
-        logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensortemp_v.value)
+        logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensors_temp_av[0])
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
@@ -751,8 +742,8 @@ class ImageProcessor(object):
             .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
             .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
             .filter(IndiAllSkyDbDarkFrameTable.exposure >= exposure)\
-            .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensortemp_v.value)\
-            .filter(IndiAllSkyDbDarkFrameTable.temp <= (self.sensortemp_v.value + self.dark_temperature_range))\
+            .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensors_temp_av[0])\
+            .filter(IndiAllSkyDbDarkFrameTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
             .order_by(
                 IndiAllSkyDbDarkFrameTable.exposure.asc(),
                 IndiAllSkyDbDarkFrameTable.temp.asc(),
@@ -761,7 +752,7 @@ class ImageProcessor(object):
             .first()
 
         if not dark_frame_entry:
-            logger.warning('Temperature matched dark not found: %0.2fc', self.sensortemp_v.value)
+            logger.warning('Temperature matched dark not found: %0.2fc', self.sensors_temp_av[0])
 
             # pick a dark frame that matches the exposure at the hightest temperature found
             dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
@@ -787,7 +778,7 @@ class ImageProcessor(object):
                     float(exposure),
                     self.gain_v.value,
                     self.bin_v.value,
-                    self.sensortemp_v.value,
+                    self.sensors_temp_av[0],
                 )
 
                 raise CalibrationNotFound('Dark not found')
@@ -1602,9 +1593,9 @@ class ImageProcessor(object):
         #utcnow = datetime.now(tz=timezone.utc) - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.longitude_v.value)
-        obs.lat = math.radians(self.latitude_v.value)
-        obs.elevation = self.elevation_v.value
+        obs.lon = math.radians(self.position_av[1])
+        obs.lat = math.radians(self.position_av[0])
+        obs.elevation = self.position_av[2]
 
 
         obs.date = utcnow
@@ -1787,6 +1778,175 @@ class ImageProcessor(object):
         return satellite_data
 
 
+    def get_image_label(self, i_ref):
+        image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
+
+
+        if self.config.get('TEMP_DISPLAY') == 'f':
+            temp_unit = 'F'
+        elif self.config.get('TEMP_DISPLAY') == 'k':
+            temp_unit = 'K'
+        else:
+            temp_unit = 'C'
+
+
+        # calculate rational exposure ("1 1/4")
+        exp_whole = int(i_ref['exposure'])
+        exp_remain = i_ref['exposure'] - exp_whole
+
+        exp_remain_frac = Fraction(exp_remain).limit_denominator(max_denominator=31250)
+
+        if exp_whole:
+            if exp_remain:
+                rational_exp = '{0:d} {1:d}/{2:d}'.format(exp_whole, exp_remain_frac.numerator, exp_remain_frac.denominator)
+            else:
+                rational_exp = '{0:d}'.format(exp_whole)
+        else:
+            rational_exp = '{0:d}/{1:d}'.format(exp_remain_frac.numerator, exp_remain_frac.denominator)
+
+
+
+        label_data = {
+            'timestamp'    : i_ref['exp_date'],
+            'ts'           : i_ref['exp_date'],  # shortcut
+            'exposure'     : i_ref['exposure'],
+            'day_date'     : i_ref['day_date'],
+            'rational_exp' : rational_exp,
+            'gain'         : self.gain_v.value,
+            'temp_unit'    : temp_unit,
+            'sqm'          : i_ref['sqm_value'],
+            'stars'        : len(i_ref['stars']),
+            'detections'   : str(bool(len(i_ref['lines']))),
+            'owner'        : i_ref['owner'],
+            'location'     : i_ref['location'],
+            'kpindex'      : i_ref['kpindex'],
+            'ovation_max'  : i_ref['ovation_max'],
+            'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
+            'sun_alt'      : self.astrometric_data['sun_alt'],
+            'moon_alt'     : self.astrometric_data['moon_alt'],
+            'moon_phase'   : self.astrometric_data['moon_phase'],
+            'moon_up'      : self.astrometric_data['moon_up'],
+            'sun_moon_sep' : self.astrometric_data['sun_moon_sep'],
+            'mercury_alt'  : self.astrometric_data['mercury_alt'],
+            'mercury_up'   : self.astrometric_data['mercury_up'],
+            'venus_alt'    : self.astrometric_data['venus_alt'],
+            'venus_phase'  : self.astrometric_data['venus_phase'],
+            'venus_up'     : self.astrometric_data['venus_up'],
+            'mars_alt'     : self.astrometric_data['mars_alt'],
+            'mars_up'      : self.astrometric_data['mars_up'],
+            'jupiter_alt'  : self.astrometric_data['jupiter_alt'],
+            'jupiter_up'   : self.astrometric_data['jupiter_up'],
+            'saturn_alt'   : self.astrometric_data['saturn_alt'],
+            'saturn_up'    : self.astrometric_data['saturn_up'],
+            'iss_alt'      : self.astrometric_data['iss_alt'],
+            'iss_up'       : self.astrometric_data['iss_up'],
+            'iss_next_h'   : self.astrometric_data['iss_next_h'],
+            'iss_next_alt' : self.astrometric_data['iss_next_alt'],
+            'hst_alt'      : self.astrometric_data['hst_alt'],
+            'hst_up'       : self.astrometric_data['hst_up'],
+            'hst_next_h'   : self.astrometric_data['hst_next_h'],
+            'hst_next_alt' : self.astrometric_data['hst_next_alt'],
+            'tiangong_alt'      : self.astrometric_data['tiangong_alt'],
+            'tiangong_up'       : self.astrometric_data['tiangong_up'],
+            'tiangong_next_h'   : self.astrometric_data['tiangong_next_h'],
+            'tiangong_next_alt' : self.astrometric_data['tiangong_next_alt'],
+            'latitude'     : self.position_av[0],
+            'longitude'    : self.position_av[1],
+            'elevation'    : int(self.position_av[2]),
+            'sidereal_time'        : self.astrometric_data['sidereal_time'],
+            'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
+            'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),
+        }
+
+
+        # stacking data
+        if self.night_v.value and not self.moonmode_v.value:
+            if self.config.get('IMAGE_STACK_COUNT', 1) > 1:
+                label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'average').capitalize()
+                label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
+            else:
+                label_data['stack_method'] = 'Off'
+                label_data['stack_count'] = 0
+        else:
+            # stacking disabled during the day and moonmode
+            label_data['stack_method'] = 'Off'
+            label_data['stack_count'] = 0
+
+
+        # stretching data
+        if self.config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE'):
+            if self.night_v.value:
+                # night
+                label_data['stretch'] = 'On'
+
+                if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
+                    label_data['stretch'] = 'Off'
+            else:
+                # daytime
+                if self.config.get('IMAGE_STRETCH', {}).get('DAYTIME'):
+                    label_data['stretch'] = 'On'
+                else:
+                    label_data['stretch'] = 'Off'
+        else:
+            label_data['stretch'] = 'Off'
+
+
+        for x, data in enumerate(self.sensors_temp_av):
+            if self.config.get('TEMP_DISPLAY') == 'f':
+                sensor_temp = ((data * 9.0) / 5.0) + 32
+            elif self.config.get('TEMP_DISPLAY') == 'k':
+                sensor_temp = data + 273.15
+            else:
+                sensor_temp = data
+
+            label_data['sensor_temp_{0:d}'.format(x)] = sensor_temp
+
+
+        # 0 == ccd_temp
+        label_data['temp'] = label_data['sensor_temp_0']
+
+
+        for x, sensor_data in enumerate(self.sensors_user_av):
+            label_data['sensor_user_{0:d}'.format(x)] = sensor_data
+
+
+        # dew heater
+        if self.sensors_user_av[0]:
+            label_data['dew_heater_status'] = 'On'
+        else:
+            label_data['dew_heater_status'] = 'Off'
+
+
+        image_label = image_label_tmpl.format(**label_data)  # fill in the data
+
+
+        # Add moon mode indicator
+        if self.moonmode_v.value:
+            image_label += '\n* Moon Mode *'
+
+
+        # Add eclipse indicator
+        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_v.value:
+            # Lunar eclipse (earth's penumbra is large)
+            image_label += '\n* LUNAR ECLIPSE *'
+
+        if self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
+            # Solar eclipse
+            image_label += '\n* SOLAR ECLIPSE *'
+
+
+        # add extra text to image
+        extra_text_lines = self.get_extra_text()
+        if extra_text_lines:
+            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
+
+            for line in extra_text_lines:
+                image_label += '\n{0:s}'.format(line)
+
+
+        return image_label
+
+
     def label_image(self):
         # this needs to be enabled during focus mode
 
@@ -1845,9 +2005,9 @@ class ImageProcessor(object):
         #utcnow = datetime.now(tz=timezone.utc) - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.longitude_v.value)
-        obs.lat = math.radians(self.latitude_v.value)
-        obs.elevation = self.elevation_v.value
+        obs.lon = math.radians(self.position_av[1])
+        obs.lat = math.radians(self.position_av[0])
+        obs.elevation = self.position_av[2]
 
 
         obs.date = utcnow
@@ -1905,124 +2065,7 @@ class ImageProcessor(object):
             return
 
 
-        image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
-
-
-        if self.config.get('TEMP_DISPLAY') == 'f':
-            sensortemp = ((self.sensortemp_v.value * 9.0) / 5.0) + 32
-            temp_unit = 'F'
-        elif self.config.get('TEMP_DISPLAY') == 'k':
-            sensortemp = self.sensortemp_v.value + 273.15
-            temp_unit = 'K'
-        else:
-            sensortemp = self.sensortemp_v.value
-            temp_unit = 'C'
-
-
-        # calculate rational exposure ("1 1/4")
-        exp_whole = int(i_ref['exposure'])
-        exp_remain = i_ref['exposure'] - exp_whole
-
-        exp_remain_frac = Fraction(exp_remain).limit_denominator(max_denominator=31250)
-
-        if exp_whole:
-            if exp_remain:
-                rational_exp = '{0:d} {1:d}/{2:d}'.format(exp_whole, exp_remain_frac.numerator, exp_remain_frac.denominator)
-            else:
-                rational_exp = '{0:d}'.format(exp_whole)
-        else:
-            rational_exp = '{0:d}/{1:d}'.format(exp_remain_frac.numerator, exp_remain_frac.denominator)
-
-
-
-        label_data = {
-            'timestamp'    : i_ref['exp_date'],
-            'ts'           : i_ref['exp_date'],  # shortcut
-            'exposure'     : i_ref['exposure'],
-            'day_date'     : i_ref['day_date'],
-            'rational_exp' : rational_exp,
-            'gain'         : self.gain_v.value,
-            'temp'         : sensortemp,  # hershey fonts do not support degree symbol
-            'temp_unit'    : temp_unit,
-            'sqm'          : i_ref['sqm_value'],
-            'stars'        : len(i_ref['stars']),
-            'detections'   : str(bool(len(i_ref['lines']))),
-            'owner'        : i_ref['owner'],
-            'location'     : i_ref['location'],
-            'kpindex'      : i_ref['kpindex'],
-            'ovation_max'  : i_ref['ovation_max'],
-            'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
-            'sun_alt'      : self.astrometric_data['sun_alt'],
-            'moon_alt'     : self.astrometric_data['moon_alt'],
-            'moon_phase'   : self.astrometric_data['moon_phase'],
-            'moon_up'      : self.astrometric_data['moon_up'],
-            'sun_moon_sep' : self.astrometric_data['sun_moon_sep'],
-            'mercury_alt'  : self.astrometric_data['mercury_alt'],
-            'mercury_up'   : self.astrometric_data['mercury_up'],
-            'venus_alt'    : self.astrometric_data['venus_alt'],
-            'venus_phase'  : self.astrometric_data['venus_phase'],
-            'venus_up'     : self.astrometric_data['venus_up'],
-            'mars_alt'     : self.astrometric_data['mars_alt'],
-            'mars_up'      : self.astrometric_data['mars_up'],
-            'jupiter_alt'  : self.astrometric_data['jupiter_alt'],
-            'jupiter_up'   : self.astrometric_data['jupiter_up'],
-            'saturn_alt'   : self.astrometric_data['saturn_alt'],
-            'saturn_up'    : self.astrometric_data['saturn_up'],
-            'iss_alt'      : self.astrometric_data['iss_alt'],
-            'iss_up'       : self.astrometric_data['iss_up'],
-            'iss_next_h'   : self.astrometric_data['iss_next_h'],
-            'iss_next_alt' : self.astrometric_data['iss_next_alt'],
-            'hst_alt'      : self.astrometric_data['hst_alt'],
-            'hst_up'       : self.astrometric_data['hst_up'],
-            'hst_next_h'   : self.astrometric_data['hst_next_h'],
-            'hst_next_alt' : self.astrometric_data['hst_next_alt'],
-            'tiangong_alt'      : self.astrometric_data['tiangong_alt'],
-            'tiangong_up'       : self.astrometric_data['tiangong_up'],
-            'tiangong_next_h'   : self.astrometric_data['tiangong_next_h'],
-            'tiangong_next_alt' : self.astrometric_data['tiangong_next_alt'],
-            'latitude'     : self.latitude_v.value,
-            'longitude'    : self.longitude_v.value,
-            'elevation'    : self.elevation_v.value,
-            'sidereal_time'        : self.astrometric_data['sidereal_time'],
-            'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
-            'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),
-        }
-
-
-        # stacking data
-        if self.night_v.value and not self.moonmode_v.value:
-            if self.config.get('IMAGE_STACK_COUNT', 1) > 1:
-                label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'average').capitalize()
-                label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
-            else:
-                label_data['stack_method'] = 'Off'
-                label_data['stack_count'] = 0
-        else:
-            # stacking disabled during the day and moonmode
-            label_data['stack_method'] = 'Off'
-            label_data['stack_count'] = 0
-
-
-        # stretching data
-        if self.config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE'):
-            if self.night_v.value:
-                # night
-                label_data['stretch'] = 'On'
-
-                if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
-                    label_data['stretch'] = 'Off'
-            else:
-                # daytime
-                if self.config.get('IMAGE_STRETCH', {}).get('DAYTIME'):
-                    label_data['stretch'] = 'On'
-                else:
-                    label_data['stretch'] = 'Off'
-        else:
-            label_data['stretch'] = 'Off'
-
-
-        image_label = image_label_tmpl.format(**label_data)  # fill in the data
-
+        image_label = self.get_image_label(i_ref)
 
 
         for line in image_label.split('\n'):
@@ -2039,62 +2082,6 @@ class ImageProcessor(object):
             )
 
             self._text_next_line()
-
-
-        # Add moon mode indicator
-        if self.moonmode_v.value:
-            self.drawText_opencv(
-                self.image,
-                '* Moon Mode *',
-                tuple(self.text_xy),
-                tuple(self.text_color_bgr),
-            )
-
-            self._text_next_line()
-
-
-        # Add eclipse indicator
-        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_v.value:
-            # Lunar eclipse (earth's penumbra is large)
-            self.drawText_opencv(
-                self.image,
-                '* LUNAR ECLIPSE *',
-                tuple(self.text_xy),
-                tuple(self.text_color_bgr),
-            )
-
-            self._text_next_line()
-
-        elif self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
-            # Solar eclipse
-            self.drawText_opencv(
-                self.image,
-                '* SOLAR ECLIPSE *',
-                tuple(self.text_xy),
-                tuple(self.text_color_bgr),
-            )
-
-            self._text_next_line()
-
-
-        # add extra text to image
-        extra_text_lines = self.get_extra_text()
-        if extra_text_lines:
-            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
-
-            for line in extra_text_lines:
-                if line.startswith('#'):
-                    self._processLabelComment(line)
-                    continue
-
-                self.drawText_opencv(
-                    self.image,
-                    line,
-                    tuple(self.text_xy),
-                    tuple(self.text_color_bgr),
-                )
-
-                self._text_next_line()
 
 
     def drawText_opencv(self, data, text, pt, color_bgr):
@@ -2170,124 +2157,7 @@ class ImageProcessor(object):
             return
 
 
-        image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
-
-
-        if self.config.get('TEMP_DISPLAY') == 'f':
-            sensortemp = ((self.sensortemp_v.value * 9.0) / 5.0) + 32
-            temp_unit = 'F'
-        elif self.config.get('TEMP_DISPLAY') == 'k':
-            sensortemp = self.sensortemp_v.value + 273.15
-            temp_unit = 'K'
-        else:
-            sensortemp = self.sensortemp_v.value
-            temp_unit = 'C'
-
-
-        # calculate rational exposure ("1 1/4")
-        exp_whole = int(i_ref['exposure'])
-        exp_remain = i_ref['exposure'] - exp_whole
-
-        exp_remain_frac = Fraction(exp_remain).limit_denominator(max_denominator=31250)
-
-        if exp_whole:
-            if exp_remain:
-                rational_exp = '{0:d} {1:d}/{2:d}'.format(exp_whole, exp_remain_frac.numerator, exp_remain_frac.denominator)
-            else:
-                rational_exp = '{0:d}'.format(exp_whole)
-        else:
-            rational_exp = '{0:d}/{1:d}'.format(exp_remain_frac.numerator, exp_remain_frac.denominator)
-
-
-
-        label_data = {
-            'timestamp'    : i_ref['exp_date'],
-            'ts'           : i_ref['exp_date'],  # shortcut
-            'exposure'     : i_ref['exposure'],
-            'day_date'     : i_ref['day_date'],
-            'rational_exp' : rational_exp,
-            'gain'         : self.gain_v.value,
-            'temp'         : sensortemp,  # hershey fonts do not support degree symbol
-            'temp_unit'    : temp_unit,
-            'sqm'          : i_ref['sqm_value'],
-            'stars'        : len(i_ref['stars']),
-            'detections'   : str(bool(len(i_ref['lines']))),
-            'owner'        : i_ref['owner'],
-            'location'     : i_ref['location'],
-            'kpindex'      : i_ref['kpindex'],
-            'ovation_max'  : i_ref['ovation_max'],
-            'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
-            'sun_alt'      : self.astrometric_data['sun_alt'],
-            'moon_alt'     : self.astrometric_data['moon_alt'],
-            'moon_phase'   : self.astrometric_data['moon_phase'],
-            'moon_up'      : self.astrometric_data['moon_up'],
-            'sun_moon_sep' : self.astrometric_data['sun_moon_sep'],
-            'mercury_alt'  : self.astrometric_data['mercury_alt'],
-            'mercury_up'   : self.astrometric_data['mercury_up'],
-            'venus_alt'    : self.astrometric_data['venus_alt'],
-            'venus_phase'  : self.astrometric_data['venus_phase'],
-            'venus_up'     : self.astrometric_data['venus_up'],
-            'mars_alt'     : self.astrometric_data['mars_alt'],
-            'mars_up'      : self.astrometric_data['mars_up'],
-            'jupiter_alt'  : self.astrometric_data['jupiter_alt'],
-            'jupiter_up'   : self.astrometric_data['jupiter_up'],
-            'saturn_alt'   : self.astrometric_data['saturn_alt'],
-            'saturn_up'    : self.astrometric_data['saturn_up'],
-            'iss_alt'      : self.astrometric_data['iss_alt'],
-            'iss_up'       : self.astrometric_data['iss_up'],
-            'iss_next_h'   : self.astrometric_data['iss_next_h'],
-            'iss_next_alt' : self.astrometric_data['iss_next_alt'],
-            'hst_alt'      : self.astrometric_data['hst_alt'],
-            'hst_up'       : self.astrometric_data['hst_up'],
-            'hst_next_h'   : self.astrometric_data['hst_next_h'],
-            'hst_next_alt' : self.astrometric_data['hst_next_alt'],
-            'tiangong_alt'      : self.astrometric_data['tiangong_alt'],
-            'tiangong_up'       : self.astrometric_data['tiangong_up'],
-            'tiangong_next_h'   : self.astrometric_data['tiangong_next_h'],
-            'tiangong_next_alt' : self.astrometric_data['tiangong_next_alt'],
-            'latitude'     : self.latitude_v.value,
-            'longitude'    : self.longitude_v.value,
-            'elevation'    : self.elevation_v.value,
-            'sidereal_time'        : self.astrometric_data['sidereal_time'],
-            'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
-            'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),
-        }
-
-
-        # stacking data
-        if self.night_v.value and not self.moonmode_v.value:
-            if self.config.get('IMAGE_STACK_COUNT', 1) > 1:
-                label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'average').capitalize()
-                label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
-            else:
-                label_data['stack_method'] = 'Off'
-                label_data['stack_count'] = 0
-        else:
-            # stacking disabled during the day and moonmode
-            label_data['stack_method'] = 'Off'
-            label_data['stack_count'] = 0
-
-
-        # stretching data
-        if self.config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE'):
-            if self.night_v.value:
-                # night
-                label_data['stretch'] = 'On'
-
-                if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
-                    label_data['stretch'] = 'Off'
-            else:
-                # daytime
-                if self.config.get('IMAGE_STRETCH', {}).get('DAYTIME'):
-                    label_data['stretch'] = 'On'
-                else:
-                    label_data['stretch'] = 'Off'
-        else:
-            label_data['stretch'] = 'Off'
-
-
-        image_label = image_label_tmpl.format(**label_data)  # fill in the data
-
+        image_label = self.get_image_label(i_ref)
 
 
         for line in image_label.split('\n'):
@@ -2307,74 +2177,6 @@ class ImageProcessor(object):
             )
 
             self._text_next_line()
-
-
-        # Add moon mode indicator
-        if self.moonmode_v.value:
-            self.drawText_pillow(
-                draw,
-                '* Moon Mode *',
-                pillow_font_file_p,
-                self.text_size_pillow,
-                tuple(self.text_xy),
-                tuple(self.text_color_rgb),
-                anchor=self.text_anchor_pillow,
-            )
-
-            self._text_next_line()
-
-
-        # Add eclipse indicator
-        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_v.value:
-            # Lunar eclipse (earth's penumbra is large)
-            self.drawText_pillow(
-                draw,
-                '* LUNAR ECLIPSE *',
-                pillow_font_file_p,
-                self.text_size_pillow,
-                tuple(self.text_xy),
-                tuple(self.text_color_rgb),
-                anchor=self.text_anchor_pillow,
-            )
-
-            self._text_next_line()
-
-        elif self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
-            # Solar eclipse
-            self.drawText_pillow(
-                draw,
-                '* SOLAR ECLIPSE *',
-                pillow_font_file_p,
-                self.text_size_pillow,
-                tuple(self.text_xy),
-                tuple(self.text_color_rgb),
-                anchor=self.text_anchor_pillow,
-            )
-
-            self._text_next_line()
-
-
-        # add extra text to image
-        extra_text_lines = self.get_extra_text()
-        if extra_text_lines:
-            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
-
-            for line in extra_text_lines:
-                if line.startswith('#'):
-                    self._processLabelComment(line)
-                    continue
-
-                self.drawText_pillow(
-                    draw,
-                    line,
-                    pillow_font_file_p,
-                    self.text_size_pillow,
-                    tuple(self.text_xy),
-                    tuple(self.text_color_rgb),
-                    anchor=self.text_anchor_pillow,
-                )
-
-                self._text_next_line()
 
 
         # convert back to numpy array
