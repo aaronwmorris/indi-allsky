@@ -2876,11 +2876,11 @@ class IndiAllskyConfigForm(FlaskForm):
                         result = False
 
                 except ImportError:
-                    self.FOCUSER__CLASSNAME.errors.append('Adafruit-Blinka python module not installed')
+                    self.FOCUSER__CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
 
 
-        # dew_heater
+        # dew heater
         if self.DEW_HEATER__CLASSNAME.data:
             if self.DEW_HEATER__CLASSNAME.data.startswith('blinka_'):
                 try:
@@ -2897,7 +2897,28 @@ class IndiAllskyConfigForm(FlaskForm):
                         result = False
 
                 except ImportError:
-                    self.DEW_HEATER__CLASSNAME.errors.append('Adafruit-Blinka python module not installed')
+                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+
+        # temp sensor
+        if self.TEMP_SENSOR__CLASSNAME.data:
+            if self.TEMP_SENSOR__CLASSNAME.data.startswith('blinka_'):
+                try:
+                    import board
+
+                    if self.TEMP_SENSOR__PIN_1.data:
+                        try:
+                            getattr(board, self.TEMP_SENSOR__PIN_1.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__PIN_1.data))
+                            result = False
+                    else:
+                        self.TEMP_SENSOR__PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.TEMP_SENSOR__CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
 
 
