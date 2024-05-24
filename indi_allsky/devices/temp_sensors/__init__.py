@@ -7,6 +7,9 @@ from .tempSensorDht import TempSensorDht11 as blinka_temp_sensor_dht11
 from .tempSensorBme280 import TempSensorBme280_I2C as blinka_temp_sensor_bme280_i2c
 from .tempSensorBme280 import TempSensorBme280_SPI as blinka_temp_sensor_bme280_spi
 
+from .tempSensorBme680 import TempSensorBme680_I2C as blinka_temp_sensor_bme680_i2c
+from .tempSensorBme680 import TempSensorBme680_SPI as blinka_temp_sensor_bme680_spi
+
 __all__ = (
     'temp_sensor_simulator',
     'blinka_temp_sensor_dht22',
@@ -14,4 +17,6 @@ __all__ = (
     'blinka_temp_sensor_dht11',
     'blinka_temp_sensor_bme280_i2c',
     'blinka_temp_sensor_bme280_spi',
+    'blinka_temp_sensor_bme680_i2c',
+    'blinka_temp_sensor_bme680_spi',
 )

@@ -2445,6 +2445,8 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_temp_sensor_dht11', 'DHT11 - 2 Slots'),
         ('blinka_temp_sensor_bme280_i2c', 'BME280 i2c - 3 Slots'),
         ('blinka_temp_sensor_bme280_spi', 'BME280 SPI - 3 Slots'),
+        ('blinka_temp_sensor_bme680_i2c', 'BME680 i2c - 4 Slots'),
+        ('blinka_temp_sensor_bme680_spi', 'BME680 SPI - 4 Slots'),
     )
 
     SENSOR_USER_VAR_SLOT_choices = (

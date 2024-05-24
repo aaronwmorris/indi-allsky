@@ -12,10 +12,10 @@ class TempSensorBme280(TempSensorBase):
     def update(self):
 
         try:
-            temp_c = float(self.bme.temperature)
-            rel_h = float(self.bme.humidity)
-            pressure = float(self.bme.pressure)  # hPa
-            #altitude = float(self.bme.altitude)  # meters
+            temp_c = float(self.bme280.temperature)
+            rel_h = float(self.bme280.humidity)
+            pressure = float(self.bme280.pressure)  # hPa
+            #altitude = float(self.bme280.altitude)  # meters
         except RuntimeError as e:
             raise TemperatureReadException(str(e)) from e
 
@@ -64,9 +64,9 @@ class TempSensorBme280_I2C(TempSensorBme280):
 
         i2c_address = int(self.config.get('TEMP_SENSOR', {}).get('I2C_ADDRESS', '0x77'), 16)  # string in config
 
-        logger.warning('Initializing BME280 I2C temperature device at %s', hex(i2c_address))
+        logger.warning('Initializing BME280 I2C temperature device @ %s', hex(i2c_address))
         i2c = board.I2C()
-        self.bme = adafruit_bme280.Adafruit_BME280_I2C(i2c, address=i2c_address)
+        self.bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c, address=i2c_address)
 
 
 class TempSensorBme280_SPI(TempSensorBme280):
@@ -79,5 +79,5 @@ class TempSensorBme280_SPI(TempSensorBme280):
 
         logger.warning('Initializing BME280 SPI temperature device')
         spi = board.SPI()
-        self.bme = adafruit_bme280.Adafruit_BME280_SPI(spi)
+        self.bme280 = adafruit_bme280.Adafruit_BME280_SPI(spi)
 
