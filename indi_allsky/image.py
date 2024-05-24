@@ -765,8 +765,15 @@ class ImageWorker(Process):
             offset = 0  # need index for shared sensor values
             for t_key in sorted(temp_info):  # always return the keys in the same order
                 for i, t in enumerate(temp_info[t_key]):
-                    # temperatures always go in Celcius here
-                    current_temp = float(t.current)
+                    temp_c = float(t.current)
+
+                    if self.config.get('TEMP_DISPLAY') == 'f':
+                        current_temp = (temp_c * 9.0 / 5.0) + 32
+                    elif self.config.get('TEMP_DISPLAY') == 'k':
+                        current_temp = temp_c + 273.15
+                    else:
+                        current_temp = temp_c
+
 
                     if not t.label:
                         # use index for label name
@@ -783,9 +790,10 @@ class ImageWorker(Process):
 
 
                     # update share array
+                    # temperatures always Celcius here
                     with self.sensors_temp_av.get_lock():
                         # index 0 is always ccd_temp
-                        self.sensors_temp_av[10 + offset] = current_temp  # 0-9 are reserved
+                        self.sensors_temp_av[10 + offset] = temp_c
 
                     offset += 1
 
