@@ -1893,7 +1893,7 @@ class ImageProcessor(object):
 
         for x, data in enumerate(self.sensors_temp_av):
             if self.config.get('TEMP_DISPLAY') == 'f':
-                sensor_temp = ((data * 9.0) / 5.0) + 32
+                sensor_temp = (data * 9.0 / 5.0) + 32
             elif self.config.get('TEMP_DISPLAY') == 'k':
                 sensor_temp = data + 273.15
             else:
