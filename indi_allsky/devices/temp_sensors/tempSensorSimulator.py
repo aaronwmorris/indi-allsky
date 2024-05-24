@@ -14,5 +14,10 @@ class TempSensorSimulator(TempSensorBase):
 
 
     def update(self):
-        return tuple()
+        data = {
+            'dew_point' : None,
+            'data' : tuple(),
+        }
+
+        return data
 

@@ -91,17 +91,27 @@ class SensorWorker(Thread):
             # set next run
             self.next_run = now + self.next_run_offset
 
-
-            try:
-                self.temp_sensor.update()
-            except TemperatureReadException as e:
-                logger.error('TemperatureReadException: {0:s}'.format(str(e)))
+            #############################
+            ### do interesting stuff here
+            #############################
 
 
-            # do interesting stuff here
             if self.night != bool(self.night_v.value):
                 self.night = bool(self.night_v.value)
                 self.night_day_change()
+
+
+            try:
+                temp_data = self.temp_sensor.update()
+
+                with self.sensors_user_av.get_lock():
+                    if temp_data['dew_point']:
+                        self.sensors_user_av[1] = temp_data['dew_point']
+
+                    for i, v in enumerate(temp_data['data']):
+                        self.sensors_user_av[self.temp_sensor.slot + i] = float(v)
+            except TemperatureReadException as e:
+                logger.error('TemperatureReadException: {0:s}'.format(str(e)))
 
 
     def night_day_change(self):
@@ -155,4 +165,5 @@ class SensorWorker(Thread):
         else:
             self.temp_sensor = temp_sensors.temp_sensor_simulator(self.config)
 
+        self.temp_sensor.slot = self.config.get('TEMP_SENSOR', {}).get('VAR_SLOT', 10)
 

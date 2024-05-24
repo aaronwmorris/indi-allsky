@@ -26,24 +26,34 @@ class TempSensorDht22(TempSensorBase):
     def update(self):
 
         try:
-            temp_c = self.dht.temperature
-            humidity = self.dht.humidity
+            temp_c = float(self.dht.temperature)
+            rel_h = float(self.dht.humidity)
         except RuntimeError as e:
             raise TemperatureReadException(str(e)) from e
 
 
+        dew_point_c = self.get_dew_point_c(temp_c, rel_h)
+
+
         if self.config.get('TEMP_DISPLAY') == 'f':
-            current_temp = ((temp_c.current * 9.0 ) / 5.0) + 32
+            current_temp = ((temp_c * 9.0 ) / 5.0) + 32
+            current_dp = ((dew_point_c * 9.0 ) / 5.0) + 32
         elif self.config.get('TEMP_DISPLAY') == 'k':
-            current_temp = temp_c.current + 273.15
+            current_temp = temp_c + 273.15
+            current_dp = dew_point_c + 273.15
         else:
-            current_temp = float(temp_c.current)
+            current_temp = temp_c
+            current_dp = dew_point_c
 
 
-        logger.info('Temperature device: temp %0.1f, humidity %0.1f%%', current_temp, humidity)
+        logger.info('Temperature device: temp %0.1f, humidity %0.1f%%', current_temp, rel_h)
 
+        data = {
+            'dew_point' : current_dp,
+            'data' : (current_temp, rel_h),
+        }
 
-        return (current_temp, humidity)
+        return data
 
 
 class TempSensorDht11(TempSensorDht22):
