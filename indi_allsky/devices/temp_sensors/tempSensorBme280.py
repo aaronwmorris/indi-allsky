@@ -23,6 +23,7 @@ class TempSensorBme280(TempSensorBase):
         dew_point_c = self.get_dew_point_c(temp_c, rel_h)
         frost_point_c = self.get_frost_point_c(temp_c, dew_point_c)
 
+        logger.info('Temperature device: temp: %0.1fc, humidity: %0.1f%%, pressure: %0.1fhPa, dew pt: %0.1fc, frost pt: %0.1fc', temp_c, rel_h, pressure, dew_point_c, frost_point_c)
 
         if self.config.get('TEMP_DISPLAY') == 'f':
             current_temp = self.c2f(temp_c)
@@ -37,8 +38,6 @@ class TempSensorBme280(TempSensorBase):
             current_dp = dew_point_c
             current_fp = frost_point_c
 
-
-        logger.info('Temperature device: temp: %0.1f, humidity: %0.1f%%, pressure: %0.1f, dew pt: %0.1f, frost pt: %0.1f ', current_temp, rel_h, pressure, current_dp, current_fp)
 
         data = {
             'dew_point' : current_dp,
