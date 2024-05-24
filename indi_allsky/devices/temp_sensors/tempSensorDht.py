@@ -32,15 +32,15 @@ class TempSensorDht22(TempSensorBase):
             raise TemperatureReadException(str(e)) from e
 
 
-        logger.info('Temperature device: temp %0.1f, humidity %0.1f%%')
-
-
         if self.config.get('TEMP_DISPLAY') == 'f':
             current_temp = ((temp_c.current * 9.0 ) / 5.0) + 32
         elif self.config.get('TEMP_DISPLAY') == 'k':
             current_temp = temp_c.current + 273.15
         else:
             current_temp = float(temp_c.current)
+
+
+        logger.info('Temperature device: temp %0.1f, humidity %0.1f%%', current_temp, humidity)
 
 
         return (current_temp, humidity)

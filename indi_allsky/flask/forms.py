@@ -2433,7 +2433,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
     TEMP_SENSOR__CLASSNAME_choices = (
         ('', 'None'),
-        ('blinka_temp_sensor_dht22', 'DHT22 - 2 Slots'),
+        ('blinka_temp_sensor_dht22', 'DHT22/AM2301 - 2 Slots'),
         ('blinka_temp_sensor_dht11', 'DHT11 - 2 Slots'),
     )
 
