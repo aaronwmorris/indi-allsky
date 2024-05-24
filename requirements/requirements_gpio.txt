@@ -1,6 +1,7 @@
 Adafruit-Blinka
 gpiod
 adafruit-circuitpython-dht
+adafruit-circuitpython-bme280
 
 ### Rpi5
 #rpi-lgpio
