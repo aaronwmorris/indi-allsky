@@ -2117,6 +2117,13 @@ def TEMP_SENSOR__CLASSNAME_validator(form, field):
         raise ValidationError('Invalid class syntax')
 
 
+def TEMP_SENSOR__I2C_ADDRESS_validator(form, field):
+    try:
+        int(field.data, 16)
+    except ValueError as e:
+        raise ValidationError('Invalid HEX address: {0:s}'.format(str(e)))
+
+
 def SENSOR_USER_VAR_SLOT_validator(form, field):
     try:
         slot_i = int(field.data)
@@ -2787,6 +2794,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__CLASSNAME           = SelectField('Temp Sensor Class', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__PIN_1               = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__VAR_SLOT            = SelectField('Sensor Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
+    TEMP_SENSOR__I2C_ADDRESS         = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 

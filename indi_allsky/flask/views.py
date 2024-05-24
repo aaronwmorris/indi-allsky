@@ -1392,6 +1392,7 @@ class ConfigView(FormView):
             'DEW_HEATER__LEVEL_DEF'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100),
             'TEMP_SENSOR__CLASSNAME'         : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('CLASSNAME', ''),
             'TEMP_SENSOR__PIN_1'             : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('PIN_1', 'D5'),
+            'TEMP_SENSOR__I2C_ADDRESS'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('I2C_ADDRESS', '0x77'),
             'TEMP_SENSOR__VAR_SLOT'          : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('VAR_SLOT', 10)),  # string in form, int in config
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
@@ -2017,6 +2018,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['CLASSNAME']             = str(request.json['TEMP_SENSOR__CLASSNAME'])
         self.indi_allsky_config['TEMP_SENSOR']['PIN_1']                 = str(request.json['TEMP_SENSOR__PIN_1'])
         self.indi_allsky_config['TEMP_SENSOR']['VAR_SLOT']              = int(request.json['TEMP_SENSOR__VAR_SLOT'])
+        self.indi_allsky_config['TEMP_SENSOR']['I2C_ADDRESS']           = str(request.json['TEMP_SENSOR__I2C_ADDRESS'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))

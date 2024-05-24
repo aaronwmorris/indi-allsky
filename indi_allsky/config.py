@@ -398,6 +398,7 @@ class IndiAllSkyConfigBase(object):
             "CLASSNAME"              : "",
             "PIN_1"                  : "D5",
             "VAR_SLOT"               : 10,
+            "I2C_ADDRESS"            : "0x77",
         },
     })
 
