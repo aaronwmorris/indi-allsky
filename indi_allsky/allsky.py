@@ -123,7 +123,7 @@ class IndiAllSky(object):
         # 0 ccd_temp
         # 1-9 reserved for future use
         # 10-29 system temperatures
-        self.sensors_temp_av = Array('f', [-273.15 for x in range(30)])
+        self.sensors_temp_av = Array('f', [0.0 for x in range(30)])
 
         # sensors (temp, humidity, wind, sqm, etc)
         # 0 dew heater level
