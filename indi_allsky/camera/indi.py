@@ -881,12 +881,12 @@ class IndiClient(PyIndi.BaseClient):
         try:
             ccd_temperature = self.get_control(self.ccd_device, 'CCD_TEMPERATURE', 'number', timeout=0.2)
         except TimeOutException:
-            logger.warning("Sensor temperature not supported")
+            logger.warning("Camera temperature not supported")
             return -273.15  # absolute zero  :-)
 
 
         temp_val = float(ccd_temperature[0].getValue())  # CCD_TEMPERATURE_VALUE
-        logger.info("Sensor temperature: %0.1f", temp_val)
+        logger.info("Camera temperature: %0.1f", temp_val)
 
         return temp_val
 
