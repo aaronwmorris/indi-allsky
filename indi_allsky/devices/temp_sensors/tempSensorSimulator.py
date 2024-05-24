@@ -16,6 +16,7 @@ class TempSensorSimulator(TempSensorBase):
     def update(self):
         data = {
             'dew_point' : None,
+            'frost_point' : None,
             'data' : tuple(),
         }
 

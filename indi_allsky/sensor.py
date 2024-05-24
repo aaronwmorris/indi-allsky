@@ -108,6 +108,9 @@ class SensorWorker(Thread):
                     if temp_data['dew_point']:
                         self.sensors_user_av[1] = temp_data['dew_point']
 
+                    if temp_data['frost_point']:
+                        self.sensors_user_av[2] = temp_data['frost_point']
+
                     for i, v in enumerate(temp_data['data']):
                         self.sensors_user_av[self.temp_sensor.slot + i] = float(v)
             except TemperatureReadException as e:

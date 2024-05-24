@@ -2881,7 +2881,7 @@ class SystemInfoView(TemplateView):
         for t_key in sorted(temp_info):  # always return the keys in the same order
             for i, t in enumerate(temp_info[t_key]):
                 if self.indi_allsky_config.get('TEMP_DISPLAY') == 'f':
-                    current_temp = ((float(t.current) * 9.0 ) / 5.0) + 32
+                    current_temp = (float(t.current) * 9.0 / 5.0) + 32
                     temp_sys = 'F'
                 elif self.indi_allsky_config.get('TEMP_DISPLAY') == 'k':
                     current_temp = float(t.current) + 273.15
