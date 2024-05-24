@@ -87,7 +87,7 @@ class CaptureWorker(Process):
         self.gain_v = gain_v
         self.bin_v = bin_v
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
-        self.sensors_user_av = sensors_user_av
+        self.sensors_user_av = sensors_user_av  # 0 ccd_temp
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
@@ -933,25 +933,34 @@ class CaptureWorker(Process):
 
 
     def getSensorTemperature(self):
-        temp_val = self.indiclient.getCcdTemperature()
+        temp_c = self.indiclient.getCcdTemperature()
 
 
         # query external temperature if defined
         if self.config.get('CCD_TEMP_SCRIPT'):
             try:
-                ext_temp_val = self.getExternalTemperature(self.config.get('CCD_TEMP_SCRIPT'))
-                temp_val = ext_temp_val
+                ext_temp_c = self.getExternalTemperature(self.config.get('CCD_TEMP_SCRIPT'))
+                temp_c = ext_temp_c
             except TemperatureException as e:
                 logger.error('Exception querying external temperature: %s', str(e))
 
 
-        temp_val_f = float(temp_val)
+        temp_c_float = float(temp_c)
+
 
         with self.sensors_temp_av.get_lock():
-            self.sensors_temp_av[0] = temp_val_f
+            self.sensors_temp_av[0] = temp_c_float
+
+        with self.sensors_user_av.get_lock():
+            if self.config.get('TEMP_DISPLAY') == 'f':
+                self.sensors_user_av[0] = (temp_c_float * 9.0 / 5.0) + 32
+            elif self.config.get('TEMP_DISPLAY') == 'k':
+                self.sensors_user_av[0] = temp_c_float + 273.15
+            else:
+                self.sensors_user_av[0] = temp_c_float
 
 
-        return temp_val_f
+        return temp_c_float
 
 
     def getExternalTemperature(self, script_path):

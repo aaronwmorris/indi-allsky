@@ -106,10 +106,10 @@ class SensorWorker(Thread):
 
                 with self.sensors_user_av.get_lock():
                     if temp_data['dew_point']:
-                        self.sensors_user_av[1] = temp_data['dew_point']
+                        self.sensors_user_av[2] = temp_data['dew_point']
 
                     if temp_data['frost_point']:
-                        self.sensors_user_av[2] = temp_data['frost_point']
+                        self.sensors_user_av[3] = temp_data['frost_point']
 
                     for i, v in enumerate(temp_data['data']):
                         self.sensors_user_av[self.temp_sensor.slot + i] = float(v)
@@ -157,7 +157,7 @@ class SensorWorker(Thread):
         self.dew_heater.state = int(state)
 
         with self.sensors_user_av.get_lock():
-            self.sensors_user_av[0] = float(self.dew_heater.state)
+            self.sensors_user_av[1] = float(self.dew_heater.state)
 
 
     def init_temp_sensor(self):
