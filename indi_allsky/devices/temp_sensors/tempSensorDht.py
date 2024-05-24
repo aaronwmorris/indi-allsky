@@ -60,6 +60,10 @@ class TempSensorDht22(TempSensorBase):
         return data
 
 
+class TempSensorDht21(TempSensorDht22):
+    dht_classname = 'DHT21'
+
+
 class TempSensorDht11(TempSensorDht22):
     dht_classname = 'DHT11'
 

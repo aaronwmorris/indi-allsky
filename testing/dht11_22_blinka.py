@@ -5,8 +5,10 @@ import adafruit_dht
 import logging
 
 
-IN1 = board.D5
+PIN = board.D5
 DHT = adafruit_dht.DHT22
+#DHT = adafruit_dht.DHT21
+#DHT = adafruit_dht.DHT11
 
 
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +19,7 @@ class DhtTempSensor(object):
 
     def __init__(self):
 
-        self.dht = DHT(IN1, use_pulseio=False)
+        self.dht = DHT(PIN, use_pulseio=False)
 
 
     def main(self):
