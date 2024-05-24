@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-#import time
 import board
 import adafruit_dht
 import logging
 
 
 IN1 = board.D5
+DHT = adafruit_dht.DHT22
 
 
 logging.basicConfig(level=logging.INFO)
@@ -14,12 +14,10 @@ logger = logging
 
 
 class DhtTempSensor(object):
-    dht_classname = 'DHT22'
 
     def __init__(self):
 
-        dht_class = getattr(adafruit_dht, self.dht_classname)
-        self.dht = dht_class(IN1, use_pulseio=False)
+        self.dht = DHT(IN1, use_pulseio=False)
 
 
     def main(self):
