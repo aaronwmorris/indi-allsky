@@ -46,7 +46,7 @@ class TempSensorDht22(TempSensorBase):
             current_dp = dew_point_c
 
 
-        logger.info('Temperature device: temp %0.1f, humidity %0.1f%%', current_temp, rel_h)
+        logger.info('Temperature device: temp: %0.1f, humidity: %0.1f%%, dew point: %0.1f', current_temp, rel_h, current_dp)
 
         data = {
             'dew_point' : current_dp,
