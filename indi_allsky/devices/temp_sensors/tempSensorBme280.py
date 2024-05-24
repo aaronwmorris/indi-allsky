@@ -20,10 +20,16 @@ class TempSensorBme280(TempSensorBase):
             raise TemperatureReadException(str(e)) from e
 
 
-        dew_point_c = self.get_dew_point_c(temp_c, rel_h)
-        frost_point_c = self.get_frost_point_c(temp_c, dew_point_c)
+        logger.info('Temperature device: temp: %0.1fc, humidity: %0.1f%%, pressure: %0.1fhPa', temp_c, rel_h, pressure)
 
-        logger.info('Temperature device: temp: %0.1fc, humidity: %0.1f%%, pressure: %0.1fhPa, dew pt: %0.1fc, frost pt: %0.1fc', temp_c, rel_h, pressure, dew_point_c, frost_point_c)
+        try:
+            dew_point_c = self.get_dew_point_c(temp_c, rel_h)
+            frost_point_c = self.get_frost_point_c(temp_c, dew_point_c)
+        except ValueError as e:
+            logger.error('Dew Point calculation error - ValueError: %s', str(e))
+            dew_point_c = 0.0
+            frost_point_c = 0.0
+
 
         if self.config.get('TEMP_DISPLAY') == 'f':
             current_temp = self.c2f(temp_c)

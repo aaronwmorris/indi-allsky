@@ -32,10 +32,17 @@ class TempSensorDht22(TempSensorBase):
             raise TemperatureReadException(str(e)) from e
 
 
-        dew_point_c = self.get_dew_point_c(temp_c, rel_h)
-        frost_point_c = self.get_frost_point_c(temp_c, dew_point_c)
+        logger.info('Temperature device: temp: %0.1fc, humidity: %0.1f%%', temp_c, rel_h)
 
-        logger.info('Temperature device: temp: %0.1fc, humidity: %0.1f%%, dew pt: %0.1fc, frost pt: %0.1fc', temp_c, rel_h, dew_point_c, frost_point_c)
+
+        try:
+            dew_point_c = self.get_dew_point_c(temp_c, rel_h)
+            frost_point_c = self.get_frost_point_c(temp_c, dew_point_c)
+        except ValueError as e:
+            logger.error('Dew Point calculation error - ValueError: %s', str(e))
+            dew_point_c = 0.0
+            frost_point_c = 0.0
+
 
 
         if self.config.get('TEMP_DISPLAY') == 'f':
