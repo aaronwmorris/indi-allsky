@@ -36,11 +36,11 @@ class TempSensorDht22(TempSensorBase):
 
 
         if self.config.get('TEMP_DISPLAY') == 'f':
-            current_temp = ((temp_c * 9.0 ) / 5.0) + 32
-            current_dp = ((dew_point_c * 9.0 ) / 5.0) + 32
+            current_temp = self.c2f(temp_c)
+            current_dp = self.c2f(dew_point_c)
         elif self.config.get('TEMP_DISPLAY') == 'k':
-            current_temp = temp_c + 273.15
-            current_dp = dew_point_c + 273.15
+            current_temp = self.c2k(temp_c)
+            current_dp = self.c2k(dew_point_c)
         else:
             current_temp = temp_c
             current_dp = dew_point_c

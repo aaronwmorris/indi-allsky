@@ -22,6 +22,14 @@ class TempSensorBase(object):
         self._slot = int(new_slot)
 
 
+    def c2f(self, c):
+        return (c * 9.0 / 5.0) + 32
+
+    def f2c(self, f):
+        return (f - 32) * 5.0 / 9.0
+
+    def c2k(self, c):
+        return c + 273.15
 
     ###
     ### https://gist.github.com/sourceperl/45587ea99ff123745428
