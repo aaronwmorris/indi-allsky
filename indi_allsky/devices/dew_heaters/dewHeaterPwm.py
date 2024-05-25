@@ -12,10 +12,12 @@ class DewHeaterPwm(DewHeaterBase):
     def __init__(self, *args, **kwargs):
         super(DewHeaterPwm, self).__init__(*args, **kwargs)
 
+        pin_name = kwargs['pin_name']
+
         import board
         import pwmio
 
-        pwm_pin = getattr(board, self.config.get('DEW_HEATER', {}).get('PIN_1', 'notdefined'))
+        pwm_pin = getattr(board, pin_name)
 
         self.pwm = pwmio.PWMOut(pwm_pin)
 

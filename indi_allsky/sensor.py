@@ -137,7 +137,9 @@ class SensorWorker(Thread):
         dew_heater_classname = self.config.get('DEW_HEATER', {}).get('CLASSNAME')
         if dew_heater_classname:
             dh = getattr(dew_heaters, dew_heater_classname)
-            self.dew_heater = dh(self.config)
+            dh_pin_1 = self.config.get('DEW_HEATER', {}).get('PIN_1', 'notdefined')
+
+            self.dew_heater = dh(self.config, pin_name=dh_pin_1)
 
             if self.night_v.value:
                 self.set_dew_heater(self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100))
