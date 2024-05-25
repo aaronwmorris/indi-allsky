@@ -21,7 +21,7 @@ class TempSensorBme680(TempSensorBase):
             raise TemperatureReadException(str(e)) from e
 
 
-        logger.info('Temperature device: temp: %0.1fc, humidity: %0.1f%%, pressure: %0.1fhPa, gas: %0.1f', temp_c, rel_h, pressure, gas)
+        logger.info('BME680 - temp: %0.1fc, humidity: %0.1f%%, pressure: %0.1fhPa, gas: %0.1f', temp_c, rel_h, pressure, gas)
 
         try:
             dew_point_c = self.get_dew_point_c(temp_c, rel_h)

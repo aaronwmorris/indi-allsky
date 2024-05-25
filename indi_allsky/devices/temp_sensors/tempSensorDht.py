@@ -34,7 +34,7 @@ class TempSensorDht22(TempSensorBase):
             raise TemperatureReadException(str(e)) from e
 
 
-        logger.info('Temperature device: temp: %0.1fc, humidity: %0.1f%%', temp_c, rel_h)
+        logger.info('%s: temp: %0.1fc, humidity: %0.1f%%', self.dht_classname, temp_c, rel_h)
 
 
         try:

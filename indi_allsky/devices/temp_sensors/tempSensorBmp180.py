@@ -19,7 +19,7 @@ class TempSensorBmp180(TempSensorBase):
             raise TemperatureReadException(str(e)) from e
 
 
-        logger.info('Temperature device: temp: %0.1fc, pressure: %0.1fhPa', temp_c, pressure)
+        logger.info('BMP180 - temp: %0.1fc, pressure: %0.1fhPa', temp_c, pressure)
 
         # no humidity sensor
 
