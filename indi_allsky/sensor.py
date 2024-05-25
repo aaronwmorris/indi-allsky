@@ -177,7 +177,7 @@ class SensorWorker(Thread):
         else:
             self.temp_sensors[0] = temp_sensors.temp_sensor_simulator(self.config)
 
-        self.temp_sensors[0].slot = self.config.get('TEMP_SENSOR', {}).get('A_VAR_SLOT', 10)
+        self.temp_sensors[0].slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 10)
 
 
         ### Sensor B
@@ -192,5 +192,5 @@ class SensorWorker(Thread):
         else:
             self.temp_sensors[1] = temp_sensors.temp_sensor_simulator(self.config)
 
-        self.temp_sensors[1].slot = self.config.get('TEMP_SENSOR', {}).get('B_VAR_SLOT', 15)
+        self.temp_sensors[1].slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 15)
 
