@@ -80,11 +80,13 @@ class TempSensorBme680_SPI(TempSensorBme680):
         pin_1_name = kwargs['pin_1_name']
 
         import board
+        import digitalio
         import adafruit_bme680
 
         pin1 = getattr(board, pin_1_name)
+        cs = digitalio.DigitalInOut(pin1)
 
         logger.warning('Initializing BME680 SPI temperature device')
-        spi = board.SPI(pin1)
-        self.bme680 = adafruit_bme680.Adafruit_BME680_SPI(spi)
+        spi = board.SPI()
+        self.bme680 = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
 
