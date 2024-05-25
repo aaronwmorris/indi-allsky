@@ -2920,24 +2920,45 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
 
-        # temp sensor
-        if self.TEMP_SENSOR__CLASSNAME.data:
-            if self.TEMP_SENSOR__CLASSNAME.data.startswith('blinka_'):
+        # temp sensor A
+        if self.TEMP_SENSOR__A_CLASSNAME.data:
+            if self.TEMP_SENSOR__A_CLASSNAME.data.startswith('blinka_'):
                 try:
                     import board
 
-                    if self.TEMP_SENSOR__PIN_1.data:
+                    if self.TEMP_SENSOR__A_PIN_1.data:
                         try:
-                            getattr(board, self.TEMP_SENSOR__PIN_1.data)
+                            getattr(board, self.TEMP_SENSOR__A_PIN_1.data)
                         except AttributeError:
-                            self.TEMP_SENSOR__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__PIN_1.data))
+                            self.TEMP_SENSOR__A_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__A_PIN_1.data))
                             result = False
                     else:
-                        self.TEMP_SENSOR__PIN_1.errors.append('PIN must be defined')
+                        self.TEMP_SENSOR__A_PIN_1.errors.append('PIN must be defined')
                         result = False
 
                 except ImportError:
-                    self.TEMP_SENSOR__CLASSNAME.errors.append('GPIO python modules not installed')
+                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+
+        # temp sensor B
+        if self.TEMP_SENSOR__B_CLASSNAME.data:
+            if self.TEMP_SENSOR__B_CLASSNAME.data.startswith('blinka_'):
+                try:
+                    import board
+
+                    if self.TEMP_SENSOR__B_PIN_1.data:
+                        try:
+                            getattr(board, self.TEMP_SENSOR__B_PIN_1.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__B_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__B_PIN_1.data))
+                            result = False
+                    else:
+                        self.TEMP_SENSOR__B_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
 
 
