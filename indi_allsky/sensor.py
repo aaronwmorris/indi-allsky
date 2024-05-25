@@ -34,7 +34,7 @@ class SensorWorker(Thread):
         self.night = False
 
         self.dew_heater = None
-        self.temp_sensor = None
+        self.temp_sensors = [None, None]
 
         self.next_run = time.time()  # run immediately
         self.next_run_offset = 59
@@ -72,7 +72,7 @@ class SensorWorker(Thread):
 
 
         self.init_dew_heater()
-        self.init_temp_sensor()
+        self.init_temp_sensors()
 
 
         while True:
@@ -101,20 +101,21 @@ class SensorWorker(Thread):
                 self.night_day_change()
 
 
-            try:
-                temp_data = self.temp_sensor.update()
+            for temp_sensor in self.temp_sensors:
+                try:
+                    temp_data = temp_sensor.update()
 
-                with self.sensors_user_av.get_lock():
-                    if temp_data['dew_point']:
-                        self.sensors_user_av[2] = temp_data['dew_point']
+                    with self.sensors_user_av.get_lock():
+                        if temp_data['dew_point']:
+                            self.sensors_user_av[2] = temp_data['dew_point']
 
-                    if temp_data['frost_point']:
-                        self.sensors_user_av[3] = temp_data['frost_point']
+                        if temp_data['frost_point']:
+                            self.sensors_user_av[3] = temp_data['frost_point']
 
-                    for i, v in enumerate(temp_data['data']):
-                        self.sensors_user_av[self.temp_sensor.slot + i] = float(v)
-            except TemperatureReadException as e:
-                logger.error('TemperatureReadException: {0:s}'.format(str(e)))
+                        for i, v in enumerate(temp_data['data']):
+                            self.sensors_user_av[temp_sensor.slot + i] = float(v)
+                except TemperatureReadException as e:
+                    logger.error('TemperatureReadException: {0:s}'.format(str(e)))
 
 
     def night_day_change(self):
@@ -163,17 +164,33 @@ class SensorWorker(Thread):
             self.sensors_user_av[1] = float(self.dew_heater.state)
 
 
-    def init_temp_sensor(self):
-        temp_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('A_CLASSNAME')
-        if temp_sensor_classname:
-            ts = getattr(temp_sensors, temp_sensor_classname)
+    def init_temp_sensors(self):
+        ### Sensor A
+        a_temp_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('A_CLASSNAME')
+        if a_temp_sensor_classname:
+            a_ts = getattr(temp_sensors, a_temp_sensor_classname)
 
-            ts_i2c_address = self.config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77')
-            ts_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'notdefined')
+            a_ts_i2c_address = self.config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77')
+            a_ts_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'notdefined')
 
-            self.temp_sensor = ts(self.config, pin_1_name=ts_pin_1_name, i2c_address=ts_i2c_address)
+            self.temp_sensors[0] = a_ts(self.config, pin_1_name=a_ts_pin_1_name, i2c_address=a_ts_i2c_address)
         else:
-            self.temp_sensor = temp_sensors.temp_sensor_simulator(self.config)
+            self.temp_sensors[0] = temp_sensors.temp_sensor_simulator(self.config)
 
-        self.temp_sensor.slot = self.config.get('TEMP_SENSOR', {}).get('A_VAR_SLOT', 10)
+        self.temp_sensors[0].slot = self.config.get('TEMP_SENSOR', {}).get('A_VAR_SLOT', 10)
+
+
+        ### Sensor B
+        b_temp_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('B_CLASSNAME')
+        if b_temp_sensor_classname:
+            b_ts = getattr(temp_sensors, b_temp_sensor_classname)
+
+            b_ts_i2c_address = self.config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76')
+            b_ts_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'notdefined')
+
+            self.temp_sensors[1] = b_ts(self.config, pin_1_name=b_ts_pin_1_name, i2c_address=b_ts_i2c_address)
+        else:
+            self.temp_sensors[1] = temp_sensors.temp_sensor_simulator(self.config)
+
+        self.temp_sensors[1].slot = self.config.get('TEMP_SENSOR', {}).get('B_VAR_SLOT', 15)
 
