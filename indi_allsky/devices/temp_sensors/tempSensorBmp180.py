@@ -13,42 +13,29 @@ class TempSensorBmp180(TempSensorBase):
 
         try:
             temp_c = float(self.bmp180.temperature)
-            rel_h = float(self.bmp180.humidity)
             pressure = float(self.bmp180.pressure)  # hPa
             #altitude = float(self.bmp180.altitude)  # meters
         except RuntimeError as e:
             raise TemperatureReadException(str(e)) from e
 
 
-        logger.info('Temperature device: temp: %0.1fc, humidity: %0.1f%%, pressure: %0.1fhPa', temp_c, rel_h, pressure)
+        logger.info('Temperature device: temp: %0.1fc, pressure: %0.1fhPa', temp_c, pressure)
 
-        try:
-            dew_point_c = self.get_dew_point_c(temp_c, rel_h)
-            frost_point_c = self.get_frost_point_c(temp_c, dew_point_c)
-        except ValueError as e:
-            logger.error('Dew Point calculation error - ValueError: %s', str(e))
-            dew_point_c = 0.0
-            frost_point_c = 0.0
+        # no humidity sensor
 
 
         if self.config.get('TEMP_DISPLAY') == 'f':
             current_temp = self.c2f(temp_c)
-            current_dp = self.c2f(dew_point_c)
-            current_fp = self.c2f(frost_point_c)
         elif self.config.get('TEMP_DISPLAY') == 'k':
             current_temp = self.c2k(temp_c)
-            current_dp = self.c2k(dew_point_c)
-            current_fp = self.c2k(frost_point_c)
         else:
             current_temp = temp_c
-            current_dp = dew_point_c
-            current_fp = frost_point_c
 
 
         data = {
-            'dew_point' : current_dp,
-            'frost_point' : current_fp,
-            'data' : (current_temp, rel_h, pressure),
+            'dew_point' : None,
+            'frost_point' : None,
+            'data' : (current_temp, pressure),
         }
 
         return data
