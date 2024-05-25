@@ -2,8 +2,8 @@ import math
 
 
 class TempSensorBase(object):
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, *args, **kwargs):
+        self.config = args[0]
 
         self._slot = None  # var slot
 

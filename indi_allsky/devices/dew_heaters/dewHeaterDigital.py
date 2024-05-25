@@ -12,12 +12,12 @@ class DewHeaterDigital(DewHeaterBase):
     def __init__(self, *args, **kwargs):
         super(DewHeaterDigital, self).__init__(*args, **kwargs)
 
-        pin_name = kwargs['pin_name']
+        pin_1_name = kwargs['pin_1_name']
 
         import board
         import digitalio
 
-        pin1 = getattr(board, pin_name)
+        pin1 = getattr(board, pin_1_name)
 
         self.pin = digitalio.DigitalInOut(pin1)
         self.pin.direction = digitalio.Direction.OUTPUT

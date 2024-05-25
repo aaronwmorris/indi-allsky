@@ -59,10 +59,12 @@ class TempSensorBme280_I2C(TempSensorBme280):
     def __init__(self, *args, **kwargs):
         super(TempSensorBme280_I2C, self).__init__(*args, **kwargs)
 
+        i2c_address_str = kwargs['i2c_address']
+
         import board
         from adafruit_bme280 import basic as adafruit_bme280
 
-        i2c_address = int(self.config.get('TEMP_SENSOR', {}).get('I2C_ADDRESS', '0x77'), 16)  # string in config
+        i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing BME280 I2C temperature device @ %s', hex(i2c_address))
         i2c = board.I2C()
@@ -74,10 +76,14 @@ class TempSensorBme280_SPI(TempSensorBme280):
     def __init__(self, *args, **kwargs):
         super(TempSensorBme280_SPI, self).__init__(*args, **kwargs)
 
+        pin_1_name = kwargs['pin_1_name']
+
         import board
         from adafruit_bme280 import basic as adafruit_bme280
 
+        pin1 = getattr(board, pin_1_name)
+
         logger.warning('Initializing BME280 SPI temperature device')
-        spi = board.SPI()
+        spi = board.SPI(pin1)
         self.bme280 = adafruit_bme280.Adafruit_BME280_SPI(spi)
 

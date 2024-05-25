@@ -13,10 +13,12 @@ class TempSensorDht22(TempSensorBase):
     def __init__(self, *args, **kwargs):
         super(TempSensorDht22, self).__init__(*args, **kwargs)
 
+        pin_1_name = kwargs['pin_1_name']
+
         import board
         import adafruit_dht
 
-        pin1 = getattr(board, self.config.get('TEMP_SENSOR', {}).get('PIN_1', 'notdefined'))
+        pin1 = getattr(board, pin_1_name)
 
         logger.warning('Initializing %s temperature device', self.dht_classname)
         dht_class = getattr(adafruit_dht, self.dht_classname)

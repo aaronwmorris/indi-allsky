@@ -137,9 +137,10 @@ class SensorWorker(Thread):
         dew_heater_classname = self.config.get('DEW_HEATER', {}).get('CLASSNAME')
         if dew_heater_classname:
             dh = getattr(dew_heaters, dew_heater_classname)
+
             dh_pin_1 = self.config.get('DEW_HEATER', {}).get('PIN_1', 'notdefined')
 
-            self.dew_heater = dh(self.config, pin_name=dh_pin_1)
+            self.dew_heater = dh(self.config, pin_1_name=dh_pin_1)
 
             if self.night_v.value:
                 self.set_dew_heater(self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100))
@@ -166,7 +167,11 @@ class SensorWorker(Thread):
         temp_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('CLASSNAME')
         if temp_sensor_classname:
             ts = getattr(temp_sensors, temp_sensor_classname)
-            self.temp_sensor = ts(self.config)
+
+            ts_i2c_address = self.config.get('TEMP_SENSOR', {}).get('I2C_ADDRESS', '0x77')
+            ts_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('PIN_1', 'notdefined')
+
+            self.temp_sensor = ts(self.config, pin_1_name=ts_pin_1_name, i2c_address=ts_i2c_address)
         else:
             self.temp_sensor = temp_sensors.temp_sensor_simulator(self.config)
 
