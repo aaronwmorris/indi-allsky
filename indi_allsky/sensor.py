@@ -164,16 +164,16 @@ class SensorWorker(Thread):
 
 
     def init_temp_sensor(self):
-        temp_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('CLASSNAME')
+        temp_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('A_CLASSNAME')
         if temp_sensor_classname:
             ts = getattr(temp_sensors, temp_sensor_classname)
 
-            ts_i2c_address = self.config.get('TEMP_SENSOR', {}).get('I2C_ADDRESS', '0x77')
-            ts_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('PIN_1', 'notdefined')
+            ts_i2c_address = self.config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77')
+            ts_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'notdefined')
 
             self.temp_sensor = ts(self.config, pin_1_name=ts_pin_1_name, i2c_address=ts_i2c_address)
         else:
             self.temp_sensor = temp_sensors.temp_sensor_simulator(self.config)
 
-        self.temp_sensor.slot = self.config.get('TEMP_SENSOR', {}).get('VAR_SLOT', 10)
+        self.temp_sensor.slot = self.config.get('TEMP_SENSOR', {}).get('A_VAR_SLOT', 10)
 

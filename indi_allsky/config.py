@@ -395,10 +395,14 @@ class IndiAllSkyConfigBase(object):
             "LEVEL_DEF"              : "100",
         },
         "TEMP_SENSOR" : {
-            "CLASSNAME"              : "",
-            "PIN_1"                  : "D5",
-            "VAR_SLOT"               : 10,
-            "I2C_ADDRESS"            : "0x77",
+            "A_CLASSNAME"            : "",
+            "A_PIN_1"                : "D5",
+            "A_VAR_SLOT"             : 10,
+            "A_I2C_ADDRESS"          : "0x77",
+            "B_CLASSNAME"            : "",
+            "B_PIN_1"                : "D6",
+            "B_VAR_SLOT"             : 15,
+            "B_I2C_ADDRESS"          : "0x76",
         },
     })
 
