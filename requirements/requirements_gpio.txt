@@ -3,6 +3,7 @@ gpiod
 adafruit-circuitpython-dht
 adafruit-circuitpython-bme280
 adafruit-circuitpython-bme680
+circuitpython-bmp180
 
 ### Rpi5
 #rpi-lgpio
