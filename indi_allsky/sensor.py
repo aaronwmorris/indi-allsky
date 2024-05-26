@@ -39,16 +39,16 @@ class SensorWorker(Thread):
         self.next_run = time.time()  # run immediately
         self.next_run_offset = 59
 
-        self.temp_user_slot = self.config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
+        self.dh_temp_user_slot = self.config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
 
-        self.level_default = self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100)
-        self.level_low = self.config.get('DEW_HEATER', {}).get('LEVEL_LOW', 33)
-        self.level_med = self.config.get('DEW_HEATER', {}).get('LEVEL_MED', 66)
-        self.level_high = self.config.get('DEW_HEATER', {}).get('LEVEL_HIGH', 100)
+        self.dh_level_default = self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100)
+        self.dh_level_low = self.config.get('DEW_HEATER', {}).get('LEVEL_LOW', 33)
+        self.dh_level_med = self.config.get('DEW_HEATER', {}).get('LEVEL_MED', 66)
+        self.dh_level_high = self.config.get('DEW_HEATER', {}).get('LEVEL_HIGH', 100)
 
-        self.thold_diff_low = self.config.get('DEW_HEATER', {}).get('THOLD_DIFF_LOW', 15)
-        self.thold_diff_med = self.config.get('DEW_HEATER', {}).get('THOLD_DIFF_MED', 10)
-        self.thold_diff_high = self.config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', 5)
+        self.dh_thold_diff_low = self.config.get('DEW_HEATER', {}).get('THOLD_DIFF_LOW', 15)
+        self.dh_thold_diff_med = self.config.get('DEW_HEATER', {}).get('THOLD_DIFF_MED', 10)
+        self.dh_thold_diff_high = self.config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', 5)
 
 
         self._stopper = threading.Event()
@@ -151,13 +151,13 @@ class SensorWorker(Thread):
         if self.night:
             # night time
             if not self.dew_heater.state:
-                self.set_dew_heater(self.level_default)
+                self.set_dew_heater(self.dh_level_default)
 
         else:
             # day time
             if self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
                 if not self.dew_heater.state:
-                    self.set_dew_heater(self.level_default)
+                    self.set_dew_heater(self.dh_level_default)
             else:
                 self.set_dew_heater(0)
 
@@ -172,10 +172,10 @@ class SensorWorker(Thread):
             self.dew_heater = dh(self.config, pin_1_name=dh_pin_1)
 
             if self.night_v.value:
-                self.set_dew_heater(self.level_default)
+                self.set_dew_heater(self.dh_level_default)
             else:
                 if self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
-                    self.set_dew_heater(self.level_default)
+                    self.set_dew_heater(self.dh_level_default)
                 else:
                     self.set_dew_heater(0)
 
@@ -236,20 +236,20 @@ class SensorWorker(Thread):
             logger.warning('Dew heater target dew point is 0, possible misconfiguration')
 
 
-        current_temp = self.sensors_user_av[self.temp_user_slot]  # dew point
+        current_temp = self.sensors_user_av[self.dh_temp_user_slot]  # dew point
 
 
         temp_diff = current_temp - target_val
-        if temp_diff <= self.thold_diff_high:
+        if temp_diff <= self.dh_thold_diff_high:
             # set dew heater to high
-            self.set_dew_heater(self.level_high)
-        elif temp_diff <= self.thold_diff_med:
+            self.set_dew_heater(self.dh_level_high)
+        elif temp_diff <= self.dh_thold_diff_med:
             # set dew heater to medium
-            self.set_dew_heater(self.level_med)
-        elif temp_diff <= self.thold_diff_low:
+            self.set_dew_heater(self.dh_level_med)
+        elif temp_diff <= self.dh_thold_diff_low:
             # set dew heater to low
-            self.set_dew_heater(self.level_low)
+            self.set_dew_heater(self.dh_level_low)
         else:
-            self.set_dew_heater(self.level_default)
+            self.set_dew_heater(self.dh_level_default)
             #self.set_dew_heater(0)
 
