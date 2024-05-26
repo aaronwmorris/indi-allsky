@@ -13,13 +13,13 @@ class TempSensorBmp180(TempSensorBase):
 
         try:
             temp_c = float(self.bmp180.temperature)
-            pressure = float(self.bmp180.pressure)  # hPa
+            pressure_hpa = float(self.bmp180.pressure)  # hPa
             #altitude = float(self.bmp180.altitude)  # meters
         except RuntimeError as e:
             raise TemperatureReadException(str(e)) from e
 
 
-        logger.info('BMP180 - temp: %0.1fc, pressure: %0.1fhPa', temp_c, pressure)
+        logger.info('BMP180 - temp: %0.1fc, pressure: %0.1fhPa', temp_c, pressure_hpa)
 
         # no humidity sensor
 
@@ -32,10 +32,20 @@ class TempSensorBmp180(TempSensorBase):
             current_temp = temp_c
 
 
+        if self.config.get('PRESSURE_DISPLAY') == 'psi':
+            current_pressure = self.hPa2psi(pressure_hpa)
+        elif self.config.get('PRESSURE_DISPLAY') == 'inHg':
+            current_pressure = self.hPa2inHg(pressure_hpa)
+        elif self.config.get('PRESSURE_DISPLAY') == 'mmHg':
+            current_pressure = self.hPa2mmHg(pressure_hpa)
+        else:
+            current_pressure = pressure_hpa
+
+
         data = {
             'dew_point' : None,
             'frost_point' : None,
-            'data' : (current_temp, pressure),
+            'data' : (current_temp, current_pressure),
         }
 
         return data

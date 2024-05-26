@@ -14,13 +14,13 @@ class TempSensorBme280(TempSensorBase):
         try:
             temp_c = float(self.bme280.temperature)
             rel_h = float(self.bme280.humidity)
-            pressure = float(self.bme280.pressure)  # hPa
+            pressure_hpa = float(self.bme280.pressure)  # hPa
             #altitude = float(self.bme280.altitude)  # meters
         except RuntimeError as e:
             raise TemperatureReadException(str(e)) from e
 
 
-        logger.info('BME280 - temp: %0.1fc, humidity: %0.1f%%, pressure: %0.1fhPa', temp_c, rel_h, pressure)
+        logger.info('BME280 - temp: %0.1fc, humidity: %0.1f%%, pressure: %0.1fhPa', temp_c, rel_h, pressure_hpa)
 
         try:
             dew_point_c = self.get_dew_point_c(temp_c, rel_h)
@@ -45,10 +45,20 @@ class TempSensorBme280(TempSensorBase):
             current_fp = frost_point_c
 
 
+        if self.config.get('PRESSURE_DISPLAY') == 'psi':
+            current_pressure = self.hPa2psi(pressure_hpa)
+        elif self.config.get('PRESSURE_DISPLAY') == 'inHg':
+            current_pressure = self.hPa2inHg(pressure_hpa)
+        elif self.config.get('PRESSURE_DISPLAY') == 'mmHg':
+            current_pressure = self.hPa2mmHg(pressure_hpa)
+        else:
+            current_pressure = pressure_hpa
+
+
         data = {
             'dew_point' : current_dp,
             'frost_point' : current_fp,
-            'data' : (current_temp, rel_h, pressure),
+            'data' : (current_temp, rel_h, current_pressure),
         }
 
         return data

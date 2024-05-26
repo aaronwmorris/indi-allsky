@@ -31,6 +31,16 @@ class TempSensorBase(object):
     def c2k(self, c):
         return c + 273.15
 
+    def hPa2psi(self, hpa):
+        return hpa * 0.014503768077999999
+
+    def hPa2inHg(self, hpa):
+        return hpa * 0.02952998057228486
+
+    def hPa2mmHg(self, hpa):
+        return hpa * 0.7500637554192107
+
+
     ###
     ### https://gist.github.com/sourceperl/45587ea99ff123745428
     ###

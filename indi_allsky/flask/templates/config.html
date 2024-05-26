@@ -364,7 +364,18 @@
             {{ form_config.TEMP_DISPLAY(class='form-select bg-secondary') }}
             <div id="TEMP_DISPLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Temperature system for display</div>
+        <div class="col-sm-8">Temperature units for display</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.PRESSURE_DISPLAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.PRESSURE_DISPLAY(class='form-select bg-secondary') }}
+            <div id="PRESSURE_DISPLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Pressure units for display</div>
     </div>
 
     <div class="form-group row">
@@ -4511,6 +4522,7 @@ const field_names = [
     'SCNR_ALGORITHM',
     'CCD_TEMP',
     'TEMP_DISPLAY',
+    'PRESSURE_DISPLAY',
     'CCD_TEMP_SCRIPT',
     'TARGET_ADU',
     'TARGET_ADU_DAY',
