@@ -138,11 +138,11 @@ class SensorWorker(Thread):
             # threshold processing
             if not self.night and self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
                 # daytime
-                if self.set_dew_heater(self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE')):
+                if self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE'):
                     self.check_dew_heater_thresholds()
             else:
                 # night
-                if self.set_dew_heater(self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE')):
+                if self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE'):
                     self.check_dew_heater_thresholds()
 
 
