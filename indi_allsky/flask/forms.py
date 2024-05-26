@@ -2943,6 +2943,17 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
 
+        if self.DEW_HEATER__THOLD_DIFF_HIGH.data >= self.DEW_HEATER__THOLD_DIFF_MED.data:
+            self.DEW_HEATER__THOLD_DIFF_HIGH.errors.append('HIGH value must be less than MEDIUM value')
+            self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM value must be greater than HIGH value')
+            result = False
+
+        if self.DEW_HEATER__THOLD_DIFF_MED.data >= self.DEW_HEATER__THOLD_DIFF_LOW.data:
+            self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM value must be less than LOW value')
+            self.DEW_HEATER__THOLD_DIFF_LOW.errors.append('LOW value must be greater than MEDIUM value')
+            result = False
+
+
         # temp sensor A
         if self.TEMP_SENSOR__A_CLASSNAME.data:
             if self.TEMP_SENSOR__A_CLASSNAME.data.startswith('blinka_'):
