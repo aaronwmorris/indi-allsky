@@ -41,7 +41,7 @@ class SensorWorker(Thread):
 
         self.temp_user_slot = self.config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
 
-        self.level_default = self.set_dew_heater(self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100))
+        self.level_default = self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100)
         self.level_low = self.config.get('DEW_HEATER', {}).get('LEVEL_LOW', 33)
         self.level_med = self.config.get('DEW_HEATER', {}).get('LEVEL_MED', 66)
         self.level_high = self.config.get('DEW_HEATER', {}).get('LEVEL_HIGH', 100)
