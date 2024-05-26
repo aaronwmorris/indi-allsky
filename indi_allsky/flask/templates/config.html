@@ -4204,6 +4204,126 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DEW_HEATER__THOLD_ENABLE(class='form-check-input') }}
+                <div id="DEW_HEATER__THOLD_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__TEMP_USER_VAR_SLOT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.DEW_HEATER__TEMP_USER_VAR_SLOT(class='form-select bg-secondary') }}
+            <div id="DEW_HEATER__TEMP_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__MANUAL_TARGET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__MANUAL_TARGET(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__MANUAL_TARGET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Manual target temperature if dew point calculations are not available.  0 = disabled</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_LOW.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_LOW(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__LEVEL_LOW-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_MED.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_MED(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__LEVEL_MED-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_HIGH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_HIGH(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__LEVEL_HIGH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_DIFF_LOW.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_DIFF_LOW(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__THOLD_DIFF_LOW-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_DIFF_MED.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_DIFF_MED(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__THOLD_DIFF_MED-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_DIFF_HIGH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_DIFF_HIGH(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__THOLD_DIFF_HIGH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__A_CLASSNAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
@@ -4598,6 +4718,14 @@ const field_names = [
     'DEW_HEATER__CLASSNAME',
     'DEW_HEATER__PIN_1',
     'DEW_HEATER__LEVEL_DEF',
+    'DEW_HEATER__MANUAL_TARGET',
+    'DEW_HEATER__TEMP_USER_VAR_SLOT',
+    'DEW_HEATER__LEVEL_LOW',
+    'DEW_HEATER__LEVEL_MED',
+    'DEW_HEATER__LEVEL_HIGH',
+    'DEW_HEATER__THOLD_DIFF_LOW',
+    'DEW_HEATER__THOLD_DIFF_MED',
+    'DEW_HEATER__THOLD_DIFF_HIGH',
     'TEMP_SENSOR__A_CLASSNAME',
     'TEMP_SENSOR__A_PIN_1',
     'TEMP_SENSOR__A_USER_VAR_SLOT',
@@ -4690,6 +4818,7 @@ const checkbox_field_names = [
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
     'DEW_HEATER__ENABLE_DAY',
+    'DEW_HEATER__THOLD_ENABLE',
     'WEB_NONLOCAL_IMAGES',
     'WEB_LOCAL_IMAGES_ADMIN',
     'RELOAD_ON_SAVE',

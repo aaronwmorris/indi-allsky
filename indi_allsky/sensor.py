@@ -101,6 +101,10 @@ class SensorWorker(Thread):
                 self.night_day_change()
 
 
+            if self.sensors_user_av[2]:
+                logger.info('Dew Point: %0.1f, Frost Point: %0.1f', self.sensors_user_av[2], self.sensors_user_av[3])
+
+
             for temp_sensor in self.temp_sensors:
                 try:
                     temp_data = temp_sensor.update()

@@ -1390,6 +1390,15 @@ class ConfigView(FormView):
             'DEW_HEATER__PIN_1'              : self.indi_allsky_config.get('DEW_HEATER', {}).get('PIN_1', 'D12'),
             'DEW_HEATER__ENABLE_DAY'         : self.indi_allsky_config.get('DEW_HEATER', {}).get('ENABLE_DAY', False),
             'DEW_HEATER__LEVEL_DEF'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100),
+            'DEW_HEATER__THOLD_ENABLE'       : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_ENABLE', False),
+            'DEW_HEATER__MANUAL_TARGET'      : self.indi_allsky_config.get('DEW_HEATER', {}).get('MANUAL_TARGET', 0.0),
+            'DEW_HEATER__TEMP_USER_VAR_SLOT' : self.indi_allsky_config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10),
+            'DEW_HEATER__LEVEL_LOW'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_LOW', 33),
+            'DEW_HEATER__LEVEL_MED'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_MED', 66),
+            'DEW_HEATER__LEVEL_HIGH'         : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_HIGH', 100),
+            'DEW_HEATER__THOLD_DIFF_LOW'     : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_LOW', 15),
+            'DEW_HEATER__THOLD_DIFF_MED'     : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_MED', 10),
+            'DEW_HEATER__THOLD_DIFF_HIGH'    : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', 5),
             'TEMP_SENSOR__A_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_CLASSNAME', ''),
             'TEMP_SENSOR__A_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'D5'),
             'TEMP_SENSOR__A_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77'),
@@ -2019,6 +2028,15 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['DEW_HEATER']['PIN_1']                  = str(request.json['DEW_HEATER__PIN_1'])
         self.indi_allsky_config['DEW_HEATER']['ENABLE_DAY']             = bool(request.json['DEW_HEATER__ENABLE_DAY'])
         self.indi_allsky_config['DEW_HEATER']['LEVEL_DEF']              = int(request.json['DEW_HEATER__LEVEL_DEF'])
+        self.indi_allsky_config['DEW_HEATER']['THOLD_ENABLE']           = bool(request.json['DEW_HEATER__THOLD_ENABLE'])
+        self.indi_allsky_config['DEW_HEATER']['MANUAL_TARGET']          = float(request.json['DEW_HEATER__MANUAL_TARGET'])
+        self.indi_allsky_config['DEW_HEATER']['TEMP_USER_VAR_SLOT']     = int(request.json['DEW_HEATER__TEMP_USER_VAR_SLOT'])
+        self.indi_allsky_config['DEW_HEATER']['LEVEL_LOW']              = int(request.json['DEW_HEATER__LEVEL_LOW'])
+        self.indi_allsky_config['DEW_HEATER']['LEVEL_MED']              = int(request.json['DEW_HEATER__LEVEL_MED'])
+        self.indi_allsky_config['DEW_HEATER']['LEVEL_HIGH']             = int(request.json['DEW_HEATER__LEVEL_HIGH'])
+        self.indi_allsky_config['DEW_HEATER']['THOLD_DIFF_LOW']         = int(request.json['DEW_HEATER__THOLD_DIFF_LOW'])
+        self.indi_allsky_config['DEW_HEATER']['THOLD_DIFF_MED']         = int(request.json['DEW_HEATER__THOLD_DIFF_MED'])
+        self.indi_allsky_config['DEW_HEATER']['THOLD_DIFF_HIGH']        = int(request.json['DEW_HEATER__THOLD_DIFF_HIGH'])
         self.indi_allsky_config['TEMP_SENSOR']['A_CLASSNAME']           = str(request.json['TEMP_SENSOR__A_CLASSNAME'])
         self.indi_allsky_config['TEMP_SENSOR']['A_PIN_1']               = str(request.json['TEMP_SENSOR__A_PIN_1'])
         self.indi_allsky_config['TEMP_SENSOR']['A_USER_VAR_SLOT']       = int(request.json['TEMP_SENSOR__A_USER_VAR_SLOT'])

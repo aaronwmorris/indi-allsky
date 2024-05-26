@@ -2096,7 +2096,7 @@ def DEW_HEATER__CLASSNAME_validator(form, field):
         raise ValidationError('Invalid class syntax')
 
 
-def DEW_HEATER__LEVEL_DEF_validator(form, field):
+def DEW_HEATER__LEVEL_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter a valid number')
 
@@ -2105,6 +2105,19 @@ def DEW_HEATER__LEVEL_DEF_validator(form, field):
 
     if field.data > 100:
         raise ValidationError('Level must be 100 or less')
+
+
+def DEW_HEATER__THOLD_DIFF_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data < 0:
+        raise ValidationError('Threshold difference must be 0 or greater')
+
+
+def DEW_HEATER__MANUAL_TARGET_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
 
 
 def TEMP_SENSOR__CLASSNAME_validator(form, field):
@@ -2793,7 +2806,16 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__CLASSNAME            = SelectField('Dew Heater', choices=DEW_HEATER__CLASSNAME_choices, validators=[DEW_HEATER__CLASSNAME_validator])
     DEW_HEATER__ENABLE_DAY           = BooleanField('Enable Daytime')
     DEW_HEATER__PIN_1                = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
-    DEW_HEATER__LEVEL_DEF            = IntegerField('Default Level', validators=[DEW_HEATER__LEVEL_DEF_validator])
+    DEW_HEATER__LEVEL_DEF            = IntegerField('Default Level', validators=[DEW_HEATER__LEVEL_validator])
+    DEW_HEATER__THOLD_ENABLE         = BooleanField('Enable Dew Heater Thresholds')
+    DEW_HEATER__MANUAL_TARGET        = FloatField('Manual Target', validators=[DEW_HEATER__MANUAL_TARGET_validator])
+    DEW_HEATER__TEMP_USER_VAR_SLOT   = SelectField('Temperature Sensor Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
+    DEW_HEATER__LEVEL_LOW            = IntegerField('Low Setting', validators=[DEW_HEATER__LEVEL_validator])
+    DEW_HEATER__LEVEL_MED            = IntegerField('Medium Setting', validators=[DEW_HEATER__LEVEL_validator])
+    DEW_HEATER__LEVEL_HIGH           = IntegerField('High Setting', validators=[DEW_HEATER__LEVEL_validator])
+    DEW_HEATER__THOLD_DIFF_LOW       = IntegerField('Low Threshold Difference', validators=[DEW_HEATER__THOLD_DIFF_validator])
+    DEW_HEATER__THOLD_DIFF_MED       = IntegerField('Medium Threshold Difference', validators=[DEW_HEATER__THOLD_DIFF_validator])
+    DEW_HEATER__THOLD_DIFF_HIGH      = IntegerField('High Threshold Difference', validators=[DEW_HEATER__THOLD_DIFF_validator])
     TEMP_SENSOR__A_CLASSNAME         = SelectField('Temperature Sensor A', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__A_PIN_1             = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__A_USER_VAR_SLOT     = SelectField('Sensor Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
