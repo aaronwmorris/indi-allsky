@@ -342,9 +342,9 @@ class IndiClientLibCameraGeneric(IndiClient):
         try:
             self._temp_val = float(metadata_dict[self._sensor_temp_metadata_key])
         except KeyError:
-            logger.error('libcamera sensor temperature key not found')
+            logger.error('libcamera camera temperature key not found')
         except ValueError:
-            logger.error('Unable to parse libcamera sensor temperature')
+            logger.error('Unable to parse libcamera camera temperature')
 
 
         ### Auto white balance

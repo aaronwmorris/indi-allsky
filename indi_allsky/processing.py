@@ -106,7 +106,7 @@ class ImageProcessor(object):
         self.gain_v = gain_v
         self.bin_v = bin_v
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
-        self.sensors_user_av = sensors_user_av
+        self.sensors_user_av = sensors_user_av  # 0 ccd_temp
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
@@ -1893,7 +1893,7 @@ class ImageProcessor(object):
 
         for x, data in enumerate(self.sensors_temp_av):
             if self.config.get('TEMP_DISPLAY') == 'f':
-                sensor_temp = ((data * 9.0) / 5.0) + 32
+                sensor_temp = (data * 9.0 / 5.0) + 32
             elif self.config.get('TEMP_DISPLAY') == 'k':
                 sensor_temp = data + 273.15
             else:
@@ -1911,7 +1911,7 @@ class ImageProcessor(object):
 
 
         # dew heater
-        if self.sensors_user_av[0]:
+        if self.sensors_user_av[1]:
             label_data['dew_heater_status'] = 'On'
         else:
             label_data['dew_heater_status'] = 'Off'

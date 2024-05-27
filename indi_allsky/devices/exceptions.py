@@ -1,0 +1,3 @@
+
+class TemperatureReadException(Exception):
+    pass

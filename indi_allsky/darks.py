@@ -901,7 +901,7 @@ class IndiAllSkyDarks(object):
             logger.info('Image average adu: %0.2f', m_avg)
 
             self.getSensorTemperature()
-            logger.info('Sensor temperature: %0.2f', self.sensors_temp_av[0])
+            logger.info('Camera temperature: %0.2f', self.sensors_temp_av[0])
 
             i += 1  # increment
 

@@ -307,6 +307,11 @@ def TEMP_DISPLAY_validator(form, field):
         raise ValidationError('Please select the temperature system for display')
 
 
+def PRESSURE_DISPLAY_validator(form, field):
+    if field.data not in ('hPa', 'psi', 'inHg', 'mmHg'):
+        raise ValidationError('Please select the pressure system for display')
+
+
 def CCD_TEMP_SCRIPT_validator(form, field):
     if not field.data:
         return
@@ -2083,7 +2088,7 @@ def FOCUSER__CLASSNAME_validator(form, field):
     class_regex = r'^[a-zA-Z0-9_\-]+$'
 
     if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid focuser class syntax')
+        raise ValidationError('Invalid class syntax')
 
 
 def DEW_HEATER__CLASSNAME_validator(form, field):
@@ -2093,18 +2098,62 @@ def DEW_HEATER__CLASSNAME_validator(form, field):
     class_regex = r'^[a-zA-Z0-9_\-]+$'
 
     if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid dew heaterclass syntax')
+        raise ValidationError('Invalid class syntax')
 
 
-def DEW_HEATER__LEVEL_DEF_validator(form, field):
+def DEW_HEATER__LEVEL_validator(form, field):
     if not isinstance(field.data, int):
-        raise ValidationError('Please enter a valid category number')
+        raise ValidationError('Please enter a valid number')
 
     if field.data < 0:
         raise ValidationError('Level must be 0 or greater')
 
     if field.data > 100:
         raise ValidationError('Level must be 100 or less')
+
+
+def DEW_HEATER__THOLD_DIFF_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data < 0:
+        raise ValidationError('Threshold difference must be 0 or greater')
+
+
+def DEW_HEATER__MANUAL_TARGET_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
+
+
+def TEMP_SENSOR__CLASSNAME_validator(form, field):
+    if not field.data:
+        return
+
+    class_regex = r'^[a-zA-Z0-9_\-]+$'
+
+    if not re.search(class_regex, field.data):
+        raise ValidationError('Invalid class syntax')
+
+
+def TEMP_SENSOR__I2C_ADDRESS_validator(form, field):
+    try:
+        int(field.data, 16)
+    except ValueError as e:
+        raise ValidationError('Invalid HEX address: {0:s}'.format(str(e)))
+
+
+def SENSOR_USER_VAR_SLOT_validator(form, field):
+    try:
+        slot_i = int(field.data)
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
+    if slot_i < 10:
+        raise ValidationError('Slot must be 10 or greater')
+
+    if slot_i > 30:
+        raise ValidationError('Slot must be 30 or less')
 
 
 def DEVICE_PIN_NAME_validator(form, field):
@@ -2203,6 +2252,13 @@ class IndiAllskyConfigForm(FlaskForm):
         ('c', 'Celcius'),
         ('f', 'Fahrenheit'),
         ('k', 'Kelvin'),
+    )
+
+    PRESSURE_DISPLAY_choices = (
+        ('hPa', 'hectoPascals (hPa)'),
+        ('psi', 'PSI'),
+        ('inHg', 'Inches of Mercury (inHg)'),
+        ('mmHg', 'Millimeters of Mercury (mmHg)'),
     )
 
     IMAGE_FILE_TYPE_choices = (
@@ -2407,6 +2463,41 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_dew_heater_pwm', 'Dew Heater - PWM'),
     )
 
+    TEMP_SENSOR__CLASSNAME_choices = (
+        ('', 'None'),
+        ('blinka_temp_sensor_dht22', 'DHT22/AM2302 - 2 Slots'),
+        ('blinka_temp_sensor_dht21', 'DHT21/AM2301 - 2 Slots'),
+        ('blinka_temp_sensor_dht11', 'DHT11 - 2 Slots'),
+        ('blinka_temp_sensor_bmp180_i2c', 'BMP180 i2c - 2 Slots (No Dew Point)'),
+        ('blinka_temp_sensor_bme280_i2c', 'BME280 i2c - 3 Slots'),
+        ('blinka_temp_sensor_bme280_spi', 'BME280 SPI - 3 Slots'),
+        ('blinka_temp_sensor_bme680_i2c', 'BME680 i2c - 4 Slots'),
+        ('blinka_temp_sensor_bme680_spi', 'BME680 SPI - 4 Slots'),
+    )
+
+    SENSOR_USER_VAR_SLOT_choices = (
+        ('10', '10'),
+        ('11', '11'),
+        ('12', '12'),
+        ('13', '13'),
+        ('14', '14'),
+        ('15', '15'),
+        ('16', '16'),
+        ('17', '17'),
+        ('18', '18'),
+        ('19', '19'),
+        ('20', '20'),
+        ('21', '21'),
+        ('22', '22'),
+        ('23', '23'),
+        ('24', '24'),
+        ('25', '25'),
+        ('26', '26'),
+        ('27', '27'),
+        ('28', '28'),
+        ('29', '29'),
+    )
+
 
     ENCRYPT_PASSWORDS                = BooleanField('Encrypt Passwords')
     CAMERA_INTERFACE                 = SelectField('Camera Interface', choices=CAMERA_INTERFACE_choices, validators=[DataRequired(), CAMERA_INTERFACE_validator])
@@ -2445,6 +2536,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_COOLING                      = BooleanField('CCD Cooling')
     CCD_TEMP                         = FloatField('Target CCD Temp', validators=[CCD_TEMP_validator])
     TEMP_DISPLAY                     = SelectField('Temperature Display', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), TEMP_DISPLAY_validator])
+    PRESSURE_DISPLAY                 = SelectField('Pressure Display', choices=PRESSURE_DISPLAY_choices, validators=[DataRequired(), PRESSURE_DISPLAY_validator])
     CCD_TEMP_SCRIPT                  = StringField('External Temperature Script', validators=[CCD_TEMP_SCRIPT_validator])
     GPS_ENABLE                       = BooleanField('GPS Enable')
     TARGET_ADU                       = IntegerField('Target ADU (night)', validators=[DataRequired(), TARGET_ADU_validator])
@@ -2719,15 +2811,32 @@ class IndiAllskyConfigForm(FlaskForm):
     PYCURL_CAMERA__URL               = StringField('pyCurl Camera URL', validators=[PYCURL_CAMERA__URL_validator])
     PYCURL_CAMERA__USERNAME          = StringField('Username', validators=[PYCURL_CAMERA__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
     PYCURL_CAMERA__PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[PYCURL_CAMERA__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
-    FOCUSER__CLASSNAME               = SelectField('Focuser Class', choices=FOCUSER__CLASSNAME_choices, validators=[FOCUSER__CLASSNAME_validator])
+    FOCUSER__CLASSNAME               = SelectField('Focuser', choices=FOCUSER__CLASSNAME_choices, validators=[FOCUSER__CLASSNAME_validator])
     FOCUSER__GPIO_PIN_1              = StringField('GPIO Pin 1', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_2              = StringField('GPIO Pin 2', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_3              = StringField('GPIO Pin 3', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_4              = StringField('GPIO Pin 4', validators=[DEVICE_PIN_NAME_validator])
-    DEW_HEATER__CLASSNAME            = SelectField('Dew Heater Class', choices=DEW_HEATER__CLASSNAME_choices, validators=[DEW_HEATER__CLASSNAME_validator])
+    DEW_HEATER__CLASSNAME            = SelectField('Dew Heater', choices=DEW_HEATER__CLASSNAME_choices, validators=[DEW_HEATER__CLASSNAME_validator])
     DEW_HEATER__ENABLE_DAY           = BooleanField('Enable Daytime')
     DEW_HEATER__PIN_1                = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
-    DEW_HEATER__LEVEL_DEF            = IntegerField('Default Level', validators=[DEW_HEATER__LEVEL_DEF_validator])
+    DEW_HEATER__LEVEL_DEF            = IntegerField('Default Level', validators=[DEW_HEATER__LEVEL_validator])
+    DEW_HEATER__THOLD_ENABLE         = BooleanField('Enable Dew Heater Thresholds')
+    DEW_HEATER__MANUAL_TARGET        = FloatField('Manual Target', validators=[DEW_HEATER__MANUAL_TARGET_validator])
+    DEW_HEATER__TEMP_USER_VAR_SLOT   = SelectField('Temperature Sensor Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
+    DEW_HEATER__LEVEL_LOW            = IntegerField('Low Setting', validators=[DEW_HEATER__LEVEL_validator])
+    DEW_HEATER__LEVEL_MED            = IntegerField('Medium Setting', validators=[DEW_HEATER__LEVEL_validator])
+    DEW_HEATER__LEVEL_HIGH           = IntegerField('High Setting', validators=[DEW_HEATER__LEVEL_validator])
+    DEW_HEATER__THOLD_DIFF_LOW       = IntegerField('Low Threshold Difference', validators=[DEW_HEATER__THOLD_DIFF_validator])
+    DEW_HEATER__THOLD_DIFF_MED       = IntegerField('Medium Threshold Difference', validators=[DEW_HEATER__THOLD_DIFF_validator])
+    DEW_HEATER__THOLD_DIFF_HIGH      = IntegerField('High Threshold Difference', validators=[DEW_HEATER__THOLD_DIFF_validator])
+    TEMP_SENSOR__A_CLASSNAME         = SelectField('Temperature Sensor A', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
+    TEMP_SENSOR__A_PIN_1             = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    TEMP_SENSOR__A_USER_VAR_SLOT     = SelectField('Sensor Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
+    TEMP_SENSOR__A_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
+    TEMP_SENSOR__B_CLASSNAME         = SelectField('Temperature Sensor B', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
+    TEMP_SENSOR__B_PIN_1             = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    TEMP_SENSOR__B_USER_VAR_SLOT     = SelectField('Sensor Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
+    TEMP_SENSOR__B_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
@@ -2822,11 +2931,11 @@ class IndiAllskyConfigForm(FlaskForm):
                         result = False
 
                 except ImportError:
-                    self.FOCUSER__CLASSNAME.errors.append('Adafruit-Blinka python module not installed')
+                    self.FOCUSER__CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
 
 
-        # dew_heater
+        # dew heater
         if self.DEW_HEATER__CLASSNAME.data:
             if self.DEW_HEATER__CLASSNAME.data.startswith('blinka_'):
                 try:
@@ -2843,7 +2952,60 @@ class IndiAllskyConfigForm(FlaskForm):
                         result = False
 
                 except ImportError:
-                    self.DEW_HEATER__CLASSNAME.errors.append('Adafruit-Blinka python module not installed')
+                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+
+        if self.DEW_HEATER__THOLD_DIFF_HIGH.data >= self.DEW_HEATER__THOLD_DIFF_MED.data:
+            self.DEW_HEATER__THOLD_DIFF_HIGH.errors.append('HIGH value must be less than MEDIUM value')
+            self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM value must be greater than HIGH value')
+            result = False
+
+        if self.DEW_HEATER__THOLD_DIFF_MED.data >= self.DEW_HEATER__THOLD_DIFF_LOW.data:
+            self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM value must be less than LOW value')
+            self.DEW_HEATER__THOLD_DIFF_LOW.errors.append('LOW value must be greater than MEDIUM value')
+            result = False
+
+
+        # temp sensor A
+        if self.TEMP_SENSOR__A_CLASSNAME.data:
+            if self.TEMP_SENSOR__A_CLASSNAME.data.startswith('blinka_'):
+                try:
+                    import board
+
+                    if self.TEMP_SENSOR__A_PIN_1.data:
+                        try:
+                            getattr(board, self.TEMP_SENSOR__A_PIN_1.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__A_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__A_PIN_1.data))
+                            result = False
+                    else:
+                        self.TEMP_SENSOR__A_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+
+        # temp sensor B
+        if self.TEMP_SENSOR__B_CLASSNAME.data:
+            if self.TEMP_SENSOR__B_CLASSNAME.data.startswith('blinka_'):
+                try:
+                    import board
+
+                    if self.TEMP_SENSOR__B_PIN_1.data:
+                        try:
+                            getattr(board, self.TEMP_SENSOR__B_PIN_1.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__B_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__B_PIN_1.data))
+                            result = False
+                    else:
+                        self.TEMP_SENSOR__B_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
 
 

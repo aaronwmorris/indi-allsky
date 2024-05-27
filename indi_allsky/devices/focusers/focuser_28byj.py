@@ -36,10 +36,12 @@ class focuser_28byj_64(FocuserBase):
     def __init__(self, *args, **kwargs):
         super(focuser_28byj_64, self).__init__(*args, **kwargs)
 
-        pin1 = getattr(board, self.config.get('FOCUSER', {}).get('GPIO_PIN_1', 'notdefined'))
-        pin2 = getattr(board, self.config.get('FOCUSER', {}).get('GPIO_PIN_2', 'notdefined'))
-        pin3 = getattr(board, self.config.get('FOCUSER', {}).get('GPIO_PIN_3', 'notdefined'))
-        pin4 = getattr(board, self.config.get('FOCUSER', {}).get('GPIO_PIN_4', 'notdefined'))
+        pin_names = kwargs['pin_names']
+
+        pin1 = getattr(board, pin_names[0])
+        pin2 = getattr(board, pin_names[1])
+        pin3 = getattr(board, pin_names[2])
+        pin4 = getattr(board, pin_names[3])
 
         self.pins = [
             digitalio.DigitalInOut(pin1),

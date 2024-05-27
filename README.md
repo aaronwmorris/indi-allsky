@@ -6,7 +6,16 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 
 ## New Features
-* Mechanical focuser support (28BYJ-48 Stepper)
+* Native Temperature Sensor support
+    * DHT11/22
+    * BMP180
+    * BME280 (i2c & SPI)
+    * BME680 (i2c & SPI)
+* Native Dew Heater support
+    * Standard
+    * PWM Controlled
+* Mechanical focuser support
+    * 28BYJ-48 Stepper
 * Use star metrics (in addition to ADU) for star trails generation
 * Generate thumbnails to reduce load time in Timelapse view
 * Panorama timelapse generation

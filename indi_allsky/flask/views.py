@@ -1138,6 +1138,7 @@ class ConfigView(FormView):
             'CCD_COOLING'                    : self.indi_allsky_config.get('CCD_COOLING', False),
             'CCD_TEMP'                       : self.indi_allsky_config.get('CCD_TEMP', 15.0),
             'TEMP_DISPLAY'                   : self.indi_allsky_config.get('TEMP_DISPLAY', 'c'),
+            'PRESSURE_DISPLAY'               : self.indi_allsky_config.get('PRESSURE_DISPLAY', 'hpa'),
             'CCD_TEMP_SCRIPT'                : self.indi_allsky_config.get('CCD_TEMP_SCRIPT', ''),
             'GPS_ENABLE'                     : self.indi_allsky_config.get('GPS_ENABLE', False),
             'TARGET_ADU'                     : self.indi_allsky_config.get('TARGET_ADU', 75),
@@ -1390,6 +1391,23 @@ class ConfigView(FormView):
             'DEW_HEATER__PIN_1'              : self.indi_allsky_config.get('DEW_HEATER', {}).get('PIN_1', 'D12'),
             'DEW_HEATER__ENABLE_DAY'         : self.indi_allsky_config.get('DEW_HEATER', {}).get('ENABLE_DAY', False),
             'DEW_HEATER__LEVEL_DEF'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100),
+            'DEW_HEATER__THOLD_ENABLE'       : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_ENABLE', False),
+            'DEW_HEATER__MANUAL_TARGET'      : self.indi_allsky_config.get('DEW_HEATER', {}).get('MANUAL_TARGET', 0.0),
+            'DEW_HEATER__TEMP_USER_VAR_SLOT' : str(self.indi_allsky_config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)),  # string in form, int in config
+            'DEW_HEATER__LEVEL_LOW'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_LOW', 33),
+            'DEW_HEATER__LEVEL_MED'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_MED', 66),
+            'DEW_HEATER__LEVEL_HIGH'         : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_HIGH', 100),
+            'DEW_HEATER__THOLD_DIFF_LOW'     : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_LOW', 15),
+            'DEW_HEATER__THOLD_DIFF_MED'     : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_MED', 10),
+            'DEW_HEATER__THOLD_DIFF_HIGH'    : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', 5),
+            'TEMP_SENSOR__A_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_CLASSNAME', ''),
+            'TEMP_SENSOR__A_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'D5'),
+            'TEMP_SENSOR__A_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77'),
+            'TEMP_SENSOR__A_USER_VAR_SLOT'   : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 10)),  # string in form, int in config
+            'TEMP_SENSOR__B_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_CLASSNAME', ''),
+            'TEMP_SENSOR__B_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'D6'),
+            'TEMP_SENSOR__B_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76'),
+            'TEMP_SENSOR__B_USER_VAR_SLOT'   : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 15)),  # string in form, int in config
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -1701,6 +1719,9 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('DEW_HEATER'):
             self.indi_allsky_config['DEW_HEATER'] = {}
 
+        if not self.indi_allsky_config.get('TEMP_SENSOR'):
+            self.indi_allsky_config['TEMP_SENSOR'] = {}
+
         if not self.indi_allsky_config.get('THUMBNAILS'):
             self.indi_allsky_config['THUMBNAILS'] = {}
 
@@ -1744,6 +1765,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CCD_TEMP']                             = float(request.json['CCD_TEMP'])
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
         self.indi_allsky_config['TEMP_DISPLAY']                         = str(request.json['TEMP_DISPLAY'])
+        self.indi_allsky_config['PRESSURE_DISPLAY']                     = str(request.json['PRESSURE_DISPLAY'])
         self.indi_allsky_config['GPS_ENABLE']                           = bool(request.json['GPS_ENABLE'])
         self.indi_allsky_config['CCD_TEMP_SCRIPT']                      = str(request.json['CCD_TEMP_SCRIPT'])
         self.indi_allsky_config['TARGET_ADU']                           = int(request.json['TARGET_ADU'])
@@ -2008,6 +2030,23 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['DEW_HEATER']['PIN_1']                  = str(request.json['DEW_HEATER__PIN_1'])
         self.indi_allsky_config['DEW_HEATER']['ENABLE_DAY']             = bool(request.json['DEW_HEATER__ENABLE_DAY'])
         self.indi_allsky_config['DEW_HEATER']['LEVEL_DEF']              = int(request.json['DEW_HEATER__LEVEL_DEF'])
+        self.indi_allsky_config['DEW_HEATER']['THOLD_ENABLE']           = bool(request.json['DEW_HEATER__THOLD_ENABLE'])
+        self.indi_allsky_config['DEW_HEATER']['MANUAL_TARGET']          = float(request.json['DEW_HEATER__MANUAL_TARGET'])
+        self.indi_allsky_config['DEW_HEATER']['TEMP_USER_VAR_SLOT']     = int(request.json['DEW_HEATER__TEMP_USER_VAR_SLOT'])
+        self.indi_allsky_config['DEW_HEATER']['LEVEL_LOW']              = int(request.json['DEW_HEATER__LEVEL_LOW'])
+        self.indi_allsky_config['DEW_HEATER']['LEVEL_MED']              = int(request.json['DEW_HEATER__LEVEL_MED'])
+        self.indi_allsky_config['DEW_HEATER']['LEVEL_HIGH']             = int(request.json['DEW_HEATER__LEVEL_HIGH'])
+        self.indi_allsky_config['DEW_HEATER']['THOLD_DIFF_LOW']         = int(request.json['DEW_HEATER__THOLD_DIFF_LOW'])
+        self.indi_allsky_config['DEW_HEATER']['THOLD_DIFF_MED']         = int(request.json['DEW_HEATER__THOLD_DIFF_MED'])
+        self.indi_allsky_config['DEW_HEATER']['THOLD_DIFF_HIGH']        = int(request.json['DEW_HEATER__THOLD_DIFF_HIGH'])
+        self.indi_allsky_config['TEMP_SENSOR']['A_CLASSNAME']           = str(request.json['TEMP_SENSOR__A_CLASSNAME'])
+        self.indi_allsky_config['TEMP_SENSOR']['A_PIN_1']               = str(request.json['TEMP_SENSOR__A_PIN_1'])
+        self.indi_allsky_config['TEMP_SENSOR']['A_USER_VAR_SLOT']       = int(request.json['TEMP_SENSOR__A_USER_VAR_SLOT'])
+        self.indi_allsky_config['TEMP_SENSOR']['A_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__A_I2C_ADDRESS'])
+        self.indi_allsky_config['TEMP_SENSOR']['B_CLASSNAME']           = str(request.json['TEMP_SENSOR__B_CLASSNAME'])
+        self.indi_allsky_config['TEMP_SENSOR']['B_PIN_1']               = str(request.json['TEMP_SENSOR__B_PIN_1'])
+        self.indi_allsky_config['TEMP_SENSOR']['B_USER_VAR_SLOT']       = int(request.json['TEMP_SENSOR__B_USER_VAR_SLOT'])
+        self.indi_allsky_config['TEMP_SENSOR']['B_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__B_I2C_ADDRESS'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
@@ -2871,14 +2910,16 @@ class SystemInfoView(TemplateView):
         temp_list = list()
         for t_key in sorted(temp_info):  # always return the keys in the same order
             for i, t in enumerate(temp_info[t_key]):
+                temp_c = float(t.current)
+
                 if self.indi_allsky_config.get('TEMP_DISPLAY') == 'f':
-                    current_temp = ((t.current * 9.0 ) / 5.0) + 32
+                    current_temp = (temp_c * 9.0 / 5.0) + 32
                     temp_sys = 'F'
                 elif self.indi_allsky_config.get('TEMP_DISPLAY') == 'k':
-                    current_temp = t.current + 273.15
+                    current_temp = temp_c + 273.15
                     temp_sys = 'K'
                 else:
-                    current_temp = float(t.current)
+                    current_temp = temp_c
                     temp_sys = 'C'
 
                 # these names will match the mqtt topics

@@ -364,7 +364,18 @@
             {{ form_config.TEMP_DISPLAY(class='form-select bg-secondary') }}
             <div id="TEMP_DISPLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Temperature system for display</div>
+        <div class="col-sm-8">Temperature units for display</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.PRESSURE_DISPLAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.PRESSURE_DISPLAY(class='form-select bg-secondary') }}
+            <div id="PRESSURE_DISPLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Pressure units for display</div>
     </div>
 
     <div class="form-group row">
@@ -4102,7 +4113,7 @@
             <div id="FOCUSER__GPIO_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Example: D17</div>
+            <div>Example: D17 (GPIO17 / Pin 11 Raspi)</div>
         </div>
     </div>
 
@@ -4115,7 +4126,7 @@
             <div id="FOCUSER__GPIO_PIN_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Example: D18</div>
+            <div>Example: D18 (GPIO18 / Pin 12 Raspi)</div>
         </div>
     </div>
 
@@ -4128,7 +4139,7 @@
             <div id="FOCUSER__GPIO_PIN_3-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Example: D27</div>
+            <div>Example: D27 (GPIO27 / Pin 13 Raspi)</div>
         </div>
     </div>
 
@@ -4141,7 +4152,7 @@
             <div id="FOCUSER__GPIO_PIN_4-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Example: D22</div>
+            <div>Example: D22 (GPIO22 / Pin 15 Raspi)</div>
         </div>
     </div>
 
@@ -4169,7 +4180,7 @@
             <div id="DEW_HEATER__PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Example: D12</div>
+            <div>Example: D12 (GPIO12 / Pin 32 Raspi)</div>
         </div>
     </div>
 
@@ -4195,6 +4206,234 @@
                 {{ form_config.DEW_HEATER__ENABLE_DAY(class='form-check-input') }}
                 <div id="DEW_HEATER__ENABLE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DEW_HEATER__THOLD_ENABLE(class='form-check-input') }}
+                <div id="DEW_HEATER__THOLD_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__TEMP_USER_VAR_SLOT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__TEMP_USER_VAR_SLOT(class='form-select bg-secondary') }}
+            <div id="DEW_HEATER__TEMP_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__MANUAL_TARGET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__MANUAL_TARGET(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__MANUAL_TARGET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Manual target temperature if dew point calculations are not available.  0 = disabled</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_LOW.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_LOW(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__LEVEL_LOW-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_MED.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_MED(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__LEVEL_MED-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_HIGH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__LEVEL_HIGH(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__LEVEL_HIGH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_DIFF_LOW.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_DIFF_LOW(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__THOLD_DIFF_LOW-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>If the difference is above the LOW threshold, the default level (above) is used</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_DIFF_MED.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_DIFF_MED(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__THOLD_DIFF_MED-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_DIFF_HIGH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__THOLD_DIFF_HIGH(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__THOLD_DIFF_HIGH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__A_CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.TEMP_SENSOR__A_CLASSNAME(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__A_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Temperature-Sensors" class="text-decoration-none link-info" target="_blank">Temperature Sensor Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__A_PIN_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__A_PIN_1(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__A_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D5 (GPIO5 / Pin 29 Raspi)</div>
+            <div>Unused for i2c devices</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__A_I2C_ADDRESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__A_I2C_ADDRESS(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__A_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Hexidecimal address - Example: 0x77</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__A_USER_VAR_SLOT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__A_USER_VAR_SLOT(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__A_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.TEMP_SENSOR__B_CLASSNAME(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__B_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Temperature-Sensors" class="text-decoration-none link-info" target="_blank">Temperature Sensor Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_PIN_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_PIN_1(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__B_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D6 (GPIO5 / Pin 31 Raspi)</div>
+            <div>Unused for i2c devices</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_I2C_ADDRESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_I2C_ADDRESS(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__B_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Hexidecimal address - Example: 0x76</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_USER_VAR_SLOT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_USER_VAR_SLOT(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__B_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
         </div>
@@ -4283,6 +4522,7 @@ const field_names = [
     'SCNR_ALGORITHM',
     'CCD_TEMP',
     'TEMP_DISPLAY',
+    'PRESSURE_DISPLAY',
     'CCD_TEMP_SCRIPT',
     'TARGET_ADU',
     'TARGET_ADU_DAY',
@@ -4490,6 +4730,22 @@ const field_names = [
     'DEW_HEATER__CLASSNAME',
     'DEW_HEATER__PIN_1',
     'DEW_HEATER__LEVEL_DEF',
+    'DEW_HEATER__MANUAL_TARGET',
+    'DEW_HEATER__TEMP_USER_VAR_SLOT',
+    'DEW_HEATER__LEVEL_LOW',
+    'DEW_HEATER__LEVEL_MED',
+    'DEW_HEATER__LEVEL_HIGH',
+    'DEW_HEATER__THOLD_DIFF_LOW',
+    'DEW_HEATER__THOLD_DIFF_MED',
+    'DEW_HEATER__THOLD_DIFF_HIGH',
+    'TEMP_SENSOR__A_CLASSNAME',
+    'TEMP_SENSOR__A_PIN_1',
+    'TEMP_SENSOR__A_USER_VAR_SLOT',
+    'TEMP_SENSOR__A_I2C_ADDRESS',
+    'TEMP_SENSOR__B_CLASSNAME',
+    'TEMP_SENSOR__B_PIN_1',
+    'TEMP_SENSOR__B_USER_VAR_SLOT',
+    'TEMP_SENSOR__B_I2C_ADDRESS',
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',
@@ -4574,6 +4830,7 @@ const checkbox_field_names = [
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
     'DEW_HEATER__ENABLE_DAY',
+    'DEW_HEATER__THOLD_ENABLE',
     'WEB_NONLOCAL_IMAGES',
     'WEB_LOCAL_IMAGES_ADMIN',
     'RELOAD_ON_SAVE',
