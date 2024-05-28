@@ -195,31 +195,31 @@ class SensorWorker(Thread):
 
     def init_sensors(self):
         ### Sensor A
-        a_temp_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('A_CLASSNAME')
-        if a_temp_sensor_classname:
-            a_ts = getattr(indi_allsky_sensors, a_temp_sensor_classname)
+        a_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('A_CLASSNAME')
+        if a_sensor_classname:
+            a_sensor = getattr(indi_allsky_sensors, a_sensor_classname)
 
-            a_ts_i2c_address = self.config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77')
-            a_ts_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'notdefined')
+            a_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77')
+            a_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'notdefined')
 
-            self.sensors[0] = a_ts(self.config, pin_1_name=a_ts_pin_1_name, i2c_address=a_ts_i2c_address)
+            self.sensors[0] = a_sensor(self.config, pin_1_name=a_sensor_pin_1_name, i2c_address=a_sensor_i2c_address)
         else:
-            self.sensors[0] = indi_allsky_sensors.temp_sensor_simulator(self.config)
+            self.sensors[0] = indi_allsky_sensors.sensor_simulator(self.config)
 
         self.sensors[0].slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 10)
 
 
         ### Sensor B
-        b_temp_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('B_CLASSNAME')
-        if b_temp_sensor_classname:
-            b_ts = getattr(indi_allsky_sensors, b_temp_sensor_classname)
+        b_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('B_CLASSNAME')
+        if b_sensor_classname:
+            b_sensor = getattr(indi_allsky_sensors, b_sensor_classname)
 
-            b_ts_i2c_address = self.config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76')
-            b_ts_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'notdefined')
+            b_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76')
+            b_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'notdefined')
 
-            self.sensors[1] = b_ts(self.config, pin_1_name=b_ts_pin_1_name, i2c_address=b_ts_i2c_address)
+            self.sensors[1] = b_sensor(self.config, pin_1_name=b_sensor_pin_1_name, i2c_address=b_sensor_i2c_address)
         else:
-            self.sensors[1] = indi_allsky_sensors.temp_sensor_simulator(self.config)
+            self.sensors[1] = indi_allsky_sensors.sensor_simulator(self.config)
 
         self.sensors[1].slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 15)
 

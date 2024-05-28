@@ -1,13 +1,13 @@
 import logging
 
-from .tempSensorBase import TempSensorBase
+from .sensorBase import SensorBase
 from ..exceptions import TemperatureReadException
 
 
 logger = logging.getLogger('indi_allsky')
 
 
-class TempSensorBme680(TempSensorBase):
+class TempSensorBme680(SensorBase):
 
     def update(self):
 
