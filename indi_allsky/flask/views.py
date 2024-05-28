@@ -5117,8 +5117,7 @@ class JsonSupportInfoView(JsonView):
         import subprocess
 
         cmd = [
-            'echo',
-            str(Path(__file__).parent),
+            str(Path(__file__).parent.parent.parent.absolute().joinpath('misc', 'support_info.sh')),
         ]
 
 

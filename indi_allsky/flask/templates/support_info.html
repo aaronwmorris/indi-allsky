@@ -17,19 +17,40 @@ pre {
 {% block content %}
 <div class="row">
     <div class="col-sm-12">
-        <div id="support_data"></div>
+      <pre>
+        <textarea id="support_info" rows="25" cols="100"></textarea>
+      </pre>
     </div>
 </div>
 
 <script>
+
+function loadSupportInfo() {
+    console.log('Loading support info');
+    loadJS("{{ url_for('indi_allsky.js_support_info_view') }}");
+}
+
+
+function loadJS(url, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json",
+        data: {},
+        success: function(json_data){
+            $("#support_info").text(json_data['support_info']);
+        },
+        error: function(data){
+            onError(data.status);
+        },
+    });
+}
+
 function init() {
-    var pre_div = $('<pre />');
-
-    $('<div />', {
-        'text'  : "{{ support_info }}",
-    }).appendTo(pre_div);
-
-    $("#support_data").html(pre_div);
+    loadSupportInfo();
 }
 
 
