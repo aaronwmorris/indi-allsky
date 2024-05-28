@@ -78,7 +78,7 @@ cd "$OLDPWD"
 
 
 # go ahead and prompt for password
-sudo true
+#sudo true
 
 
 echo "#################################"
@@ -116,7 +116,7 @@ df -k
 
 echo
 echo "sysctl info"
-sudo sysctl vm.swappiness
+/usr/sbin/sysctl vm.swappiness
 
 echo
 echo "system python: $(python3 -V)"
