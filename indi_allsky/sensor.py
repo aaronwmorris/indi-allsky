@@ -117,20 +117,20 @@ class SensorWorker(Thread):
                 logger.info('Dew Point: %0.1f, Frost Point: %0.1f', self.sensors_user_av[2], self.sensors_user_av[3])
 
 
-            # update temp sensor readings
-            for temp_sensor in self.temp_sensors:
+            # update sensor readings
+            for sensor in self.temp_sensors:
                 try:
-                    temp_data = temp_sensor.update()
+                    temp_data = sensor.update()
 
                     with self.sensors_user_av.get_lock():
-                        if temp_data['dew_point']:
-                            self.sensors_user_av[2] = temp_data['dew_point']
+                        if temp_data.get('dew_point'):
+                            self.sensors_user_av[2] = float(temp_data['dew_point'])
 
-                        if temp_data['frost_point']:
-                            self.sensors_user_av[3] = temp_data['frost_point']
+                        if temp_data.get('frost_point'):
+                            self.sensors_user_av[3] = float(temp_data['frost_point'])
 
                         for i, v in enumerate(temp_data['data']):
-                            self.sensors_user_av[temp_sensor.slot + i] = float(v)
+                            self.sensors_user_av[sensor.slot + i] = float(v)
                 except TemperatureReadException as e:
                     logger.error('TemperatureReadException: {0:s}'.format(str(e)))
 
