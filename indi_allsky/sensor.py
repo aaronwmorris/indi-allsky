@@ -34,7 +34,7 @@ class SensorWorker(Thread):
         self.night = False
 
         self.dew_heater = None
-        self.temp_sensors = [None, None]
+        self.sensors = [None, None]
 
         self.next_run = time.time()  # run immediately
         self.next_run_offset = 59
@@ -118,7 +118,7 @@ class SensorWorker(Thread):
 
 
             # update sensor readings
-            for sensor in self.temp_sensors:
+            for sensor in self.sensors:
                 try:
                     temp_data = sensor.update()
 
