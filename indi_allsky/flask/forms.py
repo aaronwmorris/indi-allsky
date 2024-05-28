@@ -2833,12 +2833,16 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__THOLD_DIFF_HIGH      = IntegerField('High Threshold Difference', validators=[DEW_HEATER__THOLD_DIFF_validator])
     TEMP_SENSOR__A_CLASSNAME         = SelectField('Sensor A', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__A_PIN_1             = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
-    TEMP_SENSOR__A_USER_VAR_SLOT     = SelectField('Sensor Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
+    TEMP_SENSOR__A_USER_VAR_SLOT     = SelectField('Sensor A Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__A_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__B_CLASSNAME         = SelectField('Sensor B', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__B_PIN_1             = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
-    TEMP_SENSOR__B_USER_VAR_SLOT     = SelectField('Sensor Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
+    TEMP_SENSOR__B_USER_VAR_SLOT     = SelectField('Sensor B Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__B_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
+    TEMP_SENSOR__C_CLASSNAME         = SelectField('Sensor C', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
+    TEMP_SENSOR__C_PIN_1             = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    TEMP_SENSOR__C_USER_VAR_SLOT     = SelectField('Sensor C Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
+    TEMP_SENSOR__C_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
@@ -2969,7 +2973,7 @@ class IndiAllskyConfigForm(FlaskForm):
             result = False
 
 
-        # temp sensor A
+        # sensor A
         if self.TEMP_SENSOR__A_CLASSNAME.data:
             if self.TEMP_SENSOR__A_CLASSNAME.data.startswith('blinka_'):
                 try:
@@ -2990,7 +2994,7 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
 
-        # temp sensor B
+        # sensor B
         if self.TEMP_SENSOR__B_CLASSNAME.data:
             if self.TEMP_SENSOR__B_CLASSNAME.data.startswith('blinka_'):
                 try:
@@ -3008,6 +3012,27 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except ImportError:
                     self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+
+        # sensor C
+        if self.TEMP_SENSOR__C_CLASSNAME.data:
+            if self.TEMP_SENSOR__C_CLASSNAME.data.startswith('blinka_'):
+                try:
+                    import board
+
+                    if self.TEMP_SENSOR__C_PIN_1.data:
+                        try:
+                            getattr(board, self.TEMP_SENSOR__C_PIN_1.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__C_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__C_PIN_1.data))
+                            result = False
+                    else:
+                        self.TEMP_SENSOR__C_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
 
 

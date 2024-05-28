@@ -34,7 +34,7 @@ class SensorWorker(Thread):
         self.night = False
 
         self.dew_heater = None
-        self.sensors = [None, None]
+        self.sensors = [None, None, None]
 
         self.next_run = time.time()  # run immediately
         self.next_run_offset = 59
@@ -222,6 +222,21 @@ class SensorWorker(Thread):
             self.sensors[1] = indi_allsky_sensors.sensor_simulator(self.config)
 
         self.sensors[1].slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 15)
+
+
+        ### Sensor C
+        c_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('C_CLASSNAME')
+        if c_sensor_classname:
+            c_sensor = getattr(indi_allsky_sensors, c_sensor_classname)
+
+            c_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40')
+            c_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('C_PIN_1', 'notdefined')
+
+            self.sensors[2] = c_sensor(self.config, pin_1_name=c_sensor_pin_1_name, i2c_address=c_sensor_i2c_address)
+        else:
+            self.sensors[2] = indi_allsky_sensors.sensor_simulator(self.config)
+
+        self.sensors[2].slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 15)
 
 
     def check_dew_heater_thresholds(self):
