@@ -18,7 +18,7 @@ class TempSensorMlx90614(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('MLX90614 - ambient temp: %0.1fc, object temp: %0.1f%%', temp_c, object_temp_c)
+        logger.info('MLX90614 - ambient temp: %0.1fc, object temp: %0.1fc', temp_c, object_temp_c)
 
 
         if self.config.get('TEMP_DISPLAY') == 'f':
