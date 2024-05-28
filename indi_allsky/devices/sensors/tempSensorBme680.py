@@ -102,7 +102,11 @@ class TempSensorBme680_SPI(TempSensorBme680):
         self.bme680 = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
 
 
-        # throw away, first reading is always 100%
+        # throw away, initial humidity reading is always 100%
+        self.bme680.temperature
         self.bme680.humidity
-        time.sleep(1)
+        self.bme680.pressure
+        self.bme680.gas
+
+        time.sleep(2)  # allow things to settle
 
