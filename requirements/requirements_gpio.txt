@@ -7,6 +7,8 @@ circuitpython-bmp180
 adafruit-circuitpython-si7021
 adafruit-circuitpython-sht4x
 adafruit-circuitpython-mlx90614
+adafruit-circuitpython-tsl2591
+adafruit-circuitpython-tsl2561
 
 ### Rpi5
 #rpi-lgpio
