@@ -1,3 +1,4 @@
+import time
 import logging
 
 from .sensorBase import SensorBase
@@ -103,4 +104,5 @@ class TempSensorBme680_SPI(TempSensorBme680):
 
         # throw away, first reading is always 100%
         self.bme680.humidity
+        time.sleep(1)
 
