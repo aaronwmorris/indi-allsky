@@ -100,3 +100,7 @@ class TempSensorBme680_SPI(TempSensorBme680):
         spi = board.SPI()
         self.bme680 = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
 
+
+        # throw away, first reading is always 100%
+        self.bme680.humidity
+
