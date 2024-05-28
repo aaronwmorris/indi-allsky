@@ -5097,6 +5097,50 @@ class JsonLogView(JsonView):
         return jsonify(json_data)
 
 
+class SupportInfoView(TemplateView):
+    decorators = [login_required]
+
+    def get_context(self):
+        context = super(SupportInfoView, self).get_context()
+
+        return context
+
+
+class JsonSupportInfoView(JsonView):
+    decorators = [login_required]
+
+    def __init__(self, **kwargs):
+        super(JsonSupportInfoView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        import subprocess
+
+        cmd = [
+            str(Path(__file__).parent.parent.parent.absolute().joinpath('misc', 'support_info.sh')),
+        ]
+
+
+        json_data = dict()
+
+        try:
+            app.logger.info('Running: %s', ' '.join(cmd))
+            support_subproc = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=True
+            )
+
+            json_data['support_info'] = (support_subproc.stdout).decode()
+        except subprocess.CalledProcessError as e:
+            app.logger.error('Support info generate failed: %s', e.stdout)
+            return jsonify({}), 400
+
+
+        return jsonify(json_data)
+
+
 class NotificationsView(TemplateView):
     decorators = [login_required]
 
@@ -6190,6 +6234,9 @@ bp_allsky.add_url_rule('/ajax/focuscontroller', view_func=AjaxFocusControllerVie
 
 bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
 bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
+
+bp_allsky.add_url_rule('/support', view_func=SupportInfoView.as_view('support_info_view', template_name='support_info.html'))
+bp_allsky.add_url_rule('/js/support', view_func=JsonSupportInfoView.as_view('js_support_info_view'))
 
 bp_allsky.add_url_rule('/user', view_func=UserInfoView.as_view('user_view', template_name='user.html'))
 bp_allsky.add_url_rule('/ajax/user', view_func=AjaxUserInfoView.as_view('ajax_user_view'))

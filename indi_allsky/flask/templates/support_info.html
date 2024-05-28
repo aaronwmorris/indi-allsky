@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Support Info{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+pre {
+    white-space: pre-wrap;
+}
+
+.loader {
+  display: block;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/clipboard.min.js') }}"></script>
+<script type="text/javascript">
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-2">
+        <span class="badge pill bg-primary copy-clipboard" style="cursor: pointer;" data-clipboard-target="#support_info">Copy Support Info to Clipboard</span>
+    </div>
+    <div class="col-sm-2">
+        <a href="https://github.com/aaronwmorris/indi-allsky/issues" class="text-decoration-none link-info" target="_blank">
+            <span class="badge pill bg-danger">indi-allsky GitHub Issues</span>
+        </a>
+    </div>
+    <div class="col-sm-1">
+        <div class="col-sm-1 loader" id="loader_support"></div>
+    </div>
+</div>
+
+<hr>
+Support info can be pasted directly into an issue
+<hr>
+
+<div class="row">
+    <div class="col-sm-12">
+      <pre>
+        <div id="support_info" style="background-color:#cccccc;">Loading...<br><br><br><br><br><br><br><br><br></div>
+      </pre>
+    </div>
+</div>
+
+<script>
+
+function loadSupportInfo() {
+    console.log('Loading support info');
+    loadJS("{{ url_for('indi_allsky.js_support_info_view') }}");
+}
+
+
+function loadJS(url, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json",
+        data: {},
+        success: function(json_data){
+            $("#support_info").text(json_data['support_info']);
+            $("#loader_support").css({'display' : 'none'});
+        },
+        error: function(data){
+            onError(data.status);
+        },
+    });
+}
+
+function init() {
+    new ClipboardJS('.copy-clipboard');
+
+    loadSupportInfo();
+}
+
+
+$( document ).ready(function() {
+    init();
+});
+
+</script>
+
+
+{% endblock %}
