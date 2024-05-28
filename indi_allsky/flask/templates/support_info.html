@@ -32,11 +32,16 @@ pre {
 
 {% block content %}
 <div class="row">
-    <div class="col-sm-1">
-        <div class="col-sm-1 loader" id="loader_support"></div>
+    <div class="col-sm-2">
+        <span class="badge pill bg-primary copy-clipboard" style="cursor: pointer;" data-clipboard-target="#support_info">Copy Support Info to Clipboard</span>
+    </div>
+    <div class="col-sm-2">
+        <a href="https://github.com/aaronwmorris/indi-allsky/issues" class="text-decoration-none link-info" target="_blank">
+            <span class="badge pill bg-danger">indi-allsky GitHub Issues</span>
+        </a>
     </div>
     <div class="col-sm-1">
-        <span class="badge pill bg-primary copy-clipboard" style="cursor: pointer;" data-clipboard-target="#support_info">Copy Info to Clipboard</span>
+        <div class="col-sm-1 loader" id="loader_support"></div>
     </div>
 </div>
 
