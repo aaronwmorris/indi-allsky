@@ -1,7 +1,7 @@
 import logging
 
 from .sensorBase import SensorBase
-from ..exceptions import TemperatureReadException
+from ..exceptions import SensorReadException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -16,7 +16,7 @@ class TempSensorBmp180(SensorBase):
             pressure_hpa = float(self.bmp180.pressure)  # hPa
             #altitude = float(self.bmp180.altitude)  # meters
         except RuntimeError as e:
-            raise TemperatureReadException(str(e)) from e
+            raise SensorReadException(str(e)) from e
 
 
         logger.info('BMP180 - temp: %0.1fc, pressure: %0.1fhPa', temp_c, pressure_hpa)
@@ -43,8 +43,6 @@ class TempSensorBmp180(SensorBase):
 
 
         data = {
-            'dew_point' : None,
-            'frost_point' : None,
             'data' : (current_temp, current_pressure),
         }
 

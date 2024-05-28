@@ -2,7 +2,7 @@ import time
 import logging
 
 from .sensorBase import SensorBase
-from ..exceptions import TemperatureReadException
+from ..exceptions import SensorReadException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -19,7 +19,7 @@ class TempSensorBme680(SensorBase):
             gas_ohm = float(self.bme680.gas)  # ohm
             #altitude = float(self.bme680.altitude)  # meters
         except RuntimeError as e:
-            raise TemperatureReadException(str(e)) from e
+            raise SensorReadException(str(e)) from e
 
 
         logger.info('BME680 - temp: %0.1fc, humidity: %0.1f%%, pressure: %0.1fhPa, gas: %0.1f', temp_c, rel_h, pressure_hpa, gas_ohm)

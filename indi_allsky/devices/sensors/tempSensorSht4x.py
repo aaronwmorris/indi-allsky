@@ -1,7 +1,7 @@
 import logging
 
 from .sensorBase import SensorBase
-from ..exceptions import TemperatureReadException
+from ..exceptions import SensorReadException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -15,7 +15,7 @@ class TempSensorSht4x(SensorBase):
             temp_c = float(self.sht4x.temperature)
             rel_h = float(self.sht4x.humidity)
         except RuntimeError as e:
-            raise TemperatureReadException(str(e)) from e
+            raise SensorReadException(str(e)) from e
 
 
         logger.info('SHT4x - temp: %0.1fc, humidity: %0.1f%%', temp_c, rel_h)

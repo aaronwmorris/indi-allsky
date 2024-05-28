@@ -16,6 +16,11 @@ from .tempSensorSi7021 import TempSensorSi7021_I2C as blinka_temp_sensor_si7021_
 
 from .tempSensorSht4x import TempSensorSht4x_I2C as blinka_temp_sensor_sht4x_i2c
 
+from .tempSensorMlx90614 import TempSensorMlx90614_I2C as blinka_temp_sensor_mlx90614_i2c
+
+from .lightSensorTsl2561 import LightSensorTsl2561_I2C as blinka_light_sensor_tsl2561_i2c
+from .lightSensorTsl2591 import LightSensorTsl2591_I2C as blinka_light_sensor_tsl2591_i2c
+
 
 __all__ = (
     'sensor_simulator',
@@ -29,4 +34,7 @@ __all__ = (
     'blinka_temp_sensor_bme680_spi',
     'blinka_temp_sensor_si7021_i2c',
     'blinka_temp_sensor_sht4x_i2c',
+    'blinka_temp_sensor_mlx90614_i2c',
+    'blinka_light_sensor_tsl2561_i2c',
+    'blinka_light_sensor_tsl2591_i2c',
 )
