@@ -5,6 +5,7 @@ adafruit-circuitpython-bme280
 adafruit-circuitpython-bme680
 circuitpython-bmp180
 adafruit-circuitpython-si7021
+adafruit-circuitpython-sht4x
 
 ### Rpi5
 #rpi-lgpio

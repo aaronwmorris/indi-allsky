@@ -14,6 +14,8 @@ from .tempSensorBme680 import TempSensorBme680_SPI as blinka_temp_sensor_bme680_
 
 from .tempSensorSi7021 import TempSensorSi7021_I2C as blinka_temp_sensor_si7021_i2c
 
+from .tempSensorSht4x import TempSensorSht4x_I2C as blinka_temp_sensor_sht4x_i2c
+
 
 __all__ = (
     'temp_sensor_simulator',
@@ -26,4 +28,5 @@ __all__ = (
     'blinka_temp_sensor_bme680_i2c',
     'blinka_temp_sensor_bme680_spi',
     'blinka_temp_sensor_si7021_i2c',
+    'blinka_temp_sensor_sht4x_i2c',
 )
