@@ -8,6 +8,21 @@
 pre {
     white-space: pre-wrap;
 }
+
+.loader {
+  display: block;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
 <script type="text/javascript">
 var json_data = {
@@ -46,6 +61,7 @@ function showLog(log_data) {
 
     $('<div />', {
         'text'  : log_data,
+        'style' : "background-color:#cccccc;"
     }).appendTo(pre_div);
 
     $("#log_data").html(pre_div);
@@ -54,6 +70,7 @@ function showLog(log_data) {
 
 function loadLog() {
     console.log('Loading log data');
+    $("#loader_log").css({'display' : 'block'});
     loadJS("{{ url_for('indi_allsky.js_log_view') }}", {'lines' : lines}, function() {});
     setTimeout(loadLog, refreshInterval);
 }
@@ -73,6 +90,7 @@ function loadJS(url, data, onDone, onError) {
         data: data,
         success: function(data){
             json_data = data;
+            $("#loader_log").css({'display' : 'none'});
         },
         error: function(data){
             onError(data.status);
@@ -127,6 +145,9 @@ $( document ).ready(function() {
         <div class="col-sm-2">
             {{ form_logviewer.LINES_SELECT(class='form-select bg-secondary') }}
         </div>
+        <div class="col-sm-1">
+            <div class="col-sm-1 loader" id="loader_log"></div>
+        </div>
     </div>
 </form>
 
@@ -134,7 +155,8 @@ $( document ).ready(function() {
 
 <div class="row">
     <div class="col-sm-12">
-        <div id="log_data"></div>
+        <div id="log_data">
+        </div>
     </div>
 </div>
 
