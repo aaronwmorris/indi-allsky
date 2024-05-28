@@ -1,3 +1,3 @@
 
-class TemperatureReadException(Exception):
+class SensorReadException(Exception):
     pass

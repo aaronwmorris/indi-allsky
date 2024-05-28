@@ -1,7 +1,7 @@
 import logging
 
 from .sensorBase import SensorBase
-from ..exceptions import TemperatureReadException
+from ..exceptions import SensorReadException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -15,7 +15,7 @@ class TempSensorMlx90614(SensorBase):
             temp_c = float(self.mlx.ambient_temperature)
             object_temp_c = float(self.mlx.object_temperature)
         except RuntimeError as e:
-            raise TemperatureReadException(str(e)) from e
+            raise SensorReadException(str(e)) from e
 
 
         logger.info('MLX90614 - ambient temp: %0.1fc, object temp: %0.1f%%', temp_c, object_temp_c)

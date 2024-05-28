@@ -8,7 +8,7 @@ import threading
 
 from .devices import dew_heaters
 from .devices import sensors as indi_allsky_sensors
-from .devices.exceptions import TemperatureReadException
+from .devices.exceptions import SensorReadException
 
 logger = logging.getLogger('indi_allsky')
 
@@ -131,8 +131,8 @@ class SensorWorker(Thread):
 
                         for i, v in enumerate(temp_data['data']):
                             self.sensors_user_av[sensor.slot + i] = float(v)
-                except TemperatureReadException as e:
-                    logger.error('TemperatureReadException: {0:s}'.format(str(e)))
+                except SensorReadException as e:
+                    logger.error('SensorReadException: {0:s}'.format(str(e)))
 
 
             # threshold processing
