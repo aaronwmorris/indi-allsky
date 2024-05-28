@@ -2465,16 +2465,16 @@ class IndiAllskyConfigForm(FlaskForm):
 
     TEMP_SENSOR__CLASSNAME_choices = (
         ('', 'None'),
-        ('blinka_temp_sensor_dht22', 'DHT22/AM2302 - 2 Slots'),
-        ('blinka_temp_sensor_dht21', 'DHT21/AM2301 - 2 Slots'),
-        ('blinka_temp_sensor_dht11', 'DHT11 - 2 Slots'),
-        ('blinka_temp_sensor_bmp180_i2c', 'BMP180 i2c - 2 Slots (No Dew Point)'),
-        ('blinka_temp_sensor_bme280_i2c', 'BME280 i2c - 3 Slots'),
-        ('blinka_temp_sensor_bme280_spi', 'BME280 SPI - 3 Slots'),
-        ('blinka_temp_sensor_bme680_i2c', 'BME680 i2c - 4 Slots'),
-        ('blinka_temp_sensor_bme680_spi', 'BME680 SPI - 4 Slots'),
-        ('blinka_temp_sensor_si7021_i2c', 'Si7021 i2c - 2 Slots'),
-        ('blinka_temp_sensor_sht4x_i2c', 'SHT40/41/45 i2c - 2 Slots'),
+        ('blinka_temp_sensor_dht22', 'DHT22/AM2302 - Temp/RH (2)'),
+        ('blinka_temp_sensor_dht21', 'DHT21/AM2301 - Temp/RH (2)'),
+        ('blinka_temp_sensor_dht11', 'DHT11 - Temp/RH (2)'),
+        ('blinka_temp_sensor_bmp180_i2c', 'BMP180 i2c - Temp/Pres (2)'),
+        ('blinka_temp_sensor_bme280_i2c', 'BME280 i2c - Temp/RH/Pres (3)'),
+        ('blinka_temp_sensor_bme280_spi', 'BME280 SPI - Temp/RH/Pres (3)'),
+        ('blinka_temp_sensor_bme680_i2c', 'BME680 i2c - Temp/RH/Pres/Gas (4)'),
+        ('blinka_temp_sensor_bme680_spi', 'BME680 SPI - Temp/RH/Pres/Gas (4)'),
+        ('blinka_temp_sensor_si7021_i2c', 'Si7021 i2c - Temp/RH (2)'),
+        ('blinka_temp_sensor_sht4x_i2c', 'SHT40/41/45 i2c - Temp/RH (2)'),
     )
 
     SENSOR_USER_VAR_SLOT_choices = (
