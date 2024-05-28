@@ -8,7 +8,23 @@
 pre {
     white-space: pre-wrap;
 }
+
+.loader {
+  display: block;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
+<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/clipboard.min.js') }}"></script>
 <script type="text/javascript">
 
 </script>
@@ -16,11 +32,19 @@ pre {
 
 {% block content %}
 <div class="row">
-    <div class="col-sm-12">
-      <pre>
-        <textarea id="support_info" rows="25" cols="100"></textarea>
-      </pre>
+    <div class="col-sm-1">
+        <div class="col-sm-1 loader" id="loader_support"></div>
     </div>
+    <div class="col-sm-1">
+        <span class="badge pill bg-primary copy-clipboard" style="cursor: pointer;" data-clipboard-target="#support_info">Copy Info to Clipboard</span>
+    </div>
+</div>
+<div class="row">
+  <pre>
+    <div class="col-sm-12">
+        <textarea id="support_info" rows="25" cols="120"></textarea>
+    </div>
+  </pre>
 </div>
 
 <script>
@@ -42,6 +66,7 @@ function loadJS(url, onDone, onError) {
         data: {},
         success: function(json_data){
             $("#support_info").text(json_data['support_info']);
+            $("#loader_support").css({'display' : 'none'});
         },
         error: function(data){
             onError(data.status);
@@ -50,6 +75,8 @@ function loadJS(url, onDone, onError) {
 }
 
 function init() {
+    new ClipboardJS('.copy-clipboard');
+
     loadSupportInfo();
 }
 
