@@ -43,8 +43,6 @@ class TempSensorBmp180(SensorBase):
 
 
         data = {
-            'dew_point' : None,
-            'frost_point' : None,
             'data' : (current_temp, current_pressure),
         }
 
