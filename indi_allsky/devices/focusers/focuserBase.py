@@ -4,3 +4,7 @@ class FocuserBase(object):
         self.config = args[0]
 
 
+    def move(self, *args):
+        # override in child class
+        raise Exception('Not Implemented')
+

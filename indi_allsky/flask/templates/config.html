@@ -4344,7 +4344,7 @@
             <div id="TEMP_SENSOR__A_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Temperature-Sensors" class="text-decoration-none link-info" target="_blank">Temperature Sensor Wiki</a></div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Sensors" class="text-decoration-none link-info" target="_blank">Sensor Wiki</a></div>
         </div>
     </div>
 
@@ -4411,7 +4411,7 @@
             <div id="TEMP_SENSOR__B_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Example: D6 (GPIO5 / Pin 31 Raspi)</div>
+            <div>Example: D6 (GPIO6 / Pin 31 Raspi)</div>
             <div>Unused for i2c devices</div>
         </div>
     </div>
@@ -4440,6 +4440,61 @@
         <div class="col-sm-8">
         </div>
     </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__C_CLASSNAME(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__C_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_PIN_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_PIN_1(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__C_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D16 (GPIO16 / Pin 36 Raspi)</div>
+            <div>Unused for i2c devices</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_I2C_ADDRESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_I2C_ADDRESS(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__C_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Hexidecimal address - Example: 0x40</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_USER_VAR_SLOT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_USER_VAR_SLOT(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__C_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
 
 </div><!-- end devices tab -->
 
@@ -4748,6 +4803,10 @@ const field_names = [
     'TEMP_SENSOR__B_PIN_1',
     'TEMP_SENSOR__B_USER_VAR_SLOT',
     'TEMP_SENSOR__B_I2C_ADDRESS',
+    'TEMP_SENSOR__C_CLASSNAME',
+    'TEMP_SENSOR__C_PIN_1',
+    'TEMP_SENSOR__C_USER_VAR_SLOT',
+    'TEMP_SENSOR__C_I2C_ADDRESS',
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',

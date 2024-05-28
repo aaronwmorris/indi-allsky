@@ -1,22 +1,20 @@
 # This is a fake device that acts like a temperature sensor but does not actually do anything
 import logging
 
-from .tempSensorBase import TempSensorBase
+from .sensorBase import SensorBase
 
 
 logger = logging.getLogger('indi_allsky')
 
 
-class TempSensorSimulator(TempSensorBase):
+class SensorSimulator(SensorBase):
 
     def __init__(self, *args, **kwargs):
-        super(TempSensorSimulator, self).__init__(*args, **kwargs)
+        super(SensorSimulator, self).__init__(*args, **kwargs)
 
 
     def update(self):
         data = {
-            'dew_point' : None,
-            'frost_point' : None,
             'data' : tuple(),
         }
 

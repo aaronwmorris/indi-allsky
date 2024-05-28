@@ -1,7 +1,7 @@
 import math
 
 
-class TempSensorBase(object):
+class SensorBase(object):
     def __init__(self, *args, **kwargs):
         self.config = args[0]
 

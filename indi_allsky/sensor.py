@@ -7,7 +7,7 @@ from threading import Thread
 import threading
 
 from .devices import dew_heaters
-from .devices import temp_sensors
+from .devices import sensors as indi_allsky_sensors
 from .devices.exceptions import TemperatureReadException
 
 logger = logging.getLogger('indi_allsky')
@@ -34,7 +34,7 @@ class SensorWorker(Thread):
         self.night = False
 
         self.dew_heater = None
-        self.temp_sensors = [None, None]
+        self.sensors = [None, None, None]
 
         self.next_run = time.time()  # run immediately
         self.next_run_offset = 59
@@ -84,7 +84,7 @@ class SensorWorker(Thread):
 
 
         self.init_dew_heater()
-        self.init_temp_sensors()
+        self.init_sensors()
 
 
         while True:
@@ -117,20 +117,20 @@ class SensorWorker(Thread):
                 logger.info('Dew Point: %0.1f, Frost Point: %0.1f', self.sensors_user_av[2], self.sensors_user_av[3])
 
 
-            # update temp sensor readings
-            for temp_sensor in self.temp_sensors:
+            # update sensor readings
+            for sensor in self.sensors:
                 try:
-                    temp_data = temp_sensor.update()
+                    temp_data = sensor.update()
 
                     with self.sensors_user_av.get_lock():
-                        if temp_data['dew_point']:
-                            self.sensors_user_av[2] = temp_data['dew_point']
+                        if temp_data.get('dew_point'):
+                            self.sensors_user_av[2] = float(temp_data['dew_point'])
 
-                        if temp_data['frost_point']:
-                            self.sensors_user_av[3] = temp_data['frost_point']
+                        if temp_data.get('frost_point'):
+                            self.sensors_user_av[3] = float(temp_data['frost_point'])
 
                         for i, v in enumerate(temp_data['data']):
-                            self.sensors_user_av[temp_sensor.slot + i] = float(v)
+                            self.sensors_user_av[sensor.slot + i] = float(v)
                 except TemperatureReadException as e:
                     logger.error('TemperatureReadException: {0:s}'.format(str(e)))
 
@@ -193,35 +193,50 @@ class SensorWorker(Thread):
                 self.sensors_user_av[1] = float(self.dew_heater.state)
 
 
-    def init_temp_sensors(self):
+    def init_sensors(self):
         ### Sensor A
-        a_temp_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('A_CLASSNAME')
-        if a_temp_sensor_classname:
-            a_ts = getattr(temp_sensors, a_temp_sensor_classname)
+        a_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('A_CLASSNAME')
+        if a_sensor_classname:
+            a_sensor = getattr(indi_allsky_sensors, a_sensor_classname)
 
-            a_ts_i2c_address = self.config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77')
-            a_ts_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'notdefined')
+            a_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77')
+            a_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'notdefined')
 
-            self.temp_sensors[0] = a_ts(self.config, pin_1_name=a_ts_pin_1_name, i2c_address=a_ts_i2c_address)
+            self.sensors[0] = a_sensor(self.config, pin_1_name=a_sensor_pin_1_name, i2c_address=a_sensor_i2c_address)
         else:
-            self.temp_sensors[0] = temp_sensors.temp_sensor_simulator(self.config)
+            self.sensors[0] = indi_allsky_sensors.sensor_simulator(self.config)
 
-        self.temp_sensors[0].slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 10)
+        self.sensors[0].slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 10)
 
 
         ### Sensor B
-        b_temp_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('B_CLASSNAME')
-        if b_temp_sensor_classname:
-            b_ts = getattr(temp_sensors, b_temp_sensor_classname)
+        b_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('B_CLASSNAME')
+        if b_sensor_classname:
+            b_sensor = getattr(indi_allsky_sensors, b_sensor_classname)
 
-            b_ts_i2c_address = self.config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76')
-            b_ts_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'notdefined')
+            b_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76')
+            b_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'notdefined')
 
-            self.temp_sensors[1] = b_ts(self.config, pin_1_name=b_ts_pin_1_name, i2c_address=b_ts_i2c_address)
+            self.sensors[1] = b_sensor(self.config, pin_1_name=b_sensor_pin_1_name, i2c_address=b_sensor_i2c_address)
         else:
-            self.temp_sensors[1] = temp_sensors.temp_sensor_simulator(self.config)
+            self.sensors[1] = indi_allsky_sensors.sensor_simulator(self.config)
 
-        self.temp_sensors[1].slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 15)
+        self.sensors[1].slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 15)
+
+
+        ### Sensor C
+        c_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('C_CLASSNAME')
+        if c_sensor_classname:
+            c_sensor = getattr(indi_allsky_sensors, c_sensor_classname)
+
+            c_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40')
+            c_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('C_PIN_1', 'notdefined')
+
+            self.sensors[2] = c_sensor(self.config, pin_1_name=c_sensor_pin_1_name, i2c_address=c_sensor_i2c_address)
+        else:
+            self.sensors[2] = indi_allsky_sensors.sensor_simulator(self.config)
+
+        self.sensors[2].slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 15)
 
 
     def check_dew_heater_thresholds(self):

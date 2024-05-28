@@ -1,13 +1,13 @@
 import logging
 
-from .tempSensorBase import TempSensorBase
+from .sensorBase import SensorBase
 from ..exceptions import TemperatureReadException
 
 
 logger = logging.getLogger('indi_allsky')
 
 
-class TempSensorDht22(TempSensorBase):
+class TempSensorDht22(SensorBase):
     dht_classname = 'DHT22'
 
     def __init__(self, *args, **kwargs):
