@@ -14,12 +14,18 @@ class TempSensorDs18x20(SensorBase):
     def __init__(self, *args, **kwargs):
         super(TempSensorDs18x20, self).__init__(*args, **kwargs)
 
+        logger.warning('Initializing DS18x20 temperature device')
+
 
         base_dir = Path('/sys/bus/w1/devices/')
 
-        # Get all folders beginning with 28
+        if not base_dir.is_dir():
+            raise Exception('1-Wire interface is not enabled')
+
+
         try:
-            device_folder = base_dir.glob('28*')[0]
+            # Get all folders beginning with 28
+            device_folder = list(base_dir.glob('28*'))[0]
         except IndexError:
             raise Exception('DS18x20 device not found')
 
