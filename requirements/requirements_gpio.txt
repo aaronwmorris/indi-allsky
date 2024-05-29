@@ -9,6 +9,7 @@ adafruit-circuitpython-sht4x
 adafruit-circuitpython-mlx90614
 adafruit-circuitpython-tsl2591
 adafruit-circuitpython-tsl2561
+adafruit-circuitpython-ds18x20
 
 ### Rpi5
 #rpi-lgpio
