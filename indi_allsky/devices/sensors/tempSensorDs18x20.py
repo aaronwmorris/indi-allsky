@@ -1,3 +1,5 @@
+import io
+from pathlib import Path
 import logging
 
 from .sensorBase import SensorBase
@@ -12,27 +14,27 @@ class TempSensorDs18x20(SensorBase):
     def __init__(self, *args, **kwargs):
         super(TempSensorDs18x20, self).__init__(*args, **kwargs)
 
-        pin_1_name = kwargs['pin_1_name']
 
-        import board
-        from adafruit_onewire.bus import OneWireBus
-        from adafruit_ds18x20 import DS18X20
+        base_dir = Path('/sys/bus/w1/devices/')
 
-        pin1 = getattr(board, pin_1_name)
+        # Get all folders beginning with 28
+        try:
+            device_folder = base_dir.glob('28*')[0]
+        except IndexError:
+            raise Exception('DS18x20 device not found')
 
-        ow_bus = OneWireBus(pin1)
 
-        logger.warning('Initializing DS18x20 temperature device')
-        self.ds18x20 = DS18X20(ow_bus, ow_bus.scan()[0])
-
-        ### 9, 10, 11, or 12
-        self.ds18x20.resolution = 12
+        self.ds_temp_file = device_folder.joinpath('temperature')
 
 
     def update(self):
 
+        with io.open(self.ds_temp_file, 'r') as f_temp:
+            temp_str = f_temp.readline().rstrip()
+
+
         try:
-            temp_c = float(self.ds18x20.temperature)
+            temp_c = int(temp_str) / 1000
         except RuntimeError as e:
             raise SensorReadException(str(e)) from e
 
