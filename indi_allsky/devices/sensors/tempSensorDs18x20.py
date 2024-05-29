@@ -48,7 +48,7 @@ class TempSensorDs18x20(SensorBase):
 
 
         try:
-            temp_c = int(temp_str) / 1000
+            temp_c = int(temp_str) / 1000.0
         except RuntimeError as e:
             raise SensorReadException(str(e)) from e
 
