@@ -4850,6 +4850,7 @@ class JsonImageProcessingView(JsonView):
         gain_v = Value('i', int(hdulist[0].header['GAIN']))
         bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
         sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
+        sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         night_v = Value('i', 1)  # using night values for processing
 
         hdulist.close()
@@ -4861,6 +4862,7 @@ class JsonImageProcessingView(JsonView):
             gain_v,
             bin_v,
             sensors_temp_av,
+            sensors_user_av,
             night_v,
             moonmode_v,
             {},    # astrometric_data
