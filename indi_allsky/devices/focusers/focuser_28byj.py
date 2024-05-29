@@ -8,7 +8,7 @@ from .focuserBase import FocuserBase
 logger = logging.getLogger('indi_allsky')
 
 
-class focuser_28byj_64(FocuserBase):
+class focuser_28byj(FocuserBase):
     # 1/64 ratio
 
     SEQ = (
@@ -23,18 +23,12 @@ class focuser_28byj_64(FocuserBase):
     )
 
 
-    STEP_DEGREES = {
-        6   : 8,
-        12  : 17,
-        24  : 34,
-        45  : 64,
-        90  : 128,
-        180 : 256,
-    }
+    # override in child class
+    STEP_DEGREES = {}
 
 
     def __init__(self, *args, **kwargs):
-        super(focuser_28byj_64, self).__init__(*args, **kwargs)
+        super(focuser_28byj, self).__init__(*args, **kwargs)
 
         pin_names = kwargs['pin_names']
 
@@ -88,7 +82,21 @@ class focuser_28byj_64(FocuserBase):
                 time.sleep(0.005)
 
 
-class focuser_28byj_16(focuser_28byj_64):
+class focuser_28byj_64(focuser_28byj):
+    # 1/64 ratio
+
+    STEP_DEGREES = {
+        6   : 8,
+        12  : 17,
+        24  : 34,
+        45  : 64,
+        90  : 128,
+        180 : 256,
+    }
+
+
+
+class focuser_28byj_16(focuser_28byj):
     # 1/16 ratio
 
     ### untested

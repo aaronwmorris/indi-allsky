@@ -10,5 +10,8 @@ adafruit-circuitpython-mlx90614
 adafruit-circuitpython-tsl2591
 adafruit-circuitpython-tsl2561
 
+### does not work on raspi
+#adafruit-circuitpython-ds18x20
+
 ### Rpi5
 #rpi-lgpio
