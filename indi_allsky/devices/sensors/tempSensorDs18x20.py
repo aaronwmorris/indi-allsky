@@ -17,20 +17,28 @@ class TempSensorDs18x20(SensorBase):
         logger.warning('Initializing DS18x20 temperature device')
 
 
-        base_dir = Path('/sys/bus/w1/devices/')
+        w1_base_dir = Path('/sys/bus/w1/devices/')
 
-        if not base_dir.is_dir():
+        if not w1_base_dir.is_dir():
             raise Exception('1-Wire interface is not enabled')
 
 
-        try:
-            # Get all folders beginning with 28
-            device_folder = list(base_dir.glob('28*'))[0]
-        except IndexError:
+        # Get all folders beginning with 28
+        device_folders = list(w1_base_dir.glob('28*'))
+
+
+        if len(device_folders) == 0:
             raise Exception('DS18x20 device not found')
+        if len(device_folders) > 1:
+            logger.warning('Multiple DS18x20 devices detected')
 
 
-        self.ds_temp_file = device_folder.joinpath('temperature')
+        # multiple devices might be available, we only want one
+        self.ds_temp_file = device_folders[0].joinpath('temperature')
+
+
+        if not self.ds_temp_file.is_file():
+            raise Exception('DS18x20 temperature property not found')
 
 
     def update(self):
