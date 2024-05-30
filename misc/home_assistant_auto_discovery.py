@@ -382,11 +382,36 @@ class HADiscovery(object):
                     'config' : {
                         'name' : 'Thermal {0} {1}'.format(t_key, label),
                         'unit_of_measurement' : '°',
-                        'unique_id' : 'indi_allsky_thermal_{0}_{1}'.format(t_key_safe, label_safe),
+                        'unique_id' : 'indi_allsky_thermal_{0}_{1}_{2}'.format(t_key_safe, label_safe, self.unique_id_base),
                         'state_topic' : '/'.join((base_topic, 'temp', t_key_safe, label_safe)),
                     },
                 })
 
+
+        # user sensors
+        for i in range(30):
+            extended_sensor_list.append({
+                'component' : 'sensor',
+                'object_id' : 'indi_allsky_sensor_temp_{0}'.format(i),
+                'config' : {
+                    'name' : 'sensor_temp_{0}'.format(i),
+                    'unique_id' : 'indi_allsky_sensor_temp_{0}_{1}'.format(i, self.unique_id_base),
+                    'state_topic' : '/'.join((base_topic, 'sensor_temp_{0}'.format(str(i)))),
+                },
+            })
+
+
+        # user sensors
+        for i in range(30):
+            extended_sensor_list.append({
+                'component' : 'sensor',
+                'object_id' : 'indi_allsky_sensor_user_{0}'.format(i),
+                'config' : {
+                    'name' : 'sensor_user_{0}'.format(i),
+                    'unique_id' : 'indi_allsky_sensor_user_{0}_{1}'.format(i, self.unique_id_base),
+                    'state_topic' : '/'.join((base_topic, 'sensor_user_{0}'.format(str(i)))),
+                },
+            })
 
 
         message_list = list()
