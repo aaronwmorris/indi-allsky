@@ -120,16 +120,16 @@ class SensorWorker(Thread):
             # update sensor readings
             for sensor in self.sensors:
                 try:
-                    temp_data = sensor.update()
+                    sensor_data = sensor.update()
 
                     with self.sensors_user_av.get_lock():
-                        if temp_data.get('dew_point'):
-                            self.sensors_user_av[2] = float(temp_data['dew_point'])
+                        if sensor_data.get('dew_point'):
+                            self.sensors_user_av[2] = float(sensor_data['dew_point'])
 
-                        if temp_data.get('frost_point'):
-                            self.sensors_user_av[3] = float(temp_data['frost_point'])
+                        if sensor_data.get('frost_point'):
+                            self.sensors_user_av[3] = float(sensor_data['frost_point'])
 
-                        for i, v in enumerate(temp_data['data']):
+                        for i, v in enumerate(sensor_data['data']):
                             self.sensors_user_av[sensor.slot + i] = float(v)
                 except SensorReadException as e:
                     logger.error('SensorReadException: {0:s}'.format(str(e)))

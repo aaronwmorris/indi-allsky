@@ -798,6 +798,18 @@ class ImageWorker(Process):
                     offset += 1
 
 
+            # system temp sensors
+            for i, val in enumerate(self.sensors_temp_av):
+                sensor_topic = 'sensor_temp_{0:d}'.format(i)
+                mqtt_data[sensor_topic] = round(val, 1)
+
+
+            # user sensors
+            for i, val in enumerate(self.sensors_user_av):
+                sensor_topic = 'sensor_user_{0:d}'.format(i)
+                mqtt_data[sensor_topic] = round(val, 1)
+
+
             if new_filename:
                 upload_filename = new_filename
             else:

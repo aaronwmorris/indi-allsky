@@ -1,3 +1,4 @@
+import time
 import logging
 
 from .sensorBase import SensorBase
@@ -81,6 +82,15 @@ class TempSensorBme280_I2C(TempSensorBme280):
         self.bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c, address=i2c_address)
 
 
+        # throw away
+        self.bme280.temperature
+        self.bme280.humidity
+        self.bme280.pressure
+
+        # allow things to settle
+        time.sleep(2)
+
+
 class TempSensorBme280_SPI(TempSensorBme280):
 
     def __init__(self, *args, **kwargs):
@@ -98,4 +108,13 @@ class TempSensorBme280_SPI(TempSensorBme280):
         logger.warning('Initializing BME280 SPI temperature device')
         spi = board.SPI()
         self.bme280 = adafruit_bme280.Adafruit_BME280_SPI(spi, cs)
+
+
+        # throw away
+        self.bme280.temperature
+        self.bme280.humidity
+        self.bme280.pressure
+
+        # allow things to settle
+        time.sleep(2)
 
