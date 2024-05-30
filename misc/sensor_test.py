@@ -22,10 +22,17 @@ app = create_app()
 app.app_context().push()
 
 
+logger = logging.getLogger('indi_allsky')
+logger.setLevel(logging.INFO)
 
-logging.basicConfig(level=logging.INFO)
-logger = logging
 
+LOG_FORMATTER_STREAM = logging.Formatter('[%(levelname)s]: %(message)s')
+
+LOG_HANDLER_STREAM = logging.StreamHandler()
+LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
+
+logger.handlers.clear()  # remove syslog
+logger.addHandler(LOG_HANDLER_STREAM)
 
 
 class TestSensors(object):
