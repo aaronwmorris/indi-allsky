@@ -17,9 +17,6 @@ from pprint import pformat  # noqa: F401
 
 from passlib.hash import argon2
 
-from multiprocessing import Value
-from multiprocessing import Array
-
 from ..version import __version__
 from .. import constants
 from ..processing import ImageProcessor
@@ -4757,6 +4754,8 @@ class JsonImageProcessingView(JsonView):
         import cv2
         from astropy.io import fits
         from PIL import Image
+        from multiprocessing import Value
+        from multiprocessing import Array
 
 
         form_processing = IndiAllskyImageProcessingForm(data=request.json)

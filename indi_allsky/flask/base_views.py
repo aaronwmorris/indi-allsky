@@ -214,6 +214,9 @@ class BaseView(View):
 
     def _load_detection_mask(self):
         import cv2
+        from multiprocessing import Value
+        from ..maskProcessing import MaskProcessor
+
 
         detect_mask = self.indi_allsky_config.get('DETECT_MASK', '')
 
@@ -250,7 +253,47 @@ class BaseView(View):
         #mask_data[mask_data < 255] = 0  # did not quite work
 
 
-        return mask_data
+        bin_v = Value('i', 1)  # always assume bin 1
+        mask_processor = MaskProcessor(
+            self.indi_allsky_config,
+            bin_v,
+        )
+
+
+        # masks need to be rotated, flipped, cropped for post-processed images
+        mask_processor.image = mask_data
+
+
+        if self.indi_allsky_config.get('IMAGE_ROTATE'):
+            mask_processor.rotate_90()
+
+
+        # rotation
+        if self.indi_allsky_config.get('IMAGE_ROTATE_ANGLE'):
+            mask_processor.rotate_angle()
+
+
+        # verticle flip
+        if self.indi_allsky_config.get('IMAGE_FLIP_V'):
+            mask_processor.flip_v()
+
+
+        # horizontal flip
+        if self.indi_allsky_config.get('IMAGE_FLIP_H'):
+            mask_processor.flip_h()
+
+
+        # crop
+        if self.indi_allsky_config.get('IMAGE_CROP_ROI'):
+            mask_processor.crop_image()
+
+
+        # scale
+        if self.indi_allsky_config['IMAGE_SCALE'] and self.indi_allsky_config['IMAGE_SCALE'] != 100:
+            mask_processor.scale_image()
+
+
+        return mask_processor.image
 
 
 class TemplateView(BaseView):
