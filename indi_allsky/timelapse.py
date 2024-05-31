@@ -34,6 +34,9 @@ class TimelapseGenerator(object):
         file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
 
 
+        if skip_frames:
+            logger.warning('Skipping %d frames for timelapse', skip_frames)
+
         for i, f in enumerate(file_list_ordered):
             if i < skip_frames:
                 # Skip a few frames when the exposure needs to adjust between night and day
