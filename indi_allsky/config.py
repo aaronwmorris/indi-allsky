@@ -106,6 +106,7 @@ class IndiAllSkyConfigBase(object):
         "LOCATION_LONGITUDE" : -84.0,
         "LOCATION_ELEVATION" : 300.0,
         "TIMELAPSE_ENABLE"         : True,
+        "TIMELAPSE_SKIP_FRAMES"    : 4,
         "DAYTIME_CAPTURE"          : True,
         "DAYTIME_TIMELAPSE"        : True,
         "DAYTIME_CONTRAST_ENHANCE" : False,

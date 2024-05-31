@@ -385,9 +385,11 @@ class VideoWorker(Process):
         )
 
 
+        timelapse_skip_frames = self.config.get('TIMELAPSE_SKIP_FRAMES', 4)
+
         try:
             tg = TimelapseGenerator(self.config)
-            tg.generate(video_file, timelapse_files)
+            tg.generate(video_file, timelapse_files, skip_frames=timelapse_skip_frames)
         except TimelapseException:
             video_entry.success = False
             db.session.commit()
@@ -573,9 +575,11 @@ class VideoWorker(Process):
         )
 
 
+        timelapse_skip_frames = self.config.get('TIMELAPSE_SKIP_FRAMES', 4)
+
         try:
             tg = TimelapseGenerator(self.config)
-            tg.generate(video_file, timelapse_files)
+            tg.generate(video_file, timelapse_files, skip_frames=timelapse_skip_frames)
         except TimelapseException:
             video_entry.success = False
             db.session.commit()

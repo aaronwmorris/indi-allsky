@@ -24,7 +24,7 @@ class TimelapseGenerator(object):
         #self.seqfolder_p = Path(seqfolder)
 
 
-    def generate(self, video_file, file_list):
+    def generate(self, video_file, file_list, skip_frames=0):
         video_file_p = Path(video_file)
 
         # Exclude empty files
@@ -35,6 +35,10 @@ class TimelapseGenerator(object):
 
 
         for i, f in enumerate(file_list_ordered):
+            if i < skip_frames:
+                # Skip a few frames when the exposure needs to adjust between night and day
+                continue
+
             p_symlink = self.seqfolder_p.joinpath('{0:05d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
             p_symlink.symlink_to(f)
 
