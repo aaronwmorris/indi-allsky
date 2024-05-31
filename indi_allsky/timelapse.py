@@ -68,6 +68,12 @@ class TimelapseGenerator(object):
             cmd.append('scale={0:s}'.format(self.config.get('FFMPEG_VFSCALE')))
 
 
+        # add extra options
+        ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS')
+        if ffmpeg_extra_options:
+            cmd.extend(ffmpeg_extra_options.split(' '))
+
+
         # finally add filename
         cmd.append('{0:s}'.format(str(video_file_p)))
 
