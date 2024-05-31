@@ -24,7 +24,7 @@ class TimelapseGenerator(object):
         #self.seqfolder_p = Path(seqfolder)
 
 
-    def generate(self, video_file, file_list):
+    def generate(self, video_file, file_list, skip_frames=0):
         video_file_p = Path(video_file)
 
         # Exclude empty files
@@ -34,7 +34,14 @@ class TimelapseGenerator(object):
         file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
 
 
+        if skip_frames:
+            logger.warning('Skipping %d frames for timelapse', skip_frames)
+
         for i, f in enumerate(file_list_ordered):
+            if i < skip_frames:
+                # Skip a few frames when the exposure needs to adjust between night and day
+                continue
+
             p_symlink = self.seqfolder_p.joinpath('{0:05d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
             p_symlink.symlink_to(f)
 
@@ -62,6 +69,12 @@ class TimelapseGenerator(object):
             logger.warning('Setting FFMPEG scaling option: %s', self.config.get('FFMPEG_VFSCALE'))
             cmd.append('-vf')
             cmd.append('scale={0:s}'.format(self.config.get('FFMPEG_VFSCALE')))
+
+
+        # add extra options
+        ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS')
+        if ffmpeg_extra_options:
+            cmd.extend(ffmpeg_extra_options.split(' '))
 
 
         # finally add filename

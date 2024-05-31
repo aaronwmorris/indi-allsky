@@ -241,6 +241,17 @@ def EXPOSURE_PERIOD_DAY_validator(form, field):
         raise ValidationError('Exposure period must be 1.0 or more')
 
 
+def TIMELAPSE_SKIP_FRAMES_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Skip frames must 0 or more')
+
+    if field.data > 10:
+        raise ValidationError('Skip frames must 10 or less')
+
+
 def CCD_BIT_DEPTH_validator(form, field):
     if int(field.data) not in (0, 8, 10, 12, 14, 16):
         raise ValidationError('Bits must be 0, 8, 10, 12, 14, or 16 ')
@@ -1286,6 +1297,15 @@ def FFMPEG_VFSCALE_validator(form, field):
 def FFMPEG_CODEC_validator(form, field):
     if field.data not in list(zip(*form.FFMPEG_CODEC_choices))[0]:
         raise ValidationError('Invalid codec option')
+
+
+def FFMPEG_EXTRA_OPTIONS_validator(form, field):
+    if not field.data:
+        return
+
+    options_regex = r'^[a-zA-Z0-9_\.\-\:\/\ ]+$'
+    if not re.search(options_regex, field.data):
+        raise ValidationError('Invalid characters')
 
 
 def TEXT_PROPERTIES__FONT_FACE_validator(form, field):
@@ -2570,6 +2590,7 @@ class IndiAllskyConfigForm(FlaskForm):
     LOCATION_LONGITUDE               = FloatField('Longitude', validators=[LOCATION_LONGITUDE_validator])
     LOCATION_ELEVATION               = IntegerField('Elevation', validators=[LOCATION_ELEVATION_validator])
     TIMELAPSE_ENABLE                 = BooleanField('Enable Timelapse Creation')
+    TIMELAPSE_SKIP_FRAMES            = IntegerField('Timelapse Skip Frames', validators=[TIMELAPSE_SKIP_FRAMES_validator])
     DAYTIME_CAPTURE                  = BooleanField('Daytime Capture')
     DAYTIME_TIMELAPSE                = BooleanField('Daytime Timelapse')
     DAYTIME_CONTRAST_ENHANCE         = BooleanField('Daytime Contrast Enhance')
@@ -2669,6 +2690,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FFMPEG_BITRATE                   = StringField('FFMPEG Bitrate', validators=[DataRequired(), FFMPEG_BITRATE_validator])
     FFMPEG_VFSCALE                   = SelectField('FFMPEG Scaling', choices=FFMPEG_VFSCALE_choices, validators=[FFMPEG_VFSCALE_validator])
     FFMPEG_CODEC                     = SelectField('FFMPEG Codec', choices=FFMPEG_CODEC_choices, validators=[FFMPEG_CODEC_validator])
+    FFMPEG_EXTRA_OPTIONS             = StringField('FFMPEG Extra Options', validators=[FFMPEG_EXTRA_OPTIONS_validator])
     IMAGE_LABEL_SYSTEM               = SelectField('Label Images', choices=IMAGE_LABEL_SYSTEM_choices, validators=[IMAGE_LABEL_SYSTEM_validator])
     TEXT_PROPERTIES__FONT_FACE       = SelectField('OpenCV Font', choices=TEXT_PROPERTIES__FONT_FACE_choices, validators=[DataRequired(), TEXT_PROPERTIES__FONT_FACE_validator])
     #TEXT_PROPERTIES__FONT_AA
