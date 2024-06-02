@@ -2,7 +2,7 @@
 
 import sys
 import logging
-import time
+#import time
 from pathlib import Path
 #from pprint import pformat
 
@@ -55,21 +55,18 @@ class TestSensors(object):
         self.init_sensors()
 
 
-        while True:
-            # update sensor readings
-            for i, sensor in enumerate(self.sensors):
+        # update sensor readings
+        for i, sensor in enumerate(self.sensors):
 
-                if isinstance(sensor, type(None)):
-                    continue
+            if isinstance(sensor, type(None)):
+                continue
 
-                try:
-                    sensor_data = sensor.update()
+            try:
+                sensor_data = sensor.update()
 
-                    logger.info('Sensor %d: %s', i, str(sensor_data))
-                except SensorReadException as e:
-                    logger.error('SensorReadException: {0:s}'.format(str(e)))
-
-            time.sleep(2)
+                logger.info('Sensor %d: %s', i, str(sensor_data))
+            except SensorReadException as e:
+                logger.error('SensorReadException: {0:s}'.format(str(e)))
 
 
     def init_sensors(self):
