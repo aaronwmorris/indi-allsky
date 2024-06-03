@@ -2697,12 +2697,12 @@ class SystemInfoView(TemplateView):
         except ImportError:
             oci = None
 
-        try:
-            import board
-        except ImportError:
-            board = None
-        except PermissionError:
-            board = None
+        #try:
+        #    import board
+        #except ImportError:
+        #    board = None
+        #except PermissionError:
+        #    board = False
 
         try:
             import PyIndi
@@ -2756,7 +2756,7 @@ class SystemInfoView(TemplateView):
         context['ccdproc_version'] = str(getattr(ccdproc, '__version__', -1))
         context['flask_version'] = str(getattr(flask, '__version__', -1))
         context['dbus_version'] = str(getattr(dbus, '__version__', -1))
-        context['board_version'] = str(getattr(board, '__version__', -1))
+
 
         if pycurl:
             context['pycurl_version'] = str(getattr(pycurl, 'version', -1))
