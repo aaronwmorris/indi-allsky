@@ -346,6 +346,27 @@ https://github.com/aaronwmorris/indi-allsky/wiki/Security-considerations
 It is also possible to use cloud security offerings like [Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/) to further protect your indi-allsky site.
 
 
+## Sensor support
+
+indi-allsky supports reading sensors natively on single board computers like Raspberry Pi.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Sensors
+
+
+## Dew Heater support
+
+Native dew heater support is built in for standard and PWM controlled dew heaters.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Dew-Heater-Support
+
+
+## Focuser support
+
+If you built your system with a focuser, it is now possible to control the focuser within the Focus view.  `28BYJ-48` steppers are currently supported.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Focuser-Device
+
+
 ## YouTube support
 indi-allsky supports being able to upload timlapse and star trail videos directly to YouTube
 
@@ -527,7 +548,7 @@ Please let me know if you want to make an addition or correction.
 
 * Thomas Jacquin's Allsky
     * Free, Open source
-    * Linux, SBC
+    * Linux, Single board computer
     * https://github.com/thomasjacquin/allsky
 * AllSkEye
     * Free version, Commercial option
@@ -535,15 +556,15 @@ Please let me know if you want to make an addition or correction.
     * https://allskeye.com/
 * frankAllSkyCam
     * Free, Open source
-    * Linux, SBC
+    * Linux, Single board computer
     * https://github.com/sferlix/frankAllSkyCam
 * RPi Meteor Station
     * Free, Open source
-    * Linux, SBC
+    * Linux, Single board computer
     * https://github.com/CroatianMeteorNetwork/RMS
 * Meteotux Pi
     * Free version, Commercial option
-    * Linux, SBC
+    * Linux, Single board computer
     * https://www.meteotuxpi.com/
 * UFOCapture
     * Shareware, Commercial option
