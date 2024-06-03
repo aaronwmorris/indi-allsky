@@ -162,7 +162,9 @@ function focuserMove(direction, degrees) {
             $('#offset_div').text(steps_offset + " Steps Offset");
         },
         error: function(response_data){
-            $('#focus_controller_error').text(response_data['focuser_error'][0]);
+            var errors = JSON.parse(response_data.responseText);
+
+            $('#focus_controller_error').text(errors['focuser_error'][0]);
 
             // Leave disabled on errors
             //$('#FOCUS_CCW').addClass("btn-primary");
