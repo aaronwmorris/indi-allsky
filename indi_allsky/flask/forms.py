@@ -2195,8 +2195,8 @@ def HEALTHCHECK__DISK_USAGE_validator(form, field):
     if field.data < 0:
         raise ValidationError('Percentage must be 0 or greater')
 
-    if field.data > 100:
-        raise ValidationError('Percentage must be 100 or less')
+    if field.data > 101:
+        raise ValidationError('Percentage must be 101 or less')
 
 
 def HEALTHCHECK__SWAP_USAGE_validator(form, field):
@@ -2207,8 +2207,8 @@ def HEALTHCHECK__SWAP_USAGE_validator(form, field):
     if field.data < 0:
         raise ValidationError('Percentage must be 0 or greater')
 
-    if field.data > 100:
-        raise ValidationError('Percentage must be 100 or less')
+    if field.data > 101:
+        raise ValidationError('Percentage must be 101 or less')
 
 
 def INDI_CONFIG_DEFAULTS_validator(form, field):
