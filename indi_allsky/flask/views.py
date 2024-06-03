@@ -4654,6 +4654,11 @@ class AjaxFocusControllerView(BaseView):
                 'focuser_error' : ['Error initializing focuser: {0:s}'.format(str(e))],
             }
             return jsonify(json_data), 400
+        except ValueError as e:
+            json_data = {
+                'focuser_error' : ['Error initializing focuser: {0:s}'.format(str(e))],
+            }
+            return jsonify(json_data), 400
 
         steps_offset = focuser.move(direction, degrees)
 
