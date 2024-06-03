@@ -149,17 +149,23 @@ function focuserMove(direction, degrees) {
         url: "{{ url_for('indi_allsky.focus_controller_view') }}",
         contentType: "application/json",
         data: JSON.stringify(data),
-        success: function(json_data){
+        success: function(response_data){
+            $('#focus_controller_error').empty();
+
             $('#FOCUS_CCW').addClass("btn-primary");
             $('#FOCUS_CW').addClass("btn-danger");
             $('#FOCUS_CCW').prop("disabled", false);
             $('#FOCUS_CW').prop("disabled", false);
 
-            steps_offset += json_data['steps'];
+            steps_offset += response_data['steps'];
 
             $('#offset_div').text(steps_offset + " Steps Offset");
         },
-        error: function(json_data){
+        error: function(response_data){
+            var errors = JSON.parse(response_data.responseText);
+
+            $('#focus_controller_error').text(errors['focuser_error'][0]);
+
             // Leave disabled on errors
             //$('#FOCUS_CCW').addClass("btn-primary");
             //$('#FOCUS_CW').addClass("btn-danger");
@@ -273,6 +279,9 @@ function closeFullscreen() {
         <div id="offset_div">0 Steps Offset</div>
     </div>
     <div class="col-sm-1"><button id="FOCUS_CW" class="btn btn-danger">Focus<br>+</button></div>
+</div>
+<div class="row justify-content-center">
+    <div id="focus_controller_error" class="text-danger"></div>
 </div>
 
 

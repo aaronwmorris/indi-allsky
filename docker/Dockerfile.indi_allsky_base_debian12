@@ -34,6 +34,7 @@ RUN apt-get -y install \
     ffmpeg \
     gifsicle \
     jq \
+    libgpiod2 \
     sqlite3
 
 

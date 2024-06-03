@@ -451,6 +451,7 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         gifsicle \
         jq \
         sqlite3 \
+        libgpiod2 \
         policykit-1 \
         dbus-user-session
 
@@ -618,6 +619,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         gifsicle \
         jq \
         sqlite3 \
+        libgpiod2 \
         policykit-1 \
         dbus-user-session
 
@@ -785,6 +787,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         gifsicle \
         jq \
         sqlite3 \
+        libgpiod2 \
         policykit-1 \
         dbus-user-session
 
@@ -952,6 +955,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         gifsicle \
         jq \
         sqlite3 \
+        libgpiod2 \
         policykit-1 \
         dbus-user-session
 
@@ -1105,6 +1109,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         gifsicle \
         jq \
         sqlite3 \
+        libgpiod2 \
         policykit-1 \
         dbus-user-session
 
@@ -1242,6 +1247,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         gifsicle \
         jq \
         sqlite3 \
+        libgpiod2 \
         policykit-1 \
         dbus-user-session
 
@@ -1415,6 +1421,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         gifsicle \
         jq \
         sqlite3 \
+        libgpiod2 \
         policykit-1 \
         dbus-user-session
 
@@ -1598,6 +1605,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
         gifsicle \
         jq \
         sqlite3 \
+        libgpiod2 \
         policykit-1 \
         dbus-user-session
 
@@ -1770,6 +1778,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
         gifsicle \
         jq \
         sqlite3 \
+        libgpiod2 \
         policykit-1 \
         dbus-user-session
 
