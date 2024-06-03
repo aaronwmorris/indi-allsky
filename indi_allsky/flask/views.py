@@ -1150,6 +1150,8 @@ class ConfigView(FormView):
             'DETECT_MASK'                    : self.indi_allsky_config.get('DETECT_MASK', ''),
             'DETECT_DRAW'                    : self.indi_allsky_config.get('DETECT_DRAW', False),
             'LOGO_OVERLAY'                   : self.indi_allsky_config.get('LOGO_OVERLAY', ''),
+            'HEALTHCHECK__DISK_USAGE'        : self.indi_allsky_config.get('HEALTHCHECK', {}).get('DISK_USAGE', 90.0),
+            'HEALTHCHECK__SWAP_USAGE'        : self.indi_allsky_config.get('HEALTHCHECK', {}).get('SWAP_USAGE', 90.0),
             'LOCATION_NAME'                  : self.indi_allsky_config.get('LOCATION_NAME', ''),
             'LOCATION_LATITUDE'              : self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0),
             'LOCATION_LONGITUDE'             : self.indi_allsky_config.get('LOCATION_LONGITUDE', 0.0),
@@ -1728,6 +1730,9 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('THUMBNAILS'):
             self.indi_allsky_config['THUMBNAILS'] = {}
 
+        if not self.indi_allsky_config.get('HEALTHCHECK'):
+            self.indi_allsky_config['HEALTHCHECK'] = {}
+
         if not self.indi_allsky_config.get('FITSHEADERS'):
             self.indi_allsky_config['FITSHEADERS'] = [['', ''], ['', ''], ['', ''], ['', ''], ['', '']]
 
@@ -1783,6 +1788,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['DETECT_MASK']                          = str(request.json['DETECT_MASK'])
         self.indi_allsky_config['DETECT_DRAW']                          = bool(request.json['DETECT_DRAW'])
         self.indi_allsky_config['LOGO_OVERLAY']                         = str(request.json['LOGO_OVERLAY'])
+        self.indi_allsky_config['HEALTHCHECK']['DISK_USAGE']            = float(request.json['HEALTHCHECK__DISK_USAGE'])
+        self.indi_allsky_config['HEALTHCHECK']['SWAP_USAGE']            = float(request.json['HEALTHCHECK__SWAP_USAGE'])
         self.indi_allsky_config['LOCATION_NAME']                        = str(request.json['LOCATION_NAME'])
         self.indi_allsky_config['LOCATION_LATITUDE']                    = float(request.json['LOCATION_LATITUDE'])
         self.indi_allsky_config['LOCATION_LONGITUDE']                   = float(request.json['LOCATION_LONGITUDE'])
