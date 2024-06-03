@@ -149,7 +149,7 @@ function focuserMove(direction, degrees) {
         url: "{{ url_for('indi_allsky.focus_controller_view') }}",
         contentType: "application/json",
         data: JSON.stringify(data),
-        success: function(json_data){
+        success: function(response_data){
             $('#focus_controller_error').empty();
 
             $('#FOCUS_CCW').addClass("btn-primary");
@@ -157,12 +157,12 @@ function focuserMove(direction, degrees) {
             $('#FOCUS_CCW').prop("disabled", false);
             $('#FOCUS_CW').prop("disabled", false);
 
-            steps_offset += json_data['steps'];
+            steps_offset += response_data['steps'];
 
             $('#offset_div').text(steps_offset + " Steps Offset");
         },
-        error: function(json_data){
-            $('#focus_controller_error').text(json_data['focuser_error'][0]);
+        error: function(response_data){
+            $('#focus_controller_error').text(response_data['focuser_error'][0]);
 
             // Leave disabled on errors
             //$('#FOCUS_CCW').addClass("btn-primary");
