@@ -2701,6 +2701,8 @@ class SystemInfoView(TemplateView):
             import board
         except ImportError:
             board = None
+        except PermissionError:
+            board = None
 
         try:
             import PyIndi
