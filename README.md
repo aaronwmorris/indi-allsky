@@ -127,6 +127,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## INDI support
 | Version         | Note |
 | --------------- | ---- |
+| v2.0.8          |      |
 | v2.0.7          | **Recommended** |
 | v2.0.6          |      |
 | v2.0.5          | Requires upgrade to indi-allsky v7.7<br>[ZWO ASI problem](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.5-notes) |
