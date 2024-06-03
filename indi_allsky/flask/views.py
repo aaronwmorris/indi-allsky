@@ -4649,7 +4649,7 @@ class AjaxFocusControllerView(BaseView):
 
         try:
             focuser = IndiAllSkyFocuser(self.indi_allsky_config)
-        except ValueError as e:
+        except SystemError as e:
             json_data = {
                 'focuser_error' : ['Error initializing focuser: {0:s}'.format(str(e))],
             }
