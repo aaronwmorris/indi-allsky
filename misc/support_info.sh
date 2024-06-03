@@ -103,6 +103,14 @@ echo
 uname -a
 
 echo
+echo "Time"
+date
+
+echo
+echo "System timezone"
+cat /etc/timezone || true
+
+echo
 echo "Uptime"
 uptime
 
