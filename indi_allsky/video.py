@@ -1201,6 +1201,11 @@ class VideoWorker(Process):
     def systemHealthCheck(self, task, timespec, night, camera):
         task.setRunning()
 
+
+        disk_usage_warning = self.config.get('HEALTHCHECK', {}).get('DISK_USAGE', 90.0)
+        swap_usage_warning = self.config.get('HEALTHCHECK', {}).get('SWAP_USAGE', 90.0)
+
+
         # check filesystems
         logger.info('Performing system health check')
 
@@ -1221,22 +1226,22 @@ class VideoWorker(Process):
                 logger.error('PermissionError: %s', str(e))
                 continue
 
-            if disk_usage.percent >= 90:
+            if disk_usage.percent >= disk_usage_warning:
                 self._miscDb.addNotification(
                     NotificationCategory.DISK,
                     fs.mountpoint,
-                    'Filesystem {0:s} is >90% full'.format(fs.mountpoint),
+                    'Filesystem {0:s} >={1:0.1f}% full'.format(fs.mountpoint, disk_usage_warning),
                     expire=timedelta(minutes=715),  # should run every ~12 hours
                 )
 
 
         # check swap capacity
         swap_info = psutil.swap_memory()
-        if swap_info.percent >= 90:
+        if swap_info.percent >= swap_usage_warning:
             self._miscDb.addNotification(
                 NotificationCategory.MISC,
                 'swap',
-                'Swap memory is >90% full',
+                'Swap memory >={0:0.1f}% full'.format(swap_usage_warning),
                 expire=timedelta(minutes=715),  # should run every ~12 hours
             )
 

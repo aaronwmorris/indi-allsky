@@ -2187,6 +2187,30 @@ def DEVICE_PIN_NAME_validator(form, field):
         raise ValidationError('Invalid PIN name')
 
 
+def HEALTHCHECK__DISK_USAGE_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
+
+
+    if field.data < 0:
+        raise ValidationError('Percentage must be 0 or greater')
+
+    if field.data > 101:
+        raise ValidationError('Percentage must be 101 or less')
+
+
+def HEALTHCHECK__SWAP_USAGE_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
+
+
+    if field.data < 0:
+        raise ValidationError('Percentage must be 0 or greater')
+
+    if field.data > 101:
+        raise ValidationError('Percentage must be 101 or less')
+
+
 def INDI_CONFIG_DEFAULTS_validator(form, field):
     try:
         json_data = json.loads(field.data)
@@ -2585,6 +2609,8 @@ class IndiAllskyConfigForm(FlaskForm):
     SQM_ROI_X2                       = IntegerField('SQM ROI x2', validators=[SQM_ROI_validator])
     SQM_ROI_Y2                       = IntegerField('SQM ROI y2', validators=[SQM_ROI_validator])
     SQM_FOV_DIV                      = SelectField('SQM FoV', choices=SQM_FOV_DIV_choices, validators=[SQM_FOV_DIV_validator])
+    HEALTHCHECK__DISK_USAGE          = FloatField('Disk Usage Percentage', validators=[DataRequired(), HEALTHCHECK__DISK_USAGE_validator])
+    HEALTHCHECK__SWAP_USAGE          = FloatField('Swap Usage Percentage', validators=[DataRequired(), HEALTHCHECK__SWAP_USAGE_validator])
     LOCATION_NAME                    = StringField('Location', validators=[LOCATION_NAME_validator])
     LOCATION_LATITUDE                = FloatField('Latitude', validators=[LOCATION_LATITUDE_validator])
     LOCATION_LONGITUDE               = FloatField('Longitude', validators=[LOCATION_LONGITUDE_validator])
