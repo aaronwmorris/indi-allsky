@@ -7,6 +7,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 ## New Features
 * Native Temperature Sensor support
+    * DS18B20 1-wire
     * DHT11/22
     * BMP180
     * BME280 (i2c & SPI)
@@ -114,7 +115,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Debian 12 (bookworm)           | x86_64         | Compile INDI with build_indi.sh |
 | Debian 11 (bullseye)           | x86_64         | Compile INDI with build_indi.sh |
 | Debian 10 (buster)             | x86_64         | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
-| Ubuntu 24.04 (noble)           |                | (NOT READY) pyindi-client will not build [May 2024] |
+| Ubuntu 24.04 (noble)           |                | Requires INDI 2.0.8 or newer for pyindi-client<br>INDI installed from ppa:mutlaqja/ppa (Touptek support missing in PPA, can be compiled from source)<br>Compile libcamera with build_libcamera.sh |
 | Ubuntu 22.04 (focal)           | aarch64        | INDI installed from ppa:mutlaqja/ppa |
 | Ubuntu 22.04                   | armhf          | Compile INDI with build_indi.sh |
 | Ubuntu 22.04                   | x86_64         | INDI installed from ppa:mutlaqja/ppa |
