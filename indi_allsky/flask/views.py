@@ -4637,7 +4637,7 @@ class AjaxFocusControllerView(BaseView):
 
         if not self.verify_admin_network():
             json_data = {
-                'form_global' : ['Request not from admin network (flask.json)'],
+                'focuser_error' : ['Request not from admin network (flask.json)'],
             }
             return jsonify(json_data), 400
 
@@ -4647,7 +4647,14 @@ class AjaxFocusControllerView(BaseView):
 
         app.logger.info('Focusing: {0:s}', direction)
 
-        focuser = IndiAllSkyFocuser(self.indi_allsky_config)
+        try:
+            focuser = IndiAllSkyFocuser(self.indi_allsky_config)
+        except ValueError as e:
+            json_data = {
+                'focuser_error' : ['Error initializing focuser: {0:s}'.format(str(e))],
+            }
+            return jsonify(json_data), 400
+
         steps_offset = focuser.move(direction, degrees)
 
         r = {

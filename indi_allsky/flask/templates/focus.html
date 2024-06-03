@@ -150,6 +150,8 @@ function focuserMove(direction, degrees) {
         contentType: "application/json",
         data: JSON.stringify(data),
         success: function(json_data){
+            $('#focus_controller_error').empty();
+
             $('#FOCUS_CCW').addClass("btn-primary");
             $('#FOCUS_CW').addClass("btn-danger");
             $('#FOCUS_CCW').prop("disabled", false);
@@ -160,6 +162,8 @@ function focuserMove(direction, degrees) {
             $('#offset_div').text(steps_offset + " Steps Offset");
         },
         error: function(json_data){
+            $('#focuser_controller_error').text(json_data['focuser_error']);
+
             // Leave disabled on errors
             //$('#FOCUS_CCW').addClass("btn-primary");
             //$('#FOCUS_CW').addClass("btn-danger");
@@ -273,6 +277,9 @@ function closeFullscreen() {
         <div id="offset_div">0 Steps Offset</div>
     </div>
     <div class="col-sm-1"><button id="FOCUS_CW" class="btn btn-danger">Focus<br>+</button></div>
+</div>
+<div class="row justify-content-center">
+    <div id="focus_controller_error" class="text-danger"></div>
 </div>
 
 
