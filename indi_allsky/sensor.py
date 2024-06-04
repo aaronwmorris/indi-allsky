@@ -235,7 +235,7 @@ class SensorWorker(Thread):
     def init_fan(self):
         fan_classname = self.config.get('FAN', {}).get('CLASSNAME')
         if fan_classname:
-            fan_class = getattr(dew_heaters, fan_classname)
+            fan_class = getattr(fans, fan_classname)
 
             fan_pin_1 = self.config.get('FAN', {}).get('PIN_1', 'notdefined')
 
