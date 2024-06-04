@@ -342,7 +342,7 @@ class SensorWorker(Thread):
 
 
     def check_fan_thresholds(self):
-        target = self.config.get('FAN', {}).get('TARGET', 38.0)
+        target = self.config.get('FAN', {}).get('TARGET', 30.0)
 
 
         current_temp = self.sensors_user_av[self.fan_temp_user_slot]

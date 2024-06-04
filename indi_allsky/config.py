@@ -416,7 +416,7 @@ class IndiAllSkyConfigBase(object):
             "PIN_1"                  : "D13",
             "LEVEL_DEF"              : 100,
             "THOLD_ENABLE "          : False,
-            "TARGET"                 : 38.0,
+            "TARGET"                 : 30.0,
             "TEMP_USER_VAR_SLOT"     : 10,
             "LEVEL_LOW"              : 33,
             "LEVEL_MED"              : 66,

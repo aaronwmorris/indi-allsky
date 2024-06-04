@@ -1406,7 +1406,7 @@ class ConfigView(FormView):
             'FAN__ENABLE_NIGHT'              : self.indi_allsky_config.get('FAN', {}).get('ENABLE_NIGHT', False),
             'FAN__LEVEL_DEF'                 : self.indi_allsky_config.get('FAN', {}).get('LEVEL_DEF', 100),
             'FAN__THOLD_ENABLE'              : self.indi_allsky_config.get('FAN', {}).get('THOLD_ENABLE', False),
-            'FAN__TARGET'                    : self.indi_allsky_config.get('FAN', {}).get('TARGET', 38.0),
+            'FAN__TARGET'                    : self.indi_allsky_config.get('FAN', {}).get('TARGET', 30.0),
             'FAN__TEMP_USER_VAR_SLOT'        : str(self.indi_allsky_config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 10)),  # string in form, int in config
             'FAN__LEVEL_LOW'                 : self.indi_allsky_config.get('FAN', {}).get('LEVEL_LOW', 33),
             'FAN__LEVEL_MED'                 : self.indi_allsky_config.get('FAN', {}).get('LEVEL_MED', 66),
