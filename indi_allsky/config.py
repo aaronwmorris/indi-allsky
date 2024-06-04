@@ -412,7 +412,8 @@ class IndiAllSkyConfigBase(object):
         },
         "FAN" : {
             "CLASSNAME"              : "",
-            "PIN_1"                  : "D12",
+            "ENABLE_NIGHT"           : False,
+            "PIN_1"                  : "D13",
             "LEVEL_DEF"              : 100,
             "THOLD_ENABLE "          : False,
             "TARGET"                 : 50.0,
