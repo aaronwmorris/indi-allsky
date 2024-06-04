@@ -7,6 +7,7 @@ from threading import Thread
 import threading
 
 from .devices import dew_heaters
+from .devices import fans
 from .devices import sensors as indi_allsky_sensors
 from .devices.exceptions import SensorReadException
 
@@ -34,11 +35,13 @@ class SensorWorker(Thread):
         self.night = False
 
         self.dew_heater = None
+        self.fan = None
         self.sensors = [None, None, None]
 
         self.next_run = time.time()  # run immediately
         self.next_run_offset = 59
 
+        # dew heater
         self.dh_temp_user_slot = self.config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
 
         self.dh_level_default = self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100)
@@ -50,6 +53,17 @@ class SensorWorker(Thread):
         self.dh_thold_diff_med = self.config.get('DEW_HEATER', {}).get('THOLD_DIFF_MED', 10)
         self.dh_thold_diff_high = self.config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', 5)
 
+        # fan
+        self.fan_temp_user_slot = self.config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 10)
+
+        self.fan_level_default = self.config.get('FAN', {}).get('LEVEL_DEF', 100)
+        self.fan_level_low = self.config.get('FAN', {}).get('LEVEL_LOW', 33)
+        self.fan_level_med = self.config.get('FAN', {}).get('LEVEL_MED', 66)
+        self.fan_level_high = self.config.get('FAN', {}).get('LEVEL_HIGH', 100)
+
+        self.fan_thold_diff_low = self.config.get('FAN', {}).get('THOLD_DIFF_LOW', 0)
+        self.fan_thold_diff_med = self.config.get('FAN', {}).get('THOLD_DIFF_MED', 5)
+        self.fan_thold_diff_high = self.config.get('FAN', {}).get('THOLD_DIFF_HIGH', 10)
 
         self._stopper = threading.Event()
 
@@ -84,6 +98,7 @@ class SensorWorker(Thread):
 
 
         self.init_dew_heater()
+        self.init_fan()
         self.init_sensors()
 
 
@@ -135,7 +150,7 @@ class SensorWorker(Thread):
                     logger.error('SensorReadException: {0:s}'.format(str(e)))
 
 
-            # threshold processing
+            # dew heater threshold processing
             if not self.night and self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
                 # daytime
                 if self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE'):
@@ -146,12 +161,30 @@ class SensorWorker(Thread):
                     self.check_dew_heater_thresholds()
 
 
+            # fan threshold processing
+            if self.night and self.config.get('FAN', {}).get('ENABLE_NIGHT'):
+                # night
+                if self.config.get('FAN', {}).get('THOLD_ENABLE'):
+                    self.check_fan_thresholds()
+            else:
+                # day
+                if self.config.get('FAN', {}).get('THOLD_ENABLE'):
+                    self.check_fan_thresholds()
+
+
     def night_day_change(self):
         # changing modes here
         if self.night:
             # night time
             if not self.dew_heater.state:
                 self.set_dew_heater(self.dh_level_default)
+
+
+            if self.config.get('FAN', {}).get('ENABLE_NIGHT'):
+                if not self.fan.state:
+                    self.set_fan(self.dh_level_default)
+            else:
+                self.set_fan(0)
 
         else:
             # day time
@@ -162,18 +195,24 @@ class SensorWorker(Thread):
                 self.set_dew_heater(0)
 
 
+            if not self.fan.state:
+                self.set_fan(self.fan_level_default)
+
+
     def init_dew_heater(self):
         dew_heater_classname = self.config.get('DEW_HEATER', {}).get('CLASSNAME')
         if dew_heater_classname:
-            dh = getattr(dew_heaters, dew_heater_classname)
+            dh_class = getattr(dew_heaters, dew_heater_classname)
 
             dh_pin_1 = self.config.get('DEW_HEATER', {}).get('PIN_1', 'notdefined')
 
-            self.dew_heater = dh(self.config, pin_1_name=dh_pin_1)
+            self.dew_heater = dh_class(self.config, pin_1_name=dh_pin_1)
 
             if self.night_v.value:
+                # night
                 self.set_dew_heater(self.dh_level_default)
             else:
+                # day
                 if self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
                     self.set_dew_heater(self.dh_level_default)
                 else:
@@ -191,6 +230,37 @@ class SensorWorker(Thread):
 
             with self.sensors_user_av.get_lock():
                 self.sensors_user_av[1] = float(self.dew_heater.state)
+
+
+    def init_fan(self):
+        fan_classname = self.config.get('FAN', {}).get('CLASSNAME')
+        if fan_classname:
+            fan_class = getattr(dew_heaters, fan_classname)
+
+            fan_pin_1 = self.config.get('FAN', {}).get('PIN_1', 'notdefined')
+
+            self.fan = fan_class(self.config, pin_1_name=fan_pin_1)
+
+            if not self.night_v.value:
+                # day
+                self.set_fan(self.fan_level_default)
+            else:
+                # night
+                if self.config.get('FAN', {}).get('ENABLE_NIGHT'):
+                    self.set_fan(self.fan_level_default)
+                else:
+                    self.set_fan(0)
+
+        else:
+            self.fan = fans.fan_simulator(self.config)
+
+
+    def set_fan(self, new_state):
+        if self.fan.state != new_state:
+            self.fan.state = new_state
+
+            with self.sensors_user_av.get_lock():
+                self.sensors_user_av[4] = float(self.fan.state)
 
 
     def init_sensors(self):
@@ -267,4 +337,26 @@ class SensorWorker(Thread):
         else:
             self.set_dew_heater(self.dh_level_default)
             #self.set_dew_heater(0)
+
+
+    def check_fan_thresholds(self):
+        target = self.config.get('FAN', {}).get('TARGET', 50.0)
+
+
+        current_temp = self.sensors_user_av[self.fan_temp_user_slot]
+
+
+        temp_diff = current_temp - target
+        if temp_diff > self.fan_thold_diff_high:
+            # set fan to high
+            self.set_fan(self.fan_level_high)
+        elif temp_diff > self.fan_thold_diff_med:
+            # set fan to medium
+            self.set_fan(self.dh_level_med)
+        elif temp_diff > self.fan_thold_diff_low:
+            # set fan to low
+            self.set_fan(self.fan_level_low)
+        else:
+            self.set_fan(self.fan_level_default)
+            #self.set_fan(0)
 
