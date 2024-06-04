@@ -153,22 +153,22 @@ class SensorWorker(Thread):
 
             # dew heater threshold processing
             if not self.night and self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
-                # daytime
+                ### day
                 if self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE'):
                     self.check_dew_heater_thresholds()
             else:
-                # night
+                ### night
                 if self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE'):
                     self.check_dew_heater_thresholds()
 
 
             # fan threshold processing
             if self.night and self.config.get('FAN', {}).get('ENABLE_NIGHT'):
-                # night
+                ### night
                 if self.config.get('FAN', {}).get('THOLD_ENABLE'):
                     self.check_fan_thresholds()
             else:
-                # day
+                ### day
                 if self.config.get('FAN', {}).get('THOLD_ENABLE'):
                     self.check_fan_thresholds()
 
@@ -178,19 +178,24 @@ class SensorWorker(Thread):
 
         # changing modes here
         if self.night:
-            # night time
+            ### night
+
+            # dew heater
             if not self.dew_heater.state:
                 self.set_dew_heater(self.dh_level_default)
 
 
+            # fan
             if self.config.get('FAN', {}).get('ENABLE_NIGHT'):
                 if not self.fan.state:
-                    self.set_fan(self.dh_level_default)
+                    self.set_fan(self.fan_level_default)
             else:
                 self.set_fan(0)
 
         else:
-            # day time
+            ### day
+
+            # dew heater
             if self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
                 if not self.dew_heater.state:
                     self.set_dew_heater(self.dh_level_default)
@@ -198,6 +203,7 @@ class SensorWorker(Thread):
                 self.set_dew_heater(0)
 
 
+            # fan
             if not self.fan.state:
                 self.set_fan(self.fan_level_default)
 
@@ -212,10 +218,10 @@ class SensorWorker(Thread):
             self.dew_heater = dh_class(self.config, pin_1_name=dh_pin_1)
 
             if self.night_v.value:
-                # night
+                ### night
                 self.set_dew_heater(self.dh_level_default)
             else:
-                # day
+                ### day
                 if self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
                     self.set_dew_heater(self.dh_level_default)
                 else:
@@ -245,10 +251,10 @@ class SensorWorker(Thread):
             self.fan = fan_class(self.config, pin_1_name=fan_pin_1)
 
             if not self.night_v.value:
-                # day
+                ### day
                 self.set_fan(self.fan_level_default)
             else:
-                # night
+                ### night
                 if self.config.get('FAN', {}).get('ENABLE_NIGHT'):
                     self.set_fan(self.fan_level_default)
                 else:
@@ -356,7 +362,7 @@ class SensorWorker(Thread):
             self.set_fan(self.fan_level_high)
         elif temp_diff > self.fan_thold_diff_med:
             # set fan to medium
-            self.set_fan(self.dh_level_med)
+            self.set_fan(self.fan_level_med)
         elif temp_diff > self.fan_thold_diff_low:
             # set fan to low
             self.set_fan(self.fan_level_low)
