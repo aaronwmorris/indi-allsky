@@ -2203,8 +2203,8 @@ def SENSOR_USER_VAR_SLOT_validator(form, field):
         raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
 
-    if slot_i < 10:
-        raise ValidationError('Slot must be 10 or greater')
+    if slot_i < 0:
+        raise ValidationError('Slot must be 0 or greater')
 
     if slot_i > 30:
         raise ValidationError('Slot must be 30 or less')
@@ -2566,6 +2566,7 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     SENSOR_USER_VAR_SLOT_choices = (
+        ('0', '0 - Camera Temp'),
         ('10', '10'),
         ('11', '11'),
         ('12', '12'),
