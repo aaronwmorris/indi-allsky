@@ -4560,13 +4560,15 @@
         <div class="col-sm-2">
             {{ form_config.RELOAD_ON_SAVE.label }}
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-1">
             <div class="form-switch">
                 {{ form_config.RELOAD_ON_SAVE(class='form-check-input') }}
                 <div id="RELOAD_ON_SAVE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8"></div>
+        <div class="col-sm-9">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> A reload will restart the indi-allsky capture processes.  This requires 1-3 minutes to complete.</span>
+        </div>
     </div>
 
     <hr>
