@@ -2544,7 +2544,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FAN__CLASSNAME_choices = (
         ('', 'None'),
         ('blinka_fan_standard', 'Fan - Standard'),
-        ('blinka_fas_pwm', 'Fan - PWM'),
+        ('blinka_fan_pwm', 'Fan - PWM'),
     )
 
     TEMP_SENSOR__CLASSNAME_choices = (
