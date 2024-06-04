@@ -54,6 +54,7 @@ class SensorWorker(Thread):
         self.dh_thold_diff_high = self.config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', 5)
 
         # fan
+        self.fan_target = self.config.get('FAN', {}).get('TARGET', 30.0)
         self.fan_temp_user_slot = self.config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 10)
 
         self.fan_level_default = self.config.get('FAN', {}).get('LEVEL_DEF', 100)
@@ -173,6 +174,8 @@ class SensorWorker(Thread):
 
 
     def night_day_change(self):
+        logger.warning('Day/Night change')
+
         # changing modes here
         if self.night:
             # night time
@@ -342,13 +345,10 @@ class SensorWorker(Thread):
 
 
     def check_fan_thresholds(self):
-        target = self.config.get('FAN', {}).get('TARGET', 30.0)
-
-
         current_temp = self.sensors_user_av[self.fan_temp_user_slot]
 
 
-        temp_diff = current_temp - target
+        temp_diff = current_temp - self.fan_target
         logger.info('Fan threshold delta: %0.1f', temp_diff)
 
         if temp_diff > self.fan_thold_diff_high:
