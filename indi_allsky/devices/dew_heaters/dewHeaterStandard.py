@@ -7,10 +7,10 @@ from .dewHeaterBase import DewHeaterBase
 logger = logging.getLogger('indi_allsky')
 
 
-class DewHeaterDigital(DewHeaterBase):
+class DewHeaterStandard(DewHeaterBase):
 
     def __init__(self, *args, **kwargs):
-        super(DewHeaterDigital, self).__init__(*args, **kwargs)
+        super(DewHeaterStandard, self).__init__(*args, **kwargs)
 
         pin_1_name = kwargs['pin_1_name']
 
