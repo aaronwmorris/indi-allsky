@@ -888,7 +888,7 @@ class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
             'max_gain'      : 16,  # unverified
             'min_exposure'  : 0.0001,
             'max_exposure'  : 200.0,
-            'cfa'           : 'GRGB',
+            'cfa'           : 'GRBG',
             'bit_depth'     : 16,
         }
 
