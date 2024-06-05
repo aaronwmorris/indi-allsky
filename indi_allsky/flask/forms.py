@@ -2145,6 +2145,40 @@ def DEW_HEATER__MANUAL_TARGET_validator(form, field):
         raise ValidationError('Please enter a valid number')
 
 
+def FAN__CLASSNAME_validator(form, field):
+    if not field.data:
+        return
+
+    class_regex = r'^[a-zA-Z0-9_\-]+$'
+
+    if not re.search(class_regex, field.data):
+        raise ValidationError('Invalid class syntax')
+
+
+def FAN__LEVEL_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data < 0:
+        raise ValidationError('Level must be 0 or greater')
+
+    if field.data > 100:
+        raise ValidationError('Level must be 100 or less')
+
+
+def FAN__THOLD_DIFF_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data < 0:
+        raise ValidationError('Threshold difference must be 0 or greater')
+
+
+def FAN__TARGET_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
+
+
 def TEMP_SENSOR__CLASSNAME_validator(form, field):
     if not field.data:
         return
@@ -2169,8 +2203,8 @@ def SENSOR_USER_VAR_SLOT_validator(form, field):
         raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
 
-    if slot_i < 10:
-        raise ValidationError('Slot must be 10 or greater')
+    if slot_i < 0:
+        raise ValidationError('Slot must be 0 or greater')
 
     if slot_i > 30:
         raise ValidationError('Slot must be 30 or less')
@@ -2503,8 +2537,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
     DEW_HEATER__CLASSNAME_choices = (
         ('', 'None'),
-        ('blinka_dew_heater_digital', 'Dew Heater - Standard'),
+        ('blinka_dew_heater_standard', 'Dew Heater - Standard'),
         ('blinka_dew_heater_pwm', 'Dew Heater - PWM'),
+    )
+
+    FAN__CLASSNAME_choices = (
+        ('', 'None'),
+        ('blinka_fan_standard', 'Fan - Standard'),
+        ('blinka_fan_pwm', 'Fan - PWM'),
     )
 
     TEMP_SENSOR__CLASSNAME_choices = (
@@ -2526,6 +2566,7 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     SENSOR_USER_VAR_SLOT_choices = (
+        ('0', '0 - Camera Temp'),
         ('10', '10'),
         ('11', '11'),
         ('12', '12'),
@@ -2883,6 +2924,19 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__THOLD_DIFF_LOW       = IntegerField('Low Threshold Difference', validators=[DEW_HEATER__THOLD_DIFF_validator])
     DEW_HEATER__THOLD_DIFF_MED       = IntegerField('Medium Threshold Difference', validators=[DEW_HEATER__THOLD_DIFF_validator])
     DEW_HEATER__THOLD_DIFF_HIGH      = IntegerField('High Threshold Difference', validators=[DEW_HEATER__THOLD_DIFF_validator])
+    FAN__CLASSNAME                   = SelectField('Fan', choices=FAN__CLASSNAME_choices, validators=[FAN__CLASSNAME_validator])
+    FAN__ENABLE_NIGHT                = BooleanField('Enable Night')
+    FAN__PIN_1                       = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    FAN__LEVEL_DEF                   = IntegerField('Default Level', validators=[FAN__LEVEL_validator])
+    FAN__THOLD_ENABLE                = BooleanField('Enable Fan Thresholds')
+    FAN__TARGET                      = FloatField('Target Temp', validators=[FAN__TARGET_validator])
+    FAN__TEMP_USER_VAR_SLOT          = SelectField('Temperature Sensor Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
+    FAN__LEVEL_LOW                   = IntegerField('Low Setting', validators=[FAN__LEVEL_validator])
+    FAN__LEVEL_MED                   = IntegerField('Medium Setting', validators=[FAN__LEVEL_validator])
+    FAN__LEVEL_HIGH                  = IntegerField('High Setting', validators=[FAN__LEVEL_validator])
+    FAN__THOLD_DIFF_LOW              = IntegerField('Low Threshold Difference', validators=[FAN__THOLD_DIFF_validator])
+    FAN__THOLD_DIFF_MED              = IntegerField('Medium Threshold Difference', validators=[FAN__THOLD_DIFF_validator])
+    FAN__THOLD_DIFF_HIGH             = IntegerField('High Threshold Difference', validators=[FAN__THOLD_DIFF_validator])
     TEMP_SENSOR__A_CLASSNAME         = SelectField('Sensor A', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__A_PIN_1             = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__A_USER_VAR_SLOT     = SelectField('Sensor A Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])

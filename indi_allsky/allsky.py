@@ -130,6 +130,7 @@ class IndiAllSky(object):
         # 1 dew heater level
         # 2 dew point
         # 3 frost point
+        # 4 fan level
         # 1-9 reserved for future use
         self.sensors_user_av = Array('f', [0.0 for x in range(30)])
 
