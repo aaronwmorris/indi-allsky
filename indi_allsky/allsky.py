@@ -249,6 +249,11 @@ class IndiAllSky(object):
 
 
     def _startup(self):
+        now = time.time()
+
+        self._miscDb.setState('WATCHDOG', int(now))
+        self._miscDb.setState('STATUS', constants.STATUS_STARTING)
+
         logger.info('indi-allsky release: %s', str(__version__))
         logger.info('indi-allsky config level: %s', str(__config_level__))
 
@@ -608,10 +613,12 @@ class IndiAllSky(object):
             self._startup()
 
 
-
-
         while True:
             if self._shutdown:
+                with app.app_context():
+                    self._miscDb.setState('STATUS', constants.STATUS_STOPPING)
+
+
                 logger.warning('Shutting down')
                 self._stopCaptureWorker()  # stop this first so image queue is cleared out
                 self._stopImageWorker()
@@ -627,6 +634,8 @@ class IndiAllSky(object):
                         'indi-allsky was shutdown',
                         expire=timedelta(hours=1),
                     )
+
+                    self._miscDb.setState('STATUS', constants.STATUS_STOPPED)
 
 
                 sys.exit()

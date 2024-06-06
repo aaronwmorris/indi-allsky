@@ -2194,6 +2194,8 @@ class AjaxConfigView(BaseView):
 
 
         if reload_on_save:
+            self._miscDb.setState('STATUS', constants.STATUS_RELOADING)
+
             task_reload = IndiAllSkyDbTaskQueueTable(
                 queue=TaskQueueQueue.MAIN,
                 state=TaskQueueState.MANUAL,
@@ -3217,6 +3219,8 @@ class AjaxSystemInfoView(BaseView):
 
         elif service == app.config['ALLSKY_SERVICE_NAME']:
             if command == 'hup':
+                self._miscDb.setState('STATUS', constants.STATUS_RELOADING)
+
                 task_reload = IndiAllSkyDbTaskQueueTable(
                     queue=TaskQueueQueue.MAIN,
                     state=TaskQueueState.MANUAL,

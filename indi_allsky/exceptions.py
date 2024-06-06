@@ -11,6 +11,10 @@ class TemperatureException(Exception):
     pass
 
 
+class IndiServerException(Exception):
+    pass
+
+
 class CameraException(Exception):
     pass
 

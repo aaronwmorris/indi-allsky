@@ -401,32 +401,6 @@ class TemplateView(BaseView):
 
 
         ### assuming indi-allsky process is running if we reach this point
-        longitude = self.camera.longitude
-        latitude = self.camera.latitude
-        elevation = self.camera.elevation
-
-        # this can be eventually removed
-        if isinstance(elevation, type(None)):
-            elevation = 0
-
-
-        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
-
-        obs = ephem.Observer()
-        obs.lon = math.radians(longitude)
-        obs.lat = math.radians(latitude)
-        obs.elevation = elevation
-
-        sun = ephem.Sun()
-
-        obs.date = utcnow
-        sun.compute(obs)
-        sun_alt = math.degrees(sun.alt)
-
-        if sun_alt > self.camera.nightSunAlt:
-            night = False
-        else:
-            night = True
 
 
         if self.indi_allsky_config.get('FOCUS_MODE', False):
@@ -445,12 +419,37 @@ class TemplateView(BaseView):
             )
 
 
-        if not night and not self.daytime_capture:
-            data['status'] = '<span class="text-muted">SLEEPING</span>'
+        try:
+            status = int(self._miscDb.getState('STATUS'))
+        except NoResultFound:
+            # legacy
+            data['status'] = '<span class="text-success">RUNNING</span>'
+            return data
+        except ValueError:
+            # legacy
+            data['status'] = '<span class="text-danger">UNKNOWN</span>'
             return data
 
 
-        data['status'] = '<span class="text-success">RUNNING</span>'
+        if status == constants.STATUS_RUNNING:
+            data['status'] = '<span class="text-success">RUNNING</span>'
+        elif status == constants.STATUS_SLEEPING:
+            data['status'] = '<span class="text-muted">SLEEPING</span>'
+        elif status == constants.STATUS_RELOADING:
+            data['status'] = '<span class="text-warning">RELOADING</span>'
+        elif status == constants.STATUS_STARTING:
+            data['status'] = '<span class="text-info">STARTING</span>'
+        elif status == constants.STATUS_STOPPING:
+            data['status'] = '<span class="text-primary">STOPPING</span>'
+        elif status == constants.STATUS_STOPPED:
+            data['status'] = '<span class="text-primary">STOPPED</span>'
+        elif status == constants.STATUS_NOCAMERA:
+            data['status'] = '<span class="text-danger">NO CAMERA</span>'
+        elif status == constants.STATUS_NOINDISERVER:
+            data['status'] = '<span class="text-danger">NO INDISERVER</span>'
+        else:
+            data['status'] = '<span class="text-danger">UNKNOWN</span>'
+
         return data
 
 

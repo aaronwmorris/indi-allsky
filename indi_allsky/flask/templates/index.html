@@ -88,11 +88,11 @@ function loadJS(url, data, onDone, onError) {
         data: data,
         success: function(data){
             json_data = data
-            $('#message').text(json_data['latest_image']['message']);
+            $('#message').html(json_data['latest_image']['message']);
         },
         error: function(data){
             onError(data.status);
-            $('#message').text('Error loading data.  Please check the logs.');
+            $('#message').html('Error loading data.  Please check the logs.');
         },
     });
 

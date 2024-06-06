@@ -31,6 +31,7 @@ from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import NotificationCategory
 from .flask.models import IndiAllSkyDbTaskQueueTable
 
+from .exceptions import IndiServerException
 from .exceptions import CameraException
 from .exceptions import TimeOutException
 from .exceptions import TemperatureException
@@ -266,6 +267,8 @@ class CaptureWorker(Process):
                     logger.info('Daytime capture is disabled')
                     self.generate_timelapse_flag = False
 
+                    self._miscDb.setState('STATUS', constants.STATUS_SLEEPING)
+
                     if self._shutdown:
                         logger.warning('Shutting down')
                         self.indiclient.disableCcdCooler()  # safety
@@ -478,6 +481,8 @@ class CaptureWorker(Process):
 
             logger.error("No indiserver available at %s:%d", host, port)
 
+            self._miscDb.setState('STATUS', constants.STATUS_NOINDISERVER)
+
             self._miscDb.addNotification(
                 NotificationCategory.GENERAL,
                 'no_indiserver',
@@ -485,7 +490,8 @@ class CaptureWorker(Process):
                 expire=timedelta(hours=2),
             )
 
-            return
+            raise IndiServerException('indiserver not available')
+
 
         # give devices a chance to register
         time.sleep(8)
@@ -494,6 +500,8 @@ class CaptureWorker(Process):
             self.indiclient.findCcd(camera_name=self.config.get('INDI_CAMERA_NAME'))
         except CameraException as e:
             logger.error('Camera error: !!! %s !!!', str(e).upper())
+
+            self._miscDb.setState('STATUS', constants.STATUS_NOCAMERA)
 
             self._miscDb.addNotification(
                 NotificationCategory.CAMERA,
@@ -891,12 +899,9 @@ class CaptureWorker(Process):
 
     def _pre_run_tasks(self):
         # Tasks that need to be run before the main program loop
-        now = time.time()
 
-
-        # Update watchdog
-        self._miscDb.setState('WATCHDOG', int(now))
-
+        # Update status
+        self._miscDb.setState('STATUS', constants.STATUS_RUNNING)
 
         if self.camera_server in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
