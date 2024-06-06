@@ -109,6 +109,10 @@
                             </li>
                             {% if current_user.is_authenticated or login_disabled %}
                             <li>
+                                <a href="{{ url_for('indi_allsky.generate_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/plus-square-dotted.svg') }}" width="16" height="16" alt="Generate"><span class="ms-1 d-none d-sm-inline">Generate</span></a>
+                            </li>
+                            <li>
                                 <a href="{{ url_for('indi_allsky.darks_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/subtract.svg') }}" width="16" height="16" alt="Dark Library"><span class="ms-1 d-none d-sm-inline">Dark Library</span></a>
                             </li>
