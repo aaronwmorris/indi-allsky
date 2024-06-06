@@ -401,32 +401,6 @@ class TemplateView(BaseView):
 
 
         ### assuming indi-allsky process is running if we reach this point
-        longitude = self.camera.longitude
-        latitude = self.camera.latitude
-        elevation = self.camera.elevation
-
-        # this can be eventually removed
-        if isinstance(elevation, type(None)):
-            elevation = 0
-
-
-        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
-
-        obs = ephem.Observer()
-        obs.lon = math.radians(longitude)
-        obs.lat = math.radians(latitude)
-        obs.elevation = elevation
-
-        sun = ephem.Sun()
-
-        obs.date = utcnow
-        sun.compute(obs)
-        sun_alt = math.degrees(sun.alt)
-
-        if sun_alt > self.camera.nightSunAlt:
-            night = False
-        else:
-            night = True
 
 
         if self.indi_allsky_config.get('FOCUS_MODE', False):
@@ -443,11 +417,6 @@ class TemplateView(BaseView):
                 'Watchdog expired.  indi-allsky may be in a failed state.',
                 expire=timedelta(minutes=60),
             )
-
-
-        if not night and not self.daytime_capture:
-            data['status'] = '<span class="text-muted">SLEEPING</span>'
-            return data
 
 
         try:
@@ -473,9 +442,7 @@ class TemplateView(BaseView):
         elif status == constants.STATUS_STOPPING:
             data['status'] = '<span class="text-primary">STOPPING</span>'
         elif status == constants.STATUS_STOPPED:
-            data['status'] = '<span class="text-danger">DOWN</span>'
-        elif status == constants.STATUS_FAILED:
-            data['status'] = '<span class="text-danger">FAILED</span>'
+            data['status'] = '<span class="text-primary">STOPPED</span>'
         elif status == constants.STATUS_NOCAMERA:
             data['status'] = '<span class="text-danger">NO CAMERA</span>'
         elif status == constants.STATUS_NOINDISERVER:

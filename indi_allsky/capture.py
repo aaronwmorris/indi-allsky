@@ -267,6 +267,8 @@ class CaptureWorker(Process):
                     logger.info('Daytime capture is disabled')
                     self.generate_timelapse_flag = False
 
+                    self._miscDb.setState('STATUS', constants.STATUS_SLEEPING)
+
                     if self._shutdown:
                         logger.warning('Shutting down')
                         self.indiclient.disableCcdCooler()  # safety
