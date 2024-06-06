@@ -450,7 +450,35 @@ class TemplateView(BaseView):
             return data
 
 
-        data['status'] = '<span class="text-success">RUNNING</span>'
+        try:
+            status = int(self._miscDb.getState('STATUS'))
+        except NoResultFound:
+            # legacy
+            data['status'] = '<span class="text-success">RUNNING</span>'
+            return data
+        except ValueError:
+            # legacy
+            data['status'] = '<span class="text-danger">UNKNOWN</span>'
+            return data
+
+
+        if status == constants.STATUS_STARTING:
+            data['status'] = '<span class="text-info">STARTING</span>'
+        elif status == constants.STATUS_RUNNING:
+            data['status'] = '<span class="text-success">RUNNING</span>'
+        elif status == constants.STATUS_SLEEPING:
+            data['status'] = '<span class="text-muted">SLEEPING</span>'
+        elif status == constants.STATUS_RELOADING:
+            data['status'] = '<span class="text-warning">RELOADING</span>'
+        elif status == constants.STATUS_STOPPING:
+            data['status'] = '<span class="text-primary">STOPPING</span>'
+        elif status == constants.STATUS_STOPPED:
+            data['status'] = '<span class="text-danger">DOWN</span>'
+        elif status == constants.STATUS_FAILED:
+            data['status'] = '<span class="text-danger">FAILED</span>'
+        else:
+            data['status'] = '<span class="text-danger">UNKNOWN</span>'
+
         return data
 
 

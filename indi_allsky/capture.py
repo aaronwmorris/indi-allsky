@@ -891,12 +891,9 @@ class CaptureWorker(Process):
 
     def _pre_run_tasks(self):
         # Tasks that need to be run before the main program loop
-        now = time.time()
 
-
-        # Update watchdog
-        self._miscDb.setState('WATCHDOG', int(now))
-
+        # Update status
+        self._miscDb.setState('STATUS', constants.STATUS_RUNNING)
 
         if self.camera_server in ['indi_rpicam']:
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
