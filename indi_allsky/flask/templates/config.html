@@ -505,6 +505,18 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.PYCURL_CAMERA__IMAGE_FILE_TYPE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.PYCURL_CAMERA__IMAGE_FILE_TYPE(class='form-select bg-secondary') }}
+            <div id="PYCURL_CAMERA__IMAGE_FILE_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.PYCURL_CAMERA__USERNAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -5010,6 +5022,7 @@ const field_names = [
     'LIBCAMERA__EXTRA_OPTIONS',
     'LIBCAMERA__EXTRA_OPTIONS_DAY',
     'PYCURL_CAMERA__URL',
+    'PYCURL_CAMERA__IMAGE_FILE_TYPE',
     'PYCURL_CAMERA__USERNAME',
     'PYCURL_CAMERA__PASSWORD',
     'FOCUSER__CLASSNAME',

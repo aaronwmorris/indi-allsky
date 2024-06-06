@@ -174,8 +174,11 @@ class IndiClientPycurl(IndiClient):
             return
 
 
+        file_type = self.config['PYCURL_CAMERA'].get('IMAGE_FILE_TYPE', 'jpg')
+
+
         try:
-            image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.{0:s}'.format('jpg'), delete=True)
+            image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.{0:s}'.format(file_type), delete=True)
             image_tmp_f.close()
             image_tmp_p = Path(image_tmp_f.name)
 
