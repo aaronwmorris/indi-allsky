@@ -101,6 +101,8 @@ class SensorWorker(Thread):
 
 
         self.init_sensors()  # sensors before dew heater and fan
+        self.update_sensors()
+
         self.init_dew_heater()
         self.init_fan()
 
@@ -135,44 +137,10 @@ class SensorWorker(Thread):
                 logger.info('Dew Point: %0.1f, Frost Point: %0.1f', self.sensors_user_av[2], self.sensors_user_av[3])
 
 
-            # update sensor readings
-            for sensor in self.sensors:
-                try:
-                    sensor_data = sensor.update()
+            self.update_sensors()
 
-                    with self.sensors_user_av.get_lock():
-                        if sensor_data.get('dew_point'):
-                            self.sensors_user_av[2] = float(sensor_data['dew_point'])
-
-                        if sensor_data.get('frost_point'):
-                            self.sensors_user_av[3] = float(sensor_data['frost_point'])
-
-                        for i, v in enumerate(sensor_data['data']):
-                            self.sensors_user_av[sensor.slot + i] = float(v)
-                except SensorReadException as e:
-                    logger.error('SensorReadException: {0:s}'.format(str(e)))
-
-
-            # dew heater threshold processing
-            if not self.night and self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
-                ### day
-                if self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE'):
-                    self.check_dew_heater_thresholds()
-            else:
-                ### night
-                if self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE'):
-                    self.check_dew_heater_thresholds()
-
-
-            # fan threshold processing
-            if self.night and self.config.get('FAN', {}).get('ENABLE_NIGHT'):
-                ### night
-                if self.config.get('FAN', {}).get('THOLD_ENABLE'):
-                    self.check_fan_thresholds()
-            else:
-                ### day
-                if self.config.get('FAN', {}).get('THOLD_ENABLE'):
-                    self.check_fan_thresholds()
+            self.update_dew_heater()
+            self.update_fan()
 
 
     def night_day_change(self):
@@ -243,6 +211,19 @@ class SensorWorker(Thread):
                 self.sensors_user_av[1] = float(self.dew_heater.state)
 
 
+    def update_dew_heater(self):
+        # dew heater threshold processing
+        if not self.night and self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
+            ### day
+            if self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE'):
+                self.check_dew_heater_thresholds()
+        else:
+            ### night
+            if self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE'):
+                self.check_dew_heater_thresholds()
+
+
+
     def init_fan(self):
         fan_classname = self.config.get('FAN', {}).get('CLASSNAME')
         if fan_classname:
@@ -272,6 +253,18 @@ class SensorWorker(Thread):
 
             with self.sensors_user_av.get_lock():
                 self.sensors_user_av[4] = float(self.fan.state)
+
+
+    def update_fan(self):
+        # fan threshold processing
+        if self.night and self.config.get('FAN', {}).get('ENABLE_NIGHT'):
+            ### night
+            if self.config.get('FAN', {}).get('THOLD_ENABLE'):
+                self.check_fan_thresholds()
+        else:
+            ### day
+            if self.config.get('FAN', {}).get('THOLD_ENABLE'):
+                self.check_fan_thresholds()
 
 
     def init_sensors(self):
@@ -318,6 +311,25 @@ class SensorWorker(Thread):
             self.sensors[2] = indi_allsky_sensors.sensor_simulator(self.config)
 
         self.sensors[2].slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 15)
+
+
+    def update_sensors(self):
+        # update sensor readings
+        for sensor in self.sensors:
+            try:
+                sensor_data = sensor.update()
+
+                with self.sensors_user_av.get_lock():
+                    if sensor_data.get('dew_point'):
+                        self.sensors_user_av[2] = float(sensor_data['dew_point'])
+
+                    if sensor_data.get('frost_point'):
+                        self.sensors_user_av[3] = float(sensor_data['frost_point'])
+
+                    for i, v in enumerate(sensor_data['data']):
+                        self.sensors_user_av[sensor.slot + i] = float(v)
+            except SensorReadException as e:
+                logger.error('SensorReadException: {0:s}'.format(str(e)))
 
 
     def check_dew_heater_thresholds(self):
