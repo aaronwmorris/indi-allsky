@@ -377,16 +377,21 @@ class ImageProcessor(object):
                 hdulist[0].header['ORIGIN'] = camera.owner
 
         elif filename_p.suffix in ['.png']:
-            try:
-                with Image.open(str(filename_p)) as img:
-                    data = numpy.array(img)
-            except PIL.UnidentifiedImageError:
+            # PNGs may be 16-bit, use OpenCV
+            data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+
+            if isinstance(data, type(None)):
                 raise BadImage('Bad png image')
 
 
-            # swap axes for FITS
-            data = numpy.swapaxes(data, 1, 0)
-            data = numpy.swapaxes(data, 2, 0)
+            if len(data.shape) == 3:
+                if data.shape[2] == 4:
+                    # remove alpha channel
+                    data = data[:, :, :3]
+
+                # swap axes for FITS
+                data = numpy.swapaxes(data, 1, 0)
+                data = numpy.swapaxes(data, 2, 0)
 
 
             image_bitpix = 8

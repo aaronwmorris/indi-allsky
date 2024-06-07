@@ -2101,6 +2101,11 @@ def PYCURL_CAMERA__URL_validator(form, field):
         return
 
 
+def PYCURL_CAMERA__IMAGE_FILE_TYPE_validator(form, field):
+    if field.data not in ('jpg', 'png'):
+        raise ValidationError('Please select a valid file type')
+
+
 def FOCUSER__CLASSNAME_validator(form, field):
     if not field.data:
         return
@@ -2523,6 +2528,11 @@ class IndiAllskyConfigForm(FlaskForm):
         ('custom', 'Custom'),
     )
 
+    PYCURL_CAMERA__IMAGE_FILE_TYPE_choices = (
+        ('jpg', 'JPEG'),
+        ('png', 'PNG'),
+    )
+
     YOUTUBE__PRIVACY_STATUS_choices = (
         ('private', 'Private'),
         ('public', 'Public'),
@@ -2904,6 +2914,7 @@ class IndiAllskyConfigForm(FlaskForm):
     LIBCAMERA__EXTRA_OPTIONS         = StringField('Night libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     LIBCAMERA__EXTRA_OPTIONS_DAY     = StringField('Day libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     PYCURL_CAMERA__URL               = StringField('pyCurl Camera URL', validators=[PYCURL_CAMERA__URL_validator])
+    PYCURL_CAMERA__IMAGE_FILE_TYPE   = SelectField('File Type', choices=PYCURL_CAMERA__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), PYCURL_CAMERA__IMAGE_FILE_TYPE_validator])
     PYCURL_CAMERA__USERNAME          = StringField('Username', validators=[PYCURL_CAMERA__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
     PYCURL_CAMERA__PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[PYCURL_CAMERA__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
     FOCUSER__CLASSNAME               = SelectField('Focuser', choices=FOCUSER__CLASSNAME_choices, validators=[FOCUSER__CLASSNAME_validator])

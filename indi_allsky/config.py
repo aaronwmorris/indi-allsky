@@ -384,6 +384,7 @@ class IndiAllSkyConfigBase(object):
         },
         "PYCURL_CAMERA" : {
             "URL"                    : '',
+            "IMAGE_FILE_TYPE"        : "jpg",  # jpg, png
             "USERNAME"               : "",
             "PASSWORD"               : "",
             "PASSWORD_E"             : "",
