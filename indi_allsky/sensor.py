@@ -349,7 +349,7 @@ class SensorWorker(Thread):
                 current_temp = temp_c
 
 
-        temp_diff = current_temp - target_val
+        temp_diff = target_val - current_temp
         logger.info('Dew Heater threshold delta: %0.1f', temp_diff)
 
         if temp_diff <= self.dh_thold_diff_high:
@@ -384,7 +384,7 @@ class SensorWorker(Thread):
                 current_temp = temp_c
 
 
-        temp_diff = current_temp - self.fan_target
+        temp_diff = self.fan_target - current_temp
         logger.info('Fan threshold delta: %0.1f', temp_diff)
 
         if temp_diff > self.fan_thold_diff_high:
