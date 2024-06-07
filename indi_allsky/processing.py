@@ -1039,7 +1039,7 @@ class ImageProcessor(object):
     def apply_color_correction_matrix(self, libcamera_ccm):
         ccm_start = time.time()
 
-        max_value = 2 ** self.max_bit_depth
+        max_value = (2 ** self.max_bit_depth) - 1
 
         ccm_image = numpy.matmul(self.image, numpy.array(libcamera_ccm).T)
         ccm_image[ccm_image > max_value] = max_value  # clip high end
@@ -1071,9 +1071,6 @@ class ImageProcessor(object):
             return
 
         logger.info('Resampling image from %d to 8 bits', image_bitpix)
-
-        #div_factor = int((2 ** self.max_bit_depth) / 255)
-        #self.image = (self.image / div_factor).astype(numpy.uint8)
 
         # shifting is 5x faster than division
         shift_factor = self.max_bit_depth - 8
@@ -1406,7 +1403,7 @@ class ImageProcessor(object):
             numpy_dtype = numpy.uint16
 
 
-        max_value = 2 ** self.max_bit_depth
+        max_value = (2 ** self.max_bit_depth) - 1
 
         # float32 normalized values
         norm_image = (self.image / max_value).astype(numpy.float32)
