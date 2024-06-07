@@ -4,6 +4,7 @@ import ephem
 from skyfield.api import load
 from skyfield.api import wgs84
 from skyfield.api import EarthSatellite
+from skyfield import almanac
 import io
 import math
 from datetime import datetime
@@ -51,6 +52,14 @@ class svp(object):
         p_sun_alt_deg = math.degrees(p_sun.alt)
         logger.info('Sun alt: %0.1f', p_sun_alt_deg)
 
+        p_sun_rise_date = p_obs.next_rising(p_sun)
+        p_sun_set_date = p_obs.next_setting(p_sun)
+        p_sun_next_transit = p_obs.next_transit(p_sun)
+
+        logger.info('Sun rise: %s', p_sun_rise_date)
+        logger.info('Sun set: %s', p_sun_set_date)
+        logger.info('Sun Transit: %s', p_sun_next_transit)
+
 
         moon_alt_deg = math.degrees(p_moon.alt)
         logger.info('Moon alt: %0.1f', moon_alt_deg)
@@ -68,10 +77,20 @@ class svp(object):
 
         ts = load.timescale()
         t0 = ts.from_datetime(utcnow)
+        t1 = ts.from_datetime(utcnow + timedelta(hours=24))
 
         s_sun_alt, s_sun_az, dist = s_observer.at(t0).observe(s_sun).apparent().altaz()
-
         logger.info('Sun alt: %0.1f', s_sun_alt.degrees)
+
+        s_rise_twil_time, s_civil_twil_up = almanac.find_discrete(t0, t1, self.daylength(s_eph, s_location, 0.8333))
+        logger.info('Sun time: %s', s_rise_twil_time[0].utc_datetime())
+        logger.info('Sun time: %s', s_rise_twil_time[1].utc_datetime())
+
+
+        s_sun_transit_f = almanac.meridian_transits(s_eph, s_sun, s_location)
+        s_sun_transit_times, s_sun_transit_events = almanac.find_discrete(t0, t1, s_sun_transit_f)
+        s_sun_transit_times = s_sun_transit_times[s_sun_transit_events == 1]  # Select transits instead of antitransits.
+        logger.info('Sun Transit: %s', s_sun_transit_times[0].utc_datetime())
 
         s_moon_alt, s_moon_az, dist = s_observer.at(t0).observe(s_moon).apparent().altaz()
         logger.info('Moon alt: %0.1f', s_moon_alt.degrees)
@@ -114,7 +133,6 @@ class svp(object):
         s_iss_height = wgs84.height_of(s_iss_geocentric)
         #earth_radius_km = 6378.16
 
-        t1 = ts.from_datetime(utcnow + timedelta(hours=24))
         t_iss, iss_events = s_iss.find_events(s_location, t0, t1, altitude_degrees=0.0)
         s_iss_event_list = list(zip(t_iss.utc_datetime(), iss_events))
         #logger.info('%s', pformat(s_iss_event_list))
@@ -126,6 +144,27 @@ class svp(object):
             (s_iss_event_list[2][0] - s_iss_event_list[0][0]).seconds,
             s_iss_height.km,
         ))
+
+
+    def daylength(self, ephemeris, topos, degrees):
+        """Build a function of time that returns the daylength.
+
+        The function that this returns will expect a single argument that is a
+        :class:`~skyfield.timelib.Time` and will return ``True`` if the sun is up
+        or twilight has started, else ``False``.
+        """
+        from skyfield.nutationlib import iau2000b
+
+        sun = ephemeris['sun']
+        topos_at = (ephemeris['earth'] + topos).at
+
+        def is_sun_up_at(t):
+            """Return `True` if the sun has risen by time `t`."""
+            t._nutation_angles = iau2000b(t.tt)
+            return topos_at(t).observe(sun).apparent().altaz()[0].degrees > -degrees
+
+        is_sun_up_at.rough_period = 0.5  # twice a day
+        return is_sun_up_at
 
 
 if __name__ == "__main__":
