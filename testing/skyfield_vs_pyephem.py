@@ -60,6 +60,9 @@ class svp(object):
         logger.info('Sun set: %s', p_sun_set_date)
         logger.info('Sun Transit: %s', p_sun_next_transit)
 
+        p_sun_ha_rad = p_obs.sidereal_time() - p_sun.ra
+        p_sun_ha_deg = math.degrees(p_sun_ha_rad)
+        logger.info('Sun HA: %0.1f', p_sun_ha_deg)
 
         moon_alt_deg = math.degrees(p_moon.alt)
         logger.info('Moon alt: %0.1f', moon_alt_deg)
@@ -92,6 +95,9 @@ class svp(object):
         s_sun_transit_times = s_sun_transit_times[s_sun_transit_events == 1]  # Select transits instead of antitransits.
         logger.info('Sun Transit: %s', s_sun_transit_times[0].utc_datetime())
 
+        s_sun_ha, s_sun_dec, dist = s_observer.at(t0).observe(s_sun).apparent().hadec()
+        logger.info('Sun HA: %0.1f', math.degrees(s_sun_ha.radians))
+
         s_moon_alt, s_moon_az, dist = s_observer.at(t0).observe(s_moon).apparent().altaz()
         logger.info('Moon alt: %0.1f', s_moon_alt.degrees)
 
@@ -110,11 +116,11 @@ class svp(object):
 
         logger.info('iss: altitude %4.1f, azimuth %5.1f', math.degrees(p_iss.alt), math.degrees(p_iss.az))
         logger.info(' next rise: {0:%Y-%m-%d %H:%M:%S} ({1:0.1f}h), max: {2:%Y-%m-%d %H:%M:%S}, set: {3:%Y-%m-%d %H:%M:%S} - duration {4:d}s - elev {5:0.1f}km'.format(
-            ephem.localtime(p_iss_next_pass[0]),
+            p_iss_next_pass[0].datetime(),
             (p_iss_next_pass[0].datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600,
-            ephem.localtime(p_iss_next_pass[2]),
-            ephem.localtime(p_iss_next_pass[4]),
-            (ephem.localtime(p_iss_next_pass[4]) - ephem.localtime(p_iss_next_pass[0])).seconds,
+            p_iss_next_pass[2].datetime(),
+            p_iss_next_pass[4].datetime(),
+            (p_iss_next_pass[4].datetime() - p_iss_next_pass[0].datetime()).seconds,
             p_iss.elevation / 1000,
         ))
 
