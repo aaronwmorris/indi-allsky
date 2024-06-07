@@ -437,6 +437,10 @@ class ImageProcessor(object):
 
             data = raw.raw_image
 
+            ### testing
+            #data = numpy.left_shift(data, 4)  # upscale to full 16-bits
+            #data = data + 15  # increase max value
+
             # create a new fits container
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
