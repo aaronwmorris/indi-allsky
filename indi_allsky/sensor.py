@@ -20,6 +20,7 @@ class SensorWorker(Thread):
         idx,
         config,
         error_q,
+        sensors_temp_av,
         sensors_user_av,
         night_v,
     ):
@@ -30,6 +31,7 @@ class SensorWorker(Thread):
         self.config = config
         self.error_q = error_q
 
+        self.sensors_temp_av = sensors_temp_av
         self.sensors_user_av = sensors_user_av
         self.night_v = night_v
         self.night = False
@@ -330,10 +332,24 @@ class SensorWorker(Thread):
             logger.warning('Dew heater target dew point is 0, possible misconfiguration')
 
 
-        current_temp = self.sensors_user_av[self.dh_temp_user_slot]  # dew point
+        if self.dh_temp_user_slot < 100:
+            # user slots
+            current_temp = self.sensors_user_av[self.dh_temp_user_slot]
+        else:
+            # use system temps
+            slot = self.dh_temp_user_slot - 100
+            temp_c = self.sensors_temp_av[slot]
 
 
-        temp_diff = current_temp - target_val
+            if self.config.get('TEMP_DISPLAY') == 'f':
+                current_temp = (temp_c * 9.0 / 5.0) + 32
+            elif self.config.get('TEMP_DISPLAY') == 'k':
+                current_temp = temp_c + 273.15
+            else:
+                current_temp = temp_c
+
+
+        temp_diff = target_val - current_temp
         logger.info('Dew Heater threshold delta: %0.1f', temp_diff)
 
         if temp_diff <= self.dh_thold_diff_high:
@@ -351,10 +367,24 @@ class SensorWorker(Thread):
 
 
     def check_fan_thresholds(self):
-        current_temp = self.sensors_user_av[self.fan_temp_user_slot]
+        if self.fan_temp_user_slot < 100:
+            # user slots
+            current_temp = self.sensors_user_av[self.fan_temp_user_slot]
+        else:
+            # use system temps
+            slot = self.fan_temp_user_slot - 100
+            temp_c = self.sensors_temp_av[slot]
 
 
-        temp_diff = current_temp - self.fan_target
+            if self.config.get('TEMP_DISPLAY') == 'f':
+                current_temp = (temp_c * 9.0 / 5.0) + 32
+            elif self.config.get('TEMP_DISPLAY') == 'k':
+                current_temp = temp_c + 273.15
+            else:
+                current_temp = temp_c
+
+
+        temp_diff = self.fan_target - current_temp
         logger.info('Fan threshold delta: %0.1f', temp_diff)
 
         if temp_diff > self.fan_thold_diff_high:

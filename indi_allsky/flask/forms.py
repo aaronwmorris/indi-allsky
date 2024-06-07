@@ -2201,6 +2201,17 @@ def TEMP_SENSOR__I2C_ADDRESS_validator(form, field):
         raise ValidationError('Invalid HEX address: {0:s}'.format(str(e)))
 
 
+def SENSOR_SLOT_validator(form, field):
+    try:
+        slot_i = int(field.data)
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
+    if slot_i < 0:
+        raise ValidationError('Slot must be 0 or greater')
+
+
 def SENSOR_USER_VAR_SLOT_validator(form, field):
     try:
         slot_i = int(field.data)
@@ -2212,7 +2223,7 @@ def SENSOR_USER_VAR_SLOT_validator(form, field):
         raise ValidationError('Slot must be 0 or greater')
 
     if slot_i > 30:
-        raise ValidationError('Slot must be 30 or less')
+        raise ValidationError('Slot must be less than 30')
 
 
 def DEVICE_PIN_NAME_validator(form, field):
@@ -2576,27 +2587,71 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     SENSOR_USER_VAR_SLOT_choices = (
-        ('0', '0 - Camera Temp'),
-        ('10', '10'),
-        ('11', '11'),
-        ('12', '12'),
-        ('13', '13'),
-        ('14', '14'),
-        ('15', '15'),
-        ('16', '16'),
-        ('17', '17'),
-        ('18', '18'),
-        ('19', '19'),
-        ('20', '20'),
-        ('21', '21'),
-        ('22', '22'),
-        ('23', '23'),
-        ('24', '24'),
-        ('25', '25'),
-        ('26', '26'),
-        ('27', '27'),
-        ('28', '28'),
-        ('29', '29'),
+        ('10', 'User Slot 10'),
+        ('11', 'User Slot 11'),
+        ('12', 'User Slot 12'),
+        ('13', 'User Slot 13'),
+        ('14', 'User Slot 14'),
+        ('15', 'User Slot 15'),
+        ('16', 'User Slot 16'),
+        ('17', 'User Slot 17'),
+        ('18', 'User Slot 18'),
+        ('19', 'User Slot 19'),
+        ('20', 'User Slot 20'),
+        ('21', 'User Slot 21'),
+        ('22', 'User Slot 22'),
+        ('23', 'User Slot 23'),
+        ('24', 'User Slot 24'),
+        ('25', 'User Slot 25'),
+        ('26', 'User Slot 26'),
+        ('27', 'User Slot 27'),
+        ('28', 'User Slot 28'),
+        ('29', 'User Slot 29'),
+    )
+
+    SENSOR_SLOT_choices = (
+        ('0', 'User Slot 0 (Camera)'),
+        ('10', 'User Slot 10'),
+        ('11', 'User Slot 11'),
+        ('12', 'User Slot 12'),
+        ('13', 'User Slot 13'),
+        ('14', 'User Slot 14'),
+        ('15', 'User Slot 15'),
+        ('16', 'User Slot 16'),
+        ('17', 'User Slot 17'),
+        ('18', 'User Slot 18'),
+        ('19', 'User Slot 19'),
+        ('20', 'User Slot 20'),
+        ('21', 'User Slot 21'),
+        ('22', 'User Slot 22'),
+        ('23', 'User Slot 23'),
+        ('24', 'User Slot 24'),
+        ('25', 'User Slot 25'),
+        ('26', 'User Slot 26'),
+        ('27', 'User Slot 27'),
+        ('28', 'User Slot 28'),
+        ('29', 'User Slot 29'),
+        ('100', 'System Temp 0 (Camera)'),
+        ('110', 'System Temp 10'),
+        ('111', 'System Temp 11'),
+        ('112', 'System Temp 12'),
+        ('113', 'System Temp 13'),
+        ('114', 'System Temp 14'),
+        ('115', 'System Temp 15'),
+        ('116', 'System Temp 16'),
+        ('117', 'System Temp 17'),
+        ('118', 'System Temp 18'),
+        ('119', 'System Temp 19'),
+        ('120', 'System Temp 20'),
+        ('121', 'System Temp 21'),
+        ('122', 'System Temp 22'),
+        ('123', 'System Temp 23'),
+        ('124', 'System Temp 24'),
+        ('125', 'System Temp 25'),
+        ('126', 'System Temp 26'),
+        ('127', 'System Temp 27'),
+        ('128', 'System Temp 28'),
+        ('129', 'System Temp 29'),
     )
 
 
@@ -2928,7 +2983,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__LEVEL_DEF            = IntegerField('Default Level', validators=[DEW_HEATER__LEVEL_validator])
     DEW_HEATER__THOLD_ENABLE         = BooleanField('Enable Dew Heater Thresholds')
     DEW_HEATER__MANUAL_TARGET        = FloatField('Manual Target', validators=[DEW_HEATER__MANUAL_TARGET_validator])
-    DEW_HEATER__TEMP_USER_VAR_SLOT   = SelectField('Temperature Sensor Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
+    DEW_HEATER__TEMP_USER_VAR_SLOT   = SelectField('Temperature Sensor Slot', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
     DEW_HEATER__LEVEL_LOW            = IntegerField('Low Setting', validators=[DEW_HEATER__LEVEL_validator])
     DEW_HEATER__LEVEL_MED            = IntegerField('Medium Setting', validators=[DEW_HEATER__LEVEL_validator])
     DEW_HEATER__LEVEL_HIGH           = IntegerField('High Setting', validators=[DEW_HEATER__LEVEL_validator])
@@ -2941,7 +2996,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FAN__LEVEL_DEF                   = IntegerField('Default Level', validators=[FAN__LEVEL_validator])
     FAN__THOLD_ENABLE                = BooleanField('Enable Fan Thresholds')
     FAN__TARGET                      = FloatField('Target Temp', validators=[FAN__TARGET_validator])
-    FAN__TEMP_USER_VAR_SLOT          = SelectField('Temperature Sensor Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
+    FAN__TEMP_USER_VAR_SLOT          = SelectField('Temperature Sensor Slot', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
     FAN__LEVEL_LOW                   = IntegerField('Low Setting', validators=[FAN__LEVEL_validator])
     FAN__LEVEL_MED                   = IntegerField('Medium Setting', validators=[FAN__LEVEL_validator])
     FAN__LEVEL_HIGH                  = IntegerField('High Setting', validators=[FAN__LEVEL_validator])

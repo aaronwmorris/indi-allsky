@@ -499,6 +499,7 @@ class IndiAllSky(object):
             self.sensor_worker_idx,
             self.config,
             self.sensor_error_q,
+            self.sensors_temp_av,
             self.sensors_user_av,
             self.night_v,
         )

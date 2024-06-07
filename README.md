@@ -363,6 +363,13 @@ Native dew heater support is built in for standard and PWM controlled dew heater
 https://github.com/aaronwmorris/indi-allsky/wiki/Dew-Heater-Support
 
 
+## Fan Controller support
+
+Native fan controller support is built in for standard and PWM controlled fans.
+
+https://github.com/aaronwmorris/indi-allsky/wiki/Fan-Control
+
+
 ## Focuser support
 
 If you built your system with a focuser, it is now possible to control the focuser within the Focus view.  `28BYJ-48` steppers are currently supported.
