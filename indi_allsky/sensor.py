@@ -133,11 +133,13 @@ class SensorWorker(Thread):
                 self.night_day_change()
 
 
+            self.update_sensors()
+
+
             if self.sensors_user_av[2]:
                 logger.info('Dew Point: %0.1f, Frost Point: %0.1f', self.sensors_user_av[2], self.sensors_user_av[3])
 
 
-            self.update_sensors()
 
             self.update_dew_heater()
             self.update_fan()
