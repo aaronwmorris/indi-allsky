@@ -437,6 +437,10 @@ class ImageProcessor(object):
 
             data = raw.raw_image
 
+            ### testing
+            #data = numpy.left_shift(data, 4)  # upscale to full 16-bits
+            #data = data + 15  # increase max value
+
             # create a new fits container
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
@@ -1039,7 +1043,7 @@ class ImageProcessor(object):
     def apply_color_correction_matrix(self, libcamera_ccm):
         ccm_start = time.time()
 
-        max_value = 2 ** self.max_bit_depth
+        max_value = (2 ** self.max_bit_depth) - 1
 
         ccm_image = numpy.matmul(self.image, numpy.array(libcamera_ccm).T)
         ccm_image[ccm_image > max_value] = max_value  # clip high end
@@ -1071,9 +1075,6 @@ class ImageProcessor(object):
             return
 
         logger.info('Resampling image from %d to 8 bits', image_bitpix)
-
-        #div_factor = int((2 ** self.max_bit_depth) / 255)
-        #self.image = (self.image / div_factor).astype(numpy.uint8)
 
         # shifting is 5x faster than division
         shift_factor = self.max_bit_depth - 8
@@ -1406,7 +1407,7 @@ class ImageProcessor(object):
             numpy_dtype = numpy.uint16
 
 
-        max_value = 2 ** self.max_bit_depth
+        max_value = (2 ** self.max_bit_depth) - 1
 
         # float32 normalized values
         norm_image = (self.image / max_value).astype(numpy.float32)
@@ -1417,11 +1418,11 @@ class ImageProcessor(object):
         lab = cv2.cvtColor(norm_image, cv2.COLOR_BGR2LAB)
 
         # clahe only accepts uint8 and uint16
-        # luminance is a float between 0-100, which needs to be remapped ot a 16bit int
+        # luminance is a float between 0-100, which needs to be remapped to a 16bit int
         cl_u16 = clahe.apply((lab[:, :, 0] * 655).astype(numpy_dtype))  # a little less than 65535 / 100
 
         # map luminance back to 0-100
-        lab[:, :, 0] = (cl_u16 / 690).astype(numpy.float32)  # trying to prevent artifiacts in bright areas
+        lab[:, :, 0] = (cl_u16 / 656).astype(numpy.float32)  # a little more than 655.35
 
         #logger.info('L min: %0.4f', numpy.min(lab[:, :, 0]))
         #logger.info('L max: %0.4f', numpy.max(lab[:, :, 0]))
