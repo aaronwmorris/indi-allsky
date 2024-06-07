@@ -100,9 +100,9 @@ class SensorWorker(Thread):
         #raise Exception('Test exception handling in worker')
 
 
+        self.init_sensors()  # sensors before dew heater and fan
         self.init_dew_heater()
         self.init_fan()
-        self.init_sensors()
 
 
         while True:
