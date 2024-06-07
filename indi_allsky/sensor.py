@@ -372,7 +372,7 @@ class SensorWorker(Thread):
             current_temp = self.sensors_user_av[self.fan_temp_user_slot]
         else:
             # use system temps
-            slot = self.dh_temp_user_slot - 100
+            slot = self.fan_temp_user_slot - 100
             temp_c = self.sensors_temp_av[slot]
 
 
