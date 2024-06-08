@@ -745,6 +745,7 @@ class UploadSync(object):
             'origin'     : entry_metadata['type'],
             'createDate' : thumbnail_entry.createDate.timestamp(),
             'utc_offset' : thumbnail_entry.createDate.astimezone().utcoffset().total_seconds(),
+            'night'      : entry_metadata['night'],
             'dayDate'    : thumbnail_entry.createDate.strftime('%Y%m%d'),  # this is not correct, but does not really matter
             'uuid'       : thumbnail_entry.uuid,
             'width'      : thumbnail_entry.width,
@@ -777,6 +778,7 @@ class UploadSync(object):
             'origin'     : entry_metadata['type'],
             'createDate' : thumbnail_entry.createDate.timestamp(),
             'utc_offset' : thumbnail_entry.createDate.astimezone().utcoffset().total_seconds(),
+            'night'      : entry_metadata['night'],
             'dayDate'    : thumbnail_entry.createDate.strftime('%Y%m%d'),  # this is not correct, but does not really matter
             'uuid'       : thumbnail_entry.uuid,
             'width'      : thumbnail_entry.width,
