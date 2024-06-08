@@ -45,8 +45,10 @@ class svp(object):
 
         p_sun = ephem.Sun()
         p_moon = ephem.Moon()
+        p_jupiter = ephem.Jupiter()
         p_sun.compute(p_obs)
         p_moon.compute(p_obs)
+        p_jupiter.compute(p_obs)
 
 
         p_sun_alt_deg = math.degrees(p_sun.alt)
@@ -64,9 +66,12 @@ class svp(object):
         p_sun_ha_deg = math.degrees(p_sun_ha_rad)
         logger.info('Sun HA: %0.1f', p_sun_ha_deg)
 
-        moon_alt_deg = math.degrees(p_moon.alt)
-        logger.info('Moon alt: %0.1f', moon_alt_deg)
+        p_moon_alt_deg = math.degrees(p_moon.alt)
+        logger.info('Moon alt: %0.1f', p_moon_alt_deg)
         logger.info('Moon phase: %0.2f%%', p_moon.moon_phase * 100)
+
+        p_jupiter_alt_deg = math.degrees(p_jupiter.alt)
+        logger.info('Jupiter alt: %0.1f', p_jupiter_alt_deg)
 
 
         # skyfield
@@ -74,6 +79,7 @@ class svp(object):
         s_earth = s_eph['earth']
         s_sun = s_eph['sun']
         s_moon = s_eph['moon']
+        s_jup = s_eph['jupiter barycenter']
 
         s_location = wgs84.latlon(LATITUDE, LONGITUDE)
         s_observer = s_earth + s_location
@@ -82,7 +88,7 @@ class svp(object):
         t0 = ts.from_datetime(utcnow)
         t1 = ts.from_datetime(utcnow + timedelta(hours=24))
 
-        s_sun_alt, s_sun_az, dist = s_observer.at(t0).observe(s_sun).apparent().altaz()
+        s_sun_alt, s_sun_az, s_sun_dist = s_observer.at(t0).observe(s_sun).apparent().altaz()
         logger.info('Sun alt: %0.1f', s_sun_alt.degrees)
 
         s_rise_twil_time, s_civil_twil_up = almanac.find_discrete(t0, t1, self.daylength(s_eph, s_location, 0.8333))
@@ -95,10 +101,10 @@ class svp(object):
         s_sun_transit_times = s_sun_transit_times[s_sun_transit_events == 1]  # Select transits instead of antitransits.
         logger.info('Sun Transit: %s', s_sun_transit_times[0].utc_datetime())
 
-        s_sun_ha, s_sun_dec, dist = s_observer.at(t0).observe(s_sun).apparent().hadec()
+        s_sun_ha, s_sun_dec, s_sun_dist = s_observer.at(t0).observe(s_sun).apparent().hadec()
         logger.info('Sun HA: %0.1f', math.degrees(s_sun_ha.radians))
 
-        s_moon_alt, s_moon_az, dist = s_observer.at(t0).observe(s_moon).apparent().altaz()
+        s_moon_alt, s_moon_az, s_moon_dist = s_observer.at(t0).observe(s_moon).apparent().altaz()
         logger.info('Moon alt: %0.1f', s_moon_alt.degrees)
 
         e_at = s_earth.at(t0)
@@ -106,6 +112,9 @@ class svp(object):
 
         moon_percent = s_m_earth.fraction_illuminated(s_sun)
         logger.info('Moon phase: %0.2f%%', moon_percent * 100)
+
+        s_jup_alt, s_jup_az, s_jup_dist = s_observer.at(t0).observe(s_jup).apparent().altaz()
+        logger.info('Jupiter Alt: %0.1f', s_jup_alt.degrees)
 
 
         ### Satellite ###
