@@ -139,6 +139,9 @@ if [ -f "/etc/astroberry.version" ]; then
     echo
 fi
 
+echo
+echo "IP Info"
+ip address
 
 echo
 echo "User info"
