@@ -13,6 +13,7 @@ class DewHeaterPwm(DewHeaterBase):
         super(DewHeaterPwm, self).__init__(*args, **kwargs)
 
         pin_1_name = kwargs['pin_1_name']
+        self.invert_output = kwargs['invert_output']
 
         import board
         import pwmio
@@ -43,13 +44,24 @@ class DewHeaterPwm(DewHeaterBase):
             return
 
 
-        logger.warning('Set dew heater state: %d%%', new_state_i)
+        if not self.invert_output:
+            new_duty_cycle = ((2 ** 16) - 1) * new_state_i / 100
+        else:
+            new_duty_cycle = ((2 ** 16) - 1) * (100 - new_state_i) / 100
 
-        d = ((2 ** 16) - 1) * new_state_i / 100
-        self.pwm.duty_cycle = d
+
+        logger.warning('Set dew heater state: %d%%', new_state_i)
+        self.pwm.duty_cycle = new_duty_cycle
 
         self._state = new_state_i
 
 
     def disable(self):
+        if not self.invert_output:
+            new_duty_cycle = 0
+        else:
+            new_duty_cycle = ((2 ** 16) - 1)
+
+        self.pwm.duty_cycle = new_duty_cycle
         self.state = 0
+
