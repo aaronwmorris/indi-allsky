@@ -13,6 +13,7 @@ class FanStandard(FanBase):
         super(FanStandard, self).__init__(*args, **kwargs)
 
         pin_1_name = kwargs['pin_1_name']
+        invert_output = kwargs['invert_output']
 
         import board
         import digitalio
@@ -21,6 +22,15 @@ class FanStandard(FanBase):
 
         self.pin = digitalio.DigitalInOut(pin1)
         self.pin.direction = digitalio.Direction.OUTPUT
+
+
+        if not invert_output:
+            self.ON = 1
+            self.OFF = 0
+        else:
+            self.ON = 0
+            self.OFF = 1
+
 
         self._state = None
 
@@ -37,14 +47,15 @@ class FanStandard(FanBase):
 
         if new_state_b:
             logger.warning('Set fan state: 100%')
-            self.pin.value = 1
+            self.pin.value = self.ON
             self._state = 100
         else:
             logger.warning('Set fan state: 0%')
-            self.pin.value = 0
+            self.pin.value = self.OFF
             self._state = 0
 
 
     def disable(self):
+        self.pin.value = self.OFF
         self.state = 0
 

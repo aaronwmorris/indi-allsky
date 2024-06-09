@@ -186,8 +186,9 @@ class SensorWorker(Thread):
             dh_class = getattr(dew_heaters, dew_heater_classname)
 
             dh_pin_1 = self.config.get('DEW_HEATER', {}).get('PIN_1', 'notdefined')
+            dh_invert_output = self.config.get('DEW_HEATER', {}).get('INVERT_OUTPUT', False)
 
-            self.dew_heater = dh_class(self.config, pin_1_name=dh_pin_1)
+            self.dew_heater = dh_class(self.config, pin_1_name=dh_pin_1, invert_output=dh_invert_output)
 
             if self.night_v.value:
                 ### night
@@ -232,8 +233,9 @@ class SensorWorker(Thread):
             fan_class = getattr(fans, fan_classname)
 
             fan_pin_1 = self.config.get('FAN', {}).get('PIN_1', 'notdefined')
+            fan_invert_output = self.config.get('FAN', {}).get('INVERT_OUTPUT', False)
 
-            self.fan = fan_class(self.config, pin_1_name=fan_pin_1)
+            self.fan = fan_class(self.config, pin_1_name=fan_pin_1, invert_output=fan_invert_output)
 
             if not self.night_v.value:
                 ### day

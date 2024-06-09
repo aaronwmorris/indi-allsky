@@ -1922,6 +1922,12 @@ class ImageProcessor(object):
         else:
             label_data['dew_heater_status'] = 'Off'
 
+        # fan
+        if self.sensors_user_av[4]:
+            label_data['fan_status'] = 'On'
+        else:
+            label_data['fan_status'] = 'Off'
+
 
         image_label = image_label_tmpl.format(**label_data)  # fill in the data
 

@@ -1391,6 +1391,7 @@ class ConfigView(FormView):
             'FOCUSER__GPIO_PIN_4'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_4', 'D22'),
             'DEW_HEATER__CLASSNAME'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('CLASSNAME', ''),
             'DEW_HEATER__PIN_1'              : self.indi_allsky_config.get('DEW_HEATER', {}).get('PIN_1', 'D12'),
+            'DEW_HEATER__INVERT_OUTPUT'      : self.indi_allsky_config.get('DEW_HEATER', {}).get('INVERT_OUTPUT', False),
             'DEW_HEATER__ENABLE_DAY'         : self.indi_allsky_config.get('DEW_HEATER', {}).get('ENABLE_DAY', False),
             'DEW_HEATER__LEVEL_DEF'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100),
             'DEW_HEATER__THOLD_ENABLE'       : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_ENABLE', False),
@@ -1404,6 +1405,7 @@ class ConfigView(FormView):
             'DEW_HEATER__THOLD_DIFF_HIGH'    : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', 5),
             'FAN__CLASSNAME'                 : self.indi_allsky_config.get('FAN', {}).get('CLASSNAME', ''),
             'FAN__PIN_1'                     : self.indi_allsky_config.get('FAN', {}).get('PIN_1', 'D12'),
+            'FAN__INVERT_OUTPUT'             : self.indi_allsky_config.get('FAN', {}).get('INVERT_OUTPUT', False),
             'FAN__ENABLE_NIGHT'              : self.indi_allsky_config.get('FAN', {}).get('ENABLE_NIGHT', False),
             'FAN__LEVEL_DEF'                 : self.indi_allsky_config.get('FAN', {}).get('LEVEL_DEF', 100),
             'FAN__THOLD_ENABLE'              : self.indi_allsky_config.get('FAN', {}).get('THOLD_ENABLE', False),
@@ -2058,6 +2060,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_4']                = str(request.json['FOCUSER__GPIO_PIN_4'])
         self.indi_allsky_config['DEW_HEATER']['CLASSNAME']              = str(request.json['DEW_HEATER__CLASSNAME'])
         self.indi_allsky_config['DEW_HEATER']['PIN_1']                  = str(request.json['DEW_HEATER__PIN_1'])
+        self.indi_allsky_config['DEW_HEATER']['INVERT_OUTPUT']          = bool(request.json['DEW_HEATER__INVERT_OUTPUT'])
         self.indi_allsky_config['DEW_HEATER']['ENABLE_DAY']             = bool(request.json['DEW_HEATER__ENABLE_DAY'])
         self.indi_allsky_config['DEW_HEATER']['LEVEL_DEF']              = int(request.json['DEW_HEATER__LEVEL_DEF'])
         self.indi_allsky_config['DEW_HEATER']['THOLD_ENABLE']           = bool(request.json['DEW_HEATER__THOLD_ENABLE'])
@@ -2071,6 +2074,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['DEW_HEATER']['THOLD_DIFF_HIGH']        = int(request.json['DEW_HEATER__THOLD_DIFF_HIGH'])
         self.indi_allsky_config['FAN']['CLASSNAME']                     = str(request.json['FAN__CLASSNAME'])
         self.indi_allsky_config['FAN']['PIN_1']                         = str(request.json['FAN__PIN_1'])
+        self.indi_allsky_config['FAN']['INVERT_OUTPUT']                 = bool(request.json['FAN__INVERT_OUTPUT'])
         self.indi_allsky_config['FAN']['ENABLE_NIGHT']                  = bool(request.json['FAN__ENABLE_NIGHT'])
         self.indi_allsky_config['FAN']['LEVEL_DEF']                     = int(request.json['FAN__LEVEL_DEF'])
         self.indi_allsky_config['FAN']['THOLD_ENABLE']                  = bool(request.json['FAN__THOLD_ENABLE'])
