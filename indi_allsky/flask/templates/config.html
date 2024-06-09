@@ -4,7 +4,7 @@
 
 {% block head %}
 <style>
-#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab {
+#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab {
 	width: 150px;
 	margin-top: 10px;
 	margin-right: 5px;
@@ -28,6 +28,7 @@
     <button class="nav-link link-danger bg-dark" id="nav-youtube-tab" data-bs-toggle="tab" data-bs-target="#nav-youtube" type="button" role="tab" aria-controls="nav-youtube" aria-selected="false">YouTube</button>
     <button class="nav-link link-secondary bg-dark" id="nav-s3-tab" data-bs-toggle="tab" data-bs-target="#nav-s3" type="button" role="tab" aria-controls="nav-s3" aria-selected="false">Object Storage</button>
     <button class="nav-link link-light bg-dark" id="nav-syncapi-tab" data-bs-toggle="tab" data-bs-target="#nav-syncapi" type="button" role="tab" aria-controls="nav-syncapi" aria-selected="false">SyncAPI</button>
+    <button class="nav-link link-primary bg-dark" id="nav-sensors-tab" data-bs-toggle="tab" data-bs-target="#nav-sensors" type="button" role="tab" aria-controls="nav-sensors" aria-selected="false">Sensors</button>
     <button class="nav-link link-danger bg-dark" id="nav-devices-tab" data-bs-toggle="tab" data-bs-target="#nav-devices" type="button" role="tab" aria-controls="nav-devices" aria-selected="false">Devices</button>
   </div>
 </nav>
@@ -4150,7 +4151,7 @@
 
 </div><!-- end syncapi tab -->
 
-<div class="tab-pane fade" id="nav-devices" role="tabpanel" aria-labelledby="nav-devices-tab">
+<div class="tab-pane fade" id="nav-sensors" role="tabpanel" aria-labelledby="nav-sensors-tab">
     <hr>
 
     <div><span class="badge rounded-pill bg-info text-dark">Note</span> Hardware Device support requires the Adafruit-Blinka module</div>
@@ -4159,68 +4160,170 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.FOCUSER__CLASSNAME.label(class='col-form-label') }}
+            {{ form_config.TEMP_SENSOR__A_CLASSNAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_config.FOCUSER__CLASSNAME(class='form-select bg-secondary') }}
-            <div id="FOCUSER__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.TEMP_SENSOR__A_CLASSNAME(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__A_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Focuser-Device" class="text-decoration-none link-info" target="_blank">Focuser Wiki</a></div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Sensors" class="text-decoration-none link-info" target="_blank">Sensor Wiki</a></div>
         </div>
     </div>
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.FOCUSER__GPIO_PIN_1.label(class='col-form-label') }}
+            {{ form_config.TEMP_SENSOR__A_PIN_1.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.FOCUSER__GPIO_PIN_1(class='form-control bg-secondary') }}
-            <div id="FOCUSER__GPIO_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.TEMP_SENSOR__A_PIN_1(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__A_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Example: D17 (GPIO17 / Pin 11 Raspi)</div>
+            <div>Example: D5 (GPIO5 / Pin 29 Raspi)</div>
+            <div>Unused for i2c devices</div>
         </div>
     </div>
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.FOCUSER__GPIO_PIN_2.label(class='col-form-label') }}
+            {{ form_config.TEMP_SENSOR__A_I2C_ADDRESS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.FOCUSER__GPIO_PIN_2(class='form-control bg-secondary') }}
-            <div id="FOCUSER__GPIO_PIN_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.TEMP_SENSOR__A_I2C_ADDRESS(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__A_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Example: D18 (GPIO18 / Pin 12 Raspi)</div>
+            <div>Hexidecimal address - Example: 0x77</div>
         </div>
     </div>
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.FOCUSER__GPIO_PIN_3.label(class='col-form-label') }}
+            {{ form_config.TEMP_SENSOR__A_USER_VAR_SLOT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.FOCUSER__GPIO_PIN_3(class='form-control bg-secondary') }}
-            <div id="FOCUSER__GPIO_PIN_3-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.TEMP_SENSOR__A_USER_VAR_SLOT(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__A_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Example: D27 (GPIO27 / Pin 13 Raspi)</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__B_CLASSNAME(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__B_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
         </div>
     </div>
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.FOCUSER__GPIO_PIN_4.label(class='col-form-label') }}
+            {{ form_config.TEMP_SENSOR__B_PIN_1.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.FOCUSER__GPIO_PIN_4(class='form-control bg-secondary') }}
-            <div id="FOCUSER__GPIO_PIN_4-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.TEMP_SENSOR__B_PIN_1(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__B_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Example: D22 (GPIO22 / Pin 15 Raspi)</div>
+            <div>Example: D6 (GPIO6 / Pin 31 Raspi)</div>
+            <div>Unused for i2c devices</div>
         </div>
     </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_I2C_ADDRESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_I2C_ADDRESS(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__B_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Hexidecimal address - Example: 0x76</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_USER_VAR_SLOT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_USER_VAR_SLOT(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__B_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__C_CLASSNAME(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__C_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_PIN_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_PIN_1(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__C_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D16 (GPIO16 / Pin 36 Raspi)</div>
+            <div>Unused for i2c devices</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_I2C_ADDRESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_I2C_ADDRESS(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__C_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Hexidecimal address - Example: 0x40</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_USER_VAR_SLOT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_USER_VAR_SLOT(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__C_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+</div><!-- end sensors tab -->
+
+<div class="tab-pane fade" id="nav-devices" role="tabpanel" aria-labelledby="nav-devices-tab">
+    <hr>
+
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> Hardware Device support requires the Adafruit-Blinka module</div>
 
     <hr>
 
@@ -4415,168 +4518,6 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_CLASSNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__A_CLASSNAME(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__A_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Sensors" class="text-decoration-none link-info" target="_blank">Sensor Wiki</a></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_PIN_1.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_PIN_1(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__A_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Example: D5 (GPIO5 / Pin 29 Raspi)</div>
-            <div>Unused for i2c devices</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_I2C_ADDRESS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_I2C_ADDRESS(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__A_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Hexidecimal address - Example: 0x77</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_USER_VAR_SLOT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__A_USER_VAR_SLOT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__A_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_CLASSNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__B_CLASSNAME(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__B_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_PIN_1.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_PIN_1(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__B_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Example: D6 (GPIO6 / Pin 31 Raspi)</div>
-            <div>Unused for i2c devices</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_I2C_ADDRESS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_I2C_ADDRESS(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__B_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Hexidecimal address - Example: 0x76</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_USER_VAR_SLOT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__B_USER_VAR_SLOT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__B_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_CLASSNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TEMP_SENSOR__C_CLASSNAME(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__C_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_PIN_1.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_PIN_1(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__C_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Example: D16 (GPIO16 / Pin 36 Raspi)</div>
-            <div>Unused for i2c devices</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_I2C_ADDRESS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_I2C_ADDRESS(class='form-control bg-secondary') }}
-            <div id="TEMP_SENSOR__C_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Hexidecimal address - Example: 0x40</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_USER_VAR_SLOT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TEMP_SENSOR__C_USER_VAR_SLOT(class='form-select bg-secondary') }}
-            <div id="TEMP_SENSOR__C_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
             {{ form_config.FAN__CLASSNAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -4761,6 +4702,74 @@
             <div></div>
         </div>
     </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FOCUSER__CLASSNAME(class='form-select bg-secondary') }}
+            <div id="FOCUSER__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Focuser-Device" class="text-decoration-none link-info" target="_blank">Focuser Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_1(class='form-control bg-secondary') }}
+            <div id="FOCUSER__GPIO_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D17 (GPIO17 / Pin 11 Raspi)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_2.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_2(class='form-control bg-secondary') }}
+            <div id="FOCUSER__GPIO_PIN_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D18 (GPIO18 / Pin 12 Raspi)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_3.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_3(class='form-control bg-secondary') }}
+            <div id="FOCUSER__GPIO_PIN_3-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D27 (GPIO27 / Pin 13 Raspi)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_4.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FOCUSER__GPIO_PIN_4(class='form-control bg-secondary') }}
+            <div id="FOCUSER__GPIO_PIN_4-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D22 (GPIO22 / Pin 15 Raspi)</div>
+        </div>
+    </div>
+
 
 </div><!-- end devices tab -->
 
