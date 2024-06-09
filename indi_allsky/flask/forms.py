@@ -635,6 +635,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'stretch_m1_gamma' : 0.0,
         'stretch_m1_stddevs' : 0.0,
         'dew_heater_status' : '',
+        'fan_status' : '',
     }
 
 
@@ -2980,6 +2981,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__CLASSNAME            = SelectField('Dew Heater', choices=DEW_HEATER__CLASSNAME_choices, validators=[DEW_HEATER__CLASSNAME_validator])
     DEW_HEATER__ENABLE_DAY           = BooleanField('Enable Daytime')
     DEW_HEATER__PIN_1                = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    DEW_HEATER__INVERT_OUTPUT        = BooleanField('Invert Output')
     DEW_HEATER__LEVEL_DEF            = IntegerField('Default Level', validators=[DEW_HEATER__LEVEL_validator])
     DEW_HEATER__THOLD_ENABLE         = BooleanField('Enable Dew Heater Thresholds')
     DEW_HEATER__MANUAL_TARGET        = FloatField('Manual Target', validators=[DEW_HEATER__MANUAL_TARGET_validator])
@@ -2993,6 +2995,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FAN__CLASSNAME                   = SelectField('Fan', choices=FAN__CLASSNAME_choices, validators=[FAN__CLASSNAME_validator])
     FAN__ENABLE_NIGHT                = BooleanField('Enable Night')
     FAN__PIN_1                       = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    FAN__INVERT_OUTPUT               = BooleanField('Invert Output')
     FAN__LEVEL_DEF                   = IntegerField('Default Level', validators=[FAN__LEVEL_validator])
     FAN__THOLD_ENABLE                = BooleanField('Enable Fan Thresholds')
     FAN__TARGET                      = FloatField('Target Temp', validators=[FAN__TARGET_validator])

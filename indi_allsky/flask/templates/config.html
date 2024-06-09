@@ -4252,6 +4252,20 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__INVERT_OUTPUT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DEW_HEATER__INVERT_OUTPUT(class='form-check-input') }}
+                <div id="DEW_HEATER__INVERT_OUTPUT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.DEW_HEATER__LEVEL_DEF.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -4584,6 +4598,20 @@
         </div>
         <div class="col-sm-8">
             <div>Example: D13 (GPIO13 / Pin 33 Raspi)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FAN__INVERT_OUTPUT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FAN__INVERT_OUTPUT(class='form-check-input') }}
+                <div id="FAN__INVERT_OUTPUT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
         </div>
     </div>
 
@@ -5147,8 +5175,10 @@ const checkbox_field_names = [
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
     'DEW_HEATER__ENABLE_DAY',
+    'DEW_HEATER__INVERT_OUTPUT',
     'DEW_HEATER__THOLD_ENABLE',
     'FAN__ENABLE_NIGHT',
+    'FAN__INVERT_OUTPUT',
     'FAN__THOLD_ENABLE',
     'WEB_NONLOCAL_IMAGES',
     'WEB_LOCAL_IMAGES_ADMIN',
