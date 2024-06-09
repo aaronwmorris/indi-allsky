@@ -266,6 +266,10 @@ class UploadSync(object):
                     self._miscUpload.upload_startrail_video(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbPanoramaVideoTable':
                     self._miscUpload.upload_panorama_video(entry)
+                elif x['table'].__name__ == 'IndiAllSkyDbRawImageTable':
+                    self._miscUpload.upload_raw_image(entry)
+                elif x['table'].__name__ == 'IndiAllSkyDbFitsImageTable':
+                    self._miscUpload.upload_fits_image(entry)
                 else:
                     logger.error('Unknown table: %s', x['table'].__name__)
 
@@ -879,7 +883,6 @@ class UploadSync(object):
             status_dict['syncapi'][IndiAllSkyDbPanoramaImageTable] = None
 
 
-
         # s3
         s3_table_list = [
             IndiAllSkyDbVideoTable,
@@ -921,7 +924,6 @@ class UploadSync(object):
             status_dict['s3'][IndiAllSkyDbRawImageTable] = None
 
 
-
         # upload
         upload_table_list = [
             [IndiAllSkyDbVideoTable, 'UPLOAD_VIDEO'],
@@ -929,6 +931,8 @@ class UploadSync(object):
             [IndiAllSkyDbStarTrailsTable, 'UPLOAD_STARTRAIL'],
             [IndiAllSkyDbStarTrailsVideoTable, 'UPLOAD_VIDEO'],
             [IndiAllSkyDbPanoramaVideoTable, 'UPLOAD_VIDEO'],
+            [IndiAllSkyDbRawImageTable, 'UPLOAD_RAW'],
+            [IndiAllSkyDbFitsImageTable, 'UPLOAD_FITS'],
         ]
 
         for table in upload_table_list:
@@ -962,7 +966,6 @@ class UploadSync(object):
             else:
                 logger.info('%s uploading disabled', IndiAllSkyDbPanoramaImageTable.__name__)
                 status_dict['upload'][IndiAllSkyDbPanoramaImageTable] = None
-
 
 
         return status_dict
@@ -1050,7 +1053,6 @@ class UploadSync(object):
         return syncapi
 
 
-
     def _startFileUploadWorkers(self):
         for upload_worker_dict in self.upload_worker_list:
             self._fileUploadWorkerStart(upload_worker_dict)
@@ -1113,7 +1115,6 @@ class UploadSync(object):
         logger.info('Stopping FileUploadWorker process')
 
         uw_dict['worker'].join()
-
 
 
 class NoUploadsAvailable(Exception):
