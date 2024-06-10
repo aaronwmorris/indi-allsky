@@ -137,8 +137,7 @@ class SensorWorker(Thread):
 
 
             if self.sensors_user_av[2]:
-                logger.info('Dew Point: %0.1f, Frost Point: %0.1f', self.sensors_user_av[2], self.sensors_user_av[3])
-
+                logger.info('Dew Point: %0.1f, Frost Point: %0.1f, Heat Index: %0.1f', self.sensors_user_av[2], self.sensors_user_av[3], self.sensors_user_av[5])
 
 
             self.update_dew_heater()
@@ -329,6 +328,9 @@ class SensorWorker(Thread):
 
                     if sensor_data.get('frost_point'):
                         self.sensors_user_av[3] = float(sensor_data['frost_point'])
+
+                    if sensor_data.get('heat_index'):
+                        self.sensors_user_av[5] = float(sensor_data['heat_index'])
 
                     for i, v in enumerate(sensor_data['data']):
                         self.sensors_user_av[sensor.slot + i] = float(v)

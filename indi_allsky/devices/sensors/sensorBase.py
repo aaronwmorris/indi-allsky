@@ -42,6 +42,41 @@ class SensorBase(object):
 
 
     ###
+    ### https://github.com/gregnau/heat-index-calc/blob/master/heat-index-calc.py
+    ###
+
+
+    def get_heat_index_f(self, temp_f, rh):
+        T2 = pow(temp_f, 2)
+        #T3 = pow(temp_f, 3)
+        H2 = pow(rh, 2)
+        #H3 = pow(rh, 3)
+
+
+        # Coefficients for the calculations
+        C1_f = [ -42.379, 2.04901523, 10.14333127, -0.22475541, -6.83783e-03, -5.481717e-02, 1.22874e-03, 8.5282e-04, -1.99e-06]
+        #C2_f = [ 0.363445176, 0.988622465, 4.777114035, -0.114037667, -0.000850208, -0.020716198, 0.000687678, 0.000274954, 0]
+        #C3_f = [ 16.923, 0.185212, 5.37941, -0.100254, 0.00941695, 0.00728898, 0.000345372, -0.000814971, 0.0000102102, -0.000038646, 0.0000291583, 0.00000142721, 0.000000197483, -0.0000000218429, 0.000000000843296, -0.0000000000481975]
+
+
+        heatindex1_f = C1_f[0] + (C1_f[1] * temp_f) + (C1_f[2] * rh) + (C1_f[3] * temp_f * rh) + (C1_f[4] * T2) + (C1_f[5] * H2) + (C1_f[6] * T2 * rh) + (C1_f[7] * temp_f * H2) + (C1_f[8] * T2 * H2)
+        #heatindex2_f = C2_f[0] + (C2_f[1] * temp_f) + (C2_f[2] * rh) + (C2_f[3] * temp_f * rh) + (C2_f[4] * T2) + (C2_f[5] * H2) + (C2_f[6] * T2 * rh) + (C2_f[7] * temp_f * H2) + (C2_f[8] * T2 * H2)
+        #heatindex3_f = C3_f[0] + (C3_f[1] * temp_f) + (C3_f[2] * rh) + (C3_f[3] * temp_f * rh) + (C3_f[4] * T2) + (C3_f[5] * H2) + (C3_f[6] * T2 * rh) + (C3_f[7] * temp_f * H2) + (C3_f[8] * T2 * H2) + (C3_f[9] * T3) + (C3_f[10] * H3) + (C3_f[11] * T3 * rh) + (C3_f[12] * temp_f * H3) + (C3_f[13] * T3 * H2) + (C3_f[14] * T2 * H3) + (C3_f[15] * T3 * H3)
+
+
+        return heatindex1_f
+
+
+    def get_heat_index_c(self, temp_c, rh):
+        temp_f = self.c2f(temp_c)
+
+        heat_index_f = self.get_heat_index_f(temp_f, rh)
+
+        return self.f2c(heat_index_f)
+
+
+
+    ###
     ### https://gist.github.com/sourceperl/45587ea99ff123745428
     ###
 

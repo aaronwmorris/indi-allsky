@@ -43,7 +43,10 @@ class TempSensorBmp180(SensorBase):
 
 
         data = {
-            'data' : (current_temp, current_pressure),
+            'data' : (
+                current_temp,
+                current_pressure,
+            ),
         }
 
         return data

@@ -33,7 +33,10 @@ class TempSensorMlx90614(SensorBase):
 
 
         data = {
-            'data' : (current_temp, object_temp),
+            'data' : (
+                current_temp,
+                object_temp,
+            ),
         }
 
         return data

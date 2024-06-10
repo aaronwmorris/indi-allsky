@@ -659,7 +659,17 @@ class ImageWorker(Process):
                 'camera_uuid'     : i_ref['camera_uuid'],
             }
 
-            image_metadata['data'] = {}
+
+
+            image_add_data = dict()
+            for i, v in enumerate(self.sensors_temp_av):
+                image_add_data['sensor_temp_{0:d}'.format(i)] = v
+
+            for i, v in enumerate(self.sensors_user_av):
+                image_add_data['sensor_user_{0:d}'.format(i)] = v
+
+            image_metadata['data'] = image_add_data
+
 
             image_entry = self._miscDb.addImage(
                 new_filename.relative_to(self.image_dir),
@@ -799,15 +809,15 @@ class ImageWorker(Process):
 
 
             # system temp sensors
-            for i, val in enumerate(self.sensors_temp_av):
+            for i, v in enumerate(self.sensors_temp_av):
                 sensor_topic = 'sensor_temp_{0:d}'.format(i)
-                mqtt_data[sensor_topic] = round(val, 1)
+                mqtt_data[sensor_topic] = round(v, 1)
 
 
             # user sensors
-            for i, val in enumerate(self.sensors_user_av):
+            for i, v in enumerate(self.sensors_user_av):
                 sensor_topic = 'sensor_user_{0:d}'.format(i)
-                mqtt_data[sensor_topic] = round(val, 1)
+                mqtt_data[sensor_topic] = round(v, 1)
 
 
             if new_filename:
