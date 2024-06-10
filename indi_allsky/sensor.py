@@ -332,6 +332,10 @@ class SensorWorker(Thread):
                     if sensor_data.get('heat_index'):
                         self.sensors_user_av[5] = float(sensor_data['heat_index'])
 
+                    if sensor_data.get('wind_degrees'):
+                        self.sensors_user_av[6] = float(sensor_data['wind_degrees'])
+
+
                     for i, v in enumerate(sensor_data['data']):
                         self.sensors_user_av[sensor.slot + i] = float(v)
             except SensorReadException as e:
