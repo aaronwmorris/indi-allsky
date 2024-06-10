@@ -10,6 +10,21 @@
 	margin-right: 5px;
 	height: 50px;
 }
+
+.loader {
+  display: none;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
 {% endblock %}
 
@@ -4810,6 +4825,7 @@
 
     <div class="form-group row" style="height:100px;">
         <div class="col-sm-8">
+            <div class="loader" id="loader_config"></div>
             <div id="success-message" class="text-success" style="display: none;"></div>
             <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
@@ -5218,7 +5234,6 @@ fields['form_global'] = {
 
 
 $('#form_config').on('submit', function() {
-
     // hide all errors
     successMessage.css({'display' : 'none'});
     Object.keys(fields).forEach((key) => {
@@ -5231,6 +5246,8 @@ $('#form_config').on('submit', function() {
     field_names.forEach(item => {
         json_data[item] = fields[item].input.val();
     });
+
+    $("#loader_config").css({'display' : 'block'});
 
     // checkboxes
     checkbox_field_names.forEach(item => {
@@ -5247,15 +5264,19 @@ $('#form_config').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(data){
+            $("#loader_config").css({'display' : 'none'});
+
             successMessage.html(data['success-message']);
             successMessage.css({'display' : 'block'});
             setTimeout(function() {
                 successMessage.css({'display' : 'none'});
-            }, 10000);
+            }, 15000);
 
             $('#CONFIG_NOTE').val('');
         },
         error: function(data){
+            $("#loader_config").css({'display' : 'none'});
+
             var errors = JSON.parse(data.responseText);
             Object.keys(errors).forEach((key) => {
                 fields[key].input.addClass('is-invalid');
