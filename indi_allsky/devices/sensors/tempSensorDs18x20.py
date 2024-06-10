@@ -65,7 +65,9 @@ class TempSensorDs18x20(SensorBase):
 
 
         data = {
-            'data' : (current_temp, ),
+            'data' : (
+                current_temp,
+            ),
         }
 
         return data

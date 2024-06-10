@@ -46,9 +46,7 @@ class SensorBase(object):
     ###
 
 
-    def get_heat_index_c(self, temp_c, rh):
-        temp_f = self.c2f(temp_c)
-
+    def get_heat_index_f(self, temp_f, rh):
         T2 = pow(temp_f, 2)
         #T3 = pow(temp_f, 3)
         H2 = pow(rh, 2)
@@ -66,7 +64,16 @@ class SensorBase(object):
         #heatindex3_f = C3_f[0] + (C3_f[1] * temp_f) + (C3_f[2] * rh) + (C3_f[3] * temp_f * rh) + (C3_f[4] * T2) + (C3_f[5] * H2) + (C3_f[6] * T2 * rh) + (C3_f[7] * temp_f * H2) + (C3_f[8] * T2 * H2) + (C3_f[9] * T3) + (C3_f[10] * H3) + (C3_f[11] * T3 * rh) + (C3_f[12] * temp_f * H3) + (C3_f[13] * T3 * H2) + (C3_f[14] * T2 * H3) + (C3_f[15] * T3 * H3)
 
 
-        return self.f2c(heatindex1_f)
+        return heatindex1_f
+
+
+    def get_heat_index_c(self, temp_c, rh):
+        temp_f = self.c2f(temp_c)
+
+        heat_index_f = self.get_heat_index_f(temp_f, rh)
+
+        return self.f2c(heat_index_f)
+
 
 
     ###

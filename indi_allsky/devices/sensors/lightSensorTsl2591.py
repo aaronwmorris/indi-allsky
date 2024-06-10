@@ -24,7 +24,12 @@ class LightSensorTsl2591(SensorBase):
 
 
         data = {
-            'data' : (lux, visible, infrared, full_spectrum),
+            'data' : (
+                lux,
+                visible,
+                infrared,
+                full_spectrum,
+            ),
         }
 
         return data

@@ -46,25 +46,34 @@ class TempSensorDht22(SensorBase):
             frost_point_c = 0.0
 
 
+        heat_index_c = self.get_heat_index_c(temp_c, rel_h)
+
 
         if self.config.get('TEMP_DISPLAY') == 'f':
             current_temp = self.c2f(temp_c)
             current_dp = self.c2f(dew_point_c)
             current_fp = self.c2f(frost_point_c)
+            current_hi = self.c2f(heat_index_c)
         elif self.config.get('TEMP_DISPLAY') == 'k':
             current_temp = self.c2k(temp_c)
             current_dp = self.c2k(dew_point_c)
             current_fp = self.c2k(frost_point_c)
+            current_hi = self.c2k(heat_index_c)
         else:
             current_temp = temp_c
             current_dp = dew_point_c
             current_fp = frost_point_c
+            current_hi = heat_index_c
 
 
         data = {
             'dew_point' : current_dp,
             'frost_point' : current_fp,
-            'data' : (current_temp, rel_h),
+            'heat_index' : current_hi,
+            'data' : (
+                current_temp,
+                rel_h,
+            ),
         }
 
         return data
