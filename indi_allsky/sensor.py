@@ -143,6 +143,10 @@ class SensorWorker(Thread):
                 logger.info('Dew Point: %0.1f, Frost Point: %0.1f, Heat Index: %0.1f', self.sensors_user_av[2], self.sensors_user_av[3], self.sensors_user_av[5])
 
 
+            if self.sensors_user_av[7]:
+                logger.info('Sensor SQM: %0.5f', self.sensors_user_av[7])
+
+
             self.update_dew_heater()
             self.update_fan()
 
