@@ -25,7 +25,11 @@ class LightSensorTsl2561(SensorBase):
         logger.info('TSL2561 - lux: %0.1f, broadband: %d, ir: %d', lux, broadband, infrared)
 
 
-        sqm_mag = self.lux2mag(lux)
+        try:
+            sqm_mag = self.lux2mag(lux)
+        except ValueError as e:
+            logger.error('SQM calculation error - ValueError: %s', str(e))
+            sqm_mag = 0.0
 
 
         data = {
