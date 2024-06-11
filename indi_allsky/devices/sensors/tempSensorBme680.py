@@ -95,6 +95,12 @@ class TempSensorBme680_I2C(TempSensorBme680):
         self.bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c, address=i2c_address)
 
 
+        self.bme680.humidity_oversample = 2
+        self.bme680.pressure_oversample = 4
+        self.bme680.temperature_oversample = 8
+        self.bme680.filter_size = 3
+
+
         # throw away, initial humidity reading is always 100%
         self.bme680.temperature
         self.bme680.humidity
@@ -121,6 +127,12 @@ class TempSensorBme680_SPI(TempSensorBme680):
         logger.warning('Initializing BME680 SPI temperature device')
         spi = board.SPI()
         self.bme680 = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
+
+
+        self.bme680.humidity_oversample = 2
+        self.bme680.pressure_oversample = 4
+        self.bme680.temperature_oversample = 8
+        self.bme680.filter_size = 3
 
 
         # throw away, initial humidity reading is always 100%
