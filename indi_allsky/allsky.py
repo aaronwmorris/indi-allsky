@@ -133,7 +133,8 @@ class IndiAllSky(object):
         # 4 fan level
         # 5 heat index
         # 6 wind direction in degrees
-        # 7-9 reserved for future use
+        # 7 sqm
+        # 8-9 reserved for future use
         self.sensors_user_av = Array('f', [0.0 for x in range(30)])
 
         self.exposure_av = Array('f', [

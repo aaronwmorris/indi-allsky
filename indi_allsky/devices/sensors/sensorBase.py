@@ -72,6 +72,10 @@ class SensorBase(object):
         return mm * 0.0393700787
 
 
+    def lux2mag(self, lux):
+        return math.log10(lux / 108000) / -0.45
+
+
     ###
     ### https://github.com/gregnau/heat-index-calc/blob/master/heat-index-calc.py
     ###

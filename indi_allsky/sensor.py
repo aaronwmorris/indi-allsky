@@ -335,6 +335,9 @@ class SensorWorker(Thread):
                     if sensor_data.get('wind_degrees'):
                         self.sensors_user_av[6] = float(sensor_data['wind_degrees'])
 
+                    if sensor_data.get('sqm_mag'):
+                        self.sensors_user_av[7] = float(sensor_data['sqm_mag'])
+
 
                     for i, v in enumerate(sensor_data['data']):
                         self.sensors_user_av[sensor.slot + i] = float(v)

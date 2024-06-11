@@ -24,7 +24,11 @@ class LightSensorTsl2591(SensorBase):
         logger.info('TSL2591 - lux: %d, visible: %d, ir: %d, full: %d', lux, visible, infrared, full_spectrum)
 
 
+        sqm_mag = self.lux2mag(lux)
+
+
         data = {
+            'sqm_mag' : sqm_mag,
             'data' : (
                 lux,
                 visible,
