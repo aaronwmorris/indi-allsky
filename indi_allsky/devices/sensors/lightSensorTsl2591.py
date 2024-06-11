@@ -1,3 +1,4 @@
+import time
 import logging
 
 from .sensorBase import SensorBase
@@ -52,15 +53,17 @@ class LightSensorTsl2591_I2C(LightSensorTsl2591):
         self.tsl2591 = adafruit_tsl2591.TSL2591(i2c, address=i2c_address)
 
 
-        # You can optionally change the gain and integration time:
-        # self.tsl2591.gain = adafruit_tsl2591.GAIN_LOW (1x gain)
-        # self.tsl2591.gain = adafruit_tsl2591.GAIN_MED (25x gain, the default)
-        # self.tsl2591.gain = adafruit_tsl2591.GAIN_HIGH (428x gain)
-        # self.tsl2591.gain = adafruit_tsl2591.GAIN_MAX (9876x gain)
-        # self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS (100ms, default)
-        # self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_200MS (200ms)
-        # self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_300MS (300ms)
-        # self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_400MS (400ms)
-        # self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_500MS (500ms)
-        # self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_600MS (600ms)
+        ### You can optionally change the gain and integration time:
+        #self.tsl2591.gain = adafruit_tsl2591.GAIN_LOW   # (1x gain)
+        self.tsl2591.gain = adafruit_tsl2591.GAIN_MED   # (25x gain, the default)
+        #self.tsl2591.gain = adafruit_tsl2591.GAIN_HIGH  # (428x gain)
+        #self.tsl2591.gain = adafruit_tsl2591.GAIN_MAX   # (9876x gain)
 
+        self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS  # (100ms, default)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_200MS  # (200ms)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_300MS  # (300ms)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_400MS  # (400ms)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_500MS  # (500ms)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_600MS  # (600ms)
+
+        time.sleep(1)
