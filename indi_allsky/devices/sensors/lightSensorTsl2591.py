@@ -13,7 +13,7 @@ class LightSensorTsl2591(SensorBase):
     def update(self):
 
         try:
-            lux = int(self.tsl2591.lux)
+            lux = float(self.tsl2591.lux)
             infrared = int(self.tsl2591.infrared)
             visible = int(self.tsl2591.visible)
             full_spectrum = int(self.tsl2591.full_spectrum)
@@ -21,7 +21,7 @@ class LightSensorTsl2591(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('TSL2591 - lux: %d, visible: %d, ir: %d, full: %d', lux, visible, infrared, full_spectrum)
+        logger.info('TSL2591 - lux: %0.4f, visible: %d, ir: %d, full: %d', lux, visible, infrared, full_spectrum)
 
 
         try:

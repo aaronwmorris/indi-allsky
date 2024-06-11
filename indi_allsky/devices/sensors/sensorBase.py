@@ -73,7 +73,7 @@ class SensorBase(object):
 
 
     def lux2mag(self, lux):
-        return math.log10(lux / 108000) / -0.45
+        return math.log10(lux / 108000) / -0.4
 
 
     ###

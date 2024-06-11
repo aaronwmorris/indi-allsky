@@ -22,7 +22,7 @@ class LightSensorTsl2561(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('TSL2561 - lux: %0.1f, broadband: %d, ir: %d', lux, broadband, infrared)
+        logger.info('TSL2561 - lux: %0.4f, broadband: %d, ir: %d', lux, broadband, infrared)
 
 
         try:
