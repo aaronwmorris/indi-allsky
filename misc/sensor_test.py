@@ -50,6 +50,8 @@ class TestSensors(object):
 
         self.sensors = [None, None, None]
 
+        self.openweathermap_apikey = self.config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
+
 
     def main(self):
         self.init_sensors()
@@ -78,7 +80,12 @@ class TestSensors(object):
             a_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77')
             a_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'notdefined')
 
-            self.sensors[0] = a_sensor(self.config, pin_1_name=a_sensor_pin_1_name, i2c_address=a_sensor_i2c_address)
+            self.sensors[0] = a_sensor(
+                self.config,
+                pin_1_name=a_sensor_pin_1_name,
+                i2c_address=a_sensor_i2c_address,
+                openweathermap_apikey=self.openweathermap_apikey,
+            )
         else:
             logger.warning('No sensor A - Initializing sensor simulator')
             self.sensors[0] = indi_allsky_sensors.sensor_simulator(self.config)
@@ -94,7 +101,12 @@ class TestSensors(object):
             b_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76')
             b_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'notdefined')
 
-            self.sensors[1] = b_sensor(self.config, pin_1_name=b_sensor_pin_1_name, i2c_address=b_sensor_i2c_address)
+            self.sensors[1] = b_sensor(
+                self.config,
+                pin_1_name=b_sensor_pin_1_name,
+                i2c_address=b_sensor_i2c_address,
+                openweathermap_apikey=self.openweathermap_apikey,
+            )
         else:
             logger.warning('No sensor B - Initializing sensor simulator')
             self.sensors[1] = indi_allsky_sensors.sensor_simulator(self.config)
@@ -110,7 +122,12 @@ class TestSensors(object):
             c_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40')
             c_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('C_PIN_1', 'notdefined')
 
-            self.sensors[2] = c_sensor(self.config, pin_1_name=c_sensor_pin_1_name, i2c_address=c_sensor_i2c_address)
+            self.sensors[2] = c_sensor(
+                self.config,
+                pin_1_name=c_sensor_pin_1_name,
+                i2c_address=c_sensor_i2c_address,
+                openweathermap_apikey=self.openweathermap_apikey,
+            )
         else:
             logger.warning('No sensor C - Initializing sensor simulator')
             self.sensors[2] = indi_allsky_sensors.sensor_simulator(self.config)
