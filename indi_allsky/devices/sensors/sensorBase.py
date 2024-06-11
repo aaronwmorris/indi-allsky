@@ -73,6 +73,8 @@ class SensorBase(object):
 
 
     def lux2mag(self, lux):
+        # lux to magnitude/arcsec^2
+        # http://unihedron.com/projects/darksky/magconv.php
         return math.log10(lux / 108000) / -0.4
 
 
