@@ -107,7 +107,7 @@ class TempSensorBme680_I2C(TempSensorBme680):
         self.bme680.pressure
         self.bme680.gas
 
-        time.sleep(2)  # allow things to settle
+        time.sleep(1)  # allow things to settle
 
 
 class TempSensorBme680_SPI(TempSensorBme680):
@@ -141,5 +141,5 @@ class TempSensorBme680_SPI(TempSensorBme680):
         self.bme680.pressure
         self.bme680.gas
 
-        time.sleep(2)  # allow things to settle
+        time.sleep(1)  # allow things to settle
 
