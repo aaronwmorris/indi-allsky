@@ -441,6 +441,8 @@ class IndiAllSkyConfigBase(object):
             "C_PIN_1"                : "D16",
             "C_USER_VAR_SLOT"        : 20,
             "C_I2C_ADDRESS"          : "0x40",
+            "OPENWEATHERMAP_APIKEY"  : "",
+            "OPENWEATHERMAP_APIKEY_E": "",
         },
     })
 
@@ -575,6 +577,14 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             else:
                 pycurl_camera__password = config.get('PYCURL_CAMERA', {}).get('PASSWORD', '')
 
+            temp_sensor__openweathermap_apikey_e = config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY_E', '')
+            if temp_sensor__openweathermap_apikey_e:
+                # not catching InvalidToken
+                temp_sensor__openweathermap_apikey = f_key.decrypt(temp_sensor__openweathermap_apikey_e.encode()).decode()
+            else:
+                temp_sensor__openweathermap_apikey = config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
+
+
         else:
             # passwords should not be encrypted
             filetransfer__password = config.get('FILETRANSFER', {}).get('PASSWORD', '')
@@ -582,6 +592,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             mqttpublish__password = config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
             syncapi__apikey = config.get('SYNCAPI', {}).get('APIKEY', '')
             pycurl_camera__password = config.get('PYCURL_CAMERA', {}).get('PASSWORD', '')
+            temp_sensor__openweathermap_apikey = config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
 
 
         config['FILETRANSFER']['PASSWORD'] = filetransfer__password
@@ -594,6 +605,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['SYNCAPI']['APIKEY_E'] = ''
         config['PYCURL_CAMERA']['PASSWORD'] = pycurl_camera__password
         config['PYCURL_CAMERA']['PASSWORD_E'] = ''
+        config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = temp_sensor__openweathermap_apikey
+        config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY_E'] = ''
 
         return config
 
@@ -665,6 +678,16 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 pycurl_camera__password_e = ''
                 pycurl_camera__password = ''
 
+
+            temp_sensor__openweathermap_apikey = str(config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'])
+            if temp_sensor__openweathermap_apikey:
+                temp_sensor__openweathermap_apikey_e = f_key.encrypt(temp_sensor__openweathermap_apikey.encode()).decode()
+                temp_sensor__openweathermap_apikey = ''
+            else:
+                temp_sensor__openweathermap_apikey_e = ''
+                temp_sensor__openweathermap_apikey = ''
+
+
         else:
             # passwords should not be encrypted
             encrypted = False
@@ -679,6 +702,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             syncapi__apikey_e = ''
             pycurl_camera__password = str(config['PYCURL_CAMERA']['PASSWORD'])
             pycurl_camera__password_e = ''
+            temp_sensor__openweathermap_apikey = str(config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'])
+            temp_sensor__openweathermap_apikey_e = ''
 
 
         config['FILETRANSFER']['PASSWORD'] = filetransfer__password
@@ -691,6 +716,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['SYNCAPI']['APIKEY_E'] = syncapi__apikey_e
         config['PYCURL_CAMERA']['PASSWORD'] = pycurl_camera__password
         config['PYCURL_CAMERA']['PASSWORD_E'] = pycurl_camera__password_e
+        config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = temp_sensor__openweathermap_apikey
+        config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY_E'] = temp_sensor__openweathermap_apikey_e
 
 
         return config, encrypted

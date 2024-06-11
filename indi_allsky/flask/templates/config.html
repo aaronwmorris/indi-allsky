@@ -4333,6 +4333,21 @@
         </div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__OPENWEATHERMAP_APIKEY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__OPENWEATHERMAP_APIKEY(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__OPENWEATHERMAP_APIKEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
 </div><!-- end sensors tab -->
 
 <div class="tab-pane fade" id="nav-devices" role="tabpanel" aria-labelledby="nav-devices-tab">
@@ -5116,6 +5131,7 @@ const field_names = [
     'TEMP_SENSOR__C_PIN_1',
     'TEMP_SENSOR__C_USER_VAR_SLOT',
     'TEMP_SENSOR__C_I2C_ADDRESS',
+    'TEMP_SENSOR__OPENWEATHERMAP_APIKEY',
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',
