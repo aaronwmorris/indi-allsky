@@ -68,6 +68,9 @@ class SensorWorker(Thread):
         self.fan_thold_diff_med = self.config.get('FAN', {}).get('THOLD_DIFF_MED', 5)
         self.fan_thold_diff_high = self.config.get('FAN', {}).get('THOLD_DIFF_HIGH', 10)
 
+
+        self.openweathermap_apikey = self.config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
+
         self._stopper = threading.Event()
 
 
@@ -138,6 +141,10 @@ class SensorWorker(Thread):
 
             if self.sensors_user_av[2]:
                 logger.info('Dew Point: %0.1f, Frost Point: %0.1f, Heat Index: %0.1f', self.sensors_user_av[2], self.sensors_user_av[3], self.sensors_user_av[5])
+
+
+            if self.sensors_user_av[7]:
+                logger.info('Sensor SQM: %0.5f', self.sensors_user_av[7])
 
 
             self.update_dew_heater()
@@ -279,7 +286,12 @@ class SensorWorker(Thread):
             a_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77')
             a_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'notdefined')
 
-            self.sensors[0] = a_sensor(self.config, pin_1_name=a_sensor_pin_1_name, i2c_address=a_sensor_i2c_address)
+            self.sensors[0] = a_sensor(
+                self.config,
+                pin_1_name=a_sensor_pin_1_name,
+                i2c_address=a_sensor_i2c_address,
+                openweathermap_apikey=self.openweathermap_apikey,
+            )
         else:
             self.sensors[0] = indi_allsky_sensors.sensor_simulator(self.config)
 
@@ -294,7 +306,12 @@ class SensorWorker(Thread):
             b_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76')
             b_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'notdefined')
 
-            self.sensors[1] = b_sensor(self.config, pin_1_name=b_sensor_pin_1_name, i2c_address=b_sensor_i2c_address)
+            self.sensors[1] = b_sensor(
+                self.config,
+                pin_1_name=b_sensor_pin_1_name,
+                i2c_address=b_sensor_i2c_address,
+                openweathermap_apikey=self.openweathermap_apikey,
+            )
         else:
             self.sensors[1] = indi_allsky_sensors.sensor_simulator(self.config)
 
@@ -309,7 +326,12 @@ class SensorWorker(Thread):
             c_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40')
             c_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('C_PIN_1', 'notdefined')
 
-            self.sensors[2] = c_sensor(self.config, pin_1_name=c_sensor_pin_1_name, i2c_address=c_sensor_i2c_address)
+            self.sensors[2] = c_sensor(
+                self.config,
+                pin_1_name=c_sensor_pin_1_name,
+                i2c_address=c_sensor_i2c_address,
+                openweathermap_apikey=self.openweathermap_apikey,
+            )
         else:
             self.sensors[2] = indi_allsky_sensors.sensor_simulator(self.config)
 
@@ -331,6 +353,13 @@ class SensorWorker(Thread):
 
                     if sensor_data.get('heat_index'):
                         self.sensors_user_av[5] = float(sensor_data['heat_index'])
+
+                    if sensor_data.get('wind_degrees'):
+                        self.sensors_user_av[6] = float(sensor_data['wind_degrees'])
+
+                    if sensor_data.get('sqm_mag'):
+                        self.sensors_user_av[7] = float(sensor_data['sqm_mag'])
+
 
                     for i, v in enumerate(sensor_data['data']):
                         self.sensors_user_av[sensor.slot + i] = float(v)

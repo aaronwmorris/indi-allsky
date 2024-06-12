@@ -269,9 +269,17 @@ if [ -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
     echo "indi-allsky config (passwords redacted)"
     INDI_ALLSKY_CONFIG=$("${ALLSKY_DIRECTORY}/config.py" dump)
 
+
+    # reduce lat/long precision
+    LOCATION_LATITUDE=$(echo "$INDI_ALLSKY_CONFIG" | jq -r '.LOCATION_LATITUDE')
+    LOCATION_LONGITUDE=$(echo "$INDI_ALLSKY_CONFIG" | jq -r '.LOCATION_LONGITUDE')
+
+    INDI_ALLSKY_CONFIG=$(echo "$INDI_ALLSKY_CONFIG" | jq --argjson lat "$(printf '%0.0f' "$LOCATION_LATITUDE")" --argjson long "$(printf '%0.0f' "$LOCATION_LONGITUDE")" '.LOCATION_LATITUDE = $lat | .LOCATION_LONGITUDE = $long')
+
+
     echo "\`\`\`json"  # markdown
     # Remove all secrets from config
-    echo "$INDI_ALLSKY_CONFIG" | jq --arg redacted "REDACTED" '.FILETRANSFER.PASSWORD = $redacted | .FILETRANSFER.PASSWORD_E = $redacted | .S3UPLOAD.SECRET_KEY = $redacted | .S3UPLOAD.SECRET_KEY_E = $redacted | .MQTTPUBLISH.PASSWORD = $redacted | .MQTTPUBLISH.PASSWORD_E = $redacted | .SYNCAPI.APIKEY = $redacted | .SYNCAPI.APIKEY_E = $redacted | .PYCURL_CAMERA.PASSWORD = $redacted | .PYCURL_CAMERA.PASSWORD_E = $redacted'
+    echo "$INDI_ALLSKY_CONFIG" | jq --arg redacted "REDACTED" '.FILETRANSFER.PASSWORD = $redacted | .FILETRANSFER.PASSWORD_E = $redacted | .S3UPLOAD.SECRET_KEY = $redacted | .S3UPLOAD.SECRET_KEY_E = $redacted | .MQTTPUBLISH.PASSWORD = $redacted | .MQTTPUBLISH.PASSWORD_E = $redacted | .SYNCAPI.APIKEY = $redacted | .SYNCAPI.APIKEY_E = $redacted | .PYCURL_CAMERA.PASSWORD = $redacted | .PYCURL_CAMERA.PASSWORD_E = $redacted | .TEMP_SENSOR.OPENWEATHERMAP_APIKEY = $redacted | .TEMP_SENSOR.OPENWEATHERMAP_APIKEY_E = $redacted'
 
     deactivate
     echo

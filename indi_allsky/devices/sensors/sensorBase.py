@@ -23,22 +23,59 @@ class SensorBase(object):
 
 
     def c2f(self, c):
+        # celcius to fahrenheit
         return (c * 9.0 / 5.0) + 32
 
+
     def f2c(self, f):
+        # fahrenheit to celcius
         return (f - 32) * 5.0 / 9.0
 
+
     def c2k(self, c):
+        # celcius to kelvin
         return c + 273.15
 
+
     def hPa2psi(self, hpa):
+        # hectopascals to pounds/sq in
         return hpa * 0.014503768077999999
 
+
     def hPa2inHg(self, hpa):
+        # hectopascals to inches mercury
         return hpa * 0.02952998057228486
 
+
     def hPa2mmHg(self, hpa):
+        # hectopascals to millimeters mercury
         return hpa * 0.7500637554192107
+
+
+    def mps2kmph(self, mps):
+        # meters/sec to kilometers/hour
+        return mps * 3.6
+
+
+    def kmph2miph(self, kmph):
+        # kilometers/hour to miles/hour
+        return kmph * 0.6213711922
+
+
+    def mps2miph(self, mps):
+        # meters/sec to miles/hour
+        return mps * 3.6 * 0.6213711922
+
+
+    def mm2in(self, mm):
+        # millimeters to inches
+        return mm * 0.0393700787
+
+
+    def lux2mag(self, lux):
+        # lux to magnitude/arcsec^2
+        # http://unihedron.com/projects/darksky/magconv.php
+        return math.log10(lux / 108000) / -0.4
 
 
     ###

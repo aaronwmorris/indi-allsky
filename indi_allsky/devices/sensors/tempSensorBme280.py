@@ -84,7 +84,7 @@ class TempSensorBme280_I2C(TempSensorBme280):
         i2c_address_str = kwargs['i2c_address']
 
         import board
-        from adafruit_bme280 import basic as adafruit_bme280
+        from adafruit_bme280 import advanced as adafruit_bme280
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
@@ -93,13 +93,18 @@ class TempSensorBme280_I2C(TempSensorBme280):
         self.bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c, address=i2c_address)
 
 
+        self.bme280.overscan_humidity = adafruit_bme280.OVERSCAN_X1
+        self.bme280.overscan_temperature = adafruit_bme280.OVERSCAN_X1
+        self.bme280.overscan_pressure = adafruit_bme280.OVERSCAN_X16
+        self.bme280.iir_filter = adafruit_bme280.IIR_FILTER_DISABLE
+
+
         # throw away
         self.bme280.temperature
         self.bme280.humidity
         self.bme280.pressure
 
-        # allow things to settle
-        time.sleep(2)
+        time.sleep(1)  # allow things to settle
 
 
 class TempSensorBme280_SPI(TempSensorBme280):
@@ -111,7 +116,7 @@ class TempSensorBme280_SPI(TempSensorBme280):
 
         import board
         import digitalio
-        from adafruit_bme280 import basic as adafruit_bme280
+        from adafruit_bme280 import advanced as adafruit_bme280
 
         pin1 = getattr(board, pin_1_name)
         cs = digitalio.DigitalInOut(pin1)
@@ -121,11 +126,16 @@ class TempSensorBme280_SPI(TempSensorBme280):
         self.bme280 = adafruit_bme280.Adafruit_BME280_SPI(spi, cs)
 
 
+        self.bme280.overscan_humidity = adafruit_bme280.OVERSCAN_X1
+        self.bme280.overscan_temperature = adafruit_bme280.OVERSCAN_X1
+        self.bme280.overscan_pressure = adafruit_bme280.OVERSCAN_X16
+        self.bme280.iir_filter = adafruit_bme280.IIR_FILTER_DISABLE
+
+
         # throw away
         self.bme280.temperature
         self.bme280.humidity
         self.bme280.pressure
 
-        # allow things to settle
-        time.sleep(2)
+        time.sleep(1)  # allow things to settle
 

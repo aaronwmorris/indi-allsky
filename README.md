@@ -6,6 +6,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 
 ## New Features
+* Weather API
+    * OpenWeather Map API
 * Native Fan controller support
     * Standard
     * PWM Controlled

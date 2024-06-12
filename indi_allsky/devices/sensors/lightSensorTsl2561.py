@@ -22,10 +22,18 @@ class LightSensorTsl2561(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('TSL2561 - lux: %0.1f, broadband: %d, ir: %d', lux, broadband, infrared)
+        logger.info('TSL2561 - lux: %0.4f, broadband: %d, ir: %d', lux, broadband, infrared)
+
+
+        try:
+            sqm_mag = self.lux2mag(lux)
+        except ValueError as e:
+            logger.error('SQM calculation error - ValueError: %s', str(e))
+            sqm_mag = 0.0
 
 
         data = {
+            'sqm_mag' : sqm_mag,
             'data' : (
                 lux,
                 broadband,
@@ -58,8 +66,9 @@ class LightSensorTsl2561_I2C(LightSensorTsl2561):
         time.sleep(1)
 
         # Set gain 0=1x, 1=16x
-        self.tsl2561.gain = 0
+        self.tsl2561.gain = 1
 
         # Set integration time (0=13.7ms, 1=101ms, 2=402ms, or 3=manual)
         self.tsl2561.integration_time = 1
 
+        time.sleep(1)

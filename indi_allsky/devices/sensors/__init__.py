@@ -23,6 +23,8 @@ from .lightSensorTsl2591 import LightSensorTsl2591_I2C as blinka_light_sensor_ts
 
 from .tempSensorDs18x20 import TempSensorDs18x20 as kernel_temp_sensor_ds18x20_w1
 
+from .tempApiOpenWeatherMap import TempApiOpenWeatherMap as temp_api_openweathermap
+
 
 __all__ = (
     'sensor_simulator',
@@ -40,4 +42,5 @@ __all__ = (
     'blinka_light_sensor_tsl2561_i2c',
     'blinka_light_sensor_tsl2591_i2c',
     'kernel_temp_sensor_ds18x20_w1',
+    'temp_api_openweathermap',
 )

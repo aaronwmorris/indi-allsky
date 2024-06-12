@@ -274,8 +274,8 @@ echo
 echo
 echo "indi-allsky supports the following camera interfaces."
 echo
-echo "          indi: For astro/planetary cameras normally connected via USB"
-echo "     libcamera: Supports cameras connected via CSI interface on Raspberry Pi SoCs"
+echo "          indi: For astro/planetary cameras normally connected via USB (ZWO, QHY, PlayerOne, SVBony, Altair, Touptek, etc)"
+echo "     libcamera: Supports cameras connected via CSI interface on Raspberry Pi SBCs (Raspi HQ Camera, Camera Module 3, etc)"
 echo "  indi_passive: Connect a second instance of indi-allsky to an existing indi-allsky indiserver"
 echo " pycurl_camera: Download images from a remote web camera"
 echo
@@ -452,6 +452,7 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         jq \
         sqlite3 \
         libgpiod2 \
+        i2c-tools \
         policykit-1 \
         dbus-user-session
 
@@ -620,6 +621,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         jq \
         sqlite3 \
         libgpiod2 \
+        i2c-tools \
         policykit-1 \
         dbus-user-session
 
@@ -788,6 +790,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         jq \
         sqlite3 \
         libgpiod2 \
+        i2c-tools \
         policykit-1 \
         dbus-user-session
 
@@ -956,6 +959,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         jq \
         sqlite3 \
         libgpiod2 \
+        i2c-tools \
         policykit-1 \
         dbus-user-session
 
@@ -1110,6 +1114,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         jq \
         sqlite3 \
         libgpiod2 \
+        i2c-tools \
         policykit-1 \
         dbus-user-session
 
@@ -1248,6 +1253,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         jq \
         sqlite3 \
         libgpiod2 \
+        i2c-tools \
         policykit-1 \
         dbus-user-session
 
@@ -1422,6 +1428,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         jq \
         sqlite3 \
         libgpiod2 \
+        i2c-tools \
         policykit-1 \
         dbus-user-session
 
@@ -1606,6 +1613,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
         jq \
         sqlite3 \
         libgpiod2 \
+        i2c-tools \
         policykit-1 \
         dbus-user-session
 
@@ -1779,6 +1787,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
         jq \
         sqlite3 \
         libgpiod2 \
+        i2c-tools \
         policykit-1 \
         dbus-user-session
 
