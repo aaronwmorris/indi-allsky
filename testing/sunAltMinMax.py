@@ -55,12 +55,12 @@ class SunAltMinMax(object):
         sun_next_transit = obs.next_transit(sun)
         obs.date = sun_next_transit
         sun.compute(obs)
-        logger.info('%s: Max %0.1f', sun_next_transit.datetime(), math.degrees(sun.alt))
+        logger.info('%s: Max %0.3f', sun_next_transit.datetime(), math.degrees(sun.alt))
 
         sun_next_antitransit = sun_next_transit.datetime() + timedelta(hours=12)
         obs.date = sun_next_antitransit
         sun.compute(obs)
-        logger.info('%s: Min %0.1f', sun_next_antitransit, math.degrees(sun.alt))
+        logger.info('%s: Min %0.3f', sun_next_antitransit, math.degrees(sun.alt))
 
 
 
