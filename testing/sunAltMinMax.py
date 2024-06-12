@@ -9,7 +9,7 @@ import logging
 
 
 
-LATITUDE = 33.0
+LATITUDE  = 33.0
 LONGITUDE = -84.0
 ELEVATION = 300
 
@@ -33,17 +33,18 @@ class SunAltMinMax(object):
         obs.elevation = ELEVATION
 
         utcnow = datetime.now(tz=timezone.utc)
+        #utcnow = datetime.now(tz=timezone.utc) - timedelta(days=5)
 
         sun_solstice_1 = ephem.next_solstice(utcnow)
         sun_solstice_2 = ephem.next_solstice(sun_solstice_1.datetime() + timedelta(days=1))
 
-        logger.warning('Today')
+        logger.warning('Now - %s', utcnow)
         self.calcMinMax(utcnow, obs, sun)
 
         logger.warning('Solstice 1')
         self.calcMinMax(sun_solstice_1.datetime(), obs, sun)
 
-        logger.warning('Soltice 2')
+        logger.warning('Solstice 2')
         self.calcMinMax(sun_solstice_2.datetime(), obs, sun)
 
 
