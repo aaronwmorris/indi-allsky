@@ -98,7 +98,7 @@ class svp(object):
 
         s_sun_transit_f = almanac.meridian_transits(s_eph, s_sun, s_location)
         s_sun_transit_times, s_sun_transit_events = almanac.find_discrete(t0, t1, s_sun_transit_f)
-        s_sun_transit_times = s_sun_transit_times[s_sun_transit_events == 1]  # Select transits instead of antitransits.
+        s_sun_transit_times = s_sun_transit_times[s_sun_transit_events == almanac.MERIDIAN_TRANSITS.index('Meridian transit')]  # Select transits instead of antitransits.
         logger.info('Sun Transit: %s', s_sun_transit_times[0].utc_datetime())
 
         s_sun_ha, s_sun_dec, s_sun_dist = s_observer.at(t0).observe(s_sun).apparent().hadec()
