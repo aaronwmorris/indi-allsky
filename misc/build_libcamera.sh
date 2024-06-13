@@ -19,13 +19,15 @@ trap handler_SIGINT SIGINT
 if [ -n "${1:-}" ]; then
     LIBCAMERA_TAG="$1"
 else
-    LIBCAMERA_TAG="HEAD"
+    #LIBCAMERA_TAG="HEAD"
+    LIBCAMERA_TAG="v0.2.0+rpt20240418"
 fi
 
 if [ -n "${2:-}" ]; then
     RPICAM_APPS_TAG="$2"
 else
-    RPICAM_APPS_TAG="HEAD"
+    #RPICAM_APPS_TAG="HEAD"
+    RPICAM_APPS_TAG="v1.5.0"
 fi
 
 
@@ -390,8 +392,8 @@ if [ "${BUILD_RPICAM_APPS:-true}" == "true" ]; then
 
 
     # Setup build
-    #meson setup build -Denable_libav=false -Denable_drm=true -Denable_egl=false -Denable_qt=false -Denable_opencv=false -Denable_tflite=false
-    meson setup build -Denable_libav=true -Denable_drm=true -Denable_egl=true -Denable_qt=true -Denable_opencv=false -Denable_tflite=false
+    #meson setup build -Denable_libav=disabled -Denable_drm=enabled -Denable_egl=disabled -Denable_qt=disabled -Denable_opencv=disabled -Denable_tflite=disabled
+    meson setup build -Denable_libav=enabled -Denable_drm=enabled -Denable_egl=enabled -Denable_qt=enabled -Denable_opencv=disabled -Denable_tflite=disabled
 
     # Compile
     meson compile -C build -j "$MAKE_CONCURRENT"
