@@ -19,6 +19,7 @@ LONGITUDE = -84.0
 #LONGITUDE = -160.0
 
 ELEVATION = 300
+PRESSURE  = 0
 
 
 logging.basicConfig(level=logging.INFO)
@@ -44,6 +45,7 @@ class SunAltMinMax(object):
         obs.lat = math.radians(LATITUDE)
         obs.lon = math.radians(LONGITUDE)
         obs.elevation = ELEVATION
+        obs.pressure = PRESSURE
 
 
         sun_solstice_1 = ephem.next_solstice(utcnow)
@@ -116,11 +118,11 @@ class SunAltMinMax(object):
 
 
         sun_transit_times_m = sun_transit_times[sun_transit_events == almanac.MERIDIAN_TRANSITS.index('Meridian transit')]
-        sun_alt_max, sun_az_max, sun_dist_max = obs.at(sun_transit_times_m[0]).observe(sun).apparent().altaz()
+        sun_alt_max, sun_az_max, sun_dist_max = obs.at(sun_transit_times_m[0]).observe(sun).apparent().altaz(pressure_mbar=PRESSURE)
         logger.info('%s: Max %0.3f', sun_transit_times_m[0].utc_datetime(), sun_alt_max.degrees)
 
         sun_transit_times_a = sun_transit_times[sun_transit_events == almanac.MERIDIAN_TRANSITS.index('Antimeridian transit')]
-        sun_alt_min, sun_az_min, sun_dist_min = obs.at(sun_transit_times_a[0]).observe(sun).apparent().altaz()
+        sun_alt_min, sun_az_min, sun_dist_min = obs.at(sun_transit_times_a[0]).observe(sun).apparent().altaz(pressure_mbar=PRESSURE)
         logger.info('%s: Min %0.3f', sun_transit_times_a[0].utc_datetime(), sun_alt_min.degrees)
 
 
