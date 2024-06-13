@@ -15,6 +15,8 @@ logger = logging
 LATITUDE = 33
 LONGITUDE = -84
 
+PRESSURE = 1010  # 0 disables refraction
+
 
 utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 #utcnow = datetime.now(tz=timezone.utc) + timedelta(days=10)
@@ -22,6 +24,7 @@ utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 obs = ephem.Observer()
 obs.lat = math.radians(LATITUDE)
 obs.lon = math.radians(LONGITUDE)
+obs.pressure = PRESSURE
 obs.date = utcnow
 
 logger.info('Latitude: %s', obs.lat.znorm)

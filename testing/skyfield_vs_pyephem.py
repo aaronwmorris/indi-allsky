@@ -20,6 +20,7 @@ logger = logging
 LATITUDE = 33.0
 LONGITUDE = -84.0
 
+PRESSURE = 1010  # 0 disables refraction
 
 
 
@@ -41,6 +42,7 @@ class svp(object):
         p_obs.lon = math.radians(LONGITUDE)
         p_obs.date = utcnow
         p_obs.horizon = math.radians(0)
+        p_obs.pressure = PRESSURE
 
 
         p_sun = ephem.Sun()
@@ -88,7 +90,7 @@ class svp(object):
         t0 = ts.from_datetime(utcnow)
         t1 = ts.from_datetime(utcnow + timedelta(hours=24))
 
-        s_sun_alt, s_sun_az, s_sun_dist = s_observer.at(t0).observe(s_sun).apparent().altaz()
+        s_sun_alt, s_sun_az, s_sun_dist = s_observer.at(t0).observe(s_sun).apparent().altaz(pressure_mbar=PRESSURE)
         logger.info('Sun alt: %0.1f', s_sun_alt.degrees)
 
         s_rise_twil_time, s_civil_twil_up = almanac.find_discrete(t0, t1, self.daylength(s_eph, s_location, 0.8333))
@@ -104,7 +106,7 @@ class svp(object):
         s_sun_ha, s_sun_dec, s_sun_dist = s_observer.at(t0).observe(s_sun).apparent().hadec()
         logger.info('Sun HA: %0.1f', math.degrees(s_sun_ha.radians))
 
-        s_moon_alt, s_moon_az, s_moon_dist = s_observer.at(t0).observe(s_moon).apparent().altaz()
+        s_moon_alt, s_moon_az, s_moon_dist = s_observer.at(t0).observe(s_moon).apparent().altaz(pressure_mbar=PRESSURE)
         logger.info('Moon alt: %0.1f', s_moon_alt.degrees)
 
         e_at = s_earth.at(t0)
@@ -113,7 +115,7 @@ class svp(object):
         moon_percent = s_m_earth.fraction_illuminated(s_sun)
         logger.info('Moon phase: %0.2f%%', moon_percent * 100)
 
-        s_jup_alt, s_jup_az, s_jup_dist = s_observer.at(t0).observe(s_jup).apparent().altaz()
+        s_jup_alt, s_jup_az, s_jup_dist = s_observer.at(t0).observe(s_jup).apparent().altaz(pressure_mbar=PRESSURE)
         logger.info('Jupiter Alt: %0.1f', s_jup_alt.degrees)
 
 
@@ -140,7 +142,7 @@ class svp(object):
         s_iss_diff = s_iss - s_location
         s_iss_topocentric = s_iss_diff.at(t0)
 
-        s_iss_alt, s_iss_az, s_iss_distance = s_iss_topocentric.altaz()
+        s_iss_alt, s_iss_az, s_iss_distance = s_iss_topocentric.altaz(pressure_mbar=PRESSURE)
         logger.info('iss: altitude %4.1f, azimuth %5.1f', s_iss_alt.degrees, s_iss_az.degrees)
 
         s_iss_geocentric = s_iss.at(t0)
@@ -176,7 +178,7 @@ class svp(object):
         def is_sun_up_at(t):
             """Return `True` if the sun has risen by time `t`."""
             t._nutation_angles = iau2000b(t.tt)
-            return topos_at(t).observe(sun).apparent().altaz()[0].degrees > -degrees
+            return topos_at(t).observe(sun).apparent().altaz(pressure_mbar=PRESSURE)[0].degrees > -degrees
 
         is_sun_up_at.rough_period = 0.5  # twice a day
         return is_sun_up_at
