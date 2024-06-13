@@ -19,7 +19,7 @@ LONGITUDE = -84.0
 #LONGITUDE = -160.0
 
 ELEVATION = 300
-PRESSURE  = 0
+PRESSURE  = 0  # 0 to disable refraction
 
 
 logging.basicConfig(level=logging.INFO)
