@@ -13,8 +13,8 @@ RUN apt-get -y upgrade
 
 RUN apt-get -y install \
     build-essential \
-    lsb-release \
     iputils-ping \
+    iproute2 \
     bind9-host \
     apt-utils \
     locales \
