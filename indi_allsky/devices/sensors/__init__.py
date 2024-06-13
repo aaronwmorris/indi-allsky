@@ -21,6 +21,8 @@ from .tempSensorMlx90614 import TempSensorMlx90614_I2C as blinka_temp_sensor_mlx
 from .lightSensorTsl2561 import LightSensorTsl2561_I2C as blinka_light_sensor_tsl2561_i2c
 from .lightSensorTsl2591 import LightSensorTsl2591_I2C as blinka_light_sensor_tsl2591_i2c
 
+from .lightSensorBh1750 import LightSensorBh1750_I2C as blinka_light_sensor_bh1750_i2c
+
 from .tempSensorDs18x20 import TempSensorDs18x20 as kernel_temp_sensor_ds18x20_w1
 
 from .tempApiOpenWeatherMap import TempApiOpenWeatherMap as temp_api_openweathermap
@@ -41,6 +43,7 @@ __all__ = (
     'blinka_temp_sensor_mlx90614_i2c',
     'blinka_light_sensor_tsl2561_i2c',
     'blinka_light_sensor_tsl2591_i2c',
+    'blinka_light_sensor_bh1750_i2c',
     'kernel_temp_sensor_ds18x20_w1',
     'temp_api_openweathermap',
 )
