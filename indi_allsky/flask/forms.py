@@ -636,6 +636,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'stretch_m1_stddevs' : 0.0,
         'dew_heater_status' : '',
         'fan_status' : '',
+        'wind_dir' : '',
     }
 
 
