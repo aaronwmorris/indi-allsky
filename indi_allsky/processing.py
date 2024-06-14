@@ -87,6 +87,9 @@ class ImageProcessor(object):
     }
 
 
+    wind_directions = ('N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N')
+
+
     def __init__(
         self,
         config,
@@ -1927,6 +1930,14 @@ class ImageProcessor(object):
             label_data['fan_status'] = 'On'
         else:
             label_data['fan_status'] = 'Off'
+
+
+        # wind direction
+        try:
+            label_data['wind_dir'] = self.wind_directions[round(self.sensors_user_av[6] / 22.5)]
+        except IndexError:
+            logger.error('Unable to calculate wind direction')
+            label_data['wind_dir'] = 'Error'
 
 
         image_label = image_label_tmpl.format(**label_data)  # fill in the data
