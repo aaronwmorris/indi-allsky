@@ -32,7 +32,7 @@ class DayNightStop(object):
 
 
         now = datetime.now()
-        now = datetime.now() - timedelta(hours=12)
+        #now = datetime.now() - timedelta(hours=12)
 
 
         utc_offset = now.astimezone().utcoffset()
