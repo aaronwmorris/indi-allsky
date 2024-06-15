@@ -36,12 +36,10 @@ class TimelapseGenerator(object):
 
         if skip_frames:
             logger.warning('Skipping %d frames for timelapse', skip_frames)
+            file_list_ordered = file_list_ordered[skip_frames:]
 
         for i, f in enumerate(file_list_ordered):
-            if i < skip_frames:
-                # Skip a few frames when the exposure needs to adjust between night and day
-                continue
-
+            # the symlink files must start at index 0 or ffmpeg will fail
             p_symlink = self.seqfolder_p.joinpath('{0:05d}.{1:s}'.format(i, self.config['IMAGE_FILE_TYPE']))
             p_symlink.symlink_to(f)
 
