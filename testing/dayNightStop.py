@@ -17,8 +17,8 @@ logger = logging
 LATITUDE  = 33.0
 LONGITUDE = -84.0
 
-#LATITUDE  = 62.9
-#LONGITUDE = -160.0
+LATITUDE  = 62.9
+LONGITUDE = -160.0
 
 SUN_ALT   = -6.0
 
@@ -34,14 +34,17 @@ class DayNightStop(object):
 
 
         now = datetime.now()
-        #now = datetime.now() - timedelta(hours=12)
-        #now = datetime.now() - timedelta(days=180)
+        #now -= timedelta(hours=11.5)
+        #now -= timedelta(days=180)
+
         utc_offset = now.astimezone().utcoffset()
+        now_utc = now - utc_offset
 
 
-        #obs.date = now - utc_offset
-        #sun.compute(obs)
-        #night = math.degrees(sun.alt) < SUN_ALT
+        obs.date = now_utc
+        sun.compute(obs)
+        now_sun_alt = math.degrees(sun.alt)
+        night = now_sun_alt < SUN_ALT
 
 
         start_day = datetime.strptime(now.strftime('%Y%m%d'), '%Y%m%d')
@@ -52,30 +55,57 @@ class DayNightStop(object):
 
 
         today_transit = obs.next_transit(sun).datetime()
+        obs.date = today_transit
+        sun.compute(obs)
+
+        previous_antitransit = obs.previous_antitransit(sun).datetime()
+        next_antitransit = obs.next_antitransit(sun).datetime()
 
 
-        pre_transit_antimeridian = today_transit - timedelta(hours=12)
-        if now - utc_offset < pre_transit_antimeridian:
-            night_stop = today_transit
+        if now_utc < previous_antitransit:
+            logger.warning('Pre-antimeridian')
             dayDate = (now - timedelta(days=1)).date()
-        elif now - utc_offset < today_transit:
+
             night_stop = today_transit
-            dayDate = now.date()
+
+            if night:
+                day_stop = next_antitransit
+            else:
+                day_stop = previous_antitransit
+        elif now_utc < today_transit:
+            logger.warning('Pre-meridian')
+
+            if night:
+                dayDate = (now - timedelta(days=1)).date()
+            else:
+                dayDate = now.date()
+
+            night_stop = today_transit
+            day_stop = next_antitransit
         else:
-            night_stop = today_transit + timedelta(hours=12)
+            logger.warning('Post-meridian')
             dayDate = now.date()
+
+            next_transit = obs.next_transit(sun).datetime()
+
+            night_stop = next_transit
+            day_stop = next_antitransit
+
 
 
         obs.date = night_stop
         sun.compute(obs)
         end_night_alt = math.degrees(sun.alt)
 
-        day_stop = night_stop + timedelta(hours=12)
         obs.date = day_stop
         sun.compute(obs)
         end_day_alt = math.degrees(sun.alt)
 
-        logger.info('Now:             %s', now)
+
+        logger.info('Latitude:        %0.1f', LATITUDE)
+        logger.info('Longitude:       %0.1f', LONGITUDE)
+        logger.info('Now:             %s, %0.1f', now, now_sun_alt)
+        logger.info('Night:           %s', str(night))
         logger.info('Start Day:       %s', start_day)
         #logger.info('Start Day UTC:   %s', start_day_utc)
         logger.info('UTC Offset:      %s', utc_offset)
