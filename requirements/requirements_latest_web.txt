@@ -35,3 +35,4 @@ astroalign
 requests[security]
 lxml
 shapely
+pytz

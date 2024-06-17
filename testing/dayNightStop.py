@@ -4,6 +4,7 @@
 from datetime import datetime
 from datetime import timedelta
 #from datetime import timezone
+import pytz
 import math
 import ephem
 import logging
@@ -13,11 +14,15 @@ logging.basicConfig(level=logging.INFO)
 logger = logging
 
 
+### If the longitude changes, make sure the TZ is correct
 
+#TZ        = 'America/New_York'
+TZ        = 'America/Chicago'
 LATITUDE  = 33.0
-LONGITUDE = -84.0
+LONGITUDE = -85.0
 
-#LATITUDE  = 62.9
+#TZ        = 'America/Anchorage'
+#LATITUDE  = 75.0
 #LONGITUDE = -160.0
 
 SUN_ALT   = -6.0
@@ -26,22 +31,25 @@ SUN_ALT   = -6.0
 class DayNightStop(object):
     def main(self):
 
+        #utcnow = datetime.now(tz=timezone.utc)
+        utcnow = datetime.now(tz=pytz.timezone('UTC'))
+        #utcnow -= timedelta(hours=20.5)
+        #utcnow -= timedelta(days=180)
+
+
+        now_tz = utcnow.astimezone(pytz.timezone(TZ))
+        utc_offset = now_tz.utcoffset()
+        now = now_tz.replace(tzinfo=None)
+        utcnow_notz = now - utc_offset
+
 
         obs = ephem.Observer()
         sun = ephem.Sun()
         obs.lat = math.radians(LATITUDE)
         obs.lon = math.radians(LONGITUDE)
+        obs.date = utcnow_notz
 
 
-        now = datetime.now()
-        #now -= timedelta(hours=11.5)
-        #now -= timedelta(days=180)
-
-        utc_offset = now.astimezone().utcoffset()
-        now_utc = now - utc_offset
-
-
-        obs.date = now_utc
         sun.compute(obs)
         now_sun_alt = math.degrees(sun.alt)
         night = now_sun_alt < SUN_ALT
@@ -62,7 +70,7 @@ class DayNightStop(object):
         next_antitransit = obs.next_antitransit(sun).datetime()
 
 
-        if now_utc < previous_antitransit:
+        if utcnow_notz < previous_antitransit:
             logger.warning('Pre-antimeridian')
             dayDate = (now - timedelta(days=1)).date()
 
@@ -72,7 +80,7 @@ class DayNightStop(object):
                 day_stop = next_antitransit
             else:
                 day_stop = previous_antitransit
-        elif now_utc < today_transit:
+        elif utcnow_notz < today_transit:
             logger.warning('Pre-meridian')
 
             if night:
@@ -105,6 +113,7 @@ class DayNightStop(object):
         logger.info('Latitude:        %0.1f', LATITUDE)
         logger.info('Longitude:       %0.1f', LONGITUDE)
         logger.info('Now:             %s, %0.1f', now.strftime('%Y-%m-%d %H:%M:%S'), now_sun_alt)
+        logger.info('Timezone:        %s', TZ)
         logger.info('Night:           %s', str(night))
         logger.info('Start Day:       %s', start_day.strftime('%Y-%m-%d %H:%M:%S'))
         #logger.info('Start Day UTC:   %s', start_day_utc)
