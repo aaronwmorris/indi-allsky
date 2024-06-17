@@ -7,14 +7,11 @@ from datetime import timedelta
 from datetime import timezone
 from pathlib import Path
 import tempfile
-import math
 import subprocess
 import dbus
 import signal
 import logging
 import traceback
-
-import ephem
 
 from multiprocessing import Process
 #from threading import Thread
@@ -106,9 +103,6 @@ class CaptureWorker(Process):
         self.indi_config = self.config.get('INDI_CONFIG_DEFAULTS', {})
 
         self.focus_mode = self.config.get('FOCUS_MODE', False)  # focus mode takes images as fast as possible
-
-        self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
-        self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
         self.update_time_offset = None  # when time needs to be updated, this will be the offset
 
@@ -225,13 +219,12 @@ class CaptureWorker(Process):
                 pass
 
 
-            self.detectNight()
-            self.detectMoonMode()
+            # update night/moonmode values here
 
 
             with app.app_context():
                 ### Change between day and night
-                if self.night_v.value != int(self.night):
+                if bool(self.night_v.value) != self.night:
                     if not self.night and self.generate_timelapse_flag:
                         ### Generate timelapse at end of night
                         yesterday_ref = datetime.now() - timedelta(days=1)
@@ -1147,14 +1140,17 @@ class CaptureWorker(Process):
 
 
     def reconfigureCcd(self):
-
-        if self.night_v.value != int(self.night):
+        if bool(self.night_v.value) != self.night:
             pass
-        elif self.night and bool(self.moonmode_v.value) != bool(self.moonmode):
+        elif self.night and bool(self.moonmode_v.value) != self.moonmode:
             pass
         else:
             # No need to reconfigure
             return
+
+
+        self.night = bool(self.night_v.value)
+        self.moonmode = bool(self.moonmode_v.value)
 
 
         if self.night:
@@ -1190,54 +1186,6 @@ class CaptureWorker(Process):
 
         # update CCD config
         self.indiclient.configureCcdDevice(self.indi_config)
-
-
-        # Update shared values
-        with self.night_v.get_lock():
-            self.night_v.value = int(self.night)
-
-        with self.moonmode_v.get_lock():
-            self.moonmode_v.value = int(self.moonmode)
-
-
-
-    def detectNight(self):
-        obs = ephem.Observer()
-        obs.lon = math.radians(self.position_av[1])
-        obs.lat = math.radians(self.position_av[0])
-        obs.elevation = self.position_av[2]
-        obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
-
-        sun = ephem.Sun()
-        sun.compute(obs)
-
-        logger.info('Sun altitude: %s', sun.alt)
-
-        self.night = sun.alt < self.night_sun_radians  # boolean
-
-
-    def detectMoonMode(self):
-        # detectNight() should be run first
-        obs = ephem.Observer()
-        obs.lon = math.radians(self.position_av[1])
-        obs.lat = math.radians(self.position_av[0])
-        obs.elevation = self.position_av[2]
-        obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
-
-        moon = ephem.Moon()
-        moon.compute(obs)
-
-        moon_phase = moon.moon_phase * 100.0
-
-        logger.info('Moon altitude: %s, phase %0.1f%%', moon.alt, moon_phase)
-        if self.night:
-            if moon.alt >= self.night_moonmode_radians:
-                if moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
-                    logger.info('Moon Mode conditions detected')
-                    self.moonmode = True
-                    return
-
-        self.moonmode = False
 
 
     def _generateDayTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):

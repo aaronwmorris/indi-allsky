@@ -130,6 +130,11 @@ class DayNightStop(object):
         sun.compute(obs)
         end_day_alt = math.degrees(sun.alt)
 
+        if night:
+            next_stop = night_stop
+        else:
+            next_stop = day_stop
+
 
         logger.info('Latitude:        %0.1f', LATITUDE)
         logger.info('Longitude:       %0.1f', LONGITUDE)
@@ -143,6 +148,7 @@ class DayNightStop(object):
         logger.info('Today Transit:   %s', (today_meridian + utc_offset).strftime('%Y-%m-%d %H:%M:%S'))
         logger.info('Night Hard Stop: %s, %0.1f', (night_stop + utc_offset).strftime('%Y-%m-%d %H:%M:%S'), end_night_alt)
         logger.info('Day Hard Stop:   %s, %0.1f', (day_stop + utc_offset).strftime('%Y-%m-%d %H:%M:%S'), end_day_alt)
+        logger.info('Next Hard Stop:  %s', (next_stop + utc_offset).strftime('%Y-%m-%d %H:%M:%S'))
 
 
 
