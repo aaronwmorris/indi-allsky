@@ -30,8 +30,7 @@ class DayNightManager(object):
         self.sun = ephem.Sun()
         self.moon = ephem.Moon()
 
-        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
-        self.obs.date = utcnow
+        self.update()
 
 
     def update(self):
@@ -41,7 +40,7 @@ class DayNightManager(object):
         self.sun.compute(self.obs)
 
         self.detectNight()
-        self.detectMoonmode()
+        self.detectMoonMode()
 
 
     def detectNight(self):

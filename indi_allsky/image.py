@@ -78,6 +78,7 @@ class ImageWorker(Process):
         sensors_user_av,
         night_v,
         moonmode_v,
+        dayDate_v,
     ):
         super(ImageWorker, self).__init__()
 
@@ -98,6 +99,7 @@ class ImageWorker(Process):
         self.sensors_user_av = sensors_user_av
         self.night_v = night_v
         self.moonmode_v = moonmode_v
+        self.dayDate_v = dayDate_v
 
         # shared between objects
         self.astrometric_data = {
