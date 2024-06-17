@@ -2,7 +2,7 @@
 # https://www.piwheels.org/project/astropy/
 astropy
 # https://www.piwheels.org/project/numpy/
-numpy >= 1.22.2
+numpy >= 1.22.2, < 2.0
 # https://www.piwheels.org/project/opencv-python-headless/
 opencv-python-headless <= 4.6.0.66
 # https://www.piwheels.org/project/scipy/

@@ -2,7 +2,7 @@
 # https://www.wheelodex.org/projects/astropy/
 astropy
 # https://www.wheelodex.org/projects/numpy/
-numpy >= 1.22.2
+numpy >= 1.22.2, < 2.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
 opencv-python-headless >= 4.8.1.78
 # https://www.wheelodex.org/projects/scipy/
