@@ -25,3 +25,4 @@ gunicorn-indi-allsky.sock
 env.*
 ssl.crt
 ssl.key
+de421.bsp
