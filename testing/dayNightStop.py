@@ -16,14 +16,34 @@ logger = logging
 
 ### If the longitude changes, make sure the TZ is correct
 
+##TZ        = 'America/Chicago'
 #TZ        = 'America/New_York'
-TZ        = 'America/Chicago'
-LATITUDE  = 33.0
-LONGITUDE = -85.0
+#LATITUDE  = 33.0
+#LONGITUDE = -84.0
 
-#TZ        = 'America/Anchorage'
-#LATITUDE  = 75.0
-#LONGITUDE = -160.0
+#UTC_DT    = datetime(2024, 6, 21, 5, 20, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre antimeridian
+#UTC_DT    = datetime(2024, 6, 21, 10, 20, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre meridian
+#UTC_DT    = datetime(2024, 6, 21, 20, 20, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice post meridian
+
+#UTC_DT    = datetime(2024, 12, 21, 5, 20, 0, tzinfo=pytz.timezone('UTC'))  # winter solstice pre antimeridian
+#UTC_DT    = datetime(2024, 12, 21, 10, 20, 0, tzinfo=pytz.timezone('UTC'))  # winter solstice pre meridian
+#UTC_DT    = datetime(2024, 12, 21, 19, 0, 0, tzinfo=pytz.timezone('UTC'))  # winter solstice post meridian
+
+
+TZ        = 'America/Anchorage'
+LATITUDE  = 75.0
+LONGITUDE = -160.0
+
+### always day
+UTC_DT    = datetime(2024, 6, 20, 10, 0, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre antimeridian
+#UTC_DT    = datetime(2024, 6, 20, 18, 0, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre meridian
+#UTC_DT    = datetime(2024, 6, 21, 3, 0, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice post meridian
+
+### always night
+#UTC_DT    = datetime(2024, 12, 21, 10, 0, 0, tzinfo=pytz.timezone('UTC'))  # winter solstice pre antimeridian
+#UTC_DT    = datetime(2024, 12, 21, 18, 0, 0, tzinfo=pytz.timezone('UTC'))  # winter solstice pre meridian
+#UTC_DT    = datetime(2024, 12, 22, 3, 0, 0, tzinfo=pytz.timezone('UTC'))  # winter solstice post meridian
+
 
 SUN_ALT   = -6.0
 
@@ -32,9 +52,10 @@ class DayNightStop(object):
     def main(self):
 
         #utcnow = datetime.now(tz=timezone.utc)
-        utcnow = datetime.now(tz=pytz.timezone('UTC'))
+        #utcnow = datetime.now(tz=pytz.timezone('UTC'))
         #utcnow -= timedelta(hours=20.5)
         #utcnow -= timedelta(days=180)
+        utcnow = UTC_DT
 
 
         now_tz = utcnow.astimezone(pytz.timezone(TZ))
@@ -62,25 +83,25 @@ class DayNightStop(object):
         sun.compute(obs)
 
 
-        today_transit = obs.next_transit(sun).datetime()
-        obs.date = today_transit
+        today_meridian = obs.next_transit(sun).datetime()
+        obs.date = today_meridian
         sun.compute(obs)
 
-        previous_antitransit = obs.previous_antitransit(sun).datetime()
-        next_antitransit = obs.next_antitransit(sun).datetime()
+        previous_antimeridian = obs.previous_antitransit(sun).datetime()
+        next_antimeridian = obs.next_antitransit(sun).datetime()
 
 
-        if utcnow_notz < previous_antitransit:
+        if utcnow_notz < previous_antimeridian:
             logger.warning('Pre-antimeridian')
             dayDate = (now - timedelta(days=1)).date()
 
-            night_stop = today_transit
+            night_stop = today_meridian
 
             if night:
-                day_stop = next_antitransit
+                day_stop = next_antimeridian
             else:
-                day_stop = previous_antitransit
-        elif utcnow_notz < today_transit:
+                day_stop = previous_antimeridian
+        elif utcnow_notz < today_meridian:
             logger.warning('Pre-meridian')
 
             if night:
@@ -88,16 +109,16 @@ class DayNightStop(object):
             else:
                 dayDate = now.date()
 
-            night_stop = today_transit
-            day_stop = next_antitransit
+            night_stop = today_meridian
+            day_stop = next_antimeridian
         else:
             logger.warning('Post-meridian')
             dayDate = now.date()
 
-            next_transit = obs.next_transit(sun).datetime()
+            next_meridian = obs.next_transit(sun).datetime()
 
-            night_stop = next_transit
-            day_stop = next_antitransit
+            night_stop = next_meridian
+            day_stop = next_antimeridian
 
 
 
@@ -119,7 +140,7 @@ class DayNightStop(object):
         #logger.info('Start Day UTC:   %s', start_day_utc)
         logger.info('UTC Offset:      %s', utc_offset)
         logger.info('Current dayDate  %s', dayDate)
-        logger.info('Today Transit:   %s', (today_transit + utc_offset).strftime('%Y-%m-%d %H:%M:%S'))
+        logger.info('Today Transit:   %s', (today_meridian + utc_offset).strftime('%Y-%m-%d %H:%M:%S'))
         logger.info('Night Hard Stop: %s, %0.1f', (night_stop + utc_offset).strftime('%Y-%m-%d %H:%M:%S'), end_night_alt)
         logger.info('Day Hard Stop:   %s, %0.1f', (day_stop + utc_offset).strftime('%Y-%m-%d %H:%M:%S'), end_day_alt)
 
