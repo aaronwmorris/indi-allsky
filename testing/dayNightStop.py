@@ -53,9 +53,9 @@ class DayNightStop(object):
 
         #utcnow = datetime.now(tz=timezone.utc)
         #utcnow = datetime.now(tz=pytz.timezone('UTC'))
-        #utcnow -= timedelta(hours=20.5)
-        #utcnow -= timedelta(days=180)
         utcnow = UTC_DT
+        #utcnow -= timedelta(hours=5)
+        #utcnow -= timedelta(hours=180)
 
 
         now_tz = utcnow.astimezone(pytz.timezone(TZ))
@@ -111,6 +111,24 @@ class DayNightStop(object):
 
             night_stop = today_meridian
             day_stop = next_antimeridian
+        elif utcnow_notz > next_antimeridian:
+            logger.warning('Post-antimeridian')
+
+            next_meridian = obs.next_transit(sun).datetime()
+
+            night_stop = next_meridian
+
+            if night:
+                dayDate = now.date()
+            else:
+                dayDate = (now + timedelta(days=1)).date()
+
+
+            obs.date = next_antimeridian
+            sun.compute(obs)
+            next_antimeridian_2 = obs.next_antitransit(sun).datetime()
+
+            day_stop = next_antimeridian_2
         else:
             logger.warning('Post-meridian')
             dayDate = now.date()
@@ -130,7 +148,8 @@ class DayNightStop(object):
         sun.compute(obs)
         end_day_alt = math.degrees(sun.alt)
 
-        if night:
+
+        if night_stop < day_stop:
             next_stop = night_stop
         else:
             next_stop = day_stop
