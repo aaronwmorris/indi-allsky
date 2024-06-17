@@ -148,7 +148,6 @@ class IndiAllSky(object):
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.night_v = Value('i', -1)  # bogus initial value
         self.moonmode_v = Value('i', -1)  # bogus initial value
-        self.dayDate_v = Value('i', -1)  # bogus initial value
 
 
         self.capture_q = Queue()
@@ -337,7 +336,6 @@ class IndiAllSky(object):
             self.sensors_user_av,
             self.night_v,
             self.moonmode_v,
-            self.dayDate_v,
         )
         self.capture_worker.start()
 
@@ -391,7 +389,6 @@ class IndiAllSky(object):
             self.sensors_user_av,
             self.night_v,
             self.moonmode_v,
-            self.dayDate_v,
         )
         self.image_worker.start()
 

@@ -66,7 +66,6 @@ class CaptureWorker(Process):
         sensors_user_av,
         night_v,
         moonmode_v,
-        dayDate_v,
     ):
 
         super(CaptureWorker, self).__init__()
@@ -90,15 +89,13 @@ class CaptureWorker(Process):
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
         self.night_v = night_v
         self.moonmode_v = moonmode_v
-        self.dayDate_v = dayDate_v
 
         self._miscDb = miscDb(self.config)
         self._dayNightManager = DayNightManager(
             self.config,
+            self.position_av,
             self.night_v,
             self.moonmode_v,
-            self.dayDate_v,
-            self.position_av,
         )
 
         self.indiclient = None
