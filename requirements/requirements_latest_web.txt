@@ -1,6 +1,6 @@
 ### Requirements for a web interface only interface
 # https://www.wheelodex.org/projects/numpy/
-numpy >= 1.22.2
+numpy >= 1.22.2, < 2.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
 opencv-python-headless >= 4.8.1.78
 # https://www.wheelodex.org/projects/ccdproc/
