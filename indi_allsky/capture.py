@@ -237,7 +237,10 @@ class CaptureWorker(Process):
 
 
             with app.app_context():
-                if bool(self.night_v.value) != self.night:
+                if isinstance(self.night, type(None)):
+                    pass
+
+                elif bool(self.night_v.value) != self.night:
                     ### Change between day and night
 
                     # update transition time
