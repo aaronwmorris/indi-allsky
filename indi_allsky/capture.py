@@ -1,6 +1,5 @@
 import os
 import time
-import math
 import io
 import json
 from datetime import datetime
@@ -14,15 +13,15 @@ import signal
 import logging
 import traceback
 
-import ephem
-
 from multiprocessing import Process
 #from threading import Thread
 import queue
 
 from . import constants
 from . import camera as camera_module
+
 from .dayNightManager import DayNightManager
+from .utils import IndiAllSkyDateCalcs
 
 from .flask.models import TaskQueueQueue
 from .flask.models import TaskQueueState
@@ -94,6 +93,7 @@ class CaptureWorker(Process):
         self.moonmode_v = moonmode_v
 
         self._miscDb = miscDb(self.config)
+        self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
         self._dayNightManager = DayNightManager(
             self.config,
             self.position_av,
@@ -1456,63 +1456,4 @@ class CaptureWorker(Process):
         db.session.commit()
 
         self.video_q.put({'task_id' : task.id})
-
-
-    def getNextDayNightTransitionTime(self):
-        now = datetime.now()
-        utc_offset = now.utcoffset()
-        utcnow_notz = now + utc_offset
-
-
-        obs = ephem.Observer()
-        sun = ephem.Sun()
-        obs.lon = math.radians(self.position_av[1])
-        obs.lat = math.radians(self.position_av[0])
-        obs.elevation = self.position_av[2]
-
-
-        start_day = datetime.strptime(now.strftime('%Y%m%d'), '%Y%m%d')
-        start_day_utc = start_day - utc_offset
-
-        obs.date = start_day_utc
-        sun.compute(obs)
-
-
-        today_meridian = obs.next_transit(sun).datetime()
-        obs.date = today_meridian
-        sun.compute(obs)
-
-        previous_antimeridian = obs.previous_antitransit(sun).datetime()
-        next_antimeridian = obs.next_antitransit(sun).datetime()
-
-
-        if utcnow_notz < previous_antimeridian:
-            #logger.warning('Pre-antimeridian')
-
-            night_stop = today_meridian
-
-            if self.night_v.value:
-                day_stop = next_antimeridian
-            else:
-                day_stop = previous_antimeridian
-        elif utcnow_notz < today_meridian:
-            #logger.warning('Pre-meridian')
-
-            night_stop = today_meridian
-            day_stop = next_antimeridian
-        else:
-            #logger.warning('Post-meridian')
-            next_meridian = obs.next_transit(sun).datetime()
-
-            night_stop = next_meridian
-            day_stop = next_antimeridian
-
-
-        if self.night_v.value:
-            next_stop = night_stop
-        else:
-            next_stop = day_stop
-
-
-        return datetime.timestamp(next_stop + utc_offset)
 

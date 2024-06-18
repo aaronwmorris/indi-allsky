@@ -129,8 +129,6 @@ class DayNightStop(object):
         else:
             logger.warning('Post-antimeridian')
 
-            next_meridian = obs.next_transit(sun).datetime()
-
             night_stop = next_meridian
 
             if night:

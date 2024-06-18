@@ -6,7 +6,6 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 import time
-import math
 import functools
 import tempfile
 import shutil
@@ -16,8 +15,6 @@ import signal
 import logging
 import traceback
 #from pprint import pformat
-
-import ephem
 
 from multiprocessing import Process
 #from threading import Thread
@@ -35,6 +32,7 @@ from . import constants
 
 from .processing import ImageProcessor
 from .miscUpload import miscUpload
+from .utils import IndiAllSkyDateCalcs
 
 from .flask import create_app
 from .flask import db
@@ -162,6 +160,7 @@ class ImageWorker(Process):
 
         self._miscDb = miscDb(self.config)
         self._miscUpload = miscUpload(self.config, self.upload_q)
+        self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
 
 
         self._libcamera_raw = False
@@ -1660,46 +1659,3 @@ class ImageWorker(Process):
         with self.exposure_av.get_lock():
             self.exposure_av[0] = new_exposure
 
-
-    def calcDayDate(self, exp_dt):
-        utc_offset = exp_dt.astimezone().utcoffset()
-
-        utcnow_notz = exp_dt + utc_offset
-
-        obs = ephem.Observer()
-        sun = ephem.Sun()
-        obs.lon = math.radians(self.position_av[1])
-        obs.lat = math.radians(self.position_av[0])
-        obs.elevation = self.position_av[2]
-
-
-        start_day = datetime.strptime(exp_dt.strftime('%Y%m%d'), '%Y%m%d')
-        start_day_utc = start_day - utc_offset
-
-        obs.date = start_day_utc
-        sun.compute(obs)
-
-
-        today_meridian = obs.next_transit(sun).datetime()
-        obs.date = today_meridian
-        sun.compute(obs)
-
-        previous_antimeridian = obs.previous_antitransit(sun).datetime()
-
-
-        if utcnow_notz < previous_antimeridian:
-            #logger.warning('Pre-antimeridian')
-            dayDate = (exp_dt - timedelta(days=1)).date()
-        elif utcnow_notz < today_meridian:
-            #logger.warning('Pre-meridian')
-
-            if self.night_v.value:
-                dayDate = (exp_dt - timedelta(days=1)).date()
-            else:
-                dayDate = exp_dt.date()
-        else:
-            #logger.warning('Post-meridian')
-            dayDate = exp_dt.date()
-
-
-        return dayDate
