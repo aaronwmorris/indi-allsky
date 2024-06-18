@@ -236,30 +236,13 @@ class CaptureWorker(Process):
 
 
             with app.app_context():
-                if loop_start_time > next_day_night_transition:
-                    # this should only happen when the sun never sets/rises
-                    if not self.night and self.generate_timelapse_flag:
-                        ### Generate timelapse at end of day
-                        #### fixme
-                        day_ref = datetime.now() - timedelta(days=1)
-                        timespec = day_ref.strftime('%Y%m%d')
-                        self._generateDayTimelapse(timespec, self.camera_id)
-                        self._generateDayKeogram(timespec, self.camera_id)
-                        self._expireData(self.camera_id)  # cleanup old images and folders
-
-                    elif self.night and self.generate_timelapse_flag:
-                        ### Generate timelapse at end of night
-                        day_ref = datetime.now() - timedelta(days=1)
-                        timespec = day_ref.strftime('%Y%m%d')
-                        self._generateNightTimelapse(timespec, self.camera_id)
-                        self._generateNightKeogram(timespec, self.camera_id)
-                        self._uploadAllskyEndOfNight(self.camera_id)
-
-                elif bool(self.night_v.value) != self.night:
+                if bool(self.night_v.value) != self.night:
                     ### Change between day and night
+                    dayDate = self._dateCalcs.getDayDate()
+
                     if not self.night and self.generate_timelapse_flag:
                         ### Generate timelapse at end of night
-                        yesterday_ref = datetime.now() - timedelta(days=1)
+                        yesterday_ref = dayDate - timedelta(days=1)
                         timespec = yesterday_ref.strftime('%Y%m%d')
                         self._generateNightTimelapse(timespec, self.camera_id)
                         self._generateNightKeogram(timespec, self.camera_id)
@@ -267,11 +250,31 @@ class CaptureWorker(Process):
 
                     elif self.night and self.generate_timelapse_flag:
                         ### Generate timelapse at end of day
-                        today_ref = datetime.now()
+                        today_ref = dayDate
                         timespec = today_ref.strftime('%Y%m%d')
                         self._generateDayTimelapse(timespec, self.camera_id)
                         self._generateDayKeogram(timespec, self.camera_id)
                         self._expireData(self.camera_id)  # cleanup old images and folders
+
+                elif loop_start_time > next_day_night_transition:
+                    # this should only happen when the sun never sets/rises
+                    dayDate = self._dateCalcs.getDayDate()
+
+                    if not self.night and self.generate_timelapse_flag:
+                        ### Generate timelapse at end of day
+                        yesterday_ref = dayDate - timedelta(days=1)
+                        timespec = yesterday_ref.strftime('%Y%m%d')
+                        self._generateDayTimelapse(timespec, self.camera_id)
+                        self._generateDayKeogram(timespec, self.camera_id)
+                        self._expireData(self.camera_id)  # cleanup old images and folders
+
+                    elif self.night and self.generate_timelapse_flag:
+                        ### Generate timelapse at end of night
+                        yesterday_ref = dayDate - timedelta(days=1)
+                        timespec = yesterday_ref.strftime('%Y%m%d')
+                        self._generateNightTimelapse(timespec, self.camera_id)
+                        self._generateNightKeogram(timespec, self.camera_id)
+                        self._uploadAllskyEndOfNight(self.camera_id)
 
 
                 # this is to prevent expiring images at startup
