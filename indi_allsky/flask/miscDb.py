@@ -169,6 +169,7 @@ class miscDb(object):
         ### expected metadata
         #{
         #    'createDate'  # datetime or timestamp
+        #    'dayDate'  # date or string
         #    'exposure'
         #    'exp_elapsed'
         #    'gain'
@@ -204,11 +205,10 @@ class miscDb(object):
             createDate = metadata['createDate']
 
 
-        if metadata['night']:
-            # day date for night is offset by 12 hours
-            dayDate = (createDate - timedelta(hours=12)).date()
+        if isinstance(metadata['dayDate'], str):
+            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
         else:
-            dayDate = createDate.date()
+            dayDate = metadata['dayDate']
 
 
         # If temp is 0, write null
@@ -657,6 +657,7 @@ class miscDb(object):
         ### expected metadata
         #{
         #    'createDate'  # datetime or timestamp
+        #    'dayDate'     # date or string
         #    'exposure'
         #    'gain'
         #    'binmode'
@@ -677,11 +678,10 @@ class miscDb(object):
             createDate = metadata['createDate']
 
 
-        if metadata['night']:
-            # day date for night is offset by 12 hours
-            dayDate = (createDate - timedelta(hours=12)).date()
+        if isinstance(metadata['dayDate'], str):
+            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
         else:
-            dayDate = createDate.date()
+            dayDate = metadata['dayDate']
 
 
         logger.info('Adding fits image %s to DB', filename_p)
@@ -715,6 +715,7 @@ class miscDb(object):
         ### expected metadata
         #{
         #    'createDate'  # datetime or timestamp
+        #    'dayDate'     # date or string
         #    'exposure'
         #    'gain'
         #    'binmode'
@@ -735,11 +736,10 @@ class miscDb(object):
             createDate = metadata['createDate']
 
 
-        if metadata['night']:
-            # day date for night is offset by 12 hours
-            dayDate = (createDate - timedelta(hours=12)).date()
+        if isinstance(metadata['dayDate'], str):
+            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
         else:
-            dayDate = createDate.date()
+            dayDate = metadata['dayDate']
 
 
         logger.info('Adding raw image %s to DB', filename_p)
@@ -773,6 +773,7 @@ class miscDb(object):
         ### expected metadata
         #{
         #    'createDate'  # datetime or timestamp
+        #    'dayDate'     # date or string
         #    'exposure'
         #    'gain'
         #    'binmode'
@@ -793,11 +794,10 @@ class miscDb(object):
             createDate = metadata['createDate']
 
 
-        if metadata['night']:
-            # day date for night is offset by 12 hours
-            dayDate = (createDate - timedelta(hours=12)).date()
+        if isinstance(metadata['dayDate'], str):
+            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
         else:
-            dayDate = createDate.date()
+            dayDate = metadata['dayDate']
 
 
         logger.info('Adding panorama image %s to DB', filename_p)
@@ -961,8 +961,8 @@ class miscDb(object):
 
 
         if thumbnail_metadata['night']:
-            # day date for night is offset by 12 hours
-            dayDate = (createDate - timedelta(hours=12)).date()
+            # day date for night is offset by 1 day
+            dayDate = (createDate - timedelta(days=1)).date()
             timeofday = 'night'
         else:
             dayDate = createDate.date()
