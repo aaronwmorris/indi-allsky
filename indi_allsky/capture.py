@@ -189,7 +189,7 @@ class CaptureWorker(Process):
             self._pre_run_tasks()
 
 
-        next_day_night_transition = self.getNextDayNightTransitionTime()
+        next_day_night_transition_time = datetime.timestamp(self._dateCalcs.getNextDayNightTransition())
 
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
@@ -256,8 +256,12 @@ class CaptureWorker(Process):
                         self._generateDayKeogram(timespec, self.camera_id)
                         self._expireData(self.camera_id)  # cleanup old images and folders
 
-                elif loop_start_time > next_day_night_transition:
+                elif loop_start_time > next_day_night_transition_time:
                     # this should only happen when the sun never sets/rises
+
+                    # update transition time
+                    next_day_night_transition_time = datetime.timestamp(self._dateCalcs.getNextDayNightTransition())
+
                     dayDate = self._dateCalcs.getDayDate()
 
                     if not self.night and self.generate_timelapse_flag:

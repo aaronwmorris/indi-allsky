@@ -286,6 +286,7 @@ class ImageWorker(Process):
         filename_p = Path(i_dict['filename'])
         exposure = i_dict['exposure']
         exp_date = datetime.fromtimestamp(i_dict['exp_time'])
+        dayDate = self._dateCalcs.calcDayDate(exp_date)
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
         filename_t = i_dict.get('filename_t')
@@ -607,7 +608,7 @@ class ImageWorker(Process):
                 if self.config.get('FISH2PANO', {}).get('ENABLE_CARDINAL_DIRS'):
                     pano_data = self.image_processor.fish2pano_cardinal_dirs_label(pano_data)
 
-                self.write_panorama_img(pano_data, i_ref, camera, jpeg_exif=jpeg_exif)
+                self.write_panorama_img(pano_data, i_ref, camera, dayDate, jpeg_exif=jpeg_exif)
 
 
 
@@ -636,6 +637,7 @@ class ImageWorker(Process):
             image_metadata = {
                 'type'            : constants.IMAGE,
                 'createDate'      : exp_date.timestamp(),
+                'dayDate'         : dayDate.strftime('%Y%m%d'),
                 'utc_offset'      : exp_date.astimezone().utcoffset().total_seconds(),
                 'exposure'        : exposure,
                 'exp_elapsed'     : exp_elapsed,
@@ -1427,7 +1429,7 @@ class ImageWorker(Process):
         return hour_folder
 
 
-    def write_panorama_img(self, pano_data, i_ref, camera, jpeg_exif=None):
+    def write_panorama_img(self, pano_data, i_ref, camera, dayDate, jpeg_exif=None):
         panorama_height, panorama_width = pano_data.shape[:2]
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
@@ -1504,6 +1506,7 @@ class ImageWorker(Process):
         panorama_metadata = {
             'type'       : constants.PANORAMA_IMAGE,
             'createDate' : i_ref['exp_date'].timestamp(),
+            'dayDate'    : dayDate.strftime('%Y%m%d'),
             'utc_offset' : i_ref['exp_date'].astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref['exposure'],
             'gain'       : self.gain_v.value,
