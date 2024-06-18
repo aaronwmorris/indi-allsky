@@ -32,7 +32,6 @@ from . import constants
 
 from .processing import ImageProcessor
 from .miscUpload import miscUpload
-from .utils import IndiAllSkyDateCalcs
 
 from .flask import create_app
 from .flask import db
@@ -160,7 +159,6 @@ class ImageWorker(Process):
 
         self._miscDb = miscDb(self.config)
         self._miscUpload = miscUpload(self.config, self.upload_q)
-        self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
 
 
         self._libcamera_raw = False
@@ -286,7 +284,6 @@ class ImageWorker(Process):
         filename_p = Path(i_dict['filename'])
         exposure = i_dict['exposure']
         exp_date = datetime.fromtimestamp(i_dict['exp_time'])
-        dayDate = self._dateCalcs.calcDayDate(exp_date)
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
         filename_t = i_dict.get('filename_t')
@@ -346,7 +343,7 @@ class ImageWorker(Process):
         if self.config.get('IMAGE_SAVE_FITS'):
             if self.config.get('IMAGE_SAVE_FITS_PRE_DARK'):
                 logger.warning('Saving FITS without dark frame calibration')
-                self.write_fit(i_ref, camera, dayDate)
+                self.write_fit(i_ref, camera)
 
 
         # use original value if not defined
@@ -357,7 +354,7 @@ class ImageWorker(Process):
 
         if self.config.get('IMAGE_SAVE_FITS'):
             if not self.config.get('IMAGE_SAVE_FITS_PRE_DARK'):
-                self.write_fit(i_ref, camera, dayDate)
+                self.write_fit(i_ref, camera)
 
 
         self.image_processor.calculateSqm()
@@ -608,7 +605,7 @@ class ImageWorker(Process):
                 if self.config.get('FISH2PANO', {}).get('ENABLE_CARDINAL_DIRS'):
                     pano_data = self.image_processor.fish2pano_cardinal_dirs_label(pano_data)
 
-                self.write_panorama_img(pano_data, i_ref, camera, dayDate, jpeg_exif=jpeg_exif)
+                self.write_panorama_img(pano_data, i_ref, camera, jpeg_exif=jpeg_exif)
 
 
 
@@ -631,13 +628,13 @@ class ImageWorker(Process):
 
         self.write_status_json(i_ref, adu, adu_average)  # write json status file
 
-        latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, dayDate, jpeg_exif=jpeg_exif)
+        latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, jpeg_exif=jpeg_exif)
 
         if new_filename:
             image_metadata = {
                 'type'            : constants.IMAGE,
                 'createDate'      : exp_date.timestamp(),
-                'dayDate'         : dayDate.strftime('%Y%m%d'),
+                'dayDate'         : i_ref['day_date'].strftime('%Y%m%d'),
                 'utc_offset'      : exp_date.astimezone().utcoffset().total_seconds(),
                 'exposure'        : exposure,
                 'exp_elapsed'     : exp_elapsed,
@@ -993,7 +990,7 @@ class ImageWorker(Process):
         return stars_data
 
 
-    def write_fit(self, i_ref, camera, dayDate):
+    def write_fit(self, i_ref, camera):
         data = i_ref['hdulist'][0].data
         image_height, image_width = data.shape[:2]
 
@@ -1008,7 +1005,7 @@ class ImageWorker(Process):
 
         date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
         # raw light
-        folder = self._getImageFolder(i_ref['exp_date'], dayDate, camera, 'fits')
+        folder = self._getImageFolder(i_ref['exp_date'], i_ref['day_date'], camera, 'fits')
         filename = folder.joinpath(self.filename_t.format(
             i_ref['camera_id'],
             date_str,
@@ -1019,7 +1016,7 @@ class ImageWorker(Process):
         fits_metadata = {
             'type'       : constants.FITS_IMAGE,
             'createDate' : i_ref['exp_date'].timestamp(),
-            'dayDate'    : dayDate.strftime('%Y%m%d'),
+            'dayDate'    : i_ref['day_date'].strftime('%Y%m%d'),
             'utc_offset' : i_ref['exp_date'].astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref['exposure'],
             'gain'       : self.gain_v.value,
@@ -1073,7 +1070,7 @@ class ImageWorker(Process):
         self._miscUpload.upload_fits_image(fits_entry)
 
 
-    def export_raw_image(self, i_ref, camera, dayDate, jpeg_exif=None):
+    def export_raw_image(self, i_ref, camera, jpeg_exif=None):
         if not self.config.get('IMAGE_EXPORT_RAW'):
             return
 
@@ -1166,7 +1163,7 @@ class ImageWorker(Process):
 
         day_folder = export_dir.joinpath(
             'ccd_{0:s}'.format(camera.uuid),
-            '{0:s}'.format(dayDate.strftime('%Y%m%d')),
+            '{0:s}'.format(i_ref['day_date'].strftime('%Y%m%d')),
             timeofday_str,
         )
 
@@ -1194,7 +1191,7 @@ class ImageWorker(Process):
         raw_metadata = {
             'type'       : constants.RAW_IMAGE,
             'createDate' : i_ref['exp_date'].timestamp(),
-            'dayDate'    : dayDate.strftime('%Y%m%d'),
+            'dayDate'    : i_ref['day_date'].strftime('%Y%m%d'),
             'utc_offset' : i_ref['exp_date'].astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref['exposure'],
             'gain'       : self.gain_v.value,
@@ -1274,7 +1271,7 @@ class ImageWorker(Process):
         tmpfile_name.unlink()
 
 
-    def write_img(self, data, i_ref, camera, dayDate, jpeg_exif=None):
+    def write_img(self, data, i_ref, camera, jpeg_exif=None):
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
 
@@ -1337,7 +1334,7 @@ class ImageWorker(Process):
 
 
         ### Write the timelapse file
-        folder = self._getImageFolder(i_ref['exp_date'], dayDate, camera, 'exposures')
+        folder = self._getImageFolder(i_ref['exp_date'], i_ref['day_date'], camera, 'exposures')
 
         date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
         filename = folder.joinpath(self.filename_t.format(i_ref['camera_id'], date_str, self.config['IMAGE_FILE_TYPE']))
@@ -1397,7 +1394,7 @@ class ImageWorker(Process):
         indi_allsky_status_p.chmod(0o644)
 
 
-    def _getImageFolder(self, exp_date, dayDate, camera, type_folder):
+    def _getImageFolder(self, exp_date, day_date, camera, type_folder):
         if self.night_v.value:
             # images should be written to previous day's folder until noon
             timeofday_str = 'night'
@@ -1409,7 +1406,7 @@ class ImageWorker(Process):
         day_folder = self.image_dir.joinpath(
             'ccd_{0:s}'.format(camera.uuid),
             type_folder,
-            '{0:s}'.format(dayDate.strftime('%Y%m%d')),
+            '{0:s}'.format(day_date.strftime('%Y%m%d')),
             timeofday_str,
         )
 
@@ -1425,7 +1422,7 @@ class ImageWorker(Process):
         return hour_folder
 
 
-    def write_panorama_img(self, pano_data, i_ref, camera, dayDate, jpeg_exif=None):
+    def write_panorama_img(self, pano_data, i_ref, camera, jpeg_exif=None):
         panorama_height, panorama_width = pano_data.shape[:2]
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
@@ -1489,7 +1486,7 @@ class ImageWorker(Process):
 
 
         ### Write the panorama file
-        folder = self._getImageFolder(i_ref['exp_date'], dayDate, camera, 'panoramas')
+        folder = self._getImageFolder(i_ref['exp_date'], i_ref['day_date'], camera, 'panoramas')
 
 
         panorama_filename_t = 'panorama_{0:s}'.format(self.filename_t)
@@ -1502,7 +1499,7 @@ class ImageWorker(Process):
         panorama_metadata = {
             'type'       : constants.PANORAMA_IMAGE,
             'createDate' : i_ref['exp_date'].timestamp(),
-            'dayDate'    : dayDate.strftime('%Y%m%d'),
+            'dayDate'    : i_ref['day_date'].strftime('%Y%m%d'),
             'utc_offset' : i_ref['exp_date'].astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref['exposure'],
             'gain'       : self.gain_v.value,
