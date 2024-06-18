@@ -44,6 +44,7 @@ UTC_DT    = datetime(2024, 6, 20, 10, 0, 0, tzinfo=pytz.timezone('UTC'))  # summ
 #UTC_DT    = datetime(2024, 12, 21, 18, 0, 0, tzinfo=pytz.timezone('UTC'))  # winter solstice pre meridian
 #UTC_DT    = datetime(2024, 12, 22, 3, 0, 0, tzinfo=pytz.timezone('UTC'))  # winter solstice post meridian
 
+#UTC_DT     = datetime.now(tz=pytz.timezone('UTC'))
 
 SUN_ALT   = -6.0
 
@@ -51,8 +52,6 @@ SUN_ALT   = -6.0
 class DayNightStop(object):
     def main(self):
 
-        #utcnow = datetime.now(tz=timezone.utc)
-        #utcnow = datetime.now(tz=pytz.timezone('UTC'))
         utcnow = UTC_DT
         #utcnow -= timedelta(hours=5)
         #utcnow -= timedelta(hours=180)

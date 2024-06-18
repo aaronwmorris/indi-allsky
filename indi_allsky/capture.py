@@ -189,7 +189,8 @@ class CaptureWorker(Process):
             self._pre_run_tasks()
 
 
-        next_day_night_transition_time = datetime.timestamp(self._dateCalcs.getNextDayNightTransition())
+        next_day_night_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
+        logger.warning('Next Transition Time: %s', datetime.fromtimestamp(next_day_night_transition_time))
 
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
@@ -238,7 +239,13 @@ class CaptureWorker(Process):
             with app.app_context():
                 if bool(self.night_v.value) != self.night:
                     ### Change between day and night
+
+                    # update transition time
+                    next_day_night_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
+                    logger.warning('Next Transition Time: %s', datetime.fromtimestamp(next_day_night_transition_time))
+
                     dayDate = self._dateCalcs.getDayDate()
+
 
                     if not self.night and self.generate_timelapse_flag:
                         ### Generate timelapse at end of night
@@ -260,9 +267,11 @@ class CaptureWorker(Process):
                     # this should only happen when the sun never sets/rises
 
                     # update transition time
-                    next_day_night_transition_time = datetime.timestamp(self._dateCalcs.getNextDayNightTransition())
+                    next_day_night_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
+                    logger.warning('Next Transition Time: %s', datetime.fromtimestamp(next_day_night_transition_time))
 
                     dayDate = self._dateCalcs.getDayDate()
+
 
                     if not self.night and self.generate_timelapse_flag:
                         ### Generate timelapse at end of day
