@@ -87,8 +87,13 @@ class DayNightStop(object):
         obs.date = today_meridian
         sun.compute(obs)
 
+        next_meridian = obs.next_transit(sun).datetime()
         previous_antimeridian = obs.previous_antitransit(sun).datetime()
         next_antimeridian = obs.next_antitransit(sun).datetime()
+
+        obs.date = next_antimeridian
+        sun.compute(obs)
+        next_antimeridian_2 = obs.next_antitransit(sun).datetime()
 
 
         if utcnow_notz < previous_antimeridian:
@@ -111,7 +116,17 @@ class DayNightStop(object):
 
             night_stop = today_meridian
             day_stop = next_antimeridian
-        elif utcnow_notz > next_antimeridian:
+        elif utcnow_notz < next_antimeridian:
+            logger.warning('Post-meridian')
+            dayDate = now.date()
+
+            night_stop = next_meridian
+
+            if night:
+                day_stop = next_antimeridian_2
+            else:
+                day_stop = next_antimeridian
+        else:
             logger.warning('Post-antimeridian')
 
             next_meridian = obs.next_transit(sun).datetime()
@@ -123,20 +138,7 @@ class DayNightStop(object):
             else:
                 dayDate = (now + timedelta(days=1)).date()
 
-
-            obs.date = next_antimeridian
-            sun.compute(obs)
-            next_antimeridian_2 = obs.next_antitransit(sun).datetime()
-
             day_stop = next_antimeridian_2
-        else:
-            logger.warning('Post-meridian')
-            dayDate = now.date()
-
-            next_meridian = obs.next_transit(sun).datetime()
-
-            night_stop = next_meridian
-            day_stop = next_antimeridian
 
 
 
