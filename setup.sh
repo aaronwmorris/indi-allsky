@@ -2366,7 +2366,7 @@ while [ -z "${LOCATION_LATITUDE_INPUT:-}" ]; do
         continue
     fi
 
-    if [[ $(echo "$LOCATION_LATITUDE_INPUT < -90" | bc) -eq 1 || $(echo "$LOCATION_LATITUDE_INPUT > 90" | bc) -eq 1 ]]; then
+    if [[ $(echo "$LOCATION_LATITUDE_INPUT < -90" | bc -l) -eq 1 || $(echo "$LOCATION_LATITUDE_INPUT > 90" | bc -l) -eq 1 ]]; then
         unset LOCATION_LATITUDE_INPUT
         whiptail --msgbox "Error: Invalid latitude" 0 0
         continue
@@ -2388,7 +2388,7 @@ while [ -z "${LOCATION_LONGITUDE_INPUT:-}" ]; do
         continue
     fi
 
-    if [[ $(echo "$LOCATION_LONGITUDE_INPUT < -180" | bc) -eq 1 || $(echo "$LOCATION_LONGITUDE_INPUT > 180" | bc) -eq 1 ]]; then
+    if [[ $(echo "$LOCATION_LONGITUDE_INPUT < -180" | bc -l) -eq 1 || $(echo "$LOCATION_LONGITUDE_INPUT > 180" | bc -l) -eq 1 ]]; then
         unset LOCATION_LONGITUDE_INPUT
         whiptail --msgbox "Error: Invalid longitude" 0 0
         continue
