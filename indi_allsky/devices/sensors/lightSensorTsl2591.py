@@ -62,8 +62,8 @@ class LightSensorTsl2591_I2C(LightSensorTsl2591):
 
 
         ### You can optionally change the gain and integration time:
-        #self.tsl2591.gain = adafruit_tsl2591.GAIN_LOW   # (1x gain)
-        self.tsl2591.gain = adafruit_tsl2591.GAIN_MED   # (25x gain, the default)
+        self.tsl2591.gain = adafruit_tsl2591.GAIN_LOW   # (1x gain)
+        #self.tsl2591.gain = adafruit_tsl2591.GAIN_MED   # (25x gain, the default)
         #self.tsl2591.gain = adafruit_tsl2591.GAIN_HIGH  # (428x gain)
         #self.tsl2591.gain = adafruit_tsl2591.GAIN_MAX   # (9876x gain)
 
