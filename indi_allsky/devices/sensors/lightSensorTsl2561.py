@@ -66,7 +66,7 @@ class LightSensorTsl2561_I2C(LightSensorTsl2561):
         time.sleep(1)
 
         # Set gain 0=1x, 1=16x
-        self.tsl2561.gain = 1
+        self.tsl2561.gain = 0
 
         # Set integration time (0=13.7ms, 1=101ms, 2=402ms, or 3=manual)
         self.tsl2561.integration_time = 1
