@@ -389,6 +389,7 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -546,6 +547,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -703,6 +705,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -860,6 +863,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -1004,6 +1008,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -1145,6 +1150,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -1293,6 +1299,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -1466,6 +1473,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -1628,6 +1636,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -2344,23 +2353,45 @@ LOCATION_LONGITUDE=$(jq -r '.LOCATION_LONGITUDE' "$TMP_CONFIG_DUMP")
 
 while [ -z "${LOCATION_LATITUDE_INPUT:-}" ]; do
     # shellcheck disable=SC2068
-    LOCATION_LATITUDE_INPUT=$(whiptail --title "Latitude" --nocancel --inputbox "Please enter your latitude [90 to -90].  Positive values are the northern hemisphere, negative values are the southern hemisphere" 0 0 -- "$LOCATION_LATITUDE" 3>&1 1>&2 2>&3)
-
-    if ! [[ "$LOCATION_LATITUDE_INPUT" =~ ^[+-]?[0-9]{1,2}\.?[0-9]?+$ ]]; then
-        printf "Invalid latitude input: %s\n\n" "$LOCATION_LATITUDE_INPUT"
+    LOCATION_LATITUDE_INPUT=$(whiptail --title "Latitude" --nocancel --inputbox "Please enter your latitude [90.0 to -90.0].  Positive values for the Northern Hemisphere, negative values for the Southern Hemisphere" 0 0 -- "$LOCATION_LATITUDE" 3>&1 1>&2 2>&3)
+    if [[ "$LOCATION_LATITUDE_INPUT" =~ ^[+-]?[0-9]{3}$ ]]; then
         unset LOCATION_LATITUDE_INPUT
-        sleep 5
+        whiptail --msgbox "Error: Invalid latitude" 0 0
+        continue
+    fi
+
+    if ! [[ "$LOCATION_LATITUDE_INPUT" =~ ^[+-]?[0-9]{1,2}\.?[0-9]*$ ]]; then
+        unset LOCATION_LATITUDE_INPUT
+        whiptail --msgbox "Error: Invalid latitude" 0 0
+        continue
+    fi
+
+    if [[ $(echo "$LOCATION_LATITUDE_INPUT < -90" | bc) -eq 1 || $(echo "$LOCATION_LATITUDE_INPUT > 90" | bc) -eq 1 ]]; then
+        unset LOCATION_LATITUDE_INPUT
+        whiptail --msgbox "Error: Invalid latitude" 0 0
+        continue
     fi
 done
 
 while [ -z "${LOCATION_LONGITUDE_INPUT:-}" ]; do
     # shellcheck disable=SC2068
-    LOCATION_LONGITUDE_INPUT=$(whiptail --title "Longitude" --nocancel --inputbox "Please enter your longitude [-180 to 180].  Positive values are the eastern hemisphere, negative values are the western hemisphere" 0 0 -- "$LOCATION_LONGITUDE" 3>&1 1>&2 2>&3)
-
-    if ! [[ "$LOCATION_LONGITUDE_INPUT" =~ ^[+-]?[0-9]{1,3}\.?[0-9]?+$ ]]; then
-        printf "Invalid longitude input: %s\n\n" "$LOCATION_LONGITUDE_INPUT"
+    LOCATION_LONGITUDE_INPUT=$(whiptail --title "Longitude" --nocancel --inputbox "Please enter your longitude [-180.0 to 180.0].  Negative values for the Western Hemisphere, positive values for the Eastern Hemisphere" 0 0 -- "$LOCATION_LONGITUDE" 3>&1 1>&2 2>&3)
+    if [[ "$LOCATION_LATITUDE_INPUT" =~ ^[+-]?[0-9]{4}$ ]]; then
         unset LOCATION_LONGITUDE_INPUT
-        sleep 5
+        whiptail --msgbox "Error: Invalid longitude" 0 0
+        continue
+    fi
+
+    if ! [[ "$LOCATION_LONGITUDE_INPUT" =~ ^[+-]?[0-9]{1,3}\.?[0-9]*$ ]]; then
+        unset LOCATION_LONGITUDE_INPUT
+        whiptail --msgbox "Error: Invalid longitude" 0 0
+        continue
+    fi
+
+    if [[ $(echo "$LOCATION_LONGITUDE_INPUT < -180" | bc) -eq 1 || $(echo "$LOCATION_LONGITUDE_INPUT > 180" | bc) -eq 1 ]]; then
+        unset LOCATION_LONGITUDE_INPUT
+        whiptail --msgbox "Error: Invalid longitude" 0 0
+        continue
     fi
 done
 
