@@ -190,7 +190,7 @@ class CaptureWorker(Process):
 
 
         next_day_night_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
-        logger.warning('Next Transition Time: %s', datetime.fromtimestamp(next_day_night_transition_time))
+        logger.warning('Next Transition Time: %s', datetime.fromtimestamp(next_day_night_transition_time).strftime('%Y-%m-%d %H:%M:%S'))
 
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
@@ -245,7 +245,7 @@ class CaptureWorker(Process):
 
                     # update transition time
                     next_day_night_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
-                    logger.warning('Next Transition Time: %s', datetime.fromtimestamp(next_day_night_transition_time))
+                    logger.warning('Next Transition Time: %s', datetime.fromtimestamp(next_day_night_transition_time).strftime('%Y-%m-%d %H:%M:%S'))
 
                     dayDate = self._dateCalcs.getDayDate()
 
@@ -271,7 +271,7 @@ class CaptureWorker(Process):
 
                     # update transition time
                     next_day_night_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
-                    logger.warning('Next Transition Time: %s', datetime.fromtimestamp(next_day_night_transition_time))
+                    logger.warning('Next Transition Time: %s', datetime.fromtimestamp(next_day_night_transition_time).strftime('%Y-%m-%d %H:%M:%S'))
 
                     dayDate = self._dateCalcs.getDayDate()
 

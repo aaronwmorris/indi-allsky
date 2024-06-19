@@ -16,12 +16,12 @@ logger = logging
 
 ### If the longitude changes, make sure the TZ is correct
 
-##TZ        = 'America/Chicago'
+TZ        = 'America/Chicago'
 #TZ        = 'America/New_York'
-#LATITUDE  = 33.0
-#LONGITUDE = -84.0
+LATITUDE  = 33.0
+LONGITUDE = -84.0
 
-#UTC_DT    = datetime(2024, 6, 21, 5, 20, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre antimeridian
+UTC_DT    = datetime(2024, 6, 21, 5, 20, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre antimeridian
 #UTC_DT    = datetime(2024, 6, 21, 10, 20, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre meridian
 #UTC_DT    = datetime(2024, 6, 21, 20, 20, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice post meridian
 
@@ -30,12 +30,17 @@ logger = logging
 #UTC_DT    = datetime(2024, 12, 21, 19, 0, 0, tzinfo=pytz.timezone('UTC'))  # winter solstice post meridian
 
 
-TZ        = 'America/Anchorage'
-LATITUDE  = 75.0
-LONGITUDE = -160.0
+#LATITUDE  = 75.0
+#LONGITUDE = -70.0
+#UTC_DT    = datetime(2024, 6, 21, 2, 50, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre antimeridian  75 lat test
+
+
+#TZ        = 'America/Anchorage'
+#LATITUDE  = 75.0
+#LONGITUDE = -160.0
 
 ### always day
-UTC_DT    = datetime(2024, 6, 20, 10, 0, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre antimeridian
+#UTC_DT    = datetime(2024, 6, 20, 10, 0, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre antimeridian
 #UTC_DT    = datetime(2024, 6, 20, 18, 0, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre meridian
 #UTC_DT    = datetime(2024, 6, 21, 3, 0, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice post meridian
 
