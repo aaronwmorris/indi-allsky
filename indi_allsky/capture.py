@@ -200,7 +200,13 @@ class CaptureWorker(Process):
         exposure_state = 'unset'
         check_exposure_state = time.time() + 300  # check in 5 minutes
 
+
         next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
+        logger.warning(
+            'Next forced transition time: %s (%0.1fh)',
+            datetime.fromtimestamp(next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
+            (next_forced_transition_time - time.time()) / 3600,
+        )
 
 
         ### main loop starts
@@ -246,6 +252,14 @@ class CaptureWorker(Process):
                     next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
 
                     dayDate = self._dateCalcs.getDayDate()
+                    logger.warning(
+                        'Next forced transition time: %s (%0.1fh)',
+                        datetime.fromtimestamp(next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
+                        (next_forced_transition_time - loop_start_time) / 3600,
+                    )
+
+
+                    dayDate = self._dateCalcs.getDayDate()
 
 
                     if not self.night and self.generate_timelapse_flag:
@@ -264,11 +278,17 @@ class CaptureWorker(Process):
                         self._generateDayKeogram(timespec, self.camera_id)
                         self._expireData(self.camera_id)  # cleanup old images and folders
 
-                elif loop_start_time >= next_forced_transition_time:
+                elif loop_start_time > next_forced_transition_time:
                     # this should only happen when the sun never sets/rises
 
                     # update transition time
                     next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
+                    logger.warning(
+                        'Next forced transition time: %s (%0.1fh)',
+                        datetime.fromtimestamp(next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
+                        (next_forced_transition_time - loop_start_time) / 3600,
+                    )
+
 
                     dayDate = self._dateCalcs.getDayDate()
 
@@ -299,11 +319,11 @@ class CaptureWorker(Process):
                     self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
 
 
-                logger.warning(
-                    'Next forced transition time: %s (%0.1fh)',
-                    datetime.fromtimestamp(next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
-                    (next_forced_transition_time - loop_start_time) / 3600,
-                )
+                #logger.warning(
+                #    'Next forced transition time: %s (%0.1fh)',
+                #    datetime.fromtimestamp(next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
+                #    (next_forced_transition_time - loop_start_time) / 3600,
+                #)
 
 
                 self.getSensorTemperature()
