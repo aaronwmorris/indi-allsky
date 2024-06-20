@@ -131,7 +131,12 @@ class IndiAllSkyDateCalcs(object):
                 day_stop = previous_antimeridian
         elif utcnow_notz < today_meridian:
             #logger.warning('Pre-meridian')
-            night_stop = today_meridian
+
+            if night:
+                night_stop = today_meridian
+            else:
+                night_stop = next_meridian
+
             day_stop = next_antimeridian
         elif utcnow_notz < next_antimeridian:
             #logger.warning('Post-meridian')

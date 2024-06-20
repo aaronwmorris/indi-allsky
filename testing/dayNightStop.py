@@ -115,10 +115,11 @@ class DayNightStop(object):
 
             if night:
                 dayDate = (now - timedelta(days=1)).date()
+                night_stop = today_meridian
             else:
                 dayDate = now.date()
+                night_stop = next_meridian
 
-            night_stop = today_meridian
             day_stop = next_antimeridian
         elif utcnow_notz < next_antimeridian:
             logger.warning('Post-meridian')
