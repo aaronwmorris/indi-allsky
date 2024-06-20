@@ -281,6 +281,13 @@ class CaptureWorker(Process):
                 elif loop_start_time > next_forced_transition_time:
                     # this should only happen when the sun never sets/rises
 
+
+                    if self.night:
+                        logger.warning('End of night reached, forcing transition to next night period')
+                    else:
+                        logger.warning('End of day reached, forcing transition to next day period')
+
+
                     # update transition time
                     next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
                     logger.warning(
