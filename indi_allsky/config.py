@@ -529,8 +529,11 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
 
     def _setConfigEntry(self, config, user_entry, note, encrypted):
+        now = datetime.now()
+
         config_entry = IndiAllSkyDbConfigTable(
             data=config,
+            createDate=now,
             level=str(__config_level__),
             user_id=user_entry.id,
             note=str(note),
