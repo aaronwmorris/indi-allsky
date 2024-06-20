@@ -21,7 +21,7 @@ TZ        = 'America/Chicago'
 LATITUDE  = 33.0
 LONGITUDE = -84.0
 
-UTC_DT    = datetime(2024, 6, 21, 5, 20, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre antimeridian
+#UTC_DT    = datetime(2024, 6, 21, 5, 20, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre antimeridian
 #UTC_DT    = datetime(2024, 6, 21, 10, 20, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice pre meridian
 #UTC_DT    = datetime(2024, 6, 21, 20, 20, 0, tzinfo=pytz.timezone('UTC'))  # summer solstice post meridian
 
@@ -49,7 +49,7 @@ UTC_DT    = datetime(2024, 6, 21, 5, 20, 0, tzinfo=pytz.timezone('UTC'))  # summ
 #UTC_DT    = datetime(2024, 12, 21, 18, 0, 0, tzinfo=pytz.timezone('UTC'))  # winter solstice pre meridian
 #UTC_DT    = datetime(2024, 12, 22, 3, 0, 0, tzinfo=pytz.timezone('UTC'))  # winter solstice post meridian
 
-#UTC_DT     = datetime.now(tz=pytz.timezone('UTC'))
+UTC_DT     = datetime.now(tz=pytz.timezone('UTC'))
 
 SUN_ALT   = -6.0
 

@@ -28,6 +28,7 @@ astroalign
 bottleneck
 python-dateutil
 ephem
+skyfield
 paramiko
 # https://www.piwheels.org/project/pycurl/
 pycurl
@@ -65,3 +66,4 @@ lxml
 shapely
 requests-toolbelt
 fish2pano >= 0.4.1
+pytz

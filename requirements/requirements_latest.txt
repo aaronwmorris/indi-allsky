@@ -15,6 +15,7 @@ astroalign
 bottleneck
 python-dateutil
 ephem
+skyfield
 paramiko
 # https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
 pycurl
