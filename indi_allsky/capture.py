@@ -189,8 +189,6 @@ class CaptureWorker(Process):
             self._pre_run_tasks()
 
 
-        next_day_night_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
-
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
         waiting_for_frame = False
@@ -201,6 +199,8 @@ class CaptureWorker(Process):
         last_camera_ready = False
         exposure_state = 'unset'
         check_exposure_state = time.time() + 300  # check in 5 minutes
+
+        next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
 
 
         ### main loop starts
@@ -243,7 +243,7 @@ class CaptureWorker(Process):
                     ### Change between day and night
 
                     # update transition time
-                    next_day_night_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
+                    next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
 
                     dayDate = self._dateCalcs.getDayDate()
 
@@ -264,11 +264,11 @@ class CaptureWorker(Process):
                         self._generateDayKeogram(timespec, self.camera_id)
                         self._expireData(self.camera_id)  # cleanup old images and folders
 
-                elif loop_start_time > next_day_night_transition_time:
+                elif loop_start_time >= next_forced_transition_time:
                     # this should only happen when the sun never sets/rises
 
                     # update transition time
-                    next_day_night_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
+                    next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
 
                     dayDate = self._dateCalcs.getDayDate()
 
@@ -301,8 +301,8 @@ class CaptureWorker(Process):
 
                 logger.warning(
                     'Next forced transition time: %s (%0.1fh)',
-                    datetime.fromtimestamp(next_day_night_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
-                    (next_day_night_transition_time - loop_start_time) / 3600,
+                    datetime.fromtimestamp(next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
+                    (next_forced_transition_time - loop_start_time) / 3600,
                 )
 
 
