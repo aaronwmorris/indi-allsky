@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+from datetime import datetime
 import io
 import json
 import tempfile
@@ -502,6 +503,15 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
     def _getConfigEntry(self, config_id=None):
         ### return the last saved config entry
 
+
+        future_configs = IndiAllSkyDbConfigTable.query\
+            .filter(IndiAllSkyDbConfigTable.createDate > datetime.now())\
+            .first()
+
+        if future_configs:
+            logger.warning('!!! CONFIGURATIONS FOUND WITH A TIMESTAMP IN THE FUTURE, TIME MAY HAVE CHANGED !!!')
+
+
         if config_id:
             # not catching NoResultFound
             config_entry = IndiAllSkyDbConfigTable.query\
@@ -513,6 +523,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 .order_by(IndiAllSkyDbConfigTable.createDate.desc())\
                 .limit(1)\
                 .one()
+
 
         return config_entry
 
