@@ -50,8 +50,6 @@ class TestSensors(object):
 
         self.sensors = [None, None, None]
 
-        self.openweathermap_apikey = self.config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
-
 
     def main(self):
         self.init_sensors()
@@ -84,7 +82,6 @@ class TestSensors(object):
                 self.config,
                 pin_1_name=a_sensor_pin_1_name,
                 i2c_address=a_sensor_i2c_address,
-                openweathermap_apikey=self.openweathermap_apikey,
             )
         else:
             logger.warning('No sensor A - Initializing sensor simulator')
@@ -105,7 +102,6 @@ class TestSensors(object):
                 self.config,
                 pin_1_name=b_sensor_pin_1_name,
                 i2c_address=b_sensor_i2c_address,
-                openweathermap_apikey=self.openweathermap_apikey,
             )
         else:
             logger.warning('No sensor B - Initializing sensor simulator')
@@ -126,7 +122,6 @@ class TestSensors(object):
                 self.config,
                 pin_1_name=c_sensor_pin_1_name,
                 i2c_address=c_sensor_i2c_address,
-                openweathermap_apikey=self.openweathermap_apikey,
             )
         else:
             logger.warning('No sensor C - Initializing sensor simulator')

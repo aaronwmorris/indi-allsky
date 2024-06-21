@@ -54,7 +54,8 @@ class TempApiOpenWeatherMap(SensorBase):
 
         logger.warning('Initializing OpenWeather API Sensor')
 
-        apikey = kwargs['openweathermap_apikey']
+        apikey = self.config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
+
         if not apikey:
             raise Exception('OpenWeatherMap api key is empty')
 
