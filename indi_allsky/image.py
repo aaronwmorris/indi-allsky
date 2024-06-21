@@ -683,6 +683,7 @@ class ImageWorker(Process):
                 'type'       : constants.THUMBNAIL,
                 'origin'     : constants.IMAGE,
                 'createDate' : exp_date.timestamp(),
+                'dayDate'    : i_ref['day_date'].strftime('%Y%m%d'),
                 'utc_offset' : exp_date.astimezone().utcoffset().total_seconds(),
                 'night'      : bool(self.night_v.value),
                 'camera_uuid': camera.uuid,

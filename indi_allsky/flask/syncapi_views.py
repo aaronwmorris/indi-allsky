@@ -650,13 +650,12 @@ class SyncApiThumbnailView(SyncApiBaseView):
 
         camera_createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
 
+        d_dayDate = datetime.strptime(thumbnail_metadata['dayDate'], '%Y%m%d').date()
+
 
         if thumbnail_metadata['night']:
-            # day date for night is offset by 12 hours
-            dayDate = (camera_createDate - timedelta(hours=12)).date()
             timeofday = 'night'
         else:
-            dayDate = camera_createDate.date()
             timeofday = 'day'
 
 
@@ -675,7 +674,7 @@ class SyncApiThumbnailView(SyncApiBaseView):
             thumbnail_dir_p = self.image_dir.joinpath(
                 'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
                 type_folder,
-                dayDate.strftime('%Y%m%d'),
+                d_dayDate.strftime('%Y%m%d'),
                 timeofday,
                 camera_createDate.strftime('%d_%H'),
                 'thumbnails',
@@ -685,7 +684,7 @@ class SyncApiThumbnailView(SyncApiBaseView):
             thumbnail_dir_p = self.image_dir.joinpath(
                 'ccd_{0:s}'.format(thumbnail_metadata['camera_uuid']),
                 'timelapse',
-                dayDate.strftime('%Y%m%d'),
+                d_dayDate.strftime('%Y%m%d'),
                 'thumbnails',
             )
 

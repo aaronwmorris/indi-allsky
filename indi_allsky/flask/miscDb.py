@@ -960,12 +960,16 @@ class miscDb(object):
             createDate = thumbnail_metadata['createDate']
 
 
+        if isinstance(thumbnail_metadata['dayDate'], str):
+            dayDate = datetime.strptime(thumbnail_metadata['dayDate'], '%Y%m%d').date()
+        else:
+            dayDate = thumbnail_metadata['dayDate']
+
+
         if thumbnail_metadata['night']:
             # day date for night is offset by 1 day
-            dayDate = (createDate - timedelta(days=1)).date()
             timeofday = 'night'
         else:
-            dayDate = createDate.date()
             timeofday = 'day'
 
 
