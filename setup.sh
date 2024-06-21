@@ -365,18 +365,6 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
     fi
 
 
-    # reconfigure system timezone
-    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
-        # this is not validated
-        echo
-        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
-        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
-        sudo dpkg-reconfigure -f noninteractive tzdata
-    else
-        sudo dpkg-reconfigure tzdata
-    fi
-
-
     INSTALL_INDI="false"
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
@@ -401,6 +389,7 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -534,18 +523,6 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
     fi
 
 
-    # reconfigure system timezone
-    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
-        # this is not validated
-        echo
-        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
-        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
-        sudo dpkg-reconfigure -f noninteractive tzdata
-    else
-        sudo dpkg-reconfigure tzdata
-    fi
-
-
     INSTALL_INDI="false"
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
@@ -570,6 +547,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -703,18 +681,6 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
     fi
 
 
-    # reconfigure system timezone
-    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
-        # this is not validated
-        echo
-        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
-        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
-        sudo dpkg-reconfigure -f noninteractive tzdata
-    else
-        sudo dpkg-reconfigure tzdata
-    fi
-
-
     INSTALL_INDI="false"
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
@@ -739,6 +705,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -872,18 +839,6 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
     fi
 
 
-    # reconfigure system timezone
-    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
-        # this is not validated
-        echo
-        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
-        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
-        sudo dpkg-reconfigure -f noninteractive tzdata
-    else
-        sudo dpkg-reconfigure tzdata
-    fi
-
-
     INSTALL_INDI="false"
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
@@ -908,6 +863,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -1028,18 +984,6 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
     fi
 
 
-    # reconfigure system timezone
-    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
-        # this is not validated
-        echo
-        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
-        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
-        sudo dpkg-reconfigure -f noninteractive tzdata
-    else
-        sudo dpkg-reconfigure tzdata
-    fi
-
-
     INSTALL_INDI="false"
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
@@ -1064,6 +1008,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -1194,18 +1139,6 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
     fi
 
 
-    # reconfigure system timezone
-    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
-        # this is not validated
-        echo
-        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
-        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
-        sudo dpkg-reconfigure -f noninteractive tzdata
-    else
-        sudo dpkg-reconfigure tzdata
-    fi
-
-
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
@@ -1217,6 +1150,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -1354,18 +1288,6 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
     fi
 
 
-    # reconfigure system timezone
-    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
-        # this is not validated
-        echo
-        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
-        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
-        sudo dpkg-reconfigure -f noninteractive tzdata
-    else
-        sudo dpkg-reconfigure tzdata
-    fi
-
-
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
@@ -1377,6 +1299,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -1536,18 +1459,6 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
     fi
 
 
-    # reconfigure system timezone
-    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
-        # this is not validated
-        echo
-        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
-        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
-        sudo dpkg-reconfigure -f noninteractive tzdata
-    else
-        sudo dpkg-reconfigure tzdata
-    fi
-
-
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
@@ -1562,6 +1473,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -1710,18 +1622,6 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
     fi
 
 
-    # reconfigure system timezone
-    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
-        # this is not validated
-        echo
-        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
-        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
-        sudo dpkg-reconfigure -f noninteractive tzdata
-    else
-        sudo dpkg-reconfigure tzdata
-    fi
-
-
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
@@ -1736,6 +1636,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
         cmake \
         gfortran \
         whiptail \
+        bc \
         rsyslog \
         cron \
         git \
@@ -2445,9 +2346,88 @@ TMP_CONFIG_DUMP=$(mktemp --suffix=.json)
 "${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_CONFIG_DUMP"
 
 
+# Detect location
+LOCATION_LATITUDE=$(jq -r '.LOCATION_LATITUDE' "$TMP_CONFIG_DUMP")
+LOCATION_LONGITUDE=$(jq -r '.LOCATION_LONGITUDE' "$TMP_CONFIG_DUMP")
+
+
+while [ -z "${LOCATION_LATITUDE_INPUT:-}" ]; do
+    # shellcheck disable=SC2068
+    LOCATION_LATITUDE_INPUT=$(whiptail --title "Latitude" --nocancel --inputbox "Please enter your latitude [90.0 to -90.0].  Positive values for the Northern Hemisphere, negative values for the Southern Hemisphere" 0 0 -- "$LOCATION_LATITUDE" 3>&1 1>&2 2>&3)
+    if [[ "$LOCATION_LATITUDE_INPUT" =~ ^[+-]?[0-9]{3}$ ]]; then
+        unset LOCATION_LATITUDE_INPUT
+        whiptail --msgbox "Error: Invalid latitude" 0 0
+        continue
+    fi
+
+    if ! [[ "$LOCATION_LATITUDE_INPUT" =~ ^[+-]?[0-9]{1,2}\.?[0-9]*$ ]]; then
+        unset LOCATION_LATITUDE_INPUT
+        whiptail --msgbox "Error: Invalid latitude" 0 0
+        continue
+    fi
+
+    if [[ $(echo "$LOCATION_LATITUDE_INPUT < -90" | bc -l) -eq 1 || $(echo "$LOCATION_LATITUDE_INPUT > 90" | bc -l) -eq 1 ]]; then
+        unset LOCATION_LATITUDE_INPUT
+        whiptail --msgbox "Error: Invalid latitude" 0 0
+        continue
+    fi
+done
+
+while [ -z "${LOCATION_LONGITUDE_INPUT:-}" ]; do
+    # shellcheck disable=SC2068
+    LOCATION_LONGITUDE_INPUT=$(whiptail --title "Longitude" --nocancel --inputbox "Please enter your longitude [-180.0 to 180.0].  Negative values for the Western Hemisphere, positive values for the Eastern Hemisphere" 0 0 -- "$LOCATION_LONGITUDE" 3>&1 1>&2 2>&3)
+    if [[ "$LOCATION_LATITUDE_INPUT" =~ ^[+-]?[0-9]{4}$ ]]; then
+        unset LOCATION_LONGITUDE_INPUT
+        whiptail --msgbox "Error: Invalid longitude" 0 0
+        continue
+    fi
+
+    if ! [[ "$LOCATION_LONGITUDE_INPUT" =~ ^[+-]?[0-9]{1,3}\.?[0-9]*$ ]]; then
+        unset LOCATION_LONGITUDE_INPUT
+        whiptail --msgbox "Error: Invalid longitude" 0 0
+        continue
+    fi
+
+    if [[ $(echo "$LOCATION_LONGITUDE_INPUT < -180" | bc -l) -eq 1 || $(echo "$LOCATION_LONGITUDE_INPUT > 180" | bc -l) -eq 1 ]]; then
+        unset LOCATION_LONGITUDE_INPUT
+        whiptail --msgbox "Error: Invalid longitude" 0 0
+        continue
+    fi
+done
+
+
+TMP_LOCATION=$(mktemp --suffix=.json)
+jq \
+    --argjson latitude "$LOCATION_LATITUDE_INPUT" \
+    --argjson longitude "$LOCATION_LONGITUDE_INPUT" \
+    '.LOCATION_LATITUDE = $latitude | .LOCATION_LONGITUDE = $longitude' "${TMP_CONFIG_DUMP}" > "$TMP_LOCATION"
+
+cat "$TMP_LOCATION" > "$TMP_CONFIG_DUMP"
+
+[[ -f "$TMP_LOCATION" ]] && rm -f "$TMP_LOCATION"
+
+
+
+if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" ]]; then
+    # reconfigure system timezone
+    if [ -n "${INDIALLSKY_TIMEZONE:-}" ]; then
+        # this is not validated
+        echo
+        echo "Setting timezone to $INDIALLSKY_TIMEZONE"
+        echo "$INDIALLSKY_TIMEZONE" | sudo tee /etc/timezone
+        sudo dpkg-reconfigure -f noninteractive tzdata
+    else
+        sudo dpkg-reconfigure tzdata
+    fi
+else
+    echo "Unable to set timezone for distribution"
+    exit 1
+fi
+
 
 # Detect IMAGE_FOLDER
 IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "$TMP_CONFIG_DUMP")
+
 
 echo
 echo
@@ -2522,7 +2502,7 @@ else
      "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP3"
 
 
-    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" ]]; then
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" ]]; then
         sudo cp -f "$TMP3" /etc/apache2/sites-available/indi-allsky.conf
         sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
         sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf

@@ -2,7 +2,7 @@ import io
 import re
 from pathlib import Path
 from datetime import datetime
-from datetime import timedelta
+#from datetime import timedelta
 from datetime import timezone
 import math
 import time
@@ -29,6 +29,7 @@ from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
 from .stack import IndiAllskyStacker
 from .cardinalDirsLabel import IndiAllskyCardinalDirsLabel
+from .utils import IndiAllSkyDateCalcs
 
 from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
@@ -144,6 +145,8 @@ class ImageProcessor(object):
 
         # contains the raw image data, data will be newest to oldest
         self.image_list = [None]  # element will be removed on first image
+
+        self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
 
         self._stretch = IndiAllSkyStretch(self.config, self.bin_v, self.night_v, self.moonmode_v, mask=self._detection_mask)
 
@@ -520,12 +523,13 @@ class ImageProcessor(object):
         detected_bit_depth = self._detectBitDepth(hdulist)
 
 
+        dayDate = self._dateCalcs.calcDayDate(exp_date)
+
+
         if self.night_v.value:
             target_adu = self.config['TARGET_ADU']
-            day_date = (exp_date - timedelta(hours=12)).date()
         else:
             target_adu = self.config['TARGET_ADU_DAY']
-            day_date = exp_date.date()
 
 
         image_data = {
@@ -535,7 +539,7 @@ class ImageProcessor(object):
             'exposure'         : exposure,
             'exp_date'         : exp_date,
             'exp_elapsed'      : exp_elapsed,
-            'day_date'         : day_date,
+            'day_date'         : dayDate,
             'camera_id'        : camera.id,
             'camera_name'      : camera.name,
             'camera_uuid'      : camera.uuid,
