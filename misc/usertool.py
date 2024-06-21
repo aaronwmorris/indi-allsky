@@ -84,6 +84,7 @@ class UserManager(object):
 
             if existing_user:
                 logger.warning('User already exists: %s', username)
+                username = None
                 continue
 
             break

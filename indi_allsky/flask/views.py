@@ -4918,6 +4918,7 @@ class JsonImageProcessingView(JsonView):
         hdulist = fits.open(filename_p)
 
         exposure = float(hdulist[0].header['EXPTIME'])
+        position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
         gain_v = Value('i', int(hdulist[0].header['GAIN']))
         bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
         sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
@@ -4929,7 +4930,7 @@ class JsonImageProcessingView(JsonView):
         moonmode_v = Value('i', 0)
         image_processor = ImageProcessor(
             p_config,
-            None,  # position_av
+            position_av,
             gain_v,
             bin_v,
             sensors_temp_av,

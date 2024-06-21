@@ -634,6 +634,7 @@ class ImageWorker(Process):
             image_metadata = {
                 'type'            : constants.IMAGE,
                 'createDate'      : exp_date.timestamp(),
+                'dayDate'         : i_ref['day_date'].strftime('%Y%m%d'),
                 'utc_offset'      : exp_date.astimezone().utcoffset().total_seconds(),
                 'exposure'        : exposure,
                 'exp_elapsed'     : exp_elapsed,
@@ -682,6 +683,7 @@ class ImageWorker(Process):
                 'type'       : constants.THUMBNAIL,
                 'origin'     : constants.IMAGE,
                 'createDate' : exp_date.timestamp(),
+                'dayDate'    : i_ref['day_date'].strftime('%Y%m%d'),
                 'utc_offset' : exp_date.astimezone().utcoffset().total_seconds(),
                 'night'      : bool(self.night_v.value),
                 'camera_uuid': camera.uuid,
@@ -1004,7 +1006,7 @@ class ImageWorker(Process):
 
         date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
         # raw light
-        folder = self._getImageFolder(i_ref['exp_date'], camera, 'fits')
+        folder = self._getImageFolder(i_ref['exp_date'], i_ref['day_date'], camera, 'fits')
         filename = folder.joinpath(self.filename_t.format(
             i_ref['camera_id'],
             date_str,
@@ -1015,6 +1017,7 @@ class ImageWorker(Process):
         fits_metadata = {
             'type'       : constants.FITS_IMAGE,
             'createDate' : i_ref['exp_date'].timestamp(),
+            'dayDate'    : i_ref['day_date'].strftime('%Y%m%d'),
             'utc_offset' : i_ref['exp_date'].astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref['exposure'],
             'gain'       : self.gain_v.value,
@@ -1153,19 +1156,15 @@ class ImageWorker(Process):
         export_dir = Path(self.config['IMAGE_EXPORT_FOLDER'])
 
         if self.night_v.value:
-            # images should be written to previous day's folder until noon
-            day_ref = i_ref['exp_date'] - timedelta(hours=12)
             timeofday_str = 'night'
         else:
             # daytime
-            # images should be written to current day's folder
-            day_ref = i_ref['exp_date']
             timeofday_str = 'day'
 
 
         day_folder = export_dir.joinpath(
             'ccd_{0:s}'.format(camera.uuid),
-            '{0:s}'.format(day_ref.strftime('%Y%m%d')),
+            '{0:s}'.format(i_ref['day_date'].strftime('%Y%m%d')),
             timeofday_str,
         )
 
@@ -1193,6 +1192,7 @@ class ImageWorker(Process):
         raw_metadata = {
             'type'       : constants.RAW_IMAGE,
             'createDate' : i_ref['exp_date'].timestamp(),
+            'dayDate'    : i_ref['day_date'].strftime('%Y%m%d'),
             'utc_offset' : i_ref['exp_date'].astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref['exposure'],
             'gain'       : self.gain_v.value,
@@ -1335,7 +1335,7 @@ class ImageWorker(Process):
 
 
         ### Write the timelapse file
-        folder = self._getImageFolder(i_ref['exp_date'], camera, 'exposures')
+        folder = self._getImageFolder(i_ref['exp_date'], i_ref['day_date'], camera, 'exposures')
 
         date_str = i_ref['exp_date'].strftime('%Y%m%d_%H%M%S')
         filename = folder.joinpath(self.filename_t.format(i_ref['camera_id'], date_str, self.config['IMAGE_FILE_TYPE']))
@@ -1395,21 +1395,19 @@ class ImageWorker(Process):
         indi_allsky_status_p.chmod(0o644)
 
 
-    def _getImageFolder(self, exp_date, camera, type_folder):
+    def _getImageFolder(self, exp_date, day_date, camera, type_folder):
         if self.night_v.value:
             # images should be written to previous day's folder until noon
-            day_ref = exp_date - timedelta(hours=12)
             timeofday_str = 'night'
         else:
             # images should be written to current day's folder
-            day_ref = exp_date
             timeofday_str = 'day'
 
 
         day_folder = self.image_dir.joinpath(
             'ccd_{0:s}'.format(camera.uuid),
             type_folder,
-            '{0:s}'.format(day_ref.strftime('%Y%m%d')),
+            '{0:s}'.format(day_date.strftime('%Y%m%d')),
             timeofday_str,
         )
 
@@ -1489,7 +1487,7 @@ class ImageWorker(Process):
 
 
         ### Write the panorama file
-        folder = self._getImageFolder(i_ref['exp_date'], camera, 'panoramas')
+        folder = self._getImageFolder(i_ref['exp_date'], i_ref['day_date'], camera, 'panoramas')
 
 
         panorama_filename_t = 'panorama_{0:s}'.format(self.filename_t)
@@ -1502,6 +1500,7 @@ class ImageWorker(Process):
         panorama_metadata = {
             'type'       : constants.PANORAMA_IMAGE,
             'createDate' : i_ref['exp_date'].timestamp(),
+            'dayDate'    : i_ref['day_date'].strftime('%Y%m%d'),
             'utc_offset' : i_ref['exp_date'].astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref['exposure'],
             'gain'       : self.gain_v.value,
@@ -1656,5 +1655,4 @@ class ImageWorker(Process):
         logger.warning('New calculated exposure: %0.8f', new_exposure)
         with self.exposure_av.get_lock():
             self.exposure_av[0] = new_exposure
-
 
