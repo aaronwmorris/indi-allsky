@@ -7,23 +7,7 @@ from ..exceptions import SensorReadException
 logger = logging.getLogger('indi_allsky')
 
 
-class TempSensorDht22(SensorBase):
-    dht_classname = 'DHT22'
-
-    def __init__(self, *args, **kwargs):
-        super(TempSensorDht22, self).__init__(*args, **kwargs)
-
-        pin_1_name = kwargs['pin_1_name']
-
-        import board
-        import adafruit_dht
-
-        pin1 = getattr(board, pin_1_name)
-
-        logger.warning('Initializing %s temperature device', self.dht_classname)
-        dht_class = getattr(adafruit_dht, self.dht_classname)
-        self.dht = dht_class(pin1, use_pulseio=False)
-
+class TempSensorDht2x(SensorBase):
 
     def update(self):
 
@@ -34,7 +18,7 @@ class TempSensorDht22(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('%s - temp: %0.1fc, humidity: %0.1f%%', self.dht_classname, temp_c, rel_h)
+        logger.info('DHT - temp: %0.1fc, humidity: %0.1f%%', temp_c, rel_h)
 
 
         try:
@@ -79,10 +63,47 @@ class TempSensorDht22(SensorBase):
         return data
 
 
-class TempSensorDht21(TempSensorDht22):
-    dht_classname = 'DHT21'
+class TempSensorDht22(TempSensorDht2x):
+    def __init__(self, *args, **kwargs):
+        super(TempSensorDht2x, self).__init__(*args, **kwargs)
+
+        pin_1_name = kwargs['pin_1_name']
+
+        import board
+        import adafruit_dht
+
+        pin1 = getattr(board, pin_1_name)
+
+        logger.warning('Initializing DHT22 temperature device')
+        self.dht = adafruit_dht.DHT22(pin1, use_pulseio=False)
 
 
-class TempSensorDht11(TempSensorDht22):
-    dht_classname = 'DHT11'
+class TempSensorDht21(TempSensorDht2x):
+    def __init__(self, *args, **kwargs):
+        super(TempSensorDht2x, self).__init__(*args, **kwargs)
+
+        pin_1_name = kwargs['pin_1_name']
+
+        import board
+        import adafruit_dht
+
+        pin1 = getattr(board, pin_1_name)
+
+        logger.warning('Initializing DHT21 temperature device')
+        self.dht = adafruit_dht.DHT21(pin1, use_pulseio=False)
+
+
+class TempSensorDht11(TempSensorDht2x):
+    def __init__(self, *args, **kwargs):
+        super(TempSensorDht2x, self).__init__(*args, **kwargs)
+
+        pin_1_name = kwargs['pin_1_name']
+
+        import board
+        import adafruit_dht
+
+        pin1 = getattr(board, pin_1_name)
+
+        logger.warning('Initializing DHT11 temperature device')
+        self.dht = adafruit_dht.DHT11(pin1, use_pulseio=False)
 
