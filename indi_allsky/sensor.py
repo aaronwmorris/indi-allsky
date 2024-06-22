@@ -10,6 +10,7 @@ from .devices import dew_heaters
 from .devices import fans
 from .devices import sensors as indi_allsky_sensors
 from .devices.exceptions import SensorReadException
+from .devices.exceptions import DeviceControlException
 
 logger = logging.getLogger('indi_allsky')
 
@@ -212,7 +213,11 @@ class SensorWorker(Thread):
 
     def set_dew_heater(self, new_state):
         if self.dew_heater.state != new_state:
-            self.dew_heater.state = new_state
+            try:
+                self.dew_heater.state = new_state
+            except DeviceControlException as e:
+                logger.error('Dew heater exception: %s', str(e))
+                return
 
             with self.sensors_user_av.get_lock():
                 self.sensors_user_av[1] = float(self.dew_heater.state)
@@ -257,7 +262,11 @@ class SensorWorker(Thread):
 
     def set_fan(self, new_state):
         if self.fan.state != new_state:
-            self.fan.state = new_state
+            try:
+                self.fan.state = new_state
+            except DeviceControlException as e:
+                logger.error('Fan exception: %s', str(e))
+                return
 
             with self.sensors_user_av.get_lock():
                 self.sensors_user_av[4] = float(self.fan.state)

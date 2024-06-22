@@ -57,11 +57,5 @@ class FanPwm(FanBase):
 
 
     def disable(self):
-        if not self.invert_output:
-            new_duty_cycle = 0
-        else:
-            new_duty_cycle = ((2 ** 16) - 1)
-
-        self.pwm.duty_cycle = new_duty_cycle
         self.state = 0
 
