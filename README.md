@@ -22,6 +22,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * BME680 (i2c & SPI)
     * Si7021
     * SHT40/41/45
+    * TMP36 via ADS1x15 ADC
     * MLX90614 Sky Temperature
 * Light (Lux) Sensors
     * TSL2561
