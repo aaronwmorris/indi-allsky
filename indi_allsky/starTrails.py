@@ -495,11 +495,6 @@ class StarTrailGenerator(object):
         return degrees, minutes, seconds
 
 
-    def cleanup(self):
-        # cleanup the folder
-        self.timelapse_tmpdir.cleanup()
-
-
     def _generateSqmMask(self, img):
         logger.info('Generating mask based on SQM_ROI')
 

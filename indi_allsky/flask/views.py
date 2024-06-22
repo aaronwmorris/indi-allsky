@@ -2253,30 +2253,61 @@ class AjaxSetTimeView(BaseView):
         new_datetime_utc = new_datetime.astimezone(tz=timezone.utc)
 
 
-        systemtime_utc = datetime.now(tz=timezone.utc)
+        #systemtime_utc = datetime.now(tz=timezone.utc)
 
-        time_offset = systemtime_utc.timestamp() - new_datetime_utc.timestamp()
-        app.logger.info('Time offset: %ds', int(time_offset))
+        #time_offset = systemtime_utc.timestamp() - new_datetime_utc.timestamp()
+        #app.logger.info('Time offset: %ds', int(time_offset))
 
-        task_settime = IndiAllSkyDbTaskQueueTable(
-            queue=TaskQueueQueue.MAIN,
-            state=TaskQueueState.MANUAL,
-            priority=100,
-            data={
-                'action'      : 'settime',
-                'time_offset' : time_offset,
-            },
-        )
+        #task_settime = IndiAllSkyDbTaskQueueTable(
+        #    queue=TaskQueueQueue.MAIN,
+        #    state=TaskQueueState.MANUAL,
+        #    priority=100,
+        #    data={
+        #        'action'      : 'settime',
+        #        'time_offset' : time_offset,
+        #    },
+        #)
 
-        db.session.add(task_settime)
-        db.session.commit()
+        #db.session.add(task_settime)
+        #db.session.commit()
 
         # form passed validation
+
+
+        try:
+            self.setTimeSystemd(new_datetime_utc)
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('DBus Error: %s', str(e))
+            errors = {
+                'form_settime_global' : 'DBus Error: {0:s}'.format(str(e)),
+            }
+            return jsonify(errors), 400
+
+
         message = {
-            'success-message' : 'System time update queued.',
+            'success-message' : 'System time updated.',
         }
 
         return jsonify(message)
+
+
+    def setTimeSystemd(self, new_datetime_utc):
+        app.logger.warning('Setting system time to %s (UTC)', new_datetime_utc)
+
+        epoch = new_datetime_utc.timestamp() + 5  # add 5 due to sleep below
+        epoch_msec = epoch * 1000000
+
+        system_bus = dbus.SystemBus()
+        timedate1 = system_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
+        manager = dbus.Interface(timedate1, 'org.freedesktop.timedate1')
+
+        app.logger.warning('Disabling NTP time sync')
+        manager.SetNTP(False, False)  # disable time sync
+        time.sleep(5.0)  # give enough time for time sync to diable
+
+        r2 = manager.SetTime(epoch_msec, False, False)
+
+        return r2
 
 
 class ImageViewerView(FormView):

@@ -69,8 +69,6 @@ class SensorWorker(Thread):
         self.fan_thold_diff_high = self.config.get('FAN', {}).get('THOLD_DIFF_HIGH', 10)
 
 
-        self.openweathermap_apikey = self.config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
-
         self._stopper = threading.Event()
 
 
@@ -288,12 +286,15 @@ class SensorWorker(Thread):
 
             self.sensors[0] = a_sensor(
                 self.config,
+                self.night_v,
                 pin_1_name=a_sensor_pin_1_name,
                 i2c_address=a_sensor_i2c_address,
-                openweathermap_apikey=self.openweathermap_apikey,
             )
         else:
-            self.sensors[0] = indi_allsky_sensors.sensor_simulator(self.config)
+            self.sensors[0] = indi_allsky_sensors.sensor_simulator(
+                self.config,
+                self.night_v,
+            )
 
         self.sensors[0].slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 10)
 
@@ -308,12 +309,15 @@ class SensorWorker(Thread):
 
             self.sensors[1] = b_sensor(
                 self.config,
+                self.night_v,
                 pin_1_name=b_sensor_pin_1_name,
                 i2c_address=b_sensor_i2c_address,
-                openweathermap_apikey=self.openweathermap_apikey,
             )
         else:
-            self.sensors[1] = indi_allsky_sensors.sensor_simulator(self.config)
+            self.sensors[1] = indi_allsky_sensors.sensor_simulator(
+                self.config,
+                self.night_v,
+            )
 
         self.sensors[1].slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 15)
 
@@ -328,12 +332,15 @@ class SensorWorker(Thread):
 
             self.sensors[2] = c_sensor(
                 self.config,
+                self.night_v,
                 pin_1_name=c_sensor_pin_1_name,
                 i2c_address=c_sensor_i2c_address,
-                openweathermap_apikey=self.openweathermap_apikey,
             )
         else:
-            self.sensors[2] = indi_allsky_sensors.sensor_simulator(self.config)
+            self.sensors[2] = indi_allsky_sensors.sensor_simulator(
+                self.config,
+                self.night_v,
+            )
 
         self.sensors[2].slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 15)
 

@@ -110,8 +110,3 @@ class TimelapseGenerator(object):
         # set default permissions
         video_file_p.chmod(0o644)
 
-
-    def cleanup(self):
-        # delete all existing symlinks and sequence folder
-        self.seqfolder.cleanup()
-

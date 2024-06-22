@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 
 import sys
+import math
+from datetime import datetime
+from datetime import timezone
+import ephem
 import logging
 #import time
 from pathlib import Path
 #from pprint import pformat
+
+from multiprocessing import Value
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -47,13 +53,28 @@ class TestSensors(object):
 
         self.config = self._config_obj.config
 
+        self.night_v = Value('i', -1)  # bogus initial value
+        self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
 
         self.sensors = [None, None, None]
 
-        self.openweathermap_apikey = self.config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
-
 
     def main(self):
+        obs = ephem.Observer()
+        obs.lon = math.radians(self.config['LOCATION_LONGITUDE'])
+        obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
+        obs.elevation = self.config.get('LOCATION_ELEVATION', 300)
+
+        sun = ephem.Sun()
+
+        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
+        obs.date = utcnow
+        sun.compute(obs)
+
+        with self.night_v.get_lock():
+            self.night_v.value = int(sun.alt < self.night_sun_radians)
+
+
         self.init_sensors()
 
 
@@ -82,13 +103,16 @@ class TestSensors(object):
 
             self.sensors[0] = a_sensor(
                 self.config,
+                self.night_v,
                 pin_1_name=a_sensor_pin_1_name,
                 i2c_address=a_sensor_i2c_address,
-                openweathermap_apikey=self.openweathermap_apikey,
             )
         else:
             logger.warning('No sensor A - Initializing sensor simulator')
-            self.sensors[0] = indi_allsky_sensors.sensor_simulator(self.config)
+            self.sensors[0] = indi_allsky_sensors.sensor_simulator(
+                self.config,
+                self.night_v,
+            )
 
         self.sensors[0].slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 10)
 
@@ -103,13 +127,16 @@ class TestSensors(object):
 
             self.sensors[1] = b_sensor(
                 self.config,
+                self.night_v,
                 pin_1_name=b_sensor_pin_1_name,
                 i2c_address=b_sensor_i2c_address,
-                openweathermap_apikey=self.openweathermap_apikey,
             )
         else:
             logger.warning('No sensor B - Initializing sensor simulator')
-            self.sensors[1] = indi_allsky_sensors.sensor_simulator(self.config)
+            self.sensors[1] = indi_allsky_sensors.sensor_simulator(
+                self.config,
+                self.night_v,
+            )
 
         self.sensors[1].slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 15)
 
@@ -124,13 +151,16 @@ class TestSensors(object):
 
             self.sensors[2] = c_sensor(
                 self.config,
+                self.night_v,
                 pin_1_name=c_sensor_pin_1_name,
                 i2c_address=c_sensor_i2c_address,
-                openweathermap_apikey=self.openweathermap_apikey,
             )
         else:
             logger.warning('No sensor C - Initializing sensor simulator')
-            self.sensors[2] = indi_allsky_sensors.sensor_simulator(self.config)
+            self.sensors[2] = indi_allsky_sensors.sensor_simulator(
+                self.config,
+                self.night_v,
+            )
 
         self.sensors[2].slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 15)
 
