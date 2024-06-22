@@ -3193,6 +3193,24 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.TEMP_SENSOR__A_PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
 
+            elif self.TEMP_SENSOR__A_CLASSNAME.data.startswith('cpads_'):
+                try:
+                    import adafruit_ads1x15.ads1115 as ADS
+
+                    if self.TEMP_SENSOR__A_PIN_1.data:
+                        try:
+                            getattr(ADS, self.TEMP_SENSOR__A_PIN_1.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__A_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__A_PIN_1.data))
+                            result = False
+                    else:
+                        self.TEMP_SENSOR__A_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
 
         # sensor B
         if self.TEMP_SENSOR__B_CLASSNAME.data:
@@ -3218,6 +3236,24 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.TEMP_SENSOR__B_PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
 
+            elif self.TEMP_SENSOR__B_CLASSNAME.data.startswith('cpads_'):
+                try:
+                    import adafruit_ads1x15.ads1115 as ADS
+
+                    if self.TEMP_SENSOR__B_PIN_1.data:
+                        try:
+                            getattr(ADS, self.TEMP_SENSOR__B_PIN_1.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__B_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__B_PIN_1.data))
+                            result = False
+                    else:
+                        self.TEMP_SENSOR__B_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
 
         # sensor C
         if self.TEMP_SENSOR__C_CLASSNAME.data:
@@ -3241,6 +3277,24 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:
                     self.TEMP_SENSOR__C_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+            elif self.TEMP_SENSOR__C_CLASSNAME.data.startswith('cpads_'):
+                try:
+                    import adafruit_ads1x15.ads1115 as ADS
+
+                    if self.TEMP_SENSOR__C_PIN_1.data:
+                        try:
+                            getattr(ADS, self.TEMP_SENSOR__C_PIN_1.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__C_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__C_PIN_1.data))
+                            result = False
+                    else:
+                        self.TEMP_SENSOR__C_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
 
 
