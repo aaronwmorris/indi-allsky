@@ -2566,12 +2566,14 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'None'),
         ('blinka_dew_heater_standard', 'Dew Heater - Standard'),
         ('blinka_dew_heater_pwm', 'Dew Heater - PWM'),
+        ('serial_dew_heater_pwm', 'Dew Heater - PWM (Serial Port)'),
     )
 
     FAN__CLASSNAME_choices = (
         ('', 'None'),
         ('blinka_fan_standard', 'Fan - Standard'),
         ('blinka_fan_pwm', 'Fan - PWM'),
+        ('serial_fan_pwm', 'Fan - PWM (Serial Port)'),
     )
 
     TEMP_SENSOR__CLASSNAME_choices = (

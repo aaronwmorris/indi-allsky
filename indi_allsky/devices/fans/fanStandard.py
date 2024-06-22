@@ -56,6 +56,5 @@ class FanStandard(FanBase):
 
 
     def disable(self):
-        self.pin.value = self.OFF
         self.state = 0
 
