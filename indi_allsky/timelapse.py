@@ -17,7 +17,7 @@ class TimelapseGenerator(object):
     def __init__(self, config):
         self.config = config
 
-        self.seqfolder = tempfile.TemporaryDirectory(suffix='_timelapse')  # context manager automatically deletes files when finished
+        self.seqfolder = tempfile.TemporaryDirectory(suffix='_timelapse', delete=True)  # context manager automatically deletes files when finished
         self.seqfolder_p = Path(self.seqfolder.name)
 
         #seqfolder = tempfile.mkdtemp(suffix='_timelapse')  # testing
@@ -109,9 +109,4 @@ class TimelapseGenerator(object):
 
         # set default permissions
         video_file_p.chmod(0o644)
-
-
-    def cleanup(self):
-        # delete all existing symlinks and sequence folder
-        self.seqfolder.cleanup()
 

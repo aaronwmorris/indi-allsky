@@ -77,7 +77,7 @@ class StarTrailGenerator(object):
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
 
-        self.timelapse_tmpdir = tempfile.TemporaryDirectory(dir=self.image_dir, suffix='_startrail_timelapse')    # context manager automatically deletes files when finished
+        self.timelapse_tmpdir = tempfile.TemporaryDirectory(dir=self.image_dir, suffix='_startrail_timelapse', delete=True)    # context manager automatically deletes files when finished
         self.timelapse_tmpdir_p = Path(self.timelapse_tmpdir.name)
 
 
@@ -493,11 +493,6 @@ class StarTrailGenerator(object):
         degrees, minutes = divmod(minutes, 60)
         degrees = degrees if is_positive else -degrees
         return degrees, minutes, seconds
-
-
-    def cleanup(self):
-        # cleanup the folder
-        self.timelapse_tmpdir.cleanup()
 
 
     def _generateSqmMask(self, img):
