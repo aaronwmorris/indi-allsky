@@ -4699,6 +4699,7 @@ class AjaxFocusControllerView(BaseView):
 
     def dispatch_request(self):
         from ..focuser import IndiAllSkyFocuser
+        from ..devices.exceptions import DeviceControlException
 
         form_focuscontroller = IndiAllskyFocusControllerForm(data=request.json)
 
@@ -4731,8 +4732,21 @@ class AjaxFocusControllerView(BaseView):
                 'focuser_error' : ['Error initializing focuser: {0:s}'.format(str(e))],
             }
             return jsonify(json_data), 400
+        except DeviceControlException as e:
+            json_data = {
+                'focuser_error' : ['Error initializing focuser: {0:s}'.format(str(e))],
+            }
+            return jsonify(json_data), 400
 
-        steps_offset = focuser.move(direction, degrees)
+
+        try:
+            steps_offset = focuser.move(direction, degrees)
+        except DeviceControlException as e:
+            json_data = {
+                'focuser_error' : ['Error moving focuser: {0:s}'.format(str(e))],
+            }
+            return jsonify(json_data), 400
+
 
         r = {
             'steps' : steps_offset,

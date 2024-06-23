@@ -22,7 +22,7 @@ class FanSerialPwm(FanBase):
         self.serial_port = Path('/dev').joinpath(serial_port_name)
 
         if not self.serial_port.exists():
-            raise DeviceControlException('Serial port does not exist: {0:s}', self.serial_port)
+            raise DeviceControlException('Serial port does not exist: {0:s}'.format(str(self.serial_port)))
 
 
         self._state = None
