@@ -7,11 +7,14 @@ from datetime import timedelta
 from datetime import timezone
 from pathlib import Path
 import tempfile
+import math
 import subprocess
 import dbus
 import signal
 import logging
 import traceback
+
+import ephem
 
 from multiprocessing import Process
 #from threading import Thread
@@ -20,7 +23,6 @@ import queue
 from . import constants
 from . import camera as camera_module
 
-from .dayNightManager import DayNightManager
 from .utils import IndiAllSkyDateCalcs
 
 from .flask.models import TaskQueueQueue
@@ -94,12 +96,6 @@ class CaptureWorker(Process):
 
         self._miscDb = miscDb(self.config)
         self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
-        self._dayNightManager = DayNightManager(
-            self.config,
-            self.position_av,
-            self.night_v,
-            self.moonmode_v,
-        )
 
         self.indiclient = None
 
@@ -113,6 +109,9 @@ class CaptureWorker(Process):
         self.indi_config = self.config.get('INDI_CONFIG_DEFAULTS', {})
 
         self.focus_mode = self.config.get('FOCUS_MODE', False)  # focus mode takes images as fast as possible
+
+        self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
+        self.night_moonmode_radians = math.radians(self.config['NIGHT_MOONMODE_ALT_DEG'])
 
         self.update_time_offset = None  # when time needs to be updated, this will be the offset
 
@@ -237,21 +236,16 @@ class CaptureWorker(Process):
                 pass
 
 
-
-            self._dayNightManager.update()
+            self.detectNight()
 
 
             with app.app_context():
-                if isinstance(self.night, type(None)):
-                    pass
-
-                elif bool(self.night_v.value) != self.night:
+                if bool(self.night_v.value) != self.night:
                     ### Change between day and night
 
                     # update transition time
                     next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
 
-                    dayDate = self._dateCalcs.getDayDate()
                     logger.warning(
                         'Next forced transition time: %s (%0.1fh)',
                         datetime.fromtimestamp(next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
@@ -280,7 +274,6 @@ class CaptureWorker(Process):
 
                 elif loop_start_time > next_forced_transition_time:
                     # this should only happen when the sun never sets/rises
-
 
                     if self.night:
                         logger.warning('End of night reached, forcing transition to next night period')
@@ -1231,10 +1224,6 @@ class CaptureWorker(Process):
             return
 
 
-        self.night = bool(self.night_v.value)
-        self.moonmode = bool(self.moonmode_v.value)
-
-
         if self.night:
             self.indi_config = self.config['INDI_CONFIG_DEFAULTS']
 
@@ -1268,6 +1257,46 @@ class CaptureWorker(Process):
 
         # update CCD config
         self.indiclient.configureCcdDevice(self.indi_config)
+
+
+        # Update shared values
+        with self.night_v.get_lock():
+            self.night_v.value = int(self.night)
+
+        with self.moonmode_v.get_lock():
+            self.moonmode_v.value = int(self.moonmode)
+
+
+    def detectNight(self):
+        obs = ephem.Observer()
+        obs.lon = math.radians(self.position_av[1])
+        obs.lat = math.radians(self.position_av[0])
+        obs.elevation = self.position_av[2]
+        obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
+
+        sun = ephem.Sun()
+        moon = ephem.Moon()
+
+        sun.compute(obs)
+        moon.compute(obs)
+
+        # Night
+        logger.info('Sun altitude: %0.1f', math.degrees(sun.alt))
+        self.night = sun.alt < self.night_sun_radians  # boolean
+
+
+        # Moonmode
+        moon_phase = moon.moon_phase * 100.0
+
+        logger.info('Moon altitude: %0.1f, phase %0.1f%%', math.degrees(moon.alt), moon_phase)
+        if self.night:
+            if moon.alt >= self.night_moonmode_radians:
+                if moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
+                    logger.info('Moon Mode conditions detected')
+                    self.moonmode = True
+                    return
+
+        self.moonmode = False
 
 
     def _generateDayTimelapse(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
