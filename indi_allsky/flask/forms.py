@@ -2560,6 +2560,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'None'),
         ('blinka_focuser_28byj_64', '28BYJ-48 Stepper (1/64) ULN2003 - GPIO'),
         ('blinka_focuser_28byj_16', '28BYJ-48 Stepper (1/16) ULN2003 - GPIO'),
+        ('serial_focuser_28byj_64', '28BYJ-48 Stepper (1/64) ULN2003 - Serial Port'),
     )
 
     DEW_HEATER__CLASSNAME_choices = (
