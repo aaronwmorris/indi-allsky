@@ -1,4 +1,4 @@
 #rawpy  # not available on armv7l
-# v0.22.0 requires numpy 2.0
+# rawpy v0.22.0 requires numpy 2.0
 git+https://github.com/letmaik/rawpy.git@v0.21.0#egg=rawpy
 numpy < 2.0

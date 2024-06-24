@@ -1146,47 +1146,52 @@ if __name__ == "__main__":
         type=int,
         default=30
     )
-    argparser.add_argument(
+
+
+    upload_images_group = argparser.add_mutually_exclusive_group(required=False)
+    upload_images_group.add_argument(
         '--no-upload-images',
         help='disable image uploading (default)',
         dest='upload_images',
         action='store_false',
     )
-    argparser.add_argument(
+    upload_images_group.add_argument(
         '--upload-images',
         help='enable image uploading',
         dest='upload_images',
         action='store_true',
     )
-    argparser.set_defaults(upload_images=False)
+    upload_images_group.set_defaults(upload_images=False)
 
-    argparser.add_argument(
+    syncapi_group = argparser.add_mutually_exclusive_group(required=False)
+    syncapi_group.add_argument(
         '--no-syncapi',
         help='disable syncapi (all types)',
         dest='syncapi',
         action='store_false',
     )
-    argparser.add_argument(
+    syncapi_group.add_argument(
         '--syncapi',
         help='enable syncapi (all types) (default)',
         dest='syncapi',
         action='store_true',
     )
-    argparser.set_defaults(syncapi_images=True)
+    syncapi_group.set_defaults(syncapi=True)
 
-    argparser.add_argument(
+    syncapi_images_group = argparser.add_mutually_exclusive_group(required=False)
+    syncapi_images_group.add_argument(
         '--no-syncapi-images',
         help='disable syncapi for images',
         dest='syncapi_images',
         action='store_false',
     )
-    argparser.add_argument(
+    syncapi_images_group.add_argument(
         '--syncapi-images',
         help='enable syncapi for images (default)',
         dest='syncapi_images',
         action='store_true',
     )
-    argparser.set_defaults(syncapi_images=True)
+    syncapi_images_group.set_defaults(syncapi_images=True)
 
 
     args = argparser.parse_args()

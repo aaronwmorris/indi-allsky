@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import argparse
 from pathlib import Path
 from pprint import pformat  # noqa: F401
 import time
@@ -47,7 +48,7 @@ class HADiscovery(object):
         self._port = 1883
 
 
-    def main(self):
+    def main(self, retain=False):
         if not self.config['MQTTPUBLISH'].get('ENABLE'):
             logger.error('MQ Publishing not enabled')
             sys.exit(1)
@@ -420,7 +421,7 @@ class HADiscovery(object):
                 'topic'    : '/'.join((self.discovery_base_topic, sensor['component'], sensor['object_id'], 'config')),
                 'payload'  : json.dumps(sensor['config']),
                 'qos'      : 0,
-                'retain'   : False,
+                'retain'   : retain,
             }
             message_list.append(message)
 
@@ -433,7 +434,7 @@ class HADiscovery(object):
                 'topic'    : '/'.join((self.discovery_base_topic, sensor['component'], sensor['object_id'], 'config')),
                 'payload'  : json.dumps(sensor['config']),
                 'qos'      : 0,
-                'retain'   : False,
+                'retain'   : retain,
             }
 
             message_list.append(message)
@@ -484,5 +485,26 @@ class HADiscovery(object):
 
 
 if __name__ == "__main__":
+    argparser = argparse.ArgumentParser()
+
+    retain_group = argparser.add_mutually_exclusive_group(required=False)
+    retain_group.add_argument(
+        '--retain',
+        help='Enable retain flag on discovery topics',
+        dest='retain',
+        action='store_true',
+    )
+    retain_group.add_argument(
+        '--no-retain',
+        help='Disable retain flag on discovery topics (default)',
+        dest='retain',
+        action='store_false',
+    )
+    retain_group.set_defaults(retain=False)
+
+    args = argparser.parse_args()
+
+
     had = HADiscovery()
-    had.main()
+    had.main(retain=args.retain)
+
