@@ -146,6 +146,9 @@ class IndiAllSky(object):
 
         self.gain_v = Value('i', -1)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
+
+
+        # These shared values are to indicate when the camera is in night/moon modes
         self.night_v = Value('i', -1)  # bogus initial value
         self.moonmode_v = Value('i', -1)  # bogus initial value
 
