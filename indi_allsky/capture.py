@@ -107,6 +107,7 @@ class CaptureWorker(Process):
         self.camera_server = None
 
         self.indi_config = self.config.get('INDI_CONFIG_DEFAULTS', {})
+        self.reconfigure_camera = False
 
         self.focus_mode = self.config.get('FOCUS_MODE', False)  # focus mode takes images as fast as possible
 
@@ -243,6 +244,8 @@ class CaptureWorker(Process):
                 if bool(self.night_v.value) != self.night:
                     ### Change between day and night
 
+                    self.reconfigure_camera = True
+
                     # update transition time
                     next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
 
@@ -272,8 +275,13 @@ class CaptureWorker(Process):
                         self._generateDayKeogram(timespec, self.camera_id)
                         self._expireData(self.camera_id)  # cleanup old images and folders
 
+                elif self.night and bool(self.moonmode_v.value) != self.moonmode:
+                    self.reconfigure_camera = True
+
                 elif loop_start_time > next_forced_transition_time:
                     # this should only happen when the sun never sets/rises
+
+                    self.reconfigure_camera = True
 
                     if self.night:
                         logger.warning('End of night reached, forcing transition to next night period')
@@ -438,7 +446,9 @@ class CaptureWorker(Process):
 
 
                     # reconfigure if needed
-                    self.reconfigureCcd()
+                    if self.reconfigure_camera:
+                        self.reconfigureCcd()
+
 
                     # these tasks run every ~3 minutes
                     self._periodic_tasks()
@@ -1215,13 +1225,10 @@ class CaptureWorker(Process):
 
 
     def reconfigureCcd(self):
-        if bool(self.night_v.value) != self.night:
-            pass
-        elif self.night and bool(self.moonmode_v.value) != self.moonmode:
-            pass
-        else:
-            # No need to reconfigure
+        if not self.reconfigure_camera:
             return
+
+        self.reconfigure_camera = False
 
 
         if self.night:
@@ -1259,7 +1266,8 @@ class CaptureWorker(Process):
         self.indiclient.configureCcdDevice(self.indi_config)
 
 
-        # Update shared values
+        ### Update shared values
+        # These need to be updated in the capture process to indicate the real state of the camera
         with self.night_v.get_lock():
             self.night_v.value = int(self.night)
 
