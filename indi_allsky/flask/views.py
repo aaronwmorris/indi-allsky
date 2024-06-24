@@ -655,7 +655,11 @@ class JsonImageLoopView(JsonView):
             'image_list' : self.getLoopImages(session['camera_id'], ts_dt, history_seconds),
             'sqm_data'   : self.getSqmData(session['camera_id'], ts_dt),
             'stars_data' : self.getStarsData(session['camera_id'], ts_dt),
+            'message'    : '',
         }
+
+        if len(data['image_list']) == 0:
+            data['message'] = 'No Timelapse Data'
 
         return data
 
