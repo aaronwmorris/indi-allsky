@@ -8,7 +8,7 @@ from ..exceptions import SensorReadException
 logger = logging.getLogger('indi_allsky')
 
 
-class TempSensorTmp36_Ads1x15(SensorBase):
+class TempSensorLm35_Ads1x15(SensorBase):
 
     def update(self):
 
@@ -18,10 +18,10 @@ class TempSensorTmp36_Ads1x15(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        temp_c = (sensor_v - 0.5) * 100  # 500mv offset
+        temp_c = sensor_v * 100
 
 
-        logger.info('TMP36 ADS1x15 - temp: %0.1fc', temp_c)
+        logger.info('LM35 ADS1x15 - temp: %0.1fc', temp_c)
 
         if self.config.get('TEMP_DISPLAY') == 'f':
             current_temp = self.c2f(temp_c)
@@ -40,10 +40,10 @@ class TempSensorTmp36_Ads1x15(SensorBase):
         return data
 
 
-class TempSensorTmp36_Ads1015_I2C(TempSensorTmp36_Ads1x15):
+class TempSensorLm35_Ads1015_I2C(TempSensorLm35_Ads1x15):
 
     def __init__(self, *args, **kwargs):
-        super(TempSensorTmp36_Ads1015_I2C, self).__init__(*args, **kwargs)
+        super(TempSensorLm35_Ads1015_I2C, self).__init__(*args, **kwargs)
 
         i2c_address_str = kwargs['i2c_address']
         pin_1_name = kwargs['pin_1_name']
@@ -55,7 +55,7 @@ class TempSensorTmp36_Ads1015_I2C(TempSensorTmp36_Ads1x15):
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        logger.warning('Initializing ADS1015 I2C ADC - TMP36 temperature device @ %s', hex(i2c_address))
+        logger.warning('Initializing ADS1015 I2C ADC - LM35 temperature device @ %s', hex(i2c_address))
 
         pin1 = getattr(ADS, pin_1_name)
 
@@ -64,10 +64,10 @@ class TempSensorTmp36_Ads1015_I2C(TempSensorTmp36_Ads1x15):
         self.sensor = AnalogIn(ads, pin1)
 
 
-class TempSensorTmp36_Ads1115_I2C(TempSensorTmp36_Ads1x15):
+class TempSensorLm35_Ads1115_I2C(TempSensorLm35_Ads1x15):
 
     def __init__(self, *args, **kwargs):
-        super(TempSensorTmp36_Ads1115_I2C, self).__init__(*args, **kwargs)
+        super(TempSensorLm35_Ads1115_I2C, self).__init__(*args, **kwargs)
 
         i2c_address_str = kwargs['i2c_address']
         pin_1_name = kwargs['pin_1_name']
@@ -79,7 +79,7 @@ class TempSensorTmp36_Ads1115_I2C(TempSensorTmp36_Ads1x15):
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        logger.warning('Initializing ADS1115 I2C ADC - TMP36 temperature device @ %s', hex(i2c_address))
+        logger.warning('Initializing ADS1115 I2C ADC - LM35 temperature device @ %s', hex(i2c_address))
 
         pin1 = getattr(ADS, pin_1_name)
 
