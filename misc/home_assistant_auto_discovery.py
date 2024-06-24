@@ -420,7 +420,7 @@ class HADiscovery(object):
                 'topic'    : '/'.join((self.discovery_base_topic, sensor['component'], sensor['object_id'], 'config')),
                 'payload'  : json.dumps(sensor['config']),
                 'qos'      : 0,
-                'retain'   : False,
+                'retain'   : True,
             }
             message_list.append(message)
 
@@ -433,7 +433,7 @@ class HADiscovery(object):
                 'topic'    : '/'.join((self.discovery_base_topic, sensor['component'], sensor['object_id'], 'config')),
                 'payload'  : json.dumps(sensor['config']),
                 'qos'      : 0,
-                'retain'   : False,
+                'retain'   : True,
             }
 
             message_list.append(message)
