@@ -60,36 +60,36 @@ if __name__ == "__main__":
     )
 
 
-    reverse_parser = argparser.add_mutually_exclusive_group(required=False)
-    reverse_parser.add_argument(
+    reverse_group = argparser.add_mutually_exclusive_group(required=False)
+    reverse_group.add_argument(
         '--reverse',
         help='take dark frames from highest to lowest exposure (default)',
         dest='reverse',
         action='store_true',
     )
-    reverse_parser.add_argument(
+    reverse_group.add_argument(
         '--no-reverse',
         help='take dark frames from lowest to highest exposure',
         dest='reverse',
         action='store_false',
     )
-    reverse_parser.set_defaults(reverse=True)
+    reverse_group.set_defaults(reverse=True)
 
 
-    daytime_parser = argparser.add_mutually_exclusive_group(required=False)
-    daytime_parser.add_argument(
+    daytime_group = argparser.add_mutually_exclusive_group(required=False)
+    daytime_group .add_argument(
         '--daytime',
         help='enable daytime darks (default)',
         dest='daytime',
         action='store_true',
     )
-    daytime_parser.add_argument(
+    daytime_group.add_argument(
         '--no-daytime',
         help='disable daytime darks',
         dest='daytime',
         action='store_false',
     )
-    daytime_parser.set_defaults(daytime=True)
+    daytime_group.set_defaults(daytime=True)
 
 
     args = argparser.parse_args()
