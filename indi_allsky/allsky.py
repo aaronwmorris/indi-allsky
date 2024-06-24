@@ -1,5 +1,7 @@
 import platform
 import sys
+import fcntl
+#import errno
 import os
 import time
 import io
@@ -67,6 +69,8 @@ class IndiAllSky(object):
 
     def __init__(self):
         self.name = 'Main'
+
+        self.pid_lock = None
 
         with app.app_context():
             try:
@@ -249,6 +253,17 @@ class IndiAllSky(object):
 
 
         self.pid_file.chmod(0o644)
+
+        try:
+            self.pid_lock = io.open(self.pid_file, 'w+')
+            fcntl.flock(self.pid_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            logger.error('Failed to get lock, indi-allsky may already be running')
+            sys.exit(1)
+        except PermissionError as e:
+            logger.error('Failed to get lock: %s', e.strerror)
+            sys.exit(1)
+
 
         self._miscDb.setState('PID', pid)
         self._miscDb.setState('PID_FILE', self.pid_file)
@@ -644,6 +659,9 @@ class IndiAllSky(object):
 
                     self._miscDb.setState('STATUS', constants.STATUS_STOPPED)
 
+
+                if self.pid_lock:
+                    fcntl.flock(self.pid_lock, fcntl.LOCK_UN)
 
                 sys.exit()
 
