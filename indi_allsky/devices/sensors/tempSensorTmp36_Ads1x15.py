@@ -54,6 +54,9 @@ class TempSensorTmp36_Ads1015_I2C(TempSensorTmp36_Ads1x15):
         from adafruit_ads1x15.analog_in import AnalogIn
 
         i2c_address = int(i2c_address_str, 16)  # string in config
+
+        logger.warning('Initializing ADS1015 I2C ADC - TMP35 temperature device @ %s', hex(i2c_address))
+
         pin1 = getattr(ADS, pin_1_name)
 
         i2c = busio.I2C(board.SCL, board.SDA)
@@ -75,6 +78,9 @@ class TempSensorTmp36_Ads1115_I2C(TempSensorTmp36_Ads1x15):
         from adafruit_ads1x15.analog_in import AnalogIn
 
         i2c_address = int(i2c_address_str, 16)  # string in config
+
+        logger.warning('Initializing ADS1115 I2C ADC - TMP35 temperature device @ %s', hex(i2c_address))
+
         pin1 = getattr(ADS, pin_1_name)
 
         i2c = busio.I2C(board.SCL, board.SDA)
