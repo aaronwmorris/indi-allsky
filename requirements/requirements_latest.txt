@@ -27,7 +27,8 @@ imageio-ffmpeg
 # https://www.wheelodex.org/projects/imagecodecs/
 #imagecodecs
 cython
-rawpy
+# rawpy v0.22.0 requires numpy 2.0
+rawpy <= 0.21.0
 pygifsicle
 gunicorn[gthread] >= 22.0.0
 inotify
