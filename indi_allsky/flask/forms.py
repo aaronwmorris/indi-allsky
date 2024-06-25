@@ -2599,6 +2599,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR (3)'),
         ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full (4)'),
         ('blinka_light_sensor_bh1750_i2c', 'BH1750 (GY-30) i2c - Lux (1)'),
+        ('sensor_data_generator', 'Test Data Generator - (4)'),
     )
 
     SENSOR_USER_VAR_SLOT_choices = (
@@ -2626,6 +2627,15 @@ class IndiAllskyConfigForm(FlaskForm):
 
     SENSOR_SLOT_choices = (
         ('0', 'User Slot 0 (Camera)'),
+        ('1', 'User Slot 1 (Dew Heater Level)'),
+        ('2', 'User Slot 2 (Dew Point)'),
+        ('3', 'User Slot 3 (Frost Point)'),
+        ('4', 'User Slot 4 (Fan Level)'),
+        ('5', 'User Slot 5 (Heat Index)'),
+        ('6', 'User Slot 6 (Wind Dir Degrees)'),
+        ('7', 'User Slot 7 (SQM)'),
+        ('8', 'User Slot 8 (Reserved)'),
+        ('9', 'User Slot 9 (Reserved)'),
         ('10', 'User Slot 10'),
         ('11', 'User Slot 11'),
         ('12', 'User Slot 12'),
@@ -3033,6 +3043,9 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__C_USER_VAR_SLOT     = SelectField('Sensor C Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__C_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap Api Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator])
+    CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
+    CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
+    CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 

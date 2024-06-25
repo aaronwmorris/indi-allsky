@@ -1,4 +1,5 @@
 from .sensorSimulator import SensorSimulator as sensor_simulator
+from .sensorSimulator import SensorDataGenerator as sensor_data_generator
 
 from .tempSensorDht import TempSensorDht22 as blinka_temp_sensor_dht22
 from .tempSensorDht import TempSensorDht21 as blinka_temp_sensor_dht21
@@ -35,6 +36,7 @@ from .tempSensorDs18x20 import TempSensorDs18x20 as kernel_temp_sensor_ds18x20_w
 
 __all__ = (
     'sensor_simulator',
+    'sensor_data_generator',
     'blinka_temp_sensor_dht22',
     'blinka_temp_sensor_dht21',
     'blinka_temp_sensor_dht11',

@@ -42,7 +42,7 @@ class SensorWorker(Thread):
         self.sensors = [None, None, None]
 
         self.next_run = time.time()  # run immediately
-        self.next_run_offset = 59
+        self.next_run_offset = 15
 
         # dew heater
         self.dh_temp_user_slot = self.config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
