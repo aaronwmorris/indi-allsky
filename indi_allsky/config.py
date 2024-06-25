@@ -2,6 +2,7 @@ import sys
 import os
 import time
 from datetime import datetime
+from datetime import timezone
 import io
 import json
 import tempfile
@@ -502,10 +503,10 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
     def _getConfigEntry(self, config_id=None):
         ### return the last saved config entry
-
+        utcnow = datetime.now(tz=timezone.utc).replace(tzinfo=None)  # configs stored with UTC
 
         future_configs = IndiAllSkyDbConfigTable.query\
-            .filter(IndiAllSkyDbConfigTable.createDate > datetime.now())\
+            .filter(IndiAllSkyDbConfigTable.createDate > utcnow)\
             .first()
 
         if future_configs:
@@ -529,11 +530,12 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
 
     def _setConfigEntry(self, config, user_entry, note, encrypted):
-        now = datetime.now()
+        ### Always store configs with UTC
+        utcnow = datetime.now(tz=timezone.utc).replace(tzinfo=None)
 
         config_entry = IndiAllSkyDbConfigTable(
             data=config,
-            createDate=now,
+            createDate=utcnow,
             level=str(__config_level__),
             user_id=user_entry.id,
             note=str(note),

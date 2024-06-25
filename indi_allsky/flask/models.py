@@ -660,7 +660,7 @@ class IndiAllSkyDbConfigTable(db.Model):
     __tablename__ = 'config'
 
     id = db.Column(db.Integer, primary_key=True)
-    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())  # this should be stored as UTC
     level = db.Column(db.String(length=12), nullable=False)
     encrypted = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
     note = db.Column(db.String(length=255), nullable=False)
