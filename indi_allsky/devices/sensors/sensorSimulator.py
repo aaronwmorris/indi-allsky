@@ -30,7 +30,7 @@ class SensorDataGenerator(SensorBase):
         logger.info('Initializing test data generator sensor')
 
         self.value_1 = 0
-        self.value_2 = 1000.0
+        self.value_2 = 25.0
 
         # fibonacci
         self.fib_1 = 0
@@ -43,7 +43,7 @@ class SensorDataGenerator(SensorBase):
 
 
         # random
-        rand_value = random.randrange(0, 100, 1)
+        rand_value = random.randrange(-100, 100, 1)
 
         logger.info('Test Sensor - %d, %0.1f, %d, %d', self.value_1, self.value_2, self.fib_1, rand_value)
 
