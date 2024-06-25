@@ -301,6 +301,179 @@ function init() {
     });
 
 
+    ctx_custom_1 = $('#custom-1-chart')[0].getContext('2d');
+    custom_1_chart = new Chart(ctx_custom_1, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'Custom 1',
+                backgroundColor: "rgba(128, 0, 0, 1)",
+                //borderColor: "rgba(92, 0, 0, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:false,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: false,
+                    },
+                    suggestedMin: 0,
+                },
+            }
+        }
+    });
+
+    ctx_custom_2 = $('#custom-2-chart')[0].getContext('2d');
+    custom_2_chart = new Chart(ctx_custom_2, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'Custom 2',
+                backgroundColor: "rgba(128, 0, 0, 1)",
+                //borderColor: "rgba(92, 0, 0, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:false,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: false,
+                    },
+                    suggestedMin: 0,
+                },
+            }
+        }
+    });
+
+    ctx_custom_3 = $('#custom-3-chart')[0].getContext('2d');
+    custom_3_chart = new Chart(ctx_custom_3, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'Custom 3',
+                backgroundColor: "rgba(128, 0, 0, 1)",
+                //borderColor: "rgba(92, 0, 0, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:false,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: false,
+                    },
+                    suggestedMin: 0,
+                },
+            }
+        }
+    });
+
+    ctx_custom_4 = $('#custom-4-chart')[0].getContext('2d');
+    custom_4_chart = new Chart(ctx_custom_4, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'Custom 4',
+                backgroundColor: "rgba(128, 0, 0, 1)",
+                //borderColor: "rgba(92, 0, 0, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:false,
+                    grid: {
+                        display: true,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: false,
+                    },
+                    suggestedMin: 0,
+                },
+            }
+        }
+    });
+
+
     ctx_histogram = $('#histogram-chart')[0].getContext('2d');
     histogram_chart = new Chart(ctx_histogram, {
         type: "line",
@@ -399,6 +572,10 @@ function drawChart() {
     temp_chart.data.datasets[0].data = json_data['chart_data']['temp'].reverse();
     exposure_chart.data.datasets[0].data = json_data['chart_data']['exp'].reverse();
     detection_chart.data.datasets[0].data = json_data['chart_data']['detection'].reverse();
+    custom_1_chart.data.datasets[0].data = json_data['chart_data']['custom_1'].reverse();
+    custom_2_chart.data.datasets[0].data = json_data['chart_data']['custom_2'].reverse();
+    custom_3_chart.data.datasets[0].data = json_data['chart_data']['custom_3'].reverse();
+    custom_4_chart.data.datasets[0].data = json_data['chart_data']['custom_4'].reverse();
 
     histogram_chart.data.datasets[0].data = json_data['chart_data']['histogram']['red'];
     histogram_chart.data.datasets[1].data = json_data['chart_data']['histogram']['green'];
@@ -411,6 +588,10 @@ function drawChart() {
     temp_chart.update();
     exposure_chart.update();
     detection_chart.update();
+    custom_1_chart.update();
+    custom_2_chart.update();
+    custom_3_chart.update();
+    custom_4_chart.update();
     histogram_chart.update();
 }
 
@@ -524,6 +705,34 @@ $( document ).ready(function() {
     <div class="col-sm-6">
         <div class="bg-dark" style="margin:3px">
             <canvas id="detection-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="bg-dark" style="margin:3px">
+            <canvas id="custom-1-chart"></canvas>
+        </div>
+    </div>
+
+    <div class="col-sm-6">
+        <div class="bg-dark" style="margin:3px">
+            <canvas id="custom-2-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="bg-dark" style="margin:3px">
+            <canvas id="custom-3-chart"></canvas>
+        </div>
+    </div>
+
+    <div class="col-sm-6">
+        <div class="bg-dark" style="margin:3px">
+            <canvas id="custom-4-chart"></canvas>
         </div>
     </div>
 </div>

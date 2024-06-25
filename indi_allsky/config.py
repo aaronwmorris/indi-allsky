@@ -450,6 +450,7 @@ class IndiAllSkyConfigBase(object):
             "CUSTOM_SLOT_1"          : 10,
             "CUSTOM_SLOT_2"          : 11,
             "CUSTOM_SLOT_3"          : 12,
+            "CUSTOM_SLOT_4"          : 13,
         },
     })
 

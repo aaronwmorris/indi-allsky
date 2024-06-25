@@ -931,6 +931,7 @@ class JsonChartView(JsonView):
             'custom_1'  : [],
             'custom_2'  : [],
             'custom_3'  : [],
+            'custom_4'  : [],
             'histogram' : {
                 'red'   : [],
                 'green' : [],
@@ -943,6 +944,7 @@ class JsonChartView(JsonView):
         custom_1_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 10)
         custom_2_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)
         custom_3_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)
+        custom_4_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 13)
 
 
         for i in chart_query:
@@ -1054,6 +1056,26 @@ class JsonChartView(JsonView):
                 'y' : custom_3_y,
             }
             chart_data['custom_3'].append(custom_3_data)
+
+
+            # custom chart 4
+            if custom_4_index < 100:
+                try:
+                    custom_4_y = i.data['sensor_user_{0:d}'.format(custom_4_index)]
+                except KeyError:
+                    custom_4_y = 0
+            else:
+                try:
+                    custom_4_y = i.data['sensor_temp_{0:d}'.format(100 - custom_4_index)]
+                except KeyError:
+                    custom_4_y = 0
+
+            custom_4_data = {
+                'x' : x,
+                'y' : custom_4_y,
+            }
+            chart_data['custom_4'].append(custom_4_data)
+
 
 
         # build last image histogram
@@ -1506,6 +1528,7 @@ class ConfigView(FormView):
             'CHARTS__CUSTOM_SLOT_1'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 10)),  # string in form, int in config
             'CHARTS__CUSTOM_SLOT_2'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)),  # string in form, int in config
             'CHARTS__CUSTOM_SLOT_3'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)),  # string in form, int in config
+            'CHARTS__CUSTOM_SLOT_4'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 13)),  # string in form, int in config
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -2182,6 +2205,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1']              = int(request.json['CHARTS__CUSTOM_SLOT_1'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2']              = int(request.json['CHARTS__CUSTOM_SLOT_2'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_3']              = int(request.json['CHARTS__CUSTOM_SLOT_3'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_4']              = int(request.json['CHARTS__CUSTOM_SLOT_4'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))

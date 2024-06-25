@@ -3046,6 +3046,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
+    CHARTS__CUSTOM_SLOT_4            = SelectField('Extra Chart Slot 4', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
