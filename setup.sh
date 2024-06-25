@@ -1370,6 +1370,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
         sudo apt-get -y install \
+            indi-full \
             libindi-dev \
             indi-webcam \
             indi-asi \
@@ -1384,15 +1385,13 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
             libmallincam \
             libmicam \
             libnncam \
+            indi-toupbase \
             libtoupcam \
             indi-gphoto \
             indi-sx \
             indi-gpsd \
             indi-gpsnmea
     fi
-
-    #        indi-full \
-    #        indi-toupbase \
 
 
     #if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
