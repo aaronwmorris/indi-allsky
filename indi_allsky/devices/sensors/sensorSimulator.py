@@ -59,6 +59,10 @@ class SensorDataGenerator(SensorBase):
 
         # fibonacci
         self.fib_1, self.fib_2 = self.fib_2, self.fib_1 + self.fib_2
+        if self.fib_1 > 2 ** 24:
+            # reset values
+            self.fib_1 = 0
+            self.fib_2 = 1
 
 
         return data
