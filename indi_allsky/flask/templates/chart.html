@@ -25,6 +25,10 @@ var json_data = {
         'temp'  : [],
         'exp'   : [],
         'detection' : [],
+        'custom_1'  : [],
+        'custom_2'  : [],
+        'custom_3'  : [],
+        'custom_4'  : [],
         'histogram' : {
             'red'   : [],
             'green' : [],
@@ -308,7 +312,7 @@ function init() {
             datasets: [{
                 label: 'Custom 1',
                 backgroundColor: "rgba(128, 0, 0, 1)",
-                //borderColor: "rgba(92, 0, 0, 1)",
+                borderColor: "rgba(92, 0, 0, 1)",
                 tension: 0.1,
                 data: []
             }],
@@ -350,8 +354,8 @@ function init() {
         data: {
             datasets: [{
                 label: 'Custom 2',
-                backgroundColor: "rgba(128, 0, 0, 1)",
-                //borderColor: "rgba(92, 0, 0, 1)",
+                backgroundColor: "rgba(0, 128, 0, 1)",
+                borderColor: "rgba(0, 92, 0, 1)",
                 tension: 0.1,
                 data: []
             }],
@@ -393,8 +397,8 @@ function init() {
         data: {
             datasets: [{
                 label: 'Custom 3',
-                backgroundColor: "rgba(128, 0, 0, 1)",
-                //borderColor: "rgba(92, 0, 0, 1)",
+                backgroundColor: "rgba(0, 0, 128, 1)",
+                borderColor: "rgba(0, 0, 92, 1)",
                 tension: 0.1,
                 data: []
             }],
@@ -436,8 +440,8 @@ function init() {
         data: {
             datasets: [{
                 label: 'Custom 4',
-                backgroundColor: "rgba(128, 0, 0, 1)",
-                //borderColor: "rgba(92, 0, 0, 1)",
+                backgroundColor: "rgba(128, 128, 0, 1)",
+                borderColor: "rgba(92, 92, 0, 1)",
                 tension: 0.1,
                 data: []
             }],
