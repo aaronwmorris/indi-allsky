@@ -128,7 +128,10 @@ class IndiClientLibCameraGeneric(IndiClient):
         if self.active_exposure:
             return
 
+
+        libcamera_camera_id = self.config.get('LIBCAMERA', {}).get('CAMERA_ID', 0)
         image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
+
 
         if image_type == 'dng' and self.memory_total_mb <= 768:
             logger.warning('*** Capturing raw images (dng) with libcamera and less than 1gb of memory can result in out-of-memory errors ***')
@@ -167,6 +170,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 self.ccd_device.driver_exec,
                 '--immediate',
                 '--nopreview',
+                '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
                 '--denoise', 'off',
                 '--gain', '{0:d}'.format(self.gain_v.value),
@@ -180,6 +184,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 self.ccd_device.driver_exec,
                 '--immediate',
                 '--nopreview',
+                '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
                 '--gain', '{0:d}'.format(self.gain_v.value),
