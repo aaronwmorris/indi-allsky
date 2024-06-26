@@ -411,6 +411,19 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__CAMERA_ID.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__CAMERA_ID(class='form-select bg-secondary') }}
+            <div id="LIBCAMERA__CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Select the correct CSI port on your system</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -5141,6 +5154,7 @@ const field_names = [
     'FITSHEADERS__4__KEY',
     'FITSHEADERS__4__VAL',
     'ADMIN_NETWORKS_FLASK',
+    'LIBCAMERA__CAMERA_ID',
     'LIBCAMERA__IMAGE_FILE_TYPE',
     'LIBCAMERA__AWB',
     'LIBCAMERA__AWB_DAY',

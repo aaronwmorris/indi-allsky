@@ -2089,6 +2089,19 @@ def LIBCAMERA__AWB_validator(form, field):
         raise ValidationError('Please select a valid AWB')
 
 
+def LIBCAMERA__CAMERA_ID_validator(form, field):
+    try:
+        camera_id = int(field.data)
+    except ValueError:
+        raise ValidationError('Please enter a valid number')
+
+    if camera_id < 0:
+        raise ValidationError('Invalid camera id')
+
+    if camera_id > 4:
+        raise ValidationError('Invalid camera id')
+
+
 def LIBCAMERA__EXTRA_OPTIONS_validator(form, field):
     if not field.data:
         return
@@ -2545,6 +2558,13 @@ class IndiAllskyConfigForm(FlaskForm):
         ('custom', 'Custom'),
     )
 
+    LIBCAMERA__CAMERA_ID_choices = (
+        ('0', '0'),
+        ('1', '1'),
+        ('2', '2'),
+        ('3', '3'),
+    )
+
     PYCURL_CAMERA__IMAGE_FILE_TYPE_choices = (
         ('jpg', 'JPEG'),
         ('png', 'PNG'),
@@ -2991,6 +3011,7 @@ class IndiAllskyConfigForm(FlaskForm):
     LIBCAMERA__AWB_DAY               = SelectField('Day AWB', choices=LIBCAMERA__AWB_choices, validators=[DataRequired(), LIBCAMERA__AWB_validator])
     LIBCAMERA__AWB_ENABLE            = BooleanField('Night Enable AWB')
     LIBCAMERA__AWB_ENABLE_DAY        = BooleanField('Day Enable AWB')
+    LIBCAMERA__CAMERA_ID             = SelectField('Camera ID', choices=LIBCAMERA__CAMERA_ID_choices, validators=[LIBCAMERA__CAMERA_ID_validator])
     LIBCAMERA__EXTRA_OPTIONS         = StringField('Night libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     LIBCAMERA__EXTRA_OPTIONS_DAY     = StringField('Day libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     PYCURL_CAMERA__URL               = StringField('pyCurl Camera URL', validators=[PYCURL_CAMERA__URL_validator])
