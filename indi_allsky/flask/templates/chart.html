@@ -5,6 +5,21 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
+.loader {
+  display: block;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 canvas {
     width:100%;
     height:100%;
@@ -36,6 +51,7 @@ var json_data = {
             'gray'  : [],
         }
     },
+    'message' : '',
 };
 
 function init() {
@@ -608,16 +624,21 @@ function sleep(time) {
 function loadJS(url, data, onDone, onError) {
     if(!onDone)onDone=function(){};
     if(!onError)onError=function(){};
+
+    $("#loader_chart").css({'display' : 'block'});
+
     $.ajax({
         type: "GET",
         url: url,
         contentType: "application/json",
         data: data,
         success: function(data){
+            $("#loader_chart").css({'display' : 'none'});
             json_data = data
-            $('#message').text('');
+            $('#message').html(json_data['message']);
         },
         error: function(data){
+            $("#loader_chart").css({'display' : 'none'});
             onError(data.status);
             $('#message').text('Error loading data.  Please check the logs.');
         },
@@ -660,6 +681,9 @@ $( document ).ready(function() {
         <div class="col-sm-2">
             {{ form_history.HISTORY_SELECT(class='form-select bg-secondary') }}
         </div>
+        <div class="col-sm-1">
+            <div class="loader" id="loader_chart"></div>
+        </div>
     </div>
 </form>
 
@@ -667,7 +691,7 @@ $( document ).ready(function() {
 
 <div class="row">
     <div class="text-center">
-        <div class="text-muted" id="message">No Timelapse Data</div>
+        <div class="text-muted" id="message"></div>
     </div>
 </div>
 

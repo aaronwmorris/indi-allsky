@@ -884,7 +884,13 @@ class JsonChartView(JsonView):
 
         data = {
             'chart_data' : self.getChartData(ts_dt, history_seconds),
+            'message' : '',
         }
+
+
+        if len(data['chart_data']['sqm']) == 0:
+            data['message'] = 'No chart data in history range'
+
 
         return data
 
