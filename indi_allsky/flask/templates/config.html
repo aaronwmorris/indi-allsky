@@ -2844,6 +2844,57 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.CHARTS__CUSTOM_SLOT_1(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div>Slot to chart on charts view</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_2.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.CHARTS__CUSTOM_SLOT_2(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_3.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.CHARTS__CUSTOM_SLOT_3(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_3-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_4.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.CHARTS__CUSTOM_SLOT_4(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_4-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.WEB_NONLOCAL_IMAGES.label }}
         </div>
         <div class="col-sm-2">
@@ -4920,6 +4971,10 @@ const field_names = [
     'NIGHT_MOONMODE_PHASE',
     'WEB_STATUS_TEMPLATE',
     'WEB_EXTRA_TEXT',
+    'CHARTS__CUSTOM_SLOT_1',
+    'CHARTS__CUSTOM_SLOT_2',
+    'CHARTS__CUSTOM_SLOT_3',
+    'CHARTS__CUSTOM_SLOT_4',
     'CLAHE_CLIPLIMIT',
     'CLAHE_GRIDSIZE',
     'IMAGE_STRETCH__MODE1_GAMMA',

@@ -884,7 +884,13 @@ class JsonChartView(JsonView):
 
         data = {
             'chart_data' : self.getChartData(ts_dt, history_seconds),
+            'message' : '',
         }
+
+
+        if len(data['chart_data']['sqm']) == 0:
+            data['message'] = 'No chart data in history range'
+
 
         return data
 
@@ -906,6 +912,7 @@ class JsonChartView(JsonView):
                 IndiAllSkyDbImageTable.exposure,
                 IndiAllSkyDbImageTable.detections,
                 (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('sqm_diff'),
+                IndiAllSkyDbImageTable.data,
             )\
             .join(IndiAllSkyDbCameraTable)\
             .filter(
@@ -926,7 +933,11 @@ class JsonChartView(JsonView):
             'stars' : [],
             'temp'  : [],
             'exp'   : [],
-            'detection': [],
+            'detection' : [],
+            'custom_1'  : [],
+            'custom_2'  : [],
+            'custom_3'  : [],
+            'custom_4'  : [],
             'histogram' : {
                 'red'   : [],
                 'green' : [],
@@ -934,15 +945,25 @@ class JsonChartView(JsonView):
                 'gray'  : [],
             },
         }
+
+
+        custom_1_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 10)
+        custom_2_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)
+        custom_3_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)
+        custom_4_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 13)
+
+
         for i in chart_query:
+            x = i.createDate.strftime('%H:%M:%S')
+
             sqm_data = {
-                'x' : i.createDate.strftime('%H:%M:%S'),
+                'x' : x,
                 'y' : i.sqm,
             }
             chart_data['sqm'].append(sqm_data)
 
             star_data = {
-                'x' : i.createDate.strftime('%H:%M:%S'),
+                'x' : x,
                 'y' : int(i.stars_rolling),
             }
             chart_data['stars'].append(star_data)
@@ -956,19 +977,19 @@ class JsonChartView(JsonView):
                 sensortemp = i.temp
 
             temp_data = {
-                'x' : i.createDate.strftime('%H:%M:%S'),
+                'x' : x,
                 'y' : sensortemp,
             }
             chart_data['temp'].append(temp_data)
 
             exp_data = {
-                'x' : i.createDate.strftime('%H:%M:%S'),
+                'x' : x,
                 'y' : i.exposure,
             }
             chart_data['exp'].append(exp_data)
 
             sqm_d_data = {
-                'x' : i.createDate.strftime('%H:%M:%S'),
+                'x' : x,
                 'y' : i.sqm_diff,
             }
             chart_data['sqm_d'].append(sqm_d_data)
@@ -980,10 +1001,86 @@ class JsonChartView(JsonView):
                 detection = 0
 
             detection_data = {
-                'x' : i.createDate.strftime('%H:%M:%S'),
+                'x' : x,
                 'y' : detection,
             }
             chart_data['detection'].append(detection_data)
+
+
+            # custom chart 1
+            if custom_1_index < 100:
+                try:
+                    custom_1_y = i.data['sensor_user_{0:d}'.format(custom_1_index)]
+                except KeyError:
+                    custom_1_y = 0
+            else:
+                try:
+                    custom_1_y = i.data['sensor_temp_{0:d}'.format(100 - custom_1_index)]
+                except KeyError:
+                    custom_1_y = 0
+
+            custom_1_data = {
+                'x' : x,
+                'y' : custom_1_y,
+            }
+            chart_data['custom_1'].append(custom_1_data)
+
+
+            # custom chart 2
+            if custom_2_index < 100:
+                try:
+                    custom_2_y = i.data['sensor_user_{0:d}'.format(custom_2_index)]
+                except KeyError:
+                    custom_2_y = 0
+            else:
+                try:
+                    custom_2_y = i.data['sensor_temp_{0:d}'.format(100 - custom_2_index)]
+                except KeyError:
+                    custom_2_y = 0
+
+            custom_2_data = {
+                'x' : x,
+                'y' : custom_2_y,
+            }
+            chart_data['custom_2'].append(custom_2_data)
+
+
+            # custom chart 3
+            if custom_3_index < 100:
+                try:
+                    custom_3_y = i.data['sensor_user_{0:d}'.format(custom_3_index)]
+                except KeyError:
+                    custom_3_y = 0
+            else:
+                try:
+                    custom_3_y = i.data['sensor_temp_{0:d}'.format(100 - custom_3_index)]
+                except KeyError:
+                    custom_3_y = 0
+
+            custom_3_data = {
+                'x' : x,
+                'y' : custom_3_y,
+            }
+            chart_data['custom_3'].append(custom_3_data)
+
+
+            # custom chart 4
+            if custom_4_index < 100:
+                try:
+                    custom_4_y = i.data['sensor_user_{0:d}'.format(custom_4_index)]
+                except KeyError:
+                    custom_4_y = 0
+            else:
+                try:
+                    custom_4_y = i.data['sensor_temp_{0:d}'.format(100 - custom_4_index)]
+                except KeyError:
+                    custom_4_y = 0
+
+            custom_4_data = {
+                'x' : x,
+                'y' : custom_4_y,
+            }
+            chart_data['custom_4'].append(custom_4_data)
 
 
 
@@ -1434,6 +1531,10 @@ class ConfigView(FormView):
             'TEMP_SENSOR__C_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40'),
             'TEMP_SENSOR__C_USER_VAR_SLOT'   : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 20)),  # string in form, int in config
             'TEMP_SENSOR__OPENWEATHERMAP_APIKEY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', ''),
+            'CHARTS__CUSTOM_SLOT_1'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 10)),  # string in form, int in config
+            'CHARTS__CUSTOM_SLOT_2'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)),  # string in form, int in config
+            'CHARTS__CUSTOM_SLOT_3'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)),  # string in form, int in config
+            'CHARTS__CUSTOM_SLOT_4'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 13)),  # string in form, int in config
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -1756,6 +1857,9 @@ class AjaxConfigView(BaseView):
 
         if not self.indi_allsky_config.get('HEALTHCHECK'):
             self.indi_allsky_config['HEALTHCHECK'] = {}
+
+        if not self.indi_allsky_config.get('CHARTS'):
+            self.indi_allsky_config['CHARTS'] = {}
 
         if not self.indi_allsky_config.get('FITSHEADERS'):
             self.indi_allsky_config['FITSHEADERS'] = [['', ''], ['', ''], ['', ''], ['', ''], ['', '']]
@@ -2104,6 +2208,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['C_USER_VAR_SLOT']       = int(request.json['TEMP_SENSOR__C_USER_VAR_SLOT'])
         self.indi_allsky_config['TEMP_SENSOR']['C_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__C_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = str(request.json['TEMP_SENSOR__OPENWEATHERMAP_APIKEY'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1']              = int(request.json['CHARTS__CUSTOM_SLOT_1'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2']              = int(request.json['CHARTS__CUSTOM_SLOT_2'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_3']              = int(request.json['CHARTS__CUSTOM_SLOT_3'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_4']              = int(request.json['CHARTS__CUSTOM_SLOT_4'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
