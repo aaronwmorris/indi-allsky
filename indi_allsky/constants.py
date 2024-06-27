@@ -139,6 +139,7 @@ HA_SENSOR_DEVICE_CLASS = {
 }
 
 
+# https://github.com/home-assistant/core/blob/master/homeassistant/const.py
 HA_UNIT_MAP = {
     SENSOR_TEMPERATURE : {
         'c' : '°C',
