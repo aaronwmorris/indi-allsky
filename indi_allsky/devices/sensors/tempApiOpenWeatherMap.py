@@ -6,6 +6,7 @@ import requests
 import logging
 
 from .sensorBase import SensorBase
+from ... import constants
 from ..exceptions import SensorReadException
 
 
@@ -47,6 +48,35 @@ class TempApiOpenWeatherMap(SensorBase):
 
     UNITS = 'metric'
     URL_TEMPLATE = 'https://api.openweathermap.org/data/2.5/weather?lat={0:0.1f}&lon={1:0.1f}&units={2:s}&appid={3:s}'
+
+
+    METADATA = {
+        'name' : 'OpenWeatherMap API',
+        'description' : 'OpenWeatherMap API Sensor',
+        'count' : 9,
+        'label' : (
+            'Temperature',
+            '"Feels Like" Temperature',
+            'Relative Humidity',
+            'Pressure',
+            'Clouds',
+            'Wind Speed',
+            'Wind Gusts',
+            'Rain (1h)',
+            'Snow (1h)',
+        ),
+        'type' : (
+            constants.SENSOR_TEMPERATURE,
+            constants.SENSOR_TEMPERATURE,
+            constants.SENSOR_RELATIVE_HUMIDITY,
+            constants.SENSOR_ATMOSPHERIC_PRESSURE,
+            constants.SENSOR_PERCENTAGE,
+            constants.SENSOR_WIND_SPEED,
+            constants.SENSOR_WIND_SPEED,
+            constants.SENSOR_PRECIPITATION,
+            constants.SENSOR_PRECIPITATION,
+        ),
+    }
 
 
     def __init__(self, *args, **kwargs):

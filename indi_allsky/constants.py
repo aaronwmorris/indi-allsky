@@ -104,3 +104,83 @@ SATELLITE_VISUAL    = 800
 SATELLITE_STARLINK  = 801
 SATELLITE_STATIONS  = 802
 
+
+
+# Sensor types
+SENSOR_TEMPERATURE          = 600
+SENSOR_RELATIVE_HUMIDITY    = 601
+SENSOR_ATMOSPHERIC_PRESSURE = 602
+SENSOR_WIND_SPEED           = 603
+SENSOR_PRECIPITATION        = 604
+SENSOR_CONCENTRATION        = 605
+SENSOR_LIGHT_LUX            = 606
+SENSOR_LIGHT_SQM            = 607
+SENSOR_LIGHT_MISC           = 608
+SENSOR_FAN_SPEED            = 609
+SENSOR_PERCENTAGE           = 610
+SENSOR_DIRECTION_AZIMUTH    = 612
+SENSOR_STATE                = 613
+SENSOR_MISC                 = 620
+
+
+# maps to SensorDeviceClass
+HA_SENSOR_DEVICE_CLASS = {
+    SENSOR_TEMPERATURE          : 'TEMPERATURE',
+    SENSOR_RELATIVE_HUMIDITY    : 'HUMIDITY',
+    SENSOR_ATMOSPHERIC_PRESSURE : 'ATMOSPHERIC_PRESSURE',
+    SENSOR_WIND_SPEED           : 'WIND_SPEED',
+    SENSOR_PRECIPITATION        : 'PRECIPITATION',
+    SENSOR_CONCENTRATION        : None,
+    SENSOR_LIGHT_LUX            : 'ILLUMINANCE',
+    SENSOR_LIGHT_MISC           : 'ILLUMINANCE',
+    SENSOR_FAN_SPEED            : None,
+    SENSOR_PERCENTAGE           : None,
+    SENSOR_MISC                 : None,
+}
+
+
+HA_UNIT_MAP = {
+    SENSOR_TEMPERATURE : {
+        'c' : '°C',
+        'f' : '°F',
+        'k' : 'K',
+        'degree'  : '°',
+        'degrees' : '°',
+    },
+    SENSOR_RELATIVE_HUMIDITY : {
+        'percent' : '%',
+        '%'       : '%',
+    },
+    SENSOR_ATMOSPHERIC_PRESSURE : {
+        'hpa'  : 'hPa',
+        'mbar' : 'mbar',
+        'inhg' : 'inHg',
+        'mmhg' : 'mmHg',
+        'psi'  : 'psi',
+    },
+    SENSOR_WIND_SPEED : {
+        'ms'   : 'm/s',
+        'kph'  : 'km/h',
+        'mph'  : 'mph',
+    },
+    SENSOR_PRECIPITATION : {
+        'in'   : 'in',
+        'mm'   : 'mm',
+        'cm'   : 'cm',
+    },
+    SENSOR_CONCENTRATION : {
+        'ppm'  : 'ppm',
+        'ppb'  : 'ppb',
+    },
+    SENSOR_PERCENTAGE : {
+        'percent' : '%',
+        '%'       : '%',
+    },
+    SENSOR_LIGHT_LUX : {
+        'lux'     : 'lx',
+    },
+    SENSOR_FAN_SPEED : {
+        'rpm'     : 'rpm',
+    },
+}
+

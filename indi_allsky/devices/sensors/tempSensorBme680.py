@@ -2,6 +2,7 @@ import time
 import logging
 
 from .sensorBase import SensorBase
+from ... import constants
 from ..exceptions import SensorReadException
 
 
@@ -80,6 +81,25 @@ class TempSensorBme680(SensorBase):
 
 class TempSensorBme680_I2C(TempSensorBme680):
 
+    METADATA = {
+        'name' : 'BME680 (i2c)',
+        'description' : 'BME680 i2c Temperature Sensor',
+        'count' : 4,
+        'label' : (
+            'Temperature',
+            'Relative Humidity',
+            'Pressure',
+            'Gas',
+        ),
+        'type' : (
+            constants.SENSOR_TEMPERATURE,
+            constants.SENSOR_RELATIVE_HUMIDITY,
+            constants.SENSOR_ATMOSPHERIC_PRESSURE,
+            constants.SENSOR_MISC,
+        ),
+    }
+
+
     def __init__(self, *args, **kwargs):
         super(TempSensorBme680_I2C, self).__init__(*args, **kwargs)
 
@@ -111,6 +131,25 @@ class TempSensorBme680_I2C(TempSensorBme680):
 
 
 class TempSensorBme680_SPI(TempSensorBme680):
+
+    METADATA = {
+        'name' : 'BME680 (SPI)',
+        'description' : 'BME680 SPI Temperature Sensor',
+        'count' : 4,
+        'label' : (
+            'Temperature',
+            'Relative Humidity',
+            'Pressure',
+            'Gas',
+        ),
+        'type' : (
+            constants.SENSOR_TEMPERATURE,
+            constants.SENSOR_RELATIVE_HUMIDITY,
+            constants.SENSOR_ATMOSPHERIC_PRESSURE,
+            constants.SENSOR_MISC,
+        ),
+    }
+
 
     def __init__(self, *args, **kwargs):
         super(TempSensorBme680_SPI, self).__init__(*args, **kwargs)

@@ -1,6 +1,7 @@
 import logging
 
 from .sensorBase import SensorBase
+from ... import constants
 from ..exceptions import SensorReadException
 
 
@@ -64,6 +65,21 @@ class TempSensorSht4x(SensorBase):
 
 
 class TempSensorSht4x_I2C(TempSensorSht4x):
+
+    METADATA = {
+        'name' : 'SHT4x (i2c)',
+        'description' : 'SHT4x i2c Temperature Sensor',
+        'count' : 2,
+        'label' : (
+            'Temperature',
+            'Relative Humidity',
+        ),
+        'type' : (
+            constants.SENSOR_TEMPERATURE,
+            constants.SENSOR_RELATIVE_HUMIDITY,
+        ),
+    }
+
 
     def __init__(self, *args, **kwargs):
         super(TempSensorSht4x_I2C, self).__init__(*args, **kwargs)

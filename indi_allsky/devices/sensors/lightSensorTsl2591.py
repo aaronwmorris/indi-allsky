@@ -2,6 +2,7 @@ import time
 import logging
 
 from .sensorBase import SensorBase
+from ... import constants
 from ..exceptions import SensorReadException
 
 
@@ -9,6 +10,24 @@ logger = logging.getLogger('indi_allsky')
 
 
 class LightSensorTsl2591(SensorBase):
+
+    METADATA = {
+        'name' : 'TSL2591',
+        'description' : 'TSL2591 Light Sensor',
+        'count' : 4,
+        'label' : (
+            'Lux',
+            'Visible',
+            'Infrared',
+            'Full Spectrum',
+        ),
+        'type' : (
+            constants.SENSOR_LIGHT_LUX,
+            constants.SENSOR_LIGHT_MISC,
+            constants.SENSOR_LIGHT_MISC,
+            constants.SENSOR_LIGHT_MISC,
+        ),
+    }
 
     def update(self):
 
