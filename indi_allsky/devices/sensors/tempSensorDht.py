@@ -1,6 +1,7 @@
 import logging
 
 from .sensorBase import SensorBase
+from ... import constants
 from ..exceptions import SensorReadException
 
 
@@ -64,6 +65,22 @@ class TempSensorDht2x(SensorBase):
 
 
 class TempSensorDht22(TempSensorDht2x):
+
+    METADATA = {
+        'name' : 'DHT22',
+        'description' : 'DHT22/AM2302 Temperature Sensor',
+        'count' : 2,
+        'label' : (
+            'Temperature',
+            'Relative Humidity',
+        ),
+        'type' : (
+            constants.SENSOR_TEMPERATURE,
+            constants.SENSOR_RELATIVE_HUMIDITY,
+        ),
+    }
+
+
     def __init__(self, *args, **kwargs):
         super(TempSensorDht2x, self).__init__(*args, **kwargs)
 
@@ -79,6 +96,22 @@ class TempSensorDht22(TempSensorDht2x):
 
 
 class TempSensorDht21(TempSensorDht2x):
+
+    METADATA = {
+        'name' : 'DHT21',
+        'description' : 'DHT21/AM2301 Temperature Sensor',
+        'count' : 2,
+        'label' : (
+            'Temperature',
+            'Relative Humidity',
+        ),
+        'type' : (
+            constants.SENSOR_TEMPERATURE,
+            constants.SENSOR_RELATIVE_HUMIDITY,
+        ),
+    }
+
+
     def __init__(self, *args, **kwargs):
         super(TempSensorDht2x, self).__init__(*args, **kwargs)
 
@@ -94,6 +127,22 @@ class TempSensorDht21(TempSensorDht2x):
 
 
 class TempSensorDht11(TempSensorDht2x):
+
+    METADATA = {
+        'name' : 'DHT11',
+        'description' : 'DHT11 Temperature Sensor',
+        'count' : 2,
+        'label' : (
+            'Temperature',
+            'Relative Humidity',
+        ),
+        'type' : (
+            constants.SENSOR_TEMPERATURE,
+            constants.SENSOR_RELATIVE_HUMIDITY,
+        ),
+    }
+
+
     def __init__(self, *args, **kwargs):
         super(TempSensorDht2x, self).__init__(*args, **kwargs)
 

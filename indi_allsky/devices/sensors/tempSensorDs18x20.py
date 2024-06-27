@@ -3,6 +3,7 @@ from pathlib import Path
 import logging
 
 from .sensorBase import SensorBase
+from ... import constants
 from ..exceptions import SensorReadException
 
 
@@ -10,6 +11,19 @@ logger = logging.getLogger('indi_allsky')
 
 
 class TempSensorDs18x20(SensorBase):
+
+    METADATA = {
+        'name' : 'DS18x20',
+        'description' : 'DS18x20 1-wire Temperature Sensor',
+        'count' : 1,
+        'label' : (
+            'Temperature',
+        ),
+        'type' : (
+            constants.SENSOR_TEMPERATURE,
+        ),
+    }
+
 
     def __init__(self, *args, **kwargs):
         super(TempSensorDs18x20, self).__init__(*args, **kwargs)

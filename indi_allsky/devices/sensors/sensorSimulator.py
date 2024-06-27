@@ -3,12 +3,22 @@ import random
 import logging
 
 from .sensorBase import SensorBase
+from ... import constants
 
 
 logger = logging.getLogger('indi_allsky')
 
 
 class SensorSimulator(SensorBase):
+
+    METADATA = {
+        'name' : 'Simulator',
+        'description' : 'Simulator',
+        'count' : 0,
+        'label' : tuple(),
+        'type' : tuple(),
+    }
+
 
     def __init__(self, *args, **kwargs):
         super(SensorSimulator, self).__init__(*args, **kwargs)
@@ -24,6 +34,25 @@ class SensorSimulator(SensorBase):
 
 
 class SensorDataGenerator(SensorBase):
+
+    METADATA = {
+        'name' : 'Test Data Generator',
+        'description' : 'Test Data Generator',
+        'count' : 4,
+        'label' : (
+            'Add',
+            'Subtract',
+            'Fibonacci',
+            'Random',
+        ),
+        'type' : (
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
+        ),
+    }
+
     def __init__(self, *args, **kwargs):
         super(SensorDataGenerator, self).__init__(*args, **kwargs)
 

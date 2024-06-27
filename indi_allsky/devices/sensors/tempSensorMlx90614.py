@@ -1,6 +1,7 @@
 import logging
 
 from .sensorBase import SensorBase
+from ... import constants
 from ..exceptions import SensorReadException
 
 
@@ -43,6 +44,21 @@ class TempSensorMlx90614(SensorBase):
 
 
 class TempSensorMlx90614_I2C(TempSensorMlx90614):
+
+    METADATA = {
+        'name' : 'MLX90614 (i2c)',
+        'description' : 'MLX90614 i2c Sky Temperature Sensor',
+        'count' : 2,
+        'label' : (
+            'Temperature',
+            'Sky Temperature',
+        ),
+        'type' : (
+            constants.SENSOR_TEMPERATURE,
+            constants.SENSOR_TEMPERATURE,
+        ),
+    }
+
 
     def __init__(self, *args, **kwargs):
         super(TempSensorMlx90614_I2C, self).__init__(*args, **kwargs)

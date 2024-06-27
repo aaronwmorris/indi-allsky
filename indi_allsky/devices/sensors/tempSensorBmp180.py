@@ -1,6 +1,7 @@
 import logging
 
 from .sensorBase import SensorBase
+from ... import constants
 from ..exceptions import SensorReadException
 
 
@@ -53,6 +54,21 @@ class TempSensorBmp180(SensorBase):
 
 
 class TempSensorBmp180_I2C(TempSensorBmp180):
+
+    METADATA = {
+        'name' : 'BMP180 (i2c)',
+        'description' : 'BMP180 i2c Temperature Sensor',
+        'count' : 2,
+        'label' : (
+            'Temperature',
+            'Pressure',
+        ),
+        'type' : (
+            constants.SENSOR_TEMPERATURE,
+            constants.SENSOR_ATMOSPHERIC_PRESSURE,
+        ),
+    }
+
 
     def __init__(self, *args, **kwargs):
         super(TempSensorBmp180_I2C, self).__init__(*args, **kwargs)

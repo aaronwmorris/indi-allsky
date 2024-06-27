@@ -1,6 +1,7 @@
 import logging
 
 from .sensorBase import SensorBase
+from ... import constants
 from ..exceptions import SensorReadException
 
 
@@ -64,6 +65,21 @@ class TempSensorSi7021(SensorBase):
 
 
 class TempSensorSi7021_I2C(TempSensorSi7021):
+
+    METADATA = {
+        'name' : 'SI7021 (i2c)',
+        'description' : 'SI7021 i2c Temperature Sensor',
+        'count' : 2,
+        'label' : (
+            'Temperature',
+            'Relative Humidity',
+        ),
+        'type' : (
+            constants.SENSOR_TEMPERATURE,
+            constants.SENSOR_RELATIVE_HUMIDITY,
+        ),
+    }
+
 
     def __init__(self, *args, **kwargs):
         super(TempSensorSi7021_I2C, self).__init__(*args, **kwargs)

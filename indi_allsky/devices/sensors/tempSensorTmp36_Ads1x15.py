@@ -2,6 +2,7 @@
 import logging
 
 from .sensorBase import SensorBase
+from ... import constants
 from ..exceptions import SensorReadException
 
 
@@ -42,6 +43,19 @@ class TempSensorTmp36_Ads1x15(SensorBase):
 
 class TempSensorTmp36_Ads1015_I2C(TempSensorTmp36_Ads1x15):
 
+    METADATA = {
+        'name' : 'TMP36 - ADS1015 i2c ADC',
+        'description' : 'TMP36 Temperature Sensor via ADS1015 i2c ADC',
+        'count' : 1,
+        'label' : (
+            'Temperature',
+        ),
+        'type' : (
+            constants.SENSOR_TEMPERATURE,
+        ),
+    }
+
+
     def __init__(self, *args, **kwargs):
         super(TempSensorTmp36_Ads1015_I2C, self).__init__(*args, **kwargs)
 
@@ -65,6 +79,19 @@ class TempSensorTmp36_Ads1015_I2C(TempSensorTmp36_Ads1x15):
 
 
 class TempSensorTmp36_Ads1115_I2C(TempSensorTmp36_Ads1x15):
+
+    METADATA = {
+        'name' : 'TMP36 - ADS1115 i2c ADC',
+        'description' : 'TMP36 Temperature Sensor via ADS1115 i2c ADC',
+        'count' : 1,
+        'label' : (
+            'Temperature',
+        ),
+        'type' : (
+            constants.SENSOR_TEMPERATURE,
+        ),
+    }
+
 
     def __init__(self, *args, **kwargs):
         super(TempSensorTmp36_Ads1115_I2C, self).__init__(*args, **kwargs)

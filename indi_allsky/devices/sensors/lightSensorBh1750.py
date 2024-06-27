@@ -2,6 +2,7 @@
 import logging
 
 from .sensorBase import SensorBase
+from ... import constants
 from ..exceptions import SensorReadException
 
 
@@ -9,6 +10,19 @@ logger = logging.getLogger('indi_allsky')
 
 
 class LightSensorBh1750(SensorBase):
+
+    METADATA = {
+        'name' : 'BH1750',
+        'description' : 'BH1750 Light Sensor',
+        'count' : 1,
+        'label' : (
+            'Lux',
+        ),
+        'type' : (
+            constants.SENSOR_LIGHT_LUX,
+        ),
+    }
+
 
     def update(self):
 
