@@ -5876,6 +5876,18 @@ class TimelapseImageView(TemplateView):
 
         image_id = int(request.args.get('id', -1))
 
+        if image_id == -1:
+            latest_image = self.model.query\
+                .order_by(
+                    self.model.dayDate.desc(),
+                    self.model.createDate.desc(),
+                )\
+                .first()
+
+            if latest_image:
+                image_id = latest_image.id
+
+
         context['image_id'] = image_id
 
 
@@ -5915,8 +5927,8 @@ class TimelapseImageView(TemplateView):
             return context
 
 
-        # Set session camera
-        session['camera_id'] = image.camera_id
+        ### Set session camera
+        #session['camera_id'] = image.camera_id
 
 
         if image.night:
@@ -5969,6 +5981,18 @@ class TimelapseVideoView(TemplateView):
 
         video_id = int(request.args.get('id', -1))
 
+        if video_id == -1:
+            latest_video = self.model.query\
+                .order_by(
+                    self.model.dayDate.desc(),
+                    self.model.createDate.desc(),
+                )\
+                .first()
+
+            if latest_video:
+                video_id = latest_video.id
+
+
         context['video_id'] = video_id
 
 
@@ -6002,8 +6026,8 @@ class TimelapseVideoView(TemplateView):
             return context
 
 
-        # Set session camera
-        session['camera_id'] = video.camera_id
+        ### Set session camera
+        #session['camera_id'] = video.camera_id
 
 
         if video.night:
