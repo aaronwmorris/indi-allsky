@@ -59,11 +59,11 @@ class TempSensorBmp180_I2C(TempSensorBmp180):
         'name' : 'BMP180 (i2c)',
         'description' : 'BMP180 i2c Temperature Sensor',
         'count' : 2,
-        'label' : (
+        'labels' : (
             'Temperature',
             'Pressure',
         ),
-        'type' : (
+        'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_ATMOSPHERIC_PRESSURE,
         ),

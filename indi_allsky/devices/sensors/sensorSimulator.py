@@ -15,8 +15,8 @@ class SensorSimulator(SensorBase):
         'name' : 'Simulator',
         'description' : 'Simulator',
         'count' : 0,
-        'label' : tuple(),
-        'type' : tuple(),
+        'labels' : tuple(),
+        'types' : tuple(),
     }
 
 
@@ -39,13 +39,13 @@ class SensorDataGenerator(SensorBase):
         'name' : 'Test Data Generator',
         'description' : 'Test Data Generator',
         'count' : 4,
-        'label' : (
+        'labels' : (
             'Add',
             'Subtract',
             'Fibonacci',
             'Random',
         ),
-        'type' : (
+        'types' : (
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,

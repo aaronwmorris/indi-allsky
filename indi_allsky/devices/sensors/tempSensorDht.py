@@ -70,11 +70,11 @@ class TempSensorDht22(TempSensorDht2x):
         'name' : 'DHT22',
         'description' : 'DHT22/AM2302 Temperature Sensor',
         'count' : 2,
-        'label' : (
+        'labels' : (
             'Temperature',
             'Relative Humidity',
         ),
-        'type' : (
+        'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
         ),
@@ -101,11 +101,11 @@ class TempSensorDht21(TempSensorDht2x):
         'name' : 'DHT21',
         'description' : 'DHT21/AM2301 Temperature Sensor',
         'count' : 2,
-        'label' : (
+        'labels' : (
             'Temperature',
             'Relative Humidity',
         ),
-        'type' : (
+        'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
         ),
@@ -132,11 +132,11 @@ class TempSensorDht11(TempSensorDht2x):
         'name' : 'DHT11',
         'description' : 'DHT11 Temperature Sensor',
         'count' : 2,
-        'label' : (
+        'labels' : (
             'Temperature',
             'Relative Humidity',
         ),
-        'type' : (
+        'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
         ),

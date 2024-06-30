@@ -70,11 +70,11 @@ class TempSensorSi7021_I2C(TempSensorSi7021):
         'name' : 'SI7021 (i2c)',
         'description' : 'SI7021 i2c Temperature Sensor',
         'count' : 2,
-        'label' : (
+        'labels' : (
             'Temperature',
             'Relative Humidity',
         ),
-        'type' : (
+        'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
         ),

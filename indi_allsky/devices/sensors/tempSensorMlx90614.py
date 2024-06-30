@@ -49,11 +49,11 @@ class TempSensorMlx90614_I2C(TempSensorMlx90614):
         'name' : 'MLX90614 (i2c)',
         'description' : 'MLX90614 i2c Sky Temperature Sensor',
         'count' : 2,
-        'label' : (
+        'labels' : (
             'Temperature',
             'Sky Temperature',
         ),
-        'type' : (
+        'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_TEMPERATURE,
         ),

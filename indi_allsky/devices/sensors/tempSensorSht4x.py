@@ -70,11 +70,11 @@ class TempSensorSht4x_I2C(TempSensorSht4x):
         'name' : 'SHT4x (i2c)',
         'description' : 'SHT4x i2c Temperature Sensor',
         'count' : 2,
-        'label' : (
+        'labels' : (
             'Temperature',
             'Relative Humidity',
         ),
-        'type' : (
+        'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
         ),

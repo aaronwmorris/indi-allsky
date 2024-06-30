@@ -16,10 +16,10 @@ class TempSensorDs18x20(SensorBase):
         'name' : 'DS18x20',
         'description' : 'DS18x20 1-wire Temperature Sensor',
         'count' : 1,
-        'label' : (
+        'labels' : (
             'Temperature',
         ),
-        'type' : (
+        'types' : (
             constants.SENSOR_TEMPERATURE,
         ),
     }
