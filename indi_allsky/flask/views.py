@@ -925,6 +925,17 @@ class ChartView(TemplateView):
         temp_sensor__c_user_var_slot = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT')
 
 
+        # fix system temp offset
+        if temp_sensor__a_user_var_slot >= 100:
+            temp_sensor__a_user_var_slot -= 79
+
+        if temp_sensor__b_user_var_slot >= 100:
+            temp_sensor__b_user_var_slot -= 79
+
+        if temp_sensor__c_user_var_slot >= 100:
+            temp_sensor__c_user_var_slot -= 79
+
+
         if temp_sensor__a_classname:
             temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
 
@@ -967,6 +978,20 @@ class ChartView(TemplateView):
         custom_2_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)
         custom_3_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)
         custom_4_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 13)
+
+
+        # fix system temp offset
+        if custom_1_index >= 100:
+            custom_1_index -= 79
+
+        if custom_2_index >= 100:
+            custom_2_index -= 79
+
+        if custom_3_index >= 100:
+            custom_3_index -= 79
+
+        if custom_4_index >= 100:
+            custom_4_index -= 79
 
 
         context['label_custom_chart_1'] = new_sensor_slot_choices[custom_1_index][1]
