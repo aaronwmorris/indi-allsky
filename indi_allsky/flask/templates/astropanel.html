@@ -65,7 +65,6 @@ async function loop() {
 
 function loadData() {
     console.log('Loading data');
-    //$("#loader_data").css({'display' : 'block'});
     loadJS("{{ url_for('indi_allsky.ajax_astropanel_view') }}", {});
     setTimeout(loadData, refreshInterval);
 }
@@ -79,6 +78,9 @@ function sleep(time) {
 function loadJS(url, data, onDone, onError) {
     if(!onDone)onDone=function(){};
     if(!onError)onError=function(){};
+
+    $("#loader_data").css({'display' : 'block'});
+
     $.ajax({
         type: "GET",
         url: url,
@@ -90,6 +92,7 @@ function loadJS(url, data, onDone, onError) {
         },
         error: function(data){
             onError(data.status);
+            $("#loader_data").css({'display' : 'none'});
         },
     });
 
