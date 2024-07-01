@@ -2645,7 +2645,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('29', 'User Slot 29'),
     )
 
-    SENSOR_SLOT_choices = (
+    SENSOR_SLOT_choices = [  # mutable
         ('0', 'User Slot 0 (Camera)'),
         ('1', 'User Slot 1 (Dew Heater Level)'),
         ('2', 'User Slot 2 (Dew Point)'),
@@ -2697,7 +2697,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('127', 'System Temp 27'),
         ('128', 'System Temp 28'),
         ('129', 'System Temp 29'),
-    )
+    ]
 
 
     ENCRYPT_PASSWORDS                = BooleanField('Encrypt Passwords')
@@ -3093,13 +3093,11 @@ class IndiAllskyConfigForm(FlaskForm):
         temp_sensor__c_user_var_slot = int(data['TEMP_SENSOR__C_USER_VAR_SLOT'])
 
 
-        new_sensor_slot_choices = list(self.SENSOR_SLOT_choices)
-
         if temp_sensor__a_classname:
             temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
 
             for x in range(temp_sensor__a_class.METADATA['count']):
-                new_sensor_slot_choices[temp_sensor__a_user_var_slot + x] = (
+                self.SENSOR_SLOT_choices[temp_sensor__a_user_var_slot + x] = (
                     str(temp_sensor__a_user_var_slot + x),
                     '({0:d}) {1:s} - {2:s}'.format(
                         temp_sensor__a_user_var_slot + x,
@@ -3112,7 +3110,7 @@ class IndiAllskyConfigForm(FlaskForm):
             temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
 
             for x in range(temp_sensor__b_class.METADATA['count']):
-                new_sensor_slot_choices[temp_sensor__b_user_var_slot + x] = (
+                self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x] = (
                     str(temp_sensor__b_user_var_slot + x),
                     '({0:d}) {1:s} - {2:s}'.format(
                         temp_sensor__b_user_var_slot + x,
@@ -3125,7 +3123,7 @@ class IndiAllskyConfigForm(FlaskForm):
             temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
 
             for x in range(temp_sensor__c_class.METADATA['count']):
-                new_sensor_slot_choices[temp_sensor__c_user_var_slot + x] = (
+                self.SENSOR_SLOT_choices[temp_sensor__c_user_var_slot + x] = (
                     str(temp_sensor__c_user_var_slot + x),
                     '({0:d}) {1:s} - {2:s}'.format(
                         temp_sensor__c_user_var_slot + x,
@@ -3136,12 +3134,12 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
         ### Update the choices
-        self.DEW_HEATER__TEMP_USER_VAR_SLOT.choices = new_sensor_slot_choices
-        self.FAN__TEMP_USER_VAR_SLOT.choices = new_sensor_slot_choices
-        self.CHARTS__CUSTOM_SLOT_1.choices = new_sensor_slot_choices
-        self.CHARTS__CUSTOM_SLOT_2.choices = new_sensor_slot_choices
-        self.CHARTS__CUSTOM_SLOT_3.choices = new_sensor_slot_choices
-        self.CHARTS__CUSTOM_SLOT_4.choices = new_sensor_slot_choices
+        self.DEW_HEATER__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
+        self.FAN__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
+        self.CHARTS__CUSTOM_SLOT_1.choices = self.SENSOR_SLOT_choices
+        self.CHARTS__CUSTOM_SLOT_2.choices = self.SENSOR_SLOT_choices
+        self.CHARTS__CUSTOM_SLOT_3.choices = self.SENSOR_SLOT_choices
+        self.CHARTS__CUSTOM_SLOT_4.choices = self.SENSOR_SLOT_choices
 
 
 
