@@ -47,10 +47,10 @@ class TempSensorTmp36_Ads1015_I2C(TempSensorTmp36_Ads1x15):
         'name' : 'TMP36 - ADS1015 i2c ADC',
         'description' : 'TMP36 Temperature Sensor via ADS1015 i2c ADC',
         'count' : 1,
-        'label' : (
+        'labels' : (
             'Temperature',
         ),
-        'type' : (
+        'types' : (
             constants.SENSOR_TEMPERATURE,
         ),
     }
@@ -84,10 +84,10 @@ class TempSensorTmp36_Ads1115_I2C(TempSensorTmp36_Ads1x15):
         'name' : 'TMP36 - ADS1115 i2c ADC',
         'description' : 'TMP36 Temperature Sensor via ADS1115 i2c ADC',
         'count' : 1,
-        'label' : (
+        'labels' : (
             'Temperature',
         ),
-        'type' : (
+        'types' : (
             constants.SENSOR_TEMPERATURE,
         ),
     }

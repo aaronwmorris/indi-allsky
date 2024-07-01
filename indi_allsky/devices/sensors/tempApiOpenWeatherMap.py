@@ -54,7 +54,7 @@ class TempApiOpenWeatherMap(SensorBase):
         'name' : 'OpenWeatherMap API',
         'description' : 'OpenWeatherMap API Sensor',
         'count' : 9,
-        'label' : (
+        'labels' : (
             'Temperature',
             '"Feels Like" Temperature',
             'Relative Humidity',
@@ -65,7 +65,7 @@ class TempApiOpenWeatherMap(SensorBase):
             'Rain (1h)',
             'Snow (1h)',
         ),
-        'type' : (
+        'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,

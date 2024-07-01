@@ -11,24 +11,6 @@ logger = logging.getLogger('indi_allsky')
 
 class LightSensorTsl2591(SensorBase):
 
-    METADATA = {
-        'name' : 'TSL2591',
-        'description' : 'TSL2591 Light Sensor',
-        'count' : 4,
-        'label' : (
-            'Lux',
-            'Visible',
-            'Infrared',
-            'Full Spectrum',
-        ),
-        'type' : (
-            constants.SENSOR_LIGHT_LUX,
-            constants.SENSOR_LIGHT_MISC,
-            constants.SENSOR_LIGHT_MISC,
-            constants.SENSOR_LIGHT_MISC,
-        ),
-    }
-
     def update(self):
 
         try:
@@ -64,6 +46,25 @@ class LightSensorTsl2591(SensorBase):
 
 
 class LightSensorTsl2591_I2C(LightSensorTsl2591):
+
+    METADATA = {
+        'name' : 'TSL2591 (i2c)',
+        'description' : 'TSL2591 i2c Light Sensor',
+        'count' : 4,
+        'labels' : (
+            'Lux',
+            'Visible',
+            'Infrared',
+            'Full Spectrum',
+        ),
+        'types' : (
+            constants.SENSOR_LIGHT_LUX,
+            constants.SENSOR_LIGHT_MISC,
+            constants.SENSOR_LIGHT_MISC,
+            constants.SENSOR_LIGHT_MISC,
+        ),
+    }
+
 
     def __init__(self, *args, **kwargs):
         super(LightSensorTsl2591_I2C, self).__init__(*args, **kwargs)

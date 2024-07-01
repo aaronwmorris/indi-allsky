@@ -2645,17 +2645,17 @@ class IndiAllskyConfigForm(FlaskForm):
         ('29', 'User Slot 29'),
     )
 
-    SENSOR_SLOT_choices = (
-        ('0', 'User Slot 0 (Camera)'),
-        ('1', 'User Slot 1 (Dew Heater Level)'),
-        ('2', 'User Slot 2 (Dew Point)'),
-        ('3', 'User Slot 3 (Frost Point)'),
-        ('4', 'User Slot 4 (Fan Level)'),
-        ('5', 'User Slot 5 (Heat Index)'),
-        ('6', 'User Slot 6 (Wind Dir Degrees)'),
-        ('7', 'User Slot 7 (SQM)'),
-        ('8', 'User Slot 8 (Reserved)'),
-        ('9', 'User Slot 9 (Reserved)'),
+    SENSOR_SLOT_choices = [  # mutable
+        ('0', '(0) User Slot - Camera Temp'),
+        ('1', '(1) User Slot - Dew Heater Level'),
+        ('2', '(2) User Slot - Dew Point'),
+        ('3', '(3) User Slot - Frost Point'),
+        ('4', '(4) User Slot - Fan Level'),
+        ('5', '(5) User Slot - Heat Index'),
+        ('6', '(6) User Slot - Wind Dir (Degrees)'),
+        ('7', '(7) User Slot - SQM)'),
+        ('8', '(8) User Slot - Reserved'),
+        ('9', '(9) User Slot - Reserved'),
         ('10', 'User Slot 10'),
         ('11', 'User Slot 11'),
         ('12', 'User Slot 12'),
@@ -2676,7 +2676,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('27', 'User Slot 27'),
         ('28', 'User Slot 28'),
         ('29', 'User Slot 29'),
-        ('100', 'System Temp 0 (Camera)'),
+        ('100', '(0) System Temp - Camera Temp'),
         ('110', 'System Temp 10'),
         ('111', 'System Temp 11'),
         ('112', 'System Temp 12'),
@@ -2697,7 +2697,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('127', 'System Temp 27'),
         ('128', 'System Temp 28'),
         ('129', 'System Temp 29'),
-    )
+    ]
 
 
     ENCRYPT_PASSWORDS                = BooleanField('Encrypt Passwords')
@@ -3030,7 +3030,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__LEVEL_DEF            = IntegerField('Default Level', validators=[DEW_HEATER__LEVEL_validator])
     DEW_HEATER__THOLD_ENABLE         = BooleanField('Enable Dew Heater Thresholds')
     DEW_HEATER__MANUAL_TARGET        = FloatField('Manual Target', validators=[DEW_HEATER__MANUAL_TARGET_validator])
-    DEW_HEATER__TEMP_USER_VAR_SLOT   = SelectField('Temperature Sensor Slot', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
+    DEW_HEATER__TEMP_USER_VAR_SLOT   = SelectField('Temperature Sensor Slot', choices=[], validators=[SENSOR_SLOT_validator])
     DEW_HEATER__LEVEL_LOW            = IntegerField('Low Setting', validators=[DEW_HEATER__LEVEL_validator])
     DEW_HEATER__LEVEL_MED            = IntegerField('Medium Setting', validators=[DEW_HEATER__LEVEL_validator])
     DEW_HEATER__LEVEL_HIGH           = IntegerField('High Setting', validators=[DEW_HEATER__LEVEL_validator])
@@ -3044,7 +3044,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FAN__LEVEL_DEF                   = IntegerField('Default Level', validators=[FAN__LEVEL_validator])
     FAN__THOLD_ENABLE                = BooleanField('Enable Fan Thresholds')
     FAN__TARGET                      = FloatField('Target Temp', validators=[FAN__TARGET_validator])
-    FAN__TEMP_USER_VAR_SLOT          = SelectField('Temperature Sensor Slot', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
+    FAN__TEMP_USER_VAR_SLOT          = SelectField('Temperature Sensor Slot', choices=[], validators=[SENSOR_SLOT_validator])
     FAN__LEVEL_LOW                   = IntegerField('Low Setting', validators=[FAN__LEVEL_validator])
     FAN__LEVEL_MED                   = IntegerField('Medium Setting', validators=[FAN__LEVEL_validator])
     FAN__LEVEL_HIGH                  = IntegerField('High Setting', validators=[FAN__LEVEL_validator])
@@ -3064,10 +3064,10 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__C_USER_VAR_SLOT     = SelectField('Sensor C Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__C_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap Api Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator])
-    CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
-    CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
-    CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
-    CHARTS__CUSTOM_SLOT_4            = SelectField('Extra Chart Slot 4', choices=SENSOR_SLOT_choices, validators=[SENSOR_SLOT_validator])
+    CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[SENSOR_SLOT_validator])
+    CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[SENSOR_SLOT_validator])
+    CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[SENSOR_SLOT_validator])
+    CHARTS__CUSTOM_SLOT_4            = SelectField('Extra Chart Slot 4', choices=[], validators=[SENSOR_SLOT_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
@@ -3077,8 +3077,70 @@ class IndiAllskyConfigForm(FlaskForm):
     ADMIN_NETWORKS_FLASK             = TextAreaField('Admin Networks', render_kw={'readonly' : True, 'disabled' : 'disabled'})
 
 
-    #def __init__(self, *args, **kwargs):
-    #    super(IndiAllskyConfigForm, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyConfigForm, self).__init__(*args, **kwargs)
+
+        from ..devices import sensors as indi_allsky_sensors
+
+        data = kwargs['data']
+
+
+        temp_sensor__a_classname = str(data['TEMP_SENSOR__A_CLASSNAME'])
+        temp_sensor__a_user_var_slot = int(data['TEMP_SENSOR__A_USER_VAR_SLOT'])
+        temp_sensor__b_classname = str(data['TEMP_SENSOR__B_CLASSNAME'])
+        temp_sensor__b_user_var_slot = int(data['TEMP_SENSOR__B_USER_VAR_SLOT'])
+        temp_sensor__c_classname = str(data['TEMP_SENSOR__C_CLASSNAME'])
+        temp_sensor__c_user_var_slot = int(data['TEMP_SENSOR__C_USER_VAR_SLOT'])
+
+
+        if temp_sensor__a_classname:
+            temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
+
+            for x in range(temp_sensor__a_class.METADATA['count']):
+                self.SENSOR_SLOT_choices[temp_sensor__a_user_var_slot + x] = (
+                    str(temp_sensor__a_user_var_slot + x),
+                    '({0:d}) {1:s} - {2:s}'.format(
+                        temp_sensor__a_user_var_slot + x,
+                        temp_sensor__a_class.METADATA['name'],
+                        temp_sensor__a_class.METADATA['labels'][x],
+                    )
+                )
+
+        if temp_sensor__b_classname:
+            temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
+
+            for x in range(temp_sensor__b_class.METADATA['count']):
+                self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x] = (
+                    str(temp_sensor__b_user_var_slot + x),
+                    '({0:d}) {1:s} - {2:s}'.format(
+                        temp_sensor__b_user_var_slot + x,
+                        temp_sensor__b_class.METADATA['name'],
+                        temp_sensor__b_class.METADATA['labels'][x],
+                    )
+                )
+
+        if temp_sensor__c_classname:
+            temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
+
+            for x in range(temp_sensor__c_class.METADATA['count']):
+                self.SENSOR_SLOT_choices[temp_sensor__c_user_var_slot + x] = (
+                    str(temp_sensor__c_user_var_slot + x),
+                    '({0:d}) {1:s} - {2:s}'.format(
+                        temp_sensor__c_user_var_slot + x,
+                        temp_sensor__c_class.METADATA['name'],
+                        temp_sensor__c_class.METADATA['labels'][x],
+                    )
+                )
+
+
+        ### Update the choices
+        self.DEW_HEATER__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
+        self.FAN__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
+        self.CHARTS__CUSTOM_SLOT_1.choices = self.SENSOR_SLOT_choices
+        self.CHARTS__CUSTOM_SLOT_2.choices = self.SENSOR_SLOT_choices
+        self.CHARTS__CUSTOM_SLOT_3.choices = self.SENSOR_SLOT_choices
+        self.CHARTS__CUSTOM_SLOT_4.choices = self.SENSOR_SLOT_choices
+
 
 
     def validate(self):

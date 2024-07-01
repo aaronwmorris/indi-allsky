@@ -11,19 +11,6 @@ logger = logging.getLogger('indi_allsky')
 
 class LightSensorBh1750(SensorBase):
 
-    METADATA = {
-        'name' : 'BH1750',
-        'description' : 'BH1750 Light Sensor',
-        'count' : 1,
-        'label' : (
-            'Lux',
-        ),
-        'type' : (
-            constants.SENSOR_LIGHT_LUX,
-        ),
-    }
-
-
     def update(self):
 
         try:
@@ -55,6 +42,19 @@ class LightSensorBh1750(SensorBase):
 
 
 class LightSensorBh1750_I2C(LightSensorBh1750):
+
+    METADATA = {
+        'name' : 'BH1750 (i2c)',
+        'description' : 'BH1750 i2c Light Sensor',
+        'count' : 1,
+        'labels' : (
+            'Lux',
+        ),
+        'types' : (
+            constants.SENSOR_LIGHT_LUX,
+        ),
+    }
+
 
     def __init__(self, *args, **kwargs):
         super(LightSensorBh1750_I2C, self).__init__(*args, **kwargs)

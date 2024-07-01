@@ -18,6 +18,7 @@ sys.path.append(str(Path(__file__).parent.absolute().parent))
 
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.flask import create_app
+from indi_allsky import constants
 
 
 logger = logging.getLogger('indi_allsky')
@@ -32,6 +33,69 @@ class HADiscovery(object):
 
     discovery_base_topic = 'homeassistant'
     unique_id_base = '001'
+
+
+    # maps to SensorDeviceClass
+    HA_SENSOR_DEVICE_CLASS = {
+        constants.SENSOR_TEMPERATURE          : 'TEMPERATURE',
+        constants.SENSOR_RELATIVE_HUMIDITY    : 'HUMIDITY',
+        constants.SENSOR_ATMOSPHERIC_PRESSURE : 'ATMOSPHERIC_PRESSURE',
+        constants.SENSOR_WIND_SPEED           : 'WIND_SPEED',
+        constants.SENSOR_PRECIPITATION        : 'PRECIPITATION',
+        constants.SENSOR_CONCENTRATION        : None,
+        constants.SENSOR_LIGHT_LUX            : 'ILLUMINANCE',
+        constants.SENSOR_LIGHT_MISC           : 'ILLUMINANCE',
+        constants.SENSOR_FAN_SPEED            : None,
+        constants.SENSOR_PERCENTAGE           : None,
+        constants.SENSOR_MISC                 : None,
+    }
+
+
+    # https://github.com/home-assistant/core/blob/master/homeassistant/const.py
+    HA_UNIT_MAP = {
+        constants.SENSOR_TEMPERATURE : {
+            'c' : '°C',
+            'f' : '°F',
+            'k' : 'K',
+            'degree'  : '°',
+            'degrees' : '°',
+        },
+        constants.SENSOR_RELATIVE_HUMIDITY : {
+            'percent' : '%',
+            '%'       : '%',
+        },
+        constants.SENSOR_ATMOSPHERIC_PRESSURE : {
+            'hpa'  : 'hPa',
+            'mbar' : 'mbar',
+            'inhg' : 'inHg',
+            'mmhg' : 'mmHg',
+            'psi'  : 'psi',
+        },
+        constants.SENSOR_WIND_SPEED : {
+            'ms'   : 'm/s',
+            'kph'  : 'km/h',
+            'mph'  : 'mph',
+        },
+        constants.SENSOR_PRECIPITATION : {
+            'in'   : 'in',
+            'mm'   : 'mm',
+            'cm'   : 'cm',
+        },
+        constants.SENSOR_CONCENTRATION : {
+            'ppm'  : 'ppm',
+            'ppb'  : 'ppb',
+        },
+        constants.SENSOR_PERCENTAGE : {
+            'percent' : '%',
+            '%'       : '%',
+        },
+        constants.SENSOR_LIGHT_LUX : {
+            'lux'     : 'lx',
+        },
+        constants.SENSOR_FAN_SPEED : {
+            'rpm'     : 'rpm',
+        },
+    }
 
 
     def __init__(self):
@@ -389,13 +453,14 @@ class HADiscovery(object):
                 })
 
 
-        # user sensors
+        # system temp sensors
         for i in range(30):
             extended_sensor_list.append({
                 'component' : 'sensor',
                 'object_id' : 'indi_allsky_sensor_temp_{0}'.format(i),
                 'config' : {
                     'name' : 'sensor_temp_{0}'.format(i),
+                    'unit_of_measurement' : '°',
                     'unique_id' : 'indi_allsky_sensor_temp_{0}_{1}'.format(i, self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'sensor_temp_{0}'.format(str(i)))),
                 },
