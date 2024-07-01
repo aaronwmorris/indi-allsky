@@ -194,6 +194,9 @@ class BaseView(View):
         obs.lat = math.radians(self.camera.latitude)
         obs.elevation = self.camera.elevation
 
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
+
         sun = ephem.Sun()
 
         obs.date = utcnow
@@ -504,6 +507,9 @@ class TemplateView(BaseView):
         obs.lon = math.radians(longitude)
         obs.lat = math.radians(latitude)
         obs.elevation = elevation
+
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
 
         sun = ephem.Sun()
         moon = ephem.Moon()

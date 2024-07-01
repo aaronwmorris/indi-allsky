@@ -74,6 +74,8 @@ class DayNightStop(object):
         obs.lon = math.radians(LONGITUDE)
         obs.date = utcnow_notz
 
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
 
         sun.compute(obs)
         now_sun_alt = math.degrees(sun.alt)

@@ -65,6 +65,9 @@ class TestSensors(object):
         obs.lat = math.radians(self.config['LOCATION_LATITUDE'])
         obs.elevation = self.config.get('LOCATION_ELEVATION', 300)
 
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
+
         sun = ephem.Sun()
 
         utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates

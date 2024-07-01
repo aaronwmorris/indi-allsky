@@ -34,6 +34,8 @@ obs.lon = math.radians(33.0)
 obs.lat = math.radians(-84.0)
 obs.elevation = 300
 
+# disable atmospheric refraction calcs
+obs.pressure = 0
 
 obs.date = utcnow_notz
 sun.compute(obs)

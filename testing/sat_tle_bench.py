@@ -27,6 +27,9 @@ obs = ephem.Observer()
 obs.lat = math.radians(33.0)
 obs.lon = math.radians(-84.0)
 
+# disable atmospheric refraction calcs
+obs.pressure = 0
+
 with io.open('/tmp/iss_27272897.txt', 'r') as f_tle:
     tle_data = f_tle.readlines()
 '''

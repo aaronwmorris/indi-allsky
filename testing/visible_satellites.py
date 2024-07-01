@@ -111,6 +111,9 @@ class SatelliteTrack(object):
             obs.long = math.radians(self.longitude)
             obs.elevation = 300
 
+            # disable atmospheric refraction calcs
+            obs.pressure = 0
+
 
             tle_iter = iter(self.sats_tle_data)
             while True:

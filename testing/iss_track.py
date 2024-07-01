@@ -75,6 +75,9 @@ class IssTrack(object):
             #obs.long = math.radians(0)
             #obs.elevation = 300
 
+            # disable atmospheric refraction calcs
+            obs.pressure = 0
+
             try:
                 iss = ephem.readtle(*self.iss_tle_data)
             except ValueError as e:

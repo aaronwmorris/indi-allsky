@@ -1611,6 +1611,10 @@ class ImageProcessor(object):
         obs.elevation = self.position_av[2]
 
 
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
+
+
         obs.date = utcnow
 
         self.astrometric_data['sidereal_time'] = str(obs.sidereal_time())
@@ -1691,10 +1695,6 @@ class ImageProcessor(object):
 
         # separation of 1-3 degrees means a possible eclipse
         self.astrometric_data['sun_moon_sep'] = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
-
-
-        # disable atmospheric refraction calcs for satellites
-        obs.pressure = 0
 
 
         # satellites

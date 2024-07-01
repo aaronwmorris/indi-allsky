@@ -29,6 +29,8 @@ class IndiAllSkyDateCalcs(object):
         obs.lat = math.radians(self.position_av[0])
         obs.elevation = self.position_av[2]
 
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
 
         obs.date = utcnow_notz
         sun.compute(obs)
@@ -95,6 +97,8 @@ class IndiAllSkyDateCalcs(object):
         obs.lat = math.radians(self.position_av[0])
         obs.elevation = self.position_av[2]
 
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
 
         obs.date = utcnow_notz
         sun.compute(obs)
