@@ -1693,6 +1693,10 @@ class ImageProcessor(object):
         self.astrometric_data['sun_moon_sep'] = abs((ephem.separation(moon, sun) / (math.pi / 180)) - 180)
 
 
+        # disable atmospheric refraction calcs for satellites
+        obs.pressure = 0
+
+
         # satellites
         satellite_data = self.populateSatelliteData()
 
@@ -2035,6 +2039,10 @@ class ImageProcessor(object):
         obs.lon = math.radians(self.position_av[1])
         obs.lat = math.radians(self.position_av[0])
         obs.elevation = self.position_av[2]
+
+
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
 
 
         obs.date = utcnow

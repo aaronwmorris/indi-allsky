@@ -6248,6 +6248,9 @@ class AjaxAstroPanelView(BaseView):
         obs.lon = math.radians(camera.longitude)
         obs.elevation = camera.elevation
 
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
+
         # update time
         utcnow = datetime.now(tz=timezone.utc)
 

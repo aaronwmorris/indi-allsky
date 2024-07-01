@@ -56,6 +56,10 @@ class StarTrailGenerator(object):
         self.moon = ephem.Moon()
 
 
+        # disable atmospheric refraction calcs
+        self.obs.pressure = 0
+
+
         # start with a black image
         star_template = numpy.zeros([15, 15], dtype=numpy.uint8)
 
