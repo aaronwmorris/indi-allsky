@@ -19,7 +19,7 @@ class TempSensorDht2x(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('DHT - temp: %0.1fc, humidity: %0.1f%%', temp_c, rel_h)
+        logger.info('[%s] DHT - temp: %0.1fc, humidity: %0.1f%%', self.name, temp_c, rel_h)
 
 
         try:
@@ -91,7 +91,7 @@ class TempSensorDht22(TempSensorDht2x):
 
         pin1 = getattr(board, pin_1_name)
 
-        logger.warning('Initializing DHT22 temperature device')
+        logger.warning('Initializing [%s] DHT22 temperature device', self.name)
         self.dht = adafruit_dht.DHT22(pin1, use_pulseio=False)
 
 
@@ -122,7 +122,7 @@ class TempSensorDht21(TempSensorDht2x):
 
         pin1 = getattr(board, pin_1_name)
 
-        logger.warning('Initializing DHT21 temperature device')
+        logger.warning('Initializing [%s] DHT21 temperature device', self.name)
         self.dht = adafruit_dht.DHT21(pin1, use_pulseio=False)
 
 
@@ -153,6 +153,6 @@ class TempSensorDht11(TempSensorDht2x):
 
         pin1 = getattr(board, pin_1_name)
 
-        logger.warning('Initializing DHT11 temperature device')
+        logger.warning('Initializing [%s] DHT11 temperature device', self.name)
         self.dht = adafruit_dht.DHT11(pin1, use_pulseio=False)
 

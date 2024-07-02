@@ -22,7 +22,7 @@ class TempSensorLm35_Ads1x15(SensorBase):
         temp_c = sensor_v * 100
 
 
-        logger.info('LM35 ADS1x15 - temp: %0.1fc', temp_c)
+        logger.info('[%s] LM35 ADS1x15 - temp: %0.1fc', self.name, temp_c)
 
         if self.config.get('TEMP_DISPLAY') == 'f':
             current_temp = self.c2f(temp_c)
@@ -69,7 +69,7 @@ class TempSensorLm35_Ads1015_I2C(TempSensorLm35_Ads1x15):
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        logger.warning('Initializing ADS1015 I2C ADC - LM35 temperature device @ %s', hex(i2c_address))
+        logger.warning('Initializing [%s] ADS1015 I2C ADC - LM35 temperature device @ %s', self.name, hex(i2c_address))
 
         pin1 = getattr(ADS, pin_1_name)
 
@@ -106,7 +106,7 @@ class TempSensorLm35_Ads1115_I2C(TempSensorLm35_Ads1x15):
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        logger.warning('Initializing ADS1115 I2C ADC - LM35 temperature device @ %s', hex(i2c_address))
+        logger.warning('Initializing [%s] ADS1115 I2C ADC - LM35 temperature device @ %s', self.name, hex(i2c_address))
 
         pin1 = getattr(ADS, pin_1_name)
 

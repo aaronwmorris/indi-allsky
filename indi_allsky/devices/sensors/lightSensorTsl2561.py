@@ -23,7 +23,7 @@ class LightSensorTsl2561(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('TSL2561 - lux: %0.4f, broadband: %d, ir: %d', lux, broadband, infrared)
+        logger.info('[%s] TSL2561 - lux: %0.4f, broadband: %d, ir: %d', self.name, lux, broadband, infrared)
 
 
         try:
@@ -75,7 +75,7 @@ class LightSensorTsl2561_I2C(LightSensorTsl2561):
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        logger.warning('Initializing TSL2561 I2C light sensor device @ %s', hex(i2c_address))
+        logger.warning('Initializing [%s] TSL2561 I2C light sensor device @ %s', self.name, hex(i2c_address))
         i2c = busio.I2C(board.SCL, board.SDA)
         self.tsl2561 = adafruit_tsl2561.TSL2561(i2c, address=i2c_address)
 

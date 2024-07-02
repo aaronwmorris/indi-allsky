@@ -4,7 +4,8 @@ import math
 class SensorBase(object):
     def __init__(self, *args, **kwargs):
         self.config = args[0]
-        self.night_v = args[1]
+        self.name = args[1]
+        self.night_v = args[2]
 
         self._slot = None  # var slot
 

@@ -28,7 +28,7 @@ class TempSensorDs18x20(SensorBase):
     def __init__(self, *args, **kwargs):
         super(TempSensorDs18x20, self).__init__(*args, **kwargs)
 
-        logger.warning('Initializing DS18x20 temperature device')
+        logger.warning('Initializing [%s] DS18x20 temperature device', self.name)
 
 
         w1_base_dir = Path('/sys/bus/w1/devices/')
@@ -67,7 +67,7 @@ class TempSensorDs18x20(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('DS18x20 - temp: %0.1fc', temp_c)
+        logger.info('[%s] DS18x20 - temp: %0.1fc', self.name, temp_c)
 
 
         if self.config.get('TEMP_DISPLAY') == 'f':

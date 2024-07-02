@@ -56,7 +56,7 @@ class SensorDataGenerator(SensorBase):
     def __init__(self, *args, **kwargs):
         super(SensorDataGenerator, self).__init__(*args, **kwargs)
 
-        logger.info('Initializing test data generator sensor')
+        logger.info('Initializing [%s] test data generator sensor', self.name)
 
         self.value_1 = 0
         self.value_2 = 25.0
@@ -74,7 +74,7 @@ class SensorDataGenerator(SensorBase):
         # random
         rand_value = random.randrange(-100, 100, 1)
 
-        logger.info('Test Sensor - %d, %0.1f, %d, %d', self.value_1, self.value_2, self.fib_1, rand_value)
+        logger.info('[%s] Test Sensor - %d, %0.1f, %d, %d', self.name, self.value_1, self.value_2, self.fib_1, rand_value)
 
         data = {
             'data' : (

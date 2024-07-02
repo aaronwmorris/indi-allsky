@@ -82,7 +82,7 @@ class TempApiOpenWeatherMap(SensorBase):
     def __init__(self, *args, **kwargs):
         super(TempApiOpenWeatherMap, self).__init__(*args, **kwargs)
 
-        logger.warning('Initializing OpenWeather API Sensor')
+        logger.warning('Initializing [%s] OpenWeather API Sensor', self.name)
 
         apikey = self.config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
 
@@ -179,7 +179,7 @@ class TempApiOpenWeatherMap(SensorBase):
             #snow_3h = 0.0
 
 
-        logger.info('OpenWeather API - temp: %0.1fc, humidity: %d%%, pressure: %0.1fhPa, clouds: %d%%', temp_c, rel_h, pressure_hpa, clouds_percent)
+        logger.info('[%s] OpenWeather API - temp: %0.1fc, humidity: %d%%, pressure: %0.1fhPa, clouds: %d%%', self.name, temp_c, rel_h, pressure_hpa, clouds_percent)
 
 
         try:

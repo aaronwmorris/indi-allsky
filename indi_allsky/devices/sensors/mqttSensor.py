@@ -33,7 +33,7 @@ class MqttSensorSingle(SensorBase):
         import ssl
         import paho.mqtt.client as mqtt
 
-        logger.warning('Initializing MQTT Client Sensor')
+        logger.warning('Initializing [%s] MQTT Client Sensor', self.name)
 
         self.data = {
             'data' : [0.0],
@@ -77,7 +77,7 @@ class MqttSensorSingle(SensorBase):
 
 
     def update(self):
-        logger.info('MQTT - val: %0.3f', self.data['data'][0])
+        logger.info('[%s] MQTT - val: %0.3f', self.name, self.data['data'][0])
 
         return self.data
 
