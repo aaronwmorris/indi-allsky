@@ -58,6 +58,11 @@ class StarTrailGenerator(object):
         self.sun = ephem.Sun()
         self.moon = ephem.Moon()
 
+
+        # disable atmospheric refraction calcs
+        self.obs.pressure = 0
+
+
         self.image_processing_elapsed_s = 0
 
         self._sqm_mask = mask

@@ -1280,6 +1280,10 @@ class CaptureWorker(Process):
         obs.lon = math.radians(self.position_av[1])
         obs.lat = math.radians(self.position_av[0])
         obs.elevation = self.position_av[2]
+
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
+
         obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
 
         sun = ephem.Sun()

@@ -1119,6 +1119,9 @@ class VideoWorker(Process):
         obs.lat = math.radians(camera.latitude)
         obs.elevation = camera.elevation
 
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
+
         sun = ephem.Sun()
 
         obs.date = utcnow

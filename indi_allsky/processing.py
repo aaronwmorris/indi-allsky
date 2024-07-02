@@ -1611,6 +1611,10 @@ class ImageProcessor(object):
         obs.elevation = self.position_av[2]
 
 
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
+
+
         obs.date = utcnow
 
         self.astrometric_data['sidereal_time'] = str(obs.sidereal_time())
@@ -2035,6 +2039,10 @@ class ImageProcessor(object):
         obs.lon = math.radians(self.position_av[1])
         obs.lat = math.radians(self.position_av[0])
         obs.elevation = self.position_av[2]
+
+
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
 
 
         obs.date = utcnow
