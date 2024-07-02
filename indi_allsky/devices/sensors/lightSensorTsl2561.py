@@ -12,6 +12,10 @@ logger = logging.getLogger('indi_allsky')
 class LightSensorTsl2561(SensorBase):
 
     def update(self):
+        if self.night != bool(self.night_v.value):
+            self.night = bool(self.night_v.value)
+            self.update_sensor_settings()
+
 
         try:
             lux = float(self.tsl2561.lux)  # can be None
@@ -43,6 +47,19 @@ class LightSensorTsl2561(SensorBase):
         }
 
         return data
+
+
+    def update_sensor_settings(self):
+        if self.night:
+            logger.info('[%s] Switching TSL2561 to night mode', self.name)
+            self.tsl2561.gain = self.gain_night
+            self.tsl2561.integration_time = self.integration_night
+        else:
+            logger.info('[%s] Switching TSL2561 to day mode', self.name)
+            self.tsl2561.gain = self.gain_day
+            self.tsl2561.integration_time = self.integration_day
+
+        time.sleep(1.0)
 
 
 class LightSensorTsl2561_I2C(LightSensorTsl2561):
@@ -79,14 +96,21 @@ class LightSensorTsl2561_I2C(LightSensorTsl2561):
         i2c = busio.I2C(board.SCL, board.SDA)
         self.tsl2561 = adafruit_tsl2561.TSL2561(i2c, address=i2c_address)
 
+        self.night = None  # force update on first run
+
+        self.gain_night = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_NIGHT', 1))
+        self.gain_day = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_NIGHT', 0))
+        self.integration_night = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_INT_NIGHT', 1))
+        self.integration_day = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_INT_DAY', 1))
+
         # Enable the light sensor
         self.tsl2561.enabled = True
+
+        ### Set gain 0=1x, 1=16x
+        #self.tsl2561.gain = 0
+
+        ### Set integration time (0=13.7ms, 1=101ms, 2=402ms, or 3=manual)
+        #self.tsl2561.integration_time = 1
+
         time.sleep(1)
 
-        # Set gain 0=1x, 1=16x
-        self.tsl2561.gain = 0
-
-        # Set integration time (0=13.7ms, 1=101ms, 2=402ms, or 3=manual)
-        self.tsl2561.integration_time = 1
-
-        time.sleep(1)
