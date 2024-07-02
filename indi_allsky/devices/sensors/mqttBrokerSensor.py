@@ -10,25 +10,35 @@ from ... import constants
 logger = logging.getLogger('indi_allsky')
 
 
-class MqttBrokerSensorSingle(SensorBase):
+class MqttBrokerSensor(SensorBase):
 
     METADATA = {
         'name' : 'MQTT Broker',
         'description' : 'MQTT Broker Sensor',
-        'count' : 1,
+        'count' : 5,
         'labels' : (
-            'Value',
+            'Value 1',
+            'Value 2',
+            'Value 3',
+            'Value 4',
+            'Value 5',
         ),
         'types' : (
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
             constants.SENSOR_MISC,
         ),
     }
 
 
     def __init__(self, *args, **kwargs):
-        super(MqttBrokerSensorSingle, self).__init__(*args, **kwargs)
+        super(MqttBrokerSensor, self).__init__(*args, **kwargs)
 
-        self.topic = kwargs['pin_1_name']
+        topics_str = kwargs['pin_1_name']
+        topics = topics_str.split(',')
+        self.topic_list = list(set(topics[:5]))  # ensure unique values
 
         import ssl
         import paho.mqtt.client as mqtt
@@ -36,7 +46,7 @@ class MqttBrokerSensorSingle(SensorBase):
         logger.warning('Initializing [%s] MQTT Broker Sensor', self.name)
 
         self.data = {
-            'data' : (0.0,),
+            'data' : [0.0, 0.0, 0.0, 0.0, 0.0],
         }
 
         host = self.config.get('TEMP_SENSOR', {}).get('MQTT_HOST', 'localhost')
@@ -77,14 +87,13 @@ class MqttBrokerSensorSingle(SensorBase):
 
 
     def update(self):
-        logger.info('[%s] MQTT Broker - value: %0.3f', self.name, self.data['data'][0])
+        logger.info('[%s] MQTT Broker - values: %0.3f, %0.3f, %0.3f, %0.3f, %0.3f', self.name, *self.data['data'])
 
         return self.data
 
 
     def on_subscribe(self, client, userdata, mid, reason_code_list, properties):
-        # Since we subscribed only for a single channel, reason_code_list contains
-        # a single entry
+        # only report a single channel
         if reason_code_list[0].is_failure:
             logger.error('Broker rejected you subscription: %s', reason_code_list[0])
         else:
@@ -103,14 +112,20 @@ class MqttBrokerSensorSingle(SensorBase):
 
 
     def on_message(self, client, userdata, message):
-        # userdata is the structure we choose to provide, here it's a list()
-        #self.data['data'][0] = float(message)
         try:
             val = float(message.payload.decode())
-            userdata['data'] = (val,)
-            logger.info('MQTT Sensor received: %0.3f', val)
         except ValueError as e:
             logger.error('MQTT data ValueError: %s', str(e))
+            return
+
+        try:
+            idx = self.topic_list.index(message.topic)
+        except ValueError:
+            logger.error('MQTT unknown topic: %s', message.topic)
+            return
+
+        logger.info('MQTT Sensor received: %0.3f (%s)', val, message.topic)
+        userdata['data'][idx] = val
 
 
     def on_connect(self, client, userdata, flags, reason_code, properties):
@@ -119,5 +134,6 @@ class MqttBrokerSensorSingle(SensorBase):
         else:
             # we should always subscribe from on_connect callback to be sure
             # our subscribed is persisted across reconnections.
-            client.subscribe(self.topic)
+            logger.info('Subscribing to %d topics', len(self.topic_list))
+            client.subscribe([(t, 0) for t in self.topic_list])
 

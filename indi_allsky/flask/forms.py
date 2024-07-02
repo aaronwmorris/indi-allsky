@@ -2250,7 +2250,7 @@ def DEVICE_PIN_NAME_validator(form, field):
         return
 
 
-    class_regex = r'^[a-zA-Z0-9_\-\/]+$'
+    class_regex = r'^[a-zA-Z0-9_,\-\/]+$'
 
     if not re.search(class_regex, field.data):
         raise ValidationError('Invalid PIN name')
@@ -2619,7 +2619,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR (3)'),
         ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full (4)'),
         ('blinka_light_sensor_bh1750_i2c', 'BH1750 (GY-30) i2c - Lux (1)'),
-        ('mqtt_broker_sensor_single', 'MQTT Broker Sensor - (1)'),
+        ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5)'),
         ('sensor_data_generator', 'Test Data Generator - (4)'),
     )
 

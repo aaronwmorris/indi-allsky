@@ -33,7 +33,7 @@ from .tempApiOpenWeatherMap import TempApiOpenWeatherMap as temp_api_openweather
 
 from .tempSensorDs18x20 import TempSensorDs18x20 as kernel_temp_sensor_ds18x20_w1
 
-from .mqttBrokerSensor import MqttBrokerSensorSingle as mqtt_broker_sensor_single
+from .mqttBrokerSensor import MqttBrokerSensor as mqtt_broker_sensor
 
 
 __all__ = (
@@ -58,6 +58,6 @@ __all__ = (
     'cpads_temp_sensor_lm35_ads1015_i2c',
     'cpads_temp_sensor_lm35_ads1115_i2c',
     'kernel_temp_sensor_ds18x20_w1',
-    'mqtt_broker_sensor_single',
+    'mqtt_broker_sensor',
     'temp_api_openweathermap',
 )
