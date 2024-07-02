@@ -21,7 +21,7 @@ class LightSensorBh1750(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('BH1750 - lux: %0.4f', lux)
+        logger.info('[%s] BH1750 - lux: %0.4f', self.name, lux)
 
 
         try:
@@ -66,7 +66,7 @@ class LightSensorBh1750_I2C(LightSensorBh1750):
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        logger.warning('Initializing BH1750 I2C light sensor device @ %s', hex(i2c_address))
+        logger.warning('Initializing [%s] BH1750 I2C light sensor device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
         self.bh1750 = adafruit_bh1750.BH1750(i2c, address=i2c_address)
 

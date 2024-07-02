@@ -19,7 +19,7 @@ class TempSensorSht4x(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('SHT4x - temp: %0.1fc, humidity: %0.1f%%', temp_c, rel_h)
+        logger.info('[%s] SHT4x - temp: %0.1fc, humidity: %0.1f%%', self.name, temp_c, rel_h)
 
 
         try:
@@ -91,7 +91,7 @@ class TempSensorSht4x_I2C(TempSensorSht4x):
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        logger.warning('Initializing SHT4x I2C temperature device @ %s', hex(i2c_address))
+        logger.warning('Initializing [%s] SHT4x I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
         self.sht4x = adafruit_sht4x.SHT4x(i2c, address=i2c_address)
 

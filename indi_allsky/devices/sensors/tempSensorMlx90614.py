@@ -19,7 +19,7 @@ class TempSensorMlx90614(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('MLX90614 - ambient temp: %0.1fc, object temp: %0.1fc', temp_c, object_temp_c)
+        logger.info('[%s] MLX90614 - ambient temp: %0.1fc, object temp: %0.1fc', self.name, temp_c, object_temp_c)
 
 
         if self.config.get('TEMP_DISPLAY') == 'f':
@@ -70,7 +70,7 @@ class TempSensorMlx90614_I2C(TempSensorMlx90614):
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        logger.warning('Initializing MLX90614 I2C temperature device @ %s', hex(i2c_address))
+        logger.warning('Initializing [%s] MLX90614 I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
         self.mlx = adafruit_mlx90614.MLX90614(i2c, address=i2c_address)
 

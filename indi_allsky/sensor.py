@@ -295,6 +295,7 @@ class SensorWorker(Thread):
 
             self.sensors[0] = a_sensor(
                 self.config,
+                'A',
                 self.night_v,
                 pin_1_name=a_sensor_pin_1_name,
                 i2c_address=a_sensor_i2c_address,
@@ -302,6 +303,7 @@ class SensorWorker(Thread):
         else:
             self.sensors[0] = indi_allsky_sensors.sensor_simulator(
                 self.config,
+                'A',
                 self.night_v,
             )
 
@@ -318,6 +320,7 @@ class SensorWorker(Thread):
 
             self.sensors[1] = b_sensor(
                 self.config,
+                'B',
                 self.night_v,
                 pin_1_name=b_sensor_pin_1_name,
                 i2c_address=b_sensor_i2c_address,
@@ -325,6 +328,7 @@ class SensorWorker(Thread):
         else:
             self.sensors[1] = indi_allsky_sensors.sensor_simulator(
                 self.config,
+                'B',
                 self.night_v,
             )
 
@@ -341,6 +345,7 @@ class SensorWorker(Thread):
 
             self.sensors[2] = c_sensor(
                 self.config,
+                'C',
                 self.night_v,
                 pin_1_name=c_sensor_pin_1_name,
                 i2c_address=c_sensor_i2c_address,
@@ -348,6 +353,7 @@ class SensorWorker(Thread):
         else:
             self.sensors[2] = indi_allsky_sensors.sensor_simulator(
                 self.config,
+                'C',
                 self.night_v,
             )
 

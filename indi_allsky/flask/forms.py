@@ -2250,7 +2250,7 @@ def DEVICE_PIN_NAME_validator(form, field):
         return
 
 
-    class_regex = r'^[a-zA-Z0-9_\-]+$'
+    class_regex = r'^[a-zA-Z0-9_,\-\/]+$'
 
     if not re.search(class_regex, field.data):
         raise ValidationError('Invalid PIN name')
@@ -2619,6 +2619,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR (3)'),
         ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full (4)'),
         ('blinka_light_sensor_bh1750_i2c', 'BH1750 (GY-30) i2c - Lux (1)'),
+        ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5)'),
         ('sensor_data_generator', 'Test Data Generator - (4)'),
     )
 
@@ -3052,18 +3053,25 @@ class IndiAllskyConfigForm(FlaskForm):
     FAN__THOLD_DIFF_MED              = IntegerField('Medium Threshold Difference', validators=[FAN__THOLD_DIFF_validator])
     FAN__THOLD_DIFF_HIGH             = IntegerField('High Threshold Difference', validators=[FAN__THOLD_DIFF_validator])
     TEMP_SENSOR__A_CLASSNAME         = SelectField('Sensor A', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
-    TEMP_SENSOR__A_PIN_1             = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    TEMP_SENSOR__A_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__A_USER_VAR_SLOT     = SelectField('Sensor A Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__A_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__B_CLASSNAME         = SelectField('Sensor B', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
-    TEMP_SENSOR__B_PIN_1             = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    TEMP_SENSOR__B_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__B_USER_VAR_SLOT     = SelectField('Sensor B Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__B_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__C_CLASSNAME         = SelectField('Sensor C', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
-    TEMP_SENSOR__C_PIN_1             = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    TEMP_SENSOR__C_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__C_USER_VAR_SLOT     = SelectField('Sensor C Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__C_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
-    TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap Api Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator])
+    TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap Api Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
+    TEMP_SENSOR__MQTT_TRANSPORT      = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
+    TEMP_SENSOR__MQTT_HOST           = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
+    TEMP_SENSOR__MQTT_PORT           = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
+    TEMP_SENSOR__MQTT_USERNAME       = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
+    TEMP_SENSOR__MQTT_PASSWORD       = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[MQTTPUBLISH__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
+    TEMP_SENSOR__MQTT_TLS            = BooleanField('Use TLS')
+    TEMP_SENSOR__MQTT_CERT_BYPASS    = BooleanField('Disable Certificate Validation')
     CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[SENSOR_SLOT_validator])
@@ -3094,43 +3102,54 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
         if temp_sensor__a_classname:
-            temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
+            try:
+                temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
 
-            for x in range(temp_sensor__a_class.METADATA['count']):
-                self.SENSOR_SLOT_choices[temp_sensor__a_user_var_slot + x] = (
-                    str(temp_sensor__a_user_var_slot + x),
-                    '({0:d}) {1:s} - {2:s}'.format(
-                        temp_sensor__a_user_var_slot + x,
-                        temp_sensor__a_class.METADATA['name'],
-                        temp_sensor__a_class.METADATA['labels'][x],
+                for x in range(temp_sensor__a_class.METADATA['count']):
+                    self.SENSOR_SLOT_choices[temp_sensor__a_user_var_slot + x] = (
+                        str(temp_sensor__a_user_var_slot + x),
+                        '({0:d}) {1:s} - {2:s}'.format(
+                            temp_sensor__a_user_var_slot + x,
+                            temp_sensor__a_class.METADATA['name'],
+                            temp_sensor__a_class.METADATA['labels'][x],
+                        )
                     )
-                )
+            except AttributeError:
+                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+
 
         if temp_sensor__b_classname:
-            temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
+            try:
+                temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
 
-            for x in range(temp_sensor__b_class.METADATA['count']):
-                self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x] = (
-                    str(temp_sensor__b_user_var_slot + x),
-                    '({0:d}) {1:s} - {2:s}'.format(
-                        temp_sensor__b_user_var_slot + x,
-                        temp_sensor__b_class.METADATA['name'],
-                        temp_sensor__b_class.METADATA['labels'][x],
+                for x in range(temp_sensor__b_class.METADATA['count']):
+                    self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x] = (
+                        str(temp_sensor__b_user_var_slot + x),
+                        '({0:d}) {1:s} - {2:s}'.format(
+                            temp_sensor__b_user_var_slot + x,
+                            temp_sensor__b_class.METADATA['name'],
+                            temp_sensor__b_class.METADATA['labels'][x],
+                        )
                     )
-                )
+            except AttributeError:
+                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+
 
         if temp_sensor__c_classname:
-            temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
+            try:
+                temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
 
-            for x in range(temp_sensor__c_class.METADATA['count']):
-                self.SENSOR_SLOT_choices[temp_sensor__c_user_var_slot + x] = (
-                    str(temp_sensor__c_user_var_slot + x),
-                    '({0:d}) {1:s} - {2:s}'.format(
-                        temp_sensor__c_user_var_slot + x,
-                        temp_sensor__c_class.METADATA['name'],
-                        temp_sensor__c_class.METADATA['labels'][x],
+                for x in range(temp_sensor__c_class.METADATA['count']):
+                    self.SENSOR_SLOT_choices[temp_sensor__c_user_var_slot + x] = (
+                        str(temp_sensor__c_user_var_slot + x),
+                        '({0:d}) {1:s} - {2:s}'.format(
+                            temp_sensor__c_user_var_slot + x,
+                            temp_sensor__c_class.METADATA['name'],
+                            temp_sensor__c_class.METADATA['labels'][x],
+                        )
                     )
-                )
+            except AttributeError:
+                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
 
 
         ### Update the choices

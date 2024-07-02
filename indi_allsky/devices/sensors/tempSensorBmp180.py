@@ -20,7 +20,7 @@ class TempSensorBmp180(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('BMP180 - temp: %0.1fc, pressure: %0.1fhPa', temp_c, pressure_hpa)
+        logger.info('[%s] BMP180 - temp: %0.1fc, pressure: %0.1fhPa', self.name, temp_c, pressure_hpa)
 
         # no humidity sensor
 
@@ -80,7 +80,7 @@ class TempSensorBmp180_I2C(TempSensorBmp180):
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        logger.warning('Initializing BMP180 I2C temperature device @ %s', hex(i2c_address))
+        logger.warning('Initializing [%s] BMP180 I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
         self.bmp180 = bmp180.BMP180(i2c, address=i2c_address)
 

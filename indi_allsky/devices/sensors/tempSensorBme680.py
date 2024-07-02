@@ -23,7 +23,7 @@ class TempSensorBme680(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('BME680 - temp: %0.1fc, humidity: %0.1f%%, pressure: %0.1fhPa, gas: %0.1f', temp_c, rel_h, pressure_hpa, gas_ohm)
+        logger.info('[%s] BME680 - temp: %0.1fc, humidity: %0.1f%%, pressure: %0.1fhPa, gas: %0.1f', self.name, temp_c, rel_h, pressure_hpa, gas_ohm)
 
         try:
             dew_point_c = self.get_dew_point_c(temp_c, rel_h)
@@ -110,7 +110,7 @@ class TempSensorBme680_I2C(TempSensorBme680):
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        logger.warning('Initializing BME680 I2C temperature device @ %s', hex(i2c_address))
+        logger.warning('Initializing [%s] BME680 I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
         self.bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c, address=i2c_address)
 
@@ -163,7 +163,7 @@ class TempSensorBme680_SPI(TempSensorBme680):
         pin1 = getattr(board, pin_1_name)
         cs = digitalio.DigitalInOut(pin1)
 
-        logger.warning('Initializing BME680 SPI temperature device')
+        logger.warning('Initializing [%s] BME680 SPI temperature device', self.name)
         spi = board.SPI()
         self.bme680 = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
 

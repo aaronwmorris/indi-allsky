@@ -19,7 +19,7 @@ class TempSensorSi7021(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('Si7021 - temp: %0.1fc, humidity: %0.1f%%', temp_c, rel_h)
+        logger.info('[%s] Si7021 - temp: %0.1fc, humidity: %0.1f%%', self.name, temp_c, rel_h)
 
 
         try:
@@ -91,7 +91,7 @@ class TempSensorSi7021_I2C(TempSensorSi7021):
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        logger.warning('Initializing Si7021 I2C temperature device @ %s', hex(i2c_address))
+        logger.warning('Initializing [%s] Si7021 I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
         self.si7021 = adafruit_si7021.SI7021(i2c, address=i2c_address)
 

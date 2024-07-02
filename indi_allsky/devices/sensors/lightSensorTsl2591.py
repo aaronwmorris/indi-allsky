@@ -22,7 +22,7 @@ class LightSensorTsl2591(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('TSL2591 - lux: %0.4f, visible: %d, ir: %d, full: %d', lux, visible, infrared, full_spectrum)
+        logger.info('[%s] TSL2591 - lux: %0.4f, visible: %d, ir: %d, full: %d', self.name, lux, visible, infrared, full_spectrum)
 
 
         try:
@@ -76,7 +76,7 @@ class LightSensorTsl2591_I2C(LightSensorTsl2591):
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        logger.warning('Initializing TSL2591 I2C light sensor device @ %s', hex(i2c_address))
+        logger.warning('Initializing [%s] TSL2591 I2C light sensor device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
         self.tsl2591 = adafruit_tsl2591.TSL2591(i2c, address=i2c_address)
 
