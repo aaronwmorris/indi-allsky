@@ -4415,6 +4415,90 @@
         </div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__MQTT_HOST.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__MQTT_HOST(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__MQTT_HOST-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT hostname</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__MQTT_TRANSPORT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__MQTT_TRANSPORT(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__MQTT_TRANSPORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Transport</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__MQTT_PORT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__MQTT_PORT(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__MQTT_PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT port - 8883 = TLS, 1883 = standard</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__MQTT_USERNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__MQTT_USERNAME(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__MQTT_USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Username</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__MQTT_PASSWORD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__MQTT_PASSWORD(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__MQTT_PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Password</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__MQTT_TLS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TEMP_SENSOR__MQTT_TLS(class='form-check-input') }}
+                <div id="TEMP_SENSOR__MQTT_TLS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Use TLS/SSL for MQTT connections</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__MQTT_CERT_BYPASS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TEMP_SENSOR__MQTT_CERT_BYPASS(class='form-check-input') }}
+                <div id="TEMP_SENSOR__MQTT_CERT_BYPASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Bypass certificate validation</div>
+    </div>
+
+
 </div><!-- end sensors tab -->
 
 <div class="tab-pane fade" id="nav-devices" role="tabpanel" aria-labelledby="nav-devices-tab">
@@ -5204,6 +5288,11 @@ const field_names = [
     'TEMP_SENSOR__C_USER_VAR_SLOT',
     'TEMP_SENSOR__C_I2C_ADDRESS',
     'TEMP_SENSOR__OPENWEATHERMAP_APIKEY',
+    'TEMP_SENSOR__MQTT_TRANSPORT',
+    'TEMP_SENSOR__MQTT_HOST',
+    'TEMP_SENSOR__MQTT_PORT',
+    'TEMP_SENSOR__MQTT_USERNAME',
+    'TEMP_SENSOR__MQTT_PASSWORD',
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',
@@ -5287,6 +5376,8 @@ const checkbox_field_names = [
     'YOUTUBE__UPLOAD_PANORAMA_VIDEO',
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
+    'TEMP_SENSOR__MQTT_TLS',
+    'TEMP_SENSOR__MQTT_CERT_BYPASS',
     'DEW_HEATER__ENABLE_DAY',
     'DEW_HEATER__INVERT_OUTPUT',
     'DEW_HEATER__THOLD_ENABLE',
