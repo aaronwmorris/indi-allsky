@@ -36,7 +36,7 @@ class MqttSensorSingle(SensorBase):
         logger.warning('Initializing [%s] MQTT Client Sensor', self.name)
 
         self.data = {
-            'data' : [0.0],
+            'data' : (0.0,),
         }
 
         host = self.config.get('TEMP_SENSOR', {}).get('MQTT_HOST', 'localhost')
@@ -107,7 +107,7 @@ class MqttSensorSingle(SensorBase):
         #self.data['data'][0] = float(message)
         try:
             val = float(message.payload.decode())
-            userdata['data'][0] = val
+            userdata['data'] = (val,)
             logger.info('MQTT Sensor received: %0.3f', val)
         except ValueError as e:
             logger.error('MQTT data ValueError: %s', str(e))
