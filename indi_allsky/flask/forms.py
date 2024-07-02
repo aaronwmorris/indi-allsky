@@ -2250,7 +2250,7 @@ def DEVICE_PIN_NAME_validator(form, field):
         return
 
 
-    class_regex = r'^[a-zA-Z0-9_\-]+$'
+    class_regex = r'^[a-zA-Z0-9_\-\/]+$'
 
     if not re.search(class_regex, field.data):
         raise ValidationError('Invalid PIN name')
@@ -2619,6 +2619,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR (3)'),
         ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full (4)'),
         ('blinka_light_sensor_bh1750_i2c', 'BH1750 (GY-30) i2c - Lux (1)'),
+        ('mqtt_sensor_single', 'MQTT Sensor - (1)'),
         ('sensor_data_generator', 'Test Data Generator - (4)'),
     )
 
@@ -3052,15 +3053,15 @@ class IndiAllskyConfigForm(FlaskForm):
     FAN__THOLD_DIFF_MED              = IntegerField('Medium Threshold Difference', validators=[FAN__THOLD_DIFF_validator])
     FAN__THOLD_DIFF_HIGH             = IntegerField('High Threshold Difference', validators=[FAN__THOLD_DIFF_validator])
     TEMP_SENSOR__A_CLASSNAME         = SelectField('Sensor A', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
-    TEMP_SENSOR__A_PIN_1             = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    TEMP_SENSOR__A_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__A_USER_VAR_SLOT     = SelectField('Sensor A Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__A_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__B_CLASSNAME         = SelectField('Sensor B', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
-    TEMP_SENSOR__B_PIN_1             = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    TEMP_SENSOR__B_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__B_USER_VAR_SLOT     = SelectField('Sensor B Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__B_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__C_CLASSNAME         = SelectField('Sensor C', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
-    TEMP_SENSOR__C_PIN_1             = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
+    TEMP_SENSOR__C_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__C_USER_VAR_SLOT     = SelectField('Sensor C Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__C_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap Api Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
