@@ -937,41 +937,51 @@ class ChartView(TemplateView):
 
 
         if temp_sensor__a_classname:
-            temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
+            try:
+                temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
 
-            for x in range(temp_sensor__a_class.METADATA['count']):
-                new_sensor_slot_choices[temp_sensor__a_user_var_slot + x] = (
-                    str(temp_sensor__a_user_var_slot + x),
-                    '{0:s} - {1:s}'.format(
-                        temp_sensor__a_class.METADATA['name'],
-                        temp_sensor__a_class.METADATA['labels'][x],
+                for x in range(temp_sensor__a_class.METADATA['count']):
+                    new_sensor_slot_choices[temp_sensor__a_user_var_slot + x] = (
+                        str(temp_sensor__a_user_var_slot + x),
+                        '{0:s} - {1:s}'.format(
+                            temp_sensor__a_class.METADATA['name'],
+                            temp_sensor__a_class.METADATA['labels'][x],
+                        )
                     )
-                )
+            except AttributeError:
+                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+
 
         if temp_sensor__b_classname:
-            temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
+            try:
+                temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
 
-            for x in range(temp_sensor__b_class.METADATA['count']):
-                new_sensor_slot_choices[temp_sensor__b_user_var_slot + x] = (
-                    str(temp_sensor__b_user_var_slot + x),
-                    '{0:s} - {1:s}'.format(
-                        temp_sensor__b_class.METADATA['name'],
-                        temp_sensor__b_class.METADATA['labels'][x],
+                for x in range(temp_sensor__b_class.METADATA['count']):
+                    new_sensor_slot_choices[temp_sensor__b_user_var_slot + x] = (
+                        str(temp_sensor__b_user_var_slot + x),
+                        '{0:s} - {1:s}'.format(
+                            temp_sensor__b_class.METADATA['name'],
+                            temp_sensor__b_class.METADATA['labels'][x],
+                        )
                     )
-                )
+            except AttributeError:
+                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+
 
         if temp_sensor__c_classname:
-            temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
+            try:
+                temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
 
-            for x in range(temp_sensor__c_class.METADATA['count']):
-                new_sensor_slot_choices[temp_sensor__c_user_var_slot + x] = (
-                    str(temp_sensor__c_user_var_slot + x),
-                    '{0:s} - {1:s}'.format(
-                        temp_sensor__c_class.METADATA['name'],
-                        temp_sensor__c_class.METADATA['labels'][x],
+                for x in range(temp_sensor__c_class.METADATA['count']):
+                    new_sensor_slot_choices[temp_sensor__c_user_var_slot + x] = (
+                        str(temp_sensor__c_user_var_slot + x),
+                        '{0:s} - {1:s}'.format(
+                            temp_sensor__c_class.METADATA['name'],
+                            temp_sensor__c_class.METADATA['labels'][x],
+                        )
                     )
-                )
-
+            except AttributeError:
+                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
 
 
         custom_1_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 10)

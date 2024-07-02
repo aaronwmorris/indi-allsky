@@ -10,14 +10,14 @@ from ... import constants
 logger = logging.getLogger('indi_allsky')
 
 
-class MqttSensorSingle(SensorBase):
+class MqttBrokerSensorSingle(SensorBase):
 
     METADATA = {
-        'name' : 'MQTT Client',
-        'description' : 'MQTT Client Sensor',
+        'name' : 'MQTT Broker',
+        'description' : 'MQTT Broker Sensor',
         'count' : 1,
         'labels' : (
-            'MQTT Value',
+            'Value',
         ),
         'types' : (
             constants.SENSOR_MISC,
@@ -26,14 +26,14 @@ class MqttSensorSingle(SensorBase):
 
 
     def __init__(self, *args, **kwargs):
-        super(MqttSensorSingle, self).__init__(*args, **kwargs)
+        super(MqttBrokerSensorSingle, self).__init__(*args, **kwargs)
 
         self.topic = kwargs['pin_1_name']
 
         import ssl
         import paho.mqtt.client as mqtt
 
-        logger.warning('Initializing [%s] MQTT Client Sensor', self.name)
+        logger.warning('Initializing [%s] MQTT Broker Sensor', self.name)
 
         self.data = {
             'data' : (0.0,),
@@ -77,7 +77,7 @@ class MqttSensorSingle(SensorBase):
 
 
     def update(self):
-        logger.info('[%s] MQTT - val: %0.3f', self.name, self.data['data'][0])
+        logger.info('[%s] MQTT Broker - value: %0.3f', self.name, self.data['data'][0])
 
         return self.data
 
