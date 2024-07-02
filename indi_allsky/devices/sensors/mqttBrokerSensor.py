@@ -38,7 +38,7 @@ class MqttBrokerSensor(SensorBase):
 
         topics_str = kwargs['pin_1_name']
         topics = topics_str.split(',')
-        self.topic_list = list(set(topics[:5]))  # ensure unique values
+        self.topic_list = list(topics[:5])
 
         import ssl
         import paho.mqtt.client as mqtt
@@ -134,6 +134,7 @@ class MqttBrokerSensor(SensorBase):
         else:
             # we should always subscribe from on_connect callback to be sure
             # our subscribed is persisted across reconnections.
-            logger.info('Subscribing to %d topics', len(self.topic_list))
-            client.subscribe([(t, 0) for t in self.topic_list])
+            for topic in self.topic_list:
+                logger.info('Subscribing to topic %s', topic)
+                client.subscribe(topic)
 
