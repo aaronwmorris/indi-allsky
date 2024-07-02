@@ -12,6 +12,10 @@ logger = logging.getLogger('indi_allsky')
 class LightSensorTsl2591(SensorBase):
 
     def update(self):
+        if self.night != bool(self.night_v.value):
+            self.night = bool(self.night_v.value)
+            self.update_sensor_settings()
+
 
         try:
             lux = float(self.tsl2591.lux)
@@ -43,6 +47,20 @@ class LightSensorTsl2591(SensorBase):
         }
 
         return data
+
+
+    def update_sensor_settings(self):
+        if self.night:
+            logger.info('[%s] Switching TSL2591 to night mode', self.name)
+            self.tsl2591.gain = self.gain_night
+            self.tsl2591.integration_time = self.integration_night
+        else:
+            logger.info('[%s] Switching TSL2591 to day mode', self.name)
+            self.tsl2591.gain = self.gain_day
+            self.tsl2591.integration_time = self.integration_day
+
+        time.sleep(1.0)
+
 
 
 class LightSensorTsl2591_I2C(LightSensorTsl2591):
@@ -80,14 +98,21 @@ class LightSensorTsl2591_I2C(LightSensorTsl2591):
         i2c = board.I2C()
         self.tsl2591 = adafruit_tsl2591.TSL2591(i2c, address=i2c_address)
 
+        self.night = None  # force update on first run
+
+        self.gain_night = getattr(adafruit_tsl2591, self.config.get('TEMP_SENSOR', {}).get('TSL2591_GAIN_NIGHT', 'GAIN_MED'))
+        self.gain_day = getattr(adafruit_tsl2591, self.config.get('TEMP_SENSOR', {}).get('TSL2591_GAIN_NIGHT', 'GAIN_LOW'))
+        self.integration_night = getattr(adafruit_tsl2591, self.config.get('TEMP_SENSOR', {}).get('TSL2591_INT_NIGHT', 'INTEGRATIONTIME_100MS'))
+        self.integration_day = getattr(adafruit_tsl2591, self.config.get('TEMP_SENSOR', {}).get('TSL2591_INT_DAY', 'INTEGRATIONTIME_100MS'))
+
 
         ### You can optionally change the gain and integration time:
-        self.tsl2591.gain = adafruit_tsl2591.GAIN_LOW   # (1x gain)
+        #self.tsl2591.gain = adafruit_tsl2591.GAIN_LOW   # (1x gain)
         #self.tsl2591.gain = adafruit_tsl2591.GAIN_MED   # (25x gain, the default)
         #self.tsl2591.gain = adafruit_tsl2591.GAIN_HIGH  # (428x gain)
         #self.tsl2591.gain = adafruit_tsl2591.GAIN_MAX   # (9876x gain)
 
-        self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS  # (100ms, default)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS  # (100ms, default)
         #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_200MS  # (200ms)
         #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_300MS  # (300ms)
         #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_400MS  # (400ms)
@@ -95,3 +120,4 @@ class LightSensorTsl2591_I2C(LightSensorTsl2591):
         #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_600MS  # (600ms)
 
         time.sleep(1)
+
