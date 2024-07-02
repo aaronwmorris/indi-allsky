@@ -454,6 +454,14 @@ class IndiAllSkyConfigBase(object):
             "MQTT_PASSWORD_E"        : "",
             "MQTT_TLS"               : True,
             "MQTT_CERT_BYPASS"       : True,
+            "TSL2561_GAIN_NIGHT"     : 1,  # 0=1x, 1=16x
+            "TSL2561_GAIN_DAY"       : 0,
+            "TSL2561_INT_NIGHT"      : 1,  # 0=13.7ms, 1=101ms, 2=402ms, or 3=manual
+            "TSL2561_INT_DAY"        : 1,
+            "TSL2591_GAIN_NIGHT"     : "GAIN_MED",
+            "TSL2591_GAIN_DAY"       : "GAIN_LOW",
+            "TSL2591_INT_NIGHT"      : "INTEGRATIONTIME_100MS",
+            "TSL2591_INT_DAY"        : "INTEGRATIONTIME_100MS",
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : 10,
