@@ -29,9 +29,13 @@ class GpioStandard(GenericBase):
         if not invert_output:
             self.ON = 1
             self.OFF = 0
+            self.ON_LEVEL = 'high'
+            self.OFF_LEVEL = 'low'
         else:
             self.ON = 0
             self.OFF = 1
+            self.ON_LEVEL = 'low'
+            self.OFF_LEVEL = 'high'
 
 
         self._state = None
@@ -48,11 +52,11 @@ class GpioStandard(GenericBase):
         new_state_b = bool(new_state)
 
         if new_state_b:
-            logger.warning('Set GPIO state: ON')
+            logger.warning('Set GPIO state: ON (%s)', self.ON_LEVEL)
             self.pin.value = self.ON
             self._state = 1
         else:
-            logger.warning('Set GPIO state: OFF')
+            logger.warning('Set GPIO state: OFF (%s)', self.OFF_LEVEL)
             self.pin.value = self.OFF
             self._state = 0
 
