@@ -2199,6 +2199,16 @@ def FAN__TARGET_validator(form, field):
         raise ValidationError('Please enter a valid number')
 
 
+def GENERIC_GPIO__CLASSNAME_validator(form, field):
+    if not field.data:
+        return
+
+    class_regex = r'^[a-zA-Z0-9_\-]+$'
+
+    if not re.search(class_regex, field.data):
+        raise ValidationError('Invalid class syntax')
+
+
 def TEMP_SENSOR__CLASSNAME_validator(form, field):
     if not field.data:
         return
@@ -2631,6 +2641,11 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_fan_standard', 'Fan - Standard'),
         ('blinka_fan_pwm', 'Fan - PWM'),
         ('serial_fan_pwm', 'Fan - PWM (Serial Port)'),
+    )
+
+    GENERIC_GPIO__CLASSNAME_choices = (
+        ('', 'None'),
+        ('blinka_gpio_standard', 'GPIO - Standard'),
     )
 
     TEMP_SENSOR__CLASSNAME_choices = (
@@ -3119,6 +3134,9 @@ class IndiAllskyConfigForm(FlaskForm):
     FAN__THOLD_DIFF_LOW              = IntegerField('Low Threshold Difference', validators=[FAN__THOLD_DIFF_validator])
     FAN__THOLD_DIFF_MED              = IntegerField('Medium Threshold Difference', validators=[FAN__THOLD_DIFF_validator])
     FAN__THOLD_DIFF_HIGH             = IntegerField('High Threshold Difference', validators=[FAN__THOLD_DIFF_validator])
+    GENERIC_GPIO__A_CLASSNAME        = SelectField('GPIO', choices=GENERIC_GPIO__CLASSNAME_choices, validators=[GENERIC_GPIO__CLASSNAME_validator])
+    GENERIC_GPIO__A_PIN_1            = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
+    GENERIC_GPIO__A_INVERT_OUTPUT    = BooleanField('Invert Output')
     TEMP_SENSOR__A_CLASSNAME         = SelectField('Sensor A', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__A_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__A_USER_VAR_SLOT     = SelectField('Sensor A Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
@@ -3363,6 +3381,56 @@ class IndiAllskyConfigForm(FlaskForm):
             self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM value must be less than LOW value')
             self.DEW_HEATER__THOLD_DIFF_LOW.errors.append('LOW value must be greater than MEDIUM value')
             result = False
+
+
+        # fan
+        if self.FAN__CLASSNAME.data:
+            if self.FAN__CLASSNAME.data.startswith('blinka_'):
+                try:
+                    import board
+
+                    if self.FAN__PIN_1.data:
+                        try:
+                            getattr(board, self.FAN__PIN_1.data)
+                        except AttributeError:
+                            self.FAN__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.FAN__PIN_1.data))
+                            result = False
+                    else:
+                        self.FAN__PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.FAN__CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+                except PermissionError:
+                    self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+
+        # generic gpio
+        if self.GENERIC_GPIO__A_CLASSNAME.data:
+            if self.GENERIC_GPIO__A_CLASSNAME.data.startswith('blinka_'):
+                try:
+                    import board
+
+                    if self.GENERIC_GPIO__A_PIN_1.data:
+                        try:
+                            getattr(board, self.GENERIC_GPIO__A_PIN_1.data)
+                        except AttributeError:
+                            self.GENERIC_GPIO__A_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.GENERIC_GPIO__A_PIN_1.data))
+                            result = False
+                    else:
+                        self.GENERIC_GPIO__A_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.GENERIC_GPIO__A_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+                except PermissionError:
+                    self.GENERIC_GPIO__A_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
 
 
         # sensor A
