@@ -1,4 +1,4 @@
-#import time
+import time
 import logging
 
 from .fanBase import FanBase
@@ -18,11 +18,15 @@ class FanPwm(FanBase):
         import board
         import pwmio
 
+        logger.info('Initializing PWM FAN device')
+
         pwm_pin = getattr(board, pin_1_name)
 
         self.pwm = pwmio.PWMOut(pwm_pin)
 
         self._state = None
+
+        time.sleep(1.0)
 
 
     @property

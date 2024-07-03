@@ -6,6 +6,7 @@ from threading import Thread
 #import queue
 import threading
 
+from .devices import generic as indi_allsky_gpios
 from .devices import dew_heaters
 from .devices import fans
 from .devices import sensors as indi_allsky_sensors
@@ -37,6 +38,7 @@ class SensorWorker(Thread):
         self.night_v = night_v
         self.night = False
 
+        self.gpio = None
         self.dew_heater = None
         self.fan = None
         self.sensors = [None, None, None]
@@ -105,6 +107,7 @@ class SensorWorker(Thread):
         self.init_sensors()  # sensors before dew heater and fan
         self.update_sensors()
 
+        self.init_gpio()
         self.init_dew_heater()
         self.init_fan()
 
@@ -157,6 +160,10 @@ class SensorWorker(Thread):
         if self.night:
             ### night
 
+            # gpio
+            self.set_gpio(1)
+
+
             # dew heater
             if not self.dew_heater.state:
                 self.set_dew_heater(self.dh_level_default)
@@ -172,6 +179,10 @@ class SensorWorker(Thread):
         else:
             ### day
 
+            # gpio
+            self.set_gpio(0)
+
+
             # dew heater
             if self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
                 if not self.dew_heater.state:
@@ -183,6 +194,38 @@ class SensorWorker(Thread):
             # fan
             if not self.fan.state:
                 self.set_fan(self.fan_level_default)
+
+
+    def init_gpio(self):
+        a_gpio__classname = self.config.get('GENERIC_GPIO', {}).get('A_CLASSNAME')
+        if a_gpio__classname:
+            a_gpio_class = getattr(indi_allsky_gpios, a_gpio__classname)
+
+            a_gpio_pin_1 = self.config.get('GENERIC_GPIO', {}).get('A_PIN_1', 'notdefined')
+            a_gpio_invert_output = self.config.get('GENERIC_GPIO', {}).get('A_INVERT_OUTPUT', False)
+
+            self.gpio = a_gpio_class(self.config, pin_1_name=a_gpio_pin_1, invert_output=a_gpio_invert_output)
+
+
+            if self.night_v.value:
+                ### night
+                self.set_gpio(1)
+            else:
+                ### day
+                self.set_gpio(0)
+
+        else:
+            self.gpio = indi_allsky_gpios.gpio_simulator(self.config)
+
+
+
+    def set_gpio(self, new_state):
+        if self.gpio.state != new_state:
+            try:
+                self.gpio.state = new_state
+            except DeviceControlException as e:
+                logger.error('GPIO exception: %s', str(e))
+                return
 
 
     def init_dew_heater(self):
@@ -204,7 +247,6 @@ class SensorWorker(Thread):
                     self.set_dew_heater(self.dh_level_default)
                 else:
                     self.set_dew_heater(0)
-
 
         else:
             self.dew_heater = dew_heaters.dew_heater_simulator(self.config)

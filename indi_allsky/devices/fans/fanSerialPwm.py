@@ -1,5 +1,5 @@
 from pathlib import Path
-#import time
+import time
 import logging
 
 from .fanBase import FanBase
@@ -19,6 +19,8 @@ class FanSerialPwm(FanBase):
 
         serial_port_name = kwargs['pin_1_name']
 
+        logger.info('Initializing serial controlled FAN device')
+
         self.serial_port = Path('/dev').joinpath(serial_port_name)
 
         if not self.serial_port.exists():
@@ -26,6 +28,8 @@ class FanSerialPwm(FanBase):
 
 
         self._state = None
+
+        time.sleep(1.0)
 
 
     @property

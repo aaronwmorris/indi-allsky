@@ -1658,7 +1658,7 @@ class ConfigView(FormView):
             'DEW_HEATER__THOLD_DIFF_MED'     : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_MED', 10),
             'DEW_HEATER__THOLD_DIFF_HIGH'    : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', 5),
             'FAN__CLASSNAME'                 : self.indi_allsky_config.get('FAN', {}).get('CLASSNAME', ''),
-            'FAN__PIN_1'                     : self.indi_allsky_config.get('FAN', {}).get('PIN_1', 'D12'),
+            'FAN__PIN_1'                     : self.indi_allsky_config.get('FAN', {}).get('PIN_1', 'D13'),
             'FAN__INVERT_OUTPUT'             : self.indi_allsky_config.get('FAN', {}).get('INVERT_OUTPUT', False),
             'FAN__ENABLE_NIGHT'              : self.indi_allsky_config.get('FAN', {}).get('ENABLE_NIGHT', False),
             'FAN__LEVEL_DEF'                 : self.indi_allsky_config.get('FAN', {}).get('LEVEL_DEF', 100),
@@ -1671,6 +1671,9 @@ class ConfigView(FormView):
             'FAN__THOLD_DIFF_LOW'            : self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_LOW', 15),
             'FAN__THOLD_DIFF_MED'            : self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_MED', 10),
             'FAN__THOLD_DIFF_HIGH'           : self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_HIGH', 5),
+            'GENERIC_GPIO__A_CLASSNAME'      : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_CLASSNAME', ''),
+            'GENERIC_GPIO__A_PIN_1'          : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_PIN_1', 'D21'),
+            'GENERIC_GPIO__A_INVERT_OUTPUT'  : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_INVERT_OUTPUT', False),
             'TEMP_SENSOR__A_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_CLASSNAME', ''),
             'TEMP_SENSOR__A_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'D5'),
             'TEMP_SENSOR__A_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77'),
@@ -2016,6 +2019,9 @@ class AjaxConfigView(BaseView):
 
         if not self.indi_allsky_config.get('FAN'):
             self.indi_allsky_config['FAN'] = {}
+
+        if not self.indi_allsky_config.get('GENERIC_GPIO'):
+            self.indi_allsky_config['GENERIC_GPIO'] = {}
 
         if not self.indi_allsky_config.get('TEMP_SENSOR'):
             self.indi_allsky_config['TEMP_SENSOR'] = {}
@@ -2364,6 +2370,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FAN']['THOLD_DIFF_LOW']                = int(request.json['FAN__THOLD_DIFF_LOW'])
         self.indi_allsky_config['FAN']['THOLD_DIFF_MED']                = int(request.json['FAN__THOLD_DIFF_MED'])
         self.indi_allsky_config['FAN']['THOLD_DIFF_HIGH']               = int(request.json['FAN__THOLD_DIFF_HIGH'])
+        self.indi_allsky_config['GENERIC_GPIO']['A_CLASSNAME']          = str(request.json['GENERIC_GPIO__A_CLASSNAME'])
+        self.indi_allsky_config['GENERIC_GPIO']['A_PIN_1']              = str(request.json['GENERIC_GPIO__A_PIN_1'])
+        self.indi_allsky_config['GENERIC_GPIO']['A_INVERT_OUTPUT']      = bool(request.json['GENERIC_GPIO__A_INVERT_OUTPUT'])
         self.indi_allsky_config['TEMP_SENSOR']['A_CLASSNAME']           = str(request.json['TEMP_SENSOR__A_CLASSNAME'])
         self.indi_allsky_config['TEMP_SENSOR']['A_PIN_1']               = str(request.json['TEMP_SENSOR__A_PIN_1'])
         self.indi_allsky_config['TEMP_SENSOR']['A_USER_VAR_SLOT']       = int(request.json['TEMP_SENSOR__A_USER_VAR_SLOT'])

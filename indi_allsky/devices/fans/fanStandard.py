@@ -1,4 +1,4 @@
-#import time
+import time
 import logging
 
 from .fanBase import FanBase
@@ -18,6 +18,8 @@ class FanStandard(FanBase):
         import board
         import digitalio
 
+        logger.info('Initializing standard FAN device')
+
         pin1 = getattr(board, pin_1_name)
 
         self.pin = digitalio.DigitalInOut(pin1)
@@ -33,6 +35,8 @@ class FanStandard(FanBase):
 
 
         self._state = None
+
+        time.sleep(1.0)
 
 
     @property

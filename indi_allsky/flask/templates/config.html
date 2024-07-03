@@ -4618,6 +4618,48 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.GENERIC_GPIO__A_CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.GENERIC_GPIO__A_CLASSNAME(class='form-select bg-secondary') }}
+            <div id="GENERIC_GPIO__A_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>Activates a device/pin at night and off during day (or reversed)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.GENERIC_GPIO__A_PIN_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.GENERIC_GPIO__A_PIN_1(class='form-control bg-secondary') }}
+            <div id="GENERIC_GPIO__A_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D21 (GPIO21 / Pin 40 Raspi)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.GENERIC_GPIO__A_INVERT_OUTPUT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.GENERIC_GPIO__A_INVERT_OUTPUT(class='form-check-input') }}
+                <div id="GENERIC_GPIO__A_INVERT_OUTPUT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.DEW_HEATER__CLASSNAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -4638,7 +4680,7 @@
             <div id="DEW_HEATER__PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Example: D12 (GPIO12 / Pin 32 Raspi)</div>
+            <div>Example: D13 (GPIO13 / Pin 33 Raspi)</div>
         </div>
     </div>
 
@@ -5383,6 +5425,8 @@ const field_names = [
     'FAN__THOLD_DIFF_LOW',
     'FAN__THOLD_DIFF_MED',
     'FAN__THOLD_DIFF_HIGH',
+    'GENERIC_GPIO__A_CLASSNAME',
+    'GENERIC_GPIO__A_PIN_1',
     'TEMP_SENSOR__A_CLASSNAME',
     'TEMP_SENSOR__A_PIN_1',
     'TEMP_SENSOR__A_USER_VAR_SLOT',
@@ -5500,6 +5544,7 @@ const checkbox_field_names = [
     'FAN__ENABLE_NIGHT',
     'FAN__INVERT_OUTPUT',
     'FAN__THOLD_ENABLE',
+    'GENERIC_GPIO__A_INVERT_OUTPUT',
     'WEB_NONLOCAL_IMAGES',
     'WEB_LOCAL_IMAGES_ADMIN',
     'RELOAD_ON_SAVE',

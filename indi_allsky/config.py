@@ -431,6 +431,11 @@ class IndiAllSkyConfigBase(object):
             "THOLD_DIFF_MED"         : 5,
             "THOLD_DIFF_HIGH"        : 10,
         },
+        "GENERIC_GPIO" : {
+            "A_CLASSNAME"            : "",
+            "A_PIN_1"                : "D21",
+            "A_INVERT_OUTPUT"        : False,
+        },
         "TEMP_SENSOR" : {
             "A_CLASSNAME"            : "",
             "A_PIN_1"                : "D5",

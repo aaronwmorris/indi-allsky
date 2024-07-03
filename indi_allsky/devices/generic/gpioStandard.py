@@ -1,16 +1,16 @@
 import time
 import logging
 
-from .dewHeaterBase import DewHeaterBase
+from .genericBase import GenericBase
 
 
 logger = logging.getLogger('indi_allsky')
 
 
-class DewHeaterStandard(DewHeaterBase):
+class GpioStandard(GenericBase):
 
     def __init__(self, *args, **kwargs):
-        super(DewHeaterStandard, self).__init__(*args, **kwargs)
+        super(GpioStandard, self).__init__(*args, **kwargs)
 
         pin_1_name = kwargs['pin_1_name']
         invert_output = kwargs['invert_output']
@@ -18,7 +18,7 @@ class DewHeaterStandard(DewHeaterBase):
         import board
         import digitalio
 
-        logger.info('Initializing standard DEW HEATER device')
+        logger.info('Initializing standard GPIO device')
 
         pin1 = getattr(board, pin_1_name)
 
@@ -29,9 +29,13 @@ class DewHeaterStandard(DewHeaterBase):
         if not invert_output:
             self.ON = 1
             self.OFF = 0
+            self.ON_LEVEL = 'high'
+            self.OFF_LEVEL = 'low'
         else:
             self.ON = 0
             self.OFF = 1
+            self.ON_LEVEL = 'low'
+            self.OFF_LEVEL = 'high'
 
 
         self._state = None
@@ -50,11 +54,11 @@ class DewHeaterStandard(DewHeaterBase):
         new_state_b = bool(new_state)
 
         if new_state_b:
-            logger.warning('Set dew heater state: 100%')
+            logger.warning('Set GPIO state: ON (%s)', self.ON_LEVEL)
             self.pin.value = self.ON
-            self._state = 100
+            self._state = 1
         else:
-            logger.warning('Set dew heater state: 0%')
+            logger.warning('Set GPIO state: OFF (%s)', self.OFF_LEVEL)
             self.pin.value = self.OFF
             self._state = 0
 
