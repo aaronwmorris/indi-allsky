@@ -1672,7 +1672,7 @@ class ConfigView(FormView):
             'FAN__THOLD_DIFF_MED'            : self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_MED', 10),
             'FAN__THOLD_DIFF_HIGH'           : self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_HIGH', 5),
             'GENERIC_GPIO__A_CLASSNAME'      : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_CLASSNAME', ''),
-            'GENERIC_GPIO__A_PIN_1'          : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_PIN_1', 'D4'),
+            'GENERIC_GPIO__A_PIN_1'          : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_PIN_1', 'D21'),
             'GENERIC_GPIO__A_INVERT_OUTPUT'  : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_INVERT_OUTPUT', False),
             'TEMP_SENSOR__A_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_CLASSNAME', ''),
             'TEMP_SENSOR__A_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'D5'),
