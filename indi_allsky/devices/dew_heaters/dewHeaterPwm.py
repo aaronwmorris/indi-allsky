@@ -18,6 +18,8 @@ class DewHeaterPwm(DewHeaterBase):
         import board
         import pwmio
 
+        logger.info('Initializing PWM DEW HEATER device')
+
         pwm_pin = getattr(board, pin_1_name)
 
         self.pwm = pwmio.PWMOut(pwm_pin)

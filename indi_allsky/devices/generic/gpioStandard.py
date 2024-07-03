@@ -18,6 +18,8 @@ class GpioStandard(GenericBase):
         import board
         import digitalio
 
+        logger.info('Initializing standard GPIO device')
+
         pin1 = getattr(board, pin_1_name)
 
         self.pin = digitalio.DigitalInOut(pin1)
@@ -48,7 +50,7 @@ class GpioStandard(GenericBase):
         if new_state_b:
             logger.warning('Set GPIO state: ON')
             self.pin.value = self.ON
-            self._state = 100
+            self._state = 1
         else:
             logger.warning('Set GPIO state: OFF')
             self.pin.value = self.OFF
