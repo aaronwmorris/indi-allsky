@@ -433,7 +433,7 @@ class IndiAllSkyConfigBase(object):
         },
         "GENERIC_GPIO" : {
             "A_CLASSNAME"            : "",
-            "A_PIN_1"                : "D13",
+            "A_PIN_1"                : "D4",
             "A_INVERT_OUTPUT"        : False,
         },
         "TEMP_SENSOR" : {
