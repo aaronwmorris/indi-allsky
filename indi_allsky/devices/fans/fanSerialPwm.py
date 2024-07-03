@@ -1,5 +1,5 @@
 from pathlib import Path
-#import time
+import time
 import logging
 
 from .fanBase import FanBase
@@ -28,6 +28,8 @@ class FanSerialPwm(FanBase):
 
 
         self._state = None
+
+        time.sleep(1.0)
 
 
     @property

@@ -1,4 +1,4 @@
-#import time
+import time
 import logging
 
 from .dewHeaterBase import DewHeaterBase
@@ -35,6 +35,8 @@ class DewHeaterStandard(DewHeaterBase):
 
 
         self._state = None
+
+        time.sleep(1.0)
 
 
     @property

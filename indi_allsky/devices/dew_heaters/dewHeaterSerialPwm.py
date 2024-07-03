@@ -1,5 +1,5 @@
 from pathlib import Path
-#import time
+import time
 import logging
 
 from .dewHeaterBase import DewHeaterBase
@@ -28,6 +28,8 @@ class DewHeaterSerialPwm(DewHeaterBase):
 
 
         self._state = None
+
+        time.sleep(1.0)
 
 
     @property

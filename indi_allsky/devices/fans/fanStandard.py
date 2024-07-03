@@ -1,4 +1,4 @@
-#import time
+import time
 import logging
 
 from .fanBase import FanBase
@@ -35,6 +35,8 @@ class FanStandard(FanBase):
 
 
         self._state = None
+
+        time.sleep(1.0)
 
 
     @property

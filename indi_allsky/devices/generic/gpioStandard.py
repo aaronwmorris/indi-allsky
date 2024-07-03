@@ -1,4 +1,4 @@
-#import time
+import time
 import logging
 
 from .genericBase import GenericBase
@@ -39,6 +39,8 @@ class GpioStandard(GenericBase):
 
 
         self._state = None
+
+        time.sleep(1.0)
 
 
     @property

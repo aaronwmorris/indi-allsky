@@ -1,4 +1,4 @@
-#import time
+import time
 import logging
 
 from .dewHeaterBase import DewHeaterBase
@@ -25,6 +25,8 @@ class DewHeaterPwm(DewHeaterBase):
         self.pwm = pwmio.PWMOut(pwm_pin)
 
         self._state = None
+
+        time.sleep(1.0)
 
 
     @property
