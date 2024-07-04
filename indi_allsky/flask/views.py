@@ -852,8 +852,6 @@ class ChartView(TemplateView):
     def get_context(self):
         context = super(ChartView, self).get_context()
 
-        from ..devices import sensors as indi_allsky_sensors
-
         context['timestamp'] = int(request.args.get('timestamp', 0))
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
@@ -862,133 +860,7 @@ class ChartView(TemplateView):
         context['form_history'] = IndiAllskyHistoryForm()
 
 
-        new_sensor_slot_choices = [
-            ('0', 'Camera Temp'),
-            ('1', 'Dew Heater Level'),
-            ('2', 'Dew Point'),
-            ('3', 'Frost Point'),
-            ('4', 'Fan Level'),
-            ('5', 'Heat Index'),
-            ('6', 'Wind Dir Degrees'),
-            ('7', 'SQM'),
-            ('8', 'Reserved'),
-            ('9', 'Reserved'),
-            ('10', 'User Slot 10'),
-            ('11', 'User Slot 11'),
-            ('12', 'User Slot 12'),
-            ('13', 'User Slot 13'),
-            ('14', 'User Slot 14'),
-            ('15', 'User Slot 15'),
-            ('16', 'User Slot 16'),
-            ('17', 'User Slot 17'),
-            ('18', 'User Slot 18'),
-            ('19', 'User Slot 19'),
-            ('20', 'User Slot 20'),
-            ('21', 'User Slot 21'),
-            ('22', 'User Slot 22'),
-            ('23', 'User Slot 23'),
-            ('24', 'User Slot 24'),
-            ('25', 'User Slot 25'),
-            ('26', 'User Slot 26'),
-            ('27', 'User Slot 27'),
-            ('28', 'User Slot 28'),
-            ('29', 'User Slot 29'),
-            ('100', 'Camera Temp'),
-            ('110', 'System Temp 10'),
-            ('111', 'System Temp 11'),
-            ('112', 'System Temp 12'),
-            ('113', 'System Temp 13'),
-            ('114', 'System Temp 14'),
-            ('115', 'System Temp 15'),
-            ('116', 'System Temp 16'),
-            ('117', 'System Temp 17'),
-            ('118', 'System Temp 18'),
-            ('119', 'System Temp 19'),
-            ('120', 'System Temp 20'),
-            ('121', 'System Temp 21'),
-            ('122', 'System Temp 22'),
-            ('123', 'System Temp 23'),
-            ('124', 'System Temp 24'),
-            ('125', 'System Temp 25'),
-            ('126', 'System Temp 26'),
-            ('127', 'System Temp 27'),
-            ('128', 'System Temp 28'),
-            ('129', 'System Temp 29'),
-        ]
-
-
-        temp_sensor__a_classname = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_CLASSNAME', '')
-        temp_sensor__a_label = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_LABEL', 'Sensor A')
-        temp_sensor__a_user_var_slot = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT')
-        temp_sensor__b_classname = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_CLASSNAME', '')
-        temp_sensor__b_label = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B')
-        temp_sensor__b_user_var_slot = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT')
-        temp_sensor__c_classname = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_CLASSNAME', '')
-        temp_sensor__c_label = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C')
-        temp_sensor__c_user_var_slot = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT')
-
-
-        # fix system temp offset
-        if temp_sensor__a_user_var_slot >= 100:
-            temp_sensor__a_user_var_slot -= 79
-
-        if temp_sensor__b_user_var_slot >= 100:
-            temp_sensor__b_user_var_slot -= 79
-
-        if temp_sensor__c_user_var_slot >= 100:
-            temp_sensor__c_user_var_slot -= 79
-
-
-        if temp_sensor__a_classname:
-            try:
-                temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
-
-                for x in range(temp_sensor__a_class.METADATA['count']):
-                    new_sensor_slot_choices[temp_sensor__a_user_var_slot + x] = (
-                        str(temp_sensor__a_user_var_slot + x),
-                        '{0:s} - {1:s} - {2:s}'.format(
-                            temp_sensor__a_class.METADATA['name'],
-                            temp_sensor__a_label,
-                            temp_sensor__a_class.METADATA['labels'][x],
-                        )
-                    )
-            except AttributeError:
-                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
-
-
-        if temp_sensor__b_classname:
-            try:
-                temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
-
-                for x in range(temp_sensor__b_class.METADATA['count']):
-                    new_sensor_slot_choices[temp_sensor__b_user_var_slot + x] = (
-                        str(temp_sensor__b_user_var_slot + x),
-                        '{0:s} - {1:s} - {2:s}'.format(
-                            temp_sensor__b_class.METADATA['name'],
-                            temp_sensor__b_label,
-                            temp_sensor__b_class.METADATA['labels'][x],
-                        )
-                    )
-            except AttributeError:
-                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
-
-
-        if temp_sensor__c_classname:
-            try:
-                temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
-
-                for x in range(temp_sensor__c_class.METADATA['count']):
-                    new_sensor_slot_choices[temp_sensor__c_user_var_slot + x] = (
-                        str(temp_sensor__c_user_var_slot + x),
-                        '{0:s} - {1:s} - {2:s}'.format(
-                            temp_sensor__c_class.METADATA['name'],
-                            temp_sensor__c_label,
-                            temp_sensor__c_class.METADATA['labels'][x],
-                        )
-                    )
-            except AttributeError:
-                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
-
+        self.update_sensor_slot_labels()
 
         custom_1_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 10)
         custom_2_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)
@@ -1010,11 +882,10 @@ class ChartView(TemplateView):
             custom_4_index -= 79
 
 
-        context['label_custom_chart_1'] = new_sensor_slot_choices[custom_1_index][1]
-        context['label_custom_chart_2'] = new_sensor_slot_choices[custom_2_index][1]
-        context['label_custom_chart_3'] = new_sensor_slot_choices[custom_3_index][1]
-        context['label_custom_chart_4'] = new_sensor_slot_choices[custom_4_index][1]
-
+        context['label_custom_chart_1'] = self.SENSOR_SLOT_choices[custom_1_index][1]
+        context['label_custom_chart_2'] = self.SENSOR_SLOT_choices[custom_2_index][1]
+        context['label_custom_chart_3'] = self.SENSOR_SLOT_choices[custom_3_index][1]
+        context['label_custom_chart_4'] = self.SENSOR_SLOT_choices[custom_4_index][1]
 
 
         return context
