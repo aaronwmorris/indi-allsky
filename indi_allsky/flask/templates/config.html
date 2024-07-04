@@ -2859,11 +2859,11 @@
         <div class="col-sm-2">
             {{ form_config.CHARTS__CUSTOM_SLOT_1.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-4">
             {{ form_config.CHARTS__CUSTOM_SLOT_1(class='form-select bg-secondary') }}
             <div id="CHARTS__CUSTOM_SLOT_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7">
+        <div class="col-sm-6">
             <div>Slot to chart on charts view</div>
         </div>
     </div>
@@ -2872,11 +2872,11 @@
         <div class="col-sm-2">
             {{ form_config.CHARTS__CUSTOM_SLOT_2.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-4">
             {{ form_config.CHARTS__CUSTOM_SLOT_2(class='form-select bg-secondary') }}
             <div id="CHARTS__CUSTOM_SLOT_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7">
+        <div class="col-sm-6">
         </div>
     </div>
 
@@ -2884,11 +2884,11 @@
         <div class="col-sm-2">
             {{ form_config.CHARTS__CUSTOM_SLOT_3.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-4">
             {{ form_config.CHARTS__CUSTOM_SLOT_3(class='form-select bg-secondary') }}
             <div id="CHARTS__CUSTOM_SLOT_3-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7">
+        <div class="col-sm-6">
         </div>
     </div>
 
@@ -2896,11 +2896,11 @@
         <div class="col-sm-2">
             {{ form_config.CHARTS__CUSTOM_SLOT_4.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-4">
             {{ form_config.CHARTS__CUSTOM_SLOT_4(class='form-select bg-secondary') }}
             <div id="CHARTS__CUSTOM_SLOT_4-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7">
+        <div class="col-sm-6">
         </div>
     </div>
 
@@ -4237,6 +4237,10 @@
 
     <hr>
 
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> Additional graphs may be configured for sensor values on the Admin Tab</div>
+
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__A_CLASSNAME.label(class='col-form-label') }}
@@ -4247,6 +4251,18 @@
         </div>
         <div class="col-sm-6">
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Sensors" class="text-decoration-none link-info" target="_blank">Sensor Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__A_LABEL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__A_LABEL(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__A_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
         </div>
     </div>
 
@@ -4307,6 +4323,18 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_LABEL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_LABEL(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__B_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__B_PIN_1.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -4357,6 +4385,18 @@
         </div>
         <div class="col-sm-6">
             <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_LABEL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_LABEL(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__C_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
         </div>
     </div>
 
@@ -4745,11 +4785,11 @@
         <div class="col-sm-2">
             {{ form_config.DEW_HEATER__TEMP_USER_VAR_SLOT.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-4">
             {{ form_config.DEW_HEATER__TEMP_USER_VAR_SLOT(class='form-select bg-secondary') }}
             <div id="DEW_HEATER__TEMP_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7">
+        <div class="col-sm-6">
             <div>This should be the slot containing the current temperature to be compared against the dew point (or manual target)</div>
         </div>
     </div>
@@ -4934,11 +4974,11 @@
         <div class="col-sm-2">
             {{ form_config.FAN__TEMP_USER_VAR_SLOT.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-4">
             {{ form_config.FAN__TEMP_USER_VAR_SLOT(class='form-select bg-secondary') }}
             <div id="FAN__TEMP_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-7">
+        <div class="col-sm-6">
             <div>This should be the slot containing the current temperature to be compared with the target temperature</div>
         </div>
     </div>
@@ -5428,14 +5468,17 @@ const field_names = [
     'GENERIC_GPIO__A_CLASSNAME',
     'GENERIC_GPIO__A_PIN_1',
     'TEMP_SENSOR__A_CLASSNAME',
+    'TEMP_SENSOR__A_LABEL',
     'TEMP_SENSOR__A_PIN_1',
     'TEMP_SENSOR__A_USER_VAR_SLOT',
     'TEMP_SENSOR__A_I2C_ADDRESS',
     'TEMP_SENSOR__B_CLASSNAME',
+    'TEMP_SENSOR__B_LABEL',
     'TEMP_SENSOR__B_PIN_1',
     'TEMP_SENSOR__B_USER_VAR_SLOT',
     'TEMP_SENSOR__B_I2C_ADDRESS',
     'TEMP_SENSOR__C_CLASSNAME',
+    'TEMP_SENSOR__C_LABEL',
     'TEMP_SENSOR__C_PIN_1',
     'TEMP_SENSOR__C_USER_VAR_SLOT',
     'TEMP_SENSOR__C_I2C_ADDRESS',

@@ -2219,6 +2219,10 @@ def TEMP_SENSOR__CLASSNAME_validator(form, field):
         raise ValidationError('Invalid class syntax')
 
 
+def TEMP_SENSOR__LABEL_validator(form, field):
+    pass
+
+
 def TEMP_SENSOR__I2C_ADDRESS_validator(form, field):
     try:
         int(field.data, 16)
@@ -3138,14 +3142,17 @@ class IndiAllskyConfigForm(FlaskForm):
     GENERIC_GPIO__A_PIN_1            = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     GENERIC_GPIO__A_INVERT_OUTPUT    = BooleanField('Invert Output')
     TEMP_SENSOR__A_CLASSNAME         = SelectField('Sensor A', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
+    TEMP_SENSOR__A_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__A_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__A_USER_VAR_SLOT     = SelectField('Sensor A Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__A_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__B_CLASSNAME         = SelectField('Sensor B', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
+    TEMP_SENSOR__B_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__B_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__B_USER_VAR_SLOT     = SelectField('Sensor B Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__B_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__C_CLASSNAME         = SelectField('Sensor C', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
+    TEMP_SENSOR__C_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__C_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__C_USER_VAR_SLOT     = SelectField('Sensor C Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__C_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
@@ -3187,10 +3194,13 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
         temp_sensor__a_classname = str(data['TEMP_SENSOR__A_CLASSNAME'])
+        temp_sensor__a_label = str(data['TEMP_SENSOR__A_LABEL'])
         temp_sensor__a_user_var_slot = int(data['TEMP_SENSOR__A_USER_VAR_SLOT'])
         temp_sensor__b_classname = str(data['TEMP_SENSOR__B_CLASSNAME'])
+        temp_sensor__b_label = str(data['TEMP_SENSOR__B_LABEL'])
         temp_sensor__b_user_var_slot = int(data['TEMP_SENSOR__B_USER_VAR_SLOT'])
         temp_sensor__c_classname = str(data['TEMP_SENSOR__C_CLASSNAME'])
+        temp_sensor__c_label = str(data['TEMP_SENSOR__C_LABEL'])
         temp_sensor__c_user_var_slot = int(data['TEMP_SENSOR__C_USER_VAR_SLOT'])
 
 
@@ -3201,9 +3211,10 @@ class IndiAllskyConfigForm(FlaskForm):
                 for x in range(temp_sensor__a_class.METADATA['count']):
                     self.SENSOR_SLOT_choices[temp_sensor__a_user_var_slot + x] = (
                         str(temp_sensor__a_user_var_slot + x),
-                        '({0:d}) {1:s} - {2:s}'.format(
+                        '({0:d}) {1:s} - {2:s} - {3:s}'.format(
                             temp_sensor__a_user_var_slot + x,
                             temp_sensor__a_class.METADATA['name'],
+                            temp_sensor__a_label,
                             temp_sensor__a_class.METADATA['labels'][x],
                         )
                     )
@@ -3218,9 +3229,10 @@ class IndiAllskyConfigForm(FlaskForm):
                 for x in range(temp_sensor__b_class.METADATA['count']):
                     self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x] = (
                         str(temp_sensor__b_user_var_slot + x),
-                        '({0:d}) {1:s} - {2:s}'.format(
+                        '({0:d}) {1:s} - {2:s} - {3:s}'.format(
                             temp_sensor__b_user_var_slot + x,
                             temp_sensor__b_class.METADATA['name'],
+                            temp_sensor__b_label,
                             temp_sensor__b_class.METADATA['labels'][x],
                         )
                     )
@@ -3235,9 +3247,10 @@ class IndiAllskyConfigForm(FlaskForm):
                 for x in range(temp_sensor__c_class.METADATA['count']):
                     self.SENSOR_SLOT_choices[temp_sensor__c_user_var_slot + x] = (
                         str(temp_sensor__c_user_var_slot + x),
-                        '({0:d}) {1:s} - {2:s}'.format(
+                        '({0:d}) {1:s} - {2:s} - {3:s}'.format(
                             temp_sensor__c_user_var_slot + x,
                             temp_sensor__c_class.METADATA['name'],
+                            temp_sensor__c_label,
                             temp_sensor__c_class.METADATA['labels'][x],
                         )
                     )
