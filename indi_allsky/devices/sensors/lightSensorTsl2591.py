@@ -101,7 +101,7 @@ class LightSensorTsl2591_I2C(LightSensorTsl2591):
         self.night = None  # force update on first run
 
         self.gain_night = getattr(adafruit_tsl2591, self.config.get('TEMP_SENSOR', {}).get('TSL2591_GAIN_NIGHT', 'GAIN_MED'))
-        self.gain_day = getattr(adafruit_tsl2591, self.config.get('TEMP_SENSOR', {}).get('TSL2591_GAIN_NIGHT', 'GAIN_LOW'))
+        self.gain_day = getattr(adafruit_tsl2591, self.config.get('TEMP_SENSOR', {}).get('TSL2591_GAIN_DAY', 'GAIN_LOW'))
         self.integration_night = getattr(adafruit_tsl2591, self.config.get('TEMP_SENSOR', {}).get('TSL2591_INT_NIGHT', 'INTEGRATIONTIME_100MS'))
         self.integration_day = getattr(adafruit_tsl2591, self.config.get('TEMP_SENSOR', {}).get('TSL2591_INT_DAY', 'INTEGRATIONTIME_100MS'))
 
