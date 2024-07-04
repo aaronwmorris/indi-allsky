@@ -4256,6 +4256,18 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__A_LABEL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__A_LABEl(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__A_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__A_PIN_1.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -4311,6 +4323,18 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_LABEL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_LABEl(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__B_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__B_PIN_1.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -4361,6 +4385,18 @@
         </div>
         <div class="col-sm-6">
             <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_LABEL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_LABEl(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__C_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
         </div>
     </div>
 
@@ -5432,14 +5468,17 @@ const field_names = [
     'GENERIC_GPIO__A_CLASSNAME',
     'GENERIC_GPIO__A_PIN_1',
     'TEMP_SENSOR__A_CLASSNAME',
+    'TEMP_SENSOR__A_LABEL',
     'TEMP_SENSOR__A_PIN_1',
     'TEMP_SENSOR__A_USER_VAR_SLOT',
     'TEMP_SENSOR__A_I2C_ADDRESS',
     'TEMP_SENSOR__B_CLASSNAME',
+    'TEMP_SENSOR__B_LABEL',
     'TEMP_SENSOR__B_PIN_1',
     'TEMP_SENSOR__B_USER_VAR_SLOT',
     'TEMP_SENSOR__B_I2C_ADDRESS',
     'TEMP_SENSOR__C_CLASSNAME',
+    'TEMP_SENSOR__C_LABEL',
     'TEMP_SENSOR__C_PIN_1',
     'TEMP_SENSOR__C_USER_VAR_SLOT',
     'TEMP_SENSOR__C_I2C_ADDRESS',
