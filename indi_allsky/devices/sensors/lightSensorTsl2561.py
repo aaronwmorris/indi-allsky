@@ -17,6 +17,11 @@ class LightSensorTsl2561(SensorBase):
             self.update_sensor_settings()
 
 
+        #gain = self.tsl2561.gain
+        #integration = self.tsl2561.integration_time
+        #logger.info('[%s] TSL2561 settings - Gain: %d, Integration: %d', gain, integration)
+
+
         try:
             lux = float(self.tsl2561.lux)  # can be None
             broadband = int(self.tsl2561.broadband)
@@ -51,11 +56,11 @@ class LightSensorTsl2561(SensorBase):
 
     def update_sensor_settings(self):
         if self.night:
-            logger.info('[%s] Switching TSL2561 to night mode', self.name)
+            logger.info('[%s] Switching TSL2561 to night mode - Gain: %d, Integration: %d', self.name, self.gain_night, self.integration_night)
             self.tsl2561.gain = self.gain_night
             self.tsl2561.integration_time = self.integration_night
         else:
-            logger.info('[%s] Switching TSL2561 to day mode', self.name)
+            logger.info('[%s] Switching TSL2561 to day mode - Gain: %d, Integration: %d', self.name, self.gain_day, self.integration_day)
             self.tsl2561.gain = self.gain_day
             self.tsl2561.integration_time = self.integration_day
 
