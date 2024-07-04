@@ -99,7 +99,7 @@ class LightSensorTsl2561_I2C(LightSensorTsl2561):
         self.night = None  # force update on first run
 
         self.gain_night = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_NIGHT', 1))
-        self.gain_day = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_NIGHT', 0))
+        self.gain_day = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_DAY', 0))
         self.integration_night = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_INT_NIGHT', 1))
         self.integration_day = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_INT_DAY', 1))
 
