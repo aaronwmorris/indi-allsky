@@ -3194,10 +3194,13 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
         temp_sensor__a_classname = str(data['TEMP_SENSOR__A_CLASSNAME'])
+        temp_sensor__a_label = str(data['TEMP_SENSOR__A_LABEL'])
         temp_sensor__a_user_var_slot = int(data['TEMP_SENSOR__A_USER_VAR_SLOT'])
         temp_sensor__b_classname = str(data['TEMP_SENSOR__B_CLASSNAME'])
+        temp_sensor__b_label = str(data['TEMP_SENSOR__B_LABEL'])
         temp_sensor__b_user_var_slot = int(data['TEMP_SENSOR__B_USER_VAR_SLOT'])
         temp_sensor__c_classname = str(data['TEMP_SENSOR__C_CLASSNAME'])
+        temp_sensor__c_label = str(data['TEMP_SENSOR__C_LABEL'])
         temp_sensor__c_user_var_slot = int(data['TEMP_SENSOR__C_USER_VAR_SLOT'])
 
 
@@ -3208,9 +3211,10 @@ class IndiAllskyConfigForm(FlaskForm):
                 for x in range(temp_sensor__a_class.METADATA['count']):
                     self.SENSOR_SLOT_choices[temp_sensor__a_user_var_slot + x] = (
                         str(temp_sensor__a_user_var_slot + x),
-                        '({0:d}) {1:s} - {2:s}'.format(
+                        '({0:d}) {1:s} - {2:s} - {3:s}'.format(
                             temp_sensor__a_user_var_slot + x,
                             temp_sensor__a_class.METADATA['name'],
+                            temp_sensor__a_label,
                             temp_sensor__a_class.METADATA['labels'][x],
                         )
                     )
@@ -3225,9 +3229,10 @@ class IndiAllskyConfigForm(FlaskForm):
                 for x in range(temp_sensor__b_class.METADATA['count']):
                     self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x] = (
                         str(temp_sensor__b_user_var_slot + x),
-                        '({0:d}) {1:s} - {2:s}'.format(
+                        '({0:d}) {1:s} - {2:s} - {3:s}'.format(
                             temp_sensor__b_user_var_slot + x,
                             temp_sensor__b_class.METADATA['name'],
+                            temp_sensor__b_label,
                             temp_sensor__b_class.METADATA['labels'][x],
                         )
                     )
@@ -3242,9 +3247,10 @@ class IndiAllskyConfigForm(FlaskForm):
                 for x in range(temp_sensor__c_class.METADATA['count']):
                     self.SENSOR_SLOT_choices[temp_sensor__c_user_var_slot + x] = (
                         str(temp_sensor__c_user_var_slot + x),
-                        '({0:d}) {1:s} - {2:s}'.format(
+                        '({0:d}) {1:s} - {2:s} - {3:s}'.format(
                             temp_sensor__c_user_var_slot + x,
                             temp_sensor__c_class.METADATA['name'],
+                            temp_sensor__c_label,
                             temp_sensor__c_class.METADATA['labels'][x],
                         )
                     )

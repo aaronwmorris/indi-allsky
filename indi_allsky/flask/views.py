@@ -918,10 +918,13 @@ class ChartView(TemplateView):
 
 
         temp_sensor__a_classname = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_CLASSNAME', '')
+        temp_sensor__a_label = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_LABEL', 'Sensor A')
         temp_sensor__a_user_var_slot = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT')
         temp_sensor__b_classname = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_CLASSNAME', '')
+        temp_sensor__b_label = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B')
         temp_sensor__b_user_var_slot = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT')
         temp_sensor__c_classname = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_CLASSNAME', '')
+        temp_sensor__c_label = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C')
         temp_sensor__c_user_var_slot = self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT')
 
 
@@ -943,8 +946,9 @@ class ChartView(TemplateView):
                 for x in range(temp_sensor__a_class.METADATA['count']):
                     new_sensor_slot_choices[temp_sensor__a_user_var_slot + x] = (
                         str(temp_sensor__a_user_var_slot + x),
-                        '{0:s} - {1:s}'.format(
+                        '{0:s} - {1:s} - {2:s}'.format(
                             temp_sensor__a_class.METADATA['name'],
+                            temp_sensor__a_label,
                             temp_sensor__a_class.METADATA['labels'][x],
                         )
                     )
@@ -959,8 +963,9 @@ class ChartView(TemplateView):
                 for x in range(temp_sensor__b_class.METADATA['count']):
                     new_sensor_slot_choices[temp_sensor__b_user_var_slot + x] = (
                         str(temp_sensor__b_user_var_slot + x),
-                        '{0:s} - {1:s}'.format(
+                        '{0:s} - {1:s} - {2:s}'.format(
                             temp_sensor__b_class.METADATA['name'],
+                            temp_sensor__b_label,
                             temp_sensor__b_class.METADATA['labels'][x],
                         )
                     )
@@ -975,8 +980,9 @@ class ChartView(TemplateView):
                 for x in range(temp_sensor__c_class.METADATA['count']):
                     new_sensor_slot_choices[temp_sensor__c_user_var_slot + x] = (
                         str(temp_sensor__c_user_var_slot + x),
-                        '{0:s} - {1:s}'.format(
+                        '{0:s} - {1:s} - {2:s}'.format(
                             temp_sensor__c_class.METADATA['name'],
+                            temp_sensor__c_label,
                             temp_sensor__c_class.METADATA['labels'][x],
                         )
                     )
