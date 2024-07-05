@@ -101,12 +101,13 @@ class TestSensors(object):
         if a_sensor_classname:
             a_sensor = getattr(indi_allsky_sensors, a_sensor_classname)
 
+            a_sensor_label = self.config.get('TEMP_SENSOR', {}).get('A_LABEL', 'Sensor A')
             a_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77')
             a_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'notdefined')
 
             self.sensors[0] = a_sensor(
                 self.config,
-                'A',
+                a_sensor_label,
                 self.night_v,
                 pin_1_name=a_sensor_pin_1_name,
                 i2c_address=a_sensor_i2c_address,
@@ -115,7 +116,7 @@ class TestSensors(object):
             logger.warning('No sensor A - Initializing sensor simulator')
             self.sensors[0] = indi_allsky_sensors.sensor_simulator(
                 self.config,
-                'A',
+                a_sensor_label,
                 self.night_v,
             )
 
@@ -127,12 +128,13 @@ class TestSensors(object):
         if b_sensor_classname:
             b_sensor = getattr(indi_allsky_sensors, b_sensor_classname)
 
+            b_sensor_label = self.config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B')
             b_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76')
             b_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'notdefined')
 
             self.sensors[1] = b_sensor(
                 self.config,
-                'B',
+                b_sensor_label,
                 self.night_v,
                 pin_1_name=b_sensor_pin_1_name,
                 i2c_address=b_sensor_i2c_address,
@@ -141,7 +143,7 @@ class TestSensors(object):
             logger.warning('No sensor B - Initializing sensor simulator')
             self.sensors[1] = indi_allsky_sensors.sensor_simulator(
                 self.config,
-                'B',
+                b_sensor_label,
                 self.night_v,
             )
 
@@ -153,12 +155,13 @@ class TestSensors(object):
         if c_sensor_classname:
             c_sensor = getattr(indi_allsky_sensors, c_sensor_classname)
 
+            c_sensor_label = self.config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C')
             c_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40')
             c_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('C_PIN_1', 'notdefined')
 
             self.sensors[2] = c_sensor(
                 self.config,
-                'C',
+                c_sensor_label,
                 self.night_v,
                 pin_1_name=c_sensor_pin_1_name,
                 i2c_address=c_sensor_i2c_address,
@@ -167,7 +170,7 @@ class TestSensors(object):
             logger.warning('No sensor C - Initializing sensor simulator')
             self.sensors[2] = indi_allsky_sensors.sensor_simulator(
                 self.config,
-                'C',
+                c_sensor_label,
                 self.night_v,
             )
 
