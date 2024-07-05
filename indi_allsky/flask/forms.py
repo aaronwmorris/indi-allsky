@@ -2757,33 +2757,33 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
     TEMP_SENSOR__TSL2561_GAIN_choices = (
-        ('0', 'Low (1x)'),
-        ('1', 'High (16x)'),
+        ('0', '[0] Low - 1x'),
+        ('1', '[1] High - 16x'),
     )
 
 
     TEMP_SENSOR__TSL2561_INT_choices = (
-        ('0', '13.7ms'),
-        ('1', '101ms (default)'),
-        ('2', '402ms'),
+        ('0', '[0] 13.7ms'),
+        ('1', '[1] 101ms (default)'),
+        ('2', '[2] 402ms '),
     )
 
 
     TEMP_SENSOR__TSL2591_GAIN_choices = (
-        ('GAIN_LOW', 'Low (1x)'),
-        ('GAIN_MED', 'Medium (25x) (default)'),
-        ('GAIN_HIGH', 'High (428x)'),
-        ('GAIN_MAX', 'Maximum (9876x)'),
+        ('GAIN_LOW', '[0] Low - 1x'),
+        ('GAIN_MED', '[16] Medium - 25x (default)'),
+        ('GAIN_HIGH', '[32] High - 428x'),
+        ('GAIN_MAX', '[48] Maximum - 9876x'),
     )
 
 
     TEMP_SENSOR__TSL2591_INT_choices = (
-        ('INTEGRATIONTIME_100MS', '100ms (default)'),
-        ('INTEGRATIONTIME_200MS', '200ms'),
-        ('INTEGRATIONTIME_300MS', '300ms'),
-        ('INTEGRATIONTIME_400MS', '400ms'),
-        ('INTEGRATIONTIME_500MS', '500ms'),
-        ('INTEGRATIONTIME_600MS', '600ms'),
+        ('INTEGRATIONTIME_100MS', '[0] 100ms (default)'),
+        ('INTEGRATIONTIME_200MS', '[1] 200ms'),
+        ('INTEGRATIONTIME_300MS', '[2] 300ms'),
+        ('INTEGRATIONTIME_400MS', '[3] 400ms'),
+        ('INTEGRATIONTIME_500MS', '[4] 500ms'),
+        ('INTEGRATIONTIME_600MS', '[5] 600ms'),
     )
 
 
