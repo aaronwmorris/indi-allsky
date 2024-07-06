@@ -438,6 +438,18 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE_DAY(class='form-select bg-secondary') }}
+            <div id="LIBCAMERA__IMAGE_FILE_TYPE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LIBCAMERA__AWB_ENABLE.label }}
         </div>
         <div class="col-sm-2">
@@ -5430,6 +5442,7 @@ const field_names = [
     'ADMIN_NETWORKS_FLASK',
     'LIBCAMERA__CAMERA_ID',
     'LIBCAMERA__IMAGE_FILE_TYPE',
+    'LIBCAMERA__IMAGE_FILE_TYPE_DAY',
     'LIBCAMERA__AWB',
     'LIBCAMERA__AWB_DAY',
     'LIBCAMERA__EXTRA_OPTIONS',
