@@ -735,6 +735,12 @@ class IndiAllSkyDarks(object):
         completed_exposures = 0
 
 
+        if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+            if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'):
+                logger.warning('DAYTIME AWB IS ENABLED.  DISABLING DAYTIME DARKS')
+                self.daytime = False
+
+
         # take day darks with cooling disabled
         if self.daytime:
             ### DAY
@@ -810,7 +816,13 @@ class IndiAllSkyDarks(object):
             self.night_v.value = 1
 
 
+
         if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+            if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'):
+                logger.error('NIGHT AWB IS ENABLED.  CANCELING DARKS.')
+                sys.exit(1)
+
+
             libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
             if libcamera_image_type == 'dng':
                 self.indiclient.libcamera_bit_depth = 16
