@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+import time
 import numpy
 import cv2
 #from PIL import Image
@@ -62,23 +63,30 @@ class CloudDetect(object):
 
     def main(self):
 
-        image_entry = db.session.query(
-            IndiAllSkyDbImageTable,
-        )\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
-            .first()
+        while True:
+            latest_image_entry = db.session.query(
+                IndiAllSkyDbImageTable,
+            )\
+                .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+                .first()
 
-        image_file = image_entry.getFilesystemPath()
+            image_file = latest_image_entry.getFilesystemPath()
 
-        #with Image.open(str(image_file)) as img:
-        #    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            #with Image.open(str(image_file)) as img:
+            #    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
 
-        image = cv2.imread(str(image_file), cv2.IMREAD_UNCHANGED)
+            image_data = cv2.imread(str(image_file), cv2.IMREAD_UNCHANGED)
 
-        if isinstance(image, type(None)):
-            logger.error('Invalid image file: %s', image_file)
-            sys.exit(1)
+            if isinstance(image_data, type(None)):
+                logger.error('Invalid image file: %s', image_file)
+                sys.exit(1)
 
+            self.detect(image_data)
+
+            time.sleep(15.0)
+
+
+    def detect(self, image):
 
         thumbnail = cv2.resize(image, (224, 224))
 
@@ -93,10 +101,10 @@ class CloudDetect(object):
         prediction = self.model.predict(data)
         idx = numpy.argmax(prediction)
         class_name = self.CLASS_NAMES[idx]
-        confidence_score = prediction[0][idx]
+        confidence_score = (prediction[0][idx]).astype(numpy.float32)
 
         logger.info('Class: %s', class_name)
-        logger.info('Confidence: %s', confidence_score.astype('str'))
+        logger.info('Confidence: %0.3f', confidence_score)
 
 
 if __name__ == "__main__":

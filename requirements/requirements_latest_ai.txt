@@ -1,2 +1,3 @@
 keras
-tensorflow
+tensorflow < 2.13
+typing-extensions >= 4.6.0
