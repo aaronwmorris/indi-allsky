@@ -8,8 +8,10 @@ import json
 import logging
 #import ssl
 from sqlalchemy import create_engine
+from sqlalchemy.schema import Table
+from sqlalchemy.schema import MetaData
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.inspection import inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import event
@@ -23,15 +25,17 @@ logger.setLevel(logging.INFO)
 
 SRC_URL = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
 
-DST_URL = 'mysql+mysqlconnector://indi_allsky_own:password123@localhost:3306/indi_allsky'
+DST_URL = 'mysql+mysqlconnector://indi_allsky_own:password@localhost:3306/indi_allsky?charset=utf8mb4&collation=utf8mb4_unicode_ci'
 
 
 
 SRC_ENGINE = create_engine(SRC_URL, echo=False)
-src_Base = declarative_base(SRC_ENGINE)
+SRC_METADATA = MetaData()
+SRC_METADATA.reflect(SRC_ENGINE)
 
 DST_ENGINE = create_engine(DST_URL, echo=False)
-dst_Base = declarative_base(DST_ENGINE)
+DST_METADATA = MetaData()
+DST_METADATA.reflect(DST_ENGINE)
 
 
 # WAL journal
@@ -53,11 +57,15 @@ class ConvertDb(object):
 
 
     def main(self):
+        logger.warning('Migrating in 5 seconds...')
+        time.sleep(5.0)
+
         self.migrate_table(src_IndiAllSkyDbCameraTable, dst_IndiAllSkyDbCameraTable)
         self.migrate_table(src_IndiAllSkyDbUserTable, dst_IndiAllSkyDbUserTable)
         self.migrate_table(src_IndiAllSkyDbConfigTable, dst_IndiAllSkyDbConfigTable)  # user foreign keys
 
         # all tables below have camera foreign keys
+        self.migrate_table(src_IndiAllSkyDbThumbnailTable, dst_IndiAllSkyDbThumbnailTable)
         self.migrate_table(src_IndiAllSkyDbImageTable, dst_IndiAllSkyDbImageTable)
         self.migrate_table(src_IndiAllSkyDbDarkFrameTable, dst_IndiAllSkyDbDarkFrameTable)
         self.migrate_table(src_IndiAllSkyDbBadPixelMapTable, dst_IndiAllSkyDbBadPixelMapTable)
@@ -67,6 +75,8 @@ class ConvertDb(object):
         self.migrate_table(src_IndiAllSkyDbStarTrailsVideoTable, dst_IndiAllSkyDbStarTrailsVideoTable)
         self.migrate_table(src_IndiAllSkyDbFitsImageTable, dst_IndiAllSkyDbFitsImageTable)
         self.migrate_table(src_IndiAllSkyDbRawImageTable, dst_IndiAllSkyDbRawImageTable)
+        self.migrate_table(src_IndiAllSkyDbPanoramaImageTable, dst_IndiAllSkyDbPanoramaImageTable)
+        self.migrate_table(src_IndiAllSkyDbPanoramaVideoTable, dst_IndiAllSkyDbPanoramaVideoTable)
 
 
     def migrate_table(self, src_class, dst_class):
@@ -113,125 +123,138 @@ class ConvertDb(object):
         logger.warning(' Elapsed: %0.2fs', elapsed)
 
 
-class src_IndiAllSkyDbCameraTable(src_Base):
-    __tablename__ = 'camera'
-    __table_args__ = { 'autoload' : True }
+#####################
+### SOURCE TABLES ###
+#####################
+class SrcBase(DeclarativeBase):
+    pass
 
 
-class src_IndiAllSkyDbImageTable(src_Base):
-    __tablename__ = 'image'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbCameraTable(SrcBase):
+    __table__ = Table('camera', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class src_IndiAllSkyDbDarkFrameTable(src_Base):
-    __tablename__ = 'darkframe'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbThumbnailTable(SrcBase):
+    __table__ = Table('thumbnail', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class src_IndiAllSkyDbBadPixelMapTable(src_Base):
-    __tablename__ = 'badpixelmap'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbImageTable(SrcBase):
+    __table__ = Table('image', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class src_IndiAllSkyDbVideoTable(src_Base):
-    __tablename__ = 'video'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbDarkFrameTable(SrcBase):
+    __table__ = Table('darkframe', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class src_IndiAllSkyDbKeogramTable(src_Base):
-    __tablename__ = 'keogram'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbBadPixelMapTable(SrcBase):
+    __table__ = Table('badpixelmap', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class src_IndiAllSkyDbStarTrailsTable(src_Base):
-    __tablename__ = 'startrail'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbVideoTable(SrcBase):
+    __table__ = Table('video', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class src_IndiAllSkyDbStarTrailsVideoTable(src_Base):
-    __tablename__ = 'startrailvideo'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbKeogramTable(SrcBase):
+    __table__ = Table('keogram', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class src_IndiAllSkyDbFitsImageTable(src_Base):
-    __tablename__ = 'fitsimage'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbStarTrailsTable(SrcBase):
+    __table__ = Table('startrail', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class src_IndiAllSkyDbRawImageTable(src_Base):
-    __tablename__ = 'rawimage'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbStarTrailsVideoTable(SrcBase):
+    __table__ = Table('startrailvideo', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class src_IndiAllSkyDbConfigTable(src_Base):
-    __tablename__ = 'config'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbFitsImageTable(SrcBase):
+    __table__ = Table('fitsimage', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class src_IndiAllSkyDbUserTable(src_Base):
-    __tablename__ = 'user'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbRawImageTable(SrcBase):
+    __table__ = Table('rawimage', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-
-class dst_IndiAllSkyDbCameraTable(dst_Base):
-    __tablename__ = 'camera'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbPanoramaImageTable(SrcBase):
+    __table__ = Table('panoramaimage', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class dst_IndiAllSkyDbImageTable(dst_Base):
-    __tablename__ = 'image'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbPanoramaVideoTable(SrcBase):
+    __table__ = Table('panoramavideo', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class dst_IndiAllSkyDbDarkFrameTable(dst_Base):
-    __tablename__ = 'darkframe'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbConfigTable(SrcBase):
+    __table__ = Table('config', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class dst_IndiAllSkyDbBadPixelMapTable(dst_Base):
-    __tablename__ = 'badpixelmap'
-    __table_args__ = { 'autoload' : True }
+class src_IndiAllSkyDbUserTable(SrcBase):
+    __table__ = Table('user', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
-class dst_IndiAllSkyDbVideoTable(dst_Base):
-    __tablename__ = 'video'
-    __table_args__ = { 'autoload' : True }
+##########################
+### DESTINATION TABLES ###
+##########################
+class DstBase(DeclarativeBase):
+    pass
 
 
-class dst_IndiAllSkyDbKeogramTable(dst_Base):
-    __tablename__ = 'keogram'
-    __table_args__ = { 'autoload' : True }
+class dst_IndiAllSkyDbCameraTable(DstBase):
+    __table__ = Table('camera', DST_METADATA, autoload_with=DST_ENGINE)
 
 
-class dst_IndiAllSkyDbStarTrailsTable(dst_Base):
-    __tablename__ = 'startrail'
-    __table_args__ = { 'autoload' : True }
+class dst_IndiAllSkyDbThumbnailTable(DstBase):
+    __table__ = Table('thumbnail', DST_METADATA, autoload_with=DST_ENGINE)
 
 
-class dst_IndiAllSkyDbStarTrailsVideoTable(dst_Base):
-    __tablename__ = 'startrailvideo'
-    __table_args__ = { 'autoload' : True }
+class dst_IndiAllSkyDbImageTable(DstBase):
+    __table__ = Table('image', DST_METADATA, autoload_with=DST_ENGINE)
 
 
-class dst_IndiAllSkyDbFitsImageTable(dst_Base):
-    __tablename__ = 'fitsimage'
-    __table_args__ = { 'autoload' : True }
+class dst_IndiAllSkyDbDarkFrameTable(DstBase):
+    __table__ = Table('darkframe', DST_METADATA, autoload_with=DST_ENGINE)
 
 
-class dst_IndiAllSkyDbRawImageTable(dst_Base):
-    __tablename__ = 'rawimage'
-    __table_args__ = { 'autoload' : True }
+class dst_IndiAllSkyDbBadPixelMapTable(DstBase):
+    __table__ = Table('badpixelmap', DST_METADATA, autoload_with=DST_ENGINE)
 
 
-class dst_IndiAllSkyDbConfigTable(dst_Base):
-    __tablename__ = 'config'
-    __table_args__ = { 'autoload' : True }
+class dst_IndiAllSkyDbVideoTable(DstBase):
+    __table__ = Table('video', DST_METADATA, autoload_with=DST_ENGINE)
 
 
-class dst_IndiAllSkyDbUserTable(dst_Base):
-    __tablename__ = 'user'
-    __table_args__ = { 'autoload' : True }
+class dst_IndiAllSkyDbKeogramTable(DstBase):
+    __table__ = Table('keogram', DST_METADATA, autoload_with=DST_ENGINE)
+
+
+class dst_IndiAllSkyDbStarTrailsTable(DstBase):
+    __table__ = Table('startrail', DST_METADATA, autoload_with=DST_ENGINE)
+
+
+class dst_IndiAllSkyDbStarTrailsVideoTable(DstBase):
+    __table__ = Table('startrailvideo', DST_METADATA, autoload_with=DST_ENGINE)
+
+
+class dst_IndiAllSkyDbFitsImageTable(DstBase):
+    __table__ = Table('fitsimage', DST_METADATA, autoload_with=DST_ENGINE)
+
+
+class dst_IndiAllSkyDbRawImageTable(DstBase):
+    __table__ = Table('rawimage', DST_METADATA, autoload_with=DST_ENGINE)
+
+
+class dst_IndiAllSkyDbPanoramaImageTable(DstBase):
+    __table__ = Table('panoramaimage', DST_METADATA, autoload_with=DST_ENGINE)
+
+
+class dst_IndiAllSkyDbPanoramaVideoTable(DstBase):
+    __table__ = Table('panoramavideo', DST_METADATA, autoload_with=DST_ENGINE)
+
+
+class dst_IndiAllSkyDbConfigTable(DstBase):
+    __table__ = Table('config', DST_METADATA, autoload_with=DST_ENGINE)
+
+
+class dst_IndiAllSkyDbUserTable(DstBase):
+    __table__ = Table('user', DST_METADATA, autoload_with=DST_ENGINE)
 
 
 
