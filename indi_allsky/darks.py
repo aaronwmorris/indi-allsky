@@ -756,8 +756,10 @@ class IndiAllSkyDarks(object):
                 libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'dng')
                 if libcamera_image_type == 'dng':
                     self.indiclient.libcamera_bit_depth = 16
+                    ccd_bits = 16
                 else:
                     self.indiclient.libcamera_bit_depth = 8
+                    ccd_bits = 8
 
 
             # update CCD config
@@ -826,8 +828,10 @@ class IndiAllSkyDarks(object):
             libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
             if libcamera_image_type == 'dng':
                 self.indiclient.libcamera_bit_depth = 16
+                ccd_bits = 16
             else:
                 self.indiclient.libcamera_bit_depth = 8
+                ccd_bits = 8
 
 
         # update CCD config
