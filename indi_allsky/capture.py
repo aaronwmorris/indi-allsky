@@ -597,7 +597,14 @@ class CaptureWorker(Process):
 
 
         # this is only needed for libcamera
-        libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
+        if self.night_v.value:
+            # night
+            libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
+        else:
+            # day
+            libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'dng')
+
+
         if libcamera_image_type != 'dng':
             self.indiclient.libcamera_bit_depth = 8
 

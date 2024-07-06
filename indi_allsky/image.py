@@ -163,11 +163,6 @@ class ImageWorker(Process):
 
         self._libcamera_raw = False
 
-        if self.config['CAMERA_INTERFACE'].startswith('libcamera') and self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', '') == 'dng':
-            self.libcamera_raw = True
-            self.image_processor.libcamera_raw = True
-
-
         if self.config.get('IMAGE_FOLDER'):
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
         else:
@@ -288,10 +283,20 @@ class ImageWorker(Process):
         camera_id = i_dict['camera_id']
         filename_t = i_dict.get('filename_t')
 
+
         # libcamera
         libcamera_black_level = i_dict.get('libcamera_black_level', 0)
         libcamera_awb_gains = i_dict.get('libcamera_awb_gains')
         libcamera_ccm = i_dict.get('libcamera_ccm')
+
+
+        if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+            if filename_p.suffix == '.dng':
+                self.libcamera_raw = True
+                self.image_processor.libcamera_raw = True
+            else:
+                self.libcamera_raw = False
+                self.image_processor.libcamera_raw = False
 
 
         if filename_t:
