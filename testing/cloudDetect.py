@@ -58,10 +58,15 @@ class CloudDetect(object):
             logger.error('No config file found, please import a config')
             sys.exit(1)
 
-        self.model = load_model("keras_model.h5", compile=False)
+        self.config = self._config_obj.config
+
+        self.exposure_period = self.config.get('EXPOSURE_PERIOD', 15)
+
+        self.model = None
 
 
     def main(self):
+        self.model = load_model("keras_model.h5", compile=False)
 
         while True:
             latest_image_entry = db.session.query(
@@ -83,11 +88,10 @@ class CloudDetect(object):
 
             self.detect(image_data)
 
-            time.sleep(15.0)
+            time.sleep(self.exposure_period)
 
 
     def detect(self, image):
-
         thumbnail = cv2.resize(image, (224, 224))
 
         normalized_thumbnail = (thumbnail.astype(numpy.float32) / 127.5) - 1
@@ -97,11 +101,17 @@ class CloudDetect(object):
 
         data[0] = normalized_thumbnail
 
+        detect_start = time.time()
+
         # Predicts the model
         prediction = self.model.predict(data)
         idx = numpy.argmax(prediction)
         class_name = self.CLASS_NAMES[idx]
         confidence_score = (prediction[0][idx]).astype(numpy.float32)
+
+        detect_elapsed_s = time.time() - detect_start
+        logger.info('Cloud detection in %0.4f s', detect_elapsed_s)
+
 
         logger.info('Class: %s', class_name)
         logger.info('Confidence: %0.3f', confidence_score)
