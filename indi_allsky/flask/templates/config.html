@@ -466,6 +466,35 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__EXTRA_OPTIONS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.LIBCAMERA__EXTRA_OPTIONS(class='form-control bg-secondary') }}
+            <div id="LIBCAMERA__EXTRA_OPTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>Extra options for libcamera-still.</div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement#customizations" class="text-decoration-none link-info" target="_blank">libcamera customizations Wiki</a></div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Options are not validated</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE_DAY(class='form-select bg-secondary') }}
+            <div id="LIBCAMERA__IMAGE_FILE_TYPE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LIBCAMERA__AWB_ENABLE_DAY.label }}
         </div>
         <div class="col-sm-2">
@@ -487,21 +516,6 @@
             <div id="LIBCAMERA__AWB_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__EXTRA_OPTIONS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_config.LIBCAMERA__EXTRA_OPTIONS(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__EXTRA_OPTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <div>Extra options for libcamera-still.</div>
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement#customizations" class="text-decoration-none link-info" target="_blank">libcamera customizations Wiki</a></div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Options are not validated</div>
         </div>
     </div>
 
@@ -5430,6 +5444,7 @@ const field_names = [
     'ADMIN_NETWORKS_FLASK',
     'LIBCAMERA__CAMERA_ID',
     'LIBCAMERA__IMAGE_FILE_TYPE',
+    'LIBCAMERA__IMAGE_FILE_TYPE_DAY',
     'LIBCAMERA__AWB',
     'LIBCAMERA__AWB_DAY',
     'LIBCAMERA__EXTRA_OPTIONS',

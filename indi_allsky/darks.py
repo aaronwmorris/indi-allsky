@@ -222,12 +222,6 @@ class IndiAllSkyDarks(object):
             sys.exit(1)
 
 
-        # this is only needed for libcamera
-        libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
-        if libcamera_image_type != 'dng':
-            self.indiclient.libcamera_bit_depth = 8
-
-
         logger.warning('Connecting to device %s', self.indiclient.ccd_device.getDeviceName())
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
 
@@ -741,11 +735,31 @@ class IndiAllSkyDarks(object):
         completed_exposures = 0
 
 
+        if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+            if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'):
+                logger.warning('DAYTIME AWB IS ENABLED.  DISABLING DAYTIME DARKS')
+                self.daytime = False
+
+
         # take day darks with cooling disabled
         if self.daytime:
+            ### DAY
+            with self.night_v.get_lock():
+                self.night_v.value = 0
+
             self.indiclient.disableCcdCooler()
             logger.warning('****** IF THE CCD COOLER WAS ENABLED, YOU MAY CONSIDER STOPPING THIS UNTIL THE SENSOR HAS WARMED ******')
             time.sleep(8.0)
+
+
+            if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+                libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'dng')
+                if libcamera_image_type == 'dng':
+                    self.indiclient.libcamera_bit_depth = 16
+                    ccd_bits = 16
+                else:
+                    self.indiclient.libcamera_bit_depth = 8
+                    ccd_bits = 8
 
 
             # update CCD config
@@ -796,6 +810,28 @@ class IndiAllSkyDarks(object):
             remaining_configs -= 1  # skip daytime
 
             time.sleep(8.0)
+
+
+
+        ### NIGHT
+        with self.night_v.get_lock():
+            self.night_v.value = 1
+
+
+
+        if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+            if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'):
+                logger.error('NIGHT AWB IS ENABLED.  CANCELING DARKS.')
+                sys.exit(1)
+
+
+            libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
+            if libcamera_image_type == 'dng':
+                self.indiclient.libcamera_bit_depth = 16
+                ccd_bits = 16
+            else:
+                self.indiclient.libcamera_bit_depth = 8
+                ccd_bits = 8
 
 
         # update CCD config

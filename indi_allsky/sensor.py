@@ -346,7 +346,7 @@ class SensorWorker(Thread):
         else:
             self.sensors[0] = indi_allsky_sensors.sensor_simulator(
                 self.config,
-                'A',
+                'Sensor A',
                 self.night_v,
             )
 
@@ -372,7 +372,7 @@ class SensorWorker(Thread):
         else:
             self.sensors[1] = indi_allsky_sensors.sensor_simulator(
                 self.config,
-                'B',
+                'Sensor B',
                 self.night_v,
             )
 
@@ -398,7 +398,7 @@ class SensorWorker(Thread):
         else:
             self.sensors[2] = indi_allsky_sensors.sensor_simulator(
                 self.config,
-                c_sensor_label,
+                'Sensor B',
                 self.night_v,
             )
 

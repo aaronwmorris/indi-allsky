@@ -596,12 +596,6 @@ class CaptureWorker(Process):
         self.indiclient.findGps()
 
 
-        # this is only needed for libcamera
-        libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
-        if libcamera_image_type != 'dng':
-            self.indiclient.libcamera_bit_depth = 8
-
-
         logger.warning('Connecting to CCD device %s', self.indiclient.ccd_device.getDeviceName())
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
 
@@ -1249,6 +1243,14 @@ class CaptureWorker(Process):
                 logger.warning('Change to night (normal mode)')
                 self.indiclient.setCcdGain(self.config['CCD_CONFIG']['NIGHT']['GAIN'])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
+
+
+            if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+                libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
+                if libcamera_image_type == 'dng':
+                    self.indiclient.libcamera_bit_depth = 16
+                else:
+                    self.indiclient.libcamera_bit_depth = 8
         else:
             logger.warning('Change to day')
 
@@ -1260,6 +1262,14 @@ class CaptureWorker(Process):
             self.indiclient.disableCcdCooler()
             self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
             self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
+
+
+            if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+                libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'dng')
+                if libcamera_image_type == 'dng':
+                    self.indiclient.libcamera_bit_depth = 16
+                else:
+                    self.indiclient.libcamera_bit_depth = 8
 
 
         # update CCD config
