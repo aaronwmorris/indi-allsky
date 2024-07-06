@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import argparse
 from pathlib import Path
 import time
 from datetime import datetime
@@ -21,6 +22,7 @@ from indi_allsky.flask import db
 from indi_allsky.flask import create_app
 from indi_allsky.config import IndiAllSkyConfig
 
+from indi_allsky.flask.models import IndiAllSkyDbCameraTable
 from indi_allsky.flask.models import IndiAllSkyDbImageTable
 
 
@@ -40,6 +42,9 @@ logger.handlers.clear()  # remove syslog
 logger.addHandler(LOG_HANDLER_STREAM)
 
 
+KERAS_MODEL = 'keras_model.h5'
+
+
 class CloudDetect(object):
     CLASS_NAMES = (
         '0 Aurora',
@@ -53,7 +58,9 @@ class CloudDetect(object):
     )
 
 
-    def __init__(self):
+    def __init__(self, camera_id=1):
+        self.camera_id = camera_id
+
         try:
             self._config_obj = IndiAllSkyConfig()
             #logger.info('Loaded config id: %d', self._config_obj.config_id)
@@ -69,8 +76,10 @@ class CloudDetect(object):
 
 
     def main(self):
-        logger.info('Using keras model: keras_model.h5')
-        self.model = load_model("keras_model.h5", compile=False)
+        logger.warning('Camera %d selected', self.camera_id)
+
+        logger.warning('Using keras model: %s', KERAS_MODEL)
+        self.model = load_model(KERAS_MODEL, compile=False)
 
         while True:
             now_minus_5m = datetime.now() - timedelta(minutes=5)
@@ -78,6 +87,8 @@ class CloudDetect(object):
             latest_image_entry = db.session.query(
                 IndiAllSkyDbImageTable,
             )\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
                 .filter(IndiAllSkyDbImageTable.createDate > now_minus_5m)\
                 .order_by(IndiAllSkyDbImageTable.createDate.desc())\
                 .first()
@@ -145,5 +156,17 @@ class CloudDetect(object):
 
 
 if __name__ == "__main__":
-    CloudDetect().main()
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        '--Camera',
+        '-C',
+        help='Camera ID',
+        type=int,
+        default=1,
+    )
+
+    args = argparser.parse_args()
+
+
+    CloudDetect(camera_id=args.Camera).main()
 
