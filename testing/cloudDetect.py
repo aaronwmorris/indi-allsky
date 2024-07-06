@@ -105,7 +105,7 @@ class CloudDetect(object):
             logger.warning('Loading image: %s', image_file)
 
 
-            # PIL
+            ### PIL
             try:
                 with Image.open(str(image_file)) as img:
                     image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
@@ -115,7 +115,7 @@ class CloudDetect(object):
                 continue
 
 
-            # OpenCV
+            ### OpenCV
             #image_data = cv2.imread(str(image_file), cv2.IMREAD_UNCHANGED)
 
             #if isinstance(image_data, type(None)):
