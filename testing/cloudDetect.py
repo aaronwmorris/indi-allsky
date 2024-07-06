@@ -3,6 +3,8 @@
 import sys
 from pathlib import Path
 import time
+from datetime import datetime
+from datetime import timedelta
 import numpy
 import cv2
 import PIL
@@ -71,11 +73,21 @@ class CloudDetect(object):
         self.model = load_model("keras_model.h5", compile=False)
 
         while True:
+            now_minus_5m = datetime.now() - timedelta(minutes=5)
+
             latest_image_entry = db.session.query(
                 IndiAllSkyDbImageTable,
             )\
+                .filter(IndiAllSkyDbImageTable.createDate > now_minus_5m)\
                 .order_by(IndiAllSkyDbImageTable.createDate.desc())\
                 .first()
+
+
+            if not latest_image_entry:
+                logger.warning('No image in 5 minutes')
+                time.sleep(self.exposure_period)
+                continue
+
 
             image_file = latest_image_entry.getFilesystemPath()
 
