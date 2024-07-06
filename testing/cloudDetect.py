@@ -5,7 +5,8 @@ from pathlib import Path
 import time
 import numpy
 import cv2
-#from PIL import Image
+import PIL
+from PIL import Image
 import logging
 
 from keras.models import load_model
@@ -66,6 +67,7 @@ class CloudDetect(object):
 
 
     def main(self):
+        logger.info('Using keras model: keras_model.h5')
         self.model = load_model("keras_model.h5", compile=False)
 
         while True:
@@ -77,14 +79,27 @@ class CloudDetect(object):
 
             image_file = latest_image_entry.getFilesystemPath()
 
-            #with Image.open(str(image_file)) as img:
-            #    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            logger.warning('Loading image: %s', image_file)
 
-            image_data = cv2.imread(str(image_file), cv2.IMREAD_UNCHANGED)
 
-            if isinstance(image_data, type(None)):
+            # PIL
+            try:
+                with Image.open(str(image_file)) as img:
+                    image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
                 logger.error('Invalid image file: %s', image_file)
-                sys.exit(1)
+                time.sleep(self.exposure_period)
+                continue
+
+
+            # OpenCV
+            #image_data = cv2.imread(str(image_file), cv2.IMREAD_UNCHANGED)
+
+            #if isinstance(image_data, type(None)):
+            #    logger.error('Invalid image file: %s', image_file)
+            #    time.sleep(self.exposure_period)
+            #    continue
+
 
             self.detect(image_data)
 
