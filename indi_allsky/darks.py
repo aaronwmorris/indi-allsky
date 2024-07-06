@@ -222,12 +222,6 @@ class IndiAllSkyDarks(object):
             sys.exit(1)
 
 
-        # this is only needed for libcamera
-        libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
-        if libcamera_image_type != 'dng':
-            self.indiclient.libcamera_bit_depth = 8
-
-
         logger.warning('Connecting to device %s', self.indiclient.ccd_device.getDeviceName())
         self.indiclient.connectDevice(self.indiclient.ccd_device.getDeviceName())
 
@@ -748,6 +742,14 @@ class IndiAllSkyDarks(object):
             time.sleep(8.0)
 
 
+            if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+                libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'dng')
+                if libcamera_image_type == 'dng':
+                    self.indiclient.libcamera_bit_depth = 16
+                else:
+                    self.indiclient.libcamera_bit_depth = 8
+
+
             # update CCD config
             if self.config.get('INDI_CONFIG_DAY', {}):
                 self.indi_config = self.config['INDI_CONFIG_DAY']
@@ -796,6 +798,15 @@ class IndiAllSkyDarks(object):
             remaining_configs -= 1  # skip daytime
 
             time.sleep(8.0)
+
+
+
+        if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+            libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
+            if libcamera_image_type == 'dng':
+                self.indiclient.libcamera_bit_depth = 16
+            else:
+                self.indiclient.libcamera_bit_depth = 8
 
 
         # update CCD config
