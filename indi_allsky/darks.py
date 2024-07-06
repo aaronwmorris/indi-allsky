@@ -737,6 +737,10 @@ class IndiAllSkyDarks(object):
 
         # take day darks with cooling disabled
         if self.daytime:
+            ### DAY
+            with self.night_v.get_lock():
+                self.night_v.value = 0
+
             self.indiclient.disableCcdCooler()
             logger.warning('****** IF THE CCD COOLER WAS ENABLED, YOU MAY CONSIDER STOPPING THIS UNTIL THE SENSOR HAS WARMED ******')
             time.sleep(8.0)
@@ -799,6 +803,11 @@ class IndiAllSkyDarks(object):
 
             time.sleep(8.0)
 
+
+
+        ### NIGHT
+        with self.night_v.get_lock():
+            self.night_v.value = 1
 
 
         if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
