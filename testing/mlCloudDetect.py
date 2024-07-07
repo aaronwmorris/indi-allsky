@@ -30,7 +30,6 @@ from indi_allsky.flask.models import IndiAllSkyDbImageTable
 
 # setup flask context for db access
 app = create_app()
-app.app_context().push()
 
 
 logger = logging.getLogger('indi_allsky')
@@ -63,12 +62,13 @@ class CloudDetect(object):
     def __init__(self, camera_id=1):
         self.camera_id = camera_id
 
-        try:
-            self._config_obj = IndiAllSkyConfig()
-            #logger.info('Loaded config id: %d', self._config_obj.config_id)
-        except NoResultFound:
-            logger.error('No config file found, please import a config')
-            sys.exit(1)
+        with app.app_context():
+            try:
+                self._config_obj = IndiAllSkyConfig()
+                #logger.info('Loaded config id: %d', self._config_obj.config_id)
+            except NoResultFound:
+                logger.error('No config file found, please import a config')
+                sys.exit(1)
 
         self.config = self._config_obj.config
 
@@ -84,29 +84,25 @@ class CloudDetect(object):
         self.model = keras.models.load_model(KERAS_MODEL)
 
         while True:
-            db.session.expire_all()  # flush cache
+            now_minus_2m = datetime.now() - timedelta(minutes=2)
 
-            now_minus_5m = datetime.now() - timedelta(minutes=5)
+            with app.app_context():
+                latest_image_entry = db.session.query(
+                    IndiAllSkyDbImageTable,
+                )\
+                    .join(IndiAllSkyDbImageTable.camera)\
+                    .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+                    .filter(IndiAllSkyDbImageTable.createDate > now_minus_2m)\
+                    .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+                    .first()
 
-            latest_image_entry = db.session.query(
-                IndiAllSkyDbImageTable,
-            )\
-                .join(IndiAllSkyDbImageTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-                .filter(IndiAllSkyDbImageTable.createDate > now_minus_5m)\
-                .order_by(IndiAllSkyDbImageTable.createDate.desc())\
-                .first()
+                if not latest_image_entry:
+                    logger.warning('No image in 2 minutes')
+                    time.sleep(self.exposure_period)
+                    continue
 
-
-            if not latest_image_entry:
-                logger.warning('No image in 5 minutes')
-                time.sleep(self.exposure_period)
-                continue
-
-
-            image_file = latest_image_entry.getFilesystemPath()
-
-            logger.warning('Loading image: %s', image_file)
+                image_file = latest_image_entry.getFilesystemPath()
+                logger.warning('Loading image: %s', image_file)
 
 
             ### PIL
