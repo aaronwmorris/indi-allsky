@@ -14,7 +14,7 @@ import PIL
 from PIL import Image
 import logging
 
-from keras.models import load_model
+import keras
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -81,7 +81,7 @@ class CloudDetect(object):
         logger.warning('Camera %d selected', self.camera_id)
 
         logger.warning('Using keras model: %s', KERAS_MODEL)
-        self.model = load_model(KERAS_MODEL, compile=False)
+        self.model = keras.models.load_model(KERAS_MODEL)
 
         while True:
             db.session.expire_all()  # flush cache
