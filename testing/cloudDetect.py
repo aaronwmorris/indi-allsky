@@ -47,14 +47,14 @@ KERAS_MODEL = 'keras_model.h5'
 
 class CloudDetect(object):
     CLASS_NAMES = (
-        '0 Aurora',
-        '1 Clear',
-        '2 Cloudy',
-        '3 AuroraMoon',
-        '4 Frost',
-        '5 Overcast',
-        '6 Snow',
-        '7 Partly Cloudy',
+        'Aurora',
+        'Clear',
+        'Cloudy',
+        'AuroraMoon',
+        'Frost',
+        'Overcast',
+        'Snow',
+        'Partly Cloudy',
     )
 
 
@@ -82,6 +82,8 @@ class CloudDetect(object):
         self.model = load_model(KERAS_MODEL, compile=False)
 
         while True:
+            db.session.expire_all()  # flush cache
+
             now_minus_5m = datetime.now() - timedelta(minutes=5)
 
             latest_image_entry = db.session.query(
@@ -151,8 +153,7 @@ class CloudDetect(object):
         logger.info('Cloud detection in %0.4f s', detect_elapsed_s)
 
 
-        logger.info('Class: %s', class_name)
-        logger.info('Confidence: %0.3f', confidence_score)
+        logger.info('Rating: %s, Confidence %0.3f', class_name, confidence_score)
 
 
 if __name__ == "__main__":
