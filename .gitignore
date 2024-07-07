@@ -26,3 +26,4 @@ env.*
 ssl.crt
 ssl.key
 de421.bsp
+*.h5

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+### Adapted from https://github.com/gordtulloch/mlCloudDetect
+
 import sys
 import argparse
 from pathlib import Path
