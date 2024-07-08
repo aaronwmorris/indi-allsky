@@ -214,8 +214,8 @@ class TempApiOpenWeatherMap(SensorBase):
             current_dp = self.c2k(dew_point_c)
             current_fp = self.c2k(frost_point_c)
             current_hi = self.c2k(heat_index_c)
-            current_wind_speed = wind_speed
-            current_wind_gust = wind_gust
+            current_wind_speed = self.mps2kmph(wind_speed)
+            current_wind_gust = self.mps2kmph(wind_gust)
             current_rain_1h = rain_1h
             #current_rain_3h = rain_3h
             current_snow_1h = snow_1h
@@ -226,8 +226,8 @@ class TempApiOpenWeatherMap(SensorBase):
             current_dp = dew_point_c
             current_fp = frost_point_c
             current_hi = heat_index_c
-            current_wind_speed = wind_speed
-            current_wind_gust = wind_gust
+            current_wind_speed = self.mps2kmph(wind_speed)
+            current_wind_gust = self.mps2kmph(wind_gust)
             current_rain_1h = rain_1h
             #current_rain_3h = rain_3h
             current_snow_1h = snow_1h
