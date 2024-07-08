@@ -65,7 +65,7 @@ class TempApiWeatherUnderground(SensorBase):
             raise Exception('Weather API key is empty')
 
 
-        self.url = self.URL_TEMPLATE.format({
+        self.url = self.URL_TEMPLATE.format(**{
             'stationId' : stationId,
             'units' : self.UNITS,
             'apikey' : apikey,
