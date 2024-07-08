@@ -455,6 +455,8 @@ class IndiAllSkyConfigBase(object):
             "C_I2C_ADDRESS"          : "0x40",
             "OPENWEATHERMAP_APIKEY"  : "",
             "OPENWEATHERMAP_APIKEY_E": "",
+            "WUNDERGROUND_APIKEY"    : "",
+            "WUNDERGROUND_APIKEY_E"  : "",
             "MQTT_TRANSPORT"         : "tcp",  # tcp or websockets
             "MQTT_HOST"              : "localhost",
             "MQTT_PORT"              : 8883,  # 1883 = mqtt, 8883 = TLS
@@ -625,12 +627,21 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             else:
                 pycurl_camera__password = config.get('PYCURL_CAMERA', {}).get('PASSWORD', '')
 
+
             temp_sensor__openweathermap_apikey_e = config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY_E', '')
             if temp_sensor__openweathermap_apikey_e:
                 # not catching InvalidToken
                 temp_sensor__openweathermap_apikey = f_key.decrypt(temp_sensor__openweathermap_apikey_e.encode()).decode()
             else:
                 temp_sensor__openweathermap_apikey = config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
+
+
+            temp_sensor__wunderground_apikey_e = config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY_E', '')
+            if temp_sensor__wunderground_apikey_e:
+                # not catching InvalidToken
+                temp_sensor__wunderground_apikey = f_key.decrypt(temp_sensor__wunderground_apikey_e.encode()).decode()
+            else:
+                temp_sensor__wunderground_apikey = config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', '')
 
 
             temp_sensor__mqtt_password_e = config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD_E', '')
@@ -648,6 +659,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             syncapi__apikey = config.get('SYNCAPI', {}).get('APIKEY', '')
             pycurl_camera__password = config.get('PYCURL_CAMERA', {}).get('PASSWORD', '')
             temp_sensor__openweathermap_apikey = config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
+            temp_sensor__wunderground_apikey = config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', '')
             temp_sensor__mqtt_password = config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD', '')
 
 
@@ -663,6 +675,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['PYCURL_CAMERA']['PASSWORD_E'] = ''
         config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = temp_sensor__openweathermap_apikey
         config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY_E'] = ''
+        config['TEMP_SENSOR']['WUNDERGROUND_APIKEY'] = temp_sensor__wunderground_apikey
+        config['TEMP_SENSOR']['WUNDERGROUND_APIKEY_E'] = ''
         config['TEMP_SENSOR']['MQTT_PASSWORD'] = temp_sensor__mqtt_password
         config['TEMP_SENSOR']['MQTT_PASSWORD_E'] = ''
 
@@ -746,6 +760,15 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__openweathermap_apikey = ''
 
 
+            temp_sensor__wunderground_apikey = str(config['TEMP_SENSOR']['WUNDERGROUND_APIKEY'])
+            if temp_sensor__wunderground_apikey:
+                temp_sensor__wunderground_apikey_e = f_key.encrypt(temp_sensor__wunderground_apikey.encode()).decode()
+                temp_sensor__wunderground_apikey = ''
+            else:
+                temp_sensor__wunderground_apikey_e = ''
+                temp_sensor__wunderground_apikey = ''
+
+
             temp_sensor__mqtt_password = str(config['TEMP_SENSOR']['MQTT_PASSWORD'])
             if temp_sensor__mqtt_password:
                 temp_sensor__mqtt_password_e = f_key.encrypt(temp_sensor__mqtt_password.encode()).decode()
@@ -770,6 +793,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             pycurl_camera__password_e = ''
             temp_sensor__openweathermap_apikey = str(config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'])
             temp_sensor__openweathermap_apikey_e = ''
+            temp_sensor__wunderground_apikey = str(config['TEMP_SENSOR']['WUNDERGROUND_APIKEY'])
+            temp_sensor__wunderground_apikey_e = ''
             temp_sensor__mqtt_password = str(config['TEMP_SENSOR']['MQTT_PASSWORD'])
             temp_sensor__mqtt_password_e = ''
 
@@ -786,6 +811,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['PYCURL_CAMERA']['PASSWORD_E'] = pycurl_camera__password_e
         config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = temp_sensor__openweathermap_apikey
         config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY_E'] = temp_sensor__openweathermap_apikey_e
+        config['TEMP_SENSOR']['WUNDERGROUND_APIKEY'] = temp_sensor__wunderground_apikey
+        config['TEMP_SENSOR']['WUNDERGROUND_APIKEY_E'] = temp_sensor__wunderground_apikey_e
         config['TEMP_SENSOR']['MQTT_PASSWORD'] = temp_sensor__mqtt_password
         config['TEMP_SENSOR']['MQTT_PASSWORD_E'] = temp_sensor__mqtt_password_e
 

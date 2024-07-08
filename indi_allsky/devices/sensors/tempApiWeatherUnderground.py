@@ -61,10 +61,10 @@ class TempApiWeatherUnderground(SensorBase):
 
         logger.warning('Initializing [%s] Weather Underground API Sensor', self.name)
 
-        apikey = self.config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
+        apikey = self.config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', '')
 
         if not apikey:
-            raise Exception('Weather API key is empty')
+            raise Exception('Weather Underground API key is empty')
 
 
         self.url = self.URL_TEMPLATE.format(**{
