@@ -22,6 +22,8 @@ class TempApiWeatherUnderground(SensorBase):
     ### https://www.ibm.com/docs/en/environmental-intel-suite?topic=apis-pws-observations-current-conditions
 
     UNITS = 's'  # s = metric_si
+    #UNITS = 'm'  # m = metric
+
     URL_TEMPLATE = 'https://api.weather.com/v2/pws/observations/current?stationId={stationId:s}&format=json&numericPrecision=decimal&units={units:s}&apiKey={apikey:s}'
 
 
@@ -120,6 +122,7 @@ class TempApiWeatherUnderground(SensorBase):
 
 
         units = 'metric_si'
+        #units = 'metric'
 
         if r_data['observations'][0][units].get('temp'):
             temp_c = float(r_data['observations'][0][units]['temp'])
@@ -193,9 +196,15 @@ class TempApiWeatherUnderground(SensorBase):
             current_dp = self.c2f(dew_point_c)
             current_fp = self.c2f(frost_point_c)
             current_hi = self.c2f(heat_index_c)
+
             ### assume MPH if you are showing F
+            ### metric_si
             current_wind_speed = self.mps2miph(wind_speed)
             current_wind_gust = self.mps2miph(wind_gust)
+            ### metric
+            #current_wind_speed = self.kmph2miph(wind_speed)
+            #current_wind_gust = self.kmph2miph(wind_gust)
+
             ### assume inches if you are showing F
             current_rain = self.mm2in(rain_total)
         elif self.config.get('TEMP_DISPLAY') == 'k':
@@ -203,16 +212,28 @@ class TempApiWeatherUnderground(SensorBase):
             current_dp = self.c2k(dew_point_c)
             current_fp = self.c2k(frost_point_c)
             current_hi = self.c2k(heat_index_c)
+
+            ### metric_si
             current_wind_speed = self.mps2kmph(wind_speed)
             current_wind_gust = self.mps2kmph(wind_gust)
+            ### metric
+            #current_wind_speed = wind_speed
+            #current_wind_gust = wind_gust
+
             current_rain = rain_total
         else:
             current_temp = temp_c
             current_dp = dew_point_c
             current_fp = frost_point_c
             current_hi = heat_index_c
+
+            ### metric_si
             current_wind_speed = self.mps2kmph(wind_speed)
             current_wind_gust = self.mps2kmph(wind_gust)
+            ### metric
+            #current_wind_speed = wind_speed
+            #current_wind_gust = wind_gust
+
             current_rain = rain_total
 
 

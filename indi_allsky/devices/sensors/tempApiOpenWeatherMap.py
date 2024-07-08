@@ -200,9 +200,11 @@ class TempApiOpenWeatherMap(SensorBase):
             current_dp = self.c2f(dew_point_c)
             current_fp = self.c2f(frost_point_c)
             current_hi = self.c2f(heat_index_c)
+
             ### assume MPH if you are showing F
             current_wind_speed = self.mps2miph(wind_speed)
             current_wind_gust = self.mps2miph(wind_gust)
+
             ### assume inches if you are showing F
             current_rain_1h = self.mm2in(rain_1h)
             #current_rain_3h = self.mm2in(rain_3h)
