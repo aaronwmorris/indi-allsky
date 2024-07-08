@@ -34,6 +34,8 @@ class TempApiWeatherUnderground(SensorBase):
             'Wind Speed',
             'Wind Gusts',
             'Total Precipitation',
+            'Solar Radiation',
+            'UV',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
@@ -42,6 +44,8 @@ class TempApiWeatherUnderground(SensorBase):
             constants.SENSOR_WIND_SPEED,
             constants.SENSOR_WIND_SPEED,
             constants.SENSOR_PRECIPITATION,
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
         ),
     }
 
@@ -155,6 +159,18 @@ class TempApiWeatherUnderground(SensorBase):
             rain_total = 0.0
 
 
+        if r_data['observations'][0].get('solarRadiation'):
+            solar_radiation = float(r_data['observations'][0]['solarRadiation'])
+        else:
+            solar_radiation = 0.0
+
+        if r_data['observations'][0].get('uv'):
+            uv = float(r_data['observations'][0]['uv'])
+        else:
+            uv = 0.0
+
+
+
         logger.info('[%s] Weather Underground API - temp: %0.1fc, humidity: %d%%, pressure: %0.1fmb', self.name, temp_c, rel_h, pressure_mb)
 
 
@@ -220,6 +236,8 @@ class TempApiWeatherUnderground(SensorBase):
                 current_wind_speed,
                 current_wind_gust,
                 current_rain,
+                solar_radiation,
+                uv,
             ),
         }
 

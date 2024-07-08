@@ -2655,7 +2655,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__CLASSNAME_choices = (
         ('', 'None'),
         ('temp_api_openweathermap', 'OpenWeather API (9)'),
-        ('temp_api_weatherunderground', 'Weather Underground API (6)'),
+        ('temp_api_weatherunderground', 'Weather Underground API (8)'),
         ('kernel_temp_sensor_ds18x20_w1', 'DS18x20 - Temp (1)'),
         ('blinka_temp_sensor_dht22', 'DHT22/AM2302 - Temp/RH (2)'),
         ('blinka_temp_sensor_dht21', 'DHT21/AM2301 - Temp/RH (2)'),
