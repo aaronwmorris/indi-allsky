@@ -14,88 +14,61 @@ logger = logging.getLogger('indi_allsky')
 
 
 ### Example
-#{'base': 'stations',
-# 'clouds': {'all': 58},
-# 'cod': 200,
-# 'coord': {'lat': 33, 'lon': -84},
-# 'dt': 1718044502,
-# 'id': 4195771,
-# 'main': {'feels_like': 33.49,
-#          'grnd_level': 986,
-#          'humidity': 58,
-#          'pressure': 1009,
-#          'sea_level': 1009,
-#          'temp': 30.56,
-#          'temp_max': 31.4,
-#          'temp_min': 28.01},
-# 'name': 'Forsyth',
-# 'sys': {'country': 'US',
-#         'id': 2010956,
-#         'sunrise': 1718015218,
-#         'sunset': 1718066661,
-#         'type': 2},
-# 'timezone': -14400,
-# 'visibility': 10000,
-# 'weather': [{'description': 'broken clouds',
-#              'icon': '04d',
-#              'id': 803,
-#              'main': 'Clouds'}],
-# 'wind': {'deg': 306, 'gust': 4.89, 'speed': 3.3}}
 ###
 
 
-class TempApiOpenWeatherMap(SensorBase):
+class TempApiWeatherUnderground(SensorBase):
 
-    UNITS = 'metric'
-    URL_TEMPLATE = 'https://api.openweathermap.org/data/2.5/weather?lat={latitude:0.1f}&lon={longitude:0.1f}&units={units:s}&appid={apikey:s}'
+    ### https://www.ibm.com/docs/en/environmental-intel-suite?topic=apis-pws-observations-current-conditions
+
+    UNITS = 's'  # s = metric_si
+    #UNITS = 'm'  # m = metric
+
+    URL_TEMPLATE = 'https://api.weather.com/v2/pws/observations/current?stationId={stationId:s}&format=json&numericPrecision=decimal&units={units:s}&apiKey={apikey:s}'
 
 
     METADATA = {
-        'name' : 'OpenWeatherMap API',
-        'description' : 'OpenWeatherMap API Sensor',
-        'count' : 9,
+        'name' : 'Weather Underground API',
+        'description' : 'Weather Underground API Sensor',
+        'count' : 8,
         'labels' : (
             'Temperature',
-            '"Feels Like" Temperature',
             'Relative Humidity',
             'Pressure',
-            'Clouds',
             'Wind Speed',
             'Wind Gusts',
-            'Rain (1h)',
-            'Snow (1h)',
+            'Total Precipitation',
+            'Solar Radiation',
+            'UV',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
-            constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
             constants.SENSOR_ATMOSPHERIC_PRESSURE,
-            constants.SENSOR_PERCENTAGE,
             constants.SENSOR_WIND_SPEED,
             constants.SENSOR_WIND_SPEED,
             constants.SENSOR_PRECIPITATION,
-            constants.SENSOR_PRECIPITATION,
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
         ),
     }
 
 
     def __init__(self, *args, **kwargs):
-        super(TempApiOpenWeatherMap, self).__init__(*args, **kwargs)
+        super(TempApiWeatherUnderground, self).__init__(*args, **kwargs)
 
-        logger.warning('Initializing [%s] OpenWeather API Sensor', self.name)
+        stationId = kwargs['pin_1_name']
 
-        apikey = self.config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
+        logger.warning('Initializing [%s] Weather Underground API Sensor', self.name)
+
+        apikey = self.config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', '')
 
         if not apikey:
-            raise Exception('OpenWeatherMap API key is empty')
+            raise Exception('Weather Underground API key is empty')
 
-
-        latitude = self.config['LOCATION_LATITUDE']
-        longitude = self.config['LOCATION_LONGITUDE']
 
         self.url = self.URL_TEMPLATE.format(**{
-            'latitude'  : latitude,
-            'longitude' : longitude,
+            'stationId' : stationId,
             'units'     : self.UNITS,
             'apikey'    : apikey,
         })
@@ -139,7 +112,7 @@ class TempApiOpenWeatherMap(SensorBase):
 
 
         if r.status_code >= 400:
-            raise SensorReadException('OpenWeatherMap API returned {0:d}'.format(r.status_code))
+            raise SensorReadException('Weather Underground API returned {0:d}'.format(r.status_code))
 
 
         try:
@@ -148,43 +121,62 @@ class TempApiOpenWeatherMap(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        temp_c = float(r_data['main']['temp'])
-        feels_like_c = float(r_data['main']['feels_like'])
-        rel_h = int(r_data['main']['humidity'])
-        pressure_hpa = int(r_data['main']['pressure'])
-        clouds_percent = int(r_data['clouds']['all'])
+        units = 'metric_si'
+        #units = 'metric'
 
-
-        wind = r_data.get('wind', {})
-        if wind:
-            wind_deg = int(wind.get('deg', 0))
-            wind_speed = float(wind.get('speed', 0.0))
-            wind_gust = float(wind.get('gust', 0.0))
+        if r_data['observations'][0][units].get('temp'):
+            temp_c = float(r_data['observations'][0][units]['temp'])
         else:
-            wind_deg = 0.0
-            wind_speed = 0.0  # meters/s
-            wind_gust = 0.0  # meters/s
+            temp_c = 0.0
 
 
-        rain = r_data.get('rain', {})
-        if rain:
-            rain_1h = float(rain.get('1h', 0.0))  # mm
-            #rain_3h = float(rain.get('3h', 0.0))  # mm
+        if r_data['observations'][0].get('humidity'):
+            rel_h = float(r_data['observations'][0]['humidity'])
         else:
-            rain_1h = 0.0
-            #rain_3h = 0.0
+            rel_h = 0.0
 
 
-        snow = r_data.get('snow', {})
-        if snow:
-            snow_1h = float(snow.get('1h', 0.0))  # mm
-            #snow_3h = float(snow.get('3h', 0.0))  # mm
+        if r_data['observations'][0][units].get('pressure'):
+            pressure_mb = int(r_data['observations'][0][units]['pressure'])
         else:
-            snow_1h = 0.0
-            #snow_3h = 0.0
+            pressure_mb = 0
 
 
-        logger.info('[%s] OpenWeather API - temp: %0.1fc, humidity: %d%%, pressure: %0.1fhPa, clouds: %d%%', self.name, temp_c, rel_h, pressure_hpa, clouds_percent)
+        if r_data['observations'][0].get('winddir'):
+            wind_deg = int(r_data['observations'][0]['winddir'])
+        else:
+            wind_deg = 0
+
+        if r_data['observations'][0][units].get('windSpeed'):
+            wind_speed = float(r_data['observations'][0][units]['windSpeed'])
+        else:
+            wind_speed = 0.0
+
+        if r_data['observations'][0][units].get('windGust'):
+            wind_gust = float(r_data['observations'][0][units]['windGust'])
+        else:
+            wind_gust = 0.0
+
+
+        if r_data['observations'][0][units].get('precipTotal'):
+            rain_total = float(r_data['observations'][0][units]['precipTotal'])
+        else:
+            rain_total = 0.0
+
+
+        if r_data['observations'][0].get('solarRadiation'):
+            solar_radiation = float(r_data['observations'][0]['solarRadiation'])
+        else:
+            solar_radiation = 0.0
+
+        if r_data['observations'][0].get('uv'):
+            uv = float(r_data['observations'][0]['uv'])
+        else:
+            uv = 0.0
+
+
+
+        logger.info('[%s] Weather Underground API - temp: %0.1fc, humidity: %d%%, pressure: %0.1fmb', self.name, temp_c, rel_h, pressure_mb)
 
 
         try:
@@ -201,54 +193,58 @@ class TempApiOpenWeatherMap(SensorBase):
 
         if self.config.get('TEMP_DISPLAY') == 'f':
             current_temp = self.c2f(temp_c)
-            current_feels_like = self.c2f(feels_like_c)
             current_dp = self.c2f(dew_point_c)
             current_fp = self.c2f(frost_point_c)
             current_hi = self.c2f(heat_index_c)
 
             ### assume MPH if you are showing F
+            ### metric_si
             current_wind_speed = self.mps2miph(wind_speed)
             current_wind_gust = self.mps2miph(wind_gust)
+            ### metric
+            #current_wind_speed = self.kmph2miph(wind_speed)
+            #current_wind_gust = self.kmph2miph(wind_gust)
 
             ### assume inches if you are showing F
-            current_rain_1h = self.mm2in(rain_1h)
-            #current_rain_3h = self.mm2in(rain_3h)
-            current_snow_1h = self.mm2in(snow_1h)
-            #current_snow_3h = self.mm2in(snow_3h)
+            current_rain = self.mm2in(rain_total)
         elif self.config.get('TEMP_DISPLAY') == 'k':
             current_temp = self.c2k(temp_c)
-            current_feels_like = self.c2k(feels_like_c)
             current_dp = self.c2k(dew_point_c)
             current_fp = self.c2k(frost_point_c)
             current_hi = self.c2k(heat_index_c)
+
+            ### metric_si
             current_wind_speed = self.mps2kmph(wind_speed)
             current_wind_gust = self.mps2kmph(wind_gust)
-            current_rain_1h = rain_1h
-            #current_rain_3h = rain_3h
-            current_snow_1h = snow_1h
-            #current_snow_3h = snow_3h
+            ### metric
+            #current_wind_speed = wind_speed
+            #current_wind_gust = wind_gust
+
+            current_rain = rain_total
         else:
             current_temp = temp_c
-            current_feels_like = feels_like_c
             current_dp = dew_point_c
             current_fp = frost_point_c
             current_hi = heat_index_c
+
+            ### metric_si
             current_wind_speed = self.mps2kmph(wind_speed)
             current_wind_gust = self.mps2kmph(wind_gust)
-            current_rain_1h = rain_1h
-            #current_rain_3h = rain_3h
-            current_snow_1h = snow_1h
-            #current_snow_3h = snow_3h
+            ### metric
+            #current_wind_speed = wind_speed
+            #current_wind_gust = wind_gust
+
+            current_rain = rain_total
 
 
         if self.config.get('PRESSURE_DISPLAY') == 'psi':
-            current_pressure = self.hPa2psi(pressure_hpa)
+            current_pressure = self.hPa2psi(pressure_mb)  # 1 mb = 1 hPa
         elif self.config.get('PRESSURE_DISPLAY') == 'inHg':
-            current_pressure = self.hPa2inHg(pressure_hpa)
+            current_pressure = self.hPa2inHg(pressure_mb)  # 1 mb = 1 hPa
         elif self.config.get('PRESSURE_DISPLAY') == 'mmHg':
-            current_pressure = self.hPa2mmHg(pressure_hpa)
+            current_pressure = self.hPa2mmHg(pressure_mb)  # 1 mb = 1 hPa
         else:
-            current_pressure = pressure_hpa
+            current_pressure = pressure_mb
 
 
         self.data = {
@@ -258,14 +254,13 @@ class TempApiOpenWeatherMap(SensorBase):
             'wind_degrees' : wind_deg,
             'data' : (
                 current_temp,
-                current_feels_like,
                 rel_h,
                 current_pressure,
-                clouds_percent,
                 current_wind_speed,
                 current_wind_gust,
-                current_rain_1h,
-                current_snow_1h,
+                current_rain,
+                solar_radiation,
+                uv,
             ),
         }
 

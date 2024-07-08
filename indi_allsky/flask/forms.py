@@ -2234,6 +2234,10 @@ def TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator(form, field):
     pass
 
 
+def TEMP_SENSOR__WUNDERGROUND_APIKEY_validator(form, field):
+    pass
+
+
 def SENSOR_SLOT_validator(form, field):
     try:
         slot_i = int(field.data)
@@ -2655,6 +2659,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__CLASSNAME_choices = (
         ('', 'None'),
         ('temp_api_openweathermap', 'OpenWeather API (9)'),
+        ('temp_api_weatherunderground', 'Weather Underground API (8)'),
         ('kernel_temp_sensor_ds18x20_w1', 'DS18x20 - Temp (1)'),
         ('blinka_temp_sensor_dht22', 'DHT22/AM2302 - Temp/RH (2)'),
         ('blinka_temp_sensor_dht21', 'DHT21/AM2301 - Temp/RH (2)'),
@@ -3157,7 +3162,8 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__C_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__C_USER_VAR_SLOT     = SelectField('Sensor C Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__C_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
-    TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap Api Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
+    TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
+    TEMP_SENSOR__WUNDERGROUND_APIKEY = PasswordField('Weather Underground API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__WUNDERGROUND_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__MQTT_TRANSPORT      = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     TEMP_SENSOR__MQTT_HOST           = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
     TEMP_SENSOR__MQTT_PORT           = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
