@@ -87,7 +87,7 @@ class TempApiOpenWeatherMap(SensorBase):
         apikey = self.config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
 
         if not apikey:
-            raise Exception('OpenWeather Map API key is empty')
+            raise Exception('OpenWeatherMap API key is empty')
 
 
         latitude = self.config['LOCATION_LATITUDE']
