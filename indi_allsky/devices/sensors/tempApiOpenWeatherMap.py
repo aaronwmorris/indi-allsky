@@ -47,7 +47,7 @@ logger = logging.getLogger('indi_allsky')
 class TempApiOpenWeatherMap(SensorBase):
 
     UNITS = 'metric'
-    URL_TEMPLATE = 'https://api.openweathermap.org/data/2.5/weather?lat={0:0.1f}&lon={1:0.1f}&units={2:s}&appid={3:s}'
+    URL_TEMPLATE = 'https://api.openweathermap.org/data/2.5/weather?lat={latitude:0.1f}&lon={longitude:0.1f}&units={units:s}&appid={apikey:s}'
 
 
     METADATA = {
@@ -93,7 +93,12 @@ class TempApiOpenWeatherMap(SensorBase):
         latitude = self.config['LOCATION_LATITUDE']
         longitude = self.config['LOCATION_LONGITUDE']
 
-        self.url = self.URL_TEMPLATE.format(latitude, longitude, self.UNITS, apikey)
+        self.url = self.URL_TEMPLATE.format(**{
+            'latitude'  : latitude,
+            'longitude' : longitude,
+            'units'     : self.UNITS,
+            'apikey'    : apikey,
+        })
 
         self.data = {
             'data' : tuple(),

@@ -69,8 +69,8 @@ class TempApiWeatherUnderground(SensorBase):
 
         self.url = self.URL_TEMPLATE.format(**{
             'stationId' : stationId,
-            'units' : self.UNITS,
-            'apikey' : apikey,
+            'units'     : self.UNITS,
+            'apikey'    : apikey,
         })
 
         self.data = {
