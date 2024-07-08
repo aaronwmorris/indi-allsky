@@ -19,6 +19,8 @@ logger = logging.getLogger('indi_allsky')
 
 class TempApiWeatherUnderground(SensorBase):
 
+    ### https://www.ibm.com/docs/en/environmental-intel-suite?topic=apis-pws-observations-current-conditions
+
     UNITS = 'm'
     URL_TEMPLATE = 'https://api.weather.com/v2/pws/observations/current?stationId={stationId:s}&format=json&numericPrecision=decimal&units={units:s}&apiKey={apikey:s}'
 
