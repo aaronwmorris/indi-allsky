@@ -28,7 +28,7 @@ class TempApiWeatherUnderground(SensorBase):
     METADATA = {
         'name' : 'Weather Underground API',
         'description' : 'Weather Underground API Sensor',
-        'count' : 9,
+        'count' : 8,
         'labels' : (
             'Temperature',
             'Relative Humidity',
