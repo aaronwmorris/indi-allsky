@@ -116,7 +116,7 @@ class TestSensors(object):
             logger.warning('No sensor A - Initializing sensor simulator')
             self.sensors[0] = indi_allsky_sensors.sensor_simulator(
                 self.config,
-                a_sensor_label,
+                'Sensor A',
                 self.night_v,
             )
 
@@ -143,7 +143,7 @@ class TestSensors(object):
             logger.warning('No sensor B - Initializing sensor simulator')
             self.sensors[1] = indi_allsky_sensors.sensor_simulator(
                 self.config,
-                b_sensor_label,
+                'Sensor B',
                 self.night_v,
             )
 
@@ -170,7 +170,7 @@ class TestSensors(object):
             logger.warning('No sensor C - Initializing sensor simulator')
             self.sensors[2] = indi_allsky_sensors.sensor_simulator(
                 self.config,
-                c_sensor_label,
+                'Sensor C',
                 self.night_v,
             )
 
