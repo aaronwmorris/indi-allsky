@@ -524,7 +524,7 @@ class IndiAllSkyDarks(object):
 
         self._pre_run_tasks()
 
-        self.getSensorTemperature()
+        self.getCcdTemperature()
         next_temp_thold = self.sensors_temp_av[0] - self.temp_delta
 
         # get first set of images
@@ -532,7 +532,7 @@ class IndiAllSkyDarks(object):
 
         while True:
             # This loop will run forever, it is up to the user to cancel
-            self.getSensorTemperature()
+            self.getCcdTemperature()
 
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
@@ -581,7 +581,7 @@ class IndiAllSkyDarks(object):
 
         self._pre_run_tasks()
 
-        self.getSensorTemperature()
+        self.getCcdTemperature()
         next_temp_thold = self.sensors_temp_av[0] - self.temp_delta
 
         # get first set of images
@@ -589,7 +589,7 @@ class IndiAllSkyDarks(object):
 
         while True:
             # This loop will run forever, it is up to the user to cancel
-            self.getSensorTemperature()
+            self.getCcdTemperature()
 
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
@@ -936,7 +936,7 @@ class IndiAllSkyDarks(object):
             m_avg = numpy.mean(hdulist[0].data)
             logger.info('Image average adu: %0.2f', m_avg)
 
-            self.getSensorTemperature()
+            self.getCcdTemperature()
             logger.info('Camera temperature: %0.2f', self.sensors_temp_av[0])
 
             i += 1  # increment
@@ -1059,7 +1059,7 @@ class IndiAllSkyDarks(object):
 
 
 
-    def getSensorTemperature(self):
+    def getCcdTemperature(self):
         temp_val = self.indiclient.getCcdTemperature()
 
 

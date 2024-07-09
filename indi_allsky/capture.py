@@ -334,7 +334,7 @@ class CaptureWorker(Process):
                 #)
 
 
-                self.getSensorTemperature()
+                self.getCcdTemperature()
                 self.getTelescopeRaDec()
                 self.getGpsPosition()
 
@@ -1009,7 +1009,7 @@ class CaptureWorker(Process):
                 self.indiclient.configureCcdDevice(self.indi_config)
 
 
-    def getSensorTemperature(self):
+    def getCcdTemperature(self):
         temp_c = self.indiclient.getCcdTemperature()
 
 
