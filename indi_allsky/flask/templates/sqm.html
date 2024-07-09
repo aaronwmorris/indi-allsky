@@ -16,6 +16,7 @@ var json_data = {
     'image_list'  : [],
     'sqm_data'    : {'min' : 0, 'max' : 0, 'avg' : 0},
     'stars_data'  : {'min' : 0, 'max' : 0, 'avg' : 0},
+    'message' : '',
 };
 var refreshInterval = {{ refreshInterval | int }};
 var fullscreen = false;  //initial state
@@ -166,7 +167,7 @@ function loadJS(url, data, onDone, onError) {
         data: data,
         success: function(data){
             json_data = data
-            $('#message').text('');
+            $('#message').html(json_data['message']);
         },
         error: function(data){
             onError(data.status);
@@ -245,7 +246,7 @@ $( document ).ready(function() {
 {% block content %}
 <div class="row">
     <div class="text-center">
-        <div class="text-muted" id="message">No Timelapse Data</div>
+        <div class="text-muted" id="message">Loading...</div>
     </div>
 </div>
 <div class="row">
