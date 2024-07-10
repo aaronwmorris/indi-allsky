@@ -260,6 +260,8 @@ class CaptureWorker(Process):
 
 
                     if not self.night and self.generate_timelapse_flag:
+                        self._expireData(self.camera_id)  # cleanup old images and folders
+
                         ### Generate timelapse at end of night
                         yesterday_ref = dayDate - timedelta(days=1)
                         timespec = yesterday_ref.strftime('%Y%m%d')
@@ -268,14 +270,16 @@ class CaptureWorker(Process):
                         self._uploadAllskyEndOfNight(self.camera_id)
 
                     elif self.night and self.generate_timelapse_flag:
+                        self._expireData(self.camera_id)  # cleanup old images and folders
+
                         ### Generate timelapse at end of day
                         today_ref = dayDate
                         timespec = today_ref.strftime('%Y%m%d')
                         self._generateDayTimelapse(timespec, self.camera_id)
                         self._generateDayKeogram(timespec, self.camera_id)
-                        self._expireData(self.camera_id)  # cleanup old images and folders
 
                 elif self.night and bool(self.moonmode_v.value) != self.moonmode:
+                    # Switch between night non-moonmode and moonmode
                     self.reconfigure_camera = True
 
                 elif loop_start_time > next_forced_transition_time:
@@ -302,6 +306,8 @@ class CaptureWorker(Process):
 
 
                     if not self.night and self.generate_timelapse_flag:
+                        self._expireData(self.camera_id)  # cleanup old images and folders
+
                         ### Generate timelapse at end of day
                         yesterday_ref = dayDate - timedelta(days=1)
                         timespec = yesterday_ref.strftime('%Y%m%d')
@@ -310,6 +316,8 @@ class CaptureWorker(Process):
                         self._expireData(self.camera_id)  # cleanup old images and folders
 
                     elif self.night and self.generate_timelapse_flag:
+                        self._expireData(self.camera_id)  # cleanup old images and folders
+
                         ### Generate timelapse at end of night
                         yesterday_ref = dayDate - timedelta(days=1)
                         timespec = yesterday_ref.strftime('%Y%m%d')
