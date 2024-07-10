@@ -3963,13 +3963,16 @@ class IndiAllskyGalleryViewer(FlaskForm):
             createDate_year,
         )\
             .join(IndiAllSkyDbImageTable.camera)\
-            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == self.camera_id,
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                 )
         )
+
+
+        ### Disable this join to make things faster
+        #    .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
 
 
         if not self.local:
