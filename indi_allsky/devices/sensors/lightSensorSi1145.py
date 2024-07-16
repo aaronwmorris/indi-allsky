@@ -26,7 +26,7 @@ class LightSensorSi1145(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('[%s] SI1145 - visible: %d, ir: %d', vis, ir)
+        logger.info('[%s] SI1145 - visible: %d, ir: %d', self.name, vis, ir)
 
 
         data = {
@@ -42,7 +42,7 @@ class LightSensorSi1145(SensorBase):
 class LightSensorSi1145_I2C(LightSensorSi1145):
 
     METADATA = {
-        'name' : 'SI1145(i2c)',
+        'name' : 'SI1145 (i2c)',
         'description' : 'SI1145 i2c Light Sensor',
         'count' : 2,
         'labels' : (
