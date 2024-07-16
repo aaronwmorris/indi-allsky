@@ -26,7 +26,7 @@ class LightSensorSi1145(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('[%s] SI1145 - visible: %d, ir: %d', vis, ir)
+        logger.info('[%s] SI1145 - visible: %d, ir: %d', self.name, vis, ir)
 
 
         data = {
