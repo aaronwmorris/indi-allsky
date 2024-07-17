@@ -15,6 +15,7 @@ class LightSensorSi1145(SensorBase):
 
         try:
             vis, ir = self.si1145.als
+            uv_index = self.si1145.uv_index
         except RuntimeError as e:
             raise SensorReadException(str(e)) from e
 
@@ -22,17 +23,19 @@ class LightSensorSi1145(SensorBase):
         try:
             vis = int(vis)
             ir = int(ir)
+            uv_index = float(uv_index)
         except TypeError as e:
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('[%s] SI1145 - visible: %d, ir: %d', self.name, vis, ir)
+        logger.info('[%s] SI1145 - visible: %d, ir: %d, uv: %0.3f', self.name, vis, ir, uv_index)
 
 
         data = {
             'data' : (
                 vis,
                 ir,
+                uv_index,
             ),
         }
 
@@ -44,12 +47,14 @@ class LightSensorSi1145_I2C(LightSensorSi1145):
     METADATA = {
         'name' : 'SI1145 (i2c)',
         'description' : 'SI1145 i2c Light Sensor',
-        'count' : 2,
+        'count' : 3,
         'labels' : (
             'Visible',
             'IR',
+            'UV Index',
         ),
         'types' : (
+            constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
         ),
@@ -70,4 +75,7 @@ class LightSensorSi1145_I2C(LightSensorSi1145):
         i2c = board.I2C()
         self.si1145 = adafruit_si1145.SI1145(i2c, address=i2c_address)
 
+
+        # enable UV index
+        self.si1145.uv_index_enabled(True)
 
