@@ -77,5 +77,5 @@ class LightSensorSi1145_I2C(LightSensorSi1145):
 
 
         # enable UV index
-        self.si1145.uv_index_enabled(True)
+        self.si1145.uv_index_enabled = True
 
