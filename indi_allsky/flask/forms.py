@@ -643,6 +643,9 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
     for x in range(30):
         # temperature sensors
         test_data['sensor_temp_{0:d}'.format(x)] = 0.0
+        test_data['sensor_temp_{0:d}_f'.format(x)] = 0.0
+        test_data['sensor_temp_{0:d}_c'.format(x)] = 0.0
+        test_data['sensor_temp_{0:d}_k'.format(x)] = 0.0
 
     for x in range(30):
         # other sensors
