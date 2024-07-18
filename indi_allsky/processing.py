@@ -1908,15 +1908,21 @@ class ImageProcessor(object):
             label_data['stretch'] = 'Off'
 
 
-        for x, data in enumerate(self.sensors_temp_av):
+        for x, temp_c in enumerate(self.sensors_temp_av):
+            temp_f = (temp_c * 9.0 / 5.0) + 32
+            temp_k = temp_c + 273.15
+
             if self.config.get('TEMP_DISPLAY') == 'f':
-                sensor_temp = (data * 9.0 / 5.0) + 32
+                sensor_temp = temp_f
             elif self.config.get('TEMP_DISPLAY') == 'k':
-                sensor_temp = data + 273.15
+                sensor_temp = temp_k
             else:
-                sensor_temp = data
+                sensor_temp = temp_c
 
             label_data['sensor_temp_{0:d}'.format(x)] = sensor_temp
+            label_data['sensor_temp_{0:d}_f'.format(x)] = temp_f
+            label_data['sensor_temp_{0:d}_c'.format(x)] = temp_c
+            label_data['sensor_temp_{0:d}_k'.format(x)] = temp_k
 
 
         # 0 == ccd_temp
