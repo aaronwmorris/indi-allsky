@@ -700,6 +700,100 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TARGET_ADU.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU(class='form-control bg-secondary') }}
+            <div id="TARGET_ADU-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Target Average Image Brightness - Max value: 255</div>
+            <div>Default: 75 (~30% of histogram)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU_DAY(class='form-control bg-secondary') }}
+            <div id="TARGET_ADU_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU_DEV.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU_DEV(class='form-control bg-secondary') }}
+            <div id="TARGET_ADU_DEV-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Allowed Brightness deviation</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU_DEV_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TARGET_ADU_DEV_DAY(class='form-control bg-secondary') }}
+            <div id="TARGET_ADU_DEV_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Allowed Brightness deviation.  Setting this value too low can cause exposure flapping.</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ADU_FOV_DIV.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ADU_FOV_DIV(class='form-select bg-secondary') }}
+            <div id="ADU_FOV_DIV-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Central region to use for ADU calculations (not used if ROI defined)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label">
+            ADU Region of Interest
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ADU_ROI_X1(class='form-control bg-secondary') }}
+            <div id="ADU_ROI_X1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-2">
+            {{ form_config.ADU_ROI_Y1(class='form-control bg-secondary') }}
+            <div id="ADU_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>x1, y1</div>
+            <div>* Not used if Detection Mask is defined *</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2 col-form-label"></div>
+        <div class="col-sm-2">
+            {{ form_config.ADU_ROI_X2(class='form-control bg-secondary') }}
+            <div id="ADU_ROI_X2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-2">
+            {{ form_config.ADU_ROI_Y2(class='form-control bg-secondary') }}
+            <div id="ADU_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">x2, y2</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.DAYTIME_CONTRAST_ENHANCE.label }}
         </div>
         <div class="col-sm-2">
@@ -930,96 +1024,6 @@
             <div id="SATURATION_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">1.0 is disabled.  1.5 is a good starting point</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TARGET_ADU.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TARGET_ADU(class='form-control bg-secondary') }}
-            <div id="TARGET_ADU-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Target Image Brightness</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TARGET_ADU_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TARGET_ADU_DAY(class='form-control bg-secondary') }}
-            <div id="TARGET_ADU_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TARGET_ADU_DEV.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TARGET_ADU_DEV(class='form-control bg-secondary') }}
-            <div id="TARGET_ADU_DEV-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Allowed Brightness deviation</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TARGET_ADU_DEV_DAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TARGET_ADU_DEV_DAY(class='form-control bg-secondary') }}
-            <div id="TARGET_ADU_DEV_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Allowed Brightness deviation.  Setting this value too low can cause exposure flapping.</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.ADU_FOV_DIV.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.ADU_FOV_DIV(class='form-select bg-secondary') }}
-            <div id="ADU_FOV_DIV-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Central region to use for ADU calculations (not used if ROI defined)</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2 col-form-label">
-            ADU Region of Interest
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.ADU_ROI_X1(class='form-control bg-secondary') }}
-            <div id="ADU_ROI_X1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-
-        <div class="col-sm-2">
-            {{ form_config.ADU_ROI_Y1(class='form-control bg-secondary') }}
-            <div id="ADU_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div>x1, y1</div>
-            <div>* Not used if Detection Mask is defined *</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2 col-form-label"></div>
-        <div class="col-sm-2">
-            {{ form_config.ADU_ROI_X2(class='form-control bg-secondary') }}
-            <div id="ADU_ROI_X2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-
-        <div class="col-sm-2">
-            {{ form_config.ADU_ROI_Y2(class='form-control bg-secondary') }}
-            <div id="ADU_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">x2, y2</div>
     </div>
 
     <hr>
