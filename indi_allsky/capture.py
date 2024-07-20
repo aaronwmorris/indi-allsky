@@ -200,6 +200,7 @@ class CaptureWorker(Process):
         exposure_state = 'unset'
         check_exposure_state = time.time() + 300  # check in 5 minutes
 
+        self.reconfigure_camera = True  # reconfigure on first run
 
         next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
         logger.warning(
