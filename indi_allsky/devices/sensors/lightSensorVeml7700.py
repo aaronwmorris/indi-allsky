@@ -17,6 +17,11 @@ class LightSensorVeml7700(SensorBase):
             self.update_sensor_settings()
 
 
+        #gain = self.tsl2591.light_gain
+        #integration = self.tsl2591.light_integration_time
+        #logger.info('[%s] VEML7700 settings - Gain: %d, Integration: %d', gain, integration)
+
+
         try:
             lux = float(self.veml7700.lux)
             light = int(self.veml7700.light)
