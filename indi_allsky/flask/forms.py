@@ -2313,6 +2313,16 @@ def TEMP_SENSOR__TSL2591_INT_validator(form, field):
         raise ValidationError('Invalid integration selection')
 
 
+def TEMP_SENSOR__VEML7700_GAIN_validator(form, field):
+    if field.data not in list(zip(*form.TEMP_SENSOR__VEML7700_GAIN_choices))[0]:
+        raise ValidationError('Invalid gain selection')
+
+
+def TEMP_SENSOR__VEML7700_INT_validator(form, field):
+    if field.data not in list(zip(*form.TEMP_SENSOR__VEML7700_INT_choices))[0]:
+        raise ValidationError('Invalid integration selection')
+
+
 def HEALTHCHECK__DISK_USAGE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter a valid number')
@@ -2668,12 +2678,14 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_temp_sensor_dht21', 'DHT21/AM2301 - Temp/RH (2)'),
         ('blinka_temp_sensor_dht11', 'DHT11 - Temp/RH (2)'),
         ('blinka_temp_sensor_bmp180_i2c', 'BMP180 i2c - Temp/Pres (2)'),
-        ('blinka_temp_sensor_bme280_i2c', 'BME280 i2c - Temp/RH/Pres (3)'),
-        ('blinka_temp_sensor_bme280_spi', 'BME280 SPI - Temp/RH/Pres (3)'),
+        ('blinka_temp_sensor_bme280_i2c', 'BMP/BME280 i2c - Temp/RH/Pres (3)'),
+        ('blinka_temp_sensor_bme280_spi', 'BMP/BME280 SPI - Temp/RH/Pres (3)'),
         ('blinka_temp_sensor_bme680_i2c', 'BME680 i2c - Temp/RH/Pres/Gas (4)'),
         ('blinka_temp_sensor_bme680_spi', 'BME680 SPI - Temp/RH/Pres/Gas (4)'),
         ('blinka_temp_sensor_si7021_i2c', 'Si7021 i2c - Temp/RH (2)'),
+        ('blinka_temp_sensor_sht3x_i2c', 'SHT3x i2c - Temp/RH (2)'),
         ('blinka_temp_sensor_sht4x_i2c', 'SHT40/41/45 i2c - Temp/RH (2)'),
+        ('blinka_temp_sensor_ahtx0_i2c', 'AHT10/20 i2c - Temp/RH (2)'),
         ('cpads_temp_sensor_tmp36_ads1015_i2c', 'TMP36 ADS1015 i2c - Temp (1)'),
         ('cpads_temp_sensor_tmp36_ads1115_i2c', 'TMP36 ADS1115 i2c - Temp (1)'),
         ('cpads_temp_sensor_lm35_ads1015_i2c', 'LM35 ADS1015 i2c - Temp (1)'),
@@ -2681,7 +2693,8 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_temp_sensor_mlx90614_i2c', 'MLX90614 i2c - Temp/SkyTemp (2)'),
         ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR (3)'),
         ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full (4)'),
-        ('blinka_light_sensor_bh1750_i2c', 'BH1750 (GY-30) i2c - Lux (1)'),
+        ('blinka_light_sensor_veml7700_i2c', 'VEML7700 i2c - Lux/Light/White (3)'),
+        ('blinka_light_sensor_bh1750_i2c', 'BH1750 i2c - Lux (1)'),
         ('blinka_light_sensor_si1145_i2c', 'SI1145 i2c - Vis/IR/UV (3)'),
         ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5)'),
         ('sensor_data_generator', 'Test Data Generator - (4)'),
@@ -2793,6 +2806,23 @@ class IndiAllskyConfigForm(FlaskForm):
         ('INTEGRATIONTIME_400MS', '[3] 400ms'),
         ('INTEGRATIONTIME_500MS', '[4] 500ms'),
         ('INTEGRATIONTIME_600MS', '[5] 600ms'),
+    )
+
+
+    TEMP_SENSOR__VEML7700_GAIN_choices = (
+        ('ALS_GAIN_1_8', '[2] Low - 1/8x'),
+        ('ALS_GAIN_1_4', '[3] Medium - 1/4x'),
+        ('ALS_GAIN_1', '[0] High - 1x'),
+        ('ALS_GAIN_2', '[1] Maximum - 2x'),
+    )
+
+    TEMP_SENSOR__VEML7700_INT_choices = (
+        ('ALS_25MS', '[12] 25ms)'),
+        ('ALS_50MS', '[8] 50ms)'),
+        ('ALS_100MS', '[0] 100ms (default)'),
+        ('ALS_200MS', '[1] 200ms'),
+        ('ALS_400MS', '[2] 400ms'),
+        ('ALS_800MS', '[3] 800ms)'),
     )
 
 
@@ -3183,6 +3213,10 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__TSL2591_GAIN_DAY    = SelectField('TSL2591 Gain (Day)', choices=TEMP_SENSOR__TSL2591_GAIN_choices, validators=[TEMP_SENSOR__TSL2591_GAIN_validator])
     TEMP_SENSOR__TSL2591_INT_NIGHT   = SelectField('TSL2591 Integration (Night)', choices=TEMP_SENSOR__TSL2591_INT_choices, validators=[TEMP_SENSOR__TSL2591_INT_validator])
     TEMP_SENSOR__TSL2591_INT_DAY     = SelectField('TSL2591 Integration (Day)', choices=TEMP_SENSOR__TSL2591_INT_choices, validators=[TEMP_SENSOR__TSL2591_INT_validator])
+    TEMP_SENSOR__VEML7700_GAIN_NIGHT = SelectField('VEML7700 Gain (Night)', choices=TEMP_SENSOR__VEML7700_GAIN_choices, validators=[TEMP_SENSOR__VEML7700_GAIN_validator])
+    TEMP_SENSOR__VEML7700_GAIN_DAY   = SelectField('VEML7700 Gain (Day)', choices=TEMP_SENSOR__VEML7700_GAIN_choices, validators=[TEMP_SENSOR__VEML7700_GAIN_validator])
+    TEMP_SENSOR__VEML7700_INT_NIGHT  = SelectField('VEML7700 Integration (Night)', choices=TEMP_SENSOR__VEML7700_INT_choices, validators=[TEMP_SENSOR__VEML7700_INT_validator])
+    TEMP_SENSOR__VEML7700_INT_DAY    = SelectField('VEML7700 Integration (Day)', choices=TEMP_SENSOR__VEML7700_INT_choices, validators=[TEMP_SENSOR__VEML7700_INT_validator])
     CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[SENSOR_SLOT_validator])

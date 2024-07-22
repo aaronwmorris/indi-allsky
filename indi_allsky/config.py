@@ -473,6 +473,10 @@ class IndiAllSkyConfigBase(object):
             "TSL2591_GAIN_DAY"       : "GAIN_LOW",
             "TSL2591_INT_NIGHT"      : "INTEGRATIONTIME_100MS",
             "TSL2591_INT_DAY"        : "INTEGRATIONTIME_100MS",
+            "VEML7700_GAIN_NIGHT"    : "ALS_GAIN_1",
+            "VEML7700_GAIN_DAY"      : "ALS_GAIN_1_8",
+            "VEML7700_INT_NIGHT"     : "ALS_100MS",
+            "VEML7700_INT_DAY"       : "ALS_100MS",
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : 10,

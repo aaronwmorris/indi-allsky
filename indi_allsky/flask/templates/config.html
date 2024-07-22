@@ -4604,6 +4604,60 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__VEML7700_GAIN_NIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__VEML7700_GAIN_NIGHT(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__VEML7700_GAIN_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__VEML7700_GAIN_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__VEML7700_GAIN_DAY(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__VEML7700_GAIN_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__VEML7700_INT_NIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__VEML7700_INT_NIGHT(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__VEML7700_INT_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__VEML7700_INT_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__VEML7700_INT_DAY(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__VEML7700_INT_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__MQTT_HOST.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -5539,6 +5593,10 @@ const field_names = [
     'TEMP_SENSOR__TSL2591_GAIN_DAY',
     'TEMP_SENSOR__TSL2591_INT_NIGHT',
     'TEMP_SENSOR__TSL2591_INT_DAY',
+    'TEMP_SENSOR__VEML7700_GAIN_NIGHT',
+    'TEMP_SENSOR__VEML7700_GAIN_DAY',
+    'TEMP_SENSOR__VEML7700_INT_NIGHT',
+    'TEMP_SENSOR__VEML7700_INT_DAY',
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',

@@ -6,10 +6,13 @@ adafruit-circuitpython-bme280
 adafruit-circuitpython-bme680
 circuitpython-bmp180
 adafruit-circuitpython-si7021
+adafruit-circuitpython-sht31d
 adafruit-circuitpython-sht4x
+adafruit-circuitpython-ahtx0
 adafruit-circuitpython-mlx90614
 adafruit-circuitpython-tsl2591
 adafruit-circuitpython-tsl2561
+adafruit-circuitpython-veml7700
 adafruit-circuitpython-bh1750
 adafruit-circuitpython-ads1x15
 adafruit-circuitpython-si1145
