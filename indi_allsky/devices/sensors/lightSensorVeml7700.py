@@ -27,7 +27,7 @@ class LightSensorVeml7700(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('[%s] VEML770 - lux: %0.4f, light: %d, ir: %d', self.name, lux, light, white)
+        logger.info('[%s] VEML770 - lux: %0.4f, light: %d, white: %d', self.name, lux, light, white)
 
 
         try:
