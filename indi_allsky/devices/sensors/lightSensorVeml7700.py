@@ -98,10 +98,10 @@ class LightSensorVeml7700_I2C(LightSensorVeml7700):
 
         self.night = None  # force update on first run
 
-        self.gain_night = getattr(adafruit_veml7700, self.config.get('TEMP_SENSOR', {}).get('VEML7700_GAIN_NIGHT', 'ALS_GAIN_2'))
-        self.gain_day = getattr(adafruit_veml7700, self.config.get('TEMP_SENSOR', {}).get('VEML7700_GAIN_DAY', 'ALS_GAIN_1_8'))
-        self.integration_night = getattr(adafruit_veml7700, self.config.get('TEMP_SENSOR', {}).get('VEML7700_INT_NIGHT', 'ALS_100MS'))
-        self.integration_day = getattr(adafruit_veml7700, self.config.get('TEMP_SENSOR', {}).get('VEML7700_INT_DAY', 'ALS_100MS'))
+        self.gain_night = getattr(adafruit_veml7700.VEML7700, self.config.get('TEMP_SENSOR', {}).get('VEML7700_GAIN_NIGHT', 'ALS_GAIN_2'))
+        self.gain_day = getattr(adafruit_veml7700.VEML7700, self.config.get('TEMP_SENSOR', {}).get('VEML7700_GAIN_DAY', 'ALS_GAIN_1_8'))
+        self.integration_night = getattr(adafruit_veml7700.VEML7700, self.config.get('TEMP_SENSOR', {}).get('VEML7700_INT_NIGHT', 'ALS_100MS'))
+        self.integration_day = getattr(adafruit_veml7700.VEML7700, self.config.get('TEMP_SENSOR', {}).get('VEML7700_INT_DAY', 'ALS_100MS'))
 
 
         time.sleep(1)
