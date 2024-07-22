@@ -2810,10 +2810,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
     TEMP_SENSOR__VEML7700_GAIN_choices = (
-        ('ALS_GAIN_1_8', '[2] Low - 1/8'),
-        ('ALS_GAIN_1_4', '[3] Medium - 1/4'),
-        ('ALS_GAIN_1', '[0] High - 1'),
-        ('ALS_GAIN_2', '[1] Maximum - 2'),
+        ('ALS_GAIN_1_8', '[2] Low - 1/8x'),
+        ('ALS_GAIN_1_4', '[3] Medium - 1/4x'),
+        ('ALS_GAIN_1', '[0] High - 1x'),
+        ('ALS_GAIN_2', '[1] Maximum - 2x'),
     )
 
     TEMP_SENSOR__VEML7700_INT_choices = (
