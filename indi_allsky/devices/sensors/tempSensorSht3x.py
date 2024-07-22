@@ -93,7 +93,7 @@ class TempSensorSht3x_I2C(TempSensorSht3x):
 
         logger.warning('Initializing [%s] SHT3x I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
-        self.sht3x = adafruit_sht31d.SHT3x(i2c, address=i2c_address)
+        self.sht3x = adafruit_sht31d.SHT31D(i2c, address=i2c_address)
 
 
         # single shot data acquisition mode
