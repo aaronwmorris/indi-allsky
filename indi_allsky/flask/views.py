@@ -1584,6 +1584,10 @@ class ConfigView(FormView):
             'TEMP_SENSOR__TSL2591_GAIN_DAY'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2591_GAIN_DAY', 'GAIN_LOW'),
             'TEMP_SENSOR__TSL2591_INT_NIGHT' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2591_INT_NIGHT', 'INTEGRATIONTIME_100MS'),
             'TEMP_SENSOR__TSL2591_INT_DAY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2591_INT_DAY', 'INTEGRATIONTIME_100MS'),
+            'TEMP_SENSOR__VEML7700_GAIN_NIGHT': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('VEML7700_GAIN_NIGHT', 'ALS_GAIN_1'),
+            'TEMP_SENSOR__VEML7700_GAIN_DAY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('VEML7700_GAIN_DAY', 'ALS_GAIN_1_8'),
+            'TEMP_SENSOR__VEML7700_INT_NIGHT': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('VEML7700_INT_NIGHT', 'ALS_100MS'),
+            'TEMP_SENSOR__VEML7700_INT_DAY'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('VEML7700_INT_DAY', 'ALS_100MS'),
             'CHARTS__CUSTOM_SLOT_1'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 10)),  # string in form, int in config
             'CHARTS__CUSTOM_SLOT_2'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)),  # string in form, int in config
             'CHARTS__CUSTOM_SLOT_3'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)),  # string in form, int in config
@@ -2288,6 +2292,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['TSL2591_GAIN_DAY']      = str(request.json['TEMP_SENSOR__TSL2591_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2591_INT_NIGHT']     = str(request.json['TEMP_SENSOR__TSL2591_INT_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2591_INT_DAY']       = str(request.json['TEMP_SENSOR__TSL2591_INT_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['VEML7700_GAIN_NIGHT']   = str(request.json['TEMP_SENSOR__VEML7700_GAIN_NIGHT'])
+        self.indi_allsky_config['TEMP_SENSOR']['VEML7700_GAIN_DAY']     = str(request.json['TEMP_SENSOR__VEML7700_GAIN_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['VEML7700_INT_NIGHT']    = str(request.json['TEMP_SENSOR__VEML7700_INT_NIGHT'])
+        self.indi_allsky_config['TEMP_SENSOR']['VEML7700_INT_DAY']      = str(request.json['TEMP_SENSOR__VEML7700_INT_DAY'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1']              = int(request.json['CHARTS__CUSTOM_SLOT_1'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2']              = int(request.json['CHARTS__CUSTOM_SLOT_2'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_3']              = int(request.json['CHARTS__CUSTOM_SLOT_3'])
