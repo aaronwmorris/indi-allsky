@@ -459,6 +459,7 @@ ffmpeg video processing is considerably more expensive.  A 2 minute 1920x1080 h.
 |                   | Gunicorn      | https://gunicorn.org/ |
 |                   | Apache        | https://httpd.apache.org/ |
 |                   | NGINX         | https://www.nginx.com/ |
+| Hardware Sensors  | Circuit Python | https://circuitpython.org/ [GitHub](https://github.com/adafruit) |
 
 
 ## Architecture
