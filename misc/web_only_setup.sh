@@ -686,6 +686,8 @@ if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
     echo "Now that the dbus package has been installed..."
     echo "Please reboot your system and re-run this script to continue"
     echo
+    echo "WARNING: If you use screen, tmux, or byobu for virtual sessions, this check may always fail"
+    echo
     exit 1
 fi
 
