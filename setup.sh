@@ -390,6 +390,7 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         gfortran \
         whiptail \
         bc \
+        procps \
         rsyslog \
         cron \
         git \
@@ -548,6 +549,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         gfortran \
         whiptail \
         bc \
+        procps \
         rsyslog \
         cron \
         git \
@@ -706,6 +708,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         gfortran \
         whiptail \
         bc \
+        procps \
         rsyslog \
         cron \
         git \
@@ -864,6 +867,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         gfortran \
         whiptail \
         bc \
+        procps \
         rsyslog \
         cron \
         git \
@@ -1009,6 +1013,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         gfortran \
         whiptail \
         bc \
+        procps \
         rsyslog \
         cron \
         git \
@@ -1151,6 +1156,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         gfortran \
         whiptail \
         bc \
+        procps \
         rsyslog \
         cron \
         git \
@@ -1300,6 +1306,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         gfortran \
         whiptail \
         bc \
+        procps \
         rsyslog \
         cron \
         git \
@@ -1473,6 +1480,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
         gfortran \
         whiptail \
         bc \
+        procps \
         rsyslog \
         cron \
         git \
@@ -1636,6 +1644,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
         gfortran \
         whiptail \
         bc \
+        procps \
         rsyslog \
         cron \
         git \

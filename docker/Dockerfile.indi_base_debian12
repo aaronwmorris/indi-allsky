@@ -21,6 +21,7 @@ RUN apt-get -y install \
     vim-tiny \
     nano \
     tzdata \
+    procps \
     netcat-traditional \
     sudo \
     git
