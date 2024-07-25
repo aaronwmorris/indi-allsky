@@ -240,7 +240,7 @@ class FileUploader(Thread):
                 client.port = self.config['FILETRANSFER']['PORT']
 
         elif action == constants.TRANSFER_S3:
-            s3_key = local_file_p.relative_to(self.image_dir)
+            s3_key = local_file_p.relative_to(self.image_dir).as_posix()
 
             connect_kwargs = {
                 'username'     : '*',  # not logging access key
