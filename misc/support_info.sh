@@ -153,6 +153,11 @@ echo "Process info"
 ps auxwww | grep indi | grep -v grep || true
 echo
 
+echo "Check for virtual sessions"
+# shellcheck disable=SC2009
+ps auxwww | grep -i "screen\|tmux\|byobu" | grep -v grep || true
+echo
+
 echo "USB info"
 lsusb
 echo
