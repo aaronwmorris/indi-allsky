@@ -5764,21 +5764,24 @@ class CameraLensView(TemplateView):
         context['image_circle_diameter_mm'] = image_circle_diameter * camera.pixelSize / 1000.0
 
 
+        # since the arcsec/px increases near the edges of the image, this factor tries to account for that
+        arcsec_pix_factor = 1.2
+
         if image_circle_diameter <= camera.width:
-            arcsec_fov_width = image_circle_diameter * arcsec_pixel
+            arcsec_fov_width = image_circle_diameter * arcsec_pixel * arcsec_pix_factor
         else:
-            arcsec_fov_width = camera.width * arcsec_pixel
+            arcsec_fov_width = camera.width * arcsec_pixel * arcsec_pix_factor
 
         if image_circle_diameter <= camera.height:
-            arcsec_fov_height = image_circle_diameter * arcsec_pixel
+            arcsec_fov_height = image_circle_diameter * arcsec_pixel * arcsec_pix_factor
         else:
-            arcsec_fov_height = camera.height * arcsec_pixel
+            arcsec_fov_height = camera.height * arcsec_pixel * arcsec_pix_factor
 
         camera_diagonal = math.hypot(camera.width, camera.height)  # this cannot be used to calculate distance
         if image_circle_diameter <= camera_diagonal:
-            arcsec_fov_diagonal = image_circle_diameter * arcsec_pixel
+            arcsec_fov_diagonal = image_circle_diameter * arcsec_pixel * arcsec_pix_factor
         else:
-            arcsec_fov_diagonal = camera_diagonal * arcsec_pixel
+            arcsec_fov_diagonal = camera_diagonal * arcsec_pixel * arcsec_pix_factor
 
 
         #context['arcsec_fov_width'] = arcsec_fov_width

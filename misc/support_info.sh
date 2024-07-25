@@ -3,6 +3,7 @@
 #set -x  # command tracing
 set -o errexit
 set -o nounset
+shopt -s nullglob
 
 PATH=/usr/local/bin:/usr/bin:/bin
 export PATH
@@ -125,6 +126,13 @@ df -k
 echo
 echo "sysctl info"
 /usr/sbin/sysctl vm.swappiness
+
+echo
+echo "Thermal info"
+for X in /sys/class/thermal/thermal_zone*; do
+    [ -f "$X/type" ] && cat "$X/type"
+    [ -f "$X/temp" ] && cat "$X/temp"
+done
 
 echo
 echo "system python: $(python3 -V)"
