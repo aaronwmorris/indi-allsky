@@ -130,7 +130,8 @@ echo "sysctl info"
 echo
 echo "Thermal info"
 for X in /sys/class/thermal/thermal_zone*; do
-    echo "$(<"$X/name")" "$(<"$X/temp")" || true
+    [ -f "$X/type" ] && cat "$X/type"
+    [ -f "$X/temp" ] && cat "$X/temp"
 done
 
 echo
