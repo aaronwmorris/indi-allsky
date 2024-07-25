@@ -32,7 +32,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * TSL2561
     * TSL2591
     * VEML7700
-    * BH1750 (GY-30)
+    * BH1750
     * SI1145
 * Generic GPIO controls
 * MQTT Broker sensors
@@ -459,6 +459,7 @@ ffmpeg video processing is considerably more expensive.  A 2 minute 1920x1080 h.
 |                   | Gunicorn      | https://gunicorn.org/ |
 |                   | Apache        | https://httpd.apache.org/ |
 |                   | NGINX         | https://www.nginx.com/ |
+| Hardware Sensors  | Circuit Python | https://circuitpython.org/ [GitHub](https://github.com/adafruit) |
 
 
 ## Architecture
@@ -611,6 +612,7 @@ Please let me know if you want to make an addition or correction.
 * [Radek Kaczorek](https://github.com/rkaczorek) - [astropanel](https://github.com/rkaczorek/astropanel/) has been integrated into indi-allsky
 * [CelesTrak](https://celestrak.org/) - Satellite orbital data
 * [Russell Valentine](https://github.com/bluthen) - [fish2pano](https://github.com/bluthen/fish2pano) Fish-eye to panoramic perspective conversion
+* [Adafruit Industries](https://www.adafruit.com/) - [Adafruit Github](https://github.com/adafruit) Circuit Python modules enabled indi-allsky to quickly facilitate using many electronics sensors
 
 ## Donate
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://paypal.me/aaronwmorris)

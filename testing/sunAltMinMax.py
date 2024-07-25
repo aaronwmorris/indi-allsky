@@ -48,6 +48,11 @@ class SunAltMinMax(object):
         obs.pressure = PRESSURE
 
 
+        obs.date = utcnow
+        sun.compute(obs)
+        logger.warning('pyephem - Sun alt: %0.1f', math.degrees(sun.alt))
+
+
         sun_solstice_1 = ephem.next_solstice(utcnow)
         sun_solstice_2 = ephem.next_solstice(sun_solstice_1.datetime() + timedelta(days=1))
 
@@ -86,12 +91,17 @@ class SunAltMinMax(object):
         loc = wgs84.latlon(LATITUDE, LONGITUDE, elevation_m=ELEVATION)
         obs = earth + loc
 
+
+        ts = load.timescale()
+        t0 = ts.from_datetime(utcnow)
+        s_sun_alt, s_sun_az, s_sun_dist = obs.at(t0).observe(sun).apparent().altaz(pressure_mbar=PRESSURE)
+        logger.info('skyfield Sun alt: %0.1f', s_sun_alt.degrees)
+
+
         logger.warning('skyfield Now - %s', utcnow)
         self.calcMinMax_skyfield(utcnow, eph, loc, obs, sun)
 
 
-        ts = load.timescale()
-        t0 = ts.from_datetime(utcnow)
         t1 = ts.from_datetime(utcnow + timedelta(days=365))
 
 

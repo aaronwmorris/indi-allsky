@@ -196,6 +196,7 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         cmake \
         gfortran \
         whiptail \
+        procps \
         rsyslog \
         cron \
         git \
@@ -278,6 +279,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         cmake \
         gfortran \
         whiptail \
+        procps \
         rsyslog \
         cron \
         git \
@@ -360,6 +362,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         cmake \
         gfortran \
         whiptail \
+        procps \
         rsyslog \
         cron \
         git \
@@ -442,6 +445,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         cmake \
         gfortran \
         whiptail \
+        procps \
         rsyslog \
         cron \
         git \
@@ -527,6 +531,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
         cmake \
         gfortran \
         whiptail \
+        procps \
         rsyslog \
         cron \
         git \
@@ -612,6 +617,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
         cmake \
         gfortran \
         whiptail \
+        procps \
         rsyslog \
         cron \
         git \
@@ -685,6 +691,8 @@ if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
     echo
     echo "Now that the dbus package has been installed..."
     echo "Please reboot your system and re-run this script to continue"
+    echo
+    echo "WARNING: If you use screen, tmux, or byobu for virtual sessions, this check may always fail"
     echo
     exit 1
 fi
