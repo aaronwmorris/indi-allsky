@@ -99,10 +99,8 @@ class gcp_storage(GenericFileTransfer):
             content_type = 'application/octet-stream'
 
 
-        generation_match_precondition = 0
-
         upload_kwargs = {
-            'if_generation_match'   : generation_match_precondition,
+            #'if_generation_match'   : 0,  # 0 does not allow overwriting existing uploads
             'content_type'          : content_type,
             'timeout'               : (self.connect_timeout, self.timeout),
             'retry'                 : None,
