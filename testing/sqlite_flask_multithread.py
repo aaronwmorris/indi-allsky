@@ -11,6 +11,7 @@ import signal
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm.exc import NoResultFound
+#from sqlalchemy.pool import NullPool
 
 import threading
 
@@ -69,6 +70,10 @@ def create_app():
 
     app.config['SECRET_KEY'] = 'secretkey'
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        "echo"      : False,
+        #"poolclass" : NullPool,
+    }
 
 
     db.init_app(app)
