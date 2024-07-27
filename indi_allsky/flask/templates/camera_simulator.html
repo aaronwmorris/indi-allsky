@@ -455,6 +455,9 @@ function show_simulation() {
 
     ctx.font = '20px serif';
 
+    // round the background strokes to prevent spikes
+    ctx.lineJoin = 'round';
+
     var lens_text = $("#LENS_SELECT option:selected").text()
     var camera_text = $("#SENSOR_SELECT option:selected").text()
     var resolution_text = sd[sensor]['w'] + " x " + sd[sensor]['h'] + " (" + sd[sensor]['p'] + "µm)";

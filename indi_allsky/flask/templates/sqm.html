@@ -69,6 +69,11 @@ function showImage(entry) {
         var y = canvas.height-150;
 
 
+        // round the background strokes to prevent spikes
+        context.lineJoin = 'round';
+        //context.miterLimit = 2;
+
+
         // Lines
         if (entry["detections"] > 0) {
             context.font = '20px serif';
