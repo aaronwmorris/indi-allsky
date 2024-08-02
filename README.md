@@ -158,10 +158,10 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## Single Board Computer support
 | Board                         | Note |
 | ----------------------------- | ---- |
-| Raspberry Pi 5                | Requires bookworm |
-| Raspberry Pi 4                | Recommend 64-bit bullseye |
-| Raspberry Pi 3                | Recommend 64-bit bullseye, recommend 1GB of swap |
-| Raspberry Pi Zero 2           | Recommend 64-bit bullseye, memory constrained |
+| Raspberry Pi 5                | Requires bookworm (12) |
+| Raspberry Pi 4                | Recommend 64-bit bookworm (12) |
+| Raspberry Pi 3                | Recommend 64-bit bookworm (12), recommend 1GB of swap |
+| Raspberry Pi Zero 2           | Recommend 64-bit bookworm (12), memory constrained |
 | Raspberry Pi Zero             | Recommend 32-bit bullseye, memory constrained |
 | Rock Pi                       |      |
 | Libre Computer (Le Potato)    |      |
