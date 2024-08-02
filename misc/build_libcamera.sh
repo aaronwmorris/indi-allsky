@@ -16,13 +16,15 @@ function handler_SIGINT() {
 trap handler_SIGINT SIGINT
 
 
+### https://github.com/raspberrypi/libcamera
 if [ -n "${1:-}" ]; then
     LIBCAMERA_TAG="$1"
 else
     #LIBCAMERA_TAG="HEAD"
-    LIBCAMERA_TAG="v0.2.0+rpt20240418"
+    LIBCAMERA_TAG="v0.3.0+rpt20240617"
 fi
 
+### https://github.com/raspberrypi/rpicam-apps
 if [ -n "${2:-}" ]; then
     RPICAM_APPS_TAG="$2"
 else
