@@ -486,10 +486,13 @@ The hardware below has at least been plugged in and tested for correct detection
 | -------- | ------------------- | ------ | ----- |
 | ZWO      | ASI120MC-S          | B      | https://github.com/aaronwmorris/indi-allsky/wiki/ASI120MC-S-Camera-Issues |
 | ZWO      | ASI678MC            | A      |       |
+| ZWO      | ASI676MC            | A      | This camera was designed for all sky systems |
+| ZWO      | ASI585MC            | A      |       |
 | ZWO      | ASI178MC/MM         | A      |       |
 | ZWO      | ASI290MC/MM         | A      |       |
 | ZWO      | ASI385MC            | A      |       |
 | ZWO      | ASI174MM            | A      |       |
+| ZWO      | ASI533MC/MM         | A      |       |
 | ZWO      | ASI183MC/MM         | A      |       |
 | QHY      | QHY5III485C         | A      | Needs newer [fxload](https://github.com/aaronwmorris/indi-allsky/wiki/Build-fxload-for-USB3-support) utility for firmware |
 | QHY      | QHY5LII-M           | A      |       |
@@ -504,15 +507,16 @@ The hardware below has at least been plugged in and tested for correct detection
 | Player One        | Neptune-C                     | A | |
 | Starlight Xpress  | Superstar                     | A | Fixed gain.  Using stretching and/or contrast enhance |
 | Datyson           | T7C                           | A | Using indi_asi_ccd driver<br>Recommend ASI120MC Linux compatibility firmware |
-| Raspberry Pi      | CM3 imx708 (libcamera)        | A | Minimum 1GB of memory is needed to process RAW images with dark calibration frames |
 | Raspberry Pi      | HQ Camera imx477 (libcamera)  | A | |
+| Raspberry Pi      | CM3 imx708 (libcamera)        | A | Minimum 1GB of memory is needed to process RAW images with dark calibration frames |
 | Raspberry Pi      | HQ Camera (indi_pylibcamera)  | A | https://github.com/scriptorron/indi_pylibcamera |
 | Waveshare         | imx378 (libcamera)            | A | |
-| Waveshare         | imx462 (libcamera)            | C | Long exposures do not work with AWB disabled |
+| Waveshare         | imx462 (libcamera)            | A | |
 | ArduCam           | 64MP HawkEye                  | A | Recommend at least 4GB of RAM for full resolution 9152x6944.  [Options](https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement) available to reduce image size. |
 | Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | IP Cameras | indi_webcam_ccd   | C      | Needs [config](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-custom-config) for operation |
+| Webcams  | indi_v4l2_ccd       | B      | |
 | Webcams  | indi_webcam_ccd     | D      | No gain controls.  Little control over image quality. |
 | indi     | indi_simulator_ccd  |        | CCD Simulator.  Install GSC to generate sample images. |
 
