@@ -16,11 +16,18 @@ function handler_SIGINT() {
 trap handler_SIGINT SIGINT
 
 
+LIBCAMERA_GIT_URL="https://github.com/raspberrypi/libcamera"
+#LIBCAMERA_GIT_URL="https://git.libcamera.org/libcamera/libcamera.git"
+
+RPICAM_APPS_GIT_URL="https://github.com/raspberrypi/rpicam-apps.git"
+
+
 if [ -n "${1:-}" ]; then
     LIBCAMERA_TAG="$1"
 else
     #LIBCAMERA_TAG="HEAD"
-    LIBCAMERA_TAG="v0.2.0+rpt20240418"
+    LIBCAMERA_TAG="v0.3.0+rpt20240617"
+    #LIBCAMERA_TAG="v0.3.1"
 fi
 
 if [ -n "${2:-}" ]; then
@@ -347,9 +354,9 @@ if [ "${BUILD_LIBCAMERA:-true}" == "true" ]; then
     [[ -d "${PROJECTS_FOLDER}/src/libcamera" ]] && rm -fR "${PROJECTS_FOLDER}/src/libcamera"
 
     if [ "$LIBCAMERA_TAG" == "HEAD" ]; then
-        git clone --depth 1 "https://github.com/raspberrypi/libcamera.git" "${PROJECTS_FOLDER}/src/libcamera"
+        git clone --depth 1 "$LIBCAMERA_GIT_URL=" "${PROJECTS_FOLDER}/src/libcamera"
     else
-        git clone --depth 1 --branch "$LIBCAMERA_TAG" "https://github.com/raspberrypi/libcamera.git" "${PROJECTS_FOLDER}/src/libcamera"
+        git clone --depth 1 --branch "$LIBCAMERA_TAG" "$LIBCAMERA_GIT_URL=" "${PROJECTS_FOLDER}/src/libcamera"
     fi
 
 
@@ -357,6 +364,9 @@ if [ "${BUILD_LIBCAMERA:-true}" == "true" ]; then
 
     # Setup build
     meson setup build --buildtype=release -Dpipelines=rpi/vc4,rpi/pisp -Dipas=rpi/vc4,rpi/pisp -Dv4l2=true -Dgstreamer=enabled -Dtest=false -Dlc-compliance=disabled -Dcam=disabled -Dqcam=disabled -Ddocumentation=disabled -Dpycamera=enabled
+
+    ### without PISP (Pi5)
+    #meson setup build --buildtype=release -Dpipelines=rpi/vc4 -Dipas=rpi/vc4 -Dv4l2=true -Dgstreamer=enabled -Dtest=false -Dlc-compliance=disabled -Dcam=disabled -Dqcam=disabled -Ddocumentation=disabled -Dpycamera=enabled
 
     # Compile
     ninja -C build -j "$MAKE_CONCURRENT"
@@ -382,9 +392,9 @@ if [ "${BUILD_RPICAM_APPS:-true}" == "true" ]; then
     [[ -d "${PROJECTS_FOLDER}/src/rpicam-apps" ]] && rm -fR "${PROJECTS_FOLDER}/src/rpicam-apps"
 
     if [ "$RPICAM_APPS_TAG" == "HEAD" ]; then
-        git clone --depth 1 "https://github.com/raspberrypi/rpicam-apps.git" "${PROJECTS_FOLDER}/src/rpicam-apps"
+        git clone --depth 1 "$RPICAM_APPS_GIT_URL" "${PROJECTS_FOLDER}/src/rpicam-apps"
     else
-        git clone --depth 1 --branch "$RPICAM_APPS_TAG" "https://github.com/raspberrypi/rpicam-apps.git" "${PROJECTS_FOLDER}/src/rpicam-apps"
+        git clone --depth 1 --branch "$RPICAM_APPS_TAG" "$RPICAM_APPS_GIT_URL" "${PROJECTS_FOLDER}/src/rpicam-apps"
     fi
 
 

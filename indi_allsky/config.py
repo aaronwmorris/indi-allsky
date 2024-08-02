@@ -251,7 +251,7 @@ class IndiAllSkyConfigBase(object):
             "SWAP_EW"        : False,
             "CHAR_NORTH"     : "N",
             "CHAR_EAST"      : "E",
-            "CHAR WEST"      : "W",
+            "CHAR_WEST"      : "W",
             "CHAR_SOUTH"     : "S",
             "DIAMETER"       : 4000,
             "OFFSET_X"       : 0,

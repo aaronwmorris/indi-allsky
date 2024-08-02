@@ -2948,33 +2948,6 @@ class SystemInfoView(TemplateView):
             paho_mqtt = None
 
         try:
-            import boto3
-        except ImportError:
-            boto3 = None
-
-        try:
-            import libcloud
-        except ImportError:
-            libcloud = None
-
-        try:
-            import google.cloud.version as google_cloud_version
-        except ImportError:
-            google_cloud_version = None
-
-        try:
-            import oci
-        except ImportError:
-            oci = None
-
-        #try:
-        #    import board
-        #except ImportError:
-        #    board = None
-        #except PermissionError:
-        #    board = False
-
-        try:
             import PyIndi
         except ImportError:
             PyIndi = None
@@ -3042,26 +3015,6 @@ class SystemInfoView(TemplateView):
             context['pahomqtt_version'] = str(getattr(paho_mqtt, '__version__', -1))
         else:
             context['pahomqtt_version'] = 'Not installed'
-
-        if boto3:
-            context['boto3_version'] = str(getattr(boto3, '__version__', -1))
-        else:
-            context['boto3_version'] = 'Not installed'
-
-        if libcloud:
-            context['libcloud_version'] = str(getattr(libcloud, '__version__', -1))
-        else:
-            context['libcloud_version'] = 'Not installed'
-
-        if google_cloud_version:
-            context['googlecloud_version'] = str(getattr(google_cloud_version, '__version__', -1))
-        else:
-            context['googlecloud_version'] = 'Not installed'
-
-        if oci:
-            context['oci_version'] = str(getattr(oci, '__version__', -1))
-        else:
-            context['oci_version'] = 'Not installed'
 
         if PyIndi:
             context['pyindi_version'] = '.'.join((
