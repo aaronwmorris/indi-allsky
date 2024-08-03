@@ -145,8 +145,8 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Version         | Note |
 | --------------- | ---- |
 | v2.0.9          | **Recommended** |
-| v2.0.8          |      |
-| v2.0.7          |      |
+| v2.0.8          | Minimum for Ubuntu 24.04 (pyindi-client) |
+| v2.0.7          | Minimum for ASI676MC |
 | v2.0.6          |      |
 | v2.0.5          | Requires upgrade to indi-allsky v7.7<br>[ZWO ASI problem](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.5-notes) |
 | v2.0.4          | [Typo in indibash.h prevents building pyindi-client](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.4-bug)<br>Svbony support is broken |
