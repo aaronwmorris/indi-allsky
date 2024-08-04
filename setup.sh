@@ -1242,7 +1242,8 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
 
     MYSQL_ETC="/etc/mysql"
 
-    PYTHON_BIN=python3
+    # deadsnakes PPA
+    PYTHON_BIN=python3.11
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_32.txt
@@ -1272,14 +1273,20 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
 
 
     if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
+        sudo add-apt-repository -y ppa:deadsnakes/ppa
+
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
+        sudo add-apt-repository -y ppa:deadsnakes/ppa
+
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
+        sudo add-apt-repository -y ppa:deadsnakes/ppa
+
         INSTALL_INDI="false"
 
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
@@ -1297,6 +1304,9 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         build-essential \
+        python3.11 \
+        python3.11-dev \
+        python3.11-venv \
         python3 \
         python3-dev \
         python3-venv \
