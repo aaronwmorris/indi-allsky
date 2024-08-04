@@ -1242,8 +1242,13 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
 
     MYSQL_ETC="/etc/mysql"
 
-    # deadsnakes PPA
+
+    # Use Python 3.11 due to problems with Python 3.12 and pyindi-client
+    # https://github.com/indilib/pyindi-client/issues/46
+    sudo add-apt-repository -y ppa:deadsnakes/ppa
+
     PYTHON_BIN=python3.11
+
 
     if [ "$CPU_ARCH" == "armv7l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_32.txt
@@ -1273,20 +1278,14 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
 
 
     if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
-        sudo add-apt-repository -y ppa:deadsnakes/ppa
-
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
-        sudo add-apt-repository -y ppa:deadsnakes/ppa
-
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
             sudo add-apt-repository -y ppa:mutlaqja/ppa
         fi
     elif [[ "$CPU_ARCH" == "armv7l" || "$CPU_ARCH" == "armv6l" ]]; then
-        sudo add-apt-repository -y ppa:deadsnakes/ppa
-
         INSTALL_INDI="false"
 
         if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
