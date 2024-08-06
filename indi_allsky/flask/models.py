@@ -20,6 +20,7 @@ __all__ = (
     'IndiAllSkyDbBadPixelMapTable',
     'IndiAllSkyDbDarkFrameTable',
     'IndiAllSkyDbVideoTable',
+    'IndiAllSkyDbMiniVideoTable',
     'IndiAllSkyDbKeogramTable',
     'IndiAllSkyDbStarTrailsTable',
     'IndiAllSkyDbStarTrailsVideoTable',
@@ -90,6 +91,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     thumbnails = db.relationship('IndiAllSkyDbThumbnailTable', back_populates='camera')
     images = db.relationship('IndiAllSkyDbImageTable', back_populates='camera')
     videos = db.relationship('IndiAllSkyDbVideoTable', back_populates='camera')
+    minivideos = db.relationship('IndiAllSkyDbMiniVideoTable', back_populates='camera')
     keograms = db.relationship('IndiAllSkyDbKeogramTable', back_populates='camera')
     startrails = db.relationship('IndiAllSkyDbStarTrailsTable', back_populates='camera')
     startrailvideos = db.relationship('IndiAllSkyDbStarTrailsVideoTable', back_populates='camera')
@@ -374,6 +376,7 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    frames = db.Column(db.Integer, server_default='0', nullable=False)
     #kpindex = db.Column(db.Float, nullable=True, index=True)
     #ovation_max = db.Column(db.Integer, nullable=True, index=True)
     #smoke_rating = db.Column(db.Integer, nullable=True, index=True)
@@ -394,6 +397,38 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
 
     def __repr__(self):
         return '<Video {0:s}>'.format(self.filename)
+
+
+class IndiAllSkyDbMiniVideoTable(IndiAllSkyDbFileBase):
+    __tablename__ = 'minivideo'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(length=255), unique=True, nullable=False)
+    thumbnail_uuid = db.Column(db.String(length=36), nullable=True, index=True)
+    remote_url = db.Column(db.String(length=255), nullable=True, index=True)
+    s3_key = db.Column(db.String(length=255), nullable=True, index=True)
+    createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
+    dayDate = db.Column(db.Date, nullable=False, index=True)
+    night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
+    uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+    sync_id = db.Column(db.Integer, nullable=True, index=True)
+    success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    image_id = db.Column(db.Integer, nullable=False)
+    image_date = db.Column(db.DateTime(), nullable=False, index=True)
+    startDate = db.Column(db.DateTime(), nullable=False)
+    endDate = db.Column(db.DateTime(), nullable=False)
+    fps = db.Column(db.Float, nullable=False)
+    frames = db.Column(db.Integer, server_default='0', nullable=False)
+    note = db.Column(db.String(length=255), nullable=False)
+    data = db.Column(db.JSON, index=True)
+    width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
+    height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
+    camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
+    camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='minivideos')
+
+
+    def __repr__(self):
+        return '<Mini Video {0:s}>'.format(self.filename)
 
 
 class IndiAllSkyDbKeogramTable(IndiAllSkyDbFileBase):
@@ -458,6 +493,7 @@ class IndiAllSkyDbStarTrailsVideoTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    frames = db.Column(db.Integer, server_default='0', nullable=False)
     width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     data = db.Column(db.JSON, index=True)
@@ -561,6 +597,7 @@ class IndiAllSkyDbPanoramaVideoTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
+    frames = db.Column(db.Integer, server_default='0', nullable=False)
     width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     data = db.Column(db.JSON, index=True)
