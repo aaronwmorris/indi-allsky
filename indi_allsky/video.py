@@ -391,6 +391,12 @@ class VideoWorker(Process):
 
         try:
             tg = TimelapseGenerator(self.config)
+            tg.codec = self.config['FFMPEG_CODEC']
+            tg.framerate = self.config['FFMPEG_FRAMERATE']
+            tg.bitrate = self.config['FFMPEG_BITRATE']
+            tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
+            tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+
             tg.generate(video_file, timelapse_files, skip_frames=timelapse_skip_frames)
         except TimelapseException:
             video_entry.success = False
@@ -583,6 +589,12 @@ class VideoWorker(Process):
 
         try:
             tg = TimelapseGenerator(self.config)
+            tg.codec = self.config['FFMPEG_CODEC']
+            tg.framerate = self.config['FFMPEG_FRAMERATE']
+            tg.bitrate = self.config['FFMPEG_BITRATE']
+            tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
+            tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+
             tg.generate(video_file, timelapse_files, skip_frames=timelapse_skip_frames)
         except TimelapseException:
             video_entry.success = False
@@ -1032,6 +1044,12 @@ class VideoWorker(Process):
 
                 try:
                     st_tg = TimelapseGenerator(self.config)
+                    st_tg.codec = self.config['FFMPEG_CODEC']
+                    st_tg.framerate = self.config['FFMPEG_FRAMERATE']
+                    st_tg.bitrate = self.config['FFMPEG_BITRATE']
+                    st_tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
+                    st_tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+
                     st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
                 except TimelapseException:
                     logger.error('Failed to generate startrails timelapse')

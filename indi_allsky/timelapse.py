@@ -23,6 +23,53 @@ class TimelapseGenerator(object):
         #seqfolder = tempfile.mkdtemp(suffix='_timelapse')  # testing
         #self.seqfolder_p = Path(seqfolder)
 
+        self._codec = 'libx264'
+        self._framerate = 25.0
+        self._bitrate = '5000k'
+        self._vf_scale = ''
+        self._ffmpeg_extra_options = ''
+
+
+    @property
+    def codec(self):
+        return self._codec
+
+    @codec.setter
+    def codec(self, new_codec):
+        self._codec = str(new_codec)
+
+    @property
+    def framerate(self):
+        return self._framerate
+
+    @framerate.setter
+    def framerate(self, new_framerate):
+        self._framerate = float(new_framerate)
+
+    @property
+    def bitrate(self):
+        return self._bitrate
+
+    @bitrate.setter
+    def bitrate(self, new_bitrate):
+        self._bitrate = str(new_bitrate)
+
+    @property
+    def vf_scale(self):
+        return self._vf_scale
+
+    @vf_scale.setter
+    def vf_scale(self, new_vf_scale):
+        self._vf_scale = str(new_vf_scale)
+
+    @property
+    def ffmpeg_extra_options(self):
+        return self._ffmpeg_extra_options
+
+    @ffmpeg_extra_options.setter
+    def ffmpeg_extra_options(self, new_ffmpeg_extra_options):
+        self._ffmpeg_extra_options = str(new_ffmpeg_extra_options)
+
 
     def generate(self, video_file, file_list, skip_frames=0):
         video_file_p = Path(video_file)
@@ -51,28 +98,27 @@ class TimelapseGenerator(object):
             '-y',
             '-loglevel', 'level+warning',
             '-f', 'image2',
-            '-r', '{0:d}'.format(self.config['FFMPEG_FRAMERATE']),
+            '-r', '{0:0.2f}'.format(self.framerate),
             #'-start_number', '0',
             #'-pattern_type', 'glob',
             '-i', '{0:s}/%05d.{1:s}'.format(str(self.seqfolder_p), self.config['IMAGE_FILE_TYPE']),
-            '-vcodec', '{0:s}'.format(self.config['FFMPEG_CODEC']),
-            '-b:v', '{0:s}'.format(self.config['FFMPEG_BITRATE']),
+            '-vcodec', '{0:s}'.format(self.codec),
+            '-b:v', '{0:s}'.format(self.bitrate),
             '-pix_fmt', 'yuv420p',
             '-movflags', '+faststart',
         ]
 
 
         # add scaling option if defined
-        if self.config.get('FFMPEG_VFSCALE'):
-            logger.warning('Setting FFMPEG scaling option: %s', self.config.get('FFMPEG_VFSCALE'))
+        if self.vf_scale:
+            logger.warning('Setting FFMPEG scaling option: %s', self.vf_scale)
             cmd.append('-vf')
-            cmd.append('scale={0:s}'.format(self.config.get('FFMPEG_VFSCALE')))
+            cmd.append('scale={0:s}'.format(self.vf_scale))
 
 
         # add extra options
-        ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS')
-        if ffmpeg_extra_options:
-            cmd.extend(ffmpeg_extra_options.split(' '))
+        if self.ffmpeg_extra_options:
+            cmd.extend(self.ffmpeg_extra_options.split(' '))
 
 
         # finally add filename
