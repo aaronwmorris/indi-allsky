@@ -131,7 +131,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Debian 12 (bookworm)           | x86_64         | Compile INDI with build_indi.sh |
 | Debian 11 (bullseye)           | x86_64         | Compile INDI with build_indi.sh |
 | Debian 10 (buster)             | x86_64         | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
-| Ubuntu 24.04 (noble)           |                | Requires INDI 2.0.8 or newer for pyindi-client<br>INDI installed from ppa:mutlaqja/ppa<br>Compile libcamera with build_libcamera.sh |
+| Ubuntu 24.04 (noble)           |                | Requires INDI 2.0.8 or newer for pyindi-client<br>INDI installed from ppa:mutlaqja/ppa<br>Compile libcamera with build_libcamera.sh<br>Python 3.11 installed from ppa:deadsnakes/ppa (due to problems with Python 3.12 and pyindi-client) |
 | Ubuntu 22.04 (focal)           | aarch64        | INDI installed from ppa:mutlaqja/ppa |
 | Ubuntu 22.04                   | armhf          | Compile INDI with build_indi.sh |
 | Ubuntu 22.04                   | x86_64         | INDI installed from ppa:mutlaqja/ppa |
@@ -145,8 +145,8 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Version         | Note |
 | --------------- | ---- |
 | v2.0.9          | **Recommended** |
-| v2.0.8          |      |
-| v2.0.7          |      |
+| v2.0.8          | Minimum for Ubuntu 24.04 (pyindi-client) |
+| v2.0.7          | Minimum for ASI676MC |
 | v2.0.6          |      |
 | v2.0.5          | Requires upgrade to indi-allsky v7.7<br>[ZWO ASI problem](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.5-notes) |
 | v2.0.4          | [Typo in indibash.h prevents building pyindi-client](https://github.com/aaronwmorris/indi-allsky/wiki/INDI-2.0.4-bug)<br>Svbony support is broken |
@@ -158,10 +158,10 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## Single Board Computer support
 | Board                         | Note |
 | ----------------------------- | ---- |
-| Raspberry Pi 5                | Requires bookworm |
-| Raspberry Pi 4                | Recommend 64-bit bullseye |
-| Raspberry Pi 3                | Recommend 64-bit bullseye, recommend 1GB of swap |
-| Raspberry Pi Zero 2           | Recommend 64-bit bullseye, memory constrained |
+| Raspberry Pi 5                | Requires bookworm (12) |
+| Raspberry Pi 4                | Recommend 64-bit bookworm (12) |
+| Raspberry Pi 3                | Recommend 64-bit bookworm (12), recommend 1GB of swap |
+| Raspberry Pi Zero 2           | Recommend 64-bit bookworm (12), memory constrained |
 | Raspberry Pi Zero             | Recommend 32-bit bullseye, memory constrained |
 | Rock Pi                       |      |
 | Libre Computer (Le Potato)    |      |

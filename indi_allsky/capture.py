@@ -665,9 +665,6 @@ class CaptureWorker(Process):
         if self.indiclient.telescope_device:
             telescope_config = {
                 'SWITCHES' : {
-                    'TELESCOPE_SLEW_RATE' : {
-                        'on' : ['4x'],  # zoom zoom
-                    },
                     'TELESCOPE_TRACK_STATE' : {
                         'on'  : ['TRACK_OFF'],
                         'off' : ['TRACK_ON'],
