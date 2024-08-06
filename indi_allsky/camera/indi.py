@@ -795,12 +795,12 @@ class IndiClient(PyIndi.BaseClient):
 
     def getGpsPosition(self):
         if not self.gps_device:
-            return self.position_av[0:2]
+            return self.position_av[0:3]
 
         try:
             geographic_coord = self.get_control(self.gps_device, 'GEOGRAPHIC_COORD', 'number', timeout=0.5)
         except TimeOutException:
-            return self.position_av[0:2]
+            return self.position_av[0:3]
 
         gps_lat = float(geographic_coord[0].getValue())   # LAT
         gps_long = float(geographic_coord[1].getValue())  # LONG
@@ -808,7 +808,7 @@ class IndiClient(PyIndi.BaseClient):
 
         if not gps_lat and not gps_long:
             logger.warning('GPS fix not found')
-            return self.position_av[0:2]
+            return self.position_av[0:3]
 
         if gps_long > 180.0:
             # put longitude in range of -180 to 180
