@@ -360,13 +360,15 @@ class VideoWorker(Process):
             timelapse_files.append(p_entry)
 
 
+        timelapse_skip_frames = self.config.get('TIMELAPSE_SKIP_FRAMES', 4)
+
         video_metadata = {
             'type'          : constants.VIDEO,
             'createDate'    : now.timestamp(),
             'utc_offset'    : now.astimezone().utcoffset().total_seconds(),
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'night'         : night,
-            'frames'        : timelapse_files_entries_count,
+            'frames'        : timelapse_files_entries_count - timelapse_skip_frames,
             'camera_uuid'   : camera.uuid,
         }
 
@@ -386,8 +388,6 @@ class VideoWorker(Process):
             video_metadata,
         )
 
-
-        timelapse_skip_frames = self.config.get('TIMELAPSE_SKIP_FRAMES', 4)
 
         try:
             tg = TimelapseGenerator(self.config)
@@ -557,13 +557,15 @@ class VideoWorker(Process):
             timelapse_files.append(p_entry)
 
 
+        timelapse_skip_frames = self.config.get('TIMELAPSE_SKIP_FRAMES', 4)
+
         video_metadata = {
             'type'          : constants.PANORAMA_VIDEO,
             'createDate'    : now.timestamp(),
             'utc_offset'    : now.astimezone().utcoffset().total_seconds(),
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'night'         : night,
-            'frames'        : timelapse_files_entries_count,
+            'frames'        : timelapse_files_entries_count - timelapse_skip_frames,
             'camera_uuid'   : camera.uuid,
         }
 
@@ -584,8 +586,6 @@ class VideoWorker(Process):
             video_metadata,
         )
 
-
-        timelapse_skip_frames = self.config.get('TIMELAPSE_SKIP_FRAMES', 4)
 
         try:
             tg = TimelapseGenerator(self.config)
