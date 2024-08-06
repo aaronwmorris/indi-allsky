@@ -50,7 +50,6 @@ class StarTrailGenerator(object):
         self.original_width = None
 
         self.trail_image = None
-        self.trail_count = 0
         self.pixels_cutoff = None
         self.excluded_images = 0
 
@@ -72,6 +71,7 @@ class StarTrailGenerator(object):
         self.placeholder_adu = 255
 
 
+        self._trail_count = 0
         self._timelapse_frame_count = 0
         self._timelapse_frame_list = list()
 
@@ -118,6 +118,14 @@ class StarTrailGenerator(object):
     @min_stars.setter
     def min_stars(self, new_min_stars):
         self._min_stars = int(new_min_stars)
+
+    @property
+    def trail_count(self):
+        return self._trail_count
+
+    @trail_count.setter
+    def trail_count(self, new_trail_count):
+        return  # read only
 
     @property
     def timelapse_frame_count(self):
@@ -328,7 +336,7 @@ class StarTrailGenerator(object):
             self.excluded_images += 1
             return
 
-        self.trail_count += 1
+        self._trail_count += 1
 
 
         if self.min_stars > 0:
