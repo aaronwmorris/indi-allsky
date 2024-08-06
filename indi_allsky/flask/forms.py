@@ -5287,6 +5287,45 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     PROCESSING_SPLIT_SCREEN          = BooleanField('Split screen')
 
 
+class IndiAllskyMiniTimelapseForm(FlaskForm):
+    SECONDS_choices = (
+        (60, '1 minute'),
+        (120, '2 minutes'),
+        (180, '3 minutes'),
+        (240, '4 minutes'),
+        (300, '5 minutes'),
+        (360, '6 minutes'),
+        (420, '7 minutes'),
+        (480, '8 minutes'),
+        (540, '9 minutes'),
+        (600, '10 minutes'),
+        (900, '15 minutes'),
+        (1200, '20 minutes'),
+        (1800, '30 minutes'),
+        (2700, '45 minutes'),
+        (3600, '1 hour'),
+        (5400, '1.5 hours'),
+        (7200, '2 hours'),
+    )
+
+    FPS_SELECT_choices = (
+        (0.25, '0.25'),
+        (0.5, '0.5'),
+        (0.75, '0.75'),
+        (1, '1'),
+        (2, '2'),
+        (5, '5'),
+        (10, '10'),
+        (25, '25'),
+    )
+
+    CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
+    TIMESTAMP                        = IntegerField('Timestamp', validators=[DataRequired()])
+    PRE_SECONDS                      = SelectField('Pre-Selection Time', choices=SECONDS_choices, validators=[DataRequired()])
+    POST_SECONDS                     = SelectField('Post-Selection Time', choices=SECONDS_choices, validators=[DataRequired()])
+    FPS_SELECT                       = SelectField('Frames/sec', choices=FPS_SELECT_choices, validators=[DataRequired()])
+
+
 class IndiAllskyCameraSimulatorForm(FlaskForm):
     SENSOR_SELECT_choices = {
         'Small' : (
