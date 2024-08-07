@@ -5320,7 +5320,7 @@ class IndiAllskyMiniTimelapseForm(FlaskForm):
     )
 
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
-    TIMESTAMP                        = IntegerField('Timestamp', validators=[DataRequired()])
+    IMAGE_ID                         = IntegerField('Image ID', validators=[DataRequired()])
     PRE_SECONDS                      = SelectField('Pre-Selection Time', choices=SECONDS_choices, validators=[DataRequired()])
     POST_SECONDS                     = SelectField('Post-Selection Time', choices=SECONDS_choices, validators=[DataRequired()])
     FPS_SELECT                       = SelectField('Frames/sec', choices=FPS_SELECT_choices, validators=[DataRequired()])

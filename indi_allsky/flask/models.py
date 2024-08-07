@@ -413,7 +413,7 @@ class IndiAllSkyDbMiniVideoTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
-    imageDate = db.Column(db.DateTime(), nullable=False, index=True)
+    targetDate = db.Column(db.DateTime(), nullable=False, index=True)
     startDate = db.Column(db.DateTime(), nullable=False)
     endDate = db.Column(db.DateTime(), nullable=False)
     fps = db.Column(db.Float, server_default='0', nullable=False)
