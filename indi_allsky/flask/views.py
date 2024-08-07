@@ -90,6 +90,7 @@ from .forms import IndiAllskyImageExcludeForm
 from .forms import IndiAllskyImageProcessingForm
 from .forms import IndiAllskyCameraSimulatorForm
 from .forms import IndiAllskyFocusControllerForm
+from .forms import IndiAllskyMiniTimelapseForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -6109,6 +6110,50 @@ class PanoramaVideoView(TimelapseVideoView):
     file_view = 'indi_allsky.panorama_video_view'
 
 
+class MiniTimelapseGeneratorView(TemplateView):
+    title = 'Mini Timelapse'
+    image_loop_view = 'indi_allsky.js_image_loop_view'
+
+    def get_context(self):
+        context = super(MiniTimelapseGeneratorView, self).get_context()
+
+        image_id = int(request.args.get('image_id', 0))
+
+        if image_id:
+            image_entry = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbImageTable.id == image_id)\
+                .one()
+        else:
+            # load last image
+            image_entry = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+                .first()
+
+
+        context['title'] = self.title
+        context['image_loop_view'] = self.image_loop_view
+
+        # this should be the endDate
+        context['timestamp'] = int((image_entry.createDate + timedelta(seconds=120)).timestamp())
+
+
+        form_data = {
+            'CAMERA_ID'             : session['camera_id'],
+            'IMAGE_ID'              : image_id,
+            'PRE_SECONDS_SELECT'    : '240',
+            'POST_SECONDS_SELECT'   : '120',
+            'FRAMERATE_SELECT'      : '10',
+        }
+
+        context['form_mini_timelapse'] = IndiAllskyMiniTimelapseForm(data=form_data)
+
+        return context
+
+
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
@@ -6543,6 +6588,8 @@ bp_allsky.add_url_rule('/watch_panorama', view_func=PanoramaVideoView.as_view('p
 
 bp_allsky.add_url_rule('/generate', view_func=TimelapseGeneratorView.as_view('generate_view', template_name='generate.html'))
 bp_allsky.add_url_rule('/ajax/generate', view_func=AjaxTimelapseGeneratorView.as_view('ajax_generate_view'))
+
+bp_allsky.add_url_rule('/minigenerate', view_func=MiniTimelapseGeneratorView.as_view('mini_generate_view', template_name='mini_generate.html'))
 
 bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp_allsky.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))

@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: {{ title }}{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+.loader {
+  display: block;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+canvas {
+    width: 100%;
+    height: auto;
+};
+</style>
+<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
+<script type="text/javascript">
+var timestamp = {{ timestamp | int }};
+var history_seconds;  // set later
+var framerate;  // set later
+var json_data = {
+    'image_list' : [],
+    'message' : '',
+};
+var fullscreen = false;  //initial state
+
+var framerate_delay_lut = {
+    '0.25' : 4000,
+    '0.5'  : 2000,
+    '0.75' : 1333,
+    '1'    : 1000,
+    '2'    : 500,
+    '5'    : 200,
+    '10'   : 100,
+    '25'   : 40,
+};
+
+function init() {
+    loadImages();
+    loop();
+}
+
+async function loop() {
+    console.log('Starting loop');
+
+    while(json_data['image_list'].length == 0) {
+        await sleep(100);
+    }
+
+    // prevent concurrent updates to list
+    var image_list_copy = JSON.parse(JSON.stringify(json_data['image_list']));
+
+    for (var i = image_list_copy.length - 1; i >= 0; i--) {
+        showImage(image_list_copy[i], i);
+        await sleep(framerate_delay_lut[framerate]);
+    };
+
+    setTimeout(loop, 3000);
+}
+
+
+function showImage(entry, idx) {
+    console.log('Showing image ' + entry["url"]);
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    var img = new Image();
+    img.src = entry["url"];
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio = canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        //context.imageSmoothingEnabled = false;
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+        // round the background strokes to prevent spikes
+        context.lineJoin = 'round';
+
+        if(drawIndex) {
+            var text = idx;
+            var maxWidth = 10;
+            var x = canvas.width-10-maxWidth;
+            var y = canvas.height-10;
+
+            context.strokeStyle = 'black';
+            context.lineWidth = 2;
+            context.strokeText(idx, x, y, maxWidth);
+            context.fillStyle = 'lightgrey';
+            context.fillText(idx, x, y, maxWidth);
+        }
+
+    };
+}
+
+
+function loadImages() {
+    console.log('Loading next images');
+    loadJS("{{ url_for(image_loop_view) }}", {'limit_s' : history_seconds, 'timestamp' : timestamp}, function() {});
+}
+
+function sleep(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function loadJS(url, data, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $("#loader_loop").css({'display' : 'block'});
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json",
+        data: data,
+        success: function(data){
+            $("#loader_loop").css({'display' : 'none'});
+            json_data = data
+            $('#message').html(json_data['message']);
+        },
+        error: function(data){
+            $("#loader_loop").css({'display' : 'none'});
+            onError(data.status);
+            $('#message').text('Error loading data.  Please check the logs.');
+        },
+    });
+
+}
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
+$( document ).ready(function() {
+    var pre_seconds = $('#PRE_SECONDS_SELECT').val();
+    var post_seconds = $('#PRE_SECONDS_SELECT').val();
+    history_seconds = parseInt(pre_seconds) + parseInt(post_seconds);
+    framerate = $('#FRAMERATE_SELECT').val();
+
+    $('#canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
+    init();
+});
+
+</script>
+{% endblock %}
+
+{% block content %}
+<form id="form_mini_timelapse" onSubmit="return false;">
+    <div class="form-group row">
+        {{ form_mini_timelapse.CAMERA_ID() }}
+        {{ form_mini_timelapse.IMAGE_ID() }}
+
+        <div class="col-sm-1">
+            {{ form_mini_timelapse.PRE_SECONDS_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_mini_timelapse.PRE_SECONDS_SELECT(class='form-select bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_mini_timelapse.POST_SECONDS_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_mini_timelapse.POST_SECONDS_SELECT(class='form-select bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_mini_timelapse.FRAMERATE_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_mini_timelapse.FRAMERATE_SELECT(class='form-select bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            <div class="loader" id="loader_loop"></div>
+        </div>
+    </div>
+</form>
+
+<hr>
+
+<div class="row">
+    <div class="text-muted text-center" id="message"></div>
+</div>
+<div class="row">
+    <div class="text-center">
+        <canvas id="canvas"></canvas>
+    </div>
+</div>
+
+<script>
+
+function updateImages() {
+    var pre_seconds = $('#PRE_SECONDS_SELECT').val();
+    var post_seconds = $('#POST_SECONDS_SELECT').val();
+    history_seconds = parseInt(pre_seconds) + parseInt(post_seconds);
+    framerate = $('#FRAMERATE_SELECT').val();
+
+    loadImages();
+}
+
+$("#PRE_SECONDS_SELECT").on("change", function() {
+    updateImages();
+});
+
+$("#POST_SECONDS_SELECT").on("change", function() {
+    updateImages();
+});
+
+$("#FRAMERATE_SELECT").on("change", function() {
+    updateImages();
+});
+
+</script>
+
+{% endblock %}
