@@ -4492,17 +4492,21 @@ class AjaxTimelapseGeneratorView(BaseView):
             app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata_video = {
-                'action'      : 'generateVideo',
-                'timespec'    : timespec,
-                'night'       : night,
-                'camera_id'   : camera.id,
+                'action' : 'generateVideo',
+                'kwargs' : {
+                    'timespec'    : timespec,
+                    'night'       : night,
+                    'camera_id'   : camera.id,
+                },
             }
 
             jobdata_kst = {
-                'action'      : 'generateKeogramStarTrails',
-                'timespec'    : timespec,
-                'night'       : night,
-                'camera_id'   : camera.id,
+                'action' : 'generateKeogramStarTrails',
+                'kwargs' : {
+                    'timespec'    : timespec,
+                    'night'       : night,
+                    'camera_id'   : camera.id,
+                },
             }
 
 
@@ -4526,10 +4530,12 @@ class AjaxTimelapseGeneratorView(BaseView):
 
             if self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE'):
                 jobdata_panorama_video = {
-                    'action'      : 'generatePanoramaVideo',
-                    'timespec'    : timespec,
-                    'night'       : night,
-                    'camera_id'   : camera.id,
+                    'action' : 'generatePanoramaVideo',
+                    'kwargs' : {
+                        'timespec'    : timespec,
+                        'night'       : night,
+                        'camera_id'   : camera.id,
+                    },
                 }
 
                 task_panorama_video = IndiAllSkyDbTaskQueueTable(
@@ -4563,10 +4569,12 @@ class AjaxTimelapseGeneratorView(BaseView):
             app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata = {
-                'action'      : 'generateVideo',
-                'timespec'    : timespec,
-                'night'       : night,
-                'camera_id'   : camera.id,
+                'action' : 'generateVideo',
+                'kwargs' : {
+                    'timespec'    : timespec,
+                    'night'       : night,
+                    'camera_id'   : camera.id,
+                },
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -4604,10 +4612,12 @@ class AjaxTimelapseGeneratorView(BaseView):
             app.logger.warning('Generating %s time panorama timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata = {
-                'action'      : 'generatePanoramaVideo',
-                'timespec'    : timespec,
-                'night'       : night,
-                'camera_id'   : camera.id,
+                'action' : 'generatePanoramaVideo',
+                'kwargs' : {
+                    'timespec'    : timespec,
+                    'night'       : night,
+                    'camera_id'   : camera.id,
+                },
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -4637,10 +4647,12 @@ class AjaxTimelapseGeneratorView(BaseView):
             app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata = {
-                'action'      : 'generateKeogramStarTrails',
-                'timespec'    : timespec,
-                'night'       : night,
-                'camera_id'   : camera.id,
+                'action' : 'generateKeogramStarTrails',
+                'kwargs' : {
+                    'timespec'    : timespec,
+                    'night'       : night,
+                    'camera_id'   : camera.id,
+                },
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -4662,10 +4674,11 @@ class AjaxTimelapseGeneratorView(BaseView):
             app.logger.warning('Uploading end of night data for camera %d', camera.id)
 
             jobdata = {
-                'action'      : 'uploadAllskyEndOfNight',
-                'timespec'    : None,  # not needed
-                'night'       : True,
-                'camera_id'   : camera.id,
+                'action' : 'uploadAllskyEndOfNight',
+                'kwargs' : {
+                    'night'     : True,
+                    'camera_id' : camera.id,
+                },
             }
 
             task = IndiAllSkyDbTaskQueueTable(

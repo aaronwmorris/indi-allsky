@@ -201,17 +201,7 @@ class VideoWorker(Process):
 
 
         action = task.data['action']
-        timespec = task.data['timespec']
-        night = task.data['night']
-        camera_id = task.data['camera_id']
-
-
-        if camera_id:
-            camera = IndiAllSkyDbCameraTable.query\
-                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-                .one()
-        else:
-            camera = None
+        kwargs = task.data.get('kwargs', {})
 
 
         try:
@@ -222,10 +212,19 @@ class VideoWorker(Process):
 
 
         # perform the action
-        action_method(task, timespec, night, camera)
+        action_method(task, **kwargs)
 
 
-    def generateVideo(self, task, timespec, night, camera):
+    def generateVideo(self, task, **kwargs):
+        timespec = kwargs['timespec']
+        night = kwargs['night']
+        camera_id = kwargs['camera_id']
+
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+
         task.setRunning()
 
         now = datetime.now()
@@ -423,7 +422,16 @@ class VideoWorker(Process):
         self._miscUpload.youtube_upload_video(video_entry, video_metadata)
 
 
-    def generatePanoramaVideo(self, task, timespec, night, camera):
+    def generatePanoramaVideo(self, task, **kwargs):
+        timespec = kwargs['timespec']
+        night = kwargs['night']
+        camera_id = kwargs['camera_id']
+
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+
         task.setRunning()
 
         now = datetime.now()
@@ -622,7 +630,16 @@ class VideoWorker(Process):
         self._miscUpload.youtube_upload_panorama_video(video_entry, video_metadata)
 
 
-    def generateKeogramStarTrails(self, task, timespec, night, camera):
+    def generateKeogramStarTrails(self, task, **kwargs):
+        timespec = kwargs['timespec']
+        night = kwargs['night']
+        camera_id = kwargs['camera_id']
+
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+
         task.setRunning()
 
         now = datetime.now()
@@ -1122,7 +1139,15 @@ class VideoWorker(Process):
         task.setSuccess('Generated keogram and/or star trail')
 
 
-    def uploadAllskyEndOfNight(self, task, timespec, night, camera):
+    def uploadAllskyEndOfNight(self, task, **kwargs):
+        night = kwargs['night']
+        camera_id = kwargs['camera_id']
+
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+
         task.setRunning()
 
         if not night:
@@ -1233,7 +1258,7 @@ class VideoWorker(Process):
         task.setSuccess('Uploaded EndOfNight data')
 
 
-    def systemHealthCheck(self, task, timespec, night, camera):
+    def systemHealthCheck(self, task, **kwargs):
         task.setRunning()
 
 
@@ -1283,7 +1308,14 @@ class VideoWorker(Process):
         task.setSuccess('Health check complete')
 
 
-    def updateAuroraData(self, task, timespec, night, camera):
+    def updateAuroraData(self, task, **kwargs):
+        camera_id = kwargs['camera_id']
+
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+
         task.setRunning()
 
         aurora = IndiAllskyAuroraUpdate(self.config)
@@ -1292,7 +1324,14 @@ class VideoWorker(Process):
         task.setSuccess('Aurora data updated')
 
 
-    def updateSmokeData(self, task, timespec, night, camera):
+    def updateSmokeData(self, task, **kwargs):
+        camera_id = kwargs['camera_id']
+
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+
         task.setRunning()
 
         smoke = IndiAllskySmokeUpdate(self.config)
@@ -1301,7 +1340,7 @@ class VideoWorker(Process):
         task.setSuccess('Smoke data updated')
 
 
-    def updateSatelliteTleData(self, task, timespec, night, camera):
+    def updateSatelliteTleData(self, task, **kwargs):
         task.setRunning()
 
         satellite = IndiAllskyUpdateSatelliteData(self.config)
@@ -1310,7 +1349,14 @@ class VideoWorker(Process):
         task.setSuccess('Satellite data updated')
 
 
-    def expireData(self, task, timespec, night, camera):
+    def expireData(self, task, **kwargs):
+        camera_id = kwargs['camera_id']
+
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+
         task.setRunning()
 
 
