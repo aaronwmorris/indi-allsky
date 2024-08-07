@@ -24,7 +24,7 @@ class TimelapseGenerator(object):
         #self.seqfolder_p = Path(seqfolder)
 
         self._codec = 'libx264'
-        self._framerate = 25.0
+        self._framerate = 25
         self._bitrate = '5000k'
         self._vf_scale = ''
         self._ffmpeg_extra_options = ''
@@ -44,7 +44,7 @@ class TimelapseGenerator(object):
 
     @framerate.setter
     def framerate(self, new_framerate):
-        self._framerate = float(new_framerate)
+        self._framerate = int(new_framerate)
 
     @property
     def bitrate(self):
@@ -97,8 +97,8 @@ class TimelapseGenerator(object):
             'ffmpeg',
             '-y',
             '-loglevel', 'level+warning',
+            '-r', '{0:d}'.format(self.framerate),
             '-f', 'image2',
-            '-r', '{0:0.2f}'.format(self.framerate),
             #'-start_number', '0',
             #'-pattern_type', 'glob',
             '-i', '{0:s}/%05d.{1:s}'.format(str(self.seqfolder_p), self.config['IMAGE_FILE_TYPE']),
