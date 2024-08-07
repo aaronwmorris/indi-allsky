@@ -15,12 +15,14 @@ METADATA        = 12
 PANORAMA_IMAGE  = 13
 PANORAMA_VIDEO  = 14
 THUMBNAIL       = 15
+MINI_VIDEO      = 16
 
 
 ENDPOINT_V1 = {
     CAMERA          : 'sync/v1/camera',
     IMAGE           : 'sync/v1/image',
     VIDEO           : 'sync/v1/video',
+    MINI_VIDEO      : 'sync/v1/minivideo',
     KEOGRAM         : 'sync/v1/keogram',
     STARTRAIL       : 'sync/v1/startrail',
     STARTRAIL_VIDEO : 'sync/v1/startrailvideo',

@@ -272,7 +272,7 @@ class VideoWorker(Process):
 
         try:
             # delete old video entry if it exists
-            video_entry = IndiAllSkyDbVideoTable.query\
+            old_video_entry = IndiAllSkyDbVideoTable.query\
                 .filter(
                     or_(
                         IndiAllSkyDbVideoTable.filename == str(video_file),
@@ -282,7 +282,7 @@ class VideoWorker(Process):
                 .one()
 
             logger.warning('Removing orphaned video db entry')
-            db.session.delete(video_entry)
+            db.session.delete(old_video_entry)
             db.session.commit()
         except NoResultFound:
             pass
@@ -422,6 +422,231 @@ class VideoWorker(Process):
         self._miscUpload.youtube_upload_video(video_entry, video_metadata)
 
 
+    def generateMiniVideo(self, task, **kwargs):
+        image_id = kwargs['image_id']
+        camera_id = kwargs['camera_id']
+        pre_seconds = int(kwargs['pre_seconds'])
+        post_seconds = int(kwargs['post_seconds'])
+        framerate = float(kwargs['framerate'])
+        note = str(kwargs['note'])
+
+
+        task.setRunning()
+
+
+        now = datetime.now()
+
+        camera = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .one()
+
+
+        image_entry = db.session.query(
+            IndiAllSkyDbImageTable,
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.id == image_id)\
+            .one()
+
+
+        targetDate = image_entry.createDate
+        startDate = image_entry.createDate - timedelta(seconds=pre_seconds)
+        endDate = image_entry.createDate + timedelta(seconds=post_seconds)
+
+        d_dayDate = image_entry.dayDate
+        night = image_entry.night
+
+
+        if image_entry.night:
+            timeofday = 'night'
+        else:
+            timeofday = 'day'
+
+
+        if self.config['FFMPEG_CODEC'] in ['libx264']:
+            video_format = 'mp4'
+        elif self.config['FFMPEG_CODEC'] in ['libvpx']:
+            video_format = 'webm'
+        else:
+            logger.error('Invalid codec in config, timelapse generation failed')
+            task.setFailed('Invalid codec in config, timelapse generation failed')
+            return
+
+
+        vid_folder = self._getVideoFolder(d_dayDate, camera)
+
+        video_file = vid_folder.joinpath(
+            'allsky-minitimelapse_ccd{0:d}_{1:s}_{2:d}_{3:s}.{4:s}'.format(
+                camera.id,
+                d_dayDate.strftime('%Y%m%d'),
+                timeofday,
+                int(now.timestamp()),
+                video_format,
+            )
+        )
+
+        if video_file.exists():
+            logger.warning('Video is already generated: %s', video_file)
+            task.setFailed('Video is already generated: {0:s}'.format(str(video_file)))
+            return
+
+
+        try:
+            # delete old video entry if it exists
+            old_video_entry = IndiAllSkyDbVideoTable.query\
+                .filter(
+                    or_(
+                        IndiAllSkyDbVideoTable.filename == str(video_file),
+                        IndiAllSkyDbVideoTable.filename == str(video_file.relative_to(self.image_dir)),
+                    )
+                )\
+                .one()
+
+            logger.warning('Removing orphaned video db entry')
+            db.session.delete(old_video_entry)
+            db.session.commit()
+        except NoResultFound:
+            pass
+
+
+        # find all files
+        mini_timelapse_files_entries = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbImageTable.createDate >= startDate)\
+            .filter(IndiAllSkyDbImageTable.createDate <= endDate)\
+            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
+
+
+        mini_timelapse_files_entries_count = mini_timelapse_files_entries.count()
+        logger.info('Found %d images for mini timelapse', mini_timelapse_files_entries_count)
+
+
+        timelapse_data = IndiAllSkyDbImageTable.query\
+            .add_columns(
+                func.max(IndiAllSkyDbImageTable.kpindex).label('image_max_kpindex'),
+                func.max(IndiAllSkyDbImageTable.ovation_max).label('image_max_ovation_max'),
+                func.max(IndiAllSkyDbImageTable.smoke_rating).label('image_max_smoke_rating'),
+                func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
+                func.max(IndiAllSkyDbImageTable.moonphase).label('image_max_moonphase'),
+                func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
+            )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbImageTable.createDate >= startDate)\
+            .filter(IndiAllSkyDbImageTable.createDate <= endDate)\
+            .filter(IndiAllSkyDbImageTable.exclude == sa_false())\
+            .first()
+
+
+        # some of these values might be NULL which might cause other problems
+        try:
+            max_kpindex = float(timelapse_data.image_max_kpindex)
+            max_ovation_max = int(timelapse_data.image_max_ovation_max)
+            avg_stars = float(timelapse_data.image_avg_stars)
+            max_moonphase = float(timelapse_data.image_max_moonphase)
+            avg_sqm = float(timelapse_data.image_avg_sqm)
+        except TypeError:
+            max_kpindex = 0.0
+            max_ovation_max = 0
+            avg_stars = 0
+            max_moonphase = -1.0
+            avg_sqm = 0.0
+
+
+        try:
+            max_smoke_rating = int(timelapse_data.image_max_smoke_rating)
+        except ValueError:
+            max_smoke_rating = constants.SMOKE_RATING_NODATA
+        except TypeError:
+            max_smoke_rating = constants.SMOKE_RATING_NODATA
+
+
+        logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
+
+
+        timelapse_files = list()
+        for entry in mini_timelapse_files_entries:
+            p_entry = Path(entry.getFilesystemPath())
+
+            if not p_entry.exists():
+                logger.error('File not found: %s', p_entry)
+                continue
+
+            if p_entry.stat().st_size == 0:
+                continue
+
+            timelapse_files.append(p_entry)
+
+
+        mini_video_metadata = {
+            'type'          : constants.MINI_VIDEO,
+            'createDate'    : now.timestamp(),
+            'utc_offset'    : now.astimezone().utcoffset().total_seconds(),
+            'dayDate'       : d_dayDate.strftime('%Y%m%d'),
+            'targetDate'    : targetDate.timestamp(),
+            'startDate'     : startDate.timestamp(),
+            'endDate'       : endDate.timestamp(),
+            'night'         : night,
+            'framerate'     : framerate,
+            'frames'        : mini_timelapse_files_entries_count,
+            'note'          : note,
+            'camera_uuid'   : camera.uuid,
+        }
+
+        mini_video_metadata['data'] = {
+            'max_kpindex'       : max_kpindex,
+            'max_ovation_max'   : max_ovation_max,
+            'max_smoke_rating'  : max_smoke_rating,
+            'avg_stars'         : avg_stars,
+            'max_moonphase'     : max_moonphase,
+            'avg_sqm'           : avg_sqm,
+        }
+
+        # Create DB entry before creating file
+        mini_video_entry = self._miscDb.addMiniVideo(
+            video_file.relative_to(self.image_dir),
+            camera.id,
+            mini_video_metadata,
+        )
+
+
+        try:
+            tg = TimelapseGenerator(self.config)
+            tg.codec = self.config['FFMPEG_CODEC']
+            tg.framerate = framerate
+            tg.bitrate = self.config['FFMPEG_BITRATE']
+            tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
+            tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+
+            tg.generate(video_file, timelapse_files, skip_frames=0)
+        except TimelapseException:
+            mini_video_entry.success = False
+            db.session.commit()
+
+            self._miscDb.addNotification(
+                NotificationCategory.MEDIA,
+                'mini_timelapse_video',
+                'Mini timelapse video failed to generate',
+                expire=timedelta(hours=12),
+            )
+
+            task.setFailed('Failed to generate mini timelapse: {0:s}'.format(str(video_file)))
+            return
+
+
+        task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
+
+        ### Upload ###
+        self._miscUpload.syncapi_minivideo(mini_video_entry, mini_video_metadata)  # syncapi before s3
+        self._miscUpload.s3_upload_minivideo(mini_video_entry, mini_video_metadata)
+        self._miscUpload.upload_minivideo(mini_video_entry)
+        self._miscUpload.youtube_upload_minivideo(mini_video_entry, mini_video_metadata)
+
+
+
     def generatePanoramaVideo(self, task, **kwargs):
         timespec = kwargs['timespec']
         night = kwargs['night']
@@ -479,7 +704,7 @@ class VideoWorker(Process):
 
         try:
             # delete old video entry if it exists
-            video_entry = IndiAllSkyDbPanoramaVideoTable.query\
+            old_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
                 .filter(
                     or_(
                         IndiAllSkyDbPanoramaVideoTable.filename == str(video_file),
@@ -489,7 +714,7 @@ class VideoWorker(Process):
                 .one()
 
             logger.warning('Removing orphaned video db entry')
-            db.session.delete(video_entry)
+            db.session.delete(old_video_entry)
             db.session.commit()
         except NoResultFound:
             pass
@@ -1071,7 +1296,7 @@ class VideoWorker(Process):
                     st_tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
                     st_tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
 
-                    st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
+                    st_tg.generate(startrail_video_file, stg.timelapse_frame_list, skip_frames=0)
                 except TimelapseException:
                     logger.error('Failed to generate startrails timelapse')
 
