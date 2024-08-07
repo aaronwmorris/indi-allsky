@@ -6137,8 +6137,7 @@ class MiniTimelapseGeneratorView(TemplateView):
         context['title'] = self.title
         context['image_loop_view'] = self.image_loop_view
 
-        # this should be the endDate
-        context['timestamp'] = int((image_entry.createDate + timedelta(seconds=120)).timestamp())
+        context['timestamp'] = int(image_entry.createDate.timestamp())
 
 
         form_data = {

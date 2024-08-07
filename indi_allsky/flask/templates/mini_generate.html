@@ -28,6 +28,7 @@ canvas {
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
 var timestamp = {{ timestamp | int }};
+var endDate_timestamp;  // set later
 var history_seconds;  // set later
 var framerate;  // set later
 var json_data = {
@@ -115,7 +116,7 @@ function showImage(entry, idx) {
 
 function loadImages() {
     console.log('Loading next images');
-    loadJS("{{ url_for(image_loop_view) }}", {'limit_s' : history_seconds, 'timestamp' : timestamp}, function() {});
+    loadJS("{{ url_for(image_loop_view) }}", {'limit_s' : history_seconds, 'timestamp' : endDate_timestamp}, function() {});
 }
 
 function sleep(time) {
@@ -181,9 +182,10 @@ function closeFullscreen() {
 }
 
 $( document ).ready(function() {
-    var pre_seconds = $('#PRE_SECONDS_SELECT').val();
-    var post_seconds = $('#PRE_SECONDS_SELECT').val();
-    history_seconds = parseInt(pre_seconds) + parseInt(post_seconds);
+    var pre_seconds = parseInt($('#PRE_SECONDS_SELECT').val());
+    var post_seconds = parseInt($('#PRE_SECONDS_SELECT').val());
+    endDate_timestamp = timestamp + post_seconds;
+    history_seconds = pre_seconds + post_seconds;
     framerate = $('#FRAMERATE_SELECT').val();
 
     $('#canvas').on("click", function() {
@@ -243,9 +245,10 @@ $( document ).ready(function() {
 <script>
 
 function updateImages() {
-    var pre_seconds = $('#PRE_SECONDS_SELECT').val();
-    var post_seconds = $('#POST_SECONDS_SELECT').val();
-    history_seconds = parseInt(pre_seconds) + parseInt(post_seconds);
+    var pre_seconds = parseInt($('#PRE_SECONDS_SELECT').val());
+    var post_seconds = parseInt($('#POST_SECONDS_SELECT').val());
+    endDate_timestamp = timestamp + post_seconds;
+    history_seconds = pre_seconds + post_seconds;
     framerate = $('#FRAMERATE_SELECT').val();
 
     loadImages();
