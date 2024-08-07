@@ -396,7 +396,7 @@ class miscDb(object):
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
         #    'night'
-        #    'fps'
+        #    'framerate'
         #    'frames'
         #    'data'
         #}
@@ -429,7 +429,7 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
-            fps=float(metadata.get('fps', 0.0)),
+            framerate=float(metadata.get('framerate', 0.0)),
             frames=metadata.get('frames', 0),
             height=metadata.get('height'),  # optional
             width=metadata.get('width'),  # optional
@@ -452,7 +452,7 @@ class miscDb(object):
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
         #    'night'
-        #    'fps'
+        #    'framerate'
         #    'frames'
         #    'data'
         #}
@@ -485,7 +485,7 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
-            fps=float(metadata.get('fps', 0.0)),
+            framerate=float(metadata.get('framerate', 0.0)),
             frames=metadata.get('frames', 0),
             height=metadata.get('height'),  # optional
             width=metadata.get('width'),  # optional
@@ -615,7 +615,7 @@ class miscDb(object):
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
         #    'night'
-        #    'fps'
+        #    'framerate'
         #    'frames'
         #}
 
@@ -648,7 +648,7 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
-            fps=float(metadata.get('fps', 0.0)),
+            framerate=float(metadata.get('framerate', 0.0)),
             frames=metadata.get('frames', 0),
             height=metadata.get('height'),  # optional
             width=metadata.get('width'),  # optional

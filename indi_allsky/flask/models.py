@@ -376,7 +376,7 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
-    fps = db.Column(db.Float, server_default='0', nullable=False)
+    framerate = db.Column(db.Float, server_default='0', nullable=False)
     frames = db.Column(db.Integer, server_default='0', nullable=False)
     #kpindex = db.Column(db.Float, nullable=True, index=True)
     #ovation_max = db.Column(db.Integer, nullable=True, index=True)
@@ -416,7 +416,7 @@ class IndiAllSkyDbMiniVideoTable(IndiAllSkyDbFileBase):
     targetDate = db.Column(db.DateTime(), nullable=False, index=True)
     startDate = db.Column(db.DateTime(), nullable=False)
     endDate = db.Column(db.DateTime(), nullable=False)
-    fps = db.Column(db.Float, server_default='0', nullable=False)
+    framerate = db.Column(db.Float, server_default='0', nullable=False)
     frames = db.Column(db.Integer, server_default='0', nullable=False)
     note = db.Column(db.String(length=255), nullable=False)
     data = db.Column(db.JSON, index=True)
@@ -492,7 +492,7 @@ class IndiAllSkyDbStarTrailsVideoTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
-    fps = db.Column(db.Float, server_default='0', nullable=False)
+    framerate = db.Column(db.Float, server_default='0', nullable=False)
     frames = db.Column(db.Integer, server_default='0', nullable=False)
     width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
@@ -597,7 +597,7 @@ class IndiAllSkyDbPanoramaVideoTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
-    fps = db.Column(db.Float, server_default='0', nullable=False)
+    framerate = db.Column(db.Float, server_default='0', nullable=False)
     frames = db.Column(db.Integer, server_default='0', nullable=False)
     width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated

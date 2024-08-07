@@ -367,7 +367,7 @@ class VideoWorker(Process):
             'utc_offset'    : now.astimezone().utcoffset().total_seconds(),
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'night'         : night,
-            'fps'           : self.config['FFMPEG_FRAMERATE'],
+            'framerate'     : self.config['FFMPEG_FRAMERATE'],
             'frames'        : timelapse_files_entries_count - timelapse_skip_frames,
             'camera_uuid'   : camera.uuid,
         }
@@ -574,7 +574,7 @@ class VideoWorker(Process):
             'utc_offset'    : now.astimezone().utcoffset().total_seconds(),
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'night'         : night,
-            'fps'           : self.config['FFMPEG_FRAMERATE'],
+            'framerate'     : self.config['FFMPEG_FRAMERATE'],
             'frames'        : timelapse_files_entries_count - timelapse_skip_frames,
             'camera_uuid'   : camera.uuid,
         }
@@ -886,7 +886,7 @@ class VideoWorker(Process):
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
             'camera_uuid': camera.uuid,
-            'fps'        : self.config['FFMPEG_FRAMERATE'],
+            'framerate'  : self.config['FFMPEG_FRAMERATE'],
             #'frames'  # added later
         }
 
