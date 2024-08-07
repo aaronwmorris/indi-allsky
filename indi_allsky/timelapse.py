@@ -44,7 +44,7 @@ class TimelapseGenerator(object):
 
     @framerate.setter
     def framerate(self, new_framerate):
-        self._framerate = int(new_framerate)
+        self._framerate = float(new_framerate)
 
     @property
     def bitrate(self):
@@ -97,13 +97,14 @@ class TimelapseGenerator(object):
             'ffmpeg',
             '-y',
             '-loglevel', 'level+warning',
-            '-r', '{0:d}'.format(self.framerate),
+            '-r', '{0:0.2f}'.format(self.framerate),
             '-f', 'image2',
             #'-start_number', '0',
             #'-pattern_type', 'glob',
             '-i', '{0:s}/%05d.{1:s}'.format(str(self.seqfolder_p), self.config['IMAGE_FILE_TYPE']),
             '-vcodec', '{0:s}'.format(self.codec),
             '-b:v', '{0:s}'.format(self.bitrate),
+            #'-filter:v', 'setpts=50*PTS',
             '-pix_fmt', 'yuv420p',
             '-movflags', '+faststart',
         ]
