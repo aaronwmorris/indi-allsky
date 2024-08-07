@@ -409,6 +409,7 @@ class IndiAllSkyDbMiniVideoTable(IndiAllSkyDbFileBase):
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
+    dayDate = db.Column(db.Date, nullable=False, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
