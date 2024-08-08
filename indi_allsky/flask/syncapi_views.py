@@ -26,6 +26,7 @@ from . import db
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
+from .models import IndiAllSkyDbMiniVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
@@ -577,6 +578,14 @@ class SyncApiVideoView(SyncApiBaseView):
     add_function = 'addVideo'
 
 
+class SyncApiMiniVideoView(SyncApiBaseView):
+    decorators = []
+
+    model = IndiAllSkyDbMiniVideoTable
+    filename_t = 'allsky-minitimelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'
+    add_function = 'addMiniVideo'
+
+
 class SyncApiKeogramView(SyncApiBaseView):
     decorators = []
 
@@ -768,6 +777,7 @@ class AuthenticationFailure(Exception):
 bp_syncapi_allsky.add_url_rule('/sync/v1/camera', view_func=SyncApiCameraView.as_view('syncapi_v1_camera_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/image', view_func=SyncApiImageView.as_view('syncapi_v1_image_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/video', view_func=SyncApiVideoView.as_view('syncapi_v1_video_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
+bp_syncapi_allsky.add_url_rule('/sync/v1/minivideo', view_func=SyncApiMiniVideoView.as_view('syncapi_v1_min_video_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/keogram', view_func=SyncApiKeogramView.as_view('syncapi_v1_keogram_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/startrail', view_func=SyncApiStartrailView.as_view('syncapi_v1_startrail_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
 bp_syncapi_allsky.add_url_rule('/sync/v1/startrailvideo', view_func=SyncApiStartrailVideoView.as_view('syncapi_v1_startrail_video_view'), methods=['GET', 'POST', 'PUT', 'DELETE'])
