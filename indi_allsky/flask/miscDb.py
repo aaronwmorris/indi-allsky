@@ -19,6 +19,7 @@ from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbBadPixelMapTable
 from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbVideoTable
+from .models import IndiAllSkyDbMiniVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
@@ -443,6 +444,87 @@ class miscDb(object):
         db.session.commit()
 
         return video
+
+
+    def addMiniVideo(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'  # datetime or timestamp
+        #    'dayDate'  # date or string
+        #    'night'
+        #    'targetDate'
+        #    'startDate'
+        #    'endDate'
+        #    'framerate'
+        #    'frames'
+        #    'data'
+        #    'note'
+        #}
+
+
+        if not filename:
+            return
+
+        filename_p = Path(filename)
+
+
+        logger.info('Adding video %s to DB', filename_p)
+
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
+
+
+        if isinstance(metadata['targetDate'], (int, float)):
+            targetDate = datetime.fromtimestamp(metadata['targetDate'])
+        else:
+            targetDate = metadata['targetDate']
+
+
+        if isinstance(metadata['startDate'], (int, float)):
+            startDate = datetime.fromtimestamp(metadata['startDate'])
+        else:
+            startDate = metadata['startDate']
+
+
+        if isinstance(metadata['endDate'], (int, float)):
+            endDate = datetime.fromtimestamp(metadata['endDate'])
+        else:
+            endDate = metadata['endDate']
+
+
+        if isinstance(metadata['dayDate'], str):
+            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
+        else:
+            dayDate = metadata['dayDate']
+
+
+        mini_video = IndiAllSkyDbMiniVideoTable(
+            createDate=createDate,
+            camera_id=camera_id,
+            filename=str(filename_p),
+            dayDate=dayDate,
+            night=metadata['night'],
+            targetDate=targetDate,
+            startDate=startDate,
+            endDate=endDate,
+            framerate=float(metadata.get('framerate', 0.0)),
+            frames=metadata.get('frames', 0),
+            height=metadata.get('height'),  # optional
+            width=metadata.get('width'),  # optional
+            data=metadata.get('data', {}),
+            remote_url=metadata.get('remote_url'),
+            s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
+            note=metadata['note']
+        )
+
+        db.session.add(mini_video)
+        db.session.commit()
+
+        return mini_video
 
 
     def addPanoramaVideo(self, filename, camera_id, metadata):
