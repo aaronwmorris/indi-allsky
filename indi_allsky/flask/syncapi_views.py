@@ -590,7 +590,7 @@ class SyncApiMiniVideoView(SyncApiBaseView):
         now = datetime.now()
         self.filename_t = 'allsky-minitimelapse_ccd{0:d}_{1:s}_{2:s}_' + str(int(now.timestamp())) + '{3:s}'
 
-        super(SyncApiMiniVideoView, self).processPost(*args, **kwargs)
+        return super(SyncApiMiniVideoView, self).processPost(*args, **kwargs)
 
 
 class SyncApiKeogramView(SyncApiBaseView):
