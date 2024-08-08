@@ -215,7 +215,7 @@ function populate_videos(video_list) {
                     'target'  : "_blank",
                     'rel'     : "noopener noreferrer",
                     'class'   : "text-decoration-none link-warning",
-                    'onclick' : "upload_youtube_video(" + item['id'] + ", 3)", // 3 == VIDEO constant
+                    'onclick' : "upload_youtube_video(" + item['id'] + ", 16)", // 16 == MINI_VIDEO constant
                 }).appendTo(minivideo_div);
                 $('<div />', {}).html(
                     $('<span />', {

@@ -5974,6 +5974,9 @@ class AjaxUploadYoutubeView(BaseView):
         if asset_type == constants.VIDEO:
             table = IndiAllSkyDbVideoTable
             asset_label = 'Timelapse'
+        elif asset_type == constants.MINI_VIDEO:
+            table = IndiAllSkyDbMiniVideoTable
+            asset_label = 'Mini Timelapse'
         elif asset_type == constants.STARTRAIL_VIDEO:
             table = IndiAllSkyDbStarTrailsVideoTable
             asset_label = 'Star Trails Timelapse'
