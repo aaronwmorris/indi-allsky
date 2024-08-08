@@ -679,6 +679,10 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
+    def syncapi_mini_video(self, *args):
+        self.syncapi_video(*args)
+
+
     def syncapi_keogram(self, *args):
         self.syncapi_video(*args)
 
