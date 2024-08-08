@@ -213,6 +213,7 @@ class IndiAllSkyConfigBase(object):
         },
         "IMAGE_EXPIRE_DAYS"     : 30,
         "TIMELAPSE_EXPIRE_DAYS" : 365,
+        "TIMELAPSE_OVERWRITE"   : False,
         "IMAGE_QUEUE_MAX"       : 3,
         "IMAGE_QUEUE_MIN"       : 1,
         "IMAGE_QUEUE_BACKOFF"   : 0.5,

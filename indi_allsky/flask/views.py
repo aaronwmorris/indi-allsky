@@ -1377,12 +1377,13 @@ class ConfigView(FormView):
             'IMAGE_ALIGN_POINTS'             : self.indi_allsky_config.get('IMAGE_ALIGN_POINTS', 50),
             'IMAGE_ALIGN_SOURCEMINAREA'      : self.indi_allsky_config.get('IMAGE_ALIGN_SOURCEMINAREA', 10),
             'IMAGE_STACK_SPLIT'              : self.indi_allsky_config.get('IMAGE_STACK_SPLIT', False),
-            'IMAGE_EXPIRE_DAYS'              : self.indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 30),
             'IMAGE_QUEUE_MAX'                : self.indi_allsky_config.get('IMAGE_QUEUE_MAX', 3),
             'IMAGE_QUEUE_MIN'                : self.indi_allsky_config.get('IMAGE_QUEUE_MIN', 1),
             'IMAGE_QUEUE_BACKOFF'            : self.indi_allsky_config.get('IMAGE_QUEUE_BACKOFF', 0.5),
             'THUMBNAILS__IMAGES_AUTO'        : self.indi_allsky_config.get('THUMBNAILS', {}).get('IMAGES_AUTO', True),
+            'IMAGE_EXPIRE_DAYS'              : self.indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 30),
             'TIMELAPSE_EXPIRE_DAYS'          : self.indi_allsky_config.get('TIMELAPSE_EXPIRE_DAYS', 365),
+            'TIMELAPSE_OVERWRITE'            : self.indi_allsky_config.get('TIMELAPSE_OVERWRITE', False),
             'FFMPEG_FRAMERATE'               : self.indi_allsky_config.get('FFMPEG_FRAMERATE', 25),
             'FFMPEG_BITRATE'                 : self.indi_allsky_config.get('FFMPEG_BITRATE', '5000k'),
             'FFMPEG_VFSCALE'                 : self.indi_allsky_config.get('FFMPEG_VFSCALE', ''),
@@ -2078,12 +2079,13 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_ALIGN_POINTS']                   = int(request.json['IMAGE_ALIGN_POINTS'])
         self.indi_allsky_config['IMAGE_ALIGN_SOURCEMINAREA']            = int(request.json['IMAGE_ALIGN_SOURCEMINAREA'])
         self.indi_allsky_config['IMAGE_STACK_SPLIT']                    = bool(request.json['IMAGE_STACK_SPLIT'])
-        self.indi_allsky_config['IMAGE_EXPIRE_DAYS']                    = int(request.json['IMAGE_EXPIRE_DAYS'])
         self.indi_allsky_config['IMAGE_QUEUE_MAX']                      = int(request.json['IMAGE_QUEUE_MAX'])
         self.indi_allsky_config['IMAGE_QUEUE_MIN']                      = int(request.json['IMAGE_QUEUE_MIN'])
         self.indi_allsky_config['IMAGE_QUEUE_BACKOFF']                  = float(request.json['IMAGE_QUEUE_BACKOFF'])
         self.indi_allsky_config['THUMBNAILS']['IMAGES_AUTO']            = bool(request.json['THUMBNAILS__IMAGES_AUTO'])
+        self.indi_allsky_config['IMAGE_EXPIRE_DAYS']                    = int(request.json['IMAGE_EXPIRE_DAYS'])
         self.indi_allsky_config['TIMELAPSE_EXPIRE_DAYS']                = int(request.json['TIMELAPSE_EXPIRE_DAYS'])
+        self.indi_allsky_config['TIMELAPSE_OVERWRITE']                  = bool(request.json['TIMELAPSE_OVERWRITE'])
         self.indi_allsky_config['FFMPEG_FRAMERATE']                     = int(request.json['FFMPEG_FRAMERATE'])
         self.indi_allsky_config['FFMPEG_BITRATE']                       = str(request.json['FFMPEG_BITRATE'])
         self.indi_allsky_config['FFMPEG_VFSCALE']                       = str(request.json['FFMPEG_VFSCALE'])
