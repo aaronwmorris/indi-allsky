@@ -43,6 +43,7 @@ from flask import current_app as app
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
+from .models import IndiAllSkyDbMiniVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
@@ -4725,6 +4726,205 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
         dates_elapsed_s = time.time() - dates_start
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
 
+
+class IndiAllskyMiniVideoViewer(FlaskForm):
+    YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
+    MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyMiniVideoViewer, self).__init__(*args, **kwargs)
+
+        self.s3_prefix = kwargs.get('s3_prefix', '')
+        self.camera_id = kwargs.get('camera_id')
+        self.local = kwargs.get('local')
+
+
+    def getYears(self):
+        dayDate_year = extract('year', IndiAllSkyDbMiniVideoTable.dayDate).label('dayDate_year')
+
+        years_query = db.session.query(
+            dayDate_year,
+        )\
+            .join(IndiAllSkyDbMiniVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)
+
+
+        if not self.local:
+            # Do not serve local assets
+            years_query = years_query\
+                .filter(
+                    or_(
+                        IndiAllSkyDbMiniVideoTable.remote_url != sa_null(),
+                        IndiAllSkyDbMiniVideoTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        years_query = years_query\
+            .distinct()\
+            .order_by(dayDate_year.desc())
+
+
+        year_choices = []
+        for y in years_query:
+            entry = (y.dayDate_year, str(y.dayDate_year))
+            year_choices.append(entry)
+
+
+        return year_choices
+
+
+    def getMonths(self, year):
+        dayDate_year = extract('year', IndiAllSkyDbMiniVideoTable.dayDate).label('dayDate_year')
+        dayDate_month = extract('month', IndiAllSkyDbMiniVideoTable.dayDate).label('dayDate_month')
+
+        months_query = db.session.query(
+            dayDate_year,
+            dayDate_month,
+        )\
+            .join(IndiAllSkyDbMiniVideoTable.camera)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    dayDate_year == year,
+                )
+        )
+
+
+        if not self.local:
+            # Do not serve local assets
+            months_query = months_query\
+                .filter(
+                    or_(
+                        IndiAllSkyDbMiniVideoTable.remote_url != sa_null(),
+                        IndiAllSkyDbMiniVideoTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        months_query = months_query\
+            .distinct()\
+            .order_by(dayDate_month.desc())
+
+
+        month_choices = []
+        for m in months_query:
+            month_name = datetime.strptime('{0} {1}'.format(year, m.dayDate_month), '%Y %m')\
+                .strftime('%B')
+            entry = (m.dayDate_month, month_name)
+            month_choices.append(entry)
+
+
+        return month_choices
+
+
+
+    def getVideos(self, year, month):
+        dayDate_year = extract('year', IndiAllSkyDbMiniVideoTable.dayDate).label('dayDate_year')
+        dayDate_month = extract('month', IndiAllSkyDbMiniVideoTable.dayDate).label('dayDate_month')
+
+        videos_query = db.session.query(
+            IndiAllSkyDbMiniVideoTable,
+            IndiAllSkyDbThumbnailTable,
+        )\
+            .join(IndiAllSkyDbMiniVideoTable.camera)\
+            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbMiniVideoTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    dayDate_year == year,
+                    dayDate_month == month,
+                )
+        )
+
+
+        if not self.local:
+            # Do not serve local assets
+            videos_query = videos_query\
+                .filter(
+                    or_(
+                        IndiAllSkyDbMiniVideoTable.remote_url != sa_null(),
+                        IndiAllSkyDbMiniVideoTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        # set order
+        videos_query = videos_query.order_by(
+            IndiAllSkyDbMiniVideoTable.dayDate.desc(),
+            IndiAllSkyDbMiniVideoTable.night.desc(),
+        )
+
+
+        videos_data = []
+        for v, t in videos_query:
+            try:
+                url = v.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+            except ValueError as e:
+                app.logger.error('Error determining relative file name: %s', str(e))
+                continue
+
+
+            try:
+                thumbnail_url = t.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+            except ValueError as e:
+                app.logger.error('Error determining relative file name: %s', str(e))
+                continue
+
+
+            if v.data:
+                data = v.data
+            else:
+                data = {}
+
+            entry = {
+                'id'                : v.id,
+                'url'               : str(url),
+                'thumbnail_url'     : str(thumbnail_url),
+                'dayDate_long'      : v.dayDate.strftime('%B %d, %Y'),
+                'dayDate'           : v.dayDate.strftime('%Y%m%d'),
+                'night'             : v.night,
+                'max_smoke_rating'  : constants.SMOKE_RATING_MAP_STR[data.get('max_smoke_rating', constants.SMOKE_RATING_NODATA)],
+                'max_kpindex'       : data.get('max_kpindex', 0.0),
+                'max_ovation_max'   : data.get('max_ovation_max', 0),
+                'max_moonphase'     : data.get('max_moonphase', 0),  # might be null
+                'avg_stars'         : int(data.get('avg_stars', 0)),
+                'avg_sqm'           : int(data.get('avg_sqm', 0)),
+                'youtube_uploaded'  : bool(data.get('youtube_id', False)),
+            }
+            videos_data.append(entry)
+
+
+        return videos_data
+
+
+class IndiAllskyMiniVideoViewerPreload(IndiAllskyMiniVideoViewer):
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyMiniVideoViewerPreload, self).__init__(*args, **kwargs)
+
+        last_video = IndiAllSkyDbMiniVideoTable.query\
+            .join(IndiAllSkyDbMiniVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .order_by(IndiAllSkyDbMiniVideoTable.dayDate.desc())\
+            .first()
+
+        if not last_video:
+            app.logger.warning('No timelapses found in DB')
+
+            self.YEAR_SELECT.choices = (('', 'None'),)
+            self.MONTH_SELECT.choices = (('', 'None'),)
+
+            return
+
+
+        dates_start = time.time()
+
+        self.YEAR_SELECT.choices = self.getYears()
+        self.MONTH_SELECT.choices = (('', 'Loading'),)
+
+        dates_elapsed_s = time.time() - dates_start
+        app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
 
 
 #def SERVICE_HIDDEN_validator(form, field):

@@ -79,6 +79,8 @@ from .forms import IndiAllskyGalleryViewer
 from .forms import IndiAllskyGalleryViewerPreload
 from .forms import IndiAllskyVideoViewer
 from .forms import IndiAllskyVideoViewerPreload
+from .forms import IndiAllskyMiniVideoViewer
+from .forms import IndiAllskyMiniVideoViewerPreload
 from .forms import IndiAllskySystemInfoForm
 from .forms import IndiAllskyHistoryForm
 from .forms import IndiAllskySetDateTimeForm
@@ -2916,6 +2918,88 @@ class AjaxVideoViewerView(BaseView):
             month = json_data['MONTH_SELECT'][0][0]
 
             json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday)
+
+        return jsonify(json_data)
+
+
+class MiniVideoViewerView(FormView):
+    def get_context(self):
+        context = super(MiniVideoViewerView, self).get_context()
+
+        context['camera_id'] = session['camera_id']
+
+        context['youtube__enable'] = int(self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', 0))
+
+        form_data = {
+            'YEAR_SELECT'  : None,
+            'MONTH_SELECT' : None,
+        }
+
+
+        local = True  # default to local assets
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+
+        context['form_mini_video_viewer'] = IndiAllskyMiniVideoViewerPreload(
+            data=form_data,
+            camera_id=session['camera_id'],
+            s3_prefix=self.s3_prefix,
+            local=local,
+        )
+
+        return context
+
+
+class AjaxMiniVideoViewerView(BaseView):
+    methods = ['POST']
+
+    def __init__(self, **kwargs):
+        super(AjaxMiniVideoViewerView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        local = True  # default to local assets
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+
+        form_mini_video_viewer = IndiAllskyMiniVideoViewer(
+            data=request.json,
+            camera_id=session['camera_id'],
+            s3_prefix=self.s3_prefix,
+            local=local,
+        )
+
+
+        form_year      = request.json.get('YEAR_SELECT')
+        form_month     = request.json.get('MONTH_SELECT')
+
+        json_data = {}
+
+        if form_month:
+            form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
+
+            year = form_datetime.strftime('%Y')
+            month = form_datetime.strftime('%m')
+
+            json_data['video_list'] = form_mini_video_viewer.getVideos(year, month)
+
+        elif form_year:
+            form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
+
+            year = form_datetime.strftime('%Y')
+
+            json_data['MONTH_SELECT'] = form_mini_video_viewer.getMonths(year)
+            month = json_data['MONTH_SELECT'][0][0]
+
+            json_data['video_list'] = form_mini_video_viewer.getVideos(year, month)
 
         return jsonify(json_data)
 
@@ -6632,6 +6716,9 @@ bp_allsky.add_url_rule('/ajax/gallery', view_func=AjaxGalleryViewerView.as_view(
 
 bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
 bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
+
+bp_allsky.add_url_rule('/minivideoviewer', view_func=MiniVideoViewerView.as_view('mini_videoviewer_view', template_name='minivideoviewer.html'))
+bp_allsky.add_url_rule('/ajax/minivideoviewer', view_func=AjaxMiniVideoViewerView.as_view('ajax_mini_videoviewer_view'))
 
 bp_allsky.add_url_rule('/view_image', view_func=TimelapseImageView.as_view('timelapse_image_view', template_name='view_image.html'))
 bp_allsky.add_url_rule('/view_panorama', view_func=PanoramaImageView.as_view('panorama_image_view', template_name='view_image.html'))
