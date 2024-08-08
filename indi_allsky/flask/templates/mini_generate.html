@@ -139,7 +139,7 @@ function loadJS(url, data, onDone, onError) {
             json_data = return_data
 
             var image_count = return_data['image_list'].length;
-            $('#video_length').html('Approximately ' + image_count / parseFloat(framerate) + 's');
+            $('#video_length').html(image_count + ' Frames - Approximately ' + image_count / parseFloat(framerate) + 's');
 
             $('#message').html(json_data['message']);
         },
@@ -285,7 +285,7 @@ $("#FRAMERATE_SELECT").on("change", function() {
     framerate = $('#FRAMERATE_SELECT').val();
 
     var image_count = json_data['image_list'].length;
-    $('#video_length').html('Approximately ' + image_count / parseFloat(framerate) + 's');
+    $('#video_length').html(image_count + ' frames - Approximately ' + image_count / parseFloat(framerate) + 's');
 });
 
 
