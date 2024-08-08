@@ -53,6 +53,7 @@ from .flask.models import IndiAllSkyDbTaskQueueTable
 
 from sqlalchemy import func
 from sqlalchemy import or_
+from sqlalchemy import and_
 from sqlalchemy.sql.expression import false as sa_false
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -219,7 +220,7 @@ class VideoWorker(Process):
 
     def generateVideo(self, task, **kwargs):
         timespec = kwargs['timespec']
-        night = kwargs['night']
+        night = bool(kwargs['night'])
         camera_id = kwargs['camera_id']
 
         camera = IndiAllSkyDbCameraTable.query\
@@ -271,9 +272,9 @@ class VideoWorker(Process):
             # delete old video entry if it exists
             old_video_entry = IndiAllSkyDbVideoTable.query\
                 .filter(
-                    or_(
-                        IndiAllSkyDbVideoTable.filename == str(video_file),
-                        IndiAllSkyDbVideoTable.filename == str(video_file.relative_to(self.image_dir)),
+                    and_(
+                        IndiAllSkyDbVideoTable.dayDate == d_dayDate,
+                        IndiAllSkyDbVideoTable.night == night,
                     )
                 )\
                 .one()
@@ -684,7 +685,7 @@ class VideoWorker(Process):
 
     def generatePanoramaVideo(self, task, **kwargs):
         timespec = kwargs['timespec']
-        night = kwargs['night']
+        night = bool(kwargs['night'])
         camera_id = kwargs['camera_id']
 
         camera = IndiAllSkyDbCameraTable.query\
@@ -736,14 +737,14 @@ class VideoWorker(Process):
             # delete old video entry if it exists
             old_panorama_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
                 .filter(
-                    or_(
-                        IndiAllSkyDbPanoramaVideoTable.filename == str(video_file),
-                        IndiAllSkyDbPanoramaVideoTable.filename == str(video_file.relative_to(self.image_dir)),
+                    and_(
+                        IndiAllSkyDbPanoramaVideoTable.dayDate == d_dayDate,
+                        IndiAllSkyDbPanoramaVideoTable.night == night,
                     )
                 )\
                 .one()
 
-            logger.warning('Removing old video db entry')
+            logger.warning('Removing old panorama video db entry')
 
             old_panorama_video_entry.deleteAsset()
 
@@ -754,7 +755,7 @@ class VideoWorker(Process):
 
 
         if video_file.exists():
-            logger.warning('Removing orphaned Video file: %s', video_file)
+            logger.warning('Removing orphaned panorama video file: %s', video_file)
             video_file.unlink()
 
 
@@ -895,7 +896,7 @@ class VideoWorker(Process):
 
     def generateKeogramStarTrails(self, task, **kwargs):
         timespec = kwargs['timespec']
-        night = kwargs['night']
+        night = bool(kwargs['night'])
         camera_id = kwargs['camera_id']
 
         camera = IndiAllSkyDbCameraTable.query\
@@ -965,9 +966,9 @@ class VideoWorker(Process):
             # delete old keogram entry if it exists
             old_keogram_entry = IndiAllSkyDbKeogramTable.query\
                 .filter(
-                    or_(
-                        IndiAllSkyDbKeogramTable.filename == str(keogram_file),
-                        IndiAllSkyDbKeogramTable.filename == str(keogram_file.relative_to(self.image_dir))
+                    and_(
+                        IndiAllSkyDbKeogramTable.dayDate == d_dayDate,
+                        IndiAllSkyDbKeogramTable.night == night,
                     )
                 )\
                 .one()
@@ -986,9 +987,9 @@ class VideoWorker(Process):
             # delete old star trail entry if it exists
             old_startrail_entry = IndiAllSkyDbStarTrailsTable.query\
                 .filter(
-                    or_(
-                        IndiAllSkyDbStarTrailsTable.filename == str(startrail_file),
-                        IndiAllSkyDbStarTrailsTable.filename == str(startrail_file.relative_to(self.image_dir)),
+                    and_(
+                        IndiAllSkyDbStarTrailsTable.dayDate == d_dayDate,
+                        IndiAllSkyDbStarTrailsTable.night == night,
                     )
                 )\
                 .one()
@@ -1007,9 +1008,9 @@ class VideoWorker(Process):
             # delete old star trail video entry if it exists
             old_startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
                 .filter(
-                    or_(
-                        IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file),
-                        IndiAllSkyDbStarTrailsVideoTable.filename == str(startrail_video_file.relative_to(self.image_dir)),
+                    and_(
+                        IndiAllSkyDbStarTrailsVideoTable.dayDate == d_dayDate,
+                        IndiAllSkyDbStarTrailsVideoTable.night == night,
                     )
                 )\
                 .one()
@@ -1410,7 +1411,7 @@ class VideoWorker(Process):
 
 
     def uploadAllskyEndOfNight(self, task, **kwargs):
-        night = kwargs['night']
+        night = bool(kwargs['night'])
         camera_id = kwargs['camera_id']
 
         camera = IndiAllSkyDbCameraTable.query\
