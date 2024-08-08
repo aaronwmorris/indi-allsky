@@ -5512,21 +5512,21 @@ class IndiAllskyMiniTimelapseForm(FlaskForm):
     )
 
     FRAMERATE_SELECT_choices = (
-        ('0.25', '0.25'),
-        ('0.5', '0.5'),
-        ('0.75', '0.75'),
-        ('1', '1'),
-        ('2', '2'),
-        ('5', '5'),
-        ('10', '10'),
-        ('25', '25'),
+        ('0.25', '0.25 FPS'),
+        ('0.5', '0.5 FPS'),
+        ('0.75', '0.75 FPS'),
+        ('1', '1 FPS'),
+        ('2', '2 FPS'),
+        ('5', '5 FPS'),
+        ('10', '10 FPS'),
+        ('25', '25 FPS'),
     )
 
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
     IMAGE_ID                         = HiddenField('Image ID', validators=[DataRequired()])
     PRE_SECONDS_SELECT               = SelectField('Pre-Selection Time', choices=SECONDS_choices, validators=[DataRequired()])
     POST_SECONDS_SELECT              = SelectField('Post-Selection Time', choices=SECONDS_choices, validators=[DataRequired()])
-    FRAMERATE_SELECT                 = SelectField('Frames/sec', choices=FRAMERATE_SELECT_choices, validators=[DataRequired()])
+    FRAMERATE_SELECT                 = SelectField('Speed', choices=FRAMERATE_SELECT_choices, validators=[DataRequired()])
     NOTE                             = StringField('Description', validators=[DataRequired()])
 
 
