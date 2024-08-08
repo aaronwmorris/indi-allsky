@@ -134,15 +134,20 @@ function loadJS(url, data, onDone, onError) {
         url: url,
         contentType: "application/json",
         data: data,
-        success: function(data){
+        success: function(return_data){
             $("#loader_generate").css({'display' : 'none'});
-            json_data = data
+            json_data = return_data
+
+            var image_count = return_data['image_list'].length;
+            $('#video_length').html('Approximately ' + image_count / parseFloat(framerate) + 's');
+
             $('#message').html(json_data['message']);
         },
         error: function(data){
             $("#loader_generate").css({'display' : 'none'});
             onError(data.status);
             $('#message').text('Error loading data.  Please check the logs.');
+            $('#video_length').html('');
         },
     });
 
@@ -247,6 +252,7 @@ $( document ).ready(function() {
 
 <div class="row">
     <div class="text-muted text-center" id="message"></div>
+    <div class="text-muted text-center" id="video_length"></div>
 </div>
 <div class="row">
     <div class="text-center">
@@ -276,6 +282,9 @@ $("#POST_SECONDS_SELECT").on("change", function() {
 
 $("#FRAMERATE_SELECT").on("change", function() {
     framerate = $('#FRAMERATE_SELECT').val();
+
+    var image_count = json_data['image_list'].length;
+    $('#video_length').html('Approximately ' + image_count / parseFloat(framerate) + 's');
 });
 
 
