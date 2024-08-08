@@ -3777,6 +3777,11 @@ class AjaxSystemInfoView(BaseView):
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .order_by(IndiAllSkyDbVideoTable.createDate.asc())
 
+        mini_video_query = IndiAllSkyDbMiniVideoTable.query\
+            .join(IndiAllSkyDbMiniVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbMiniVideoTable.createDate.asc())
+
         keogram_query = IndiAllSkyDbKeogramTable.query\
             .join(IndiAllSkyDbKeogramTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
@@ -3798,12 +3803,19 @@ class AjaxSystemInfoView(BaseView):
             .order_by(IndiAllSkyDbPanoramaVideoTable.createDate.asc())
 
         video_count = video_query.count()
+        mini_video_count = mini_video_query.count()
         keogram_count = keogram_query.count()
         startrail_count = startrail_query.count()
         startrail_video_count = startrail_video_query.count()
         panorama_video_count = panorama_video_query.count()
 
-        file_count = video_count + keogram_count + startrail_count + startrail_video_count + panorama_video_count
+
+        file_count = video_count
+        file_count += mini_video_count
+        file_count += keogram_count
+        file_count += startrail_count
+        file_count += startrail_video_count
+        file_count += panorama_video_count
 
 
         ### Getting IDs first then deleting each file is faster than deleting all files with
@@ -3813,6 +3825,10 @@ class AjaxSystemInfoView(BaseView):
         video_id_list = list()
         for entry in video_query:
             video_id_list.append(entry.id)
+
+        mini_video_id_list = list()
+        for entry in mini_video_query:
+            mini_video_id_list.append(entry.id)
 
         keogram_id_list = list()
         for entry in keogram_query:
@@ -3832,6 +3848,7 @@ class AjaxSystemInfoView(BaseView):
 
 
         self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
+        self._deleteAssets(IndiAllSkyDbMiniVideoTable, mini_video_id_list)
         self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
         self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
         self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
@@ -3881,6 +3898,7 @@ class AjaxSystemInfoView(BaseView):
             .filter(IndiAllSkyDbVideoTable.night == sa_false())\
             .order_by(IndiAllSkyDbVideoTable.createDate.asc())
 
+        ### Not flushing daytime mini timelapses
 
         ### Keograms
         keogram_query = IndiAllSkyDbKeogramTable.query\
