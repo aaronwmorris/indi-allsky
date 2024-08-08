@@ -5260,10 +5260,10 @@ class IndiAllskyHistoryForm(FlaskForm):
     )
 
     FRAMEDELAY_SELECT_choices = (
-        ('25', 'Fast'),
-        ('50', 'Medium'),
-        ('75', 'Slow'),
-        ('150', 'Very Slow'),
+        ('20', '50 FPS'),
+        ('40', '25 FPS'),
+        ('100', '10 FPS'),
+        ('200', '5 FPS'),
     )
 
     HISTORY_SELECT       = SelectField('History', choices=HISTORY_SELECT_choices, default=HISTORY_SELECT_choices[0][0], validators=[])
