@@ -279,6 +279,13 @@ class VideoWorker(Process):
                 )\
                 .one()
 
+
+            if not self.config.get('TIMELAPSE_OVERWRITE'):
+                logger.error('Timelapse already exists, overwrite not permitted')
+                task.setFailed('Timelapse already exists, overwrite not permitted')
+                return
+
+
             logger.warning('Removing old video db entry')
 
             old_video_entry.deleteAsset()
@@ -503,6 +510,13 @@ class VideoWorker(Process):
                     )
                 )\
                 .one()
+
+
+            if not self.config.get('TIMELAPSE_OVERWRITE'):
+                logger.error('Mini Timelapse already exists, overwrite not permitted')
+                task.setFailed('Mini Timelapse already exists, overwrite not permitted')
+                return
+
 
             logger.warning('Removing old video db entry')
 
@@ -744,6 +758,13 @@ class VideoWorker(Process):
                 )\
                 .one()
 
+
+            if not self.config.get('TIMELAPSE_OVERWRITE'):
+                logger.error('Panorama Timelapse already exists, overwrite not permitted')
+                task.setFailed('Panorama Timelapse already exists, overwrite not permitted')
+                return
+
+
             logger.warning('Removing old panorama video db entry')
 
             old_panorama_video_entry.deleteAsset()
@@ -973,6 +994,13 @@ class VideoWorker(Process):
                 )\
                 .one()
 
+
+            if not self.config.get('TIMELAPSE_OVERWRITE'):
+                logger.error('Keogram already exists, overwrite not permitted')
+                task.setFailed('Keogram already exists, overwrite not permitted')
+                return
+
+
             logger.warning('Removing old keogram db entry')
 
             old_keogram_entry.deleteAsset()
@@ -994,6 +1022,13 @@ class VideoWorker(Process):
                 )\
                 .one()
 
+
+            if not self.config.get('TIMELAPSE_OVERWRITE'):
+                logger.error('Star trail already exists, overwrite not permitted')
+                task.setFailed('Star trail already exists, overwrite not permitted')
+                return
+
+
             logger.warning('Removing old star trail db entry')
 
             old_startrail_entry.deleteAsset()
@@ -1014,6 +1049,13 @@ class VideoWorker(Process):
                     )
                 )\
                 .one()
+
+
+            if not self.config.get('TIMELAPSE_OVERWRITE'):
+                logger.error('Star trail timelapse already exists, overwrite not permitted')
+                task.setFailed('Star trail timelapse already exists, overwrite not permitted')
+                return
+
 
             logger.warning('Removing old star trail video db entry')
 
