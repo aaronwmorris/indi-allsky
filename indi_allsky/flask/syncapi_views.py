@@ -188,7 +188,6 @@ class SyncApiBaseView(BaseView):
         filename_p = date_folder.joinpath(
             self.filename_t.format(
                 camera.id,
-                'timelapse',
                 d_dayDate.strftime('%Y%m%d'),
                 timeofday_str,
                 tmp_file_p.suffix,  # suffix includes dot
