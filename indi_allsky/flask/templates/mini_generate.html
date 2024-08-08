@@ -231,7 +231,7 @@ $( document ).ready(function() {
         </div>
 
         <div class="col-sm-1">
-            <button class="btn btn-success">Generate</button>
+            <button class="btn btn-success">Create</button>
         </div>
 
         <div class="col-sm-1">
@@ -251,6 +251,7 @@ $( document ).ready(function() {
 <hr>
 
 <div class="row">
+    <div class="text-success text-center" id="job_message"></div>
     <div class="text-muted text-center" id="message"></div>
     <div class="text-muted text-center" id="video_length"></div>
 </div>
@@ -306,6 +307,12 @@ $('#form_mini_timelapse').on('submit', function() {
         success: function(return_data){
             $("#loader_generate").css({'display' : 'none'});
             $('#NOTE').val('');
+
+            $('#job_message').html(return_data['success-message']);
+            $('#job_message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#job_message').css({'display' : 'none'});
+            }, 15000);
         },
         error: function(data){
             $("#loader_config").css({'display' : 'none'});
