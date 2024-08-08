@@ -670,7 +670,7 @@ class VideoWorker(Process):
             self._miscUpload.s3_upload_thumbnail(mini_video_thumbnail_entry, mini_video_thumbnail_metadata)
 
 
-        #self._miscUpload.syncapi_mini_video(mini_video_entry, mini_video_metadata)  # syncapi before s3
+        self._miscUpload.syncapi_mini_video(mini_video_entry, mini_video_metadata)  # syncapi before s3
         self._miscUpload.s3_upload_mini_video(mini_video_entry, mini_video_metadata)
         self._miscUpload.upload_mini_video(mini_video_entry)
         self._miscUpload.youtube_upload_mini_video(mini_video_entry, mini_video_metadata)
