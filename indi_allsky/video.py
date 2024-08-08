@@ -266,11 +266,6 @@ class VideoWorker(Process):
             )
         )
 
-        if video_file.exists():
-            logger.warning('Video is already generated: %s', video_file)
-            task.setFailed('Video is already generated: {0:s}'.format(str(video_file)))
-            return
-
 
         try:
             # delete old video entry if it exists
@@ -283,11 +278,19 @@ class VideoWorker(Process):
                 )\
                 .one()
 
-            logger.warning('Removing orphaned video db entry')
+            logger.warning('Removing old video db entry')
+
+            old_video_entry.deleteAsset()
+
             db.session.delete(old_video_entry)
             db.session.commit()
         except NoResultFound:
             pass
+
+
+        if video_file.exists():
+            logger.warning('Removing orphaned video file: %s', video_file)
+            video_file.unlink()
 
 
         # find all files
@@ -488,15 +491,10 @@ class VideoWorker(Process):
             )
         )
 
-        if video_file.exists():
-            logger.warning('Video is already generated: %s', video_file)
-            task.setFailed('Video is already generated: {0:s}'.format(str(video_file)))
-            return
-
 
         try:
             # delete old video entry if it exists
-            old_video_entry = IndiAllSkyDbVideoTable.query\
+            old_mini_video_entry = IndiAllSkyDbVideoTable.query\
                 .filter(
                     or_(
                         IndiAllSkyDbVideoTable.filename == str(video_file),
@@ -505,11 +503,19 @@ class VideoWorker(Process):
                 )\
                 .one()
 
-            logger.warning('Removing orphaned video db entry')
-            db.session.delete(old_video_entry)
+            logger.warning('Removing old video db entry')
+
+            old_mini_video_entry.deleteAsset()
+
+            db.session.delete(old_mini_video_entry)
             db.session.commit()
         except NoResultFound:
             pass
+
+
+        if video_file.exists():
+            logger.warning('Removin orphaned Video file: %s', video_file)
+            video_file.unlink()
 
 
         # find all files
@@ -725,15 +731,10 @@ class VideoWorker(Process):
             )
         )
 
-        if video_file.exists():
-            logger.warning('Video is already generated: %s', video_file)
-            task.setFailed('Video is already generated: {0:s}'.format(str(video_file)))
-            return
-
 
         try:
             # delete old video entry if it exists
-            old_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
+            old_panorama_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
                 .filter(
                     or_(
                         IndiAllSkyDbPanoramaVideoTable.filename == str(video_file),
@@ -742,11 +743,19 @@ class VideoWorker(Process):
                 )\
                 .one()
 
-            logger.warning('Removing orphaned video db entry')
-            db.session.delete(old_video_entry)
+            logger.warning('Removing old video db entry')
+
+            old_panorama_video_entry.deleteAsset()
+
+            db.session.delete(old_panorama_video_entry)
             db.session.commit()
         except NoResultFound:
             pass
+
+
+        if video_file.exists():
+            logger.warning('Removing orphaned Video file: %s', video_file)
+            video_file.unlink()
 
 
         # find all files
@@ -951,21 +960,6 @@ class VideoWorker(Process):
             )
         )
 
-        if keogram_file.exists():
-            logger.warning('Keogram is already generated: %s', keogram_file)
-            task.setFailed('Keogram is already generated: {0:s}'.format(str(keogram_file)))
-            return
-
-        if startrail_file.exists():
-            logger.warning('Star trail is already generated: %s', startrail_file)
-            task.setFailed('Star trail is already generated: {0:s}'.format(str(startrail_file)))
-            return
-
-        if startrail_video_file.exists():
-            logger.warning('Star trail timelapse is already generated: %s', startrail_video_file)
-            task.setFailed('Star trail timelapse is already generated: {0:s}'.format(str(startrail_video_file)))
-            return
-
 
         try:
             # delete old keogram entry if it exists
@@ -978,7 +972,10 @@ class VideoWorker(Process):
                 )\
                 .one()
 
-            logger.warning('Removing orphaned keogram db entry')
+            logger.warning('Removing old keogram db entry')
+
+            old_keogram_entry.deleteAsset()
+
             db.session.delete(old_keogram_entry)
             db.session.commit()
         except NoResultFound:
@@ -996,7 +993,10 @@ class VideoWorker(Process):
                 )\
                 .one()
 
-            logger.warning('Removing orphaned star trail db entry')
+            logger.warning('Removing old star trail db entry')
+
+            old_startrail_entry.deleteAsset()
+
             db.session.delete(old_startrail_entry)
             db.session.commit()
         except NoResultFound:
@@ -1014,11 +1014,27 @@ class VideoWorker(Process):
                 )\
                 .one()
 
-            logger.warning('Removing orphaned star trail video db entry')
+            logger.warning('Removing old star trail video db entry')
+
+            old_startrail_video_entry.deleteAsset()
+
             db.session.delete(old_startrail_video_entry)
             db.session.commit()
         except NoResultFound:
             pass
+
+
+        if keogram_file.exists():
+            logger.warning('Removing orphaned keogram file: %s', keogram_file)
+            keogram_file.unlink()
+
+        if startrail_file.exists():
+            logger.warning('Removing orphanded Star trail file: %s', startrail_file)
+            startrail_file.unlink()
+
+        if startrail_video_file.exists():
+            logger.warning('Removin orphaned Star trail timelapse file: %s', startrail_video_file)
+            startrail_video_file.unlink()
 
 
         # find all files
