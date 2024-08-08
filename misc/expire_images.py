@@ -17,6 +17,7 @@ sys.path.append(str(Path(__file__).parent.absolute().parent))
 
 from indi_allsky.flask.models import IndiAllSkyDbImageTable
 from indi_allsky.flask.models import IndiAllSkyDbVideoTable
+from indi_allsky.flask.models import IndiAllSkyDbMiniVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbKeogramTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsVideoTable
@@ -133,6 +134,9 @@ class ExpireImages(object):
         old_videos = IndiAllSkyDbVideoTable.query\
             .filter(IndiAllSkyDbVideoTable.dayDate < cutoff_age_timelapse_date)\
             .order_by(IndiAllSkyDbVideoTable.createDate.asc())
+        old_mini_videos = IndiAllSkyDbMiniVideoTable.query\
+            .filter(IndiAllSkyDbMiniVideoTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbMiniVideoTable.createDate.asc())
         old_keograms = IndiAllSkyDbKeogramTable.query\
             .filter(IndiAllSkyDbKeogramTable.dayDate < cutoff_age_timelapse_date)\
             .order_by(IndiAllSkyDbKeogramTable.createDate.asc())
@@ -152,6 +156,7 @@ class ExpireImages(object):
         logger.warning('Found %d expired RAW images to delete', old_raw_images.count())
         logger.warning('Found %d expired Panorama images to delete', old_panorama_images.count())
         logger.warning('Found %d expired videos to delete', old_videos.count())
+        logger.warning('Found %d expired mini videos to delete', old_mini_videos.count())
         logger.warning('Found %d expired keograms to delete', old_keograms.count())
         logger.warning('Found %d expired star trails to delete', old_startrails.count())
         logger.warning('Found %d expired star trail videos to delete', old_startrails_videos.count())
@@ -187,6 +192,10 @@ class ExpireImages(object):
         for entry in old_videos:
             video_id_list.append(entry.id)
 
+        mini_video_id_list = list()
+        for entry in old_mini_videos:
+            mini_video_id_list.append(entry.id)
+
         keogram_id_list = list()
         for entry in old_keograms:
             keogram_id_list.append(entry.id)
@@ -216,6 +225,7 @@ class ExpireImages(object):
         self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
         self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
         self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
+        self._deleteAssets(IndiAllSkyDbMiniVideoTable, mini_video_id_list)
         self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
         self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
         self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)

@@ -41,6 +41,7 @@ from .flask.models import NotificationCategory
 from .flask.models import IndiAllSkyDbCameraTable
 from .flask.models import IndiAllSkyDbImageTable
 from .flask.models import IndiAllSkyDbVideoTable
+from .flask.models import IndiAllSkyDbMiniVideoTable
 from .flask.models import IndiAllSkyDbKeogramTable
 from .flask.models import IndiAllSkyDbStarTrailsTable
 from .flask.models import IndiAllSkyDbStarTrailsVideoTable
@@ -1647,6 +1648,11 @@ class VideoWorker(Process):
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbVideoTable.dayDate < cutoff_age_timelapse_date)\
             .order_by(IndiAllSkyDbVideoTable.createDate.asc())
+        old_mini_videos = IndiAllSkyDbMiniVideoTable.query\
+            .join(IndiAllSkyDbMiniVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbMiniVideoTable.dayDate < cutoff_age_timelapse_date)\
+            .order_by(IndiAllSkyDbMiniVideoTable.createDate.asc())
         old_keograms = IndiAllSkyDbKeogramTable.query\
             .join(IndiAllSkyDbKeogramTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
@@ -1695,6 +1701,10 @@ class VideoWorker(Process):
         for entry in old_videos:
             video_id_list.append(entry.id)
 
+        mini_video_id_list = list()
+        for entry in old_mini_videos:
+            mini_video_id_list.append(entry.id)
+
         keogram_id_list = list()
         for entry in old_keograms:
             keogram_id_list.append(entry.id)
@@ -1717,6 +1727,7 @@ class VideoWorker(Process):
         self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
         self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
         self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
+        self._deleteAssets(IndiAllSkyDbMiniVideoTable, mini_video_id_list)
         self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
         self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
         self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
