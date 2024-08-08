@@ -6349,7 +6349,7 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
         db.session.commit()
 
         message = {
-            'success-message' : 'Job Submitted',
+            'success-message' : 'Job Submitted - Check the Mini Timelapses view in a few minutes',
         }
 
         return jsonify(message)
