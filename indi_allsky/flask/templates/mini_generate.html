@@ -27,20 +27,29 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
-var refreshInterval = {{ refreshInterval | int }};
 var timestamp = {{ timestamp | int }};
+var endDate_timestamp;  // set later
 var history_seconds;  // set later
-var frame_delay_ms;  // set later
-var page_settings;  // set later
-var rock;  // set later
+var framerate;  // set later
 var json_data = {
     'image_list' : [],
     'message' : '',
 };
 var fullscreen = false;  //initial state
 
+var framerate_delay_lut = {
+    '0.25' : 4000,
+    '0.5'  : 2000,
+    '0.75' : 1333,
+    '1'    : 1000,
+    '2'    : 500,
+    '5'    : 200,
+    '10'   : 100,
+    '25'   : 40,
+};
+
 function init() {
-    loadNextImage();
+    loadImages();
     loop();
 }
 
@@ -54,16 +63,9 @@ async function loop() {
     // prevent concurrent updates to list
     var image_list_copy = JSON.parse(JSON.stringify(json_data['image_list']));
 
-    if (rock) {
-        for (var i = 0; i < image_list_copy.length; i++) {
-            showImage(image_list_copy[i], i);
-            await sleep(frame_delay_ms);
-        };
-    };
-
     for (var i = image_list_copy.length - 1; i >= 0; i--) {
         showImage(image_list_copy[i], i);
-        await sleep(frame_delay_ms);
+        await sleep(framerate_delay_lut[framerate]);
     };
 
     setTimeout(loop, 3000);
@@ -112,14 +114,9 @@ function showImage(entry, idx) {
 }
 
 
-function loadNextImage() {
+function loadImages() {
     console.log('Loading next images');
-    loadJS("{{ url_for(image_loop_view) }}", {'limit_s' : history_seconds, 'timestamp' : timestamp}, function() {
-        //while (json_data['image_list'].length > maxFrames) {
-        //    json_data['image_list'].splice(0, 1);  // remove first image
-        //};
-    });
-    setTimeout(loadNextImage, refreshInterval);
+    loadJS("{{ url_for(image_loop_view) }}", {'limit_s' : history_seconds, 'timestamp' : endDate_timestamp}, function() {});
 }
 
 function sleep(time) {
@@ -130,22 +127,27 @@ function loadJS(url, data, onDone, onError) {
     if(!onDone)onDone=function(){};
     if(!onError)onError=function(){};
 
-    $("#loader_loop").css({'display' : 'block'});
+    $("#loader_generate").css({'display' : 'block'});
 
     $.ajax({
         type: "GET",
         url: url,
         contentType: "application/json",
         data: data,
-        success: function(data){
-            $("#loader_loop").css({'display' : 'none'});
-            json_data = data
+        success: function(return_data){
+            $("#loader_generate").css({'display' : 'none'});
+            json_data = return_data
+
+            var image_count = return_data['image_list'].length;
+            $('#video_length').html('Approximately ' + image_count / parseFloat(framerate) + 's');
+
             $('#message').html(json_data['message']);
         },
         error: function(data){
-            $("#loader_loop").css({'display' : 'none'});
+            $("#loader_generate").css({'display' : 'none'});
             onError(data.status);
             $('#message').text('Error loading data.  Please check the logs.');
+            $('#video_length').html('');
         },
     });
 
@@ -185,33 +187,11 @@ function closeFullscreen() {
 }
 
 $( document ).ready(function() {
-    if(localStorage) {
-        loop_settings = localStorage.getItem("loop_settings");
-        if(loop_settings) {
-            page_settings = JSON.parse(loop_settings);
-        } else {
-            page_settings = new Object();
-            page_settings["history_seconds"] = 900;
-            page_settings["frame_delay_ms"] = 100;
-            page_settings["rock"] = false;
-
-            localStorage.setItem("loop_settings", JSON.stringify(page_settings));
-        }
-    }
-
-    if(typeof page_settings["history_seconds"] !== "undefined") {
-        $("#HISTORY_SELECT").val(page_settings["history_seconds"]);
-    }
-    if(typeof page_settings["frame_delay_ms"] !== "undefined") {
-        $("#FRAMEDELAY_SELECT").val(page_settings["frame_delay_ms"]);
-    }
-    if(typeof page_settings["rock"] !== "undefined") {
-        $("#ROCK_CHECKBOX").prop("checked", page_settings["rock"]);
-    }
-
-    history_seconds = $('#HISTORY_SELECT').val();
-    frame_delay_ms = $('#FRAMEDELAY_SELECT').val();
-    rock = $('#ROCK_CHECKBOX').prop('checked');
+    var pre_seconds = parseInt($('#PRE_SECONDS_SELECT').val());
+    var post_seconds = parseInt($('#PRE_SECONDS_SELECT').val());
+    endDate_timestamp = timestamp + post_seconds;
+    history_seconds = pre_seconds + post_seconds;
+    framerate = $('#FRAMERATE_SELECT').val();
 
     $('#canvas').on("click", function() {
         goFullscreen(this);
@@ -224,32 +204,46 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
-<form id="form_history" onSubmit="return false;">
+<form id="form_mini_timelapse" onSubmit="return false; "autocomplete="off">
+    <div class="form-group row">
+        {{ form_mini_timelapse.CAMERA_ID() }}
+        {{ form_mini_timelapse.IMAGE_ID() }}
+
+        <div class="col-sm-1">
+            {{ form_mini_timelapse.PRE_SECONDS_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_mini_timelapse.PRE_SECONDS_SELECT(class='form-select bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_mini_timelapse.POST_SECONDS_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_mini_timelapse.POST_SECONDS_SELECT(class='form-select bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_mini_timelapse.FRAMERATE_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_mini_timelapse.FRAMERATE_SELECT(class='form-select bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            <button class="btn btn-success">Create</button>
+        </div>
+
+        <div class="col-sm-1">
+            <div class="loader" id="loader_generate"></div>
+        </div>
+    </div>
     <div class="form-group row">
         <div class="col-sm-1">
-            {{ form_history.HISTORY_SELECT.label(class='col-form-label') }}
+            {{ form_mini_timelapse.NOTE.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-2">
-            {{ form_history.HISTORY_SELECT(class='form-select bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_history.FRAMEDELAY_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_history.FRAMEDELAY_SELECT(class='form-select bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_history.ROCK_CHECKBOX.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            <span data-bs-toggle="tooltip" data-bs-placement="right" title="Rocks the images from newest to oldest to newest">
-            {{ form_history.ROCK_CHECKBOX(class='form-check-input bg-secondary') }}
-            </span>
-        </div>
-        <div class="col-sm-1">
-            <div class="loader" id="loader_loop"></div>
+        <div class="col-sm-8">
+            {{ form_mini_timelapse.NOTE(class='form-control bg-secondary') }}
         </div>
     </div>
 </form>
@@ -257,7 +251,9 @@ $( document ).ready(function() {
 <hr>
 
 <div class="row">
+    <div class="text-success text-center" id="job_message"></div>
     <div class="text-muted text-center" id="message"></div>
+    <div class="text-muted text-center" id="video_length"></div>
 </div>
 <div class="row">
     <div class="text-center">
@@ -267,34 +263,62 @@ $( document ).ready(function() {
 
 <script>
 
-$("#HISTORY_SELECT").on("change", function() {
-    history_seconds = $('#HISTORY_SELECT').val();
-    console.log('Changing loop history: ' + history_seconds);
+function updateImages() {
+    var pre_seconds = parseInt($('#PRE_SECONDS_SELECT').val());
+    var post_seconds = parseInt($('#POST_SECONDS_SELECT').val());
+    endDate_timestamp = timestamp + post_seconds;
+    history_seconds = pre_seconds + post_seconds;
+    framerate = $('#FRAMERATE_SELECT').val();
 
-    if(localStorage) {
-        page_settings["history_seconds"] = history_seconds;
-        localStorage.setItem("loop_settings", JSON.stringify(page_settings));
-    }
+    loadImages();
+}
+
+$("#PRE_SECONDS_SELECT").on("change", function() {
+    updateImages();
 });
 
-$("#FRAMEDELAY_SELECT").on("change", function() {
-    frame_delay_ms = $('#FRAMEDELAY_SELECT').val();
-    console.log('Changing frame delay: ' + frame_delay_ms);
-
-    if(localStorage) {
-        page_settings["frame_delay_ms"] = frame_delay_ms;
-        localStorage.setItem("loop_settings", JSON.stringify(page_settings));
-    }
+$("#POST_SECONDS_SELECT").on("change", function() {
+    updateImages();
 });
 
-$("#ROCK_CHECKBOX").on("change", function() {
-    rock = $('#ROCK_CHECKBOX').prop('checked');
-    console.log('Changing rock: ' + rock);
+$("#FRAMERATE_SELECT").on("change", function() {
+    framerate = $('#FRAMERATE_SELECT').val();
 
-    if(localStorage) {
-        page_settings["rock"] = rock;
-        localStorage.setItem("loop_settings", JSON.stringify(page_settings));
+    var image_count = json_data['image_list'].length;
+    $('#video_length').html('Approximately ' + image_count / parseFloat(framerate) + 's');
+});
+
+
+$('#form_mini_timelapse').on('submit', function() {
+    var form_data = {
+        'IMAGE_ID' : $('#IMAGE_ID').val(),
+        'CAMERA_ID' : $('#CAMERA_ID').val(),
+        'PRE_SECONDS' : parseInt($('#PRE_SECONDS_SELECT').val()),
+        'POST_SECONDS' : parseInt($('#POST_SECONDS_SELECT').val()),
+        'FRAMERATE' : $('#FRAMERATE_SELECT').val(),
+        'NOTE' : $('#NOTE').val(),
     }
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_mini_generate_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(form_data),
+        success: function(return_data){
+            $("#loader_generate").css({'display' : 'none'});
+            $('#NOTE').val('');
+
+            $('#job_message').html(return_data['success-message']);
+            $('#job_message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#job_message').css({'display' : 'none'});
+            }, 15000);
+        },
+        error: function(data){
+            $("#loader_config").css({'display' : 'none'});
+        },
+    });
+
 });
 
 </script>

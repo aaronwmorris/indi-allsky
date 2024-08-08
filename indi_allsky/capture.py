@@ -1341,10 +1341,12 @@ class CaptureWorker(Process):
         logger.warning('Generating day time timelapse for %s camera %d', timespec, camera.id)
 
         video_jobdata = {
-            'action'      : 'generateVideo',
-            'timespec'    : timespec,
-            'night'       : False,
-            'camera_id'   : camera.id,
+            'action' : 'generateVideo',
+            'kwargs' : {
+                'timespec'    : timespec,
+                'night'       : False,
+                'camera_id'   : camera.id,
+            }
         }
 
         video_task = IndiAllSkyDbTaskQueueTable(
@@ -1361,9 +1363,11 @@ class CaptureWorker(Process):
         if self.config.get('FISH2PANO', {}).get('ENABLE'):
             panorama_video_jobdata = {
                 'action'      : 'generatePanoramaVideo',
-                'timespec'    : timespec,
-                'night'       : False,
-                'camera_id'   : camera.id,
+                'kwargs' : {
+                    'timespec'    : timespec,
+                    'night'       : False,
+                    'camera_id'   : camera.id,
+                },
             }
 
             panorama_video_task = IndiAllSkyDbTaskQueueTable(
@@ -1392,9 +1396,11 @@ class CaptureWorker(Process):
 
         video_jobdata = {
             'action'      : 'generateVideo',
-            'timespec'    : timespec,
-            'night'       : True,
-            'camera_id'   : camera.id,
+            'kwargs' : {
+                'timespec'    : timespec,
+                'night'       : True,
+                'camera_id'   : camera.id,
+            },
         }
 
         video_task = IndiAllSkyDbTaskQueueTable(
@@ -1411,9 +1417,11 @@ class CaptureWorker(Process):
         if self.config.get('FISH2PANO', {}).get('ENABLE'):
             panorama_video_jobdata = {
                 'action'      : 'generatePanoramaVideo',
-                'timespec'    : timespec,
-                'night'       : True,
-                'camera_id'   : camera.id,
+                'kwargs' : {
+                    'timespec'    : timespec,
+                    'night'       : True,
+                    'camera_id'   : camera.id,
+                },
             }
 
             panorama_video_task = IndiAllSkyDbTaskQueueTable(
@@ -1441,10 +1449,12 @@ class CaptureWorker(Process):
         logger.warning('Generating night time keogram for %s camera %d', timespec, camera.id)
 
         jobdata = {
-            'action'      : 'generateKeogramStarTrails',
-            'timespec'    : timespec,
-            'night'       : True,
-            'camera_id'   : camera.id,
+            'action' : 'generateKeogramStarTrails',
+            'kwargs' : {
+                'timespec'    : timespec,
+                'night'       : True,
+                'camera_id'   : camera.id,
+            },
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1473,9 +1483,11 @@ class CaptureWorker(Process):
 
         jobdata = {
             'action'      : 'generateKeogramStarTrails',
-            'timespec'    : timespec,
-            'night'       : False,
-            'camera_id'   : camera.id,
+            'kwargs' : {
+                'timespec'    : timespec,
+                'night'       : False,
+                'camera_id'   : camera.id,
+            },
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1522,10 +1534,11 @@ class CaptureWorker(Process):
 
         # This will delete old images from the filesystem and DB
         jobdata = {
-            'action'       : 'uploadAllskyEndOfNight',
-            'timespec'     : None,  # Not needed
-            'night'        : True,
-            'camera_id'    : camera.id,
+            'action' : 'uploadAllskyEndOfNight',
+            'kwargs' : {
+                'night'        : True,
+                'camera_id'    : camera.id,
+            },
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1548,10 +1561,10 @@ class CaptureWorker(Process):
 
         # This will delete old images from the filesystem and DB
         jobdata = {
-            'action'       : 'expireData',
-            'timespec'     : None,  # Not needed
-            'night'        : None,  # Not needed
-            'camera_id'    : camera.id,
+            'action' : 'expireData',
+            'kwargs' : {
+                'camera_id' : camera.id,
+            }
         }
 
         task = IndiAllSkyDbTaskQueueTable(

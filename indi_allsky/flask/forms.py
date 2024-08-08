@@ -43,6 +43,7 @@ from flask import current_app as app
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
+from .models import IndiAllSkyDbMiniVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
@@ -3051,7 +3052,8 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__REMOTE_METADATA_FOLDER   = StringField('Remote Metadata Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_RAW_FOLDER        = StringField('Remote RAW Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_FITS_FOLDER       = StringField('Remote FITS Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
-    FILETRANSFER__REMOTE_VIDEO_FOLDER      = StringField('Remote Video Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_VIDEO_FOLDER      = StringField('Remote Timelapse Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER = StringField('Remote Mini Timelapse Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_KEOGRAM_FOLDER    = StringField('Remote Keogram Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_STARTRAIL_FOLDER  = StringField('Remote Star Trails Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER = StringField('Remote Star Trail Video Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
@@ -3062,7 +3064,8 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__UPLOAD_METADATA    = BooleanField('Transfer metadata')
     FILETRANSFER__UPLOAD_RAW         = BooleanField('Transfer RAW')
     FILETRANSFER__UPLOAD_FITS        = BooleanField('Transfer FITS')
-    FILETRANSFER__UPLOAD_VIDEO       = BooleanField('Transfer videos')
+    FILETRANSFER__UPLOAD_VIDEO       = BooleanField('Transfer timelapses')
+    FILETRANSFER__UPLOAD_MINI_VIDEO  = BooleanField('Transfer mini timelapses')
     FILETRANSFER__UPLOAD_KEOGRAM     = BooleanField('Transfer keograms')
     FILETRANSFER__UPLOAD_STARTRAIL   = BooleanField('Transfer star trails')
     FILETRANSFER__UPLOAD_STARTRAIL_VIDEO = BooleanField('Transfer star trail videos')
@@ -3117,9 +3120,10 @@ class IndiAllskyConfigForm(FlaskForm):
     YOUTUBE__DESCRIPTION_TEMPLATE    = StringField('Description', validators=[YOUTUBE__DESCRIPTION_TEMPLATE_validator])
     YOUTUBE__CATEGORY                = IntegerField('Category ID', validators=[YOUTUBE__CATEGORY_validator])
     YOUTUBE__TAGS_STR                = StringField('Tags', validators=[YOUTUBE__TAGS_STR_validator])
-    YOUTUBE__UPLOAD_VIDEO            = BooleanField('Auto-Upload Timelapse')
-    YOUTUBE__UPLOAD_STARTRAIL_VIDEO  = BooleanField('Auto-Upload Star Trail Timelapse')
-    YOUTUBE__UPLOAD_PANORAMA_VIDEO   = BooleanField('Auto-Upload Panorama Timelapse')
+    YOUTUBE__UPLOAD_VIDEO            = BooleanField('Auto-Upload Timelapses')
+    YOUTUBE__UPLOAD_MINI_VIDEO       = BooleanField('Auto-Upload Mini Timelapses')
+    YOUTUBE__UPLOAD_STARTRAIL_VIDEO  = BooleanField('Auto-Upload Star Trail Timelapses')
+    YOUTUBE__UPLOAD_PANORAMA_VIDEO   = BooleanField('Auto-Upload Panorama Timelapses')
     YOUTUBE__REDIRECT_URI            = StringField('Detected Redirect URI', render_kw={'readonly' : True, 'disabled' : 'disabled'})
     YOUTUBE__CREDS_STORED            = BooleanField('Credentials authorized', render_kw={'disabled' : 'disabled'})
     FITSHEADERS__0__KEY              = StringField('FITS Header 1', validators=[DataRequired(), FITSHEADER_KEY_validator])
@@ -4726,6 +4730,206 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
         app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
 
 
+class IndiAllskyMiniVideoViewer(FlaskForm):
+    YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
+    MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyMiniVideoViewer, self).__init__(*args, **kwargs)
+
+        self.s3_prefix = kwargs.get('s3_prefix', '')
+        self.camera_id = kwargs.get('camera_id')
+        self.local = kwargs.get('local')
+
+
+    def getYears(self):
+        dayDate_year = extract('year', IndiAllSkyDbMiniVideoTable.dayDate).label('dayDate_year')
+
+        years_query = db.session.query(
+            dayDate_year,
+        )\
+            .join(IndiAllSkyDbMiniVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)
+
+
+        if not self.local:
+            # Do not serve local assets
+            years_query = years_query\
+                .filter(
+                    or_(
+                        IndiAllSkyDbMiniVideoTable.remote_url != sa_null(),
+                        IndiAllSkyDbMiniVideoTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        years_query = years_query\
+            .distinct()\
+            .order_by(dayDate_year.desc())
+
+
+        year_choices = []
+        for y in years_query:
+            entry = (y.dayDate_year, str(y.dayDate_year))
+            year_choices.append(entry)
+
+
+        return year_choices
+
+
+    def getMonths(self, year):
+        dayDate_year = extract('year', IndiAllSkyDbMiniVideoTable.dayDate).label('dayDate_year')
+        dayDate_month = extract('month', IndiAllSkyDbMiniVideoTable.dayDate).label('dayDate_month')
+
+        months_query = db.session.query(
+            dayDate_year,
+            dayDate_month,
+        )\
+            .join(IndiAllSkyDbMiniVideoTable.camera)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    dayDate_year == year,
+                )
+        )
+
+
+        if not self.local:
+            # Do not serve local assets
+            months_query = months_query\
+                .filter(
+                    or_(
+                        IndiAllSkyDbMiniVideoTable.remote_url != sa_null(),
+                        IndiAllSkyDbMiniVideoTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        months_query = months_query\
+            .distinct()\
+            .order_by(dayDate_month.desc())
+
+
+        month_choices = []
+        for m in months_query:
+            month_name = datetime.strptime('{0} {1}'.format(year, m.dayDate_month), '%Y %m')\
+                .strftime('%B')
+            entry = (m.dayDate_month, month_name)
+            month_choices.append(entry)
+
+
+        return month_choices
+
+
+
+    def getVideos(self, year, month):
+        dayDate_year = extract('year', IndiAllSkyDbMiniVideoTable.dayDate).label('dayDate_year')
+        dayDate_month = extract('month', IndiAllSkyDbMiniVideoTable.dayDate).label('dayDate_month')
+
+        videos_query = db.session.query(
+            IndiAllSkyDbMiniVideoTable,
+            IndiAllSkyDbThumbnailTable,
+        )\
+            .join(IndiAllSkyDbMiniVideoTable.camera)\
+            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbMiniVideoTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    dayDate_year == year,
+                    dayDate_month == month,
+                )
+        )
+
+
+        if not self.local:
+            # Do not serve local assets
+            videos_query = videos_query\
+                .filter(
+                    or_(
+                        IndiAllSkyDbMiniVideoTable.remote_url != sa_null(),
+                        IndiAllSkyDbMiniVideoTable.s3_key != sa_null(),
+                    )
+                )
+
+
+        # set order
+        videos_query = videos_query.order_by(
+            IndiAllSkyDbMiniVideoTable.dayDate.desc(),
+            IndiAllSkyDbMiniVideoTable.night.desc(),
+        )
+
+
+        videos_data = []
+        for v, t in videos_query:
+            try:
+                url = v.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+            except ValueError as e:
+                app.logger.error('Error determining relative file name: %s', str(e))
+                continue
+
+
+            try:
+                thumbnail_url = t.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+            except ValueError as e:
+                app.logger.error('Error determining relative file name: %s', str(e))
+                continue
+
+
+            if v.data:
+                data = v.data
+            else:
+                data = {}
+
+            entry = {
+                'id'                : v.id,
+                'url'               : str(url),
+                'thumbnail_url'     : str(thumbnail_url),
+                'dayDate_long'      : v.dayDate.strftime('%B %d, %Y'),
+                'dayDate'           : v.dayDate.strftime('%Y%m%d'),
+                'night'             : v.night,
+                'note'              : v.note,
+                'max_smoke_rating'  : constants.SMOKE_RATING_MAP_STR[data.get('max_smoke_rating', constants.SMOKE_RATING_NODATA)],
+                'max_kpindex'       : data.get('max_kpindex', 0.0),
+                'max_ovation_max'   : data.get('max_ovation_max', 0),
+                'max_moonphase'     : data.get('max_moonphase', 0),  # might be null
+                'avg_stars'         : int(data.get('avg_stars', 0)),
+                'avg_sqm'           : int(data.get('avg_sqm', 0)),
+                'youtube_uploaded'  : bool(data.get('youtube_id', False)),
+            }
+            videos_data.append(entry)
+
+
+        return videos_data
+
+
+class IndiAllskyMiniVideoViewerPreload(IndiAllskyMiniVideoViewer):
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyMiniVideoViewerPreload, self).__init__(*args, **kwargs)
+
+        last_video = IndiAllSkyDbMiniVideoTable.query\
+            .join(IndiAllSkyDbMiniVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .order_by(IndiAllSkyDbMiniVideoTable.dayDate.desc())\
+            .first()
+
+        if not last_video:
+            app.logger.warning('No timelapses found in DB')
+
+            self.YEAR_SELECT.choices = (('', 'None'),)
+            self.MONTH_SELECT.choices = (('', 'None'),)
+
+            return
+
+
+        dates_start = time.time()
+
+        self.YEAR_SELECT.choices = self.getYears()
+        self.MONTH_SELECT.choices = (('', 'Loading'),)
+
+        dates_elapsed_s = time.time() - dates_start
+        app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
+
 
 #def SERVICE_HIDDEN_validator(form, field):
 #    services = (
@@ -5057,10 +5261,10 @@ class IndiAllskyHistoryForm(FlaskForm):
     )
 
     FRAMEDELAY_SELECT_choices = (
-        ('25', 'Fast'),
-        ('50', 'Medium'),
-        ('75', 'Slow'),
-        ('150', 'Very Slow'),
+        ('20', '50 FPS'),
+        ('40', '25 FPS'),
+        ('100', '10 FPS'),
+        ('200', '5 FPS'),
     )
 
     HISTORY_SELECT       = SelectField('History', choices=HISTORY_SELECT_choices, default=HISTORY_SELECT_choices[0][0], validators=[])
@@ -5285,6 +5489,46 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     FISH2PANO__FLIP_H                = BooleanField('Flip Horizontally')
     #IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     PROCESSING_SPLIT_SCREEN          = BooleanField('Split screen')
+
+
+class IndiAllskyMiniTimelapseForm(FlaskForm):
+    SECONDS_choices = (
+        ('60', '1 minute'),
+        ('120', '2 minutes'),
+        ('180', '3 minutes'),
+        ('240', '4 minutes'),
+        ('300', '5 minutes'),
+        ('360', '6 minutes'),
+        ('420', '7 minutes'),
+        ('480', '8 minutes'),
+        ('540', '9 minutes'),
+        ('600', '10 minutes'),
+        ('900', '15 minutes'),
+        ('1200', '20 minutes'),
+        ('1800', '30 minutes'),
+        ('2700', '45 minutes'),
+        ('3600', '1 hour'),
+        ('5400', '1.5 hours'),
+        ('7200', '2 hours'),
+    )
+
+    FRAMERATE_SELECT_choices = (
+        ('0.25', '0.25 FPS'),
+        ('0.5', '0.5 FPS'),
+        ('0.75', '0.75 FPS'),
+        ('1', '1 FPS'),
+        ('2', '2 FPS'),
+        ('5', '5 FPS'),
+        ('10', '10 FPS'),
+        ('25', '25 FPS'),
+    )
+
+    CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
+    IMAGE_ID                         = HiddenField('Image ID', validators=[DataRequired()])
+    PRE_SECONDS_SELECT               = SelectField('Pre-Selection Time', choices=SECONDS_choices, validators=[DataRequired()])
+    POST_SECONDS_SELECT              = SelectField('Post-Selection Time', choices=SECONDS_choices, validators=[DataRequired()])
+    FRAMERATE_SELECT                 = SelectField('Speed', choices=FRAMERATE_SELECT_choices, validators=[DataRequired()])
+    NOTE                             = StringField('Description', validators=[DataRequired()])
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):

@@ -728,10 +728,8 @@ class IndiAllSky(object):
     def _systemHealthCheck(self, task_state=TaskQueueState.QUEUED):
         # This will delete old images from the filesystem and DB
         jobdata = {
-            'action'       : 'systemHealthCheck',
-            'timespec'     : None,  # Not needed
-            'night'        : None,  # Not needed
-            'camera_id'    : None,  # Not needed
+            'action' : 'systemHealthCheck',
+            'kwargs' : {},
         }
 
         task = IndiAllSkyDbTaskQueueTable(
@@ -1341,10 +1339,10 @@ class IndiAllSky(object):
 
         for camera in active_cameras:
             jobdata = {
-                'action'       : 'updateAuroraData',
-                'timespec'     : None,  # Not needed
-                'night'        : None,  # Not needed
-                'camera_id'    : camera.id,
+                'action' : 'updateAuroraData',
+                'kwargs' : {
+                    'camera_id' : camera.id,
+                },
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -1367,10 +1365,10 @@ class IndiAllSky(object):
 
         for camera in active_cameras:
             jobdata = {
-                'action'       : 'updateSmokeData',
-                'timespec'     : None,  # Not needed
-                'night'        : None,  # Not needed
-                'camera_id'    : camera.id,
+                'action' : 'updateSmokeData',
+                'kwargs' : {
+                    'camera_id' : camera.id,
+                },
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -1386,10 +1384,8 @@ class IndiAllSky(object):
 
     def _updateSatelliteTleData(self, task_state=TaskQueueState.QUEUED):
         jobdata = {
-            'action'       : 'updateSatelliteTleData',
-            'timespec'     : None,  # Not needed
-            'night'        : None,  # Not needed
-            'camera_id'    : None,  # Not needed
+            'action' : 'updateSatelliteTleData',
+            'kwargs' : {},
         }
 
         task = IndiAllSkyDbTaskQueueTable(

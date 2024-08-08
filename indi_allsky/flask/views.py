@@ -40,6 +40,7 @@ from . import db
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
+from .models import IndiAllSkyDbMiniVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
@@ -79,6 +80,8 @@ from .forms import IndiAllskyGalleryViewer
 from .forms import IndiAllskyGalleryViewerPreload
 from .forms import IndiAllskyVideoViewer
 from .forms import IndiAllskyVideoViewerPreload
+from .forms import IndiAllskyMiniVideoViewer
+from .forms import IndiAllskyMiniVideoViewerPreload
 from .forms import IndiAllskySystemInfoForm
 from .forms import IndiAllskyHistoryForm
 from .forms import IndiAllskySetDateTimeForm
@@ -90,6 +93,7 @@ from .forms import IndiAllskyImageExcludeForm
 from .forms import IndiAllskyImageProcessingForm
 from .forms import IndiAllskyCameraSimulatorForm
 from .forms import IndiAllskyFocusControllerForm
+from .forms import IndiAllskyMiniTimelapseForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -1436,6 +1440,7 @@ class ConfigView(FormView):
             'FILETRANSFER__REMOTE_RAW_FOLDER'         : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_RAW_FOLDER', '/home/allsky/upload/allsky/export'),
             'FILETRANSFER__REMOTE_FITS_FOLDER'        : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_FITS_FOLDER', '/home/allsky/upload/allsky/fits'),
             'FILETRANSFER__REMOTE_VIDEO_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos'),
+            'FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_MINI_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos'),
             'FILETRANSFER__REMOTE_KEOGRAM_FOLDER'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_KEOGRAM_FOLDER', '/home/allsky/upload/allsky/keograms'),
             'FILETRANSFER__REMOTE_STARTRAIL_FOLDER'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_FOLDER', '/home/allsky/upload/allsky/startrails'),
             'FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER' : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos'),
@@ -1447,6 +1452,7 @@ class ConfigView(FormView):
             'FILETRANSFER__UPLOAD_RAW'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_RAW', False),
             'FILETRANSFER__UPLOAD_FITS'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_FITS', False),
             'FILETRANSFER__UPLOAD_VIDEO'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO', False),
+            'FILETRANSFER__UPLOAD_MINI_VIDEO': self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_MINI_VIDEO', False),
             'FILETRANSFER__UPLOAD_KEOGRAM'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM', False),
             'FILETRANSFER__UPLOAD_STARTRAIL' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL', False),
             'FILETRANSFER__UPLOAD_STARTRAIL_VIDEO' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL_VIDEO', False),
@@ -1501,6 +1507,7 @@ class ConfigView(FormView):
             'YOUTUBE__DESCRIPTION_TEMPLATE'  : self.indi_allsky_config.get('YOUTUBE', {}).get('DESCRIPTION_TEMPLATE', ''),
             'YOUTUBE__CATEGORY'              : self.indi_allsky_config.get('YOUTUBE', {}).get('CATEGORY', 22),
             'YOUTUBE__UPLOAD_VIDEO'          : self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_VIDEO', False),
+            'YOUTUBE__UPLOAD_MINI_VIDEO'     : self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_MINI_VIDEO', False),
             'YOUTUBE__UPLOAD_STARTRAIL_VIDEO': self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_STARTRAIL_VIDEO', False),
             'YOUTUBE__UPLOAD_PANORAMA_VIDEO' : self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_PANORAMA_VIDEO', False),
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
@@ -2134,6 +2141,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['REMOTE_RAW_FOLDER']        = str(request.json['FILETRANSFER__REMOTE_RAW_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_FITS_FOLDER']       = str(request.json['FILETRANSFER__REMOTE_FITS_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_VIDEO_FOLDER']      = str(request.json['FILETRANSFER__REMOTE_VIDEO_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_MINI_VIDEO_FOLDER'] = str(request.json['FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER']    = str(request.json['FILETRANSFER__REMOTE_KEOGRAM_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_STARTRAIL_FOLDER']  = str(request.json['FILETRANSFER__REMOTE_STARTRAIL_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_STARTRAIL_VIDEO_FOLDER'] = str(request.json['FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER'])
@@ -2143,6 +2151,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_PANORAMA']      = int(request.json['FILETRANSFER__UPLOAD_PANORAMA'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_METADATA']      = bool(request.json['FILETRANSFER__UPLOAD_METADATA'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_VIDEO']         = bool(request.json['FILETRANSFER__UPLOAD_VIDEO'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_MINI_VIDEO']    = bool(request.json['FILETRANSFER__UPLOAD_MINI_VIDEO'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_RAW']           = bool(request.json['FILETRANSFER__UPLOAD_RAW'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_FITS']          = bool(request.json['FILETRANSFER__UPLOAD_FITS'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_KEOGRAM']       = bool(request.json['FILETRANSFER__UPLOAD_KEOGRAM'])
@@ -2199,6 +2208,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['YOUTUBE']['DESCRIPTION_TEMPLATE']      = str(request.json['YOUTUBE__DESCRIPTION_TEMPLATE'])
         self.indi_allsky_config['YOUTUBE']['CATEGORY']                  = int(request.json['YOUTUBE__CATEGORY'])
         self.indi_allsky_config['YOUTUBE']['UPLOAD_VIDEO']              = bool(request.json['YOUTUBE__UPLOAD_VIDEO'])
+        self.indi_allsky_config['YOUTUBE']['UPLOAD_MINI_VIDEO']         = bool(request.json['YOUTUBE__UPLOAD_MINI_VIDEO'])
         self.indi_allsky_config['YOUTUBE']['UPLOAD_STARTRAIL_VIDEO']    = bool(request.json['YOUTUBE__UPLOAD_STARTRAIL_VIDEO'])
         self.indi_allsky_config['YOUTUBE']['UPLOAD_PANORAMA_VIDEO']     = bool(request.json['YOUTUBE__UPLOAD_PANORAMA_VIDEO'])
         self.indi_allsky_config['FITSHEADERS'][0][0]                    = str(request.json['FITSHEADERS__0__KEY'])
@@ -2915,6 +2925,88 @@ class AjaxVideoViewerView(BaseView):
             month = json_data['MONTH_SELECT'][0][0]
 
             json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday)
+
+        return jsonify(json_data)
+
+
+class MiniVideoViewerView(FormView):
+    def get_context(self):
+        context = super(MiniVideoViewerView, self).get_context()
+
+        context['camera_id'] = session['camera_id']
+
+        context['youtube__enable'] = int(self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', 0))
+
+        form_data = {
+            'YEAR_SELECT'  : None,
+            'MONTH_SELECT' : None,
+        }
+
+
+        local = True  # default to local assets
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+
+        context['form_mini_video_viewer'] = IndiAllskyMiniVideoViewerPreload(
+            data=form_data,
+            camera_id=session['camera_id'],
+            s3_prefix=self.s3_prefix,
+            local=local,
+        )
+
+        return context
+
+
+class AjaxMiniVideoViewerView(BaseView):
+    methods = ['POST']
+
+    def __init__(self, **kwargs):
+        super(AjaxMiniVideoViewerView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        local = True  # default to local assets
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+
+        form_mini_video_viewer = IndiAllskyMiniVideoViewer(
+            data=request.json,
+            camera_id=session['camera_id'],
+            s3_prefix=self.s3_prefix,
+            local=local,
+        )
+
+
+        form_year      = request.json.get('YEAR_SELECT')
+        form_month     = request.json.get('MONTH_SELECT')
+
+        json_data = {}
+
+        if form_month:
+            form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
+
+            year = form_datetime.strftime('%Y')
+            month = form_datetime.strftime('%m')
+
+            json_data['video_list'] = form_mini_video_viewer.getVideos(year, month)
+
+        elif form_year:
+            form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
+
+            year = form_datetime.strftime('%Y')
+
+            json_data['MONTH_SELECT'] = form_mini_video_viewer.getMonths(year)
+            month = json_data['MONTH_SELECT'][0][0]
+
+            json_data['video_list'] = form_mini_video_viewer.getVideos(year, month)
 
         return jsonify(json_data)
 
@@ -3691,6 +3783,11 @@ class AjaxSystemInfoView(BaseView):
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .order_by(IndiAllSkyDbVideoTable.createDate.asc())
 
+        mini_video_query = IndiAllSkyDbMiniVideoTable.query\
+            .join(IndiAllSkyDbMiniVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbMiniVideoTable.createDate.asc())
+
         keogram_query = IndiAllSkyDbKeogramTable.query\
             .join(IndiAllSkyDbKeogramTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
@@ -3712,12 +3809,19 @@ class AjaxSystemInfoView(BaseView):
             .order_by(IndiAllSkyDbPanoramaVideoTable.createDate.asc())
 
         video_count = video_query.count()
+        mini_video_count = mini_video_query.count()
         keogram_count = keogram_query.count()
         startrail_count = startrail_query.count()
         startrail_video_count = startrail_video_query.count()
         panorama_video_count = panorama_video_query.count()
 
-        file_count = video_count + keogram_count + startrail_count + startrail_video_count + panorama_video_count
+
+        file_count = video_count
+        file_count += mini_video_count
+        file_count += keogram_count
+        file_count += startrail_count
+        file_count += startrail_video_count
+        file_count += panorama_video_count
 
 
         ### Getting IDs first then deleting each file is faster than deleting all files with
@@ -3727,6 +3831,10 @@ class AjaxSystemInfoView(BaseView):
         video_id_list = list()
         for entry in video_query:
             video_id_list.append(entry.id)
+
+        mini_video_id_list = list()
+        for entry in mini_video_query:
+            mini_video_id_list.append(entry.id)
 
         keogram_id_list = list()
         for entry in keogram_query:
@@ -3746,6 +3854,7 @@ class AjaxSystemInfoView(BaseView):
 
 
         self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
+        self._deleteAssets(IndiAllSkyDbMiniVideoTable, mini_video_id_list)
         self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
         self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
         self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
@@ -3795,6 +3904,7 @@ class AjaxSystemInfoView(BaseView):
             .filter(IndiAllSkyDbVideoTable.night == sa_false())\
             .order_by(IndiAllSkyDbVideoTable.createDate.asc())
 
+        ### Not flushing daytime mini timelapses
 
         ### Keograms
         keogram_query = IndiAllSkyDbKeogramTable.query\
@@ -4014,6 +4124,27 @@ class AjaxSystemInfoView(BaseView):
                 video_notfound_list.append(v)
 
 
+        ### Mini Videos
+        mini_video_entries = IndiAllSkyDbMiniVideoTable.query\
+            .filter(
+                and_(
+                    IndiAllSkyDbMiniVideoTable.success == sa_true(),
+                    IndiAllSkyDbMiniVideoTable.s3_key == sa_null(),
+                )
+            )\
+            .order_by(IndiAllSkyDbMiniVideoTable.createDate.asc())
+
+        mini_video_entries_count = mini_video_entries.count()
+        message_list.append('<p>Mini Timelapses: {0:d}</p>'.format(mini_video_entries_count))
+
+        app.logger.info('Searching %d mini videos...', mini_video_entries_count)
+        mini_video_notfound_list = list()
+        for m in mini_video_entries:
+            if not m.validateFile():
+                #logger.warning('Entry not found on filesystem: %s', m.filename)
+                mini_video_notfound_list.append(m)
+
+
         ### Keograms
         keogram_entries = IndiAllSkyDbKeogramTable.query\
             .filter(IndiAllSkyDbKeogramTable.s3_key == sa_null())\
@@ -4117,6 +4248,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.warning('Bad pixel maps not found: %d', len(badpixelmap_notfound_list))
         app.logger.warning('Dark frames not found: %d', len(darkframe_notfound_list))
         app.logger.warning('Videos not found: %d', len(video_notfound_list))
+        app.logger.warning('Mini Videos not found: %d', len(mini_video_notfound_list))
         app.logger.warning('Keograms not found: %d', len(keogram_notfound_list))
         app.logger.warning('Star trails not found: %d', len(startrail_notfound_list))
         app.logger.warning('Star trail timelapses not found: %d', len(startrail_video_notfound_list))
@@ -4151,6 +4283,10 @@ class AjaxSystemInfoView(BaseView):
 
         message_list.append('<p>Removed {0:d} missing video entries</p>'.format(len(video_notfound_list)))
         [db.session.delete(v) for v in video_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing mini video entries</p>'.format(len(mini_video_notfound_list)))
+        [db.session.delete(m) for m in mini_video_notfound_list]
 
 
         message_list.append('<p>Removed {0:d} missing keogram entries</p>'.format(len(keogram_notfound_list)))
@@ -4492,17 +4628,21 @@ class AjaxTimelapseGeneratorView(BaseView):
             app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata_video = {
-                'action'      : 'generateVideo',
-                'timespec'    : timespec,
-                'night'       : night,
-                'camera_id'   : camera.id,
+                'action' : 'generateVideo',
+                'kwargs' : {
+                    'timespec'    : timespec,
+                    'night'       : night,
+                    'camera_id'   : camera.id,
+                },
             }
 
             jobdata_kst = {
-                'action'      : 'generateKeogramStarTrails',
-                'timespec'    : timespec,
-                'night'       : night,
-                'camera_id'   : camera.id,
+                'action' : 'generateKeogramStarTrails',
+                'kwargs' : {
+                    'timespec'    : timespec,
+                    'night'       : night,
+                    'camera_id'   : camera.id,
+                },
             }
 
 
@@ -4526,10 +4666,12 @@ class AjaxTimelapseGeneratorView(BaseView):
 
             if self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE'):
                 jobdata_panorama_video = {
-                    'action'      : 'generatePanoramaVideo',
-                    'timespec'    : timespec,
-                    'night'       : night,
-                    'camera_id'   : camera.id,
+                    'action' : 'generatePanoramaVideo',
+                    'kwargs' : {
+                        'timespec'    : timespec,
+                        'night'       : night,
+                        'camera_id'   : camera.id,
+                    },
                 }
 
                 task_panorama_video = IndiAllSkyDbTaskQueueTable(
@@ -4563,10 +4705,12 @@ class AjaxTimelapseGeneratorView(BaseView):
             app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata = {
-                'action'      : 'generateVideo',
-                'timespec'    : timespec,
-                'night'       : night,
-                'camera_id'   : camera.id,
+                'action' : 'generateVideo',
+                'kwargs' : {
+                    'timespec'    : timespec,
+                    'night'       : night,
+                    'camera_id'   : camera.id,
+                },
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -4604,10 +4748,12 @@ class AjaxTimelapseGeneratorView(BaseView):
             app.logger.warning('Generating %s time panorama timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata = {
-                'action'      : 'generatePanoramaVideo',
-                'timespec'    : timespec,
-                'night'       : night,
-                'camera_id'   : camera.id,
+                'action' : 'generatePanoramaVideo',
+                'kwargs' : {
+                    'timespec'    : timespec,
+                    'night'       : night,
+                    'camera_id'   : camera.id,
+                },
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -4637,10 +4783,12 @@ class AjaxTimelapseGeneratorView(BaseView):
             app.logger.warning('Generating %s time timelapse for %s camera %d', timeofday_str, timespec, camera.id)
 
             jobdata = {
-                'action'      : 'generateKeogramStarTrails',
-                'timespec'    : timespec,
-                'night'       : night,
-                'camera_id'   : camera.id,
+                'action' : 'generateKeogramStarTrails',
+                'kwargs' : {
+                    'timespec'    : timespec,
+                    'night'       : night,
+                    'camera_id'   : camera.id,
+                },
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -4662,10 +4810,11 @@ class AjaxTimelapseGeneratorView(BaseView):
             app.logger.warning('Uploading end of night data for camera %d', camera.id)
 
             jobdata = {
-                'action'      : 'uploadAllskyEndOfNight',
-                'timespec'    : None,  # not needed
-                'night'       : True,
-                'camera_id'   : camera.id,
+                'action' : 'uploadAllskyEndOfNight',
+                'kwargs' : {
+                    'night'     : True,
+                    'camera_id' : camera.id,
+                },
             }
 
             task = IndiAllSkyDbTaskQueueTable(
@@ -5825,6 +5974,9 @@ class AjaxUploadYoutubeView(BaseView):
         if asset_type == constants.VIDEO:
             table = IndiAllSkyDbVideoTable
             asset_label = 'Timelapse'
+        elif asset_type == constants.MINI_VIDEO:
+            table = IndiAllSkyDbMiniVideoTable
+            asset_label = 'Mini Timelapse'
         elif asset_type == constants.STARTRAIL_VIDEO:
             table = IndiAllSkyDbStarTrailsVideoTable
             asset_label = 'Star Trails Timelapse'
@@ -6084,6 +6236,12 @@ class TimelapseVideoView(TemplateView):
         return context
 
 
+class MiniTimelapseVideoView(TimelapseVideoView):
+    model = IndiAllSkyDbMiniVideoTable
+    title = 'Mini Timelapse'
+    file_view = 'indi_allsky.mini_timelapse_video_view'
+
+
 class StartrailVideoView(TimelapseVideoView):
     model = IndiAllSkyDbStarTrailsVideoTable
     title = 'Startrail Video'
@@ -6094,6 +6252,107 @@ class PanoramaVideoView(TimelapseVideoView):
     model = IndiAllSkyDbPanoramaVideoTable
     title = 'Panorama Video'
     file_view = 'indi_allsky.panorama_video_view'
+
+
+class MiniTimelapseGeneratorView(TemplateView):
+    decorators = [login_required]
+
+    title = 'Mini Timelapse'
+    image_loop_view = 'indi_allsky.js_image_loop_view'
+
+    def get_context(self):
+        context = super(MiniTimelapseGeneratorView, self).get_context()
+
+        image_id = int(request.args.get('image_id', 0))
+
+        if image_id:
+            image_entry = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbImageTable.id == image_id)\
+                .one()
+        else:
+            # load last image
+            image_entry = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+                .first()
+
+
+        context['title'] = self.title
+        context['image_loop_view'] = self.image_loop_view
+
+        context['timestamp'] = int(image_entry.createDate.timestamp())
+
+
+        form_data = {
+            'CAMERA_ID'             : session['camera_id'],
+            'IMAGE_ID'              : image_id,
+            'PRE_SECONDS_SELECT'    : '240',
+            'POST_SECONDS_SELECT'   : '120',
+            'FRAMERATE_SELECT'      : '10',
+        }
+
+        context['form_mini_timelapse'] = IndiAllskyMiniTimelapseForm(data=form_data)
+
+        return context
+
+
+class AjaxMiniTimelapseGeneratorView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+
+    def __init__(self, **kwargs):
+        super(AjaxMiniTimelapseGeneratorView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        image_id = int(request.json['IMAGE_ID'])
+        camera_id = int(request.json['CAMERA_ID'])
+        pre_seconds = int(request.json['PRE_SECONDS'])
+        post_seconds = int(request.json['POST_SECONDS'])
+        framerate = float(request.json['FRAMERATE'])
+        note = str(request.json['NOTE'])
+
+
+        # sanity check
+        IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.id == image_id)\
+            .one()
+
+
+        jobdata = {
+            'action' : 'generateMiniVideo',
+            'kwargs' : {
+                'image_id'      : image_id,
+                'camera_id'     : camera_id,
+                'pre_seconds'   : pre_seconds,
+                'post_seconds'  : post_seconds,
+                'framerate'     : framerate,
+                'note'          : note,
+            },
+        }
+
+
+        task_mini_video = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=TaskQueueState.MANUAL,
+            priority=100,
+            data=jobdata,
+        )
+
+        db.session.add(task_mini_video)
+        db.session.commit()
+
+        message = {
+            'success-message' : 'Job Submitted',
+        }
+
+        return jsonify(message)
 
 
 class AstroPanelView(TemplateView):
@@ -6518,6 +6777,9 @@ bp_allsky.add_url_rule('/ajax/gallery', view_func=AjaxGalleryViewerView.as_view(
 bp_allsky.add_url_rule('/videoviewer', view_func=VideoViewerView.as_view('videoviewer_view', template_name='videoviewer.html'))
 bp_allsky.add_url_rule('/ajax/videoviewer', view_func=AjaxVideoViewerView.as_view('ajax_videoviewer_view'))
 
+bp_allsky.add_url_rule('/minivideoviewer', view_func=MiniVideoViewerView.as_view('mini_videoviewer_view', template_name='minivideoviewer.html'))
+bp_allsky.add_url_rule('/ajax/minivideoviewer', view_func=AjaxMiniVideoViewerView.as_view('ajax_mini_videoviewer_view'))
+
 bp_allsky.add_url_rule('/view_image', view_func=TimelapseImageView.as_view('timelapse_image_view', template_name='view_image.html'))
 bp_allsky.add_url_rule('/view_panorama', view_func=PanoramaImageView.as_view('panorama_image_view', template_name='view_image.html'))
 bp_allsky.add_url_rule('/view_startrail', view_func=StartrailImageView.as_view('startrail_image_view', template_name='view_image.html'))
@@ -6525,11 +6787,15 @@ bp_allsky.add_url_rule('/view_keogram', view_func=KeogramImageView.as_view('keog
 bp_allsky.add_url_rule('/view_raw', view_func=RawImageView.as_view('raw_image_view', template_name='view_image.html'))
 
 bp_allsky.add_url_rule('/watch_timelapse', view_func=TimelapseVideoView.as_view('timelapse_video_view', template_name='watch_video.html'))
+bp_allsky.add_url_rule('/watch_mini_timelapse', view_func=MiniTimelapseVideoView.as_view('mini_timelapse_video_view', template_name='watch_video.html'))
 bp_allsky.add_url_rule('/watch_startrail', view_func=StartrailVideoView.as_view('startrail_video_view', template_name='watch_video.html'))
 bp_allsky.add_url_rule('/watch_panorama', view_func=PanoramaVideoView.as_view('panorama_video_view', template_name='watch_video.html'))
 
 bp_allsky.add_url_rule('/generate', view_func=TimelapseGeneratorView.as_view('generate_view', template_name='generate.html'))
 bp_allsky.add_url_rule('/ajax/generate', view_func=AjaxTimelapseGeneratorView.as_view('ajax_generate_view'))
+
+bp_allsky.add_url_rule('/minigenerate', view_func=MiniTimelapseGeneratorView.as_view('mini_generate_view', template_name='mini_generate.html'))
+bp_allsky.add_url_rule('/ajax/minigenerate', view_func=AjaxMiniTimelapseGeneratorView.as_view('ajax_mini_generate_view'))
 
 bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp_allsky.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))

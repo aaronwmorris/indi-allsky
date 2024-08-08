@@ -19,6 +19,7 @@ from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbBadPixelMapTable
 from .models import IndiAllSkyDbDarkFrameTable
 from .models import IndiAllSkyDbVideoTable
+from .models import IndiAllSkyDbMiniVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
@@ -396,6 +397,8 @@ class miscDb(object):
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
         #    'night'
+        #    'framerate'
+        #    'frames'
         #    'data'
         #}
 
@@ -427,6 +430,8 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            framerate=float(metadata.get('framerate', 0.0)),
+            frames=metadata.get('frames', 0),
             height=metadata.get('height'),  # optional
             width=metadata.get('width'),  # optional
             data=metadata.get('data', {}),
@@ -441,6 +446,87 @@ class miscDb(object):
         return video
 
 
+    def addMiniVideo(self, filename, camera_id, metadata):
+
+        ### expected metadata
+        #{
+        #    'createDate'  # datetime or timestamp
+        #    'dayDate'  # date or string
+        #    'night'
+        #    'targetDate'
+        #    'startDate'
+        #    'endDate'
+        #    'framerate'
+        #    'frames'
+        #    'data'
+        #    'note'
+        #}
+
+
+        if not filename:
+            return
+
+        filename_p = Path(filename)
+
+
+        logger.info('Adding video %s to DB', filename_p)
+
+        if isinstance(metadata['createDate'], (int, float)):
+            createDate = datetime.fromtimestamp(metadata['createDate'])
+        else:
+            createDate = metadata['createDate']
+
+
+        if isinstance(metadata['targetDate'], (int, float)):
+            targetDate = datetime.fromtimestamp(metadata['targetDate'])
+        else:
+            targetDate = metadata['targetDate']
+
+
+        if isinstance(metadata['startDate'], (int, float)):
+            startDate = datetime.fromtimestamp(metadata['startDate'])
+        else:
+            startDate = metadata['startDate']
+
+
+        if isinstance(metadata['endDate'], (int, float)):
+            endDate = datetime.fromtimestamp(metadata['endDate'])
+        else:
+            endDate = metadata['endDate']
+
+
+        if isinstance(metadata['dayDate'], str):
+            dayDate = datetime.strptime(metadata['dayDate'], '%Y%m%d').date()
+        else:
+            dayDate = metadata['dayDate']
+
+
+        mini_video = IndiAllSkyDbMiniVideoTable(
+            createDate=createDate,
+            camera_id=camera_id,
+            filename=str(filename_p),
+            dayDate=dayDate,
+            night=metadata['night'],
+            targetDate=targetDate,
+            startDate=startDate,
+            endDate=endDate,
+            framerate=float(metadata.get('framerate', 0.0)),
+            frames=metadata.get('frames', 0),
+            height=metadata.get('height'),  # optional
+            width=metadata.get('width'),  # optional
+            data=metadata.get('data', {}),
+            remote_url=metadata.get('remote_url'),
+            s3_key=metadata.get('s3_key'),
+            thumbnail_uuid=metadata.get('thumbnail_uuid'),
+            note=metadata['note']
+        )
+
+        db.session.add(mini_video)
+        db.session.commit()
+
+        return mini_video
+
+
     def addPanoramaVideo(self, filename, camera_id, metadata):
 
         ### expected metadata
@@ -448,6 +534,8 @@ class miscDb(object):
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
         #    'night'
+        #    'framerate'
+        #    'frames'
         #    'data'
         #}
 
@@ -479,6 +567,8 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            framerate=float(metadata.get('framerate', 0.0)),
+            frames=metadata.get('frames', 0),
             height=metadata.get('height'),  # optional
             width=metadata.get('width'),  # optional
             data=metadata.get('data', {}),
@@ -607,6 +697,8 @@ class miscDb(object):
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
         #    'night'
+        #    'framerate'
+        #    'frames'
         #}
 
 
@@ -638,6 +730,8 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            framerate=float(metadata.get('framerate', 0.0)),
+            frames=metadata.get('frames', 0),
             height=metadata.get('height'),  # optional
             width=metadata.get('width'),  # optional
             data=metadata.get('data', {}),
@@ -949,7 +1043,7 @@ class miscDb(object):
         db.session.commit()
 
 
-    def addThumbnail(self, entry, entry_metadata, camera_id, thumbnail_metadata, new_width=150, numpy_data=None):
+    def addThumbnail(self, entry, entry_metadata, camera_id, thumbnail_metadata, new_width=150, numpy_data=None, image_entry=None):
         if entry.thumbnail_uuid:
             return
 
@@ -1013,8 +1107,26 @@ class miscDb(object):
             thumbnail_dir_p.mkdir(mode=0o755, parents=True)
 
 
-        if isinstance(numpy_data, type(None)):
-            # use file on filesystem
+        if not isinstance(numpy_data, type(None)):
+            # process numpy data
+            img = Image.fromarray(cv2.cvtColor(numpy_data, cv2.COLOR_BGR2RGB))
+
+        elif image_entry:
+            # use alternate image entry
+            filename_p = Path(image_entry.getFilesystemPath())
+
+            if not filename_p.exists():
+                logger.error('Cannot create thumbnail: File not found: %s', filename_p)
+                return
+
+            try:
+                img = Image.open(str(filename_p))
+            except PIL.UnidentifiedImageError:
+                logger.error('Cannot create thumbnail:  Bad Image')
+                return
+
+        else:
+            # use entry file on filesystem
             filename_p = Path(entry.getFilesystemPath())
 
             if not filename_p.exists():
@@ -1026,8 +1138,6 @@ class miscDb(object):
             except PIL.UnidentifiedImageError:
                 logger.error('Cannot create thumbnail:  Bad Image')
                 return
-        else:
-            img = Image.fromarray(cv2.cvtColor(numpy_data, cv2.COLOR_BGR2RGB))
 
 
         width, height = img.size
