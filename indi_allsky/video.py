@@ -477,7 +477,7 @@ class VideoWorker(Process):
         vid_folder = self._getVideoFolder(d_dayDate, camera)
 
         video_file = vid_folder.joinpath(
-            'allsky-minitimelapse_ccd{0:d}_{1:s}_{2:d}_{3:s}.{4:s}'.format(
+            'allsky-minitimelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
                 d_dayDate.strftime('%Y%m%d'),
                 timeofday,
@@ -640,11 +640,10 @@ class VideoWorker(Process):
         task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
         ### Upload ###
-        self._miscUpload.syncapi_minivideo(mini_video_entry, mini_video_metadata)  # syncapi before s3
-        self._miscUpload.s3_upload_minivideo(mini_video_entry, mini_video_metadata)
-        self._miscUpload.upload_minivideo(mini_video_entry)
-        self._miscUpload.youtube_upload_minivideo(mini_video_entry, mini_video_metadata)
-
+        #self._miscUpload.syncapi_minivideo(mini_video_entry, mini_video_metadata)  # syncapi before s3
+        #self._miscUpload.s3_upload_minivideo(mini_video_entry, mini_video_metadata)
+        #self._miscUpload.upload_minivideo(mini_video_entry)
+        #self._miscUpload.youtube_upload_minivideo(mini_video_entry, mini_video_metadata)
 
 
     def generatePanoramaVideo(self, task, **kwargs):

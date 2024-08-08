@@ -127,7 +127,7 @@ function loadJS(url, data, onDone, onError) {
     if(!onDone)onDone=function(){};
     if(!onError)onError=function(){};
 
-    $("#loader_loop").css({'display' : 'block'});
+    $("#loader_generate").css({'display' : 'block'});
 
     $.ajax({
         type: "GET",
@@ -135,12 +135,12 @@ function loadJS(url, data, onDone, onError) {
         contentType: "application/json",
         data: data,
         success: function(data){
-            $("#loader_loop").css({'display' : 'none'});
+            $("#loader_generate").css({'display' : 'none'});
             json_data = data
             $('#message').html(json_data['message']);
         },
         error: function(data){
-            $("#loader_loop").css({'display' : 'none'});
+            $("#loader_generate").css({'display' : 'none'});
             onError(data.status);
             $('#message').text('Error loading data.  Please check the logs.');
         },
@@ -199,7 +199,7 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
-<form id="form_mini_timelapse" onSubmit="return false;">
+<form id="form_mini_timelapse" onSubmit="return false; "autocomplete="off">
     <div class="form-group row">
         {{ form_mini_timelapse.CAMERA_ID() }}
         {{ form_mini_timelapse.IMAGE_ID() }}
@@ -226,7 +226,19 @@ $( document ).ready(function() {
         </div>
 
         <div class="col-sm-1">
-            <div class="loader" id="loader_loop"></div>
+            <button class="btn btn-success">Generate</button>
+        </div>
+
+        <div class="col-sm-1">
+            <div class="loader" id="loader_generate"></div>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_mini_timelapse.NOTE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-8">
+            {{ form_mini_timelapse.NOTE(class='form-control bg-secondary') }}
         </div>
     </div>
 </form>
@@ -264,6 +276,33 @@ $("#POST_SECONDS_SELECT").on("change", function() {
 
 $("#FRAMERATE_SELECT").on("change", function() {
     framerate = $('#FRAMERATE_SELECT').val();
+});
+
+
+$('#form_mini_timelapse').on('submit', function() {
+    var form_data = {
+        'IMAGE_ID' : $('#IMAGE_ID').val(),
+        'CAMERA_ID' : $('#CAMERA_ID').val(),
+        'PRE_SECONDS' : parseInt($('#PRE_SECONDS_SELECT').val()),
+        'POST_SECONDS' : parseInt($('#POST_SECONDS_SELECT').val()),
+        'FRAMERATE' : $('#FRAMERATE_SELECT').val(),
+        'NOTE' : $('#NOTE').val(),
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_mini_generate_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(form_data),
+        success: function(return_data){
+            $("#loader_generate").css({'display' : 'none'});
+            $('#NOTE').val('');
+        },
+        error: function(data){
+            $("#loader_config").css({'display' : 'none'});
+        },
+    });
+
 });
 
 </script>

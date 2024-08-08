@@ -6111,6 +6111,8 @@ class PanoramaVideoView(TimelapseVideoView):
 
 
 class MiniTimelapseGeneratorView(TemplateView):
+    decorators = [login_required]
+
     title = 'Mini Timelapse'
     image_loop_view = 'indi_allsky.js_image_loop_view'
 
@@ -6151,6 +6153,62 @@ class MiniTimelapseGeneratorView(TemplateView):
         context['form_mini_timelapse'] = IndiAllskyMiniTimelapseForm(data=form_data)
 
         return context
+
+
+class AjaxMiniTimelapseGeneratorView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+
+    def __init__(self, **kwargs):
+        super(AjaxMiniTimelapseGeneratorView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        image_id = int(request.json['IMAGE_ID'])
+        camera_id = int(request.json['CAMERA_ID'])
+        pre_seconds = int(request.json['PRE_SECONDS'])
+        post_seconds = int(request.json['POST_SECONDS'])
+        framerate = float(request.json['FRAMERATE'])
+        note = str(request.json['NOTE'])
+
+
+        # sanity check
+        IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.id == image_id)\
+            .one()
+
+
+        jobdata = {
+            'action' : 'generateMiniVideo',
+            'kwargs' : {
+                'image_id'      : image_id,
+                'camera_id'     : camera_id,
+                'pre_seconds'   : pre_seconds,
+                'post_seconds'  : post_seconds,
+                'framerate'     : framerate,
+                'note'          : note,
+            },
+        }
+
+
+        task_mini_video = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=TaskQueueState.MANUAL,
+            priority=100,
+            data=jobdata,
+        )
+
+        db.session.add(task_mini_video)
+        db.session.commit()
+
+        message = {
+            'success-message' : 'Job Submitted',
+        }
+
+        return jsonify(message)
 
 
 class AstroPanelView(TemplateView):
@@ -6589,6 +6647,7 @@ bp_allsky.add_url_rule('/generate', view_func=TimelapseGeneratorView.as_view('ge
 bp_allsky.add_url_rule('/ajax/generate', view_func=AjaxTimelapseGeneratorView.as_view('ajax_generate_view'))
 
 bp_allsky.add_url_rule('/minigenerate', view_func=MiniTimelapseGeneratorView.as_view('mini_generate_view', template_name='mini_generate.html'))
+bp_allsky.add_url_rule('/ajax/minigenerate', view_func=AjaxMiniTimelapseGeneratorView.as_view('ajax_mini_generate_view'))
 
 bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp_allsky.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))

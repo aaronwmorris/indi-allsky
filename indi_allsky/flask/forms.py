@@ -5324,6 +5324,7 @@ class IndiAllskyMiniTimelapseForm(FlaskForm):
     PRE_SECONDS_SELECT               = SelectField('Pre-Selection Time', choices=SECONDS_choices, validators=[DataRequired()])
     POST_SECONDS_SELECT              = SelectField('Post-Selection Time', choices=SECONDS_choices, validators=[DataRequired()])
     FRAMERATE_SELECT                 = SelectField('Frames/sec', choices=FRAMERATE_SELECT_choices, validators=[DataRequired()])
+    NOTE                             = StringField('Description', validators=[DataRequired()])
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):
