@@ -1043,7 +1043,7 @@ class miscDb(object):
         db.session.commit()
 
 
-    def addThumbnail(self, entry, entry_metadata, camera_id, thumbnail_metadata, new_width=150, numpy_data=None):
+    def addThumbnail(self, entry, entry_metadata, camera_id, thumbnail_metadata, new_width=150, numpy_data=None, image_entry=None):
         if entry.thumbnail_uuid:
             return
 
@@ -1107,8 +1107,26 @@ class miscDb(object):
             thumbnail_dir_p.mkdir(mode=0o755, parents=True)
 
 
-        if isinstance(numpy_data, type(None)):
-            # use file on filesystem
+        if not isinstance(numpy_data, type(None)):
+            # process numpy data
+            img = Image.fromarray(cv2.cvtColor(numpy_data, cv2.COLOR_BGR2RGB))
+
+        elif image_entry:
+            # use alternate image entry
+            filename_p = Path(image_entry.getFilesystemPath())
+
+            if not filename_p.exists():
+                logger.error('Cannot create thumbnail: File not found: %s', filename_p)
+                return
+
+            try:
+                img = Image.open(str(filename_p))
+            except PIL.UnidentifiedImageError:
+                logger.error('Cannot create thumbnail:  Bad Image')
+                return
+
+        else:
+            # use entry file on filesystem
             filename_p = Path(entry.getFilesystemPath())
 
             if not filename_p.exists():
@@ -1120,8 +1138,6 @@ class miscDb(object):
             except PIL.UnidentifiedImageError:
                 logger.error('Cannot create thumbnail:  Bad Image')
                 return
-        else:
-            img = Image.fromarray(cv2.cvtColor(numpy_data, cv2.COLOR_BGR2RGB))
 
 
         width, height = img.size

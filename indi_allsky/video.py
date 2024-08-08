@@ -73,6 +73,7 @@ class VideoWorker(Process):
 
     thumbnail_keogram_width = 1000
     thumbnail_startrail_width = 300
+    thumbnail_mini_timelapse_width = 300
 
 
     def __init__(
@@ -613,6 +614,27 @@ class VideoWorker(Process):
         )
 
 
+        mini_video_thumbnail_metadata = {
+            'type'       : constants.THUMBNAIL,
+            'origin'     : constants.MINI_VIDEO,
+            'createDate' : now.timestamp(),
+            'dayDate'    : d_dayDate.strftime('%Y%m%d'),
+            'utc_offset' : now.astimezone().utcoffset().total_seconds(),
+            'night'      : night,
+            'camera_uuid': camera.uuid,
+        }
+
+
+        mini_video_thumbnail_entry = self._miscDb.addThumbnail(
+            mini_video_entry,
+            mini_video_metadata,
+            camera.id,
+            mini_video_thumbnail_metadata,
+            new_width=self.thumbnail_mini_timelapse_width,
+            image_entry=image_entry,  # use target image for thumbnail
+        )
+
+
         try:
             tg = TimelapseGenerator(self.config)
             tg.codec = self.config['FFMPEG_CODEC']
@@ -640,6 +662,13 @@ class VideoWorker(Process):
         task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
 
         ### Upload ###
+
+
+        if mini_video_thumbnail_entry:
+            self._miscUpload.syncapi_thumbnail(mini_video_thumbnail_entry, mini_video_thumbnail_metadata)  # syncapi before S3
+            self._miscUpload.s3_upload_thumbnail(mini_video_thumbnail_entry, mini_video_thumbnail_metadata)
+
+
         #self._miscUpload.syncapi_minivideo(mini_video_entry, mini_video_metadata)  # syncapi before s3
         #self._miscUpload.s3_upload_minivideo(mini_video_entry, mini_video_metadata)
         #self._miscUpload.upload_minivideo(mini_video_entry)
