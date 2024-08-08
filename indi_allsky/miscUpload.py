@@ -128,6 +128,48 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
+    def upload_mini_video(self, video_entry):
+        ### Upload video
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_MINI_VIDEO'):
+            logger.warning('Video uploading disabled')
+            return
+
+
+        now = datetime.now()
+
+        # Parameters for string formatting
+        file_data_dict = {
+            'timestamp'    : now,
+            'ts'           : now,  # shortcut
+            'camera_uuid'  : video_entry.camera.uuid,
+        }
+
+
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_MINI_VIDEO_FOLDER'].format(**file_data_dict)
+
+        video_file_p = Path(video_entry.getFilesystemPath())
+        remote_file_p = Path(remote_dir).joinpath(video_file_p.name)
+
+        # tell worker to upload file
+        jobdata = {
+            'action'      : constants.TRANSFER_UPLOAD,
+            'model'       : video_entry.__class__.__name__,
+            'id'          : video_entry.id,
+            'remote_file' : str(remote_file_p),
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
+
+
     def upload_panorama_video(self, video_entry):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA_VIDEO'):
@@ -528,6 +570,10 @@ class miscUpload(object):
         self.s3_upload_asset(*args)
 
 
+    def s3_upload_mini_video(self, *args):
+        self.s3_upload_asset(*args)
+
+
     def s3_upload_keogram(self, *args):
         self.s3_upload_asset(*args)
 
@@ -733,6 +779,15 @@ class miscUpload(object):
             return
 
         metadata['asset_label'] = 'Timelapse'
+
+        self._youtube_upload(video_entry, metadata)
+
+
+    def youtube_upload_mini_video(self, video_entry, metadata):
+        if not self.config.get('YOUTUBE', {}).get('UPLOAD_MINI_VIDEO'):
+            return
+
+        metadata['asset_label'] = 'Mini Timelapse'
 
         self._youtube_upload(video_entry, metadata)
 
