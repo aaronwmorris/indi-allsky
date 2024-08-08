@@ -114,7 +114,7 @@ function populate_videos(video_list) {
 
 
     var h_minivideo_div = $('<div />', {
-        'class' : "col-sm-8",
+        'class' : "col-sm-3",
     }).appendTo(h_row_div);
 
 
@@ -123,6 +123,17 @@ function populate_videos(video_list) {
         'class' : "text-center",
         'style' : "font-size:14px;font-weight:bold"
     }).appendTo(h_minivideo_div);
+
+
+    var h_desc_div = $('<div />', {
+        'class' : "col-sm-7",
+    }).appendTo(h_row_div);
+
+    $('<div />', {
+        'text'  : 'Description',
+        'class' : "text-center",
+        'style' : "font-size:14px;font-weight:bold"
+    }).appendTo(h_desc_div);
 
 
     h_row_div.appendTo($("#videos_div"));
@@ -189,7 +200,7 @@ function populate_videos(video_list) {
 
         // video
         var minivideo_div = $('<div />', {
-            'class' : "col-sm-8",
+            'class' : "col-sm-3",
         }).appendTo(row_div);
 
 
@@ -198,6 +209,13 @@ function populate_videos(video_list) {
             'target' : "_blank",
             'rel'    : "noopener noreferrer",
         }).appendTo(minivideo_div);
+
+
+        // video
+        var desc_div = $('<div />', {
+            'class' : "col-sm-7",
+            'text'  : item['note'],
+        }).appendTo(row_div);
 
 
         {% if current_user.is_authenticated or login_disabled %}
@@ -252,7 +270,7 @@ function populate_videos(video_list) {
     }).appendTo(f_row_div);
 
     var f_minivideo_div = $('<div />', {
-        'class' : "col-sm-8",
+        'class' : "col-sm-3",
     }).appendTo(f_row_div);
 
     $('<div />', {
@@ -260,6 +278,17 @@ function populate_videos(video_list) {
         'class' : "text-center",
         'style' : "font-size:14px;font-weight:bold"
     }).appendTo(f_minivideo_div);
+
+
+    var f_desc_div = $('<div />', {
+        'class' : "col-sm-7",
+    }).appendTo(f_row_div);
+
+    $('<div />', {
+        'text'  : 'Description',
+        'class' : "text-center",
+        'style' : "font-size:14px;font-weight:bold"
+    }).appendTo(f_desc_div);
 
 
     f_row_div.appendTo($("#videos_div"));

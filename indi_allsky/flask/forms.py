@@ -4888,6 +4888,7 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
                 'dayDate_long'      : v.dayDate.strftime('%B %d, %Y'),
                 'dayDate'           : v.dayDate.strftime('%Y%m%d'),
                 'night'             : v.night,
+                'note'              : v.note,
                 'max_smoke_rating'  : constants.SMOKE_RATING_MAP_STR[data.get('max_smoke_rating', constants.SMOKE_RATING_NODATA)],
                 'max_kpindex'       : data.get('max_kpindex', 0.0),
                 'max_ovation_max'   : data.get('max_ovation_max', 0),
