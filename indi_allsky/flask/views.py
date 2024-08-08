@@ -4100,6 +4100,27 @@ class AjaxSystemInfoView(BaseView):
                 video_notfound_list.append(v)
 
 
+        ### Mini Videos
+        mini_video_entries = IndiAllSkyDbMiniVideoTable.query\
+            .filter(
+                and_(
+                    IndiAllSkyDbMiniVideoTable.success == sa_true(),
+                    IndiAllSkyDbMiniVideoTable.s3_key == sa_null(),
+                )
+            )\
+            .order_by(IndiAllSkyDbMiniVideoTable.createDate.asc())
+
+        mini_video_entries_count = mini_video_entries.count()
+        message_list.append('<p>Mini Timelapses: {0:d}</p>'.format(mini_video_entries_count))
+
+        app.logger.info('Searching %d mini videos...', mini_video_entries_count)
+        mini_video_notfound_list = list()
+        for m in mini_video_entries:
+            if not m.validateFile():
+                #logger.warning('Entry not found on filesystem: %s', m.filename)
+                mini_video_notfound_list.append(m)
+
+
         ### Keograms
         keogram_entries = IndiAllSkyDbKeogramTable.query\
             .filter(IndiAllSkyDbKeogramTable.s3_key == sa_null())\
@@ -4203,6 +4224,7 @@ class AjaxSystemInfoView(BaseView):
         app.logger.warning('Bad pixel maps not found: %d', len(badpixelmap_notfound_list))
         app.logger.warning('Dark frames not found: %d', len(darkframe_notfound_list))
         app.logger.warning('Videos not found: %d', len(video_notfound_list))
+        app.logger.warning('Mini Videos not found: %d', len(mini_video_notfound_list))
         app.logger.warning('Keograms not found: %d', len(keogram_notfound_list))
         app.logger.warning('Star trails not found: %d', len(startrail_notfound_list))
         app.logger.warning('Star trail timelapses not found: %d', len(startrail_video_notfound_list))
@@ -4237,6 +4259,10 @@ class AjaxSystemInfoView(BaseView):
 
         message_list.append('<p>Removed {0:d} missing video entries</p>'.format(len(video_notfound_list)))
         [db.session.delete(v) for v in video_notfound_list]
+
+
+        message_list.append('<p>Removed {0:d} missing mini video entries</p>'.format(len(mini_video_notfound_list)))
+        [db.session.delete(m) for m in mini_video_notfound_list]
 
 
         message_list.append('<p>Removed {0:d} missing keogram entries</p>'.format(len(keogram_notfound_list)))
