@@ -40,6 +40,7 @@ from . import db
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
 from .models import IndiAllSkyDbVideoTable
+from .models import IndiAllSkyDbMiniVideoTable
 from .models import IndiAllSkyDbKeogramTable
 from .models import IndiAllSkyDbStarTrailsTable
 from .models import IndiAllSkyDbStarTrailsVideoTable
@@ -6182,6 +6183,12 @@ class TimelapseVideoView(TemplateView):
         return context
 
 
+class MiniTimelapseVideoView(TimelapseVideoView):
+    model = IndiAllSkyDbMiniVideoTable
+    title = 'Mini Timelapse'
+    file_view = 'indi_allsky.mini_timelapse_video_view'
+
+
 class StartrailVideoView(TimelapseVideoView):
     model = IndiAllSkyDbStarTrailsVideoTable
     title = 'Startrail Video'
@@ -6727,6 +6734,7 @@ bp_allsky.add_url_rule('/view_keogram', view_func=KeogramImageView.as_view('keog
 bp_allsky.add_url_rule('/view_raw', view_func=RawImageView.as_view('raw_image_view', template_name='view_image.html'))
 
 bp_allsky.add_url_rule('/watch_timelapse', view_func=TimelapseVideoView.as_view('timelapse_video_view', template_name='watch_video.html'))
+bp_allsky.add_url_rule('/watch_mini_timelapse', view_func=MiniTimelapseVideoView.as_view('mini_timelapse_video_view', template_name='watch_video.html'))
 bp_allsky.add_url_rule('/watch_startrail', view_func=StartrailVideoView.as_view('startrail_video_view', template_name='watch_video.html'))
 bp_allsky.add_url_rule('/watch_panorama', view_func=PanoramaVideoView.as_view('panorama_video_view', template_name='watch_video.html'))
 
