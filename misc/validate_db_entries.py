@@ -24,6 +24,7 @@ from indi_allsky.flask.models import IndiAllSkyDbFitsImageTable
 from indi_allsky.flask.models import IndiAllSkyDbBadPixelMapTable
 from indi_allsky.flask.models import IndiAllSkyDbDarkFrameTable
 from indi_allsky.flask.models import IndiAllSkyDbVideoTable
+from indi_allsky.flask.models import IndiAllSkyDbMiniVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbKeogramTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsVideoTable
@@ -141,6 +142,22 @@ class ValidateDatabaseEntries(object):
                 video_notfound_list.append(v)
 
 
+        ### Mini Videos
+        mini_video_entries = IndiAllSkyDbMiniVideoTable.query\
+            .filter(IndiAllSkyDbMiniVideoTable.success == sa_true())\
+            .filter(IndiAllSkyDbMiniVideoTable.s3_key == sa_null())\
+            .order_by(IndiAllSkyDbMiniVideoTable.createDate.asc())
+
+
+        logger.info('Searching %d mini videos...', mini_video_entries.count())
+
+        mini_video_notfound_list = list()
+        for m in mini_video_entries:
+            if not m.validateFile():
+                #logger.warning('Entry not found on filesystem: %s', m.filename)
+                mini_video_notfound_list.append(m)
+
+
         ### Keograms
         keogram_entries = IndiAllSkyDbKeogramTable.query\
             .filter(IndiAllSkyDbKeogramTable.s3_key == sa_null())\
@@ -242,6 +259,7 @@ class ValidateDatabaseEntries(object):
         logger.warning('Bad pixel maps not found: %d', len(badpixelmap_notfound_list))
         logger.warning('Dark frames not found: %d', len(darkframe_notfound_list))
         logger.warning('Videos not found: %d', len(video_notfound_list))
+        logger.warning('Mini Videos not found: %d', len(mini_video_notfound_list))
         logger.warning('Keograms not found: %d', len(keogram_notfound_list))
         logger.warning('Star trails not found: %d', len(startrail_notfound_list))
         logger.warning('Star trail videos not found: %d', len(startrail_video_notfound_list))
@@ -287,6 +305,11 @@ class ValidateDatabaseEntries(object):
         if len(video_notfound_list):
             logger.warning('Removing %d missing video entries', len(video_notfound_list))
             [db.session.delete(v) for v in video_notfound_list]
+
+
+        if len(mini_video_notfound_list):
+            logger.warning('Removing %d missing mini video entries', len(mini_video_notfound_list))
+            [db.session.delete(m) for m in mini_video_notfound_list]
 
 
         if len(keogram_notfound_list):
