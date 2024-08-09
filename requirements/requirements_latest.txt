@@ -1,6 +1,6 @@
 ### This file is targeted to Raspbian/Debian 11 and Python 3.9+
 # https://www.wheelodex.org/projects/astropy/
-astropy
+astropy >= 5.3.3
 # https://www.wheelodex.org/projects/numpy/
 numpy >= 1.22.2, < 2.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
@@ -40,7 +40,7 @@ Flask-WTF >= 1.2.1
 Flask-Login >= 0.6.3
 werkzeug
 is-safe-url
-certifi >= 2023.7.22
+certifi >= 2024.7.4
 # https://www.wheelodex.org/projects/cryptography/
 cryptography >= 42.0.5
 dbus-python
