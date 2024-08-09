@@ -78,6 +78,8 @@ def CAMERA_INTERFACE_validator(form, field):
         'libcamera_imx296_gs',
         'libcamera_imx290',
         'libcamera_imx462',
+        'libcamera_imx327',
+        'libcamera_imx298',
         'pycurl_camera',
     ):
         raise ValidationError('Invalid camera interface')
@@ -2405,19 +2407,21 @@ def INDI_CONFIG_DAY_validator(*args):
 class IndiAllskyConfigForm(FlaskForm):
     CAMERA_INTERFACE_choices = (
         ('indi', 'INDI'),
-        ('indi_passive', 'INDI (Passive)'),
         ('libcamera_imx477', 'libcamera IMX477'),
         ('libcamera_imx378', 'libcamera IMX378'),
-        ('libcamera_ov5647', 'libcamera OV5647'),
-        ('libcamera_imx219', 'libcamera IMX219'),
         ('libcamera_imx519', 'libcamera IMX519'),
-        ('libcamera_64mp_hawkeye', 'libcamera 64mp HawkEye'),
-        ('libcamera_64mp_owlsight', 'libcamera 64mp OwlSight'),
         ('libcamera_imx708', 'libcamera IMX708'),
+        ('libcamera_imx462', 'libcamera IMX462'),
+        ('libcamera_imx327', 'libcamera IMX327'),
         ('libcamera_imx296_gs', 'libcamera IMX296 GS'),
         ('libcamera_imx290', 'libcamera IMX290'),
-        ('libcamera_imx462', 'libcamera IMX462'),
+        ('libcamera_imx298', 'libcamera IMX298'),
+        ('libcamera_imx219', 'libcamera IMX219'),
+        ('libcamera_ov5647', 'libcamera OV5647'),
+        ('libcamera_64mp_hawkeye', 'libcamera 64mp HawkEye'),
+        ('libcamera_64mp_owlsight', 'libcamera 64mp OwlSight'),
         ('pycurl_camera', 'pyCurl Camera'),
+        ('indi_passive', 'INDI (Passive)'),
     )
 
     CCD_BIT_DEPTH_choices = (
