@@ -2826,6 +2826,21 @@
         <div class="col-sm-8">Maximum age of timelapse, keogram, and star trails before deletion</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_OVERWRITE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TIMELAPSE_OVERWRITE(class='form-check-input') }}
+                <div id="TIMELAPSE_OVERWRITE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>If a timelapse already exists for a given time, this setting will overwrite the existing entry instead of stopping</div>
+        </div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -3274,6 +3289,17 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Remote folder to store mini timelapse videos</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.FILETRANSFER__REMOTE_KEOGRAM_FOLDER.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -3401,6 +3427,19 @@
             </div>
         </div>
         <div class="col-sm-8">Enable timelapse video uploads</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_MINI_VIDEO.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_MINI_VIDEO(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_MINI_VIDEO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable mini timelapse video uploads</div>
     </div>
 
     <div class="form-group row">
@@ -3755,6 +3794,21 @@
             <div class="form-switch">
                 {{ form_config.YOUTUBE__UPLOAD_VIDEO(class='form-check-input') }}
                 <div id="YOUTUBE__UPLOAD_VIDEO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.YOUTUBE__UPLOAD_MINI_VIDEO.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.YOUTUBE__UPLOAD_MINI_VIDEO(class='form-check-input') }}
+                <div id="YOUTUBE__UPLOAD_MINI_VIDEO-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">
@@ -5470,6 +5524,7 @@ const field_names = [
     'FILETRANSFER__REMOTE_RAW_FOLDER',
     'FILETRANSFER__REMOTE_FITS_FOLDER',
     'FILETRANSFER__REMOTE_VIDEO_FOLDER',
+    'FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER',
     'FILETRANSFER__REMOTE_KEOGRAM_FOLDER',
     'FILETRANSFER__REMOTE_STARTRAIL_FOLDER',
     'FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER',
@@ -5626,6 +5681,7 @@ const checkbox_field_names = [
     'STARTRAILS_USE_DB_DATA',
     'STARTRAILS_TIMELAPSE',
     'IMAGE_EXIF_PRIVACY',
+    'TIMELAPSE_OVERWRITE',
     'IMAGE_FLIP_V',
     'IMAGE_FLIP_H',
     'IMAGE_CIRCLE_MASK__ENABLE',
@@ -5654,6 +5710,7 @@ const checkbox_field_names = [
     'FILETRANSFER__UPLOAD_RAW',
     'FILETRANSFER__UPLOAD_FITS',
     'FILETRANSFER__UPLOAD_VIDEO',
+    'FILETRANSFER__UPLOAD_MINI_VIDEO',
     'FILETRANSFER__UPLOAD_KEOGRAM',
     'FILETRANSFER__UPLOAD_STARTRAIL',
     'FILETRANSFER__UPLOAD_STARTRAIL_VIDEO',
@@ -5676,6 +5733,7 @@ const checkbox_field_names = [
     'YOUTUBE__ENABLE',
     'YOUTUBE__CREDS_STORED',
     'YOUTUBE__UPLOAD_VIDEO',
+    'YOUTUBE__UPLOAD_MINI_VIDEO',
     'YOUTUBE__UPLOAD_STARTRAIL_VIDEO',
     'YOUTUBE__UPLOAD_PANORAMA_VIDEO',
     'LIBCAMERA__AWB_ENABLE',

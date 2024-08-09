@@ -30,6 +30,7 @@ sys.path.append(str(Path(__file__).parent.absolute().parent))
 from indi_allsky.flask.models import IndiAllSkyDbCameraTable
 from indi_allsky.flask.models import IndiAllSkyDbImageTable
 from indi_allsky.flask.models import IndiAllSkyDbVideoTable
+from indi_allsky.flask.models import IndiAllSkyDbMiniVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbKeogramTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsTable
 from indi_allsky.flask.models import IndiAllSkyDbStarTrailsVideoTable
@@ -258,6 +259,8 @@ class UploadSync(object):
                     self._miscUpload.upload_panorama(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbVideoTable':
                     self._miscUpload.upload_video(entry)
+                elif x['table'].__name__ == 'IndiAllSkyDbMiniVideoTable':
+                    self._miscUpload.upload_mini_video(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
                     self._miscUpload.upload_keogram(entry)
                 elif x['table'].__name__ == 'IndiAllSkyDbStarTrailsTable':
@@ -323,6 +326,8 @@ class UploadSync(object):
                         'createDate'    : entry.createDate.timestamp(),
                         'utc_offset'    : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'       : entry.dayDate.strftime('%Y%m%d'),
+                        'frames'        : entry.frames,
+                        'framerate'     : entry.framerate,
                         'night'         : entry.night,
                         'width'         : entry.width,
                         'height'        : entry.height,
@@ -342,6 +347,37 @@ class UploadSync(object):
 
 
                     self._miscUpload.s3_upload_video(entry, video_metadata)
+                elif x['table'].__name__ == 'IndiAllSkyDbMiniVideoTable':
+                    mini_video_metadata = {
+                        'type'          : constants.MINI_VIDEO,
+                        'createDate'    : entry.createDate.timestamp(),
+                        'utc_offset'    : entry.createDate.astimezone().utcoffset().total_seconds(),
+                        'dayDate'       : entry.dayDate.strftime('%Y%m%d'),
+                        'night'         : entry.night,
+                        'targetDate'    : entry.targetDate.timestamp(),
+                        'startDate'     : entry.startDate.timestamp(),
+                        'endDate'       : entry.endDate.timestamp(),
+                        'frames'        : entry.frames,
+                        'framerate'     : entry.framerate,
+                        'note'          : entry.note,
+                        'width'         : entry.width,
+                        'height'        : entry.height,
+                        'remote_url'    : entry.remote_url,
+                        'camera_uuid'   : entry.camera.uuid,
+                    }
+
+                    if entry.data:
+                        mini_video_metadata['data'] = dict(entry.data)
+                    else:
+                        mini_video_metadata['data'] = dict()
+
+
+                    # check for thumbnail upload for S3
+                    #if entry.thumbnail_uuid:
+                    #    self.addThumbnailS3(entry, mini_video_metadata)
+
+
+                    self._miscUpload.s3_upload_mini_video(entry, mini_video_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
                     keogram_metadata = {
                         'type'       : constants.KEOGRAM,
@@ -399,6 +435,8 @@ class UploadSync(object):
                         'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
+                        'frames'     : entry.frames,
+                        'framerate'  : entry.framerate,
                         'width'      : entry.width,
                         'height'     : entry.height,
                         'remote_url' : entry.remote_url,
@@ -499,6 +537,8 @@ class UploadSync(object):
                         'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
+                        'frames'     : entry.frames,
+                        'framerate'  : entry.framerate,
                         'width'      : entry.width,
                         'height'     : entry.height,
                         'remote_url' : entry.remote_url,
@@ -603,6 +643,8 @@ class UploadSync(object):
                         'utc_offset'    : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'       : entry.dayDate.strftime('%Y%m%d'),
                         'night'         : entry.night,
+                        'frames'        : entry.frames,
+                        'framerate'     : entry.framerate,
                         'width'         : entry.width,
                         'height'        : entry.height,
                         's3_key'        : entry.s3_key,
@@ -622,6 +664,38 @@ class UploadSync(object):
 
 
                     self._miscUpload.syncapi_video(entry, video_metadata)
+                elif x['table'].__name__ == 'IndiAllSkyDbMiniVideoTable':
+                    mini_video_metadata = {
+                        'type'          : constants.MINI_VIDEO,
+                        'createDate'    : entry.createDate.timestamp(),
+                        'utc_offset'    : entry.createDate.astimezone().utcoffset().total_seconds(),
+                        'dayDate'       : entry.dayDate.strftime('%Y%m%d'),
+                        'night'         : entry.night,
+                        'targetDate'    : entry.targetDate.timestamp(),
+                        'startDate'     : entry.startDate.timestamp(),
+                        'endDate'       : entry.endDate.timestamp(),
+                        'frames'        : entry.frames,
+                        'framerate'     : entry.framerate,
+                        'note'          : entry.note,
+                        'width'         : entry.width,
+                        'height'        : entry.height,
+                        's3_key'        : entry.s3_key,
+                        'remote_url'    : entry.remote_url,
+                        'camera_uuid'   : entry.camera.uuid,
+                    }
+
+                    if entry.data:
+                        mini_video_metadata['data'] = dict(entry.data)
+                    else:
+                        mini_video_metadata['data'] = dict()
+
+
+                    # check for thumbnail upload for syncapi
+                    if entry.thumbnail_uuid:
+                        self.addThumbnailSyncapi(entry, mini_video_metadata)
+
+
+                    self._miscUpload.syncapi_mini_video(entry, mini_video_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbKeogramTable':
                     keogram_metadata = {
                         'type'       : constants.KEOGRAM,
@@ -681,6 +755,8 @@ class UploadSync(object):
                         'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
+                        'frames'     : entry.frames,
+                        'framerate'  : entry.framerate,
                         'width'      : entry.width,
                         'height'     : entry.height,
                         's3_key'     : entry.s3_key,
@@ -707,6 +783,8 @@ class UploadSync(object):
                         'utc_offset' : entry.createDate.astimezone().utcoffset().total_seconds(),
                         'dayDate'    : entry.dayDate.strftime('%Y%m%d'),
                         'night'      : entry.night,
+                        'frames'     : entry.frames,
+                        'framerate'  : entry.framerate,
                         'width'      : entry.width,
                         'height'     : entry.height,
                         's3_key'     : entry.s3_key,
@@ -839,6 +917,7 @@ class UploadSync(object):
         # syncapi (before S3)
         syncapi_table_list = [
             IndiAllSkyDbVideoTable,
+            IndiAllSkyDbMiniVideoTable,
             IndiAllSkyDbKeogramTable,
             IndiAllSkyDbStarTrailsTable,
             IndiAllSkyDbStarTrailsVideoTable,
@@ -886,6 +965,7 @@ class UploadSync(object):
         # s3
         s3_table_list = [
             IndiAllSkyDbVideoTable,
+            IndiAllSkyDbMiniVideoTable,
             IndiAllSkyDbKeogramTable,
             IndiAllSkyDbStarTrailsTable,
             IndiAllSkyDbStarTrailsVideoTable,
@@ -926,7 +1006,8 @@ class UploadSync(object):
 
         # upload
         upload_table_list = [
-            [IndiAllSkyDbVideoTable, 'UPLOAD_VIDEO'],
+            [IndiAllSkyDbVideoTable, 'UPLOAD_VIDEO'],  # second parameter is config variables for enabling transfers
+            [IndiAllSkyDbMiniVideoTable, 'UPLOAD_MINI_VIDEO'],
             [IndiAllSkyDbKeogramTable, 'UPLOAD_KEOGRAM'],
             [IndiAllSkyDbStarTrailsTable, 'UPLOAD_STARTRAIL'],
             [IndiAllSkyDbStarTrailsVideoTable, 'UPLOAD_VIDEO'],

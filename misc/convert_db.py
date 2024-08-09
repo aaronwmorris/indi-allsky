@@ -70,6 +70,7 @@ class ConvertDb(object):
         self.migrate_table(src_IndiAllSkyDbDarkFrameTable, dst_IndiAllSkyDbDarkFrameTable)
         self.migrate_table(src_IndiAllSkyDbBadPixelMapTable, dst_IndiAllSkyDbBadPixelMapTable)
         self.migrate_table(src_IndiAllSkyDbVideoTable, dst_IndiAllSkyDbVideoTable)
+        self.migrate_table(src_IndiAllSkyDbMiniVideoTable, dst_IndiAllSkyDbMiniVideoTable)
         self.migrate_table(src_IndiAllSkyDbKeogramTable, dst_IndiAllSkyDbKeogramTable)
         self.migrate_table(src_IndiAllSkyDbStarTrailsTable, dst_IndiAllSkyDbStarTrailsTable)
         self.migrate_table(src_IndiAllSkyDbStarTrailsVideoTable, dst_IndiAllSkyDbStarTrailsVideoTable)
@@ -154,6 +155,10 @@ class src_IndiAllSkyDbVideoTable(SrcBase):
     __table__ = Table('video', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
+class src_IndiAllSkyDbMiniVideoTable(SrcBase):
+    __table__ = Table('minivideo', SRC_METADATA, autoload_with=SRC_ENGINE)
+
+
 class src_IndiAllSkyDbKeogramTable(SrcBase):
     __table__ = Table('keogram', SRC_METADATA, autoload_with=SRC_ENGINE)
 
@@ -219,6 +224,10 @@ class dst_IndiAllSkyDbBadPixelMapTable(DstBase):
 
 class dst_IndiAllSkyDbVideoTable(DstBase):
     __table__ = Table('video', DST_METADATA, autoload_with=DST_ENGINE)
+
+
+class dst_IndiAllSkyDbMiniVideoTable(DstBase):
+    __table__ = Table('minivideo', DST_METADATA, autoload_with=DST_ENGINE)
 
 
 class dst_IndiAllSkyDbKeogramTable(DstBase):

@@ -1,6 +1,6 @@
 ### This file is targeted to Raspbian/Debian 11 and Python 3.9 (armv7l)
 # https://www.piwheels.org/project/astropy/
-astropy
+astropy >= 5.3.3
 # https://www.piwheels.org/project/numpy/
 numpy >= 1.22.2, < 2.0
 # https://www.piwheels.org/project/opencv-python-headless/
@@ -40,7 +40,7 @@ Flask-WTF >= 1.2.1
 Flask-Login >= 0.6.3
 werkzeug
 is-safe-url
-certifi >= 2023.7.22
+certifi >= 2024.7.4
 # https://www.piwheels.org/project/cryptography/
 # 40.0.1 vulnerable https://security.snyk.io/package/pip/cryptography
 cryptography == 40.0.1
