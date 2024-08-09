@@ -2927,6 +2927,11 @@ class AjaxVideoViewerView(BaseView):
             month = json_data['MONTH_SELECT'][0][0]
 
             json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday)
+        else:
+            # No entries in DB
+            json_data['MONTH_SELECT'] = (('', 'None'),)
+            json_data['video_list'] = tuple()
+
 
         return jsonify(json_data)
 
@@ -3009,6 +3014,10 @@ class AjaxMiniVideoViewerView(BaseView):
             month = json_data['MONTH_SELECT'][0][0]
 
             json_data['video_list'] = form_mini_video_viewer.getVideos(year, month)
+        else:
+            # No entries in DB
+            json_data['MONTH_SELECT'] = (('', 'None'),)
+            json_data['video_list'] = tuple()
 
         return jsonify(json_data)
 
