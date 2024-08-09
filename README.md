@@ -69,6 +69,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
         * IMX378
         * Camera Module v3 (imx708)
         * IMX519
+        * IMX462
+        * IMX327
         * 64mp HawkEye (IMX682)
         * 64mp OwlSight (OV64A40)
         * other libcamera supported modules
@@ -513,7 +515,7 @@ The hardware below has at least been plugged in and tested for correct detection
 | Raspberry Pi      | CM3 imx708 (libcamera)        | A | Minimum 1GB of memory is needed to process RAW images with dark calibration frames |
 | Raspberry Pi      | HQ Camera (indi_pylibcamera)  | A | https://github.com/scriptorron/indi_pylibcamera |
 | Waveshare         | imx378 (libcamera)            | A | |
-| Waveshare         | imx462 (libcamera)            | A | |
+| ArduCam           | imx462 (libcamera)            | A | |
 | ArduCam           | 64MP HawkEye                  | A | Recommend at least 4GB of RAM for full resolution 9152x6944.  [Options](https://github.com/aaronwmorris/indi-allsky/wiki/libcamera-enablement) available to reduce image size. |
 | Canon    | 550D (Rebel T2i)    | A      | Camera resolution and pixel size have to be manually defined in config |
 | Canon    | 1300D (Rebel T6)    | A      | Camera resolution and pixel size have to be manually defined in config |
