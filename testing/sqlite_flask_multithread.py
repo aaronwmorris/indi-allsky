@@ -72,6 +72,7 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         "echo"      : False,
+        #"pool_size" : 100,
         #"poolclass" : NullPool,
     }
 
