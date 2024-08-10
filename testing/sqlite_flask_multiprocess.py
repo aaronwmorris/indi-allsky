@@ -161,8 +161,8 @@ class ReaderWorker(BaseWorker):
 
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
 
-        with app.app_context():
-            while True:
+        while True:
+            with app.app_context():
                 #random_sleep = random.randrange(100, 300, 10) / 1000
                 #time.sleep(random_sleep)
                 #time.sleep(0.001)
@@ -197,8 +197,8 @@ class WriterWorker(BaseWorker):
 
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
 
-        with app.app_context():
-            while True:
+        while True:
+            with app.app_context():
                 #random_sleep = random.randrange(100, 300, 10) / 1000
                 #time.sleep(random_sleep)
                 #time.sleep(0.001)
