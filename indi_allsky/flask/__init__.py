@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from logging.config import dictConfig
 
+#from sqlalchemy.pool import NullPool
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -86,6 +87,10 @@ def create_app():
 
     flask_config = os.environ.get('INDI_ALLSKY_FLASK_CONFIG', '/etc/indi-allsky/flask.json')
     app.config.from_file(flask_config, load=json.load)
+
+    #app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    #    "poolclass" : NullPool,  # disable connection pooling
+    #}
 
     csrf.init_app(app)
 

@@ -72,6 +72,7 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         "echo"      : False,
+        #"pool_size" : 100,
         #"poolclass" : NullPool,
     }
 
@@ -161,8 +162,8 @@ class ReaderWorker(BaseWorker):
 
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
 
-        with app.app_context():
-            while True:
+        while True:
+            with app.app_context():
                 #random_sleep = random.randrange(100, 300, 10) / 1000
                 #time.sleep(random_sleep)
                 #time.sleep(0.001)
@@ -197,8 +198,8 @@ class WriterWorker(BaseWorker):
 
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
 
-        with app.app_context():
-            while True:
+        while True:
+            with app.app_context():
                 #random_sleep = random.randrange(100, 300, 10) / 1000
                 #time.sleep(random_sleep)
                 #time.sleep(0.001)

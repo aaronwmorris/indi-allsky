@@ -72,6 +72,7 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         "echo"      : False,
+        #"pool_size" : 100,
         #"poolclass" : NullPool,
     }
 
@@ -169,8 +170,8 @@ class ReaderWorker(BaseWorker):
     def run(self):
         logger.warning('Starting')
 
-        with app.app_context():
-            while not self.stopped():
+        while not self.stopped():
+            with app.app_context():
                 #random_sleep = random.randrange(100, 300, 10) / 1000
                 #time.sleep(random_sleep)
                 #time.sleep(0.001)
@@ -203,8 +204,8 @@ class WriterWorker(BaseWorker):
     def run(self):
         logger.warning('Starting')
 
-        with app.app_context():
-            while not self.stopped():
+        while not self.stopped():
+            with app.app_context():
                 #random_sleep = random.randrange(100, 300, 10) / 1000
                 #time.sleep(random_sleep)
                 #time.sleep(0.001)

@@ -3,7 +3,8 @@
 
     "SQLALCHEMY_TRACK_MODIFICATIONS" : false,
     "SQLALCHEMY_ENGINE_OPTIONS" : {
-        "echo" : false
+        "echo" : false,
+        "pool_size" : 25
     },
 
     "SESSION_COOKIE_SECURE_comment" : "True will prevent using http-only mode",
