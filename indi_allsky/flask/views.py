@@ -1524,6 +1524,7 @@ class ConfigView(FormView):
             'PYCURL_CAMERA__IMAGE_FILE_TYPE' : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('IMAGE_FILE_TYPE', 'jpg'),
             'PYCURL_CAMERA__USERNAME'        : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('USERNAME', ''),
             'PYCURL_CAMERA__PASSWORD'        : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('PASSWORD', ''),
+            'ACCUM_CAMERA__SUB_EXPOSURE_MAX' : self.indi_allsky_config.get('ACCUM_CAMERA', {}).get('SUB_EXPOSURE_MAX', 1.0),
             'FOCUSER__CLASSNAME'             : self.indi_allsky_config.get('FOCUSER', {}).get('CLASSNAME', ''),
             'FOCUSER__GPIO_PIN_1'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_1', 'D17'),
             'FOCUSER__GPIO_PIN_2'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_2', 'D18'),
@@ -1905,6 +1906,9 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('PYCURL_CAMERA'):
             self.indi_allsky_config['PYCURL_CAMERA'] = {}
 
+        if not self.indi_allsky_config.get('ACCUM_CAMERA'):
+            self.indi_allsky_config['ACCUM_CAMERA'] = {}
+
         if not self.indi_allsky_config.get('FOCUSER'):
             self.indi_allsky_config['FOCUSER'] = {}
 
@@ -2236,6 +2240,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['PYCURL_CAMERA']['IMAGE_FILE_TYPE']     = str(request.json['PYCURL_CAMERA__IMAGE_FILE_TYPE'])
         self.indi_allsky_config['PYCURL_CAMERA']['USERNAME']            = str(request.json['PYCURL_CAMERA__USERNAME'])
         self.indi_allsky_config['PYCURL_CAMERA']['PASSWORD']            = str(request.json['PYCURL_CAMERA__PASSWORD'])
+        self.indi_allsky_config['ACCUM_CAMERA']['SUB_EXPOSURE_MAX']     = float(request.json['ACCUM_CAMERA__SUB_EXPOSURE_MAX'])
         self.indi_allsky_config['FOCUSER']['CLASSNAME']                 = str(request.json['FOCUSER__CLASSNAME'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_1']                = str(request.json['FOCUSER__GPIO_PIN_1'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_2']                = str(request.json['FOCUSER__GPIO_PIN_2'])

@@ -23,7 +23,8 @@ class IndiClientIndiAccumulator(IndiClient):
     def __init__(self, *args, **kwargs):
         super(IndiClientIndiAccumulator, self).__init__(*args, **kwargs)
 
-        self.max_sub_exposure = 1.0
+        self._max_sub_exposure = self.config.get('ACCUM_CAMERA', {}).get('SUB_EXPOSURE_MAX', 1.0)
+
         self.exposure_remain = 0.0
         self.sub_exposure_count = 0
 
@@ -32,6 +33,11 @@ class IndiClientIndiAccumulator(IndiClient):
 
         self.data = None
         self.header = None
+
+
+    @property
+    def max_sub_exposure(self):
+        return self._max_sub_exposure
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):

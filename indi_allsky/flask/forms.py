@@ -1606,6 +1606,17 @@ def PYCURL_CAMERA__PASSWORD_validator(form, field):
     pass
 
 
+def ACCUM_CAMERA__SUB_EXPOSURE_MAX_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 1.0:
+        raise ValidationError('Sub-Exposure must be 1.0 or more')
+
+    if field.data > 60.0:
+        raise ValidationError('Sub-Exposure must be 60.0 or less')
+
+
 def FILETRANSFER__TIMEOUT_validator(form, field):
     if field.data < 1:
         raise ValidationError('Timeout must be 1.0 or greater')
@@ -3156,6 +3167,7 @@ class IndiAllskyConfigForm(FlaskForm):
     PYCURL_CAMERA__IMAGE_FILE_TYPE   = SelectField('File Type', choices=PYCURL_CAMERA__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), PYCURL_CAMERA__IMAGE_FILE_TYPE_validator])
     PYCURL_CAMERA__USERNAME          = StringField('Username', validators=[PYCURL_CAMERA__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
     PYCURL_CAMERA__PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[PYCURL_CAMERA__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
+    ACCUM_CAMERA__SUB_EXPOSURE_MAX   = FloatField('Accumulator Max Sub-exposure', validators=[DataRequired(), ACCUM_CAMERA__SUB_EXPOSURE_MAX_validator])
     FOCUSER__CLASSNAME               = SelectField('Focuser', choices=FOCUSER__CLASSNAME_choices, validators=[FOCUSER__CLASSNAME_validator])
     FOCUSER__GPIO_PIN_1              = StringField('GPIO Pin 1', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_2              = StringField('GPIO Pin 2', validators=[DEVICE_PIN_NAME_validator])
