@@ -18,10 +18,10 @@ logger = logging.getLogger('indi_allsky')
 
 
 
-class IndiClientIndiStacker(IndiClient):
+class IndiClientIndiAccumulator(IndiClient):
 
     def __init__(self, *args, **kwargs):
-        super(IndiClientIndiStacker, self).__init__(*args, **kwargs)
+        super(IndiClientIndiAccumulator, self).__init__(*args, **kwargs)
 
         self.max_sub_exposure = 1.0
         self.exposure_remain = 0.0
