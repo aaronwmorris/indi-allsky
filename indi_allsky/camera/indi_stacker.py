@@ -1,5 +1,6 @@
 import time
 import io
+import math
 from datetime import datetime
 from pathlib import Path
 import tempfile
@@ -36,7 +37,7 @@ class IndiClientIndiStacker(IndiClient):
         if not timeout:
             timeout = self.timeout
 
-        exp_count = int(exposure / self.max_sub_exposure) + 1
+        exp_count = math.ceil(exposure / self.max_sub_exposure)
         logger.info('Taking %d sub-exposures for stacking', exp_count)
 
         self.data = None
@@ -54,16 +55,15 @@ class IndiClientIndiStacker(IndiClient):
 
     def _startNextExposure(self):
         if self.exposure_remain < self.max_sub_exposure:
-            # last exposure
+            logger.info('1 sub-exposures remain (%0.6f)', self.exposure_remain)
             sub_exposure = self.exposure_remain
             self.exposure_remain = 0.0
-            logger.info('Taking last sub-exposure')
         else:
+            exp_count = math.ceil(self.exposure_remain / self.max_sub_exposure)
+            logger.info('%d sub-exposures remain (%0.6f)', exp_count, self.exposure_remain)
+
             sub_exposure = self.max_sub_exposure
             self.exposure_remain -= sub_exposure
-
-            exp_count = int(self.max_sub_exposure / self.exposure_remain) + 1
-            logger.info('%d sub-exposures remain', exp_count)
 
 
         self.set_number(self.ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': sub_exposure}, sync=False, timeout=self.timeout)
