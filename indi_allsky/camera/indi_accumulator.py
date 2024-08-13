@@ -35,6 +35,8 @@ class IndiClientIndiAccumulator(IndiClient):
         self.data = None
         self.header = None
 
+        self.ccd_min_exp = None  # updated in getCcdInfo()
+
 
     @property
     def max_sub_exposure(self):
@@ -72,7 +74,11 @@ class IndiClientIndiAccumulator(IndiClient):
 
 
     def _startNextExposure(self):
-        if self.exposure_remain < self.max_sub_exposure:
+        if self.exposure_remain < self.ccd_min_exp:
+            logger.warning('Last sub-exposure is below the minimum exposure (%0.6fs), increasing to minimum', self.exposure_remain)
+            sub_exposure = self.ccd_min_exp + 0.00000001  # offset to deal with conversion issues
+            self.exposure_remain = 0.0
+        elif self.exposure_remain < self.max_sub_exposure:
             logger.info('1 sub-exposures remain (%0.6fs)', self.exposure_remain)
             sub_exposure = self.exposure_remain
             self.exposure_remain = 0.0
@@ -219,6 +225,9 @@ class IndiClientIndiAccumulator(IndiClient):
         # if the camera has a low max exposure, return a higher value for the accumulator
         if ccd_max_exp < 600:
             ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max'] = 600.0
+
+        # store for internal use
+        self.ccd_min_exp = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min'])
 
         return ccd_info
 
