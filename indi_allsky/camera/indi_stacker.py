@@ -117,6 +117,8 @@ class IndiClientIndiStacker(IndiClient):
         hdu = fits.PrimaryHDU(self.data)
         hdulist = fits.HDUList([hdu])
 
+        hdu.scale('float32')
+
         # repopulate headers
         for k, v in self.header.items():
             if k in ('BITPIX', 'BZERO', 'BSCALE'):
@@ -124,8 +126,9 @@ class IndiClientIndiStacker(IndiClient):
 
             hdulist[0].header[k] = v
 
-        hdulist[0].header['BITPIX'] = -32
+        #hdulist[0].header['BITPIX'] = -32  # automatically populated
         hdulist[0].header['SUBCOUNT'] = self.sub_exposure_count
+
 
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
