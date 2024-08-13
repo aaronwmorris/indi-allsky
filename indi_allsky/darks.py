@@ -1202,6 +1202,8 @@ class IndiAllSkyDarksProcessor(object):
             numpy_type = numpy.uint8
         elif image_bitpix == -32:
             numpy_type = numpy.float32
+        elif image_bitpix == 32:
+            numpy_type = numpy.uint32
         else:
             raise Exception('Unknown bits per pixel')
 
@@ -1218,8 +1220,8 @@ class IndiAllSkyDarksProcessor(object):
 
         bpm = numpy.zeros(image_data[0].shape, dtype=numpy_type)
 
-        if numpy_type == numpy.float32:
-            # no BPM for float32 data
+        if numpy_type in (numpy.float32, numpy.uint32):
+            # no BPM for float32 or uint32 data
             hdulist[0].data = bpm
             hdulist.writeto(filename_p)
             return 0.0
@@ -1267,6 +1269,8 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
             numpy_type = numpy.uint8
         elif image_bitpix == -32:
             numpy_type = numpy.float32
+        elif image_bitpix == 32:
+            numpy_type = numpy.uint32
         else:
             raise Exception('Unknown bits per pixel')
 
@@ -1312,6 +1316,8 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
             numpy_type = numpy.uint8
         elif image_bitpix == -32:
             numpy_type = numpy.float32
+        elif image_bitpix == 32:
+            numpy_type = numpy.uint32
         else:
             raise Exception('Unknown bits per pixel')
 

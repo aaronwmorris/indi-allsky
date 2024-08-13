@@ -134,7 +134,7 @@ class IndiClientIndiAccumulator(IndiClient):
         hdu = fits.PrimaryHDU(self.data)
         hdulist = fits.HDUList([hdu])
 
-        hdu.scale('float32')
+        hdu.update_header()
         #logger.info('Headers: %s', pformat(hdulist[0].header))
 
         # repopulate headers
@@ -144,7 +144,7 @@ class IndiClientIndiAccumulator(IndiClient):
 
             hdulist[0].header[k] = v
 
-        #hdulist[0].header['BITPIX'] = -32  # automatically populated
+        #hdulist[0].header['BITPIX'] = X  # automatically populated by hdu.update_header()
         hdulist[0].header['EXPTIME'] = self.exposure
         hdulist[0].header['SUBCOUNT'] = self.sub_exposure_count
 
@@ -199,7 +199,8 @@ class IndiClientIndiAccumulator(IndiClient):
 
 
         if isinstance(self.data, type(None)):
-            self.data = hdulist[0].data.astype(numpy.float32)
+            #self.data = hdulist[0].data.astype(numpy.float32)
+            self.data = hdulist[0].data.astype(numpy.uint32)
 
             # copy headers for later
             self.header = copy.copy(hdulist[0].header)

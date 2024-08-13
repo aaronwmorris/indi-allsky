@@ -604,14 +604,25 @@ class ImageProcessor(object):
 
         if image_bitpix in (8, 16):
             pass
-        elif image_bitpix in (-32, ):
-            logger.info('Scaling float data to uint16')
+        elif image_bitpix == -32:  # float32
+            logger.info('Scaling float32 data to uint16')
 
             ### cutoff lower range
             data[data < 0] = 0.0
 
             ### cutoff upper range
             data[data > 65535] = 65535.0
+
+            ### cast to uint16 for pretty pictures
+            data = data.astype(numpy.uint16)
+            i_ref['hdulist'][0].data = data
+
+            i_ref['image_bitpix'] = 16
+        elif image_bitpix == 32:  # uint32
+            logger.info('Scaling uint32 data to uint16')
+
+            ### cutoff upper range
+            data[data > 65535] = 65535
 
             ### cast to uint16 for pretty pictures
             data = data.astype(numpy.uint16)
@@ -865,11 +876,20 @@ class ImageProcessor(object):
 
 
         if data.dtype.type == numpy.float32:
-            # cv2 does not support this type
+            ### cv2 does not support float32
             data_calibrated = numpy.subtract(data, master_dark)
 
             # cutoff values less than 0
             data_calibrated[data_calibrated < 0] = 0
+        elif data.dtype.type == numpy.uint32:
+            ### cv2 does not support uint32
+            # cast to float so we can deal with negative numbers
+            data_calibrated = numpy.subtract(data.astype(numpy.float32), master_dark)
+
+            # cutoff values less than 0
+            data_calibrated[data_calibrated < 0] = 0
+
+            data_calibrated = data_calibrated.astype(numpy.uint32)
         else:
             data_calibrated = cv2.subtract(data, master_dark)
 
