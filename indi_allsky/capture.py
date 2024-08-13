@@ -581,7 +581,7 @@ class CaptureWorker(Process):
 
 
         # give devices a chance to register
-        time.sleep(8)
+        time.sleep(5)
 
         try:
             self.indiclient.findCcd(camera_name=self.config.get('INDI_CAMERA_NAME'))
