@@ -362,6 +362,9 @@ class ImageWorker(Process):
                 self.write_fit(i_ref, camera)
 
 
+        self.image_processor.fits2opencv()
+
+
         self.image_processor.calculateSqm()
 
         self.image_processor.stack()

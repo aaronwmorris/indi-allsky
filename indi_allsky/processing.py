@@ -590,10 +590,42 @@ class ImageProcessor(object):
         return image_data
 
 
-    def fits2opencv(self, data):
+    def fits2opencv(self):
+        i_ref = self.getLatestImage()
+
+        data = self._fits2opencv(i_ref)
+
+        i_ref['opencv_data'] = data
+
+
+    def _fits2opencv(self, i_ref):
+        data = i_ref['hdulist'][0].data
+        image_bitpix = i_ref['image_bitpix']
+
+        if image_bitpix in (8, 16):
+            pass
+        elif image_bitpix in (-32, ):
+            logger.info('Scaling float data to uint16')
+
+            # cutoff lower range
+            data[data < 0] = 0
+
+            # cutoff upper range
+            data[data > 65535] = 65535
+
+            # cast to uint16
+            data = data.astype(numpy.uint16)
+            i_ref['hdulist'][0].data = data
+
+            i_ref['image_bitpix'] = 16
+        else:
+            raise Exception('Unsupported bit format: {0:d}'.format(image_bitpix))
+
+
         if len(data.shape) == 2:
             # mono data does not need to be converted
             return data
+
 
         data = numpy.swapaxes(data, 0, 2)
         data = numpy.swapaxes(data, 0, 1)
@@ -664,13 +696,11 @@ class ImageProcessor(object):
 
         if not self.config.get('IMAGE_CALIBRATE_DARK', True):
             logger.warning('Dark frame calibration disabled')
-            i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
             return
 
 
         if i_ref['calibrated']:
             # already calibrated
-            i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
             return
 
 
@@ -692,10 +722,6 @@ class ImageProcessor(object):
                     #i_ref['hdulist'][0].data -= (black_level_scaled - 15)  # offset slightly
 
                     i_ref['calibrated'] = True
-
-
-        # always convert fits to opencv compatible data
-        i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
 
 
     def _apply_calibration(self, data, exposure, camera_id, image_bitpix):
