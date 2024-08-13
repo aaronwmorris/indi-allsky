@@ -1310,6 +1310,8 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
             numpy_type = numpy.uint16
         elif image_bitpix == 8:
             numpy_type = numpy.uint8
+        elif image_bitpix == -32:
+            numpy_type = numpy.float32
         else:
             raise Exception('Unknown bits per pixel')
 

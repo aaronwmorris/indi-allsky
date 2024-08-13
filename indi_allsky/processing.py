@@ -607,13 +607,13 @@ class ImageProcessor(object):
         elif image_bitpix in (-32, ):
             logger.info('Scaling float data to uint16')
 
-            # cutoff lower range
-            data[data < 0] = 0
+            ### cutoff lower range
+            data[data < 0] = 0.0
 
-            # cutoff upper range
-            data[data > 65535] = 65535
+            ### cutoff upper range
+            data[data > 65535] = 65535.0
 
-            # cast to uint16
+            ### cast to uint16 for pretty pictures
             data = data.astype(numpy.uint16)
             i_ref['hdulist'][0].data = data
 
