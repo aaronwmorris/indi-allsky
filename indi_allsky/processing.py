@@ -688,8 +688,13 @@ class ImageProcessor(object):
                     black_level_scaled = int(libcamera_black_level) >> (16 - self.max_bit_depth)
 
                     # use opencv to prevent underruns
-                    i_ref['hdulist'][0].data = cv2.subtract(i_ref['hdulist'][0].data, black_level_scaled)
+                    #i_ref['hdulist'][0].data = cv2.subtract(i_ref['hdulist'][0].data, black_level_scaled)
                     #i_ref['hdulist'][0].data -= (black_level_scaled - 15)  # offset slightly
+
+                    i_ref['hdulist'][0].data = numpy.subtract(i_ref['hdulist'][0].data, black_level_scaled)
+
+                    # cutoff values below 0
+                    i_ref['hdulist'][0].data[i_ref['hdulist'][0].data < 0] = 0
 
                     i_ref['calibrated'] = True
 
@@ -838,7 +843,11 @@ class ImageProcessor(object):
             raise CalibrationNotFound('Dark frame calibration dimension mismatch')
 
 
-        data_calibrated = cv2.subtract(data, master_dark)
+        #data_calibrated = cv2.subtract(data, master_dark)
+        data_calibrated = numpy.subtract(data, master_dark)
+
+        # cutoff values less than 0
+        data_calibrated[data_calibrated < 0] = 0
 
         return data_calibrated
 
