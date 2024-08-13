@@ -5,6 +5,7 @@ import math
 from datetime import datetime
 from pathlib import Path
 import tempfile
+from pprint import pformat  # noqa: F401
 import logging
 
 import PyIndi
@@ -134,10 +135,11 @@ class IndiClientIndiAccumulator(IndiClient):
         hdulist = fits.HDUList([hdu])
 
         hdu.scale('float32')
+        #logger.info('Headers: %s', pformat(hdulist[0].header))
 
         # repopulate headers
         for k, v in self.header.items():
-            if k in ('BITPIX', 'BZERO', 'BSCALE', 'EXPTIME'):
+            if k in ('BITPIX', 'BZERO', 'BSCALE', 'EXPTIME', 'NAXIS', 'NAXIS1', 'NAXIS2', 'EXTEND'):
                 continue
 
             hdulist[0].header[k] = v
