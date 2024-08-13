@@ -121,12 +121,13 @@ class IndiClientIndiStacker(IndiClient):
 
         # repopulate headers
         for k, v in self.header.items():
-            if k in ('BITPIX', 'BZERO', 'BSCALE'):
+            if k in ('BITPIX', 'BZERO', 'BSCALE', 'EXPTIME'):
                 continue
 
             hdulist[0].header[k] = v
 
         #hdulist[0].header['BITPIX'] = -32  # automatically populated
+        hdulist[0].header['EXPTIME'] = self.exposure
         hdulist[0].header['SUBCOUNT'] = self.sub_exposure_count
 
 
