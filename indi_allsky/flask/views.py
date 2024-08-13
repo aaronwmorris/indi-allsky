@@ -5311,10 +5311,10 @@ class JsonImageProcessingView(JsonView):
         if disable_processing:
             # just return original image with no processing
 
-            i_ref = image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
+            image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
 
 
-            i_ref['opencv_data'] = image_processor.fits2opencv(i_ref['hdulist'][0].data)  # performs what calibrate() would do
+            image_processor.fits2opencv()
 
 
             image_processor.stack()  # this populates self.image
@@ -5370,6 +5370,8 @@ class JsonImageProcessingView(JsonView):
             image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
 
             image_processor.calibrate()  # sets opencv_data
+
+            image_processor.fits2opencv()
 
             image_processor.stack()  # this populates self.image
 
