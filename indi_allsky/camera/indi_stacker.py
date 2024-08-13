@@ -54,6 +54,16 @@ class IndiClientIndiStacker(IndiClient):
         self._startNextExposure()
 
 
+        if sync:
+            while True:
+                camera_ready, exposure_state = self.getCcdExposureStatus()
+
+                if camera_ready:
+                    break
+
+                time.sleep(0.1)
+
+
     def _startNextExposure(self):
         if self.exposure_remain < self.max_sub_exposure:
             logger.info('1 sub-exposures remain (%0.6f)', self.exposure_remain)
