@@ -681,9 +681,6 @@ class IndiAllSkyDarks(object):
 
     def _run(self, stacking_class):
 
-        ccd_bits = int(self.ccd_info['CCD_INFO']['CCD_BITSPERPIXEL']['current'])
-
-
         # exposures start with 1 and then every 5s until the max exposure
         dark_exposures = [1]
         dark_exposures.extend(
@@ -756,10 +753,8 @@ class IndiAllSkyDarks(object):
                 libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'dng')
                 if libcamera_image_type == 'dng':
                     self.indiclient.libcamera_bit_depth = 16
-                    ccd_bits = 16
                 else:
                     self.indiclient.libcamera_bit_depth = 8
-                    ccd_bits = 8
 
 
             # update CCD config
@@ -788,7 +783,7 @@ class IndiAllSkyDarks(object):
                     remaining_exposures = dark_exposures[index + 1:]
 
                     start = time.time()
-                    self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
+                    self._take_exposures(exposure, dark_filename_t, bpm_filename_t, stacking_class)
                     elapsed_s = time.time()
                     exposure_time = elapsed_s - start
 
@@ -828,10 +823,8 @@ class IndiAllSkyDarks(object):
             libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
             if libcamera_image_type == 'dng':
                 self.indiclient.libcamera_bit_depth = 16
-                ccd_bits = 16
             else:
                 self.indiclient.libcamera_bit_depth = 8
-                ccd_bits = 8
 
 
         # update CCD config
@@ -863,7 +856,7 @@ class IndiAllSkyDarks(object):
                 remaining_exposures = dark_exposures[index + 1:]
 
                 start = time.time()
-                self._take_exposures(exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class)
+                self._take_exposures(exposure, dark_filename_t, bpm_filename_t, stacking_class)
                 elapsed_s = time.time()
                 exposure_time = elapsed_s - start
 
@@ -877,7 +870,7 @@ class IndiAllSkyDarks(object):
             remaining_configs -= 1
 
 
-    def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, ccd_bits, stacking_class):
+    def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, stacking_class):
         exposure_f = float(exposure)
 
         tmp_fit_dir = tempfile.TemporaryDirectory()    # context manager automatically deletes files when finished
@@ -947,7 +940,7 @@ class IndiAllSkyDarks(object):
         date_str = exp_date.strftime('%Y%m%d_%H%M%S')
         dark_filename = dark_filename_t.format(
             self.camera_id,
-            ccd_bits,
+            image_bitpix,
             int(exposure),
             self.gain_v.value,
             self.bin_v.value,
@@ -956,7 +949,7 @@ class IndiAllSkyDarks(object):
         )
         bpm_filename = bpm_filename_t.format(
             self.camera_id,
-            ccd_bits,
+            image_bitpix,
             int(exposure),
             self.gain_v.value,
             self.bin_v.value,
@@ -1207,6 +1200,8 @@ class IndiAllSkyDarksProcessor(object):
             numpy_type = numpy.uint16
         elif image_bitpix == 8:
             numpy_type = numpy.uint8
+        elif image_bitpix == -32:
+            numpy_type = numpy.float32
         else:
             raise Exception('Unknown bits per pixel')
 
@@ -1223,13 +1218,20 @@ class IndiAllSkyDarksProcessor(object):
 
         bpm = numpy.zeros(image_data[0].shape, dtype=numpy_type)
 
+        if numpy_type == numpy.float32:
+            # no BPM for float32 data
+            hdulist[0].data = bpm
+            hdulist.writeto(filename_p)
+            return 0.0
+
+
         # take the max values of each pixel from each image
         for image in image_data:
             bpm = numpy.maximum(bpm, image)
 
 
         max_val = numpy.amax(bpm)
-        logger.info('Image max value: %d', int(max_val))
+        logger.info('Image max value: %0.1f', float(max_val))
 
         if self.bitmax:
             bitmax_percent = (2 ** self.bitmax) * (self.hotpixel_adu_percent / 100.0)
@@ -1263,6 +1265,8 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
             numpy_type = numpy.uint16
         elif image_bitpix == 8:
             numpy_type = numpy.uint8
+        elif image_bitpix == -32:
+            numpy_type = numpy.float32
         else:
             raise Exception('Unknown bits per pixel')
 
@@ -1306,6 +1310,8 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
             numpy_type = numpy.uint16
         elif image_bitpix == 8:
             numpy_type = numpy.uint8
+        else:
+            raise Exception('Unknown bits per pixel')
 
         dark_images = ccdproc.ImageFileCollection(tmp_fit_dir_p)
 
