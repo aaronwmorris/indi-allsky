@@ -14,6 +14,7 @@ from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 from fractions import Fraction
+from pprint import pformat  # noqa: F401
 import logging
 
 import ephem

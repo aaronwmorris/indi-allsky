@@ -67,6 +67,7 @@ def CAMERA_INTERFACE_validator(form, field):
     if field.data not in (
         'indi',
         'indi_passive',
+        'indi_stacker',
         'libcamera_imx477',
         'libcamera_imx378',
         'libcamera_ov5647',
@@ -2421,6 +2422,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('libcamera_64mp_hawkeye', 'libcamera 64mp HawkEye'),
         ('libcamera_64mp_owlsight', 'libcamera 64mp OwlSight'),
         ('pycurl_camera', 'pyCurl Camera'),
+        ('indi_stacker', 'INDI Stacker'),
         ('indi_passive', 'INDI (Passive)'),
     )
 

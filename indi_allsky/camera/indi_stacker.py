@@ -29,15 +29,18 @@ class IndiClientIndiStacker(IndiClient):
         self.exposure_state = 'READY'
 
         self.data = None
-        self.headers = None
+        self.header = None
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
         if not timeout:
             timeout = self.timeout
 
+        exp_count = int(exposure / self.max_sub_exposure) + 1
+        logger.info('Taking %d sub-exposures for stacking', exp_count)
+
         self.data = None
-        self.headers = None
+        self.header = None
         self.sub_exposure_count = 0
 
         self.exposure = exposure
@@ -54,12 +57,16 @@ class IndiClientIndiStacker(IndiClient):
             # last exposure
             sub_exposure = self.exposure_remain
             self.exposure_remain = 0.0
+            logger.info('Taking last sub-exposure')
         else:
             sub_exposure = self.max_sub_exposure
             self.exposure_remain -= sub_exposure
 
+            exp_count = int(self.max_sub_exposure / self.exposure_remain) + 1
+            logger.info('%d sub-exposures remain', exp_count)
 
-        self.set_number(self.ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': sub_exposure}, sync=False, timeout=self.exp_timeout)
+
+        self.set_number(self.ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': sub_exposure}, sync=False, timeout=self.timeout)
 
         self.camera_ready = False
         self.exposure_state = 'BUSY'
@@ -106,9 +113,15 @@ class IndiClientIndiStacker(IndiClient):
         exposure_elapsed_s = time.time() - self.exposureStartTime
 
         # create a new fits container
-        hdulist = fits.PrimaryHDU(self.data)
-        hdulist[0].headers = self.headers
-        hdulist[0].headers['SUBCOUNT'] = self.sub_exposure_count
+        hdu = fits.PrimaryHDU(self.data)
+        hdulist = fits.HDUList([hdu])
+
+        # repopulate headers
+        for k, v in self.header.items():
+            hdulist[0].header[k] = v
+
+        hdulist[0].header['BITPIX'] = 32
+        hdulist[0].header['SUBCOUNT'] = self.sub_exposure_count
 
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
@@ -120,7 +133,7 @@ class IndiClientIndiStacker(IndiClient):
         except OSError as e:
             logger.error('OSError: %s', str(e))
             self.data = None
-            self.headers = None
+            self.header = None
             return
 
 
@@ -145,7 +158,7 @@ class IndiClientIndiStacker(IndiClient):
         self.exposure_state = 'READY'
 
         self.data = None
-        self.headers = None
+        self.header = None
 
 
     def _appendExposure(self, blob):
@@ -163,7 +176,7 @@ class IndiClientIndiStacker(IndiClient):
             self.data = hdulist[0].data.astype(numpy.uint32)
 
             # copy headers for later
-            self.headers = hdulist[0].headers
+            self.header = hdulist[0].header
 
             return
 
