@@ -1,4 +1,5 @@
 import time
+import copy
 import io
 import math
 from datetime import datetime
@@ -118,9 +119,12 @@ class IndiClientIndiStacker(IndiClient):
 
         # repopulate headers
         for k, v in self.header.items():
+            if k in ('BITPIX', 'BZERO', 'BSCALE'):
+                continue
+
             hdulist[0].header[k] = v
 
-        hdulist[0].header['BITPIX'] = 32
+        hdulist[0].header['BITPIX'] = -32
         hdulist[0].header['SUBCOUNT'] = self.sub_exposure_count
 
 
@@ -173,10 +177,10 @@ class IndiClientIndiStacker(IndiClient):
 
 
         if isinstance(self.data, type(None)):
-            self.data = hdulist[0].data.astype(numpy.uint32)
+            self.data = hdulist[0].data.astype(numpy.float32)
 
             # copy headers for later
-            self.header = hdulist[0].header
+            self.header = copy.copy(hdulist[0].header)
 
             return
 
