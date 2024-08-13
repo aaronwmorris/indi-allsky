@@ -72,12 +72,12 @@ class IndiClientIndiAccumulator(IndiClient):
 
     def _startNextExposure(self):
         if self.exposure_remain < self.max_sub_exposure:
-            logger.info('1 sub-exposures remain (%0.6f)', self.exposure_remain)
+            logger.info('1 sub-exposures remain (%0.6fs)', self.exposure_remain)
             sub_exposure = self.exposure_remain
             self.exposure_remain = 0.0
         else:
             exp_count = math.ceil(self.exposure_remain / self.max_sub_exposure)
-            logger.info('%d sub-exposures remain (%0.6f)', exp_count, self.exposure_remain)
+            logger.info('%d sub-exposures remain (%0.6fs)', exp_count, self.exposure_remain)
 
             sub_exposure = self.max_sub_exposure
             self.exposure_remain -= sub_exposure
