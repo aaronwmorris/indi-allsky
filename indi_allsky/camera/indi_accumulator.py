@@ -207,3 +207,15 @@ class IndiClientIndiAccumulator(IndiClient):
 
         self.data = numpy.add(self.data, hdulist[0].data)
 
+
+    def getCcdInfo(self):
+        ccd_info = super(IndiClientIndiAccumulator, self).getCcdInfo()
+
+        ccd_max_exp = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max'])
+
+        # if the camera has a low max exposure, return a higher value for the accumulator
+        if ccd_max_exp < 600:
+            ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max'] = 600.0
+
+        return ccd_info
+
