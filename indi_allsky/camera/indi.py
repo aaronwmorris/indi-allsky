@@ -318,7 +318,7 @@ class IndiClient(PyIndi.BaseClient):
         ### process data in worker
         jobdata = {
             'filename'    : str(f_tmpfile_p),
-            'exposure'    : self._exposure,
+            'exposure'    : self.exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
@@ -960,12 +960,13 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
-        self.exposureStartTime = time.time()
-
         if not timeout:
-            timeout = self._timeout
+            timeout = self.timeout
 
-        self._exposure = exposure
+        self.exposure = exposure
+
+
+        self.exposureStartTime = time.time()
 
         ctl_ccd_exposure = self.set_number(self.ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
 
@@ -1310,7 +1311,7 @@ class IndiClient(PyIndi.BaseClient):
 
     def get_control(self, device, name, ctl_type, timeout=None):
         if timeout is None:
-            timeout = self._timeout
+            timeout = self.timeout
 
         ctl = None
         attr = {
@@ -1437,7 +1438,7 @@ class IndiClient(PyIndi.BaseClient):
         started = time.time()
 
         if timeout is None:
-            timeout = self._timeout
+            timeout = self.timeout
 
         while ctl.getState() not in statuses:
             #logger.info('%s/%s/%s: %s', ctl.getDeviceName(), ctl.getGroupName(), ctl.getName(), self.__state_to_str_p[ctl.getState()])

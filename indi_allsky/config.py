@@ -397,6 +397,9 @@ class IndiAllSkyConfigBase(object):
             "PASSWORD"               : "",
             "PASSWORD_E"             : "",
         },
+        "ACCUM_CAMERA" : {
+            "SUB_EXPOSURE_MAX"       : 1.0,
+        },
         "FOCUSER" : {
             "CLASSNAME"              : "",
             "GPIO_PIN_1"             : "D17",

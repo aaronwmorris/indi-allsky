@@ -14,6 +14,7 @@ from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 from fractions import Fraction
+from pprint import pformat  # noqa: F401
 import logging
 
 import ephem
@@ -358,7 +359,8 @@ class ImageProcessor(object):
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
 
-            hdulist[0].header['EXTEND'] = True
+            hdu.update_header()  # populates BITPIX, NAXIS, etc
+
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'jpg'
             hdulist[0].header['EXPTIME'] = float(exposure)
@@ -366,12 +368,12 @@ class ImageProcessor(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['BITPIX'] = 8
             hdulist[0].header['SITELAT'] = self.position_av[0]
             hdulist[0].header['SITELONG'] = self.position_av[1]
             hdulist[0].header['RA'] = self.position_av[3]
             hdulist[0].header['DEC'] = self.position_av[4]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+            #hdulist[0].header['BITPIX'] = 8
 
 
             aperture = camera.lensFocalLength / camera.lensFocalRatio
@@ -407,7 +409,8 @@ class ImageProcessor(object):
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
 
-            hdulist[0].header['EXTEND'] = True
+            hdu.update_header()  # populates BITPIX, NAXIS, etc
+
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'png'
             hdulist[0].header['EXPTIME'] = float(exposure)
@@ -415,12 +418,12 @@ class ImageProcessor(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['BITPIX'] = 8
             hdulist[0].header['SITELAT'] = self.position_av[0]
             hdulist[0].header['SITELONG'] = self.position_av[1]
             hdulist[0].header['RA'] = self.position_av[3]
             hdulist[0].header['DEC'] = self.position_av[4]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+            #hdulist[0].header['BITPIX'] = 8
 
 
             aperture = camera.lensFocalLength / camera.lensFocalRatio
@@ -451,7 +454,8 @@ class ImageProcessor(object):
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
 
-            hdulist[0].header['EXTEND'] = True
+            hdu.update_header()  # populates BITPIX, NAXIS, etc
+
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'libcamera'
             hdulist[0].header['EXPTIME'] = float(exposure)
@@ -459,12 +463,12 @@ class ImageProcessor(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['BITPIX'] = 16
             hdulist[0].header['SITELAT'] = self.position_av[0]
             hdulist[0].header['SITELONG'] = self.position_av[1]
             hdulist[0].header['RA'] = self.position_av[3]
             hdulist[0].header['DEC'] = self.position_av[4]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+            #hdulist[0].header['BITPIX'] = 16
 
 
             aperture = camera.lensFocalLength / camera.lensFocalRatio
@@ -589,10 +593,53 @@ class ImageProcessor(object):
         return image_data
 
 
-    def fits2opencv(self, data):
+    def fits2opencv(self):
+        i_ref = self.getLatestImage()
+
+        data = self._fits2opencv(i_ref)
+
+        i_ref['opencv_data'] = data
+
+
+    def _fits2opencv(self, i_ref):
+        data = i_ref['hdulist'][0].data
+        image_bitpix = i_ref['image_bitpix']
+
+        if image_bitpix in (8, 16):
+            pass
+        elif image_bitpix == -32:  # float32
+            logger.info('Scaling float32 data to uint16')
+
+            ### cutoff lower range
+            data[data < 0] = 0.0
+
+            ### cutoff upper range
+            data[data > 65535] = 65535.0
+
+            ### cast to uint16 for pretty pictures
+            data = data.astype(numpy.uint16)
+            i_ref['hdulist'][0].data = data
+
+            i_ref['image_bitpix'] = 16
+        elif image_bitpix == 32:  # uint32
+            logger.info('Scaling uint32 data to uint16')
+
+            ### cutoff upper range
+            data[data > 65535] = 65535
+
+            ### cast to uint16 for pretty pictures
+            data = data.astype(numpy.uint16)
+            i_ref['hdulist'][0].data = data
+
+            i_ref['image_bitpix'] = 16
+        else:
+            raise Exception('Unsupported bit format: {0:d}'.format(image_bitpix))
+
+
         if len(data.shape) == 2:
             # mono data does not need to be converted
             return data
+
 
         data = numpy.swapaxes(data, 0, 2)
         data = numpy.swapaxes(data, 0, 1)
@@ -663,13 +710,11 @@ class ImageProcessor(object):
 
         if not self.config.get('IMAGE_CALIBRATE_DARK', True):
             logger.warning('Dark frame calibration disabled')
-            i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
             return
 
 
         if i_ref['calibrated']:
             # already calibrated
-            i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
             return
 
 
@@ -691,10 +736,6 @@ class ImageProcessor(object):
                     #i_ref['hdulist'][0].data -= (black_level_scaled - 15)  # offset slightly
 
                     i_ref['calibrated'] = True
-
-
-        # always convert fits to opencv compatible data
-        i_ref['opencv_data'] = self.fits2opencv(i_ref['hdulist'][0].data)
 
 
     def _apply_calibration(self, data, exposure, camera_id, image_bitpix):
@@ -837,7 +878,23 @@ class ImageProcessor(object):
             raise CalibrationNotFound('Dark frame calibration dimension mismatch')
 
 
-        data_calibrated = cv2.subtract(data, master_dark)
+        if data.dtype.type == numpy.float32:
+            ### cv2 does not support float32
+            data_calibrated = numpy.subtract(data, master_dark)
+
+            # cutoff values less than 0
+            data_calibrated[data_calibrated < 0] = 0
+        elif data.dtype.type == numpy.uint32:
+            ### cv2 does not support uint32
+            # cast to float so we can deal with negative numbers
+            data_calibrated = numpy.subtract(data.astype(numpy.float32), master_dark)
+
+            # cutoff values less than 0
+            data_calibrated[data_calibrated < 0] = 0
+
+            data_calibrated = data_calibrated.astype(numpy.uint32)
+        else:
+            data_calibrated = cv2.subtract(data, master_dark)
 
         return data_calibrated
 
