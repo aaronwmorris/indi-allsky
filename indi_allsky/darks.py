@@ -407,6 +407,8 @@ class IndiAllSkyDarks(object):
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
 
+            hdu.update_header()  # populates BITPIX, NAXIS, etc
+
             hdulist[0].header['IMAGETYP'] = 'Dark Frame'
             hdulist[0].header['INSTRUME'] = 'jpeg'
             hdulist[0].header['EXPTIME'] = float(exposure)
@@ -414,7 +416,7 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['BITPIX'] = 8
+            #hdulist[0].header['BITPIX'] = 8
         elif filename_p.suffix in ['.png']:
             try:
                 with Image.open(str(filename_p)) as img:
@@ -432,6 +434,8 @@ class IndiAllSkyDarks(object):
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
 
+            hdu.update_header()  # populates BITPIX, NAXIS, etc
+
             hdulist[0].header['IMAGETYP'] = 'Dark Frame'
             hdulist[0].header['INSTRUME'] = 'png'
             hdulist[0].header['EXPTIME'] = float(exposure)
@@ -439,7 +443,7 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['BITPIX'] = 8
+            #hdulist[0].header['BITPIX'] = 8
         elif filename_p.suffix in ['.dng']:
             if not rawpy:
                 filename_p.unlink()
@@ -458,6 +462,8 @@ class IndiAllSkyDarks(object):
             hdu = fits.PrimaryHDU(scidata_uncalibrated)
             hdulist = fits.HDUList([hdu])
 
+            hdu.update_header()  # populates BITPIX, NAXIS, etc
+
             hdulist[0].header['IMAGETYP'] = 'Dark Frame'
             hdulist[0].header['INSTRUME'] = 'libcamera'
             hdulist[0].header['EXPTIME'] = float(exposure)
@@ -465,7 +471,7 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['BITPIX'] = 16
+            #hdulist[0].header['BITPIX'] = 16
 
             if self.config.get('CFA_PATTERN'):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']

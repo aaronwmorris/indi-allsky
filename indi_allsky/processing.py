@@ -359,7 +359,8 @@ class ImageProcessor(object):
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
 
-            hdulist[0].header['EXTEND'] = True
+            hdu.update_header()  # populates BITPIX, NAXIS, etc
+
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'jpg'
             hdulist[0].header['EXPTIME'] = float(exposure)
@@ -367,12 +368,12 @@ class ImageProcessor(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['BITPIX'] = 8
             hdulist[0].header['SITELAT'] = self.position_av[0]
             hdulist[0].header['SITELONG'] = self.position_av[1]
             hdulist[0].header['RA'] = self.position_av[3]
             hdulist[0].header['DEC'] = self.position_av[4]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+            #hdulist[0].header['BITPIX'] = 8
 
 
             aperture = camera.lensFocalLength / camera.lensFocalRatio
@@ -408,7 +409,8 @@ class ImageProcessor(object):
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
 
-            hdulist[0].header['EXTEND'] = True
+            hdu.update_header()  # populates BITPIX, NAXIS, etc
+
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'png'
             hdulist[0].header['EXPTIME'] = float(exposure)
@@ -416,12 +418,12 @@ class ImageProcessor(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['BITPIX'] = 8
             hdulist[0].header['SITELAT'] = self.position_av[0]
             hdulist[0].header['SITELONG'] = self.position_av[1]
             hdulist[0].header['RA'] = self.position_av[3]
             hdulist[0].header['DEC'] = self.position_av[4]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+            #hdulist[0].header['BITPIX'] = 8
 
 
             aperture = camera.lensFocalLength / camera.lensFocalRatio
@@ -452,7 +454,8 @@ class ImageProcessor(object):
             hdu = fits.PrimaryHDU(data)
             hdulist = fits.HDUList([hdu])
 
-            hdulist[0].header['EXTEND'] = True
+            hdu.update_header()  # populates BITPIX, NAXIS, etc
+
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'libcamera'
             hdulist[0].header['EXPTIME'] = float(exposure)
@@ -460,12 +463,12 @@ class ImageProcessor(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(self.gain_v.value)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['BITPIX'] = 16
             hdulist[0].header['SITELAT'] = self.position_av[0]
             hdulist[0].header['SITELONG'] = self.position_av[1]
             hdulist[0].header['RA'] = self.position_av[3]
             hdulist[0].header['DEC'] = self.position_av[4]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+            #hdulist[0].header['BITPIX'] = 16
 
 
             aperture = camera.lensFocalLength / camera.lensFocalRatio
