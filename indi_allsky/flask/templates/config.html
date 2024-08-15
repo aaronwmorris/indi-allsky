@@ -64,7 +64,7 @@
         </div>
         <div class="col-sm-7">
             <a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="text-decoration-none link-info">
-                <span class="badge pill bg-danger">Camera Info</span>
+                <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces" class="text-decoration-none link-info" target="_blank">Camera Interface Wiki</a></div>
             </a>
         </div>
     </div>
@@ -252,6 +252,22 @@
         <div class="col-sm-8">
             <div>Seconds between start of each frame (Day)</div>
             <div>It is not recommended to set this below 5.0</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ACCUM_CAMERA__SUB_EXPOSURE_MAX.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ACCUM_CAMERA__SUB_EXPOSURE_MAX(class='form-control bg-secondary') }}
+            <div id="ACCUM_CAMERA__SUB_EXPOSURE_MAX-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Maximum sub-exposure for the accumulator camera.</div>
+            <div>The total exposure time will be divided by this value and the resulting sub-exposures will be summed into a unsigned 32-bit result</div>
         </div>
     </div>
 
@@ -5589,6 +5605,7 @@ const field_names = [
     'PYCURL_CAMERA__IMAGE_FILE_TYPE',
     'PYCURL_CAMERA__USERNAME',
     'PYCURL_CAMERA__PASSWORD',
+    'ACCUM_CAMERA__SUB_EXPOSURE_MAX',
     'FOCUSER__CLASSNAME',
     'FOCUSER__GPIO_PIN_1',
     'FOCUSER__GPIO_PIN_2',

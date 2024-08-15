@@ -1,5 +1,6 @@
 from .indi import IndiClient as indi
 from .indi_passive import IndiClientPassive as indi_passive
+from .indi_accumulator import IndiClientIndiAccumulator as indi_accumulator
 from .libcamera import IndiClientLibCameraImx477 as libcamera_imx477
 from .libcamera import IndiClientLibCameraImx378 as libcamera_imx378
 from .libcamera import IndiClientLibCameraOv5647 as libcamera_ov5647
@@ -18,6 +19,7 @@ from .pycurl_camera import IndiClientPycurl as pycurl_camera
 __all__ = (
     'indi',
     'indi_passive',
+    'indi_accumulator',
     'libcamera_imx477',
     'libcamera_imx378',
     'libcamera_ov5647',
