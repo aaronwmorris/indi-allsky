@@ -56,8 +56,7 @@ class PycurlCameraWorker(Thread):
         # Inherit settings from filetransfer section
         if self.config['FILETRANSFER'].get('FORCE_IPV4'):
             client.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V4)
-
-        if self.config['FILETRANSFER'].get('FORCE_IPV6'):
+        elif self.config['FILETRANSFER'].get('FORCE_IPV6'):
             client.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V6)
 
 

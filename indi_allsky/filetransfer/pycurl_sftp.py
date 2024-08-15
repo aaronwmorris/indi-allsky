@@ -73,8 +73,7 @@ class pycurl_sftp(GenericFileTransfer):
 
         if self.config['FILETRANSFER'].get('FORCE_IPV4'):
             self.client.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V4)
-
-        if self.config['FILETRANSFER'].get('FORCE_IPV6'):
+        elif self.config['FILETRANSFER'].get('FORCE_IPV6'):
             self.client.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V6)
 
 
