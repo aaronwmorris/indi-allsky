@@ -1432,6 +1432,8 @@ class ConfigView(FormView):
             'FILETRANSFER__CONNECT_TIMEOUT'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('CONNECT_TIMEOUT', 10.0),
             'FILETRANSFER__TIMEOUT'          : self.indi_allsky_config.get('FILETRANSFER', {}).get('TIMEOUT', 60.0),
             'FILETRANSFER__CERT_BYPASS'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('CERT_BYPASS', True),
+            'FILETRANSFER__FORCE_IPV4'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('FORCE_IPV4', False),
+            'FILETRANSFER__FORCE_IPV6'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('FORCE_IPV6', False),
             'FILETRANSFER__REMOTE_IMAGE_NAME'         : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_NAME', 'image.{ext}'),
             'FILETRANSFER__REMOTE_PANORAMA_NAME'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_NAME', 'panorama.{ext}'),
             'FILETRANSFER__REMOTE_IMAGE_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_FOLDER', '/home/allsky/upload/allsky'),
@@ -1458,7 +1460,7 @@ class ConfigView(FormView):
             'FILETRANSFER__UPLOAD_STARTRAIL' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL', False),
             'FILETRANSFER__UPLOAD_STARTRAIL_VIDEO' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL_VIDEO', False),
             'FILETRANSFER__UPLOAD_PANORAMA_VIDEO'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA_VIDEO', False),
-            'FILETRANSFER__UPLOAD_ENDOFNIGHT': self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_ENDOFNIGHT', False),
+            'FILETRANSFER__UPLOAD_ENDOFNIGHT'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_ENDOFNIGHT', False),
             'S3UPLOAD__CLASSNAME'            : self.indi_allsky_config.get('S3UPLOAD', {}).get('CLASSNAME', 'boto3_s3'),
             'S3UPLOAD__ENABLE'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('ENABLE', False),
             'S3UPLOAD__ACCESS_KEY'           : self.indi_allsky_config.get('S3UPLOAD', {}).get('ACCESS_KEY', ''),
@@ -2138,6 +2140,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['CONNECT_TIMEOUT']      = float(request.json['FILETRANSFER__CONNECT_TIMEOUT'])
         self.indi_allsky_config['FILETRANSFER']['TIMEOUT']              = float(request.json['FILETRANSFER__TIMEOUT'])
         self.indi_allsky_config['FILETRANSFER']['CERT_BYPASS']          = bool(request.json['FILETRANSFER__CERT_BYPASS'])
+        self.indi_allsky_config['FILETRANSFER']['FORCE_IPV4']           = bool(request.json['FILETRANSFER__FORCE_IPV4'])
+        self.indi_allsky_config['FILETRANSFER']['FORCE_IPV6']           = bool(request.json['FILETRANSFER__FORCE_IPV6'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_IMAGE_NAME']        = str(request.json['FILETRANSFER__REMOTE_IMAGE_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_PANORAMA_NAME']     = str(request.json['FILETRANSFER__REMOTE_PANORAMA_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_IMAGE_FOLDER']      = str(request.json['FILETRANSFER__REMOTE_IMAGE_FOLDER'])

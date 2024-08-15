@@ -3170,6 +3170,35 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__FORCE_IPV4.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__FORCE_IPV4(class='form-check-input') }}
+                <div id="FILETRANSFER__FORCE_IPV4-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Force IPv4 (PycURL Only)</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> This can be helpful if you receive connection timeout errors</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__FORCE_IPV6.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__FORCE_IPV6(class='form-check-input') }}
+                <div id="FILETRANSFER__FORCE_IPV6-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Force IPv6</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.FILETRANSFER__LIBCURL_OPTIONS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-6">
@@ -5733,6 +5762,8 @@ const checkbox_field_names = [
     'FILETRANSFER__UPLOAD_STARTRAIL_VIDEO',
     'FILETRANSFER__UPLOAD_PANORAMA_VIDEO',
     'FILETRANSFER__UPLOAD_ENDOFNIGHT',
+    'FILETRANSFER__FORCE_IPV4',
+    'FILETRANSFER__FORCE_IPV6',
     'S3UPLOAD__ENABLE',
     'S3UPLOAD__UPLOAD_FITS',
     'S3UPLOAD__UPLOAD_RAW',
