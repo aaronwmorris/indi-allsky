@@ -52,6 +52,33 @@ class PycurlCameraWorker(Thread):
         client.setopt(pycurl.SSL_VERIFYPEER, False)  # trust verification
         client.setopt(pycurl.SSL_VERIFYHOST, False)  # host verfication
 
+
+        # Inherit settings from filetransfer section
+        if self.config['FILETRANSFER'].get('FORCE_IPV4'):
+            client.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V4)
+
+        if self.config['FILETRANSFER'].get('FORCE_IPV6'):
+            client.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V6)
+
+
+        # Apply custom options from config
+        libcurl_opts = self.config['FILETRANSFER'].get('LIBCURL_OPTIONS', {})
+        for k, v in libcurl_opts.items():
+            # Not catching any exceptions here
+            # Options are validated in web config
+
+            if k.startswith('#'):
+                # comment
+                continue
+
+            if k.startswith('CURLOPT_'):
+                # remove CURLOPT_ prefix
+                k = k[8:]
+
+            curlopt = getattr(pycurl, k)
+            client.setopt(curlopt, v)
+
+
         username = self.config.get('PYCURL_CAMERA', {}).get('USERNAME')
         password = self.config.get('PYCURL_CAMERA', {}).get('PASSWORD')
         if username:
