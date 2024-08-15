@@ -313,6 +313,8 @@ class IndiAllSkyConfigBase(object):
             "UPLOAD_STARTRAIL_VIDEO" : False,
             "UPLOAD_PANORAMA_VIDEO"  : False,
             "UPLOAD_ENDOFNIGHT"      : False,
+            "FORCE_IPV4"             : False,
+            "FORCE_IPV6"             : False,
             "LIBCURL_OPTIONS"        : {},
         },
         "S3UPLOAD" : {

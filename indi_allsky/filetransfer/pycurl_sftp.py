@@ -71,6 +71,12 @@ class pycurl_sftp(GenericFileTransfer):
             self.client.setopt(pycurl.USERPWD, '{0:s}:{1:s}'.format(username, password))
 
 
+        if self.config['FILETRANSFER'].get('FORCE_IPV4'):
+            self.client.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V4)
+        elif self.config['FILETRANSFER'].get('FORCE_IPV6'):
+            self.client.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V6)
+
+
         # Apply custom options from config
         libcurl_opts = self.config['FILETRANSFER'].get('LIBCURL_OPTIONS', {})
         for k, v in libcurl_opts.items():
