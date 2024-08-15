@@ -37,6 +37,9 @@ INDIALLSKY_WEB_GENERATE_APIKEY=false
 
 # Only used on the debian build
 INDIALLSKY_INDI_VERSION=v2.0.9
+
+# libcamera is commented out of Dockerfile.indi_base_debian12
+# last successful build on x86_64 was v0.2.0+rpt20240418
 INDIALLSKY_LIBCAMERA_TAG=v0.3.0+rpt20240617
 INDIALLSKY_RPICAM_APPS_TAG=v1.5.0
 
