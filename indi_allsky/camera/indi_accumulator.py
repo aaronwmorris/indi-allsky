@@ -24,10 +24,15 @@ class IndiClientIndiAccumulator(IndiClient):
     def __init__(self, *args, **kwargs):
         super(IndiClientIndiAccumulator, self).__init__(*args, **kwargs)
 
-        self._max_sub_exposure = self.config.get('ACCUM_CAMERA', {}).get('SUB_EXPOSURE_MAX', 1.0)
+        self._sub_exposure_max = self.config.get('ACCUM_CAMERA', {}).get('SUB_EXPOSURE_MAX', 1.0)
+        self._even_exposures = self.config.get('ACCUM_CAMERA', {}).get('EVEN_EXPOSURES', True)
 
-        self.exposure_remain = 0.0
-        self.sub_exposure_count = 0
+
+        self._total_sub_exposures = 0  # total number of expected sub exposures
+        self._sub_exposure_base = 0.0  # current sub-exposure max
+
+        self.exposure_remain = 0.0  # remaining exposure time
+        self.current_sub_exposure_count = 0  # current count of sub exposures
 
         self.camera_ready = True
         self.exposure_state = 'READY'
@@ -39,20 +44,45 @@ class IndiClientIndiAccumulator(IndiClient):
 
 
     @property
-    def max_sub_exposure(self):
-        return self._max_sub_exposure
+    def sub_exposure_max(self):
+        return self._sub_exposure_max
+
+    @property
+    def sub_exposure_base(self):
+        return self._sub_exposure_base
+
+    @property
+    def even_exposures(self):
+        return self._even_exposures
+
+    @property
+    def total_sub_exposures(self):
+        return self._total_sub_exposures
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
+        if not self.camera_ready:
+            raise Exception('Camera is busy')
+
         if not timeout:
             timeout = self.timeout
 
-        exp_count = math.ceil(exposure / self.max_sub_exposure)
-        logger.info('Taking %d sub-exposures for stacking', exp_count)
+
+        self._total_sub_exposures = math.ceil(exposure / self.sub_exposure_max)
+
+        if self.even_exposures:
+            # the sub exposure length should be even for all exposures
+            self._sub_exposure_base = exposure / self.total_sub_exposures
+        else:
+            # any remainder of exposure will result in a short final sub-exposure
+            self._sub_exposure_base = self.sub_exposure_max
+
+
+        logger.info('Taking %d sub-exposures for accumulation, using %0.6f as the base exposure', self.total_sub_exposures, self.sub_exposure_base)
 
         self.data = None
         self.header = None
-        self.sub_exposure_count = 0
+        self.current_sub_exposure_count = 0  # reset
 
         self.exposure = exposure
         self.exposure_remain = float(exposure)
@@ -74,19 +104,25 @@ class IndiClientIndiAccumulator(IndiClient):
 
 
     def _startNextExposure(self):
+        exp_count = self.total_sub_exposures - self.current_sub_exposure_count
+
         if self.exposure_remain < self.ccd_min_exp:
             logger.warning('Last sub-exposure is below the minimum exposure (%0.6fs), increasing to minimum', self.exposure_remain)
             sub_exposure = self.ccd_min_exp + 0.00000001  # offset to deal with conversion issues
             self.exposure_remain = 0.0
-        elif self.exposure_remain < self.max_sub_exposure:
-            logger.info('1 sub-exposures remain (%0.6fs)', self.exposure_remain)
-            sub_exposure = self.exposure_remain
+        elif exp_count == 1:
+            if self.even_exposures:
+                logger.info('1 sub-exposures remain (%0.6fs)', self.exposure_remain)
+                sub_exposure = self.sub_exposure_base
+            else:
+                logger.info('1 sub-exposures remain (%0.6fs)', self.exposure_remain)
+                sub_exposure = self.exposure_remain
+
             self.exposure_remain = 0.0
         else:
-            exp_count = math.ceil(self.exposure_remain / self.max_sub_exposure)
             logger.info('%d sub-exposures remain (%0.6fs)', exp_count, self.exposure_remain)
 
-            sub_exposure = self.max_sub_exposure
+            sub_exposure = self.sub_exposure_base
             self.exposure_remain -= sub_exposure
 
 
@@ -152,7 +188,7 @@ class IndiClientIndiAccumulator(IndiClient):
 
         #hdulist[0].header['BITPIX'] = X  # automatically populated by hdu.update_header()
         hdulist[0].header['EXPTIME'] = self.exposure
-        hdulist[0].header['SUBCOUNT'] = self.sub_exposure_count
+        hdulist[0].header['SUBCOUNT'] = self.total_sub_exposures
 
 
 
@@ -197,7 +233,7 @@ class IndiClientIndiAccumulator(IndiClient):
         from astropy.io import fits
         import numpy
 
-        self.sub_exposure_count += 1
+        self.current_sub_exposure_count += 1
 
         imgdata = blob.getblobdata()
         blobfile = io.BytesIO(imgdata)

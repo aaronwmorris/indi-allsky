@@ -271,6 +271,19 @@
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ACCUM_CAMERA__EVEN_EXPOSURES.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ACCUM_CAMERA__EVEN_EXPOSURES(class='form-check-input') }}
+                <div id="ACCUM_CAMERA__EVEN_EXPOSURES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Ensure each sub-exposure is the same interval</div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -5786,6 +5799,7 @@ const checkbox_field_names = [
     'YOUTUBE__UPLOAD_PANORAMA_VIDEO',
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
+    'ACCUM_CAMERA__EVEN_EXPOSURES',
     'TEMP_SENSOR__MQTT_TLS',
     'TEMP_SENSOR__MQTT_CERT_BYPASS',
     'DEW_HEATER__ENABLE_DAY',

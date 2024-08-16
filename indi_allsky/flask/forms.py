@@ -3170,6 +3170,7 @@ class IndiAllskyConfigForm(FlaskForm):
     PYCURL_CAMERA__USERNAME          = StringField('Username', validators=[PYCURL_CAMERA__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
     PYCURL_CAMERA__PASSWORD          = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[PYCURL_CAMERA__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
     ACCUM_CAMERA__SUB_EXPOSURE_MAX   = FloatField('Accumulator Max Sub-exposure', validators=[DataRequired(), ACCUM_CAMERA__SUB_EXPOSURE_MAX_validator])
+    ACCUM_CAMERA__EVEN_EXPOSURES     = BooleanField('Accumulator Even Exposures')
     FOCUSER__CLASSNAME               = SelectField('Focuser', choices=FOCUSER__CLASSNAME_choices, validators=[FOCUSER__CLASSNAME_validator])
     FOCUSER__GPIO_PIN_1              = StringField('GPIO Pin 1', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_2              = StringField('GPIO Pin 2', validators=[DEVICE_PIN_NAME_validator])
