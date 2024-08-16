@@ -54,14 +54,13 @@ var fullscreen = false;  //initial state
     <form id="form_image_processing" onSubmit="return false;">
 
     <div class="form-group row">
-        <div class="col-sm-3">
+        <div class="col-sm-1">
             {{ form_image_processing.CAMERA_ID(class='form-control bg-secondary') }}
             <div id="CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-3">
+            {{ form_image_processing.FRAME_TYPE(class='form-control bg-secondary') }}
+            <div id="FRAME_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+
             {{ form_image_processing.FITS_ID(class='form-control bg-secondary') }}
             <div id="FITS_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
@@ -708,6 +707,7 @@ const failureMessage = $('#failure-message');
 const field_names = [
     'csrf_token',
     'CAMERA_ID',
+    'FRAME_TYPE',
     'FITS_ID',
     'CCD_BIT_DEPTH',
     'CLAHE_CLIPLIMIT',

@@ -690,7 +690,7 @@ function init() {
 
                 $('#fits_processing').html(
                     $('<a />', {
-                        'href'   : "{{ url_for('indi_allsky.image_processing_view') }}?fits_id=" + image_data[image_index]['fits_id'],
+                        'href'   : "{{ url_for('indi_allsky.image_processing_view') }}?type=light&id=" + image_data[image_index]['fits_id'],
                         'target' : '_blank',
                         'rel'    : 'noopener noreferrer',
                         'class'  : "text-decoration-none link-warning",
