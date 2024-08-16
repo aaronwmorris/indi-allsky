@@ -1059,11 +1059,6 @@ class IndiClient(PyIndi.BaseClient):
             gain_ctl = self.get_control(self.ccd_device, 'CCD_ISO', 'switch')
 
 
-            gain_max_str = gain_ctl[len(gain_ctl) - 1].getLabel()  # dont slice
-            if gain_max_str == 'Auto':
-                raise Exception('Please switch your camera to Manual/Bulb mode for indi-allsky')
-
-
             gain_list = list()
             for index in range(0, len(gain_ctl)):  # avoid using iterator
                 try:
@@ -1072,7 +1067,9 @@ class IndiClient(PyIndi.BaseClient):
                     gain = int(gain_str)
                 except ValueError:
                     # skip values like "auto"
+                    logger.warning('Skipping ISO setting "%s"', gain_str)
                     continue
+
 
                 gain_list.append(gain)
 
@@ -1081,13 +1078,16 @@ class IndiClient(PyIndi.BaseClient):
                 self.__canon_iso_to_gain[gain_ctl[index].getName()] = gain
 
 
-            gain_info = {
-                'current' : 0,  # this should not matter
-                'min'     : min(gain_list),
-                'max'     : max(gain_list),
-                'step'    : None,
-                'format'  : '',
-            }
+            try:
+                gain_info = {
+                    'current' : 0,  # this should not matter
+                    'min'     : min(gain_list),
+                    'max'     : max(gain_list),
+                    'step'    : None,
+                    'format'  : '',
+                }
+            except ValueError:
+                raise Exception('No available ISO/gain settings for camera')
 
             return gain_info
         elif indi_exec in ['indi_webcam_ccd']:
