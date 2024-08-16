@@ -1087,7 +1087,7 @@ class IndiClient(PyIndi.BaseClient):
                     'format'  : '',
                 }
             except ValueError:
-                raise Exception('No available ISO/gain settings for camera')
+                raise Exception('No available ISO/gain settings for camera.  Make sure your camera is set to Manual/Bulb mode.')
 
             return gain_info
         elif indi_exec in ['indi_webcam_ccd']:
