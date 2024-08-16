@@ -162,12 +162,12 @@ class IndiProperties(PyIndi.BaseClient):
             #logger.info('%s', p.getType())
             if p.getType() == PyIndi.INDI_TEXT:
                 for t in p.getText():
-                    properties[name][t.getName() + ' (text)'] = {
+                    properties[name]['{0} [{1}] (text)'.format(t.getName(), t.getLabel())] = {
                         'current' : t.getText(),
                     }
             elif p.getType() == PyIndi.INDI_NUMBER:
                 for t in p.getNumber():
-                    properties[name][t.getName() + ' (number)'] = {
+                    properties[name]['{0} (number)'.format(t.getName())] = {
                         'current' : t.getValue(),
                         'min'     : t.getMin(),
                         'max'     : t.getMax(),
@@ -176,12 +176,12 @@ class IndiProperties(PyIndi.BaseClient):
                     }
             elif p.getType() == PyIndi.INDI_SWITCH:
                 for t in p.getSwitch():
-                    properties[name][t.getName() + ' (switch)'] = {
+                    properties[name]['{0} [{1}] (switch)'.format(t.getName(), t.getLabel())] = {
                         'state' : self.__state_to_str_s[t.getState()],
                     }
             elif p.getType() == PyIndi.INDI_LIGHT:
                 for t in p.getLight():
-                    properties[name][t.getName() + ' (light)'] = {
+                    properties[name]['{0} [{1}] (light)'.format(t.getName(), t.getLabel())] = {
                         'state' : self.__state_to_str_p[t.getState()],
                     }
             elif p.getType() == PyIndi.INDI_BLOB:

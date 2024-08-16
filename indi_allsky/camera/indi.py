@@ -1,4 +1,5 @@
 import time
+#import math
 import io
 import tempfile
 import ctypes
@@ -1057,29 +1058,36 @@ class IndiClient(PyIndi.BaseClient):
         ]:
             gain_ctl = self.get_control(self.ccd_device, 'CCD_ISO', 'switch')
 
-            gain_max = int(gain_ctl[len(gain_ctl) - 1].getLabel())  # dont slice
 
-            for index in range(0, len(gain_ctl)):
+            gain_list = list()
+            for index in range(0, len(gain_ctl)):  # avoid using iterator
                 try:
                     # The label should be the ISO number in string format
-                    gain = int(gain_ctl[index].getLabel())
+                    gain_str = gain_ctl[index].getLabel()
+                    gain = int(gain_str)
                 except ValueError:
                     # skip values like "auto"
+                    logger.warning('Skipping ISO setting "%s"', gain_str)
                     continue
 
+
+                gain_list.append(gain)
 
                 # populate translation dicts
                 self.__canon_gain_to_iso[gain] = gain_ctl[index].getName()
                 self.__canon_iso_to_gain[gain_ctl[index].getName()] = gain
 
 
-            gain_info = {
-                'current' : 0,  # this should not matter
-                'min'     : 100,   # make ISO 100 the minimum
-                'max'     : gain_max,
-                'step'    : None,
-                'format'  : '',
-            }
+            try:
+                gain_info = {
+                    'current' : 0,  # this should not matter
+                    'min'     : min(gain_list),
+                    'max'     : max(gain_list),
+                    'step'    : None,
+                    'format'  : '',
+                }
+            except ValueError:
+                raise Exception('No available ISO/gain settings for camera.  Make sure your camera is set to Manual/Bulb mode.')
 
             return gain_info
         elif indi_exec in ['indi_webcam_ccd']:
