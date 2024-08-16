@@ -1226,12 +1226,6 @@ class IndiAllSkyDarksProcessor(object):
 
         bpm = numpy.zeros(image_data[0].shape, dtype=numpy_type)
 
-        if numpy_type in (numpy.float32, numpy.uint32):
-            # no BPM for float32 or uint32 data
-            hdulist[0].data = bpm
-            hdulist.writeto(filename_p)
-            return 0.0
-
 
         # take the max values of each pixel from each image
         for image in image_data:
@@ -1242,9 +1236,13 @@ class IndiAllSkyDarksProcessor(object):
         logger.info('Image max value: %0.1f', float(max_val))
 
         if self.bitmax:
-            bitmax_percent = (2 ** self.bitmax) * (self.hotpixel_adu_percent / 100.0)
+            bitmax_percent = ((2 ** self.bitmax) - 1) * (self.hotpixel_adu_percent / 100.0)
         else:
-            bitmax_percent = (2 ** image_bitpix) * (self.hotpixel_adu_percent / 100.0)
+            if numpy_type in (numpy.float32, numpy.uint32):
+                # assume 16bit max
+                bitmax_percent = ((2 ** 16) - 1) * (self.hotpixel_adu_percent / 100.0)
+            else:
+                bitmax_percent = ((2 ** image_bitpix) - 1) * (self.hotpixel_adu_percent / 100.0)
 
         bpm[bpm < bitmax_percent] = 0  # filter all values less than max value
 
