@@ -25,6 +25,7 @@ table, th, td {
     <th>Bin mode</th>
     <th>Temp</th>
     <th>ADU</th>
+    <th>Veiw</th>
     <th>File</th>
 </tr>
 {% for dark in darkframe_list %}
@@ -39,6 +40,7 @@ table, th, td {
     <td>{{ dark.binmode }}</td>
     <td>{{ "%0.2f"|format(dark.temp | float) }}</td>
     <td>{{ "%0.1f"|format(dark.adu | float) }}</td>
+    <td><a href="{{ url_for('indi_allsky.image_processing_view') }}?type=dark&id={{ dark.id }}">View</a></td>
     <td><a href="{{ dark.url }}">{{ dark.filename|basename }}</a></td>
 </tr>
 {% endfor %}
@@ -59,6 +61,7 @@ table, th, td {
     <th>Bin mode</th>
     <th>Temp</th>
     <th>ADU</th>
+    <th>View</th>
     <th>File</th>
 </tr>
 {% for bpm in bpm_list %}
@@ -73,6 +76,7 @@ table, th, td {
     <td>{{ bpm.binmode }}</td>
     <td>{{ "%0.2f"|format(bpm.temp | float) }}</td>
     <td>{{ "%0.1f"|format(bpm.adu | float) }}</td>
+    <td><a href="{{ url_for('indi_allsky.image_processing_view') }}?type=bpm&id={{ bpm.id }}">View</a></td>
     <td><a href="{{ bpm.url }}">{{ bpm.filename|basename }}</a></td>
 </tr>
 {% endfor %}

@@ -5088,23 +5088,35 @@ class ImageProcessingView(TemplateView):
 
         camera_id = session['camera_id']
 
-        fits_id = int(request.args.get('fits_id', 0))
-        if not fits_id:
-            # just pick the last fits file is none specified
-            fits_entry = IndiAllSkyDbFitsImageTable.query\
-                .join(IndiAllSkyDbFitsImageTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-                .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())\
-                .first()
+        fits_id = int(request.args.get('id', 0))
+        frame_type = str(request.args.get('type', 'light'))
 
-            if fits_entry:
-                fits_id = fits_entry.id
-            else:
-                fits_id = 0  # will not exist
+
+        if frame_type == 'dark':
+            # always have to request a specific dark ID
+            pass
+        elif frame_type == 'bpm':
+            # always have to request a specific bpm ID
+            pass
+        else:
+            # assume light frame
+            if not fits_id:
+                # just pick the last fits file is none specified
+                fits_entry = IndiAllSkyDbFitsImageTable.query\
+                    .join(IndiAllSkyDbFitsImageTable.camera)\
+                    .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                    .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())\
+                    .first()
+
+                if fits_entry:
+                    fits_id = fits_entry.id
+                else:
+                    fits_id = 0  # will not exist
 
 
         form_data = {
             'CAMERA_ID'                      : camera_id,
+            'FRAME_TYPE'                     : frame_type,
             'FITS_ID'                        : fits_id,
             'CCD_BIT_DEPTH'                  : str(self.indi_allsky_config.get('CCD_BIT_DEPTH', 0)),  # string in form, int in config
             'NIGHT_CONTRAST_ENHANCE'         : self.indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
@@ -5204,16 +5216,25 @@ class JsonImageProcessingView(JsonView):
 
         disable_processing                  = bool(request.json['DISABLE_PROCESSING'])
         camera_id                           = int(request.json['CAMERA_ID'])
+        frame_type                          = str(request.json['FRAME_TYPE'])
         fits_id                             = int(request.json['FITS_ID'])
 
 
+        if frame_type == 'dark':
+            table = IndiAllSkyDbDarkFrameTable
+        elif frame_type == 'bpm':
+            table = IndiAllSkyDbBadPixelMapTable
+        else:
+            table = IndiAllSkyDbFitsImageTable
+
+
         try:
-            fits_entry = IndiAllSkyDbFitsImageTable.query\
-                .join(IndiAllSkyDbFitsImageTable.camera)\
+            fits_entry = table.query\
+                .join(table.camera)\
                 .filter(
                     and_(
                         IndiAllSkyDbCameraTable.id == camera_id,
-                        IndiAllSkyDbFitsImageTable.id == fits_id,
+                        table.id == fits_id,
                     )
                 )\
                 .one()
