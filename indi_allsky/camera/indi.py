@@ -1,5 +1,5 @@
 import time
-import math
+#import math
 import io
 import tempfile
 import ctypes
@@ -1083,8 +1083,8 @@ class IndiClient(PyIndi.BaseClient):
 
             gain_info = {
                 'current' : 0,  # this should not matter
-                'min'     : math.min(gain_list),
-                'max'     : math.max(gain_list),
+                'min'     : min(gain_list),
+                'max'     : max(gain_list),
                 'step'    : None,
                 'format'  : '',
             }
