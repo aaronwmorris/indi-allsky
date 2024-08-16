@@ -1226,12 +1226,6 @@ class IndiAllSkyDarksProcessor(object):
 
         bpm = numpy.zeros(image_data[0].shape, dtype=numpy_type)
 
-        if numpy_type in (numpy.float32, numpy.uint32):
-            # no BPM for float32 or uint32 data
-            hdulist[0].data = bpm
-            hdulist.writeto(filename_p)
-            return 0.0
-
 
         # take the max values of each pixel from each image
         for image in image_data:
