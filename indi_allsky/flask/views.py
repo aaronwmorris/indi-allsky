@@ -319,6 +319,9 @@ class LatestImageRedirect(BaseView):
             camera_id = camera.id
 
 
+        self.cameraSetup(camera_id=camera_id)
+
+
         local = True
         if self.web_nonlocal_images:
             local = False
@@ -416,6 +419,8 @@ class MaskView(TemplateView):
 class CamerasView(TemplateView):
     def get_context(self):
         context = super(CamerasView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         context['camera_list'] = IndiAllSkyDbCameraTable.query\
             .all()
@@ -3481,6 +3486,8 @@ class TaskQueueView(TemplateView):
     def get_context(self):
         context = super(TaskQueueView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         state_list = (
             TaskQueueState.MANUAL,
             TaskQueueState.QUEUED,
@@ -5682,6 +5689,7 @@ class NotificationsView(TemplateView):
     def get_context(self):
         context = super(NotificationsView, self).get_context()
 
+        context['camera_id'] = self.camera.id
 
         notices = IndiAllSkyDbNotificationTable.query\
             .order_by(IndiAllSkyDbNotificationTable.createDate.desc())\
@@ -5870,6 +5878,7 @@ class UsersView(TemplateView):
     def get_context(self):
         context = super(UsersView, self).get_context()
 
+        context['camera_id'] = self.camera.id
 
         user_list = IndiAllSkyDbUserTable.query\
             .order_by(IndiAllSkyDbUserTable.createDate.asc())
@@ -5884,6 +5893,8 @@ class ConfigListView(TemplateView):
 
     def get_context(self):
         context = super(ConfigListView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         config_list = IndiAllSkyDbConfigTable.query\
             .add_columns(
