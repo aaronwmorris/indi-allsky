@@ -2719,6 +2719,8 @@ class GalleryViewerView(FormView):
     def get_context(self):
         context = super(GalleryViewerView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         form_data = {
             'CAMERA_ID'    : self.camera.id,
             'YEAR_SELECT'  : None,
