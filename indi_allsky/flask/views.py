@@ -2981,11 +2981,12 @@ class MiniVideoViewerView(FormView):
     def get_context(self):
         context = super(MiniVideoViewerView, self).get_context()
 
-        context['camera_id'] = session['camera_id']
+        context['camera_id'] = self.camera.id
 
         context['youtube__enable'] = int(self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', 0))
 
         form_data = {
+            'CAMERA_ID'    : self.camera.id,
             'YEAR_SELECT'  : None,
             'MONTH_SELECT' : None,
         }
@@ -3001,7 +3002,7 @@ class MiniVideoViewerView(FormView):
 
         context['form_mini_video_viewer'] = IndiAllskyMiniVideoViewerPreload(
             data=form_data,
-            camera_id=session['camera_id'],
+            camera_id=self.camera.id,
             s3_prefix=self.s3_prefix,
             local=local,
         )
@@ -3017,6 +3018,12 @@ class AjaxMiniVideoViewerView(BaseView):
 
 
     def dispatch_request(self):
+        camera_id      = int(request.json['CAMERA_ID'])
+        form_year      = request.json.get('YEAR_SELECT')
+        form_month     = request.json.get('MONTH_SELECT')
+
+        self.cameraSetup(camera_id=camera_id)
+
         local = True  # default to local assets
         if self.web_nonlocal_images:
             if self.web_local_images_admin and self.verify_admin_network():
@@ -3027,14 +3034,11 @@ class AjaxMiniVideoViewerView(BaseView):
 
         form_mini_video_viewer = IndiAllskyMiniVideoViewer(
             data=request.json,
-            camera_id=session['camera_id'],
+            camera_id=camera_id,
             s3_prefix=self.s3_prefix,
             local=local,
         )
 
-
-        form_year      = request.json.get('YEAR_SELECT')
-        form_month     = request.json.get('MONTH_SELECT')
 
         json_data = {}
 
@@ -6354,17 +6358,19 @@ class MiniTimelapseGeneratorView(TemplateView):
 
         image_id = int(request.args.get('image_id', 0))
 
+        context['camera_id'] = self.camera.id
+
         if image_id:
             image_entry = IndiAllSkyDbImageTable.query\
                 .join(IndiAllSkyDbImageTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(IndiAllSkyDbImageTable.id == image_id)\
                 .one()
         else:
             # load last image
             image_entry = IndiAllSkyDbImageTable.query\
                 .join(IndiAllSkyDbImageTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .order_by(IndiAllSkyDbImageTable.createDate.desc())\
                 .first()
 
@@ -6376,7 +6382,7 @@ class MiniTimelapseGeneratorView(TemplateView):
 
 
         form_data = {
-            'CAMERA_ID'             : session['camera_id'],
+            'CAMERA_ID'             : self.camera.id,
             'IMAGE_ID'              : image_id,
             'PRE_SECONDS_SELECT'    : '240',
             'POST_SECONDS_SELECT'   : '120',

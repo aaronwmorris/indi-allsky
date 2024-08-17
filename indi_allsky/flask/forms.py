@@ -4755,6 +4755,7 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
 
 
 class IndiAllskyMiniVideoViewer(FlaskForm):
+    CAMERA_ID            = HiddenField('Camera ID', validators=[DataRequired()])
     YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
     MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
 
