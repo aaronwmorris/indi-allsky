@@ -5708,10 +5708,6 @@ class AjaxNotificationView(BaseView):
             return jsonify(no_data)
 
 
-        camera_id = int(request.args['camera_id'])
-        self.cameraSetup(camera_id=camera_id)
-
-
         if request.method == 'POST':
             return self.post()
         elif request.method == 'GET':
@@ -5720,7 +5716,12 @@ class AjaxNotificationView(BaseView):
             return jsonify({}), 400
 
 
-    def get(self):
+    def get(self, camera_id=None):
+        if not camera_id:
+            camera_id = int(request.args['camera_id'])
+
+        self.cameraSetup(camera_id=camera_id)
+
         # return a single result, newest first
         now = self.camera_now
 
@@ -5754,7 +5755,8 @@ class AjaxNotificationView(BaseView):
 
 
     def post(self):
-        ack_id = request.json['ack_id']
+        camera_id = int(request.json['camera_id'])
+        ack_id = int(request.json['ack_id'])
 
         try:
             notice = IndiAllSkyDbNotificationTable.query\
@@ -5767,7 +5769,7 @@ class AjaxNotificationView(BaseView):
 
 
         # return next notification
-        return self.get()
+        return self.get(camera_id=camera_id)
 
 
 class UserInfoView(TemplateView):

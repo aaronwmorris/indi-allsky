@@ -224,7 +224,8 @@ $.ajaxSetup({
 
 function ackNotification(notice_id, onDone, onError) {
     postData = {
-        'ack_id' : notice_id
+        'camera_id' : camera_id,
+        'ack_id'    : notice_id,
     };
 
     if(!onDone)onDone=function(){};
@@ -235,11 +236,11 @@ function ackNotification(notice_id, onDone, onError) {
         url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
         contentType: "application/json",
         data: JSON.stringify(postData),
-        success: function(data){
-            onDone(data);
+        success: function(rdata){
+            onDone(rdata);
         },
-        error: function(data){
-            onError(data);
+        error: function(rdata){
+            onError(rdata);
         },
     });
 }
