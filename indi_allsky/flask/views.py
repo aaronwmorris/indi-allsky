@@ -5138,8 +5138,7 @@ class ImageProcessingView(TemplateView):
     def get_context(self):
         context = super(ImageProcessingView, self).get_context()
 
-
-        camera_id = session['camera_id']
+        context['camera_id'] = self.camera.id
 
         fits_id = int(request.args.get('id', 0))
         frame_type = str(request.args.get('type', 'light'))
@@ -5157,7 +5156,7 @@ class ImageProcessingView(TemplateView):
                 # just pick the last fits file is none specified
                 fits_entry = IndiAllSkyDbFitsImageTable.query\
                     .join(IndiAllSkyDbFitsImageTable.camera)\
-                    .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                    .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                     .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())\
                     .first()
 
@@ -5168,7 +5167,7 @@ class ImageProcessingView(TemplateView):
 
 
         form_data = {
-            'CAMERA_ID'                      : camera_id,
+            'CAMERA_ID'                      : self.camera.id,
             'FRAME_TYPE'                     : frame_type,
             'FITS_ID'                        : fits_id,
             'CCD_BIT_DEPTH'                  : str(self.indi_allsky_config.get('CCD_BIT_DEPTH', 0)),  # string in form, int in config
@@ -5271,6 +5270,8 @@ class JsonImageProcessingView(JsonView):
         camera_id                           = int(request.json['CAMERA_ID'])
         frame_type                          = str(request.json['FRAME_TYPE'])
         fits_id                             = int(request.json['FITS_ID'])
+
+        self.cameraSetup(camera_id=camera_id)
 
 
         if frame_type == 'dark':
