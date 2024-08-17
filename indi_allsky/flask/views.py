@@ -3111,6 +3111,8 @@ class SystemInfoView(TemplateView):
 
         context = super(SystemInfoView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         context['release'] = str(__version__)
 
         context['uptime_str'] = self.getUptime()
@@ -3535,7 +3537,6 @@ class AjaxSystemInfoView(BaseView):
     def dispatch_request(self):
         form_system = IndiAllskySystemInfoForm(data=request.json)
 
-
         if not app.config['LOGIN_DISABLED']:
             if not current_user.is_admin:
                 form_errors = form_system.errors  # this must be a property
@@ -3548,8 +3549,11 @@ class AjaxSystemInfoView(BaseView):
             return jsonify(form_errors), 400
 
 
+        camera_id = int(request.json['CAMERA_ID'])
         service = request.json['SERVICE_HIDDEN']
         command = request.json['COMMAND_HIDDEN']
+
+        self.cameraSetup(camera_id=camera_id)
 
         if service == app.config['INDISERVER_SERVICE_NAME']:
             if command == 'stop':
@@ -3652,7 +3656,7 @@ class AjaxSystemInfoView(BaseView):
                     }
                     return jsonify(json_data), 400
 
-                image_count = self.flushImages(session['camera_id'])
+                image_count = self.flushImages(camera_id)
 
                 json_data = {
                     'success-message' : '{0:d} Images Deleted'.format(image_count),
@@ -3666,7 +3670,7 @@ class AjaxSystemInfoView(BaseView):
                     return jsonify(json_data), 400
 
 
-                file_count = self.flushTimelapses(session['camera_id'])
+                file_count = self.flushTimelapses(camera_id)
 
                 json_data = {
                     'success-message' : '{0:d} Files Deleted'.format(file_count),
@@ -3680,7 +3684,7 @@ class AjaxSystemInfoView(BaseView):
                     return jsonify(json_data), 400
 
 
-                file_count = self.flushDaytime(session['camera_id'])
+                file_count = self.flushDaytime(camera_id)
 
                 json_data = {
                     'success-message' : '{0:d} Files Deleted'.format(file_count),

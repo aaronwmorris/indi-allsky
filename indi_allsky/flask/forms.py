@@ -5270,6 +5270,7 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 class IndiAllskySystemInfoForm(FlaskForm):
     # fake form to send commands to web application
 
+    CAMERA_ID           = HiddenField('Camera ID', validators=[DataRequired()])
     SERVICE_HIDDEN      = HiddenField('service_hidden', validators=[DataRequired()])
     COMMAND_HIDDEN      = HiddenField('command_hidden', validators=[DataRequired()])
 
