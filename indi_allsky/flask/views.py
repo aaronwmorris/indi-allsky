@@ -608,6 +608,8 @@ class SqmView(TemplateView):
     def get_context(self):
         context = super(SqmView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
         context['refreshInterval'] = refreshInterval_ms
 

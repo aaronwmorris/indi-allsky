@@ -18,6 +18,7 @@ var json_data = {
     'stars_data'  : {'min' : 0, 'max' : 0, 'avg' : 0},
     'message' : '',
 };
+var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
 var fullscreen = false;  //initial state
 
@@ -153,7 +154,7 @@ function showImage(entry) {
 
 function loadNextImage() {
     console.log('Loading next images');
-    loadJS("{{ url_for('indi_allsky.js_image_loop_view') }}", {'limit' : 1, 'limit_s' : 300}, function() {});
+    loadJS("{{ url_for('indi_allsky.js_image_loop_view') }}", {'camera_id' : camera_id, 'limit' : 1, 'limit_s' : 300}, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
 
@@ -170,12 +171,12 @@ function loadJS(url, data, onDone, onError) {
         url: url,
         contentType: "application/json",
         data: data,
-        success: function(data){
-            json_data = data
+        success: function(rdata){
+            json_data = rdata
             $('#message').html(json_data['message']);
         },
-        error: function(data){
-            onError(data.status);
+        error: function(rdata){
+            onError(rdata.status);
             $('#message').text('Error loading data.  Please check the logs.');
         },
     });
