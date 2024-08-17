@@ -99,13 +99,15 @@ function closeFullscreen() {
 
     <div class="form-group row">
         <div class="col-sm-1">
-            {{ form_viewer.CAMERA_ID(class='form-control bg-secondary') }}
             {{ form_viewer.YEAR_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-1">
             <?-- form-control until there is a better layout -->
             {{ form_viewer.YEAR_SELECT(class='form-control bg-secondary') }}
             <div id="YEAR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+
+            {{ form_viewer.CAMERA_ID(class='form-control bg-secondary') }}
+            <div id="CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
 
         <div class="col-sm-1">
