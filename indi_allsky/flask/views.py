@@ -2720,6 +2720,7 @@ class GalleryViewerView(FormView):
         context = super(GalleryViewerView, self).get_context()
 
         form_data = {
+            'CAMERA_ID'    : self.camera.id,
             'YEAR_SELECT'  : None,
             'MONTH_SELECT' : None,
             'DAY_SELECT'   : None,
@@ -2738,7 +2739,7 @@ class GalleryViewerView(FormView):
 
         context['form_viewer'] = IndiAllskyGalleryViewerPreload(
             data=form_data,
-            camera_id=session['camera_id'],
+            camera_id=self.camera.id,
             s3_prefix=self.s3_prefix,
             local=local,
         )
@@ -2754,12 +2755,14 @@ class AjaxGalleryViewerView(BaseView):
 
 
     def dispatch_request(self):
+        camera_id  = int(request.json['CAMERA_ID'])
         form_year  = request.json.get('YEAR_SELECT')
         form_month = request.json.get('MONTH_SELECT')
         form_day   = request.json.get('DAY_SELECT')
         form_hour  = request.json.get('HOUR_SELECT')
         form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
 
+        self.cameraSetup(camera_id=camera_id)
 
         local = True  # default to local assets
         if self.web_nonlocal_images:
@@ -2773,7 +2776,7 @@ class AjaxGalleryViewerView(BaseView):
             # filter images that have a detection
             form_viewer = IndiAllskyGalleryViewer(
                 data=request.json,
-                camera_id=session['camera_id'],
+                camera_id=camera_id,
                 detections_count=1,
                 s3_prefix=self.s3_prefix,
                 local=local,
@@ -2781,7 +2784,7 @@ class AjaxGalleryViewerView(BaseView):
         else:
             form_viewer = IndiAllskyGalleryViewer(
                 data=request.json,
-                camera_id=session['camera_id'],
+                camera_id=camera_id,
                 detections_count=0,
                 s3_prefix=self.s3_prefix,
                 local=local,
