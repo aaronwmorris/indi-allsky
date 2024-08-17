@@ -868,6 +868,7 @@ class ChartView(TemplateView):
     def get_context(self):
         context = super(ChartView, self).get_context()
 
+        context['camera_id'] = self.camera.id
         context['timestamp'] = int(request.args.get('timestamp', 0))
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
@@ -915,8 +916,11 @@ class JsonChartView(JsonView):
 
 
     def get_objects(self):
+        camera_id = int(request.args['camera_id'])
         history_seconds = int(request.args.get('limit_s', self.chart_history_seconds))
         timestamp = int(request.args.get('timestamp', 0))
+
+        self.cameraSetup(camera_id=camera_id)
 
         if not timestamp:
             timestamp = int(datetime.timestamp(self.camera_now))
@@ -928,7 +932,7 @@ class JsonChartView(JsonView):
             history_seconds = 86400
 
         data = {
-            'chart_data' : self.getChartData(ts_dt, history_seconds),
+            'chart_data' : self.getChartData(camera_id, ts_dt, history_seconds),
             'message' : '',
         }
 
@@ -940,7 +944,7 @@ class JsonChartView(JsonView):
         return data
 
 
-    def getChartData(self, ts_dt, history_seconds):
+    def getChartData(self, camera_id, ts_dt, history_seconds):
         import numpy
         import cv2
         import PIL
@@ -962,7 +966,7 @@ class JsonChartView(JsonView):
             .join(IndiAllSkyDbCameraTable)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == session['camera_id'],
+                    IndiAllSkyDbCameraTable.id == camera_id,
                     IndiAllSkyDbImageTable.createDate > ts_minus_seconds,
                     IndiAllSkyDbImageTable.createDate < ts_dt,
                 )
@@ -1136,7 +1140,7 @@ class JsonChartView(JsonView):
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == session['camera_id'],
+                    IndiAllSkyDbCameraTable.id == camera_id,
                     IndiAllSkyDbImageTable.createDate > now_minus_seconds,
                     IndiAllSkyDbImageTable.createDate < ts_dt,
                 )
