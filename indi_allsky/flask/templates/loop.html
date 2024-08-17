@@ -27,6 +27,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
+var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
 var timestamp = {{ timestamp | int }};
 var history_seconds;  // set later
@@ -114,7 +115,7 @@ function showImage(entry, idx) {
 
 function loadNextImage() {
     console.log('Loading next images');
-    loadJS("{{ url_for(image_loop_view) }}", {'limit_s' : history_seconds, 'timestamp' : timestamp}, function() {
+    loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : history_seconds, 'timestamp' : timestamp}, function() {
         //while (json_data['image_list'].length > maxFrames) {
         //    json_data['image_list'].splice(0, 1);  // remove first image
         //};
@@ -137,14 +138,14 @@ function loadJS(url, data, onDone, onError) {
         url: url,
         contentType: "application/json",
         data: data,
-        success: function(data){
+        success: function(rdata){
             $("#loader_loop").css({'display' : 'none'});
-            json_data = data
+            json_data = rdata
             $('#message').html(json_data['message']);
         },
-        error: function(data){
+        error: function(rdata){
             $("#loader_loop").css({'display' : 'none'});
-            onError(data.status);
+            onError(rdata.status);
             $('#message').text('Error loading data.  Please check the logs.');
         },
     });

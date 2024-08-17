@@ -622,6 +622,7 @@ class ImageLoopView(TemplateView):
         context = super(ImageLoopView, self).get_context()
 
         context['title'] = self.title
+        context['camera_id'] = self.camera.id
         context['image_loop_view'] = self.image_loop_view
 
         context['timestamp'] = int(request.args.get('timestamp', 0))
@@ -650,6 +651,10 @@ class JsonImageLoopView(JsonView):
         history_seconds = int(request.args.get('limit_s', self.history_seconds))
         self.limit = int(request.args.get('limit', self._limit))
         timestamp = int(request.args.get('timestamp', 0))
+        camera_id = int(request.args['camera_id'])
+
+        self.cameraSetup(camera_id=camera_id)
+
 
         if not timestamp:
             timestamp = int(datetime.timestamp(self.camera_now))
@@ -661,9 +666,9 @@ class JsonImageLoopView(JsonView):
             history_seconds = 86400
 
         data = {
-            'image_list' : self.getLoopImages(session['camera_id'], ts_dt, history_seconds),
-            'sqm_data'   : self.getSqmData(session['camera_id'], ts_dt),
-            'stars_data' : self.getStarsData(session['camera_id'], ts_dt),
+            'image_list' : self.getLoopImages(camera_id, ts_dt, history_seconds),
+            'sqm_data'   : self.getSqmData(camera_id, ts_dt),
+            'stars_data' : self.getStarsData(camera_id, ts_dt),
             'message'    : '',
         }
 
