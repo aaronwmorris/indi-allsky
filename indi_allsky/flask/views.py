@@ -392,6 +392,8 @@ class MaskView(TemplateView):
     def get_context(self):
         context = super(MaskView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         mask_image_uri = Path('images/mask_base.png')
 
         context['mask_image_uri'] = str(mask_image_uri)
@@ -424,6 +426,8 @@ class CamerasView(TemplateView):
 class DarkFramesView(TemplateView):
     def get_context(self):
         context = super(DarkFramesView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         darkframe_list = IndiAllSkyDbDarkFrameTable.query\
             .join(IndiAllSkyDbCameraTable)\
@@ -488,10 +492,11 @@ class DarkFramesView(TemplateView):
         return context
 
 
-
 class ImageLagView(TemplateView):
     def get_context(self):
         context = super(ImageLagView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         camera_now_minus_3h = self.camera_now - timedelta(hours=3)
 
@@ -517,7 +522,7 @@ class ImageLagView(TemplateView):
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == session['camera_id'],
+                    IndiAllSkyDbCameraTable.id == self.camera.id,
                     IndiAllSkyDbImageTable.createDate > camera_now_minus_3h,
                 )
             )\
@@ -534,6 +539,8 @@ class ImageLagView(TemplateView):
 class RollingAduView(TemplateView):
     def get_context(self):
         context = super(RollingAduView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         camera_now_minus_7d = self.camera_now - timedelta(days=7)
         createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
@@ -554,7 +561,7 @@ class RollingAduView(TemplateView):
                     func.avg(IndiAllSkyDbImageTable.stars).label('stars_avg'),
                 )\
                 .join(IndiAllSkyDbImageTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(
                     and_(
                         IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
@@ -585,7 +592,7 @@ class RollingAduView(TemplateView):
                     func.avg(IndiAllSkyDbImageTable.stars).label('stars_avg'),
                 )\
                 .join(IndiAllSkyDbImageTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(
                     and_(
                         IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
@@ -5550,6 +5557,7 @@ class LogView(TemplateView):
     def get_context(self):
         context = super(LogView, self).get_context()
 
+        context['camera_id'] = self.camera.id
         context['form_logviewer'] = IndiAllskyLogViewerForm()
 
         return context
@@ -5622,7 +5630,7 @@ class SupportInfoView(TemplateView):
 
     def get_context(self):
         context = super(SupportInfoView, self).get_context()
-
+        context['camera_id'] = self.camera.id
         return context
 
 
@@ -5931,8 +5939,10 @@ class CameraLensView(TemplateView):
     def get_context(self):
         context = super(CameraLensView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .one()
 
 
@@ -6135,6 +6145,8 @@ class AjaxUploadYoutubeView(BaseView):
 class CameraSimulatorView(TemplateView):
     def get_context(self):
         context = super(CameraSimulatorView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         lens = str(request.args.get('lens', 'zwo_f1.2_2.5mm'))
         sensor = str(request.args.get('sensor', 'imx477'))
