@@ -4322,6 +4322,7 @@ class IndiAllskyVideoViewer(FlaskForm):
         ('night', 'Night'),
     )
 
+    CAMERA_ID            = HiddenField('Camera ID', validators=[DataRequired()])
     YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
     MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
     TIMEOFDAY_SELECT     = SelectField('Time of Day', choices=TIMEOFDAY_SELECT_choices, validators=[])
@@ -4412,7 +4413,6 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
         return month_choices
-
 
 
     def getVideos(self, year, month, timeofday):
