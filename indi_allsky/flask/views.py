@@ -1248,6 +1248,8 @@ class ConfigView(FormView):
     def get_context(self):
         context = super(ConfigView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         form_data = {
             'CAMERA_INTERFACE'               : self.indi_allsky_config.get('CAMERA_INTERFACE', 'indi'),
             'INDI_SERVER'                    : self.indi_allsky_config.get('INDI_SERVER', 'localhost'),
