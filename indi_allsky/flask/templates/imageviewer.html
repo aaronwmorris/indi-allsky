@@ -29,6 +29,7 @@ canvas {
 var img;
 var fullscreen = false;  //initial state
 var newest_image_default = true;  // load last image by default
+var camera_id = {{ camera_id }};
 var panorama__enable = {{ panorama__enable }};
 var image_data = [];
 var image_index = -1;
@@ -98,6 +99,7 @@ function closeFullscreen() {
 
     <div class="form-group row">
         <div class="col-sm-1">
+            {{ form_viewer.CAMERA_ID(class='form-control bg-secondary') }}
             {{ form_viewer.YEAR_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-1">
@@ -213,6 +215,7 @@ const successMessage = $('#success-message');
 const failureMessage = $('#failure-message');
 const field_names = [
     'csrf_token',
+    'CAMERA_ID',
     'YEAR_SELECT',
     'MONTH_SELECT',
     'DAY_SELECT',
@@ -278,11 +281,11 @@ function hour_change(json_data) {
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
-        success: function(data){
-            image_data = data['IMAGE_DATA']
+        success: function(rdata){
+            image_data = rdata['IMAGE_DATA']
 
             $("#IMG_SELECT").empty()
-            data['IMAGE_DATA'].forEach(item => {
+            rdata['IMAGE_DATA'].forEach(item => {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
@@ -300,8 +303,8 @@ function hour_change(json_data) {
 
             $("#loader_filter").css({'display' : 'none'});
         },
-        error: function(data){
-            Object.keys(data).forEach((key) => {
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
                 fields[key].input.addClass('is-invalid');
                 fields[key].error.html(errors[key][0]);
                 fields[key].error.css({'display' : 'block'});
@@ -321,6 +324,7 @@ $("#HOUR_SELECT").on("change", function() {
     $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
         'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
@@ -338,16 +342,16 @@ function day_change(json_data) {
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
-        success: function(data){
-            image_data = data['IMAGE_DATA']
+        success: function(rdata){
+            image_data = rdata['IMAGE_DATA']
 
             $("#HOUR_SELECT").empty()
-            data['HOUR_SELECT'].forEach(item => {
+            rdata['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#IMG_SELECT").empty()
-            data['IMAGE_DATA'].forEach(item => {
+            rdata['IMAGE_DATA'].forEach(item => {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
@@ -355,8 +359,8 @@ function day_change(json_data) {
 
             $("#loader_filter").css({'display' : 'none'});
         },
-        error: function(data){
-            Object.keys(data).forEach((key) => {
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
                 fields[key].input.addClass('is-invalid');
                 fields[key].error.html(errors[key][0]);
                 fields[key].error.css({'display' : 'block'});
@@ -376,6 +380,7 @@ $("#DAY_SELECT").on("change", function() {
     $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
         'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
@@ -392,21 +397,21 @@ function month_change(json_data) {
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
-        success: function(data){
-            image_data = data['IMAGE_DATA']
+        success: function(rdata){
+            image_data = rdata['IMAGE_DATA']
 
             $("#DAY_SELECT").empty()
-            data['DAY_SELECT'].forEach(item => {
+            rdata['DAY_SELECT'].forEach(item => {
                 $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#HOUR_SELECT").empty()
-            data['HOUR_SELECT'].forEach(item => {
+            rdata['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#IMG_SELECT").empty()
-            data['IMAGE_DATA'].forEach(item => {
+            rdata['IMAGE_DATA'].forEach(item => {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
@@ -414,8 +419,8 @@ function month_change(json_data) {
 
             $("#loader_filter").css({'display' : 'none'});
         },
-        error: function(data){
-            Object.keys(data).forEach((key) => {
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
                 fields[key].input.addClass('is-invalid');
                 fields[key].error.html(errors[key][0]);
                 fields[key].error.css({'display' : 'block'});
@@ -435,6 +440,7 @@ $("#MONTH_SELECT").on("change", function() {
     $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
@@ -450,26 +456,26 @@ function year_change(json_data) {
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
-        success: function(data){
-            image_data = data['IMAGE_DATA']
+        success: function(rdata){
+            image_data = rdata['IMAGE_DATA']
 
             $("#MONTH_SELECT").empty()
-            data['MONTH_SELECT'].forEach(item => {
+            rdata['MONTH_SELECT'].forEach(item => {
                 $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#DAY_SELECT").empty()
-            data['DAY_SELECT'].forEach(item => {
+            rdata['DAY_SELECT'].forEach(item => {
                 $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#HOUR_SELECT").empty()
-            data['HOUR_SELECT'].forEach(item => {
+            rdata['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#IMG_SELECT").empty()
-            data['IMAGE_DATA'].forEach(item => {
+            rdata['IMAGE_DATA'].forEach(item => {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
@@ -477,8 +483,8 @@ function year_change(json_data) {
 
             $("#loader_filter").css({'display' : 'none'});
         },
-        error: function(data){
-            Object.keys(data).forEach((key) => {
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
                 fields[key].input.addClass('is-invalid');
                 fields[key].error.html(errors[key][0]);
                 fields[key].error.css({'display' : 'block'});
@@ -498,6 +504,7 @@ $("#YEAR_SELECT").on("change", function() {
     $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
@@ -524,31 +531,31 @@ $("#FILTER_DETECTIONS").on("change", function() {
         url: "{{ url_for('indi_allsky.ajax_imageviewer_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
-        success: function(data){
-            image_data = data['IMAGE_DATA']
+        success: function(rdata){
+            image_data = rdata['IMAGE_DATA']
 
             $("#YEAR_SELECT").empty()
-            data['YEAR_SELECT'].forEach(item => {
+            rdata['YEAR_SELECT'].forEach(item => {
                 $("#YEAR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#MONTH_SELECT").empty()
-            data['MONTH_SELECT'].forEach(item => {
+            rdata['MONTH_SELECT'].forEach(item => {
                 $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#DAY_SELECT").empty()
-            data['DAY_SELECT'].forEach(item => {
+            rdata['DAY_SELECT'].forEach(item => {
                 $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#HOUR_SELECT").empty()
-            data['HOUR_SELECT'].forEach(item => {
+            rdata['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
             $("#IMG_SELECT").empty()
-            data['IMAGE_DATA'].forEach(item => {
+            rdata['IMAGE_DATA'].forEach(item => {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
@@ -556,8 +563,8 @@ $("#FILTER_DETECTIONS").on("change", function() {
 
             $("#loader_filter").css({'display' : 'none'});
         },
-        error: function(data){
-            Object.keys(data).forEach((key) => {
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
                 fields[key].input.addClass('is-invalid');
                 fields[key].error.html(errors[key][0]);
                 fields[key].error.css({'display' : 'block'});
@@ -569,6 +576,7 @@ $("#FILTER_DETECTIONS").on("change", function() {
 
 function init() {
     var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
         'FILTER_DETECTIONS' : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
@@ -780,8 +788,9 @@ $("#EXCLUDE_EXCLUDE").on("change", function() {
     $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
+        'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
         'EXCLUDE_IMAGE_ID' : $('#EXCLUDE_IMAGE_ID').val(),
-        'EXCLUDE_EXCLUDE' : $('#EXCLUDE_EXCLUDE').prop('checked'),
+        'EXCLUDE_EXCLUDE'  : $('#EXCLUDE_EXCLUDE').prop('checked'),
     };
 
     $.ajax({
@@ -789,11 +798,11 @@ $("#EXCLUDE_EXCLUDE").on("change", function() {
         url: "{{ url_for('indi_allsky.ajax_image_exclude_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
-        success: function(data){
+        success: function(rdata){
             $("#loader_filter").css({'display' : 'none'});
-            image_data[image_index]['exclude'] = data['exclude'];  // update image exclude value
+            image_data[image_index]['exclude'] = rdata['exclude'];  // update image exclude value
         },
-        error: function(data){
+        error: function(rdata){
             $("#loader_filter").css({'display' : 'none'});
         },
     });

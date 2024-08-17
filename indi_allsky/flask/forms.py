@@ -3650,6 +3650,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
 class IndiAllskyImageViewer(FlaskForm):
+    CAMERA_ID            = HiddenField('Camera ID', validators=[DataRequired()])
     YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
     MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
     DAY_SELECT           = SelectField('Day', choices=[], validators=[])

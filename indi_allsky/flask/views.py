@@ -2553,9 +2553,10 @@ class ImageViewerView(FormView):
     def get_context(self):
         context = super(ImageViewerView, self).get_context()
 
-        context['camera_id'] = session['camera_id']
+        context['camera_id'] = self.camera.id
 
         form_data = {
+            'CAMERA_ID'    : self.camera.id,
             'YEAR_SELECT'  : None,
             'MONTH_SELECT' : None,
             'DAY_SELECT'   : None,
@@ -2594,12 +2595,14 @@ class AjaxImageViewerView(BaseView):
 
 
     def dispatch_request(self):
+        camera_id  = int(request.json['CAMERA_ID'])
         form_year  = request.json.get('YEAR_SELECT')
         form_month = request.json.get('MONTH_SELECT')
         form_day   = request.json.get('DAY_SELECT')
         form_hour  = request.json.get('HOUR_SELECT')
         form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
 
+        self.cameraSetup(camera_id=camera_id)
 
         local = True  # default to local assets
         if self.web_nonlocal_images:
@@ -2613,7 +2616,7 @@ class AjaxImageViewerView(BaseView):
             # filter images that have a detection
             form_viewer = IndiAllskyImageViewer(
                 data=request.json,
-                camera_id=session['camera_id'],
+                camera_id=camera_id,
                 detections_count=1,
                 s3_prefix=self.s3_prefix,
                 local=local,
@@ -2621,7 +2624,7 @@ class AjaxImageViewerView(BaseView):
         else:
             form_viewer = IndiAllskyImageViewer(
                 data=request.json,
-                camera_id=session['camera_id'],
+                camera_id=camera_id,
                 detections_count=0,
                 s3_prefix=self.s3_prefix,
                 local=local,
@@ -5996,7 +5999,7 @@ class AjaxImageExcludeView(BaseView):
             return jsonify(form_errors), 400
 
 
-        camera_id = session['camera_id']
+        camera_id = int(request.json['CAMERA_ID'])
         image_id = int(request.json['EXCLUDE_IMAGE_ID'])
         exclude = bool(request.json['EXCLUDE_EXCLUDE'])
 
