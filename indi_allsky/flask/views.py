@@ -6455,6 +6455,7 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
+        context['camera_id'] = self.camera.id
         return context
 
 
@@ -6473,21 +6474,17 @@ class AjaxAstroPanelView(BaseView):
 
 
     def dispatch_request(self):
+        camera_id = int(request.args['camera_id'])
+
         if request.method == 'GET':
-            return self.get()
-        elif request.method == 'POST':
-            return self.post()
+            return self.get(camera_id)
         else:
             return jsonify({}), 400
 
 
-    def get(self):
-        return self.post()
-
-
-    def post(self):
+    def get(self, camera_id):
         camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .one()
 
 
