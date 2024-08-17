@@ -247,7 +247,7 @@ function ackNotification(notice_id, onDone, onError) {
 
 
 function loadNotification(getData, onDone, onError) {
-    if(!getData)getData={};
+    if(!getData)getData={'camera_id' : camera_id};
     if(!onDone)onDone=function(){};
     if(!onError)onError=function(){};
 
@@ -317,7 +317,7 @@ function changeCamera(onDone, onError) {
 
 $( document ).ready(function() {
     // Load notifications when ready
-    loadNotification({}, showNotification);
+    loadNotification({'camera_id' : camera_id}, showNotification);
 
     $("#CAMERA_SELECT").on("change", function() {
         changeCamera();

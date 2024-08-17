@@ -60,7 +60,7 @@ class BaseView(View):
 
     def cameraSetup(self, camera_id=None):
         if not self.camera:
-            self.camera = self.getCameraById(self, camera_id)
+            self.camera = self.getCameraById(camera_id)
 
         self.local_indi_allsky = self.camera.local
         self.getSunSetDate()

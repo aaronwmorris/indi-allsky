@@ -19,6 +19,7 @@ var json_data = {
     }
 };
 var max_age = 900;
+var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
 var night = {{ night }};
 var fullscreen = false;  //initial state
@@ -69,7 +70,7 @@ function showImage(entry) {
 
 function loadNextImage() {
     console.log('Loading next image');
-    loadJS("{{ url_for(latest_image_view) }}", {'limit_s' : max_age, 'night' : night}, function() {});
+    loadJS("{{ url_for(latest_image_view) }}", {'camera_id' : camera_id, 'limit_s' : max_age, 'night' : night}, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
 
@@ -86,12 +87,12 @@ function loadJS(url, data, onDone, onError) {
         url: url,
         contentType: "application/json",
         data: data,
-        success: function(data){
-            json_data = data
+        success: function(rdata){
+            json_data = rdata
             $('#message').html(json_data['latest_image']['message']);
         },
-        error: function(data){
-            onError(data.status);
+        error: function(rdata){
+            onError(rdata.status);
             $('#message').html('Error loading data.  Please check the logs.');
         },
     });

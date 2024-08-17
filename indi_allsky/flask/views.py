@@ -127,6 +127,7 @@ class IndexView(TemplateView):
         context = super(IndexView, self).get_context()
 
         context['title'] = self.title
+        context['camera_id'] = self.camera.id
         context['latest_image_view'] = self.latest_image_view
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
@@ -147,12 +148,16 @@ class JsonLatestImageView(JsonView):
 
 
     def get_objects(self):
+        camera_id = int(request.args['camera_id'])
         history_seconds = int(request.args.get('limit_s', self.history_seconds))
         night = bool(int(request.args.get('night', 1)))
 
         # sanity check
         if history_seconds > 86400:
             history_seconds = 86400
+
+
+        self.cameraSetup(camera_id=camera_id)
 
 
         no_image_message = 'No Image for 15 minutes'
@@ -5660,6 +5665,10 @@ class AjaxNotificationView(BaseView):
                 'id' : 0,
             }
             return jsonify(no_data)
+
+
+        camera_id = int(request.args['camera_id'])
+        self.cameraSetup(camera_id=camera_id)
 
 
         if request.method == 'POST':
