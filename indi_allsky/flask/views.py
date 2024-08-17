@@ -4377,7 +4377,16 @@ class TimelapseGeneratorView(TemplateView):
     def get_context(self):
         context = super(TimelapseGeneratorView, self).get_context()
 
-        context['form_timelapsegen'] = IndiAllskyTimelapseGeneratorForm(camera_id=session['camera_id'])
+        context['camera_id'] = self.camera.id
+
+        form_data = {
+            'CAMERA_ID' : self.camera.id,
+        }
+
+        context['form_timelapsegen'] = IndiAllskyTimelapseGeneratorForm(
+            data=form_data,
+            camera_id=self.camera.id,
+        )
 
         # Lookup tasks
         state_list = (
@@ -4429,7 +4438,6 @@ class TimelapseGeneratorView(TemplateView):
         return context
 
 
-
 class AjaxTimelapseGeneratorView(BaseView):
     methods = ['POST']
     decorators = [login_required]
@@ -4440,7 +4448,9 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
     def dispatch_request(self):
-        form_timelapsegen = IndiAllskyTimelapseGeneratorForm(data=request.json, camera_id=session['camera_id'])
+        camera_id = int(request.json['CAMERA_ID'])
+
+        form_timelapsegen = IndiAllskyTimelapseGeneratorForm(data=request.json, camera_id=camera_id)
 
         if not form_timelapsegen.validate():
             form_errors = form_timelapsegen.errors  # this must be a property
@@ -4468,7 +4478,7 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
         camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .one()
 
 

@@ -4995,6 +4995,7 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
         ('delete_images', 'Delete Images for date *DANGER*'),
     )
 
+    CAMERA_ID          = HiddenField('Camera ID', validators=[DataRequired()])
     ACTION_SELECT      = SelectField('Action', choices=ACTION_SELECT_choices, validators=[DataRequired()])
     DAY_SELECT         = SelectField('Day', choices=[], validators=[DataRequired()])
     CONFIRM1           = BooleanField('Confirm')
