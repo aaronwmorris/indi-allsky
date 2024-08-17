@@ -2586,7 +2586,7 @@ class ImageViewerView(FormView):
 
         context['form_viewer'] = IndiAllskyImageViewerPreload(
             data=form_data,
-            camera_id=session['camera_id'],
+            camera_id=self.camera.id,
             s3_prefix=self.s3_prefix,
             local=local,
         )
@@ -6233,10 +6233,6 @@ class TimelapseImageView(TemplateView):
             return context
 
 
-        ### Set session camera
-        #session['camera_id'] = image.camera_id
-
-
         if image.night:
             context['timeofday'] = 'Night'
         else:
@@ -6330,10 +6326,6 @@ class TimelapseVideoView(TemplateView):
             context['dayDate_full'] = 'Video not found'
             context['video_url'] = ''
             return context
-
-
-        ### Set session camera
-        #session['camera_id'] = video.camera_id
 
 
         if video.night:
