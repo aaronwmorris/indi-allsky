@@ -525,6 +525,7 @@ $("#FILTER_DETECTIONS").on("change", function() {
     $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
+        'CAMERA_ID'          : fields["CAMERA_ID"].input.val(),
         'FILTER_DETECTIONS'  : fields["FILTER_DETECTIONS"].input.prop("checked"),
     };
 
