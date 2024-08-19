@@ -43,6 +43,7 @@
 <link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='astropanel/css/style.css') }}">
 
 <script type="text/javascript">
+var camera_id = {{ camera_id }};
 var refreshInterval = 60000;
 var json_data = {
     'moon_phase' : 'Unknown',
@@ -65,7 +66,7 @@ async function loop() {
 
 function loadData() {
     console.log('Loading data');
-    loadJS("{{ url_for('indi_allsky.ajax_astropanel_view') }}", {});
+    loadJS("{{ url_for('indi_allsky.ajax_astropanel_view') }}", {'camera_id' : camera_id});
     setTimeout(loadData, refreshInterval);
 }
 
@@ -97,7 +98,6 @@ function loadJS(url, data, onDone, onError) {
     });
 
 }
-
 
 
 function populateData() {

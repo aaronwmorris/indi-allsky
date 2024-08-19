@@ -20,10 +20,13 @@
   100% { transform: rotate(360deg); }
 }
 </style>
+<script type="text/javascript">
+var camera_id = {{ camera_id }};
+</script>
+
 {% endblock %}
 
 {% block content %}
-
 
 <hr>
 
@@ -38,6 +41,7 @@
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_timelapsegen.CAMERA_ID(class='form-control bg-secondary') }}
             {{ form_timelapsegen.ACTION_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
@@ -115,6 +119,7 @@ const form_timelapsegen_successMessage = $('#form_timelapsegen_success-message')
 const form_timelapsegen_failureMessage = $('#form_timelapsegen_failure-message');
 const form_timelapsegen_field_names = [
     'csrf_token',
+    'CAMERA_ID',
     'ACTION_SELECT',
     'DAY_SELECT',
 ];
@@ -174,6 +179,7 @@ $('#form_timelapsegen').on('submit', function() {
 
     // Populate fields object
     var json_data = {};
+
     form_timelapsegen_field_names.forEach(item => {
         json_data[item] = form_timelapsegen_fields[item].input.val();
     });
@@ -189,9 +195,9 @@ $('#form_timelapsegen').on('submit', function() {
         url: "{{ url_for('indi_allsky.ajax_generate_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
-        success: function(data){
+        success: function(rdata){
             $("#ACTION_SELECT").val('none');
-            form_timelapsegen_successMessage.html(data['success-message']);
+            form_timelapsegen_successMessage.html(rdata['success-message']);
             form_timelapsegen_successMessage.css({'display' : 'block'});
             setTimeout(function() {
                 form_timelapsegen_successMessage.css({'display' : 'none'});
@@ -199,8 +205,8 @@ $('#form_timelapsegen').on('submit', function() {
 
             $("#loader_generate").css({'display' : 'none'});
         },
-        error: function(data){
-            var errors = JSON.parse(data.responseText);
+        error: function(rdata){
+            var errors = JSON.parse(rdata.responseText);
             Object.keys(errors).forEach((key) => {
                 form_timelapsegen_fields[key].input.addClass('is-invalid');
                 form_timelapsegen_fields[key].error.html(errors[key][0]);

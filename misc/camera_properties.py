@@ -167,7 +167,7 @@ class IndiProperties(PyIndi.BaseClient):
                     }
             elif p.getType() == PyIndi.INDI_NUMBER:
                 for t in p.getNumber():
-                    properties[name]['{0} (number)'.format(t.getName())] = {
+                    properties[name]['{0} [{1}] (number)'.format(t.getName(), t.getLabel())] = {
                         'current' : t.getValue(),
                         'min'     : t.getMin(),
                         'max'     : t.getMax(),

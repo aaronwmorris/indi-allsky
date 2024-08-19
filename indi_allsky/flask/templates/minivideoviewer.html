@@ -21,6 +21,7 @@
 }
 </style>
 <script type="text/javascript">
+var camera_id = {{ camera_id }};
 var youtube__enable = {{ youtube__enable }};
 </script>
 
@@ -38,6 +39,9 @@ var youtube__enable = {{ youtube__enable }};
         <div class="col-sm-2">
             {{ form_mini_video_viewer.YEAR_SELECT(class='form-select bg-secondary') }}
             <div id="YEAR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+
+            {{ form_mini_video_viewer.CAMERA_ID(class='form-control bg-secondary') }}
+            <div id="CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
 
         <div class="col-sm-1">
@@ -71,6 +75,7 @@ const successMessage = $('#success-message');
 const failureMessage = $('#failure-message');
 const field_names = [
     'csrf_token',
+    'CAMERA_ID',
     'YEAR_SELECT',
     'MONTH_SELECT',
 ];
@@ -301,12 +306,12 @@ function month_change(json_data) {
         url: "{{ url_for('indi_allsky.ajax_mini_videoviewer_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
-        success: function(data){
-            populate_videos(data['video_list']);
+        success: function(rdata){
+            populate_videos(rdata['video_list']);
             $("#loader_filter").css({'display' : 'none'});
         },
-        error: function(data){
-            Object.keys(data).forEach((key) => {
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
                 fields[key].input.addClass('is-invalid');
                 fields[key].error.html(errors[key][0]);
                 fields[key].error.css({'display' : 'block'});
@@ -326,6 +331,7 @@ $("#MONTH_SELECT").on("change", function() {
     $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
+        'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
         'MONTH_SELECT'     : fields["MONTH_SELECT"].input.val(),
     };
@@ -344,6 +350,7 @@ $("#TIMEOFDAY_SELECT").on("change", function() {
     $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
+        'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
         'MONTH_SELECT'     : fields["MONTH_SELECT"].input.val(),
     };
@@ -358,18 +365,18 @@ function year_change(json_data) {
         url: "{{ url_for('indi_allsky.ajax_mini_videoviewer_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
-        success: function(data){
+        success: function(rdata){
             $("#MONTH_SELECT").empty()
-            data['MONTH_SELECT'].forEach(item => {
+            rdata['MONTH_SELECT'].forEach(item => {
                 $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-            populate_videos(data['video_list']);
+            populate_videos(rdata['video_list']);
 
             $("#loader_filter").css({'display' : 'none'});
         },
-        error: function(data){
-            Object.keys(data).forEach((key) => {
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
                 fields[key].input.addClass('is-invalid');
                 fields[key].error.html(errors[key][0]);
                 fields[key].error.css({'display' : 'block'});
@@ -390,6 +397,7 @@ $("#YEAR_SELECT").on("change", function() {
     $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
+        'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
     };
 
@@ -401,6 +409,7 @@ function upload_youtube_video(video_id, asset_type) {
     $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
+        'CAMERA_ID'  : fields["CAMERA_ID"].input.val(),
         'VIDEO_ID'   : video_id,
         'ASSET_TYPE' : asset_type,
     };
@@ -410,17 +419,17 @@ function upload_youtube_video(video_id, asset_type) {
         url: "{{ url_for('indi_allsky.ajax_upload_youtube_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
-        success: function(data){
+        success: function(rdata){
             $("#loader_filter").css({'display' : 'none'});
 
-            successMessage.html(data['success-message']);
+            successMessage.html(rdata['success-message']);
             successMessage.css({'display' : 'block'});
             setTimeout(function() {
                 successMessage.css({'display' : 'none'});
             }, 10000);
 
         },
-        error: function(data){
+        error: function(rdata){
             $("#loader_filter").css({'display' : 'none'});
 
             failureMessage.html('Error submitting upload');
@@ -435,6 +444,7 @@ function upload_youtube_video(video_id, asset_type) {
 
 function init() {
     var json_data = {
+        'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
         'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
     };
 
