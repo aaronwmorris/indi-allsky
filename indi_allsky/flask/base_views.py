@@ -57,6 +57,9 @@ class BaseView(View):
 
         self.camera = None
 
+        ### Any non-TemplateView that needs camera related variables needs to call cameraSetup(camera_id=camera_id)
+        ### This means the camera_id variable needs to be passed to the view via parameter or form element
+
 
     def cameraSetup(self, camera_id=None):
         if not self.camera:
