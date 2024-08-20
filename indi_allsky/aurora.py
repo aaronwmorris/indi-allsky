@@ -3,6 +3,7 @@ import socket
 import ssl
 import math
 import json
+import urllib3.exceptions
 import requests
 import numpy
 import logging
@@ -52,6 +53,9 @@ class IndiAllskyAuroraUpdate(object):
             except requests.exceptions.ReadTimeout as e:
                 logger.error('Connection error: %s', str(e))
                 self.ovation_json_data = None
+            except urllib3.exceptions.ReadTimeoutError as e:
+                logger.error('Connection error: %s', str(e))
+                self.ovation_json_data = None
             except ssl.SSLCertVerificationError as e:
                 logger.error('Certificate error: %s', str(e))
                 self.ovation_json_data = None
@@ -77,6 +81,9 @@ class IndiAllskyAuroraUpdate(object):
                 logger.error('Connection timeout: %s', str(e))
                 self.kpindex_json_data = None
             except requests.exceptions.ConnectionError as e:
+                logger.error('Connection error: %s', str(e))
+                self.kpindex_json_data = None
+            except urllib3.exceptions.ReadTimeoutError as e:
                 logger.error('Connection error: %s', str(e))
                 self.kpindex_json_data = None
             except ssl.SSLCertVerificationError as e:

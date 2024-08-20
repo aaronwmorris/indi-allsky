@@ -3,6 +3,7 @@
 #from datetime import timedelta
 import socket
 import ssl
+import urllib3.exceptions
 import requests
 import logging
 
@@ -48,6 +49,9 @@ class IndiAllskyUpdateSatelliteData(object):
                 logger.error('Connection error: %s', str(e))
                 continue
             except requests.exceptions.ReadTimeout as e:
+                logger.error('Connection error: %s', str(e))
+                continue
+            except urllib3.exceptions.ReadTimeoutError as e:
                 logger.error('Connection error: %s', str(e))
                 continue
             except ssl.SSLCertVerificationError as e:

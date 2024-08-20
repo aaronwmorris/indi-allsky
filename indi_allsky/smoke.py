@@ -5,6 +5,7 @@ from datetime import timedelta  # noqa: F401
 from collections import OrderedDict
 import socket
 import ssl
+import urllib3.exceptions
 import requests
 from lxml import etree
 import shapely
@@ -104,6 +105,9 @@ class IndiAllskySmokeUpdate(object):
                 logger.error('Connection error: %s', str(e))
                 self.hms_kml_data = None
             except requests.exceptions.ReadTimeout as e:
+                logger.error('Connection error: %s', str(e))
+                self.hms_kml_data = None
+            except urllib3.exceptions.ReadTimeoutError as e:
                 logger.error('Connection error: %s', str(e))
                 self.hms_kml_data = None
             except ssl.SSLCertVerificationError as e:
