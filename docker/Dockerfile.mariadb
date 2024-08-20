@@ -1,5 +1,5 @@
 
-FROM mariadb:jammy
+FROM mariadb:latest
 
 ARG DEBIAN_FRONTEND=noninteractive
 

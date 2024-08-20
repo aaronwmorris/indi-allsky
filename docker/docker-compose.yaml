@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   indi.base:
     build:
@@ -21,8 +19,8 @@ services:
     env_file: .env
     volumes:
       - database_indi_allsky:/var/lib/mysql
-    #ports:
-    #  - "13306:3306"
+    ports:
+      - "13306:3306"
 
 
   indiserver.indi.allsky:
