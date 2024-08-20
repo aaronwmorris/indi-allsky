@@ -5538,6 +5538,12 @@ class IndiAllskyMiniTimelapseForm(FlaskForm):
         ('3600', '1 hour'),
         ('5400', '1.5 hours'),
         ('7200', '2 hours'),
+        ('7200', '2 hours'),
+        ('10800', '3 hours'),
+        ('14400', '4 hours'),
+        ('21600', '6 hours'),
+        ('28800', '8 hours'),
+        ('43200', '12 hours'),
     )
 
     FRAMERATE_SELECT_choices = (
