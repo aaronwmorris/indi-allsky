@@ -585,13 +585,13 @@ class IndiAllSky(object):
         uw_dict['worker'].start()
 
 
-        if self.upload_worker_idx % 10 == 0:
-            # notify if worker is restarted more than 10 times
+        if self.upload_worker_idx % 20 == 0:
+            # notify if worker is restarted more than 20 times
             with app.app_context():
                 self._miscDb.addNotification(
                     NotificationCategory.WORKER,
                     'FileUploader',
-                    'WARNING: Upload worker was restarted more than 10 times',
+                    'WARNING: Upload worker was restarted more than 20 times',
                     expire=timedelta(hours=2),
                 )
 
