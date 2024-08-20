@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   homeassistant.indi.allsky:
     image: "ghcr.io/home-assistant/home-assistant:stable"

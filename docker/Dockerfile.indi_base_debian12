@@ -1,5 +1,5 @@
 
-FROM debian:bookworm-slim as indi.base
+FROM debian:bookworm-slim AS indi.base
 
 ARG TZ
 ARG INDI_VERSION

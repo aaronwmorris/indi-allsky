@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   indi.base:
     build:

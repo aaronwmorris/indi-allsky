@@ -1,5 +1,5 @@
 
-FROM ubuntu:jammy as indi.base
+FROM ubuntu:jammy AS indi.base
 
 ARG TZ
 ARG INDI_VERSION
