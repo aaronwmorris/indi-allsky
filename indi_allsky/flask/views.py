@@ -127,6 +127,7 @@ class IndexView(TemplateView):
         context = super(IndexView, self).get_context()
 
         context['title'] = self.title
+        context['camera_id'] = self.camera.id
         context['latest_image_view'] = self.latest_image_view
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
@@ -147,12 +148,16 @@ class JsonLatestImageView(JsonView):
 
 
     def get_objects(self):
+        camera_id = int(request.args['camera_id'])
         history_seconds = int(request.args.get('limit_s', self.history_seconds))
         night = bool(int(request.args.get('night', 1)))
 
         # sanity check
         if history_seconds > 86400:
             history_seconds = 86400
+
+
+        self.cameraSetup(camera_id=camera_id)
 
 
         no_image_message = 'No Image for 15 minutes'
@@ -244,7 +249,7 @@ class JsonLatestImageView(JsonView):
 
 
         # use database
-        latest_image_url = self.getLatestImage(session['camera_id'], history_seconds)
+        latest_image_url = self.getLatestImage(camera_id, history_seconds)
         if latest_image_url:
             data['latest_image']['url'] = latest_image_url
             data['latest_image']['message'] = ''
@@ -312,6 +317,9 @@ class LatestImageRedirect(BaseView):
         else:
             camera = self.getLatestCamera()
             camera_id = camera.id
+
+
+        self.cameraSetup(camera_id=camera_id)
 
 
         local = True
@@ -387,6 +395,8 @@ class MaskView(TemplateView):
     def get_context(self):
         context = super(MaskView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         mask_image_uri = Path('images/mask_base.png')
 
         context['mask_image_uri'] = str(mask_image_uri)
@@ -410,6 +420,8 @@ class CamerasView(TemplateView):
     def get_context(self):
         context = super(CamerasView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         context['camera_list'] = IndiAllSkyDbCameraTable.query\
             .all()
 
@@ -419,6 +431,8 @@ class CamerasView(TemplateView):
 class DarkFramesView(TemplateView):
     def get_context(self):
         context = super(DarkFramesView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         darkframe_list = IndiAllSkyDbDarkFrameTable.query\
             .join(IndiAllSkyDbCameraTable)\
@@ -483,10 +497,11 @@ class DarkFramesView(TemplateView):
         return context
 
 
-
 class ImageLagView(TemplateView):
     def get_context(self):
         context = super(ImageLagView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         camera_now_minus_3h = self.camera_now - timedelta(hours=3)
 
@@ -512,7 +527,7 @@ class ImageLagView(TemplateView):
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == session['camera_id'],
+                    IndiAllSkyDbCameraTable.id == self.camera.id,
                     IndiAllSkyDbImageTable.createDate > camera_now_minus_3h,
                 )
             )\
@@ -529,6 +544,8 @@ class ImageLagView(TemplateView):
 class RollingAduView(TemplateView):
     def get_context(self):
         context = super(RollingAduView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         camera_now_minus_7d = self.camera_now - timedelta(days=7)
         createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
@@ -549,7 +566,7 @@ class RollingAduView(TemplateView):
                     func.avg(IndiAllSkyDbImageTable.stars).label('stars_avg'),
                 )\
                 .join(IndiAllSkyDbImageTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(
                     and_(
                         IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
@@ -580,7 +597,7 @@ class RollingAduView(TemplateView):
                     func.avg(IndiAllSkyDbImageTable.stars).label('stars_avg'),
                 )\
                 .join(IndiAllSkyDbImageTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(
                     and_(
                         IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
@@ -603,6 +620,8 @@ class SqmView(TemplateView):
     def get_context(self):
         context = super(SqmView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
         context['refreshInterval'] = refreshInterval_ms
 
@@ -617,6 +636,7 @@ class ImageLoopView(TemplateView):
         context = super(ImageLoopView, self).get_context()
 
         context['title'] = self.title
+        context['camera_id'] = self.camera.id
         context['image_loop_view'] = self.image_loop_view
 
         context['timestamp'] = int(request.args.get('timestamp', 0))
@@ -645,6 +665,10 @@ class JsonImageLoopView(JsonView):
         history_seconds = int(request.args.get('limit_s', self.history_seconds))
         self.limit = int(request.args.get('limit', self._limit))
         timestamp = int(request.args.get('timestamp', 0))
+        camera_id = int(request.args['camera_id'])
+
+        self.cameraSetup(camera_id=camera_id)
+
 
         if not timestamp:
             timestamp = int(datetime.timestamp(self.camera_now))
@@ -656,9 +680,9 @@ class JsonImageLoopView(JsonView):
             history_seconds = 86400
 
         data = {
-            'image_list' : self.getLoopImages(session['camera_id'], ts_dt, history_seconds),
-            'sqm_data'   : self.getSqmData(session['camera_id'], ts_dt),
-            'stars_data' : self.getStarsData(session['camera_id'], ts_dt),
+            'image_list' : self.getLoopImages(camera_id, ts_dt, history_seconds),
+            'sqm_data'   : self.getSqmData(camera_id, ts_dt),
+            'stars_data' : self.getStarsData(camera_id, ts_dt),
             'message'    : '',
         }
 
@@ -856,6 +880,7 @@ class ChartView(TemplateView):
     def get_context(self):
         context = super(ChartView, self).get_context()
 
+        context['camera_id'] = self.camera.id
         context['timestamp'] = int(request.args.get('timestamp', 0))
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
@@ -903,8 +928,11 @@ class JsonChartView(JsonView):
 
 
     def get_objects(self):
+        camera_id = int(request.args['camera_id'])
         history_seconds = int(request.args.get('limit_s', self.chart_history_seconds))
         timestamp = int(request.args.get('timestamp', 0))
+
+        self.cameraSetup(camera_id=camera_id)
 
         if not timestamp:
             timestamp = int(datetime.timestamp(self.camera_now))
@@ -916,7 +944,7 @@ class JsonChartView(JsonView):
             history_seconds = 86400
 
         data = {
-            'chart_data' : self.getChartData(ts_dt, history_seconds),
+            'chart_data' : self.getChartData(camera_id, ts_dt, history_seconds),
             'message' : '',
         }
 
@@ -928,7 +956,7 @@ class JsonChartView(JsonView):
         return data
 
 
-    def getChartData(self, ts_dt, history_seconds):
+    def getChartData(self, camera_id, ts_dt, history_seconds):
         import numpy
         import cv2
         import PIL
@@ -950,7 +978,7 @@ class JsonChartView(JsonView):
             .join(IndiAllSkyDbCameraTable)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == session['camera_id'],
+                    IndiAllSkyDbCameraTable.id == camera_id,
                     IndiAllSkyDbImageTable.createDate > ts_minus_seconds,
                     IndiAllSkyDbImageTable.createDate < ts_dt,
                 )
@@ -1124,7 +1152,7 @@ class JsonChartView(JsonView):
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(
                 and_(
-                    IndiAllSkyDbCameraTable.id == session['camera_id'],
+                    IndiAllSkyDbCameraTable.id == camera_id,
                     IndiAllSkyDbImageTable.createDate > now_minus_seconds,
                     IndiAllSkyDbImageTable.createDate < ts_dt,
                 )
@@ -1231,6 +1259,8 @@ class ConfigView(FormView):
 
     def get_context(self):
         context = super(ConfigView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         form_data = {
             'CAMERA_INTERFACE'               : self.indi_allsky_config.get('CAMERA_INTERFACE', 'indi'),
@@ -2537,9 +2567,10 @@ class ImageViewerView(FormView):
     def get_context(self):
         context = super(ImageViewerView, self).get_context()
 
-        context['camera_id'] = session['camera_id']
+        context['camera_id'] = self.camera.id
 
         form_data = {
+            'CAMERA_ID'    : self.camera.id,
             'YEAR_SELECT'  : None,
             'MONTH_SELECT' : None,
             'DAY_SELECT'   : None,
@@ -2560,7 +2591,7 @@ class ImageViewerView(FormView):
 
         context['form_viewer'] = IndiAllskyImageViewerPreload(
             data=form_data,
-            camera_id=session['camera_id'],
+            camera_id=self.camera.id,
             s3_prefix=self.s3_prefix,
             local=local,
         )
@@ -2578,12 +2609,14 @@ class AjaxImageViewerView(BaseView):
 
 
     def dispatch_request(self):
+        camera_id  = int(request.json['CAMERA_ID'])
         form_year  = request.json.get('YEAR_SELECT')
         form_month = request.json.get('MONTH_SELECT')
         form_day   = request.json.get('DAY_SELECT')
         form_hour  = request.json.get('HOUR_SELECT')
         form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
 
+        self.cameraSetup(camera_id=camera_id)
 
         local = True  # default to local assets
         if self.web_nonlocal_images:
@@ -2597,7 +2630,7 @@ class AjaxImageViewerView(BaseView):
             # filter images that have a detection
             form_viewer = IndiAllskyImageViewer(
                 data=request.json,
-                camera_id=session['camera_id'],
+                camera_id=camera_id,
                 detections_count=1,
                 s3_prefix=self.s3_prefix,
                 local=local,
@@ -2605,7 +2638,7 @@ class AjaxImageViewerView(BaseView):
         else:
             form_viewer = IndiAllskyImageViewer(
                 data=request.json,
-                camera_id=session['camera_id'],
+                camera_id=camera_id,
                 detections_count=0,
                 s3_prefix=self.s3_prefix,
                 local=local,
@@ -2703,7 +2736,10 @@ class GalleryViewerView(FormView):
     def get_context(self):
         context = super(GalleryViewerView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         form_data = {
+            'CAMERA_ID'    : self.camera.id,
             'YEAR_SELECT'  : None,
             'MONTH_SELECT' : None,
             'DAY_SELECT'   : None,
@@ -2722,7 +2758,7 @@ class GalleryViewerView(FormView):
 
         context['form_viewer'] = IndiAllskyGalleryViewerPreload(
             data=form_data,
-            camera_id=session['camera_id'],
+            camera_id=self.camera.id,
             s3_prefix=self.s3_prefix,
             local=local,
         )
@@ -2738,12 +2774,14 @@ class AjaxGalleryViewerView(BaseView):
 
 
     def dispatch_request(self):
+        camera_id  = int(request.json['CAMERA_ID'])
         form_year  = request.json.get('YEAR_SELECT')
         form_month = request.json.get('MONTH_SELECT')
         form_day   = request.json.get('DAY_SELECT')
         form_hour  = request.json.get('HOUR_SELECT')
         form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
 
+        self.cameraSetup(camera_id=camera_id)
 
         local = True  # default to local assets
         if self.web_nonlocal_images:
@@ -2757,7 +2795,7 @@ class AjaxGalleryViewerView(BaseView):
             # filter images that have a detection
             form_viewer = IndiAllskyGalleryViewer(
                 data=request.json,
-                camera_id=session['camera_id'],
+                camera_id=camera_id,
                 detections_count=1,
                 s3_prefix=self.s3_prefix,
                 local=local,
@@ -2765,7 +2803,7 @@ class AjaxGalleryViewerView(BaseView):
         else:
             form_viewer = IndiAllskyGalleryViewer(
                 data=request.json,
-                camera_id=session['camera_id'],
+                camera_id=camera_id,
                 detections_count=0,
                 s3_prefix=self.s3_prefix,
                 local=local,
@@ -2863,11 +2901,12 @@ class VideoViewerView(FormView):
     def get_context(self):
         context = super(VideoViewerView, self).get_context()
 
-        context['camera_id'] = session['camera_id']
+        context['camera_id'] = self.camera.id
 
         context['youtube__enable'] = int(self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', 0))
 
         form_data = {
+            'CAMERA_ID'    : self.camera.id,
             'YEAR_SELECT'  : None,
             'MONTH_SELECT' : None,
         }
@@ -2883,7 +2922,7 @@ class VideoViewerView(FormView):
 
         context['form_video_viewer'] = IndiAllskyVideoViewerPreload(
             data=form_data,
-            camera_id=session['camera_id'],
+            camera_id=self.camera.id,
             s3_prefix=self.s3_prefix,
             local=local,
         )
@@ -2899,6 +2938,15 @@ class AjaxVideoViewerView(BaseView):
 
 
     def dispatch_request(self):
+        camera_id      = int(request.json['CAMERA_ID'])
+        form_year      = request.json.get('YEAR_SELECT')
+        form_month     = request.json.get('MONTH_SELECT')
+        form_timeofday = request.json.get('TIMEOFDAY_SELECT')
+
+
+        self.cameraSetup(camera_id=camera_id)
+
+
         local = True  # default to local assets
         if self.web_nonlocal_images:
             if self.web_local_images_admin and self.verify_admin_network():
@@ -2909,15 +2957,11 @@ class AjaxVideoViewerView(BaseView):
 
         form_video_viewer = IndiAllskyVideoViewer(
             data=request.json,
-            camera_id=session['camera_id'],
+            camera_id=camera_id,
             s3_prefix=self.s3_prefix,
             local=local,
         )
 
-
-        form_year      = request.json.get('YEAR_SELECT')
-        form_month     = request.json.get('MONTH_SELECT')
-        form_timeofday = request.json.get('TIMEOFDAY_SELECT')
 
         json_data = {}
 
@@ -2951,11 +2995,12 @@ class MiniVideoViewerView(FormView):
     def get_context(self):
         context = super(MiniVideoViewerView, self).get_context()
 
-        context['camera_id'] = session['camera_id']
+        context['camera_id'] = self.camera.id
 
         context['youtube__enable'] = int(self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', 0))
 
         form_data = {
+            'CAMERA_ID'    : self.camera.id,
             'YEAR_SELECT'  : None,
             'MONTH_SELECT' : None,
         }
@@ -2971,7 +3016,7 @@ class MiniVideoViewerView(FormView):
 
         context['form_mini_video_viewer'] = IndiAllskyMiniVideoViewerPreload(
             data=form_data,
-            camera_id=session['camera_id'],
+            camera_id=self.camera.id,
             s3_prefix=self.s3_prefix,
             local=local,
         )
@@ -2987,6 +3032,12 @@ class AjaxMiniVideoViewerView(BaseView):
 
 
     def dispatch_request(self):
+        camera_id      = int(request.json['CAMERA_ID'])
+        form_year      = request.json.get('YEAR_SELECT')
+        form_month     = request.json.get('MONTH_SELECT')
+
+        self.cameraSetup(camera_id=camera_id)
+
         local = True  # default to local assets
         if self.web_nonlocal_images:
             if self.web_local_images_admin and self.verify_admin_network():
@@ -2997,14 +3048,11 @@ class AjaxMiniVideoViewerView(BaseView):
 
         form_mini_video_viewer = IndiAllskyMiniVideoViewer(
             data=request.json,
-            camera_id=session['camera_id'],
+            camera_id=camera_id,
             s3_prefix=self.s3_prefix,
             local=local,
         )
 
-
-        form_year      = request.json.get('YEAR_SELECT')
-        form_month     = request.json.get('MONTH_SELECT')
 
         json_data = {}
 
@@ -3067,6 +3115,8 @@ class SystemInfoView(TemplateView):
             PyIndi = None
 
         context = super(SystemInfoView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         context['release'] = str(__version__)
 
@@ -3436,6 +3486,8 @@ class TaskQueueView(TemplateView):
     def get_context(self):
         context = super(TaskQueueView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         state_list = (
             TaskQueueState.MANUAL,
             TaskQueueState.QUEUED,
@@ -3492,7 +3544,6 @@ class AjaxSystemInfoView(BaseView):
     def dispatch_request(self):
         form_system = IndiAllskySystemInfoForm(data=request.json)
 
-
         if not app.config['LOGIN_DISABLED']:
             if not current_user.is_admin:
                 form_errors = form_system.errors  # this must be a property
@@ -3505,8 +3556,11 @@ class AjaxSystemInfoView(BaseView):
             return jsonify(form_errors), 400
 
 
+        camera_id = int(request.json['CAMERA_ID'])
         service = request.json['SERVICE_HIDDEN']
         command = request.json['COMMAND_HIDDEN']
+
+        self.cameraSetup(camera_id=camera_id)
 
         if service == app.config['INDISERVER_SERVICE_NAME']:
             if command == 'stop':
@@ -3609,7 +3663,7 @@ class AjaxSystemInfoView(BaseView):
                     }
                     return jsonify(json_data), 400
 
-                image_count = self.flushImages(session['camera_id'])
+                image_count = self.flushImages(camera_id)
 
                 json_data = {
                     'success-message' : '{0:d} Images Deleted'.format(image_count),
@@ -3623,7 +3677,7 @@ class AjaxSystemInfoView(BaseView):
                     return jsonify(json_data), 400
 
 
-                file_count = self.flushTimelapses(session['camera_id'])
+                file_count = self.flushTimelapses(camera_id)
 
                 json_data = {
                     'success-message' : '{0:d} Files Deleted'.format(file_count),
@@ -3637,7 +3691,7 @@ class AjaxSystemInfoView(BaseView):
                     return jsonify(json_data), 400
 
 
-                file_count = self.flushDaytime(session['camera_id'])
+                file_count = self.flushDaytime(camera_id)
 
                 json_data = {
                     'success-message' : '{0:d} Files Deleted'.format(file_count),
@@ -4347,7 +4401,16 @@ class TimelapseGeneratorView(TemplateView):
     def get_context(self):
         context = super(TimelapseGeneratorView, self).get_context()
 
-        context['form_timelapsegen'] = IndiAllskyTimelapseGeneratorForm(camera_id=session['camera_id'])
+        context['camera_id'] = self.camera.id
+
+        form_data = {
+            'CAMERA_ID' : self.camera.id,
+        }
+
+        context['form_timelapsegen'] = IndiAllskyTimelapseGeneratorForm(
+            data=form_data,
+            camera_id=self.camera.id,
+        )
 
         # Lookup tasks
         state_list = (
@@ -4399,7 +4462,6 @@ class TimelapseGeneratorView(TemplateView):
         return context
 
 
-
 class AjaxTimelapseGeneratorView(BaseView):
     methods = ['POST']
     decorators = [login_required]
@@ -4410,7 +4472,9 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
     def dispatch_request(self):
-        form_timelapsegen = IndiAllskyTimelapseGeneratorForm(data=request.json, camera_id=session['camera_id'])
+        camera_id = int(request.json['CAMERA_ID'])
+
+        form_timelapsegen = IndiAllskyTimelapseGeneratorForm(data=request.json, camera_id=camera_id)
 
         if not form_timelapsegen.validate():
             form_errors = form_timelapsegen.errors  # this must be a property
@@ -4438,7 +4502,7 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
         camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .one()
 
 
@@ -4935,6 +4999,8 @@ class FocusView(TemplateView):
     def get_context(self):
         context = super(FocusView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         context['form_focus'] = IndiAllskyFocusForm()
 
         context['focuser_device'] = int(bool(self.indi_allsky_config.get('FOCUSER', {}).get('CLASSNAME')))
@@ -5085,8 +5151,7 @@ class ImageProcessingView(TemplateView):
     def get_context(self):
         context = super(ImageProcessingView, self).get_context()
 
-
-        camera_id = session['camera_id']
+        context['camera_id'] = self.camera.id
 
         fits_id = int(request.args.get('id', 0))
         frame_type = str(request.args.get('type', 'light'))
@@ -5104,7 +5169,7 @@ class ImageProcessingView(TemplateView):
                 # just pick the last fits file is none specified
                 fits_entry = IndiAllSkyDbFitsImageTable.query\
                     .join(IndiAllSkyDbFitsImageTable.camera)\
-                    .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                    .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                     .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())\
                     .first()
 
@@ -5115,7 +5180,7 @@ class ImageProcessingView(TemplateView):
 
 
         form_data = {
-            'CAMERA_ID'                      : camera_id,
+            'CAMERA_ID'                      : self.camera.id,
             'FRAME_TYPE'                     : frame_type,
             'FITS_ID'                        : fits_id,
             'CCD_BIT_DEPTH'                  : str(self.indi_allsky_config.get('CCD_BIT_DEPTH', 0)),  # string in form, int in config
@@ -5218,6 +5283,8 @@ class JsonImageProcessingView(JsonView):
         camera_id                           = int(request.json['CAMERA_ID'])
         frame_type                          = str(request.json['FRAME_TYPE'])
         fits_id                             = int(request.json['FITS_ID'])
+
+        self.cameraSetup(camera_id=camera_id)
 
 
         if frame_type == 'dark':
@@ -5504,6 +5571,7 @@ class LogView(TemplateView):
     def get_context(self):
         context = super(LogView, self).get_context()
 
+        context['camera_id'] = self.camera.id
         context['form_logviewer'] = IndiAllskyLogViewerForm()
 
         return context
@@ -5576,7 +5644,7 @@ class SupportInfoView(TemplateView):
 
     def get_context(self):
         context = super(SupportInfoView, self).get_context()
-
+        context['camera_id'] = self.camera.id
         return context
 
 
@@ -5621,6 +5689,7 @@ class NotificationsView(TemplateView):
     def get_context(self):
         context = super(NotificationsView, self).get_context()
 
+        context['camera_id'] = self.camera.id
 
         notices = IndiAllSkyDbNotificationTable.query\
             .order_by(IndiAllSkyDbNotificationTable.createDate.desc())\
@@ -5670,7 +5739,12 @@ class AjaxNotificationView(BaseView):
             return jsonify({}), 400
 
 
-    def get(self):
+    def get(self, camera_id=None):
+        if not camera_id:
+            camera_id = int(request.args['camera_id'])
+
+        self.cameraSetup(camera_id=camera_id)
+
         # return a single result, newest first
         now = self.camera_now
 
@@ -5704,7 +5778,8 @@ class AjaxNotificationView(BaseView):
 
 
     def post(self):
-        ack_id = request.json['ack_id']
+        camera_id = int(request.json['camera_id'])
+        ack_id = int(request.json['ack_id'])
 
         try:
             notice = IndiAllSkyDbNotificationTable.query\
@@ -5717,7 +5792,7 @@ class AjaxNotificationView(BaseView):
 
 
         # return next notification
-        return self.get()
+        return self.get(camera_id=camera_id)
 
 
 class UserInfoView(TemplateView):
@@ -5803,6 +5878,7 @@ class UsersView(TemplateView):
     def get_context(self):
         context = super(UsersView, self).get_context()
 
+        context['camera_id'] = self.camera.id
 
         user_list = IndiAllSkyDbUserTable.query\
             .order_by(IndiAllSkyDbUserTable.createDate.asc())
@@ -5817,6 +5893,8 @@ class ConfigListView(TemplateView):
 
     def get_context(self):
         context = super(ConfigListView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         config_list = IndiAllSkyDbConfigTable.query\
             .add_columns(
@@ -5879,8 +5957,10 @@ class CameraLensView(TemplateView):
     def get_context(self):
         context = super(CameraLensView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .one()
 
 
@@ -5971,7 +6051,7 @@ class AjaxImageExcludeView(BaseView):
             return jsonify(form_errors), 400
 
 
-        camera_id = session['camera_id']
+        camera_id = int(request.json['CAMERA_ID'])
         image_id = int(request.json['EXCLUDE_IMAGE_ID'])
         exclude = bool(request.json['EXCLUDE_EXCLUDE'])
 
@@ -6011,7 +6091,7 @@ class AjaxUploadYoutubeView(BaseView):
 
 
     def dispatch_request(self):
-        camera_id = session['camera_id']
+        camera_id = int(request.json['CAMERA_ID'])
         video_id = int(request.json['VIDEO_ID'])
         asset_type = int(request.json['ASSET_TYPE'])
 
@@ -6083,6 +6163,8 @@ class AjaxUploadYoutubeView(BaseView):
 class CameraSimulatorView(TemplateView):
     def get_context(self):
         context = super(CameraSimulatorView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         lens = str(request.args.get('lens', 'zwo_f1.2_2.5mm'))
         sensor = str(request.args.get('sensor', 'imx477'))
@@ -6164,10 +6246,6 @@ class TimelapseImageView(TemplateView):
             context['createDate_full'] = 'Image not found'
             context['image_url'] = ''
             return context
-
-
-        ### Set session camera
-        #session['camera_id'] = image.camera_id
 
 
         if image.night:
@@ -6265,10 +6343,6 @@ class TimelapseVideoView(TemplateView):
             return context
 
 
-        ### Set session camera
-        #session['camera_id'] = video.camera_id
-
-
         if video.night:
             context['timeofday'] = 'Night'
         else:
@@ -6310,17 +6384,19 @@ class MiniTimelapseGeneratorView(TemplateView):
 
         image_id = int(request.args.get('image_id', 0))
 
+        context['camera_id'] = self.camera.id
+
         if image_id:
             image_entry = IndiAllSkyDbImageTable.query\
                 .join(IndiAllSkyDbImageTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(IndiAllSkyDbImageTable.id == image_id)\
                 .one()
         else:
             # load last image
             image_entry = IndiAllSkyDbImageTable.query\
                 .join(IndiAllSkyDbImageTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .order_by(IndiAllSkyDbImageTable.createDate.desc())\
                 .first()
 
@@ -6332,7 +6408,7 @@ class MiniTimelapseGeneratorView(TemplateView):
 
 
         form_data = {
-            'CAMERA_ID'             : session['camera_id'],
+            'CAMERA_ID'             : self.camera.id,
             'IMAGE_ID'              : image_id,
             'PRE_SECONDS_SELECT'    : '240',
             'POST_SECONDS_SELECT'   : '120',
@@ -6403,6 +6479,7 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
+        context['camera_id'] = self.camera.id
         return context
 
 
@@ -6421,21 +6498,17 @@ class AjaxAstroPanelView(BaseView):
 
 
     def dispatch_request(self):
+        camera_id = int(request.args['camera_id'])
+
         if request.method == 'GET':
-            return self.get()
-        elif request.method == 'POST':
-            return self.post()
+            return self.get(camera_id)
         else:
             return jsonify({}), 400
 
 
-    def get(self):
-        return self.post()
-
-
-    def post(self):
+    def get(self, camera_id):
         camera = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.id == session['camera_id'])\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .one()
 
 

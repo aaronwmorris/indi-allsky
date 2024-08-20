@@ -3650,6 +3650,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
 class IndiAllskyImageViewer(FlaskForm):
+    CAMERA_ID            = HiddenField('Camera ID', validators=[DataRequired()])
     YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
     MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
     DAY_SELECT           = SelectField('Day', choices=[], validators=[])
@@ -4004,6 +4005,7 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
 
 
 class IndiAllskyGalleryViewer(FlaskForm):
+    CAMERA_ID            = HiddenField('Camera ID', validators=[DataRequired()])
     YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
     MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
     DAY_SELECT           = SelectField('Day', choices=[], validators=[])
@@ -4320,6 +4322,7 @@ class IndiAllskyVideoViewer(FlaskForm):
         ('night', 'Night'),
     )
 
+    CAMERA_ID            = HiddenField('Camera ID', validators=[DataRequired()])
     YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
     MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
     TIMEOFDAY_SELECT     = SelectField('Time of Day', choices=TIMEOFDAY_SELECT_choices, validators=[])
@@ -4410,7 +4413,6 @@ class IndiAllskyVideoViewer(FlaskForm):
 
 
         return month_choices
-
 
 
     def getVideos(self, year, month, timeofday):
@@ -4753,6 +4755,7 @@ class IndiAllskyVideoViewerPreload(IndiAllskyVideoViewer):
 
 
 class IndiAllskyMiniVideoViewer(FlaskForm):
+    CAMERA_ID            = HiddenField('Camera ID', validators=[DataRequired()])
     YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
     MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
 
@@ -4993,6 +4996,7 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
         ('delete_images', 'Delete Images for date *DANGER*'),
     )
 
+    CAMERA_ID          = HiddenField('Camera ID', validators=[DataRequired()])
     ACTION_SELECT      = SelectField('Action', choices=ACTION_SELECT_choices, validators=[DataRequired()])
     DAY_SELECT         = SelectField('Day', choices=[], validators=[DataRequired()])
     CONFIRM1           = BooleanField('Confirm')
@@ -5266,6 +5270,7 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 class IndiAllskySystemInfoForm(FlaskForm):
     # fake form to send commands to web application
 
+    CAMERA_ID           = HiddenField('Camera ID', validators=[DataRequired()])
     SERVICE_HIDDEN      = HiddenField('service_hidden', validators=[DataRequired()])
     COMMAND_HIDDEN      = HiddenField('command_hidden', validators=[DataRequired()])
 

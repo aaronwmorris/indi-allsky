@@ -26,6 +26,10 @@
   100% { transform: rotate(360deg); }
 }
 </style>
+<script type="text/javascript">
+var camera_id = {{ camera_id }};
+</script>
+
 {% endblock %}
 
 {% block content %}
@@ -758,6 +762,7 @@ function button_click(service, command) {
 
 
     var json_data = {
+        'CAMERA_ID'      : camera_id,
         'SERVICE_HIDDEN' : service,
         'COMMAND_HIDDEN' : command,
     };
@@ -767,8 +772,8 @@ function button_click(service, command) {
         url: "{{ url_for('indi_allsky.ajax_system_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
-        success: function(data){
-            successMessage.html(data['success-message']);
+        success: function(rdata){
+            successMessage.html(rdata['success-message']);
             successMessage.css({'display' : 'block'});
             setTimeout(function() {
                 successMessage.css({'display' : 'none'});
@@ -782,8 +787,8 @@ function button_click(service, command) {
 
             $("#loader_shutdown").css({'display' : 'none'});
         },
-        error: function(data){
-            var errors = JSON.parse(data.responseText);
+        error: function(rdata){
+            var errors = JSON.parse(rdata.responseText);
             Object.keys(errors).forEach((key) => {
                 fields[key].error.addClass('is-invalid');
                 fields[key].error.html(errors[key][0]);

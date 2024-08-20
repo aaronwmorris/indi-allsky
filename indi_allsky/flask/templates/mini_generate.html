@@ -27,6 +27,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
+var camera_id = {{ camera_id }};
 var timestamp = {{ timestamp | int }};
 var endDate_timestamp;  // set later
 var history_seconds;  // set later
@@ -116,7 +117,7 @@ function showImage(entry, idx) {
 
 function loadImages() {
     console.log('Loading next images');
-    loadJS("{{ url_for(image_loop_view) }}", {'limit_s' : history_seconds, 'timestamp' : endDate_timestamp}, function() {});
+    loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : history_seconds, 'timestamp' : endDate_timestamp}, function() {});
 }
 
 function sleep(time) {

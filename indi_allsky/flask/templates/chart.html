@@ -28,6 +28,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/chart.umd.js') }}"></script>
 <script type="text/javascript">
+var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
 var timestamp = {{ timestamp | int }};
 var page_settings;  // set later
@@ -580,7 +581,7 @@ async function loop() {
 
 function loadChartData() {
     console.log('Loading chart data');
-    loadJS("{{ url_for('indi_allsky.js_chart_view') }}", {'limit_s' : history_seconds, 'timestamp' : timestamp});
+    loadJS("{{ url_for('indi_allsky.js_chart_view') }}", {'camera_id' : camera_id, 'limit_s' : history_seconds, 'timestamp' : timestamp});
     setTimeout(loadChartData, refreshInterval);
 }
 
@@ -632,14 +633,14 @@ function loadJS(url, data, onDone, onError) {
         url: url,
         contentType: "application/json",
         data: data,
-        success: function(data){
+        success: function(rdata){
             $("#loader_chart").css({'display' : 'none'});
-            json_data = data
+            json_data = rdata
             $('#message').html(json_data['message']);
         },
-        error: function(data){
+        error: function(rdata){
             $("#loader_chart").css({'display' : 'none'});
-            onError(data.status);
+            onError(rdata.status);
             $('#message').text('Error loading data.  Please check the logs.');
         },
     });

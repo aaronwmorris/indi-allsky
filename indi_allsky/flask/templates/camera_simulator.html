@@ -11,6 +11,8 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/clipboard.min.js') }}"></script>
 <script>
+var camera_id = {{ camera_id }};
+
 // lens image circle diameter (mm)
 var icd = {
     'zwo_f2.0_2.1mm_1-3' :          6.7,

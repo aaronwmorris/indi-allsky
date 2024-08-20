@@ -55,9 +55,15 @@ class BaseView(View):
 
         self._miscDb = miscDb(self.indi_allsky_config)
 
-        self.camera = None  # set in setupSession()
+        self.camera = None
 
-        self.setupSession()
+        ### Any non-TemplateView that needs camera related variables needs to call cameraSetup(camera_id=camera_id)
+        ### This means the camera_id variable needs to be passed to the view via parameter or form element
+
+
+    def cameraSetup(self, camera_id=None):
+        if not self.camera:
+            self.camera = self.getCameraById(camera_id)
 
         self.local_indi_allsky = self.camera.local
         self.getSunSetDate()
@@ -76,19 +82,6 @@ class BaseView(View):
 
         camera_time_offset = self.camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
         self.camera_now = datetime.now() + timedelta(seconds=camera_time_offset)
-
-
-    def setupSession(self):
-        if session.get('camera_id'):
-            self.camera = self.getCameraById(session['camera_id'])
-            return
-
-        try:
-            self.camera = self.getLatestCamera()
-        except NoResultFound:
-            self.camera = FakeCamera()
-
-        session['camera_id'] = self.camera.id
 
 
     def getLatestCamera(self):
@@ -111,7 +104,6 @@ class BaseView(View):
                 .first()
 
             if camera:
-                session['camera_id'] = camera.id
                 return camera
 
             app.logger.warning('No cameras are defined')
@@ -370,6 +362,9 @@ class TemplateView(BaseView):
         super(TemplateView, self).__init__(**kwargs)
         self.template_name = template_name
 
+        self.setupSession()
+        self.cameraSetup()
+
         self.check_config(self._indi_allsky_config_obj.config_id)
 
         self.login_disabled = app.config.get('LOGIN_DISABLED', False)
@@ -442,6 +437,19 @@ class TemplateView(BaseView):
         except ValueError:
             app.logger.error('Invalid CONFIG_ID')
             return
+
+
+    def setupSession(self):
+        if session.get('camera_id'):
+            self.camera = self.getCameraById(session['camera_id'])
+            return
+
+        try:
+            self.camera = self.getLatestCamera()
+        except NoResultFound:
+            self.camera = FakeCamera()
+
+        session['camera_id'] = self.camera.id
 
 
     def get_indi_allsky_status(self):
