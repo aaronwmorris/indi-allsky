@@ -517,6 +517,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         # apply config on top of template
         self._config_id = config_entry.id
         self._config_level = config_entry.level
+        self._createDate = config_entry.createDate
         self._config.update(config_entry.data)
 
         self._config = self._decrypt_passwords()
@@ -526,27 +527,17 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
     def config(self):
         return self._config
 
-    @config.setter
-    def config(self, new_config):
-        pass  # read only
-
-
     @property
     def config_id(self):
         return self._config_id
-
-    @config_id.setter
-    def config_id(self, new_config_id):
-        pass  # read only
-
 
     @property
     def config_level(self):
         return self._config_level
 
-    @config_level.setter
-    def config_level(self, new_config_level):
-        pass  # read only
+    @property
+    def createDate(self):
+        return self._createDate
 
 
     def _getConfigEntry(self, config_id=None):

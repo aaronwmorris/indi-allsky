@@ -722,6 +722,7 @@ class IndiAllSky(object):
             return
 
 
+        # indicate newer config is loaded
         self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
 
 

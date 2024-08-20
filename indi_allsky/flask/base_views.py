@@ -365,7 +365,7 @@ class TemplateView(BaseView):
         self.setupSession()
         self.cameraSetup()
 
-        self.check_config(self._indi_allsky_config_obj.config_id)
+        self.check_config(self._indi_allsky_config_obj)
 
         self.login_disabled = app.config.get('LOGIN_DISABLED', False)
 
@@ -416,13 +416,18 @@ class TemplateView(BaseView):
         return context
 
 
-    def check_config(self, config_id):
+    def check_config(self, config_obj):
         try:
             if self.local_indi_allsky:
                 # only do this on local devices
                 db_config_id = int(self._miscDb.getState('CONFIG_ID'))
 
-                if db_config_id == config_id:
+                if db_config_id == config_obj.config_id:
+                    return
+
+                # wait 10 minutes to notify when a new config is saved
+                utcnow = datetime.now(tz=timezone.utc).replace(tzinfo=None)
+                if config_obj.createDate.timestamp() + 600 >= utcnow.timestamp():
                     return
 
                 self._miscDb.addNotification(
