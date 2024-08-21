@@ -221,7 +221,7 @@ class IndiAllSkyConfigBase(object):
         "FFMPEG_BITRATE"   : "5000k",
         "FFMPEG_VFSCALE"   : "",
         "FFMPEG_CODEC"     : "libx264",
-        "FFMPEG_EXTRA_OPTIONS" : "",
+        "FFMPEG_EXTRA_OPTIONS" : "-level 3.1",
         "FITSHEADERS" : [
             [ "INSTRUME", "indi-allsky" ],
             [ "OBSERVER", "" ],
