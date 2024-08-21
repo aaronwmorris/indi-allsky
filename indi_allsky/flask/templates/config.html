@@ -1116,7 +1116,7 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-5">
             <div>Directory to store timelapse images</div>
             <div>Default: /var/www/html/allsky/images</div>
-            <div>If you change this setting, please re-run setup.sh to update the web server config</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> If you change this setting, please re-run setup.sh to update the web server config</div>
         </div>
     </div>
 
@@ -1300,7 +1300,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-6">
             <div>ffmpeg extra options (not validated).</div>
-            <div>Example:<pre>-level 3.1</pre></div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> "-level 3.1" can reduce artifacts and increase IOS compatibility</div>
         </div>
     </div>
 
@@ -1500,7 +1500,7 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span>Cardinal directions are based on the Azimuth for the Lens/Camera in the Location Tab</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Cardinal directions are based on the Azimuth for the Lens/Camera in the Location Tab</div>
         </div>
     </div>
 
@@ -1710,7 +1710,6 @@ var camera_id = {{ camera_id }};
             <div id="ORB_PROPERTIES__MODE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-7">
-            <div>Orb display mode</div>
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Orbs" class="text-decoration-none link-info" target="_blank">Orb Wiki</a></div>
         </div>
     </div>
@@ -2119,7 +2118,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>Central region to use for SQM calculations (not used if ROI defined)</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span>SQM FoV/RoI used for stretching calculations</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> SQM FoV/RoI used for stretching calculations</div>
         </div>
     </div>
 
@@ -2181,7 +2180,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>Method to use for image stacking</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span>Stacking disabled during daytime and moon mode</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Stacking disabled during daytime and moon mode</div>
         </div>
     </div>
 
@@ -2196,8 +2195,8 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span>Here be dragons</div>
             <div>Align images before stacking.</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Registration is not always a perfect process.  All sky images have significant distortion and mis-allignments can be common.</div>
         </div>
     </div>
 
@@ -2793,7 +2792,7 @@ var camera_id = {{ camera_id }};
             <div id="LENS_AZIMUTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span>This affects Cardinal directions</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> This affects Cardinal directions</div>
         </div>
     </div>
 
