@@ -764,6 +764,7 @@ class CaptureWorker(Process):
             'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
 
             'daytime_capture'       : self.config.get('DAYTIME_CAPTURE', True),
+            'daytime_capture_save'  : self.config.get('DAYTIME_CAPTURE_SAVE', True),
             'daytime_timelapse'     : self.config.get('DAYTIME_TIMELAPSE', True),
 
             's3_prefix'             : s3_prefix,
