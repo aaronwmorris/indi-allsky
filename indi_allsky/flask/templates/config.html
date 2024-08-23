@@ -6035,22 +6035,13 @@ $('#CARDINAL_DIRS__ENABLE').on('change', function() {
 
 $( document ).ready(function() {
     // Global timelapse
-    if ($('#TIMELAPSE_ENABLE').prop('checked')) {
-        $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
-        $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
-    } else {
+    if (!$('#TIMELAPSE_ENABLE').prop('checked')) {
         $('#DAYTIME_TIMELAPSE').attr('readonly', true);
         $('#DAYTIME_TIMELAPSE').attr('disabled', true);
     }
 
     // Daytime timelapse
-    if ($('#DAYTIME_CAPTURE').prop('checked')) {
-        $('#DAYTIME_CAPTURE_SAVE').removeAttr('readonly');
-        $('#DAYTIME_CAPTURE_SAVE').removeAttr('disabled');
-
-        $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
-        $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
-    } else {
+    if (!$('#DAYTIME_CAPTURE').prop('checked')) {
         $('#DAYTIME_CAPTURE_SAVE').attr('readonly', true);
         $('#DAYTIME_CAPTURE_SAVE').attr('disabled', true);
 
@@ -6058,53 +6049,35 @@ $( document ).ready(function() {
         $('#DAYTIME_TIMELAPSE').attr('disabled', true);
     }
 
-    if ($('#DAYTIME_CAPTURE_SAVE').prop('checked')) {
-        $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
-        $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
-    } else {
+    if (!$('#DAYTIME_CAPTURE_SAVE').prop('checked')) {
         $('#DAYTIME_TIMELAPSE').attr('readonly', true);
         $('#DAYTIME_TIMELAPSE').attr('disabled', true);
     }
 
     // FOCUS_MODE
-    if ($('#FOCUS_MODE').prop('checked')) {
-        $('#FOCUS_DELAY').removeAttr('readonly');
-        $('#FOCUS_DELAY').removeAttr('disabled');
-    } else {
+    if (!$('#FOCUS_MODE').prop('checked')) {
         $('#FOCUS_DELAY').attr('readonly', true);
         $('#FOCUS_DELAY').attr('disabled', true);
     }
 
     // CCD_COOLING
-    if ($('#CCD_COOLING').prop('checked')) {
-        $('#CCD_TEMP').removeAttr('readonly');
-        $('#CCD_TEMP').removeAttr('disabled');
-    } else {
+    if (!$('#CCD_COOLING').prop('checked')) {
         $('#CCD_TEMP').attr('readonly', true);
         $('#CCD_TEMP').attr('disabled', true);
     }
 
     // libcamera AWB
-    if ($('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
-        $('#LIBCAMERA__AWB').removeAttr('disabled');
-    } else {
+    if (!$('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
         $('#LIBCAMERA__AWB').attr('disabled', true);
     }
 
     // libcamera AWB DAY
-    if ($('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
-        $('#LIBCAMERA__AWB_DAY').removeAttr('disabled');
-    } else {
+    if (!$('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
         $('#LIBCAMERA__AWB_DAY').attr('disabled', true);
     }
 
     // startrails moonmode
-    if ($('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
-        $('#STARTRAILS_MOON_ALT_THOLD').attr('disabled', true);
-        $('#STARTRAILS_MOON_ALT_THOLD').attr('readonly', true);
-        $('#STARTRAILS_MOON_PHASE_THOLD').attr('disabled', true);
-        $('#STARTRAILS_MOON_PHASE_THOLD').attr('readonly', true);
-    } else {
+    if (!$('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
         $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('disabled');
         $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('readonly');
         $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('disabled');
@@ -6112,19 +6085,12 @@ $( document ).ready(function() {
     }
 
     // nonlocal assets
-    if ($('#WEB_NONLOCAL_IMAGES').prop('checked')) {
-        $('#WEB_LOCAL_IMAGES_ADMIN').removeAttr('disabled');
-    } else {
-        $('#WEB_LOCAL_IMAGES_ADMIN').prop('checked', false);
+    if (!$('#WEB_NONLOCAL_IMAGES').prop('checked')) {
         $('#WEB_LOCAL_IMAGES_ADMIN').attr('disabled', true);
     }
 
     // cardinal dirs
-    if ($('#CARDINAL_DIRS__ENABLE').prop('checked')) {
-        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').removeAttr('disabled');
-        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', true);
-    } else {
-        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', false);
+    if (!$('#CARDINAL_DIRS__ENABLE').prop('checked')) {
         $('#FISH2PANO__ENABLE_CARDINAL_DIRS').attr('disabled', true);
     }
 });
