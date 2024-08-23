@@ -5910,6 +5910,19 @@ $('#form_config').on('submit', function() {
 });
 
 
+// Global timelapse
+$('#TIMELAPSE_ENABLE').on('change', function() {
+    if ($('#TIMELAPSE_ENABLE').prop('checked')) {
+        $('#DAYTIME_TIMELAPSE').prop('checked', true);
+        $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
+        $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
+    } else {
+        $('#DAYTIME_TIMELAPSE').prop('checked', false);
+        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
+        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+    }
+});
+
 // Daytime timelapse
 $('#DAYTIME_CAPTURE').on('change', function() {
     if ($('#DAYTIME_CAPTURE').prop('checked')) {
@@ -6021,6 +6034,15 @@ $('#CARDINAL_DIRS__ENABLE').on('change', function() {
 
 
 $( document ).ready(function() {
+    // Global timelapse
+    if ($('#TIMELAPSE_ENABLE').prop('checked')) {
+        $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
+        $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
+    } else {
+        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
+        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+    }
+
     // Daytime timelapse
     if ($('#DAYTIME_CAPTURE').prop('checked')) {
         $('#DAYTIME_CAPTURE_SAVE').removeAttr('readonly');
