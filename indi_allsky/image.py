@@ -1335,9 +1335,9 @@ class ImageWorker(Process):
             return None, None
 
 
-        ### Do not write daytime image files if daytime timelapse is disabled
-        if not self.night_v.value and not self.config['DAYTIME_TIMELAPSE']:
-            logger.info('Daytime timelapse is disabled')
+        ### Do not write daytime image files if daytime capture is disabled
+        if not self.night_v.value and self.config['DAYTIME_CAPTURE'] and not self.config.get('DAYTIME_CAPTURE_SAVE', True):
+            logger.info('Daytime capture is disabled')
             tmpfile_name.unlink()
             return latest_file, None
 
@@ -1488,8 +1488,8 @@ class ImageWorker(Process):
             return
 
 
-        ### Do not write daytime image files if daytime timelapse is disabled
-        if not self.night_v.value and not self.config['DAYTIME_TIMELAPSE']:
+        ### Do not write daytime image files if daytime capture is disabled
+        if not self.night_v.value and self.config['DAYTIME_CAPTURE'] and not self.config.get('DAYTIME_CAPTURE_SAVE', True):
             tmpfile_name.unlink()
             return
 

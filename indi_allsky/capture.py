@@ -331,7 +331,7 @@ class CaptureWorker(Process):
                 if self.night:
                     # always indicate timelapse generation at night
                     self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
-                elif self.config['DAYTIME_CAPTURE'] and self.config['DAYTIME_TIMELAPSE']:
+                elif self.config['DAYTIME_CAPTURE'] and self.config.get('DAYTIME_CAPTURE_SAVE', True):
                     # must be day time
                     self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
 
@@ -1333,6 +1333,10 @@ class CaptureWorker(Process):
             logger.warning('Timelapse creation disabled')
             return
 
+        if not self.config.get('DAYTIME_TIMELAPSE', True):
+            logger.warning('Daytime Timelapse creation disabled')
+            return
+
 
         camera = IndiAllSkyDbCameraTable.query\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
@@ -1472,6 +1476,10 @@ class CaptureWorker(Process):
     def _generateDayKeogram(self, timespec, camera_id, task_state=TaskQueueState.QUEUED):
         if not self.config.get('TIMELAPSE_ENABLE', True):
             logger.warning('Timelapse creation disabled')
+            return
+
+        if not self.config.get('DAYTIME_TIMELAPSE', True):
+            logger.warning('Daytime Timelapse creation disabled')
             return
 
 
