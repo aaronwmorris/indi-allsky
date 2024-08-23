@@ -2913,6 +2913,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TIMELAPSE_ENABLE                 = BooleanField('Enable Timelapse Creation')
     TIMELAPSE_SKIP_FRAMES            = IntegerField('Timelapse Skip Frames', validators=[TIMELAPSE_SKIP_FRAMES_validator])
     DAYTIME_CAPTURE                  = BooleanField('Daytime Capture')
+    DAYTIME_CAPTURE_SAVE             = BooleanField('Daytime Save Images')
     DAYTIME_TIMELAPSE                = BooleanField('Daytime Timelapse')
     DAYTIME_CONTRAST_ENHANCE         = BooleanField('Daytime Contrast Enhance')
     NIGHT_CONTRAST_ENHANCE           = BooleanField('Night time Contrast Enhance')

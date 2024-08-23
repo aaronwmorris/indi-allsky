@@ -1323,6 +1323,7 @@ class ConfigView(FormView):
             'TIMELAPSE_ENABLE'               : self.indi_allsky_config.get('TIMELAPSE_ENABLE', True),
             'TIMELAPSE_SKIP_FRAMES'          : self.indi_allsky_config.get('TIMELAPSE_SKIP_FRAMES', 4),
             'DAYTIME_CAPTURE'                : self.indi_allsky_config.get('DAYTIME_CAPTURE', True),
+            'DAYTIME_CAPTURE_SAVE'           : self.indi_allsky_config.get('DAYTIME_CAPTURE_SAVE', True),
             'DAYTIME_TIMELAPSE'              : self.indi_allsky_config.get('DAYTIME_TIMELAPSE', True),
             'DAYTIME_CONTRAST_ENHANCE'       : self.indi_allsky_config.get('DAYTIME_CONTRAST_ENHANCE', False),
             'NIGHT_CONTRAST_ENHANCE'         : self.indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
@@ -2030,6 +2031,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TIMELAPSE_ENABLE']                     = bool(request.json['TIMELAPSE_ENABLE'])
         self.indi_allsky_config['TIMELAPSE_SKIP_FRAMES']                = int(request.json['TIMELAPSE_SKIP_FRAMES'])
         self.indi_allsky_config['DAYTIME_CAPTURE']                      = bool(request.json['DAYTIME_CAPTURE'])
+        self.indi_allsky_config['DAYTIME_CAPTURE_SAVE']                 = bool(request.json['DAYTIME_CAPTURE_SAVE'])
         self.indi_allsky_config['DAYTIME_TIMELAPSE']                    = bool(request.json['DAYTIME_TIMELAPSE'])
         self.indi_allsky_config['DAYTIME_CONTRAST_ENHANCE']             = bool(request.json['DAYTIME_CONTRAST_ENHANCE'])
         self.indi_allsky_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
