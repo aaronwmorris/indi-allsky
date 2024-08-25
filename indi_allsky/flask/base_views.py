@@ -69,7 +69,7 @@ class BaseView(View):
         self.getSunSetDate()
 
         self.daytime_capture = self.camera.daytime_capture
-        self.daytime_timelapse = self.camera.daytime_timelapse
+        self.daytime_capture_save = self.camera.daytime_capture_save
 
         self.s3_prefix = self.camera.s3_prefix
         self.web_nonlocal_images = self.camera.web_nonlocal_images

@@ -110,6 +110,7 @@ class IndiAllSkyConfigBase(object):
         "TIMELAPSE_ENABLE"         : True,
         "TIMELAPSE_SKIP_FRAMES"    : 4,
         "DAYTIME_CAPTURE"          : True,
+        "DAYTIME_CAPTURE_SAVE"     : True,
         "DAYTIME_TIMELAPSE"        : True,
         "DAYTIME_CONTRAST_ENHANCE" : False,
         "NIGHT_CONTRAST_ENHANCE"   : False,

@@ -196,8 +196,10 @@ class JsonLatestImageView(JsonView):
 
 
         if not night:
-            if not self.local_indi_allsky and not self.daytime_timelapse:
-                # remote cameras will not receive daytime images when timelapse is disabled
+            ### day
+
+            if not self.local_indi_allsky and self.daytime_capture and not self.daytime_capture_save:
+                # remote cameras will not receive daytime images when save is disabled
                 if self.sun_set_date:
                     utcnow = datetime.now(tz=timezone.utc)
                     delta_sun_set = self.sun_set_date - utcnow.replace(tzinfo=None)
@@ -214,15 +216,7 @@ class JsonLatestImageView(JsonView):
                 else:
                     data['latest_image']['message'] = 'Daytime capture disabled.<br><div class="text-warning">Sun never sets.</div>'
 
-            elif self.daytime_capture and not self.daytime_timelapse:
-                if self.sun_set_date:
-                    utcnow = datetime.now(tz=timezone.utc)
-                    delta_sun_set = self.sun_set_date - utcnow.replace(tzinfo=None)
-                    data['latest_image']['message'] = 'Daytime timelapse disabled.<br><div class="text-warning">Night starts in {0:0.1f} hours.</div>'.format(delta_sun_set.total_seconds() / 3600)
-                else:
-                    data['latest_image']['message'] = 'Daytime timelapse disabled.<br><div class="text-warning">Sun never sets.</div>'
-
-
+            elif self.daytime_capture and not self.daytime_capture_save:
                 if self.web_nonlocal_images:
                     if not self.verify_admin_network():
                         # only show locally hosted assets if coming from admin networks
@@ -234,18 +228,21 @@ class JsonLatestImageView(JsonView):
                 image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
                 latest_image_p = image_dir.joinpath(latest_image_uri.name)
 
-                if latest_image_p.exists():
-                    # use latest image if it exists
-                    max_age = self.camera_now - timedelta(seconds=history_seconds)
-                    if latest_image_p.stat().st_mtime > max_age.timestamp():
 
-                        data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time()))
-                        data['latest_image']['message'] = ''
-                        return data
-                    else:
-                        return data
-                else:
+                if not latest_image_p.exists():
                     return data
+
+
+                # use latest image if it exists
+                data['latest_image']['url'] = '{0:s}?{1:d}'.format(str(latest_image_uri), int(time.time()))
+
+                max_age = self.camera_now - timedelta(seconds=history_seconds)
+                if latest_image_p.stat().st_mtime > max_age.timestamp():
+                    data['latest_image']['message'] = ''
+                else:
+                    data['latest_image']['message'] = 'Image is out of date'
+
+                return data
 
 
         # use database
@@ -1323,6 +1320,7 @@ class ConfigView(FormView):
             'TIMELAPSE_ENABLE'               : self.indi_allsky_config.get('TIMELAPSE_ENABLE', True),
             'TIMELAPSE_SKIP_FRAMES'          : self.indi_allsky_config.get('TIMELAPSE_SKIP_FRAMES', 4),
             'DAYTIME_CAPTURE'                : self.indi_allsky_config.get('DAYTIME_CAPTURE', True),
+            'DAYTIME_CAPTURE_SAVE'           : self.indi_allsky_config.get('DAYTIME_CAPTURE_SAVE', True),
             'DAYTIME_TIMELAPSE'              : self.indi_allsky_config.get('DAYTIME_TIMELAPSE', True),
             'DAYTIME_CONTRAST_ENHANCE'       : self.indi_allsky_config.get('DAYTIME_CONTRAST_ENHANCE', False),
             'NIGHT_CONTRAST_ENHANCE'         : self.indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
@@ -2030,6 +2028,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TIMELAPSE_ENABLE']                     = bool(request.json['TIMELAPSE_ENABLE'])
         self.indi_allsky_config['TIMELAPSE_SKIP_FRAMES']                = int(request.json['TIMELAPSE_SKIP_FRAMES'])
         self.indi_allsky_config['DAYTIME_CAPTURE']                      = bool(request.json['DAYTIME_CAPTURE'])
+        self.indi_allsky_config['DAYTIME_CAPTURE_SAVE']                 = bool(request.json['DAYTIME_CAPTURE_SAVE'])
         self.indi_allsky_config['DAYTIME_TIMELAPSE']                    = bool(request.json['DAYTIME_TIMELAPSE'])
         self.indi_allsky_config['DAYTIME_CONTRAST_ENHANCE']             = bool(request.json['DAYTIME_CONTRAST_ENHANCE'])
         self.indi_allsky_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
