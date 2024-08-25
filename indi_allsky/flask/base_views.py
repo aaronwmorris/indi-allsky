@@ -217,6 +217,77 @@ class BaseView(View):
             self.sun_set_date = None
 
 
+    def get_status_text(self, data):
+        status_lines = list()
+        for line in self.indi_allsky_config.get('WEB_STATUS_TEMPLATE', 'Status: {status:s}').splitlines():
+            # encapsulate each line in a div
+            status_lines.append('<div>{0:s}</div>'.format(line))
+
+        status_tmpl = ''.join(status_lines)
+        #app.logger.info('Status Text: %s', status_tmpl)
+        #app.logger.info('Status data: %s', pformat(data))
+
+        try:
+            status_text = status_tmpl.format(**data)
+        except KeyError as e:
+            app.logger.error('Failure to format status: %s', str(e))
+            return 'TEMPLATE ERROR'
+        except ValueError as e:
+            app.logger.error('Failure to format status: %s', str(e))
+            return 'TEMPLATE ERROR'
+
+
+        return status_text
+
+
+    def get_web_extra_text(self):
+        if not self.indi_allsky_config.get('WEB_EXTRA_TEXT'):
+            return str()
+
+
+        web_extra_text_p = Path(self.indi_allsky_config['WEB_EXTRA_TEXT'])
+
+        try:
+            if not web_extra_text_p.exists():
+                app.logger.error('%s does not exist', web_extra_text_p)
+                return str()
+
+
+            if not web_extra_text_p.is_file():
+                app.logger.error('%s is not a file', web_extra_text_p)
+                return str()
+
+
+            # Sanity check
+            if web_extra_text_p.stat().st_size > 10000:
+                app.logger.error('%s is too large', web_extra_text_p)
+                return str()
+
+        except PermissionError as e:
+            app.logger.error(str(e))
+            return str()
+
+
+        try:
+            with io.open(str(web_extra_text_p), 'r') as web_extra_text_f:
+                extra_lines_raw = [x.rstrip() for x in web_extra_text_f.readlines()]
+                web_extra_text_f.close()
+        except PermissionError as e:
+            app.logger.error(str(e))
+            return str()
+
+
+        extra_lines = list()
+        for line in extra_lines_raw:
+            # encapsulate each line in a div
+            extra_lines.append('<div>{0:s}</div>'.format(line))
+
+        extra_text = ''.join(extra_lines)
+        #app.logger.info('Extra Text: %s', extra_text)
+
+        return extra_text
+
+
     def _load_detection_mask(self):
         import cv2
         from multiprocessing import Value
@@ -392,8 +463,7 @@ class TemplateView(BaseView):
         status_data.update(self.get_aurora_info())
 
         context = {
-            'status_text'        : self.get_status_text(status_data),
-            'web_extra_text'     : self.get_web_extra_text(),
+            'status_text'        : self.get_status_text(status_data) + self.get_web_extra_text(),
             'username_text'      : self.get_user_info(),
             'login_disabled'     : self.login_disabled,
         }
@@ -791,77 +861,6 @@ class TemplateView(BaseView):
                 data['smoke_rating_status'] = '[old]'
 
         return data
-
-
-    def get_status_text(self, data):
-        status_lines = list()
-        for line in self.indi_allsky_config.get('WEB_STATUS_TEMPLATE', 'Status: {status:s}').splitlines():
-            # encapsulate each line in a div
-            status_lines.append('<div>{0:s}</div>'.format(line))
-
-        status_tmpl = ''.join(status_lines)
-        #app.logger.info('Status Text: %s', status_tmpl)
-        #app.logger.info('Status data: %s', pformat(data))
-
-        try:
-            status_text = status_tmpl.format(**data)
-        except KeyError as e:
-            app.logger.error('Failure to format status: %s', str(e))
-            return 'TEMPLATE ERROR'
-        except ValueError as e:
-            app.logger.error('Failure to format status: %s', str(e))
-            return 'TEMPLATE ERROR'
-
-
-        return status_text
-
-
-    def get_web_extra_text(self):
-        if not self.indi_allsky_config.get('WEB_EXTRA_TEXT'):
-            return str()
-
-
-        web_extra_text_p = Path(self.indi_allsky_config['WEB_EXTRA_TEXT'])
-
-        try:
-            if not web_extra_text_p.exists():
-                app.logger.error('%s does not exist', web_extra_text_p)
-                return str()
-
-
-            if not web_extra_text_p.is_file():
-                app.logger.error('%s is not a file', web_extra_text_p)
-                return str()
-
-
-            # Sanity check
-            if web_extra_text_p.stat().st_size > 10000:
-                app.logger.error('%s is too large', web_extra_text_p)
-                return str()
-
-        except PermissionError as e:
-            app.logger.error(str(e))
-            return str()
-
-
-        try:
-            with io.open(str(web_extra_text_p), 'r') as web_extra_text_f:
-                extra_lines_raw = [x.rstrip() for x in web_extra_text_f.readlines()]
-                web_extra_text_f.close()
-        except PermissionError as e:
-            app.logger.error(str(e))
-            return str()
-
-
-        extra_lines = list()
-        for line in extra_lines_raw:
-            # encapsulate each line in a div
-            extra_lines.append('<div>{0:s}</div>'.format(line))
-
-        extra_text = ''.join(extra_lines)
-        #app.logger.info('Extra Text: %s', extra_text)
-
-        return extra_text
 
 
     def get_user_info(self):
