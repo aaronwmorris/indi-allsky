@@ -217,246 +217,6 @@ class BaseView(View):
             self.sun_set_date = None
 
 
-    def _load_detection_mask(self):
-        import cv2
-        from multiprocessing import Value
-        from ..maskProcessing import MaskProcessor
-
-
-        detect_mask = self.indi_allsky_config.get('DETECT_MASK', '')
-
-        if not detect_mask:
-            app.logger.warning('No detection mask defined')
-            return
-
-
-        detect_mask_p = Path(detect_mask)
-
-        try:
-            if not detect_mask_p.exists():
-                app.logger.error('%s does not exist', detect_mask_p)
-                return
-
-
-            if not detect_mask_p.is_file():
-                app.logger.error('%s is not a file', detect_mask_p)
-                return
-
-        except PermissionError as e:
-            app.logger.error(str(e))
-            return
-
-        mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)  # mono
-        if isinstance(mask_data, type(None)):
-            app.logger.error('%s is not a valid image', detect_mask_p)
-            return
-
-
-        app.logger.info('Loaded detection mask: %s', detect_mask_p)
-
-        ### any compression artifacts will be set to black
-        #mask_data[mask_data < 255] = 0  # did not quite work
-
-
-        bin_v = Value('i', 1)  # always assume bin 1
-        mask_processor = MaskProcessor(
-            self.indi_allsky_config,
-            bin_v,
-        )
-
-
-        # masks need to be rotated, flipped, cropped for post-processed images
-        mask_processor.image = mask_data
-
-
-        if self.indi_allsky_config.get('IMAGE_ROTATE'):
-            mask_processor.rotate_90()
-
-
-        # rotation
-        if self.indi_allsky_config.get('IMAGE_ROTATE_ANGLE'):
-            mask_processor.rotate_angle()
-
-
-        # verticle flip
-        if self.indi_allsky_config.get('IMAGE_FLIP_V'):
-            mask_processor.flip_v()
-
-
-        # horizontal flip
-        if self.indi_allsky_config.get('IMAGE_FLIP_H'):
-            mask_processor.flip_h()
-
-
-        # crop
-        if self.indi_allsky_config.get('IMAGE_CROP_ROI'):
-            mask_processor.crop_image()
-
-
-        # scale
-        if self.indi_allsky_config['IMAGE_SCALE'] and self.indi_allsky_config['IMAGE_SCALE'] != 100:
-            mask_processor.scale_image()
-
-
-        return mask_processor.image
-
-
-class TemplateView(BaseView):
-
-    SENSOR_SLOT_choices = [  # mutable
-        ('0', 'Camera Temp'),
-        ('1', 'Dew Heater Level'),
-        ('2', 'Dew Point'),
-        ('3', 'Frost Point'),
-        ('4', 'Fan Level'),
-        ('5', 'Heat Index'),
-        ('6', 'Wind Dir Degrees'),
-        ('7', 'SQM'),
-        ('8', 'Reserved'),
-        ('9', 'Reserved'),
-        ('10', 'User Slot 10'),
-        ('11', 'User Slot 11'),
-        ('12', 'User Slot 12'),
-        ('13', 'User Slot 13'),
-        ('14', 'User Slot 14'),
-        ('15', 'User Slot 15'),
-        ('16', 'User Slot 16'),
-        ('17', 'User Slot 17'),
-        ('18', 'User Slot 18'),
-        ('19', 'User Slot 19'),
-        ('20', 'User Slot 20'),
-        ('21', 'User Slot 21'),
-        ('22', 'User Slot 22'),
-        ('23', 'User Slot 23'),
-        ('24', 'User Slot 24'),
-        ('25', 'User Slot 25'),
-        ('26', 'User Slot 26'),
-        ('27', 'User Slot 27'),
-        ('28', 'User Slot 28'),
-        ('29', 'User Slot 29'),
-        ('100', 'Camera Temp'),
-        ('110', 'System Temp 10'),
-        ('111', 'System Temp 11'),
-        ('112', 'System Temp 12'),
-        ('113', 'System Temp 13'),
-        ('114', 'System Temp 14'),
-        ('115', 'System Temp 15'),
-        ('116', 'System Temp 16'),
-        ('117', 'System Temp 17'),
-        ('118', 'System Temp 18'),
-        ('119', 'System Temp 19'),
-        ('120', 'System Temp 20'),
-        ('121', 'System Temp 21'),
-        ('122', 'System Temp 22'),
-        ('123', 'System Temp 23'),
-        ('124', 'System Temp 24'),
-        ('125', 'System Temp 25'),
-        ('126', 'System Temp 26'),
-        ('127', 'System Temp 27'),
-        ('128', 'System Temp 28'),
-        ('129', 'System Temp 29'),
-    ]
-
-
-    def __init__(self, template_name, **kwargs):
-        super(TemplateView, self).__init__(**kwargs)
-        self.template_name = template_name
-
-        self.setupSession()
-        self.cameraSetup()
-
-        self.check_config(self._indi_allsky_config_obj)
-
-        self.login_disabled = app.config.get('LOGIN_DISABLED', False)
-
-        # night set in get_astrometric_info()
-        self.night = True
-
-
-    def render_template(self, context):
-        return render_template(self.template_name, **context)
-
-
-    def dispatch_request(self):
-        context = self.get_context()
-        return self.render_template(context)
-
-
-    def get_context(self):
-        status_data = dict()
-
-        status_data.update(self.get_indi_allsky_status())
-        status_data.update(self.get_camera_info())
-        status_data.update(self.get_astrometric_info())
-        status_data.update(self.get_smoke_info())
-        status_data.update(self.get_aurora_info())
-
-        context = {
-            'status_text'        : self.get_status_text(status_data),
-            'web_extra_text'     : self.get_web_extra_text(),
-            'username_text'      : self.get_user_info(),
-            'login_disabled'     : self.login_disabled,
-        }
-
-        # night set in get_astrometric_info()
-        context['night'] = int(self.night)  # javascript does not play well with bools
-
-
-        camera_default = {
-            'CAMERA_SELECT' : session['camera_id'],
-        }
-
-
-        context['camera_count'] = IndiAllSkyDbCameraTable.query\
-            .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
-            .count()
-
-        context['form_camera_select'] = IndiAllskyCameraSelectForm(data=camera_default)
-
-        return context
-
-
-    def check_config(self, config_obj):
-        try:
-            if self.local_indi_allsky:
-                # only do this on local devices
-                db_config_id = int(self._miscDb.getState('CONFIG_ID'))
-
-                if db_config_id == config_obj.config_id:
-                    return
-
-                # wait 10 minutes to notify when a new config is saved
-                utcnow = datetime.now(tz=timezone.utc).replace(tzinfo=None)
-                if config_obj.createDate.timestamp() + 600 >= utcnow.timestamp():
-                    return
-
-                self._miscDb.addNotification(
-                    NotificationCategory.STATE,
-                    'config_id',
-                    'Config updated: indi-allsky needs to be reloaded',
-                    expire=timedelta(minutes=30),
-                )
-        except NoResultFound:
-            app.logger.error('Unable to get CONFIG_ID')
-            return
-        except ValueError:
-            app.logger.error('Invalid CONFIG_ID')
-            return
-
-
-    def setupSession(self):
-        if session.get('camera_id'):
-            self.camera = self.getCameraById(session['camera_id'])
-            return
-
-        try:
-            self.camera = self.getLatestCamera()
-        except NoResultFound:
-            self.camera = FakeCamera()
-
-        session['camera_id'] = self.camera.id
-
-
     def get_indi_allsky_status(self):
         data = {}
 
@@ -862,6 +622,244 @@ class TemplateView(BaseView):
         #app.logger.info('Extra Text: %s', extra_text)
 
         return extra_text
+
+
+    def _load_detection_mask(self):
+        import cv2
+        from multiprocessing import Value
+        from ..maskProcessing import MaskProcessor
+
+
+        detect_mask = self.indi_allsky_config.get('DETECT_MASK', '')
+
+        if not detect_mask:
+            app.logger.warning('No detection mask defined')
+            return
+
+
+        detect_mask_p = Path(detect_mask)
+
+        try:
+            if not detect_mask_p.exists():
+                app.logger.error('%s does not exist', detect_mask_p)
+                return
+
+
+            if not detect_mask_p.is_file():
+                app.logger.error('%s is not a file', detect_mask_p)
+                return
+
+        except PermissionError as e:
+            app.logger.error(str(e))
+            return
+
+        mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)  # mono
+        if isinstance(mask_data, type(None)):
+            app.logger.error('%s is not a valid image', detect_mask_p)
+            return
+
+
+        app.logger.info('Loaded detection mask: %s', detect_mask_p)
+
+        ### any compression artifacts will be set to black
+        #mask_data[mask_data < 255] = 0  # did not quite work
+
+
+        bin_v = Value('i', 1)  # always assume bin 1
+        mask_processor = MaskProcessor(
+            self.indi_allsky_config,
+            bin_v,
+        )
+
+
+        # masks need to be rotated, flipped, cropped for post-processed images
+        mask_processor.image = mask_data
+
+
+        if self.indi_allsky_config.get('IMAGE_ROTATE'):
+            mask_processor.rotate_90()
+
+
+        # rotation
+        if self.indi_allsky_config.get('IMAGE_ROTATE_ANGLE'):
+            mask_processor.rotate_angle()
+
+
+        # verticle flip
+        if self.indi_allsky_config.get('IMAGE_FLIP_V'):
+            mask_processor.flip_v()
+
+
+        # horizontal flip
+        if self.indi_allsky_config.get('IMAGE_FLIP_H'):
+            mask_processor.flip_h()
+
+
+        # crop
+        if self.indi_allsky_config.get('IMAGE_CROP_ROI'):
+            mask_processor.crop_image()
+
+
+        # scale
+        if self.indi_allsky_config['IMAGE_SCALE'] and self.indi_allsky_config['IMAGE_SCALE'] != 100:
+            mask_processor.scale_image()
+
+
+        return mask_processor.image
+
+
+class TemplateView(BaseView):
+
+    SENSOR_SLOT_choices = [  # mutable
+        ('0', 'Camera Temp'),
+        ('1', 'Dew Heater Level'),
+        ('2', 'Dew Point'),
+        ('3', 'Frost Point'),
+        ('4', 'Fan Level'),
+        ('5', 'Heat Index'),
+        ('6', 'Wind Dir Degrees'),
+        ('7', 'SQM'),
+        ('8', 'Reserved'),
+        ('9', 'Reserved'),
+        ('10', 'User Slot 10'),
+        ('11', 'User Slot 11'),
+        ('12', 'User Slot 12'),
+        ('13', 'User Slot 13'),
+        ('14', 'User Slot 14'),
+        ('15', 'User Slot 15'),
+        ('16', 'User Slot 16'),
+        ('17', 'User Slot 17'),
+        ('18', 'User Slot 18'),
+        ('19', 'User Slot 19'),
+        ('20', 'User Slot 20'),
+        ('21', 'User Slot 21'),
+        ('22', 'User Slot 22'),
+        ('23', 'User Slot 23'),
+        ('24', 'User Slot 24'),
+        ('25', 'User Slot 25'),
+        ('26', 'User Slot 26'),
+        ('27', 'User Slot 27'),
+        ('28', 'User Slot 28'),
+        ('29', 'User Slot 29'),
+        ('100', 'Camera Temp'),
+        ('110', 'System Temp 10'),
+        ('111', 'System Temp 11'),
+        ('112', 'System Temp 12'),
+        ('113', 'System Temp 13'),
+        ('114', 'System Temp 14'),
+        ('115', 'System Temp 15'),
+        ('116', 'System Temp 16'),
+        ('117', 'System Temp 17'),
+        ('118', 'System Temp 18'),
+        ('119', 'System Temp 19'),
+        ('120', 'System Temp 20'),
+        ('121', 'System Temp 21'),
+        ('122', 'System Temp 22'),
+        ('123', 'System Temp 23'),
+        ('124', 'System Temp 24'),
+        ('125', 'System Temp 25'),
+        ('126', 'System Temp 26'),
+        ('127', 'System Temp 27'),
+        ('128', 'System Temp 28'),
+        ('129', 'System Temp 29'),
+    ]
+
+
+    def __init__(self, template_name, **kwargs):
+        super(TemplateView, self).__init__(**kwargs)
+        self.template_name = template_name
+
+        self.setupSession()
+        self.cameraSetup()
+
+        self.check_config(self._indi_allsky_config_obj)
+
+        self.login_disabled = app.config.get('LOGIN_DISABLED', False)
+
+        # night set in get_astrometric_info()
+        self.night = True
+
+
+    def render_template(self, context):
+        return render_template(self.template_name, **context)
+
+
+    def dispatch_request(self):
+        context = self.get_context()
+        return self.render_template(context)
+
+
+    def get_context(self):
+        status_data = dict()
+        status_data.update(self.get_indi_allsky_status())
+        status_data.update(self.get_camera_info())
+        status_data.update(self.get_astrometric_info())
+        status_data.update(self.get_smoke_info())
+        status_data.update(self.get_aurora_info())
+
+        context = {
+            'status_text'        : self.get_status_text(status_data) + self.get_web_extra_text(),
+            'username_text'      : self.get_user_info(),
+            'login_disabled'     : self.login_disabled,
+        }
+
+        # night set in get_astrometric_info()
+        context['night'] = int(self.night)  # javascript does not play well with bools
+
+
+        camera_default = {
+            'CAMERA_SELECT' : session['camera_id'],
+        }
+
+
+        context['camera_count'] = IndiAllSkyDbCameraTable.query\
+            .filter(IndiAllSkyDbCameraTable.hidden == sa_false())\
+            .count()
+
+        context['form_camera_select'] = IndiAllskyCameraSelectForm(data=camera_default)
+
+        return context
+
+
+    def check_config(self, config_obj):
+        try:
+            if self.local_indi_allsky:
+                # only do this on local devices
+                db_config_id = int(self._miscDb.getState('CONFIG_ID'))
+
+                if db_config_id == config_obj.config_id:
+                    return
+
+                # wait 10 minutes to notify when a new config is saved
+                utcnow = datetime.now(tz=timezone.utc).replace(tzinfo=None)
+                if config_obj.createDate.timestamp() + 600 >= utcnow.timestamp():
+                    return
+
+                self._miscDb.addNotification(
+                    NotificationCategory.STATE,
+                    'config_id',
+                    'Config updated: indi-allsky needs to be reloaded',
+                    expire=timedelta(minutes=30),
+                )
+        except NoResultFound:
+            app.logger.error('Unable to get CONFIG_ID')
+            return
+        except ValueError:
+            app.logger.error('Invalid CONFIG_ID')
+            return
+
+
+    def setupSession(self):
+        if session.get('camera_id'):
+            self.camera = self.getCameraById(session['camera_id'])
+            return
+
+        try:
+            self.camera = self.getLatestCamera()
+        except NoResultFound:
+            self.camera = FakeCamera()
+
+        session['camera_id'] = self.camera.id
 
 
     def get_user_info(self):
