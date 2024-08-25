@@ -682,7 +682,20 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>Enable daytime image capture</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> If Daytime Timelapse is disabled, no images will be saved</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DAYTIME_CAPTURE_SAVE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DAYTIME_CAPTURE_SAVE(class='form-check-input') }}
+                <div id="DAYTIME_CAPTURE_SAVE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
         </div>
     </div>
 
@@ -5730,6 +5743,7 @@ const checkbox_field_names = [
     'DETECT_DRAW',
     'TIMELAPSE_ENABLE',
     'DAYTIME_CAPTURE',
+    'DAYTIME_CAPTURE_SAVE',
     'DAYTIME_TIMELAPSE',
     'DAYTIME_CONTRAST_ENHANCE',
     'NIGHT_CONTRAST_ENHANCE',
@@ -5896,9 +5910,42 @@ $('#form_config').on('submit', function() {
 });
 
 
+// Global timelapse
+$('#TIMELAPSE_ENABLE').on('change', function() {
+    if ($('#TIMELAPSE_ENABLE').prop('checked')) {
+        $('#DAYTIME_TIMELAPSE').prop('checked', true);
+        $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
+        $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
+    } else {
+        $('#DAYTIME_TIMELAPSE').prop('checked', false);
+        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
+        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+    }
+});
+
 // Daytime timelapse
 $('#DAYTIME_CAPTURE').on('change', function() {
     if ($('#DAYTIME_CAPTURE').prop('checked')) {
+        $('#DAYTIME_CAPTURE_SAVE').prop('checked', true);
+        $('#DAYTIME_CAPTURE_SAVE').removeAttr('readonly');
+        $('#DAYTIME_CAPTURE_SAVE').removeAttr('disabled');
+
+        $('#DAYTIME_TIMELAPSE').prop('checked', true);
+        $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
+        $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
+    } else {
+        $('#DAYTIME_CAPTURE_SAVE').prop('checked', false);
+        $('#DAYTIME_CAPTURE_SAVE').attr('readonly', true);
+        $('#DAYTIME_CAPTURE_SAVE').attr('disabled', true);
+
+        $('#DAYTIME_TIMELAPSE').prop('checked', false);
+        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
+        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+    }
+});
+
+$('#DAYTIME_CAPTURE_SAVE').on('change', function() {
+    if ($('#DAYTIME_CAPTURE_SAVE').prop('checked')) {
         $('#DAYTIME_TIMELAPSE').prop('checked', true);
         $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
         $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
@@ -5987,54 +6034,50 @@ $('#CARDINAL_DIRS__ENABLE').on('change', function() {
 
 
 $( document ).ready(function() {
+    // Global timelapse
+    if (!$('#TIMELAPSE_ENABLE').prop('checked')) {
+        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
+        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+    }
+
     // Daytime timelapse
-    if ($('#DAYTIME_CAPTURE').prop('checked')) {
-        $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
-        $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
-    } else {
+    if (!$('#DAYTIME_CAPTURE').prop('checked')) {
+        $('#DAYTIME_CAPTURE_SAVE').attr('readonly', true);
+        $('#DAYTIME_CAPTURE_SAVE').attr('disabled', true);
+
+        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
+        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+    }
+
+    if (!$('#DAYTIME_CAPTURE_SAVE').prop('checked')) {
         $('#DAYTIME_TIMELAPSE').attr('readonly', true);
         $('#DAYTIME_TIMELAPSE').attr('disabled', true);
     }
 
     // FOCUS_MODE
-    if ($('#FOCUS_MODE').prop('checked')) {
-        $('#FOCUS_DELAY').removeAttr('readonly');
-        $('#FOCUS_DELAY').removeAttr('disabled');
-    } else {
+    if (!$('#FOCUS_MODE').prop('checked')) {
         $('#FOCUS_DELAY').attr('readonly', true);
         $('#FOCUS_DELAY').attr('disabled', true);
     }
 
     // CCD_COOLING
-    if ($('#CCD_COOLING').prop('checked')) {
-        $('#CCD_TEMP').removeAttr('readonly');
-        $('#CCD_TEMP').removeAttr('disabled');
-    } else {
+    if (!$('#CCD_COOLING').prop('checked')) {
         $('#CCD_TEMP').attr('readonly', true);
         $('#CCD_TEMP').attr('disabled', true);
     }
 
     // libcamera AWB
-    if ($('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
-        $('#LIBCAMERA__AWB').removeAttr('disabled');
-    } else {
+    if (!$('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
         $('#LIBCAMERA__AWB').attr('disabled', true);
     }
 
     // libcamera AWB DAY
-    if ($('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
-        $('#LIBCAMERA__AWB_DAY').removeAttr('disabled');
-    } else {
+    if (!$('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
         $('#LIBCAMERA__AWB_DAY').attr('disabled', true);
     }
 
     // startrails moonmode
-    if ($('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
-        $('#STARTRAILS_MOON_ALT_THOLD').attr('disabled', true);
-        $('#STARTRAILS_MOON_ALT_THOLD').attr('readonly', true);
-        $('#STARTRAILS_MOON_PHASE_THOLD').attr('disabled', true);
-        $('#STARTRAILS_MOON_PHASE_THOLD').attr('readonly', true);
-    } else {
+    if (!$('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
         $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('disabled');
         $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('readonly');
         $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('disabled');
@@ -6042,19 +6085,12 @@ $( document ).ready(function() {
     }
 
     // nonlocal assets
-    if ($('#WEB_NONLOCAL_IMAGES').prop('checked')) {
-        $('#WEB_LOCAL_IMAGES_ADMIN').removeAttr('disabled');
-    } else {
-        $('#WEB_LOCAL_IMAGES_ADMIN').prop('checked', false);
+    if (!$('#WEB_NONLOCAL_IMAGES').prop('checked')) {
         $('#WEB_LOCAL_IMAGES_ADMIN').attr('disabled', true);
     }
 
     // cardinal dirs
-    if ($('#CARDINAL_DIRS__ENABLE').prop('checked')) {
-        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').removeAttr('disabled');
-        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', true);
-    } else {
-        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', false);
+    if (!$('#CARDINAL_DIRS__ENABLE').prop('checked')) {
         $('#FISH2PANO__ENABLE_CARDINAL_DIRS').attr('disabled', true);
     }
 });

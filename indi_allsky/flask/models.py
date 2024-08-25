@@ -77,6 +77,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     lensImageCircle = db.Column(db.Integer, nullable=True)  # pixels
 
     daytime_capture = db.Column(db.Boolean, server_default=expression.true(), nullable=False)
+    daytime_capture_save = db.Column(db.Boolean, server_default=expression.true(), nullable=False)
     daytime_timelapse = db.Column(db.Boolean, server_default=expression.true(), nullable=False)
 
     s3_prefix = db.Column(db.String(length=255), nullable=True)
