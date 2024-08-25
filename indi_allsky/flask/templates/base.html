@@ -330,14 +330,14 @@ function getStatusText() {
 function updateStatus(data) {
     console.log('Update status');
     $("#status_text").html(data['status_text']);
-    setTimeout(getStatusText, 90000);
+    setTimeout(getStatusText, 101000);
 }
 
 $( document ).ready(function() {
     // Load notifications when ready
     loadNotification({'camera_id' : camera_id});
 
-    setTimeout(getStatusText, 90000);
+    setTimeout(getStatusText, 101000);  // prime number
 
     $("#CAMERA_SELECT").on("change", function() {
         changeCamera();
