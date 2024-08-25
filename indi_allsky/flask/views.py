@@ -118,6 +118,29 @@ bp_allsky = Blueprint(
 )
 
 
+class AjaxStatusUpdateView(BaseView):
+    methods = ['GET']
+
+    def dispatch_request(self):
+        camera_id = int(request.args['camera_id'])
+
+        self.cameraSetup(camera_id=camera_id)
+
+
+        status_data = dict()
+        status_data.update(self.get_indi_allsky_status())
+        status_data.update(self.get_camera_info())
+        status_data.update(self.get_astrometric_info())
+        status_data.update(self.get_smoke_info())
+        status_data.update(self.get_aurora_info())
+
+        data = {
+            'status_text' : self.get_status_text(status_data) + self.get_web_extra_text(),
+        }
+
+        return jsonify(data)
+
+
 class IndexView(TemplateView):
     title = 'Latest'
     latest_image_view = 'indi_allsky.js_latest_image_view'
@@ -6864,6 +6887,8 @@ def images_folder(path):
     app.logger.warning('Serving image file: %s', path)
     return send_from_directory(app.config['INDI_ALLSKY_IMAGE_FOLDER'], path)
 
+
+bp_allsky.add_url_rule('/ajax/status_update', view_func=AjaxStatusUpdateView.as_view('ajax_status_update_view'))
 
 bp_allsky.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index.html'))
 bp_allsky.add_url_rule('/js/latest', view_func=JsonLatestImageView.as_view('js_latest_image_view'))

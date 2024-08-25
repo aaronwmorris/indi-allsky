@@ -168,8 +168,7 @@
 
                 <div class="py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1 d-none d-sm-inline">
                     <hr>
-                    <div>{{ status_text|safe }}</div>
-                    <div>{{ web_extra_text|safe }}</div>
+                    <div id="status_text">{{ status_text|safe }}</div>
                     <hr>
                     <div>{{ username_text|safe }}</div>
                 </div>
@@ -246,22 +245,18 @@ function ackNotification(notice_id, onDone, onError) {
 }
 
 
-
-function loadNotification(getData, onDone, onError) {
-    if(!getData)getData={'camera_id' : camera_id};
-    if(!onDone)onDone=function(){};
-    if(!onError)onError=function(){};
+function loadNotification() {
+    var getData={'camera_id' : camera_id};
 
     $.ajax({
         type: "GET",
         url: "{{ url_for('indi_allsky.ajax_notification_view') }}",
         contentType: "application/json",
         data: getData,
-        success: function(data){
-            onDone(data);
+        success: function(rdata){
+            showNotification(rdata);
         },
-        error: function(data){
-            onError(data);
+        error: function(rdata){
         },
     });
 }
@@ -290,15 +285,14 @@ function showNotification(data) {
 }
 
 
-function changeCamera(onDone, onError) {
+function changeCamera() {
     postData = {
         'camera_id' : $("#CAMERA_SELECT").val()
     };
 
-    if(!onDone)onDone=function(){
+    var onDone=function(){
         location.reload();
     };
-    if(!onError)onError=function(){};
 
 
     $.ajax({
@@ -306,19 +300,44 @@ function changeCamera(onDone, onError) {
         url: "{{ url_for('indi_allsky.ajax_select_camera_view') }}",
         contentType: "application/json",
         data: JSON.stringify(postData),
-        success: function(data){
-            onDone(data);
+        success: function(rdata){
+            onDone(rdata);
         },
-        error: function(data){
-            onError(data);
+        error: function(rdata){
+            onError(rdata);
         },
     });
 }
 
 
+function getStatusText() {
+    var getData={'camera_id' : camera_id};
+
+    $.ajax({
+        type: "GET",
+        url: "{{ url_for('indi_allsky.ajax_status_update_view') }}",
+        contentType: "application/json",
+        data: getData,
+        success: function(rdata){
+            updateStatus(rdata);
+        },
+        error: function(rdata){
+        },
+    });
+}
+
+
+function updateStatus(data) {
+    console.log('Update status');
+    $("#status_text").html(data['status_text']);
+    setTimeout(getStatusText, 101000);
+}
+
 $( document ).ready(function() {
     // Load notifications when ready
-    loadNotification({'camera_id' : camera_id}, showNotification);
+    loadNotification({'camera_id' : camera_id});
+
+    setTimeout(getStatusText, 101000);  // prime number
 
     $("#CAMERA_SELECT").on("change", function() {
         changeCamera();
