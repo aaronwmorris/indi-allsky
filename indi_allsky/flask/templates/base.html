@@ -328,15 +328,16 @@ function getStatusText() {
 
 
 function updateStatus(data) {
+    console.log('Update status');
     $("#status_text").html(data['status_text']);
-    setTimeout(getStatusText, 180000);
+    setTimeout(getStatusText, 90000);
 }
 
 $( document ).ready(function() {
     // Load notifications when ready
     loadNotification({'camera_id' : camera_id});
 
-    setTimeout(getStatusText, 180000);
+    setTimeout(getStatusText, 90000);
 
     $("#CAMERA_SELECT").on("change", function() {
         changeCamera();
