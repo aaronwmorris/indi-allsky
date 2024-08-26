@@ -735,6 +735,16 @@ def WEB_EXTRA_TEXT_validator(form, field):
         raise ValidationError(str(e))
 
 
+def IMAGE_STRETCH__CLASSNAME_validator(form, field):
+    if not field.data:
+        return
+
+    class_regex = r'^[a-zA-Z0-9_\-]+$'
+
+    if not re.search(class_regex, field.data):
+        raise ValidationError('Invalid class syntax')
+
+
 def IMAGE_STRETCH__MODE1_GAMMA_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -749,6 +759,39 @@ def IMAGE_STRETCH__MODE1_STDDEVS_validator(form, field):
 
     if field.data < 1:
         raise ValidationError('Standard deviations must be 1.0 or greater')
+
+
+def IMAGE_STRETCH__MODE2_SHADOWS_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Value must be 0.0 or greater')
+
+    if field.data > 0.5:
+        raise ValidationError('Value must be 0.5 or less')
+
+
+def IMAGE_STRETCH__MODE2_MIDTONES_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Value must be 0.0 or greater')
+
+    if field.data > 1:
+        raise ValidationError('Value must be 1.0 or less')
+
+
+def IMAGE_STRETCH__MODE2_HIGHLIGHTS_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.5:
+        raise ValidationError('Value must be 0.5 or greater')
+
+    if field.data > 1:
+        raise ValidationError('Value must be 1.0 or less')
 
 
 def IMAGE_ROTATE_validator(form, field):
@@ -2661,6 +2704,14 @@ class IndiAllskyConfigForm(FlaskForm):
         ('unlisted', 'Unlisted'),
     )
 
+
+    IMAGE_STRETCH__CLASSNAME_choices = (
+        ('', 'None'),
+        ('mode1_stddev_cutoff', 'Standard Deviation Cutoff'),
+        ('mode1_mtf', 'Midtone Transfer Function Transformation'),
+    )
+
+
     FOCUSER__CLASSNAME_choices = (
         ('', 'None'),
         ('blinka_focuser_28byj_64', '28BYJ-48 Stepper (1/64) ULN2003 - GPIO'),
@@ -2927,9 +2978,13 @@ class IndiAllskyConfigForm(FlaskForm):
     WEB_EXTRA_TEXT                   = StringField('Extra HTML Info File', validators=[WEB_EXTRA_TEXT_validator])
     WEB_NONLOCAL_IMAGES              = BooleanField('Non-Local Images')
     WEB_LOCAL_IMAGES_ADMIN           = BooleanField('Local Images from Admin Networks')
+    IMAGE_STRETCH__CLASSNAME         = SelectField('Stretch Function', choices=IMAGE_STRETCH__CLASSNAME_choices, validators=[DataRequired(), IMAGE_STRETCH__CLASSNAME_validator])
     IMAGE_STRETCH__MODE1_ENABLE      = BooleanField('Enable Stretching')
-    IMAGE_STRETCH__MODE1_GAMMA       = FloatField('Stretching Gamma', validators=[IMAGE_STRETCH__MODE1_GAMMA_validator])
-    IMAGE_STRETCH__MODE1_STDDEVS     = FloatField('Stretching Std Deviations', validators=[DataRequired(), IMAGE_STRETCH__MODE1_STDDEVS_validator])
+    IMAGE_STRETCH__MODE1_GAMMA       = FloatField('StdDev Cutoff - Stretching Gamma', validators=[IMAGE_STRETCH__MODE1_GAMMA_validator])
+    IMAGE_STRETCH__MODE1_STDDEVS     = FloatField('StdDev Cutoff - Stretching Std Deviations', validators=[DataRequired(), IMAGE_STRETCH__MODE1_STDDEVS_validator])
+    IMAGE_STRETCH__MODE2_SHADOWS     = FloatField('MTF - Shadows Cutoff', validators=[IMAGE_STRETCH__MODE2_SHADOWS_validator])
+    IMAGE_STRETCH__MODE2_MIDTONES    = FloatField('MTF - Midtones Target', validators=[IMAGE_STRETCH__MODE2_MIDTONES_validator])
+    IMAGE_STRETCH__MODE2_HIGHTLIGHTS = FloatField('MTF - Highlights Cutoff', validators=[IMAGE_STRETCH__MODE2_HIGHLIGHTS_validator])
     IMAGE_STRETCH__SPLIT             = BooleanField('Stretching split screen')
     IMAGE_STRETCH__MOONMODE          = BooleanField('Moon Mode Stretching')
     IMAGE_STRETCH__DAYTIME           = BooleanField('Daytime Stretching')
