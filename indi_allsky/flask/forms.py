@@ -2707,7 +2707,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
     IMAGE_STRETCH__CLASSNAME_choices = (
         ('', 'None'),
-        ('mode1_stddev_cutoff', 'Standard Deviation Cutoff'),
+        ('mode1_stddev_cutoff', 'Standard Deviation Cutoff (Original)'),
         ('mode1_mtf', 'Midtone Transfer Function Transformation'),
     )
 
@@ -2984,7 +2984,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_STRETCH__MODE1_STDDEVS     = FloatField('StdDev Cutoff - Stretching Std Deviations', validators=[DataRequired(), IMAGE_STRETCH__MODE1_STDDEVS_validator])
     IMAGE_STRETCH__MODE2_SHADOWS     = FloatField('MTF - Shadows Cutoff', validators=[IMAGE_STRETCH__MODE2_SHADOWS_validator])
     IMAGE_STRETCH__MODE2_MIDTONES    = FloatField('MTF - Midtones Target', validators=[IMAGE_STRETCH__MODE2_MIDTONES_validator])
-    IMAGE_STRETCH__MODE2_HIGHTLIGHTS = FloatField('MTF - Highlights Cutoff', validators=[IMAGE_STRETCH__MODE2_HIGHLIGHTS_validator])
+    IMAGE_STRETCH__MODE2_HIGHLIGHTS  = FloatField('MTF - Highlights Cutoff', validators=[IMAGE_STRETCH__MODE2_HIGHLIGHTS_validator])
     IMAGE_STRETCH__SPLIT             = BooleanField('Stretching split screen')
     IMAGE_STRETCH__MOONMODE          = BooleanField('Moon Mode Stretching')
     IMAGE_STRETCH__DAYTIME           = BooleanField('Daytime Stretching')
