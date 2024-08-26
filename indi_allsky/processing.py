@@ -21,7 +21,7 @@ import ephem
 
 from . import constants
 
-from .stretch import IndiAllSkyStretch
+from . import stretch
 from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
@@ -149,7 +149,11 @@ class ImageProcessor(object):
 
         self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
 
-        self._stretch = IndiAllSkyStretch(self.config, self.bin_v, self.night_v, self.moonmode_v, mask=self._detection_mask)
+        if self.config['IMAGE_STRETCH'].get('CLASSNAME'):
+            stretch_class = getattr(stretch, self.config['IMAGE_STRETCH']['CLASSNAME'])
+            self._stretch = stretch_class(self.config, self.bin_v, mask=self._detection_mask)
+        else:
+            self._stretch = None
 
         self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
         self._stars_detect = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
@@ -1948,7 +1952,7 @@ class ImageProcessor(object):
 
 
         # stretching data
-        if self.config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE'):
+        if self.config.get('IMAGE_STRETCH', {}).get('CLASSNAME'):
             if self.night_v.value:
                 # night
                 label_data['stretch'] = 'On'
@@ -2385,6 +2389,22 @@ class ImageProcessor(object):
         if self.focus_mode:
             # disable processing in focus mode
             return
+
+
+        if isinstance(self._stretch, type(None)):
+            return
+
+
+        if self.night_v.value:
+            # night
+            if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
+                return
+        else:
+            # daytime
+            if not self.config.get('IMAGE_STRETCH', {}).get('DAYTIME'):
+                return
+
+
 
         stretched_image, is_stretched = self._stretch.main(self.image, self.max_bit_depth)
 

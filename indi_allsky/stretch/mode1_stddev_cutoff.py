@@ -10,12 +10,10 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky_Mode1_Stretch(object):
 
-    def __init__(self, config, bin_v, night_v, moonmode_v, mask=None):
+    def __init__(self, config, bin_v, mask=None):
         self.config = config
 
         self.bin_v = bin_v
-        self.night_v = night_v
-        self.moonmode_v = moonmode_v
 
         self._sqm_mask = mask
 
@@ -26,17 +24,6 @@ class IndiAllSky_Mode1_Stretch(object):
         if isinstance(self._numpy_mask, type(None)):
             # This only needs to be done once
             self._generateNumpyMask(data)
-
-
-        if self.night_v.value:
-            # night
-            if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
-                logger.info('Moon mode stretching disabled')
-                return data, False
-        else:
-            # daytime
-            if not self.config.get('IMAGE_STRETCH', {}).get('DAYTIME'):
-                return data, False
 
 
         stretched_image = self.stretch(data, image_bit_depth)
