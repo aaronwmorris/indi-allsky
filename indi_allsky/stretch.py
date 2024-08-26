@@ -125,13 +125,13 @@ class IndiAllSkyStretch(object):
 
 
         # apply lookup table
-        stretch_image = lut.take(data, mode='raise')
+        stretched_image = lut.take(data, mode='raise')
 
         levels_elapsed_s = time.time() - levels_start
         logger.info('Image levels in %0.4f s', levels_elapsed_s)
 
 
-        return stretch_image
+        return stretched_image
 
 
     def _get_image_stddev(self, data):

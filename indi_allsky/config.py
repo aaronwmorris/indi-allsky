@@ -129,7 +129,7 @@ class IndiAllSkyConfigBase(object):
             "SWAP_USAGE"     : 90.0,
         },
         "IMAGE_STRETCH" : {
-            "MODE1_ENABLE"   : False,
+            "CLASSNAME"      : "",
             "MODE1_GAMMA"    : 3.0,
             "MODE1_STDDEVS"  : 2.25,
             "SPLIT"          : False,
