@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger('indi_allsky')
 
 
-class IndiAllSkyStretch(object):
+class IndiAllSky_Mode1_Stretch(object):
 
     def __init__(self, config, bin_v, night_v, moonmode_v, mask=None):
         self.config = config
@@ -39,15 +39,13 @@ class IndiAllSkyStretch(object):
                 return data, False
 
 
-        if self.config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE'):
-            logger.info('Using image stretch mode 1')
-            return self.mode1_stretch(data, image_bit_depth), True
-        else:
-            logger.info('Image stretching disabled')
-            return data, False
+        stretched_image = self.stretch(data, image_bit_depth)
 
 
-    def mode1_stretch(self, data, image_bit_depth):
+        return stretched_image, True
+
+
+    def stretch(self, data, image_bit_depth):
 
         data = self.mode1_apply_gamma(data, image_bit_depth)
 
