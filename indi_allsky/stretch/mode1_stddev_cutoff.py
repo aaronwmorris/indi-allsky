@@ -4,18 +4,18 @@ import time
 import numpy
 import logging
 
+from .stretchBase import IndiAllSky_Stretch_Base
+
 
 logger = logging.getLogger('indi_allsky')
 
 
-class IndiAllSky_Mode1_Stretch(object):
+class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
 
-    def __init__(self, config, bin_v, mask=None):
-        self.config = config
+    def __init__(self, *args, **kwargs):
+        super(IndiAllSky_Mode1_Stretch, self).__init__(*args, **kwargs)
 
-        self.bin_v = bin_v
-
-        self._sqm_mask = mask
+        self._sqm_mask = kwargs['mask']
 
         self._numpy_mask = None
 

@@ -7,16 +7,15 @@ import time
 import numpy
 import logging
 
+from .stretchBase import IndiAllSky_Stretch_Base
 
 logger = logging.getLogger('indi_allsky')
 
 
-class IndiAllSky_Mode2_MTF_Stretch(object):
+class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
 
-    def __init__(self, config, bin_v, mask=None):
-        self.config = config
-
-        self.bin_v = bin_v
+    def __init__(self, *args, **kwargs):
+        super(IndiAllSky_Mode2_MTF_Stretch, self).__init__(*args, **kwargs)
 
 
     def main(self, data, image_bit_depth):
