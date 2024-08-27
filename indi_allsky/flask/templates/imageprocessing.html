@@ -265,16 +265,16 @@ var fullscreen = false;  //initial state
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STRETCH__MODE1_ENABLE.label }}
+            {{ form_image_processing.IMAGE_STRETCH__CLASSNAME.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.IMAGE_STRETCH__MODE1_ENABLE(class='form-check-input') }}
-                <div id="IMAGE_STRETCH__MODE1_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
+        <div class="col-sm-3">
+            {{ form_image_processing.IMAGE_STRETCH__CLASSNAME(class='form-select bg-secondary') }}
+            <div id="IMAGE_STRETCH__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Image stretching and contrast enhancement</div>
+        <div class="col-sm-7"></div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -296,6 +296,47 @@ var fullscreen = false;  //initial state
             <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Black level cutoff in standard deviations.  Lower number results in greater dynamic range.</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE2_SHADOWS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE2_SHADOWS(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE1_SHADOWS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default: 0.0</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE2_MIDTONES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE2_MIDTONES(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE1_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Values less than 0.5 enhances midtones, greater than 0.5 darkens midtones (0.5 results in the original image)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE2_HIGHLIGHTS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STRETCH__MODE2_HIGHLIGHTS(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE1_HIGHLIGHTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default: 1.0</div>
+        </div>
     </div>
 
     <hr>
@@ -713,8 +754,12 @@ const field_names = [
     'CCD_BIT_DEPTH',
     'CLAHE_CLIPLIMIT',
     'CLAHE_GRIDSIZE',
+    'IMAGE_STRETCH__CLASSNAME',
     'IMAGE_STRETCH__MODE1_GAMMA',
     'IMAGE_STRETCH__MODE1_STDDEVS',
+    'IMAGE_STRETCH__MODE2_SHADOWS',
+    'IMAGE_STRETCH__MODE2_MIDTONES',
+    'IMAGE_STRETCH__MODE2_HIGHLIGHTS',
     'CFA_PATTERN',
     'SCNR_ALGORITHM',
     'WBR_FACTOR',
@@ -746,7 +791,6 @@ const checkbox_field_names = [
     'IMAGE_CALIBRATE_DARK',
     'NIGHT_CONTRAST_ENHANCE',
     'CONTRAST_ENHANCE_16BIT',
-    'IMAGE_STRETCH__MODE1_ENABLE',
     'AUTO_WB',
     'IMAGE_STACK_ALIGN',
     'IMAGE_FLIP_V',
