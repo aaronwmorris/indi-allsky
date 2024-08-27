@@ -24,14 +24,6 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
         self._mtf_lut = None
 
 
-    def main(self, data, image_bit_depth):
-
-        stretched_image = self.stretch(data, image_bit_depth)
-
-
-        return stretched_image, True
-
-
     def stretch(self, data, image_bit_depth):
         #logger.info('MTF: Shadows - Shadows %0.2f, Midtones %0.2f, Highlights %0.2f', self.shadows, self.midtones, self.highlights)
 

@@ -24,19 +24,11 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
         self._numpy_mask = None
 
 
-    def main(self, data, image_bit_depth):
+    def stretch(self, data, image_bit_depth):
         if isinstance(self._numpy_mask, type(None)):
             # This only needs to be done once
             self._generateNumpyMask(data)
 
-
-        stretched_image = self.stretch(data, image_bit_depth)
-
-
-        return stretched_image, True
-
-
-    def stretch(self, data, image_bit_depth):
 
         data = self.mode1_apply_gamma(data, image_bit_depth)
 
