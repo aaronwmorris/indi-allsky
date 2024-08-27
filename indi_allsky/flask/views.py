@@ -568,7 +568,7 @@ class RollingAduView(TemplateView):
         context['camera_id'] = self.camera.id
 
         camera_now_minus_7d = self.camera_now - timedelta(days=7)
-        createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
+        createDate_H = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_H')
 
 
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
@@ -591,8 +591,8 @@ class RollingAduView(TemplateView):
                     and_(
                         IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
                         or_(
-                            createDate_hour >= 22,  # night is normally between 10p and 4a, right?
-                            createDate_hour <= 4,
+                            createDate_H >= 22,  # night is normally between 10p and 4a, right?
+                            createDate_H <= 4,
                         )
                     )
                 )\
@@ -622,8 +622,8 @@ class RollingAduView(TemplateView):
                     and_(
                         IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
                         or_(
-                            createDate_hour >= 22,  # night is normally between 10p and 4a, right?
-                            createDate_hour <= 4,
+                            createDate_H >= 22,  # night is normally between 10p and 4a, right?
+                            createDate_H <= 4,
                         )
                     )
                 )\
