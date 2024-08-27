@@ -53,7 +53,9 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
 
 
         data_max = (2 ** image_bit_depth) - 1
-        range_array = numpy.arange(0, data_max, dtype=numpy.float32)
+
+
+        range_array = numpy.arange(0, data_max + 1, dtype=numpy.float32)
         lut = (((range_array / data_max) ** (1 / float(self.gamma))) * data_max).astype(numpy_dtype)
 
 
@@ -80,7 +82,7 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
             numpy_dtype = numpy.uint16
 
 
-        data_max = 2 ** image_bit_depth
+        data_max = (2 ** image_bit_depth) - 1
 
         low = int(mean - (self.stddevs * stddev))
 
@@ -91,8 +93,7 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
         highIndex = int((highPercent / 100) * data_max)
 
 
-        range_array = numpy.arange(0, data_max, dtype=numpy.float32)
-
+        range_array = numpy.arange(0, data_max + 1, dtype=numpy.float32)
         lut = (((range_array - lowIndex) * data_max) / (highIndex - lowIndex))  # floating point math, results in negative numbers
 
         lut[lut < 0] = 0  # clip low end

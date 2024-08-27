@@ -41,7 +41,7 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
             data_max = (2 ** image_bit_depth) - 1
 
 
-            range_array = numpy.arange(0, data_max, dtype=numpy.float32)
+            range_array = numpy.arange(0, data_max + 1, dtype=numpy.float32)
             shadows_val = int(self.shadows * data_max)
             highlights_val = int(self.highlights * data_max)
 
