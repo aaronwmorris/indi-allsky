@@ -15,6 +15,10 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
     def __init__(self, *args, **kwargs):
         super(IndiAllSky_Mode1_Stretch, self).__init__(*args, **kwargs)
 
+        self.gamma = self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0)
+        self.stddevs = self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 3.0)
+
+
         self._sqm_mask = kwargs['mask']
 
         self._numpy_mask = None
@@ -42,9 +46,7 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
 
 
     def mode1_apply_gamma(self, data, image_bit_depth):
-        gamma = self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0)
-
-        if not gamma:
+        if not self.gamma:
             return data
 
         logger.info('Applying gamma correction')
@@ -60,7 +62,7 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
 
         data_max = (2 ** image_bit_depth) - 1
         range_array = numpy.arange(0, data_max, dtype=numpy.float32)
-        lut = (((range_array / data_max) ** (1 / float(gamma))) * data_max).astype(numpy_dtype)
+        lut = (((range_array / data_max) ** (1 / float(self.gamma))) * data_max).astype(numpy_dtype)
 
 
         # apply lookup table
@@ -73,8 +75,6 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
 
 
     def mode1_adjustImageLevels(self, data, image_bit_depth):
-        stddevs = self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 3.0)
-
         mean, stddev = self._get_image_stddev(data)
         logger.info('Mean: %0.2f, StdDev: %0.2f', mean, stddev)
 
@@ -90,7 +90,7 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
 
         data_max = 2 ** image_bit_depth
 
-        low = int(mean - (stddevs * stddev))
+        low = int(mean - (self.stddevs * stddev))
 
         lowPercent  = (low / data_max) * 100
         highPercent = 100.0

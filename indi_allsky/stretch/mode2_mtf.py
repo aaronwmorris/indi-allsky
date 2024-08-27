@@ -17,6 +17,10 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
     def __init__(self, *args, **kwargs):
         super(IndiAllSky_Mode2_MTF_Stretch, self).__init__(*args, **kwargs)
 
+        self.shadows = self.config.get('IMAGE_STRETCH', {}).get('MODE2_SHADOWS', 0.0)
+        self.midtones = self.config.get('IMAGE_STRETCH', {}).get('MODE2_MIDTONES', 0.25)
+        self.highlights = self.config.get('IMAGE_STRETCH', {}).get('MODE2_HIGHLIGHTS', 1.0)
+
         self._mtf_lut = None
 
 
@@ -29,10 +33,6 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
 
 
     def stretch(self, data, image_bit_depth):
-
-        shadows = 0
-        midtones = 0.25
-        highlights = 1
 
         mtf_start = time.time()
 
@@ -50,9 +50,9 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
             range_array = numpy.arange(0, data_max, dtype=numpy.float32)
 
 
-            lut = (range_array - shadows) / (highlights - shadows)
+            lut = (range_array - self.shadows) / (self.highlights - self.shadows)
 
-            lut = ((midtones - 1) * lut) / (((2 * midtones - 1) * lut) - midtones)
+            lut = ((self.midtones - 1) * lut) / (((2 * self.midtones - 1) * lut) - self.midtones)
 
 
             lut[lut < 0] = 0  # clip low end
@@ -63,7 +63,6 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
             self._mtf_lut = lut
 
 
-        # apply lookup table
         stretched_image = self._mtf_lut.take(data, mode='raise')
 
 
