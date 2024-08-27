@@ -924,17 +924,6 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.IMAGE_STRETCH__MODE1_GAMMA.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_STRETCH__MODE1_GAMMA(class='form-control bg-secondary') }}
-            <div id="IMAGE_STRETCH__MODE1_GAMMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
             {{ form_config.IMAGE_STRETCH__MODE1_STDDEVS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -942,6 +931,17 @@ var camera_id = {{ camera_id }};
             <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Black level cutoff in standard deviations.  Lower number results in greater dynamic range.</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE1_GAMMA.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE1_GAMMA(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE1_GAMMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
     </div>
 
     <hr>
