@@ -4,50 +4,31 @@ import time
 import numpy
 import logging
 
+from .stretchBase import IndiAllSky_Stretch_Base
+
 
 logger = logging.getLogger('indi_allsky')
 
 
-class IndiAllSkyStretch(object):
+class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
 
-    def __init__(self, config, bin_v, night_v, moonmode_v, mask=None):
-        self.config = config
+    def __init__(self, *args, **kwargs):
+        super(IndiAllSky_Mode1_Stretch, self).__init__(*args, **kwargs)
+        self._sqm_mask = kwargs['mask']
 
-        self.bin_v = bin_v
-        self.night_v = night_v
-        self.moonmode_v = moonmode_v
 
-        self._sqm_mask = mask
+        self.gamma = self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0)
+        self.stddevs = self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 3.0)
+
 
         self._numpy_mask = None
 
 
-    def main(self, data, image_bit_depth):
+    def stretch(self, data, image_bit_depth):
         if isinstance(self._numpy_mask, type(None)):
             # This only needs to be done once
             self._generateNumpyMask(data)
 
-
-        if self.night_v.value:
-            # night
-            if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
-                logger.info('Moon mode stretching disabled')
-                return data, False
-        else:
-            # daytime
-            if not self.config.get('IMAGE_STRETCH', {}).get('DAYTIME'):
-                return data, False
-
-
-        if self.config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE'):
-            logger.info('Using image stretch mode 1')
-            return self.mode1_stretch(data, image_bit_depth), True
-        else:
-            logger.info('Image stretching disabled')
-            return data, False
-
-
-    def mode1_stretch(self, data, image_bit_depth):
 
         data = self.mode1_apply_gamma(data, image_bit_depth)
 
@@ -57,9 +38,7 @@ class IndiAllSkyStretch(object):
 
 
     def mode1_apply_gamma(self, data, image_bit_depth):
-        gamma = self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0)
-
-        if not gamma:
+        if not self.gamma:
             return data
 
         logger.info('Applying gamma correction')
@@ -73,9 +52,9 @@ class IndiAllSkyStretch(object):
             numpy_dtype = numpy.uint16
 
 
-        data_max = 2 ** image_bit_depth
+        data_max = (2 ** image_bit_depth) - 1
         range_array = numpy.arange(0, data_max, dtype=numpy.float32)
-        lut = (((range_array / data_max) ** (1 / float(gamma))) * data_max).astype(numpy_dtype)
+        lut = (((range_array / data_max) ** (1 / float(self.gamma))) * data_max).astype(numpy_dtype)
 
 
         # apply lookup table
@@ -88,8 +67,6 @@ class IndiAllSkyStretch(object):
 
 
     def mode1_adjustImageLevels(self, data, image_bit_depth):
-        stddevs = self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 3.0)
-
         mean, stddev = self._get_image_stddev(data)
         logger.info('Mean: %0.2f, StdDev: %0.2f', mean, stddev)
 
@@ -105,7 +82,7 @@ class IndiAllSkyStretch(object):
 
         data_max = 2 ** image_bit_depth
 
-        low = int(mean - (stddevs * stddev))
+        low = int(mean - (self.stddevs * stddev))
 
         lowPercent  = (low / data_max) * 100
         highPercent = 100.0
@@ -125,13 +102,13 @@ class IndiAllSkyStretch(object):
 
 
         # apply lookup table
-        stretch_image = lut.take(data, mode='raise')
+        stretched_image = lut.take(data, mode='raise')
 
         levels_elapsed_s = time.time() - levels_start
         logger.info('Image levels in %0.4f s', levels_elapsed_s)
 
 
-        return stretch_image
+        return stretched_image
 
 
     def _get_image_stddev(self, data):

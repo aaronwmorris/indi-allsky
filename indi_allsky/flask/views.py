@@ -1357,9 +1357,12 @@ class ConfigView(FormView):
             'WEB_EXTRA_TEXT'                 : self.indi_allsky_config.get('WEB_EXTRA_TEXT', ''),
             'WEB_NONLOCAL_IMAGES'            : self.indi_allsky_config.get('WEB_NONLOCAL_IMAGES', False),
             'WEB_LOCAL_IMAGES_ADMIN'         : self.indi_allsky_config.get('WEB_LOCAL_IMAGES_ADMIN', False),
-            'IMAGE_STRETCH__MODE1_ENABLE'    : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE', False),
+            'IMAGE_STRETCH__CLASSNAME'       : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('CLASSNAME', ''),
             'IMAGE_STRETCH__MODE1_GAMMA'     : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0),
             'IMAGE_STRETCH__MODE1_STDDEVS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 2.25),
+            'IMAGE_STRETCH__MODE2_SHADOWS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_SHADOWS', 0.0),
+            'IMAGE_STRETCH__MODE2_MIDTONES'  : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_MIDTONES', 0.35),
+            'IMAGE_STRETCH__MODE2_HIGHLIGHTS': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_HIGHLIGHTS', 1.0),
             'IMAGE_STRETCH__SPLIT'           : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('SPLIT', False),
             'IMAGE_STRETCH__MOONMODE'        : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MOONMODE', False),
             'IMAGE_STRETCH__DAYTIME'         : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('DAYTIME', False),
@@ -2065,9 +2068,12 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['WEB_EXTRA_TEXT']                       = str(request.json['WEB_EXTRA_TEXT'])
         self.indi_allsky_config['WEB_NONLOCAL_IMAGES']                  = bool(request.json['WEB_NONLOCAL_IMAGES'])
         self.indi_allsky_config['WEB_LOCAL_IMAGES_ADMIN']               = bool(request.json['WEB_LOCAL_IMAGES_ADMIN'])
-        self.indi_allsky_config['IMAGE_STRETCH']['MODE1_ENABLE']        = bool(request.json['IMAGE_STRETCH__MODE1_ENABLE'])
+        self.indi_allsky_config['IMAGE_STRETCH']['CLASSNAME']           = str(request.json['IMAGE_STRETCH__CLASSNAME'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE1_GAMMA']         = float(request.json['IMAGE_STRETCH__MODE1_GAMMA'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE1_STDDEVS']       = float(request.json['IMAGE_STRETCH__MODE1_STDDEVS'])
+        self.indi_allsky_config['IMAGE_STRETCH']['MODE2_SHADOWS']       = float(request.json['IMAGE_STRETCH__MODE2_SHADOWS'])
+        self.indi_allsky_config['IMAGE_STRETCH']['MODE2_MIDTONES']      = float(request.json['IMAGE_STRETCH__MODE2_MIDTONES'])
+        self.indi_allsky_config['IMAGE_STRETCH']['MODE2_HIGHLIGHTS']    = float(request.json['IMAGE_STRETCH__MODE2_HIGHLIGHTS'])
         self.indi_allsky_config['IMAGE_STRETCH']['SPLIT']               = bool(request.json['IMAGE_STRETCH__SPLIT'])
         self.indi_allsky_config['IMAGE_STRETCH']['MOONMODE']            = bool(request.json['IMAGE_STRETCH__MOONMODE'])
         self.indi_allsky_config['IMAGE_STRETCH']['DAYTIME']             = bool(request.json['IMAGE_STRETCH__DAYTIME'])
@@ -5210,9 +5216,12 @@ class ImageProcessingView(TemplateView):
             'CONTRAST_ENHANCE_16BIT'         : self.indi_allsky_config.get('CONTRAST_ENHANCE_16BIT', False),
             'CLAHE_CLIPLIMIT'                : self.indi_allsky_config.get('CLAHE_CLIPLIMIT', 3.0),
             'CLAHE_GRIDSIZE'                 : self.indi_allsky_config.get('CLAHE_GRIDSIZE', 8),
-            'IMAGE_STRETCH__MODE1_ENABLE'    : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_ENABLE', False),
+            'IMAGE_STRETCH__CLASSNAME'       : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('CLASSNAME', ''),
             'IMAGE_STRETCH__MODE1_GAMMA'     : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0),
             'IMAGE_STRETCH__MODE1_STDDEVS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 2.25),
+            'IMAGE_STRETCH__MODE2_SHADOWS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_SHADOWS', 0.0),
+            'IMAGE_STRETCH__MODE2_MIDTONES'  : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_MIDTONES', 0.35),
+            'IMAGE_STRETCH__MODE2_HIGHLIGHTS': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_HIGHLIGHTS', 1.0),
             'CFA_PATTERN'                    : self.indi_allsky_config.get('CFA_PATTERN', ''),
             'SCNR_ALGORITHM'                 : self.indi_allsky_config.get('SCNR_ALGORITHM', ''),
             'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
@@ -5348,9 +5357,12 @@ class JsonImageProcessingView(JsonView):
         p_config['CONTRAST_ENHANCE_16BIT']               = bool(request.json['CONTRAST_ENHANCE_16BIT'])
         p_config['CLAHE_CLIPLIMIT']                      = float(request.json['CLAHE_CLIPLIMIT'])
         p_config['CLAHE_GRIDSIZE']                       = int(request.json['CLAHE_GRIDSIZE'])
-        p_config['IMAGE_STRETCH']['MODE1_ENABLE']        = bool(request.json['IMAGE_STRETCH__MODE1_ENABLE'])
+        p_config['IMAGE_STRETCH']['CLASSNAME']           = str(request.json['IMAGE_STRETCH__CLASSNAME'])
         p_config['IMAGE_STRETCH']['MODE1_GAMMA']         = float(request.json['IMAGE_STRETCH__MODE1_GAMMA'])
         p_config['IMAGE_STRETCH']['MODE1_STDDEVS']       = float(request.json['IMAGE_STRETCH__MODE1_STDDEVS'])
+        p_config['IMAGE_STRETCH']['MODE2_SHADOWS']       = float(request.json['IMAGE_STRETCH__MODE2_SHADOWS'])
+        p_config['IMAGE_STRETCH']['MODE2_MIDTONES']      = float(request.json['IMAGE_STRETCH__MODE2_MIDTONES'])
+        p_config['IMAGE_STRETCH']['MODE2_HIGHLIGHTS']    = float(request.json['IMAGE_STRETCH__MODE2_HIGHLIGHTS'])
         p_config['IMAGE_STRETCH']['SPLIT']               = False
         p_config['CFA_PATTERN']                          = str(request.json['CFA_PATTERN'])
         p_config['SCNR_ALGORITHM']                       = str(request.json['SCNR_ALGORITHM'])

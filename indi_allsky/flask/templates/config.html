@@ -911,15 +911,26 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.IMAGE_STRETCH__MODE1_ENABLE.label }}
+            {{ form_config.IMAGE_STRETCH__CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.IMAGE_STRETCH__CLASSNAME(class='form-select bg-secondary') }}
+            <div id="IMAGE_STRETCH__CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE1_STDDEVS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.IMAGE_STRETCH__MODE1_ENABLE(class='form-check-input') }}
-                <div id="IMAGE_STRETCH__MODE1_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
+            {{ form_config.IMAGE_STRETCH__MODE1_STDDEVS(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Image stretching and contrast enhancement</div>
+        <div class="col-sm-8">Black level cutoff in standard deviations.  Lower number results in greater dynamic range.</div>
     </div>
 
     <div class="form-group row">
@@ -933,16 +944,49 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8"></div>
     </div>
 
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.IMAGE_STRETCH__MODE1_STDDEVS.label(class='col-form-label') }}
+            {{ form_config.IMAGE_STRETCH__MODE2_SHADOWS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.IMAGE_STRETCH__MODE1_STDDEVS(class='form-control bg-secondary') }}
-            <div id="IMAGE_STRETCH__MODE1_STDDEVS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.IMAGE_STRETCH__MODE2_SHADOWS(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE2_SHADOWS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Black level cutoff in standard deviations.  Lower number results in greater dynamic range.</div>
+        <div class="col-sm-8">
+            <div>Default 0.0 - With 0.03 this gives a nice subtle effect</div>
+        </div>
     </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE2_MIDTONES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE2_MIDTONES(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE2_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Values less than 0.5 enhances midtones, greater than 0.5 darkens midtones (0.5 results in the original image)</div>
+            <div>0.25 - 0.35 are good values to start</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE2_HIGHLIGHTS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE2_HIGHLIGHTS(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE2_HIGHLIGHTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default 1.0 - It is recommended not to adjust this setting</div>
+        </div>
+    </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -5487,8 +5531,12 @@ const field_names = [
     'CHARTS__CUSTOM_SLOT_4',
     'CLAHE_CLIPLIMIT',
     'CLAHE_GRIDSIZE',
+    'IMAGE_STRETCH__CLASSNAME',
     'IMAGE_STRETCH__MODE1_GAMMA',
     'IMAGE_STRETCH__MODE1_STDDEVS',
+    'IMAGE_STRETCH__MODE2_SHADOWS',
+    'IMAGE_STRETCH__MODE2_MIDTONES',
+    'IMAGE_STRETCH__MODE2_HIGHLIGHTS',
     'KEOGRAM_ANGLE',
     'KEOGRAM_H_SCALE',
     'KEOGRAM_V_SCALE',
@@ -5748,7 +5796,6 @@ const checkbox_field_names = [
     'DAYTIME_CONTRAST_ENHANCE',
     'NIGHT_CONTRAST_ENHANCE',
     'CONTRAST_ENHANCE_16BIT',
-    'IMAGE_STRETCH__MODE1_ENABLE',
     'IMAGE_STRETCH__SPLIT',
     'IMAGE_STRETCH__MOONMODE',
     'IMAGE_STRETCH__DAYTIME',

@@ -78,6 +78,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * Generic web cameras
     * More to come
 * Image stretching (16-bit)
+    * Standard Deviation Cutoff (Original)
+    * Midtone Transfer Function
 * Multi-image stacking
 * Dark calibration frames to remove hot pixels
 * Camera temperature control (for cameras with active cooling)
