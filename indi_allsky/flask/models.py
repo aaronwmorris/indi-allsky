@@ -245,6 +245,10 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
+    createDate_year = db.Column(db.Integer, nullable=True, index=True)
+    createDate_month = db.Column(db.Integer, nullable=True, index=True)
+    createDate_day = db.Column(db.Integer, nullable=True, index=True)
+    createDate_hour = db.Column(db.Integer, nullable=True, index=True)
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
     exp_elapsed = db.Column(db.Float, nullable=True)
@@ -275,14 +279,13 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='images')
 
-    # SQLAlchemy tries to create this over and over
-    #db.Index(
-    #    'idx_image_createDate_YmdH',
-    #    db.extract('year', createDate),
-    #    db.extract('month', createDate),
-    #    db.extract('day', createDate),
-    #    db.extract('hour', createDate),
-    #)
+    db.Index(
+        'idx_image_createDate_YmdH_2',
+        createDate_year,
+        createDate_month,
+        createDate_day,
+        createDate_hour,
+    )
 
 
     def __repr__(self):
@@ -373,6 +376,8 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     dayDate = db.Column(db.Date, nullable=False, index=True)
+    dayDate_year = db.Column(db.Integer, nullable=True, index=True)
+    dayDate_month = db.Column(db.Integer, nullable=True, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
@@ -389,12 +394,11 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='videos')
 
-    # SQLAlchemy tries to create this over and over
-    #db.Index(
-    #    'idx_video_dayDate_Ym',
-    #    db.extract('year', dayDate),
-    #    db.extract('month', dayDate),
-    #)
+    db.Index(
+        'idx_video_dayDate_Ym_2',
+        dayDate_year,
+        dayDate_month,
+    )
 
 
     def __repr__(self):
@@ -411,6 +415,8 @@ class IndiAllSkyDbMiniVideoTable(IndiAllSkyDbFileBase):
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
     dayDate = db.Column(db.Date, nullable=False, index=True)
+    dayDate_year = db.Column(db.Integer, nullable=True, index=True)
+    dayDate_month = db.Column(db.Integer, nullable=True, index=True)
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
@@ -426,6 +432,12 @@ class IndiAllSkyDbMiniVideoTable(IndiAllSkyDbFileBase):
     height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='minivideos')
+
+    db.Index(
+        'idx_minivideo_dayDate_Ym_2',
+        dayDate_year,
+        dayDate_month,
+    )
 
 
     def __repr__(self):
