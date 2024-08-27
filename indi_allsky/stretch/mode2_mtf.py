@@ -18,7 +18,7 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
         super(IndiAllSky_Mode2_MTF_Stretch, self).__init__(*args, **kwargs)
 
         self.shadows = self.config.get('IMAGE_STRETCH', {}).get('MODE2_SHADOWS', 0.0)
-        self.midtones = self.config.get('IMAGE_STRETCH', {}).get('MODE2_MIDTONES', 0.25)
+        self.midtones = self.config.get('IMAGE_STRETCH', {}).get('MODE2_MIDTONES', 0.35)
         self.highlights = self.config.get('IMAGE_STRETCH', {}).get('MODE2_HIGHLIGHTS', 1.0)
 
         self._mtf_lut = None

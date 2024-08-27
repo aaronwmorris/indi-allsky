@@ -133,7 +133,7 @@ class IndiAllSkyConfigBase(object):
             "MODE1_GAMMA"       : 3.0,
             "MODE1_STDDEVS"     : 2.25,
             "MODE2_SHADOWS"     : 0.0,
-            "MODE2_MIDTONES"    : 0.25,
+            "MODE2_MIDTONES"    : 0.35,
             "MODE2_HIGHLIGHTS"  : 1.0,
             "SPLIT"             : False,
             "MOONMODE"          : False,
