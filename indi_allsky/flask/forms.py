@@ -2708,7 +2708,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_STRETCH__CLASSNAME_choices = (
         ('', 'None'),
         ('mode1_stddev_cutoff', 'Standard Deviation Cutoff (Original)'),
-        ('mode1_mtf', 'Midtone Transfer Function Transformation'),
+        ('mode2_mtf', 'Midtone Transfer Function Transformation'),
     )
 
 
