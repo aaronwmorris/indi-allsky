@@ -149,11 +149,13 @@ class ImageProcessor(object):
 
         self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
 
+
         if self.config['IMAGE_STRETCH'].get('CLASSNAME'):
             stretch_class = getattr(stretch, self.config['IMAGE_STRETCH']['CLASSNAME'])
             self._stretch = stretch_class(self.config, self.bin_v, mask=self._detection_mask)
         else:
             self._stretch = None
+
 
         self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
         self._stars_detect = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)

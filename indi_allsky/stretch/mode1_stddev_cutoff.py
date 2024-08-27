@@ -14,12 +14,12 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
 
     def __init__(self, *args, **kwargs):
         super(IndiAllSky_Mode1_Stretch, self).__init__(*args, **kwargs)
+        self._sqm_mask = kwargs['mask']
+
 
         self.gamma = self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0)
         self.stddevs = self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 3.0)
 
-
-        self._sqm_mask = kwargs['mask']
 
         self._numpy_mask = None
 
