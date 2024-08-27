@@ -42,7 +42,7 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
         else:
             numpy_dtype = numpy.uint16
 
-        data_max = 2 ** image_bit_depth
+        data_max = (2 ** image_bit_depth) - 1
 
 
         if isinstance(self._mtf_lut, type(None)):
@@ -68,7 +68,7 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
 
 
         levels_elapsed_s = time.time() - mtf_start
-        logger.info('Image levels in %0.4f s', levels_elapsed_s)
+        logger.info('Stretch in %0.4f s', levels_elapsed_s)
 
         return stretched_image
 

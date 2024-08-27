@@ -58,7 +58,7 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
             numpy_dtype = numpy.uint16
 
 
-        data_max = 2 ** image_bit_depth
+        data_max = (2 ** image_bit_depth) - 1
         range_array = numpy.arange(0, data_max, dtype=numpy.float32)
         lut = (((range_array / data_max) ** (1 / float(gamma))) * data_max).astype(numpy_dtype)
 
