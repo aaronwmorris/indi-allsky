@@ -2680,8 +2680,8 @@ class AjaxImageViewerView(BaseView):
 
             year = form_datetime.year
             month = form_datetime.month
-            day = form_datetime.hour
-            hour = form_datetime.day
+            day = form_datetime.day
+            hour = form_datetime.hour
 
             json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
 
