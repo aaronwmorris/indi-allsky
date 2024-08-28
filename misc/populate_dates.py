@@ -72,6 +72,18 @@ class PopulateDates(object):
         print('Timelapse entries to fix: {0:d}'.format(video_count))
         print('Mini Timelapse entries to fix: {0:d}'.format(mini_video_count))
         print()
+
+
+        total_count = image_count
+        total_count += panorama_image_count
+        total_count += video_count
+        total_count += mini_video_count
+
+        if total_count == 0:
+            print('No updates needed')
+            sys.exit()
+
+
         print('Running in 10 seconds... control-c to cancel')
         print()
 
