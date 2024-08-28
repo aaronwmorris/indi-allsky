@@ -61,7 +61,7 @@ from .models import TaskQueueQueue
 from .models import TaskQueueState
 
 from sqlalchemy import func
-from sqlalchemy import extract
+#from sqlalchemy import extract
 from sqlalchemy import desc
 from sqlalchemy import cast
 from sqlalchemy import and_
@@ -568,7 +568,6 @@ class RollingAduView(TemplateView):
         context['camera_id'] = self.camera.id
 
         camera_now_minus_7d = self.camera_now - timedelta(days=7)
-        createDate_H = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_H')
 
 
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
@@ -591,8 +590,8 @@ class RollingAduView(TemplateView):
                     and_(
                         IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
                         or_(
-                            createDate_H >= 22,  # night is normally between 10p and 4a, right?
-                            createDate_H <= 4,
+                            IndiAllSkyDbImageTable.createDate_hour >= 22,  # night is normally between 10p and 4a, right?
+                            IndiAllSkyDbImageTable.createDate_hour <= 4,
                         )
                     )
                 )\
@@ -622,8 +621,8 @@ class RollingAduView(TemplateView):
                     and_(
                         IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
                         or_(
-                            createDate_H >= 22,  # night is normally between 10p and 4a, right?
-                            createDate_H <= 4,
+                            IndiAllSkyDbImageTable.createDate_hour >= 22,  # night is normally between 10p and 4a, right?
+                            IndiAllSkyDbImageTable.createDate_hour <= 4,
                         )
                     )
                 )\
