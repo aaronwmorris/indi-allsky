@@ -289,6 +289,12 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
         detections,
     )
 
+    db.Index(
+        'idx_image_createDate_ix',
+        camera_id,
+        createDate,
+        exclude,
+    )
 
     def __repr__(self):
         return '<Image {0:s}>'.format(self.filename)
@@ -599,6 +605,14 @@ class IndiAllSkyDbPanoramaImageTable(IndiAllSkyDbFileBase):
 
     def __repr__(self):
         return '<PanoramaImage {0:s}>'.format(self.filename)
+
+
+    db.Index(
+        'idx_panoramaimage_createDate_ix',
+        camera_id,
+        createDate,
+        exclude,
+    )
 
 
 class IndiAllSkyDbPanoramaVideoTable(IndiAllSkyDbFileBase):
