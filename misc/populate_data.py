@@ -37,7 +37,7 @@ logger.addHandler(LOG_HANDLER_STREAM)
 logger.setLevel(logging.INFO)
 
 
-class PopulateDates(object):
+class PopulateData(object):
 
     def __init__(self):
         self._shutdown = False
@@ -234,5 +234,5 @@ class PopulateDates(object):
 
 
 if __name__ == "__main__":
-    PopulateDates().main()
+    PopulateData().main()
 
