@@ -25,8 +25,16 @@ from sqlalchemy.sql.expression import null as sa_null
 
 from indi_allsky.flask import db
 
-logging.basicConfig(level=logging.INFO)
-logger = logging
+
+LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s: %(message)s')
+LOG_HANDLER_STREAM = logging.StreamHandler()
+LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
+
+
+logger = logging.getLogger('indi_allsky')
+logger.handlers.clear()
+logger.addHandler(LOG_HANDLER_STREAM)
+logger.setLevel(logging.INFO)
 
 
 class PopulateDates(object):
