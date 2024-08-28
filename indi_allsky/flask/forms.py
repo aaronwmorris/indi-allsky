@@ -4106,7 +4106,6 @@ class IndiAllskyGalleryViewer(FlaskForm):
             IndiAllSkyDbImageTable.createDate_month,
         )\
             .join(IndiAllSkyDbImageTable.camera)\
-            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == self.camera_id,
@@ -4114,6 +4113,9 @@ class IndiAllskyGalleryViewer(FlaskForm):
                     IndiAllSkyDbImageTable.createDate_year == year,
                 )
         )\
+
+        ### Disable this join to make things faster
+        #    .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
 
 
         if not self.local:
@@ -4150,7 +4152,6 @@ class IndiAllskyGalleryViewer(FlaskForm):
             IndiAllSkyDbImageTable.createDate_day,
         )\
             .join(IndiAllSkyDbImageTable.camera)\
-            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == self.camera_id,
@@ -4159,6 +4160,10 @@ class IndiAllskyGalleryViewer(FlaskForm):
                     IndiAllSkyDbImageTable.createDate_month == month,
                 )
         )
+
+
+        ### Disable this join to make things faster
+        #    .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
 
 
         if not self.local:
@@ -4194,7 +4199,6 @@ class IndiAllskyGalleryViewer(FlaskForm):
             IndiAllSkyDbImageTable.createDate_hour,
         )\
             .join(IndiAllSkyDbImageTable.camera)\
-            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == self.camera_id,
@@ -4204,6 +4208,10 @@ class IndiAllskyGalleryViewer(FlaskForm):
                     IndiAllSkyDbImageTable.createDate_day == day,
                 )
         )
+
+
+        ### Disable this join to make things faster
+        #    .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
 
 
         if not self.local:
