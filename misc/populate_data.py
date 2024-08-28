@@ -92,6 +92,8 @@ class PopulateData(object):
             sys.exit()
 
 
+        print('This process may require 10-20 minutes in some cases')
+        print()
         print('Running in 10 seconds... control-c to cancel')
         print()
 
