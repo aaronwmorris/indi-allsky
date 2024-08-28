@@ -280,7 +280,8 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='images')
 
     db.Index(
-        'idx_image_createDate_YmdH_2',
+        'idx_image_createDate_iYmdHd_2',
+        camera_id,
         createDate_year,
         createDate_month,
         createDate_day,
