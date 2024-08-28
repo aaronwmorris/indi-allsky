@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 #from datetime import datetime
 #from datetime import timedelta
+import signal
 import logging
 
 sys.path.append(str(Path(__file__).parent.absolute().parent))
@@ -30,29 +31,38 @@ logger = logging
 class PopulateDates(object):
 
     def __init__(self):
-        pass
+        self._shutdown = False
+
+
+    def sigint_handler_main(self, signum, frame):
+        logger.warning('Caught INT signal, shutting down')
+        self._shutdown = True
 
 
     def main(self):
-        images_query = db.session.query(
+        image_count = db.session.query(
             IndiAllSkyDbImageTable
         )\
-            .filter(IndiAllSkyDbImageTable.createDate_year == sa_null())
+            .filter(IndiAllSkyDbImageTable.createDate_year == sa_null())\
+            .count()
 
-        videos_query = db.session.query(
+        video_count = db.session.query(
             IndiAllSkyDbVideoTable
         )\
-            .filter(IndiAllSkyDbVideoTable.dayDate_year == sa_null())
+            .filter(IndiAllSkyDbVideoTable.dayDate_year == sa_null())\
+            .count()
 
-        mini_videos_query = db.session.query(
+        mini_video_count = db.session.query(
             IndiAllSkyDbMiniVideoTable
         )\
-            .filter(IndiAllSkyDbMiniVideoTable.dayDate_year == sa_null())
+            .filter(IndiAllSkyDbMiniVideoTable.dayDate_year == sa_null())\
+            .count()
 
 
-        print('Image entries to fix: {0:d}'.format(images_query.count()))
-        print('Timelapse entries to fix: {0:d}'.format(videos_query.count()))
-        print('Mini Timelapse entries to fix: {0:d}'.format(mini_videos_query.count()))
+        print()
+        print('Image entries to fix: {0:d}'.format(image_count))
+        print('Timelapse entries to fix: {0:d}'.format(video_count))
+        print('Mini Timelapse entries to fix: {0:d}'.format(mini_video_count))
         print()
         print('Running in 10 seconds... control-c to cancel')
         print()
@@ -60,47 +70,103 @@ class PopulateDates(object):
         time.sleep(10.0)
 
 
+        signal.signal(signal.SIGINT, self.sigint_handler_main)
+
 
         start = time.time()
 
         ### images
         logger.warning('Processing images...')
-        for x, i in enumerate(images_query):
-            if x % 500 == 0:
-                logger.info('Processed %d', x)
+        while True:
+            image_query = db.session.query(
+                IndiAllSkyDbImageTable
+            )\
+                .filter(IndiAllSkyDbImageTable.createDate_year == sa_null())\
+                .limit(500)
 
-            i.createDate_year   = i.createDate.year
-            i.createDate_month  = i.createDate.month
-            i.createDate_day    = i.createDate.day
-            i.createDate_hour   = i.createDate.hour
+
+            i_count = image_query.count()
+            if i_count == 0:
+                break
+
+
+            for i in image_query:
+                i.createDate_year   = i.createDate.year
+                i.createDate_month  = i.createDate.month
+                i.createDate_day    = i.createDate.day
+                i.createDate_hour   = i.createDate.hour
 
             db.session.commit()
+
+
+            image_count -= i_count
+            logger.info(' %d remaining...', image_count)
+
+
+            if self._shutdown:
+                sys.exit(1)
 
 
         ### videos
         logger.warning('Processing timelapses...')
-        for x, v in enumerate(videos_query):
-            if x % 50 == 0:
-                logger.info('Processed %d', x)
+        while True:
+            video_query = db.session.query(
+                IndiAllSkyDbVideoTable
+            )\
+                .filter(IndiAllSkyDbVideoTable.dayDate_year == sa_null())\
+                .limit(500)
 
-            v.dayDate_year   = v.dayDate.year
-            v.dayDate_month  = v.dayDate.month
-            v.dayDate_day    = v.dayDate.day
+
+            v_count = video_query.count()
+            if v_count == 0:
+                break
+
+
+            for v in video_query:
+                v.dayDate_year   = v.dayDate.year
+                v.dayDate_month  = v.dayDate.month
+                v.dayDate_day    = v.dayDate.day
 
             db.session.commit()
+
+
+            video_count -= v_count
+            logger.info(' %d remaining...', video_count)
+
+
+            if self._shutdown:
+                sys.exit(1)
 
 
         ### mini videos
         logger.warning('Processing mini-timelapses...')
-        for x, m in enumerate(mini_videos_query):
-            if x % 50 == 0:
-                logger.info('Processed %d', x)
+        while True:
+            mini_video_query = db.session.query(
+                IndiAllSkyDbMiniVideoTable
+            )\
+                .filter(IndiAllSkyDbMiniVideoTable.dayDate_year == sa_null())\
+                .limit(500)
 
-            m.dayDate_year   = m.dayDate.year
-            m.dayDate_month  = m.dayDate.month
-            m.dayDate_day    = m.dayDate.day
+
+            m_count = mini_video_query.count()
+            if m_count == 0:
+                break
+
+
+            for m in mini_video_query:
+                m.dayDate_year   = m.dayDate.year
+                m.dayDate_month  = m.dayDate.month
+                m.dayDate_day    = m.dayDate.day
 
             db.session.commit()
+
+
+            mini_video_count -= m_count
+            logger.info(' %d remaining...', mini_video_count)
+
+
+            if self._shutdown:
+                sys.exit(1)
 
 
         elapsed_s = time.time() - start
