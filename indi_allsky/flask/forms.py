@@ -3773,7 +3773,7 @@ class IndiAllskyImageViewer(FlaskForm):
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                     IndiAllSkyDbImageTable.createDate_year == year,
                 )
-        )\
+        )
 
 
         if not self.local:
@@ -4112,7 +4112,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
                     IndiAllSkyDbImageTable.detections >= self.detections_count,
                     IndiAllSkyDbImageTable.createDate_year == year,
                 )
-        )\
+        )
 
         ### Disable this join to make things faster
         #    .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbImageTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
