@@ -285,6 +285,7 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
         createDate_month,
         createDate_day,
         createDate_hour,
+        detections,
     )
 
 
