@@ -488,6 +488,16 @@ class IndiAllSkyDbKeogramTable(IndiAllSkyDbFileBase):
         return '<Keogram {0:s}>'.format(self.filename)
 
 
+    db.Index(
+        'idx_keogram_082824',
+        dayDate,
+        night,
+        remote_url,
+        s3_key,
+        camera_id,
+    )
+
+
 class IndiAllSkyDbStarTrailsTable(IndiAllSkyDbFileBase):
     __tablename__ = 'startrail'
 
@@ -510,6 +520,16 @@ class IndiAllSkyDbStarTrailsTable(IndiAllSkyDbFileBase):
 
     def __repr__(self):
         return '<StarTrails {0:s}>'.format(self.filename)
+
+
+    db.Index(
+        'idx_startrails_082824',
+        dayDate,
+        night,
+        remote_url,
+        s3_key,
+        camera_id,
+    )
 
 
 class IndiAllSkyDbStarTrailsVideoTable(IndiAllSkyDbFileBase):
@@ -536,6 +556,16 @@ class IndiAllSkyDbStarTrailsVideoTable(IndiAllSkyDbFileBase):
 
     def __repr__(self):
         return '<StarTrailVideo {0:s}>'.format(self.filename)
+
+
+    db.Index(
+        'idx_startrailsvideo_082824',
+        dayDate,
+        night,
+        remote_url,
+        s3_key,
+        camera_id,
+    )
 
 
 class IndiAllSkyDbFitsImageTable(IndiAllSkyDbFileBase):
@@ -651,6 +681,16 @@ class IndiAllSkyDbPanoramaVideoTable(IndiAllSkyDbFileBase):
 
     def __repr__(self):
         return '<PanoramaVideo {0:s}>'.format(self.filename)
+
+
+    db.Index(
+        'idx_panoramavideo_082824',
+        dayDate,
+        night,
+        remote_url,
+        s3_key,
+        camera_id,
+    )
 
 
 class TaskQueueState(enum.Enum):
