@@ -629,6 +629,10 @@ class IndiAllSkyDbPanoramaImageTable(IndiAllSkyDbFileBase):
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
+    createDate_year = db.Column(db.Integer, nullable=True, index=True)
+    createDate_month = db.Column(db.Integer, nullable=True, index=True)
+    createDate_day = db.Column(db.Integer, nullable=True, index=True)
+    createDate_hour = db.Column(db.Integer, nullable=True, index=True)
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
     gain = db.Column(db.Integer, nullable=False)
@@ -645,6 +649,18 @@ class IndiAllSkyDbPanoramaImageTable(IndiAllSkyDbFileBase):
 
     def __repr__(self):
         return '<PanoramaImage {0:s}>'.format(self.filename)
+
+
+    db.Index(
+        'idx_panoramaimage_createDate_iYmdH_2',
+        camera_id,
+        createDate_year,
+        createDate_month,
+        createDate_day,
+        createDate_hour,
+        remote_url,
+        s3_key,
+    )
 
 
     db.Index(

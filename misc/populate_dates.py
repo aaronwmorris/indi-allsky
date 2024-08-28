@@ -17,6 +17,7 @@ app = create_app()
 app.app_context().push()
 
 from indi_allsky.flask.models import IndiAllSkyDbImageTable
+from indi_allsky.flask.models import IndiAllSkyDbPanoramaImageTable
 from indi_allsky.flask.models import IndiAllSkyDbVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbMiniVideoTable
 
@@ -46,6 +47,12 @@ class PopulateDates(object):
             .filter(IndiAllSkyDbImageTable.createDate_year == sa_null())\
             .count()
 
+        panorama_image_count = db.session.query(
+            IndiAllSkyDbPanoramaImageTable
+        )\
+            .filter(IndiAllSkyDbPanoramaImageTable.createDate_year == sa_null())\
+            .count()
+
         video_count = db.session.query(
             IndiAllSkyDbVideoTable
         )\
@@ -61,6 +68,7 @@ class PopulateDates(object):
 
         print()
         print('Image entries to fix: {0:d}'.format(image_count))
+        print('Panorama Image entries to fix: {0:d}'.format(panorama_image_count))
         print('Timelapse entries to fix: {0:d}'.format(video_count))
         print('Mini Timelapse entries to fix: {0:d}'.format(mini_video_count))
         print()
@@ -101,6 +109,38 @@ class PopulateDates(object):
 
             image_count -= i_count
             logger.info(' %d remaining...', image_count)
+
+
+            if self._shutdown:
+                sys.exit(1)
+
+
+        ### panorama images
+        logger.warning('Processing panorama images...')
+        while True:
+            panorama_image_query = db.session.query(
+                IndiAllSkyDbPanoramaImageTable
+            )\
+                .filter(IndiAllSkyDbPanoramaImageTable.createDate_year == sa_null())\
+                .limit(500)
+
+
+            p_count = panorama_image_query.count()
+            if p_count == 0:
+                break
+
+
+            for p in panorama_image_query:
+                p.createDate_year   = p.createDate.year
+                p.createDate_month  = p.createDate.month
+                p.createDate_day    = p.createDate.day
+                p.createDate_hour   = p.createDate.hour
+
+            db.session.commit()
+
+
+            panorama_image_count -= p_count
+            logger.info(' %d remaining...', panorama_image_count)
 
 
             if self._shutdown:
