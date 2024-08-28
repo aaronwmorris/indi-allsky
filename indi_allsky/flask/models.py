@@ -287,6 +287,8 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
         createDate_day,
         createDate_hour,
         detections,
+        remote_url,
+        s3_key,
     )
 
     db.Index(
@@ -294,6 +296,8 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
         camera_id,
         createDate,
         exclude,
+        remote_url,
+        s3_key,
     )
 
     def __repr__(self):
@@ -407,6 +411,8 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
         'idx_video_dayDate_Ym_2',
         dayDate_year,
         dayDate_month,
+        remote_url,
+        s3_key,
     )
 
 
@@ -447,6 +453,8 @@ class IndiAllSkyDbMiniVideoTable(IndiAllSkyDbFileBase):
         'idx_minivideo_dayDate_Ym_2',
         dayDate_year,
         dayDate_month,
+        remote_url,
+        s3_key,
     )
 
 
@@ -612,6 +620,8 @@ class IndiAllSkyDbPanoramaImageTable(IndiAllSkyDbFileBase):
         camera_id,
         createDate,
         exclude,
+        remote_url,
+        s3_key,
     )
 
 
