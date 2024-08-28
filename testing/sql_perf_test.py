@@ -191,32 +191,32 @@ class SqlTester(object):
         ).order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 
-        #hours_query_group_new = db.session.query(
-        #    IndiAllSkyDbImageTable.createDate_year,
-        #    IndiAllSkyDbImageTable.createDate_month,
-        #    IndiAllSkyDbImageTable.createDate_day,
-        #    IndiAllSkyDbImageTable.createDate_hour,
-        #)\
-        #    .join(IndiAllSkyDbImageTable.camera)\
-        #    .filter(
-        #        and_(
-        #            IndiAllSkyDbCameraTable.id == camera_id,
-        #            IndiAllSkyDbImageTable.detections >= detections_count,
-        #        )
-        #)\
-        #    .group_by(
-        #        IndiAllSkyDbImageTable.createDate_year,
-        #        IndiAllSkyDbImageTable.createDate_month,
-        #        IndiAllSkyDbImageTable.createDate_day,
-        #        IndiAllSkyDbImageTable.createDate_hour,
-        #)\
-        #    .distinct()\
-        #    .order_by(
-        #        IndiAllSkyDbImageTable.createDate_year.desc(),
-        #        IndiAllSkyDbImageTable.createDate_month.desc(),
-        #        IndiAllSkyDbImageTable.createDate_day.desc(),
-        #        IndiAllSkyDbImageTable.createDate_hour.desc(),
-        #)
+        YmdH_query_group_new = db.session.query(
+            IndiAllSkyDbImageTable.createDate_year,
+            IndiAllSkyDbImageTable.createDate_month,
+            IndiAllSkyDbImageTable.createDate_day,
+            IndiAllSkyDbImageTable.createDate_hour,
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == camera_id,
+                    IndiAllSkyDbImageTable.detections >= detections_count,
+                )
+        )\
+            .group_by(
+                IndiAllSkyDbImageTable.createDate_year,
+                IndiAllSkyDbImageTable.createDate_month,
+                IndiAllSkyDbImageTable.createDate_day,
+                IndiAllSkyDbImageTable.createDate_hour,
+        )\
+            .distinct()\
+            .order_by(
+                IndiAllSkyDbImageTable.createDate_year.desc(),
+                IndiAllSkyDbImageTable.createDate_month.desc(),
+                IndiAllSkyDbImageTable.createDate_day.desc(),
+                IndiAllSkyDbImageTable.createDate_hour.desc(),
+        )
 
 
 
@@ -232,6 +232,7 @@ class SqlTester(object):
         #logger.warning('Entries: %d', hours_query_group.count())
         #elapsed_s = time.time() - start_group
         #logger.info('Original group SQL executed in %0.4f s', elapsed_s)
+
 
 
         start_new = time.time()
@@ -260,10 +261,11 @@ class SqlTester(object):
         logger.info('New Images SQL executed in %0.4f s', elapsed_new)
 
 
-        #start_new = time.time()
-        #logger.warning('Entries: %d', hours_query_group_new.count())
-        #elapsed_new = time.time() - start_new
-        #logger.info('New group SQL executed in %0.4f s', elapsed_new)
+        start_new = time.time()
+        logger.warning('Entries: %d', YmdH_query_group_new.count())
+        elapsed_new = time.time() - start_new
+        logger.info('New group SQL executed in %0.4f s', elapsed_new)
+
 
         #for i in hours_query:
         #    #logger.info('attrs: %s', i.keys())
