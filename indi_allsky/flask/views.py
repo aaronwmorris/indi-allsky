@@ -2637,10 +2637,10 @@ class AjaxImageViewerView(BaseView):
 
     def dispatch_request(self):
         camera_id  = int(request.json['CAMERA_ID'])
-        form_year  = request.json.get('YEAR_SELECT')
-        form_month = request.json.get('MONTH_SELECT')
-        form_day   = request.json.get('DAY_SELECT')
-        form_hour  = request.json.get('HOUR_SELECT')
+        form_year  = int(request.json.get('YEAR_SELECT', 0))
+        form_month = int(request.json.get('MONTH_SELECT', 0))
+        form_day   = int(request.json.get('DAY_SELECT', 0))
+        form_hour  = int(request.json.get('HOUR_SELECT', 0))
         form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
 
         self.cameraSetup(camera_id=camera_id)
@@ -2802,10 +2802,10 @@ class AjaxGalleryViewerView(BaseView):
 
     def dispatch_request(self):
         camera_id  = int(request.json['CAMERA_ID'])
-        form_year  = request.json.get('YEAR_SELECT')
-        form_month = request.json.get('MONTH_SELECT')
-        form_day   = request.json.get('DAY_SELECT')
-        form_hour  = request.json.get('HOUR_SELECT')
+        form_year  = int(request.json.get('YEAR_SELECT', 0))
+        form_month = int(request.json.get('MONTH_SELECT', 0))
+        form_day   = int(request.json.get('DAY_SELECT', 0))
+        form_hour  = int(request.json.get('HOUR_SELECT', 0))
         form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
 
         self.cameraSetup(camera_id=camera_id)
@@ -2966,9 +2966,9 @@ class AjaxVideoViewerView(BaseView):
 
     def dispatch_request(self):
         camera_id      = int(request.json['CAMERA_ID'])
-        form_year      = request.json.get('YEAR_SELECT')
-        form_month     = request.json.get('MONTH_SELECT')
-        form_timeofday = request.json.get('TIMEOFDAY_SELECT')
+        form_year      = int(request.json.get('YEAR_SELECT', 0))
+        form_month     = int(request.json.get('MONTH_SELECT', 0))
+        form_timeofday = str(request.json.get('TIMEOFDAY_SELECT', ''))
 
 
         self.cameraSetup(camera_id=camera_id)
@@ -3060,8 +3060,8 @@ class AjaxMiniVideoViewerView(BaseView):
 
     def dispatch_request(self):
         camera_id      = int(request.json['CAMERA_ID'])
-        form_year      = request.json.get('YEAR_SELECT')
-        form_month     = request.json.get('MONTH_SELECT')
+        form_year      = int(request.json.get('YEAR_SELECT', 0))
+        form_month     = int(request.json.get('MONTH_SELECT', 0))
 
         self.cameraSetup(camera_id=camera_id)
 
