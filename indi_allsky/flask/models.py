@@ -411,6 +411,7 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
         'idx_video_dayDate_Ym_2',
         dayDate_year,
         dayDate_month,
+        night,
         remote_url,
         s3_key,
     )
@@ -453,6 +454,7 @@ class IndiAllSkyDbMiniVideoTable(IndiAllSkyDbFileBase):
         'idx_minivideo_dayDate_Ym_2',
         dayDate_year,
         dayDate_month,
+        night,
         remote_url,
         s3_key,
     )
