@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+###
+### This script populates required data in the database for new functionality
+### Safe to re-run and cancel at any time
+###
 
 import sys
 import time
@@ -8,22 +12,22 @@ from pathlib import Path
 import signal
 import logging
 
+from sqlalchemy.sql.expression import null as sa_null
+
 sys.path.append(str(Path(__file__).parent.absolute().parent))
-
-from indi_allsky.flask import create_app
-
-# setup flask context for db access
-app = create_app()
-app.app_context().push()
 
 from indi_allsky.flask.models import IndiAllSkyDbImageTable
 from indi_allsky.flask.models import IndiAllSkyDbPanoramaImageTable
 from indi_allsky.flask.models import IndiAllSkyDbVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbMiniVideoTable
 
-from sqlalchemy.sql.expression import null as sa_null
-
+from indi_allsky.flask import create_app
 from indi_allsky.flask import db
+
+
+# setup flask context for db access
+app = create_app()
+app.app_context().push()
 
 
 LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s: %(message)s')
