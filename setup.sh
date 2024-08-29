@@ -2281,6 +2281,11 @@ sudo chmod 664 "${DB_FILE}"
 sudo chown "$USER":"$PGRP" "${DB_FILE}"
 
 
+# some schema changes require data to be populated
+echo "**** Populate database fields ****"
+"${ALLSKY_DIRECTORY}/misc/populate_data.py"
+
+
 if [ -f "${ALLSKY_ETC}/config.json" ]; then
     echo
     echo

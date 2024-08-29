@@ -340,25 +340,6 @@ $("#MONTH_SELECT").on("change", function() {
 });
 
 
-$("#TIMEOFDAY_SELECT").on("change", function() {
-    // hide all errors
-    successMessage.css({'display' : 'none'});
-    Object.keys(fields).forEach((key) => {
-        fields[key].error.css({'display' : 'none'});
-    });
-
-    $("#loader_filter").css({'display' : 'block'});
-
-    var json_data = {
-        'CAMERA_ID'        : fields["CAMERA_ID"].input.val(),
-        'YEAR_SELECT'      : fields["YEAR_SELECT"].input.val(),
-        'MONTH_SELECT'     : fields["MONTH_SELECT"].input.val(),
-    };
-
-    month_change(json_data);
-});
-
-
 function year_change(json_data) {
     $.ajax({
         type: "POST",
