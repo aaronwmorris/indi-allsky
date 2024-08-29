@@ -936,6 +936,11 @@ sudo chmod 664 "${DB_FILE}"
 sudo chown "$USER":"$PGRP" "${DB_FILE}"
 
 
+# some schema changes require data to be populated
+echo "**** Populate database fields ****"
+"${ALLSKY_DIRECTORY}/misc/populate_data.py"
+
+
 ### Mysql
 if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
     sudo cp -f "${ALLSKY_DIRECTORY}/service/mysql_indi-allsky.conf" "$MYSQL_ETC/mariadb.conf.d/90-mysql_indi-allsky.conf"

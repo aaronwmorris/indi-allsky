@@ -61,7 +61,7 @@ from .models import TaskQueueQueue
 from .models import TaskQueueState
 
 from sqlalchemy import func
-from sqlalchemy import extract
+#from sqlalchemy import extract
 from sqlalchemy import desc
 from sqlalchemy import cast
 from sqlalchemy import and_
@@ -568,7 +568,6 @@ class RollingAduView(TemplateView):
         context['camera_id'] = self.camera.id
 
         camera_now_minus_7d = self.camera_now - timedelta(days=7)
-        createDate_hour = extract('hour', IndiAllSkyDbImageTable.createDate).label('createDate_hour')
 
 
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
@@ -591,8 +590,8 @@ class RollingAduView(TemplateView):
                     and_(
                         IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
                         or_(
-                            createDate_hour >= 22,  # night is normally between 10p and 4a, right?
-                            createDate_hour <= 4,
+                            IndiAllSkyDbImageTable.createDate_hour >= 22,  # night is normally between 10p and 4a, right?
+                            IndiAllSkyDbImageTable.createDate_hour <= 4,
                         )
                     )
                 )\
@@ -622,8 +621,8 @@ class RollingAduView(TemplateView):
                     and_(
                         IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
                         or_(
-                            createDate_hour >= 22,  # night is normally between 10p and 4a, right?
-                            createDate_hour <= 4,
+                            IndiAllSkyDbImageTable.createDate_hour >= 22,  # night is normally between 10p and 4a, right?
+                            IndiAllSkyDbImageTable.createDate_hour <= 4,
                         )
                     )
                 )\
@@ -2638,10 +2637,10 @@ class AjaxImageViewerView(BaseView):
 
     def dispatch_request(self):
         camera_id  = int(request.json['CAMERA_ID'])
-        form_year  = request.json.get('YEAR_SELECT')
-        form_month = request.json.get('MONTH_SELECT')
-        form_day   = request.json.get('DAY_SELECT')
-        form_hour  = request.json.get('HOUR_SELECT')
+        form_year  = int(request.json.get('YEAR_SELECT', 0))
+        form_month = int(request.json.get('MONTH_SELECT', 0))
+        form_day   = int(request.json.get('DAY_SELECT', 0))
+        form_hour  = int(request.json.get('HOUR_SELECT', 0))
         form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
 
         self.cameraSetup(camera_id=camera_id)
@@ -2679,19 +2678,19 @@ class AjaxImageViewerView(BaseView):
         if form_hour:
             form_datetime = datetime.strptime('{0} {1} {2} {3}'.format(form_year, form_month, form_day, form_hour), '%Y %m %d %H')
 
-            year = form_datetime.strftime('%Y')
-            month = form_datetime.strftime('%m')
-            day = form_datetime.strftime('%d')
-            hour = form_datetime.strftime('%H')
+            year = form_datetime.year
+            month = form_datetime.month
+            day = form_datetime.day
+            hour = form_datetime.hour
 
             json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
 
         elif form_day:
             form_datetime = datetime.strptime('{0} {1} {2}'.format(form_year, form_month, form_day), '%Y %m %d')
 
-            year = form_datetime.strftime('%Y')
-            month = form_datetime.strftime('%m')
-            day = form_datetime.strftime('%d')
+            year = form_datetime.year
+            month = form_datetime.month
+            day = form_datetime.day
 
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
@@ -2701,8 +2700,8 @@ class AjaxImageViewerView(BaseView):
         elif form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
 
-            year = form_datetime.strftime('%Y')
-            month = form_datetime.strftime('%m')
+            year = form_datetime.year
+            month = form_datetime.month
 
             json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
             day = json_data['DAY_SELECT'][0][0]
@@ -2715,7 +2714,7 @@ class AjaxImageViewerView(BaseView):
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
 
-            year = form_datetime.strftime('%Y')
+            year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
             month = json_data['MONTH_SELECT'][0][0]
@@ -2803,10 +2802,10 @@ class AjaxGalleryViewerView(BaseView):
 
     def dispatch_request(self):
         camera_id  = int(request.json['CAMERA_ID'])
-        form_year  = request.json.get('YEAR_SELECT')
-        form_month = request.json.get('MONTH_SELECT')
-        form_day   = request.json.get('DAY_SELECT')
-        form_hour  = request.json.get('HOUR_SELECT')
+        form_year  = int(request.json.get('YEAR_SELECT', 0))
+        form_month = int(request.json.get('MONTH_SELECT', 0))
+        form_day   = int(request.json.get('DAY_SELECT', 0))
+        form_hour  = int(request.json.get('HOUR_SELECT', 0))
         form_filter_detections = bool(request.json.get('FILTER_DETECTIONS'))
 
         self.cameraSetup(camera_id=camera_id)
@@ -2844,19 +2843,19 @@ class AjaxGalleryViewerView(BaseView):
         if form_hour:
             form_datetime = datetime.strptime('{0} {1} {2} {3}'.format(form_year, form_month, form_day, form_hour), '%Y %m %d %H')
 
-            year = form_datetime.strftime('%Y')
-            month = form_datetime.strftime('%m')
-            day = form_datetime.strftime('%d')
-            hour = form_datetime.strftime('%H')
+            year = form_datetime.year
+            month = form_datetime.month
+            day = form_datetime.day
+            hour = form_datetime.hour
 
             json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
 
         elif form_day:
             form_datetime = datetime.strptime('{0} {1} {2}'.format(form_year, form_month, form_day), '%Y %m %d')
 
-            year = form_datetime.strftime('%Y')
-            month = form_datetime.strftime('%m')
-            day = form_datetime.strftime('%d')
+            year = form_datetime.year
+            month = form_datetime.month
+            day = form_datetime.day
 
             json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
             hour = json_data['HOUR_SELECT'][0][0]
@@ -2866,8 +2865,8 @@ class AjaxGalleryViewerView(BaseView):
         elif form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
 
-            year = form_datetime.strftime('%Y')
-            month = form_datetime.strftime('%m')
+            year = form_datetime.year
+            month = form_datetime.month
 
             json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
             day = json_data['DAY_SELECT'][0][0]
@@ -2880,7 +2879,7 @@ class AjaxGalleryViewerView(BaseView):
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
 
-            year = form_datetime.strftime('%Y')
+            year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
             month = json_data['MONTH_SELECT'][0][0]
@@ -2967,9 +2966,9 @@ class AjaxVideoViewerView(BaseView):
 
     def dispatch_request(self):
         camera_id      = int(request.json['CAMERA_ID'])
-        form_year      = request.json.get('YEAR_SELECT')
-        form_month     = request.json.get('MONTH_SELECT')
-        form_timeofday = request.json.get('TIMEOFDAY_SELECT')
+        form_year      = int(request.json.get('YEAR_SELECT', 0))
+        form_month     = int(request.json.get('MONTH_SELECT', 0))
+        form_timeofday = str(request.json.get('TIMEOFDAY_SELECT', ''))
 
 
         self.cameraSetup(camera_id=camera_id)
@@ -2996,15 +2995,15 @@ class AjaxVideoViewerView(BaseView):
         if form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
 
-            year = form_datetime.strftime('%Y')
-            month = form_datetime.strftime('%m')
+            year = form_datetime.year
+            month = form_datetime.month
 
             json_data['video_list'] = form_video_viewer.getVideos(year, month, form_timeofday)
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
 
-            year = form_datetime.strftime('%Y')
+            year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_video_viewer.getMonths(year)
             month = json_data['MONTH_SELECT'][0][0]
@@ -3061,8 +3060,8 @@ class AjaxMiniVideoViewerView(BaseView):
 
     def dispatch_request(self):
         camera_id      = int(request.json['CAMERA_ID'])
-        form_year      = request.json.get('YEAR_SELECT')
-        form_month     = request.json.get('MONTH_SELECT')
+        form_year      = int(request.json.get('YEAR_SELECT', 0))
+        form_month     = int(request.json.get('MONTH_SELECT', 0))
 
         self.cameraSetup(camera_id=camera_id)
 
@@ -3087,15 +3086,15 @@ class AjaxMiniVideoViewerView(BaseView):
         if form_month:
             form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
 
-            year = form_datetime.strftime('%Y')
-            month = form_datetime.strftime('%m')
+            year = form_datetime.year
+            month = form_datetime.month
 
             json_data['video_list'] = form_mini_video_viewer.getVideos(year, month)
 
         elif form_year:
             form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
 
-            year = form_datetime.strftime('%Y')
+            year = form_datetime.year
 
             json_data['MONTH_SELECT'] = form_mini_video_viewer.getMonths(year)
             month = json_data['MONTH_SELECT'][0][0]
