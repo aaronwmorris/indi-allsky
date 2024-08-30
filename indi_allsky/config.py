@@ -491,6 +491,8 @@ class IndiAllSkyConfigBase(object):
             "VEML7700_GAIN_DAY"      : "ALS_GAIN_1_8",
             "VEML7700_INT_NIGHT"     : "ALS_100MS",
             "VEML7700_INT_DAY"       : "ALS_100MS",
+            "SI1145_GAIN_NIGHT"      : "GAIN_ADC_CLOCK_DIV_32",
+            "SI1145_GAIN_DAY"        : "GAIN_ADC_CLOCK_DIV_1",
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : 10,
