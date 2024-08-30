@@ -2381,6 +2381,11 @@ def TEMP_SENSOR__VEML7700_INT_validator(form, field):
         raise ValidationError('Invalid integration selection')
 
 
+def TEMP_SENSOR__SI1145_GAIN_validator(form, field):
+    if field.data not in list(zip(*form.TEMP_SENSOR__SI1145_GAIN_choices))[0]:
+        raise ValidationError('Invalid gain selection')
+
+
 def HEALTHCHECK__DISK_USAGE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter a valid number')
@@ -2895,6 +2900,19 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
 
+    TEMP_SENSOR__SI1145_GAIN_choices = (
+        ('GAIN_ADC_CLOCK_DIV_1', '[0] - 1x (default)'),
+        ('GAIN_ADC_CLOCK_DIV_2', '[1] - 2x'),
+        ('GAIN_ADC_CLOCK_DIV_4', '[2] - 4x'),
+        ('GAIN_ADC_CLOCK_DIV_8', '[3] - 8x'),
+        ('GAIN_ADC_CLOCK_DIV_16', '[4] - 16x'),
+        ('GAIN_ADC_CLOCK_DIV_32', '[5] - 32x'),
+        ('GAIN_ADC_CLOCK_DIV_64', '[6] - 64x'),
+        ('GAIN_ADC_CLOCK_DIV_128', '[7] - 128x'),
+    )
+
+
+
     ENCRYPT_PASSWORDS                = BooleanField('Encrypt Passwords')
     CAMERA_INTERFACE                 = SelectField('Camera Interface', choices=CAMERA_INTERFACE_choices, validators=[DataRequired(), CAMERA_INTERFACE_validator])
     INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
@@ -3298,6 +3316,10 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__VEML7700_GAIN_DAY   = SelectField('VEML7700 Gain (Day)', choices=TEMP_SENSOR__VEML7700_GAIN_choices, validators=[TEMP_SENSOR__VEML7700_GAIN_validator])
     TEMP_SENSOR__VEML7700_INT_NIGHT  = SelectField('VEML7700 Integration (Night)', choices=TEMP_SENSOR__VEML7700_INT_choices, validators=[TEMP_SENSOR__VEML7700_INT_validator])
     TEMP_SENSOR__VEML7700_INT_DAY    = SelectField('VEML7700 Integration (Day)', choices=TEMP_SENSOR__VEML7700_INT_choices, validators=[TEMP_SENSOR__VEML7700_INT_validator])
+    TEMP_SENSOR__SI1145_VIS_GAIN_NIGHT = SelectField('SI1145 Visible Gain (Night)', choices=TEMP_SENSOR__SI1145_GAIN_choices, validators=[TEMP_SENSOR__SI1145_GAIN_validator])
+    TEMP_SENSOR__SI1145_VIS_GAIN_DAY   = SelectField('SI1145 Visible Gain (Day)', choices=TEMP_SENSOR__SI1145_GAIN_choices, validators=[TEMP_SENSOR__SI1145_GAIN_validator])
+    TEMP_SENSOR__SI1145_IR_GAIN_NIGHT  = SelectField('SI1145 IR Gain (Night)', choices=TEMP_SENSOR__SI1145_GAIN_choices, validators=[TEMP_SENSOR__SI1145_GAIN_validator])
+    TEMP_SENSOR__SI1145_IR_GAIN_DAY    = SelectField('SI1145 IR Gain (Day)', choices=TEMP_SENSOR__SI1145_GAIN_choices, validators=[TEMP_SENSOR__SI1145_GAIN_validator])
     CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[SENSOR_SLOT_validator])

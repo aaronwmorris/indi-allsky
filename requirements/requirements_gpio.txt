@@ -15,7 +15,9 @@ adafruit-circuitpython-tsl2561
 adafruit-circuitpython-veml7700
 adafruit-circuitpython-bh1750
 adafruit-circuitpython-ads1x15
-adafruit-circuitpython-si1145
+
+#adafruit-circuitpython-si1145
+git+https://github.com/aaronwmorris/Adafruit_CircuitPython_SI1145.git#egg=adafruit-circuitpython-si1145
 
 ### does not work on raspi
 #adafruit-circuitpython-ds18x20
