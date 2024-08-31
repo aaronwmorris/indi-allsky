@@ -1248,6 +1248,10 @@ fi
 [[ -f "$TMP_CONFIG_DUMP" ]] && rm -f "$TMP_CONFIG_DUMP"
 
 
+# ensure latest code is active
+systemctl --user restart ${GUNICORN_SERVICE_NAME}.service
+
+
 echo
 echo
 echo "The web interface may be accessed with the following URL"
