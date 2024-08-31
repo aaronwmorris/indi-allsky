@@ -2782,6 +2782,9 @@ fi
 # ensure indiserver is running
 systemctl --user start ${INDISERVER_SERVICE_NAME}.service
 
+# ensure latest code is active
+systemctl --user restart ${GUNICORN_SERVICE_NAME}.service
+
 
 echo
 echo
