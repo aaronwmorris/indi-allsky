@@ -389,6 +389,8 @@ class LatestTimelapseRedirect(BaseView):
 
     def dispatch_request(self):
         camera_id = request.args.get('camera_id')
+        night = request.args.get('night')
+
 
         if camera_id:
             camera_id = int(camera_id)
@@ -405,7 +407,7 @@ class LatestTimelapseRedirect(BaseView):
             local = False
 
 
-        video_entry = self.getLatestVideo(camera_id)
+        video_entry = self.getLatestVideo(camera_id, night=night)
 
 
         video_url = video_entry.getUrl(s3_prefix=self.s3_prefix, local=local)
@@ -414,13 +416,23 @@ class LatestTimelapseRedirect(BaseView):
         return redirect(video_url, code=302)
 
 
-    def getLatestVideo(self, camera_id):
-        latest_video_entry = IndiAllSkyDbVideoTable.query\
-            .join(IndiAllSkyDbVideoTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
-            .first()
+    def getLatestVideo(self, camera_id, night=None):
+        if isinstance('night', type(None)):
+            latest_video_entry = IndiAllSkyDbVideoTable.query\
+                .join(IndiAllSkyDbVideoTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
+                .first()
+        else:
+            # filter based on night
+            night_bool = bool(int(night))
 
+            latest_video_entry = IndiAllSkyDbVideoTable.query\
+                .join(IndiAllSkyDbVideoTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .filter(IndiAllSkyDbVideoTable.night == night_bool)\
+                .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
+                .first()
 
         return latest_video_entry
 
@@ -464,6 +476,8 @@ class LatestTimelapseWatchRedirect(BaseView):
 
     def dispatch_request(self):
         camera_id = request.args.get('camera_id')
+        night = request.args.get('night')
+
 
         if camera_id:
             camera_id = int(camera_id)
@@ -475,7 +489,7 @@ class LatestTimelapseWatchRedirect(BaseView):
         self.cameraSetup(camera_id=camera_id)
 
 
-        video_entry = self.getLatestVideo(camera_id)
+        video_entry = self.getLatestVideo(camera_id, night=night)
 
 
         view_url = url_for('indi_allsky.timelapse_video_view', id=video_entry.id)
@@ -484,12 +498,23 @@ class LatestTimelapseWatchRedirect(BaseView):
         return redirect(view_url, code=302)
 
 
-    def getLatestVideo(self, camera_id):
-        latest_video_entry = IndiAllSkyDbVideoTable.query\
-            .join(IndiAllSkyDbVideoTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
-            .first()
+    def getLatestVideo(self, camera_id, night=None):
+        if isinstance('night', type(None)):
+            latest_video_entry = IndiAllSkyDbVideoTable.query\
+                .join(IndiAllSkyDbVideoTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
+                .first()
+        else:
+            # filter based on night
+            night_bool = bool(int(night))
+
+            latest_video_entry = IndiAllSkyDbVideoTable.query\
+                .join(IndiAllSkyDbVideoTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .filter(IndiAllSkyDbVideoTable.night == night_bool)\
+                .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
+                .first()
 
 
         return latest_video_entry
@@ -7119,7 +7144,7 @@ bp_allsky.add_url_rule('/latestthumbnail', view_func=LatestThumbnailRedirect.as_
 bp_allsky.add_url_rule('/latesttimelapse', view_func=LatestTimelapseRedirect.as_view('latest_video_redirect_view'))
 
 bp_allsky.add_url_rule('/latestimageview', view_func=LatestImageViewRedirect.as_view('latest_image_view_redirect_view'))
-bp_allsky.add_url_rule('/latestvideowatch', view_func=LatestTimelapseWatchRedirect.as_view('latest_video_watch_redirect_view'))
+bp_allsky.add_url_rule('/latesttimelapsewatch', view_func=LatestTimelapseWatchRedirect.as_view('latest_video_watch_redirect_view'))
 
 # hidden
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
