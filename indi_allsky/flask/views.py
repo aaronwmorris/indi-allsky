@@ -328,13 +328,13 @@ class JsonLatestImageView(JsonView):
 
 
 class LatestImageRedirect(BaseView):
+    model = IndiAllSkyDbImageTable
+
 
     def dispatch_request(self):
-        camera_id = request.args.get('camera_id')
+        camera_id = int(request.args.get('camera_id', 0))
 
-        if camera_id:
-            camera_id = int(camera_id)
-        else:
+        if not camera_id:
             camera = self.getLatestCamera()
             camera_id = camera.id
 
@@ -357,10 +357,10 @@ class LatestImageRedirect(BaseView):
 
 
     def getLatestImage(self, camera_id):
-        latest_image_entry = IndiAllSkyDbImageTable.query\
-            .join(IndiAllSkyDbImageTable.camera)\
+        latest_image_entry = self.model.query\
+            .join(self.model.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .order_by(self.model.createDate.desc())\
             .first()
 
 
@@ -385,16 +385,15 @@ class LatestThumbnailRedirect(LatestImageRedirect):
         return latest_thumbnail_entry
 
 
-class LatestTimelapseRedirect(BaseView):
+class LatestVideoRedirect(BaseView):
+    model = IndiAllSkyDbVideoTable
 
     def dispatch_request(self):
-        camera_id = request.args.get('camera_id')
-        night = request.args.get('night')
+        camera_id = int(request.args.get('camera_id', 0))
+        night = request.args.get('night')  # can be None
 
 
-        if camera_id:
-            camera_id = int(camera_id)
-        else:
+        if not camera_id:
             camera = self.getLatestCamera()
             camera_id = camera.id
 
@@ -417,34 +416,35 @@ class LatestTimelapseRedirect(BaseView):
 
 
     def getLatestVideo(self, camera_id, night=None):
-        if isinstance('night', type(None)):
-            latest_video_entry = IndiAllSkyDbVideoTable.query\
-                .join(IndiAllSkyDbVideoTable.camera)\
+        if isinstance(night, type(None)):
+            latest_video_entry = self.model.query\
+                .join(self.model.camera)\
                 .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-                .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
+                .order_by(self.model.dayDate.desc())\
                 .first()
         else:
             # filter based on night
             night_bool = bool(int(night))
 
-            latest_video_entry = IndiAllSkyDbVideoTable.query\
-                .join(IndiAllSkyDbVideoTable.camera)\
+            latest_video_entry = self.model.query\
+                .join(self.model.camera)\
                 .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-                .filter(IndiAllSkyDbVideoTable.night == night_bool)\
-                .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
+                .filter(self.model.night == night_bool)\
+                .order_by(self.model.dayDate.desc())\
                 .first()
 
         return latest_video_entry
 
 
 class LatestImageViewRedirect(BaseView):
+    model = IndiAllSkyDbImageTable
+    view_view = 'indi_allsky.timelapse_image_view'
+
 
     def dispatch_request(self):
-        camera_id = request.args.get('camera_id')
+        camera_id = int(request.args.get('camera_id', 0))
 
-        if camera_id:
-            camera_id = int(camera_id)
-        else:
+        if not camera_id:
             camera = self.getLatestCamera()
             camera_id = camera.id
 
@@ -455,33 +455,34 @@ class LatestImageViewRedirect(BaseView):
         image_entry = self.getLatestImage(camera_id)
 
 
-        view_url = url_for('indi_allsky.timelapse_image_view', id=image_entry.id)
+        view_url = url_for(self.view_view, id=image_entry.id)
 
 
         return redirect(view_url, code=302)
 
 
     def getLatestImage(self, camera_id):
-        latest_image_entry = IndiAllSkyDbImageTable.query\
-            .join(IndiAllSkyDbImageTable.camera)\
+        latest_image_entry = self.model.query\
+            .join(self.model.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .order_by(self.model.createDate.desc())\
             .first()
 
 
         return latest_image_entry
 
 
-class LatestTimelapseWatchRedirect(BaseView):
+class LatestVideoWatchRedirect(BaseView):
+    model = IndiAllSkyDbVideoTable
+    watch_view = 'indi_allsky.timelapse_video_view'
+
 
     def dispatch_request(self):
-        camera_id = request.args.get('camera_id')
-        night = request.args.get('night')
+        camera_id = int(request.args.get('camera_id', 0))
+        night = request.args.get('night')  # can be None
 
 
-        if camera_id:
-            camera_id = int(camera_id)
-        else:
+        if not camera_id:
             camera = self.getLatestCamera()
             camera_id = camera.id
 
@@ -492,28 +493,28 @@ class LatestTimelapseWatchRedirect(BaseView):
         video_entry = self.getLatestVideo(camera_id, night=night)
 
 
-        view_url = url_for('indi_allsky.timelapse_video_view', id=video_entry.id)
+        view_url = url_for(self.watch_view, id=video_entry.id)
 
 
         return redirect(view_url, code=302)
 
 
     def getLatestVideo(self, camera_id, night=None):
-        if isinstance('night', type(None)):
-            latest_video_entry = IndiAllSkyDbVideoTable.query\
-                .join(IndiAllSkyDbVideoTable.camera)\
+        if isinstance(night, type(None)):
+            latest_video_entry = self.model.query\
+                .join(self.model.camera)\
                 .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-                .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
+                .order_by(self.model.dayDate.desc())\
                 .first()
         else:
             # filter based on night
             night_bool = bool(int(night))
 
-            latest_video_entry = IndiAllSkyDbVideoTable.query\
-                .join(IndiAllSkyDbVideoTable.camera)\
+            latest_video_entry = self.model.query\
+                .join(self.model.camera)\
                 .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-                .filter(IndiAllSkyDbVideoTable.night == night_bool)\
-                .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
+                .filter(self.model.night == night_bool)\
+                .order_by(self.model.dayDate.desc())\
                 .first()
 
 
@@ -7141,10 +7142,10 @@ bp_allsky.add_url_rule('/youtube/oauth2revoke', view_func=YoutubeRevokeAuthView.
 # redirects
 bp_allsky.add_url_rule('/latestimage', view_func=LatestImageRedirect.as_view('latest_image_redirect_view'))
 bp_allsky.add_url_rule('/latestthumbnail', view_func=LatestThumbnailRedirect.as_view('latest_thumbnail_redirect_view'))
-bp_allsky.add_url_rule('/latesttimelapse', view_func=LatestTimelapseRedirect.as_view('latest_video_redirect_view'))
+bp_allsky.add_url_rule('/latesttimelapse', view_func=LatestVideoRedirect.as_view('latest_video_redirect_view'))
 
 bp_allsky.add_url_rule('/latestimageview', view_func=LatestImageViewRedirect.as_view('latest_image_view_redirect_view'))
-bp_allsky.add_url_rule('/latesttimelapsewatch', view_func=LatestTimelapseWatchRedirect.as_view('latest_video_watch_redirect_view'))
+bp_allsky.add_url_rule('/latesttimelapsewatch', view_func=LatestVideoWatchRedirect.as_view('latest_video_watch_redirect_view'))
 
 # hidden
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
