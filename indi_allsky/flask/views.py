@@ -385,6 +385,47 @@ class LatestThumbnailRedirect(LatestImageRedirect):
         return latest_thumbnail_entry
 
 
+class LatestTimelapseRedirect(BaseView):
+
+    def dispatch_request(self):
+        camera_id = request.args.get('camera_id')
+
+        if camera_id:
+            camera_id = int(camera_id)
+        else:
+            camera = self.getLatestCamera()
+            camera_id = camera.id
+
+
+        self.cameraSetup(camera_id=camera_id)
+
+
+        local = True
+        if self.web_nonlocal_images:
+            local = False
+
+
+        video_entry = self.getLatestVideo(camera_id)
+
+
+        video_url = video_entry.getUrl(s3_prefix=self.s3_prefix, local=local)
+
+
+        return redirect(video_url, code=302)
+
+
+    def getLatestVideo(self, camera_id):
+        latest_video_entry = IndiAllSkyDbVideoTable.query\
+            .join(IndiAllSkyDbVideoTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(IndiAllSkyDbVideoTable.createDate.desc())\
+            .first()
+
+
+        return latest_video_entry
+
+
+
 class LatestPanoramaView(IndexView):
     title = 'Panorama'
     latest_image_view = 'indi_allsky.js_latest_panorama_view'
@@ -7002,9 +7043,12 @@ bp_allsky.add_url_rule('/youtube/authorize', view_func=YoutubeAuthorizeView.as_v
 bp_allsky.add_url_rule('/youtube/oauth2callback', view_func=YoutubeCallbackView.as_view('youtube_oauth2callback_view'))
 bp_allsky.add_url_rule('/youtube/oauth2revoke', view_func=YoutubeRevokeAuthView.as_view('youtube_oauth2revoke_view'))
 
-# hidden
+# redirects
 bp_allsky.add_url_rule('/latestimage', view_func=LatestImageRedirect.as_view('latest_image_redirect_view'))
 bp_allsky.add_url_rule('/latestthumbnail', view_func=LatestThumbnailRedirect.as_view('latest_thumbnail_redirect_view'))
+bp_allsky.add_url_rule('/latesttimelapse', view_func=LatestTimelapseRedirect.as_view('latest_video_redirect_view'))
+
+# hidden
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
