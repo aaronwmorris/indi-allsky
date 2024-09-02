@@ -385,7 +385,7 @@ class LatestThumbnailRedirect(LatestImageRedirect):
         return latest_thumbnail_entry
 
 
-class LatestVideoRedirect(BaseView):
+class LatestTimelapseVideoRedirect(BaseView):
     model = IndiAllSkyDbVideoTable
 
     def dispatch_request(self):
@@ -436,6 +436,10 @@ class LatestVideoRedirect(BaseView):
         return latest_video_entry
 
 
+class LatestStartrailVideoRedirect(LatestTimelapseVideoRedirect):
+    model = IndiAllSkyDbStarTrailsVideoTable
+
+
 class LatestImageViewRedirect(BaseView):
     model = IndiAllSkyDbImageTable
     view_view = 'indi_allsky.timelapse_image_view'
@@ -472,7 +476,7 @@ class LatestImageViewRedirect(BaseView):
         return latest_image_entry
 
 
-class LatestVideoWatchRedirect(BaseView):
+class LatestTimelapseVideoWatchRedirect(BaseView):
     model = IndiAllSkyDbVideoTable
     watch_view = 'indi_allsky.timelapse_video_view'
 
@@ -520,6 +524,10 @@ class LatestVideoWatchRedirect(BaseView):
 
         return latest_video_entry
 
+
+class LatestStartrailVideoWatchRedirect(LatestTimelapseVideoWatchRedirect):
+    model = IndiAllSkyDbStarTrailsVideoTable
+    watch_view = 'indi_allsky.startrail_video_view'
 
 
 class LatestPanoramaView(IndexView):
@@ -7142,10 +7150,12 @@ bp_allsky.add_url_rule('/youtube/oauth2revoke', view_func=YoutubeRevokeAuthView.
 # redirects
 bp_allsky.add_url_rule('/latestimage', view_func=LatestImageRedirect.as_view('latest_image_redirect_view'))
 bp_allsky.add_url_rule('/latestthumbnail', view_func=LatestThumbnailRedirect.as_view('latest_thumbnail_redirect_view'))
-bp_allsky.add_url_rule('/latesttimelapse', view_func=LatestVideoRedirect.as_view('latest_video_redirect_view'))
+bp_allsky.add_url_rule('/latesttimelapse', view_func=LatestTimelapseVideoRedirect.as_view('latest_timelapse_video_redirect_view'))
+bp_allsky.add_url_rule('/lateststartrail', view_func=LatestStartrailVideoRedirect.as_view('latest_startrail_video_redirect_view'))
 
 bp_allsky.add_url_rule('/latestimageview', view_func=LatestImageViewRedirect.as_view('latest_image_view_redirect_view'))
-bp_allsky.add_url_rule('/latesttimelapsewatch', view_func=LatestVideoWatchRedirect.as_view('latest_video_watch_redirect_view'))
+bp_allsky.add_url_rule('/latesttimelapsewatch', view_func=LatestTimelapseVideoWatchRedirect.as_view('latest_timelapse_video_watch_redirect_view'))
+bp_allsky.add_url_rule('/lateststartrailwatch', view_func=LatestStartrailVideoWatchRedirect.as_view('latest_startrail_video_watch_redirect_view'))
 
 # hidden
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
