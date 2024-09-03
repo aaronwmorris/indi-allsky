@@ -328,13 +328,13 @@ class JsonLatestImageView(JsonView):
 
 
 class LatestImageRedirect(BaseView):
+    model = IndiAllSkyDbImageTable
+
 
     def dispatch_request(self):
-        camera_id = request.args.get('camera_id')
+        camera_id = int(request.args.get('camera_id', 0))
 
-        if camera_id:
-            camera_id = int(camera_id)
-        else:
+        if not camera_id:
             camera = self.getLatestCamera()
             camera_id = camera.id
 
@@ -357,10 +357,10 @@ class LatestImageRedirect(BaseView):
 
 
     def getLatestImage(self, camera_id):
-        latest_image_entry = IndiAllSkyDbImageTable.query\
-            .join(IndiAllSkyDbImageTable.camera)\
+        latest_image_entry = self.model.query\
+            .join(self.model.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .order_by(self.model.createDate.desc())\
             .first()
 
 
@@ -383,6 +383,151 @@ class LatestThumbnailRedirect(LatestImageRedirect):
         _, latest_thumbnail_entry = latest_image_thumbnail_entry
 
         return latest_thumbnail_entry
+
+
+class LatestTimelapseVideoRedirect(BaseView):
+    model = IndiAllSkyDbVideoTable
+
+    def dispatch_request(self):
+        camera_id = int(request.args.get('camera_id', 0))
+        night = request.args.get('night')  # can be None
+
+
+        if not camera_id:
+            camera = self.getLatestCamera()
+            camera_id = camera.id
+
+
+        self.cameraSetup(camera_id=camera_id)
+
+
+        local = True
+        if self.web_nonlocal_images:
+            local = False
+
+
+        video_entry = self.getLatestVideo(camera_id, night=night)
+
+
+        video_url = video_entry.getUrl(s3_prefix=self.s3_prefix, local=local)
+
+
+        return redirect(video_url, code=302)
+
+
+    def getLatestVideo(self, camera_id, night=None):
+        if isinstance(night, type(None)):
+            latest_video_entry = self.model.query\
+                .join(self.model.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .order_by(self.model.dayDate.desc())\
+                .first()
+        else:
+            # filter based on night
+            night_bool = bool(int(night))
+
+            latest_video_entry = self.model.query\
+                .join(self.model.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .filter(self.model.night == night_bool)\
+                .order_by(self.model.dayDate.desc())\
+                .first()
+
+        return latest_video_entry
+
+
+class LatestStartrailVideoRedirect(LatestTimelapseVideoRedirect):
+    model = IndiAllSkyDbStarTrailsVideoTable
+
+
+class LatestImageViewRedirect(BaseView):
+    model = IndiAllSkyDbImageTable
+    view_view = 'indi_allsky.timelapse_image_view'
+
+
+    def dispatch_request(self):
+        camera_id = int(request.args.get('camera_id', 0))
+
+        if not camera_id:
+            camera = self.getLatestCamera()
+            camera_id = camera.id
+
+
+        self.cameraSetup(camera_id=camera_id)
+
+
+        image_entry = self.getLatestImage(camera_id)
+
+
+        view_url = url_for(self.view_view, id=image_entry.id)
+
+
+        return redirect(view_url, code=302)
+
+
+    def getLatestImage(self, camera_id):
+        latest_image_entry = self.model.query\
+            .join(self.model.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .order_by(self.model.createDate.desc())\
+            .first()
+
+
+        return latest_image_entry
+
+
+class LatestTimelapseVideoWatchRedirect(BaseView):
+    model = IndiAllSkyDbVideoTable
+    watch_view = 'indi_allsky.timelapse_video_view'
+
+
+    def dispatch_request(self):
+        camera_id = int(request.args.get('camera_id', 0))
+        night = request.args.get('night')  # can be None
+
+
+        if not camera_id:
+            camera = self.getLatestCamera()
+            camera_id = camera.id
+
+
+        self.cameraSetup(camera_id=camera_id)
+
+
+        video_entry = self.getLatestVideo(camera_id, night=night)
+
+
+        view_url = url_for(self.watch_view, id=video_entry.id)
+
+
+        return redirect(view_url, code=302)
+
+
+    def getLatestVideo(self, camera_id, night=None):
+        if isinstance(night, type(None)):
+            latest_video_entry = self.model.query\
+                .join(self.model.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .order_by(self.model.dayDate.desc())\
+                .first()
+        else:
+            # filter based on night
+            night_bool = bool(int(night))
+
+            latest_video_entry = self.model.query\
+                .join(self.model.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .filter(self.model.night == night_bool)\
+                .order_by(self.model.dayDate.desc())\
+                .first()
+
+
+        return latest_video_entry
+
+
+class LatestStartrailVideoWatchRedirect(LatestTimelapseVideoWatchRedirect):
+    model = IndiAllSkyDbStarTrailsVideoTable
+    watch_view = 'indi_allsky.startrail_video_view'
 
 
 class LatestPanoramaView(IndexView):
@@ -7002,9 +7147,17 @@ bp_allsky.add_url_rule('/youtube/authorize', view_func=YoutubeAuthorizeView.as_v
 bp_allsky.add_url_rule('/youtube/oauth2callback', view_func=YoutubeCallbackView.as_view('youtube_oauth2callback_view'))
 bp_allsky.add_url_rule('/youtube/oauth2revoke', view_func=YoutubeRevokeAuthView.as_view('youtube_oauth2revoke_view'))
 
-# hidden
+# redirects
 bp_allsky.add_url_rule('/latestimage', view_func=LatestImageRedirect.as_view('latest_image_redirect_view'))
 bp_allsky.add_url_rule('/latestthumbnail', view_func=LatestThumbnailRedirect.as_view('latest_thumbnail_redirect_view'))
+bp_allsky.add_url_rule('/latesttimelapse', view_func=LatestTimelapseVideoRedirect.as_view('latest_timelapse_video_redirect_view'))
+bp_allsky.add_url_rule('/lateststartrail', view_func=LatestStartrailVideoRedirect.as_view('latest_startrail_video_redirect_view'))
+
+bp_allsky.add_url_rule('/latestimageview', view_func=LatestImageViewRedirect.as_view('latest_image_view_redirect_view'))
+bp_allsky.add_url_rule('/latesttimelapsewatch', view_func=LatestTimelapseVideoWatchRedirect.as_view('latest_timelapse_video_watch_redirect_view'))
+bp_allsky.add_url_rule('/lateststartrailwatch', view_func=LatestStartrailVideoWatchRedirect.as_view('latest_startrail_video_watch_redirect_view'))
+
+# hidden
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
