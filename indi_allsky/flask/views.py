@@ -333,6 +333,7 @@ class LatestImageRedirect(BaseView):
 
     def dispatch_request(self):
         camera_id = int(request.args.get('camera_id', 0))
+        night = request.args.get('night')  # can be None
 
         if not camera_id:
             camera = self.getLatestCamera()
@@ -347,7 +348,7 @@ class LatestImageRedirect(BaseView):
             local = False
 
 
-        image_entry = self.getLatestImage(camera_id)
+        image_entry = self.getLatestImage(camera_id, night=night)
 
 
         image_url = image_entry.getUrl(s3_prefix=self.s3_prefix, local=local)
@@ -356,7 +357,7 @@ class LatestImageRedirect(BaseView):
         return redirect(image_url, code=302)
 
 
-    def getLatestImage(self, camera_id):
+    def getLatestImage(self, camera_id, night=None):
         latest_image_entry = self.model.query\
             .join(self.model.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
@@ -365,6 +366,18 @@ class LatestImageRedirect(BaseView):
 
 
         return latest_image_entry
+
+
+class LatestKeogramRedirect(LatestImageRedirect):
+    model = IndiAllSkyDbKeogramTable
+
+
+class LatestStartrailRedirect(LatestImageRedirect):
+    model = IndiAllSkyDbStarTrailsTable
+
+
+class LatestPanoramaImageRedirect(LatestImageRedirect):
+    model = IndiAllSkyDbPanoramaImageTable
 
 
 class LatestThumbnailRedirect(LatestImageRedirect):
@@ -440,6 +453,10 @@ class LatestStartrailVideoRedirect(LatestTimelapseVideoRedirect):
     model = IndiAllSkyDbStarTrailsVideoTable
 
 
+class LatestPanoramaVideoRedirect(LatestTimelapseVideoRedirect):
+    model = IndiAllSkyDbPanoramaVideoTable
+
+
 class LatestImageViewRedirect(BaseView):
     model = IndiAllSkyDbImageTable
     view_view = 'indi_allsky.timelapse_image_view'
@@ -447,6 +464,8 @@ class LatestImageViewRedirect(BaseView):
 
     def dispatch_request(self):
         camera_id = int(request.args.get('camera_id', 0))
+        night = request.args.get('night')  # can be None
+
 
         if not camera_id:
             camera = self.getLatestCamera()
@@ -456,7 +475,7 @@ class LatestImageViewRedirect(BaseView):
         self.cameraSetup(camera_id=camera_id)
 
 
-        image_entry = self.getLatestImage(camera_id)
+        image_entry = self.getLatestImage(camera_id, night=night)
 
 
         view_url = url_for(self.view_view, id=image_entry.id)
@@ -465,7 +484,7 @@ class LatestImageViewRedirect(BaseView):
         return redirect(view_url, code=302)
 
 
-    def getLatestImage(self, camera_id):
+    def getLatestImage(self, camera_id, night=None):
         latest_image_entry = self.model.query\
             .join(self.model.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
@@ -474,6 +493,21 @@ class LatestImageViewRedirect(BaseView):
 
 
         return latest_image_entry
+
+
+class LatestKeogramViewRedirect(LatestImageViewRedirect):
+    model = IndiAllSkyDbKeogramTable
+    view_view = 'indi_allsky.keogram_image_view'
+
+
+class LatestStartrailViewRedirect(LatestImageViewRedirect):
+    model = IndiAllSkyDbStarTrailsTable
+    view_view = 'indi_allsky.startrail_image_view'
+
+
+class LatestPanoramaImageViewRedirect(LatestImageViewRedirect):
+    model = IndiAllSkyDbPanoramaImageTable
+    view_view = 'indi_allsky.panorama_image_view'
 
 
 class LatestTimelapseVideoWatchRedirect(BaseView):
@@ -528,6 +562,11 @@ class LatestTimelapseVideoWatchRedirect(BaseView):
 class LatestStartrailVideoWatchRedirect(LatestTimelapseVideoWatchRedirect):
     model = IndiAllSkyDbStarTrailsVideoTable
     watch_view = 'indi_allsky.startrail_video_view'
+
+
+class LatestPanoramaVideoWatchRedirect(LatestTimelapseVideoWatchRedirect):
+    model = IndiAllSkyDbPanoramaVideoTable
+    watch_view = 'indi_allsky.panorama_video_view'
 
 
 class LatestPanoramaView(IndexView):
@@ -7149,13 +7188,21 @@ bp_allsky.add_url_rule('/youtube/oauth2revoke', view_func=YoutubeRevokeAuthView.
 
 # redirects
 bp_allsky.add_url_rule('/latestimage', view_func=LatestImageRedirect.as_view('latest_image_redirect_view'))
+bp_allsky.add_url_rule('/latestkeogram', view_func=LatestKeogramRedirect.as_view('latest_keogram_redirect_view'))
+bp_allsky.add_url_rule('/lateststartrail', view_func=LatestStartrailRedirect.as_view('latest_startrail_redirect_view'))
+bp_allsky.add_url_rule('/latestpanorama', view_func=LatestPanoramaImageRedirect.as_view('latest_panorama_image_redirect_view'))
 bp_allsky.add_url_rule('/latestthumbnail', view_func=LatestThumbnailRedirect.as_view('latest_thumbnail_redirect_view'))
 bp_allsky.add_url_rule('/latesttimelapse', view_func=LatestTimelapseVideoRedirect.as_view('latest_timelapse_video_redirect_view'))
-bp_allsky.add_url_rule('/lateststartrail', view_func=LatestStartrailVideoRedirect.as_view('latest_startrail_video_redirect_view'))
+bp_allsky.add_url_rule('/lateststartrailvideo', view_func=LatestStartrailVideoRedirect.as_view('latest_startrail_video_redirect_view'))
+bp_allsky.add_url_rule('/latestpanoramavideo', view_func=LatestPanoramaVideoRedirect.as_view('latest_panorama_video_redirect_view'))
 
 bp_allsky.add_url_rule('/latestimageview', view_func=LatestImageViewRedirect.as_view('latest_image_view_redirect_view'))
+bp_allsky.add_url_rule('/latestkeogramview', view_func=LatestKeogramViewRedirect.as_view('latest_keogram_view_redirect_view'))
+bp_allsky.add_url_rule('/lateststartrailview', view_func=LatestKeogramViewRedirect.as_view('latest_startrail_view_redirect_view'))
+bp_allsky.add_url_rule('/latestpanoramaview', view_func=LatestPanoramaImageViewRedirect.as_view('latest_panorama_image_view_redirect_view'))
 bp_allsky.add_url_rule('/latesttimelapsewatch', view_func=LatestTimelapseVideoWatchRedirect.as_view('latest_timelapse_video_watch_redirect_view'))
-bp_allsky.add_url_rule('/lateststartrailwatch', view_func=LatestStartrailVideoWatchRedirect.as_view('latest_startrail_video_watch_redirect_view'))
+bp_allsky.add_url_rule('/lateststartrailvideowatch', view_func=LatestStartrailVideoWatchRedirect.as_view('latest_startrail_video_watch_redirect_view'))
+bp_allsky.add_url_rule('/latestpanoramavideowatch', view_func=LatestPanoramaVideoWatchRedirect.as_view('latest_panorama_video_watch_redirect_view'))
 
 # hidden
 bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view', template_name='cameras.html'))
