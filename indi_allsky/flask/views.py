@@ -358,11 +358,22 @@ class LatestImageRedirect(BaseView):
 
 
     def getLatestImage(self, camera_id, night=None):
-        latest_image_entry = self.model.query\
-            .join(self.model.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .order_by(self.model.createDate.desc())\
-            .first()
+        if isinstance(night, type(None)):
+            latest_image_entry = self.model.query\
+                .join(self.model.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .order_by(self.model.createDate.desc())\
+                .first()
+        else:
+            # filter based on night
+            night_bool = bool(int(night))
+
+            latest_image_entry = self.model.query\
+                .join(self.model.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .filter(self.model.night == night_bool)\
+                .order_by(self.model.createDate.desc())\
+                .first()
 
 
         return latest_image_entry
@@ -485,11 +496,22 @@ class LatestImageViewRedirect(BaseView):
 
 
     def getLatestImage(self, camera_id, night=None):
-        latest_image_entry = self.model.query\
-            .join(self.model.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .order_by(self.model.createDate.desc())\
-            .first()
+        if isinstance(night, type(None)):
+            latest_image_entry = self.model.query\
+                .join(self.model.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .order_by(self.model.createDate.desc())\
+                .first()
+        else:
+            # filter based on night
+            night_bool = bool(int(night))
+
+            latest_image_entry = self.model.query\
+                .join(self.model.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .filter(self.model.night == night_bool)\
+                .order_by(self.model.createDate.desc())\
+                .first()
 
 
         return latest_image_entry
