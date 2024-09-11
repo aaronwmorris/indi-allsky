@@ -59,6 +59,12 @@ class IndiProperties(PyIndi.BaseClient):
         PyIndi.ISR_NOFMANY : 'ANY',
     }
 
+    __perm_to_str = {
+        PyIndi.IP_RO : 'READ_ONLY',
+        PyIndi.IP_WO : 'WRITE_ONLY',
+        PyIndi.IP_RW : 'READ_WRITE',
+    }
+
 
     def __init__(self):
         super(IndiProperties, self).__init__()
@@ -164,6 +170,7 @@ class IndiProperties(PyIndi.BaseClient):
                 for t in p.getText():
                     properties[name]['{0} [{1}] (text)'.format(t.getName(), t.getLabel())] = {
                         'current' : t.getText(),
+                        'permissions' : self.__perm_to_str[p.getPermission()],
                     }
             elif p.getType() == PyIndi.INDI_NUMBER:
                 for t in p.getNumber():
@@ -173,16 +180,19 @@ class IndiProperties(PyIndi.BaseClient):
                         'max'     : t.getMax(),
                         'step'    : t.getStep(),
                         'format'  : t.getFormat(),
+                        'permissions' : self.__perm_to_str[p.getPermission()],
                     }
             elif p.getType() == PyIndi.INDI_SWITCH:
                 for t in p.getSwitch():
                     properties[name]['{0} [{1}] (switch)'.format(t.getName(), t.getLabel())] = {
                         'state' : self.__state_to_str_s[t.getState()],
+                        'permissions' : self.__perm_to_str[p.getPermission()],
                     }
             elif p.getType() == PyIndi.INDI_LIGHT:
                 for t in p.getLight():
                     properties[name]['{0} [{1}] (light)'.format(t.getName(), t.getLabel())] = {
                         'state' : self.__state_to_str_p[t.getState()],
+                        'permissions' : self.__perm_to_str[p.getPermission()],
                     }
             elif p.getType() == PyIndi.INDI_BLOB:
                 pass
