@@ -96,9 +96,11 @@ class FlushImages(object):
 
         print()
         print()
-        print('This script will flush image and/or video files in the indi-allsky database and filesystem')
+        print('DANGER:  THIS ACTION IS NOT RECOVERABLE !!!')
         print()
-        print('Camera ID:    {0:d} - {1:s}'.format(self.camera_id, camera_entry.name))
+        print('This script will delete image and/or video files in the indi-allsky database and filesystem')
+        print()
+        print('Camera ID:    {0:d} [{1:s}]'.format(self.camera_id, camera_entry.name))
         print('Flush Images: {0:s}  [images, fits, raw, panorama images]'.format(str(self.flush_images)))
         print('Flush Videos: {0:s}  [timelapses, keograms, startrails, panorama timelapses]'.format(str(self.flush_videos)))
         print()
