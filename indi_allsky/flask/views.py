@@ -662,6 +662,7 @@ class DarkFramesView(TemplateView):
 
         darkframe_list = IndiAllSkyDbDarkFrameTable.query\
             .join(IndiAllSkyDbCameraTable)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .order_by(
                 IndiAllSkyDbCameraTable.id.desc(),
                 IndiAllSkyDbDarkFrameTable.gain.asc(),
@@ -670,6 +671,7 @@ class DarkFramesView(TemplateView):
 
         bpm_list = IndiAllSkyDbBadPixelMapTable.query\
             .join(IndiAllSkyDbCameraTable)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .order_by(
                 IndiAllSkyDbCameraTable.id.desc(),
                 IndiAllSkyDbBadPixelMapTable.gain.asc(),
