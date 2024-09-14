@@ -58,6 +58,12 @@ class IndiClient(PyIndi.BaseClient):
         PyIndi.INDI_UNKNOWN : 'unknown',
     }
 
+    __perm_to_str = {
+        PyIndi.IP_RO : 'READ_ONLY',
+        PyIndi.IP_WO : 'WRITE_ONLY',
+        PyIndi.IP_RW : 'READ_WRITE',
+    }
+
     __indi_interfaces = {
         PyIndi.BaseDevice.GENERAL_INTERFACE   : 'general',
         PyIndi.BaseDevice.TELESCOPE_INTERFACE : 'telescope',

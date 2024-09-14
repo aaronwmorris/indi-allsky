@@ -662,6 +662,7 @@ class DarkFramesView(TemplateView):
 
         darkframe_list = IndiAllSkyDbDarkFrameTable.query\
             .join(IndiAllSkyDbCameraTable)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .order_by(
                 IndiAllSkyDbCameraTable.id.desc(),
                 IndiAllSkyDbDarkFrameTable.gain.asc(),
@@ -670,6 +671,7 @@ class DarkFramesView(TemplateView):
 
         bpm_list = IndiAllSkyDbBadPixelMapTable.query\
             .join(IndiAllSkyDbCameraTable)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
             .order_by(
                 IndiAllSkyDbCameraTable.id.desc(),
                 IndiAllSkyDbBadPixelMapTable.gain.asc(),
@@ -4058,10 +4060,15 @@ class AjaxSystemInfoView(BaseView):
             .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
 
-        file_count = image_query.count()
-        file_count += fits_image_query.count()
-        file_count += raw_image_query.count()
-        file_count += panorama_image_query.count()
+        image_count = image_query.count()
+        fits_image_count = fits_image_query.count()
+        raw_image_count = raw_image_query.count()
+        panorama_image_count = panorama_image_query.count()
+
+        file_count = image_count
+        file_count += fits_image_count
+        file_count += raw_image_count
+        file_count += panorama_image_count
 
 
         ### Getting IDs first then deleting each file is faster than deleting all files with
