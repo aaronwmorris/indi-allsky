@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
 
+import board
+import digitalio
 import time
 import signal
 import logging
 
 import threading
 from multiprocessing import Process
+from multiprocessing import Value
 from multiprocessing import log_to_stderr
 
 PIN = 'D21'
@@ -22,17 +25,27 @@ logger.addHandler(LOG_HANDLER_STREAM)
 logger.setLevel(logging.INFO)
 
 
-class GpioWorker(threading.Thread):
+class GpioWorkerProcess(Process):
 
-    def __init__(self, idx):
-        super(GpioWorker, self).__init__()
+    def __init__(self, idx, stopper_v):
+        super(GpioWorkerProcess, self).__init__()
 
-        import board
-        import digitalio
+        self.stopper_v = stopper_v
+        self.name = 'GpioWorkerProcess-{0:03d}'.format(idx)
+
+        self.pin = None
 
 
-        self.threadID = idx
-        self.name = 'GpioWorker{0:03d}'.format(idx)
+    def sigint_handler_worker(self, signum, frame):
+        # ignore SIGINT
+        pass
+
+
+    def run(self):
+        logger.warning('Starting worker')
+
+        # setup signal handling after detaching from the main process
+        signal.signal(signal.SIGINT, self.sigint_handler_worker)
 
 
         logger.info('Initializing GPIO %s', PIN)
@@ -41,22 +54,43 @@ class GpioWorker(threading.Thread):
         self.pin.direction = digitalio.Direction.OUTPUT
 
 
-        self._stopper = threading.Event()
+        while True:
+            if self.stopper_v.value:
+                logger.warning('Stopping')
+                self.pin.deinit()
+                return
 
 
-    def stop(self):
-        self._stopper.set()
+            self.pin.value = 1
 
 
-    def stopped(self):
-        return self._stopper.is_set()
+            time.sleep(1)
+
+
+class GpioWorkerThread(threading.Thread):
+
+    def __init__(self, idx, stopper_v):
+        super(GpioWorkerThread, self).__init__()
+
+        self.threadID = idx
+        self.stopper_v = stopper_v
+        self.name = 'GpioWorkerThread-{0:03d}'.format(idx)
+
+        self.pin = None
 
 
     def run(self):
-        logger.info('Running...')
+        logger.warning('Starting worker')
+
+
+        logger.info('Initializing GPIO %s', PIN)
+        p = getattr(board, PIN)
+        self.pin = digitalio.DigitalInOut(p)
+        self.pin.direction = digitalio.Direction.OUTPUT
+
 
         while True:
-            if self.stopped():
+            if self.stopper_v.value:
                 logger.warning('Stopping')
                 self.pin.deinit()
                 return
@@ -69,12 +103,11 @@ class GpioWorker(threading.Thread):
 
 
 class TestWorkerProcess(Process):
-    def __init__(self, idx):
+    def __init__(self, idx, stopper_v):
         super(TestWorkerProcess, self).__init__()
 
+        self.stopper_v = stopper_v
         self.name = 'TestWorkerProcess-{0:d}'.format(idx)
-
-        self._shutdown = False
 
 
     def sigint_handler_worker(self, signum, frame):
@@ -82,22 +115,15 @@ class TestWorkerProcess(Process):
         pass
 
 
-    def sigterm_handler_worker(self, signum, frame):
-        logger.warning('Caught TERM signal')
-
-        # set flag for program to stop processes
-        self._shutdown = True
-
-
     def run(self):
-        logger.info('Running...')
+        logger.warning('Starting worker')
+
         # setup signal handling after detaching from the main process
-        signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
         signal.signal(signal.SIGINT, self.sigint_handler_worker)
 
 
         while True:
-            if self._shutdown:
+            if self.stopper_v.value:
                 return
 
             # process does nothing other than exist
@@ -112,6 +138,8 @@ class GpioLockTest(object):
 
         self.test_worker_process = None
         self.test_worker_process_idx = 0
+
+        self.stopper_v = Value('i', 0)  # set to 1 to shutdown processes
 
         self._restart = False
 
@@ -133,6 +161,13 @@ class GpioLockTest(object):
                 self._restart = False
                 self.stopTestWorkerProcess()
                 self.stopGpioWorker()
+
+
+                # reset stopper
+                with self.stopper_v.get_lock():
+                    self.stopper_v.value = 0
+
+
                 time.sleep(1)
 
 
@@ -157,8 +192,12 @@ class GpioLockTest(object):
 
         self.gpio_worker_idx += 1
 
-        logger.info('Starting GpioWorker-%d worker', self.gpio_worker_idx)
-        self.gpio_worker = GpioWorker(self.gpio_worker_idx)
+
+        ### swap these to switch between threads and processes
+        self.gpio_worker = GpioWorkerThread(self.gpio_worker_idx, self.stopper_v)
+        #self.gpio_worker = GpioWorkerProcess(self.gpio_worker_idx, self.stopper_v)
+
+
         self.gpio_worker.start()
 
 
@@ -171,7 +210,9 @@ class GpioLockTest(object):
 
         logger.info('Stopping GpioWorker')
 
-        self.gpio_worker.stop()
+        with self.stopper_v.get_lock():
+            self.stopper_v.value = 1
+
         self.gpio_worker.join()
 
 
@@ -181,8 +222,7 @@ class GpioLockTest(object):
                 return
 
         self.test_worker_process_idx += 1
-        logger.info('Starting TestWorkerProcess-%d worker', self.test_worker_process_idx)
-        self.test_worker_process = TestWorkerProcess(self.test_worker_process_idx)
+        self.test_worker_process = TestWorkerProcess(self.test_worker_process_idx, self.stopper_v)
         self.test_worker_process.start()
 
 
@@ -194,9 +234,11 @@ class GpioLockTest(object):
             return
 
         logger.info('Terminating TestWorkerProcess')
-        self.test_worker_process.terminate()
-        self.test_worker_process.join()
 
+        with self.stopper_v.get_lock():
+            self.stopper_v.value = 1
+
+        self.test_worker_process.join()
 
 
 if __name__ == "__main__":
