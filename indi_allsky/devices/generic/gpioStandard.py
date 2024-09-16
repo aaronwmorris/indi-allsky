@@ -66,3 +66,8 @@ class GpioStandard(GenericBase):
     def disable(self):
         self.state = 0
 
+
+    def deinit(self):
+        super(GpioStandard, self).deinit()
+        self.pin.deinit()
+

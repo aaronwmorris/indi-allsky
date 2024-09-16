@@ -63,3 +63,8 @@ class DewHeaterPwm(DewHeaterBase):
     def disable(self):
         self.state = 0
 
+
+    def deinit(self):
+        super(DewHeaterPwm, self).deinit()
+        self.pwm.deinit()
+

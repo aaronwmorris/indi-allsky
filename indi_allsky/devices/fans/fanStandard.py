@@ -62,3 +62,8 @@ class FanStandard(FanBase):
     def disable(self):
         self.state = 0
 
+
+    def deinit(self):
+        super(FanStandard, self).deinit()
+        self.pin.deinit()
+

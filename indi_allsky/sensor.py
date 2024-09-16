@@ -117,6 +117,12 @@ class SensorWorker(Thread):
 
             if self.stopped():
                 logger.warning('Goodbye')
+
+                # deinit devices
+                self.gpio.deinit()
+                self.fan.deinit()
+                self.dew_heater.deinit()
+
                 return
 
 
