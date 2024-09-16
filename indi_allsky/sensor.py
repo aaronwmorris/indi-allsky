@@ -1,10 +1,13 @@
 import time
+import signal
 import traceback
 import logging
 
-from threading import Thread
-#import queue
-import threading
+#from threading import Thread
+import queue
+#import threading
+
+from multiprocessing import Process
 
 from .devices import generic as indi_allsky_gpios
 from .devices import dew_heaters
@@ -16,11 +19,14 @@ from .devices.exceptions import DeviceControlException
 logger = logging.getLogger('indi_allsky')
 
 
-class SensorWorker(Thread):
+### lgpio module appears to not be thread safe when using with multiprocessing
+
+class SensorWorker(Process):
     def __init__(
         self,
         idx,
         config,
+        sensor_q,
         error_q,
         sensors_temp_av,
         sensors_user_av,
@@ -31,6 +37,7 @@ class SensorWorker(Thread):
         self.name = 'Sensor-{0:d}'.format(idx)
 
         self.config = config
+        self.sensor_q = sensor_q
         self.error_q = error_q
 
         self.sensors_temp_av = sensors_temp_av
@@ -72,22 +79,44 @@ class SensorWorker(Thread):
         self.fan_thold_diff_high = self.config.get('FAN', {}).get('THOLD_DIFF_HIGH', 10)
 
 
-        self._stopper = threading.Event()
+        self._shutdown = False
+        #self._stopper = threading.Event()
 
 
-    def stop(self):
-        self._stopper.set()
+    #def stop(self):
+    #    self._stopper.set()
 
 
-    def stopped(self):
-        return self._stopper.isSet()
+    #def stopped(self):
+    #    return self._stopper.isSet()
+
+
+    def sighup_handler_worker(self, signum, frame):
+        logger.warning('Caught HUP signal')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
+
+    def sigterm_handler_worker(self, signum, frame):
+        logger.warning('Caught TERM signal')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
+
+    def sigint_handler_worker(self, signum, frame):
+        logger.warning('Caught INT signal')
+
+        # set flag for program to stop processes
+        self._shutdown = True
 
 
     def run(self):
         # setup signal handling after detaching from the main process
-        #signal.signal(signal.SIGHUP, self.sighup_handler_worker)
-        #signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
-        #signal.signal(signal.SIGINT, self.sigint_handler_worker)
+        signal.signal(signal.SIGHUP, self.sighup_handler_worker)
+        signal.signal(signal.SIGTERM, self.sigterm_handler_worker)
+        signal.signal(signal.SIGINT, self.sigint_handler_worker)
         #signal.signal(signal.SIGALRM, self.sigalarm_handler_worker)
 
 
@@ -103,7 +132,6 @@ class SensorWorker(Thread):
     def saferun(self):
         #raise Exception('Test exception handling in worker')
 
-
         self.init_sensors()  # sensors before dew heater and fan
         self.update_sensors()
 
@@ -115,8 +143,26 @@ class SensorWorker(Thread):
         while True:
             time.sleep(3)
 
-            if self.stopped():
+            try:
+                s_dict = self.sensor_q.get(False)
+
+                if s_dict.get('stop'):
+                    self._shutdown = True
+                else:
+                    logger.error('Unknown action: %s', str(s_dict))
+
+            except queue.Empty:
+                pass
+
+
+            if self._shutdown:
                 logger.warning('Goodbye')
+
+                # deinit devices
+                self.gpio.deinit()
+                self.fan.deinit()
+                self.dew_heater.deinit()
+
                 return
 
 

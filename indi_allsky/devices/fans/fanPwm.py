@@ -63,3 +63,8 @@ class FanPwm(FanBase):
     def disable(self):
         self.state = 0
 
+
+    def deinit(self):
+        super(FanPwm, self).deinit()
+        self.pwm.deinit()
+

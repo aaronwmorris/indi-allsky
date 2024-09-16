@@ -172,8 +172,9 @@ class IndiAllSky(object):
         self.video_worker = None
         self.video_worker_idx = 0
 
-        self.sensor_worker = None
+        self.sensor_q = Queue()
         self.sensor_error_q = Queue()
+        self.sensor_worker = None
         self.sensor_worker_idx = 0
 
         self.upload_q = Queue()
@@ -519,6 +520,7 @@ class IndiAllSky(object):
         self.sensor_worker = SensorWorker(
             self.sensor_worker_idx,
             self.config,
+            self.sensor_q,
             self.sensor_error_q,
             self.sensors_temp_av,
             self.sensors_user_av,
@@ -547,7 +549,7 @@ class IndiAllSky(object):
 
         logger.info('Stopping Sensor worker')
 
-        self.sensor_worker.stop()
+        self.sensor_q.put({'stop' : True})
         self.sensor_worker.join()
 
 
