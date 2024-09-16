@@ -19,6 +19,8 @@ from .devices.exceptions import DeviceControlException
 logger = logging.getLogger('indi_allsky')
 
 
+### lgpio module appears to not be thread safe when using with multiprocessing
+
 class SensorWorker(Process):
     def __init__(
         self,
