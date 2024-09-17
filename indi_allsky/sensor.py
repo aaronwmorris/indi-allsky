@@ -88,7 +88,7 @@ class SensorWorker(Process):
 
 
     #def stopped(self):
-    #    return self._stopper.isSet()
+    #    return self._stopper.is_set()
 
 
     def sighup_handler_worker(self, signum, frame):

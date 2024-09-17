@@ -92,7 +92,7 @@ class FileUploader(Thread):
 
 
     def stopped(self):
-        return self._stopper.isSet()
+        return self._stopper.is_set()
 
 
     def run(self):

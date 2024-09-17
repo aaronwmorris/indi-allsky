@@ -108,7 +108,7 @@ class BaseWorker(threading.Thread):
 
 
     def stopped(self):
-        return self._stopper.isSet()
+        return self._stopper.is_set()
 
 
     def setState(self, key, value):
