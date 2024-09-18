@@ -350,6 +350,7 @@ class IndiAllskyCardinalDirsLabel(object):
             int(height / 2) - self.y_offset,
         )
 
+        # center dot
         cv2.circle(
             img=image,
             center=pt,
@@ -358,6 +359,7 @@ class IndiAllskyCardinalDirsLabel(object):
             thickness=cv2.FILLED,
         )
 
+        # image circle outline
         cv2.circle(
             img=image,
             center=pt,
