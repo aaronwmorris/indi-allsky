@@ -428,13 +428,21 @@ class CaptureWorker(Process):
 
 
                         if frame_delta < -1:
-                            logger.error('%0.4fs EXPOSURE RECEIVED IN %0.4fs.  POSSIBLE CAMERA PROBLEM.', self.exposure_av[0], frame_elapsed)
-                            self._miscDb.addNotification(
-                                NotificationCategory.CAMERA,
-                                'exposure_delta',
-                                '{0:0.1f}s exposure received in {1:0.1f}s.  Possible camera problem.'.format(self.exposure_av[0], frame_elapsed),
-                                expire=timedelta(minutes=60),
-                            )
+
+                            if self.config['CAMERA_INTERFACE'].startswith('pycurl'):
+                                ### camera does not obey expsoure values
+                                pass
+                            elif self.config['CAMERA_INTERFACE'] == 'indi_passive':
+                                ### camera does not obey expsoure values
+                                pass
+                            else:
+                                logger.error('%0.4fs EXPOSURE RECEIVED IN %0.4fs.  POSSIBLE CAMERA PROBLEM.', self.exposure_av[0], frame_elapsed)
+                                self._miscDb.addNotification(
+                                    NotificationCategory.CAMERA,
+                                    'exposure_delta',
+                                    '{0:0.1f}s exposure received in {1:0.1f}s.  Possible camera problem.'.format(self.exposure_av[0], frame_elapsed),
+                                    expire=timedelta(minutes=60),
+                                )
 
 
 
