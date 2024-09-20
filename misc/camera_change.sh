@@ -97,7 +97,7 @@ while [ -z "${CAMERA_INTERFACE:-}" ]; do
     if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
         echo
         PS3="Select a libcamera interface: "
-        select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_ov5647 libcamera_imx219 libcamera_imx519 libcamera_imx708 libcamera_imx296_gs libcamera_imx290 libcamera_imx462 libcamera_64mp_hawkeye; do
+        select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_ov5647 libcamera_imx219 libcamera_imx519 libcamera_imx708 libcamera_imx296_gs libcamera_imx290 libcamera_imx462 libcamera_imx327 libcamera_imx298 libcamera_64mp_hawkeye libcamera_64mp_owlsight; do
             if [ -n "$libcamera_interface" ]; then
                 # overwrite variable
                 CAMERA_INTERFACE=$libcamera_interface
