@@ -1303,7 +1303,7 @@ class JsonChartView(JsonView):
                     custom_1_y = 0
             else:
                 try:
-                    custom_1_y = i.data['sensor_temp_{0:d}'.format(100 - custom_1_index)]
+                    custom_1_y = i.data['sensor_temp_{0:d}'.format(custom_1_index - 100)]
                 except KeyError:
                     custom_1_y = 0
 
@@ -1322,7 +1322,7 @@ class JsonChartView(JsonView):
                     custom_2_y = 0
             else:
                 try:
-                    custom_2_y = i.data['sensor_temp_{0:d}'.format(100 - custom_2_index)]
+                    custom_2_y = i.data['sensor_temp_{0:d}'.format(custom_2_index - 100)]
                 except KeyError:
                     custom_2_y = 0
 
@@ -1341,7 +1341,7 @@ class JsonChartView(JsonView):
                     custom_3_y = 0
             else:
                 try:
-                    custom_3_y = i.data['sensor_temp_{0:d}'.format(100 - custom_3_index)]
+                    custom_3_y = i.data['sensor_temp_{0:d}'.format(custom_3_index - 100)]
                 except KeyError:
                     custom_3_y = 0
 
@@ -1360,7 +1360,7 @@ class JsonChartView(JsonView):
                     custom_4_y = 0
             else:
                 try:
-                    custom_4_y = i.data['sensor_temp_{0:d}'.format(100 - custom_4_index)]
+                    custom_4_y = i.data['sensor_temp_{0:d}'.format(custom_4_index - 100)]
                 except KeyError:
                     custom_4_y = 0
 
