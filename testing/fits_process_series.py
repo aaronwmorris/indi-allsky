@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+###
+### Processes FITS files using the indi-allsky processing pipeline
+###
+
+
+import os
 import sys
 import argparse
 from datetime import datetime
@@ -137,7 +143,8 @@ class ProcessFitsSeries(object):
         for filename_p in fits_file_list_ordered:
             logger.warning('Processing %s', filename_p)
 
-            exp_date = datetime.fromtimestamp(filename_p.stat().st_mtime)
+            exp_ts = filename_p.stat().st_mtime
+            exp_date = datetime.fromtimestamp(exp_ts)
 
 
             try:
@@ -262,6 +269,9 @@ class ProcessFitsSeries(object):
                 image_p.parent.mkdir(parents=True)
 
             img.save(str(image_p), quality=self.jpeg_quality)
+
+            # set original file mtime
+            os.utime(str(image_p), (exp_ts, exp_ts))
 
 
     def getCameraById(self, camera_id):
