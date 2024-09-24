@@ -19,9 +19,12 @@ logger = logging
 
 
 class TimelapseGenerator(object):
+
+    FFMPEG_CODEC = 'libx264'
+
     FFMPEG_FRAMERATE = 25
 
-    FFMPEG_BITRATE = '2500k'
+    FFMPEG_BITRATE = '5000k'
     FFMPEG_BITRATE_MAX = '5000k'
     FFMPEG_BITRATE_MIN = '1000k'
     FFMPEG_BITRATE_BUF = '2000k'
@@ -30,24 +33,32 @@ class TimelapseGenerator(object):
 
 
     def __init__(self):
-        pass
+        self._input_dir = None
 
 
-    def main(self, outfile, inputdir):
+    @property
+    def input_dir(self):
+        return self._input_dir
+
+    @input_dir.setter
+    def input_dir(self, new_input_dir):
+        self._input_dir = Path(str(new_input_dir)).absolute()
+
+
+    def main(self, outfile):
         outfile_p = Path(outfile)
-        inputdir_p = Path(inputdir)
 
         if outfile_p.exists():
             logger.error('File already exists: %s', outfile_p)
             sys.exit(1)
 
-        if not inputdir_p.exists():
-            logger.error('Directory does not exist: %s', inputdir_p)
+        if not self.input_dir.exists():
+            logger.error('Directory does not exist: %s', self.input_dir)
             sys.exit(1)
 
 
         file_list = list()
-        self.getFolderFilesByExt(inputdir_p, file_list)
+        self.getFolderFilesByExt(self.input_dir, file_list)
 
         # Exclude empty files
         file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
@@ -72,13 +83,19 @@ class TimelapseGenerator(object):
         cmd = [
             'ffmpeg',
             '-y',
+
             '-loglevel', 'level+warning',
-            '-f', 'image2',
+
             '-r', '{0:d}'.format(self.FFMPEG_FRAMERATE),
+            '-f', 'image2',
+
             #'-start_number', '0',
             #'-pattern_type', 'glob',
+
             '-i', '{0:s}/%05d.{1:s}'.format(str(p_seqfolder), IMAGE_FILETYPE),
-            '-c:v', 'libx264',
+
+            '-vcodec', self.FFMPEG_CODEC,
+            #'-c:v', self.FFMPEG_CODEC,
 
             '-b:v', '{0:s}'.format(self.FFMPEG_BITRATE),
             #'-minrate', '{0:s}'.format(self.FFMPEG_BITRATE_MIN),
@@ -89,6 +106,9 @@ class TimelapseGenerator(object):
 
             '-pix_fmt', 'yuv420p',
             '-movflags', '+faststart',
+
+            '-level', '3.1',  # better compatibility
+
             '{0:s}'.format(str(outfile_p)),
         ]
 
@@ -137,7 +157,7 @@ class TimelapseGenerator(object):
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
-        'inputdir',
+        'input_dir',
         help='Input directory',
         type=str,
     )
@@ -153,5 +173,6 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
     tg = TimelapseGenerator()
-    tg.main(args.output, args.inputdir)
+    tg.input_dir = args.input_dir
+    tg.main(args.output)
 

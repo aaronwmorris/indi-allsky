@@ -7,6 +7,11 @@ set -o nounset
 PATH=/bin:/usr/bin
 export PATH
 
+# can be overridden by environment variables
+#BUILD_INDI_CORE="true"
+#BUILD_INDI_3RDPARTY="true"
+#MAKE_CONCURRENT=x
+
 
 function handler_SIGINT() {
     #stty echo
@@ -50,20 +55,19 @@ CMAKE_BIN=cmake
 INSTALL_PREFIX="/usr/local"
 
 
-# can be overridden by environment variables
-#BUILD_INDI_CORE="true"
-#BUILD_INDI_3RDPARTY="true"
-
-
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
-if [ "$MEM_TOTAL" -lt "1536000" ]; then
-    # <= 1GB memory should use 1 process
-    MAKE_CONCURRENT=1
-elif [ "$MEM_TOTAL" -lt "2560000" ]; then
-    # 2GB memory should use 2 processes
-    MAKE_CONCURRENT=2
-else
-    MAKE_CONCURRENT=$(nproc)
+
+
+if [ -z "${MAKE_CONCURRENT:-}" ]; then
+    if [ "$MEM_TOTAL" -lt "1536000" ]; then
+        # <= 1GB memory should use 1 process
+        MAKE_CONCURRENT=1
+    elif [ "$MEM_TOTAL" -lt "2560000" ]; then
+        # 2GB memory should use 2 processes
+        MAKE_CONCURRENT=2
+    else
+        MAKE_CONCURRENT=$(nproc)
+    fi
 fi
 
 
