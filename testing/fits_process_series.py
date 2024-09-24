@@ -135,7 +135,7 @@ class ProcessFitsSeries(object):
 
 
         for filename_p in fits_file_list_ordered:
-            logger.info('Processing %s', filename_p)
+            logger.warning('Processing %s', filename_p)
 
             exp_date = datetime.fromtimestamp(filename_p.stat().st_mtime)
 
@@ -253,9 +253,11 @@ class ProcessFitsSeries(object):
             img = Image.fromarray(cv2.cvtColor(image_processor.image, cv2.COLOR_BGR2RGB))
 
 
-            image_p = self.output_dir.joinpath(filename_p.parent, '{0:s}.{1:s}'.format(filename_p.stem, self.image_type))
+            rel_p = filename_p.relative_to(self.input_dir)
+            image_p = self.output_dir.joinpath(rel_p.parent, '{0:s}.{1:s}'.format(filename_p.stem, self.image_type))
 
 
+            logger.warning('Saving %s', image_p)
             if not image_p.parent.is_dir():
                 image_p.parent.mkdir(parents=True)
 
