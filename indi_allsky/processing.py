@@ -330,7 +330,7 @@ class ImageProcessor(object):
 
 
         ### Open file
-        if filename_p.suffix in ['.fit']:
+        if filename_p.suffix in ['.fit', '.fits']:
             try:
                 hdulist = fits.open(filename_p)
             except OSError as e:
