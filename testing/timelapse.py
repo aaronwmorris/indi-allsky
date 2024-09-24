@@ -33,24 +33,32 @@ class TimelapseGenerator(object):
 
 
     def __init__(self):
-        pass
+        self._input_dir = None
 
 
-    def main(self, outfile, inputdir):
+    @property
+    def input_dir(self):
+        return self._input_dir
+
+    @input_dir.setter
+    def input_dir(self, new_input_dir):
+        self._input_dir = Path(str(new_input_dir)).absolute()
+
+
+    def main(self, outfile):
         outfile_p = Path(outfile)
-        inputdir_p = Path(inputdir)
 
         if outfile_p.exists():
             logger.error('File already exists: %s', outfile_p)
             sys.exit(1)
 
-        if not inputdir_p.exists():
-            logger.error('Directory does not exist: %s', inputdir_p)
+        if not self.input_dir.exists():
+            logger.error('Directory does not exist: %s', self.input_dir)
             sys.exit(1)
 
 
         file_list = list()
-        self.getFolderFilesByExt(inputdir_p, file_list)
+        self.getFolderFilesByExt(self.input_dir, file_list)
 
         # Exclude empty files
         file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
@@ -149,7 +157,7 @@ class TimelapseGenerator(object):
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
-        'inputdir',
+        'input_dir',
         help='Input directory',
         type=str,
     )
@@ -165,5 +173,6 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
     tg = TimelapseGenerator()
-    tg.main(args.output, args.inputdir)
+    tg.input_dir = args.input_dir
+    tg.main(args.output)
 
