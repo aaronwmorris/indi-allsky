@@ -19,9 +19,12 @@ logger = logging
 
 
 class TimelapseGenerator(object):
+
+    FFMPEG_CODEC = 'libx264'
+
     FFMPEG_FRAMERATE = 25
 
-    FFMPEG_BITRATE = '2500k'
+    FFMPEG_BITRATE = '5000k'
     FFMPEG_BITRATE_MAX = '5000k'
     FFMPEG_BITRATE_MIN = '1000k'
     FFMPEG_BITRATE_BUF = '2000k'
@@ -72,13 +75,19 @@ class TimelapseGenerator(object):
         cmd = [
             'ffmpeg',
             '-y',
+
             '-loglevel', 'level+warning',
-            '-f', 'image2',
+
             '-r', '{0:d}'.format(self.FFMPEG_FRAMERATE),
+            '-f', 'image2',
+
             #'-start_number', '0',
             #'-pattern_type', 'glob',
+
             '-i', '{0:s}/%05d.{1:s}'.format(str(p_seqfolder), IMAGE_FILETYPE),
-            '-c:v', 'libx264',
+
+            '-vcodec', self.FFMPEG_CODEC,
+            #'-c:v', self.FFMPEG_CODEC,
 
             '-b:v', '{0:s}'.format(self.FFMPEG_BITRATE),
             #'-minrate', '{0:s}'.format(self.FFMPEG_BITRATE_MIN),
@@ -89,6 +98,9 @@ class TimelapseGenerator(object):
 
             '-pix_fmt', 'yuv420p',
             '-movflags', '+faststart',
+
+            '-level', '3.1',  # better compatibility
+
             '{0:s}'.format(str(outfile_p)),
         ]
 
