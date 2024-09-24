@@ -64,7 +64,7 @@ class ExpireImages(object):
         self.config = self._config_obj.config
 
 
-        self._image_days = 30
+        self._image_days = 10
         self._video_days = 365
 
 
@@ -286,7 +286,7 @@ if __name__ == "__main__":
         '-d',
         help='Images older than days will be deleted',
         type=int,
-        default=30,
+        default=10,
     )
     argparser.add_argument(
         '--timelapse_days',
