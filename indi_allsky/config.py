@@ -215,7 +215,7 @@ class IndiAllSkyConfigBase(object):
         "THUMBNAILS" : {
             "IMAGES_AUTO" : True,
         },
-        "IMAGE_EXPIRE_DAYS"     : 30,
+        "IMAGE_EXPIRE_DAYS"     : 10,
         "TIMELAPSE_EXPIRE_DAYS" : 365,
         "TIMELAPSE_OVERWRITE"   : False,
         "IMAGE_QUEUE_MAX"       : 3,
