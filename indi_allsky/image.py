@@ -717,6 +717,7 @@ class ImageWorker(Process):
             mq_topic_latest = 'latest'
 
             mqtt_data = {
+                'exp_date' : exp_date.strftime('%Y-%m-%d %H:%M:%S'),
                 'exposure' : round(exposure, 6),
                 'gain'     : self.gain_v.value,
                 'bin'      : self.bin_v.value,

@@ -169,6 +169,15 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
+                'object_id' : 'indi_allsky_exp_date',
+                'config' : {
+                    'name' : 'Exposure Date',
+                    'unique_id' : 'indi_allsky_exp_date_{0}'.format(self.unique_id_base),
+                    'state_topic' : '/'.join((base_topic, 'exp_date')),
+                },
+            },
+            {
+                'component' : 'sensor',
                 'object_id' : 'indi_allsky_exposure',
                 'config' : {
                     'name' : 'Exposure',
