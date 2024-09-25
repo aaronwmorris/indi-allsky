@@ -787,7 +787,7 @@ class IndiAllSky(object):
         timelapse_videos_tl = filter(lambda p: 'timelapse' in p.name, file_list_videos)
         timelapse_videos = filter(lambda p: 'startrail' not in p.name, timelapse_videos_tl)  # exclude star trail timelapses
 
-        #/var/www/html/allsky/images/20210915/allsky-timelapse_ccd1_20210915_night.mp4
+        # timelapse/20210915/allsky-timelapse_ccd1_20210915_night.mp4
         re_video = re.compile(r'(?P<dayDate_str>\d{8})\/.+timelapse_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
 
         video_entries = list()
@@ -843,7 +843,7 @@ class IndiAllSky(object):
         ### Keograms
         file_list_keograms = filter(lambda p: 'keogram' in p.name, file_list_images)
 
-        #/var/www/html/allsky/images/20210915/allsky-keogram_ccd1_20210915_night.jpg
+        # timelapse/20210915/allsky-keogram_ccd1_20210915_night.jpg
         re_keogram = re.compile(r'(?P<dayDate_str>\d{8})\/.+keogram_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z]+$')
 
         keogram_entries = list()
@@ -893,7 +893,7 @@ class IndiAllSky(object):
         ### Star trails
         file_list_startrail = filter(lambda p: 'startrail' in p.name, file_list_images)
 
-        #/var/www/html/allsky/images/20210915/allsky-startrail_ccd1_20210915_night.jpg
+        # timelapse/20210915/allsky-startrail_ccd1_20210915_night.jpg
         re_startrail = re.compile(r'(?P<dayDate_str>\d{8})\/.+startrail_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z]+$')
 
         startrail_entries = list()
@@ -944,7 +944,7 @@ class IndiAllSky(object):
         file_list_startrail_video_tl = filter(lambda p: 'timelapse' in p.name, file_list_videos)
         file_list_startrail_video = filter(lambda p: 'startrail' in p.name, file_list_startrail_video_tl)
 
-        #/var/www/html/allsky/images/20210915/allsky-startrail_timelapse_ccd1_20210915_night.mp4
+        # timelapse/20210915/allsky-startrail_timelapse_ccd1_20210915_night.mp4
         re_startrail_video = re.compile(r'(?P<dayDate_str>\d{8})\/.+startrail_timelapse_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
 
         startrail_video_entries = list()
@@ -995,7 +995,7 @@ class IndiAllSky(object):
         file_list_panorama_video_tl = filter(lambda p: 'timelapse' in p.name, file_list_videos)
         file_list_panorama_video = filter(lambda p: 'panorama' in p.name, file_list_panorama_video_tl)
 
-        #/var/www/html/allsky/images/20210915/allsky-panorama_timelapse_ccd1_20210915_night.mp4
+        # timelapse/20210915/allsky-panorama_timelapse_ccd1_20210915_night.mp4
         re_panorama_video = re.compile(r'(?P<dayDate_str>\d{8})\/.+panorama_timelapse_ccd(?P<ccd_id_str>\d+)_\d{8}_(?P<timeofday_str>[a-z]+)\.[a-z0-9]+$')
 
         panorama_video_entries = list()
@@ -1050,7 +1050,7 @@ class IndiAllSky(object):
         file_list_images_nok_nost_noraw_nopan = filter(lambda p: 'panorama' not in p.name, file_list_images_nok_nost_noraw)
         file_list_images_nok_nost_noraw_nopan_nothumb = filter(lambda p: 'thumbnail' not in p.name, file_list_images_nok_nost_noraw_nopan)
 
-        #/var/www/html/allsky/images/20210825/night/26_02/ccd1_20210826_020202.jpg
+        # exposures/20210825/night/26_02/ccd1_20210826_020202.jpg
         re_image = re.compile(r'(?P<dayDate_str>\d{8})\/(?P<timeofday_str>[a-z]+)\/\d{2}_\d{2}\/ccd(?P<ccd_id_str>\d+)_(?P<createDate_str>[0-9_]+)\.[a-z]+$')
 
         image_entries = list()
@@ -1111,7 +1111,7 @@ class IndiAllSky(object):
         ### Panorama images
         file_list_panorama_images = filter(lambda p: 'panoram' in p.name, file_list_images)
 
-        #/var/www/html/allsky/images/20210825/night/26_02/panorama_ccd1_20210826_020202.jpg
+        # panoramas/20210825/night/26_02/panorama_ccd1_20210826_020202.jpg
         re_image = re.compile(r'(?P<dayDate_str>\d{8})\/(?P<timeofday_str>[a-z]+)\/\d{2}_\d{2}\/panorama_ccd(?P<ccd_id_str>\d+)_(?P<createDate_str>[0-9_]+)\.[a-z]+$')
 
         panorama_image_entries = list()
