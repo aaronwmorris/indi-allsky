@@ -2770,6 +2770,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_light_sensor_veml7700_i2c', 'VEML7700 i2c - Lux/Light/White (3)'),
         ('blinka_light_sensor_bh1750_i2c', 'BH1750 i2c - Lux (1)'),
         ('blinka_light_sensor_si1145_i2c', 'SI1145 i2c - Vis/IR/UV (3)'),
+        ('blinka_light_sensor_ltr390_i2c', 'LTR390 i2c - UV/Vis/UVI/Lux (4)'),
         ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5)'),
         ('sensor_data_generator', 'Test Data Generator - (4)'),
     )

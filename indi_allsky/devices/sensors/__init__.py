@@ -31,6 +31,8 @@ from .lightSensorBh1750 import LightSensorBh1750_I2C as blinka_light_sensor_bh17
 
 from .lightSensorSi1145 import LightSensorSi1145_I2C as blinka_light_sensor_si1145_i2c
 
+from .lightSensorLtr390 import LightSensorLtr390_I2C as blinka_light_sensor_ltr390_i2c
+
 from .tempSensorTmp36_Ads1x15 import TempSensorTmp36_Ads1015_I2C as cpads_temp_sensor_tmp36_ads1015_i2c
 from .tempSensorTmp36_Ads1x15 import TempSensorTmp36_Ads1115_I2C as cpads_temp_sensor_tmp36_ads1115_i2c
 from .tempSensorLm35_Ads1x15 import TempSensorLm35_Ads1015_I2C as cpads_temp_sensor_lm35_ads1015_i2c
@@ -65,6 +67,7 @@ __all__ = (
     'blinka_light_sensor_veml7700_i2c',
     'blinka_light_sensor_bh1750_i2c',
     'blinka_light_sensor_si1145_i2c',
+    'blinka_light_sensor_ltr390_i2c',
     'cpads_temp_sensor_tmp36_ads1015_i2c',
     'cpads_temp_sensor_tmp36_ads1115_i2c',
     'cpads_temp_sensor_lm35_ads1015_i2c',
