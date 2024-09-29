@@ -68,7 +68,7 @@ class LightSensorSi1145_I2C(LightSensorSi1145):
 
     METADATA = {
         'name' : 'SI1145 (i2c)',
-        'description' : 'SI1145 i2c Light Sensor',
+        'description' : 'SI1145 i2c UV Light Sensor',
         'count' : 3,
         'labels' : (
             'Visible',

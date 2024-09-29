@@ -2386,6 +2386,11 @@ def TEMP_SENSOR__SI1145_GAIN_validator(form, field):
         raise ValidationError('Invalid gain selection')
 
 
+def TEMP_SENSOR__LTR390_GAIN_validator(form, field):
+    if field.data not in list(zip(*form.TEMP_SENSOR__LTR390_GAIN_choices))[0]:
+        raise ValidationError('Invalid gain selection')
+
+
 def HEALTHCHECK__DISK_USAGE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter a valid number')
@@ -2770,6 +2775,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_light_sensor_veml7700_i2c', 'VEML7700 i2c - Lux/Light/White (3)'),
         ('blinka_light_sensor_bh1750_i2c', 'BH1750 i2c - Lux (1)'),
         ('blinka_light_sensor_si1145_i2c', 'SI1145 i2c - Vis/IR/UV (3)'),
+        ('blinka_light_sensor_ltr390_i2c', 'LTR390 i2c - UV/Vis/UVI/Lux (4)'),
         ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5)'),
         ('sensor_data_generator', 'Test Data Generator - (4)'),
     )
@@ -2911,6 +2917,13 @@ class IndiAllskyConfigForm(FlaskForm):
         ('GAIN_ADC_CLOCK_DIV_128', '[7] - 128x'),
     )
 
+    TEMP_SENSOR__LTR390_GAIN_choices = (
+        ('GAIN_1X', '[0] - 1x (default)'),
+        ('GAIN_3X', '[1] - 3x'),
+        ('GAIN_6X', '[2] - 6x'),
+        ('GAIN_9X', '[3] - 9x'),
+        ('GAIN_18X', '[4] - 18x'),
+    )
 
 
     ENCRYPT_PASSWORDS                = BooleanField('Encrypt Passwords')
@@ -3320,6 +3333,8 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__SI1145_VIS_GAIN_DAY   = SelectField('SI1145 Visible Gain (Day)', choices=TEMP_SENSOR__SI1145_GAIN_choices, validators=[TEMP_SENSOR__SI1145_GAIN_validator])
     TEMP_SENSOR__SI1145_IR_GAIN_NIGHT  = SelectField('SI1145 IR Gain (Night)', choices=TEMP_SENSOR__SI1145_GAIN_choices, validators=[TEMP_SENSOR__SI1145_GAIN_validator])
     TEMP_SENSOR__SI1145_IR_GAIN_DAY    = SelectField('SI1145 IR Gain (Day)', choices=TEMP_SENSOR__SI1145_GAIN_choices, validators=[TEMP_SENSOR__SI1145_GAIN_validator])
+    TEMP_SENSOR__LTR390_GAIN_NIGHT     = SelectField('LTR390 Gain (Night)', choices=TEMP_SENSOR__LTR390_GAIN_choices, validators=[TEMP_SENSOR__LTR390_GAIN_validator])
+    TEMP_SENSOR__LTR390_GAIN_DAY       = SelectField('LTR390 Gain (Day)', choices=TEMP_SENSOR__LTR390_GAIN_choices, validators=[TEMP_SENSOR__LTR390_GAIN_validator])
     CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[SENSOR_SLOT_validator])

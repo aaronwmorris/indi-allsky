@@ -16,6 +16,7 @@ adafruit-circuitpython-veml7700
 adafruit-circuitpython-bh1750
 adafruit-circuitpython-ads1x15
 adafruit-circuitpython-si1145
+adafruit-circuitpython-ltr390
 
 ### does not work on raspi
 #adafruit-circuitpython-ds18x20

@@ -36,6 +36,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * VEML7700
     * BH1750
     * SI1145
+    * LTR390
 * Generic GPIO controls
 * MQTT Broker sensors
     * Subscribe to topics as sensor input
