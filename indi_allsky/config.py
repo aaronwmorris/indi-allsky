@@ -495,6 +495,8 @@ class IndiAllSkyConfigBase(object):
             "SI1145_VIS_GAIN_DAY"    : "GAIN_ADC_CLOCK_DIV_1",
             "SI1145_IR_GAIN_NIGHT"   : "GAIN_ADC_CLOCK_DIV_32",
             "SI1145_IR_GAIN_DAY"     : "GAIN_ADC_CLOCK_DIV_1",
+            "LTR390_GAIN_NIGHT"      : "GAIN_9X",
+            "LTR390_GAIN_DAY"        : "GAIN_1X",
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : 10,
