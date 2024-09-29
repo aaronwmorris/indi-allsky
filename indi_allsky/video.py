@@ -1582,16 +1582,22 @@ class VideoWorker(Process):
         # check filesystems
         logger.info('Performing system health check')
 
-        fs_list = psutil.disk_partitions()
+        fs_list = psutil.disk_partitions(all=False)
 
         for fs in fs_list:
-            if fs.mountpoint.startswith('/snap/'):
-                # skip snap filesystems
+
+            skip = False
+            for p in ('/snap', '/boot'):
+                if fs.mountpoint.startswith(p + '/'):
+                    skip = True
+                    break
+                elif fs.mountpoint == p:
+                    skip = True
+                    break
+
+            if skip:
                 continue
 
-            if fs.mountpoint.startswith('/boot'):
-                # skip boot filesystem
-                continue
 
             try:
                 disk_usage = psutil.disk_usage(fs.mountpoint)

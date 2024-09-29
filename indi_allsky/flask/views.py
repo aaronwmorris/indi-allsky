@@ -3533,13 +3533,23 @@ class SystemInfoView(TemplateView):
 
 
     def getAllFsUsage(self):
-        fs_list = psutil.disk_partitions()
+        fs_list = psutil.disk_partitions(all=True)
 
         fs_data = list()
         for fs in fs_list:
-            if fs.mountpoint.startswith('/snap/'):
-                # skip snap filesystems
+
+            skip = False
+            for p in ('/snap', '/sys', '/proc', '/run', '/dev'):
+                if fs.mountpoint.startswith(p + '/'):
+                    skip = True
+                    break
+                elif fs.mountpoint == p:
+                    skip = True
+                    break
+
+            if skip:
                 continue
+
 
             try:
                 disk_usage = psutil.disk_usage(fs.mountpoint)
