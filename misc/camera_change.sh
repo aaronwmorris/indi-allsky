@@ -214,14 +214,30 @@ fi
 if [ "$INSTALL_INDISERVER" == "true" ]; then
     systemctl --user enable ${INDISERVER_SERVICE_NAME}.service
 
-    echo
-    echo
-    echo
-    echo
-    echo "You now need to restart the indiserver service to activate the driver change"
-    echo
-    echo "    systemctl --user restart indiserver"
-    echo
+
+    while [ -z "${RESTART_INDISERVER:-}" ]; do
+        if whiptail --title "Restart indiserver" --yesno "Do you want to restart the indiserver now?\n\nNot recommended if the indi-allsky service is active." 0 0 --defaultno; then
+            RESTART_INDISERVER="true"
+        else
+            RESTART_INDISERVER="false"
+        fi
+    done
+
+
+    if [ "$RESTART_INDISERVER" == "true" ]; then
+        echo "Restarting indiserver..."
+        sleep 3
+        systemctl --user restart indiserver
+    else
+        echo
+        echo
+        echo
+        echo
+        echo "You now need to restart the indiserver service to activate the driver change"
+        echo
+        echo "    systemctl --user restart indiserver"
+        echo
+    fi
 fi
 
 END_TIME=$(date +%s)
