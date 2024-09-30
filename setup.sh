@@ -2075,7 +2075,6 @@ systemctl --user daemon-reload
 
 # indi-allsky service is started by the timer (2 minutes after boot)
 systemctl --user disable ${ALLSKY_SERVICE_NAME}.service
-systemctl --user enable ${ALLSKY_SERVICE_NAME}.timer
 
 # gunicorn service is started by the socket
 systemctl --user disable ${GUNICORN_SERVICE_NAME}.service
@@ -2796,12 +2795,27 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
         sleep 3
         systemctl --user restart ${INDISERVER_SERVICE_NAME}.service
     fi
-
-
-    # ensure indiserver is running
-    systemctl --user start ${INDISERVER_SERVICE_NAME}.service
 fi
 
+
+while [ -z "${INDIALLSKY_AUTOSTART:-}" ]; do
+    if whiptail --title "Auto-start indi-allsky" --yesno "Do you want to start indi-allsky automatically at boot?" 0 0; then
+        INDIALLSKY_AUTOSTART="true"
+    else
+        INDIALLSKY_AUTOSTART="false"
+    fi
+done
+
+
+if [ "$INDIALLSKY_AUTOSTART" == "true" ]; then
+    systemctl --user enable ${ALLSKY_SERVICE_NAME}.timer
+else
+    systemctl --user disable ${ALLSKY_SERVICE_NAME}.timer
+fi
+
+
+# ensure indiserver is running
+systemctl --user start ${INDISERVER_SERVICE_NAME}.service
 
 # ensure latest code is active
 systemctl --user restart ${GUNICORN_SERVICE_NAME}.service
