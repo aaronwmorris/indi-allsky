@@ -207,7 +207,7 @@ if [[ -f "/etc/astroberry.version" ]]; then
 fi
 
 
-if systemctl --user -q is-active "${ALLSKY_SERVICE_NAME}" >/dev/null 2>&1; then
+if systemctl --user -q is-active "${ALLSKY_SERVICE_NAME}.service" >/dev/null 2>&1; then
     echo
     echo
     echo "ERROR: indi-allsky is running.  Please stop the service before running this script."
@@ -2508,12 +2508,12 @@ if [[ "$ASTROBERRY" == "true" ]]; then
     sudo systemctl restart nginx
 
 else
-    if systemctl -q is-active nginx; then
+    if systemctl -q is-active nginx.service; then
         echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
         sleep 3
     fi
 
-    if systemctl -q is-active lighttpd; then
+    if systemctl -q is-active lighttpd.service; then
         echo "!!! WARNING - lighttpd is active - This might interfere with apache !!!"
         sleep 3
     fi
@@ -2814,6 +2814,29 @@ else
 fi
 
 
+
+if systemctl --user -q is-active "${ALLSKY_SERVICE_NAME}.service" >/dev/null 2>&1; then
+    # no need to start if already running
+    INDIALLSKY_START="false"
+fi
+
+
+while [ -z "${INDIALLSKY_START:-}" ]; do
+    if whiptail --title "Start indi-allsky" --yesno "Do you want to start indi-allsky service now?" 0 0 --defaultno; then
+        INDIALLSKY_START="true"
+    else
+        INDIALLSKY_START="false"
+    fi
+done
+
+
+if [ "$INDIALLSKY_START" == "true" ]; then
+    echo "Starting indi-allsky..."
+    sleep 3
+    systemctl --user start ${ALLSKY_SERVICE_NAME}.service
+fi
+
+
 # ensure indiserver is running
 systemctl --user start ${INDISERVER_SERVICE_NAME}.service
 
@@ -2825,13 +2848,15 @@ echo
 echo
 echo
 echo
-echo "*** Configurations are now stored in the database and *NOT* /etc/indi-allsky/config.json ***"
-echo
-echo "Services can be started at the command line or can be started from the web interface"
-echo
-echo "    systemctl --user start indi-allsky"
-echo
-echo
+
+if [ ! "$INDIALLSKY_START" == "true" ]; then
+    echo "Services may be started at the command line or can be started from the web interface"
+    echo
+    echo "    systemctl --user start indi-allsky"
+    echo
+    echo
+fi
+
 echo "The web interface may be accessed with the following URL"
 echo " (You may have to manually access by IP)"
 echo
