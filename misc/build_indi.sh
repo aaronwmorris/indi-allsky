@@ -26,7 +26,7 @@ if [ -n "${1:-}" ]; then
     INDI_3RDPARTY_TAG=$INDI_CORE_TAG
 else
     #INDI_CORE_TAG="HEAD"
-    INDI_CORE_TAG="v2.0.9"
+    INDI_CORE_TAG="v2.1.0"
     INDI_3RDPARTY_TAG=$INDI_CORE_TAG
 fi
 
