@@ -2081,10 +2081,6 @@ systemctl --user enable ${ALLSKY_SERVICE_NAME}.timer
 systemctl --user disable ${GUNICORN_SERVICE_NAME}.service
 systemctl --user enable ${GUNICORN_SERVICE_NAME}.socket
 
-if [ "$INSTALL_INDISERVER" == "true" ]; then
-    systemctl --user enable ${INDISERVER_SERVICE_NAME}.service
-fi
-
 
 echo "**** Setup policy kit permissions ****"
 TMP_POLKIT=$(mktemp)
@@ -2782,8 +2778,30 @@ fi
 [[ -f "$TMP_CONFIG_DUMP" ]] && rm -f "$TMP_CONFIG_DUMP"
 
 
-# ensure indiserver is running
-systemctl --user start ${INDISERVER_SERVICE_NAME}.service
+if [ "$INSTALL_INDISERVER" == "true" ]; then
+    systemctl --user enable ${INDISERVER_SERVICE_NAME}.service
+
+
+    while [ -z "${RESTART_INDISERVER:-}" ]; do
+        if whiptail --title "Restart indiserver" --yesno "Do you want to restart the indiserver now?\n\nNot recommended if the indi-allsky service is active." 0 0 --defaultno; then
+            RESTART_INDISERVER="true"
+        else
+            RESTART_INDISERVER="false"
+        fi
+    done
+
+
+    if [ "$RESTART_INDISERVER" == "true" ]; then
+        echo "Restarting indiserver..."
+        sleep 3
+        systemctl --user restart ${INDISERVER_SERVICE_NAME}.service
+    fi
+
+
+    # ensure indiserver is running
+    systemctl --user start ${INDISERVER_SERVICE_NAME}.service
+fi
+
 
 # ensure latest code is active
 systemctl --user restart ${GUNICORN_SERVICE_NAME}.service

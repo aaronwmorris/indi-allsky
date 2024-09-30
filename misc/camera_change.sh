@@ -227,7 +227,7 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     if [ "$RESTART_INDISERVER" == "true" ]; then
         echo "Restarting indiserver..."
         sleep 3
-        systemctl --user restart indiserver
+        systemctl --user restart ${INDISERVER_SERVICE_NAME}.service
     else
         echo
         echo
@@ -235,7 +235,7 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
         echo
         echo "You now need to restart the indiserver service to activate the driver change"
         echo
-        echo "    systemctl --user restart indiserver"
+        echo "    systemctl --user restart $INDISERVER_SERVICE_NAME"
         echo
     fi
 fi
