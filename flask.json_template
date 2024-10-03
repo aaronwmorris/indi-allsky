@@ -7,6 +7,8 @@
         "pool_size" : 25
     },
 
+    "MIGRATION_FOLDER" : "/var/lib/indi-allsky/migrations",
+
     "SESSION_COOKIE_SECURE_comment" : "True will prevent using http-only mode",
     "SESSION_COOKIE_SECURE" : true,
     "SESSION_COOKIE_HTTPONLY" : true,
@@ -27,11 +29,11 @@
 
     "INDI_ALLSKY_DOCROOT" : "/var/www/html/allsky",
     "INDI_ALLSKY_IMAGE_FOLDER" : "/var/www/html/allsky/images",
+
     "INDI_ALLSKY_AUTH_ALL_VIEWS" : false,
+    "INDI_ALLSKY_AUTH_MEDIA_VIEWS" : false,
     "LOGIN_DISABLED_comment" : "DANGER  Set true to disable all authentication.  This will allow anonymous persons to delete data and shutdown your system",
     "LOGIN_DISABLED" : false,
-
-    "MIGRATION_FOLDER" : "/var/lib/indi-allsky/migrations",
 
     "PASSWORD_KEY_comment" : "If you lose the PASSWORD_KEY passwords cannot be recovered",
     "PASSWORD_KEY" : "CHANGEME",
