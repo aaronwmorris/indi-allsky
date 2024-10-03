@@ -35,6 +35,8 @@ from flask import current_app as app
 from flask_login import login_required
 from flask_login import current_user
 
+from .misc import login_optional_media
+
 from . import db
 
 from .models import IndiAllSkyDbCameraTable
@@ -2811,6 +2813,8 @@ class AjaxSetTimeView(BaseView):
 
 
 class ImageViewerView(FormView):
+    decorators = [login_optional_media]
+
     def get_context(self):
         context = super(ImageViewerView, self).get_context()
 
@@ -2850,6 +2854,7 @@ class ImageViewerView(FormView):
 
 class AjaxImageViewerView(BaseView):
     methods = ['POST']
+    decorators = [login_optional_media]
 
     def __init__(self, **kwargs):
         super(AjaxImageViewerView, self).__init__(**kwargs)
@@ -2980,6 +2985,8 @@ class AjaxImageViewerView(BaseView):
 
 
 class GalleryViewerView(FormView):
+    decorators = [login_optional_media]
+
     def get_context(self):
         context = super(GalleryViewerView, self).get_context()
 
@@ -3015,6 +3022,7 @@ class GalleryViewerView(FormView):
 
 class AjaxGalleryViewerView(BaseView):
     methods = ['POST']
+    decorators = [login_optional_media]
 
     def __init__(self, **kwargs):
         super(AjaxGalleryViewerView, self).__init__(**kwargs)
@@ -3145,6 +3153,8 @@ class AjaxGalleryViewerView(BaseView):
 
 
 class VideoViewerView(FormView):
+    decorators = [login_optional_media]
+
     def get_context(self):
         context = super(VideoViewerView, self).get_context()
 
@@ -3179,6 +3189,7 @@ class VideoViewerView(FormView):
 
 class AjaxVideoViewerView(BaseView):
     methods = ['POST']
+    decorators = [login_optional_media]
 
     def __init__(self, **kwargs):
         super(AjaxVideoViewerView, self).__init__(**kwargs)
@@ -3239,6 +3250,8 @@ class AjaxVideoViewerView(BaseView):
 
 
 class MiniVideoViewerView(FormView):
+    decorators = [login_optional_media]
+
     def get_context(self):
         context = super(MiniVideoViewerView, self).get_context()
 
@@ -3273,6 +3286,7 @@ class MiniVideoViewerView(FormView):
 
 class AjaxMiniVideoViewerView(BaseView):
     methods = ['POST']
+    decorators = [login_optional_media]
 
     def __init__(self, **kwargs):
         super(AjaxMiniVideoViewerView, self).__init__(**kwargs)
@@ -6453,6 +6467,7 @@ class TimelapseImageView(TemplateView):
     model = IndiAllSkyDbImageTable
     title = 'Timelapse Image'
     file_view = 'indi_allsky.timelapse_image_view'
+    decorators = [login_optional_media]
 
 
     def get_context(self):
@@ -6554,6 +6569,7 @@ class TimelapseVideoView(TemplateView):
     model = IndiAllSkyDbVideoTable
     title = 'Timelapse Video'
     file_view = 'indi_allsky.timelapse_video_view'
+    decorators = [login_optional_media]
 
 
     def get_context(self):
