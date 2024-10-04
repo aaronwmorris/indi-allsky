@@ -504,6 +504,13 @@ class IndiAllSkyConfigBase(object):
             "CUSTOM_SLOT_3"          : 12,
             "CUSTOM_SLOT_4"          : 13,
         },
+        "ADSB" : {
+            "DUMP1090_URL"           : 'https://localhost/dump1090/data/aircraft.json',
+            "CERT_BYPASS"            : True,
+            "USERNAME"               : "",
+            "PASSWORD"               : "",
+            "PASSWORD_E"             : "",
+        },
     })
 
 
