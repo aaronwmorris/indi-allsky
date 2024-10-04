@@ -3358,6 +3358,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_4            = SelectField('Extra Chart Slot 4', choices=[], validators=[SENSOR_SLOT_validator])
+    ADSB__ENABLE                     = BooleanField('Enable ADS-B Tracking')
     ADSB__DUMP1090_URL               = StringField('Dump1090 URL', validators=[ADSB__DUMP1090_URL_validator])
     ADSB__USERNAME                   = StringField('Username', validators=[ADSB__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
     ADSB__PASSWORD                   = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[ADSB__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})

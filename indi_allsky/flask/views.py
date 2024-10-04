@@ -1873,6 +1873,7 @@ class ConfigView(FormView):
             'CHARTS__CUSTOM_SLOT_2'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)),  # string in form, int in config
             'CHARTS__CUSTOM_SLOT_3'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)),  # string in form, int in config
             'CHARTS__CUSTOM_SLOT_4'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 13)),  # string in form, int in config
+            'ADSB__ENABLE'                   : self.indi_allsky_config.get('ADSB', {}).get('ENABLE', False),
             'ADSB__DUMP1090_URL'             : self.indi_allsky_config.get('ADSB', {}).get('DUMP1090_URL', 'https://localhost/dump1090/data/aircraft.json'),
             'ADSB__USERNAME'                 : self.indi_allsky_config.get('ADSB', {}).get('USERNAME', ''),
             'ADSB__PASSWORD'                 : self.indi_allsky_config.get('ADSB', {}).get('PASSWORD', ''),
@@ -2609,6 +2610,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2']              = int(request.json['CHARTS__CUSTOM_SLOT_2'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_3']              = int(request.json['CHARTS__CUSTOM_SLOT_3'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_4']              = int(request.json['CHARTS__CUSTOM_SLOT_4'])
+        self.indi_allsky_config['ADSB']['ENABLE']                       = bool(request.json['ADSB__ENABLE'])
         self.indi_allsky_config['ADSB']['DUMP1090_URL']                 = str(request.json['ADSB__DUMP1090_URL'])
         self.indi_allsky_config['ADSB']['USERNAME']                     = str(request.json['ADSB__USERNAME'])
         self.indi_allsky_config['ADSB']['PASSWORD']                     = str(request.json['ADSB__PASSWORD'])
