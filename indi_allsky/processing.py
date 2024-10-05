@@ -138,6 +138,8 @@ class ImageProcessor(object):
         self._text_size_pillow = 0
         self._text_font_height = 0
 
+        self._adsb_aircraft_list = []  # ADSB
+
         self._libcamera_raw = False
 
         # contains the current stacked image
@@ -307,6 +309,15 @@ class ImageProcessor(object):
     @text_font_height.setter
     def text_font_height(self, new_height):
         self._text_font_height = int(new_height)
+
+
+    @property
+    def adsb_aircraft_list(self):
+        return self._adsb_aircraft_list
+
+    @adsb_aircraft_list.setter
+    def adsb_aircraft_list(self, new_aircraft_list):
+        self._adsb_aircraft_list = new_aircraft_list
 
 
     def add(self, filename, exposure, exp_date, exp_elapsed, camera):
