@@ -511,6 +511,7 @@ class IndiAllSkyConfigBase(object):
             "USERNAME"               : "",
             "PASSWORD"               : "",
             "PASSWORD_E"             : "",
+            "ALT_DEG_MIN"            : 20.0,
         },
     })
 

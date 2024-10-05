@@ -116,6 +116,9 @@ class AdsbAircraftHttpWorker(Thread):
 
 
     def adsb_calculate(self, adsb_data):
+        alt_min_deg = self.config.get('ADSB', {}).get('MIN_ALT_DEG', 20.0)
+
+
         aircraft_list = []
 
         for aircraft in adsb_data.get('aircraft', []):
@@ -145,10 +148,24 @@ class AdsbAircraftHttpWorker(Thread):
             aircraft_distance = distance_deg * 111317  # convert to meters
 
 
-            # calculate observed altitude (alt/az astronomy terms)
+            # calculate observer info (alt/az astronomy terms)
             aircraft_alt = math.degrees(math.atan((aircraft_altitude - self.elevation) / aircraft_distance))  # offset aircraft altitude by local elevation
             aircraft_az = math.degrees(math.atan2(aircraft_lon - self.longitude, aircraft_lat - self.latitude))
 
+
+            if aircraft_alt < alt_min_deg:
+                logger.warning('Aircraft below minimum visual altitude')
+                continue
+
+
+            logger.info(
+                'Aircraft: %s, altitude: %0.1fm, distance: %0.1fm, alt: %0.1f, az: %0.1f',
+                aircraft_id,
+                aircraft_altitude,
+                aircraft_distance,
+                aircraft_alt,
+                aircraft_az,
+            )
 
             aircraft_list.append({
                 'id'        : aircraft_id,

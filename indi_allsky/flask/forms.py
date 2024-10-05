@@ -2434,6 +2434,17 @@ def HEALTHCHECK__SWAP_USAGE_validator(form, field):
         raise ValidationError('Percentage must be 101 or less')
 
 
+def ADSB__ALT_DEG_MIN_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 10:
+        raise ValidationError('Minimum altitude must be greater than 10')
+
+    if field.data > 90:
+        raise ValidationError('Minimum altitude must be less than 90')
+
+
 def INDI_CONFIG_DEFAULTS_validator(form, field):
     try:
         json_data = json.loads(field.data)
@@ -3363,6 +3374,7 @@ class IndiAllskyConfigForm(FlaskForm):
     ADSB__USERNAME                   = StringField('Username', validators=[ADSB__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
     ADSB__PASSWORD                   = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[ADSB__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
     ADSB__CERT_BYPASS                = BooleanField('Disable Certificate Validation')
+    ADSB__ALT_DEG_MIN                = FloatField('Minimum Altitude (Degrees)', validators=[DataRequired(), ADSB__ALT_DEG_MIN_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 

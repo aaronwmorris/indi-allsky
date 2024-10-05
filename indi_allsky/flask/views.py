@@ -1878,6 +1878,7 @@ class ConfigView(FormView):
             'ADSB__USERNAME'                 : self.indi_allsky_config.get('ADSB', {}).get('USERNAME', ''),
             'ADSB__PASSWORD'                 : self.indi_allsky_config.get('ADSB', {}).get('PASSWORD', ''),
             'ADSB__CERT_BYPASS'              : self.indi_allsky_config.get('ADSB', {}).get('CERT_BYPASS', True),
+            'ADSB__ALT_DEG_MIN'              : self.indi_allsky_config.get('ADSB', {}).get('ALT_DEG_MIN', 20.0),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -2615,6 +2616,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['ADSB']['USERNAME']                     = str(request.json['ADSB__USERNAME'])
         self.indi_allsky_config['ADSB']['PASSWORD']                     = str(request.json['ADSB__PASSWORD'])
         self.indi_allsky_config['ADSB']['CERT_BYPASS']                  = bool(request.json['ADSB__CERT_BYPASS'])
+        self.indi_allsky_config['ADSB']['ALT_DEG_MIN']                  = float(request.json['ADSB__ALT_DEG_MIN'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
