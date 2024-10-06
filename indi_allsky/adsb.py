@@ -116,53 +116,65 @@ class AdsbAircraftHttpWorker(Thread):
 
 
     def adsb_calculate(self, adsb_data):
-        alt_min_deg = self.config.get('ADSB', {}).get('MIN_ALT_DEG', 20.0)
+        alt_min_deg = self.config.get('ADSB', {}).get('ALT_DEG_MIN', 20.0)
 
 
         aircraft_list = []
 
         for aircraft in adsb_data.get('aircraft', []):
-            if not aircraft.get('squawk'):
-                continue
-
             if isinstance(aircraft.get('altitude'), str):
                 # value might be 'ground' if landed
+                continue
+            elif isinstance(aircraft.get('altitude'), type(None)):
+                logger.warning('Aircraft without altitude')
                 continue
 
             try:
                 aircraft_lat = float(aircraft['lat'])
-                aircraft_lon = float(aircraft['long'])
-                aircraft_altitude = int(aircraft['altitude']) * 0.3048  # convert to meters
+                aircraft_lon = float(aircraft['lon'])
+                aircraft_altitude_m = int(aircraft['altitude']) * 0.3048  # convert to meters
+            except KeyError as e:  # noqa: F841
+                #logger.error('KeyError: %s', str(e))
+                continue
 
-                if aircraft.get('flight'):
-                    aircraft_id = str(aircraft['flight'])
-                else:
-                    aircraft_id = str(aircraft['squawk'])
-            except KeyError:
-                logger.error('Error processing aircraft data')
+
+            if aircraft.get('flight'):
+                aircraft_id = str(aircraft['flight'])
+            elif aircraft.get('squawk'):
+                aircraft_id = str(aircraft['squawk'])
+            else:
                 continue
 
 
             # lets just assume a flat earth... it just makes the math easier  :-)
             distance_deg = math.sqrt((aircraft_lon - self.longitude) ** 2 + (aircraft_lat - self.latitude) ** 2)
-            aircraft_distance = distance_deg * 111317  # convert to meters
+            aircraft_distance_m = distance_deg * 111317  # convert to meters
 
 
             # calculate observer info (alt/az astronomy terms)
-            aircraft_alt = math.degrees(math.atan((aircraft_altitude - self.elevation) / aircraft_distance))  # offset aircraft altitude by local elevation
+            aircraft_alt = math.degrees(math.atan((aircraft_altitude_m - self.elevation) / aircraft_distance_m))  # offset aircraft altitude by local elevation
             aircraft_az = math.degrees(math.atan2(aircraft_lon - self.longitude, aircraft_lat - self.latitude))
 
 
+            if aircraft_distance_m > 50000:
+                logger.warning('Aircraft more than 50km away, geographic lat/long may be wrong')
+
+
             if aircraft_alt < alt_min_deg:
-                logger.warning('Aircraft below minimum visual altitude')
+                logger.info('Aircraft below minimum visual altitude: %0.1f deg', aircraft_alt)
                 continue
 
 
+            #aircraft_distance_nmi = aircraft_distance_m * 0.0005399568
+            aircraft_altitude_km = aircraft_altitude_m / 1000
+            aircraft_distance_km = aircraft_distance_m / 1000
+
+
             logger.info(
-                'Aircraft: %s, altitude: %0.1fm, distance: %0.1fm, alt: %0.1f, az: %0.1f',
+                'Aircraft: %s, altitude: %0.1fkm, distance: %0.1fkm, alt: %0.1f, az: %0.1f',
                 aircraft_id,
-                aircraft_altitude,
-                aircraft_distance,
+                aircraft_altitude_km,
+                aircraft_distance_km,
                 aircraft_alt,
                 aircraft_az,
             )
@@ -171,8 +183,8 @@ class AdsbAircraftHttpWorker(Thread):
                 'id'        : aircraft_id,
                 'alt'       : aircraft_alt,
                 'az'        : aircraft_az,
-                'altitude'  : aircraft_altitude,  # meters
-                'distance'  : aircraft_distance,  # meters
+                'altitude'  : aircraft_altitude_km,
+                'distance'  : aircraft_distance_km,
             })
 
 
