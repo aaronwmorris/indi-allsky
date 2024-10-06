@@ -66,38 +66,38 @@ class AdsbAircraftHttpWorker(Thread):
             )
         except socket.gaierror as e:
             logger.error('Socket error: %s', str(e))
-            self.adsb_aircraft_q.put({})
+            self.adsb_aircraft_q.put([])
             return
         except socket.timeout as e:
             logger.error('Socket timeout: %s', str(e))
-            self.adsb_aircraft_q.put({})
+            self.adsb_aircraft_q.put([])
             return
         except requests.exceptions.ConnectTimeout as e:
             logger.error('Connect timeout: %s', str(e))
-            self.adsb_aircraft_q.put({})
+            self.adsb_aircraft_q.put([])
             return
         except requests.exceptions.ConnectionError as e:
             logger.error('Connect error: %s', str(e))
-            self.adsb_aircraft_q.put({})
+            self.adsb_aircraft_q.put([])
             return
         except requests.exceptions.ReadTimeout as e:
             logger.error('Read timeout: %s', str(e))
-            self.adsb_aircraft_q.put({})
+            self.adsb_aircraft_q.put([])
             return
         except ssl.SSLCertVerificationError as e:
             logger.error('SSL Certificate Validation failed: %s', str(e))
-            self.adsb_aircraft_q.put({})
+            self.adsb_aircraft_q.put([])
             return
         except requests.exceptions.SSLError as e:
             logger.error('SSL Error: %s', str(e))
-            self.adsb_aircraft_q.put({})
+            self.adsb_aircraft_q.put([])
             return
 
 
 
         if r.status_code >= 400:
             logger.error('URL returned %d', r.status_code)
-            self.adsb_aircraft_q.put({})
+            self.adsb_aircraft_q.put([])
             return
 
 
@@ -105,7 +105,7 @@ class AdsbAircraftHttpWorker(Thread):
             r_data = r.json()
         except json.JSONDecodeError as e:
             logger.error('JSON decode error: %s', str(e))
-            self.adsb_aircraft_q.put({})
+            self.adsb_aircraft_q.put([])
             return
 
 
