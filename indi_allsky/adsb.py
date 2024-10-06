@@ -116,7 +116,7 @@ class AdsbAircraftHttpWorker(Thread):
 
 
     def adsb_calculate(self, adsb_data):
-        alt_min_deg = self.config.get('ADSB', {}).get('ALT_DEG_MIN', 20.0)
+        alt_min_deg = self.config.get('ADSB', {}).get('ALT_DEG_MIN', 30.0)
 
 
         aircraft_list = []
