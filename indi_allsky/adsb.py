@@ -126,7 +126,7 @@ class AdsbAircraftHttpWorker(Thread):
                 # value might be 'ground' if landed
                 continue
             elif isinstance(aircraft.get('altitude'), type(None)):
-                logger.warning('Aircraft without altitude')
+                #logger.warning('Aircraft without altitude')
                 continue
 
             try:
