@@ -2359,8 +2359,12 @@ class ImageProcessor(object):
 
 
     def get_adsb_aircraft_text(self, adsb_aircraft_list):
+        if not self.config.get('ADSB', {}).get('ENABLE'):
+            return list()
+
         if not self.config.get('ADSB', {}).get('LABEL_ENABLE'):
             return list()
+
 
         aircraft_lines = []
 
