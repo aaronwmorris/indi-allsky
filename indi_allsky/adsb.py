@@ -138,11 +138,15 @@ class AdsbAircraftHttpWorker(Thread):
                 continue
 
 
-            if aircraft.get('flight'):
-                aircraft_id = str(aircraft['flight'])
-            elif aircraft.get('squawk'):
-                aircraft_id = str(aircraft['squawk'])
+            aircraft_flight = aircraft.get('flight')
+            aircraft_squawk = aircraft.get('squawk')
+
+            if aircraft_flight:
+                aircraft_id = str(aircraft_flight).rstrip()
+            elif aircraft_squawk:
+                aircraft_id = str(aircraft_squawk).rstrip()
             else:
+                logger.warning('No aircraft ID')
                 continue
 
 
@@ -184,10 +188,12 @@ class AdsbAircraftHttpWorker(Thread):
 
             aircraft_list.append({
                 'id'        : aircraft_id,
-                'alt'       : aircraft_alt,
-                'az'        : aircraft_az,
+                'flight'    : aircraft_flight,
+                'squawk'    : aircraft_squawk,
                 'altitude'  : aircraft_altitude_km,
                 'distance'  : aircraft_distance_km,
+                'alt'       : aircraft_alt,
+                'az'        : aircraft_az,
             })
 
 
