@@ -5599,17 +5599,6 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.ADSB__AIRCRAFT_LABEL_TEMPLATE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.ADSB__AIRCRAFT_LABEL_TEMPLATE(class='form-control bg-secondary') }}
-            <div id="ADSB__AIRCRAFT_LABEL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
             {{ form_config.ADSB__IMAGE_LABEL_TEMPLATE_PREFIX.label(class='col-form-label') }}
         </div>
         <div class="col-sm-6">
@@ -5619,6 +5608,17 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-4">
             <div></div>
         </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ADSB__AIRCRAFT_LABEL_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.ADSB__AIRCRAFT_LABEL_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="ADSB__AIRCRAFT_LABEL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
     </div>
 
 </div><!-- end adsb tab -->

@@ -2017,48 +2017,6 @@ class ImageProcessor(object):
             label_data['wind_dir'] = 'Error'
 
 
-        # aircraft
-        for i in range(20):
-            try:
-                aircraft = adsb_aircraft_list[i]
-            except IndexError:
-                label_data['aircraft_{0:d}_id'.format(i)] = ''
-                label_data['aircraft_{0:d}_squawk'.format(i)] = ''
-                label_data['aircraft_{0:d}_flight'.format(i)] = ''
-                label_data['aircraft_{0:d}_distance'.format(i)] = 0.0
-                label_data['aircraft_{0:d}_altitude'.format(i)] = 0.0
-                label_data['aircraft_{0:d}_alt'.format(i)] = 0.0
-                label_data['aircraft_{0:d}_az'.format(i)] = 0.0
-                label_data['aircraft_{0:d}_dir'.format(i)] = ''
-                continue
-
-
-            if aircraft['squawk']:
-                aircraft_squawk = aircraft['squawk']
-            else:
-                aircraft_squawk = ''
-
-            if aircraft['flight']:
-                aircraft_flight = aircraft['flight']
-            else:
-                aircraft_flight = ''
-
-            label_data['aircraft_{0:d}_id'.format(i)] = aircraft['id']
-            label_data['aircraft_{0:d}_squawk'.format(i)] = aircraft_squawk
-            label_data['aircraft_{0:d}_flight'.format(i)] = aircraft_flight
-            label_data['aircraft_{0:d}_distance'.format(i)] = aircraft['distance']
-            label_data['aircraft_{0:d}_altitude'.format(i)] = aircraft['altitude']
-            label_data['aircraft_{0:d}_alt'.format(i)] = aircraft['alt']
-            label_data['aircraft_{0:d}_az'.format(i)] = aircraft['az']
-            label_data['aircraft_{0:d}_dir'.format(i)] = aircraft['az']
-
-            try:
-                label_data['aircraft_{0:d}_dir'.format(i)] = self.cardinal_directions[round(aircraft['az'] / 22.5)]
-            except IndexError:
-                logger.error('Unable to calculate wind direction')
-                label_data['aircraft_{0:d}_dir'.format(i)] = 'Error'
-
-
         image_label = image_label_tmpl.format(**label_data)  # fill in the data
 
 
@@ -2075,6 +2033,15 @@ class ImageProcessor(object):
         if self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
             # Solar eclipse
             image_label += '\n* SOLAR ECLIPSE *'
+
+
+        # aircraft lines
+        adsb_aircraft_lines = self.get_adsb_aircraft_text(adsb_aircraft_list)
+        if adsb_aircraft_lines:
+            logger.info('Adding aircraft text')
+
+            for line in adsb_aircraft_lines:
+                image_label += '\n{0:s}'.format(line)
 
 
         # add extra text to image
@@ -2389,6 +2356,46 @@ class ImageProcessor(object):
         #logger.info('Extra text: %s', extra_lines)
 
         return extra_lines
+
+
+    def get_adsb_aircraft_text(self, adsb_aircraft_list):
+        if not self.config.get('ADSB', {}).get('LABEL_ENABLE'):
+            return list()
+
+        aircraft_lines = []
+
+
+        for line in self.config.get('ADSB', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '').splitlines():
+            aircraft_lines.append(line)
+
+
+        label_limit = self.config.get('ADSB', {}).get('LABEL_LIMIT', 10)
+        aircraft_tmpl = self.config.get('ADSB', {}).get('AIRCRAFT_LABEL_TEMPLATE', '')
+        for i in range(label_limit):
+            try:
+                aircraft = adsb_aircraft_list[i].copy()
+            except IndexError:
+                break
+
+
+            if not aircraft['squawk']:
+                aircraft['squawk'] = ''
+
+            if not aircraft['flight']:
+                aircraft['flight'] = ''
+
+
+            try:
+                aircraft['dir'] = self.cardinal_directions[round(aircraft['az'] / 22.5)]
+            except IndexError:
+                logger.error('Unable to calculate aircraft direction')
+                aircraft['dir'] = 'Error'
+
+
+            aircraft_lines.append(aircraft_tmpl.format(**aircraft))  # fill in the data
+
+
+        return aircraft_lines
 
 
     def _text_next_line(self):
