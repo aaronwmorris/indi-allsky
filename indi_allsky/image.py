@@ -1447,7 +1447,24 @@ class ImageWorker(Process):
             'latitude'            : self.position_av[0],
             'longitude'           : self.position_av[1],
             'elevation'           : int(self.position_av[2]),
+            'kpindex'             : i_ref['kpindex'],
+            'ovation_max'         : int(i_ref['ovation_max']),
+            'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
+            'aircraft'            : len(self.adsb_aircraft_list),
+
         }
+
+
+        # system temp sensors
+        for i, v in enumerate(self.sensors_temp_av):
+            sensor_topic = 'sensor_temp_{0:d}'.format(i)
+            status[sensor_topic] = v
+
+
+        # user sensors
+        for i, v in enumerate(self.sensors_user_av):
+            sensor_topic = 'sensor_user_{0:d}'.format(i)
+            status[sensor_topic] = v
 
 
         indi_allsky_status_p = Path('/var/lib/indi-allsky/indi_allsky_status.json')
