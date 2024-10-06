@@ -62,7 +62,7 @@ class AdsbAircraftHttpWorker(Thread):
                 allow_redirects=True,
                 verify=verify,
                 auth=basic_auth,
-                timeout=(5.0, 5.0),
+                timeout=(4.0, 4.0),
             )
         except socket.gaierror as e:
             logger.error('Socket error: %s', str(e))

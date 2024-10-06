@@ -89,7 +89,7 @@ class ImageProcessor(object):
     }
 
 
-    wind_directions = ('N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N')
+    cardinal_directions = ('N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N')
 
 
     def __init__(
@@ -137,8 +137,6 @@ class ImageProcessor(object):
         self._text_anchor_pillow = 'la'
         self._text_size_pillow = 0
         self._text_font_height = 0
-
-        self._adsb_aircraft_list = []  # ADSB
 
         self._libcamera_raw = False
 
@@ -309,15 +307,6 @@ class ImageProcessor(object):
     @text_font_height.setter
     def text_font_height(self, new_height):
         self._text_font_height = int(new_height)
-
-
-    @property
-    def adsb_aircraft_list(self):
-        return self._adsb_aircraft_list
-
-    @adsb_aircraft_list.setter
-    def adsb_aircraft_list(self, new_aircraft_list):
-        self._adsb_aircraft_list = new_aircraft_list
 
 
     def add(self, filename, exposure, exp_date, exp_elapsed, camera):
@@ -1869,7 +1858,7 @@ class ImageProcessor(object):
         return satellite_data
 
 
-    def get_image_label(self, i_ref):
+    def get_image_label(self, i_ref, adsb_aircraft_list):
         image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
 
 
@@ -2022,10 +2011,52 @@ class ImageProcessor(object):
 
         # wind direction
         try:
-            label_data['wind_dir'] = self.wind_directions[round(self.sensors_user_av[6] / 22.5)]
+            label_data['wind_dir'] = self.cardinal_directions[round(self.sensors_user_av[6] / 22.5)]
         except IndexError:
             logger.error('Unable to calculate wind direction')
             label_data['wind_dir'] = 'Error'
+
+
+        # aircraft
+        for i in range(20):
+            try:
+                aircraft = adsb_aircraft_list[i]
+            except IndexError:
+                label_data['aircraft_{0:d}_id'.format(i)] = ''
+                label_data['aircraft_{0:d}_squawk'.format(i)] = ''
+                label_data['aircraft_{0:d}_flight'.format(i)] = ''
+                label_data['aircraft_{0:d}_distance'.format(i)] = 0.0
+                label_data['aircraft_{0:d}_altitude'.format(i)] = 0.0
+                label_data['aircraft_{0:d}_alt'.format(i)] = 0.0
+                label_data['aircraft_{0:d}_az'.format(i)] = 0.0
+                label_data['aircraft_{0:d}_dir'.format(i)] = ''
+                continue
+
+
+            if aircraft['squawk']:
+                aircraft_squawk = aircraft['squawk']
+            else:
+                aircraft_squawk = ''
+
+            if aircraft['flight']:
+                aircraft_flight = aircraft['flight']
+            else:
+                aircraft_flight = ''
+
+            label_data['aircraft_{0:d}_id'.format(i)] = aircraft['id']
+            label_data['aircraft_{0:d}_squawk'.format(i)] = aircraft_squawk
+            label_data['aircraft_{0:d}_flight'.format(i)] = aircraft_flight
+            label_data['aircraft_{0:d}_distance'.format(i)] = aircraft['distance']
+            label_data['aircraft_{0:d}_altitude'.format(i)] = aircraft['altitude']
+            label_data['aircraft_{0:d}_alt'.format(i)] = aircraft['alt']
+            label_data['aircraft_{0:d}_az'.format(i)] = aircraft['az']
+            label_data['aircraft_{0:d}_dir'.format(i)] = aircraft['az']
+
+            try:
+                label_data['aircraft_{0:d}_dir'.format(i)] = self.cardinal_directions[round(aircraft['az'] / 22.5)]
+            except IndexError:
+                logger.error('Unable to calculate wind direction')
+                label_data['aircraft_{0:d}_dir'.format(i)] = 'Error'
 
 
         image_label = image_label_tmpl.format(**label_data)  # fill in the data
@@ -2058,7 +2089,7 @@ class ImageProcessor(object):
         return image_label
 
 
-    def label_image(self):
+    def label_image(self, adsb_aircraft_list=[]):
         # this needs to be enabled during focus mode
 
 
@@ -2076,9 +2107,9 @@ class ImageProcessor(object):
         image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
 
         if image_label_system == 'opencv':
-            self._label_image_opencv(i_ref)
+            self._label_image_opencv(i_ref, adsb_aircraft_list)
         elif image_label_system == 'pillow':
-            self._label_image_pillow(i_ref)
+            self._label_image_pillow(i_ref, adsb_aircraft_list)
         else:
             logger.warning('Image labels disabled')
             return
@@ -2153,7 +2184,7 @@ class ImageProcessor(object):
             logger.error('Unknown orb display mode: %s', orb_mode)
 
 
-    def _label_image_opencv(self, i_ref):
+    def _label_image_opencv(self, i_ref, adsb_aircraft_list):
         image_height, image_width = self.image.shape[:2]
 
 
@@ -2180,7 +2211,7 @@ class ImageProcessor(object):
             return
 
 
-        image_label = self.get_image_label(i_ref)
+        image_label = self.get_image_label(i_ref, adsb_aircraft_list)
 
 
         for line in image_label.split('\n'):
@@ -2226,7 +2257,7 @@ class ImageProcessor(object):
         )
 
 
-    def _label_image_pillow(self, i_ref):
+    def _label_image_pillow(self, i_ref, adsb_aircraft_list):
         img_rgb = Image.fromarray(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
         image_width, image_height  = img_rgb.size  # backwards from opencv
 
@@ -2272,7 +2303,7 @@ class ImageProcessor(object):
             return
 
 
-        image_label = self.get_image_label(i_ref)
+        image_label = self.get_image_label(i_ref, adsb_aircraft_list)
 
 
         for line in image_label.split('\n'):

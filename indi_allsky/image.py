@@ -647,7 +647,7 @@ class ImageWorker(Process):
         # get ADS-B data
         if self.adsb_worker:
             try:
-                self.adsb_aircraft_list = self.adsb_aircraft_q.get(timeout=3.0)
+                self.adsb_aircraft_list = self.adsb_aircraft_q.get(timeout=5.0)
             except queue.Empty:
                 self.adsb_aircraft_list = []
 
@@ -657,10 +657,8 @@ class ImageWorker(Process):
             self.adsb_worker.join()
             self.adsb_worker = None
 
-            self.image_processor.adsb_aircraft_list = self.adsb_aircraft_list
 
-
-        self.image_processor.label_image()
+        self.image_processor.label_image(adsb_aircraft_list=self.adsb_aircraft_list)
 
 
         processing_elapsed_s = time.time() - processing_start
@@ -715,6 +713,13 @@ class ImageWorker(Process):
 
             for i, v in enumerate(self.sensors_user_av):
                 image_add_data['sensor_user_{0:d}'.format(i)] = v
+
+            if self.adsb_aircraft_list:
+                image_add_data['aircraft'] = list()
+
+                for aircraft in self.adsb_aircraft_list:
+                    image_add_data['aircraft'].append(aircraft)
+
 
             image_metadata['data'] = image_add_data
 
