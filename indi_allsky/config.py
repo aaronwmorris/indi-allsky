@@ -511,7 +511,11 @@ class IndiAllSkyConfigBase(object):
             "USERNAME"               : "",
             "PASSWORD"               : "",
             "PASSWORD_E"             : "",
-            "ALT_DEG_MIN"            : 20.0,
+            "ALT_DEG_MIN"            : 30.0,
+            'LABEL_ENABLE'           : False,
+            "LABEL_LIMIT"            : 10,
+            "AIRCRAFT_LABEL_TEMPLATE"      : "{id:s} {distance:0.1f} {alt:0.1f}",
+            "IMAGE_LABEL_TEMPLATE_PREFIX"  : "# xy:-15,200 (Right)\n# anchor:ra (Right Justified)\nAircraft",
         },
     })
 
