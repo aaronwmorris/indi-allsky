@@ -197,5 +197,9 @@ class AdsbAircraftHttpWorker(Thread):
             })
 
 
-        return aircraft_list
+        # sort by closest aircraft
+        sorted_aircraft_list = sorted(aircraft_list, key=lambda x: x['distance'])
+
+
+        return sorted_aircraft_list
 
