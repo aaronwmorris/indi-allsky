@@ -2379,6 +2379,7 @@ class ImageProcessor(object):
             try:
                 aircraft = adsb_aircraft_list[i].copy()
             except IndexError:
+                # no more aircraft
                 break
 
 
@@ -2388,6 +2389,8 @@ class ImageProcessor(object):
             if not aircraft['flight']:
                 aircraft['flight'] = ''
 
+            if not aircraft['hex']:
+                aircraft['hex'] = ''
 
             try:
                 aircraft['dir'] = self.cardinal_directions[round(aircraft['az'] / 22.5)]

@@ -140,31 +140,39 @@ class AdsbAircraftHttpWorker(Thread):
 
             aircraft_flight = aircraft.get('flight')
             aircraft_squawk = aircraft.get('squawk')
+            aircraft_hex = aircraft.get('hex')
+
 
             if aircraft_flight:
-                aircraft_id = str(aircraft_flight).rstrip()
+                aircraft_flight = aircraft_flight.rstrip()
+
+
+            if aircraft_flight:
+                aircraft_id = str(aircraft_flight)
             elif aircraft_squawk:
-                aircraft_id = str(aircraft_squawk).rstrip()
+                aircraft_id = str(aircraft_squawk)
+            elif aircraft_hex:
+                aircraft_id = str(aircraft_hex)
             else:
-                logger.warning('No aircraft ID')
-                continue
+                aircraft_id = 'Unknown'
 
 
             # lets just assume a flat earth... it just makes the math easier  :-)
-            distance_deg = math.sqrt((aircraft_lon - self.longitude) ** 2 + (aircraft_lat - self.latitude) ** 2)
-            aircraft_distance_m = distance_deg * 111317  # convert to meters
+            aircraft_distance_deg = math.sqrt((aircraft_lon - self.longitude) ** 2 + (aircraft_lat - self.latitude) ** 2)
+            aircraft_distance_m = aircraft_distance_deg * 111317  # convert to meters
 
 
             # calculate observer info (alt/az astronomy terms)
             aircraft_alt = math.degrees(math.atan((aircraft_altitude_m - self.elevation) / aircraft_distance_m))  # offset aircraft altitude by local elevation
             aircraft_az = math.degrees(math.atan2(aircraft_lat - self.latitude, aircraft_lon - self.longitude))  # y first... why?
 
+
             if aircraft_az < 0:
                 aircraft_az += 360
 
 
-            if aircraft_distance_m > 50000:
-                logger.warning('Aircraft more than 50km away, geographic lat/long may be wrong')
+            if aircraft_distance_m > 75000:
+                logger.warning('Aircraft more than 75km away, geographic lat/long may be wrong')
 
 
             if aircraft_alt < alt_min_deg:
@@ -190,6 +198,7 @@ class AdsbAircraftHttpWorker(Thread):
                 'id'        : aircraft_id,
                 'flight'    : aircraft_flight,
                 'squawk'    : aircraft_squawk,
+                'hex'       : aircraft_hex,
                 'altitude'  : aircraft_altitude_km,
                 'distance'  : aircraft_distance_km,
                 'alt'       : aircraft_alt,
