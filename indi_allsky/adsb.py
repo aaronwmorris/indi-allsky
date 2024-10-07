@@ -161,8 +161,20 @@ class AdsbAircraftHttpWorker(Thread):
 
 
             # calculate observer info (alt/az astronomy terms)
-            aircraft_alt = math.degrees(math.atan((aircraft_altitude_m - self.elevation) / aircraft_distance_m))  # offset aircraft altitude by local elevation
-            aircraft_angle = math.degrees(math.atan2(aircraft_lat - self.latitude, aircraft_lon - self.longitude)) + 90  # y first... why?
+            aircraft_alt = math.degrees(math.atan(aircraft_altitude_m / aircraft_distance_m))  # not offsetting by local elevation
+
+
+            lat_dist_m = self.haversine(self.longitude, self.latitude, self.longitude, aircraft_lat)
+            long_dist_m = self.haversine(self.longitude, self.latitude, aircraft_lon, self.latitude)
+
+            if self.latitude > aircraft_lat:
+                lat_dist_m *= -1
+
+            if self.longitude > aircraft_lon:
+                long_dist_m *= -1
+
+
+            aircraft_angle = math.degrees(math.atan2(lat_dist_m, long_dist_m))
 
 
             if aircraft_angle > 90:
