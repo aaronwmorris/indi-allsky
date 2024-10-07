@@ -511,7 +511,7 @@ class IndiAllSkyConfigBase(object):
             "USERNAME"               : "",
             "PASSWORD"               : "",
             "PASSWORD_E"             : "",
-            "ALT_DEG_MIN"            : 30.0,
+            "ALT_DEG_MIN"            : 20.0,
             'LABEL_ENABLE'           : False,
             "LABEL_LIMIT"            : 10,
             "AIRCRAFT_LABEL_TEMPLATE"      : "{id:s} {distance:0.1f}km {alt:0.1f}\u00b0 {dir:s}",
