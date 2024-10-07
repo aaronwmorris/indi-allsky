@@ -111,7 +111,7 @@ class AdsbAircraftHttpWorker(Thread):
 
 
         now = datetime.now()
-        if now.timestamp() - r_data.get('now', 0.0) > 30:
+        if abs(now.timestamp() - r_data.get('now', 0.0)) > 60:
             logger.error('aircraft.json data is out of date')
             self.adsb_aircraft_q.put([])
             return
