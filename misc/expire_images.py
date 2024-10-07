@@ -220,17 +220,16 @@ class ExpireImages(object):
         # catch signals to perform cleaner shutdown
         signal.signal(signal.SIGINT, self.sigint_handler_main)
 
-        self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
-        self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
-        self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
-        self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
-        self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
-        self._deleteAssets(IndiAllSkyDbMiniVideoTable, mini_video_id_list)
-        self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
-        self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
-        self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
-        self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
-
+        delete_count = self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbMiniVideoTable, mini_video_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
 
 
         # Remove empty folders
@@ -249,7 +248,11 @@ class ExpireImages(object):
                 logger.error('Cannot remove folder: %s', str(e))
 
 
+        logger.warning('Deleted %d assets', delete_count)
+
+
     def _deleteAssets(self, table, entry_id_list):
+        delete_count = 0
         for entry_id in entry_id_list:
             entry = table.query\
                 .filter(table.id == entry_id)\
@@ -266,9 +269,12 @@ class ExpireImages(object):
             db.session.delete(entry)
             db.session.commit()
 
+            delete_count += 1
 
             if self._shutdown:
                 sys.exit(1)
+
+        return delete_count
 
 
     def _getFolderFolders(self, folder, dir_list):
