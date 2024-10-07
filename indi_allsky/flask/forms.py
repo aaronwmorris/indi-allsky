@@ -1633,6 +1633,21 @@ def PYCURL_CAMERA__USERNAME_validator(form, field):
         raise ValidationError('Invalid username')
 
 
+def ADSB__USERNAME_validator(form, field):
+    if not field.data:
+        return
+
+    username_regex = r'^[a-zA-Z0-9_\@\.\-]+$'
+
+    if not re.search(username_regex, field.data):
+        raise ValidationError('Invalid username')
+
+
+def ADSB__DUMP1090_URL_validator(form, field):
+    if not field.data:
+        return
+
+
 def FILETRANSFER__PASSWORD_validator(form, field):
     pass
 
@@ -1646,6 +1661,10 @@ def SYNCAPI__APIKEY_validator(form, field):
 
 
 def PYCURL_CAMERA__PASSWORD_validator(form, field):
+    pass
+
+
+def ADSB__PASSWORD_validator(form, field):
     pass
 
 
@@ -2413,6 +2432,56 @@ def HEALTHCHECK__SWAP_USAGE_validator(form, field):
 
     if field.data > 101:
         raise ValidationError('Percentage must be 101 or less')
+
+
+def ADSB__ALT_DEG_MIN_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 5:
+        raise ValidationError('Minimum altitude must be greater than 5')
+
+    if field.data > 90:
+        raise ValidationError('Minimum altitude must be less than 90')
+
+
+def ADSB__IMAGE_LABEL_TEMPLATE_PREFIX_validator(form, field):
+    pass
+
+
+def ADSB__AIRCRAFT_LABEL_TEMPLATE_validator(form, field):
+    test_data = {
+        'id'        : '',
+        'squawk'    : '',
+        'flight'    : '',
+        'hex'       : '',
+        'distance'  : 0.0,
+        'altitude'  : 0.0,
+        'alt'       : 0.0,
+        'az'        : 0.0,
+        'dir'       : '',
+    }
+
+
+    try:
+        field.data.format(**test_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
+def ADSB__LABEL_LIMIT_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+
+    if field.data < 1:
+        raise ValidationError('Limit must be greater than 0')
+
+    if field.data > 20:
+        raise ValidationError('Limit must be 20 or less')
+
 
 
 def INDI_CONFIG_DEFAULTS_validator(form, field):
@@ -3339,6 +3408,16 @@ class IndiAllskyConfigForm(FlaskForm):
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_4            = SelectField('Extra Chart Slot 4', choices=[], validators=[SENSOR_SLOT_validator])
+    ADSB__ENABLE                     = BooleanField('Enable ADS-B Tracking')
+    ADSB__DUMP1090_URL               = StringField('Dump1090 URL', validators=[ADSB__DUMP1090_URL_validator])
+    ADSB__USERNAME                   = StringField('Username', validators=[ADSB__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
+    ADSB__PASSWORD                   = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[ADSB__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
+    ADSB__CERT_BYPASS                = BooleanField('Disable Certificate Validation')
+    ADSB__ALT_DEG_MIN                = FloatField('Minimum Altitude (Degrees)', validators=[DataRequired(), ADSB__ALT_DEG_MIN_validator])
+    ADSB__LABEL_ENABLE               = BooleanField('Enable Image Label')
+    ADSB__LABEL_LIMIT                = IntegerField('Label Limit', validators=[DataRequired(), ADSB__LABEL_LIMIT_validator])
+    ADSB__AIRCRAFT_LABEL_TEMPLATE    = StringField('Aircraft Label Template', validators=[DataRequired(), ADSB__AIRCRAFT_LABEL_TEMPLATE_validator])
+    ADSB__IMAGE_LABEL_TEMPLATE_PREFIX   = TextAreaField('Image Template Prefix', validators=[DataRequired(), ADSB__IMAGE_LABEL_TEMPLATE_PREFIX_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 

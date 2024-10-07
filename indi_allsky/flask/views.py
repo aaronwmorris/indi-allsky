@@ -1873,6 +1873,16 @@ class ConfigView(FormView):
             'CHARTS__CUSTOM_SLOT_2'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)),  # string in form, int in config
             'CHARTS__CUSTOM_SLOT_3'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)),  # string in form, int in config
             'CHARTS__CUSTOM_SLOT_4'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 13)),  # string in form, int in config
+            'ADSB__ENABLE'                   : self.indi_allsky_config.get('ADSB', {}).get('ENABLE', False),
+            'ADSB__DUMP1090_URL'             : self.indi_allsky_config.get('ADSB', {}).get('DUMP1090_URL', 'https://localhost/dump1090/data/aircraft.json'),
+            'ADSB__USERNAME'                 : self.indi_allsky_config.get('ADSB', {}).get('USERNAME', ''),
+            'ADSB__PASSWORD'                 : self.indi_allsky_config.get('ADSB', {}).get('PASSWORD', ''),
+            'ADSB__CERT_BYPASS'              : self.indi_allsky_config.get('ADSB', {}).get('CERT_BYPASS', True),
+            'ADSB__ALT_DEG_MIN'              : self.indi_allsky_config.get('ADSB', {}).get('ALT_DEG_MIN', 20.0),
+            'ADSB__LABEL_ENABLE'             : self.indi_allsky_config.get('ADSB', {}).get('LABEL_ENABLE', False),
+            'ADSB__LABEL_LIMIT'              : self.indi_allsky_config.get('ADSB', {}).get('LABEL_LIMIT', 10),
+            'ADSB__AIRCRAFT_LABEL_TEMPLATE'  : self.indi_allsky_config.get('ADSB', {}).get('AIRCRAFT_LABEL_TEMPLATE', '{id:s} {distance:0.1f}km {alt:0.1f}\u00b0 {dir:s}'),
+            'ADSB__IMAGE_LABEL_TEMPLATE_PREFIX' : self.indi_allsky_config.get('ADSB', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '# xy:-15,200 (Right)\n# anchor:ra (Right Justified)\n# color:200,200,200\nAircraft'),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -2204,6 +2214,9 @@ class AjaxConfigView(BaseView):
 
         if not self.indi_allsky_config.get('CHARTS'):
             self.indi_allsky_config['CHARTS'] = {}
+
+        if not self.indi_allsky_config.get('ADSB'):
+            self.indi_allsky_config['ADSB'] = {}
 
         if not self.indi_allsky_config.get('FITSHEADERS'):
             self.indi_allsky_config['FITSHEADERS'] = [['', ''], ['', ''], ['', ''], ['', ''], ['', '']]
@@ -2602,6 +2615,16 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2']              = int(request.json['CHARTS__CUSTOM_SLOT_2'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_3']              = int(request.json['CHARTS__CUSTOM_SLOT_3'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_4']              = int(request.json['CHARTS__CUSTOM_SLOT_4'])
+        self.indi_allsky_config['ADSB']['ENABLE']                       = bool(request.json['ADSB__ENABLE'])
+        self.indi_allsky_config['ADSB']['DUMP1090_URL']                 = str(request.json['ADSB__DUMP1090_URL'])
+        self.indi_allsky_config['ADSB']['USERNAME']                     = str(request.json['ADSB__USERNAME'])
+        self.indi_allsky_config['ADSB']['PASSWORD']                     = str(request.json['ADSB__PASSWORD'])
+        self.indi_allsky_config['ADSB']['CERT_BYPASS']                  = bool(request.json['ADSB__CERT_BYPASS'])
+        self.indi_allsky_config['ADSB']['ALT_DEG_MIN']                  = float(request.json['ADSB__ALT_DEG_MIN'])
+        self.indi_allsky_config['ADSB']['LABEL_ENABLE']                 = bool(request.json['ADSB__LABEL_ENABLE'])
+        self.indi_allsky_config['ADSB']['LABEL_LIMIT']                  = int(request.json['ADSB__LABEL_LIMIT'])
+        self.indi_allsky_config['ADSB']['AIRCRAFT_LABEL_TEMPLATE']      = str(request.json['ADSB__AIRCRAFT_LABEL_TEMPLATE'])
+        self.indi_allsky_config['ADSB']['IMAGE_LABEL_TEMPLATE_PREFIX']  = str(request.json['ADSB__IMAGE_LABEL_TEMPLATE_PREFIX'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))

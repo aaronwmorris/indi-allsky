@@ -89,7 +89,7 @@ class ImageProcessor(object):
     }
 
 
-    wind_directions = ('N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N')
+    cardinal_directions = ('N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N')
 
 
     def __init__(
@@ -1858,7 +1858,7 @@ class ImageProcessor(object):
         return satellite_data
 
 
-    def get_image_label(self, i_ref):
+    def get_image_label(self, i_ref, adsb_aircraft_list):
         image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
 
 
@@ -2011,7 +2011,7 @@ class ImageProcessor(object):
 
         # wind direction
         try:
-            label_data['wind_dir'] = self.wind_directions[round(self.sensors_user_av[6] / 22.5)]
+            label_data['wind_dir'] = self.cardinal_directions[round(self.sensors_user_av[6] / 22.5)]
         except IndexError:
             logger.error('Unable to calculate wind direction')
             label_data['wind_dir'] = 'Error'
@@ -2035,6 +2035,15 @@ class ImageProcessor(object):
             image_label += '\n* SOLAR ECLIPSE *'
 
 
+        # aircraft lines
+        adsb_aircraft_lines = self.get_adsb_aircraft_text(adsb_aircraft_list)
+        if adsb_aircraft_lines:
+            logger.info('Adding aircraft text')
+
+            for line in adsb_aircraft_lines:
+                image_label += '\n{0:s}'.format(line)
+
+
         # add extra text to image
         extra_text_lines = self.get_extra_text()
         if extra_text_lines:
@@ -2047,7 +2056,7 @@ class ImageProcessor(object):
         return image_label
 
 
-    def label_image(self):
+    def label_image(self, adsb_aircraft_list=[]):
         # this needs to be enabled during focus mode
 
 
@@ -2065,9 +2074,9 @@ class ImageProcessor(object):
         image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
 
         if image_label_system == 'opencv':
-            self._label_image_opencv(i_ref)
+            self._label_image_opencv(i_ref, adsb_aircraft_list)
         elif image_label_system == 'pillow':
-            self._label_image_pillow(i_ref)
+            self._label_image_pillow(i_ref, adsb_aircraft_list)
         else:
             logger.warning('Image labels disabled')
             return
@@ -2142,7 +2151,7 @@ class ImageProcessor(object):
             logger.error('Unknown orb display mode: %s', orb_mode)
 
 
-    def _label_image_opencv(self, i_ref):
+    def _label_image_opencv(self, i_ref, adsb_aircraft_list):
         image_height, image_width = self.image.shape[:2]
 
 
@@ -2169,7 +2178,7 @@ class ImageProcessor(object):
             return
 
 
-        image_label = self.get_image_label(i_ref)
+        image_label = self.get_image_label(i_ref, adsb_aircraft_list)
 
 
         for line in image_label.split('\n'):
@@ -2215,7 +2224,7 @@ class ImageProcessor(object):
         )
 
 
-    def _label_image_pillow(self, i_ref):
+    def _label_image_pillow(self, i_ref, adsb_aircraft_list):
         img_rgb = Image.fromarray(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
         image_width, image_height  = img_rgb.size  # backwards from opencv
 
@@ -2261,7 +2270,7 @@ class ImageProcessor(object):
             return
 
 
-        image_label = self.get_image_label(i_ref)
+        image_label = self.get_image_label(i_ref, adsb_aircraft_list)
 
 
         for line in image_label.split('\n'):
@@ -2347,6 +2356,53 @@ class ImageProcessor(object):
         #logger.info('Extra text: %s', extra_lines)
 
         return extra_lines
+
+
+    def get_adsb_aircraft_text(self, adsb_aircraft_list):
+        if not self.config.get('ADSB', {}).get('ENABLE'):
+            return list()
+
+        if not self.config.get('ADSB', {}).get('LABEL_ENABLE'):
+            return list()
+
+
+        aircraft_lines = []
+
+
+        for line in self.config.get('ADSB', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '').splitlines():
+            aircraft_lines.append(line)
+
+
+        label_limit = self.config.get('ADSB', {}).get('LABEL_LIMIT', 10)
+        aircraft_tmpl = self.config.get('ADSB', {}).get('AIRCRAFT_LABEL_TEMPLATE', '')
+        for i in range(label_limit):
+            try:
+                aircraft = adsb_aircraft_list[i].copy()
+            except IndexError:
+                # no more aircraft
+                break
+
+
+            if not aircraft['squawk']:
+                aircraft['squawk'] = ''
+
+            if not aircraft['flight']:
+                aircraft['flight'] = ''
+
+            if not aircraft['hex']:
+                aircraft['hex'] = ''
+
+            try:
+                aircraft['dir'] = self.cardinal_directions[round(aircraft['az'] / 22.5)]
+            except IndexError:
+                logger.error('Unable to calculate aircraft direction')
+                aircraft['dir'] = 'Error'
+
+
+            aircraft_lines.append(aircraft_tmpl.format(**aircraft))  # fill in the data
+
+
+        return aircraft_lines
 
 
     def _text_next_line(self):

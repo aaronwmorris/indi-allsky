@@ -4,7 +4,7 @@
 
 {% block head %}
 <style>
-#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab {
+#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab {
 	width: 150px;
 	margin-top: 10px;
 	margin-right: 5px;
@@ -49,6 +49,7 @@ var camera_id = {{ camera_id }};
     <button class="nav-link link-light bg-dark" id="nav-syncapi-tab" data-bs-toggle="tab" data-bs-target="#nav-syncapi" type="button" role="tab" aria-controls="nav-syncapi" aria-selected="false">SyncAPI</button>
     <button class="nav-link link-primary bg-dark" id="nav-sensors-tab" data-bs-toggle="tab" data-bs-target="#nav-sensors" type="button" role="tab" aria-controls="nav-sensors" aria-selected="false">Sensors</button>
     <button class="nav-link link-danger bg-dark" id="nav-devices-tab" data-bs-toggle="tab" data-bs-target="#nav-devices" type="button" role="tab" aria-controls="nav-devices" aria-selected="false">Devices</button>
+    <button class="nav-link link-secondary bg-dark" id="nav-adsb-tab" data-bs-toggle="tab" data-bs-target="#nav-adsb" type="button" role="tab" aria-controls="nav-adsb" aria-selected="false">ADS-B</button>
   </div>
 </nav>
 
@@ -5493,6 +5494,137 @@ var camera_id = {{ camera_id }};
 
 </div><!-- end devices tab -->
 
+<div class="tab-pane fade" id="nav-adsb" role="tabpanel" aria-labelledby="nav-adsb-tab">
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ADSB__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ADSB__ENABLE(class='form-check-input') }}
+                <div id="ADSB__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/ADS%E2%80%90B-Aircraft-Tracking" class="text-decoration-none link-info" target="_blank">ADS-B Aircraft Tracking Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ADSB__DUMP1090_URL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-6">
+            {{ form_config.ADSB__DUMP1090_URL(class='form-control bg-secondary') }}
+            <div id="ADSB__DUMP1090_URL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            <div>aircraft.json URL</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ADSB__USERNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.ADSB__USERNAME(class='form-control bg-secondary') }}
+            <div id="ADSB__USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">HTTP Username</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ADSB__PASSWORD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.ADSB__PASSWORD(class='form-control bg-secondary') }}
+            <div id="ADSB__PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">HTTP Password</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ADSB__CERT_BYPASS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ADSB__CERT_BYPASS(class='form-check-input') }}
+                <div id="ADSB__CERT_BYPASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Bypass certificate validation</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ADSB__ALT_DEG_MIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ADSB__ALT_DEG_MIN(class='form-control bg-secondary') }}
+            <div id="ADSB__ALT_DEG_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Minimum visual altitude of aircraft in degrees</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ADSB__LABEL_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ADSB__LABEL_ENABLE(class='form-check-input') }}
+                <div id="ADSB__LABEL_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ADSB__LABEL_LIMIT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ADSB__LABEL_LIMIT(class='form-control bg-secondary') }}
+            <div id="ADSB__LABEL_LIMIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Limit number of aircraft to label on image</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ADSB__IMAGE_LABEL_TEMPLATE_PREFIX.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-6">
+            {{ form_config.ADSB__IMAGE_LABEL_TEMPLATE_PREFIX(class='form-control bg-secondary', rows='10') }}
+            <div id="ADSB__IMAGE_LABEL_TEMPLATE_PREFIX-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ADSB__AIRCRAFT_LABEL_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.ADSB__AIRCRAFT_LABEL_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="ADSB__AIRCRAFT_LABEL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
+    </div>
+
+</div><!-- end adsb tab -->
+
 </div>
 
 
@@ -5863,6 +5995,13 @@ const field_names = [
     'TEMP_SENSOR__SI1145_IR_GAIN_DAY',
     'TEMP_SENSOR__LTR390_GAIN_NIGHT',
     'TEMP_SENSOR__LTR390_GAIN_DAY',
+    'ADSB__DUMP1090_URL',
+    'ADSB__USERNAME',
+    'ADSB__PASSWORD',
+    'ADSB__ALT_DEG_MIN',
+    'ADSB__LABEL_LIMIT',
+    'ADSB__AIRCRAFT_LABEL_TEMPLATE',
+    'ADSB__IMAGE_LABEL_TEMPLATE_PREFIX',
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',
@@ -5961,6 +6100,9 @@ const checkbox_field_names = [
     'FAN__INVERT_OUTPUT',
     'FAN__THOLD_ENABLE',
     'GENERIC_GPIO__A_INVERT_OUTPUT',
+    'ADSB__ENABLE',
+    'ADSB__CERT_BYPASS',
+    'ADSB__LABEL_ENABLE',
     'WEB_NONLOCAL_IMAGES',
     'WEB_LOCAL_IMAGES_ADMIN',
     'RELOAD_ON_SAVE',

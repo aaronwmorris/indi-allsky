@@ -17,6 +17,7 @@ import traceback
 #from pprint import pformat
 
 from multiprocessing import Process
+from multiprocessing import Queue
 #from threading import Thread
 import queue
 
@@ -32,6 +33,7 @@ from . import constants
 
 from .processing import ImageProcessor
 from .miscUpload import miscUpload
+from .adsb import AdsbAircraftHttpWorker
 
 from .flask import create_app
 from .flask import db
@@ -133,6 +135,11 @@ class ImageWorker(Process):
         }
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
+
+        self.adsb_worker = None
+        self.adsb_worker_idx = 0
+        self.adsb_aircraft_q = None
+        self.adsb_aircraft_list = []
 
         self.generate_mask_base = True
 
@@ -325,6 +332,21 @@ class ImageWorker(Process):
 
         ### simulate performance degradation
         #time.sleep(30)
+
+
+        ### start fetching ADSB info
+        if self.config.get('ADSB', {}).get('ENABLE'):
+            self.adsb_aircraft_q = Queue()
+            self.adsb_worker_idx += 1
+            self.adsb_worker = AdsbAircraftHttpWorker(
+                self.adsb_worker_idx,
+                self.config,
+                self.adsb_aircraft_q,
+                self.position_av[0],  # lat
+                self.position_av[1],  # long
+                self.position_av[2],  # elev
+            )
+            self.adsb_worker.start()
 
 
         self.image_processor.get_astrometric_data()
@@ -621,7 +643,22 @@ class ImageWorker(Process):
 
         self.image_processor.cardinal_dirs_label()
 
-        self.image_processor.label_image()
+
+        # get ADS-B data
+        if self.adsb_worker:
+            try:
+                self.adsb_aircraft_list = self.adsb_aircraft_q.get(timeout=5.0)
+            except queue.Empty:
+                self.adsb_aircraft_list = []
+
+            self.adsb_aircraft_q.close()
+            self.adsb_aircraft_q = None
+
+            self.adsb_worker.join()
+            self.adsb_worker = None
+
+
+        self.image_processor.label_image(adsb_aircraft_list=self.adsb_aircraft_list)
 
 
         processing_elapsed_s = time.time() - processing_start
@@ -676,6 +713,13 @@ class ImageWorker(Process):
 
             for i, v in enumerate(self.sensors_user_av):
                 image_add_data['sensor_user_{0:d}'.format(i)] = v
+
+            if self.adsb_aircraft_list:
+                image_add_data['aircraft'] = list()
+
+                for aircraft in self.adsb_aircraft_list:
+                    image_add_data['aircraft'].append(aircraft)
+
 
             image_metadata['data'] = image_add_data
 
@@ -735,6 +779,7 @@ class ImageWorker(Process):
                 'kpindex'  : round(i_ref['kpindex'], 2),
                 'ovation_max'  : int(i_ref['ovation_max']),
                 'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
+                'aircraft' : len(self.adsb_aircraft_list),
                 'sidereal_time': self.astrometric_data['sidereal_time'],
             }
 
@@ -916,6 +961,7 @@ class ImageWorker(Process):
             'kpindex'             : i_ref['kpindex'],
             'ovation_max'         : i_ref['ovation_max'],
             'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
+            'aircraft'            : len(self.adsb_aircraft_list),
         }
 
 
@@ -1401,7 +1447,24 @@ class ImageWorker(Process):
             'latitude'            : self.position_av[0],
             'longitude'           : self.position_av[1],
             'elevation'           : int(self.position_av[2]),
+            'kpindex'             : i_ref['kpindex'],
+            'ovation_max'         : int(i_ref['ovation_max']),
+            'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
+            'aircraft'            : len(self.adsb_aircraft_list),
+
         }
+
+
+        # system temp sensors
+        for i, v in enumerate(self.sensors_temp_av):
+            sensor_topic = 'sensor_temp_{0:d}'.format(i)
+            status[sensor_topic] = v
+
+
+        # user sensors
+        for i, v in enumerate(self.sensors_user_av):
+            sensor_topic = 'sensor_user_{0:d}'.format(i)
+            status[sensor_topic] = v
 
 
         indi_allsky_status_p = Path('/var/lib/indi-allsky/indi_allsky_status.json')
@@ -1674,4 +1737,5 @@ class ImageWorker(Process):
         logger.warning('New calculated exposure: %0.8f', new_exposure)
         with self.exposure_av.get_lock():
             self.exposure_av[0] = new_exposure
+
 
