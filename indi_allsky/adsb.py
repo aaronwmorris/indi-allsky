@@ -157,9 +157,7 @@ class AdsbAircraftHttpWorker(Thread):
                 aircraft_id = 'Unknown'
 
 
-            # lets just assume a flat earth... it just makes the math easier  :-)
-            aircraft_distance_deg = math.sqrt((aircraft_lon - self.longitude) ** 2 + (aircraft_lat - self.latitude) ** 2)
-            aircraft_distance_m = aircraft_distance_deg * 111317  # convert to meters
+            aircraft_distance_m = self.haversine(self.longitude, self.latitude, aircraft_lon, aircraft_lat)
 
 
             # calculate observer info (alt/az astronomy terms)
@@ -213,4 +211,21 @@ class AdsbAircraftHttpWorker(Thread):
 
 
         return sorted_aircraft_list
+
+
+    def haversine(self, lon1, lat1, lon2, lat2):
+        """
+        Calculate the great circle distance in kilometers between two points
+        on the earth (specified in decimal degrees)
+        """
+        # convert decimal degrees to radians
+        lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
+
+        # haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        c = 2 * math.asin(math.sqrt(a))
+        r = 6378100  # Radius of earth in meters
+        return c * r
 
