@@ -175,14 +175,14 @@ class AdsbAircraftHttpWorker(Thread):
                 logger.warning('Aircraft more than 75km away, geographic lat/long may be wrong')
 
 
-            if aircraft_alt < alt_min_deg:
-                logger.info('Aircraft below minimum visual altitude: %0.1f deg', aircraft_alt)
-                continue
-
-
             #aircraft_distance_nmi = aircraft_distance_m * 0.0005399568
             aircraft_altitude_km = aircraft_altitude_m / 1000
             aircraft_distance_km = aircraft_distance_m / 1000
+
+
+            if aircraft_alt < alt_min_deg:
+                logger.info('Aircraft below minimum visual altitude: %s %0.1f alt / %0.1f az (%0.1fkm)', aircraft_id, aircraft_alt, aircraft_az, aircraft_distance_km)
+                continue
 
 
             logger.info(
