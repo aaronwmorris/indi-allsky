@@ -4111,17 +4111,6 @@ class AjaxSystemInfoView(BaseView):
             .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
 
-        image_count = image_query.count()
-        fits_image_count = fits_image_query.count()
-        raw_image_count = raw_image_query.count()
-        panorama_image_count = panorama_image_query.count()
-
-        file_count = image_count
-        file_count += fits_image_count
-        file_count += raw_image_count
-        file_count += panorama_image_count
-
-
         ### Getting IDs first then deleting each file is faster than deleting all files with
         ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
         ### to recache after every delete which cause a 1-5 second lag for each delete
@@ -4143,13 +4132,13 @@ class AjaxSystemInfoView(BaseView):
             panorama_image_id_list.append(entry.id)
 
 
-        self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
-        self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
-        self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
-        self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
+        delete_count = self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
 
 
-        return file_count
+        return delete_count
 
 
     def flushTimelapses(self, camera_id):
@@ -4183,21 +4172,6 @@ class AjaxSystemInfoView(BaseView):
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .order_by(IndiAllSkyDbPanoramaVideoTable.createDate.asc())
 
-        video_count = video_query.count()
-        mini_video_count = mini_video_query.count()
-        keogram_count = keogram_query.count()
-        startrail_count = startrail_query.count()
-        startrail_video_count = startrail_video_query.count()
-        panorama_video_count = panorama_video_query.count()
-
-
-        file_count = video_count
-        file_count += mini_video_count
-        file_count += keogram_count
-        file_count += startrail_count
-        file_count += startrail_video_count
-        file_count += panorama_video_count
-
 
         ### Getting IDs first then deleting each file is faster than deleting all files with
         ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
@@ -4228,15 +4202,15 @@ class AjaxSystemInfoView(BaseView):
             panorama_video_id_list.append(entry.id)
 
 
-        self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
-        self._deleteAssets(IndiAllSkyDbMiniVideoTable, mini_video_id_list)
-        self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
-        self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
-        self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
-        self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
+        delete_count = self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbMiniVideoTable, mini_video_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
 
 
-        return file_count
+        return delete_count
 
 
     def flushDaytime(self, camera_id):
@@ -4300,15 +4274,6 @@ class AjaxSystemInfoView(BaseView):
         ## no startrail videos
 
 
-        file_count = image_query.count()
-        file_count += fits_image_query.count()
-        file_count += raw_image_query.count()
-        file_count += panorama_image_query.count()
-        file_count += video_query.count()
-        file_count += keogram_query.count()
-        file_count += panorama_video_query.count()
-
-
         ### Getting IDs first then deleting each file is faster than deleting all files with
         ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
         ### to recache after every delete which cause a 1-5 second lag for each delete
@@ -4343,19 +4308,20 @@ class AjaxSystemInfoView(BaseView):
             panorama_video_id_list.append(entry.id)
 
 
-        self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
-        self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
-        self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
-        self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
-        self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
-        self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
-        self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
+        delete_count = self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
+        delete_count += self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
 
 
-        return file_count
+        return delete_count
 
 
     def _deleteAssets(self, table, entry_id_list):
+        delete_count = 0
         for entry_id in entry_id_list:
             entry = table.query\
                 .filter(table.id == entry_id)\
@@ -4371,6 +4337,10 @@ class AjaxSystemInfoView(BaseView):
 
             db.session.delete(entry)
             db.session.commit()
+
+            delete_count += 1
+
+        return delete_count
 
 
     def validateDbEntries(self):
@@ -5241,29 +5211,25 @@ class AjaxTimelapseGeneratorView(BaseView):
                 .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
 
-            image_count = image_list.count()
-            image_count += panorama_list.count()
-
-
             ### Getting IDs first then deleting each file is faster than deleting all files with
             ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
             ### to recache after every delete which cause a 1-5 second lag for each delete
 
             image_id_list = list()
-            for entry in image_id_list:
+            for entry in image_list:
                 image_id_list.append(entry.id)
 
             panorama_image_id_list = list()
-            for entry in panorama_image_id_list:
+            for entry in panorama_list:
                 panorama_image_id_list.append(entry.id)
 
 
-            self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
-            self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
+            delete_count = self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
+            delete_count += self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
 
 
             message = {
-                'success-message' : '{0:d} images deleted'.format(image_count),
+                'success-message' : '{0:d} images deleted'.format(delete_count),
             }
             return jsonify(message)
         else:
@@ -5275,6 +5241,7 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
     def _deleteAssets(self, table, entry_id_list):
+        delete_count = 0
         for entry_id in entry_id_list:
             entry = table.query\
                 .filter(table.id == entry_id)\
@@ -5290,6 +5257,10 @@ class AjaxTimelapseGeneratorView(BaseView):
 
             db.session.delete(entry)
             db.session.commit()
+
+            delete_count += 1
+
+        return delete_count
 
 
 class FocusView(TemplateView):
