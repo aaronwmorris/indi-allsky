@@ -1,3 +1,4 @@
+from datetime import datetime
 import math
 import socket
 import ssl
@@ -105,6 +106,13 @@ class AdsbAircraftHttpWorker(Thread):
             r_data = r.json()
         except json.JSONDecodeError as e:
             logger.error('JSON decode error: %s', str(e))
+            self.adsb_aircraft_q.put([])
+            return
+
+
+        now = datetime.now()
+        if now.timestamp() - r_data.get('now', 0.0) > 30:
+            logger.error('aircraft.json data is out of date')
             self.adsb_aircraft_q.put([])
             return
 

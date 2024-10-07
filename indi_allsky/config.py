@@ -512,7 +512,7 @@ class IndiAllSkyConfigBase(object):
             "PASSWORD"               : "",
             "PASSWORD_E"             : "",
             "ALT_DEG_MIN"            : 20.0,
-            'LABEL_ENABLE'           : False,
+            "LABEL_ENABLE"           : False,
             "LABEL_LIMIT"            : 10,
             "AIRCRAFT_LABEL_TEMPLATE"      : "{id:s} {distance:0.1f}km {alt:0.1f}\u00b0 {dir:s}",
             "IMAGE_LABEL_TEMPLATE_PREFIX"  : "# xy:-15,200 (Right)\n# anchor:ra (Right Justified)\n# color:200,200,200\nAircraft",
