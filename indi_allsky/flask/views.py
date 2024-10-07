@@ -5250,11 +5250,11 @@ class AjaxTimelapseGeneratorView(BaseView):
             ### to recache after every delete which cause a 1-5 second lag for each delete
 
             image_id_list = list()
-            for entry in image_id_list:
+            for entry in image_list:
                 image_id_list.append(entry.id)
 
             panorama_image_id_list = list()
-            for entry in panorama_image_id_list:
+            for entry in panorama_list:
                 panorama_image_id_list.append(entry.id)
 
 
