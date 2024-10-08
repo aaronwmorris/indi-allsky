@@ -43,7 +43,8 @@ var fullscreen = false;  //initial state
 
     <div class="row">
         <div class="text-center">
-            <div id="processing_time"></div>
+            <span id="processing_time"></span>
+            <span id="img_download"></span>
         </div>
     </div>
     <div class="row">
@@ -861,6 +862,19 @@ function submitProcessingData() {
             json_data = data;
 
             showImage(json_data['image_b64']);
+
+            $("#img_download").html(
+                $('<a />', {
+                    'href'     : "data:image/jpg;base64," + json_data['image_b64'],
+                    'download' : "image_processor_" + Math.floor(Date.now() / 1000) + ".jpg",
+                }).html(
+                    $('<span />', {
+                        'text'  : 'Download',
+                        'class' : "badge pill bg-info text-dark",
+                    })
+                )
+            );
+
 
             $("#loader_processing").css({'display' : 'none'});
             //window.scrollTo(0, 0);
