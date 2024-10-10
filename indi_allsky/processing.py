@@ -2497,9 +2497,6 @@ class ImageProcessor(object):
 
 
             satellite_lines.append(satellite_tmpl.format(**sat_data))  # fill in the data
-
-
-            satellite_lines.append(sat_data)
             sat_count += 1
 
         else:
