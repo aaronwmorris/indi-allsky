@@ -2456,6 +2456,7 @@ def ADSB__AIRCRAFT_LABEL_TEMPLATE_validator(form, field):
         'flight'    : '',
         'hex'       : '',
         'distance'  : 0.0,
+        'elevation' : 0.0,
         'altitude'  : 0.0,
         'alt'       : 0.0,
         'az'        : 0.0,
