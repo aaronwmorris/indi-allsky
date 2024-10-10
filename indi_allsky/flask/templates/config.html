@@ -4,7 +4,7 @@
 
 {% block head %}
 <style>
-#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab {
+#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab , #nav-sat_track-tab{
 	width: 150px;
 	margin-top: 10px;
 	margin-right: 5px;
@@ -50,6 +50,7 @@ var camera_id = {{ camera_id }};
     <button class="nav-link link-primary bg-dark" id="nav-sensors-tab" data-bs-toggle="tab" data-bs-target="#nav-sensors" type="button" role="tab" aria-controls="nav-sensors" aria-selected="false">Sensors</button>
     <button class="nav-link link-danger bg-dark" id="nav-devices-tab" data-bs-toggle="tab" data-bs-target="#nav-devices" type="button" role="tab" aria-controls="nav-devices" aria-selected="false">Devices</button>
     <button class="nav-link link-secondary bg-dark" id="nav-adsb-tab" data-bs-toggle="tab" data-bs-target="#nav-adsb" type="button" role="tab" aria-controls="nav-adsb" aria-selected="false">ADS-B</button>
+    <button class="nav-link link-light bg-dark" id="nav-sat_track-tab" data-bs-toggle="tab" data-bs-target="#nav-sat_track" type="button" role="tab" aria-controls="nav-sat_track" aria-selected="false" style="font-size:14px">Satellite Tracking</button>
   </div>
 </nav>
 
@@ -5491,7 +5492,6 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
-
 </div><!-- end devices tab -->
 
 <div class="tab-pane fade" id="nav-adsb" role="tabpanel" aria-labelledby="nav-adsb-tab">
@@ -5625,8 +5625,109 @@ var camera_id = {{ camera_id }};
 
 </div><!-- end adsb tab -->
 
-</div>
+<div class="tab-pane fade" id="nav-sat_track" role="tabpanel" aria-labelledby="nav-sat_track-tab">
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SATELLITE_TRACK__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.SATELLITE_TRACK__ENABLE(class='form-check-input') }}
+                <div id="SATELLITE_TRACK__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Satellite-Tracking" class="text-decoration-none link-info" target="_blank">Satellite Tracking Wiki</a></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SATELLITE_TRACK__DAYTIME_TRACK.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.SATELLITE_TRACK__DAYTIME_TRACK(class='form-check-input') }}
+                <div id="SATELLITE_TRACK__DAYTIME_TRACK-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SATELLITE_TRACK__ALT_DEG_MIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.SATELLITE_TRACK__ALT_DEG_MIN(class='form-control bg-secondary') }}
+            <div id="SATELLITE_TRACK__ALT_DEG_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Minimum visual altitude of satellite in degrees</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SATELLITE_TRACK__LABEL_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.SATELLITE_TRACK__LABEL_ENABLE(class='form-check-input') }}
+                <div id="SATELLITE_TRACK__LABEL_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SATELLITE_TRACK__LABEL_LIMIT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.SATELLITE_TRACK__LABEL_LIMIT(class='form-control bg-secondary') }}
+            <div id="SATELLITE_TRACK__LABEL_LIMIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Limit number of satellite to label on image</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-6">
+            {{ form_config.SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX(class='form-control bg-secondary', rows='10') }}
+            <div id="SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SATELLITE_TRACK__SAT_LABEL_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.SATELLITE_TRACK__SAT_LABEL_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="SATELLITE_TRACK__SAT_LABEL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
+    </div>
+
+</div><!-- end sat_track tab -->
+
+
+</div>
 
     <hr> <hr> <hr>
 
@@ -6002,6 +6103,10 @@ const field_names = [
     'ADSB__LABEL_LIMIT',
     'ADSB__AIRCRAFT_LABEL_TEMPLATE',
     'ADSB__IMAGE_LABEL_TEMPLATE_PREFIX',
+    'SATELLITE_TRACK__ALT_DEG_MIN',
+    'SATELLITE_TRACK__LABEL_LIMIT',
+    'SATELLITE_TRACK__SAT_LABEL_TEMPLATE',
+    'SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX',
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',
@@ -6103,6 +6208,9 @@ const checkbox_field_names = [
     'ADSB__ENABLE',
     'ADSB__CERT_BYPASS',
     'ADSB__LABEL_ENABLE',
+    'SATELLITE_TRACK__ENABLE',
+    'SATELLITE_TRACK__DAYTIME_TRACK',
+    'SATELLITE_TRACK__LABEL_ENABLE',
     'WEB_NONLOCAL_IMAGES',
     'WEB_LOCAL_IMAGES_ADMIN',
     'RELOAD_ON_SAVE',

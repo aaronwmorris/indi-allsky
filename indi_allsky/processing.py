@@ -2044,6 +2044,15 @@ class ImageProcessor(object):
                 image_label += '\n{0:s}'.format(line)
 
 
+        # satellite tracking lines
+        satellite_tracking_lines = self.get_satellite_tracking_text()
+        if satellite_tracking_lines:
+            logger.info('Adding satellite text')
+
+            for line in satellite_tracking_lines:
+                image_label += '\n{0:s}'.format(line)
+
+
         # add extra text to image
         extra_text_lines = self.get_extra_text()
         if extra_text_lines:
@@ -2377,32 +2386,153 @@ class ImageProcessor(object):
         aircraft_tmpl = self.config.get('ADSB', {}).get('AIRCRAFT_LABEL_TEMPLATE', '')
         for i in range(label_limit):
             try:
-                aircraft = adsb_aircraft_list[i].copy()
+                aircraft_data = adsb_aircraft_list[i].copy()
             except IndexError:
                 # no more aircraft
                 break
 
 
-            if not aircraft['squawk']:
-                aircraft['squawk'] = ''
+            if not aircraft_data['squawk']:
+                aircraft_data['squawk'] = ''
 
-            if not aircraft['flight']:
-                aircraft['flight'] = ''
+            if not aircraft_data['flight']:
+                aircraft_data['flight'] = ''
 
-            if not aircraft['hex']:
-                aircraft['hex'] = ''
+            if not aircraft_data['hex']:
+                aircraft_data['hex'] = ''
 
             try:
-                aircraft['dir'] = self.cardinal_directions[round(aircraft['az'] / 22.5)]
+                aircraft_data['dir'] = self.cardinal_directions[round(aircraft_data['az'] / 22.5)]
             except IndexError:
                 logger.error('Unable to calculate aircraft direction')
-                aircraft['dir'] = 'Error'
+                aircraft_data['dir'] = 'Error'
 
 
-            aircraft_lines.append(aircraft_tmpl.format(**aircraft))  # fill in the data
+            aircraft_lines.append(aircraft_tmpl.format(**aircraft_data))  # fill in the data
 
 
         return aircraft_lines
+
+
+    def get_satellite_tracking_text(self):
+        if not self.config.get('SATELLITE_TRACK', {}).get('ENABLE'):
+            return list()
+
+        if not self.config.get('SATELLITE_TRACK', {}).get('LABEL_ENABLE'):
+            return list()
+
+        if not self.config.get('SATELLITE_TRACK', {}).get('DAYTIME_TRACK') and not self.night_v.value:
+            return list()
+
+
+        sat_track_start = time.time()
+
+
+        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
+        #utcnow = datetime.now(tz=timezone.utc) - timedelta(hours=13)  # testing
+
+        obs = ephem.Observer()
+        obs.lon = math.radians(self.position_av[1])
+        obs.lat = math.radians(self.position_av[0])
+        obs.elevation = self.position_av[2]
+
+
+        # disable atmospheric refraction calcs
+        obs.pressure = 0
+
+
+        obs.date = utcnow
+
+
+        # there may be multiple satellites of the same name, usually pieces of the same rocket
+        sat_entries = IndiAllSkyDbTleDataTable.query\
+            .filter(IndiAllSkyDbTleDataTable.group == constants.SATELLITE_VISUAL)\
+            .order_by(IndiAllSkyDbTleDataTable.id.desc())\
+            .limit(300)  # 300 is a sanity check
+
+
+        satellite_lines = []
+
+        for line in self.config.get('SATELLITE_TRACK', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '').splitlines():
+            satellite_lines.append(line)
+
+
+        alt_deg_min = self.config.get('SATELLITE_TRACK', {}).get('ALT_DEG_MIN', 20)
+        label_limit = self.config.get('SATELLITE_TRACK', {}).get('LABEL_LIMIT', 10)
+        satellite_tmpl = self.config.get('SATELLITE_TRACK', {}).get('SAT_LABEL_TEMPLATE', '')
+
+
+        sat_list = list()
+        for sat_entry in sat_entries:
+
+            try:
+                sat = ephem.readtle(sat_entry.title, sat_entry.line1, sat_entry.line2)
+            except ValueError as e:
+                logger.error('Satellite TLE data error: %s', str(e))
+                continue
+
+
+            sat.compute(obs)
+
+
+            if sat.eclipsed:
+                continue
+
+
+            sat_alt = math.degrees(sat.alt)
+
+            if sat_alt < alt_deg_min:
+                continue
+
+
+            sat_sublat = math.degrees(sat.sublat)
+            sat_sublong = math.degrees(sat.sublong)
+
+            sat_data = {
+                'title'     : sat_entry.title.rstrip(),
+                'alt'       : sat_alt,
+                'az'        : math.degrees(sat.az),
+                'elevation' : sat.elevation / 1000,
+                'mag'       : sat.mag,
+                'sublat'    : sat_sublat,
+                'latitude'  : sat_sublat,  # alias
+                'sublong'   : sat_sublong,
+                'longitude' : sat_sublong,  # alias
+                'range'     : sat.range / 1000,
+                'range_velocity' : sat.range_velocity / 1000,
+            }
+
+
+            try:
+                sat_data['dir'] = self.cardinal_directions[round(sat_data['az'] / 22.5)]
+            except IndexError:
+                logger.error('Unable to calculate aircraft direction')
+                sat_data['dir'] = 'Error'
+
+
+            sat_list.append(sat_data)
+
+
+        sat_track_elapsed_s = time.time() - sat_track_start
+        logger.info('Satellite tracking in %0.4f s', sat_track_elapsed_s)
+
+
+        # sort by highest satellites
+        sorted_sat_list = sorted(sat_list, key=lambda x: x['alt'], reverse=True)
+
+
+        for i in range(label_limit):
+            try:
+                sat_data = sorted_sat_list[i]
+            except IndexError:
+                # no more satellites
+                break
+
+
+            satellite_lines.append(satellite_tmpl.format(**sat_data))  # fill in the data
+
+
+        return satellite_lines
 
 
     def _text_next_line(self):

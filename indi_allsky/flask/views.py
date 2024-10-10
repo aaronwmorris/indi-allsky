@@ -1879,10 +1879,17 @@ class ConfigView(FormView):
             'ADSB__PASSWORD'                 : self.indi_allsky_config.get('ADSB', {}).get('PASSWORD', ''),
             'ADSB__CERT_BYPASS'              : self.indi_allsky_config.get('ADSB', {}).get('CERT_BYPASS', True),
             'ADSB__ALT_DEG_MIN'              : self.indi_allsky_config.get('ADSB', {}).get('ALT_DEG_MIN', 20.0),
-            'ADSB__LABEL_ENABLE'             : self.indi_allsky_config.get('ADSB', {}).get('LABEL_ENABLE', False),
+            'ADSB__LABEL_ENABLE'             : self.indi_allsky_config.get('ADSB', {}).get('LABEL_ENABLE', True),
             'ADSB__LABEL_LIMIT'              : self.indi_allsky_config.get('ADSB', {}).get('LABEL_LIMIT', 10),
             'ADSB__AIRCRAFT_LABEL_TEMPLATE'  : self.indi_allsky_config.get('ADSB', {}).get('AIRCRAFT_LABEL_TEMPLATE', '{id:s} {distance:0.1f}km {alt:0.1f}\u00b0 {dir:s}'),
             'ADSB__IMAGE_LABEL_TEMPLATE_PREFIX' : self.indi_allsky_config.get('ADSB', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '# xy:-15,200 (Right)\n# anchor:ra (Right Justified)\n# color:200,200,200\nAircraft'),
+            'SATELLITE_TRACK__ENABLE'              : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('ENABLE', False),
+            'SATELLITE_TRACK__DAYTIME_TRACK'       : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('DAYTIME_TRACK', False),
+            'SATELLITE_TRACK__ALT_DEG_MIN'         : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('ALT_DEG_MIN', 20.0),
+            'SATELLITE_TRACK__LABEL_ENABLE'        : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('LABEL_ENABLE', True),
+            'SATELLITE_TRACK__LABEL_LIMIT'         : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('LABEL_LIMIT', 10),
+            'SATELLITE_TRACK__SAT_LABEL_TEMPLATE'  : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('SAT_LABEL_TEMPLATE', '{label:s} {alt:0.1f}\u00b0 {dir:s}'),
+            'SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX' : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '# xy:15,300 (Left)\n# anchor:la (Left Justified)\n# color:200,200,200\nSatellites'),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -2217,6 +2224,9 @@ class AjaxConfigView(BaseView):
 
         if not self.indi_allsky_config.get('ADSB'):
             self.indi_allsky_config['ADSB'] = {}
+
+        if not self.indi_allsky_config.get('SATELLITE_TRACK'):
+            self.indi_allsky_config['SATELLITE_TRACK'] = {}
 
         if not self.indi_allsky_config.get('FITSHEADERS'):
             self.indi_allsky_config['FITSHEADERS'] = [['', ''], ['', ''], ['', ''], ['', ''], ['', '']]
@@ -2625,6 +2635,13 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['ADSB']['LABEL_LIMIT']                  = int(request.json['ADSB__LABEL_LIMIT'])
         self.indi_allsky_config['ADSB']['AIRCRAFT_LABEL_TEMPLATE']      = str(request.json['ADSB__AIRCRAFT_LABEL_TEMPLATE'])
         self.indi_allsky_config['ADSB']['IMAGE_LABEL_TEMPLATE_PREFIX']  = str(request.json['ADSB__IMAGE_LABEL_TEMPLATE_PREFIX'])
+        self.indi_allsky_config['SATELLITE_TRACK']['ENABLE']            = bool(request.json['SATELLITE_TRACK__ENABLE'])
+        self.indi_allsky_config['SATELLITE_TRACK']['DAYTIME_TRACK']     = bool(request.json['SATELLITE_TRACK__DAYTIME_TRACK'])
+        self.indi_allsky_config['SATELLITE_TRACK']['ALT_DEG_MIN']       = float(request.json['SATELLITE_TRACK__ALT_DEG_MIN'])
+        self.indi_allsky_config['SATELLITE_TRACK']['LABEL_ENABLE']      = bool(request.json['SATELLITE_TRACK__LABEL_ENABLE'])
+        self.indi_allsky_config['SATELLITE_TRACK']['LABEL_LIMIT']       = int(request.json['SATELLITE_TRACK__LABEL_LIMIT'])
+        self.indi_allsky_config['SATELLITE_TRACK']['SAT_LABEL_TEMPLATE'] = str(request.json['SATELLITE_TRACK__SAT_LABEL_TEMPLATE'])
+        self.indi_allsky_config['SATELLITE_TRACK']['IMAGE_LABEL_TEMPLATE_PREFIX']  = str(request.json['SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX'])
 
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
