@@ -1888,7 +1888,7 @@ class ConfigView(FormView):
             'SATELLITE_TRACK__LABEL_ENABLE'        : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('LABEL_ENABLE', True),
             'SATELLITE_TRACK__LABEL_LIMIT'         : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('LABEL_LIMIT', 10),
             'SATELLITE_TRACK__SAT_LABEL_TEMPLATE'  : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('SAT_LABEL_TEMPLATE', '{label:s} {alt:0.1f}\u00b0 {dir:s}'),
-            'SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX' : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '# xy:-15,200 (Right)\n# anchor:ra (Right Justified)\n# color:200,200,200\nSatellites'),
+            'SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX' : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '# xy:15,300 (Left)\n# anchor:la (Left Justified)\n# color:200,200,200\nSatellites'),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
