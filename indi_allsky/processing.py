@@ -2422,6 +2422,9 @@ class ImageProcessor(object):
             return list()
 
 
+        sat_track_start = time.time()
+
+
         utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
         #utcnow = datetime.now(tz=timezone.utc) - timedelta(hours=13)  # testing
 
@@ -2459,6 +2462,8 @@ class ImageProcessor(object):
         sat_count = 0
         for sat_entry in sat_entries:
             if sat_count >= label_limit:
+                sat_track_elapsed_s = time.time() - sat_track_start
+                logger.info('Satellite tracking in %0.4f s', sat_track_elapsed_s)
                 break
 
 
@@ -2496,6 +2501,10 @@ class ImageProcessor(object):
 
             satellite_lines.append(sat_data)
             sat_count += 1
+
+        else:
+            sat_track_elapsed_s = time.time() - sat_track_start
+            logger.info('Satellite tracking in %0.4f s', sat_track_elapsed_s)
 
 
         return satellite_lines
