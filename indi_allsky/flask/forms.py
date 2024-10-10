@@ -2455,7 +2455,10 @@ def ADSB__AIRCRAFT_LABEL_TEMPLATE_validator(form, field):
         'squawk'    : '',
         'flight'    : '',
         'hex'       : '',
+        'latitude'  : 0.0,
+        'longitude' : 0.0,
         'distance'  : 0.0,
+        'range'     : 0.0,
         'elevation' : 0.0,
         'altitude'  : 0.0,
         'alt'       : 0.0,
@@ -2507,6 +2510,12 @@ def SATELLITE_TRACK__SAT_LABEL_TEMPLATE_validator(form, field):
         'az'        : 0.0,
         'dir'       : '',
         'mag'       : 0.0,
+        'sublat'    : 0.0,
+        'latitude'  : 0.0,
+        'sublong'   : 0.0,
+        'longitude' : 0.0,
+        'range'     : 0.0,
+        'range_velocity' : 0.0,
     }
 
 

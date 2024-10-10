@@ -2486,12 +2486,21 @@ class ImageProcessor(object):
                 continue
 
 
+            sat_sublat = math.degrees(sat.sublat)
+            sat_sublong = math.degrees(sat.sublong)
+
             sat_data = {
                 'title'     : sat_entry.title.rstrip(),
                 'alt'       : sat_alt,
                 'az'        : math.degrees(sat.az),
                 'elevation' : sat.elevation / 1000,
                 'mag'       : sat.mag,
+                'sublat'    : sat_sublat,
+                'latitude'  : sat_sublat,  # alias
+                'sublong'   : sat_sublong,
+                'longitude' : sat_sublong,  # alias
+                'range'     : sat.range / 1000,
+                'range_velocity' : sat.range_velocity / 1000,
             }
 
 
