@@ -2421,6 +2421,10 @@ class ImageProcessor(object):
         if not self.config.get('SATELLITE_TRACK', {}).get('LABEL_ENABLE'):
             return list()
 
+        if not self.night_v.value:
+            # no tracking during daytime
+            return list()
+
 
         sat_track_start = time.time()
 
