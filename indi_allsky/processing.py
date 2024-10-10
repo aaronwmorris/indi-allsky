@@ -2450,22 +2450,17 @@ class ImageProcessor(object):
 
         satellite_lines = []
 
-
         for line in self.config.get('SATELLITE_TRACK', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '').splitlines():
             satellite_lines.append(line)
 
 
+        alt_deg_min = self.config.get('SATELLITE_TRACK', {}).get('ALT_DEG_MIN', 20)
         label_limit = self.config.get('SATELLITE_TRACK', {}).get('LABEL_LIMIT', 10)
         satellite_tmpl = self.config.get('SATELLITE_TRACK', {}).get('SAT_LABEL_TEMPLATE', '')
 
 
-        sat_count = 0
+        sat_list = list()
         for sat_entry in sat_entries:
-            if sat_count >= label_limit:
-                sat_track_elapsed_s = time.time() - sat_track_start
-                logger.info('Satellite tracking in %0.4f s', sat_track_elapsed_s)
-                break
-
 
             try:
                 sat = ephem.readtle(sat_entry.title, sat_entry.line1, sat_entry.line2)
@@ -2481,9 +2476,15 @@ class ImageProcessor(object):
                 continue
 
 
+            sat_alt = math.degrees(sat.alt)
+
+            if sat_alt < alt_deg_min:
+                continue
+
+
             sat_data = {
                 'title'     : sat_entry.title.rstrip(),
-                'alt'       : math.degrees(sat.alt),
+                'alt'       : sat_alt,
                 'az'        : math.degrees(sat.az),
                 'elevation' : sat.elevation / 1000,
             }
@@ -2496,12 +2497,26 @@ class ImageProcessor(object):
                 sat_data['dir'] = 'Error'
 
 
-            satellite_lines.append(satellite_tmpl.format(**sat_data))  # fill in the data
-            sat_count += 1
+            sat_list.append(sat_data)
 
-        else:
-            sat_track_elapsed_s = time.time() - sat_track_start
-            logger.info('Satellite tracking in %0.4f s', sat_track_elapsed_s)
+
+        sat_track_elapsed_s = time.time() - sat_track_start
+        logger.info('Satellite tracking in %0.4f s', sat_track_elapsed_s)
+
+
+        # sort by highest satellites
+        sorted_sat_list = sorted(sat_list, key=lambda x: x['alt'], reverse=True)
+
+
+        for i in range(label_limit):
+            try:
+                sat_data = sorted_sat_list[i]
+            except IndexError:
+                # no more satellites
+                break
+
+
+            satellite_lines.append(satellite_tmpl.format(**sat_data))  # fill in the data
 
 
         return satellite_lines
