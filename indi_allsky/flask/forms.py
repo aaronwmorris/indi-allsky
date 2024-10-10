@@ -2506,6 +2506,7 @@ def SATELLITE_TRACK__SAT_LABEL_TEMPLATE_validator(form, field):
         'alt'       : 0.0,
         'az'        : 0.0,
         'dir'       : '',
+        'mag'       : 0.0,
     }
 
 
