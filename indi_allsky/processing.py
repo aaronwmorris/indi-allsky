@@ -2491,6 +2491,7 @@ class ImageProcessor(object):
                 'alt'       : sat_alt,
                 'az'        : math.degrees(sat.az),
                 'elevation' : sat.elevation / 1000,
+                'mag'       : sat.mag,
             }
 
 
