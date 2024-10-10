@@ -2415,10 +2415,10 @@ class ImageProcessor(object):
 
 
     def get_satellite_tracking_text(self):
-        if not self.config.get('SAT_TRACK', {}).get('ENABLE'):
+        if not self.config.get('SATELLITE_TRACK', {}).get('ENABLE'):
             return list()
 
-        if not self.config.get('SAT_TRACK', {}).get('LABEL_ENABLE'):
+        if not self.config.get('SATELLITE_TRACK', {}).get('LABEL_ENABLE'):
             return list()
 
 
@@ -2440,23 +2440,25 @@ class ImageProcessor(object):
 
         # there may be multiple satellites of the same name, usually pieces of the same rocket
         sat_entries = IndiAllSkyDbTleDataTable.query\
-            .filter(IndiAllSkyDbTleDataTable.group == constants.SATELLITE_VISUAL)
+            .filter(IndiAllSkyDbTleDataTable.group == constants.SATELLITE_VISUAL)\
+            .order_by(IndiAllSkyDbTleDataTable.id.desc())\
+            .limit(300)  # 300 is a sanity check
 
 
         satellite_lines = []
 
 
-        for line in self.config.get('SAT_TRACK', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '').splitlines():
+        for line in self.config.get('SATELLITE_TRACK', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '').splitlines():
             satellite_lines.append(line)
 
 
-        label_limit = self.config.get('SAT_TRACK', {}).get('LABEL_LIMIT', 10)
-        satellite_tmpl = self.config.get('SAT_TRACK', {}).get('SAT_LABEL_TEMPLATE', '')
+        label_limit = self.config.get('SATELLITE_TRACK', {}).get('LABEL_LIMIT', 10)
+        satellite_tmpl = self.config.get('SATELLITE_TRACK', {}).get('SAT_LABEL_TEMPLATE', '')
 
 
         sat_count = 0
         for sat_entry in sat_entries:
-            if len(sat_count) >= label_limit:
+            if sat_count >= label_limit:
                 break
 
 

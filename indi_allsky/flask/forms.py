@@ -2483,7 +2483,7 @@ def ADSB__LABEL_LIMIT_validator(form, field):
         raise ValidationError('Limit must be 20 or less')
 
 
-def SAT_TRACK__ALT_DEG_MIN_validator(form, field):
+def SATELLITE_TRACK__ALT_DEG_MIN_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
@@ -2494,11 +2494,11 @@ def SAT_TRACK__ALT_DEG_MIN_validator(form, field):
         raise ValidationError('Minimum altitude must be less than 90')
 
 
-def SAT_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX_validator(form, field):
+def SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX_validator(form, field):
     pass
 
 
-def SAT_TRACK__SAT_LABEL_TEMPLATE_validator(form, field):
+def SATELLITE_TRACK__SAT_LABEL_TEMPLATE_validator(form, field):
     test_data = {
         'title'     : '',
         'elevation' : 0.0,
@@ -2516,7 +2516,7 @@ def SAT_TRACK__SAT_LABEL_TEMPLATE_validator(form, field):
         raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
 
-def SAT_TRACK__LABEL_LIMIT_validator(form, field):
+def SATELLITE_TRACK__LABEL_LIMIT_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter a valid number')
 
@@ -3462,12 +3462,12 @@ class IndiAllskyConfigForm(FlaskForm):
     ADSB__LABEL_LIMIT                = IntegerField('Label Limit', validators=[DataRequired(), ADSB__LABEL_LIMIT_validator])
     ADSB__AIRCRAFT_LABEL_TEMPLATE    = StringField('Aircraft Label Template', validators=[DataRequired(), ADSB__AIRCRAFT_LABEL_TEMPLATE_validator])
     ADSB__IMAGE_LABEL_TEMPLATE_PREFIX   = TextAreaField('Image Template Prefix', validators=[DataRequired(), ADSB__IMAGE_LABEL_TEMPLATE_PREFIX_validator])
-    SAT_TRACK__ENABLE                = BooleanField('Enable Satellite Tracking')
-    SAT_TRACK__ALT_DEG_MIN           = FloatField('Minimum Altitude (Degrees)', validators=[DataRequired(), SAT_TRACK__ALT_DEG_MIN_validator])
-    SAT_TRACK__LABEL_ENABLE          = BooleanField('Enable Image Label')
-    SAT_TRACK__LABEL_LIMIT           = IntegerField('Label Limit', validators=[DataRequired(), SAT_TRACK__LABEL_LIMIT_validator])
-    SAT_TRACK__SAT_LABEL_TEMPLATE    = StringField('Satellite Label Template', validators=[DataRequired(), SAT_TRACK__SAT_LABEL_TEMPLATE_validator])
-    SAT_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX   = TextAreaField('Image Template Prefix', validators=[DataRequired(), SAT_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX_validator])
+    SATELLITE_TRACK__ENABLE          = BooleanField('Enable Satellite Tracking')
+    SATELLITE_TRACK__ALT_DEG_MIN     = FloatField('Minimum Altitude (Degrees)', validators=[DataRequired(), SATELLITE_TRACK__ALT_DEG_MIN_validator])
+    SATELLITE_TRACK__LABEL_ENABLE    = BooleanField('Enable Image Label')
+    SATELLITE_TRACK__LABEL_LIMIT     = IntegerField('Label Limit', validators=[DataRequired(), SATELLITE_TRACK__LABEL_LIMIT_validator])
+    SATELLITE_TRACK__SAT_LABEL_TEMPLATE = StringField('Satellite Label Template', validators=[DataRequired(), SATELLITE_TRACK__SAT_LABEL_TEMPLATE_validator])
+    SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX = TextAreaField('Image Template Prefix', validators=[DataRequired(), SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 

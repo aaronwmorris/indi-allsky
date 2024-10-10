@@ -5631,12 +5631,12 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.SAT_TRACK__ENABLE.label }}
+            {{ form_config.SATELLITE_TRACK__ENABLE.label }}
         </div>
         <div class="col-sm-2">
             <div class="form-switch">
-                {{ form_config.SAT_TRACK__ENABLE(class='form-check-input') }}
-                <div id="SAT_TRACK__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                {{ form_config.SATELLITE_TRACK__ENABLE(class='form-check-input') }}
+                <div id="SATELLITE_TRACK__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">
@@ -5648,11 +5648,11 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.SAT_TRACK__ALT_DEG_MIN.label(class='col-form-label') }}
+            {{ form_config.SATELLITE_TRACK__ALT_DEG_MIN.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.SAT_TRACK__ALT_DEG_MIN(class='form-control bg-secondary') }}
-            <div id="SAT_TRACK__ALT_DEG_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.SATELLITE_TRACK__ALT_DEG_MIN(class='form-control bg-secondary') }}
+            <div id="SATELLITE_TRACK__ALT_DEG_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Minimum visual altitude of satellite in degrees</div>
     </div>
@@ -5661,12 +5661,12 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.SAT_TRACK__LABEL_ENABLE.label }}
+            {{ form_config.SATELLITE_TRACK__LABEL_ENABLE.label }}
         </div>
         <div class="col-sm-2">
             <div class="form-switch">
-                {{ form_config.SAT_TRACK__LABEL_ENABLE(class='form-check-input') }}
-                <div id="SAT_TRACK__LABEL_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                {{ form_config.SATELLITE_TRACK__LABEL_ENABLE(class='form-check-input') }}
+                <div id="SATELLITE_TRACK__LABEL_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8"></div>
@@ -5674,22 +5674,22 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.SAT_TRACK__LABEL_LIMIT.label(class='col-form-label') }}
+            {{ form_config.SATELLITE_TRACK__LABEL_LIMIT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.SAT_TRACK__LABEL_LIMIT(class='form-control bg-secondary') }}
-            <div id="SAT_TRACK__LABEL_LIMIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.SATELLITE_TRACK__LABEL_LIMIT(class='form-control bg-secondary') }}
+            <div id="SATELLITE_TRACK__LABEL_LIMIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Limit number of satellite to label on image</div>
     </div>
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.SAT_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX.label(class='col-form-label') }}
+            {{ form_config.SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX.label(class='col-form-label') }}
         </div>
         <div class="col-sm-6">
-            {{ form_config.SAT_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX(class='form-control bg-secondary', rows='10') }}
-            <div id="SAT_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX(class='form-control bg-secondary', rows='10') }}
+            <div id="SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-4">
             <div></div>
@@ -5698,11 +5698,11 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.SAT_TRACK__SAT_LABEL_TEMPLATE.label(class='col-form-label') }}
+            {{ form_config.SATELLITE_TRACK__SAT_LABEL_TEMPLATE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_config.SAT_TRACK__SAT_LABEL_TEMPLATE(class='form-control bg-secondary') }}
-            <div id="SAT_TRACK__SAT_LABEL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.SATELLITE_TRACK__SAT_LABEL_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="SATELLITE_TRACK__SAT_LABEL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6"></div>
     </div>
@@ -6086,10 +6086,10 @@ const field_names = [
     'ADSB__LABEL_LIMIT',
     'ADSB__AIRCRAFT_LABEL_TEMPLATE',
     'ADSB__IMAGE_LABEL_TEMPLATE_PREFIX',
-    'SAT_TRACK__ALT_DEG_MIN',
-    'SAT_TRACK__LABEL_LIMIT',
-    'SAT_TRACK__SAT_LABEL_TEMPLATE',
-    'SAT_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX',
+    'SATELLITE_TRACK__ALT_DEG_MIN',
+    'SATELLITE_TRACK__LABEL_LIMIT',
+    'SATELLITE_TRACK__SAT_LABEL_TEMPLATE',
+    'SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX',
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',
@@ -6191,8 +6191,8 @@ const checkbox_field_names = [
     'ADSB__ENABLE',
     'ADSB__CERT_BYPASS',
     'ADSB__LABEL_ENABLE',
-    'SAT_TRACK__ENABLE',
-    'SAT_TRACK__LABEL_ENABLE',
+    'SATELLITE_TRACK__ENABLE',
+    'SATELLITE_TRACK__LABEL_ENABLE',
     'WEB_NONLOCAL_IMAGES',
     'WEB_LOCAL_IMAGES_ADMIN',
     'RELOAD_ON_SAVE',
