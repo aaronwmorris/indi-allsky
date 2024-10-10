@@ -5648,6 +5648,23 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.SATELLITE_TRACK__DAYTIME_TRACK.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.SATELLITE_TRACK__DAYTIME_TRACK(class='form-check-input') }}
+                <div id="SATELLITE_TRACK__DAYTIME_TRACK-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.SATELLITE_TRACK__ALT_DEG_MIN.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -6192,6 +6209,7 @@ const checkbox_field_names = [
     'ADSB__CERT_BYPASS',
     'ADSB__LABEL_ENABLE',
     'SATELLITE_TRACK__ENABLE',
+    'SATELLITE_TRACK__DAYTIME_TRACK',
     'SATELLITE_TRACK__LABEL_ENABLE',
     'WEB_NONLOCAL_IMAGES',
     'WEB_LOCAL_IMAGES_ADMIN',

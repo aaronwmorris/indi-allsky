@@ -1884,6 +1884,7 @@ class ConfigView(FormView):
             'ADSB__AIRCRAFT_LABEL_TEMPLATE'  : self.indi_allsky_config.get('ADSB', {}).get('AIRCRAFT_LABEL_TEMPLATE', '{id:s} {distance:0.1f}km {alt:0.1f}\u00b0 {dir:s}'),
             'ADSB__IMAGE_LABEL_TEMPLATE_PREFIX' : self.indi_allsky_config.get('ADSB', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '# xy:-15,200 (Right)\n# anchor:ra (Right Justified)\n# color:200,200,200\nAircraft'),
             'SATELLITE_TRACK__ENABLE'              : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('ENABLE', False),
+            'SATELLITE_TRACK__DAYTIME_TRACK'       : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('DAYTIME_TRACK', False),
             'SATELLITE_TRACK__ALT_DEG_MIN'         : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('ALT_DEG_MIN', 20.0),
             'SATELLITE_TRACK__LABEL_ENABLE'        : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('LABEL_ENABLE', True),
             'SATELLITE_TRACK__LABEL_LIMIT'         : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('LABEL_LIMIT', 10),
@@ -2635,6 +2636,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['ADSB']['AIRCRAFT_LABEL_TEMPLATE']      = str(request.json['ADSB__AIRCRAFT_LABEL_TEMPLATE'])
         self.indi_allsky_config['ADSB']['IMAGE_LABEL_TEMPLATE_PREFIX']  = str(request.json['ADSB__IMAGE_LABEL_TEMPLATE_PREFIX'])
         self.indi_allsky_config['SATELLITE_TRACK']['ENABLE']            = bool(request.json['SATELLITE_TRACK__ENABLE'])
+        self.indi_allsky_config['SATELLITE_TRACK']['DAYTIME_TRACK']     = bool(request.json['SATELLITE_TRACK__DAYTIME_TRACK'])
         self.indi_allsky_config['SATELLITE_TRACK']['ALT_DEG_MIN']       = float(request.json['SATELLITE_TRACK__ALT_DEG_MIN'])
         self.indi_allsky_config['SATELLITE_TRACK']['LABEL_ENABLE']      = bool(request.json['SATELLITE_TRACK__LABEL_ENABLE'])
         self.indi_allsky_config['SATELLITE_TRACK']['LABEL_LIMIT']       = int(request.json['SATELLITE_TRACK__LABEL_LIMIT'])

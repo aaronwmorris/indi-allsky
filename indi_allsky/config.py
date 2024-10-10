@@ -519,6 +519,7 @@ class IndiAllSkyConfigBase(object):
         },
         "SATELLITE_TRACK" : {
             "ENABLE"                 : False,
+            "DAYTIME_TRACK"          : False,
             "ALT_DEG_MIN"            : 20.0,
             "LABEL_ENABLE"           : True,
             "LABEL_LIMIT"            : 10,

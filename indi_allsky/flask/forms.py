@@ -3474,6 +3474,7 @@ class IndiAllskyConfigForm(FlaskForm):
     ADSB__AIRCRAFT_LABEL_TEMPLATE    = StringField('Aircraft Label Template', validators=[DataRequired(), ADSB__AIRCRAFT_LABEL_TEMPLATE_validator])
     ADSB__IMAGE_LABEL_TEMPLATE_PREFIX   = TextAreaField('Image Template Prefix', validators=[DataRequired(), ADSB__IMAGE_LABEL_TEMPLATE_PREFIX_validator])
     SATELLITE_TRACK__ENABLE          = BooleanField('Enable Satellite Tracking')
+    SATELLITE_TRACK__DAYTIME_TRACK   = BooleanField('Daytime Tracking')
     SATELLITE_TRACK__ALT_DEG_MIN     = FloatField('Minimum Altitude (Degrees)', validators=[DataRequired(), SATELLITE_TRACK__ALT_DEG_MIN_validator])
     SATELLITE_TRACK__LABEL_ENABLE    = BooleanField('Enable Image Label')
     SATELLITE_TRACK__LABEL_LIMIT     = IntegerField('Label Limit', validators=[DataRequired(), SATELLITE_TRACK__LABEL_LIMIT_validator])
