@@ -518,7 +518,7 @@ class HADiscovery(object):
                 'component' : 'sensor',
                 'object_id' : 'indi_allsky_ovation_max',
                 'config' : {
-                    'name' : 'Aurora',
+                    'name' : 'Aurora Prediction',
                     'unit_of_measurement' : '%',
                     'unique_id' : 'indi_allsky_ovation_max_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'ovation_max')),
