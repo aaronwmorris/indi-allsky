@@ -914,7 +914,7 @@ class TemplateView(BaseView):
                             temp_sensor__a_class.METADATA['name'],
                             temp_sensor__a_label,
                             temp_sensor__a_class.METADATA['labels'][x],
-                        )
+                        ),
                     )
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
@@ -931,7 +931,7 @@ class TemplateView(BaseView):
                             temp_sensor__b_class.METADATA['name'],
                             temp_sensor__b_label,
                             temp_sensor__b_class.METADATA['labels'][x],
-                        )
+                        ),
                     )
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
@@ -948,7 +948,7 @@ class TemplateView(BaseView):
                             temp_sensor__c_class.METADATA['name'],
                             temp_sensor__c_label,
                             temp_sensor__c_class.METADATA['labels'][x],
-                        )
+                        ),
                     )
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)

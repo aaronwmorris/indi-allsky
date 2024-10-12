@@ -107,68 +107,68 @@ class HADiscovery(object):
     }
 
 
-    # this structure is from the flask wtforms type (I am too lazy to change it)
-    SENSOR_SLOT_choices = [  # mutable
-        ('0', 'Camera Temp'),
-        ('1', 'Dew Heater Level'),
-        ('2', 'Dew Point'),
-        ('3', 'Frost Point'),
-        ('4', 'Fan Level'),
-        ('5', 'Heat Index'),
-        ('6', 'Wind Dir Degrees'),
-        ('7', 'SQM'),
-        ('8', 'Future Use 8'),
-        ('9', 'Future Use 9'),
-        ('10', 'User Slot 10'),
-        ('11', 'User Slot 11'),
-        ('12', 'User Slot 12'),
-        ('13', 'User Slot 13'),
-        ('14', 'User Slot 14'),
-        ('15', 'User Slot 15'),
-        ('16', 'User Slot 16'),
-        ('17', 'User Slot 17'),
-        ('18', 'User Slot 18'),
-        ('19', 'User Slot 19'),
-        ('20', 'User Slot 20'),
-        ('21', 'User Slot 21'),
-        ('22', 'User Slot 22'),
-        ('23', 'User Slot 23'),
-        ('24', 'User Slot 24'),
-        ('25', 'User Slot 25'),
-        ('26', 'User Slot 26'),
-        ('27', 'User Slot 27'),
-        ('28', 'User Slot 28'),
-        ('29', 'User Slot 29'),
-        ('100', 'Camera Temp'),
-        ('101', 'Future Use 1'),
-        ('102', 'Future Use 2'),
-        ('103', 'Future Use 3'),
-        ('104', 'Future Use 4'),
-        ('105', 'Future Use 5'),
-        ('106', 'Future Use 6'),
-        ('107', 'Future Use 7'),
-        ('108', 'Future Use 8'),
-        ('109', 'Future Use 9'),
-        ('110', 'System Temp 10'),
-        ('111', 'System Temp 11'),
-        ('112', 'System Temp 12'),
-        ('113', 'System Temp 13'),
-        ('114', 'System Temp 14'),
-        ('115', 'System Temp 15'),
-        ('116', 'System Temp 16'),
-        ('117', 'System Temp 17'),
-        ('118', 'System Temp 18'),
-        ('119', 'System Temp 19'),
-        ('120', 'System Temp 20'),
-        ('121', 'System Temp 21'),
-        ('122', 'System Temp 22'),
-        ('123', 'System Temp 23'),
-        ('124', 'System Temp 24'),
-        ('125', 'System Temp 25'),
-        ('126', 'System Temp 26'),
-        ('127', 'System Temp 27'),
-        ('128', 'System Temp 28'),
-        ('129', 'System Temp 29'),
+    # (label, type)
+    SENSOR_SLOT_choices = [
+        ('Camera Temp', None),
+        ('Dew Heater Level', None),
+        ('Dew Point', None),
+        ('Frost Point', None),
+        ('Fan Level', None),
+        ('Heat Index', None),
+        ('Wind Dir Degrees', None),
+        ('SQM', None),
+        ('Future Use 8', None),
+        ('Future Use 9', None),
+        ('User Slot 10', None),
+        ('User Slot 11', None),
+        ('User Slot 12', None),
+        ('User Slot 13', None),
+        ('User Slot 14', None),
+        ('User Slot 15', None),
+        ('User Slot 16', None),
+        ('User Slot 17', None),
+        ('User Slot 18', None),
+        ('User Slot 19', None),
+        ('User Slot 20', None),
+        ('User Slot 21', None),
+        ('User Slot 22', None),
+        ('User Slot 23', None),
+        ('User Slot 24', None),
+        ('User Slot 25', None),
+        ('User Slot 26', None),
+        ('User Slot 27', None),
+        ('User Slot 28', None),
+        ('User Slot 29', None),
+        ('Camera Temp', None),
+        ('Future Use 1', None),
+        ('Future Use 2', None),
+        ('Future Use 3', None),
+        ('Future Use 4', None),
+        ('Future Use 5', None),
+        ('Future Use 6', None),
+        ('Future Use 7', None),
+        ('Future Use 8', None),
+        ('Future Use 9', None),
+        ('System Temp 10', None),
+        ('System Temp 11', None),
+        ('System Temp 12', None),
+        ('System Temp 13', None),
+        ('System Temp 14', None),
+        ('System Temp 15', None),
+        ('System Temp 16', None),
+        ('System Temp 17', None),
+        ('System Temp 18', None),
+        ('System Temp 19', None),
+        ('System Temp 20', None),
+        ('System Temp 21', None),
+        ('System Temp 22', None),
+        ('System Temp 23', None),
+        ('System Temp 24', None),
+        ('System Temp 25', None),
+        ('System Temp 26', None),
+        ('System Temp 27', None),
+        ('System Temp 28', None),
+        ('System Temp 29', None),
     ]
 
 
@@ -713,7 +713,7 @@ class HADiscovery(object):
                 'component' : 'sensor',
                 'object_id' : 'indi_allsky_sensor_temp_{0}'.format(i),
                 'config' : {
-                    'name' : self.SENSOR_SLOT_choices[i + 30][1],
+                    'name' : self.SENSOR_SLOT_choices[i + 30][0],
                     'unit_of_measurement' : '°',
                     'unique_id' : 'indi_allsky_sensor_temp_{0}_{1}'.format(i, self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'sensor_temp_{0}'.format(str(i)))),
@@ -733,7 +733,7 @@ class HADiscovery(object):
                 'component' : 'sensor',
                 'object_id' : 'indi_allsky_sensor_user_{0}'.format(i),
                 'config' : {
-                    'name' : self.SENSOR_SLOT_choices[i][1],
+                    'name' : self.SENSOR_SLOT_choices[i][0],
                     'unique_id' : 'indi_allsky_sensor_user_{0}_{1}'.format(i, self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'sensor_user_{0}'.format(str(i)))),
                     'device'   : {
@@ -744,6 +744,17 @@ class HADiscovery(object):
                     },
                 },
             })
+
+            # add the unit_of_measurement for common types
+            try:
+                if self.SENSOR_SLOT_choices[i][1] == constants.SENSOR_TEMPERATURE:
+                    extended_sensor_list[-1]['config']['unit_of_measurement'] = self.HA_UNIT_MAP[constants.SENSOR_TEMPERATURE]['degrees']
+                elif self.SENSOR_SLOT_choices[i][1] == constants.SENSOR_RELATIVE_HUMIDITY:
+                    extended_sensor_list[-1]['config']['unit_of_measurement'] = self.HA_UNIT_MAP[constants.SENSOR_RELATIVE_HUMIDITY]['percent']
+                elif self.SENSOR_SLOT_choices[i][1] == constants.SENSOR_PERCENTAGE:
+                    extended_sensor_list[-1]['config']['unit_of_measurement'] = self.HA_UNIT_MAP[constants.SENSOR_PERCENTAGE]['percent']
+            except IndexError:
+                pass
 
 
         message_list = list()
@@ -829,29 +840,18 @@ class HADiscovery(object):
         temp_sensor__c_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT')
 
 
-        # fix system temp offset
-        if temp_sensor__a_user_var_slot >= 100:
-            temp_sensor__a_user_var_slot -= 79
-
-        if temp_sensor__b_user_var_slot >= 100:
-            temp_sensor__b_user_var_slot -= 79
-
-        if temp_sensor__c_user_var_slot >= 100:
-            temp_sensor__c_user_var_slot -= 79
-
-
         if temp_sensor__a_classname:
             try:
                 temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
                     self.SENSOR_SLOT_choices[temp_sensor__a_user_var_slot + x] = (
-                        str(temp_sensor__a_user_var_slot + x),
                         '{0:s} - {1:s} - {2:s}'.format(
                             temp_sensor__a_class.METADATA['name'],
                             temp_sensor__a_label,
                             temp_sensor__a_class.METADATA['labels'][x],
-                        )
+                        ),
+                        temp_sensor__a_class.METADATA['types'][x],
                     )
             except AttributeError:
                 logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
@@ -863,12 +863,12 @@ class HADiscovery(object):
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
                     self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x] = (
-                        str(temp_sensor__b_user_var_slot + x),
                         '{0:s} - {1:s} - {2:s}'.format(
                             temp_sensor__b_class.METADATA['name'],
                             temp_sensor__b_label,
                             temp_sensor__b_class.METADATA['labels'][x],
-                        )
+                        ),
+                        temp_sensor__b_class.METADATA['types'][x],
                     )
             except AttributeError:
                 logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
@@ -880,12 +880,12 @@ class HADiscovery(object):
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
                     self.SENSOR_SLOT_choices[temp_sensor__c_user_var_slot + x] = (
-                        str(temp_sensor__c_user_var_slot + x),
                         '{0:s} - {1:s} - {2:s}'.format(
                             temp_sensor__c_class.METADATA['name'],
                             temp_sensor__c_label,
                             temp_sensor__c_class.METADATA['labels'][x],
-                        )
+                        ),
+                        temp_sensor__c_class.METADATA['types'][x],
                     )
             except AttributeError:
                 logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
