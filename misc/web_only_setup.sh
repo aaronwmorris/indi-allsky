@@ -815,7 +815,7 @@ fi
 # shellcheck source=/dev/null
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 
-pip3 install --upgrade pip setuptools wheel
+pip3 install --upgrade pip setuptools wheel packaging
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ}"
 
 
