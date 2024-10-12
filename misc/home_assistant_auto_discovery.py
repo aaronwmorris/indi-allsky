@@ -21,11 +21,20 @@ from indi_allsky.flask import create_app
 from indi_allsky import constants
 
 
+app = create_app()
+
+
 logger = logging.getLogger('indi_allsky')
 logger.setLevel(logging.INFO)
 
 
-app = create_app()
+LOG_FORMATTER_STREAM = logging.Formatter('[%(levelname)s]: %(message)s')
+
+LOG_HANDLER_STREAM = logging.StreamHandler()
+LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
+
+logger.handlers.clear()  # remove syslog
+logger.addHandler(LOG_HANDLER_STREAM)
 
 
 class HADiscovery(object):
@@ -98,6 +107,71 @@ class HADiscovery(object):
     }
 
 
+    # (label, type)
+    SENSOR_SLOT_choices = [
+        ('Camera Temp', None),
+        ('Dew Heater Level', None),
+        ('Dew Point', None),
+        ('Frost Point', None),
+        ('Fan Level', None),
+        ('Heat Index', None),
+        ('Wind Dir Degrees', None),
+        ('SQM', None),
+        ('Future Use 8', None),
+        ('Future Use 9', None),
+        ('User Slot 10', None),
+        ('User Slot 11', None),
+        ('User Slot 12', None),
+        ('User Slot 13', None),
+        ('User Slot 14', None),
+        ('User Slot 15', None),
+        ('User Slot 16', None),
+        ('User Slot 17', None),
+        ('User Slot 18', None),
+        ('User Slot 19', None),
+        ('User Slot 20', None),
+        ('User Slot 21', None),
+        ('User Slot 22', None),
+        ('User Slot 23', None),
+        ('User Slot 24', None),
+        ('User Slot 25', None),
+        ('User Slot 26', None),
+        ('User Slot 27', None),
+        ('User Slot 28', None),
+        ('User Slot 29', None),
+        ('Camera Temp', None),
+        ('Future Use 1', None),
+        ('Future Use 2', None),
+        ('Future Use 3', None),
+        ('Future Use 4', None),
+        ('Future Use 5', None),
+        ('Future Use 6', None),
+        ('Future Use 7', None),
+        ('Future Use 8', None),
+        ('Future Use 9', None),
+        ('System Temp 10', None),
+        ('System Temp 11', None),
+        ('System Temp 12', None),
+        ('System Temp 13', None),
+        ('System Temp 14', None),
+        ('System Temp 15', None),
+        ('System Temp 16', None),
+        ('System Temp 17', None),
+        ('System Temp 18', None),
+        ('System Temp 19', None),
+        ('System Temp 20', None),
+        ('System Temp 21', None),
+        ('System Temp 22', None),
+        ('System Temp 23', None),
+        ('System Temp 24', None),
+        ('System Temp 25', None),
+        ('System Temp 26', None),
+        ('System Temp 27', None),
+        ('System Temp 28', None),
+        ('System Temp 29', None),
+    ]
+
+
     def __init__(self):
         with app.app_context():
             try:
@@ -109,7 +183,18 @@ class HADiscovery(object):
 
             self.config = self._config_obj.config
 
+            self._device_name = 'indi-allsky'
+
         self._port = 1883
+
+
+    @property
+    def device_name(self):
+        return self._device_name
+
+    @device_name.setter
+    def device_name(self, new_device_name):
+        self._device_name = str(new_device_name)
 
 
     def main(self, retain=True):
@@ -133,6 +218,8 @@ class HADiscovery(object):
             self._port = port
 
 
+        self.update_sensor_slot_labels()
+
 
         print('')
         print('#################################################')
@@ -146,6 +233,8 @@ class HADiscovery(object):
         print('Username: {0}'.format(username))
         print('')
         print('Auto-discovery base topic: {0}'.format(self.discovery_base_topic))
+        print('Device name:               {0}'.format(self.device_name))
+        print('')
         print('indi-allsky base topic:    {0}'.format(base_topic))
         print('')
 
@@ -165,6 +254,12 @@ class HADiscovery(object):
                     'content_type' : 'image/jpeg',
                     #'content_type' : 'image/png',
                     'image_topic' : '/'.join((base_topic, 'latest')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -174,6 +269,12 @@ class HADiscovery(object):
                     'name' : 'Exposure Date',
                     'unique_id' : 'indi_allsky_exp_date_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'exp_date')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -184,6 +285,12 @@ class HADiscovery(object):
                     'unit_of_measurement' : 's',
                     'unique_id' : 'indi_allsky_exposure_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'exposure')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -193,6 +300,12 @@ class HADiscovery(object):
                     'name' : 'Camera Gain',
                     'unique_id' : 'indi_allsky_gain_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'gain')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -202,6 +315,12 @@ class HADiscovery(object):
                     'name' : 'Camera Binmode',
                     'unique_id' : 'indi_allsky_bin_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'bin')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -212,6 +331,12 @@ class HADiscovery(object):
                     'unit_of_measurement' : '°',
                     'unique_id' : 'indi_allsky_temp_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'temp')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -222,6 +347,12 @@ class HADiscovery(object):
                     'unit_of_measurement' : '°',
                     'unique_id' : 'indi_allsky_sunalt_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'sunalt')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -232,6 +363,12 @@ class HADiscovery(object):
                     'unit_of_measurement' : '°',
                     'unique_id' : 'indi_allsky_moonalt_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'moonalt')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -242,6 +379,12 @@ class HADiscovery(object):
                     'unit_of_measurement' : '%',
                     'unique_id' : 'indi_allsky_moonphase_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'moonphase')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -253,6 +396,12 @@ class HADiscovery(object):
                     'payload_off' : False,
                     'unique_id' : 'indi_allsky_moonmode_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'moonmode')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -264,6 +413,12 @@ class HADiscovery(object):
                     'payload_off' : False,
                     'unique_id' : 'indi_allsky_night_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'night')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -273,6 +428,12 @@ class HADiscovery(object):
                     'name' : 'SQM',
                     'unique_id' : 'indi_allsky_sqm_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'sqm')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -282,6 +443,12 @@ class HADiscovery(object):
                     'name' : 'Stars',
                     'unique_id' : 'indi_allsky_stars_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'stars')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -292,6 +459,12 @@ class HADiscovery(object):
                     'unit_of_measurement' : '°',
                     'unique_id' : 'indi_allsky_latitude_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'latitude')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -302,6 +475,12 @@ class HADiscovery(object):
                     'unit_of_measurement' : '°',
                     'unique_id' : 'indi_allsky_longitude_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'longitude')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -312,6 +491,12 @@ class HADiscovery(object):
                     'unit_of_measurement' : 'm',
                     'unique_id' : 'indi_allsky_elevation_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'elevation')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -321,16 +506,28 @@ class HADiscovery(object):
                     'name' : 'K-P Index',
                     'unique_id' : 'indi_allsky_kpindex_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'kpindex')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
                 'component' : 'sensor',
                 'object_id' : 'indi_allsky_ovation_max',
                 'config' : {
-                    'name' : 'Aurora',
+                    'name' : 'Aurora Prediction',
                     'unit_of_measurement' : '%',
                     'unique_id' : 'indi_allsky_ovation_max_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'ovation_max')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -340,6 +537,12 @@ class HADiscovery(object):
                     'name' : 'Smoke Rating',
                     'unique_id' : 'indi_allsky_smoke_rating_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'smoke_rating')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -349,6 +552,12 @@ class HADiscovery(object):
                     'name' : 'Sidereal Time',
                     'unique_id' : 'indi_allsky_sidereal_time_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'sidereal_time')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
         ]
@@ -364,6 +573,12 @@ class HADiscovery(object):
                     'content_type' : 'image/jpeg',
                     #'content_type' : 'image/png',
                     'image_topic' : '/'.join((base_topic, 'panorama')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             })
 
@@ -376,6 +591,12 @@ class HADiscovery(object):
                     'name' : 'CPU Total',
                     'unique_id' : 'indi_allsky_cpu_total_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'cpu', 'total')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
             {
@@ -386,6 +607,12 @@ class HADiscovery(object):
                     'unit_of_measurement' : '%',
                     'unique_id' : 'indi_allsky_memory_total_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'memory', 'total')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             },
         ]
@@ -413,6 +640,12 @@ class HADiscovery(object):
                         'unit_of_measurement' : '%',
                         'unique_id' : 'indi_allsky_fs_root_{0}'.format(self.unique_id_base),
                         'state_topic' : '/'.join((base_topic, 'disk', 'root')),
+                        'device'   : {
+                            'name' : self.device_name,
+                            'identifiers' : [
+                                self.device_name,
+                            ],
+                        },
                     },
                 })
 
@@ -429,6 +662,12 @@ class HADiscovery(object):
                         'unit_of_measurement' : '%',
                         'unique_id' : 'indi_allsky_fs_{0}_{1}'.format(fs_mountpoint_safe, self.unique_id_base),
                         'state_topic' : '/'.join((base_topic, 'disk', re.sub(r'^/', '', fs.mountpoint))),  # remove slash prefix
+                        'device'   : {
+                            'name' : self.device_name,
+                            'identifiers' : [
+                                self.device_name,
+                            ],
+                        },
                     },
                 })
 
@@ -458,6 +697,12 @@ class HADiscovery(object):
                         'unit_of_measurement' : '°',
                         'unique_id' : 'indi_allsky_thermal_{0}_{1}_{2}'.format(t_key_safe, label_safe, self.unique_id_base),
                         'state_topic' : '/'.join((base_topic, 'temp', t_key_safe, label_safe)),
+                        'device'   : {
+                            'name' : self.device_name,
+                            'identifiers' : [
+                                self.device_name,
+                            ],
+                        },
                     },
                 })
 
@@ -468,10 +713,16 @@ class HADiscovery(object):
                 'component' : 'sensor',
                 'object_id' : 'indi_allsky_sensor_temp_{0}'.format(i),
                 'config' : {
-                    'name' : 'sensor_temp_{0}'.format(i),
+                    'name' : self.SENSOR_SLOT_choices[i + 30][0],
                     'unit_of_measurement' : '°',
                     'unique_id' : 'indi_allsky_sensor_temp_{0}_{1}'.format(i, self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'sensor_temp_{0}'.format(str(i)))),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             })
 
@@ -482,17 +733,31 @@ class HADiscovery(object):
                 'component' : 'sensor',
                 'object_id' : 'indi_allsky_sensor_user_{0}'.format(i),
                 'config' : {
-                    'name' : 'sensor_user_{0}'.format(i),
+                    'name' : self.SENSOR_SLOT_choices[i][0],
                     'unique_id' : 'indi_allsky_sensor_user_{0}_{1}'.format(i, self.unique_id_base),
                     'state_topic' : '/'.join((base_topic, 'sensor_user_{0}'.format(str(i)))),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
                 },
             })
+
+            # add the unit_of_measurement for common types
+            if self.SENSOR_SLOT_choices[i][1] == constants.SENSOR_TEMPERATURE:
+                extended_sensor_list[-1]['config']['unit_of_measurement'] = self.HA_UNIT_MAP[constants.SENSOR_TEMPERATURE]['degrees']
+            elif self.SENSOR_SLOT_choices[i][1] == constants.SENSOR_RELATIVE_HUMIDITY:
+                extended_sensor_list[-1]['config']['unit_of_measurement'] = self.HA_UNIT_MAP[constants.SENSOR_RELATIVE_HUMIDITY]['percent']
+            elif self.SENSOR_SLOT_choices[i][1] == constants.SENSOR_PERCENTAGE:
+                extended_sensor_list[-1]['config']['unit_of_measurement'] = self.HA_UNIT_MAP[constants.SENSOR_PERCENTAGE]['percent']
 
 
         message_list = list()
         for sensor in basic_sensor_list:
             message = {
-                'topic'    : '/'.join((self.discovery_base_topic, sensor['component'], sensor['object_id'], 'config')),
+                'topic'    : '/'.join((self.discovery_base_topic, sensor['component'], base_topic, sensor['object_id'], 'config')),
                 'payload'  : json.dumps(sensor['config']),
                 'qos'      : 0,
                 'retain'   : retain,
@@ -505,7 +770,7 @@ class HADiscovery(object):
 
         for sensor in extended_sensor_list:
             message = {
-                'topic'    : '/'.join((self.discovery_base_topic, sensor['component'], sensor['object_id'], 'config')),
+                'topic'    : '/'.join((self.discovery_base_topic, sensor['component'], base_topic, sensor['object_id'], 'config')),
                 'payload'  : json.dumps(sensor['config']),
                 'qos'      : 0,
                 'retain'   : retain,
@@ -558,8 +823,81 @@ class HADiscovery(object):
         )
 
 
+    def update_sensor_slot_labels(self):
+        from indi_allsky.devices import sensors as indi_allsky_sensors
+
+        temp_sensor__a_classname = self.config.get('TEMP_SENSOR', {}).get('A_CLASSNAME', '')
+        temp_sensor__a_label = self.config.get('TEMP_SENSOR', {}).get('A_LABEL', 'Sensor A')
+        temp_sensor__a_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT')
+        temp_sensor__b_classname = self.config.get('TEMP_SENSOR', {}).get('B_CLASSNAME', '')
+        temp_sensor__b_label = self.config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B')
+        temp_sensor__b_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT')
+        temp_sensor__c_classname = self.config.get('TEMP_SENSOR', {}).get('C_CLASSNAME', '')
+        temp_sensor__c_label = self.config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C')
+        temp_sensor__c_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT')
+
+
+        if temp_sensor__a_classname:
+            try:
+                temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
+
+                for x in range(temp_sensor__a_class.METADATA['count']):
+                    self.SENSOR_SLOT_choices[temp_sensor__a_user_var_slot + x] = (
+                        '{0:s} - {1:s} - {2:s}'.format(
+                            temp_sensor__a_class.METADATA['name'],
+                            temp_sensor__a_label,
+                            temp_sensor__a_class.METADATA['labels'][x],
+                        ),
+                        temp_sensor__a_class.METADATA['types'][x],
+                    )
+            except AttributeError:
+                logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+
+
+        if temp_sensor__b_classname:
+            try:
+                temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
+
+                for x in range(temp_sensor__b_class.METADATA['count']):
+                    self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x] = (
+                        '{0:s} - {1:s} - {2:s}'.format(
+                            temp_sensor__b_class.METADATA['name'],
+                            temp_sensor__b_label,
+                            temp_sensor__b_class.METADATA['labels'][x],
+                        ),
+                        temp_sensor__b_class.METADATA['types'][x],
+                    )
+            except AttributeError:
+                logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+
+
+        if temp_sensor__c_classname:
+            try:
+                temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
+
+                for x in range(temp_sensor__c_class.METADATA['count']):
+                    self.SENSOR_SLOT_choices[temp_sensor__c_user_var_slot + x] = (
+                        '{0:s} - {1:s} - {2:s}'.format(
+                            temp_sensor__c_class.METADATA['name'],
+                            temp_sensor__c_label,
+                            temp_sensor__c_class.METADATA['labels'][x],
+                        ),
+                        temp_sensor__c_class.METADATA['types'][x],
+                    )
+            except AttributeError:
+                logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+
+
+
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        '--device_topic',
+        '-d',
+        help='device name topic',
+        type=str,
+        default='indi-allsky',
+    )
 
     retain_group = argparser.add_mutually_exclusive_group(required=False)
     retain_group.add_argument(
@@ -580,5 +918,6 @@ if __name__ == "__main__":
 
 
     had = HADiscovery()
+    had.device_topic = args.device_topic
     had.main(retain=args.retain)
 
