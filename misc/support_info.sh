@@ -103,6 +103,10 @@ echo "System: $SYSTEM_MODEL"
 echo
 uname -a
 
+echo "Hostname"
+hostname -f
+hostname -A
+
 echo
 echo "Time"
 date
