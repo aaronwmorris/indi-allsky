@@ -515,7 +515,7 @@ class IndiAllSkyConfigBase(object):
             "LABEL_ENABLE"           : True,
             "LABEL_LIMIT"            : 10,
             "AIRCRAFT_LABEL_TEMPLATE"      : "{id:s} {distance:0.1f}km {alt:0.1f}\u00b0 {dir:s}",
-            "IMAGE_LABEL_TEMPLATE_PREFIX"  : "# xy:-15,200 (Right)\n# anchor:ra (Right Justified)\n# color:200,200,200\nAircraft",
+            "IMAGE_LABEL_TEMPLATE_PREFIX"  : "# xy:15,300 (Left)\n# anchor:la (Left Justified)\n# color:200,200,200\nAircraft",
         },
         "SATELLITE_TRACK" : {
             "ENABLE"                 : False,
@@ -524,7 +524,7 @@ class IndiAllSkyConfigBase(object):
             "LABEL_ENABLE"           : True,
             "LABEL_LIMIT"            : 10,
             "SAT_LABEL_TEMPLATE"     : "{title:s} {alt:0.1f}\u00b0 {dir:s}",
-            "IMAGE_LABEL_TEMPLATE_PREFIX" : "# xy:15,300 (Left)\n# anchor:la (Left Justified)\n# color:200,200,200\nSatellites",
+            "IMAGE_LABEL_TEMPLATE_PREFIX" : "# xy:-15,200 (Right)\n# anchor:ra (Right Justified)\n# color:200,200,200\nSatellites",
         },
     })
 
