@@ -746,15 +746,12 @@ class HADiscovery(object):
             })
 
             # add the unit_of_measurement for common types
-            try:
-                if self.SENSOR_SLOT_choices[i][1] == constants.SENSOR_TEMPERATURE:
-                    extended_sensor_list[-1]['config']['unit_of_measurement'] = self.HA_UNIT_MAP[constants.SENSOR_TEMPERATURE]['degrees']
-                elif self.SENSOR_SLOT_choices[i][1] == constants.SENSOR_RELATIVE_HUMIDITY:
-                    extended_sensor_list[-1]['config']['unit_of_measurement'] = self.HA_UNIT_MAP[constants.SENSOR_RELATIVE_HUMIDITY]['percent']
-                elif self.SENSOR_SLOT_choices[i][1] == constants.SENSOR_PERCENTAGE:
-                    extended_sensor_list[-1]['config']['unit_of_measurement'] = self.HA_UNIT_MAP[constants.SENSOR_PERCENTAGE]['percent']
-            except IndexError:
-                pass
+            if self.SENSOR_SLOT_choices[i][1] == constants.SENSOR_TEMPERATURE:
+                extended_sensor_list[-1]['config']['unit_of_measurement'] = self.HA_UNIT_MAP[constants.SENSOR_TEMPERATURE]['degrees']
+            elif self.SENSOR_SLOT_choices[i][1] == constants.SENSOR_RELATIVE_HUMIDITY:
+                extended_sensor_list[-1]['config']['unit_of_measurement'] = self.HA_UNIT_MAP[constants.SENSOR_RELATIVE_HUMIDITY]['percent']
+            elif self.SENSOR_SLOT_choices[i][1] == constants.SENSOR_PERCENTAGE:
+                extended_sensor_list[-1]['config']['unit_of_measurement'] = self.HA_UNIT_MAP[constants.SENSOR_PERCENTAGE]['percent']
 
 
         message_list = list()
