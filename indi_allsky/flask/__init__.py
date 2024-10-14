@@ -18,6 +18,7 @@ csrf = CSRFProtect()
 from .views import bp_allsky  # noqa: E402
 from .auth_views import bp_auth_allsky  # noqa: E402
 from .syncapi_views import bp_syncapi_allsky  # noqa: E402
+from .actionapi_views import bp_actionapi_allsky  # noqa: E402
 
 
 dictConfig({
@@ -99,6 +100,7 @@ def create_app():
     app.register_blueprint(bp_syncapi_allsky)
 
     csrf.exempt(bp_syncapi_allsky)  # disable CSRF for syncapi views
+    csrf.exempt(bp_actionapi_allsky)  # disable CSRF for actionapi views
 
     db.init_app(app)
     migrate.init_app(app, db, directory=app.config['MIGRATION_FOLDER'])
