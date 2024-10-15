@@ -1237,6 +1237,7 @@ class IndiAllSky(object):
 
 
         reload_received = False
+        pause_received = False
 
         for task in manual_tasks:
             if task.queue == TaskQueueQueue.VIDEO:
@@ -1290,11 +1291,19 @@ class IndiAllSky(object):
                     task.setSuccess('Updated config location')
 
                 elif action == 'setpaused':
+                    if pause_received:
+                        logger.warning('Skipping duplicate pause action')
+                        task.setExpired()
+                        continue
+
                     logger.info('Set paused/unpaused')
 
                     pause = task.data['pause']
 
                     self.updateConfigPaused(pause)
+
+                    pause_received = True
+                    self._reload = True
 
                     task.setSuccess('Updated paused status')
 
@@ -1468,6 +1477,4 @@ class IndiAllSky(object):
             logger.info('Wrote new config')
         except ConfigSaveException:
             return
-
-        self._reload = True
 
