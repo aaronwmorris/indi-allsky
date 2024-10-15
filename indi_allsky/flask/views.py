@@ -220,9 +220,13 @@ class JsonLatestImageView(JsonView):
                 return data
 
 
+        if self.capture_pause:
+            data['latest_image']['message'] = 'Capture paused'
+            return data
+
+
         if not night:
             ### day
-
             if not self.local_indi_allsky and self.daytime_capture and not self.daytime_capture_save:
                 # remote cameras will not receive daytime images when save is disabled
                 if self.sun_set_date:

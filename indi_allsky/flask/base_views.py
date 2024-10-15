@@ -70,6 +70,7 @@ class BaseView(View):
 
         self.daytime_capture = self.camera.daytime_capture
         self.daytime_capture_save = self.camera.daytime_capture_save
+        self.capture_pause = self.camera.capture_pause
 
         self.s3_prefix = self.camera.s3_prefix
         self.web_nonlocal_images = self.camera.web_nonlocal_images
