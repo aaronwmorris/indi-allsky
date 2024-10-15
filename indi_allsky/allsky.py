@@ -1289,6 +1289,15 @@ class IndiAllSky(object):
 
                     task.setSuccess('Updated config location')
 
+                elif action == 'setpaused':
+                    logger.info('Set paused/unpaused')
+
+                    pause = task.data['pause']
+
+                    self.updateConfigPaused(pause)
+
+                    task.setSuccess('Updated paused status')
+
                 else:
                     logger.error('Unknown action: %s', action)
                     task.setFailed()
@@ -1416,8 +1425,8 @@ class IndiAllSky(object):
     def updateConfigLocation(self, latitude, longitude, elevation, camera_id):
         logger.warning('Updating indi-allsky config with new geographic location')
 
-        self.config['LOCATION_LATITUDE'] = round(float(latitude), 3)
-        self.config['LOCATION_LONGITUDE'] = round(float(longitude), 3)
+        self.config['LOCATION_LATITUDE'] = round(float(latitude), 4)
+        self.config['LOCATION_LONGITUDE'] = round(float(longitude), 4)
         self.config['LOCATION_ELEVATION'] = int(elevation)
 
 
@@ -1443,4 +1452,22 @@ class IndiAllSky(object):
 
         except NoResultFound:
             logger.error('Camera ID %d not found', camera_id)
+
+
+    def updateConfigPaused(self, pause):
+        if pause:
+            logger.warning('Pausing capture')
+        else:
+            logger.warning('Unpausing capture')
+
+        self.config['CAPTURE_PAUSE'] = bool(pause)
+
+        # save new config
+        try:
+            self._config_obj.save('system', '*Auto* Pause/Unpause Capture')
+            logger.info('Wrote new config')
+        except ConfigSaveException:
+            return
+
+        self._reload = True
 

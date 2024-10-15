@@ -98,6 +98,7 @@ def create_app():
     app.register_blueprint(bp_allsky)
     app.register_blueprint(bp_auth_allsky)
     app.register_blueprint(bp_syncapi_allsky)
+    app.register_blueprint(bp_actionapi_allsky)
 
     csrf.exempt(bp_syncapi_allsky)  # disable CSRF for syncapi views
     csrf.exempt(bp_actionapi_allsky)  # disable CSRF for actionapi views
