@@ -4760,6 +4760,13 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
     def dispatch_request(self):
+        if not current_user.is_admin:
+            json_data = {
+                'form_global' : ['User does not have permission to generate content'],
+            }
+            return jsonify(json_data), 400
+
+
         camera_id = int(request.json['CAMERA_ID'])
 
         form_timelapsegen = IndiAllskyTimelapseGeneratorForm(data=request.json, camera_id=camera_id)
@@ -5379,6 +5386,14 @@ class AjaxFocusControllerView(BaseView):
     def dispatch_request(self):
         from ..focuser import IndiAllSkyFocuser
         from ..devices.exceptions import DeviceControlException
+
+
+        if not current_user.is_admin:
+            json_data = {
+                'focuser_error' : ['User does not have permission to adjust focus'],
+            }
+            return jsonify(json_data), 400
+
 
         form_focuscontroller = IndiAllskyFocusControllerForm(data=request.json)
 
@@ -6725,6 +6740,13 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
 
 
     def dispatch_request(self):
+        if not current_user.is_admin:
+            json_data = {
+                'failure-message' : 'User does not have permission to generate content',
+            }
+            return jsonify(json_data), 400
+
+
         image_id = int(request.json['IMAGE_ID'])
         camera_id = int(request.json['CAMERA_ID'])
         pre_seconds = int(request.json['PRE_SECONDS'])

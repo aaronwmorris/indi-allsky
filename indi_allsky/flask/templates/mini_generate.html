@@ -135,18 +135,18 @@ function loadJS(url, data, onDone, onError) {
         url: url,
         contentType: "application/json",
         data: data,
-        success: function(return_data){
+        success: function(rdata){
             $("#loader_generate").css({'display' : 'none'});
-            json_data = return_data
+            json_data = rdata
 
-            var image_count = return_data['image_list'].length;
+            var image_count = rdata['image_list'].length;
             $('#video_length').html(image_count + ' Frames - Approximately ' + image_count / parseFloat(framerate) + 's');
 
             $('#message').html(json_data['message']);
         },
-        error: function(data){
+        error: function(rdata){
             $("#loader_generate").css({'display' : 'none'});
-            onError(data.status);
+            onError(rdata.status);
             $('#message').text('Error loading data.  Please check the logs.');
             $('#video_length').html('');
         },
@@ -252,7 +252,8 @@ $( document ).ready(function() {
 <hr>
 
 <div class="row">
-    <div class="text-success text-center" id="job_message"></div>
+    <div class="text-success text-center" id="success_message" style="display: none;"></div>
+    <div class="text-danger text-center" id="failure_message" style="display: none;"></div>
     <div class="text-muted text-center" id="message"></div>
     <div class="text-muted text-center" id="video_length"></div>
 </div>
@@ -305,18 +306,27 @@ $('#form_mini_timelapse').on('submit', function() {
         url: "{{ url_for('indi_allsky.ajax_mini_generate_view') }}",
         contentType: "application/json",
         data: JSON.stringify(form_data),
-        success: function(return_data){
+        success: function(rdata){
             $("#loader_generate").css({'display' : 'none'});
             $('#NOTE').val('');
 
-            $('#job_message').html(return_data['success-message']);
-            $('#job_message').css({'display' : 'block'});
+            $('#success_message').html(rdata['success-message']);
+            $('#success_message').css({'display' : 'block'});
             setTimeout(function() {
-                $('#job_message').css({'display' : 'none'});
+                $('#success_message').css({'display' : 'none'});
             }, 15000);
         },
-        error: function(data){
+        error: function(rdata){
             $("#loader_config").css({'display' : 'none'});
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure_message').html(errors['failure-message']);
+            $('#failure_message').css({'display' : 'block'});
+
+            setTimeout(function() {
+                $('#failure_message').css({'display' : 'none'});
+            }, 15000);
         },
     });
 
