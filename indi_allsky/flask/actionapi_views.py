@@ -73,6 +73,10 @@ class ActionApiBaseView(BaseView):
             raise PermissionDenied('Permission Denied for user: {0:s}'.format(username))
 
 
+        if not self.verify_admin_network():
+            raise PermissionDenied('Request not from admin network (flask.json)')
+
+
     def post(self):
         # override in subclass
         return jsonify({}), 400
