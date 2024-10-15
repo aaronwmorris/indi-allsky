@@ -36,6 +36,9 @@ class ActionApiBaseView(BaseView):
         except AuthenticationFailure as e:
             app.logger.error('Authentication failure: %s', str(e))
             return jsonify({'error' : 'authentication failed'}), 400
+        except PermissionDenied as e:
+            app.logger.error('Permission denied: %s', str(e))
+            return jsonify({'error' : 'permission denied'}), 400
 
 
         if request.method == 'POST':
@@ -60,13 +63,14 @@ class ActionApiBaseView(BaseView):
 
 
         if not user:
-            app.logger.warning('Unknown user: %s', username)
-            raise AuthenticationFailure('Unknown user')
-
+            raise AuthenticationFailure('Unknown user: {0:s}'.format(username))
 
         if not argon2.verify(password, user.password):
-            app.logger.warning('User failed authentication: %s', user.username)
-            raise AuthenticationFailure('Bad password')
+            raise AuthenticationFailure('User failed authentication: {0:s}'.format(username))
+
+
+        if not user.is_admin:
+            raise PermissionDenied('Permission Denied for user: {0:s}'.format(username))
 
 
     def post(self):
@@ -137,6 +141,10 @@ class UnpauseActionApiView(ActionApiBaseView):
 
 
 class AuthenticationFailure(Exception):
+    pass
+
+
+class PermissionDenied(Exception):
     pass
 
 
