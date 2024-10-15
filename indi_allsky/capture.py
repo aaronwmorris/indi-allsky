@@ -331,7 +331,7 @@ class CaptureWorker(Process):
                 if self.night:
                     # always indicate timelapse generation at night
                     self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
-                elif self.config['DAYTIME_CAPTURE'] and self.config.get('DAYTIME_CAPTURE_SAVE', True):
+                elif self.config.get('DAYTIME_CAPTURE') and self.config.get('DAYTIME_CAPTURE_SAVE', True):
                     # must be day time
                     self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
 
@@ -348,8 +348,27 @@ class CaptureWorker(Process):
                 self.getGpsPosition()
 
 
-                if not self.night and not self.config['DAYTIME_CAPTURE']:
-                    logger.info('Daytime capture is disabled')
+                if self.config.get('CAPTURE_PAUSE'):
+                    logger.warning('*** CAPTURE PAUSED ***')
+                    self.generate_timelapse_flag = True
+
+                    self._miscDb.setState('STATUS', constants.STATUS_PAUSED)
+
+                    if self._shutdown:
+                        logger.warning('Shutting down')
+                        self.indiclient.disableCcdCooler()  # safety
+
+                        self.indiclient.disconnectServer()
+
+                        logger.warning('Goodbye')
+                        return
+
+
+                    time.sleep(59)  # prime number
+                    continue
+
+                elif not self.night and not self.config.get('DAYTIME_CAPTURE'):
+                    logger.info('Daytime capture disabled')
                     self.generate_timelapse_flag = False
 
                     self._miscDb.setState('STATUS', constants.STATUS_SLEEPING)
