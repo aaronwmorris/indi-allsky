@@ -285,6 +285,8 @@ class BaseView(View):
             data['status'] = '<span class="text-primary">STOPPING</span>'
         elif status == constants.STATUS_STOPPED:
             data['status'] = '<span class="text-primary">STOPPED</span>'
+        elif status == constants.STATUS_PAUSED:
+            data['status'] = '<span class="text-muted">PAUSED</span>'
         elif status == constants.STATUS_NOCAMERA:
             data['status'] = '<span class="text-danger">NO CAMERA</span>'
         elif status == constants.STATUS_NOINDISERVER:
@@ -989,6 +991,7 @@ class FakeCamera(object):
     daytime_capture = True
     daytime_capture_save = True
     daytime_timelapse = True
+    capture_pause = False
     web_nonlocal_images = False
     web_local_images_admin = False
     utc_offset = 0

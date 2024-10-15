@@ -79,6 +79,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     daytime_capture = db.Column(db.Boolean, server_default=expression.true(), nullable=False)
     daytime_capture_save = db.Column(db.Boolean, server_default=expression.true(), nullable=False)
     daytime_timelapse = db.Column(db.Boolean, server_default=expression.true(), nullable=False)
+    capture_pause = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
 
     s3_prefix = db.Column(db.String(length=255), nullable=True)
     web_nonlocal_images = db.Column(db.Boolean, server_default=expression.false(), nullable=False)

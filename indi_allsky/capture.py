@@ -774,6 +774,7 @@ class CaptureWorker(Process):
             'daytime_capture'       : self.config.get('DAYTIME_CAPTURE', True),
             'daytime_capture_save'  : self.config.get('DAYTIME_CAPTURE_SAVE', True),
             'daytime_timelapse'     : self.config.get('DAYTIME_TIMELAPSE', True),
+            'capture_pause'         : self.config.get('CAPTURE_PAUSE', False),
 
             's3_prefix'             : s3_prefix,
             'web_nonlocal_images'   : self.config.get('WEB_NONLOCAL_IMAGES', False),

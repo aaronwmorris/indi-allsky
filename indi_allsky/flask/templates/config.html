@@ -718,6 +718,21 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.CAPTURE_PAUSE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CAPTURE_PAUSE(class='form-check-input') }}
+                <div id="CAPTURE_PAUSE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Pause image capture</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.THUMBNAILS__IMAGES_AUTO.label }}
         </div>
         <div class="col-sm-2">
@@ -6123,6 +6138,7 @@ const checkbox_field_names = [
     'DETECT_STARS',
     'DETECT_METEORS',
     'DETECT_DRAW',
+    'CAPTURE_PAUSE',
     'TIMELAPSE_ENABLE',
     'DAYTIME_CAPTURE',
     'DAYTIME_CAPTURE_SAVE',
