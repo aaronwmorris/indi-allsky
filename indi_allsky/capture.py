@@ -210,6 +210,17 @@ class CaptureWorker(Process):
         )
 
 
+        self.detectNight()
+
+        ### Update shared values to match current state
+        with self.night_v.get_lock():
+            self.night_v.value = int(self.night)
+
+        with self.moonmode_v.get_lock():
+            self.moonmode_v.value = int(self.moonmode)
+
+
+
         ### main loop starts
         while True:
             loop_start_time = time.time()
@@ -327,13 +338,15 @@ class CaptureWorker(Process):
                         self._uploadAllskyEndOfNight(self.camera_id)
 
 
-                # this is to prevent expiring images at startup
                 if self.night:
                     # always indicate timelapse generation at night
-                    self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
-                elif self.config.get('DAYTIME_CAPTURE') and self.config.get('DAYTIME_CAPTURE_SAVE', True):
-                    # must be day time
-                    self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
+                    self.generate_timelapse_flag = True
+                else:
+                    # day
+                    if not self.config.get('DAYTIME_CAPTURE') or not self.config.get('DAYTIME_CAPTURE_SAVE', True):
+                        self.generate_timelapse_flag = False
+                    else:
+                        self.generate_timelapse_flag = True
 
 
                 #logger.warning(
@@ -350,8 +363,9 @@ class CaptureWorker(Process):
 
                 if self.config.get('CAPTURE_PAUSE'):
                     logger.warning('*** CAPTURE PAUSED ***')
-                    self.generate_timelapse_flag = True
 
+                    now = time.time()
+                    self._miscDb.setState('WATCHDOG', int(now))
                     self._miscDb.setState('STATUS', constants.STATUS_PAUSED)
 
                     if self._shutdown:
@@ -371,6 +385,8 @@ class CaptureWorker(Process):
                     logger.info('Daytime capture disabled')
                     self.generate_timelapse_flag = False
 
+                    now = time.time()
+                    self._miscDb.setState('WATCHDOG', int(now))
                     self._miscDb.setState('STATUS', constants.STATUS_SLEEPING)
 
                     if self._shutdown:
