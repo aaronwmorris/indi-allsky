@@ -364,7 +364,7 @@ class CaptureWorker(Process):
                         return
 
 
-                    time.sleep(59)  # prime number
+                    time.sleep(31)  # prime number
                     continue
 
                 elif not self.night and not self.config.get('DAYTIME_CAPTURE'):
@@ -383,7 +383,7 @@ class CaptureWorker(Process):
                         return
 
 
-                    time.sleep(59)  # prime number
+                    time.sleep(31)  # prime number
                     continue
 
 
