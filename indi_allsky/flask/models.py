@@ -326,6 +326,20 @@ class IndiAllSkyDbDarkFrameTable(IndiAllSkyDbFileBase):
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='darkframes')
 
 
+    db.Index(
+        'idx_darkframe_cbegbtwh_ix',
+        camera_id,
+        bitdepth,
+        exposure,
+        gain,
+        binmode,
+        temp,
+        width,
+        height,
+        active,
+    )
+
+
     def __repr__(self):
         return '<DarkFrame {0:s}>'.format(self.filename)
 
@@ -361,6 +375,20 @@ class IndiAllSkyDbBadPixelMapTable(IndiAllSkyDbFileBase):
     data = db.Column(db.JSON, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='badpixelmaps')
+
+
+    db.Index(
+        'idx_badpixelmap_cbegbtwh_ix',
+        camera_id,
+        bitdepth,
+        exposure,
+        gain,
+        binmode,
+        temp,
+        width,
+        height,
+        active,
+    )
 
 
     def __repr__(self):
