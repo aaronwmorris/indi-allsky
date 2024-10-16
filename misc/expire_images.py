@@ -164,72 +164,44 @@ class ExpireImages(object):
         logger.info('Proceeding in 10 seconds')
 
         time.sleep(10)
-        logger.info('Building id lists...')
 
 
         ### Getting IDs first then deleting each file is faster than deleting all files with
         ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
         ### to recache after every delete which cause a 1-5 second lag for each delete
 
-        image_id_list = list()
-        for entry in old_images:
-            image_id_list.append(entry.id)
-
-        fits_id_list = list()
-        for entry in old_fits_images:
-            fits_id_list.append(entry.id)
-
-        raw_id_list = list()
-        for entry in old_raw_images:
-            raw_id_list.append(entry.id)
-
-        panorama_image_id_list = list()
-        for entry in old_panorama_images:
-            panorama_image_id_list.append(entry.id)
-
-
-        video_id_list = list()
-        for entry in old_videos:
-            video_id_list.append(entry.id)
-
-        mini_video_id_list = list()
-        for entry in old_mini_videos:
-            mini_video_id_list.append(entry.id)
-
-        keogram_id_list = list()
-        for entry in old_keograms:
-            keogram_id_list.append(entry.id)
-
-        startrail_image_id_list = list()
-        for entry in old_startrails:
-            startrail_image_id_list.append(entry.id)
-
-        startrail_video_id_list = list()
-        for entry in old_startrails_videos:
-            startrail_video_id_list.append(entry.id)
-
-        panorama_video_id_list = list()
-        for entry in old_panorama_videos:
-            panorama_video_id_list.append(entry.id)
-
-
-        logger.warning('Deleting...')
-        time.sleep(3)
-
 
         # catch signals to perform cleaner shutdown
         signal.signal(signal.SIGINT, self.sigint_handler_main)
 
-        delete_count = self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbMiniVideoTable, mini_video_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
+
+
+        logger.warning('Deleting...')
+
+
+        asset_lists = [
+            (old_images, IndiAllSkyDbImageTable),
+            (old_fits_images, IndiAllSkyDbFitsImageTable),
+            (old_raw_images, IndiAllSkyDbRawImageTable),
+            (old_panorama_images, IndiAllSkyDbPanoramaImageTable),
+            (old_videos, IndiAllSkyDbVideoTable),
+            (old_mini_videos, IndiAllSkyDbMiniVideoTable),
+            (old_keograms, IndiAllSkyDbKeogramTable),
+            (old_startrails, IndiAllSkyDbStarTrailsTable),
+            (old_startrails_videos, IndiAllSkyDbStarTrailsVideoTable),
+            (old_panorama_videos, IndiAllSkyDbPanoramaVideoTable),
+        ]
+
+
+        delete_count = 0
+        for asset_list, asset_table in asset_lists:
+            while True:
+                id_list = [entry.id for entry in asset_list.limit(500)]
+
+                if not id_list:
+                    break
+
+                delete_count += self._deleteAssets(asset_table, id_list)
 
 
         # Remove empty folders
