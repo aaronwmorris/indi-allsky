@@ -747,28 +747,9 @@ class ImageProcessor(object):
     def _apply_calibration(self, data, exposure, camera_id, image_bitpix):
         from astropy.io import fits
 
-        # pick a bad pixel map that is closest to the exposure and temperature
-        logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensors_temp_av[0])
-        bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
-            .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
-            .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
-            .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
-            .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
-            .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
-            .filter(IndiAllSkyDbBadPixelMapTable.exposure >= exposure)\
-            .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensors_temp_av[0])\
-            .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
-            .order_by(
-                IndiAllSkyDbBadPixelMapTable.exposure.asc(),
-                IndiAllSkyDbBadPixelMapTable.temp.asc(),
-                IndiAllSkyDbBadPixelMapTable.createDate.desc(),
-            )\
-            .first()
-
-        if not bpm_entry:
-            logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensors_temp_av[0])
-
-            # pick a bad pixel map that matches the exposure at the hightest temperature found
+        if self.config.get('IMAGE_CALIBRATE_BPM'):
+            # pick a bad pixel map that is closest to the exposure and temperature
+            logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensors_temp_av[0])
             bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
                 .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
                 .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
@@ -776,24 +757,46 @@ class ImageProcessor(object):
                 .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
                 .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
                 .filter(IndiAllSkyDbBadPixelMapTable.exposure >= exposure)\
+                .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensors_temp_av[0])\
+                .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
                 .order_by(
                     IndiAllSkyDbBadPixelMapTable.exposure.asc(),
-                    IndiAllSkyDbBadPixelMapTable.temp.desc(),
+                    IndiAllSkyDbBadPixelMapTable.temp.asc(),
                     IndiAllSkyDbBadPixelMapTable.createDate.desc(),
                 )\
                 .first()
 
-
             if not bpm_entry:
-                logger.warning(
-                    'Bad Pixel Map not found: ccd%d %dbit %0.7fs gain %d bin %d %0.2fc',
-                    camera_id,
-                    image_bitpix,
-                    float(exposure),
-                    self.gain_v.value,
-                    self.bin_v.value,
-                    self.sensors_temp_av[0],
-                )
+                logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensors_temp_av[0])
+
+                # pick a bad pixel map that matches the exposure at the hightest temperature found
+                bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
+                    .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
+                    .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
+                    .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
+                    .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
+                    .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
+                    .filter(IndiAllSkyDbBadPixelMapTable.exposure >= exposure)\
+                    .order_by(
+                        IndiAllSkyDbBadPixelMapTable.exposure.asc(),
+                        IndiAllSkyDbBadPixelMapTable.temp.desc(),
+                        IndiAllSkyDbBadPixelMapTable.createDate.desc(),
+                    )\
+                    .first()
+
+
+                if not bpm_entry:
+                    logger.warning(
+                        'Bad Pixel Map not found: ccd%d %dbit %0.7fs gain %d bin %d %0.2fc',
+                        camera_id,
+                        image_bitpix,
+                        float(exposure),
+                        self.gain_v.value,
+                        self.bin_v.value,
+                        self.sensors_temp_av[0],
+                    )
+        else:
+            bpm_entry = None
 
 
         # pick a dark frame that is closest to the exposure and temperature
