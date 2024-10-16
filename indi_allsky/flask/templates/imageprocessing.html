@@ -130,6 +130,21 @@ var fullscreen = false;  //initial state
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CALIBRATE_BPM.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.IMAGE_CALIBRATE_BPM(class='form-check-input') }}
+                <div id="IMAGE_CALIBRATE_BPM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -791,6 +806,7 @@ const field_names = [
 const checkbox_field_names = [
     'DISABLE_PROCESSING',
     'IMAGE_CALIBRATE_DARK',
+    'IMAGE_CALIBRATE_BPM',
     'NIGHT_CONTRAST_ENHANCE',
     'CONTRAST_ENHANCE_16BIT',
     'AUTO_WB',
