@@ -210,6 +210,17 @@ class CaptureWorker(Process):
         )
 
 
+        self.detectNight()
+
+        ### Update shared values to match current state
+        with self.night_v.get_lock():
+            self.night_v.value = int(self.night)
+
+        with self.moonmode_v.get_lock():
+            self.moonmode_v.value = int(self.moonmode)
+
+
+
         ### main loop starts
         while True:
             loop_start_time = time.time()
@@ -327,13 +338,15 @@ class CaptureWorker(Process):
                         self._uploadAllskyEndOfNight(self.camera_id)
 
 
-                # this is to prevent expiring images at startup
                 if self.night:
                     # always indicate timelapse generation at night
-                    self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
-                elif self.config['DAYTIME_CAPTURE'] and self.config.get('DAYTIME_CAPTURE_SAVE', True):
-                    # must be day time
-                    self.generate_timelapse_flag = True  # indicate images have been generated for timelapse
+                    self.generate_timelapse_flag = True
+                else:
+                    # day
+                    if not self.config.get('DAYTIME_CAPTURE') or not self.config.get('DAYTIME_CAPTURE_SAVE', True):
+                        self.generate_timelapse_flag = False
+                    else:
+                        self.generate_timelapse_flag = True
 
 
                 #logger.warning(
@@ -348,10 +361,32 @@ class CaptureWorker(Process):
                 self.getGpsPosition()
 
 
-                if not self.night and not self.config['DAYTIME_CAPTURE']:
-                    logger.info('Daytime capture is disabled')
+                if self.config.get('CAPTURE_PAUSE'):
+                    logger.warning('*** CAPTURE PAUSED ***')
+
+                    now = time.time()
+                    self._miscDb.setState('WATCHDOG', int(now))
+                    self._miscDb.setState('STATUS', constants.STATUS_PAUSED)
+
+                    if self._shutdown:
+                        logger.warning('Shutting down')
+                        self.indiclient.disableCcdCooler()  # safety
+
+                        self.indiclient.disconnectServer()
+
+                        logger.warning('Goodbye')
+                        return
+
+
+                    time.sleep(31)  # prime number
+                    continue
+
+                elif not self.night and not self.config.get('DAYTIME_CAPTURE'):
+                    logger.info('Daytime capture disabled')
                     self.generate_timelapse_flag = False
 
+                    now = time.time()
+                    self._miscDb.setState('WATCHDOG', int(now))
                     self._miscDb.setState('STATUS', constants.STATUS_SLEEPING)
 
                     if self._shutdown:
@@ -364,7 +399,7 @@ class CaptureWorker(Process):
                         return
 
 
-                    time.sleep(59)  # prime number
+                    time.sleep(31)  # prime number
                     continue
 
 
@@ -774,6 +809,7 @@ class CaptureWorker(Process):
             'daytime_capture'       : self.config.get('DAYTIME_CAPTURE', True),
             'daytime_capture_save'  : self.config.get('DAYTIME_CAPTURE_SAVE', True),
             'daytime_timelapse'     : self.config.get('DAYTIME_TIMELAPSE', True),
+            'capture_pause'         : self.config.get('CAPTURE_PAUSE', False),
 
             's3_prefix'             : s3_prefix,
             'web_nonlocal_images'   : self.config.get('WEB_NONLOCAL_IMAGES', False),

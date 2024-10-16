@@ -79,6 +79,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     daytime_capture = db.Column(db.Boolean, server_default=expression.true(), nullable=False)
     daytime_capture_save = db.Column(db.Boolean, server_default=expression.true(), nullable=False)
     daytime_timelapse = db.Column(db.Boolean, server_default=expression.true(), nullable=False)
+    capture_pause = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
 
     s3_prefix = db.Column(db.String(length=255), nullable=True)
     web_nonlocal_images = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
@@ -325,6 +326,20 @@ class IndiAllSkyDbDarkFrameTable(IndiAllSkyDbFileBase):
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='darkframes')
 
 
+    db.Index(
+        'idx_darkframe_cbegbtwh_ix',
+        camera_id,
+        bitdepth,
+        exposure,
+        gain,
+        binmode,
+        temp,
+        width,
+        height,
+        active,
+    )
+
+
     def __repr__(self):
         return '<DarkFrame {0:s}>'.format(self.filename)
 
@@ -360,6 +375,20 @@ class IndiAllSkyDbBadPixelMapTable(IndiAllSkyDbFileBase):
     data = db.Column(db.JSON, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='badpixelmaps')
+
+
+    db.Index(
+        'idx_badpixelmap_cbegbtwh_ix',
+        camera_id,
+        bitdepth,
+        exposure,
+        gain,
+        binmode,
+        temp,
+        width,
+        height,
+        active,
+    )
 
 
     def __repr__(self):

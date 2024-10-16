@@ -1237,6 +1237,7 @@ class IndiAllSky(object):
 
 
         reload_received = False
+        pause_received = False
 
         for task in manual_tasks:
             if task.queue == TaskQueueQueue.VIDEO:
@@ -1288,6 +1289,23 @@ class IndiAllSky(object):
                     self.updateConfigLocation(latitude, longitude, elevation, camera_id)
 
                     task.setSuccess('Updated config location')
+
+                elif action == 'setpaused':
+                    if pause_received:
+                        logger.warning('Skipping duplicate pause action')
+                        task.setExpired()
+                        continue
+
+                    logger.info('Set paused/unpaused')
+
+                    pause = task.data['pause']
+
+                    self.updateConfigPaused(pause)
+
+                    pause_received = True
+                    self._reload = True
+
+                    task.setSuccess('Updated paused status')
 
                 else:
                     logger.error('Unknown action: %s', action)
@@ -1416,8 +1434,8 @@ class IndiAllSky(object):
     def updateConfigLocation(self, latitude, longitude, elevation, camera_id):
         logger.warning('Updating indi-allsky config with new geographic location')
 
-        self.config['LOCATION_LATITUDE'] = round(float(latitude), 3)
-        self.config['LOCATION_LONGITUDE'] = round(float(longitude), 3)
+        self.config['LOCATION_LATITUDE'] = round(float(latitude), 4)
+        self.config['LOCATION_LONGITUDE'] = round(float(longitude), 4)
         self.config['LOCATION_ELEVATION'] = int(elevation)
 
 
@@ -1443,4 +1461,20 @@ class IndiAllSky(object):
 
         except NoResultFound:
             logger.error('Camera ID %d not found', camera_id)
+
+
+    def updateConfigPaused(self, pause):
+        if pause:
+            logger.warning('Pausing capture')
+        else:
+            logger.warning('Unpausing capture')
+
+        self.config['CAPTURE_PAUSE'] = bool(pause)
+
+        # save new config
+        try:
+            self._config_obj.save('system', '*Auto* Pause/Unpause Capture')
+            logger.info('Wrote new config')
+        except ConfigSaveException:
+            return
 

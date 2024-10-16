@@ -70,6 +70,7 @@ class BaseView(View):
 
         self.daytime_capture = self.camera.daytime_capture
         self.daytime_capture_save = self.camera.daytime_capture_save
+        self.capture_pause = self.camera.capture_pause
 
         self.s3_prefix = self.camera.s3_prefix
         self.web_nonlocal_images = self.camera.web_nonlocal_images
@@ -285,6 +286,8 @@ class BaseView(View):
             data['status'] = '<span class="text-primary">STOPPING</span>'
         elif status == constants.STATUS_STOPPED:
             data['status'] = '<span class="text-primary">STOPPED</span>'
+        elif status == constants.STATUS_PAUSED:
+            data['status'] = '<span class="text-muted">PAUSED</span>'
         elif status == constants.STATUS_NOCAMERA:
             data['status'] = '<span class="text-danger">NO CAMERA</span>'
         elif status == constants.STATUS_NOINDISERVER:
@@ -989,6 +992,7 @@ class FakeCamera(object):
     daytime_capture = True
     daytime_capture_save = True
     daytime_timelapse = True
+    capture_pause = False
     web_nonlocal_images = False
     web_local_images_admin = False
     utc_offset = 0

@@ -196,6 +196,8 @@ $('#form_timelapsegen').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
+            $("#loader_generate").css({'display' : 'none'});
+
             $("#ACTION_SELECT").val('none');
             form_timelapsegen_successMessage.html(rdata['success-message']);
             form_timelapsegen_successMessage.css({'display' : 'block'});
@@ -203,9 +205,10 @@ $('#form_timelapsegen').on('submit', function() {
                 form_timelapsegen_successMessage.css({'display' : 'none'});
             }, 15000);
 
-            $("#loader_generate").css({'display' : 'none'});
         },
         error: function(rdata){
+            $("#loader_generate").css({'display' : 'none'});
+
             var errors = JSON.parse(rdata.responseText);
             Object.keys(errors).forEach((key) => {
                 form_timelapsegen_fields[key].input.addClass('is-invalid');
