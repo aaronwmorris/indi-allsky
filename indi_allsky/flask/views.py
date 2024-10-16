@@ -4140,27 +4140,24 @@ class AjaxSystemInfoView(BaseView):
         ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
         ### to recache after every delete which cause a 1-5 second lag for each delete
 
-        image_id_list = list()
-        for entry in image_query:
-            image_id_list.append(entry.id)
 
-        fits_id_list = list()
-        for entry in fits_image_query:
-            fits_id_list.append(entry.id)
-
-        raw_id_list = list()
-        for entry in raw_image_query:
-            raw_id_list.append(entry.id)
-
-        panorama_image_id_list = list()
-        for entry in panorama_image_query:
-            panorama_image_id_list.append(entry.id)
+        asset_lists = [
+            (image_query, IndiAllSkyDbImageTable),
+            (fits_image_query, IndiAllSkyDbFitsImageTable),
+            (raw_image_query, IndiAllSkyDbRawImageTable),
+            (panorama_image_query, IndiAllSkyDbPanoramaImageTable),
+        ]
 
 
-        delete_count = self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
+        delete_count = 0
+        for asset_list, asset_table in asset_lists:
+            while True:
+                id_list = [entry.id for entry in asset_list.limit(500)]
+
+                if not id_list:
+                    break
+
+                delete_count += self._deleteAssets(asset_table, id_list)
 
 
         return delete_count
@@ -4202,37 +4199,26 @@ class AjaxSystemInfoView(BaseView):
         ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
         ### to recache after every delete which cause a 1-5 second lag for each delete
 
-        video_id_list = list()
-        for entry in video_query:
-            video_id_list.append(entry.id)
 
-        mini_video_id_list = list()
-        for entry in mini_video_query:
-            mini_video_id_list.append(entry.id)
-
-        keogram_id_list = list()
-        for entry in keogram_query:
-            keogram_id_list.append(entry.id)
-
-        startrail_image_id_list = list()
-        for entry in startrail_query:
-            startrail_image_id_list.append(entry.id)
-
-        startrail_video_id_list = list()
-        for entry in startrail_video_query:
-            startrail_video_id_list.append(entry.id)
-
-        panorama_video_id_list = list()
-        for entry in panorama_video_query:
-            panorama_video_id_list.append(entry.id)
+        asset_lists = [
+            (video_query, IndiAllSkyDbVideoTable),
+            (mini_video_query, IndiAllSkyDbMiniVideoTable),
+            (keogram_query, IndiAllSkyDbKeogramTable),
+            (startrail_query, IndiAllSkyDbStarTrailsTable),
+            (startrail_video_query, IndiAllSkyDbStarTrailsVideoTable),
+            (panorama_video_query, IndiAllSkyDbPanoramaVideoTable),
+        ]
 
 
-        delete_count = self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbMiniVideoTable, mini_video_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
+        delete_count = 0
+        for asset_list, asset_table in asset_lists:
+            while True:
+                id_list = [entry.id for entry in asset_list.limit(500)]
+
+                if not id_list:
+                    break
+
+                delete_count += self._deleteAssets(asset_table, id_list)
 
 
         return delete_count
@@ -4303,43 +4289,27 @@ class AjaxSystemInfoView(BaseView):
         ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
         ### to recache after every delete which cause a 1-5 second lag for each delete
 
-        image_id_list = list()
-        for entry in image_query:
-            image_id_list.append(entry.id)
 
-        fits_id_list = list()
-        for entry in fits_image_query:
-            fits_id_list.append(entry.id)
-
-        raw_id_list = list()
-        for entry in raw_image_query:
-            raw_id_list.append(entry.id)
-
-        panorama_image_id_list = list()
-        for entry in panorama_image_query:
-            panorama_image_id_list.append(entry.id)
+        asset_lists = [
+            (image_query, IndiAllSkyDbImageTable),
+            (fits_image_query, IndiAllSkyDbFitsImageTable),
+            (raw_image_query, IndiAllSkyDbRawImageTable),
+            (panorama_image_query, IndiAllSkyDbPanoramaImageTable),
+            (video_query, IndiAllSkyDbVideoTable),
+            (keogram_query, IndiAllSkyDbKeogramTable),
+            (panorama_video_query, IndiAllSkyDbPanoramaVideoTable),
+        ]
 
 
-        video_id_list = list()
-        for entry in video_query:
-            video_id_list.append(entry.id)
+        delete_count = 0
+        for asset_list, asset_table in asset_lists:
+            while True:
+                id_list = [entry.id for entry in asset_list.limit(500)]
 
-        keogram_id_list = list()
-        for entry in keogram_query:
-            keogram_id_list.append(entry.id)
+                if not id_list:
+                    break
 
-        panorama_video_id_list = list()
-        for entry in panorama_video_query:
-            panorama_video_id_list.append(entry.id)
-
-
-        delete_count = self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
-        delete_count += self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
+                delete_count += self._deleteAssets(asset_table, id_list)
 
 
         return delete_count
@@ -4352,7 +4322,7 @@ class AjaxSystemInfoView(BaseView):
                 .filter(table.id == entry_id)\
                 .one()
 
-            app.logger.info('Removing old %s entry: %s', entry.__class__.__name__, entry.filename)
+            app.logger.info('Removing %s entry: %s', entry.__class__.__name__, entry.filename)
 
             try:
                 entry.deleteAsset()
