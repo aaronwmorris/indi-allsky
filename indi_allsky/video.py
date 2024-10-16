@@ -1745,58 +1745,29 @@ class VideoWorker(Process):
         ### to recache after every delete which cause a 1-5 second lag for each delete
 
 
-        image_id_list = list()
-        for entry in old_images:
-            image_id_list.append(entry.id)
-
-        fits_id_list = list()
-        for entry in old_fits_images:
-            fits_id_list.append(entry.id)
-
-        raw_id_list = list()
-        for entry in old_raw_images:
-            raw_id_list.append(entry.id)
-
-        panorama_image_id_list = list()
-        for entry in old_panorama_images:
-            panorama_image_id_list.append(entry.id)
+        asset_lists = [
+            (old_images, IndiAllSkyDbImageTable),
+            (old_fits_images, IndiAllSkyDbFitsImageTable),
+            (old_raw_images, IndiAllSkyDbRawImageTable),
+            (old_panorama_images, IndiAllSkyDbPanoramaImageTable),
+            (old_videos, IndiAllSkyDbVideoTable),
+            (old_mini_videos, IndiAllSkyDbMiniVideoTable),
+            (old_keograms, IndiAllSkyDbKeogramTable),
+            (old_startrails, IndiAllSkyDbStarTrailsTable),
+            (old_startrails_videos, IndiAllSkyDbStarTrailsVideoTable),
+            (old_panorama_videos, IndiAllSkyDbPanoramaVideoTable),
+        ]
 
 
-        video_id_list = list()
-        for entry in old_videos:
-            video_id_list.append(entry.id)
+        delete_count = 0
+        for asset_list, asset_table in asset_lists:
+            while True:
+                id_list = [entry.id for entry in asset_list.limit(500)]
 
-        mini_video_id_list = list()
-        for entry in old_mini_videos:
-            mini_video_id_list.append(entry.id)
+                if not id_list:
+                    break
 
-        keogram_id_list = list()
-        for entry in old_keograms:
-            keogram_id_list.append(entry.id)
-
-        startrail_image_id_list = list()
-        for entry in old_startrails:
-            startrail_image_id_list.append(entry.id)
-
-        startrail_video_id_list = list()
-        for entry in old_startrails_videos:
-            startrail_video_id_list.append(entry.id)
-
-        panorama_video_id_list = list()
-        for entry in old_panorama_videos:
-            panorama_video_id_list.append(entry.id)
-
-
-        self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
-        self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
-        self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
-        self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
-        self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
-        self._deleteAssets(IndiAllSkyDbMiniVideoTable, mini_video_id_list)
-        self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
-        self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
-        self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
-        self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
+                delete_count += self._deleteAssets(asset_table, id_list)
 
 
         # Remove empty folders
@@ -1814,10 +1785,12 @@ class VideoWorker(Process):
             except PermissionError as e:
                 logger.error('Cannot remove folder: %s', str(e))
 
-        task.setSuccess('Expired data')
+
+        task.setSuccess('Expired {0:d} assets', delete_count)
 
 
     def _deleteAssets(self, table, entry_id_list):
+        delete_count = 0
         for entry_id in entry_id_list:
             entry = table.query\
                 .filter(table.id == entry_id)\
@@ -1833,6 +1806,10 @@ class VideoWorker(Process):
 
             db.session.delete(entry)
             db.session.commit()
+
+            delete_count += 1
+
+        return delete_count
 
 
     def _getVideoFolder(self, video_date, camera):
