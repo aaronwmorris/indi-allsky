@@ -1759,9 +1759,9 @@ class VideoWorker(Process):
 
         asset_lists = [
             (old_images, IndiAllSkyDbImageTable),
+            (old_panorama_images, IndiAllSkyDbPanoramaImageTable),
             (old_fits_images, IndiAllSkyDbFitsImageTable),
             (old_raw_images, IndiAllSkyDbRawImageTable),
-            (old_panorama_images, IndiAllSkyDbPanoramaImageTable),
             (old_videos, IndiAllSkyDbVideoTable),
             (old_mini_videos, IndiAllSkyDbMiniVideoTable),
             (old_keograms, IndiAllSkyDbKeogramTable),
