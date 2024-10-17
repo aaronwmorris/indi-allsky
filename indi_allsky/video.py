@@ -1679,8 +1679,10 @@ class VideoWorker(Process):
         task.setRunning()
 
 
+        now = datetime.now()
+
         # Old image files need to be pruned
-        cutoff_age_images = datetime.now() - timedelta(days=self.config.get('IMAGE_EXPIRE_DAYS', 10))
+        cutoff_age_images = now - timedelta(days=self.config.get('IMAGE_EXPIRE_DAYS', 10))
         cutoff_age_images_date = cutoff_age_images.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_images = IndiAllSkyDbImageTable.query\
@@ -1695,7 +1697,7 @@ class VideoWorker(Process):
             .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
         # raw
-        cutoff_age_images_raw = datetime.now() - timedelta(days=self.config.get('IMAGE_RAW_EXPIRE_DAYS', 10))
+        cutoff_age_images_raw = now - timedelta(days=self.config.get('IMAGE_RAW_EXPIRE_DAYS', 10))
         cutoff_age_images_raw_date = cutoff_age_images_raw.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_raw_images = IndiAllSkyDbRawImageTable.query\
@@ -1706,7 +1708,7 @@ class VideoWorker(Process):
 
 
         # fits
-        cutoff_age_images_fits = datetime.now() - timedelta(days=self.config.get('IMAGE_FITS_EXPIRE_DAYS', 10))
+        cutoff_age_images_fits = now - timedelta(days=self.config.get('IMAGE_FITS_EXPIRE_DAYS', 10))
         cutoff_age_images_fits_date = cutoff_age_images_fits.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_fits_images = IndiAllSkyDbFitsImageTable.query\
@@ -1717,7 +1719,7 @@ class VideoWorker(Process):
 
 
         # videos
-        cutoff_age_timelapse = datetime.now() - timedelta(days=self.config.get('TIMELAPSE_EXPIRE_DAYS', 365))
+        cutoff_age_timelapse = now - timedelta(days=self.config.get('TIMELAPSE_EXPIRE_DAYS', 365))
         cutoff_age_timelapse_date = cutoff_age_timelapse.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_videos = IndiAllSkyDbVideoTable.query\

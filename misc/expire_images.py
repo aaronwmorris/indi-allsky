@@ -132,8 +132,10 @@ class ExpireImages(object):
         time.sleep(5)
 
 
+        now = datetime.now()
+
         # Old image files need to be pruned
-        cutoff_age_images = datetime.now() - timedelta(days=self.image_days)
+        cutoff_age_images = now - timedelta(days=self.image_days)
         cutoff_age_images_date = cutoff_age_images.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_images = IndiAllSkyDbImageTable.query\
@@ -145,7 +147,7 @@ class ExpireImages(object):
 
 
         # raw
-        cutoff_age_images_raw = datetime.now() - timedelta(days=self.image_raw_days)
+        cutoff_age_images_raw = now - timedelta(days=self.image_raw_days)
         cutoff_age_images_raw_date = cutoff_age_images_raw.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_raw_images = IndiAllSkyDbRawImageTable.query\
@@ -154,7 +156,7 @@ class ExpireImages(object):
 
 
         # fits
-        cutoff_age_images_fits = datetime.now() - timedelta(days=self.image_fits_days)
+        cutoff_age_images_fits = now - timedelta(days=self.image_fits_days)
         cutoff_age_images_fits_date = cutoff_age_images_fits.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_fits_images = IndiAllSkyDbFitsImageTable.query\
@@ -163,7 +165,7 @@ class ExpireImages(object):
 
 
         # videos
-        cutoff_age_timelapse = datetime.now() - timedelta(days=self.video_days)
+        cutoff_age_timelapse = now - timedelta(days=self.video_days)
         cutoff_age_timelapse_date = cutoff_age_timelapse.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_videos = IndiAllSkyDbVideoTable.query\
