@@ -1680,7 +1680,7 @@ class VideoWorker(Process):
 
 
         # Old image files need to be pruned
-        cutoff_age_images = datetime.now() - timedelta(days=self.config['IMAGE_EXPIRE_DAYS'])
+        cutoff_age_images = datetime.now() - timedelta(days=self.config.get('IMAGE_EXPIRE_DAYS', 10))
         cutoff_age_images_date = cutoff_age_images.date()  # cutoff date based on dayDate attribute, not createDate
 
         old_images = IndiAllSkyDbImageTable.query\
@@ -1688,23 +1688,35 @@ class VideoWorker(Process):
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbImageTable.dayDate < cutoff_age_images_date)\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
-        old_fits_images = IndiAllSkyDbFitsImageTable.query\
-            .join(IndiAllSkyDbFitsImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_date)\
-            .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())
-        old_raw_images = IndiAllSkyDbRawImageTable.query\
-            .join(IndiAllSkyDbRawImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
-            .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)\
-            .order_by(IndiAllSkyDbRawImageTable.createDate.asc())
         old_panorama_images = IndiAllSkyDbPanoramaImageTable.query\
             .join(IndiAllSkyDbPanoramaImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera.id)\
             .filter(IndiAllSkyDbPanoramaImageTable.dayDate < cutoff_age_images_date)\
             .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
+        # raw
+        cutoff_age_images_raw = datetime.now() - timedelta(days=self.config.get('IMAGE_RAW_EXPIRE_DAYS', 10))
+        cutoff_age_images_raw_date = cutoff_age_images_raw.date()  # cutoff date based on dayDate attribute, not createDate
 
+        old_raw_images = IndiAllSkyDbRawImageTable.query\
+            .join(IndiAllSkyDbRawImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_raw_date)\
+            .order_by(IndiAllSkyDbRawImageTable.createDate.asc())
+
+
+        # fits
+        cutoff_age_images_fits = datetime.now() - timedelta(days=self.config.get('IMAGE_FITS_EXPIRE_DAYS', 10))
+        cutoff_age_images_fits_date = cutoff_age_images_fits.date()  # cutoff date based on dayDate attribute, not createDate
+
+        old_fits_images = IndiAllSkyDbFitsImageTable.query\
+            .join(IndiAllSkyDbFitsImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+            .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_fits_date)\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())
+
+
+        # videos
         cutoff_age_timelapse = datetime.now() - timedelta(days=self.config.get('TIMELAPSE_EXPIRE_DAYS', 365))
         cutoff_age_timelapse_date = cutoff_age_timelapse.date()  # cutoff date based on dayDate attribute, not createDate
 
