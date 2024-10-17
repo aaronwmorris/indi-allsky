@@ -754,12 +754,13 @@ class ImageProcessor(object):
                 .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
                 .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
                 .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
-                .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
                 .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
+                .filter(IndiAllSkyDbBadPixelMapTable.gain >= self.gain_v.value)\
                 .filter(IndiAllSkyDbBadPixelMapTable.exposure >= exposure)\
                 .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensors_temp_av[0])\
                 .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
                 .order_by(
+                    IndiAllSkyDbBadPixelMapTable.gain.asc(),
                     IndiAllSkyDbBadPixelMapTable.exposure.asc(),
                     IndiAllSkyDbBadPixelMapTable.temp.asc(),
                     IndiAllSkyDbBadPixelMapTable.createDate.desc(),
@@ -774,10 +775,11 @@ class ImageProcessor(object):
                     .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
                     .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
                     .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
-                    .filter(IndiAllSkyDbBadPixelMapTable.gain == self.gain_v.value)\
                     .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
+                    .filter(IndiAllSkyDbBadPixelMapTable.gain >= self.gain_v.value)\
                     .filter(IndiAllSkyDbBadPixelMapTable.exposure >= exposure)\
                     .order_by(
+                        IndiAllSkyDbBadPixelMapTable.gain.asc(),
                         IndiAllSkyDbBadPixelMapTable.exposure.asc(),
                         IndiAllSkyDbBadPixelMapTable.temp.desc(),
                         IndiAllSkyDbBadPixelMapTable.createDate.desc(),
@@ -805,12 +807,13 @@ class ImageProcessor(object):
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
             .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
-            .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
             .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
+            .filter(IndiAllSkyDbDarkFrameTable.gain >= self.gain_v.value)\
             .filter(IndiAllSkyDbDarkFrameTable.exposure >= exposure)\
             .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensors_temp_av[0])\
             .filter(IndiAllSkyDbDarkFrameTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
             .order_by(
+                IndiAllSkyDbDarkFrameTable.gain.asc(),
                 IndiAllSkyDbDarkFrameTable.exposure.asc(),
                 IndiAllSkyDbDarkFrameTable.temp.asc(),
                 IndiAllSkyDbDarkFrameTable.createDate.desc(),
@@ -825,10 +828,11 @@ class ImageProcessor(object):
                 .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
                 .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
                 .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
-                .filter(IndiAllSkyDbDarkFrameTable.gain == self.gain_v.value)\
                 .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
+                .filter(IndiAllSkyDbDarkFrameTable.gain >= self.gain_v.value)\
                 .filter(IndiAllSkyDbDarkFrameTable.exposure >= exposure)\
                 .order_by(
+                    IndiAllSkyDbDarkFrameTable.gain.asc(),
                     IndiAllSkyDbDarkFrameTable.exposure.asc(),
                     IndiAllSkyDbDarkFrameTable.temp.desc(),
                     IndiAllSkyDbDarkFrameTable.createDate.desc(),
