@@ -2935,7 +2935,35 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_EXPIRE_DAYS(class='form-control bg-secondary') }}
             <div id="IMAGE_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Maximum age of original image files before deletion</div>
+        <div class="col-sm-8">
+            <div>Maximum age of original image files before deletion</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_RAW_EXPIRE_DAYS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_RAW_EXPIRE_DAYS(class='form-control bg-secondary') }}
+            <div id="IMAGE_RAW_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FITS_EXPIRE_DAYS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FITS_EXPIRE_DAYS(class='form-control bg-secondary') }}
+            <div id="IMAGE_FITS_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -2946,7 +2974,9 @@ var camera_id = {{ camera_id }};
             {{ form_config.TIMELAPSE_EXPIRE_DAYS(class='form-control bg-secondary') }}
             <div id="TIMELAPSE_EXPIRE_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Maximum age of timelapse, keogram, and star trails before deletion</div>
+        <div class="col-sm-8">
+            <div>Maximum age of timelapse, keogram, and star trails before deletion</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -5935,6 +5965,8 @@ const field_names = [
     'IMAGE_ALIGN_POINTS',
     'IMAGE_ALIGN_SOURCEMINAREA',
     'IMAGE_EXPIRE_DAYS',
+    'IMAGE_RAW_EXPIRE_DAYS',
+    'IMAGE_FITS_EXPIRE_DAYS',
     'IMAGE_QUEUE_MAX',
     'IMAGE_QUEUE_MIN',
     'IMAGE_QUEUE_BACKOFF',
