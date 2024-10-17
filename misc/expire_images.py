@@ -65,6 +65,8 @@ class ExpireImages(object):
 
 
         self._image_days = 10
+        self._image_raw_days = 10
+        self._image_fits_days = 10
         self._video_days = 365
 
 
@@ -87,6 +89,24 @@ class ExpireImages(object):
 
 
     @property
+    def image_raw_days(self):
+        return self._image_raw_days
+
+    @image_raw_days.setter
+    def image_raw_days(self, new_image_raw_days):
+        self._image_raw_days = int(new_image_raw_days)
+
+
+    @property
+    def image_fits_days(self):
+        return self._image_fits_days
+
+    @image_fits_days.setter
+    def image_fits_days(self, new_image_fits_days):
+        self._image_fits_days = int(new_image_fits_days)
+
+
+    @property
     def video_days(self):
         return self._video_days
 
@@ -104,8 +124,10 @@ class ExpireImages(object):
 
 
     def main(self):
-        logger.info('Cutoff for images: %d days', self.image_days)
-        logger.info('Cutoff for videos: %d days', self.video_days)
+        logger.info('Cutoff for images:       %d days', self.image_days)
+        logger.info('Cutoff for raw images:   %d days', self.image_raw_days)
+        logger.info('Cutoff for fits images:  %d days', self.image_fits_days)
+        logger.info('Cutoff for videos:       %d days', self.video_days)
 
         time.sleep(5)
 
@@ -117,17 +139,30 @@ class ExpireImages(object):
         old_images = IndiAllSkyDbImageTable.query\
             .filter(IndiAllSkyDbImageTable.dayDate < cutoff_age_images_date)\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
-        old_fits_images = IndiAllSkyDbFitsImageTable.query\
-            .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_date)\
-            .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())
-        old_raw_images = IndiAllSkyDbRawImageTable.query\
-            .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_date)\
-            .order_by(IndiAllSkyDbRawImageTable.createDate.asc())
         old_panorama_images = IndiAllSkyDbPanoramaImageTable.query\
             .filter(IndiAllSkyDbPanoramaImageTable.dayDate < cutoff_age_images_date)\
             .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
 
+        # raw
+        cutoff_age_images_raw = datetime.now() - timedelta(days=self.image_raw_days)
+        cutoff_age_images_raw_date = cutoff_age_images_raw.date()  # cutoff date based on dayDate attribute, not createDate
+
+        old_raw_images = IndiAllSkyDbRawImageTable.query\
+            .filter(IndiAllSkyDbRawImageTable.dayDate < cutoff_age_images_raw_date)\
+            .order_by(IndiAllSkyDbRawImageTable.createDate.asc())
+
+
+        # fits
+        cutoff_age_images_fits = datetime.now() - timedelta(days=self.image_fits_days)
+        cutoff_age_images_fits_date = cutoff_age_images_fits.date()  # cutoff date based on dayDate attribute, not createDate
+
+        old_fits_images = IndiAllSkyDbFitsImageTable.query\
+            .filter(IndiAllSkyDbFitsImageTable.dayDate < cutoff_age_images_fits_date)\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.asc())
+
+
+        # videos
         cutoff_age_timelapse = datetime.now() - timedelta(days=self.video_days)
         cutoff_age_timelapse_date = cutoff_age_timelapse.date()  # cutoff date based on dayDate attribute, not createDate
 
@@ -152,9 +187,9 @@ class ExpireImages(object):
 
 
         logger.warning('Found %d expired images to delete', old_images.count())
+        logger.warning('Found %d expired Panorama images to delete', old_panorama_images.count())
         logger.warning('Found %d expired FITS images to delete', old_fits_images.count())
         logger.warning('Found %d expired RAW images to delete', old_raw_images.count())
-        logger.warning('Found %d expired Panorama images to delete', old_panorama_images.count())
         logger.warning('Found %d expired videos to delete', old_videos.count())
         logger.warning('Found %d expired mini videos to delete', old_mini_videos.count())
         logger.warning('Found %d expired keograms to delete', old_keograms.count())
@@ -181,9 +216,9 @@ class ExpireImages(object):
 
         asset_lists = [
             (old_images, IndiAllSkyDbImageTable),
+            (old_panorama_images, IndiAllSkyDbPanoramaImageTable),
             (old_fits_images, IndiAllSkyDbFitsImageTable),
             (old_raw_images, IndiAllSkyDbRawImageTable),
-            (old_panorama_images, IndiAllSkyDbPanoramaImageTable),
             (old_videos, IndiAllSkyDbVideoTable),
             (old_mini_videos, IndiAllSkyDbMiniVideoTable),
             (old_keograms, IndiAllSkyDbKeogramTable),
@@ -263,6 +298,20 @@ if __name__ == "__main__":
         '--days',
         '-d',
         help='Images older than days will be deleted',
+        type=int,
+        default=10,
+    )
+    argparser.add_argument(
+        '--raw',
+        '-r',
+        help='RAW Images older than days will be deleted',
+        type=int,
+        default=10,
+    )
+    argparser.add_argument(
+        '--fits',
+        '-f',
+        help='FITS Images older than days will be deleted',
         type=int,
         default=10,
     )
