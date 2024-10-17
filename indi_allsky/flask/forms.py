@@ -3227,6 +3227,8 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     THUMBNAILS__IMAGES_AUTO          = BooleanField('Auto Generate Image Thumbnails')
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
+    IMAGE_RAW_EXPIRE_DAYS            = IntegerField('RAW Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
+    IMAGE_FITS_EXPIRE_DAYS           = IntegerField('FITS Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     TIMELAPSE_EXPIRE_DAYS            = IntegerField('Timelapse expiration (days)', validators=[DataRequired(), TIMELAPSE_EXPIRE_DAYS_validator])
     TIMELAPSE_OVERWRITE              = BooleanField('Allow Overwrite Existing Timelapses')
     FFMPEG_FRAMERATE                 = IntegerField('FFMPEG Framerate', validators=[DataRequired(), FFMPEG_FRAMERATE_validator])

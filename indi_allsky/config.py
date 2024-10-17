@@ -218,6 +218,8 @@ class IndiAllSkyConfigBase(object):
             "IMAGES_AUTO" : True,
         },
         "IMAGE_EXPIRE_DAYS"     : 10,
+        "IMAGE_RAW_EXPIRE_DAYS" : 10,
+        "IMAGE_FITS_EXPIRE_DAYS": 10,
         "TIMELAPSE_EXPIRE_DAYS" : 365,
         "TIMELAPSE_OVERWRITE"   : False,
         "IMAGE_QUEUE_MAX"       : 3,

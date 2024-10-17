@@ -1660,6 +1660,8 @@ class ConfigView(FormView):
             'IMAGE_QUEUE_BACKOFF'            : self.indi_allsky_config.get('IMAGE_QUEUE_BACKOFF', 0.5),
             'THUMBNAILS__IMAGES_AUTO'        : self.indi_allsky_config.get('THUMBNAILS', {}).get('IMAGES_AUTO', True),
             'IMAGE_EXPIRE_DAYS'              : self.indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 10),
+            'IMAGE_RAW_EXPIRE_DAYS'          : self.indi_allsky_config.get('IMAGE_RAW_EXPIRE_DAYS', 10),
+            'IMAGE_FITS_EXPIRE_DAYS'         : self.indi_allsky_config.get('IMAGE_FITS_EXPIRE_DAYS', 10),
             'TIMELAPSE_EXPIRE_DAYS'          : self.indi_allsky_config.get('TIMELAPSE_EXPIRE_DAYS', 365),
             'TIMELAPSE_OVERWRITE'            : self.indi_allsky_config.get('TIMELAPSE_OVERWRITE', False),
             'FFMPEG_FRAMERATE'               : self.indi_allsky_config.get('FFMPEG_FRAMERATE', 25),
@@ -2404,6 +2406,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_QUEUE_BACKOFF']                  = float(request.json['IMAGE_QUEUE_BACKOFF'])
         self.indi_allsky_config['THUMBNAILS']['IMAGES_AUTO']            = bool(request.json['THUMBNAILS__IMAGES_AUTO'])
         self.indi_allsky_config['IMAGE_EXPIRE_DAYS']                    = int(request.json['IMAGE_EXPIRE_DAYS'])
+        self.indi_allsky_config['IMAGE_RAW_EXPIRE_DAYS']                = int(request.json['IMAGE_RAW_EXPIRE_DAYS'])
+        self.indi_allsky_config['IMAGE_FITS_EXPIRE_DAYS']               = int(request.json['IMAGE_FITS_EXPIRE_DAYS'])
         self.indi_allsky_config['TIMELAPSE_EXPIRE_DAYS']                = int(request.json['TIMELAPSE_EXPIRE_DAYS'])
         self.indi_allsky_config['TIMELAPSE_OVERWRITE']                  = bool(request.json['TIMELAPSE_OVERWRITE'])
         self.indi_allsky_config['FFMPEG_FRAMERATE']                     = int(request.json['FFMPEG_FRAMERATE'])
