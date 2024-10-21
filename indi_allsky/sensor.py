@@ -195,8 +195,8 @@ class SensorWorker(Process):
                 logger.info('Sensor SQM: %0.5f', self.sensors_user_av[7])
 
 
-            self.update_dew_heater()
-            self.update_fan()
+            self.check_dew_heater_thresholds()
+            self.check_fan_thresholds()
 
 
     def night_day_change(self):
@@ -252,13 +252,7 @@ class SensorWorker(Process):
 
             self.gpio = a_gpio_class(self.config, pin_1_name=a_gpio_pin_1, invert_output=a_gpio_invert_output)
 
-
-            if self.night_v.value:
-                ### night
-                self.set_gpio(1)
-            else:
-                ### day
-                self.set_gpio(0)
+            ### Do not set initial state on start
 
         else:
             self.gpio = indi_allsky_gpios.gpio_simulator(self.config)
@@ -284,15 +278,7 @@ class SensorWorker(Process):
 
             self.dew_heater = dh_class(self.config, pin_1_name=dh_pin_1, invert_output=dh_invert_output)
 
-            if self.night_v.value:
-                ### night
-                self.set_dew_heater(self.dh_level_default)
-            else:
-                ### day
-                if self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
-                    self.set_dew_heater(self.dh_level_default)
-                else:
-                    self.set_dew_heater(0)
+            ### Do not set initial state on start
 
         else:
             self.dew_heater = dew_heaters.dew_heater_simulator(self.config)
@@ -311,19 +297,6 @@ class SensorWorker(Process):
                 self.sensors_user_av[1] = float(self.dew_heater.state)
 
 
-    def update_dew_heater(self):
-        # dew heater threshold processing
-        if not self.night and self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
-            ### day
-            if self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE'):
-                self.check_dew_heater_thresholds()
-        else:
-            ### night
-            if self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE'):
-                self.check_dew_heater_thresholds()
-
-
-
     def init_fan(self):
         fan_classname = self.config.get('FAN', {}).get('CLASSNAME')
         if fan_classname:
@@ -334,15 +307,7 @@ class SensorWorker(Process):
 
             self.fan = fan_class(self.config, pin_1_name=fan_pin_1, invert_output=fan_invert_output)
 
-            if not self.night_v.value:
-                ### day
-                self.set_fan(self.fan_level_default)
-            else:
-                ### night
-                if self.config.get('FAN', {}).get('ENABLE_NIGHT'):
-                    self.set_fan(self.fan_level_default)
-                else:
-                    self.set_fan(0)
+            ### Do not set initial state on start
 
         else:
             self.fan = fans.fan_simulator(self.config)
@@ -358,18 +323,6 @@ class SensorWorker(Process):
 
             with self.sensors_user_av.get_lock():
                 self.sensors_user_av[4] = float(self.fan.state)
-
-
-    def update_fan(self):
-        # fan threshold processing
-        if self.night and self.config.get('FAN', {}).get('ENABLE_NIGHT'):
-            ### night
-            if self.config.get('FAN', {}).get('THOLD_ENABLE'):
-                self.check_fan_thresholds()
-        else:
-            ### day
-            if self.config.get('FAN', {}).get('THOLD_ENABLE'):
-                self.check_fan_thresholds()
 
 
     def init_sensors(self):
@@ -481,6 +434,15 @@ class SensorWorker(Process):
 
 
     def check_dew_heater_thresholds(self):
+        # dew heater threshold processing
+        if not self.config.get('DEW_HEATER', {}).get('THOLD_ENABLE'):
+            return
+
+
+        if not self.night and not self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
+            return
+
+
         manual_target = self.config.get('DEW_HEATER', {}).get('MANUAL_TARGET', 0.0)
         if manual_target:
             target_val = manual_target
@@ -527,6 +489,15 @@ class SensorWorker(Process):
 
 
     def check_fan_thresholds(self):
+        # fan threshold processing
+        if not self.config.get('FAN', {}).get('THOLD_ENABLE'):
+            return
+
+
+        if self.night and not self.config.get('FAN', {}).get('ENABLE_NIGHT'):
+            return
+
+
         if self.fan_temp_user_slot < 100:
             # user slots
             current_temp = self.sensors_user_av[self.fan_temp_user_slot]
