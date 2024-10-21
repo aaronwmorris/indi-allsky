@@ -64,25 +64,7 @@ def SQLALCHEMY_DATABASE_URI_validator(form, field):
 
 
 def CAMERA_INTERFACE_validator(form, field):
-    if field.data not in (
-        'indi',
-        'indi_passive',
-        'indi_accumulator',
-        'libcamera_imx477',
-        'libcamera_imx378',
-        'libcamera_ov5647',
-        'libcamera_imx219',
-        'libcamera_imx519',
-        'libcamera_64mp_hawkeye',
-        'libcamera_64mp_owlsight',
-        'libcamera_imx708',
-        'libcamera_imx296_gs',
-        'libcamera_imx290',
-        'libcamera_imx462',
-        'libcamera_imx327',
-        'libcamera_imx298',
-        'pycurl_camera',
-    ):
+    if field.data not in list(zip(*form.CAMERA_INTERFACE_choices))[0]:
         raise ValidationError('Invalid camera interface')
 
 
@@ -2598,10 +2580,11 @@ class IndiAllskyConfigForm(FlaskForm):
         ('indi', 'INDI'),
         ('libcamera_imx477', 'libcamera IMX477'),
         ('libcamera_imx378', 'libcamera IMX378'),
-        ('libcamera_imx519', 'libcamera IMX519'),
         ('libcamera_imx708', 'libcamera IMX708'),
+        ('libcamera_imx519', 'libcamera IMX519'),
         ('libcamera_imx462', 'libcamera IMX462'),
         ('libcamera_imx327', 'libcamera IMX327'),
+        ('libcamera_imx500_ai', 'libcamera IMX500 AI'),
         ('libcamera_imx296_gs', 'libcamera IMX296 GS'),
         ('libcamera_imx290', 'libcamera IMX290'),
         ('libcamera_imx298', 'libcamera IMX298'),

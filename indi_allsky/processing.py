@@ -2852,14 +2852,14 @@ class ImageProcessor(object):
             return False, None  # False so the image is not retried
 
 
-        overlay_rgb = overlay_img[:, :, :3]
+        overlay_bgr = overlay_img[:, :, :3]
         overlay_alpha = (overlay_img[:, :, 3] / 255).astype(numpy.float32)
 
 
         alpha_mask = numpy.dstack((overlay_alpha, overlay_alpha, overlay_alpha))
 
 
-        return overlay_rgb, alpha_mask
+        return overlay_bgr, alpha_mask
 
 
     def _generateAduMask(self, img):
