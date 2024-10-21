@@ -71,7 +71,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * Raspberry Pi Camera Modules
         * HQ Camera (IMX477)
         * IMX378
-        * Camera Module v3 (imx708)
+        * Camera Module v3 (IMX708)
+        * AI Camera (IMX500)
         * IMX519
         * IMX462
         * IMX327
