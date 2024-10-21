@@ -41,7 +41,9 @@ class IndiAllSkyDbCameraTable(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(length=36), unique=True, index=True)
-    name = db.Column(db.String(length=100), unique=True, nullable=False)
+    name = db.Column(db.String(length=100), unique=True, nullable=False, index=True)
+    name_alt1 = db.Column(db.String(length=100), nullable=True, index=True)
+    name_alt2 = db.Column(db.String(length=100), nullable=True, index=True)
     driver = db.Column(db.String(length=100), nullable=True)
     friendlyName = db.Column(db.String(length=100), unique=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, server_default=db.func.now())

@@ -33,6 +33,7 @@ from .models import IndiAllSkyDbStateTable
 
 #from .models import NotificationCategory
 
+from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 
 from .. import constants
@@ -57,8 +58,15 @@ class miscDb(object):
         now = datetime.now()
 
         try:
+            # not catching MultipleResultsFound
             camera = IndiAllSkyDbCameraTable.query\
-                .filter(IndiAllSkyDbCameraTable.name == metadata['name'])\
+                .filter(
+                    or_(
+                        IndiAllSkyDbCameraTable.name == metadata['name'],
+                        IndiAllSkyDbCameraTable.name_alt1 == metadata['name'],
+                        IndiAllSkyDbCameraTable.name_alt2 == metadata['name'],
+                    )
+                )\
                 .one()
             camera.connectDate = now
 
@@ -79,6 +87,8 @@ class miscDb(object):
         keys_exclude = [
             'id',
             'name',
+            'name_alt1',
+            'name_alt2',
             'uuid',
             'type',
             'local',
@@ -136,6 +146,8 @@ class miscDb(object):
         keys_exclude = [
             'id',
             'name',
+            'name_alt1',
+            'name_alt2',
             'uuid',
             'type',
             'local',
