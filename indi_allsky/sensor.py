@@ -252,13 +252,7 @@ class SensorWorker(Process):
 
             self.gpio = a_gpio_class(self.config, pin_1_name=a_gpio_pin_1, invert_output=a_gpio_invert_output)
 
-
-            if self.night_v.value:
-                ### night
-                self.set_gpio(1)
-            else:
-                ### day
-                self.set_gpio(0)
+            ### Do not set initial state on start
 
         else:
             self.gpio = indi_allsky_gpios.gpio_simulator(self.config)
@@ -284,15 +278,7 @@ class SensorWorker(Process):
 
             self.dew_heater = dh_class(self.config, pin_1_name=dh_pin_1, invert_output=dh_invert_output)
 
-            if self.night_v.value:
-                ### night
-                self.set_dew_heater(self.dh_level_default)
-            else:
-                ### day
-                if self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
-                    self.set_dew_heater(self.dh_level_default)
-                else:
-                    self.set_dew_heater(0)
+            ### Do not set initial state on start
 
         else:
             self.dew_heater = dew_heaters.dew_heater_simulator(self.config)
@@ -334,15 +320,7 @@ class SensorWorker(Process):
 
             self.fan = fan_class(self.config, pin_1_name=fan_pin_1, invert_output=fan_invert_output)
 
-            if not self.night_v.value:
-                ### day
-                self.set_fan(self.fan_level_default)
-            else:
-                ### night
-                if self.config.get('FAN', {}).get('ENABLE_NIGHT'):
-                    self.set_fan(self.fan_level_default)
-                else:
-                    self.set_fan(0)
+            ### Do not set initial state on start
 
         else:
             self.fan = fans.fan_simulator(self.config)
