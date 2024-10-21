@@ -14,6 +14,7 @@ from .libcamera import IndiClientLibCameraImx290 as libcamera_imx290
 from .libcamera import IndiClientLibCameraImx462 as libcamera_imx462
 from .libcamera import IndiClientLibCameraImx327 as libcamera_imx327
 from .libcamera import IndiClientLibCameraImx298 as libcamera_imx298
+from .libcamera import IndiClientLibCameraImx500 as libcamera_imx500_ai
 from .pycurl_camera import IndiClientPycurl as pycurl_camera
 
 __all__ = (
@@ -33,6 +34,7 @@ __all__ = (
     'libcamera_imx462',
     'libcamera_imx327',
     'libcamera_imx298',
+    'libcamera_imx500_ai',
     'pycurl_camera',
 )
 
