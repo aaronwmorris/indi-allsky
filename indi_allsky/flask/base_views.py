@@ -290,6 +290,8 @@ class BaseView(View):
             data['status'] = '<span class="text-muted">PAUSED</span>'
         elif status == constants.STATUS_NOCAMERA:
             data['status'] = '<span class="text-danger">NO CAMERA</span>'
+        elif status == constants.STATUS_CAMERAERROR:
+            data['status'] = '<span class="text-danger">CAMERA ERROR</span>'
         elif status == constants.STATUS_NOINDISERVER:
             data['status'] = '<span class="text-danger">NO INDISERVER</span>'
         else:

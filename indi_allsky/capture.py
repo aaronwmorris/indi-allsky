@@ -42,6 +42,8 @@ from .flask import create_app
 from .flask import db
 from .flask.miscDb import miscDb
 
+from sqlalchemy.orm.exc import MultipleResultsFound
+
 
 app = create_app()
 
@@ -817,7 +819,23 @@ class CaptureWorker(Process):
         }
 
 
-        camera = self._miscDb.addCamera(camera_metadata)
+        try:
+            camera = self._miscDb.addCamera(camera_metadata)
+        except MultipleResultsFound:
+            logger.error('!!! MULTIPLE CAMERAS WITH SAME NAME (%s) !!!', camera_metadata['name'])
+
+            self._miscDb.setState('STATUS', constants.STATUS_CAMERAERROR)
+
+            self._miscDb.addNotification(
+                NotificationCategory.CAMERA,
+                'camera_name',
+                'Multiple cameras defined with same name ({0:s})'.format(camera_metadata['name']),
+                expire=timedelta(hours=2),
+            )
+
+            time.sleep(60)
+            raise
+
 
         self.camera_id = camera.id
         self.indiclient.camera_id = camera.id
