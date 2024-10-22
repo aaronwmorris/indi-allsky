@@ -331,6 +331,8 @@ if __name__ == "__main__":
 
     ei = ExpireImages()
     ei.image_days = args.days
+    ei.image_raw_days = args.raw
+    ei.image_fits_days = args.fits
     ei.video_days = args.timelapse_days
 
     ei.main()
