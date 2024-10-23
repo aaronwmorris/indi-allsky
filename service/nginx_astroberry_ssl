@@ -66,6 +66,18 @@ server {
       proxy_redirect off;
       proxy_pass http://indi_allsky_server;
     }
+
+
+    ### ADSB Aircraft tracking
+    location /dump1090/data {
+        alias /run/dump1090-mutability;
+        autoindex off;
+    }
+
+    location /dump1090 {
+        alias /usr/share/dump1090-mutability/html;
+        autoindex off;
+    }
 }
 
 
@@ -121,5 +133,18 @@ server {
       proxy_redirect off;
       proxy_pass http://indi_allsky_server;
     }
+
+
+    ### ADSB Aircraft tracking
+    location /dump1090/data {
+        alias /run/dump1090-mutability;
+        autoindex off;
+    }
+
+    location /dump1090 {
+        alias /usr/share/dump1090-mutability/html;
+        autoindex off;
+    }
+
 }
 
