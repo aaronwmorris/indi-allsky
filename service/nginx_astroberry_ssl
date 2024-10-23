@@ -2,59 +2,8 @@ upstream indi_allsky_server {
     server %UPSTREAM_SERVER% fail_timeout=0;
 }
 
-server {
-    listen %HTTP_PORT%;
 
-    root %DOCROOT_FOLDER%;
-
-    ### Comment this section to permit HTTP access to indi-allsky
-    ###  SESSION_COOKIE_SECURE will have to be set to "false" in flash config
-    return 302 https://$host:%HTTPS_PORT%$request_uri;
-    ###
-
-    rewrite ^/$ /indi-allsky;
-
-    client_max_body_size 1024M;
-
-    location /indi-allsky/images {
-        alias %IMAGE_FOLDER%;
-        autoindex off;
-
-        location ~* \.(jpe?g|png|tiff?|bmp|gif|fits?|webp|jp2|mp4|webm)$ {
-            expires 90d;
-            add_header Pragma public;
-            add_header Cache-Control "public";
-        }
-    }
-
-    location /indi-allsky/static {
-        alias %ALLSKY_DIRECTORY%/indi_allsky/flask/static;
-        autoindex off;
-
-        location ~* \.(js|css|svg|jpe?g|png)$ {
-            expires 1d;
-            add_header Pragma public;
-            add_header Cache-Control "public";
-        }
-    }
-
-
-    location /indi-allsky {
-        try_files $uri @proxy_to_indi_allsky;
-    }
-
-
-    proxy_read_timeout 180s;
-
-    location @proxy_to_indi_allsky {
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header X-Forwarded-Proto $scheme;
-      proxy_set_header Host $http_host;
-      proxy_redirect off;
-      proxy_pass http://indi_allsky_server;
-    }
-}
-
+# HTTPS server
 server {
     listen %HTTPS_PORT%;
 
@@ -118,3 +67,59 @@ server {
       proxy_pass http://indi_allsky_server;
     }
 }
+
+
+# HTTP server
+server {
+    listen %HTTP_PORT%;
+
+    root %DOCROOT_FOLDER%;
+
+    ### Comment this section to permit HTTP access to indi-allsky
+    ###  SESSION_COOKIE_SECURE will have to be set to "false" in flash config
+    return 302 https://$host:%HTTPS_PORT%$request_uri;
+    ###
+
+    rewrite ^/$ /indi-allsky;
+
+    client_max_body_size 1024M;
+
+    location /indi-allsky/images {
+        alias %IMAGE_FOLDER%;
+        autoindex off;
+
+        location ~* \.(jpe?g|png|tiff?|bmp|gif|fits?|webp|jp2|mp4|webm)$ {
+            expires 90d;
+            add_header Pragma public;
+            add_header Cache-Control "public";
+        }
+    }
+
+    location /indi-allsky/static {
+        alias %ALLSKY_DIRECTORY%/indi_allsky/flask/static;
+        autoindex off;
+
+        location ~* \.(js|css|svg|jpe?g|png)$ {
+            expires 1d;
+            add_header Pragma public;
+            add_header Cache-Control "public";
+        }
+    }
+
+
+    location /indi-allsky {
+        try_files $uri @proxy_to_indi_allsky;
+    }
+
+
+    proxy_read_timeout 180s;
+
+    location @proxy_to_indi_allsky {
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header Host $http_host;
+      proxy_redirect off;
+      proxy_pass http://indi_allsky_server;
+    }
+}
+
