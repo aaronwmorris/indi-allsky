@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+from pprint import pprint
 import logging
 
 import queue
@@ -68,6 +69,11 @@ class TestAdsb(object):
             logger.warning('ADS-B tracking is disabled')
             sys.exit(1)
 
+
+        url = self.config.get('ADSB', {}).get('DUMP1090_URL', '')
+        logger.info('dump1090 URL: %s', url)
+
+
         self.adsb_aircraft_q = Queue()
         self.adsb_worker_idx += 1
         self.adsb_worker = AdsbAircraftHttpWorker(
@@ -91,57 +97,9 @@ class TestAdsb(object):
         self.adsb_worker.join()
 
 
-        adsb_aircraft_lines = self.get_adsb_aircraft_text(adsb_aircraft_list)
-        for line in adsb_aircraft_lines:
-            logger.info(line)
-
-
-    def get_adsb_aircraft_text(self, adsb_aircraft_list):
-        if not self.config.get('ADSB', {}).get('ENABLE'):
-            return list()
-
-        if not self.config.get('ADSB', {}).get('LABEL_ENABLE'):
-            return list()
-
-
-        aircraft_lines = []
-
-
-        for line in self.config.get('ADSB', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '').splitlines():
-            aircraft_lines.append(line)
-
-
-        label_limit = self.config.get('ADSB', {}).get('LABEL_LIMIT', 10)
-        aircraft_tmpl = self.config.get('ADSB', {}).get('AIRCRAFT_LABEL_TEMPLATE', '')
-        for i in range(label_limit):
-            try:
-                aircraft_data = adsb_aircraft_list[i].copy()
-            except IndexError:
-                # no more aircraft
-                break
-
-
-            if not aircraft_data['squawk']:
-                aircraft_data['squawk'] = ''
-
-            if not aircraft_data['flight']:
-                aircraft_data['flight'] = ''
-
-            if not aircraft_data['hex']:
-                aircraft_data['hex'] = ''
-
-            try:
-                aircraft_data['dir'] = self.cardinal_directions[round(aircraft_data['az'] / 22.5)]
-            except IndexError:
-                logger.error('Unable to calculate aircraft direction')
-                aircraft_data['dir'] = 'Error'
-
-
-            aircraft_lines.append(aircraft_tmpl.format(**aircraft_data))  # fill in the data
-
-
-        return aircraft_lines
-
+        print()
+        print('Aircraft data')
+        pprint(adsb_aircraft_list)
 
 
 if __name__ == "__main__":
