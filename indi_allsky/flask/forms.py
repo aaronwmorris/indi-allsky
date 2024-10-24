@@ -2877,6 +2877,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('cpads_temp_sensor_lm35_ads1015_i2c', 'LM35 ADS1015 i2c - Temp (1)'),
         ('cpads_temp_sensor_lm35_ads1115_i2c', 'LM35 ADS1115 i2c - Temp (1)'),
         ('blinka_temp_sensor_mlx90614_i2c', 'MLX90614 i2c - Temp/SkyTemp (2)'),
+        ('blinka_temp_sensor_mlx90640_i2c', 'MLX90640 i2c - SkyTemp (1)'),
         ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR (3)'),
         ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full (4)'),
         ('blinka_light_sensor_veml7700_i2c', 'VEML7700 i2c - Lux/Light/White (3)'),
