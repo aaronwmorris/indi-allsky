@@ -19,6 +19,10 @@ logger = logging.getLogger('indi_allsky')
 
 
 class AdsbAircraftHttpWorker(Thread):
+
+    R_EARTH_m = 6378100  # Radius of earth in meters
+
+
     def __init__(
         self,
         idx,
@@ -185,11 +189,24 @@ class AdsbAircraftHttpWorker(Thread):
                 aircraft_id = 'Unknown'
 
 
+            # "great circle" distance
             aircraft_distance_m = self.haversine(self.longitude, self.latitude, aircraft_lon, aircraft_lat)
+
+            # calculate dropoff of earths curvature
+            elevation_dropoff_m = self.dropoff(aircraft_distance_m)
+            #logger.info('Dropoff: %0.3fm', elevation_dropoff_m)
+
+            # this is still only approximate since the aircraft is offset at an angle due to earths curvature
+            aircraft_elevation_m_rel = aircraft_elevation_m - elevation_dropoff_m
+
+
+            if aircraft_elevation_m_rel <= 0:
+                # aircraft below horizon
+                continue
 
 
             # calculate observer info (alt/az astronomy terms)
-            aircraft_alt = math.degrees(math.atan(aircraft_elevation_m / aircraft_distance_m))  # not offsetting by local elevation
+            aircraft_alt = math.degrees(math.atan(aircraft_elevation_m_rel / aircraft_distance_m))  # not offsetting by local elevation
 
 
             lat_dist_m = self.haversine(self.longitude, self.latitude, self.longitude, aircraft_lat)
@@ -272,6 +289,9 @@ class AdsbAircraftHttpWorker(Thread):
         dlat = lat2 - lat1
         a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
         c = 2 * math.asin(math.sqrt(a))
-        r = 6378100  # Radius of earth in meters
-        return c * r
+        return c * self.R_EARTH_m
+
+
+    def dropoff(self, c_m):
+        return self.R_EARTH_m - (self.R_EARTH_m * math.cos(c_m / self.R_EARTH_m))
 
