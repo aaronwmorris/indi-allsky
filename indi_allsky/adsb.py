@@ -1,3 +1,7 @@
+# Data references
+# https://www.adsbexchange.com/version-2-api-wip/
+# https://github.com/adsb-related-code/dump1090-mutability/blob/master/README-json.md
+
 from datetime import datetime
 import math
 import socket
@@ -130,17 +134,33 @@ class AdsbAircraftHttpWorker(Thread):
         aircraft_list = []
 
         for aircraft in adsb_data.get('aircraft', []):
-            if isinstance(aircraft.get('altitude'), str):
-                # value might be 'ground' if landed
-                continue
-            elif isinstance(aircraft.get('altitude'), type(None)):
+            alt_geom = aircraft.get('alt_geom')
+            alt_baro = aircraft.get('alt_baro')
+            altitude = aircraft.get('altitude')
+
+            if alt_geom:
+                aircraft_altitude = alt_geom
+            elif alt_baro:
+                aircraft_altitude = alt_baro
+            elif altitude:
+                aircraft_altitude = altitude
+            else:
                 #logger.warning('Aircraft without altitude')
                 continue
+
+
+            if isinstance(aircraft_altitude, str):
+                # value might be 'ground' if landed
+                #logger.warning('Aircraft altitude: %s', aircraft_altitude)
+                continue
+            elif isinstance(aircraft_altitude, type(None)):
+                continue
+
 
             try:
                 aircraft_lat = float(aircraft['lat'])
                 aircraft_lon = float(aircraft['lon'])
-                aircraft_elevation_m = int(aircraft['altitude']) * 0.3048  # convert to meters
+                aircraft_elevation_m = int(aircraft_altitude) * 0.3048  # convert to meters
             except KeyError as e:  # noqa: F841
                 #logger.error('KeyError: %s', str(e))
                 continue
@@ -191,8 +211,8 @@ class AdsbAircraftHttpWorker(Thread):
                 aircraft_az = 90 - aircraft_angle
 
 
-            if aircraft_distance_m > 75000:
-                logger.warning('Aircraft more than 75km away, geographic lat/long may be wrong')
+            if aircraft_distance_m > 150000:
+                logger.warning('Aircraft more than 150km away, geographic lat/long may be wrong')
 
 
             #aircraft_distance_nmi = aircraft_distance_m * 0.0005399568
