@@ -228,8 +228,8 @@ class AdsbAircraftHttpWorker(Thread):
                 aircraft_az = 90 - aircraft_angle
 
 
-            if aircraft_distance_m > 150000:
-                logger.warning('Aircraft more than 150km away, geographic lat/long may be wrong')
+            if aircraft_distance_m > 250000:
+                logger.warning('Aircraft more than 250km away, geographic lat/long may be wrong')
 
 
             #aircraft_distance_nmi = aircraft_distance_m * 0.0005399568
