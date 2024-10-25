@@ -10,6 +10,7 @@ adafruit-circuitpython-sht31d
 adafruit-circuitpython-sht4x
 adafruit-circuitpython-ahtx0
 adafruit-circuitpython-mlx90614
+adafruit-circuitpython-mlx90640
 adafruit-circuitpython-tsl2591
 adafruit-circuitpython-tsl2561
 adafruit-circuitpython-veml7700
