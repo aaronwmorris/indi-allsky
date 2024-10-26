@@ -17,10 +17,18 @@ class WrapKeogram(object):
 
     def main(self):
         image = cv2.imread('image.jpg', cv2.IMREAD_UNCHANGED)
+
+        if isinstance(image, type(None)):
+            raise Exception('Not a valid image: {0:s}'.format(self.keogram))
+
         image_height, image_width = image.shape[:2]
         logger.info('Image: %d x %d', image_width, image_height)
 
         keogram = cv2.imread('keogram.jpg', cv2.IMREAD_UNCHANGED)
+
+        if isinstance(keogram, type(None)):
+            raise Exception('Not a valid image: {0:s}'.format(self.keogram))
+
         keogram_height, keogram_width = keogram.shape[:2]
         logger.info('Keogram: %d x %d', keogram_width, keogram_height)
 

@@ -34,6 +34,7 @@ class TimelapseGenerator(object):
 
     def __init__(self):
         self._input_dir = None
+        self._outfile = None
 
 
     @property
@@ -45,11 +46,18 @@ class TimelapseGenerator(object):
         self._input_dir = Path(str(new_input_dir)).absolute()
 
 
-    def main(self, outfile):
-        outfile_p = Path(outfile)
+    @property
+    def outfile(self):
+        return self._outfile
 
-        if outfile_p.exists():
-            logger.error('File already exists: %s', outfile_p)
+    @outfile.setter
+    def outfile(self, new_outfile):
+        self._outfile = Path(str(new_outfile)).absolute()
+
+
+    def main(self):
+        if self.outfile.exists():
+            logger.error('File already exists: %s', self.outfile)
             sys.exit(1)
 
         if not self.input_dir.exists():
@@ -70,11 +78,11 @@ class TimelapseGenerator(object):
 
 
         seqfolder = tempfile.TemporaryDirectory()
-        p_seqfolder = Path(seqfolder.name)
+        seqfolder_p = Path(seqfolder.name)
 
 
         for i, f in enumerate(file_list_ordered):
-            p_symlink = p_seqfolder.joinpath('{0:05d}.{1:s}'.format(i, IMAGE_FILETYPE))
+            p_symlink = seqfolder_p.joinpath('{0:05d}.{1:s}'.format(i, IMAGE_FILETYPE))
             p_symlink.symlink_to(f)
 
 
@@ -92,7 +100,7 @@ class TimelapseGenerator(object):
             #'-start_number', '0',
             #'-pattern_type', 'glob',
 
-            '-i', '{0:s}/%05d.{1:s}'.format(str(p_seqfolder), IMAGE_FILETYPE),
+            '-i', '{0:s}/%05d.{1:s}'.format(str(seqfolder_p), IMAGE_FILETYPE),
 
             '-vcodec', self.FFMPEG_CODEC,
             #'-c:v', self.FFMPEG_CODEC,
@@ -109,7 +117,7 @@ class TimelapseGenerator(object):
 
             '-level', '3.1',  # better compatibility
 
-            '{0:s}'.format(str(outfile_p)),
+            '{0:s}'.format(str(self.outfile)),
         ]
 
 
@@ -137,7 +145,6 @@ class TimelapseGenerator(object):
         seqfolder.cleanup()
 
 
-
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
         if not extension_list:
             extension_list = [IMAGE_FILETYPE]
@@ -150,6 +157,10 @@ class TimelapseGenerator(object):
             if item.is_file() and item.suffix in dot_extension_list:
                 file_list.append(item)
             elif item.is_dir():
+                if item.name in ('thumbnail', 'thumbnails'):
+                    # skip thumbnails
+                    continue
+
                 self.getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 
 
