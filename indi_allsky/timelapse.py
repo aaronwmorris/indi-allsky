@@ -14,8 +14,9 @@ logger = logging.getLogger('indi_allsky')
 
 class TimelapseGenerator(object):
 
-    def __init__(self, config):
+    def __init__(self, config, skip_frames=0):
         self.config = config
+        self.skip_frames = skip_frames
 
         self.seqfolder = tempfile.TemporaryDirectory(suffix='_timelapse')  # context manager automatically deletes files when finished
         self.seqfolder_p = Path(self.seqfolder.name)
@@ -71,7 +72,7 @@ class TimelapseGenerator(object):
         self._ffmpeg_extra_options = str(new_ffmpeg_extra_options)
 
 
-    def generate(self, video_file, file_list, skip_frames=0):
+    def generate(self, video_file, file_list):
         video_file_p = Path(video_file)
 
         # Exclude empty files
@@ -81,9 +82,9 @@ class TimelapseGenerator(object):
         file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
 
 
-        if skip_frames:
-            logger.warning('Skipping %d frames for timelapse', skip_frames)
-            file_list_ordered = file_list_ordered[skip_frames:]
+        if self.skip_frames:
+            logger.warning('Skipping %d frames for timelapse', self.skip_frames)
+            file_list_ordered = file_list_ordered[self.skip_frames:]
 
         for i, f in enumerate(file_list_ordered):
             # the symlink files must start at index 0 or ffmpeg will fail

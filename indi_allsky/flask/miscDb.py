@@ -612,6 +612,7 @@ class miscDb(object):
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
         #    'night'
+        #    'frames'
         #    'width'
         #    'height'
         #}
@@ -644,6 +645,7 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            frames=metadata.get('frames', 0),
             height=metadata.get('height'),  # optional
             width=metadata.get('width'),  # optional
             data=metadata.get('data', {}),
@@ -665,6 +667,7 @@ class miscDb(object):
         #    'createDate'  # datetime or timestamp
         #    'dayDate'  # date or string
         #    'night'
+        #    'frames'
         #    'width'
         #    'height'
         #}
@@ -698,6 +701,7 @@ class miscDb(object):
             filename=str(filename_p),
             dayDate=dayDate,
             night=metadata['night'],
+            frames=metadata.get('frames', 0),
             height=metadata.get('height'),  # optional
             width=metadata.get('width'),  # optional
             data=metadata.get('data', {}),

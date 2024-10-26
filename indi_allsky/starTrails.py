@@ -23,9 +23,12 @@ logger = logging.getLogger('indi_allsky')
 
 class StarTrailGenerator(object):
 
-    def __init__(self, config, bin_v, mask=None):
+    def __init__(self, config, bin_v, skip_frames=0, mask=None):
         self.config = config
         self.bin_v = bin_v
+        self.skip_frames = skip_frames
+
+        self.process_count = 0
 
         self._max_adu = 50
         self._mask_threshold = 190
@@ -244,6 +247,12 @@ class StarTrailGenerator(object):
 
 
     def processImage(self, file_p, image, adu=None, star_count=None):
+        self.process_count += 1
+
+        if self.process_count <= self.skip_frames:
+            return
+
+
         image_processing_start = time.time()
 
         image_height, image_width = image.shape[:2]
