@@ -279,8 +279,8 @@ class CaptureWorker(Process):
                         ### Generate timelapse at end of night
                         yesterday_ref = dayDate - timedelta(days=1)
                         timespec = yesterday_ref.strftime('%Y%m%d')
+                        self._generateNightKeogram(timespec, self.camera_id)  # keogram/st first
                         self._generateNightTimelapse(timespec, self.camera_id)
-                        self._generateNightKeogram(timespec, self.camera_id)
                         self._uploadAllskyEndOfNight(self.camera_id)
 
                     elif self.night and self.generate_timelapse_flag:
@@ -289,8 +289,8 @@ class CaptureWorker(Process):
                         ### Generate timelapse at end of day
                         today_ref = dayDate
                         timespec = today_ref.strftime('%Y%m%d')
+                        self._generateDayKeogram(timespec, self.camera_id)  # keogram/st first
                         self._generateDayTimelapse(timespec, self.camera_id)
-                        self._generateDayKeogram(timespec, self.camera_id)
 
                 elif self.night and bool(self.moonmode_v.value) != self.moonmode:
                     # Switch between night non-moonmode and moonmode
@@ -325,8 +325,8 @@ class CaptureWorker(Process):
                         ### Generate timelapse at end of day
                         yesterday_ref = dayDate - timedelta(days=1)
                         timespec = yesterday_ref.strftime('%Y%m%d')
+                        self._generateDayKeogram(timespec, self.camera_id)  # keogram/st first
                         self._generateDayTimelapse(timespec, self.camera_id)
-                        self._generateDayKeogram(timespec, self.camera_id)
                         self._expireData(self.camera_id)  # cleanup old images and folders
 
                     elif self.night and self.generate_timelapse_flag:
@@ -335,8 +335,8 @@ class CaptureWorker(Process):
                         ### Generate timelapse at end of night
                         yesterday_ref = dayDate - timedelta(days=1)
                         timespec = yesterday_ref.strftime('%Y%m%d')
+                        self._generateNightKeogram(timespec, self.camera_id)  # keogram/st first
                         self._generateNightTimelapse(timespec, self.camera_id)
-                        self._generateNightKeogram(timespec, self.camera_id)
                         self._uploadAllskyEndOfNight(self.camera_id)
 
 
