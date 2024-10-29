@@ -5030,8 +5030,8 @@ class AjaxTimelapseGeneratorView(BaseView):
             )
 
 
+            db.session.add(task_kst)  # keogram/st first
             db.session.add(task_video)
-            db.session.add(task_kst)
 
 
             if self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE'):

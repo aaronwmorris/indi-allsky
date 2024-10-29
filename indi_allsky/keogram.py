@@ -25,8 +25,11 @@ class KeogramGenerator(object):
     line_length = 35
 
 
-    def __init__(self, config):
+    def __init__(self, config, skip_frames=0):
         self.config = config
+        self.skip_frames = skip_frames
+
+        self.process_count = 0
 
         self._angle = self.config['KEOGRAM_ANGLE']
         self._v_scale_factor = 100
@@ -137,6 +140,12 @@ class KeogramGenerator(object):
 
 
     def processImage(self, filename, image):
+        self.process_count += 1
+
+        if self.process_count <= self.skip_frames:
+            return
+
+
         image_processing_start = time.time()
 
         self.timestamps_list.append(filename.stat().st_mtime)

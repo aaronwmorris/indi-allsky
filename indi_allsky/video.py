@@ -403,14 +403,14 @@ class VideoWorker(Process):
 
 
         try:
-            tg = TimelapseGenerator(self.config)
+            tg = TimelapseGenerator(self.config, skip_frames=timelapse_skip_frames)
             tg.codec = self.config['FFMPEG_CODEC']
             tg.framerate = self.config['FFMPEG_FRAMERATE']
             tg.bitrate = self.config['FFMPEG_BITRATE']
             tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
             tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
 
-            tg.generate(video_file, timelapse_files, skip_frames=timelapse_skip_frames)
+            tg.generate(video_file, timelapse_files)
         except TimelapseException:
             video_entry.success = False
             db.session.commit()
@@ -658,14 +658,14 @@ class VideoWorker(Process):
 
 
         try:
-            tg = TimelapseGenerator(self.config)
+            tg = TimelapseGenerator(self.config, skip_frames=0)
             tg.codec = self.config['FFMPEG_CODEC']
             tg.framerate = framerate
             tg.bitrate = self.config['FFMPEG_BITRATE']
             tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
             tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
 
-            tg.generate(video_file, timelapse_files, skip_frames=0)
+            tg.generate(video_file, timelapse_files)
         except TimelapseException:
             mini_video_entry.success = False
             db.session.commit()
@@ -883,14 +883,14 @@ class VideoWorker(Process):
 
 
         try:
-            tg = TimelapseGenerator(self.config)
+            tg = TimelapseGenerator(self.config, skip_frames=timelapse_skip_frames)
             tg.codec = self.config['FFMPEG_CODEC']
             tg.framerate = self.config['FFMPEG_FRAMERATE']
             tg.bitrate = self.config['FFMPEG_BITRATE']
             tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
             tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
 
-            tg.generate(video_file, timelapse_files, skip_frames=timelapse_skip_frames)
+            tg.generate(video_file, timelapse_files)
         except TimelapseException:
             video_entry.success = False
             db.session.commit()
@@ -1138,10 +1138,14 @@ class VideoWorker(Process):
         logger.info('Max kpindex: %0.2f, ovation: %d, smoke rating: %s', max_kpindex, max_ovation_max, constants.SMOKE_RATING_MAP_STR[max_smoke_rating])
 
 
+        timelapse_skip_frames = self.config.get('TIMELAPSE_SKIP_FRAMES', 4)
+
+
         processing_start = time.time()
 
         kg = KeogramGenerator(
             self.config,
+            skip_frames=timelapse_skip_frames,
         )
         kg.angle = self.config['KEOGRAM_ANGLE']
         kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
@@ -1159,6 +1163,7 @@ class VideoWorker(Process):
             'camera_uuid': camera.uuid,
             #'height'  # added later
             #'width'   # added later
+            #'frames'  # added later
         }
 
         keogram_metadata['data'] = {
@@ -1180,6 +1185,7 @@ class VideoWorker(Process):
             'camera_uuid': camera.uuid,
             #'height'  # added later
             #'width'   # added later
+            #'frames'  # added later
         }
 
         startrail_metadata['data'] = {
@@ -1235,6 +1241,7 @@ class VideoWorker(Process):
         stg = StarTrailGenerator(
             self.config,
             self.bin_v,
+            skip_frames=timelapse_skip_frames,
             mask=self._detection_mask,
         )
         stg.max_adu = self.config['STARTRAILS_MAX_ADU']
@@ -1256,6 +1263,7 @@ class VideoWorker(Process):
             logger.warning('Re-using image data for ADU and Star counts')
         else:
             logger.warning('Recalculating values for ADU and Star counts')
+
 
         # Files are presorted from the DB
         for i, entry in enumerate(files_entries):
@@ -1308,9 +1316,11 @@ class VideoWorker(Process):
         keogram_height, keogram_width = kg.shape[:2]
         keogram_metadata['height'] = keogram_height
         keogram_metadata['width'] = keogram_width
+        keogram_metadata['frames'] = keogram_width  # one frame per line
 
         keogram_entry.height = keogram_height
         keogram_entry.width = keogram_width
+        keogram_entry.frames = keogram_width  # one frame per line
         db.session.commit()
 
 
@@ -1341,9 +1351,11 @@ class VideoWorker(Process):
             st_height, st_width = stg.shape[:2]
             startrail_metadata['height'] = st_height
             startrail_metadata['width'] = st_width
+            startrail_metadata['frames'] = stg.trail_count
 
             startrail_entry.height = st_height
             startrail_entry.width = st_width
+            startrail_entry.frames = stg.trail_count
             db.session.commit()
 
 
@@ -1377,14 +1389,14 @@ class VideoWorker(Process):
                 )
 
                 try:
-                    st_tg = TimelapseGenerator(self.config)
+                    st_tg = TimelapseGenerator(self.config, skip_frames=0)
                     st_tg.codec = self.config['FFMPEG_CODEC']
                     st_tg.framerate = self.config['FFMPEG_FRAMERATE']
                     st_tg.bitrate = self.config['FFMPEG_BITRATE']
                     st_tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
                     st_tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
 
-                    st_tg.generate(startrail_video_file, stg.timelapse_frame_list, skip_frames=0)
+                    st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
                 except TimelapseException:
                     logger.error('Failed to generate startrails timelapse')
 
