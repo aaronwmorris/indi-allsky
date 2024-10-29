@@ -1812,7 +1812,7 @@ class VideoWorker(Process):
                 logger.error('Cannot remove folder: %s', str(e))
 
 
-        task.setSuccess('Expired {0:d} assets', delete_count)
+        task.setSuccess('Expired {0:d} assets'.format(delete_count))
 
 
     def _deleteAssets(self, table, entry_id_list):
