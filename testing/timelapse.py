@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
 
-import os
 import sys
-import argparse
-import logging
+import os
 import time
 import tempfile
+import argparse
 from pathlib import Path
 import subprocess
+import numpy
+import cv2
+import logging
 
+
+IMAGE_CIRCLE = 1650
 
 IMAGE_FILETYPE = 'jpg'
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging
-
 
 
 class TimelapseGenerator(object):
@@ -35,6 +38,12 @@ class TimelapseGenerator(object):
     def __init__(self):
         self._input_dir = None
         self._outfile = None
+        self._keogram = None
+
+        self._keogram_image = None
+
+        self.file_list_ordered_len = 0
+        self.image_count = 0
 
 
     @property
@@ -47,12 +56,22 @@ class TimelapseGenerator(object):
 
 
     @property
+    def keogram(self):
+        return self._keogram
+
+    @keogram.setter
+    def keogram(self, new_keogram):
+        self._keogram = Path(str(new_keogram)).absolute()
+
+
+    @property
     def outfile(self):
         return self._outfile
 
     @outfile.setter
     def outfile(self, new_outfile):
         self._outfile = Path(str(new_outfile)).absolute()
+
 
 
     def main(self):
@@ -65,6 +84,7 @@ class TimelapseGenerator(object):
             sys.exit(1)
 
 
+
         file_list = list()
         self.getFolderFilesByExt(self.input_dir, file_list)
 
@@ -74,16 +94,18 @@ class TimelapseGenerator(object):
         # Sort by timestamp
         file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
 
-        logger.warning('Found %d files for timelapse', len(file_list_ordered))
+        self.file_list_ordered_len = len(file_list_ordered)
+        logger.warning('Found %d files for timelapse', self.file_list_ordered_len)
 
-
-        seqfolder = tempfile.TemporaryDirectory()
+        seqfolder = tempfile.TemporaryDirectory(dir=self.input_dir.parent, suffix='_timelapse')
         seqfolder_p = Path(seqfolder.name)
 
 
         for i, f in enumerate(file_list_ordered):
             p_symlink = seqfolder_p.joinpath('{0:05d}.{1:s}'.format(i, IMAGE_FILETYPE))
             p_symlink.symlink_to(f)
+
+            #self.wrap(i, f, seqfolder_p)
 
 
         processing_start = time.time()
@@ -141,8 +163,127 @@ class TimelapseGenerator(object):
 
         logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
 
-        # delete all existing symlinks and sequence folder
-        seqfolder.cleanup()
+
+    def wrap(self, i, infile_p, seqfolder_p):
+        logger.info('Processing %s', infile_p)
+
+
+        if isinstance(self._keogram_image, type(None)):
+            self._keogram_image = cv2.imread(str(self.keogram), cv2.IMREAD_UNCHANGED)
+
+            if isinstance(self._keogram_image, type(None)):
+                raise Exception('Not a valid image: {0:s}'.format(self.keogram))
+
+            keogram_height, keogram_width = self._keogram_image.shape[:2]
+            logger.info('Keogram: %d x %d', keogram_width, keogram_height)
+
+
+        keogram = self._keogram_image.copy()
+        keogram_height, keogram_width = keogram.shape[:2]
+
+        current_percent = i / self.file_list_ordered_len
+        keogram_line = int(keogram_width * current_percent)
+        #logger.info('Line: %d', keogram_line)
+
+        line = numpy.full([keogram_height, 1, 3], 255, dtype=numpy.uint8)
+        keogram[0:keogram_height, keogram_line:keogram_line + 1] = line
+        #cv2.imwrite(str('keogram_line.jpg'), keogram, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #sys.exit()
+
+        image = cv2.imread(str(infile_p), cv2.IMREAD_UNCHANGED)
+
+        if isinstance(image, type(None)):
+            logger.error('Not a valid image: {0:s}'.format(infile_p))
+            return
+
+
+        image_height, image_width = image.shape[:2]
+        #logger.info('Image: %d x %d', image_width, image_height)
+
+
+        if image_width < (IMAGE_CIRCLE + (keogram_height * 2)):
+            final_width = IMAGE_CIRCLE + (keogram_height * 2)
+        else:
+            final_width = image_width
+
+        if image_height < (IMAGE_CIRCLE + (keogram_height * 2)):
+            final_height = IMAGE_CIRCLE + (keogram_height * 2)
+        else:
+            final_height = image_height
+
+        #logger.info('Final: %d x %d', final_width, final_height)
+
+
+        # add black area at the top of the keogram to wrap around center
+        d_keogram = numpy.zeros([int((IMAGE_CIRCLE + keogram_height) / 2), keogram_width, 3], dtype=numpy.uint8)
+        d_height, d_width = d_keogram.shape[:2]
+        d_keogram[d_height - keogram_height:d_height, 0:keogram_width] = keogram
+
+
+        # add alpha channel for transparency (black area)
+        d_keogram_alpha = numpy.zeros([d_height, d_width], dtype=numpy.uint8)
+        d_keogram_alpha[d_height - keogram_height:d_height, 0:keogram_width] = 255
+        d_keogram = numpy.dstack((d_keogram, d_keogram_alpha))
+
+
+        d_image = cv2.rotate(d_keogram, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+
+        # wrap the keogram (square output so it can be rotated)
+        wrapped_height, wrapped_width = IMAGE_CIRCLE + (keogram_height * 2), IMAGE_CIRCLE + (keogram_height * 2)
+        wrapped_keogram = cv2.warpPolar(
+            d_image,
+            (wrapped_width, wrapped_height),
+            (int(wrapped_height / 2), int(wrapped_height / 2)),
+            int(wrapped_height / 2),
+            cv2.WARP_INVERSE_MAP,
+        )
+
+        #wrapped_keogram = cv2.rotate(wrapped_keogram, cv2.ROTATE_90_COUNTERCLOCKWISE)  # start keogram at top
+        wrapped_keogram = cv2.rotate(wrapped_keogram, cv2.ROTATE_90_CLOCKWISE)  # start keogram at bottom
+
+
+        # separate layers
+        wrapped_keogram_bgr = wrapped_keogram[:, :, :3]
+        wrapped_keogram_alpha = (wrapped_keogram[:, :, 3] / 255).astype(numpy.float32)
+
+        # create alpha mask
+        alpha_mask = numpy.dstack((
+            wrapped_keogram_alpha,
+            wrapped_keogram_alpha,
+            wrapped_keogram_alpha,
+        ))
+
+
+        f_image = numpy.zeros([final_height, final_width, 3], dtype=numpy.uint8)
+        f_image[
+            int((final_height / 2) - (image_height / 2)):int((final_height / 2) + (image_height / 2)),
+            int((final_width / 2) - (image_width / 2)):int((final_width / 2) + (image_width / 2)),
+        ] = image
+
+
+        # apply alpha mask
+        image_with_keogram = (f_image * (1 - alpha_mask) + wrapped_keogram_bgr * alpha_mask).astype(numpy.uint8)
+
+
+        mod_height = final_height % 2
+        mod_width = final_width % 2
+
+        if mod_height or mod_width:
+            # width and height needs to be divisible by 2 for timelapse
+            crop_width = final_width - mod_width
+            crop_height = final_height - mod_height
+
+            image_with_keogram = image_with_keogram[
+                0::crop_height,
+                0:crop_width,
+            ]
+
+
+        outfile_p = seqfolder_p.joinpath('{0:05d}.{1:s}'.format(self.image_count, IMAGE_FILETYPE))
+        cv2.imwrite(str(outfile_p), image_with_keogram, [cv2.IMWRITE_JPEG_QUALITY, 90])
+
+        self.image_count += 1
 
 
     def getFolderFilesByExt(self, folder, file_list, extension_list=None):
@@ -173,11 +314,18 @@ if __name__ == "__main__":
         type=str,
     )
     argparser.add_argument(
-        '--output',
+        '--outfile',
         '-o',
-        help='output',
+        help='outfile',
         type=str,
         required=True,
+    )
+    argparser.add_argument(
+        '--keogram',
+        '-k',
+        help='keogram',
+        type=str,
+        required=False
     )
 
 
@@ -185,5 +333,7 @@ if __name__ == "__main__":
 
     tg = TimelapseGenerator()
     tg.input_dir = args.input_dir
-    tg.main(args.output)
+    tg.outfile = args.outfile
+    tg.keogram = args.keogram
+    tg.main()
 
