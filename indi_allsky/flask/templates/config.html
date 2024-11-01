@@ -2860,7 +2860,34 @@ var camera_id = {{ camera_id }};
             {{ form_config.LENS_IMAGE_CIRCLE(class='form-control bg-secondary') }}
             <div id="LENS_IMAGE_CIRCLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Image circle in pixels.  If you cannot see the edge of the image circle, just ensure this number is larger than the diagonal.</div>
+        <div class="col-sm-8">
+            <div>Image circle in pixels.  If you cannot see the edge of the image circle, just ensure this number is larger than the diagonal.</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LENS_OFFSET_X(class='form-control bg-secondary') }}
+            <div id="LENS_OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Lens/Sensor offset</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LENS_OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LENS_OFFSET_Y(class='form-control bg-secondary') }}
+            <div id="LENS_OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
     </div>
 
     <div class="form-group row">
@@ -5850,6 +5877,8 @@ const field_names = [
     'LENS_FOCAL_LENGTH',
     'LENS_FOCAL_RATIO',
     'LENS_IMAGE_CIRCLE',
+    'LENS_OFFSET_X',
+    'LENS_OFFSET_Y',
     'LENS_ALTITUDE',
     'LENS_AZIMUTH',
     'CCD_CONFIG__NIGHT__GAIN',
