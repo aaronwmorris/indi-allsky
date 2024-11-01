@@ -5480,6 +5480,8 @@ class ImageProcessingView(TemplateView):
             'CAMERA_ID'                      : self.camera.id,
             'FRAME_TYPE'                     : frame_type,
             'FITS_ID'                        : fits_id,
+            'LENS_OFFSET_X'                  : self.indi_allsky_config.get('LENS_OFFSET_X', 0),
+            'LENS_OFFSET_Y'                  : self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
             'CCD_BIT_DEPTH'                  : str(self.indi_allsky_config.get('CCD_BIT_DEPTH', 0)),  # string in form, int in config
             'NIGHT_CONTRAST_ENHANCE'         : self.indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
             'CONTRAST_ENHANCE_16BIT'         : self.indi_allsky_config.get('CONTRAST_ENHANCE_16BIT', False),
@@ -5512,8 +5514,6 @@ class ImageProcessingView(TemplateView):
             'IMAGE_ALIGN_SOURCEMINAREA'      : self.indi_allsky_config.get('IMAGE_ALIGN_SOURCEMINAREA', 10),
             'FISH2PANO__ENABLE'              : False,
             'FISH2PANO__DIAMETER'            : self.indi_allsky_config.get('FISH2PANO', {}).get('DIAMETER', 3000),
-            'FISH2PANO__OFFSET_X'            : self.indi_allsky_config.get('FISH2PANO', {}).get('OFFSET_X', 0),
-            'FISH2PANO__OFFSET_Y'            : self.indi_allsky_config.get('FISH2PANO', {}).get('OFFSET_Y', 0),
             'FISH2PANO__ROTATE_ANGLE'        : self.indi_allsky_config.get('FISH2PANO', {}).get('ROTATE_ANGLE', 0),
             'FISH2PANO__SCALE'               : self.indi_allsky_config.get('FISH2PANO', {}).get('SCALE', 0.3),
             'FISH2PANO__FLIP_H'              : self.indi_allsky_config.get('FISH2PANO', {}).get('FLIP_H', False),
@@ -5621,6 +5621,8 @@ class JsonImageProcessingView(JsonView):
 
         p_config = self.indi_allsky_config.copy()
 
+        p_config['LENS_OFFSET_X']                        = int(request.json['LENS_OFFSET_X'])
+        p_config['LENS_OFFSET_X']                        = int(request.json['LENS_OFFSET_Y'])
         p_config['CCD_BIT_DEPTH']                        = int(request.json['CCD_BIT_DEPTH'])
         p_config['IMAGE_CALIBRATE_DARK']                 = bool(request.json['IMAGE_CALIBRATE_DARK'])
         p_config['IMAGE_CALIBRATE_BPM']                  = bool(request.json['IMAGE_CALIBRATE_BPM'])
@@ -5656,8 +5658,6 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_STACK_SPLIT']                    = False
         p_config['FISH2PANO']['ENABLE']                  = bool(request.json['FISH2PANO__ENABLE'])
         p_config['FISH2PANO']['DIAMETER']                = int(request.json['FISH2PANO__DIAMETER'])
-        p_config['FISH2PANO']['OFFSET_X']                = int(request.json['FISH2PANO__OFFSET_X'])
-        p_config['FISH2PANO']['OFFSET_Y']                = int(request.json['FISH2PANO__OFFSET_Y'])
         p_config['FISH2PANO']['ROTATE_ANGLE']            = int(request.json['FISH2PANO__ROTATE_ANGLE'])
         p_config['FISH2PANO']['SCALE']                   = float(request.json['FISH2PANO__SCALE'])
         p_config['FISH2PANO']['FLIP_H']                  = bool(request.json['FISH2PANO__FLIP_H'])

@@ -21,8 +21,8 @@ class IndiAllskyCardinalDirsLabel(object):
         self.SOUTH_CHAR = self.config.get('CARDINAL_DIRS', {}).get('CHAR_SOUTH', 'S')
 
 
-        self.x_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_X', 0)
-        self.y_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_Y', 0)
+        self.x_offset = self.config.get('LENS_OFFSET_X', 0)
+        self.y_offset = self.config.get('LENS_OFFSET_Y', 0)
 
 
         self.top_offset = self.config.get('CARDINAL_DIRS', {}).get('OFFSET_TOP', 15)
