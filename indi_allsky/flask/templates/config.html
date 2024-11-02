@@ -4,7 +4,7 @@
 
 {% block head %}
 <style>
-#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab , #nav-sat_track-tab{
+#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab, #nav-sat_track-tab, #nav-timelapse-tab {
 	width: 150px;
 	margin-top: 10px;
 	margin-right: 5px;
@@ -39,6 +39,7 @@ var camera_id = {{ camera_id }};
   <div class="nav nav-tabs" id="nav-tab" role="tablist">
     <button class="nav-link link-danger bg-dark active" id="nav-camera-tab" data-bs-toggle="tab" data-bs-target="#nav-camera" type="button" role="tab" aria-controls="nav-camera" aria-selected="true">Camera</button>
     <button class="nav-link link-light bg-dark" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="false">Image</button>
+    <button class="nav-link link-primary bg-dark" id="nav-timelapse-tab" data-bs-toggle="tab" data-bs-target="#nav-timelapse" type="button" role="tab" aria-controls="nav-timelapse" aria-selected="false">Timelapse</button>
     <button class="nav-link link-success bg-dark" id="nav-processing-tab" data-bs-toggle="tab" data-bs-target="#nav-processing" type="button" role="tab" aria-controls="nav-processing" aria-selected="false">Processing</button>
     <button class="nav-link link-info bg-dark" id="nav-location-tab" data-bs-toggle="tab" data-bs-target="#nav-location" type="button" role="tab" aria-controls="nav-location" aria-selected="false">Location</button>
     <button class="nav-link link-warning bg-dark" id="nav-admin-tab" data-bs-toggle="tab" data-bs-target="#nav-admin" type="button" role="tab" aria-controls="nav-admin" aria-selected="false">Admin</button>
@@ -659,21 +660,6 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.TIMELAPSE_ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.TIMELAPSE_ENABLE(class='form-check-input') }}
-                <div id="TIMELAPSE_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Enable timelapse, keogram, and star trail creation</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
             {{ form_config.DAYTIME_CAPTURE.label }}
         </div>
         <div class="col-sm-2">
@@ -699,19 +685,6 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
         </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.DAYTIME_TIMELAPSE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.DAYTIME_TIMELAPSE(class='form-check-input') }}
-                <div id="DAYTIME_TIMELAPSE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Enable daytime timelapse generation</div>
     </div>
 
     <hr>
@@ -1334,95 +1307,6 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.TIMELAPSE_PRE_PROCESSOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.TIMELAPSE_PRE_PROCESSOR(class='form-select bg-secondary') }}
-            <div id="TIMELAPSE_PRE_PROCESSOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.FFMPEG_FRAMERATE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.FFMPEG_FRAMERATE(class='form-control bg-secondary') }}
-            <div id="FFMPEG_FRAMERATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">ffmpeg framerate for timelapse videos</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.FFMPEG_BITRATE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.FFMPEG_BITRATE(class='form-control bg-secondary') }}
-            <div id="FFMPEG_BITRATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Default: 5000k</div>
-            <div>High quality timelapses with dynamic content (eg auroras) should have a much higher rate</div>
-            <div>15000k-20000k for a 1920x1080 resolution.</div>
-            <div>30000k-40000k for 4K video</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.FFMPEG_VFSCALE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.FFMPEG_VFSCALE(class='form-select bg-secondary') }}
-            <div id="FFMPEG_VFSCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">ffmpeg scaling</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.FFMPEG_CODEC.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.FFMPEG_CODEC(class='form-select bg-secondary') }}
-            <div id="FFMPEG_CODEC-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">ffmpeg output codec</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.FFMPEG_EXTRA_OPTIONS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.FFMPEG_EXTRA_OPTIONS(class='form-control bg-secondary') }}
-            <div id="FFMPEG_EXTRA_OPTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
-            <div>ffmpeg extra options (not validated).</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> "-level 3.1" can reduce artifacts and increase IOS compatibility</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.TIMELAPSE_SKIP_FRAMES.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.TIMELAPSE_SKIP_FRAMES(class='form-select bg-secondary') }}
-            <div id="TIMELAPSE_SKIP_FRAMES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Exclude frames at beginning of timelapse.  Gain changes between night and day cause bad exposures.</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
             {{ form_config.IMAGE_LABEL_SYSTEM.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -2031,6 +1915,128 @@ var camera_id = {{ camera_id }};
     </div>
 
 </div><!-- end image tab -->
+<div class="tab-pane fade" id="nav-timelapse" role="tabpanel" aria-labelledby="nav-timelapse-tab">
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TIMELAPSE_ENABLE(class='form-check-input') }}
+                <div id="TIMELAPSE_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable timelapse, keogram, and star trail creation</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DAYTIME_TIMELAPSE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DAYTIME_TIMELAPSE(class='form-check-input') }}
+                <div id="DAYTIME_TIMELAPSE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable daytime timelapse generation</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_PRE_PROCESSOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TIMELAPSE_PRE_PROCESSOR(class='form-select bg-secondary') }}
+            <div id="TIMELAPSE_PRE_PROCESSOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_FRAMERATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_FRAMERATE(class='form-control bg-secondary') }}
+            <div id="FFMPEG_FRAMERATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">ffmpeg framerate for timelapse videos</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_BITRATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_BITRATE(class='form-control bg-secondary') }}
+            <div id="FFMPEG_BITRATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default: 5000k</div>
+            <div>High quality timelapses with dynamic content (eg auroras) should have a much higher rate</div>
+            <div>15000k-20000k for a 1920x1080 resolution.</div>
+            <div>30000k-40000k for 4K video</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_VFSCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_VFSCALE(class='form-select bg-secondary') }}
+            <div id="FFMPEG_VFSCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">ffmpeg scaling</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_CODEC.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_CODEC(class='form-select bg-secondary') }}
+            <div id="FFMPEG_CODEC-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">ffmpeg output codec</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_EXTRA_OPTIONS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FFMPEG_EXTRA_OPTIONS(class='form-control bg-secondary') }}
+            <div id="FFMPEG_EXTRA_OPTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>ffmpeg extra options (not validated).</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> "-level 3.1" can reduce artifacts and increase IOS compatibility</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_SKIP_FRAMES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_SKIP_FRAMES(class='form-select bg-secondary') }}
+            <div id="TIMELAPSE_SKIP_FRAMES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Exclude frames at beginning of timelapse.  Gain changes between night and day cause bad exposures.</div>
+    </div>
+
+</div><!-- end timelapse tab -->
 <div class="tab-pane fade" id="nav-processing" role="tabpanel" aria-labelledby="nav-processing-tab">
 
     <hr>
