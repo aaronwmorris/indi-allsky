@@ -1334,6 +1334,19 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TIMELAPSE_PRE_PROCESSOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TIMELAPSE_PRE_PROCESSOR(class='form-select bg-secondary') }}
+            <div id="TIMELAPSE_PRE_PROCESSOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.FFMPEG_FRAMERATE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -6006,6 +6019,7 @@ const field_names = [
     'FFMPEG_CODEC',
     'FFMPEG_EXTRA_OPTIONS',
     'TIMELAPSE_SKIP_FRAMES',
+    'TIMELAPSE_PRE_PROCESSOR',
     'IMAGE_LABEL_SYSTEM',
     'TEXT_PROPERTIES__FONT_FACE',
     'TEXT_PROPERTIES__FONT_HEIGHT',

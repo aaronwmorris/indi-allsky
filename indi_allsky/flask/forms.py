@@ -243,6 +243,11 @@ def TIMELAPSE_SKIP_FRAMES_validator(form, field):
         raise ValidationError('Skip frames must 10 or less')
 
 
+def TIMELAPSE_PRE_PROCESSOR_validator(form, field):
+    if field.data not in list(zip(*form.TIMELAPSE_PRE_PROCESSOR_choices))[0]:
+        raise ValidationError('Invalid selection')
+
+
 def CCD_BIT_DEPTH_validator(form, field):
     if int(field.data) not in (0, 8, 10, 12, 14, 16):
         raise ValidationError('Bits must be 0, 8, 10, 12, 14, or 16 ')
@@ -2704,6 +2709,12 @@ class IndiAllskyConfigForm(FlaskForm):
         ('libvpx', 'webm')
     )
 
+
+    TIMELAPSE_PRE_PROCESSOR_choices = (
+        ('standard', 'Standard'),
+    )
+
+
     ORB_PROPERTIES__MODE_choices = (
         ('ha', 'Local Hour Angle'),
         ('az', 'Azimuth'),
@@ -3118,6 +3129,7 @@ class IndiAllskyConfigForm(FlaskForm):
     LOCATION_ELEVATION               = IntegerField('Elevation', validators=[LOCATION_ELEVATION_validator])
     TIMELAPSE_ENABLE                 = BooleanField('Enable Timelapse Creation')
     TIMELAPSE_SKIP_FRAMES            = IntegerField('Timelapse Skip Frames', validators=[TIMELAPSE_SKIP_FRAMES_validator])
+    TIMELAPSE_PRE_PROCESSOR          = SelectField('Timelapse Processing', choices=TIMELAPSE_PRE_PROCESSOR_choices, validators=[TIMELAPSE_PRE_PROCESSOR_validator])
     CAPTURE_PAUSE                    = BooleanField('Pause Capture')
     DAYTIME_CAPTURE                  = BooleanField('Daytime Capture')
     DAYTIME_CAPTURE_SAVE             = BooleanField('Daytime Save Images')
