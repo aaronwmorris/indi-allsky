@@ -1002,7 +1002,31 @@ class IndiClientLibCameraImx500(IndiClientLibCameraGeneric):
             'max_gain'      : 22,  # verified
             'min_exposure'  : 0.0002,
             'max_exposure'  : 200.0,
-            'cfa'           : 'RGGB',  # unverified
+            'cfa'           : 'RGGB',  # verified
+            'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            1 : '',
+        }
+
+
+class IndiClientLibCameraImx283(IndiClientLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx283, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_imx283'
+
+        self.camera_info = {
+            'width'         : 5472,
+            'height'        : 3648,
+            'pixel'         : 2.4,
+            'min_gain'      : 1,
+            'max_gain'      : 22,  # verified
+            'min_exposure'  : 0.000058,
+            'max_exposure'  : 129.0,
+            'cfa'           : 'RGGB',  # verified
             'bit_depth'     : 16,
         }
 
