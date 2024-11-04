@@ -278,7 +278,7 @@ if [ -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
 
     echo
     echo "virtualenv python modules"
-    pip freeze
+    pip freeze || true
 
     echo "\`\`\`"  # markdown
 

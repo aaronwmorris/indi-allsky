@@ -143,6 +143,11 @@ def LENS_IMAGE_CIRCLE_validator(form, field):
         raise ValidationError('Focal ratio must be greater than 0')
 
 
+def LENS_OFFSET_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+
 def LENS_ALTITUDE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -236,6 +241,11 @@ def TIMELAPSE_SKIP_FRAMES_validator(form, field):
 
     if field.data > 10:
         raise ValidationError('Skip frames must 10 or less')
+
+
+def TIMELAPSE_PRE_PROCESSOR_validator(form, field):
+    if field.data not in list(zip(*form.TIMELAPSE_PRE_PROCESSOR_choices))[0]:
+        raise ValidationError('Invalid selection')
 
 
 def CCD_BIT_DEPTH_validator(form, field):
@@ -2699,6 +2709,12 @@ class IndiAllskyConfigForm(FlaskForm):
         ('libvpx', 'webm')
     )
 
+
+    TIMELAPSE_PRE_PROCESSOR_choices = (
+        ('standard', 'Standard'),
+    )
+
+
     ORB_PROPERTIES__MODE_choices = (
         ('ha', 'Local Hour Angle'),
         ('az', 'Azimuth'),
@@ -3053,6 +3069,8 @@ class IndiAllskyConfigForm(FlaskForm):
     LENS_FOCAL_LENGTH                = FloatField('Focal Length', validators=[LENS_FOCAL_LENGTH_validator])
     LENS_FOCAL_RATIO                 = FloatField('Focal Ratio', validators=[LENS_FOCAL_RATIO_validator])
     LENS_IMAGE_CIRCLE                = IntegerField('Image Circle', validators=[LENS_IMAGE_CIRCLE_validator])
+    LENS_OFFSET_X                    = IntegerField('X Offset', validators=[LENS_OFFSET_validator])
+    LENS_OFFSET_Y                    = IntegerField('Y Offset', validators=[LENS_OFFSET_validator])
     LENS_ALTITUDE                    = FloatField('Altitude', validators=[LENS_ALTITUDE_validator])
     LENS_AZIMUTH                     = FloatField('Azimuth', validators=[LENS_AZIMUTH_validator])
     CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[ccd_GAIN_validator])
@@ -3111,6 +3129,7 @@ class IndiAllskyConfigForm(FlaskForm):
     LOCATION_ELEVATION               = IntegerField('Elevation', validators=[LOCATION_ELEVATION_validator])
     TIMELAPSE_ENABLE                 = BooleanField('Enable Timelapse Creation')
     TIMELAPSE_SKIP_FRAMES            = IntegerField('Timelapse Skip Frames', validators=[TIMELAPSE_SKIP_FRAMES_validator])
+    TIMELAPSE_PRE_PROCESSOR          = SelectField('Timelapse Processing', choices=TIMELAPSE_PRE_PROCESSOR_choices, validators=[TIMELAPSE_PRE_PROCESSOR_validator])
     CAPTURE_PAUSE                    = BooleanField('Pause Capture')
     DAYTIME_CAPTURE                  = BooleanField('Daytime Capture')
     DAYTIME_CAPTURE_SAVE             = BooleanField('Daytime Save Images')
@@ -3171,8 +3190,8 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_SCALE                      = IntegerField('Image Scaling', validators=[DataRequired(), IMAGE_SCALE_validator])
     IMAGE_CIRCLE_MASK__ENABLE        = BooleanField('Enable Image Circle Mask')
     IMAGE_CIRCLE_MASK__DIAMETER      = IntegerField('Mask Diameter', validators=[DataRequired(), IMAGE_CIRCLE_MASK__DIAMETER_validator])
-    IMAGE_CIRCLE_MASK__OFFSET_X      = IntegerField('Mask X Offset', validators=[IMAGE_CIRCLE_MASK__OFFSET_X_validator])
-    IMAGE_CIRCLE_MASK__OFFSET_Y      = IntegerField('Mask Y Offset', validators=[IMAGE_CIRCLE_MASK__OFFSET_Y_validator])
+    IMAGE_CIRCLE_MASK__OFFSET_X      = IntegerField('Mask X Offset', validators=[IMAGE_CIRCLE_MASK__OFFSET_X_validator], render_kw={'readonly' : True, 'disabled' : 'disabled'})
+    IMAGE_CIRCLE_MASK__OFFSET_Y      = IntegerField('Mask Y Offset', validators=[IMAGE_CIRCLE_MASK__OFFSET_Y_validator], render_kw={'readonly' : True, 'disabled' : 'disabled'})
     IMAGE_CIRCLE_MASK__BLUR          = IntegerField('Mask Blur', validators=[IMAGE_CIRCLE_MASK__BLUR_validator])
     IMAGE_CIRCLE_MASK__OPACITY       = IntegerField('Mask Opacity %', validators=[IMAGE_CIRCLE_MASK__OPACITY_validator])
     IMAGE_CIRCLE_MASK__OUTLINE       = BooleanField('Mask Outline')
@@ -3185,8 +3204,8 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_QUEUE_BACKOFF              = FloatField('Image Queue Backoff Multiplier', validators=[IMAGE_QUEUE_BACKOFF_validator])
     FISH2PANO__ENABLE                = BooleanField('Enable Fisheye to Panoramic')
     FISH2PANO__DIAMETER              = IntegerField('Diameter', validators=[DataRequired(), FISH2PANO__DIAMETER_validator])
-    FISH2PANO__OFFSET_X              = IntegerField('X Offset', validators=[FISH2PANO__OFFSET_X_validator])
-    FISH2PANO__OFFSET_Y              = IntegerField('Y Offset', validators=[FISH2PANO__OFFSET_Y_validator])
+    FISH2PANO__OFFSET_X              = IntegerField('X Offset', validators=[FISH2PANO__OFFSET_X_validator], render_kw={'readonly' : True, 'disabled' : 'disabled'})
+    FISH2PANO__OFFSET_Y              = IntegerField('Y Offset', validators=[FISH2PANO__OFFSET_Y_validator], render_kw={'readonly' : True, 'disabled' : 'disabled'})
     FISH2PANO__ROTATE_ANGLE          = IntegerField('Rotation Angle', validators=[FISH2PANO__ROTATE_ANGLE_validator])
     FISH2PANO__SCALE                 = FloatField('Scale', validators=[FISH2PANO__SCALE_validator])
     FISH2PANO__MODULUS               = IntegerField('Modulus', validators=[DataRequired(), FISH2PANO__MODULUS_validator])
@@ -3242,8 +3261,8 @@ class IndiAllskyConfigForm(FlaskForm):
     CARDINAL_DIRS__CHAR_WEST         = StringField('West Character', validators=[CARDINAL_DIRS__CHAR_validator])
     CARDINAL_DIRS__CHAR_SOUTH        = StringField('South Character', validators=[CARDINAL_DIRS__CHAR_validator])
     CARDINAL_DIRS__DIAMETER          = IntegerField('Image Circle Diameter', validators=[CARDINAL_DIRS__DIAMETER_validator])
-    CARDINAL_DIRS__OFFSET_X          = IntegerField('X Offset', validators=[CARDINAL_DIRS__CENTER_OFFSET_validator])
-    CARDINAL_DIRS__OFFSET_Y          = IntegerField('Y Offset', validators=[CARDINAL_DIRS__CENTER_OFFSET_validator])
+    CARDINAL_DIRS__OFFSET_X          = IntegerField('X Offset', validators=[CARDINAL_DIRS__CENTER_OFFSET_validator], render_kw={'readonly' : True, 'disabled' : 'disabled'})
+    CARDINAL_DIRS__OFFSET_Y          = IntegerField('Y Offset', validators=[CARDINAL_DIRS__CENTER_OFFSET_validator], render_kw={'readonly' : True, 'disabled' : 'disabled'})
     CARDINAL_DIRS__OFFSET_TOP        = IntegerField('Top Offset', validators=[CARDINAL_DIRS__SIDE_OFFSET_validator])
     CARDINAL_DIRS__OFFSET_LEFT       = IntegerField('Left Offset', validators=[CARDINAL_DIRS__SIDE_OFFSET_validator])
     CARDINAL_DIRS__OFFSET_RIGHT      = IntegerField('Right Offset', validators=[CARDINAL_DIRS__SIDE_OFFSET_validator])
@@ -5659,6 +5678,8 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
     FRAME_TYPE                       = HiddenField('FRAME_TYPE', validators=[DataRequired()])
     FITS_ID                          = HiddenField('FITS ID', validators=[DataRequired()])
+    LENS_OFFSET_X                    = IntegerField('Lens X Offset', validators=[LENS_OFFSET_validator])
+    LENS_OFFSET_Y                    = IntegerField('Lens Y Offset', validators=[LENS_OFFSET_validator])
     IMAGE_CALIBRATE_DARK             = BooleanField('Dark Frame Calibration')
     IMAGE_CALIBRATE_BPM              = BooleanField('Bad Pixel Map Calibration')
     CCD_BIT_DEPTH                    = SelectField('Camera Bit Depth', choices=IndiAllskyConfigForm.CCD_BIT_DEPTH_choices, validators=[CCD_BIT_DEPTH_validator])
@@ -5698,8 +5719,6 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     IMAGE_ALIGN_SOURCEMINAREA        = IntegerField('Minimum point area', validators=[DataRequired(), IMAGE_ALIGN_SOURCEMINAREA_validator])
     FISH2PANO__ENABLE                = BooleanField('Fisheye to Panoramic')
     FISH2PANO__DIAMETER              = IntegerField('Diameter', validators=[DataRequired(), FISH2PANO__DIAMETER_validator])
-    FISH2PANO__OFFSET_X              = IntegerField('X Offset', validators=[FISH2PANO__OFFSET_X_validator])
-    FISH2PANO__OFFSET_Y              = IntegerField('Y Offset', validators=[FISH2PANO__OFFSET_Y_validator])
     FISH2PANO__ROTATE_ANGLE          = IntegerField('Rotation Angle', validators=[FISH2PANO__ROTATE_ANGLE_validator])
     FISH2PANO__SCALE                 = FloatField('Scale', validators=[FISH2PANO__SCALE_validator])
     FISH2PANO__FLIP_H                = BooleanField('Flip Horizontally')

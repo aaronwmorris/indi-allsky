@@ -403,7 +403,12 @@ class VideoWorker(Process):
 
 
         try:
-            tg = TimelapseGenerator(self.config, skip_frames=timelapse_skip_frames)
+            tg = TimelapseGenerator(
+                self.config,
+                skip_frames=timelapse_skip_frames,
+                pre_processor_class=self.config.get('TIMELAPSE_PRE_PROCESSOR', 'standard'),
+            )
+
             tg.codec = self.config['FFMPEG_CODEC']
             tg.framerate = self.config['FFMPEG_FRAMERATE']
             tg.bitrate = self.config['FFMPEG_BITRATE']
@@ -658,7 +663,11 @@ class VideoWorker(Process):
 
 
         try:
-            tg = TimelapseGenerator(self.config, skip_frames=0)
+            tg = TimelapseGenerator(
+                self.config,
+                skip_frames=0,
+            )
+
             tg.codec = self.config['FFMPEG_CODEC']
             tg.framerate = framerate
             tg.bitrate = self.config['FFMPEG_BITRATE']
@@ -883,7 +892,11 @@ class VideoWorker(Process):
 
 
         try:
-            tg = TimelapseGenerator(self.config, skip_frames=timelapse_skip_frames)
+            tg = TimelapseGenerator(
+                self.config,
+                skip_frames=timelapse_skip_frames,
+            )
+
             tg.codec = self.config['FFMPEG_CODEC']
             tg.framerate = self.config['FFMPEG_FRAMERATE']
             tg.bitrate = self.config['FFMPEG_BITRATE']
@@ -1389,7 +1402,11 @@ class VideoWorker(Process):
                 )
 
                 try:
-                    st_tg = TimelapseGenerator(self.config, skip_frames=0)
+                    st_tg = TimelapseGenerator(
+                        self.config,
+                        skip_frames=0,
+                    )
+
                     st_tg.codec = self.config['FFMPEG_CODEC']
                     st_tg.framerate = self.config['FFMPEG_FRAMERATE']
                     st_tg.bitrate = self.config['FFMPEG_BITRATE']

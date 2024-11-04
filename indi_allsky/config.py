@@ -45,6 +45,8 @@ class IndiAllSkyConfigBase(object):
         "LENS_FOCAL_LENGTH" : 2.5,
         "LENS_FOCAL_RATIO"  : 2.0,
         "LENS_IMAGE_CIRCLE" : 4000,
+        "LENS_OFFSET_X"     : 0,
+        "LENS_OFFSET_Y"     : 0,
         "LENS_ALTITUDE"     : 90.0,
         "LENS_AZIMUTH"      : 0.0,
         "CCD_CONFIG" : {
@@ -110,6 +112,7 @@ class IndiAllSkyConfigBase(object):
         "CAPTURE_PAUSE"            : False,
         "TIMELAPSE_ENABLE"         : True,
         "TIMELAPSE_SKIP_FRAMES"    : 4,
+        "TIMELAPSE_PRE_PROCESSOR"  : "standard",
         "DAYTIME_CAPTURE"          : True,
         "DAYTIME_CAPTURE_SAVE"     : True,
         "DAYTIME_TIMELAPSE"        : True,

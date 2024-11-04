@@ -1532,8 +1532,8 @@ class ImageProcessor(object):
         if self.config.get('IMAGE_CIRCLE_MASK', {}).get('OUTLINE'):
             image_height, image_width = self.image.shape[:2]
 
-            center_x = int(image_width / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_X']
-            center_y = int(image_height / 2) - self.config['IMAGE_CIRCLE_MASK']['OFFSET_Y']  # minus
+            center_x = int(image_width / 2) + self.config.get('LENS_OFFSET_X', 0)
+            center_y = int(image_height / 2) - self.config.get('LENS_OFFSET_Y', 0)  # minus
             radius = int(self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2)
 
             cv2.circle(
@@ -2640,8 +2640,8 @@ class ImageProcessor(object):
 
         rot_height, rot_width = rotated_image.shape[:2]
 
-        x_offset = self.config.get('FISH2PANO', {}).get('OFFSET_X', 0)
-        y_offset = self.config.get('FISH2PANO', {}).get('OFFSET_Y', 0)
+        x_offset = self.config.get('LENS_OFFSET_X', 0)
+        y_offset = self.config.get('LENS_OFFSET_Y', 0)
         center_x = int(rot_width / 2) + x_offset
         center_y = int(rot_height / 2) - y_offset  # note minus for y
 
@@ -2723,8 +2723,8 @@ class ImageProcessor(object):
 
         rot_height, rot_width = rotated_image.shape[:2]
 
-        x_offset = self.config.get('FISH2PANO', {}).get('OFFSET_X', 0)
-        y_offset = self.config.get('FISH2PANO', {}).get('OFFSET_Y', 0)
+        x_offset = self.config.get('LENS_OFFSET_X', 0)
+        y_offset = self.config.get('LENS_OFFSET_Y', 0)
         center_x = int(rot_width / 2) + x_offset
         center_y = int(rot_height / 2) - y_offset  # note minus for y
 
@@ -2912,8 +2912,8 @@ class ImageProcessor(object):
 
         channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint8)
 
-        center_x = int(image_width / 2) + self.config['IMAGE_CIRCLE_MASK']['OFFSET_X']
-        center_y = int(image_height / 2) - self.config['IMAGE_CIRCLE_MASK']['OFFSET_Y']  # minus
+        center_x = int(image_width / 2) + self.config.get('LENS_OFFSET_X', 0)
+        center_y = int(image_height / 2) - self.config.get('LENS_OFFSET_Y', 0)  # minus
         radius = int(self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2)
         blur = self.config['IMAGE_CIRCLE_MASK']['BLUR']
 
