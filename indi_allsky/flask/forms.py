@@ -2595,6 +2595,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('libcamera_imx462', 'libcamera IMX462'),
         ('libcamera_imx327', 'libcamera IMX327'),
         ('libcamera_imx500_ai', 'libcamera IMX500 AI'),
+        ('libcamera_imx283', 'libcamera IMX283 Klarity/OneInchEye'),
         ('libcamera_imx296_gs', 'libcamera IMX296 GS'),
         ('libcamera_imx290', 'libcamera IMX290'),
         ('libcamera_imx298', 'libcamera IMX298'),
