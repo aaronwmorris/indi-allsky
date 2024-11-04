@@ -46,6 +46,10 @@ class WrapKeogram(object):
         logger.info('Final: %d x %d', final_width, final_height)
 
 
+        # flip upside down and backwards
+        keogram = cv2.flip(keogram, -1)
+
+
         # add black area at the top of the keogram to wrap around center
         d_keogram = numpy.zeros([int((IMAGE_CIRCLE + keogram_height) / 2), keogram_width, 3], dtype=numpy.uint8)
         d_height, d_width = d_keogram.shape[:2]

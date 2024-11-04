@@ -102,9 +102,7 @@ class TimelapseGenerator(object):
 
 
         for i, f in enumerate(file_list_ordered):
-            p_symlink = seqfolder_p.joinpath('{0:05d}.{1:s}'.format(i, IMAGE_FILETYPE))
-            p_symlink.symlink_to(f)
-
+            self.standard(i, f, seqfolder_p)
             #self.wrap(i, f, seqfolder_p)
 
 
@@ -164,8 +162,13 @@ class TimelapseGenerator(object):
         logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
 
 
-    def wrap(self, i, infile_p, seqfolder_p):
-        logger.info('Processing %s', infile_p)
+    def standard(self, i, f, seqfolder_p):
+        p_symlink = seqfolder_p.joinpath('{0:05d}.{1:s}'.format(i, IMAGE_FILETYPE))
+        p_symlink.symlink_to(f)
+
+
+    def wrap(self, i, f, seqfolder_p):
+        logger.info('Processing %s', f)
 
 
         if isinstance(self._keogram_image, type(None)):
@@ -177,12 +180,16 @@ class TimelapseGenerator(object):
             keogram_height, keogram_width = self._keogram_image.shape[:2]
             logger.info('Keogram: %d x %d', keogram_width, keogram_height)
 
+            # flip upside down and backwards
+            self._keogram_image = cv2.flip(self._keogram_image, -1)
+
 
         keogram = self._keogram_image.copy()
         keogram_height, keogram_width = keogram.shape[:2]
 
         current_percent = i / self.file_list_ordered_len
-        keogram_line = int(keogram_width * current_percent)
+        #keogram_line = int(keogram_width * current_percent)
+        keogram_line = int(keogram_width * (1 - current_percent))  # backwards
         #logger.info('Line: %d', keogram_line)
 
         line = numpy.full([keogram_height, 1, 3], 255, dtype=numpy.uint8)
@@ -190,10 +197,10 @@ class TimelapseGenerator(object):
         #cv2.imwrite(str('keogram_line.jpg'), keogram, [cv2.IMWRITE_JPEG_QUALITY, 90])
         #sys.exit()
 
-        image = cv2.imread(str(infile_p), cv2.IMREAD_UNCHANGED)
+        image = cv2.imread(str(f), cv2.IMREAD_UNCHANGED)
 
         if isinstance(image, type(None)):
-            logger.error('Not a valid image: {0:s}'.format(infile_p))
+            logger.error('Not a valid image: {0:s}'.format(f))
             return
 
 
