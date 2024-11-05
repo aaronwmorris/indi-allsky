@@ -1,4 +1,9 @@
+import logging
+
 from .preProcessorBase import PreProcessorBase
+
+
+logger = logging.getLogger('indi_allsky')
 
 
 class PreProcessorStandard(PreProcessorBase):
