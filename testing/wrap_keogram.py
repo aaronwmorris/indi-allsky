@@ -6,10 +6,10 @@ import cv2
 import logging
 
 
-IMAGE_CIRCLE = 1750
+IMAGE_CIRCLE = 1700
 OFFSET_X = 30
 OFFSET_Y = -20
-#KEOGRAM_RATIO = 0.1
+KEOGRAM_RATIO = 0.15
 
 logging.basicConfig(level=logging.INFO)
 logger = logging
@@ -31,7 +31,17 @@ class WrapKeogram(object):
         if isinstance(keogram, type(None)):
             raise Exception('Not a valid image: {0:s}'.format(self.keogram))
 
+
         keogram_height, keogram_width = keogram.shape[:2]
+
+        k_ratio_height = keogram_height / IMAGE_CIRCLE
+        if k_ratio_height > KEOGRAM_RATIO:
+            # resize keogram
+            new_k_height = int(IMAGE_CIRCLE * KEOGRAM_RATIO)
+            keogram = cv2.resize(keogram, (keogram_width, new_k_height), interpolation=cv2.INTER_AREA)
+            keogram_height = new_k_height
+
+
         logger.info('Keogram: %d x %d', keogram_width, keogram_height)
 
 

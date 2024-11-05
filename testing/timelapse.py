@@ -14,10 +14,10 @@ from PIL import Image
 import logging
 
 
-IMAGE_CIRCLE = 1650
+IMAGE_CIRCLE = 1700
 OFFSET_X = 30
 OFFSET_Y = -20
-#KEOGRAM_RATIO = 0.1
+KEOGRAM_RATIO = 0.15
 
 IMAGE_FILETYPE = 'jpg'
 
@@ -181,6 +181,15 @@ class TimelapseGenerator(object):
                 self._keogram_image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
 
             keogram_height, keogram_width = self._keogram_image.shape[:2]
+
+            k_ratio_height = keogram_height / IMAGE_CIRCLE
+            if k_ratio_height > KEOGRAM_RATIO:
+                # resize keogram
+                new_k_height = int(IMAGE_CIRCLE * KEOGRAM_RATIO)
+                keogram = cv2.resize(self._keogram_image, (keogram_width, new_k_height), interpolation=cv2.INTER_AREA)
+                keogram_height = new_k_height
+
+
             logger.info('Keogram: %d x %d', keogram_width, keogram_height)
 
             # flip upside down and backwards
@@ -191,14 +200,13 @@ class TimelapseGenerator(object):
         keogram_height, keogram_width = keogram.shape[:2]
 
         current_percent = i / self.file_list_ordered_len
+
         #keogram_line = int(keogram_width * current_percent)
         keogram_line = int(keogram_width * (1 - current_percent))  # backwards
         #logger.info('Line: %d', keogram_line)
 
         line = numpy.full([keogram_height, 1, 3], 255, dtype=numpy.uint8)
         keogram[0:keogram_height, keogram_line:keogram_line + 1] = line
-        #cv2.imwrite(str('keogram_line.jpg'), keogram, [cv2.IMWRITE_JPEG_QUALITY, 90])
-        #sys.exit()
 
 
         try:
