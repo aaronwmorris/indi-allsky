@@ -9,10 +9,15 @@ from pathlib import Path
 import subprocess
 import numpy
 import cv2
+import PIL
+from PIL import Image
 import logging
 
 
 IMAGE_CIRCLE = 1650
+OFFSET_X = 30
+OFFSET_Y = -20
+#KEOGRAM_RATIO = 0.1
 
 IMAGE_FILETYPE = 'jpg'
 
@@ -172,10 +177,8 @@ class TimelapseGenerator(object):
 
 
         if isinstance(self._keogram_image, type(None)):
-            self._keogram_image = cv2.imread(str(self.keogram), cv2.IMREAD_UNCHANGED)
-
-            if isinstance(self._keogram_image, type(None)):
-                raise Exception('Not a valid image: {0:s}'.format(self.keogram))
+            with Image.open(str(self.keogram)) as img:
+                self._keogram_image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
 
             keogram_height, keogram_width = self._keogram_image.shape[:2]
             logger.info('Keogram: %d x %d', keogram_width, keogram_height)
@@ -197,10 +200,12 @@ class TimelapseGenerator(object):
         #cv2.imwrite(str('keogram_line.jpg'), keogram, [cv2.IMWRITE_JPEG_QUALITY, 90])
         #sys.exit()
 
-        image = cv2.imread(str(f), cv2.IMREAD_UNCHANGED)
 
-        if isinstance(image, type(None)):
-            logger.error('Not a valid image: {0:s}'.format(f))
+        try:
+            with Image.open(str(f)) as img:
+                image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+        except PIL.UnidentifiedImageError:
+            logger.error('Unable to read %s', f)
             return
 
 
@@ -208,13 +213,13 @@ class TimelapseGenerator(object):
         #logger.info('Image: %d x %d', image_width, image_height)
 
 
-        if image_width < (IMAGE_CIRCLE + (keogram_height * 2)):
-            final_width = IMAGE_CIRCLE + (keogram_height * 2)
+        if image_width < (IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_X)):
+            final_width = IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_X)
         else:
             final_width = image_width
 
-        if image_height < (IMAGE_CIRCLE + (keogram_height * 2)):
-            final_height = IMAGE_CIRCLE + (keogram_height * 2)
+        if image_height < (IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_Y)):
+            final_height = IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_Y)
         else:
             final_height = image_height
 
@@ -236,8 +241,8 @@ class TimelapseGenerator(object):
         d_image = cv2.rotate(d_keogram, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
 
-        # wrap the keogram (square output so it can be rotated)
-        wrapped_height, wrapped_width = IMAGE_CIRCLE + (keogram_height * 2), IMAGE_CIRCLE + (keogram_height * 2)
+        # wrap the keogram
+        wrapped_height, wrapped_width = IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_X), IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_Y)  # reversed offsets due to rotation below
         wrapped_keogram = cv2.warpPolar(
             d_image,
             (wrapped_width, wrapped_height),
@@ -264,9 +269,9 @@ class TimelapseGenerator(object):
 
         f_image = numpy.zeros([final_height, final_width, 3], dtype=numpy.uint8)
         f_image[
-            int((final_height / 2) - (image_height / 2)):int((final_height / 2) + (image_height / 2)),
-            int((final_width / 2) - (image_width / 2)):int((final_width / 2) + (image_width / 2)),
-        ] = image
+            int((final_height / 2) - (image_height / 2) + OFFSET_Y):int((final_height / 2) + (image_height / 2) + OFFSET_Y),
+            int((final_width / 2) - (image_width / 2) - OFFSET_X):int((final_width / 2) + (image_width / 2) - OFFSET_X),
+        ] = image  # recenter the image circle in the new image
 
 
         # apply alpha mask
@@ -288,7 +293,7 @@ class TimelapseGenerator(object):
 
 
         outfile_p = seqfolder_p.joinpath('{0:05d}.{1:s}'.format(self.image_count, IMAGE_FILETYPE))
-        cv2.imwrite(str(outfile_p), image_with_keogram, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        Image.fromarray(cv2.cvtColor(image_with_keogram, cv2.COLOR_BGR2RGB)).save(str(outfile_p), quality=90)
 
         self.image_count += 1
 
