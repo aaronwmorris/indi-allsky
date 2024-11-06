@@ -17,7 +17,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
         self._keogram_image = None
 
-        self.file_list_ordered_len = 0
+        self.file_list_len = 0
         self.image_count = 0
 
         self.image_circle = self.config.get('TIMELAPSE', {}).get('IMAGE_CIRCLE', 2000)
@@ -45,11 +45,15 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         self._keogram_image = cv2.flip(self._keogram_image, -1)
 
 
-        self.file_list_ordered_len = len(file_list)
+        self.file_list_len = len(file_list)
 
 
         for i, f in enumerate(file_list):
             # the symlink files must start at index 0 or ffmpeg will fail
+
+            if i % 100 == 0:
+                logger.info('Pre-processed %d of %d images', i, self.file_list_len)
+
             self.wrap(i, f, self.seqfolder)
 
 
@@ -57,7 +61,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         keogram = self._keogram_image.copy()
         keogram_height, keogram_width = keogram.shape[:2]
 
-        current_percent = i / self.file_list_ordered_len
+        current_percent = i / self.file_list_len
 
         #keogram_line = int(keogram_width * current_percent)
         keogram_line = int(keogram_width * (1 - current_percent))  # backwards
