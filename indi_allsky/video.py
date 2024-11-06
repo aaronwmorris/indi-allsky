@@ -406,7 +406,7 @@ class VideoWorker(Process):
             tg = TimelapseGenerator(
                 self.config,
                 skip_frames=timelapse_skip_frames,
-                pre_processor_class=self.config.get('TIMELAPSE_PRE_PROCESSOR', 'standard'),
+                pre_processor_class=self.config.get('TIMELAPSE', {}).get('PRE_PROCESSOR', 'standard'),
             )
 
             tg.codec = self.config['FFMPEG_CODEC']

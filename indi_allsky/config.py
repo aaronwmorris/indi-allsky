@@ -112,7 +112,11 @@ class IndiAllSkyConfigBase(object):
         "CAPTURE_PAUSE"            : False,
         "TIMELAPSE_ENABLE"         : True,
         "TIMELAPSE_SKIP_FRAMES"    : 4,
-        "TIMELAPSE_PRE_PROCESSOR"  : "standard",
+        "TIMELAPSE" : {
+            "PRE_PROCESSOR"  : "standard",
+            "IMAGE_CIRCLE"   : 2000,
+            "KEOGRAM_RATIO"  : 0.15,
+        },
         "DAYTIME_CAPTURE"          : True,
         "DAYTIME_CAPTURE_SAVE"     : True,
         "DAYTIME_TIMELAPSE"        : True,

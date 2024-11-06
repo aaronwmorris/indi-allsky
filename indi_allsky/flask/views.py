@@ -1566,7 +1566,9 @@ class ConfigView(FormView):
             'LOCATION_ELEVATION'             : self.indi_allsky_config.get('LOCATION_ELEVATION', 0),
             'TIMELAPSE_ENABLE'               : self.indi_allsky_config.get('TIMELAPSE_ENABLE', True),
             'TIMELAPSE_SKIP_FRAMES'          : self.indi_allsky_config.get('TIMELAPSE_SKIP_FRAMES', 4),
-            'TIMELAPSE_PRE_PROCESSOR'        : self.indi_allsky_config.get('TIMELAPSE_PRE_PROCESSOR', 'standard'),
+            'TIMELAPSE__PRE_PROCESSOR'       : self.indi_allsky_config.get('TIMELAPSE', {}).get('PRE_PROCESSOR', 'standard'),
+            'TIMELAPSE__IMAGE_CIRCLE'        : self.indi_allsky_config.get('TIMELAPSE', {}).get('IMAGE_CIRCLE', 2000),
+            'TIMELAPSE__KEOGRAM_RATIO'       : self.indi_allsky_config.get('TIMELAPSE', {}).get('KEOGRAM_RATIO', 0.15),
             'CAPTURE_PAUSE'                  : self.indi_allsky_config.get('CAPTURE_PAUSE', False),
             'DAYTIME_CAPTURE'                : self.indi_allsky_config.get('DAYTIME_CAPTURE', True),
             'DAYTIME_CAPTURE_SAVE'           : self.indi_allsky_config.get('DAYTIME_CAPTURE_SAVE', True),
@@ -2242,6 +2244,9 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('CHARTS'):
             self.indi_allsky_config['CHARTS'] = {}
 
+        if not self.indi_allsky_config.get('TIMELAPSE'):
+            self.indi_allsky_config['TIMELAPSE'] = {}
+
         if not self.indi_allsky_config.get('ADSB'):
             self.indi_allsky_config['ADSB'] = {}
 
@@ -2313,7 +2318,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LOCATION_ELEVATION']                   = int(request.json['LOCATION_ELEVATION'])
         self.indi_allsky_config['TIMELAPSE_ENABLE']                     = bool(request.json['TIMELAPSE_ENABLE'])
         self.indi_allsky_config['TIMELAPSE_SKIP_FRAMES']                = int(request.json['TIMELAPSE_SKIP_FRAMES'])
-        self.indi_allsky_config['TIMELAPSE_PRE_PROCESSOR']              = str(request.json['TIMELAPSE_PRE_PROCESSOR'])
+        self.indi_allsky_config['TIMELAPSE']['PRE_PROCESSOR']           = str(request.json['TIMELAPSE__PRE_PROCESSOR'])
+        self.indi_allsky_config['TIMELAPSE']['IMAGE_CIRCLE']            = int(request.json['TIMELAPSE__IMAGE_CIRCLE'])
+        self.indi_allsky_config['TIMELAPSE']['KEOGRAM_RATIO']           = float(request.json['TIMELAPSE__KEOGRAM_RATIO'])
         self.indi_allsky_config['CAPTURE_PAUSE']                        = bool(request.json['CAPTURE_PAUSE'])
         self.indi_allsky_config['DAYTIME_CAPTURE']                      = bool(request.json['DAYTIME_CAPTURE'])
         self.indi_allsky_config['DAYTIME_CAPTURE_SAVE']                 = bool(request.json['DAYTIME_CAPTURE_SAVE'])
