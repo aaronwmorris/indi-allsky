@@ -134,7 +134,7 @@ fi
 
 
 # start the program
-gunicorn \
+exec gunicorn \
     --bind 0.0.0.0:8000 \
     --worker-class gthread \
     --threads 8 \

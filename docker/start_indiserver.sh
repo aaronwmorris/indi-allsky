@@ -16,7 +16,7 @@ fi
 
 
 if [ -n "${INDIALLSKY_INDI_GPS_DRIVER:-}" ]; then
-    "$INDISERVER" \
+    exec "$INDISERVER" \
         -v \
         -p 7624 \
         indi_simulator_telescope \
@@ -25,7 +25,7 @@ if [ -n "${INDIALLSKY_INDI_GPS_DRIVER:-}" ]; then
 
 else
     echo "No GPS driver configured"
-    "$INDISERVER" \
+    exec "$INDISERVER" \
         -v \
         -p 7624 \
         indi_simulator_telescope \
