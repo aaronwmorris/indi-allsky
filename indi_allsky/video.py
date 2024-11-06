@@ -246,7 +246,7 @@ class VideoWorker(Process):
             timeofday = 'day'
 
 
-        if self.config['FFMPEG_CODEC'] in ['libx264']:
+        if self.config['FFMPEG_CODEC'] in ['libx264', 'h264_qsv']:
             video_format = 'mp4'
         elif self.config['FFMPEG_CODEC'] in ['libvpx']:
             video_format = 'webm'
@@ -500,7 +500,7 @@ class VideoWorker(Process):
             timeofday = 'day'
 
 
-        if self.config['FFMPEG_CODEC'] in ['libx264']:
+        if self.config['FFMPEG_CODEC'] in ['libx264', 'h264_qsv']:
             video_format = 'mp4'
         elif self.config['FFMPEG_CODEC'] in ['libvpx']:
             video_format = 'webm'
@@ -752,7 +752,7 @@ class VideoWorker(Process):
             timeofday = 'day'
 
 
-        if self.config['FFMPEG_CODEC'] in ['libx264']:
+        if self.config['FFMPEG_CODEC'] in ['libx264', 'h264_qsv']:
             video_format = 'mp4'
         elif self.config['FFMPEG_CODEC'] in ['libvpx']:
             video_format = 'webm'
@@ -974,7 +974,7 @@ class VideoWorker(Process):
             timeofday = 'day'
 
 
-        if self.config['FFMPEG_CODEC'] in ['libx264']:
+        if self.config['FFMPEG_CODEC'] in ['libx264', 'h264_qsv']:
             video_format = 'mp4'
         elif self.config['FFMPEG_CODEC'] in ['libvpx']:
             video_format = 'webm'
