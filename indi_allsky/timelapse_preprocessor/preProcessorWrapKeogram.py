@@ -108,6 +108,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         d_keogram = numpy.dstack((d_keogram, d_keogram_alpha))
 
 
+        # keogram must be sideways (top/down) to wrap
         d_image = cv2.rotate(d_keogram, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
 
@@ -157,7 +158,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
             crop_height = final_height - mod_height
 
             image_with_keogram = image_with_keogram[
-                0::crop_height,
+                0:crop_height,
                 0:crop_width,
             ]
 
