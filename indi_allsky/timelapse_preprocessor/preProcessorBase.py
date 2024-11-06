@@ -33,6 +33,10 @@ class PreProcessorBase(object):
 
     @keogram.setter
     def keogram(self, new_keogram):
+        if isinstance(new_keogram, type(None)):
+            self._keogram = None
+            return
+
         self._keogram = Path(str(new_keogram)).absolute()
 
 

@@ -403,6 +403,22 @@ class VideoWorker(Process):
 
 
         try:
+            # delete old video entry if it exists
+            keogram_entry = IndiAllSkyDbKeogramTable.query\
+                .filter(
+                    and_(
+                        IndiAllSkyDbKeogramTable.dayDate == d_dayDate,
+                        IndiAllSkyDbKeogramTable.night == night,
+                    )
+                )\
+                .one()
+
+            keogram_filename = keogram_entry.getFilesystemPath()
+        except NoResultFound:
+            keogram_filename = None
+
+
+        try:
             tg = TimelapseGenerator(
                 self.config,
                 skip_frames=timelapse_skip_frames,
@@ -414,6 +430,8 @@ class VideoWorker(Process):
             tg.bitrate = self.config['FFMPEG_BITRATE']
             tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
             tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+
+            tg.pre_processor.keogram = keogram_filename
 
             tg.generate(video_file, timelapse_files)
         except TimelapseException:

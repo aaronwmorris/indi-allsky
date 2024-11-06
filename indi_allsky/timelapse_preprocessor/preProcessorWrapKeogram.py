@@ -17,6 +17,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
         self._keogram_image = None
 
+        self.file_list_ordered_len = 0
         self.image_count = 0
 
         self.image_circle = self.config.get('TIMELAPSE', {}).get('IMAGE_CIRCLE', 2000)
@@ -42,6 +43,9 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
         # flip upside down and backwards
         self._keogram_image = cv2.flip(self._keogram_image, -1)
+
+
+        self.file_list_ordered_len = len(file_list)
 
 
         for i, f in enumerate(file_list):
@@ -157,19 +161,19 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
         outfile_p = seqfolder_p.joinpath('{0:05d}.{1:s}'.format(self.image_count, self.config['IMAGE_FILE_TYPE']))
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
+            img_rgb = Image.fromarray(cv2.cvtColor(image_with_keogram, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(outfile_p), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'])
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
             #img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
             #img_rgb.save(str(f_tmp_frame_p), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
 
             # opencv is faster than Pillow with PNG
-            cv2.imwrite(str(outfile_p), self.trail_image, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+            cv2.imwrite(str(outfile_p), image_with_keogram, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
         elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
-            img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
+            img_rgb = Image.fromarray(cv2.cvtColor(image_with_keogram, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(outfile_p), quality=90, lossless=False)
         elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
-            img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
+            img_rgb = Image.fromarray(cv2.cvtColor(image_with_keogram, cv2.COLOR_BGR2RGB))
             img_rgb.save(str(outfile_p), compression='tiff_lzw')
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
