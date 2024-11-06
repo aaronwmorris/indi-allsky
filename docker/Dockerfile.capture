@@ -9,6 +9,19 @@ RUN apt-get update
 RUN apt-get -y upgrade
 
 
+# Intel VA-API drivers
+ARG TARGETARCH
+RUN if [ $TARGETARCH != "arm64" ]; then \
+        sed -i 's/Components: main/Components: main non-free non-free-firmware/g' /etc/apt/sources.list.d/debian.sources \
+        && apt-get update \
+        && apt-get -y install \
+        --no-install-recommends \
+        --no-install-suggests \
+            intel-media-va-driver-non-free \
+            i965-va-driver \
+        && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ; \
+    fi
+
 # redirect /dev/log to /dev/null
 RUN ln -s /dev/null /dev/log
 
