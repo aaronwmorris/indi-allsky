@@ -2834,6 +2834,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
     S3UPLOAD__CLASSNAME_choices = (
         ('boto3_s3', 'AWS S3 (boto3)'),
+        ('boto3_minio', 'Minio (boto3)'),
         ('libcloud_s3', 'Apache Libcloud (AWS)'),
         ('gcp_storage', 'Google Cloud Storage'),
         ('oci_storage', 'Oracle OCI Storage'),
