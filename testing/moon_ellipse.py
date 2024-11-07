@@ -22,6 +22,15 @@ class MoonEllipse(object):
     height = 200
     width = 200
 
+    full = (255, 255, 255)
+    dark = (75, 75, 75)
+
+    left_start = 180
+    left_end = 360
+    right_start = 0
+    right_end = 180
+
+
     def __init__(self):
         moon_file = Path(__file__).parent.absolute().parent.joinpath('indi_allsky', 'flask', 'static', 'astropanel', 'img', 'moon.png')
 
@@ -48,11 +57,47 @@ class MoonEllipse(object):
         sm_angle = (moon_lon - sun_lon) % math.tau
 
 
-        moon_quarter = int(sm_angle * 4.0 // math.tau)
-
+        #moon_quarter = int(sm_angle * 4.0 // math.tau)
+        moon_cycle_percent = (sm_angle / math.tau) * 100
+        logger.info('Moon cycle: %0.1f%%', moon_cycle_percent)
 
 
         height, width = self.moon.shape[:2]
+        moon_radius = int((width / 2) - 15)
+
+
+        ### Testing
+        #moon_cycle_percent = 30
+
+        if moon_cycle_percent <= 25:
+            start_scale = self.full
+            half_start = self.left_start
+            half_end = self.left_end
+            half_scale = self.dark
+            crecent_scale = self.dark
+            crecent_width = int(moon_radius - (moon_radius * (moon_cycle_percent / 25)))
+        elif moon_cycle_percent <= 50:
+            start_scale = self.dark
+            half_start = self.right_start
+            half_end = self.right_end
+            half_scale = self.full
+            crecent_scale = self.full
+            crecent_width = int(moon_radius * ((moon_cycle_percent - 25) / 25))
+        elif moon_cycle_percent <= 75:
+            start_scale = self.dark
+            half_start = self.left_start
+            half_end = self.left_end
+            half_scale = self.full
+            crecent_scale = self.full
+            crecent_width = int(moon_radius - (moon_radius * ((moon_cycle_percent - 50) / 25)))
+        else:
+            start_scale = self.full
+            half_start = self.right_start
+            half_end = self.right_end
+            half_scale = self.dark
+            crecent_scale = self.dark
+            crecent_width = int(moon_radius * ((moon_cycle_percent - 75) / 25))
+
 
 
         mask = numpy.zeros([height, width, 3], dtype=numpy.uint8)
@@ -60,8 +105,8 @@ class MoonEllipse(object):
         mask = cv2.circle(
             mask,
             (int(height / 2), int(width / 2)),
-            int(height / 2) - 15,
-            (255, 255, 255),
+            moon_radius,
+            start_scale,
             cv2.FILLED,
         )
 
@@ -70,13 +115,12 @@ class MoonEllipse(object):
         mask = cv2.ellipse(
             mask,
             (int(height / 2), int(width / 2)),
-            (int(height / 2) - 15, int(width / 2) - 15),
+            (moon_radius, moon_radius),
             270,
-            180,
-            360,
-            (75, 75, 75),
+            half_start,
+            half_end,
+            half_scale,
             cv2.FILLED,
-            #cv2.LINE_AA,
         )
 
 
@@ -84,14 +128,14 @@ class MoonEllipse(object):
         mask = cv2.ellipse(
             mask,
             (int(height / 2), int(width / 2)),
-            (int(height / 2) - 15, 150),
+            (moon_radius, crecent_width),
             270,
             0,
             360,
-            (75, 75, 75),
+            crecent_scale,
             cv2.FILLED,
-            #cv2.LINE_AA,
         )
+
 
         mask = (mask / 255).astype(numpy.float16)
 
@@ -102,7 +146,7 @@ class MoonEllipse(object):
 
         final_moon = numpy.dstack((moon, moon_alpha))
 
-        cv2.imwrite('moon.png', final_moon, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        cv2.imwrite(str(Path(__file__).parent.joinpath('moon.png')), final_moon, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 
 
 if __name__ == "__main__":
