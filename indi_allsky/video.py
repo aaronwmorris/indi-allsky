@@ -761,6 +761,10 @@ class VideoWorker(Process):
             task.setFailed('Invalid codec in config, timelapse generation failed')
             return
 
+        # QSV does not support these large resolutions, fallback to libx264
+        codec = self.config['FFMPEG_CODEC']
+        if codec == 'h264_qsv':
+            codec = 'libx264'
 
         vid_folder = self._getVideoFolder(d_dayDate, camera)
 
@@ -915,7 +919,7 @@ class VideoWorker(Process):
                 skip_frames=timelapse_skip_frames,
             )
 
-            tg.codec = self.config['FFMPEG_CODEC']
+            tg.codec = codec
             tg.framerate = self.config['FFMPEG_FRAMERATE']
             tg.bitrate = self.config['FFMPEG_BITRATE']
             tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
