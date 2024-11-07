@@ -8,6 +8,9 @@ class PreProcessorBase(object):
         self.config = args[0]
 
 
+        self._keogram = None
+
+
         if self.config.get('IMAGE_FOLDER'):
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
         else:
@@ -22,6 +25,19 @@ class PreProcessorBase(object):
     @property
     def seqfolder(self):
         return self._seqfolder
+
+
+    @property
+    def keogram(self):
+        return self._keogram
+
+    @keogram.setter
+    def keogram(self, new_keogram):
+        if isinstance(new_keogram, type(None)):
+            self._keogram = None
+            return
+
+        self._keogram = Path(str(new_keogram)).absolute()
 
 
     def main(self, *args, **kwargs):

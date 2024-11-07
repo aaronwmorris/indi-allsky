@@ -1951,14 +1951,14 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.TIMELAPSE_PRE_PROCESSOR.label(class='col-form-label') }}
+            {{ form_config.TIMELAPSE__PRE_PROCESSOR.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_config.TIMELAPSE_PRE_PROCESSOR(class='form-select bg-secondary') }}
-            <div id="TIMELAPSE_PRE_PROCESSOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.TIMELAPSE__PRE_PROCESSOR(class='form-select bg-secondary') }}
+            <div id="TIMELAPSE__PRE_PROCESSOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div></div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Timelapses" class="text-decoration-none link-info" target="_blank">Timelapse Wiki</a></div>
         </div>
     </div>
 
@@ -2034,6 +2034,35 @@ var camera_id = {{ camera_id }};
             <div id="TIMELAPSE_SKIP_FRAMES-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Exclude frames at beginning of timelapse.  Gain changes between night and day cause bad exposures.</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE__IMAGE_CIRCLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE__IMAGE_CIRCLE(class='form-control bg-secondary') }}
+            <div id="TIMELAPSE__IMAGE_CIRCLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Size of image circle for wrapping the keogram</div>
+            <div>Offsets for the image circle are on the Location tab</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE__KEOGRAM_RATIO.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE__KEOGRAM_RATIO(class='form-control bg-secondary') }}
+            <div id="TIMELAPSE__KEOGRAM_RATIO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>The ratio of the size of the keogram as it relates to the image circle</div>
+        </div>
     </div>
 
 </div><!-- end timelapse tab -->
@@ -6025,7 +6054,9 @@ const field_names = [
     'FFMPEG_CODEC',
     'FFMPEG_EXTRA_OPTIONS',
     'TIMELAPSE_SKIP_FRAMES',
-    'TIMELAPSE_PRE_PROCESSOR',
+    'TIMELAPSE__PRE_PROCESSOR',
+    'TIMELAPSE__IMAGE_CIRCLE',
+    'TIMELAPSE__KEOGRAM_RATIO',
     'IMAGE_LABEL_SYSTEM',
     'TEXT_PROPERTIES__FONT_FACE',
     'TEXT_PROPERTIES__FONT_HEIGHT',

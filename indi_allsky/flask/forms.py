@@ -243,9 +243,28 @@ def TIMELAPSE_SKIP_FRAMES_validator(form, field):
         raise ValidationError('Skip frames must 10 or less')
 
 
-def TIMELAPSE_PRE_PROCESSOR_validator(form, field):
-    if field.data not in list(zip(*form.TIMELAPSE_PRE_PROCESSOR_choices))[0]:
+def TIMELAPSE__PRE_PROCESSOR_validator(form, field):
+    if field.data not in list(zip(*form.TIMELAPSE__PRE_PROCESSOR_choices))[0]:
         raise ValidationError('Invalid selection')
+
+
+def TIMELAPSE__IMAGE_CIRCLE_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 100:
+        raise ValidationError('Diameter must be 100 or greater')
+
+
+def TIMELAPSE__KEOGRAM_RATIO_validator(form, field):
+    if not isinstance(field.data, float):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.01:
+        raise ValidationError('Ratio must be 0.01 or greater')
+
+    if field.data > 0.33:
+        raise ValidationError('Ratio must be 0.33 or less')
 
 
 def CCD_BIT_DEPTH_validator(form, field):
@@ -2711,8 +2730,9 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
 
-    TIMELAPSE_PRE_PROCESSOR_choices = (
+    TIMELAPSE__PRE_PROCESSOR_choices = (
         ('standard', 'Standard'),
+        ('wrap_keogram', 'Wrap Keogram Around Image Circle'),
     )
 
 
@@ -3130,7 +3150,9 @@ class IndiAllskyConfigForm(FlaskForm):
     LOCATION_ELEVATION               = IntegerField('Elevation', validators=[LOCATION_ELEVATION_validator])
     TIMELAPSE_ENABLE                 = BooleanField('Enable Timelapse Creation')
     TIMELAPSE_SKIP_FRAMES            = IntegerField('Timelapse Skip Frames', validators=[TIMELAPSE_SKIP_FRAMES_validator])
-    TIMELAPSE_PRE_PROCESSOR          = SelectField('Timelapse Processing', choices=TIMELAPSE_PRE_PROCESSOR_choices, validators=[TIMELAPSE_PRE_PROCESSOR_validator])
+    TIMELAPSE__PRE_PROCESSOR         = SelectField('Timelapse Processing', choices=TIMELAPSE__PRE_PROCESSOR_choices, validators=[TIMELAPSE__PRE_PROCESSOR_validator])
+    TIMELAPSE__IMAGE_CIRCLE          = IntegerField('Image Circle Diameter', validators=[DataRequired(), TIMELAPSE__IMAGE_CIRCLE_validator])
+    TIMELAPSE__KEOGRAM_RATIO         = FloatField('Keogram Ratio', validators=[DataRequired(), TIMELAPSE__KEOGRAM_RATIO_validator])
     CAPTURE_PAUSE                    = BooleanField('Pause Capture')
     DAYTIME_CAPTURE                  = BooleanField('Daytime Capture')
     DAYTIME_CAPTURE_SAVE             = BooleanField('Daytime Save Images')

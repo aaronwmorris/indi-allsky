@@ -6,8 +6,10 @@ import cv2
 import logging
 
 
-IMAGE_CIRCLE = 1650
-
+IMAGE_CIRCLE = 1700
+OFFSET_X = 30
+OFFSET_Y = -20
+KEOGRAM_RATIO = 0.15
 
 logging.basicConfig(level=logging.INFO)
 logger = logging
@@ -29,17 +31,27 @@ class WrapKeogram(object):
         if isinstance(keogram, type(None)):
             raise Exception('Not a valid image: {0:s}'.format(self.keogram))
 
+
         keogram_height, keogram_width = keogram.shape[:2]
+
+        k_ratio_height = keogram_height / IMAGE_CIRCLE
+        if k_ratio_height > KEOGRAM_RATIO:
+            # resize keogram
+            new_k_height = int(IMAGE_CIRCLE * KEOGRAM_RATIO)
+            keogram = cv2.resize(keogram, (keogram_width, new_k_height), interpolation=cv2.INTER_AREA)
+            keogram_height = new_k_height
+
+
         logger.info('Keogram: %d x %d', keogram_width, keogram_height)
 
 
-        if image_width < (IMAGE_CIRCLE + (keogram_height * 2)):
-            final_width = IMAGE_CIRCLE + (keogram_height * 2)
+        if image_width < (IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_X)):
+            final_width = IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_X)
         else:
             final_width = image_width
 
-        if image_height < (IMAGE_CIRCLE + (keogram_height * 2)):
-            final_height = IMAGE_CIRCLE + (keogram_height * 2)
+        if image_height < (IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_Y)):
+            final_height = IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_Y)
         else:
             final_height = image_height
 
@@ -65,8 +77,8 @@ class WrapKeogram(object):
         d_image = cv2.rotate(d_keogram, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
 
-        # wrap the keogram (square output so it can be rotated)
-        wrapped_height, wrapped_width = IMAGE_CIRCLE + (keogram_height * 2), IMAGE_CIRCLE + (keogram_height * 2)
+        # wrap the keogram
+        wrapped_height, wrapped_width = IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_X), IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_Y)  # reversed offsets due to rotation below
         wrapped_keogram = cv2.warpPolar(
             d_image,
             (wrapped_width, wrapped_height),
@@ -93,9 +105,9 @@ class WrapKeogram(object):
 
         f_image = numpy.zeros([final_height, final_width, 3], dtype=numpy.uint8)
         f_image[
-            int((final_height / 2) - (image_height / 2)):int((final_height / 2) + (image_height / 2)),
-            int((final_width / 2) - (image_width / 2)):int((final_width / 2) + (image_width / 2)),
-        ] = image
+            int((final_height / 2) - (image_height / 2) + OFFSET_Y):int((final_height / 2) + (image_height / 2) + OFFSET_Y),
+            int((final_width / 2) - (image_width / 2) - OFFSET_X):int((final_width / 2) + (image_width / 2) - OFFSET_X),
+        ] = image  # recenter the image circle in the new image
 
 
         # apply alpha mask
