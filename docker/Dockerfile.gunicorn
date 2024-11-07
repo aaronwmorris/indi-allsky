@@ -1,13 +1,78 @@
 
 # docker- prefix due to files in docker/ folder
-FROM docker-indi.allsky.base
+FROM python:3.11-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
 
 USER root
-RUN apt-get update
-RUN apt-get -y upgrade
 
+RUN apt-get update \
+    && apt-get -y upgrade \
+    && apt-get -y install \
+      --no-install-recommends \
+      --no-install-suggests \
+      iputils-ping \
+      iproute2 \
+      bind9-host \
+      locales \
+      tzdata \
+      procps \
+      netcat-traditional \
+      sudo \
+      git \
+      jq \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN groupadd --gid 10001 allsky \
+    && useradd --create-home --no-user-group --uid 10001 --gid allsky --home-dir /home/allsky --shell /bin/bash allsky
+
+USER allsky
+WORKDIR /home/allsky
+
+COPY requirements/requirements_latest.txt /home/allsky
+COPY requirements/requirements_optional.txt /home/allsky
+COPY requirements/requirements_gpio.txt /home/allsky
+
+USER root
+RUN apt-get update \
+    && apt-get -y install \
+        --no-install-recommends \
+        --no-install-suggests \
+        clang \
+        cmake \
+        build-essential \
+        pkg-config \
+        libdbus-1-dev \
+        libdbus-1-3 \
+        libglib2.0-dev\
+        libglib2.0-0 \
+        libcfitsio-dev \
+        libnova-dev \
+        python3-dev \
+        dbus-daemon \
+        swig \
+        libindi-dev \
+        libindiclient1 \
+    && export CC=clang \
+    && export CXX=clang++ \
+    && pip install --no-cache-dir -r requirements_latest.txt -r requirements_optional.txt -r requirements_gpio.txt \
+    && pip install --no-cache-dir "git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client" \
+    && apt-get remove --purge -y \
+        clang \
+        cmake \
+        build-essential \
+        pkg-config \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        python3-dev \
+        dbus-daemon \
+        swig \
+        libindi-dev \
+    && apt-get autoremove --purge -y \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && chown -R allsky:allsky /home/allsky
 
 # redirect /dev/log to /dev/null
 RUN ln -s /dev/null /dev/log
@@ -29,6 +94,8 @@ RUN mkdir /home/allsky/indi-allsky
 COPY . /home/allsky/indi-allsky
 RUN chown -R allsky:allsky /home/allsky/indi-allsky
 
+RUN mkdir -m 750 /etc/indi-allsky
+RUN chown -R allsky:allsky /etc/indi-allsky
 
 USER allsky
 WORKDIR /home/allsky
