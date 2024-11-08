@@ -185,6 +185,12 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_SCALE"      : 100,
         "NIGHT_GRAYSCALE"  : False,
         "DAYTIME_GRAYSCALE": False,
+        "MOON_OVERLAY" : {
+            "ENABLE"   : False,
+            "X"        : 20,
+            "Y"        : 20,
+            "SCALE"    : 0.5,
+        },
         "IMAGE_CIRCLE_MASK" : {
             "ENABLE"   : False,
             "DIAMETER" : 1500,

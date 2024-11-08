@@ -1479,6 +1479,60 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.MOON_OVERLAY__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.MOON_OVERLAY__ENABLE(class='form-check-input') }}
+                <div id="MOON_OVERLAY__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MOON_OVERLAY__X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.MOON_OVERLAY__X(class='form-control bg-secondary') }}
+            <div id="MOON_OVERLAY__X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MOON_OVERLAY__Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.MOON_OVERLAY__Y(class='form-control bg-secondary') }}
+            <div id="MOON_OVERLAY__Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MOON_OVERLAY__SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.MOON_OVERLAY__SCALE(class='form-control bg-secondary') }}
+            <div id="MOON_OVERLAY__SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CARDINAL_DIRS__ENABLE.label }}
         </div>
         <div class="col-sm-2">
@@ -6025,6 +6079,9 @@ const field_names = [
     'IMAGE_CROP_ROI_Y1',
     'IMAGE_CROP_ROI_X2',
     'IMAGE_CROP_ROI_Y2',
+    'MOON_OVERLAY__X',
+    'MOON_OVERLAY__Y',
+    'MOON_OVERLAY__SCALE',
     'FISH2PANO__DIAMETER',
     'FISH2PANO__OFFSET_X',
     'FISH2PANO__OFFSET_Y',
@@ -6302,6 +6359,7 @@ const checkbox_field_names = [
     'THUMBNAILS__IMAGES_AUTO',
     'NIGHT_GRAYSCALE',
     'DAYTIME_GRAYSCALE',
+    'MOON_OVERLAY__ENABLE',
     'TEXT_PROPERTIES__FONT_OUTLINE',
     'CARDINAL_DIRS__ENABLE',
     'CARDINAL_DIRS__SWAP_NS',

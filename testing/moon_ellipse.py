@@ -19,9 +19,6 @@ LONGITUDE = -84
 
 class MoonEllipse(object):
 
-    height = 200
-    width = 200
-
     full = (255, 255, 255)
     dark = (75, 75, 75)
 
