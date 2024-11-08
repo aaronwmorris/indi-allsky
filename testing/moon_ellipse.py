@@ -32,7 +32,7 @@ class MoonEllipse(object):
 
 
     def __init__(self):
-        moon_file = Path(__file__).parent.absolute().parent.joinpath('indi_allsky', 'flask', 'static', 'astropanel', 'img', 'moon.png')
+        moon_file = Path(__file__).parent.absolute().parent.joinpath('indi_allsky', 'flask', 'static', 'astropanel', 'img', 'moon_rot.png')
 
         self.moon = cv2.imread(str(moon_file), cv2.IMREAD_UNCHANGED)
 
