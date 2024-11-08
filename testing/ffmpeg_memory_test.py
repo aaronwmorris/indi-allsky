@@ -57,9 +57,13 @@ class FfmpegMemoryTest(object):
             logger.info('File: %s', image_file_p)
             cv2.imwrite(str(image_file_p), random_rgb, [cv2.IMWRITE_JPEG_QUALITY, 25])
 
+        cmd = ['ffmpeg']
 
-        cmd = [
-            'ffmpeg',
+        # add general extra options
+        if self.codec in ['h264_qsv']:
+            cmd.extend(['-init_hw_device', 'qsv=hw', '-filter_hw_device', 'hw'])
+
+        cmd.extend([
             '-y',
             '-loglevel', 'level+warning',
             '-r', '{0:0.2f}'.format(self.framerate),
@@ -72,7 +76,7 @@ class FfmpegMemoryTest(object):
             #'-filter:v', 'setpts=50*PTS',
             '-pix_fmt', 'yuv420p',
             '-movflags', '+faststart',
-        ]
+        ])
 
         # add extra options
         if self.ffmpeg_extra_options:

@@ -102,8 +102,13 @@ class TimelapseGenerator(object):
 
         start = time.time()
 
-        cmd = [
-            'ffmpeg',
+        cmd = ['ffmpeg']
+
+        # add codec options
+        if self.codec in ['h264_qsv']:
+            cmd.extend(['-init_hw_device', 'qsv=hw', '-filter_hw_device', 'hw'])
+
+        cmd.extend([
             '-y',
             '-loglevel', 'level+warning',
             '-r', '{0:0.2f}'.format(self.framerate),
@@ -116,7 +121,7 @@ class TimelapseGenerator(object):
             #'-filter:v', 'setpts=50*PTS',
             '-pix_fmt', 'yuv420p',
             '-movflags', '+faststart',
-        ]
+        ])
 
 
         # add scaling option if defined
