@@ -59,8 +59,8 @@ class MoonEllipse(object):
         logger.info('Moon cycle: %0.1f%%', moon_cycle_percent)
 
 
-        height, width = self.moon.shape[:2]
-        moon_radius = int((width / 2) - 15)
+        moon_height, moon_width = self.moon.shape[:2]
+        moon_radius = int((moon_width / 2) - 15)
 
 
         ### Testing
@@ -97,11 +97,11 @@ class MoonEllipse(object):
 
 
 
-        mask = numpy.zeros([height, width, 3], dtype=numpy.uint8)
+        mask = numpy.zeros([moon_height, moon_width, 3], dtype=numpy.uint8)
 
         mask = cv2.circle(
             mask,
-            (int(height / 2), int(width / 2)),
+            (int(moon_height / 2), int(moon_width / 2)),
             moon_radius,
             start_scale,
             cv2.FILLED,
@@ -111,7 +111,7 @@ class MoonEllipse(object):
         ### cover half the moon
         mask = cv2.ellipse(
             mask,
-            (int(height / 2), int(width / 2)),
+            (int(moon_height / 2), int(moon_width / 2)),
             (moon_radius, moon_radius),
             270,
             half_start,
@@ -124,7 +124,7 @@ class MoonEllipse(object):
         ### crecent
         mask = cv2.ellipse(
             mask,
-            (int(height / 2), int(width / 2)),
+            (int(moon_height / 2), int(moon_width / 2)),
             (moon_radius, crecent_width),
             270,
             0,

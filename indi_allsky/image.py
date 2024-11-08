@@ -107,6 +107,7 @@ class ImageWorker(Process):
             'moon_alt'      : 0.0,
             'moon_phase'    : 0.0,
             'sun_moon_sep'  : 90.0,
+            'moon_cycle'    : 0.0,
             'sidereal_time' : 'unset',
             'moon_up'       : 'unset',
             'mercury_alt'   : 0.0,
@@ -638,6 +639,8 @@ class ImageWorker(Process):
                 self.write_panorama_img(pano_data, i_ref, camera, jpeg_exif=jpeg_exif)
 
 
+
+        self.image_processor.moon_overlay()
 
         self.image_processor.orb_image()
 

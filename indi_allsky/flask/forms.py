@@ -1456,8 +1456,8 @@ def MOON_OVERLAY__SCALE_validator(form, field):
     if field.data < 0.1:
         raise ValidationError('Font scale must be 0.1 or more')
 
-    if field.data > 1.0:
-        raise ValidationError('Font scale must be 1.0 or less')
+    if field.data > 2.0:
+        raise ValidationError('Font scale must be 2.0 or less')
 
 
 def CARDINAL_DIRS__CHAR_validator(form, field):

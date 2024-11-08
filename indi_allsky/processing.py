@@ -31,6 +31,7 @@ from .scnr import IndiAllskyScnr
 from .stack import IndiAllskyStacker
 from .cardinalDirsLabel import IndiAllskyCardinalDirsLabel
 from .utils import IndiAllSkyDateCalcs
+from .moonOverlay import IndiAllSkyMoonOverlay
 
 from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
@@ -163,6 +164,7 @@ class ImageProcessor(object):
         self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)
         self._scnr = IndiAllskyScnr(self.config)
         self._cardinal_dirs_label = IndiAllskyCardinalDirsLabel(self.config)
+        self._moon_overlay = IndiAllSkyMoonOverlay(self.config)
 
         self._orb = IndiAllskyOrbGenerator(self.config)
         self._orb.sun_alt_deg = self.config['NIGHT_SUN_ALT_DEG']
@@ -1701,6 +1703,11 @@ class ImageProcessor(object):
         self.astrometric_data['moon_alt'] = moon_alt
         self.astrometric_data['moon_phase'] = moon.moon_phase * 100.0
 
+        sun_lon = ephem.Ecliptic(sun).lon
+        moon_lon = ephem.Ecliptic(moon).lon
+        sm_angle = (moon_lon - sun_lon) % math.tau
+        self.astrometric_data['moon_cycle'] = (sm_angle / math.tau) * 100
+
         if moon_alt >= 0:
             self.astrometric_data['moon_up'] = 'Yes'
         else:
@@ -2767,6 +2774,13 @@ class ImageProcessor(object):
             return pano_data
 
         return self._cardinal_dirs_label.panorama_label(pano_data)
+
+
+    def moon_overlay(self):
+        if not self.config.get('MOON_OVERLAY', {}).get('ENABLE'):
+            return
+
+        self.image = self._moon_overlay.apply(self.image, self.astrometric_data['moon_cycle'])
 
 
     def _load_detection_mask(self):
