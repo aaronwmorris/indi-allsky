@@ -145,6 +145,17 @@ class IndiAllSkyMoonOverlay(object):
             y = self.y
 
 
+        # sanity check coordinates
+        if x > image_width - new_moon_width:
+            logger.error('Moon overlay X offset places moon outside image boundary')
+            x = image_width - new_moon_width
+
+        if y > image_height - new_moon_height:
+            logger.error('Moon overlay Y offset places moon outside image boundary')
+            y = image_height - new_moon_height
+
+
+
         # extract are where moon is to be applied
         image_crop = image_data[
             y:y + new_moon_height,
