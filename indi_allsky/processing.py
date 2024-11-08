@@ -2951,7 +2951,7 @@ class ImageProcessor(object):
             )
 
 
-        channel_alpha = (channel_mask / 255).astype(numpy.float32)
+        channel_alpha = (channel_mask / 255).astype(numpy.float16)
 
         alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
 
