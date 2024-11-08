@@ -6,6 +6,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 
 ## New Features
+* Moon Overlay
+    * Realtime accurate representation of illumination of the moon
 * Satellite Tracking
 * ADS-B Aircraft Tracking
     * Use a SDR to tag aircraft that appear in your camera
