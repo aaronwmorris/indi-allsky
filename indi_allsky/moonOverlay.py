@@ -26,8 +26,8 @@ class IndiAllSkyMoonOverlay(object):
 
 
         self.scale = self.config.get('MOON_OVERLAY', {}).get('SCALE', 0.5)
-        self.x = self.config.get('MOON_OVERLAY', {}).get('X', 20)
-        self.y = self.config.get('MOON_OVERLAY', {}).get('Y', 20)
+        self.x = self.config.get('MOON_OVERLAY', {}).get('X', 200)
+        self.y = self.config.get('MOON_OVERLAY', {}).get('Y', 200)
 
 
     def apply(self, image_data, moon_cycle_percent):

@@ -187,8 +187,8 @@ class IndiAllSkyConfigBase(object):
         "DAYTIME_GRAYSCALE": False,
         "MOON_OVERLAY" : {
             "ENABLE"   : False,
-            "X"        : 20,
-            "Y"        : 20,
+            "X"        : 200,
+            "Y"        : 200,
             "SCALE"    : 0.5,
         },
         "IMAGE_CIRCLE_MASK" : {
