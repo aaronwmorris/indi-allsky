@@ -266,7 +266,7 @@ class TimelapseGenerator(object):
 
         # separate layers
         wrapped_keogram_bgr = wrapped_keogram[:, :, :3]
-        wrapped_keogram_alpha = (wrapped_keogram[:, :, 3] / 255).astype(numpy.float32)
+        wrapped_keogram_alpha = (wrapped_keogram[:, :, 3] / 255).astype(numpy.float16)
 
         # create alpha mask
         alpha_mask = numpy.dstack((

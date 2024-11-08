@@ -1439,6 +1439,27 @@ def TEXT_PROPERTIES__PIL_FONT_SIZE_validator(form, field):
         raise ValidationError('Size must be 10 or greater')
 
 
+def MOON_OVERLAY__X_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+
+def MOON_OVERLAY__Y_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+
+def MOON_OVERLAY__SCALE_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.1:
+        raise ValidationError('Font scale must be 0.1 or more')
+
+    if field.data > 2.0:
+        raise ValidationError('Font scale must be 2.0 or less')
+
+
 def CARDINAL_DIRS__CHAR_validator(form, field):
     if not field.data:
         return
@@ -3240,6 +3261,10 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_SAVE_FITS                  = BooleanField('Save FITS data')
     NIGHT_GRAYSCALE                  = BooleanField('Save in Grayscale at Night')
     DAYTIME_GRAYSCALE                = BooleanField('Save in Grayscale during Day')
+    MOON_OVERLAY__ENABLE             = BooleanField('Enable Moon Overlay')
+    MOON_OVERLAY__X                  = IntegerField('X', validators=[MOON_OVERLAY__X_validator])
+    MOON_OVERLAY__Y                  = IntegerField('Y', validators=[MOON_OVERLAY__Y_validator])
+    MOON_OVERLAY__SCALE              = FloatField('Scale', validators=[DataRequired(), MOON_OVERLAY__SCALE_validator])
     IMAGE_EXPORT_RAW                 = SelectField('Export RAW image type', choices=IMAGE_EXPORT_RAW_choices, validators=[IMAGE_EXPORT_RAW_validator])
     IMAGE_EXPORT_FOLDER              = StringField('Export RAW folder', validators=[DataRequired(), IMAGE_EXPORT_FOLDER_validator])
     IMAGE_EXPORT_FLIP_V              = BooleanField('Flip RAW Vertically')

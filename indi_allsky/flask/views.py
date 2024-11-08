@@ -1649,6 +1649,10 @@ class ConfigView(FormView):
             'IMAGE_SAVE_FITS'                : self.indi_allsky_config.get('IMAGE_SAVE_FITS', False),
             'NIGHT_GRAYSCALE'                : self.indi_allsky_config.get('NIGHT_GRAYSCALE', False),
             'DAYTIME_GRAYSCALE'              : self.indi_allsky_config.get('DAYTIME_GRAYSCALE', False),
+            'MOON_OVERLAY__ENABLE'           : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('ENABLE', False),
+            'MOON_OVERLAY__X'                : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('X', 200),
+            'MOON_OVERLAY__Y'                : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('Y', 200),
+            'MOON_OVERLAY__SCALE'            : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('SCALE', 0.5),
             'IMAGE_EXPORT_RAW'               : self.indi_allsky_config.get('IMAGE_EXPORT_RAW', ''),
             'IMAGE_EXPORT_FOLDER'            : self.indi_allsky_config.get('IMAGE_EXPORT_FOLDER', '/var/www/html/allsky/images/export'),
             'IMAGE_EXPORT_FLIP_V'            : self.indi_allsky_config.get('IMAGE_EXPORT_FLIP_V', False),
@@ -2247,6 +2251,9 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config.get('TIMELAPSE'):
             self.indi_allsky_config['TIMELAPSE'] = {}
 
+        if not self.indi_allsky_config.get('MOON_OVERLAY'):
+            self.indi_allsky_config['MOON_OVERLAY'] = {}
+
         if not self.indi_allsky_config.get('ADSB'):
             self.indi_allsky_config['ADSB'] = {}
 
@@ -2403,6 +2410,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_SAVE_FITS']                      = bool(request.json['IMAGE_SAVE_FITS'])
         self.indi_allsky_config['NIGHT_GRAYSCALE']                      = bool(request.json['NIGHT_GRAYSCALE'])
         self.indi_allsky_config['DAYTIME_GRAYSCALE']                    = bool(request.json['DAYTIME_GRAYSCALE'])
+        self.indi_allsky_config['MOON_OVERLAY']['ENABLE']               = bool(request.json['MOON_OVERLAY__ENABLE'])
+        self.indi_allsky_config['MOON_OVERLAY']['X']                    = int(request.json['MOON_OVERLAY__X'])
+        self.indi_allsky_config['MOON_OVERLAY']['Y']                    = int(request.json['MOON_OVERLAY__Y'])
+        self.indi_allsky_config['MOON_OVERLAY']['SCALE']                = float(request.json['MOON_OVERLAY__SCALE'])
         self.indi_allsky_config['IMAGE_EXPORT_RAW']                     = str(request.json['IMAGE_EXPORT_RAW'])
         self.indi_allsky_config['IMAGE_EXPORT_FOLDER']                  = str(request.json['IMAGE_EXPORT_FOLDER'])
         self.indi_allsky_config['IMAGE_EXPORT_FLIP_V']                  = bool(request.json['IMAGE_EXPORT_FLIP_V'])
