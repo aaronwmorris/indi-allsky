@@ -4,10 +4,6 @@
 set -o errexit
 set -o nounset
 
-PATH=/usr/bin:/bin
-export PATH
-
-
 ALLSKY_DIRECTORY="/home/allsky/indi-allsky"
 ALLSKY_ETC="/etc/indi-allsky"
 DB_FOLDER="/var/lib/indi-allsky"
@@ -28,10 +24,6 @@ else
     SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDIALLSKY_MARIADB_HOST}:${INDIALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}?charset=${INDIALLSKY_MARIADB_CHARSET}&collation=${INDIALLSKY_MARIADB_COLLATION}"
     #SQLALCHEMY_DATABASE_URI="mysql+pymysql://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDIALLSKY_MARIADB_HOST}:${INDIALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}?charset=${INDIALLSKY_MARIADB_CHARSET}"
 fi
-
-
-# shellcheck disable=SC1091
-source /home/allsky/venv/bin/activate
 
 
 TMP_FLASK=$(mktemp --suffix=.json)
