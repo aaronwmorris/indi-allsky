@@ -1337,8 +1337,8 @@ def FFMPEG_FRAMERATE_validator(form, field):
     if field.data < 10:
         raise ValidationError('FFMPEG frame rate must be 10 or greater')
 
-    if field.data > 50:
-        raise ValidationError('FFMPEG frame rate must be 50 or less')
+    if field.data > 60:
+        raise ValidationError('FFMPEG frame rate must be 60 or less')
 
 
 def FFMPEG_BITRATE_validator(form, field):
