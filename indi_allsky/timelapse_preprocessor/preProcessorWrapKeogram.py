@@ -1,3 +1,5 @@
+from pathlib import Path
+import tempfile
 import numpy
 import cv2
 import PIL
@@ -24,6 +26,10 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         self.keogram_ratio = self.config.get('TIMELAPSE', {}).get('KEOGRAM_RATIO', 0.15)
         self.offset_x = self.config.get('LENS_OFFSET_X', 0)
         self.offset_y = self.config.get('LENS_OFFSET_Y', 0)
+
+        # this needs to be a class variable
+        self.temp_seqfolder = tempfile.TemporaryDirectory(dir=self.image_dir, suffix='_timelapse')  # context manager automatically deletes files when finished
+        self._seqfolder = Path(self.temp_seqfolder.name)
 
 
     def main(self, file_list):
