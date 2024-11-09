@@ -73,15 +73,13 @@ RUN chown -R allsky:allsky /var/lib/indi-allsky
 VOLUME /var/lib/indi-allsky
 
 
-COPY docker/start_gunicorn.sh /home/allsky
-RUN chown allsky:allsky /home/allsky/start_gunicorn.sh
+COPY --chown=allsky:allsky docker/start_gunicorn.sh /home/allsky
 RUN chmod 755 /home/allsky/start_gunicorn.sh
 
 
 # installs latest code
 RUN mkdir /home/allsky/indi-allsky
-COPY . /home/allsky/indi-allsky
-RUN chown -R allsky:allsky /home/allsky/indi-allsky
+COPY --chown=allsky:allsky . /home/allsky/indi-allsky
 
 RUN mkdir -m 750 /etc/indi-allsky
 RUN chown -R allsky:allsky /etc/indi-allsky
