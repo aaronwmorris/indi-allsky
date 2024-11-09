@@ -59,7 +59,7 @@ dictConfig({
         },
         'gunicorn.error' : {
             'level'      : 'INFO',
-            'handlers'   : ['syslog_local7'],
+            'handlers'   : [os.getenv('GUNICORN_ERROR_LOG_HANDLER', 'syslog_local7')],
             'propagate'  : False,
         },
         'indi_allsky' : {
