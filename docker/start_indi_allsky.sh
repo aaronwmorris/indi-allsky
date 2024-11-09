@@ -30,10 +30,6 @@ else
 fi
 
 
-# shellcheck disable=SC1091
-source /home/allsky/venv/bin/activate
-
-
 TMP_FLASK=$(mktemp --suffix=.json)
 jq \
  --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" \
