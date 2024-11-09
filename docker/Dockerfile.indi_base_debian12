@@ -1,39 +1,27 @@
-
 FROM debian:bookworm-slim AS indi.base
 
-ARG TZ
 ARG INDI_VERSION
 ARG LIBCAMERA_TAG
 ARG RPICAM_APPS_TAG
 ARG DEBIAN_FRONTEND=noninteractive
 
-USER root
-RUN apt-get update
-RUN apt-get -y upgrade
-
-RUN apt-get -y install \
-    build-essential \
-    iputils-ping \
-    iproute2 \
-    bind9-host \
-    apt-utils \
-    locales \
-    vim-tiny \
-    nano \
-    tzdata \
-    procps \
-    netcat-traditional \
-    sudo \
-    git
-
-
-# cleanup
-RUN apt-get clean
-
-
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-RUN dpkg-reconfigure -f noninteractive tzdata
-
+RUN export DEBIAN_FRONTEND=noninteractive \
+    && apt-get update \
+    && apt-get -y install \
+      --no-install-recommends \
+      --no-install-suggests \
+        build-essential \
+        iputils-ping \
+        iproute2 \
+        bind9-host \
+        apt-utils \
+        locales \
+        tzdata \
+        procps \
+        netcat-traditional \
+        sudo \
+        git \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # need the uid and gid to match in all containers
 RUN groupadd --gid 10001 allsky
@@ -44,23 +32,11 @@ RUN if getent group spi >/dev/null 2>&1; then usermod -a -G spi allsky; fi
 RUN echo "allsky ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/allsky
 RUN chmod 0440 /etc/sudoers.d/allsky
 
-
-COPY misc/build_indi.sh /home/allsky
-RUN chown allsky:allsky /home/allsky/build_indi.sh
-RUN chmod 755 /home/allsky/build_indi.sh
-
-COPY misc/build_libcamera.sh /home/allsky
-RUN chown allsky:allsky /home/allsky/build_libcamera.sh
-RUN chmod 755 /home/allsky/build_indi.sh
-
+COPY --chown=allsky:allsky misc/build_indi.sh /home/allsky
 
 USER allsky
 WORKDIR /home/allsky
 
-
-RUN ./build_indi.sh $INDI_VERSION
-
-# libcamera build is prone to failure on x86_64
-#RUN ./build_libcamera.sh $LIBCAMERA_TAG $RPICAM_APPS_TAG
-
-RUN rm -fR /home/allsky/Projects
+RUN bash build_indi.sh $INDI_VERSION \
+    && rm -fR /home/allsky/Projects \
+    && sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

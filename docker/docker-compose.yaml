@@ -36,18 +36,6 @@ services:
       - "17624:7624"
 
 
-  indi.allsky.base:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.indi_allsky_base_debian12
-      #dockerfile: docker/Dockerfile.indi_allsky_base_ubuntu2204
-    env_file: .env
-    depends_on:
-      - indi.base
-    volumes:
-      - images_indi_allsky:/var/www/html/allsky
-
-
   gunicorn.indi.allsky:
     build:
       context: ..
@@ -55,7 +43,6 @@ services:
     env_file: .env
     depends_on:
       - mariadb.indi.allsky
-      - indi.allsky.base
     volumes:
       - images_indi_allsky:/var/www/html/allsky
       - migrations_indi_allsky:/var/lib/indi-allsky
@@ -71,7 +58,6 @@ services:
     depends_on:
       - mariadb.indi.allsky
       - indiserver.indi.allsky
-      - indi.allsky.base
     #privileged: true  # enable for libcamera
     volumes:
       - images_indi_allsky:/var/www/html/allsky
