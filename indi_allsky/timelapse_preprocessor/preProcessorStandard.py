@@ -1,3 +1,5 @@
+from pathlib import Path
+import tempfile
 import logging
 
 from .preProcessorBase import PreProcessorBase
@@ -10,6 +12,11 @@ class PreProcessorStandard(PreProcessorBase):
 
     def __init__(self, *args, **kwargs):
         super(PreProcessorStandard, self).__init__(*args, **kwargs)
+
+
+        # this needs to be a class variable
+        self.temp_seqfolder = tempfile.TemporaryDirectory(suffix='_timelapse')  # context manager automatically deletes files when finished
+        self._seqfolder = Path(self.temp_seqfolder.name)
 
 
     def main(self, file_list):
