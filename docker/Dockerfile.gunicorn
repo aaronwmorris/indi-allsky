@@ -29,9 +29,7 @@ RUN groupadd --gid 10001 allsky \
 USER allsky
 WORKDIR /home/allsky
 
-COPY requirements/requirements_latest.txt /home/allsky
-COPY requirements/requirements_optional.txt /home/allsky
-COPY requirements/requirements_gpio.txt /home/allsky
+COPY requirements/requirements_latest_web.txt /home/allsky
 
 USER root
 RUN apt-get update \
@@ -49,7 +47,7 @@ RUN apt-get update \
         dbus-daemon \
     && export CC=clang \
     && export CXX=clang++ \
-    && pip install --no-cache-dir -r requirements_latest.txt -r requirements_optional.txt -r requirements_gpio.txt \
+    && pip install --no-cache-dir -r requirements_latest_web.txt \
     && apt-get remove --purge -y \
         clang \
         cmake \
