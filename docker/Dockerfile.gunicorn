@@ -30,6 +30,7 @@ USER allsky
 WORKDIR /home/allsky
 
 COPY requirements/requirements_latest_web.txt /home/allsky
+COPY requirements/requirements_optional.txt /home/allsky
 
 USER root
 RUN apt-get update \
@@ -47,7 +48,7 @@ RUN apt-get update \
         dbus-daemon \
     && export CC=clang \
     && export CXX=clang++ \
-    && pip install --no-cache-dir -r requirements_latest_web.txt \
+    && pip install --no-cache-dir -r requirements_latest_web.txt -r requirements_optional.txt \
     && apt-get remove --purge -y \
         clang \
         cmake \
