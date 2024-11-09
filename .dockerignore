@@ -6,3 +6,16 @@ virtualenv
 #virtualenv/**/*
 log
 #log/**/*
+Docker/Dockerfile*
+.dockerignore
+.git/
+.gitignore
+.github/
+.htaccess
+README.md
+content/
+examples/
+log/
+service/
+testing/
+setup.sh
