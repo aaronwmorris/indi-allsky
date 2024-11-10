@@ -109,8 +109,8 @@ class TimelapseGenerator(object):
         process_start = time.time()
 
         for i, f in enumerate(file_list_ordered):
-            #self.standard(i, f, seqfolder_p)
-            self.wrap(i, f, seqfolder_p)
+            self.standard(i, f, seqfolder_p)
+            #self.wrap(i, f, seqfolder_p)
 
         process_elapsed_s = time.time() - process_start
         logger.info('Pre-processing in %0.4f s (%0.3fs/image)', process_elapsed_s, process_elapsed_s / len(file_list_ordered))
