@@ -2737,18 +2737,22 @@ class IndiAllskyConfigForm(FlaskForm):
 
     FFMPEG_VFSCALE_choices = (
         ('', 'None'),
-        ('-1:2304', 'V 2304px (imx477)'),
-        ('-1:1520', 'V 1520px (imx477)'),
-        ('-1:760', 'V 760px (imx477)'),
         ('iw*.75:ih*.75', '75%'),
         ('iw*.5:ih*.5', '50%'),
         ('iw*.25:ih*.25', '25%'),
+        ('-1:2304', 'V 2304px (imx477)'),
+        ('-1:1520', 'V 1520px (imx477)'),
+        ('-1:760', 'V 760px (imx477)'),
     )
 
     FFMPEG_CODEC_choices = (
         ('libx264', 'x264'),
         ('libvpx', 'webm'),
-        ('h264_qsv', 'h264 (QSV)'),
+        ('h264_v4l2m2m', 'h264 (v4l2m2m) - Raspberry Pi'),
+        ('h264_qsv', 'h264 (QSV) - Intel Quick Sync Video'),
+        ('h264_omx', 'h264 (OMX) - Raspberry Pi (32-bit only)'),
+        ('libx265', 'x265 hevc - DO NOT USE'),
+        ('hevc_v4l2m2m', 'h265 hevc (v4l2m2m) - DO NOT USE'),
     )
 
 
