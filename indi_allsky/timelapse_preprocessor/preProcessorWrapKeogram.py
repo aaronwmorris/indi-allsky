@@ -103,7 +103,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
 
         # add black area at the top of the keogram to wrap around center
-        d_keogram = numpy.zeros([int((self.image_circle + keogram_height) / 2), keogram_width, 3], dtype=numpy.uint8)
+        d_keogram = numpy.zeros([int((self.image_circle / 2) + keogram_height), keogram_width, 3], dtype=numpy.uint8)
         d_height, d_width = d_keogram.shape[:2]
         d_keogram[d_height - keogram_height:d_height, 0:keogram_width] = keogram
 
@@ -123,8 +123,8 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         wrapped_keogram = cv2.warpPolar(
             d_image,
             (wrapped_width, wrapped_height),
-            (int(wrapped_height / 2), int(wrapped_height / 2)),
-            int(wrapped_height / 2),
+            (int(wrapped_width / 2), int(wrapped_height / 2)),
+            int((self.image_circle / 2) + keogram_height),
             cv2.WARP_INVERSE_MAP,
         )
 
