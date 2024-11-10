@@ -5836,6 +5836,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         'Medium - 6mm Class' : (
             ('ar0130', 'ASI120 - 1/3" - AR0130CS'),
             ('imx224', 'IMX224 - 1/3"'),
+            ('imx225', 'IMX225 - 1/3"'),
             ('imx273', 'IMX273 - 1/2.9"'),
             ('imx287', 'IMX287 - 1/2.9"'),
             ('imx290', 'IMX290 - 1/2.8"'),
