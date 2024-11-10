@@ -2747,12 +2747,12 @@ class IndiAllskyConfigForm(FlaskForm):
 
     FFMPEG_CODEC_choices = (
         ('libx264', 'x264'),
-        ('libx265', 'x265 hevc'),
         ('libvpx', 'webm'),
-        ('h264_omx', 'h264 (OMX) - Raspberry Pi OpenMAX (32-bit only)'),
-        ('h264_v4l2m2m', 'h264 (v4l2m2m)'),
-        ('hevc_v4l2m2m', 'h265 hevc (v4l2m2m)'),
+        ('h264_v4l2m2m', 'h264 (v4l2m2m) - Raspberry Pi'),
         ('h264_qsv', 'h264 (QSV) - Intel Quick Sync Video'),
+        ('h264_omx', 'h264 (OMX) - Raspberry Pi (32-bit only)'),
+        ('libx265', 'x265 hevc - DO NOT USE'),
+        ('hevc_v4l2m2m', 'h265 hevc (v4l2m2m) - DO NOT USE'),
     )
 
 
