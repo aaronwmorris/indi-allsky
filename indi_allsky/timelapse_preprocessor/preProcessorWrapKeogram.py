@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 import tempfile
 import numpy
@@ -54,6 +55,8 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         self.file_list_len = len(file_list)
 
 
+        process_start = time.time()
+
         for i, f in enumerate(file_list):
             # the symlink files must start at index 0 or ffmpeg will fail
 
@@ -61,6 +64,10 @@ class PreProcessorWrapKeogram(PreProcessorBase):
                 logger.info('Pre-processed %d of %d images', i, self.file_list_len)
 
             self.wrap(i, f, self.seqfolder)
+
+
+        process_elapsed_s = time.time() - process_start
+        logger.info('Pre-processing in %0.4f s (%0.3fs/image)', process_elapsed_s, process_elapsed_s / len(file_list))
 
 
     def wrap(self, i, f, seqfolder_p):

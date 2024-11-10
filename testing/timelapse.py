@@ -106,12 +106,17 @@ class TimelapseGenerator(object):
         seqfolder_p = Path(seqfolder.name)
 
 
+        process_start = time.time()
+
         for i, f in enumerate(file_list_ordered):
-            self.standard(i, f, seqfolder_p)
-            #self.wrap(i, f, seqfolder_p)
+            #self.standard(i, f, seqfolder_p)
+            self.wrap(i, f, seqfolder_p)
+
+        process_elapsed_s = time.time() - process_start
+        logger.info('Pre-processing in %0.4f s (%0.3fs/image)', process_elapsed_s, process_elapsed_s / len(file_list_ordered))
 
 
-        processing_start = time.time()
+        timelapse_start = time.time()
 
         cmd = [
             'ffmpeg',
@@ -161,8 +166,8 @@ class TimelapseGenerator(object):
             sys.exit(1)
 
 
-        processing_elapsed_s = time.time() - processing_start
-        logger.warning('Total timelapse processing in %0.1f s', processing_elapsed_s)
+        timelapse_elapsed_s = time.time() - timelapse_start
+        logger.warning('Total timelapse processing in %0.1f s', timelapse_elapsed_s)
 
         logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
 
