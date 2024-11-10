@@ -134,7 +134,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
         # separate layers
         wrapped_keogram_bgr = wrapped_keogram[:, :, :3]
-        wrapped_keogram_alpha = (wrapped_keogram[:, :, 3] / 255).astype(numpy.float16)
+        wrapped_keogram_alpha = (wrapped_keogram[:, :, 3] / 255).astype(numpy.float32)
 
         # create alpha mask
         alpha_mask = numpy.dstack((

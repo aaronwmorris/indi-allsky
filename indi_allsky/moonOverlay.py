@@ -116,7 +116,7 @@ class IndiAllSkyMoonOverlay(object):
         )
 
 
-        mask = (mask / 255).astype(numpy.float16)
+        mask = (mask / 255).astype(numpy.float32)
 
         moon_bgr = moon[:, :, :3]
         moon_alpha = moon[:, :, 3]
@@ -164,7 +164,7 @@ class IndiAllSkyMoonOverlay(object):
 
 
         moon_bgr = moon[:, :, :3]
-        moon_alpha = (moon[:, :, 3] / 255).astype(numpy.float16)
+        moon_alpha = (moon[:, :, 3] / 255).astype(numpy.float32)
 
 
         # create alpha mask
