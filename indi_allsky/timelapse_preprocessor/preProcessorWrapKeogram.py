@@ -119,11 +119,10 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
 
         # wrap the keogram
-        wrapped_height, wrapped_width = self.image_circle + (keogram_height * 2) + abs(self.offset_x), self.image_circle + (keogram_height * 2) + abs(self.offset_y)  # reversed offsets due to rotation below
         wrapped_keogram = cv2.warpPolar(
             d_image,
-            (wrapped_width, wrapped_height),
-            (int(wrapped_width / 2), int(wrapped_height / 2)),
+            (final_height, final_width),  # cv2 reversed (rotated below)
+            (int(final_height / 2), int(final_width / 2)),  # reversed
             int((self.image_circle / 2) + keogram_height),
             cv2.WARP_INVERSE_MAP,
         )

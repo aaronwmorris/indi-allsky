@@ -78,11 +78,10 @@ class WrapKeogram(object):
 
 
         # wrap the keogram
-        wrapped_height, wrapped_width = IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_X), IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_Y)  # reversed offsets due to rotation below
         wrapped_keogram = cv2.warpPolar(
             d_image,
-            (wrapped_width, wrapped_height),
-            (int(wrapped_width / 2), int(wrapped_height / 2)),
+            (final_height, final_width),  # cv2 reversed (rotated below)
+            (int(final_height / 2), int(final_width / 2)),  # reversed
             int((IMAGE_CIRCLE / 2) + keogram_height),
             cv2.WARP_INVERSE_MAP,
         )
@@ -109,6 +108,14 @@ class WrapKeogram(object):
             int((final_width / 2) - (image_width / 2) - OFFSET_X):int((final_width / 2) + (image_width / 2) - OFFSET_X),
         ] = image  # recenter the image circle in the new image
 
+
+        #cv2.circle(
+        #    img=f_image,
+        #    center=(int(final_width / 2), int(final_height / 2)),
+        #    radius=int((IMAGE_CIRCLE / 2) - 0),
+        #    color=(255, 255, 255),
+        #    thickness=3,
+        #)
 
         # apply alpha mask
         image_with_keogram = (f_image * (1 - alpha_mask) + wrapped_keogram_bgr * alpha_mask).astype(numpy.uint8)
