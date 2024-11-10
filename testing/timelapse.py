@@ -106,12 +106,17 @@ class TimelapseGenerator(object):
         seqfolder_p = Path(seqfolder.name)
 
 
+        process_start = time.time()
+
         for i, f in enumerate(file_list_ordered):
             self.standard(i, f, seqfolder_p)
             #self.wrap(i, f, seqfolder_p)
 
+        process_elapsed_s = time.time() - process_start
+        logger.info('Pre-processing in %0.4f s (%0.3fs/image)', process_elapsed_s, process_elapsed_s / len(file_list_ordered))
 
-        processing_start = time.time()
+
+        timelapse_start = time.time()
 
         cmd = [
             'ffmpeg',
@@ -161,8 +166,8 @@ class TimelapseGenerator(object):
             sys.exit(1)
 
 
-        processing_elapsed_s = time.time() - processing_start
-        logger.warning('Total timelapse processing in %0.1f s', processing_elapsed_s)
+        timelapse_elapsed_s = time.time() - timelapse_start
+        logger.warning('Total timelapse processing in %0.1f s', timelapse_elapsed_s)
 
         logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
 
@@ -235,7 +240,7 @@ class TimelapseGenerator(object):
 
 
         # add black area at the top of the keogram to wrap around center
-        d_keogram = numpy.zeros([int((IMAGE_CIRCLE + keogram_height) / 2), keogram_width, 3], dtype=numpy.uint8)
+        d_keogram = numpy.zeros([int((IMAGE_CIRCLE / 2) + keogram_height), keogram_width, 3], dtype=numpy.uint8)
         d_height, d_width = d_keogram.shape[:2]
         d_keogram[d_height - keogram_height:d_height, 0:keogram_width] = keogram
 
@@ -251,12 +256,11 @@ class TimelapseGenerator(object):
 
 
         # wrap the keogram
-        wrapped_height, wrapped_width = IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_X), IMAGE_CIRCLE + (keogram_height * 2) + abs(OFFSET_Y)  # reversed offsets due to rotation below
         wrapped_keogram = cv2.warpPolar(
             d_image,
-            (wrapped_width, wrapped_height),
-            (int(wrapped_height / 2), int(wrapped_height / 2)),
-            int(wrapped_height / 2),
+            (final_height, final_width),  # cv2 reversed (rotated below)
+            (int(final_height / 2), int(final_width / 2)),  # reversed
+            int((IMAGE_CIRCLE / 2) + keogram_height),
             cv2.WARP_INVERSE_MAP,
         )
 
@@ -266,7 +270,7 @@ class TimelapseGenerator(object):
 
         # separate layers
         wrapped_keogram_bgr = wrapped_keogram[:, :, :3]
-        wrapped_keogram_alpha = (wrapped_keogram[:, :, 3] / 255).astype(numpy.float16)
+        wrapped_keogram_alpha = (wrapped_keogram[:, :, 3] / 255).astype(numpy.float32)
 
         # create alpha mask
         alpha_mask = numpy.dstack((

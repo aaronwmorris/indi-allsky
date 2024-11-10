@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 import tempfile
 import numpy
@@ -54,6 +55,8 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         self.file_list_len = len(file_list)
 
 
+        process_start = time.time()
+
         for i, f in enumerate(file_list):
             # the symlink files must start at index 0 or ffmpeg will fail
 
@@ -61,6 +64,10 @@ class PreProcessorWrapKeogram(PreProcessorBase):
                 logger.info('Pre-processed %d of %d images', i, self.file_list_len)
 
             self.wrap(i, f, self.seqfolder)
+
+
+        process_elapsed_s = time.time() - process_start
+        logger.info('Pre-processing in %0.4f s (%0.3fs/image)', process_elapsed_s, process_elapsed_s / len(file_list))
 
 
     def wrap(self, i, f, seqfolder_p):
@@ -103,7 +110,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
 
         # add black area at the top of the keogram to wrap around center
-        d_keogram = numpy.zeros([int((self.image_circle + keogram_height) / 2), keogram_width, 3], dtype=numpy.uint8)
+        d_keogram = numpy.zeros([int((self.image_circle / 2) + keogram_height), keogram_width, 3], dtype=numpy.uint8)
         d_height, d_width = d_keogram.shape[:2]
         d_keogram[d_height - keogram_height:d_height, 0:keogram_width] = keogram
 
@@ -119,12 +126,11 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
 
         # wrap the keogram
-        wrapped_height, wrapped_width = self.image_circle + (keogram_height * 2) + abs(self.offset_x), self.image_circle + (keogram_height * 2) + abs(self.offset_y)  # reversed offsets due to rotation below
         wrapped_keogram = cv2.warpPolar(
             d_image,
-            (wrapped_width, wrapped_height),
-            (int(wrapped_height / 2), int(wrapped_height / 2)),
-            int(wrapped_height / 2),
+            (final_height, final_width),  # cv2 reversed (rotated below)
+            (int(final_height / 2), int(final_width / 2)),  # reversed
+            int((self.image_circle / 2) + keogram_height),
             cv2.WARP_INVERSE_MAP,
         )
 
@@ -134,7 +140,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
         # separate layers
         wrapped_keogram_bgr = wrapped_keogram[:, :, :3]
-        wrapped_keogram_alpha = (wrapped_keogram[:, :, 3] / 255).astype(numpy.float16)
+        wrapped_keogram_alpha = (wrapped_keogram[:, :, 3] / 255).astype(numpy.float32)
 
         # create alpha mask
         alpha_mask = numpy.dstack((

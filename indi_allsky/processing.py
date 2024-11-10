@@ -1113,8 +1113,8 @@ class ImageProcessor(object):
     #    # not used
     #    dtype = self.image.dtype
 
-    #    self.image[:, :, 2] = self.image[:, :, 2].astype(numpy.float16) * float(libcamera_awb_gains[0])  # red
-    #    self.image[:, :, 0] = self.image[:, :, 0].astype(numpy.float16) * float(libcamera_awb_gains[1])  # blue
+    #    self.image[:, :, 2] = self.image[:, :, 2].astype(numpy.float32) * float(libcamera_awb_gains[0])  # red
+    #    self.image[:, :, 0] = self.image[:, :, 0].astype(numpy.float32) * float(libcamera_awb_gains[1])  # blue
 
     #    self.image = self.image.astype(dtype)
 
@@ -2951,7 +2951,7 @@ class ImageProcessor(object):
             )
 
 
-        channel_alpha = (channel_mask / 255).astype(numpy.float16)
+        channel_alpha = (channel_mask / 255).astype(numpy.float32)
 
         alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
 
