@@ -1919,6 +1919,7 @@ class ImageProcessor(object):
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'moon_alt'     : self.astrometric_data['moon_alt'],
             'moon_phase'   : self.astrometric_data['moon_phase'],
+            'moon_cycle'   : self.astrometric_data['moon_cycle'],
             'moon_up'      : self.astrometric_data['moon_up'],
             'sun_moon_sep' : self.astrometric_data['sun_moon_sep'],
             'mercury_alt'  : self.astrometric_data['mercury_alt'],

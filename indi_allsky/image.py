@@ -772,6 +772,7 @@ class ImageWorker(Process):
                 'sunalt'   : round(self.astrometric_data['sun_alt'], 1),
                 'moonalt'  : round(self.astrometric_data['moon_alt'], 1),
                 'moonphase': round(self.astrometric_data['moon_phase'], 1),
+                'mooncycle': round(self.astrometric_data['moon_cycle'], 1),
                 'moonmode' : bool(self.moonmode_v.value),
                 'night'    : bool(self.night_v.value),
                 'sqm'      : round(i_ref['sqm_value'], 1),
