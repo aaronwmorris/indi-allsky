@@ -2780,7 +2780,7 @@ class ImageProcessor(object):
         if not self.config.get('MOON_OVERLAY', {}).get('ENABLE'):
             return
 
-        self.image = self._moon_overlay.apply(self.image, self.astrometric_data['moon_cycle'])
+        self._moon_overlay.apply(self.image, self.astrometric_data['moon_cycle'], self.astrometric_data['moon_phase'])
 
 
     def _load_detection_mask(self):

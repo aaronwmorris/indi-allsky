@@ -48,6 +48,7 @@ class MoonEllipse(object):
         sun.compute(obs)
         moon.compute(obs)
 
+        moon_phase = moon.moon_phase * 100
 
         sun_lon = ephem.Ecliptic(sun).lon
         moon_lon = ephem.Ecliptic(moon).lon
@@ -57,14 +58,22 @@ class MoonEllipse(object):
         #moon_quarter = int(sm_angle * 4.0 // math.tau)
         moon_cycle_percent = (sm_angle / math.tau) * 100
         logger.info('Moon cycle: %0.1f%%', moon_cycle_percent)
+        logger.info('Moon phase: %0.1f%%', moon_phase)
 
 
         moon_height, moon_width = self.moon.shape[:2]
-        moon_radius = int((moon_width / 2) - 15)
+        moon_radius = int((moon_width / 2) - 15)  # ellipse_a
+        logger.info('Moon Radius: %d', moon_radius)
 
 
         ### Testing
-        #moon_cycle_percent = 30
+        #moon_cycle_percent = 20
+        #moon_phase = 44
+
+
+        moon_area = math.pi * (moon_radius ** 2)
+        logger.info('Moon area: %0.2f', moon_area)
+
 
         if moon_cycle_percent <= 25:
             start_scale = self.full
@@ -72,29 +81,44 @@ class MoonEllipse(object):
             half_end = self.left_end
             half_scale = self.dark
             crecent_scale = self.dark
-            crecent_width = int(moon_radius - (moon_radius * (moon_cycle_percent / 25)))
+
+            ellipse_area = (moon_area * ((1 - (moon_phase / 100)) - 0.5)) * 2
+            logger.info('Ellipse area: %0.2f', ellipse_area)
+            ellipse_b = int(ellipse_area / (math.pi * moon_radius))
         elif moon_cycle_percent <= 50:
             start_scale = self.dark
             half_start = self.right_start
             half_end = self.right_end
             half_scale = self.full
             crecent_scale = self.full
-            crecent_width = int(moon_radius * ((moon_cycle_percent - 25) / 25))
+
+            ellipse_area = (moon_area * ((moon_phase / 100) - 0.5)) * 2
+            logger.info('Ellipse area: %0.2f', ellipse_area)
+            ellipse_b = int(ellipse_area / (math.pi * moon_radius))
         elif moon_cycle_percent <= 75:
             start_scale = self.dark
             half_start = self.left_start
             half_end = self.left_end
             half_scale = self.full
             crecent_scale = self.full
-            crecent_width = int(moon_radius - (moon_radius * ((moon_cycle_percent - 50) / 25)))
+
+            ellipse_area = (moon_area * ((moon_phase / 100) - 0.5)) * 2
+            logger.info('Ellipse area: %0.2f', ellipse_area)
+            ellipse_b = int(ellipse_area / (math.pi * moon_radius))
         else:
             start_scale = self.full
             half_start = self.right_start
             half_end = self.right_end
             half_scale = self.dark
             crecent_scale = self.dark
-            crecent_width = int(moon_radius * ((moon_cycle_percent - 75) / 25))
 
+            ellipse_area = (moon_area * ((1 - (moon_phase / 100)) - 0.5)) * 2
+            logger.info('Ellipse area: %0.2f', ellipse_area)
+            ellipse_b = int(ellipse_area / (math.pi * moon_radius))
+
+
+
+        logger.info('Ellipse B: %d', ellipse_b)
 
 
         mask = numpy.zeros([moon_height, moon_width, 3], dtype=numpy.uint8)
@@ -125,7 +149,7 @@ class MoonEllipse(object):
         mask = cv2.ellipse(
             mask,
             (int(moon_height / 2), int(moon_width / 2)),
-            (moon_radius, crecent_width),
+            (moon_radius, ellipse_b),
             270,
             0,
             360,
@@ -134,7 +158,7 @@ class MoonEllipse(object):
         )
 
 
-        mask = (mask / 255).astype(numpy.float16)
+        mask = (mask / 255).astype(numpy.float32)
 
         moon_bgr = self.moon[:, :, :3]
         moon_alpha = self.moon[:, :, 3]
