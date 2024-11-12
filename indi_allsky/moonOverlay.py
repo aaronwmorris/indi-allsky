@@ -11,7 +11,7 @@ logger = logging.getLogger('indi_allsky')
 class IndiAllSkyMoonOverlay(object):
 
     full = (255, 255, 255)
-    dark = (100, 100, 100)
+    dark = (None, None, None)  # set later
 
     left_start = 180
     left_end = 360
@@ -27,8 +27,13 @@ class IndiAllSkyMoonOverlay(object):
 
 
         self.scale = self.config.get('MOON_OVERLAY', {}).get('SCALE', 0.5)
+
         self.x = self.config.get('MOON_OVERLAY', {}).get('X', 200)
         self.y = self.config.get('MOON_OVERLAY', {}).get('Y', 200)
+
+        self.dark_side_scale = self.config.get('MOON_OVERLAY', {}).get('DARK_SIDE_SCALE', 0.4)
+        dark_ratio = int(self.dark_side_scale * 255)
+        self.dark = (dark_ratio, dark_ratio, dark_ratio)
 
 
     def apply(self, image_data, moon_cycle_percent, moon_phase):
