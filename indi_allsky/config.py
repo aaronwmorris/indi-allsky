@@ -190,6 +190,7 @@ class IndiAllSkyConfigBase(object):
             "X"        : 200,
             "Y"        : 200,
             "SCALE"    : 0.5,
+            "DARK_SIDE_SCALE" : 0.4,
         },
         "IMAGE_CIRCLE_MASK" : {
             "ENABLE"   : False,
