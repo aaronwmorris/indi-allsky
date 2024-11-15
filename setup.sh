@@ -404,7 +404,7 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         apache2 \
         swig \
         libatlas-base-dev \
-        libilmbase-dev \
+        libimath-dev \
         libopenexr-dev \
         libgtk-3-0 \
         libssl-dev \
@@ -563,7 +563,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         apache2 \
         swig \
         libatlas-base-dev \
-        libilmbase-dev \
+        libimath-dev \
         libopenexr-dev \
         libgtk-3-0 \
         libssl-dev \
