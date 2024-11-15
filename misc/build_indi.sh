@@ -101,6 +101,18 @@ if [ -f "/usr/bin/indiserver" ]; then
 fi
 
 
+if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+    echo
+    echo
+    echo "INDI 3rd party drivers will not build properly on Raspbian 32-bit running a 64-bit kernel"
+    echo "You must add the following parameter to /boot/firmware/config.txt and reboot:"
+    echo
+    echo "  arm_64bit=0"
+    echo
+    exit 1
+fi
+
+
 echo
 echo
 echo "Distribution: $DISTRO_ID"
@@ -125,20 +137,6 @@ echo
 echo "Setup proceeding in 10 seconds... (control-c to cancel)"
 echo
 sleep 10
-
-
-
-if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
-    echo
-    echo
-    echo "INDI 3rd party drivers will not build properly on Raspbian 11 32-bit"
-    echo "You must add the following parameter to /boot/config.txt and reboot:"
-    echo
-    echo "  arm_64bit=0"
-    echo
-    exit 1
-fi
-
 
 
 # Run sudo to ask for initial password
