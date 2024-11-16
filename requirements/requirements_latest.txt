@@ -28,7 +28,7 @@ imageio-ffmpeg
 #imagecodecs
 cython
 # rawpy v0.22.0 requires numpy 2.0
-rawpy <= 0.21.0
+#rawpy <= 0.21.0  # installed later
 pygifsicle
 gunicorn[gthread] >= 22.0.0
 inotify
