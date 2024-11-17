@@ -3734,6 +3734,10 @@ class IndiAllskyConfigForm(FlaskForm):
                         self.FOCUSER__GPIO_PIN_4.errors.append('PIN must be defined')
                         result = False
 
+                except NotImplementedError:
+                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    result = False
+
                 except ImportError:
                     self.FOCUSER__CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
@@ -3761,6 +3765,10 @@ class IndiAllskyConfigForm(FlaskForm):
                     else:
                         self.DEW_HEATER__PIN_1.errors.append('PIN must be defined')
                         result = False
+
+                except NotImplementedError:
+                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    result = False
 
                 except ImportError:
                     self.DEW_HEATER__CLASSNAME.errors.append('GPIO python modules not installed')
@@ -3798,6 +3806,10 @@ class IndiAllskyConfigForm(FlaskForm):
                         self.FAN__PIN_1.errors.append('PIN must be defined')
                         result = False
 
+                except NotImplementedError:
+                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    result = False
+
                 except ImportError:
                     self.FAN__CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
@@ -3823,6 +3835,10 @@ class IndiAllskyConfigForm(FlaskForm):
                         self.GENERIC_GPIO__A_PIN_1.errors.append('PIN must be defined')
                         result = False
 
+                except NotImplementedError:
+                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    result = False
+
                 except ImportError:
                     self.GENERIC_GPIO__A_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
@@ -3847,6 +3863,10 @@ class IndiAllskyConfigForm(FlaskForm):
                     else:
                         self.TEMP_SENSOR__A_PIN_1.errors.append('PIN must be defined')
                         result = False
+
+                except NotImplementedError:
+                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    result = False
 
                 except ImportError:
                     self.TEMP_SENSOR__A_CLASSNAME.errors.append('GPIO python modules not installed')
@@ -3891,6 +3911,10 @@ class IndiAllskyConfigForm(FlaskForm):
                         self.TEMP_SENSOR__B_PIN_1.errors.append('PIN must be defined')
                         result = False
 
+                except NotImplementedError:
+                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    result = False
+
                 except ImportError:
                     self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
@@ -3933,6 +3957,10 @@ class IndiAllskyConfigForm(FlaskForm):
                     else:
                         self.TEMP_SENSOR__C_PIN_1.errors.append('PIN must be defined')
                         result = False
+
+                except NotImplementedError:
+                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    result = False
 
                 except ImportError:
                     self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO python modules not installed')
