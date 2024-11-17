@@ -2050,6 +2050,15 @@ class ImageProcessor(object):
             image_label += '\n* SOLAR ECLIPSE *'
 
 
+        # add extra text to image
+        extra_text_lines = self.get_extra_text()
+        if extra_text_lines:
+            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
+
+            for line in extra_text_lines:
+                image_label += '\n{0:s}'.format(line)
+
+
         # aircraft lines
         adsb_aircraft_lines = self.get_adsb_aircraft_text(adsb_aircraft_list)
         if adsb_aircraft_lines:
@@ -2065,15 +2074,6 @@ class ImageProcessor(object):
             logger.info('Adding satellite text')
 
             for line in satellite_tracking_lines:
-                image_label += '\n{0:s}'.format(line)
-
-
-        # add extra text to image
-        extra_text_lines = self.get_extra_text()
-        if extra_text_lines:
-            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
-
-            for line in extra_text_lines:
                 image_label += '\n{0:s}'.format(line)
 
 
