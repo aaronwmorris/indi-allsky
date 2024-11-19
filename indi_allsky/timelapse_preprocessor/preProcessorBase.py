@@ -1,4 +1,7 @@
 from pathlib import Path
+import logging
+
+logger = logging.getLogger('indi_allsky')
 
 
 class PreProcessorBase(object):
@@ -9,6 +12,7 @@ class PreProcessorBase(object):
 
         self._seqfolder = None
         self._keogram = None
+        self._pre_scale = 100
 
 
         if self.config.get('IMAGE_FOLDER'):
@@ -33,6 +37,16 @@ class PreProcessorBase(object):
             return
 
         self._keogram = Path(str(new_keogram)).absolute()
+
+
+    @property
+    def pre_scale(self):
+        return self._pre_scale
+
+    @pre_scale.setter
+    def pre_scale(self, new_pre_scale):
+        self._pre_scale = int(new_pre_scale)
+        #logger.info('Setting timelapse image pre-scaler to %d%%', self._pre_scale)
 
 
     def main(self, *args, **kwargs):
