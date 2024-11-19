@@ -267,6 +267,14 @@ def TIMELAPSE__KEOGRAM_RATIO_validator(form, field):
         raise ValidationError('Ratio must be 0.33 or less')
 
 
+def TIMELAPSE__PRE_SCALE_validator(form, field):
+    if field.data <= 0:
+        raise ValidationError('Pre-Scaling factor must be greater than 0')
+
+    if field.data > 100:
+        raise ValidationError('Pre-Scaling factor must be 100 or less')
+
+
 def CCD_BIT_DEPTH_validator(form, field):
     if int(field.data) not in (0, 8, 10, 12, 14, 16):
         raise ValidationError('Bits must be 0, 8, 10, 12, 14, or 16 ')
@@ -3191,6 +3199,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TIMELAPSE__PRE_PROCESSOR         = SelectField('Timelapse Processing', choices=TIMELAPSE__PRE_PROCESSOR_choices, validators=[TIMELAPSE__PRE_PROCESSOR_validator])
     TIMELAPSE__IMAGE_CIRCLE          = IntegerField('Image Circle Diameter', validators=[DataRequired(), TIMELAPSE__IMAGE_CIRCLE_validator])
     TIMELAPSE__KEOGRAM_RATIO         = FloatField('Keogram Ratio', validators=[DataRequired(), TIMELAPSE__KEOGRAM_RATIO_validator])
+    TIMELAPSE__PRE_SCALE             = IntegerField('Pre-Scale Images', validators=[DataRequired(), TIMELAPSE__PRE_SCALE_validator])
     CAPTURE_PAUSE                    = BooleanField('Pause Capture')
     DAYTIME_CAPTURE                  = BooleanField('Daytime Capture')
     DAYTIME_CAPTURE_SAVE             = BooleanField('Daytime Save Images')

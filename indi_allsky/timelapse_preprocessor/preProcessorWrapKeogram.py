@@ -161,13 +161,25 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         image_with_keogram = (f_image * (1 - alpha_mask) + wrapped_keogram_bgr * alpha_mask).astype(numpy.uint8)
 
 
-        mod_height = final_height % 2
-        mod_width = final_width % 2
+        # scale image
+        if self.pre_scale < 100:
+            pre_scaled_height = int(final_height * (self.pre_scale / 100))
+            pre_scaled_width = int(final_width * (self.pre_scale / 100))
+
+            image_with_keogram = cv2.resize(image_with_keogram, (pre_scaled_width, pre_scaled_height), interpolation=cv2.INTER_AREA)
+
+
+        # need final values in case image was scaled
+        h, w = image_with_keogram.shape[:2]
+
+
+        mod_height = h % 2
+        mod_width = w % 2
 
         if mod_height or mod_width:
             # width and height needs to be divisible by 2 for timelapse
-            crop_width = final_width - mod_width
-            crop_height = final_height - mod_height
+            crop_width = w - mod_width
+            crop_height = h - mod_height
 
             image_with_keogram = image_with_keogram[
                 0:crop_height,

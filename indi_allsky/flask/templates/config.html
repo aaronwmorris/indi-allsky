@@ -2126,6 +2126,19 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TIMELAPSE__PRE_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE__PRE_SCALE(class='form-control bg-secondary') }}
+            <div id="TIMELAPSE__PRE_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Percentage to pre-scale image.  Only valid in timelapse processors that modify the image.</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TIMELAPSE__KEOGRAM_RATIO.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -6134,6 +6147,7 @@ const field_names = [
     'TIMELAPSE__PRE_PROCESSOR',
     'TIMELAPSE__IMAGE_CIRCLE',
     'TIMELAPSE__KEOGRAM_RATIO',
+    'TIMELAPSE__PRE_SCALE',
     'IMAGE_LABEL_SYSTEM',
     'TEXT_PROPERTIES__FONT_FACE',
     'TEXT_PROPERTIES__FONT_HEIGHT',

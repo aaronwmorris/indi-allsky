@@ -432,6 +432,7 @@ class VideoWorker(Process):
             tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
 
             tg.pre_processor.keogram = keogram_filename
+            tg.pre_processor.pre_scale = self.config.get('TIMELAPSE', {}).get('PRE_SCALE', 100)
 
             tg.generate(video_file, timelapse_files)
         except TimelapseException:
