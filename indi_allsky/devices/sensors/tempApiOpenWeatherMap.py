@@ -206,10 +206,6 @@ class TempApiOpenWeatherMap(SensorBase):
             current_fp = self.c2f(frost_point_c)
             current_hi = self.c2f(heat_index_c)
 
-            ### assume MPH if you are showing F
-            current_wind_speed = self.mps2miph(wind_speed)
-            current_wind_gust = self.mps2miph(wind_gust)
-
             ### assume inches if you are showing F
             current_rain_1h = self.mm2in(rain_1h)
             #current_rain_3h = self.mm2in(rain_3h)
@@ -221,8 +217,6 @@ class TempApiOpenWeatherMap(SensorBase):
             current_dp = self.c2k(dew_point_c)
             current_fp = self.c2k(frost_point_c)
             current_hi = self.c2k(heat_index_c)
-            current_wind_speed = self.mps2kmph(wind_speed)
-            current_wind_gust = self.mps2kmph(wind_gust)
             current_rain_1h = rain_1h
             #current_rain_3h = rain_3h
             current_snow_1h = snow_1h
@@ -233,12 +227,25 @@ class TempApiOpenWeatherMap(SensorBase):
             current_dp = dew_point_c
             current_fp = frost_point_c
             current_hi = heat_index_c
-            current_wind_speed = self.mps2kmph(wind_speed)
-            current_wind_gust = self.mps2kmph(wind_gust)
             current_rain_1h = rain_1h
             #current_rain_3h = rain_3h
             current_snow_1h = snow_1h
             #current_snow_3h = snow_3h
+
+
+        if self.config.get('WINDSPEED_DISPLAY') == 'mph':
+            current_wind_speed = self.mps2miph(wind_speed)
+            current_wind_gust = self.mps2miph(wind_gust)
+        elif self.config.get('WINDSPEED_DISPLAY') == 'knots':
+            current_wind_speed = self.mps2knots(wind_speed)
+            current_wind_gust = self.mps2knots(wind_gust)
+        elif self.config.get('WINDSPEED_DISPLAY') == 'kmh':
+            current_wind_speed = self.mps2kmph(wind_speed)
+            current_wind_gust = self.mps2kmph(wind_gust)
+        else:
+            # ms meters/s
+            current_wind_speed = wind_speed
+            current_wind_gust = wind_gust
 
 
         if self.config.get('PRESSURE_DISPLAY') == 'psi':

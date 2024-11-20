@@ -69,6 +69,11 @@ class SensorBase(object):
         return mps * 3.6 * 0.6213711922
 
 
+    def mps2knots(self, mps):
+        # meters/sec to knots
+        return mps * 1.9438445
+
+
     def mm2in(self, mm):
         # millimeters to inches
         return mm * 0.0393700787
