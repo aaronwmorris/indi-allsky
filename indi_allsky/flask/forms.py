@@ -337,13 +337,18 @@ def SCNR_ALGORITHM_validator(form, field):
 
 
 def TEMP_DISPLAY_validator(form, field):
-    if field.data not in ('c', 'f', 'k'):
+    if field.data not in list(zip(*form.TEMP_DISPLAY_choices))[0]:
         raise ValidationError('Please select the temperature system for display')
 
 
 def PRESSURE_DISPLAY_validator(form, field):
-    if field.data not in ('hPa', 'psi', 'inHg', 'mmHg'):
+    if field.data not in list(zip(*form.PRESSURE_DISPLAY_choices))[0]:
         raise ValidationError('Please select the pressure system for display')
+
+
+def WINDSPEED_DISPLAY_validator(form, field):
+    if field.data not in list(zip(*form.WINDSPEED_DISPLAY_choices))[0]:
+        raise ValidationError('Please select the wind speed system for display')
 
 
 def CCD_TEMP_SCRIPT_validator(form, field):
@@ -2689,6 +2694,13 @@ class IndiAllskyConfigForm(FlaskForm):
         ('mmHg', 'Millimeters of Mercury (mmHg)'),
     )
 
+    WINDSPEED_DISPLAY_choices = (
+        ('ms', 'Meters/second (m/s)'),
+        ('knots', 'Knots'),
+        ('mph', 'Miles/hour (mph)'),
+        ('kph', 'Kilometers/hour (kph)'),
+    )
+
     IMAGE_FILE_TYPE_choices = (
         ('jpg', 'JPEG'),
         ('png', 'PNG'),
@@ -3166,6 +3178,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_TEMP                         = FloatField('Target CCD Temp', validators=[CCD_TEMP_validator])
     TEMP_DISPLAY                     = SelectField('Temperature Display', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), TEMP_DISPLAY_validator])
     PRESSURE_DISPLAY                 = SelectField('Pressure Display', choices=PRESSURE_DISPLAY_choices, validators=[DataRequired(), PRESSURE_DISPLAY_validator])
+    WINDSPEED_DISPLAY                = SelectField('Wind Speed Display', choices=WINDSPEED_DISPLAY_choices, validators=[DataRequired(), WINDSPEED_DISPLAY_validator])
     CCD_TEMP_SCRIPT                  = StringField('External Temperature Script', validators=[CCD_TEMP_SCRIPT_validator])
     GPS_ENABLE                       = BooleanField('GPS Enable')
     TARGET_ADU                       = IntegerField('Target ADU (night)', validators=[DataRequired(), TARGET_ADU_validator])

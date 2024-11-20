@@ -436,6 +436,17 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.WINDSPEED_DISPLAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WINDSPEED_DISPLAY(class='form-select bg-secondary') }}
+            <div id="WINDSPEED_DISPLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Wind Speed units for display</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CCD_TEMP_SCRIPT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-5">
@@ -6038,6 +6049,7 @@ const field_names = [
     'CCD_TEMP',
     'TEMP_DISPLAY',
     'PRESSURE_DISPLAY',
+    'WINDSPEED_DISPLAY',
     'CCD_TEMP_SCRIPT',
     'TARGET_ADU',
     'TARGET_ADU_DAY',

@@ -1544,6 +1544,7 @@ class ConfigView(FormView):
             'CCD_TEMP'                       : self.indi_allsky_config.get('CCD_TEMP', 15.0),
             'TEMP_DISPLAY'                   : self.indi_allsky_config.get('TEMP_DISPLAY', 'c'),
             'PRESSURE_DISPLAY'               : self.indi_allsky_config.get('PRESSURE_DISPLAY', 'hpa'),
+            'WINDSPEED_DISPLAY'              : self.indi_allsky_config.get('WINDSPEED_DISPLAY', 'ms'),
             'CCD_TEMP_SCRIPT'                : self.indi_allsky_config.get('CCD_TEMP_SCRIPT', ''),
             'GPS_ENABLE'                     : self.indi_allsky_config.get('GPS_ENABLE', False),
             'TARGET_ADU'                     : self.indi_allsky_config.get('TARGET_ADU', 75),
@@ -2305,6 +2306,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
         self.indi_allsky_config['TEMP_DISPLAY']                         = str(request.json['TEMP_DISPLAY'])
         self.indi_allsky_config['PRESSURE_DISPLAY']                     = str(request.json['PRESSURE_DISPLAY'])
+        self.indi_allsky_config['WINDSPEED_DISPLAY']                    = str(request.json['WINDSPEED_DISPLAY'])
         self.indi_allsky_config['GPS_ENABLE']                           = bool(request.json['GPS_ENABLE'])
         self.indi_allsky_config['CCD_TEMP_SCRIPT']                      = str(request.json['CCD_TEMP_SCRIPT'])
         self.indi_allsky_config['TARGET_ADU']                           = int(request.json['TARGET_ADU'])
