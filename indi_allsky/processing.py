@@ -2784,6 +2784,38 @@ class ImageProcessor(object):
         self._moon_overlay.apply(self.image, self.astrometric_data['moon_cycle'], self.astrometric_data['moon_phase'])
 
 
+    def add_border(self):
+        top = self.config.get('IMAGE_BORDER', {}).get('TOP', 0)
+        left = self.config.get('IMAGE_BORDER', {}).get('LEFT', 0)
+        right = self.config.get('IMAGE_BORDER', {}).get('RIGHT', 0)
+        bottom = self.config.get('IMAGE_BORDER', {}).get('BOTTOM', 0)
+
+
+        if not top and not left and not right and not bottom:
+            return
+
+
+        border_color_bgr = list(self.config.get('IMAGE_BORDER', {}).get('COLOR', [0, 0, 0]))
+        border_color_bgr.reverse()
+
+
+        image_height, image_width = self.image.shape[:2]
+
+        new_height = image_height + top + bottom
+        new_width = image_width + left + right
+
+
+        new_image = numpy.full([new_height, new_width, 3], border_color_bgr, dtype=numpy.uint8)
+
+        new_image[
+            top:top + image_height,
+            left:left + image_width,
+        ] = self.image
+
+
+        self.image = new_image
+
+
     def _load_detection_mask(self):
         detect_mask = self.config.get('DETECT_MASK', '')
 
