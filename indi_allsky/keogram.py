@@ -46,6 +46,7 @@ class KeogramGenerator(object):
 
         self.x_offset = self.config.get('LENS_OFFSET_X', 0) + (border_left - border_right)
         self.y_offset = self.config.get('LENS_OFFSET_Y', 0) - (border_top - border_bottom)
+        #logger.info('X Offset: %d, Y Offset: %d', self.x_offset, self.y_offset)
 
 
         self.original_width = None
