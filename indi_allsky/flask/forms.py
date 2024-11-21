@@ -625,6 +625,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'sun_alt'    : 0.0,
         'moon_alt'   : 0.0,
         'moon_phase' : 0.0,
+        'moon_cycle' : 0.0,
         'moon_up'    : 'No',
         'sun_moon_sep' : 0.0,
         'mercury_alt'  : 0.0,
