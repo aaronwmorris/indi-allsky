@@ -3727,6 +3727,18 @@ class IndiAllskyConfigForm(FlaskForm):
             result = False
 
 
+        # border
+        if (self.IMAGE_BORDER__TOP.data + self.IMAGE_BORDER__BOTTOM.data) % 2:
+            self.IMAGE_BORDER__TOP.errors.append('Sum of top and bottom border must be divisible by 2')
+            self.IMAGE_BORDER__BOTTOM.errors.append('Sum of top and bottom border must be divisible by 2')
+            result = False
+
+        if (self.IMAGE_BORDER__LEFT.data + self.IMAGE_BORDER__RIGHT.data) % 2:
+            self.IMAGE_BORDER__LEFT.errors.append('Sum of left and right border must be divisible by 2')
+            self.IMAGE_BORDER__RIGHT.errors.append('Sum of left and right border must be divisible by 2')
+            result = False
+
+
         # focuser
         if self.FOCUSER__CLASSNAME.data:
             if self.FOCUSER__CLASSNAME.data.startswith('blinka_'):
