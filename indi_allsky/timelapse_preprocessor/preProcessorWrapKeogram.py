@@ -25,8 +25,16 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
         self.image_circle = self.config.get('TIMELAPSE', {}).get('IMAGE_CIRCLE', 2000)
         self.keogram_ratio = self.config.get('TIMELAPSE', {}).get('KEOGRAM_RATIO', 0.15)
-        self.offset_x = self.config.get('LENS_OFFSET_X', 0)
-        self.offset_y = self.config.get('LENS_OFFSET_Y', 0)
+
+
+        border_top = self.config.get('IMAGE_BORDER', {}).get('TOP', 0)
+        border_left = self.config.get('IMAGE_BORDER', {}).get('LEFT', 0)
+        border_right = self.config.get('IMAGE_BORDER', {}).get('RIGHT', 0)
+        border_bottom = self.config.get('IMAGE_BORDER', {}).get('BOTTOM', 0)
+
+        self.x_offset = self.config.get('LENS_OFFSET_X', 0) + int((border_left - border_right) / 2)
+        self.y_offset = self.config.get('LENS_OFFSET_Y', 0) - int((border_top - border_bottom) / 2)
+
 
         # this needs to be a class variable
         self.temp_seqfolder = tempfile.TemporaryDirectory(dir=self.image_dir, suffix='_timelapse')  # context manager automatically deletes files when finished
@@ -96,13 +104,13 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         #logger.info('Image: %d x %d', image_width, image_height)
 
 
-        if image_width < (self.image_circle + (keogram_height * 2) + abs(self.offset_x)):
-            final_width = self.image_circle + (keogram_height * 2) + abs(self.offset_x)
+        if image_width < (self.image_circle + (keogram_height * 2) + abs(self.x_offset)):
+            final_width = self.image_circle + (keogram_height * 2) + abs(self.x_offset)
         else:
             final_width = image_width
 
-        if image_height < (self.image_circle + (keogram_height * 2) + abs(self.offset_y)):
-            final_height = self.image_circle + (keogram_height * 2) + abs(self.offset_y)
+        if image_height < (self.image_circle + (keogram_height * 2) + abs(self.y_offset)):
+            final_height = self.image_circle + (keogram_height * 2) + abs(self.y_offset)
         else:
             final_height = image_height
 
@@ -152,8 +160,8 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
         f_image = numpy.zeros([final_height, final_width, 3], dtype=numpy.uint8)
         f_image[
-            int((final_height / 2) - (image_height / 2) + self.offset_y):int((final_height / 2) + (image_height / 2) + self.offset_y),
-            int((final_width / 2) - (image_width / 2) - self.offset_x):int((final_width / 2) + (image_width / 2) - self.offset_x),
+            int((final_height / 2) - (image_height / 2) + self.y_offset):int((final_height / 2) + (image_height / 2) + self.y_offset),
+            int((final_width / 2) - (image_width / 2) - self.x_offset):int((final_width / 2) + (image_width / 2) - self.x_offset),
         ] = image  # recenter the image circle in the new image
 
 
