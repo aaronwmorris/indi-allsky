@@ -38,6 +38,16 @@ class KeogramGenerator(object):
         self._crop_top = 0
         self._crop_bottom = 0
 
+
+        border_top = self.config.get('IMAGE_BORDER', {}).get('TOP', 0)
+        border_left = self.config.get('IMAGE_BORDER', {}).get('LEFT', 0)
+        border_right = self.config.get('IMAGE_BORDER', {}).get('RIGHT', 0)
+        border_bottom = self.config.get('IMAGE_BORDER', {}).get('BOTTOM', 0)
+
+        self.x_offset = self.config.get('LENS_OFFSET_X', 0) + (border_left - border_right)
+        self.y_offset = self.config.get('LENS_OFFSET_Y', 0) - (border_top - border_bottom)
+
+
         self.original_width = None
         self.original_height = None
 
@@ -145,15 +155,48 @@ class KeogramGenerator(object):
         if self.process_count <= self.skip_frames:
             return
 
-
         image_processing_start = time.time()
 
         self.timestamps_list.append(filename.stat().st_mtime)
 
-        height, width = image.shape[:2]
+        image_height, image_width = image.shape[:2]
+        #logger.info('Original: %d x %d', image_width, image_height)
 
 
-        rotated_image = self.rotate(image)
+        final_width = image_width + abs(self.x_offset)
+        final_height = image_height + abs(self.y_offset)
+        #logger.info('New: %d x %d', final_width, final_height)
+
+
+        if self.y_offset <= 0:
+            y_start = 0
+            y_end = image_height
+        else:
+            y_start = self.y_offset
+            y_end = image_height + self.y_offset
+
+        if self.x_offset >= 0:
+            x_start = 0
+            x_end = image_width
+        else:
+            x_start = abs(self.x_offset)
+            x_end = image_width + abs(self.x_offset)
+
+
+        f_image = numpy.zeros([final_height, final_width, 3], dtype=numpy.uint8)
+        f_image[
+            y_start:y_end,
+            x_start:x_end,
+        ] = image  # recenter the image circle in the new image
+
+
+        #cv2.line(f_image, (int(final_width / 2), 0), (int(final_width / 2), final_height), (0, 0, 128), 3)
+        #cv2.line(f_image, (0, int(final_height / 2)), (final_width, int(final_height / 2)), (0, 0, 128), 3)
+        #cv2.imwrite('/tmp/keogram_test.jpg', f_image, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #raise Exception()
+
+
+        rotated_image = self.rotate(f_image)
 
 
         rot_height, rot_width = rotated_image.shape[:2]
@@ -165,8 +208,8 @@ class KeogramGenerator(object):
         if isinstance(self.keogram_data, type(None)):
             # this only happens on the first image
 
-            self.original_height = height
-            self.original_width = width
+            self.original_height = final_height
+            self.original_width = final_width
 
             new_shape = rotated_center_line.shape
             logger.info('New Shape: %s', pformat(new_shape))
@@ -177,7 +220,7 @@ class KeogramGenerator(object):
             self.keogram_data = numpy.empty(new_shape, dtype=new_dtype)
 
 
-        if height != self.original_height or width != self.original_width:
+        if final_height != self.original_height or final_width != self.original_width:
             # all images have to match dimensions of the first image
             logger.error('Image with dimension mismatch: %s', filename)
             return
