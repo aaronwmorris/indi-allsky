@@ -34,6 +34,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
         self.x_offset = self.config.get('LENS_OFFSET_X', 0) + int((border_left - border_right) / 2)
         self.y_offset = self.config.get('LENS_OFFSET_Y', 0) - int((border_top - border_bottom) / 2)
+        #logger.info('X Offset: %d, Y Offset: %d', self.x_offset, self.y_offset)
 
 
         # this needs to be a class variable
@@ -104,15 +105,27 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         #logger.info('Image: %d x %d', image_width, image_height)
 
 
-        if image_width < (self.image_circle + (keogram_height * 2) + abs(self.x_offset)):
+        recenter_width = image_width + (abs(self.x_offset) * 2)
+        recenter_height = image_height + (abs(self.y_offset) * 2)
+        #logger.info('New: %d x %d', recenter_width, recenter_height)
+
+
+        recenter_image = numpy.zeros([recenter_height, recenter_width, 3], dtype=numpy.uint8)
+        recenter_image[
+            int((recenter_height / 2) - (image_height / 2) + self.y_offset):int((recenter_height / 2) + (image_height / 2) + self.y_offset),
+            int((recenter_width / 2) - (image_width / 2) - self.x_offset):int((recenter_width / 2) + (image_width / 2) - self.x_offset),
+        ] = image  # recenter the image circle in the new image
+
+
+        if recenter_width < (self.image_circle + (keogram_height * 2) + abs(self.x_offset)):
             final_width = self.image_circle + (keogram_height * 2) + abs(self.x_offset)
         else:
-            final_width = image_width
+            final_width = recenter_width
 
-        if image_height < (self.image_circle + (keogram_height * 2) + abs(self.y_offset)):
+        if recenter_height < (self.image_circle + (keogram_height * 2) + abs(self.y_offset)):
             final_height = self.image_circle + (keogram_height * 2) + abs(self.y_offset)
         else:
-            final_height = image_height
+            final_height = recenter_height
 
         #logger.info('Final: %d x %d', final_width, final_height)
 
@@ -160,9 +173,9 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
         f_image = numpy.zeros([final_height, final_width, 3], dtype=numpy.uint8)
         f_image[
-            int((final_height / 2) - (image_height / 2) + self.y_offset):int((final_height / 2) + (image_height / 2) + self.y_offset),
-            int((final_width / 2) - (image_width / 2) - self.x_offset):int((final_width / 2) + (image_width / 2) - self.x_offset),
-        ] = image  # recenter the image circle in the new image
+            int((final_height / 2) - (recenter_height / 2)):int((final_height / 2) + (recenter_height / 2)),
+            int((final_width / 2) - (recenter_width / 2)):int((final_width / 2) + (recenter_width / 2)),
+        ] = recenter_image
 
 
         # apply alpha mask

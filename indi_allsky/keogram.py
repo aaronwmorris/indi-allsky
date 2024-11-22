@@ -164,15 +164,15 @@ class KeogramGenerator(object):
         #logger.info('Original: %d x %d', image_width, image_height)
 
 
-        final_width = image_width + (abs(self.x_offset) * 2)
-        final_height = image_height + (abs(self.y_offset) * 2)
-        #logger.info('New: %d x %d', final_width, final_height)
+        recenter_width = image_width + (abs(self.x_offset) * 2)
+        recenter_height = image_height + (abs(self.y_offset) * 2)
+        #logger.info('New: %d x %d', recenter_width, recenter_height)
 
 
-        f_image = numpy.zeros([final_height, final_width, 3], dtype=numpy.uint8)
-        f_image[
-            int((final_height / 2) - (image_height / 2) + self.y_offset):int((final_height / 2) + (image_height / 2) + self.y_offset),
-            int((final_width / 2) - (image_width / 2) - self.x_offset):int((final_width / 2) + (image_width / 2) - self.x_offset),
+        recenter_image = numpy.zeros([recenter_height, recenter_width, 3], dtype=numpy.uint8)
+        recenter_image[
+            int((recenter_height / 2) - (image_height / 2) + self.y_offset):int((recenter_height / 2) + (image_height / 2) + self.y_offset),
+            int((recenter_width / 2) - (image_width / 2) - self.x_offset):int((recenter_width / 2) + (image_width / 2) - self.x_offset),
         ] = image  # recenter the image circle in the new image
 
 
@@ -183,7 +183,7 @@ class KeogramGenerator(object):
         #raise Exception()
 
 
-        rotated_image = self.rotate(f_image)
+        rotated_image = self.rotate(recenter_image)
 
 
         rot_height, rot_width = rotated_image.shape[:2]
@@ -195,8 +195,8 @@ class KeogramGenerator(object):
         if isinstance(self.keogram_data, type(None)):
             # this only happens on the first image
 
-            self.original_height = final_height
-            self.original_width = final_width
+            self.original_height = recenter_height
+            self.original_width = recenter_width
 
             new_shape = rotated_center_line.shape
             logger.info('New Shape: %s', pformat(new_shape))
@@ -207,7 +207,7 @@ class KeogramGenerator(object):
             self.keogram_data = numpy.empty(new_shape, dtype=new_dtype)
 
 
-        if final_height != self.original_height or final_width != self.original_width:
+        if recenter_height != self.original_height or recenter_width != self.original_width:
             # all images have to match dimensions of the first image
             logger.error('Image with dimension mismatch: %s', filename)
             return
