@@ -348,7 +348,7 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
     else
         VIRTUALENV_REQ=requirements/requirements_latest.txt
         VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
     fi
 
 
@@ -491,7 +491,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
     else
         VIRTUALENV_REQ=requirements/requirements_latest.txt
         VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
     fi
 
 
@@ -634,7 +634,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
     else
         VIRTUALENV_REQ=requirements/requirements_latest.txt
         VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
     fi
 
 
@@ -777,7 +777,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
     else
         VIRTUALENV_REQ=requirements/requirements_latest.txt
         VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
     fi
 
 
@@ -916,7 +916,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
     PYTHON_BIN=python3
 
     VIRTUALENV_REQ=requirements/requirements_debian10.txt
-    VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+    VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
 
 
     if [[ "$CAMERA_INTERFACE" =~ ^libcamera ]]; then
@@ -1059,7 +1059,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
     PYTHON_BIN=python3
 
     VIRTUALENV_REQ=requirements/requirements_debian10.txt
-    VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+    VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
 
 
     if [[ "$CAMERA_INTERFACE" =~ ^libcamera ]]; then
@@ -1196,7 +1196,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
     else
         VIRTUALENV_REQ=requirements/requirements_latest.txt
         VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
     fi
 
 
@@ -1354,7 +1354,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
     else
         VIRTUALENV_REQ=requirements/requirements_latest.txt
         VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
     fi
 
 
@@ -1501,7 +1501,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
 
     VIRTUALENV_REQ=requirements/requirements_latest.txt
     VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-    VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+    VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
 
 
     if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
