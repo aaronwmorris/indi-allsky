@@ -320,6 +320,7 @@ class VideoWorker(Process):
                 func.max(IndiAllSkyDbImageTable.kpindex).label('image_max_kpindex'),
                 func.max(IndiAllSkyDbImageTable.ovation_max).label('image_max_ovation_max'),
                 func.max(IndiAllSkyDbImageTable.smoke_rating).label('image_max_smoke_rating'),
+                func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),
                 func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
                 func.max(IndiAllSkyDbImageTable.moonphase).label('image_max_moonphase'),
                 func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
@@ -336,13 +337,15 @@ class VideoWorker(Process):
         try:
             max_kpindex = float(timelapse_data.image_max_kpindex)
             max_ovation_max = int(timelapse_data.image_max_ovation_max)
+            max_stars = int(timelapse_data.image_max_stars)
             avg_stars = float(timelapse_data.image_avg_stars)
             max_moonphase = float(timelapse_data.image_max_moonphase)
             avg_sqm = float(timelapse_data.image_avg_sqm)
         except TypeError:
             max_kpindex = 0.0
             max_ovation_max = 0
-            avg_stars = 0
+            max_stars = 0
+            avg_stars = 0.0
             max_moonphase = -1.0
             avg_sqm = 0.0
 
@@ -389,6 +392,7 @@ class VideoWorker(Process):
             'max_kpindex'       : max_kpindex,
             'max_ovation_max'   : max_ovation_max,
             'max_smoke_rating'  : max_smoke_rating,
+            'max_stars'         : max_stars,
             'avg_stars'         : avg_stars,
             'max_moonphase'     : max_moonphase,
             'avg_sqm'           : avg_sqm,
@@ -576,6 +580,7 @@ class VideoWorker(Process):
                 func.max(IndiAllSkyDbImageTable.kpindex).label('image_max_kpindex'),
                 func.max(IndiAllSkyDbImageTable.ovation_max).label('image_max_ovation_max'),
                 func.max(IndiAllSkyDbImageTable.smoke_rating).label('image_max_smoke_rating'),
+                func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),
                 func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
                 func.max(IndiAllSkyDbImageTable.moonphase).label('image_max_moonphase'),
                 func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
@@ -592,13 +597,15 @@ class VideoWorker(Process):
         try:
             max_kpindex = float(timelapse_data.image_max_kpindex)
             max_ovation_max = int(timelapse_data.image_max_ovation_max)
+            max_stars = int(timelapse_data.image_max_stars)
             avg_stars = float(timelapse_data.image_avg_stars)
             max_moonphase = float(timelapse_data.image_max_moonphase)
             avg_sqm = float(timelapse_data.image_avg_sqm)
         except TypeError:
             max_kpindex = 0.0
             max_ovation_max = 0
-            avg_stars = 0
+            max_stars = 0
+            avg_stars = 0.0
             max_moonphase = -1.0
             avg_sqm = 0.0
 
@@ -647,6 +654,7 @@ class VideoWorker(Process):
             'max_kpindex'       : max_kpindex,
             'max_ovation_max'   : max_ovation_max,
             'max_smoke_rating'  : max_smoke_rating,
+            'max_stars'         : max_stars,
             'avg_stars'         : avg_stars,
             'max_moonphase'     : max_moonphase,
             'avg_sqm'           : avg_sqm,
@@ -831,6 +839,7 @@ class VideoWorker(Process):
                 func.max(IndiAllSkyDbImageTable.kpindex).label('image_max_kpindex'),
                 func.max(IndiAllSkyDbImageTable.ovation_max).label('image_max_ovation_max'),
                 func.max(IndiAllSkyDbImageTable.smoke_rating).label('image_max_smoke_rating'),
+                func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),
                 func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
                 func.max(IndiAllSkyDbImageTable.moonphase).label('image_max_moonphase'),
                 func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
@@ -847,13 +856,15 @@ class VideoWorker(Process):
         try:
             max_kpindex = float(timelapse_data.image_max_kpindex)
             max_ovation_max = int(timelapse_data.image_max_ovation_max)
+            max_stars = int(timelapse_data.image_max_stars)
             avg_stars = float(timelapse_data.image_avg_stars)
             max_moonphase = float(timelapse_data.image_max_moonphase)
             avg_sqm = float(timelapse_data.image_avg_sqm)
         except TypeError:
             max_kpindex = 0.0
             max_ovation_max = 0
-            avg_stars = 0
+            max_stars = 0
+            avg_stars = 0.0
             max_moonphase = -1.0
             avg_sqm = 0.0
 
@@ -900,6 +911,7 @@ class VideoWorker(Process):
             'max_kpindex'       : max_kpindex,
             'max_ovation_max'   : max_ovation_max,
             'max_smoke_rating'  : max_smoke_rating,
+            'max_stars'         : max_stars,
             'avg_stars'         : avg_stars,
             'max_moonphase'     : max_moonphase,
             'avg_sqm'           : avg_sqm,
@@ -1136,6 +1148,7 @@ class VideoWorker(Process):
                 func.max(IndiAllSkyDbImageTable.kpindex).label('image_max_kpindex'),
                 func.max(IndiAllSkyDbImageTable.ovation_max).label('image_max_ovation_max'),
                 func.max(IndiAllSkyDbImageTable.smoke_rating).label('image_max_smoke_rating'),
+                func.max(IndiAllSkyDbImageTable.stars).label('image_max_stars'),
                 func.avg(IndiAllSkyDbImageTable.stars).label('image_avg_stars'),
                 func.max(IndiAllSkyDbImageTable.moonphase).label('image_max_moonphase'),
                 func.avg(IndiAllSkyDbImageTable.sqm).label('image_avg_sqm'),
@@ -1152,13 +1165,15 @@ class VideoWorker(Process):
         try:
             max_kpindex = float(image_data.image_max_kpindex)
             max_ovation_max = int(image_data.image_max_ovation_max)
+            max_stars = int(image_data.image_max_stars)
             avg_stars = float(image_data.image_avg_stars)
             max_moonphase = float(image_data.image_max_moonphase)
             avg_sqm = float(image_data.image_avg_sqm)
         except TypeError:
             max_kpindex = 0.0
             max_ovation_max = 0
-            avg_stars = 0
+            max_stars = 0
+            avg_stars = 0.0
             max_moonphase = -1.0
             avg_sqm = 0.0
 
@@ -1206,6 +1221,7 @@ class VideoWorker(Process):
             'max_kpindex'       : max_kpindex,
             'max_ovation_max'   : max_ovation_max,
             'max_smoke_rating'  : max_smoke_rating,
+            'max_stars'         : max_stars,
             'avg_stars'         : avg_stars,
             'max_moonphase'     : max_moonphase,
             'avg_sqm'           : avg_sqm,
@@ -1228,6 +1244,7 @@ class VideoWorker(Process):
             'max_kpindex'       : max_kpindex,
             'max_ovation_max'   : max_ovation_max,
             'max_smoke_rating'  : max_smoke_rating,
+            'max_stars'         : max_stars,
             'avg_stars'         : avg_stars,
             'max_moonphase'     : max_moonphase,
             'avg_sqm'           : avg_sqm,
@@ -1249,7 +1266,8 @@ class VideoWorker(Process):
             'max_kpindex'       : max_kpindex,
             'max_ovation_max'   : max_ovation_max,
             'max_smoke_rating'  : max_smoke_rating,
-            'max_stars'         : avg_stars,
+            'max_stars'         : max_stars,
+            'avg_stars'         : avg_stars,
             'max_moonphase'     : max_moonphase,
             'max_sqm'           : avg_sqm,
         }
