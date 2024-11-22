@@ -44,8 +44,8 @@ class KeogramGenerator(object):
         border_right = self.config.get('IMAGE_BORDER', {}).get('RIGHT', 0)
         border_bottom = self.config.get('IMAGE_BORDER', {}).get('BOTTOM', 0)
 
-        self.x_offset = self.config.get('LENS_OFFSET_X', 0) + (border_left - border_right)
-        self.y_offset = self.config.get('LENS_OFFSET_Y', 0) - (border_top - border_bottom)
+        self.x_offset = self.config.get('LENS_OFFSET_X', 0) + int((border_left - border_right) / 2)
+        self.y_offset = self.config.get('LENS_OFFSET_Y', 0) - int((border_top - border_bottom) / 2)
         #logger.info('X Offset: %d, Y Offset: %d', self.x_offset, self.y_offset)
 
 
@@ -164,33 +164,19 @@ class KeogramGenerator(object):
         #logger.info('Original: %d x %d', image_width, image_height)
 
 
-        final_width = image_width + abs(self.x_offset)
-        final_height = image_height + abs(self.y_offset)
+        final_width = image_width + (abs(self.x_offset) * 2)
+        final_height = image_height + (abs(self.y_offset) * 2)
         #logger.info('New: %d x %d', final_width, final_height)
-
-
-        if self.y_offset <= 0:
-            y_start = 0
-            y_end = image_height
-        else:
-            y_start = self.y_offset
-            y_end = image_height + self.y_offset
-
-        if self.x_offset >= 0:
-            x_start = 0
-            x_end = image_width
-        else:
-            x_start = abs(self.x_offset)
-            x_end = image_width + abs(self.x_offset)
 
 
         f_image = numpy.zeros([final_height, final_width, 3], dtype=numpy.uint8)
         f_image[
-            y_start:y_end,
-            x_start:x_end,
+            int((final_height / 2) - (image_height / 2) + self.y_offset):int((final_height / 2) + (image_height / 2) + self.y_offset),
+            int((final_width / 2) - (image_width / 2) - self.x_offset):int((final_width / 2) + (image_width / 2) - self.x_offset),
         ] = image  # recenter the image circle in the new image
 
 
+        ### Draw a crosshair for reference
         #cv2.line(f_image, (int(final_width / 2), 0), (int(final_width / 2), final_height), (0, 0, 128), 3)
         #cv2.line(f_image, (0, int(final_height / 2)), (final_width, int(final_height / 2)), (0, 0, 128), 3)
         #cv2.imwrite('/tmp/keogram_test.jpg', f_image, [cv2.IMWRITE_JPEG_QUALITY, 90])
