@@ -632,6 +632,8 @@ class ImageWorker(Process):
             self.image_processor.scale_image()
 
 
+        self.image_processor.add_border()
+
         self.image_processor.moon_overlay()
 
         self.image_processor.orb_image()

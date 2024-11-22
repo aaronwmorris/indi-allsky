@@ -1319,6 +1319,70 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.IMAGE_BORDER__TOP.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_BORDER__TOP(class='form-control bg-secondary') }}
+            <div id="IMAGE_BORDER__TOP-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Add additional boarder area to the image</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_BORDER__LEFT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_BORDER__LEFT(class='form-control bg-secondary') }}
+            <div id="IMAGE_BORDER__LEFT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_BORDER__RIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_BORDER__RIGHT(class='form-control bg-secondary') }}
+            <div id="IMAGE_BORDER__RIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_BORDER__BOTTOM.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_BORDER__BOTTOM(class='form-control bg-secondary') }}
+            <div id="IMAGE_BORDER__BOTTOM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_BORDER__COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_BORDER__COLOR(class='form-control bg-secondary') }}
+            <div id="IMAGE_BORDER__COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Border color in R,G,B</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.IMAGE_EXPORT_RAW.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -6190,6 +6254,11 @@ const field_names = [
     'ORB_PROPERTIES__SUN_COLOR',
     'ORB_PROPERTIES__MOON_COLOR',
     'ORB_PROPERTIES__AZ_OFFSET',
+    'IMAGE_BORDER__TOP',
+    'IMAGE_BORDER__LEFT',
+    'IMAGE_BORDER__RIGHT',
+    'IMAGE_BORDER__BOTTOM',
+    'IMAGE_BORDER__COLOR',
     'UPLOAD_WORKERS',
     'FILETRANSFER__CLASSNAME',
     'FILETRANSFER__HOST',

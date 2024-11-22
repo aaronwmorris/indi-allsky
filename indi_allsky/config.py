@@ -297,6 +297,13 @@ class IndiAllSkyConfigBase(object):
             "AZ_OFFSET"      : 0.0,
             "RETROGRADE"     : False,
         },
+        "IMAGE_BORDER" : {
+            "TOP"       : 0,
+            "LEFT"      : 0,
+            "RIGHT"     : 0,
+            "BOTTOM"    : 0,
+            "COLOR"     : [0, 0, 0],
+        },
         "UPLOAD_WORKERS" : 2,
         "FILETRANSFER" : {
             "CLASSNAME"              : "pycurl_sftp",  # pycurl_sftp, pycurl_ftps, pycurl_ftpes, paramiko_sftp, python_ftp, python_ftpes

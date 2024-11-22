@@ -1713,6 +1713,10 @@ class ConfigView(FormView):
             'ORB_PROPERTIES__RADIUS'         : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('RADIUS', 9),
             'ORB_PROPERTIES__AZ_OFFSET'      : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('AZ_OFFSET', 0.0),
             'ORB_PROPERTIES__RETROGRADE'     : self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('RETROGRADE', False),
+            'IMAGE_BORDER__TOP'              : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('TOP', 0),
+            'IMAGE_BORDER__LEFT'             : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('LEFT', 0),
+            'IMAGE_BORDER__RIGHT'            : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('RIGHT', 0),
+            'IMAGE_BORDER__BOTTOM'           : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('BOTTOM', 0),
             'UPLOAD_WORKERS'                 : self.indi_allsky_config.get('UPLOAD_WORKERS', 2),
             'FILETRANSFER__CLASSNAME'        : self.indi_allsky_config.get('FILETRANSFER', {}).get('CLASSNAME', 'pycurl_sftp'),
             'FILETRANSFER__HOST'             : self.indi_allsky_config.get('FILETRANSFER', {}).get('HOST', ''),
@@ -2030,6 +2034,10 @@ class ConfigView(FormView):
         orb_properties__moon_color_str = [str(x) for x in orb_properties__moon_color]
         form_data['ORB_PROPERTIES__MOON_COLOR'] = ','.join(orb_properties__moon_color_str)
 
+        # Border color
+        image_border__color = self.indi_allsky_config.get('IMAGE_BORDER', {}).get('COLOR', [0, 0, 0])
+        image_border__color_str = [str(x) for x in image_border__color]
+        form_data['IMAGE_BORDER__COLOR'] = ','.join(image_border__color_str)
 
         # Youtube
         youtube_tags = self.indi_allsky_config.get('YOUTUBE', {}).get('TAGS', [])
@@ -2170,8 +2178,42 @@ class AjaxConfigView(BaseView):
 
 
         # sanity check
-        if not self.indi_allsky_config.get('CCD_CONFIG'):
-            self.indi_allsky_config['CCD_CONFIG'] = {}
+        leaf_list = (
+            'CCD_CONFIG',
+            'IMAGE_FILE_COMPRESSION',
+            'IMAGE_CIRCLE_MASK',
+            'FISH2PANO',
+            'TEXT_PROPERTIES',
+            'CARDINAL_DIRS',
+            'IMAGE_STRETCH',
+            'ORB_PROPERTIES',
+            'IMAGE_BORDER',
+            'FILETRANSFER',
+            'S3UPLOAD',
+            'MQTTPUBLISH',
+            'SYNCAPI',
+            'YOUTUBE',
+            'LIBCAMERA',
+            'PYCURL_CAMERA',
+            'ACCUM_CAMERA',
+            'FOCUSER',
+            'DEW_HEATER',
+            'FAN',
+            'GENERIC_GPIO',
+            'TEMP_SENSOR',
+            'THUMBNAILS',
+            'HEALTHCHECK',
+            'CHARTS',
+            'TIMELAPSE',
+            'MOON_OVERLAY',
+            'ADSB',
+            'SATELLITE_TRACK',
+        )
+
+        for leaf in leaf_list:
+            if not self.indi_allsky_config.get(leaf):
+                self.indi_allsky_config[leaf] = {}
+
 
         if not self.indi_allsky_config['CCD_CONFIG'].get('NIGHT'):
             self.indi_allsky_config['CCD_CONFIG']['NIGHT'] = {}
@@ -2182,89 +2224,10 @@ class AjaxConfigView(BaseView):
         if not self.indi_allsky_config['CCD_CONFIG'].get('DAY'):
             self.indi_allsky_config['CCD_CONFIG']['DAY'] = {}
 
-        if not self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION'):
-            self.indi_allsky_config['IMAGE_FILE_COMPRESSION'] = {}
-
-        if not self.indi_allsky_config.get('IMAGE_CIRCLE_MASK'):
-            self.indi_allsky_config['IMAGE_CIRCLE_MASK'] = {}
-
-        if not self.indi_allsky_config.get('FISH2PANO'):
-            self.indi_allsky_config['FISH2PANO'] = {}
-
-        if not self.indi_allsky_config.get('TEXT_PROPERTIES'):
-            self.indi_allsky_config['TEXT_PROPERTIES'] = {}
-
-        if not self.indi_allsky_config.get('CARDINAL_DIRS'):
-            self.indi_allsky_config['CARDINAL_DIRS'] = {}
-
-        if not self.indi_allsky_config.get('IMAGE_STRETCH'):
-            self.indi_allsky_config['IMAGE_STRETCH'] = {}
-
-        if not self.indi_allsky_config.get('ORB_PROPERTIES'):
-            self.indi_allsky_config['ORB_PROPERTIES'] = {}
-
-        if not self.indi_allsky_config.get('FILETRANSFER'):
-            self.indi_allsky_config['FILETRANSFER'] = {}
-
-        if not self.indi_allsky_config.get('S3UPLOAD'):
-            self.indi_allsky_config['S3UPLOAD'] = {}
-
-        if not self.indi_allsky_config.get('MQTTPUBLISH'):
-            self.indi_allsky_config['MQTTPUBLISH'] = {}
-
-        if not self.indi_allsky_config.get('SYNCAPI'):
-            self.indi_allsky_config['SYNCAPI'] = {}
-
-        if not self.indi_allsky_config.get('YOUTUBE'):
-            self.indi_allsky_config['YOUTUBE'] = {}
-
-        if not self.indi_allsky_config.get('LIBCAMERA'):
-            self.indi_allsky_config['LIBCAMERA'] = {}
-
-        if not self.indi_allsky_config.get('PYCURL_CAMERA'):
-            self.indi_allsky_config['PYCURL_CAMERA'] = {}
-
-        if not self.indi_allsky_config.get('ACCUM_CAMERA'):
-            self.indi_allsky_config['ACCUM_CAMERA'] = {}
-
-        if not self.indi_allsky_config.get('FOCUSER'):
-            self.indi_allsky_config['FOCUSER'] = {}
-
-        if not self.indi_allsky_config.get('DEW_HEATER'):
-            self.indi_allsky_config['DEW_HEATER'] = {}
-
-        if not self.indi_allsky_config.get('FAN'):
-            self.indi_allsky_config['FAN'] = {}
-
-        if not self.indi_allsky_config.get('GENERIC_GPIO'):
-            self.indi_allsky_config['GENERIC_GPIO'] = {}
-
-        if not self.indi_allsky_config.get('TEMP_SENSOR'):
-            self.indi_allsky_config['TEMP_SENSOR'] = {}
-
-        if not self.indi_allsky_config.get('THUMBNAILS'):
-            self.indi_allsky_config['THUMBNAILS'] = {}
-
-        if not self.indi_allsky_config.get('HEALTHCHECK'):
-            self.indi_allsky_config['HEALTHCHECK'] = {}
-
-        if not self.indi_allsky_config.get('CHARTS'):
-            self.indi_allsky_config['CHARTS'] = {}
-
-        if not self.indi_allsky_config.get('TIMELAPSE'):
-            self.indi_allsky_config['TIMELAPSE'] = {}
-
-        if not self.indi_allsky_config.get('MOON_OVERLAY'):
-            self.indi_allsky_config['MOON_OVERLAY'] = {}
-
-        if not self.indi_allsky_config.get('ADSB'):
-            self.indi_allsky_config['ADSB'] = {}
-
-        if not self.indi_allsky_config.get('SATELLITE_TRACK'):
-            self.indi_allsky_config['SATELLITE_TRACK'] = {}
 
         if not self.indi_allsky_config.get('FITSHEADERS'):
             self.indi_allsky_config['FITSHEADERS'] = [['', ''], ['', ''], ['', ''], ['', ''], ['', '']]
+
 
         # update data
         self.indi_allsky_config['CAMERA_INTERFACE']                     = str(request.json['CAMERA_INTERFACE'])
@@ -2477,6 +2440,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['ORB_PROPERTIES']['RADIUS']             = int(request.json['ORB_PROPERTIES__RADIUS'])
         self.indi_allsky_config['ORB_PROPERTIES']['AZ_OFFSET']          = float(request.json['ORB_PROPERTIES__AZ_OFFSET'])
         self.indi_allsky_config['ORB_PROPERTIES']['RETROGRADE']         = bool(request.json['ORB_PROPERTIES__RETROGRADE'])
+        self.indi_allsky_config['IMAGE_BORDER']['TOP']                  = int(request.json['IMAGE_BORDER__TOP'])
+        self.indi_allsky_config['IMAGE_BORDER']['LEFT']                 = int(request.json['IMAGE_BORDER__LEFT'])
+        self.indi_allsky_config['IMAGE_BORDER']['RIGHT']                = int(request.json['IMAGE_BORDER__RIGHT'])
+        self.indi_allsky_config['IMAGE_BORDER']['BOTTOM']               = int(request.json['IMAGE_BORDER__BOTTOM'])
         self.indi_allsky_config['UPLOAD_WORKERS']                       = int(request.json['UPLOAD_WORKERS'])
         self.indi_allsky_config['FILETRANSFER']['CLASSNAME']            = str(request.json['FILETRANSFER__CLASSNAME'])
         self.indi_allsky_config['FILETRANSFER']['HOST']                 = str(request.json['FILETRANSFER__HOST'])
@@ -2763,6 +2730,11 @@ class AjaxConfigView(BaseView):
         moon_color_str = str(request.json['ORB_PROPERTIES__MOON_COLOR'])
         moon_r, moon_g, moon_b = moon_color_str.split(',')
         self.indi_allsky_config['ORB_PROPERTIES']['MOON_COLOR'] = [int(moon_r), int(moon_g), int(moon_b)]
+
+        # IMAGE_BORDER COLOR
+        image_border__color_str = str(request.json['IMAGE_BORDER__COLOR'])
+        border_r, border_g, border_b = image_border__color_str.split(',')
+        self.indi_allsky_config['IMAGE_BORDER']['COLOR'] = [int(border_r), int(border_g), int(border_b)]
 
 
         # Youtube tags

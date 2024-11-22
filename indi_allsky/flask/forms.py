@@ -625,6 +625,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'sun_alt'    : 0.0,
         'moon_alt'   : 0.0,
         'moon_phase' : 0.0,
+        'moon_cycle' : 0.0,
         'moon_up'    : 'No',
         'sun_moon_sep' : 0.0,
         'mercury_alt'  : 0.0,
@@ -1568,6 +1569,17 @@ def ORB_PROPERTIES__AZ_OFFSET_validator(form, field):
 
     if field.data > 180:
         raise ValidationError('Azimuth Offset must be less than 180')
+
+
+def IMAGE_BORDER_SIDE_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Border must be 0 or greater')
+
+    if field.data > 1000:
+        raise ValidationError('Border must be less than 1000')
 
 
 def UPLOAD_WORKERS_validator(form, field):
@@ -3364,6 +3376,11 @@ class IndiAllskyConfigForm(FlaskForm):
     ORB_PROPERTIES__MOON_COLOR       = StringField('Moon Orb Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     ORB_PROPERTIES__AZ_OFFSET        = FloatField('Azimuth Offset', validators=[ORB_PROPERTIES__AZ_OFFSET_validator])
     ORB_PROPERTIES__RETROGRADE       = BooleanField('Reverse Orb Motion')
+    IMAGE_BORDER__TOP                = IntegerField('Image Border Top', validators=[IMAGE_BORDER_SIDE_validator])
+    IMAGE_BORDER__LEFT               = IntegerField('Image Border Left', validators=[IMAGE_BORDER_SIDE_validator])
+    IMAGE_BORDER__RIGHT              = IntegerField('Image Border Right', validators=[IMAGE_BORDER_SIDE_validator])
+    IMAGE_BORDER__BOTTOM             = IntegerField('Image Border Bottom', validators=[IMAGE_BORDER_SIDE_validator])
+    IMAGE_BORDER__COLOR              = StringField('Border Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     UPLOAD_WORKERS                   = IntegerField('Upload Workers', validators=[DataRequired(), UPLOAD_WORKERS_validator])
     FILETRANSFER__CLASSNAME          = SelectField('Protocol', choices=FILETRANSFER__CLASSNAME_choices, validators=[DataRequired(), FILETRANSFER__CLASSNAME_validator])
     FILETRANSFER__HOST               = StringField('Host', validators=[FILETRANSFER__HOST_validator])
@@ -3707,6 +3724,18 @@ class IndiAllskyConfigForm(FlaskForm):
         mod_image_crop_y = (self.IMAGE_CROP_ROI_Y2.data - self.IMAGE_CROP_ROI_Y1.data) % 2
         if mod_image_crop_y:
             self.IMAGE_CROP_ROI_Y2.errors.append('Y coordinates must be divisible by 2')
+            result = False
+
+
+        # border
+        if (self.IMAGE_BORDER__TOP.data + self.IMAGE_BORDER__BOTTOM.data) % 2:
+            self.IMAGE_BORDER__TOP.errors.append('Sum of top and bottom border must be divisible by 2')
+            self.IMAGE_BORDER__BOTTOM.errors.append('Sum of top and bottom border must be divisible by 2')
+            result = False
+
+        if (self.IMAGE_BORDER__LEFT.data + self.IMAGE_BORDER__RIGHT.data) % 2:
+            self.IMAGE_BORDER__LEFT.errors.append('Sum of left and right border must be divisible by 2')
+            self.IMAGE_BORDER__RIGHT.errors.append('Sum of left and right border must be divisible by 2')
             result = False
 
 

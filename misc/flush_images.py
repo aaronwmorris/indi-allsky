@@ -149,56 +149,40 @@ class FlushImages(object):
             .order_by(IndiAllSkyDbPanoramaImageTable.createDate.asc())
 
 
-        image_count = image_query.count()
-        fits_image_count = fits_image_query.count()
-        raw_image_count = raw_image_query.count()
-        panorama_image_count = panorama_image_query.count()
+        logger.warning('Found %d images to delete', image_query.count())
+        logger.warning('Found %d Panorama images to delete', panorama_image_query.count())
+        logger.warning('Found %d FITS images to delete', fits_image_query.count())
+        logger.warning('Found %d RAW images to delete', raw_image_query.count())
+        logger.info('Proceeding in 10 seconds')
 
-        file_count = image_count
-        file_count += fits_image_count
-        file_count += raw_image_count
-        file_count += panorama_image_count
+        time.sleep(10)
 
 
         ### Getting IDs first then deleting each file is faster than deleting all files with
         ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
         ### to recache after every delete which cause a 1-5 second lag for each delete
 
-        image_id_list = list()
-        for entry in image_query:
-            image_id_list.append(entry.id)
 
-        fits_id_list = list()
-        for entry in fits_image_query:
-            fits_id_list.append(entry.id)
-
-        raw_id_list = list()
-        for entry in raw_image_query:
-            raw_id_list.append(entry.id)
-
-        panorama_image_id_list = list()
-        for entry in panorama_image_query:
-            panorama_image_id_list.append(entry.id)
+        asset_lists = [
+            (image_query, IndiAllSkyDbImageTable),
+            (panorama_image_query, IndiAllSkyDbPanoramaImageTable),
+            (fits_image_query, IndiAllSkyDbFitsImageTable),
+            (raw_image_query, IndiAllSkyDbRawImageTable),
+        ]
 
 
-        logger.warning('Flushing %d Images', image_count)
-        time.sleep(3.0)
-        self._deleteAssets(IndiAllSkyDbImageTable, image_id_list)
+        delete_count = 0
+        for asset_list, asset_table in asset_lists:
+            while True:
+                id_list = [entry.id for entry in asset_list.limit(500)]
 
-        logger.warning('Flushing %d FITS', fits_image_count)
-        time.sleep(3.0)
-        self._deleteAssets(IndiAllSkyDbFitsImageTable, fits_id_list)
+                if not id_list:
+                    break
 
-        logger.warning('Flushing %d RAW', raw_image_count)
-        time.sleep(3.0)
-        self._deleteAssets(IndiAllSkyDbRawImageTable, raw_id_list)
-
-        logger.warning('Flushing %d Panorama Images', panorama_image_count)
-        time.sleep(3.0)
-        self._deleteAssets(IndiAllSkyDbPanoramaImageTable, panorama_image_id_list)
+                delete_count += self._deleteAssets(asset_table, id_list)
 
 
-        return file_count
+        return delete_count
 
 
     def flushTimelapses(self, camera_id):
@@ -232,95 +216,55 @@ class FlushImages(object):
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .order_by(IndiAllSkyDbPanoramaVideoTable.createDate.asc())
 
-        video_count = video_query.count()
-        mini_video_count = mini_video_query.count()
-        keogram_count = keogram_query.count()
-        startrail_count = startrail_query.count()
-        startrail_video_count = startrail_video_query.count()
-        panorama_video_count = panorama_video_query.count()
 
+        logger.warning('Found %d videos to delete', video_query.count())
+        logger.warning('Found %d mini videos to delete', mini_video_query.count())
+        logger.warning('Found %d keograms to delete', keogram_query.count())
+        logger.warning('Found %d star trails to delete', startrail_query.count())
+        logger.warning('Found %d star trail videos to delete', startrail_video_query.count())
+        logger.warning('Found %d panorama videos to delete', panorama_video_query.count())
+        logger.info('Proceeding in 10 seconds')
 
-        file_count = video_count
-        file_count += mini_video_count
-        file_count += keogram_count
-        file_count += startrail_count
-        file_count += startrail_video_count
-        file_count += panorama_video_count
+        time.sleep(10)
 
 
         ### Getting IDs first then deleting each file is faster than deleting all files with
         ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
         ### to recache after every delete which cause a 1-5 second lag for each delete
 
-        video_id_list = list()
-        for entry in video_query:
-            video_id_list.append(entry.id)
 
-        mini_video_id_list = list()
-        for entry in mini_video_query:
-            mini_video_id_list.append(entry.id)
-
-        keogram_id_list = list()
-        for entry in keogram_query:
-            keogram_id_list.append(entry.id)
-
-        startrail_image_id_list = list()
-        for entry in startrail_query:
-            startrail_image_id_list.append(entry.id)
-
-        startrail_video_id_list = list()
-        for entry in startrail_video_query:
-            startrail_video_id_list.append(entry.id)
-
-        panorama_video_id_list = list()
-        for entry in panorama_video_query:
-            panorama_video_id_list.append(entry.id)
+        asset_lists = [
+            (video_query, IndiAllSkyDbVideoTable),
+            (mini_video_query, IndiAllSkyDbMiniVideoTable),
+            (keogram_query, IndiAllSkyDbKeogramTable),
+            (startrail_query, IndiAllSkyDbStarTrailsTable),
+            (startrail_video_query, IndiAllSkyDbStarTrailsVideoTable),
+            (panorama_video_query, IndiAllSkyDbPanoramaVideoTable),
+        ]
 
 
-        logger.warning('Flushing %d Timelapse videos', video_count)
-        time.sleep(3.0)
-        self._deleteAssets(IndiAllSkyDbVideoTable, video_id_list)
+        delete_count = 0
+        for asset_list, asset_table in asset_lists:
+            while True:
+                id_list = [entry.id for entry in asset_list.limit(500)]
 
-        logger.warning('Flushing %d Mini videos', mini_video_count)
-        time.sleep(3.0)
-        self._deleteAssets(IndiAllSkyDbMiniVideoTable, mini_video_id_list)
+                if not id_list:
+                    break
 
-        logger.warning('Flushing %d Keograms', mini_video_count)
-        time.sleep(3.0)
-        self._deleteAssets(IndiAllSkyDbKeogramTable, keogram_id_list)
-
-        logger.warning('Flushing %d Startrail images', startrail_count)
-        time.sleep(3.0)
-        self._deleteAssets(IndiAllSkyDbStarTrailsTable, startrail_image_id_list)
-
-        logger.warning('Flushing %d Startrail videos', startrail_video_count)
-        time.sleep(3.0)
-        self._deleteAssets(IndiAllSkyDbStarTrailsVideoTable, startrail_video_id_list)
-
-        logger.warning('Flushing %d Panorama videos', panorama_video_count)
-        time.sleep(3.0)
-        self._deleteAssets(IndiAllSkyDbPanoramaVideoTable, panorama_video_id_list)
+                delete_count += self._deleteAssets(asset_table, id_list)
 
 
-        return file_count
+        return delete_count
 
 
     def _deleteAssets(self, table, entry_id_list):
-        for x, entry_id in enumerate(entry_id_list):
-            if self._shutdown:
-                sys.exit(1)
-
-
+        delete_count = 0
+        for entry_id in entry_id_list:
             entry = table.query\
                 .filter(table.id == entry_id)\
                 .one()
 
-
-            if x % 500 == 0:
-                logger.info('Removed %d %s entries', x, entry.__class__.__name__)
-
-
-            #logger.info('Removing %s entry: %s', entry.__class__.__name__, entry.filename)
+            logger.info('Removing old %s entry: %s', entry.__class__.__name__, entry.filename)
 
             try:
                 entry.deleteAsset()
@@ -330,6 +274,13 @@ class FlushImages(object):
 
             db.session.delete(entry)
             db.session.commit()
+
+            delete_count += 1
+
+            if self._shutdown:
+                sys.exit(1)
+
+        return delete_count
 
 
 if __name__ == "__main__":
