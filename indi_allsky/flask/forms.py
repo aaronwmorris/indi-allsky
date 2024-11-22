@@ -4837,6 +4837,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 'max_kpindex'       : data.get('max_kpindex', 0.0),
                 'max_ovation_max'   : data.get('max_ovation_max', 0),
                 'max_moonphase'     : data.get('max_moonphase', 0),  # might be null
+                'max_stars'         : int(data.get('max_stars', 0)),
                 'avg_stars'         : int(data.get('avg_stars', 0)),
                 'avg_sqm'           : int(data.get('avg_sqm', 0)),
                 'youtube_uploaded'  : bool(data.get('youtube_id', False)),
@@ -5266,6 +5267,7 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
                 'max_kpindex'       : data.get('max_kpindex', 0.0),
                 'max_ovation_max'   : data.get('max_ovation_max', 0),
                 'max_moonphase'     : data.get('max_moonphase', 0),  # might be null
+                'max_stars'         : int(data.get('max_stars', 0)),
                 'avg_stars'         : int(data.get('avg_stars', 0)),
                 'avg_sqm'           : int(data.get('avg_sqm', 0)),
                 'youtube_uploaded'  : bool(data.get('youtube_id', False)),
