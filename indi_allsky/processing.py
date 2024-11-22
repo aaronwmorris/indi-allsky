@@ -2707,40 +2707,55 @@ class ImageProcessor(object):
     def fish2pano_module(self):
         import fish2pano
 
+        fish2pano_start = time.time()
+
+        image_height, image_width = self.image.shape[:2]
+
+        x_offset = self.config.get('LENS_OFFSET_X', 0)
+        y_offset = self.config.get('LENS_OFFSET_Y', 0)
+
+        recenter_width = image_width + (abs(x_offset) * 2)
+        recenter_height = image_height + (abs(y_offset) * 2)
+        #logger.info('New: %d x %d', recenter_width, recenter_height)
+
+
+        recenter_image = numpy.zeros([recenter_height, recenter_width, 3], dtype=numpy.uint8)
+        recenter_image[
+            int((recenter_height / 2) - (image_height / 2) + y_offset):int((recenter_height / 2) + (image_height / 2) + y_offset),
+            int((recenter_width / 2) - (image_width / 2) - x_offset):int((recenter_width / 2) + (image_width / 2) - x_offset),
+        ] = self.image  # recenter the image circle in the new image
+
+
         angle = self.config.get('FISH2PANO', {}).get('ROTATE_ANGLE', 0)
         if angle:
-            height, width = self.image.shape[:2]
-            center_x = int(width / 2)
-            center_y = int(height / 2)
+            center_x = int(recenter_width / 2)
+            center_y = int(recenter_height / 2)
 
             rot = cv2.getRotationMatrix2D((center_x, center_y), int(angle), 1.0)
 
             abs_cos = abs(rot[0, 0])
             abs_sin = abs(rot[0, 1])
 
-            bound_w = int(height * abs_sin + width * abs_cos)
-            bound_h = int(height * abs_cos + width * abs_sin)
+            bound_w = int(recenter_height * abs_sin + recenter_width * abs_cos)
+            bound_h = int(recenter_height * abs_cos + recenter_width * abs_sin)
 
             rot[0, 2] += bound_w / 2 - center_x
             rot[1, 2] += bound_h / 2 - center_y
 
-            rotated_image = cv2.warpAffine(self.image, rot, (bound_w, bound_h))
+            rotated_image = cv2.warpAffine(recenter_image, rot, (bound_w, bound_h))
         else:
-            rotated_image = self.image
+            rotated_image = recenter_image
 
 
         rot_height, rot_width = rotated_image.shape[:2]
 
-        x_offset = self.config.get('LENS_OFFSET_X', 0)
-        y_offset = self.config.get('LENS_OFFSET_Y', 0)
-        center_x = int(rot_width / 2) + x_offset
-        center_y = int(rot_height / 2) - y_offset  # note minus for y
+
+        center_x = int(rot_width / 2)
+        center_y = int(rot_height / 2)
 
         radius = self.config.get('FISH2PANO', {}).get('DIAMETER', 3000) / 2
         scale = self.config.get('FISH2PANO', {}).get('SCALE', 0.3)
 
-
-        fish2pano_start = time.time()
 
         img_pano = fish2pano.fish2pano(rotated_image, radius, [center_x, center_y], scale)
 
