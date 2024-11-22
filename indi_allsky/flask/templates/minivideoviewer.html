@@ -167,6 +167,11 @@ function populate_videos(video_list) {
 
 
             $('<div />', {
+                'text' : 'Max Stars: ' + item['max_stars'],
+                'style' : "font-size:12px",
+            }).appendTo(datetime_div);
+
+            $('<div />', {
                 'text' : 'Avg Stars: ' + item['avg_stars'],
                 'style' : "font-size:12px",
             }).appendTo(datetime_div);
