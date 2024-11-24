@@ -14,11 +14,15 @@ class IndiAllSkyDraw(object):
         self._sqm_mask = mask
 
 
-    def main(self, sep_data):
+    def main(self, data):
         if not self.config.get('DETECT_DRAW'):
-            return sep_data
+            return data
 
-        image_height, image_width = sep_data.shape[:2]
+
+        image_height, image_width = data.shape[:2]
+
+
+        self.drawText_opencv(data, 'MARK DETECTIONS ENABLED', (int(image_width / 3), 25), (200, 200, 200))
 
 
         ### ADU ROI ###
@@ -42,7 +46,7 @@ class IndiAllSkyDraw(object):
 
             logger.info('Draw box around ADU_ROI')
             cv2.rectangle(
-                img=sep_data,
+                img=data,
                 pt1=(adu_x1, adu_y1),
                 pt2=(adu_x2, adu_y2),
                 color=(128, 128, 128),
@@ -50,7 +54,7 @@ class IndiAllSkyDraw(object):
             )
         else:
             # apply mask to image
-            sep_data = cv2.bitwise_and(sep_data, sep_data, mask=self._sqm_mask)
+            data = cv2.bitwise_and(data, data, mask=self._sqm_mask)
 
 
         ### Keogram meridian ###
@@ -71,7 +75,7 @@ class IndiAllSkyDraw(object):
 
 
         cv2.line(
-            sep_data,
+            data,
             (m_x1, m_y1),
             (m_x2, m_y2),
             (64, 64, 64),
@@ -79,5 +83,32 @@ class IndiAllSkyDraw(object):
         )
 
 
-        return sep_data
+        return data
+
+
+    def drawText_opencv(self, data, text, pt, color_bgr):
+        fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
+        lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
+
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            cv2.putText(
+                img=data,
+                text=text,
+                org=pt,
+                fontFace=fontFace,
+                color=(0, 0, 0),
+                lineType=lineType,
+                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+            )  # black outline
+        cv2.putText(
+            img=data,
+            text=text,
+            org=pt,
+            fontFace=fontFace,
+            color=tuple(color_bgr),
+            lineType=lineType,
+            fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+            thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+        )
 
