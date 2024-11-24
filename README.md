@@ -62,7 +62,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * RAW data is the default and preferred input
     * INDI - 16-bit FITS data
     * libcamera - 16-bit DNG data
-    * Also supports 8-bit RGB, PNG, and JPEG input
+    * Also supports 8-bit RGB (RGB24), PNG, and JPEG input
 * Multiple camera vendor support
     * ZWO
     * Svbony
