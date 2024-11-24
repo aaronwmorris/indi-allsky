@@ -28,8 +28,11 @@ class IndiAllSkyMoonOverlay(object):
 
         self.scale = self.config.get('MOON_OVERLAY', {}).get('SCALE', 0.5)
 
-        self.x = self.config.get('MOON_OVERLAY', {}).get('X', 200)
-        self.y = self.config.get('MOON_OVERLAY', {}).get('Y', 200)
+        self.x = self.config.get('MOON_OVERLAY', {}).get('X', -500)
+        self.y = self.config.get('MOON_OVERLAY', {}).get('Y', -200)
+
+        self.flip_v = self.config.get('MOON_OVERLAY', {}).get('FLIP_V')
+        self.flip_h = self.config.get('MOON_OVERLAY', {}).get('FLIP_H')
 
         self.dark_side_scale = self.config.get('MOON_OVERLAY', {}).get('DARK_SIDE_SCALE', 0.4)
         dark_ratio = int(self.dark_side_scale * 255)
@@ -156,6 +159,13 @@ class IndiAllSkyMoonOverlay(object):
         new_moon_width = int(moon_width * self.scale)
         new_moon_height = int(moon_height * self.scale)
         moon = cv2.resize(moon, (new_moon_width, new_moon_height), interpolation=cv2.INTER_AREA)
+
+
+        if self.flip_v:
+            moon = cv2.flip(moon, 0)
+
+        if self.flip_h:
+            moon = cv2.flip(moon, 1)
 
 
         image_height, image_width = image_data.shape[:2]

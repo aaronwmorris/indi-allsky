@@ -188,11 +188,13 @@ class IndiAllSkyConfigBase(object):
         "NIGHT_GRAYSCALE"  : False,
         "DAYTIME_GRAYSCALE": False,
         "MOON_OVERLAY" : {
-            "ENABLE"   : False,
-            "X"        : 200,
-            "Y"        : 200,
+            "ENABLE"   : True,
+            "X"        : -500,
+            "Y"        : -200,
             "SCALE"    : 0.5,
             "DARK_SIDE_SCALE" : 0.4,
+            "FLIP_H"   : False,
+            "FLIP_V"   : False,
         },
         "IMAGE_CIRCLE_MASK" : {
             "ENABLE"   : False,
