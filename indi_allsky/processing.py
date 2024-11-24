@@ -2709,7 +2709,7 @@ class ImageProcessor(object):
 
 
     def moon_overlay(self):
-        if not self.config.get('MOON_OVERLAY', {}).get('ENABLE'):
+        if not self.config.get('MOON_OVERLAY', {}).get('ENABLE', True):
             return
 
         self._moon_overlay.apply(self.image, self.astrometric_data['moon_cycle'], self.astrometric_data['moon_phase'])

@@ -28,8 +28,8 @@ class IndiAllSkyMoonOverlay(object):
 
         self.scale = self.config.get('MOON_OVERLAY', {}).get('SCALE', 0.5)
 
-        self.x = self.config.get('MOON_OVERLAY', {}).get('X', 200)
-        self.y = self.config.get('MOON_OVERLAY', {}).get('Y', 200)
+        self.x = self.config.get('MOON_OVERLAY', {}).get('X', -500)
+        self.y = self.config.get('MOON_OVERLAY', {}).get('Y', -200)
 
         self.flip_v = self.config.get('MOON_OVERLAY', {}).get('FLIP_V')
         self.flip_h = self.config.get('MOON_OVERLAY', {}).get('FLIP_H')
