@@ -1034,3 +1034,27 @@ class IndiClientLibCameraImx283(IndiClientLibCameraGeneric):
             1 : '',
         }
 
+
+class IndiClientLibCameraImx678(IndiClientLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx678, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_imx678'
+
+        self.camera_info = {
+            'width'         : 3840,
+            'height'        : 2160,
+            'pixel'         : 2.0,
+            'min_gain'      : 1,
+            'max_gain'      : 32,  # unverified
+            'min_exposure'  : 0.000032,
+            'max_exposure'  : 200.0,
+            'cfa'           : 'RGGB',  # verified
+            'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            1 : '',
+        }
+
