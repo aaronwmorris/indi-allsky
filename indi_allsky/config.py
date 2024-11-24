@@ -193,6 +193,8 @@ class IndiAllSkyConfigBase(object):
             "Y"        : 200,
             "SCALE"    : 0.5,
             "DARK_SIDE_SCALE" : 0.4,
+            "FLIP_H"   : False,
+            "FLIP_V"   : False,
         },
         "IMAGE_CIRCLE_MASK" : {
             "ENABLE"   : False,

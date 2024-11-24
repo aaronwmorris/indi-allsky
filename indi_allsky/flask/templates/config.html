@@ -1750,6 +1750,34 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.MOON_OVERLAY__FLIP_V.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.MOON_OVERLAY__FLIP_V(class='form-check-input') }}
+                <div id="MOON_OVERLAY__FLIP_V-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Flipping Vertically and Horizontal should show view from Southern Hemisphere</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MOON_OVERLAY__FLIP_H.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.MOON_OVERLAY__FLIP_H(class='form-check-input') }}
+                <div id="MOON_OVERLAY__FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.MOON_OVERLAY__SCALE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -6475,6 +6503,8 @@ const checkbox_field_names = [
     'NIGHT_GRAYSCALE',
     'DAYTIME_GRAYSCALE',
     'MOON_OVERLAY__ENABLE',
+    'MOON_OVERLAY__FLIP_V',
+    'MOON_OVERLAY__FLIP_H',
     'TEXT_PROPERTIES__FONT_OUTLINE',
     'CARDINAL_DIRS__ENABLE',
     'CARDINAL_DIRS__SWAP_NS',
