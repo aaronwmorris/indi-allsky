@@ -5638,6 +5638,9 @@ class IndiAllskyHistoryForm(FlaskForm):
         ('7200', '2 Hours'),
         ('10800', '3 Hours'),
         ('14400', '4 Hours'),
+        ('21600', '6 Hours'),
+        ('43200', '12 Hours'),
+        ('86400', '24 Hours'),
     )
 
     FRAMEDELAY_SELECT_choices = (
