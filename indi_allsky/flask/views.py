@@ -85,7 +85,8 @@ from .forms import IndiAllskyVideoViewerPreload
 from .forms import IndiAllskyMiniVideoViewer
 from .forms import IndiAllskyMiniVideoViewerPreload
 from .forms import IndiAllskySystemInfoForm
-from .forms import IndiAllskyHistoryForm
+from .forms import IndiAllskyLoopHistoryForm
+from .forms import IndiAllskyChartHistoryForm
 from .forms import IndiAllskySetDateTimeForm
 from .forms import IndiAllskyTimelapseGeneratorForm
 from .forms import IndiAllskyFocusForm
@@ -886,7 +887,7 @@ class ImageLoopView(TemplateView):
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
         context['refreshInterval'] = refreshInterval_ms
 
-        context['form_history'] = IndiAllskyHistoryForm()
+        context['form_history'] = IndiAllskyLoopHistoryForm()
 
         return context
 
@@ -917,9 +918,9 @@ class JsonImageLoopView(JsonView):
 
         ts_dt = datetime.fromtimestamp(timestamp + 3)  # allow some jitter
 
-        # sanity check
-        if history_seconds > 86400:
-            history_seconds = 86400
+        # sanity check, limit to 4 hours
+        if history_seconds > 14400:
+            history_seconds = 14400
 
         data = {
             'image_list' : self.getLoopImages(camera_id, ts_dt, history_seconds),
@@ -1128,7 +1129,7 @@ class ChartView(TemplateView):
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
         context['refreshInterval'] = refreshInterval_ms
 
-        context['form_history'] = IndiAllskyHistoryForm()
+        context['form_history'] = IndiAllskyChartHistoryForm()
 
 
         self.update_sensor_slot_labels()
