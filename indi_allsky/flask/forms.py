@@ -5629,7 +5629,7 @@ class IndiAllskySystemInfoForm(FlaskForm):
 
 
 
-class IndiAllskyHistoryForm(FlaskForm):
+class IndiAllskyLoopHistoryForm(FlaskForm):
     HISTORY_SELECT_choices = (
         ('900', '15 Minutes'),
         ('1800', '30 Minutes'),
@@ -5651,6 +5651,22 @@ class IndiAllskyHistoryForm(FlaskForm):
     FRAMEDELAY_SELECT    = SelectField('Speed', choices=FRAMEDELAY_SELECT_choices, default=FRAMEDELAY_SELECT_choices[2][0], validators=[])
     ROCK_CHECKBOX        = BooleanField('Rock', default=False)
 
+
+class IndiAllskyChartHistoryForm(FlaskForm):
+    HISTORY_SELECT_choices = (
+        ('900', '15 Minutes'),
+        ('1800', '30 Minutes'),
+        ('2700', '45 Minutes'),
+        ('3600', '1 Hour'),
+        ('7200', '2 Hours'),
+        ('10800', '3 Hours'),
+        ('14400', '4 Hours'),
+        ('21600', '6 Hours'),
+        ('43200', '12 Hours'),
+        ('86400', '24 Hours'),
+    )
+
+    HISTORY_SELECT       = SelectField('History', choices=HISTORY_SELECT_choices, default=HISTORY_SELECT_choices[0][0], validators=[])
 
 
 class IndiAllskySetDateTimeForm(FlaskForm):
