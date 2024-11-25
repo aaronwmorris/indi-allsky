@@ -615,12 +615,9 @@ class ImageWorker(Process):
                 pano_data = self.image_processor.fish2pano()
 
 
-                if self.config.get('FISH2PANO', {}).get('FLIP_H'):
-                    pano_data = self.image_processor._flip(pano_data, 1)
-
-
                 if self.config.get('FISH2PANO', {}).get('ENABLE_CARDINAL_DIRS'):
                     pano_data = self.image_processor.fish2pano_cardinal_dirs_label(pano_data)
+
 
                 self.write_panorama_img(pano_data, i_ref, camera, jpeg_exif=jpeg_exif)
 
