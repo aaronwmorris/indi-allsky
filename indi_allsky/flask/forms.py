@@ -6020,6 +6020,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
             ('m12_f2.0_1.8mm_1-2.5', 'M12 1.8mm ƒ/2.0 - 180° - 1/2.5" ∅6.9mm'),
         ),
         'Large' : (
+            ('fe185c086ha_f1.8_2.7mm_1', 'Fujinon 2.7mm ƒ/1.8 Fisheye - ∅8.6mm'),
             ('vm2.8ir10mp_f1.6_2.8mm_1-1.8', 'VM2.8IR10MP 2.8mm ƒ/1.6 Fisheye - ∅9.0mm'),
             ('meike_f2.8_3.5mm_4-3', 'Meike 3.5mm ƒ/2.8 Fisheye - 220° - 4/3" ∅12.5mm'),
             ('custom_f7_5.8mm_m42', 'Custom 5.8mm ƒ/7 - 174° - ∅17.3mm'),
