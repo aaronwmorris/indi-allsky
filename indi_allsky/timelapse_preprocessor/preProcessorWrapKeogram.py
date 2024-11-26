@@ -80,6 +80,8 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
 
     def wrap(self, i, f, seqfolder_p):
+        #wrap_start = time.time()
+
         keogram = self._keogram_image.copy()
         keogram_height, keogram_width = keogram.shape[:2]
 
@@ -93,12 +95,17 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         keogram[0:keogram_height, keogram_line:keogram_line + 1] = line
 
 
+        #start_open = time.time()
+
         try:
             with Image.open(str(f)) as img:
                 image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
         except PIL.UnidentifiedImageError:
             logger.error('Unable to read %s', f)
             return
+
+        #elapsed_open_s = time.time() - start_open
+        #logger.info('Image opened in %0.4f s', elapsed_open_s)
 
 
         image_height, image_width = image.shape[:2]
@@ -110,11 +117,16 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         #logger.info('New: %d x %d', recenter_width, recenter_height)
 
 
+        #start_recenter = time.time()
+
         recenter_image = numpy.zeros([recenter_height, recenter_width, 3], dtype=numpy.uint8)
         recenter_image[
             int((recenter_height / 2) - (image_height / 2) + self.y_offset):int((recenter_height / 2) + (image_height / 2) + self.y_offset),
             int((recenter_width / 2) - (image_width / 2) - self.x_offset):int((recenter_width / 2) + (image_width / 2) - self.x_offset),
         ] = image  # recenter the image circle in the new image
+
+        #elapsed_recenter_s = time.time() - start_recenter
+        #logger.info('Image recentered in %0.4f s', elapsed_recenter_s)
 
 
         if recenter_width < (self.image_circle + (keogram_height * 2) + abs(self.x_offset)):
@@ -146,6 +158,8 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         d_image = cv2.rotate(d_keogram, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
 
+        #start_warppolar = time.time()
+
         # wrap the keogram
         wrapped_keogram = cv2.warpPolar(
             d_image,
@@ -154,6 +168,9 @@ class PreProcessorWrapKeogram(PreProcessorBase):
             int((self.image_circle / 2) + keogram_height),
             cv2.WARP_INVERSE_MAP,
         )
+
+        #elapsed_warppolar_s = time.time() - start_warppolar
+        #logger.info('Image warpPolar in %0.4f s', elapsed_warppolar_s)
 
         #wrapped_keogram = cv2.rotate(wrapped_keogram, cv2.ROTATE_90_COUNTERCLOCKWISE)  # start keogram at top
         wrapped_keogram = cv2.rotate(wrapped_keogram, cv2.ROTATE_90_CLOCKWISE)  # start keogram at bottom
@@ -178,8 +195,13 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         ] = recenter_image
 
 
+        #start_alpha = time.time()
+
         # apply alpha mask
         image_with_keogram = (f_image * (1 - alpha_mask) + wrapped_keogram_bgr * alpha_mask).astype(numpy.uint8)
+
+        #elapsed_alpha_s = time.time() - start_alpha
+        #logger.info('Image alpha in %0.4f s', elapsed_alpha_s)
 
 
         # scale image
@@ -208,6 +230,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
             ]
 
 
+        #start_compress = time.time()
 
         outfile_p = seqfolder_p.joinpath('{0:05d}.{1:s}'.format(self.image_count, self.config['IMAGE_FILE_TYPE']))
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
@@ -227,6 +250,13 @@ class PreProcessorWrapKeogram(PreProcessorBase):
             img_rgb.save(str(outfile_p), compression='tiff_lzw')
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
+
+        #elapsed_compress_s = time.time() - start_compress
+        #logger.info('Image compress in %0.4f s', elapsed_compress_s)
+
+
+        #wrap_elapsed_s = time.time() - wrap_start
+        #logger.info('Wrapped image in %0.4f s', wrap_elapsed_s)
 
 
         self.image_count += 1
