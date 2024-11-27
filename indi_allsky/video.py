@@ -436,7 +436,7 @@ class VideoWorker(Process):
             tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
 
             tg.pre_processor.keogram = keogram_filename
-            tg.pre_processor.pre_scale = self.config.get('TIMELAPSE', {}).get('PRE_SCALE', 75)
+            tg.pre_processor.pre_scale = self.config.get('TIMELAPSE', {}).get('PRE_SCALE', 50)
 
             tg.generate(video_file, timelapse_files)
         except TimelapseException:
@@ -1321,8 +1321,9 @@ class VideoWorker(Process):
 
         # Files are presorted from the DB
         for i, entry in enumerate(files_entries):
-            if i % 100 == 0:
-                logger.info('Processed %d of %d images', i, image_count)
+            if i % 50 == 0:
+                processing_elapsed_s = time.time() - processing_start
+                logger.info('Processed %d of %d images (%0.3fs/image)', i, image_count, processing_elapsed_s / (i + 1))
 
             image_file_p = Path(entry.getFilesystemPath())
 

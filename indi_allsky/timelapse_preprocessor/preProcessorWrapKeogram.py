@@ -43,16 +43,22 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
 
     def main(self, file_list):
+        # scale settings
+        scaled_image_circle = int(self.image_circle * (self.pre_scale / 100))
+        scaled_x_offset = int(self.x_offset * (self.pre_scale / 100))
+        scaled_y_offset = int(self.y_offset * (self.pre_scale / 100))
+
+
         with Image.open(str(self.keogram)) as k_img:
             self._keogram_image = cv2.cvtColor(numpy.array(k_img), cv2.COLOR_RGB2BGR)
 
 
         keogram_height, keogram_width = self._keogram_image.shape[:2]
 
-        k_ratio_height = keogram_height / self.image_circle
+        k_ratio_height = keogram_height / scaled_image_circle
         if k_ratio_height > self.keogram_ratio:
             # resize keogram
-            new_k_height = int(self.image_circle * self.keogram_ratio)
+            new_k_height = int(scaled_image_circle * self.keogram_ratio)
             self._keogram_image = cv2.resize(self._keogram_image, (keogram_width, new_k_height), interpolation=cv2.INTER_AREA)
             keogram_height = new_k_height
 
@@ -69,17 +75,27 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         for i, f in enumerate(file_list):
             # the symlink files must start at index 0 or ffmpeg will fail
 
-            if i % 100 == 0:
-                logger.info('Pre-processed %d of %d images', i, self.file_list_len)
+            if i % 25 == 0:
+                process_elapsed_s = time.time() - process_start
+                logger.info('Pre-processed %d of %d images (%0.3fs/image)', i, self.file_list_len, process_elapsed_s / (i + 1))
 
-            self.wrap(i, f, self.seqfolder)
+            self.wrap(
+                i,
+                f,
+                self.seqfolder,
+                scaled_image_circle,
+                scaled_x_offset,
+                scaled_y_offset,
+            )
 
 
         process_elapsed_s = time.time() - process_start
         logger.info('Pre-processing in %0.4f s (%0.3fs/image)', process_elapsed_s, process_elapsed_s / len(file_list))
 
 
-    def wrap(self, i, f, seqfolder_p):
+    def wrap(self, i, f, seqfolder_p, image_circle, x_offset, y_offset):
+        #wrap_start = time.time()
+
         keogram = self._keogram_image.copy()
         keogram_height, keogram_width = keogram.shape[:2]
 
@@ -93,6 +109,8 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         keogram[0:keogram_height, keogram_line:keogram_line + 1] = line
 
 
+        #start_open = time.time()
+
         try:
             with Image.open(str(f)) as img:
                 image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
@@ -100,30 +118,50 @@ class PreProcessorWrapKeogram(PreProcessorBase):
             logger.error('Unable to read %s', f)
             return
 
+        #elapsed_open_s = time.time() - start_open
+        #logger.info('Image opened in %0.4f s', elapsed_open_s)
+
 
         image_height, image_width = image.shape[:2]
         #logger.info('Image: %d x %d', image_width, image_height)
 
 
-        recenter_width = image_width + (abs(self.x_offset) * 2)
-        recenter_height = image_height + (abs(self.y_offset) * 2)
+        ### Pre scale the image so there is less processing work to be done on slower systems like Raspberry Pi
+        if self.pre_scale < 100:
+            image_height, image_width = image.shape[:2]
+            pre_scaled_height = int(image_height * (self.pre_scale / 100))
+            pre_scaled_width = int(image_width * (self.pre_scale / 100))
+            image = cv2.resize(image, (pre_scaled_width, pre_scaled_height), interpolation=cv2.INTER_AREA)
+
+
+        image_height, image_width = image.shape[:2]
+        #logger.info('Image: %d x %d', image_width, image_height)
+
+
+        recenter_width = image_width + (abs(x_offset) * 2)
+        recenter_height = image_height + (abs(y_offset) * 2)
         #logger.info('New: %d x %d', recenter_width, recenter_height)
 
 
+        #start_recenter = time.time()
+
         recenter_image = numpy.zeros([recenter_height, recenter_width, 3], dtype=numpy.uint8)
         recenter_image[
-            int((recenter_height / 2) - (image_height / 2) + self.y_offset):int((recenter_height / 2) + (image_height / 2) + self.y_offset),
-            int((recenter_width / 2) - (image_width / 2) - self.x_offset):int((recenter_width / 2) + (image_width / 2) - self.x_offset),
+            int((recenter_height / 2) - (image_height / 2) + y_offset):int((recenter_height / 2) + (image_height / 2) + y_offset),
+            int((recenter_width / 2) - (image_width / 2) - x_offset):int((recenter_width / 2) + (image_width / 2) - x_offset),
         ] = image  # recenter the image circle in the new image
 
+        #elapsed_recenter_s = time.time() - start_recenter
+        #logger.info('Image recentered in %0.4f s', elapsed_recenter_s)
 
-        if recenter_width < (self.image_circle + (keogram_height * 2) + abs(self.x_offset)):
-            final_width = self.image_circle + (keogram_height * 2) + abs(self.x_offset)
+
+        if recenter_width < (image_circle + (keogram_height * 2) + abs(x_offset)):
+            final_width = image_circle + (keogram_height * 2) + abs(x_offset)
         else:
             final_width = recenter_width
 
-        if recenter_height < (self.image_circle + (keogram_height * 2) + abs(self.y_offset)):
-            final_height = self.image_circle + (keogram_height * 2) + abs(self.y_offset)
+        if recenter_height < (image_circle + (keogram_height * 2) + abs(y_offset)):
+            final_height = image_circle + (keogram_height * 2) + abs(y_offset)
         else:
             final_height = recenter_height
 
@@ -131,7 +169,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
 
         # add black area at the top of the keogram to wrap around center
-        d_keogram = numpy.zeros([int((self.image_circle / 2) + keogram_height), keogram_width, 3], dtype=numpy.uint8)
+        d_keogram = numpy.zeros([int((image_circle / 2) + keogram_height), keogram_width, 3], dtype=numpy.uint8)
         d_height, d_width = d_keogram.shape[:2]
         d_keogram[d_height - keogram_height:d_height, 0:keogram_width] = keogram
 
@@ -146,14 +184,19 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         d_image = cv2.rotate(d_keogram, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
 
+        #start_warppolar = time.time()
+
         # wrap the keogram
         wrapped_keogram = cv2.warpPolar(
             d_image,
             (final_height, final_width),  # cv2 reversed (rotated below)
             (int(final_height / 2), int(final_width / 2)),  # reversed
-            int((self.image_circle / 2) + keogram_height),
+            int((image_circle / 2) + keogram_height),
             cv2.WARP_INVERSE_MAP,
         )
+
+        #elapsed_warppolar_s = time.time() - start_warppolar
+        #logger.info('Image warpPolar in %0.4f s', elapsed_warppolar_s)
 
         #wrapped_keogram = cv2.rotate(wrapped_keogram, cv2.ROTATE_90_COUNTERCLOCKWISE)  # start keogram at top
         wrapped_keogram = cv2.rotate(wrapped_keogram, cv2.ROTATE_90_CLOCKWISE)  # start keogram at bottom
@@ -178,29 +221,22 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         ] = recenter_image
 
 
+        #start_alpha = time.time()
+
         # apply alpha mask
         image_with_keogram = (f_image * (1 - alpha_mask) + wrapped_keogram_bgr * alpha_mask).astype(numpy.uint8)
 
-
-        # scale image
-        if self.pre_scale < 100:
-            pre_scaled_height = int(final_height * (self.pre_scale / 100))
-            pre_scaled_width = int(final_width * (self.pre_scale / 100))
-
-            image_with_keogram = cv2.resize(image_with_keogram, (pre_scaled_width, pre_scaled_height), interpolation=cv2.INTER_AREA)
+        #elapsed_alpha_s = time.time() - start_alpha
+        #logger.info('Image alpha in %0.4f s', elapsed_alpha_s)
 
 
-        # need final values in case image was scaled
-        h, w = image_with_keogram.shape[:2]
-
-
-        mod_height = h % 2
-        mod_width = w % 2
+        mod_height = final_height % 2
+        mod_width = final_width % 2
 
         if mod_height or mod_width:
             # width and height needs to be divisible by 2 for timelapse
-            crop_width = w - mod_width
-            crop_height = h - mod_height
+            crop_width = final_width - mod_width
+            crop_height = final_height - mod_height
 
             image_with_keogram = image_with_keogram[
                 0:crop_height,
@@ -208,6 +244,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
             ]
 
 
+        #start_compress = time.time()
 
         outfile_p = seqfolder_p.joinpath('{0:05d}.{1:s}'.format(self.image_count, self.config['IMAGE_FILE_TYPE']))
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
@@ -227,6 +264,13 @@ class PreProcessorWrapKeogram(PreProcessorBase):
             img_rgb.save(str(outfile_p), compression='tiff_lzw')
         else:
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
+
+        #elapsed_compress_s = time.time() - start_compress
+        #logger.info('Image compress in %0.4f s', elapsed_compress_s)
+
+
+        #wrap_elapsed_s = time.time() - wrap_start
+        #logger.info('Wrapped image in %0.4f s', wrap_elapsed_s)
 
 
         self.image_count += 1

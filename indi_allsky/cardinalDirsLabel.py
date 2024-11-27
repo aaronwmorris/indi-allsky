@@ -46,7 +46,7 @@ class IndiAllskyCardinalDirsLabel(object):
         # most all sky lenses will flip the image horizontally and vertically
         self.az = self.config.get('LENS_AZIMUTH', 0) + 180
 
-        self.diameter = self.config.get('CARDINAL_DIRS', {}).get('DIAMETER', 4000)
+        self.diameter = self.config.get('CARDINAL_DIRS', {}).get('DIAMETER', 3000)
 
 
         if self.config['IMAGE_FLIP_V']:
