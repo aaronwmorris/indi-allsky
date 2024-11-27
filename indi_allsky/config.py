@@ -117,7 +117,7 @@ class IndiAllSkyConfigBase(object):
             "PRE_PROCESSOR"  : "standard",
             "IMAGE_CIRCLE"   : 2000,
             "KEOGRAM_RATIO"  : 0.15,
-            "PRE_SCALE"      : 75,
+            "PRE_SCALE"      : 50,
         },
         "DAYTIME_CAPTURE"          : True,
         "DAYTIME_CAPTURE_SAVE"     : True,
