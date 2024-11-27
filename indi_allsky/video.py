@@ -1321,8 +1321,9 @@ class VideoWorker(Process):
 
         # Files are presorted from the DB
         for i, entry in enumerate(files_entries):
-            if i % 100 == 0:
-                logger.info('Processed %d of %d images', i, image_count)
+            if i % 50 == 0:
+                processing_elapsed_s = time.time() - processing_start
+                logger.info('Processed %d of %d images (%0.3fs/image)', i, image_count, processing_elapsed_s / (i + 1))
 
             image_file_p = Path(entry.getFilesystemPath())
 
