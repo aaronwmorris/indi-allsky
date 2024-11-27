@@ -173,6 +173,8 @@ echo
 echo "USB info"
 lsusb || true
 echo
+lsusb -t || true
+echo
 
 echo "USB Permissions"
 find /dev/bus/usb -ls || true
