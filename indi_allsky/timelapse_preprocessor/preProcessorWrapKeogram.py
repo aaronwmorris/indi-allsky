@@ -93,7 +93,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
 
     def wrap(self, i, f, seqfolder_p, image_circle, x_offset, y_offset):
-        wrap_start = time.time()
+        #wrap_start = time.time()
 
         keogram = self._keogram_image.copy()
         keogram_height, keogram_width = keogram.shape[:2]
@@ -268,8 +268,8 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         #logger.info('Image compress in %0.4f s', elapsed_compress_s)
 
 
-        wrap_elapsed_s = time.time() - wrap_start
-        logger.info('Wrapped image in %0.4f s', wrap_elapsed_s)
+        #wrap_elapsed_s = time.time() - wrap_start
+        #logger.info('Wrapped image in %0.4f s', wrap_elapsed_s)
 
 
         self.image_count += 1
