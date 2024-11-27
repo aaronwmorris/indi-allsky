@@ -75,8 +75,9 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         for i, f in enumerate(file_list):
             # the symlink files must start at index 0 or ffmpeg will fail
 
-            if i % 100 == 0:
-                logger.info('Pre-processed %d of %d images', i, self.file_list_len)
+            if i % 25 == 0:
+                process_elapsed_s = time.time() - process_start
+                logger.info('Pre-processed %d of %d images (%0.3fs/image)', i, self.file_list_len, process_elapsed_s / (i + 1))
 
             self.wrap(
                 i,
