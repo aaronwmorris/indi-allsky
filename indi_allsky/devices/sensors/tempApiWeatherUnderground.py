@@ -221,7 +221,7 @@ class TempApiWeatherUnderground(SensorBase):
         elif self.config.get('WINDSPEED_DISPLAY') == 'knots':
             current_wind_speed = self.mps2knots(wind_speed)
             current_wind_gust = self.mps2knots(wind_gust)
-        elif self.config.get('WINDSPEED_DISPLAY') == 'kmh':
+        elif self.config.get('WINDSPEED_DISPLAY') == 'kph':
             current_wind_speed = self.mps2kmph(wind_speed)
             current_wind_gust = self.mps2kmph(wind_gust)
         else:
