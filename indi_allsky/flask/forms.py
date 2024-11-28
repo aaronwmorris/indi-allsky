@@ -2711,7 +2711,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('ms', 'Meters/second (m/s)'),
         ('knots', 'Knots'),
         ('mph', 'Miles/hour (mph)'),
-        ('kph', 'Kilometers/hour (kph)'),
+        ('kph', 'Kilometers/hour (km/h)'),
     )
 
     IMAGE_FILE_TYPE_choices = (
