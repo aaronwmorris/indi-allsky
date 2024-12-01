@@ -1226,7 +1226,7 @@ class JsonChartView(JsonView):
                     IndiAllSkyDbImageTable.createDate < ts_dt,
                 )
             )\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
         #app.logger.info('Chart SQL: %s', str(chart_query))

@@ -587,16 +587,16 @@ function loadChartData() {
 
 
 function drawChart() {
-    sqm_chart.data.datasets[0].data = json_data['chart_data']['sqm'].reverse();  // data is reversed in DB
-    sqm_d_chart.data.datasets[0].data = json_data['chart_data']['sqm_d'].reverse();
-    stars_chart.data.datasets[0].data = json_data['chart_data']['stars'].reverse();
-    temp_chart.data.datasets[0].data = json_data['chart_data']['temp'].reverse();
-    exposure_chart.data.datasets[0].data = json_data['chart_data']['exp'].reverse();
-    detection_chart.data.datasets[0].data = json_data['chart_data']['detection'].reverse();
-    custom_1_chart.data.datasets[0].data = json_data['chart_data']['custom_1'].reverse();
-    custom_2_chart.data.datasets[0].data = json_data['chart_data']['custom_2'].reverse();
-    custom_3_chart.data.datasets[0].data = json_data['chart_data']['custom_3'].reverse();
-    custom_4_chart.data.datasets[0].data = json_data['chart_data']['custom_4'].reverse();
+    sqm_chart.data.datasets[0].data = json_data['chart_data']['sqm'];
+    sqm_d_chart.data.datasets[0].data = json_data['chart_data']['sqm_d'];
+    stars_chart.data.datasets[0].data = json_data['chart_data']['stars'];
+    temp_chart.data.datasets[0].data = json_data['chart_data']['temp'];
+    exposure_chart.data.datasets[0].data = json_data['chart_data']['exp'];
+    detection_chart.data.datasets[0].data = json_data['chart_data']['detection'];
+    custom_1_chart.data.datasets[0].data = json_data['chart_data']['custom_1'];
+    custom_2_chart.data.datasets[0].data = json_data['chart_data']['custom_2'];
+    custom_3_chart.data.datasets[0].data = json_data['chart_data']['custom_3'];
+    custom_4_chart.data.datasets[0].data = json_data['chart_data']['custom_4'];
 
     histogram_chart.data.datasets[0].data = json_data['chart_data']['histogram']['red'];
     histogram_chart.data.datasets[1].data = json_data['chart_data']['histogram']['green'];
