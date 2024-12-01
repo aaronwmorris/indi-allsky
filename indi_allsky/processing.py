@@ -1720,10 +1720,13 @@ class ImageProcessor(object):
         try:
             sun_next_rise = obs.next_rising(sun, use_center=True)
             self.astrometric_data['sun_next_rise'] = ephem.localtime(sun_next_rise).strftime('%H:%M')
+            self.astrometric_data['sun_next_rise_h'] = (sun_next_rise.datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
         except ephem.NeverUpError:
             self.astrometric_data['sun_next_rise'] = '--:--'
+            self.astrometric_data['sun_next_rise_h'] = 0.0
         except ephem.AlwaysUpError:
             self.astrometric_data['sun_next_rise'] = '--:--'
+            self.astrometric_data['sun_next_rise_h'] = 0.0
 
 
         obs.date = utcnow  # reset
@@ -1732,10 +1735,13 @@ class ImageProcessor(object):
         try:
             sun_next_set = obs.next_setting(sun, use_center=True)
             self.astrometric_data['sun_next_set'] = ephem.localtime(sun_next_set).strftime('%H:%M')
+            self.astrometric_data['sun_next_set_h'] = (sun_next_set.datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
         except ephem.NeverUpError:
             self.astrometric_data['sun_next_set'] = '--:--'
+            self.astrometric_data['sun_next_set_h'] = 0.0
         except ephem.AlwaysUpError:
             self.astrometric_data['sun_next_set'] = '--:--'
+            self.astrometric_data['sun_next_set_h'] = 0.0
 
 
         obs.date = utcnow  # reset
@@ -1744,10 +1750,13 @@ class ImageProcessor(object):
         try:
             moon_next_rise = obs.next_rising(moon, use_center=True)
             self.astrometric_data['moon_next_rise'] = ephem.localtime(moon_next_rise).strftime('%H:%M')
+            self.astrometric_data['moon_next_rise_h'] = (moon_next_rise.datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
         except ephem.NeverUpError:
             self.astrometric_data['moon_next_rise'] = '--:--'
+            self.astrometric_data['moon_next_rise_h'] = 0.0
         except ephem.AlwaysUpError:
             self.astrometric_data['moon_next_rise'] = '--:--'
+            self.astrometric_data['moon_next_rise_h'] = 0.0
 
 
         obs.date = utcnow  # reset
@@ -1756,10 +1765,13 @@ class ImageProcessor(object):
         try:
             moon_next_set = obs.next_setting(moon, use_center=True)
             self.astrometric_data['moon_next_set'] = ephem.localtime(moon_next_set).strftime('%H:%M')
+            self.astrometric_data['moon_next_set_h'] = (moon_next_set.datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
         except ephem.NeverUpError:
             self.astrometric_data['moon_next_set'] = '--:--'
+            self.astrometric_data['moon_next_set_h'] = 0.0
         except ephem.AlwaysUpError:
             self.astrometric_data['moon_next_set'] = '--:--'
+            self.astrometric_data['moon_next_set_h'] = 0.0
 
 
         obs.date = utcnow  # reset
@@ -1967,10 +1979,18 @@ class ImageProcessor(object):
             'ovation_max'  : i_ref['ovation_max'],
             'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
             'sun_alt'      : self.astrometric_data['sun_alt'],
+            'sun_next_rise' : self.astrometric_data['sun_next_rise'],
+            'sun_next_rise_h' : self.astrometric_data['sun_next_rise_h'],
+            'sun_next_set' : self.astrometric_data['sun_next_set'],
+            'sun_next_set_h' : self.astrometric_data['sun_next_set_h'],
             'moon_alt'     : self.astrometric_data['moon_alt'],
             'moon_phase'   : self.astrometric_data['moon_phase'],
             'moon_cycle'   : self.astrometric_data['moon_cycle'],
             'moon_up'      : self.astrometric_data['moon_up'],
+            'moon_next_rise' : self.astrometric_data['moon_next_rise'],
+            'moon_next_rise_h' : self.astrometric_data['moon_next_rise_h'],
+            'moon_next_set' : self.astrometric_data['moon_next_set'],
+            'moon_next_set_h' : self.astrometric_data['moon_next_set_h'],
             'sun_moon_sep' : self.astrometric_data['sun_moon_sep'],
             'mercury_alt'  : self.astrometric_data['mercury_alt'],
             'mercury_up'   : self.astrometric_data['mercury_up'],

@@ -457,10 +457,13 @@ class BaseView(View):
         try:
             sun_next_rise_date = obs.next_rising(sun, use_center=True).datetime()
             data['sun_next_rise'] = (sun_next_rise_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+            data['sun_next_rise_h'] = (sun_next_rise_date - utcnow.replace(tzinfo=None)).total_seconds() / 3600
         except ephem.NeverUpError:
             data['sun_next_rise'] = '--:--'
+            data['sun_next_rise_h'] = 0.0
         except ephem.AlwaysUpError:
             data['sun_next_rise'] = '--:--'
+            data['sun_next_rise_h'] = 0.0
 
 
         obs.date = utcnow  # reset
@@ -469,10 +472,13 @@ class BaseView(View):
         try:
             sun_next_set_date = obs.next_setting(sun, use_center=True).datetime()
             data['sun_next_set'] = (sun_next_set_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+            data['sun_next_set_h'] = (sun_next_set_date - utcnow.replace(tzinfo=None)).total_seconds() / 3600
         except ephem.NeverUpError:
             data['sun_next_set'] = '--:--'
+            data['sun_next_set_h'] = 0.0
         except ephem.AlwaysUpError:
             data['sun_next_set'] = '--:--'
+            data['sun_next_set_h'] = 0.0
 
 
         obs.date = utcnow  # reset
@@ -481,10 +487,13 @@ class BaseView(View):
         try:
             moon_next_rise_date = obs.next_rising(moon, use_center=True).datetime()
             data['moon_next_rise'] = (moon_next_rise_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+            data['moon_next_rise_h'] = (moon_next_rise_date - utcnow.replace(tzinfo=None)).total_seconds() / 3600
         except ephem.NeverUpError:
             data['moon_next_rise'] = '--:--'
+            data['moon_next_rise_h'] = 0.0
         except ephem.AlwaysUpError:
             data['moon_next_rise'] = '--:--'
+            data['moon_next_rise_h'] = 0.0
 
 
         obs.date = utcnow  # reset
@@ -493,10 +502,13 @@ class BaseView(View):
         try:
             moon_next_set_date = obs.next_setting(moon, use_center=True).datetime()
             data['moon_next_set'] = (moon_next_set_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+            data['moon_next_set_h'] = (moon_next_set_date - utcnow.replace(tzinfo=None)).total_seconds() / 3600
         except ephem.NeverUpError:
             data['moon_next_set'] = '--:--'
+            data['moon_next_set_h'] = 0.0
         except ephem.AlwaysUpError:
             data['moon_next_set'] = '--:--'
+            data['moon_next_set_h'] = 0.0
 
 
         #app.logger.info('Astrometric data: %s', data)
