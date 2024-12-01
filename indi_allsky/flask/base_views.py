@@ -332,6 +332,7 @@ class BaseView(View):
         longitude = self.camera.longitude
         latitude = self.camera.latitude
         elevation = self.camera.elevation
+        camera_utc_offset = self.camera.utc_offset
 
         # this can be eventually removed
         if isinstance(elevation, type(None)):
@@ -448,6 +449,40 @@ class BaseView(View):
                 data['moon_glyph'] = '&#127768;'
             elif moon_phase_percent >= 0 and moon_phase_percent < 15:
                 data['moon_glyph'] = '&#127761;'
+
+
+        try:
+            sun_next_rise_date = obs.next_rising(sun, use_center=True).datetime()
+            data['sun_next_rise'] = (sun_next_rise_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+        except ephem.NeverUpError:
+            data['sun_next_rise'] = '--:--'
+        except ephem.AlwaysUpError:
+            data['sun_next_rise'] = '--:--'
+
+        try:
+            sun_next_set_date = obs.next_setting(sun, use_center=True).datetime()
+            data['sun_next_set'] = (sun_next_set_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+        except ephem.NeverUpError:
+            data['sun_next_set'] = '--:--'
+        except ephem.AlwaysUpError:
+            data['sun_next_set'] = '--:--'
+
+
+        try:
+            moon_next_rise_date = obs.next_rising(moon, use_center=True).datetime()
+            data['moon_next_rise'] = (moon_next_rise_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+        except ephem.NeverUpError:
+            data['moon_next_rise'] = '--:--'
+        except ephem.AlwaysUpError:
+            data['moon_next_rise'] = '--:--'
+
+        try:
+            moon_next_set_date = obs.next_setting(moon, use_center=True).datetime()
+            data['moon_next_set'] = (moon_next_set_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+        except ephem.NeverUpError:
+            data['moon_next_set'] = '--:--'
+        except ephem.AlwaysUpError:
+            data['moon_next_set'] = '--:--'
 
 
         #app.logger.info('Astrometric data: %s', data)
