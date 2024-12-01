@@ -1718,7 +1718,7 @@ class ImageProcessor(object):
         sun.compute(obs)
 
         try:
-            sun_next_rise = obs.next_rising(sun, use_center=True)
+            sun_next_rise = obs.next_rising(sun)
             self.astrometric_data['sun_next_rise'] = ephem.localtime(sun_next_rise).strftime('%H:%M')
             self.astrometric_data['sun_next_rise_h'] = (sun_next_rise.datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
         except ephem.NeverUpError:
@@ -1733,7 +1733,7 @@ class ImageProcessor(object):
         sun.compute(obs)
 
         try:
-            sun_next_set = obs.next_setting(sun, use_center=True)
+            sun_next_set = obs.next_setting(sun)
             self.astrometric_data['sun_next_set'] = ephem.localtime(sun_next_set).strftime('%H:%M')
             self.astrometric_data['sun_next_set_h'] = (sun_next_set.datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
         except ephem.NeverUpError:
@@ -1748,7 +1748,7 @@ class ImageProcessor(object):
         moon.compute(obs)
 
         try:
-            moon_next_rise = obs.next_rising(moon, use_center=True)
+            moon_next_rise = obs.next_rising(moon)
             self.astrometric_data['moon_next_rise'] = ephem.localtime(moon_next_rise).strftime('%H:%M')
             self.astrometric_data['moon_next_rise_h'] = (moon_next_rise.datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
         except ephem.NeverUpError:
@@ -1763,7 +1763,7 @@ class ImageProcessor(object):
         moon.compute(obs)
 
         try:
-            moon_next_set = obs.next_setting(moon, use_center=True)
+            moon_next_set = obs.next_setting(moon)
             self.astrometric_data['moon_next_set'] = ephem.localtime(moon_next_set).strftime('%H:%M')
             self.astrometric_data['moon_next_set_h'] = (moon_next_set.datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
         except ephem.NeverUpError:
