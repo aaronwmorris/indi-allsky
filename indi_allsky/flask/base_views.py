@@ -511,6 +511,39 @@ class BaseView(View):
             data['moon_next_set_h'] = 0.0
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
+        try:
+            obs.horizon = math.radians(-18.0)
+            sun_next_astro_twilight_rise_date = obs.next_rising(sun).datetime()
+            data['sun_next_astro_twilight_rise'] = (sun_next_astro_twilight_rise_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+            data['sun_next_astro_twilight_rise_h'] = (sun_next_astro_twilight_rise_date - utcnow.replace(tzinfo=None)).total_seconds() / 3600
+        except ephem.NeverUpError:
+            data['sun_next_astro_twilight_rise'] = '--:--'
+            data['sun_next_astro_twilight_rise_h'] = 0.0
+        except ephem.AlwaysUpError:
+            data['sun_next_astro_twilight_rise'] = '--:--'
+            data['sun_next_astro_twilight_rise_h'] = 0.0
+
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
+        try:
+            obs.horizon = math.radians(-18.0)
+            sun_next_astro_twilight_set_date = obs.next_setting(sun).datetime()
+            data['sun_next_astro_twilight_set'] = (sun_next_astro_twilight_set_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+            data['sun_next_astro_twilight_set_h'] = (sun_next_astro_twilight_set_date - utcnow.replace(tzinfo=None)).total_seconds() / 3600
+        except ephem.NeverUpError:
+            data['sun_next_astro_twilight_set'] = '--:--'
+            data['sun_next_astro_twilight_set_h'] = 0.0
+        except ephem.AlwaysUpError:
+            data['sun_next_astro_twilight_set'] = '--:--'
+            data['sun_next_astro_twilight_set_h'] = 0.0
+
+
+        #obs.horizon = math.radians(0.0)  # reset
         #app.logger.info('Astrometric data: %s', data)
 
         return data
