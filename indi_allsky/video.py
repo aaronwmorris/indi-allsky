@@ -1569,9 +1569,9 @@ class VideoWorker(Process):
 
         try:
             if math.degrees(sun.alt) < 0:
-                sun_civilDawn_date = obs.next_rising(sun, use_center=True).datetime()
+                sun_civilDawn_date = obs.next_rising(sun).datetime()
             else:
-                sun_civilDawn_date = obs.previous_rising(sun, use_center=True).datetime()
+                sun_civilDawn_date = obs.previous_rising(sun).datetime()
         except ephem.NeverUpError:
             # northern hemisphere
             sun_civilDawn_date = utcnow + timedelta(years=10)
@@ -1581,7 +1581,7 @@ class VideoWorker(Process):
 
 
         try:
-            sun_civilTwilight_date = obs.next_setting(sun, use_center=True).datetime()
+            sun_civilTwilight_date = obs.next_setting(sun).datetime()
         except ephem.AlwaysUpError:
             # northern hemisphere
             sun_civilTwilight_date = utcnow - timedelta(days=1)
