@@ -451,6 +451,9 @@ class BaseView(View):
                 data['moon_glyph'] = '&#127761;'
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
         try:
             sun_next_rise_date = obs.next_rising(sun, use_center=True).datetime()
             data['sun_next_rise'] = (sun_next_rise_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
@@ -458,6 +461,10 @@ class BaseView(View):
             data['sun_next_rise'] = '--:--'
         except ephem.AlwaysUpError:
             data['sun_next_rise'] = '--:--'
+
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
 
         try:
             sun_next_set_date = obs.next_setting(sun, use_center=True).datetime()
@@ -468,6 +475,9 @@ class BaseView(View):
             data['sun_next_set'] = '--:--'
 
 
+        obs.date = utcnow  # reset
+        moon.compute(obs)
+
         try:
             moon_next_rise_date = obs.next_rising(moon, use_center=True).datetime()
             data['moon_next_rise'] = (moon_next_rise_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
@@ -475,6 +485,10 @@ class BaseView(View):
             data['moon_next_rise'] = '--:--'
         except ephem.AlwaysUpError:
             data['moon_next_rise'] = '--:--'
+
+
+        obs.date = utcnow  # reset
+        moon.compute(obs)
 
         try:
             moon_next_set_date = obs.next_setting(moon, use_center=True).datetime()

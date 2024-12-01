@@ -1714,6 +1714,56 @@ class ImageProcessor(object):
             self.astrometric_data['moon_up'] = 'No'
 
 
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
+        try:
+            sun_next_rise = obs.next_rising(sun, use_center=True)
+            self.astrometric_data['sun_next_rise'] = ephem.localtime(sun_next_rise).strftime('%H:%M')
+        except ephem.NeverUpError:
+            self.astrometric_data['sun_next_rise'] = '--:--'
+        except ephem.AlwaysUpError:
+            self.astrometric_data['sun_next_rise'] = '--:--'
+
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
+        try:
+            sun_next_set = obs.next_setting(sun, use_center=True)
+            self.astrometric_data['sun_next_set'] = ephem.localtime(sun_next_set).strftime('%H:%M')
+        except ephem.NeverUpError:
+            self.astrometric_data['sun_next_set'] = '--:--'
+        except ephem.AlwaysUpError:
+            self.astrometric_data['sun_next_set'] = '--:--'
+
+
+        obs.date = utcnow  # reset
+        moon.compute(obs)
+
+        try:
+            moon_next_rise = obs.next_rising(moon, use_center=True)
+            self.astrometric_data['moon_next_rise'] = ephem.localtime(moon_next_rise).strftime('%H:%M')
+        except ephem.NeverUpError:
+            self.astrometric_data['moon_next_rise'] = '--:--'
+        except ephem.AlwaysUpError:
+            self.astrometric_data['moon_next_rise'] = '--:--'
+
+
+        obs.date = utcnow  # reset
+        moon.compute(obs)
+
+        try:
+            moon_next_set = obs.next_setting(moon, use_center=True)
+            self.astrometric_data['moon_next_set'] = ephem.localtime(moon_next_set).strftime('%H:%M')
+        except ephem.NeverUpError:
+            self.astrometric_data['moon_next_set'] = '--:--'
+        except ephem.AlwaysUpError:
+            self.astrometric_data['moon_next_set'] = '--:--'
+
+
+        obs.date = utcnow  # reset
+
         mercury = ephem.Mercury()
         mercury.compute(obs)
         mercury_alt = math.degrees(mercury.alt)
