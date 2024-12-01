@@ -332,6 +332,7 @@ class BaseView(View):
         longitude = self.camera.longitude
         latitude = self.camera.latitude
         elevation = self.camera.elevation
+        camera_utc_offset = self.camera.utc_offset
 
         # this can be eventually removed
         if isinstance(elevation, type(None)):
@@ -448,6 +449,66 @@ class BaseView(View):
                 data['moon_glyph'] = '&#127768;'
             elif moon_phase_percent >= 0 and moon_phase_percent < 15:
                 data['moon_glyph'] = '&#127761;'
+
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
+        try:
+            sun_next_rise_date = obs.next_rising(sun).datetime()
+            data['sun_next_rise'] = (sun_next_rise_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+            data['sun_next_rise_h'] = (sun_next_rise_date - utcnow.replace(tzinfo=None)).total_seconds() / 3600
+        except ephem.NeverUpError:
+            data['sun_next_rise'] = '--:--'
+            data['sun_next_rise_h'] = 0.0
+        except ephem.AlwaysUpError:
+            data['sun_next_rise'] = '--:--'
+            data['sun_next_rise_h'] = 0.0
+
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
+        try:
+            sun_next_set_date = obs.next_setting(sun).datetime()
+            data['sun_next_set'] = (sun_next_set_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+            data['sun_next_set_h'] = (sun_next_set_date - utcnow.replace(tzinfo=None)).total_seconds() / 3600
+        except ephem.NeverUpError:
+            data['sun_next_set'] = '--:--'
+            data['sun_next_set_h'] = 0.0
+        except ephem.AlwaysUpError:
+            data['sun_next_set'] = '--:--'
+            data['sun_next_set_h'] = 0.0
+
+
+        obs.date = utcnow  # reset
+        moon.compute(obs)
+
+        try:
+            moon_next_rise_date = obs.next_rising(moon).datetime()
+            data['moon_next_rise'] = (moon_next_rise_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+            data['moon_next_rise_h'] = (moon_next_rise_date - utcnow.replace(tzinfo=None)).total_seconds() / 3600
+        except ephem.NeverUpError:
+            data['moon_next_rise'] = '--:--'
+            data['moon_next_rise_h'] = 0.0
+        except ephem.AlwaysUpError:
+            data['moon_next_rise'] = '--:--'
+            data['moon_next_rise_h'] = 0.0
+
+
+        obs.date = utcnow  # reset
+        moon.compute(obs)
+
+        try:
+            moon_next_set_date = obs.next_setting(moon).datetime()
+            data['moon_next_set'] = (moon_next_set_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+            data['moon_next_set_h'] = (moon_next_set_date - utcnow.replace(tzinfo=None)).total_seconds() / 3600
+        except ephem.NeverUpError:
+            data['moon_next_set'] = '--:--'
+            data['moon_next_set_h'] = 0.0
+        except ephem.AlwaysUpError:
+            data['moon_next_set'] = '--:--'
+            data['moon_next_set_h'] = 0.0
 
 
         #app.logger.info('Astrometric data: %s', data)
