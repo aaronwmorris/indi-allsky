@@ -5770,7 +5770,7 @@ class JsonImageProcessingView(JsonView):
             # add image after preloading other images
             image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
 
-            image_processor.calibrate()  # sets opencv_data
+            image_processor.calibrate()
 
             image_processor.fits2opencv()
 

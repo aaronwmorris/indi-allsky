@@ -532,9 +532,6 @@ class ImageProcessor(object):
         logger.info('Image bits: %d, cfa: %s', image_bitpix, str(image_bayerpat))
 
 
-        detected_bit_depth = self._detectBitDepth(hdulist)
-
-
         dayDate = self._dateCalcs.calcDayDate(exp_date)
 
 
@@ -545,6 +542,7 @@ class ImageProcessor(object):
 
 
         image_data = ImageData(
+            self.config,
             hdulist,
             exposure,
             exp_date,
@@ -557,9 +555,24 @@ class ImageProcessor(object):
             str(camera.location),
             image_bitpix,
             image_bayerpat,
-            detected_bit_depth,  # keeping this for reference
             target_adu,
         )
+
+
+        detected_bit_depth = image_data.detected_bit_depth
+
+        config_ccd_bit_depth = self.config.get('CCD_BIT_DEPTH', 0)
+        if config_ccd_bit_depth:
+            if detected_bit_depth != config_ccd_bit_depth:
+                logger.warning('*** DETECTED BIT DEPTH (%d) IS DIFFERENT FROM CONFIGURED BIT DEPTH (%d) ***', detected_bit_depth, config_ccd_bit_depth)
+
+            logger.info('Overriding bit depth to %d bits', config_ccd_bit_depth)
+            self.max_bit_depth = config_ccd_bit_depth
+
+        else:
+            if detected_bit_depth > self.max_bit_depth:
+                logger.warning('Updated default bit depth: %d', detected_bit_depth)
+                self.max_bit_depth = detected_bit_depth
 
 
         # indi_pylibcamera specific stuff
@@ -594,104 +607,7 @@ class ImageProcessor(object):
     def fits2opencv(self):
         i_ref = self.getLatestImage()
 
-        data = self._fits2opencv(i_ref)
-
-        i_ref.opencv_data = data
-
-
-    def _fits2opencv(self, i_ref):
-        data = i_ref.hdulist[0].data
-        image_bitpix = i_ref.image_bitpix
-
-        if image_bitpix in (8, 16):
-            pass
-        elif image_bitpix == -32:  # float32
-            logger.info('Scaling float32 data to uint16')
-
-            ### cutoff lower range
-            data[data < 0] = 0.0
-
-            ### cutoff upper range
-            data[data > 65535] = 65535.0
-
-            ### cast to uint16 for pretty pictures
-            data = data.astype(numpy.uint16)
-            i_ref.hdulist[0].data = data
-
-            i_ref.image_bitpix = 16
-        elif image_bitpix == 32:  # uint32
-            logger.info('Scaling uint32 data to uint16')
-
-            ### cutoff upper range
-            data[data > 65535] = 65535
-
-            ### cast to uint16 for pretty pictures
-            data = data.astype(numpy.uint16)
-            i_ref.hdulist[0].data = data
-
-            i_ref.image_bitpix = 16
-        else:
-            raise Exception('Unsupported bit format: {0:d}'.format(image_bitpix))
-
-
-        if len(data.shape) == 2:
-            # mono data does not need to be converted
-            return data
-
-
-        data = numpy.swapaxes(data, 0, 2)
-        data = numpy.swapaxes(data, 0, 1)
-
-        return cv2.cvtColor(data, cv2.COLOR_RGB2BGR)
-
-
-    def _detectBitDepth(self, hdulist):
-        ### This will need some rework if cameras return signed int data
-
-        max_val = numpy.amax(hdulist[0].data)
-        logger.info('Image max value: %d', int(max_val))
-
-        # This method of detecting bit depth can cause the 16->8 bit conversion
-        # to stretch too much.  This most commonly happens with very low gains
-        # during the day when there are no hot pixels.  This can result in a
-        # trippy effect
-        if max_val > 32768:
-            detected_bit_depth = 16
-        elif max_val > 16384:
-            detected_bit_depth = 15
-        elif max_val > 8192:
-            detected_bit_depth = 14
-        elif max_val > 4096:
-            detected_bit_depth = 13
-        elif max_val > 2096:
-            detected_bit_depth = 12
-        elif max_val > 1024:
-            detected_bit_depth = 11
-        elif max_val > 512:
-            detected_bit_depth = 10
-        elif max_val > 256:
-            detected_bit_depth = 9
-        else:
-            detected_bit_depth = 8
-
-        #logger.info('Detected bit depth: %d', detected_bit_depth)
-
-
-        config_ccd_bit_depth = self.config.get('CCD_BIT_DEPTH', 0)
-        if config_ccd_bit_depth:
-            if detected_bit_depth != config_ccd_bit_depth:
-                logger.warning('*** DETECTED BIT DEPTH (%d) IS DIFFERENT FROM CONFIGURED BIT DEPTH (%d) ***', detected_bit_depth, config_ccd_bit_depth)
-
-            logger.info('Overriding bit depth to %d bits', config_ccd_bit_depth)
-            self.max_bit_depth = config_ccd_bit_depth
-            return config_ccd_bit_depth
-
-
-        if detected_bit_depth > self.max_bit_depth:
-            logger.warning('Updated default bit depth: %d', detected_bit_depth)
-            self.max_bit_depth = detected_bit_depth
-
-        return detected_bit_depth
+        i_ref.fits2opencv()
 
 
     def getLatestImage(self):
@@ -3111,6 +3027,7 @@ class ImageData(object):
 
     def __init__(
         self,
+        config,
         hdulist,
         exposure,
         exp_date,
@@ -3123,9 +3040,10 @@ class ImageData(object):
         location,
         image_bitpix,
         image_bayerpat,
-        detected_bit_depth,
         target_adu,
     ):
+        self.config = config
+
         self._hdulist = hdulist
         self._exposure = exposure
         self._exp_date = exp_date
@@ -3138,9 +3056,9 @@ class ImageData(object):
         self._location = location
         self._image_bitpix = image_bitpix
         self._image_bayerpat = image_bayerpat
-        self._detected_bit_depth = detected_bit_depth
         self._target_adu = target_adu
 
+        self._detected_bit_depth = 8  # updated below
         self._calibrated = False
         self._libcamera_black_level = None
         self._opencv_data = None
@@ -3151,6 +3069,8 @@ class ImageData(object):
         self._lines = list()
         self._stars = list()
 
+
+        self.detectBitDepth()
 
 
     @property
@@ -3198,14 +3118,17 @@ class ImageData(object):
         return self._image_bayerpat
 
     @property
-    def detected_bitdepth(self):
-        return self._detected_bitdepth
-
-    @property
     def target_adu(self):
         return self._target_adu
 
 
+    @property
+    def detected_bit_depth(self):
+        return self._detected_bit_depth
+
+    @detected_bit_depth.setter
+    def detected_bit_depth(self, new_detected_bit_depth):
+        self._detected_bit_depth = int(new_detected_bit_depth)
 
     @property
     def calibrated(self):
@@ -3288,4 +3211,82 @@ class ImageData(object):
     def stars(self, new_stars):
         self._stars = new_stars
 
+
+    def detectBitDepth(self):
+        max_val = numpy.amax(self.hdulist[0].data)
+        logger.info('Image max value: %d', int(max_val))
+
+        # This method of detecting bit depth can cause the 16->8 bit conversion
+        # to stretch too much.  This most commonly happens with very low gains
+        # during the day when there are no hot pixels.  This can result in a
+        # trippy effect
+        if max_val > 32768:
+            detected_bit_depth = 16
+        elif max_val > 16384:
+            detected_bit_depth = 15
+        elif max_val > 8192:
+            detected_bit_depth = 14
+        elif max_val > 4096:
+            detected_bit_depth = 13
+        elif max_val > 2096:
+            detected_bit_depth = 12
+        elif max_val > 1024:
+            detected_bit_depth = 11
+        elif max_val > 512:
+            detected_bit_depth = 10
+        elif max_val > 256:
+            detected_bit_depth = 9
+        else:
+            detected_bit_depth = 8
+
+        #logger.info('Detected bit depth: %d', detected_bit_depth)
+
+
+        self.detected_bit_depth = detected_bit_depth
+
+
+    def fits2opencv(self):
+        data = self.hdulist[0].data
+
+        if self.image_bitpix in (8, 16):
+            pass
+        elif self.image_bitpix == -32:  # float32
+            logger.info('Scaling float32 data to uint16')
+
+            ### cutoff lower range
+            data[data < 0] = 0.0
+
+            ### cutoff upper range
+            data[data > 65535] = 65535.0
+
+            ### cast to uint16 for pretty pictures
+            data = data.astype(numpy.uint16)
+            self.hdulist[0].data = data
+
+            self.image_bitpix = 16
+        elif self.image_bitpix == 32:  # uint32
+            logger.info('Scaling uint32 data to uint16')
+
+            ### cutoff upper range
+            data[data > 65535] = 65535
+
+            ### cast to uint16 for pretty pictures
+            data = data.astype(numpy.uint16)
+            self.hdulist[0].data = data
+
+            self.image_bitpix = 16
+        else:
+            raise Exception('Unsupported bit format: {0:d}'.format(self.image_bitpix))
+
+
+        if len(data.shape) == 2:
+            # mono data does not need to be converted
+            self.opencv_data = data
+            return
+
+
+        data = numpy.swapaxes(data, 0, 2)
+        data = numpy.swapaxes(data, 0, 1)
+
+        self.opencv_data = data
 
