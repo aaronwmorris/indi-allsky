@@ -2567,17 +2567,15 @@ if [ "$MEM_TOTAL" -lt "768000" ]; then
 fi
 
 
-echo "**** Ensure user is a member of the dialout, video, i2c, spi groups ****"
+echo "**** Ensure user is a member of the dialout, video, gpio, i2c, spi groups ****"
 # for GPS and serial port access
 sudo usermod -a -G dialout,video "$USER"
 
-if getent group i2c >/dev/null 2>&1; then
-    sudo usermod -a -G i2c "$USER"
-fi
-
-if getent group spi >/dev/null 2>&1; then
-    sudo usermod -a -G spi "$USER"
-fi
+for GRP in gpio i2c spi; do
+    if getent group "$GRP" >/dev/null 2>&1; then
+        sudo usermod -a -G "$GRP" "$USER"
+    fi
+done
 
 
 echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"

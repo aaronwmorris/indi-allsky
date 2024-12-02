@@ -46,6 +46,7 @@ RUN dpkg-reconfigure -f noninteractive tzdata
 # need the uid and gid to match in all containers
 RUN groupadd --gid 10001 allsky
 RUN useradd --create-home --no-user-group --uid 10001 --gid allsky --groups dialout,video --home-dir /home/allsky --shell /bin/bash allsky
+RUN if getent group gpio >/dev/null 2>&1; then usermod -a -G gpio allsky; fi
 RUN if getent group i2c >/dev/null 2>&1; then usermod -a -G i2c allsky; fi
 RUN if getent group spi >/dev/null 2>&1; then usermod -a -G spi allsky; fi
 
