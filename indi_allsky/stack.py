@@ -118,13 +118,13 @@ class IndiAllskyStacker(object):
 
         if isinstance(self._sqm_mask, type(None)):
             # This only needs to be done once if a mask is not provided
-            self._generateSqmMask(reference_i_ref['hdulist'][0].data)
+            self._generateSqmMask(reference_i_ref.hdulist[0].data)
 
 
-        reg_data_list = [reference_i_ref['hdulist'][0].data]  # add target to final list
+        reg_data_list = [reference_i_ref.hdulist[0].data]  # add target to final list
 
-        #reference_masked = self._crop(reference_i_ref['hdulist'][0].data)
-        reference_masked = cv2.bitwise_and(reference_i_ref['hdulist'][0].data, reference_i_ref['hdulist'][0].data, mask=self._sqm_mask)
+        #reference_masked = self._crop(reference_i_ref.hdulist[0].data)
+        reference_masked = cv2.bitwise_and(reference_i_ref.hdulist[0].data, reference_i_ref.hdulist[0].data, mask=self._sqm_mask)
 
         reg_start = time.time()
 
@@ -132,8 +132,8 @@ class IndiAllskyStacker(object):
         last_rotation = 0
 
         for i_ref in stack_i_ref_list[1:]:
-            #i_masked = self._crop(i_ref['hdulist'][0].data)
-            i_masked = cv2.bitwise_and(i_ref['hdulist'][0].data, i_ref['hdulist'][0].data, mask=self._sqm_mask)
+            #i_masked = self._crop(i_ref.hdulist[0].data)
+            i_masked = cv2.bitwise_and(i_ref.hdulist[0].data, i_ref.hdulist[0].data, mask=self._sqm_mask)
 
             # detection_sigma default = 5
             # max_control_points default = 50
@@ -189,14 +189,14 @@ class IndiAllskyStacker(object):
 
                 reg_data, footprint = astroalign.apply_transform(
                     transform,
-                    i_ref['hdulist'][0],
-                    reference_i_ref['hdulist'][0],
+                    i_ref.hdulist[0],
+                    reference_i_ref.hdulist[0],
                 )
 
                 ### Register full image
                 #reg_data, footprint = astroalign.register(
-                #    i_ref['hdulist'][0],
-                #    reference_i_ref['hdulist'][0],
+                #    i_ref.hdulist[0],
+                #    reference_i_ref.hdulist[0],
                 #    detection_sigma=self.detection_simga,
                 #    max_control_points=self.max_control_points,
                 #    min_area=self.min_area,
