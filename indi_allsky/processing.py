@@ -567,7 +567,7 @@ class ImageProcessor(object):
         instrume_header = hdulist[0].header.get('INSTRUME', '')
         if instrume_header == 'indi_pylibcamera':
             # OFFSET_0, _1, _2, _3 are the SensorBlackLevels metadata from libcamera
-            image_data['libcamera_black_level'] = int(hdulist[0].header.get('OFFSET_0'))
+            image_data.libcamera_black_level = int(hdulist[0].header.get('OFFSET_0', 0))
 
 
         # aurora and smoke data
@@ -3142,6 +3142,7 @@ class ImageData(object):
         self._target_adu = target_adu
 
         self._calibrated = False
+        self._libcamera_black_level = None
         self._opencv_data = None
         self._kpindex = 0.0
         self._ovation_max = 0
@@ -3213,6 +3214,15 @@ class ImageData(object):
     @calibrated.setter
     def calibrated(self, new_calibrated):
         self._calibrated = bool(new_calibrated)
+
+    @property
+    def libcamera_black_level(self):
+        return self._libcamera_black_level
+
+    @libcamera_black_level.setter
+    def libcamera_black_level(self, new_libcamera_black_level):
+        self._libcamera_black_level = bool(new_libcamera_black_level)
+
 
     @property
     def image_bitpix(self):
