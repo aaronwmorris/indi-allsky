@@ -546,7 +546,7 @@ class ImageProcessor(object):
 
         image_data = {
             'hdulist'          : hdulist,
-            #'opencv_data'      : None,  # populated in calibrate()
+            'opencv_data'      : None,  # populated in calibrate()
             'calibrated'       : False,
             'exposure'         : exposure,
             'exp_date'         : exp_date,
@@ -561,9 +561,13 @@ class ImageProcessor(object):
             'image_bayerpat'   : image_bayerpat,
             'detected_bit_depth' : detected_bit_depth,  # keeping this for reference
             'target_adu'       : target_adu,
+            'kpindex'          : 0,  # default
+            'ovation_max'      : 0.0,  # default
+            'smoke_rating'     : constants.SMOKE_RATING_NODATA,  # default
             'sqm_value'        : None,    # populated later
             'lines'            : list(),  # populated later
             'stars'            : list(),  # populated later
+            'opencv_data'      : None,    # populated later
         }
 
 
@@ -590,10 +594,6 @@ class ImageProcessor(object):
             except TypeError:
                 # fix legacy values (str) until updated
                 image_data['smoke_rating'] = constants.SMOKE_RATING_NODATA
-        else:
-            image_data['kpindex'] = 0
-            image_data['ovation_max'] = 0.0
-            image_data['smoke_rating'] = constants.SMOKE_RATING_NODATA
 
 
         self.image_list.insert(0, image_data)  # new image is first in list
@@ -3117,5 +3117,173 @@ class ImageProcessor(object):
         alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
 
         return alpha_mask
+
+
+class ImageData(object):
+
+    def __init__(
+        self,
+        hdulist,
+        exposure,
+        exp_date,
+        exp_elapsed,
+        day_date,
+        camera_id,
+        camera_name,
+        camera_uuid,
+        owner,
+        location,
+        image_bitpix,
+        image_bayerpat,
+        detected_bit_depth,
+        target_adu,
+    ):
+        self._hdulist = hdulist
+        self._exposure = exposure
+        self._exp_date = exp_date
+        self._exp_elapsed = exp_elapsed
+        self._day_date = day_date
+        self._camera_id = camera_id
+        self._camera_name = camera_name
+        self._camera_uuid = camera_uuid
+        self._owner = owner
+        self._location = location
+        self._image_bitpix = image_bitpix
+        self._image_bayerpat = image_bayerpat
+        self._detected_bit_depth = detected_bit_depth
+        self._target_adu = target_adu
+
+        self._calibrated = False
+        self._opencv_data = None
+        self._kpindex = 0.0
+        self._ovation_max = 0
+        self._smoke_rating = constants.SMOKE_RATING_NODATA
+        self._sqm_value = None
+        self._lines = list()
+        self._stars = list()
+
+
+
+    @property
+    def hdulist(self):
+        return self._hdulist
+
+    @property
+    def exposure(self):
+        return self._exposure
+
+    @property
+    def exp_date(self):
+        return self._exp_date
+
+    @property
+    def exp_elapsed(self):
+        return self._exp_elapsed
+
+    @property
+    def day_date(self):
+        return self._day_date
+
+    @property
+    def camera_id(self):
+        return self._camera_id
+
+    @property
+    def camera_name(self):
+        return self._camera_name
+
+    @property
+    def camera_uuid(self):
+        return self._camera_uuid
+
+    @property
+    def owner(self):
+        return self._owner
+
+    @property
+    def location(self):
+        return self._location
+
+    @property
+    def image_bitpix(self):
+        return self._image_bitpix
+
+    @property
+    def image_bayerpat(self):
+        return self._image_bitpix
+
+    @property
+    def detected_bitdepth(self):
+        return self._detected_bitdepth
+
+    @property
+    def target_adu(self):
+        return self._target_adu
+
+
+
+    @property
+    def calibrated(self):
+        return self._calibrated
+
+    @calibrated.setter
+    def calibrated(self, new_calibrated):
+        self._calibrated = bool(new_calibrated)
+
+    @property
+    def opencv_data(self):
+        return self._opencv_data
+
+    @opencv_data.setter
+    def opencv_data(self, new_opencv_data):
+        self._opencv_data = new_opencv_data
+
+    @property
+    def kpindex(self):
+        return self._kpindex
+
+    @kpindex.setter
+    def kpindex(self, new_kpindex):
+        self._kpindex = float(new_kpindex)
+
+    @property
+    def ovation_max(self):
+        return self._ovation_max
+
+    @ovation_max.setter
+    def ovation_max(self, new_ovation_max):
+        self._ovation_max = int(new_ovation_max)
+
+    @property
+    def smoke_rating(self):
+        return self._smoke_rating
+
+    @smoke_rating.setter
+    def smoke_rating(self, new_smoke_rating):
+        self._smoke_rating = int(new_smoke_rating)
+
+    @property
+    def sqm_value(self):
+        return self._sqm_value
+
+    @sqm_value.setter
+    def sqm_value(self, new_sqm_value):
+        self._sqm_value = float(new_sqm_value)
+
+    @property
+    def lines(self):
+        return self._lines
+
+    @lines.setter
+    def lines(self, new_lines):
+        self._lines = new_lines
+
+    @property
+    def stars(self):
+        return self._stars
+
+    @stars.setter
+    def stars(self, new_stars):
+        self._stars = new_stars
 
 
