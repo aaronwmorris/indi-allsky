@@ -455,6 +455,10 @@ class SensorWorker(Process):
                         self.sensors_user_av[sensor.slot + i] = float(v)
             except SensorReadException as e:
                 logger.error('SensorReadException: {0:s}'.format(str(e)))
+            except OSError as e:
+                logger.error('Sensor OSError: {0:s}'.format(str(e)))
+            except IOError as e:
+                logger.error('Sensor IOError: {0:s}'.format(str(e)))
 
 
     def check_dew_heater_thresholds(self):
