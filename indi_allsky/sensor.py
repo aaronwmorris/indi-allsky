@@ -266,6 +266,12 @@ class SensorWorker(Process):
             except DeviceControlException as e:
                 logger.error('GPIO exception: %s', str(e))
                 return
+            except OSError as e:
+                logger.error('GPIO OSError: %s', str(e))
+                return
+            except IOError as e:
+                logger.error('GPIO IOError: %s', str(e))
+                return
 
 
     def init_dew_heater(self):
@@ -292,6 +298,13 @@ class SensorWorker(Process):
             except DeviceControlException as e:
                 logger.error('Dew heater exception: %s', str(e))
                 return
+            except OSError as e:
+                logger.error('Dew heater OSError: %s', str(e))
+                return
+            except IOError as e:
+                logger.error('Dew heater IOError: %s', str(e))
+                return
+
 
             with self.sensors_user_av.get_lock():
                 self.sensors_user_av[1] = float(self.dew_heater.state)
@@ -320,6 +333,13 @@ class SensorWorker(Process):
             except DeviceControlException as e:
                 logger.error('Fan exception: %s', str(e))
                 return
+            except OSError as e:
+                logger.error('Fan OSError: %s', str(e))
+                return
+            except IOError as e:
+                logger.error('Fan IOError: %s', str(e))
+                return
+
 
             with self.sensors_user_av.get_lock():
                 self.sensors_user_av[4] = float(self.fan.state)
