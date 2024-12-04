@@ -19,6 +19,15 @@ logger = logging
 
 
 class Align(object):
+
+    __cfa_bgr_map = {
+        'RGGB' : cv2.COLOR_BAYER_BG2BGR,
+        'GRBG' : cv2.COLOR_BAYER_GB2BGR,
+        'BGGR' : cv2.COLOR_BAYER_RG2BGR,
+        'GBRG' : cv2.COLOR_BAYER_GR2BGR,  # untested
+    }
+
+
     def __init__(self, method):
         self.method = method
 
@@ -48,16 +57,16 @@ class Align(object):
         start = time.time()
 
 
-        #reference_bitdepth = self._detectBitDepth(reference_hdulist[0].data)
-        #reference_8bit = self._convert_16bit_to_8bit(reference_hdulist[0].data, 16, reference_bitdepth)
+        #reference_bitdepth = self._detectBitDepth(reg_list[0])
+        #reference_8bit = self._convert_16bit_to_8bit(reg_list[0], 16, reference_bitdepth)
         #cv2.imwrite('original.png', reference_8bit, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 
 
         reg_list = list()
         # add original target
-        reg_list.append(reference_hdulist[0].data)
+        reg_list.append(self.debayer(reference_hdulist))
 
-        ref_crop = self._crop(reference_hdulist[0].data)
+        ref_crop = self._crop(reg_list[0])
 
 
         for hdulist in hdulist_list[1:]:
@@ -66,20 +75,21 @@ class Align(object):
             # min_area default = 5
             reg_start = time.time()
 
+            data = self.debayer(hdulist)
 
             try:
                 ### Reusing the tranform does not appear to work
                 #if isinstance(self.transform, type(None)):
                 #    self.transform, (source_list, target_list) = astroalign.find_transform(
-                #        hdulist[0],
-                #        reference_hdulist[0],
+                #        data,
+                #        reg_list[0],
                 #        detection_sigma=5,
                 #        max_control_points=50,
                 #        min_area=10,
                 #    )
 
                 ### Find transform using a crop of the image
-                hdu_crop = self._crop(hdulist[0].data)
+                hdu_crop = self._crop(data)
                 self.transform, (source_list, target_list) = astroalign.find_transform(
                     hdu_crop,
                     ref_crop,
@@ -99,15 +109,15 @@ class Align(object):
                 ### Apply transform
                 reg_image, footprint = astroalign.apply_transform(
                     self.transform,
-                    hdulist[0],
-                    reference_hdulist[0],
+                    data,
+                    reg_list[0],
                 )
 
 
                 ## Register full image
                 #reg_image, footprint = astroalign.register(
-                #    hdulist[0],
-                #    reference_hdulist[0],
+                #    data,
+                #    reg_list[0],
                 #    detection_sigma=5,
                 #    max_control_points=50,
                 #    min_area=10,
@@ -135,8 +145,8 @@ class Align(object):
         stacked_bitdepth = self._detectBitDepth(stacked_img)
         stacked_img_8bit = self._convert_16bit_to_8bit(stacked_img, 16, stacked_bitdepth)
 
-        cv2.imwrite(output, stacked_img_8bit, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        #cv2.imwrite(output, stacked_img_8bit, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #cv2.imwrite(output, stacked_img_8bit, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        cv2.imwrite(output, stacked_img_8bit, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
     def _detectBitDepth(self, data):
@@ -225,6 +235,39 @@ class Align(object):
 
 
         return numpy.invert(mask.astype(bool))
+
+
+    def debayer(self, hdulist):
+        image_bitpix = hdulist[0].header['BITPIX']
+        image_bayerpat = hdulist[0].header.get('BAYERPAT')
+
+        data = hdulist[0].data
+
+
+        if image_bitpix in (8, 16):
+            pass
+        else:
+            raise Exception('Unsupported bit format: {0:d}'.format(image_bitpix))
+
+
+        if not len(data.shape) == 2:
+            # data is already RGB(fits)
+            data = numpy.swapaxes(data, 0, 2)
+            data = numpy.swapaxes(data, 0, 1)
+
+            return data
+
+
+        if not image_bayerpat:
+            # assume mono data
+            logger.error('No bayer pattern detected')
+            return data
+
+
+        debayer_algorithm = self.__cfa_bgr_map[image_bayerpat]
+
+
+        return cv2.cvtColor(data, debayer_algorithm)
 
 
 class ImageStacker(object):
