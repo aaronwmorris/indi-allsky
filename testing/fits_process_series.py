@@ -181,11 +181,9 @@ class ProcessFitsSeries(object):
             # Calibration is usually already applied to FITS
             #image_processor.calibrate()
 
-            image_processor.fits2opencv()
+            image_processor.debayer()
 
             image_processor.stack()  # this populates self.image
-
-            image_processor.debayer()
 
             image_processor.stretch()
 

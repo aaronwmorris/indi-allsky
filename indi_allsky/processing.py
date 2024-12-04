@@ -604,10 +604,81 @@ class ImageProcessor(object):
         return image_data
 
 
-    def fits2opencv(self):
+    def debayer(self):
         i_ref = self.getLatestImage()
 
-        i_ref.fits2opencv()
+        data = i_ref.hdulist[0].data
+
+        if i_ref.image_bitpix in (8, 16):
+            pass
+        elif i_ref.image_bitpix == -32:  # float32
+            logger.info('Scaling float32 data to uint16')
+
+            ### cutoff lower range
+            data[data < 0] = 0.0
+
+            ### cutoff upper range
+            data[data > 65535] = 65535.0
+
+            ### cast to uint16 for pretty pictures
+            data = data.astype(numpy.uint16)
+            i_ref.hdulist[0].data = data
+
+            i_ref.image_bitpix = 16
+        elif i_ref.image_bitpix == 32:  # uint32
+            logger.info('Scaling uint32 data to uint16')
+
+            ### cutoff upper range
+            data[data > 65535] = 65535
+
+            ### cast to uint16 for pretty pictures
+            data = data.astype(numpy.uint16)
+            i_ref.hdulist[0].data = data
+
+            i_ref.image_bitpix = 16
+        else:
+            raise Exception('Unsupported bit format: {0:d}'.format(i_ref.image_bitpix))
+
+
+        if not len(data.shape) == 2:
+            # data is already RGB(fits)
+            data = numpy.swapaxes(data, 0, 2)
+            data = numpy.swapaxes(data, 0, 1)
+
+            i_ref.opencv_data = data
+            return
+
+
+        ### now we reach the debayer stage
+        if self.config.get('CFA_PATTERN'):
+            # override detected bayer pattern
+            logger.warning('Overriding CFA pattern: %s', self.config['CFA_PATTERN'])
+            image_bayerpat = self.config['CFA_PATTERN']
+        else:
+            image_bayerpat = i_ref.image_bayerpat
+
+
+        if not image_bayerpat:
+            # assume mono data
+            logger.error('No bayer pattern detected')
+            i_ref.opencv_data = data
+            return
+
+
+        if self.config.get('NIGHT_GRAYSCALE') and self.night_v.value:
+            debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
+        elif self.config.get('DAYTIME_GRAYSCALE') and not self.night_v.value:
+            debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
+        else:
+            debayer_algorithm = self.__cfa_bgr_map[image_bayerpat]
+
+
+        i_ref.opencv_data = cv2.cvtColor(data, debayer_algorithm)
+
+
+        ### for raw export
+        #if not isinstance(self.non_stacked_image, type(None)):
+        #    self.non_stacked_image = cv2.cvtColor(self.non_stacked_image, debayer_algorithm)
 
 
     def getLatestImage(self):
@@ -959,45 +1030,6 @@ class ImageProcessor(object):
 
         stack_elapsed_s = time.time() - stack_start
         logger.info('Stacked %d images (%s) in %0.4f s', len(stack_data_list), self.stack_method, stack_elapsed_s)
-
-
-    def debayer(self):
-        # sanity check
-        if not len(self.image.shape) == 2:
-            # already debayered
-            return
-
-
-        i_ref = self.getLatestImage()
-
-
-        if self.config.get('CFA_PATTERN'):
-            # override detected bayer pattern
-            logger.warning('Overriding CFA pattern: %s', self.config['CFA_PATTERN'])
-            image_bayerpat = self.config['CFA_PATTERN']
-        else:
-            image_bayerpat = i_ref.image_bayerpat
-
-
-        if not image_bayerpat:
-            logger.error('No bayer pattern detected')
-            return
-
-
-        if self.config.get('NIGHT_GRAYSCALE') and self.night_v.value:
-            debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
-        elif self.config.get('DAYTIME_GRAYSCALE') and not self.night_v.value:
-            debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
-        else:
-            debayer_algorithm = self.__cfa_bgr_map[image_bayerpat]
-
-
-        self.image = cv2.cvtColor(self.image, debayer_algorithm)
-
-
-        # for raw export
-        if not isinstance(self.non_stacked_image, type(None)):
-            self.non_stacked_image = cv2.cvtColor(self.non_stacked_image, debayer_algorithm)
 
 
     #def subtract_black_level(self, libcamera_black_level):
@@ -3245,48 +3277,4 @@ class ImageData(object):
         self.detected_bit_depth = detected_bit_depth
 
 
-    def fits2opencv(self):
-        data = self.hdulist[0].data
-
-        if self.image_bitpix in (8, 16):
-            pass
-        elif self.image_bitpix == -32:  # float32
-            logger.info('Scaling float32 data to uint16')
-
-            ### cutoff lower range
-            data[data < 0] = 0.0
-
-            ### cutoff upper range
-            data[data > 65535] = 65535.0
-
-            ### cast to uint16 for pretty pictures
-            data = data.astype(numpy.uint16)
-            self.hdulist[0].data = data
-
-            self.image_bitpix = 16
-        elif self.image_bitpix == 32:  # uint32
-            logger.info('Scaling uint32 data to uint16')
-
-            ### cutoff upper range
-            data[data > 65535] = 65535
-
-            ### cast to uint16 for pretty pictures
-            data = data.astype(numpy.uint16)
-            self.hdulist[0].data = data
-
-            self.image_bitpix = 16
-        else:
-            raise Exception('Unsupported bit format: {0:d}'.format(self.image_bitpix))
-
-
-        if len(data.shape) == 2:
-            # mono data does not need to be converted
-            self.opencv_data = data
-            return
-
-
-        data = numpy.swapaxes(data, 0, 2)
-        data = numpy.swapaxes(data, 0, 1)
-
-        self.opencv_data = data
 

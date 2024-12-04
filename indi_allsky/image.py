@@ -399,15 +399,11 @@ class ImageWorker(Process):
                 self.write_fit(i_ref, camera)
 
 
-        self.image_processor.fits2opencv()
-
+        self.image_processor.debayer()
 
         self.image_processor.calculateSqm()
 
         self.image_processor.stack()
-
-        self.image_processor.debayer()
-
 
 
         image_height, image_width = self.image_processor.image.shape[:2]
@@ -1160,7 +1156,8 @@ class ImageWorker(Process):
         tmpfile_name = Path(f_tmpfile.name)
 
 
-        data = self.image_processor.non_stacked_image
+        data = i_ref.opencv_data
+
         image_height, image_width = data.shape[:2]
         max_bit_depth = self.image_processor.max_bit_depth
 

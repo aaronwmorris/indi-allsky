@@ -5715,11 +5715,9 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
 
-            image_processor.fits2opencv()
+            image_processor.debayer()
 
             image_processor.stack()  # this populates self.image
-
-            image_processor.debayer()
 
             image_processor.convert_16bit_to_8bit()
 
