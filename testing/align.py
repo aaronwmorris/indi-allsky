@@ -36,8 +36,23 @@ class Align(object):
 
     def main(self, output, reference, inputfiles):
         reference_hdulist = fits.open(reference)
+        reference_image = self.debayer(reference_hdulist)
 
-        hdulist_list = list()
+
+        # add original target
+        reg_list = list()
+        reg_list.append(reference_image)
+
+
+        #mask = self._generateMask(hdulist_list[0])
+        #for h in hdulist_list:
+        #    h[0].mask = mask
+
+        ref_crop = self._crop(reg_list[0])
+
+
+        start = time.time()
+
 
         file_list = sorted([Path(x) for x in inputfiles], key=lambda p: p.stat().st_mtime)
         for i in file_list:
@@ -45,102 +60,87 @@ class Align(object):
 
             hdulist = fits.open(filename_p)
 
-            hdulist_list.append(hdulist)
+            image = self.debayer(hdulist)
 
-
-
-        #mask = self._generateMask(hdulist_list[0])
-        #for h in hdulist_list:
-        #    h[0].mask = mask
-
-
-        start = time.time()
-
-
-        #reference_bitdepth = self._detectBitDepth(reg_list[0])
-        #reference_8bit = self._convert_16bit_to_8bit(reg_list[0], 16, reference_bitdepth)
-        #cv2.imwrite('original.png', reference_8bit, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-
-
-        reg_list = list()
-        # add original target
-        reg_list.append(self.debayer(reference_hdulist))
-
-        ref_crop = self._crop(reg_list[0])
-
-
-        for hdulist in hdulist_list[1:]:
-            # detection_sigma default = 5
-            # max_control_points default = 50
-            # min_area default = 5
-            reg_start = time.time()
-
-            data = self.debayer(hdulist)
-
-            try:
-                ### Reusing the tranform does not appear to work
-                #if isinstance(self.transform, type(None)):
-                #    self.transform, (source_list, target_list) = astroalign.find_transform(
-                #        data,
-                #        reg_list[0],
-                #        detection_sigma=5,
-                #        max_control_points=50,
-                #        min_area=10,
-                #    )
-
-                ### Find transform using a crop of the image
-                hdu_crop = self._crop(data)
-                self.transform, (source_list, target_list) = astroalign.find_transform(
-                    hdu_crop,
-                    ref_crop,
-                    detection_sigma=5,
-                    max_control_points=50,
-                    min_area=10,
-                )
-
-                logger.info(
-                    'Registration Matches: %d, Rotation: %0.6f, Translation: (%0.6f, %0.6f), Scale: %0.6f',
-                    len(target_list),
-                    self.transform.rotation,
-                    self.transform.translation[0], self.transform.translation[1],
-                    self.transform.scale,
-                )
-
-                ### Apply transform
-                reg_image, footprint = astroalign.apply_transform(
-                    self.transform,
-                    data,
-                    reg_list[0],
-                )
-
-
-                ## Register full image
-                #reg_image, footprint = astroalign.register(
-                #    data,
-                #    reg_list[0],
-                #    detection_sigma=5,
-                #    max_control_points=50,
-                #    min_area=10,
-                #    #propagate_mask=True,
-                #)
-            except astroalign.MaxIterError as e:
-                logger.error('Error registering: %s', str(e))
-                continue
-
-            reg_elapsed_s = time.time() - reg_start
-            logger.info('Image registered in %0.4f s', reg_elapsed_s)
+            reg_image = self.register(reference_image, ref_crop, image)
 
             reg_list.append(reg_image)
 
 
+        elapsed_s = time.time() - start
+        logger.info('Images aligned in %0.4f s', elapsed_s)
 
+
+        self.stack(output, reg_list)
+
+
+    def register(self, ref, ref_crop, data):
+        # detection_sigma default = 5
+        # max_control_points default = 50
+        # min_area default = 5
+        reg_start = time.time()
+
+        try:
+            ### Reusing the tranform does not appear to work
+            #if isinstance(self.transform, type(None)):
+            #    self.transform, (source_list, target_list) = astroalign.find_transform(
+            #        data,
+            #        ref,
+            #        detection_sigma=5,
+            #        max_control_points=50,
+            #        min_area=10,
+            #    )
+
+            ### Find transform using a crop of the image
+            hdu_crop = self._crop(data)
+            self.transform, (source_list, target_list) = astroalign.find_transform(
+                hdu_crop,
+                ref_crop,
+                detection_sigma=5,
+                max_control_points=50,
+                min_area=10,
+            )
+
+            logger.info(
+                'Registration Matches: %d, Rotation: %0.6f, Translation: (%0.6f, %0.6f), Scale: %0.6f',
+                len(target_list),
+                self.transform.rotation,
+                self.transform.translation[0], self.transform.translation[1],
+                self.transform.scale,
+            )
+
+            ### Apply transform
+            reg_image, footprint = astroalign.apply_transform(
+                self.transform,
+                data,
+                ref,
+            )
+
+
+            ## Register full image
+            #reg_image, footprint = astroalign.register(
+            #    data,
+            #    ref,
+            #    detection_sigma=5,
+            #    max_control_points=50,
+            #    min_area=10,
+            #    #propagate_mask=True,
+            #)
+        except astroalign.MaxIterError as e:
+            logger.error('Error registering: %s', str(e))
+            raise
+
+        reg_elapsed_s = time.time() - reg_start
+        logger.info('Image registered in %0.4f s', reg_elapsed_s)
+
+        return reg_image
+
+
+    def stack(self, output, reg_list):
         stacker = ImageStacker()
         stacker_method = getattr(stacker, self.method)
 
         stacked_img = stacker_method(reg_list, numpy.uint16)
-
-        elapsed_s = time.time() - start
-        logger.info('Images aligned in %0.4f s', elapsed_s)
 
         stacked_bitdepth = self._detectBitDepth(stacked_img)
         stacked_img_8bit = self._convert_16bit_to_8bit(stacked_img, 16, stacked_bitdepth)
