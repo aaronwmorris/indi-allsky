@@ -89,7 +89,7 @@ class IndiAllskyStacker(object):
 
     def average(self, stack_data_list, numpy_type):
         mean_image = numpy.mean(stack_data_list, axis=0)
-        return numpy.floor(mean_image).astype(numpy_type)  # no floats
+        return mean_image.astype(numpy_type)  # no floats
 
 
     def maximum(self, stack_data_list, numpy_type):
@@ -99,7 +99,7 @@ class IndiAllskyStacker(object):
         for i in stack_data_list[1:]:
             image_max = numpy.maximum(image_max, i)
 
-        return image_max
+        return image_max.astype(numpy_type)
 
     def minimum(self, stack_data_list, numpy_type):
         image_min = stack_data_list[0]  # start with first image
@@ -108,7 +108,7 @@ class IndiAllskyStacker(object):
         for i in stack_data_list[1:]:
             image_min = numpy.minimum(image_min, i)
 
-        return image_min
+        return image_min.astype(numpy_type)
 
 
     def register(self, stack_i_ref_list):
