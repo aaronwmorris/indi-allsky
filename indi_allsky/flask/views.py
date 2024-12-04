@@ -5770,11 +5770,9 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.calibrate()
 
-            image_processor.fits2opencv()
+            image_processor.debayer()
 
             image_processor.stack()  # this populates self.image
-
-            image_processor.debayer()
 
             image_processor.stretch()
 
