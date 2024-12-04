@@ -92,9 +92,9 @@ class Align(object):
             #    )
 
             ### Find transform using a crop of the image
-            hdu_crop = self._crop(data)
+            data_crop = self._crop(data)
             self.transform, (source_list, target_list) = astroalign.find_transform(
-                hdu_crop,
+                data_crop,
                 ref_crop,
                 detection_sigma=5,
                 max_control_points=50,
@@ -193,6 +193,7 @@ class Align(object):
 
         # shifting is 5x faster than division
         shift_factor = image_bit_depth - 8
+        #logger.info('Type: %s', str(data.dtype))
         return numpy.right_shift(data, shift_factor).astype(numpy.uint8)
 
 
@@ -279,7 +280,7 @@ class ImageStacker(object):
 
     def average(self, stack_data, numpy_type):
         mean_image = numpy.mean(stack_data, axis=0)
-        return numpy.floor(mean_image).astype(numpy_type)  # no floats
+        return mean_image.astype(numpy_type)  # no floats
 
 
     def maximum(self, stack_data, numpy_type):
@@ -289,7 +290,7 @@ class ImageStacker(object):
         for i in stack_data[1:]:
             image_max = numpy.maximum(image_max, i)
 
-        return image_max
+        return image_max.astype(numpy_type)
 
     def minimum(self, stack_data, numpy_type):
         image_min = stack_data[0]  # start with first image
@@ -298,7 +299,7 @@ class ImageStacker(object):
         for i in stack_data[1:]:
             image_min = numpy.minimum(image_min, i)
 
-        return image_min
+        return image_min.astype(numpy_type)
 
 
 
