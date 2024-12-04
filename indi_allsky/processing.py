@@ -143,7 +143,6 @@ class ImageProcessor(object):
 
         # contains the current stacked image
         self._image = None
-        self._non_stacked_image = None  # used when raw exports are enabled
 
         # contains the raw image data, data will be newest to oldest
         self.image_list = [None]  # element will be removed on first image
@@ -190,15 +189,6 @@ class ImageProcessor(object):
     @image.setter
     def image(self, new_image):
         self._image = new_image
-
-
-    @property
-    def non_stacked_image(self):
-        return self._non_stacked_image
-
-    @non_stacked_image.setter
-    def non_stacked_image(self, new_non_stacked_image):
-        self._non_stacked_image = new_non_stacked_image
 
 
     @property
@@ -319,7 +309,6 @@ class ImageProcessor(object):
 
         # clear old data as soon as possible
         self.image = None
-        self.non_stacked_image = None
 
 
         if self.night_v.value and not self.moonmode_v.value:
@@ -676,11 +665,6 @@ class ImageProcessor(object):
         i_ref.opencv_data = cv2.cvtColor(data, debayer_algorithm)
 
 
-        ### for raw export
-        #if not isinstance(self.non_stacked_image, type(None)):
-        #    self.non_stacked_image = cv2.cvtColor(self.non_stacked_image, debayer_algorithm)
-
-
     def getLatestImage(self):
         return self.image_list[0]
 
@@ -946,7 +930,7 @@ class ImageProcessor(object):
 
 
     def stack(self):
-        # self.image and self.non_stacked_image are first populated by this method
+        # self.image is first populated by this method
         i_ref = self.getLatestImage()
 
 
@@ -954,11 +938,6 @@ class ImageProcessor(object):
             # disable processing in focus mode
             self.image = i_ref.opencv_data
             return
-
-
-        if self.config.get('IMAGE_EXPORT_RAW'):
-            # set aside non-stacked data for raw export
-            self.non_stacked_image = i_ref.opencv_data
 
 
         stack_i_ref_list = list()

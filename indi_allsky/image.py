@@ -403,14 +403,12 @@ class ImageWorker(Process):
 
         self.image_processor.calculateSqm()
 
-        self.image_processor.stack()
+        self.image_processor.stack()  # this populates self.image
 
 
         image_height, image_width = self.image_processor.image.shape[:2]
         logger.info('Image: %d x %d', image_width, image_height)
 
-
-        i_ref = self.image_processor.getLatestImage()
 
         ### IMAGE IS CALIBRATED ###
 
