@@ -596,6 +596,10 @@ class ImageProcessor(object):
     def debayer(self):
         i_ref = self.getLatestImage()
 
+        self._debayer(i_ref)
+
+
+    def _debayer(self, i_ref):
         data = i_ref.hdulist[0].data
 
         if i_ref.image_bitpix in (8, 16):
