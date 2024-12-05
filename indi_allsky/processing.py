@@ -143,7 +143,6 @@ class ImageProcessor(object):
 
         # contains the current stacked image
         self._image = None
-        self._non_stacked_image = None  # used when raw exports are enabled
 
         # contains the raw image data, data will be newest to oldest
         self.image_list = [None]  # element will be removed on first image
@@ -190,15 +189,6 @@ class ImageProcessor(object):
     @image.setter
     def image(self, new_image):
         self._image = new_image
-
-
-    @property
-    def non_stacked_image(self):
-        return self._non_stacked_image
-
-    @non_stacked_image.setter
-    def non_stacked_image(self, new_non_stacked_image):
-        self._non_stacked_image = new_non_stacked_image
 
 
     @property
@@ -319,7 +309,6 @@ class ImageProcessor(object):
 
         # clear old data as soon as possible
         self.image = None
-        self.non_stacked_image = None
 
 
         if self.night_v.value and not self.moonmode_v.value:
@@ -532,9 +521,6 @@ class ImageProcessor(object):
         logger.info('Image bits: %d, cfa: %s', image_bitpix, str(image_bayerpat))
 
 
-        detected_bit_depth = self._detectBitDepth(hdulist)
-
-
         dayDate = self._dateCalcs.calcDayDate(exp_date)
 
 
@@ -544,28 +530,38 @@ class ImageProcessor(object):
             target_adu = self.config['TARGET_ADU_DAY']
 
 
-        image_data = {
-            'hdulist'          : hdulist,
-            #'opencv_data'      : None,  # populated in calibrate()
-            'calibrated'       : False,
-            'exposure'         : exposure,
-            'exp_date'         : exp_date,
-            'exp_elapsed'      : exp_elapsed,
-            'day_date'         : dayDate,
-            'camera_id'        : camera.id,
-            'camera_name'      : camera.name,
-            'camera_uuid'      : camera.uuid,
-            'owner'            : str(camera.owner),
-            'location'         : str(camera.location),
-            'image_bitpix'     : image_bitpix,
-            'image_bayerpat'   : image_bayerpat,
-            'detected_bit_depth' : detected_bit_depth,  # keeping this for reference
-            'target_adu'       : target_adu,
-            'sqm_value'        : None,    # populated later
-            'lines'            : list(),  # populated later
-            'stars'            : list(),  # populated later
-        }
+        image_data = ImageData(
+            self.config,
+            hdulist,
+            exposure,
+            exp_date,
+            exp_elapsed,
+            dayDate,
+            camera.id,
+            camera.name,
+            camera.uuid,
+            str(camera.owner),
+            str(camera.location),
+            image_bitpix,
+            image_bayerpat,
+            target_adu,
+        )
 
+
+        detected_bit_depth = image_data.detected_bit_depth
+
+        config_ccd_bit_depth = self.config.get('CCD_BIT_DEPTH', 0)
+        if config_ccd_bit_depth:
+            if detected_bit_depth != config_ccd_bit_depth:
+                logger.warning('*** DETECTED BIT DEPTH (%d) IS DIFFERENT FROM CONFIGURED BIT DEPTH (%d) ***', detected_bit_depth, config_ccd_bit_depth)
+
+            logger.info('Overriding bit depth to %d bits', config_ccd_bit_depth)
+            self.max_bit_depth = config_ccd_bit_depth
+
+        else:
+            if detected_bit_depth > self.max_bit_depth:
+                logger.warning('Updated default bit depth: %d', detected_bit_depth)
+                self.max_bit_depth = detected_bit_depth
 
 
         # indi_pylibcamera specific stuff
@@ -573,27 +569,23 @@ class ImageProcessor(object):
         instrume_header = hdulist[0].header.get('INSTRUME', '')
         if instrume_header == 'indi_pylibcamera':
             # OFFSET_0, _1, _2, _3 are the SensorBlackLevels metadata from libcamera
-            image_data['libcamera_black_level'] = int(hdulist[0].header.get('OFFSET_0'))
+            image_data.libcamera_black_level = int(hdulist[0].header.get('OFFSET_0', 0))
 
 
         # aurora and smoke data
         camera_data = camera.data
         if camera_data:
-            image_data['kpindex'] = float(camera_data.get('KPINDEX_CURRENT', 0))
-            image_data['ovation_max'] = int(camera_data.get('OVATION_MAX', 0))
+            image_data.kpindex = float(camera_data.get('KPINDEX_CURRENT', 0.0))
+            image_data.ovation_max = int(camera_data.get('OVATION_MAX', 0))
 
             try:
-                image_data['smoke_rating'] = int(camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA))
+                image_data.smoke_rating = int(camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA))
             except ValueError:
                 # fix legacy values (str) until updated
-                image_data['smoke_rating'] = constants.SMOKE_RATING_NODATA
+                pass
             except TypeError:
                 # fix legacy values (str) until updated
-                image_data['smoke_rating'] = constants.SMOKE_RATING_NODATA
-        else:
-            image_data['kpindex'] = 0
-            image_data['ovation_max'] = 0.0
-            image_data['smoke_rating'] = constants.SMOKE_RATING_NODATA
+                pass
 
 
         self.image_list.insert(0, image_data)  # new image is first in list
@@ -601,21 +593,18 @@ class ImageProcessor(object):
         return image_data
 
 
-    def fits2opencv(self):
+    def debayer(self):
         i_ref = self.getLatestImage()
 
-        data = self._fits2opencv(i_ref)
-
-        i_ref['opencv_data'] = data
+        self._debayer(i_ref)
 
 
-    def _fits2opencv(self, i_ref):
-        data = i_ref['hdulist'][0].data
-        image_bitpix = i_ref['image_bitpix']
+    def _debayer(self, i_ref):
+        data = i_ref.hdulist[0].data
 
-        if image_bitpix in (8, 16):
+        if i_ref.image_bitpix in (8, 16):
             pass
-        elif image_bitpix == -32:  # float32
+        elif i_ref.image_bitpix == -32:  # float32
             logger.info('Scaling float32 data to uint16')
 
             ### cutoff lower range
@@ -626,10 +615,10 @@ class ImageProcessor(object):
 
             ### cast to uint16 for pretty pictures
             data = data.astype(numpy.uint16)
-            i_ref['hdulist'][0].data = data
+            i_ref.hdulist[0].data = data
 
-            i_ref['image_bitpix'] = 16
-        elif image_bitpix == 32:  # uint32
+            i_ref.image_bitpix = 16
+        elif i_ref.image_bitpix == 32:  # uint32
             logger.info('Scaling uint32 data to uint16')
 
             ### cutoff upper range
@@ -637,71 +626,47 @@ class ImageProcessor(object):
 
             ### cast to uint16 for pretty pictures
             data = data.astype(numpy.uint16)
-            i_ref['hdulist'][0].data = data
+            i_ref.hdulist[0].data = data
 
-            i_ref['image_bitpix'] = 16
+            i_ref.image_bitpix = 16
         else:
-            raise Exception('Unsupported bit format: {0:d}'.format(image_bitpix))
+            raise Exception('Unsupported bit format: {0:d}'.format(i_ref.image_bitpix))
 
 
-        if len(data.shape) == 2:
-            # mono data does not need to be converted
-            return data
+        if not len(data.shape) == 2:
+            # data is already RGB(fits)
+            data = numpy.swapaxes(data, 0, 2)
+            data = numpy.swapaxes(data, 0, 1)
+
+            i_ref.opencv_data = data
+            return
 
 
-        data = numpy.swapaxes(data, 0, 2)
-        data = numpy.swapaxes(data, 0, 1)
-
-        return cv2.cvtColor(data, cv2.COLOR_RGB2BGR)
-
-
-    def _detectBitDepth(self, hdulist):
-        ### This will need some rework if cameras return signed int data
-
-        max_val = numpy.amax(hdulist[0].data)
-        logger.info('Image max value: %d', int(max_val))
-
-        # This method of detecting bit depth can cause the 16->8 bit conversion
-        # to stretch too much.  This most commonly happens with very low gains
-        # during the day when there are no hot pixels.  This can result in a
-        # trippy effect
-        if max_val > 32768:
-            detected_bit_depth = 16
-        elif max_val > 16384:
-            detected_bit_depth = 15
-        elif max_val > 8192:
-            detected_bit_depth = 14
-        elif max_val > 4096:
-            detected_bit_depth = 13
-        elif max_val > 2096:
-            detected_bit_depth = 12
-        elif max_val > 1024:
-            detected_bit_depth = 11
-        elif max_val > 512:
-            detected_bit_depth = 10
-        elif max_val > 256:
-            detected_bit_depth = 9
+        ### now we reach the debayer stage
+        if self.config.get('CFA_PATTERN'):
+            # override detected bayer pattern
+            logger.warning('Overriding CFA pattern: %s', self.config['CFA_PATTERN'])
+            image_bayerpat = self.config['CFA_PATTERN']
         else:
-            detected_bit_depth = 8
-
-        #logger.info('Detected bit depth: %d', detected_bit_depth)
+            image_bayerpat = i_ref.image_bayerpat
 
 
-        config_ccd_bit_depth = self.config.get('CCD_BIT_DEPTH', 0)
-        if config_ccd_bit_depth:
-            if detected_bit_depth != config_ccd_bit_depth:
-                logger.warning('*** DETECTED BIT DEPTH (%d) IS DIFFERENT FROM CONFIGURED BIT DEPTH (%d) ***', detected_bit_depth, config_ccd_bit_depth)
-
-            logger.info('Overriding bit depth to %d bits', config_ccd_bit_depth)
-            self.max_bit_depth = config_ccd_bit_depth
-            return config_ccd_bit_depth
+        if not image_bayerpat:
+            # assume mono data
+            logger.error('No bayer pattern detected')
+            i_ref.opencv_data = data
+            return
 
 
-        if detected_bit_depth > self.max_bit_depth:
-            logger.warning('Updated default bit depth: %d', detected_bit_depth)
-            self.max_bit_depth = detected_bit_depth
+        if self.config.get('NIGHT_GRAYSCALE') and self.night_v.value:
+            debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
+        elif self.config.get('DAYTIME_GRAYSCALE') and not self.night_v.value:
+            debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
+        else:
+            debayer_algorithm = self.__cfa_bgr_map[image_bayerpat]
 
-        return detected_bit_depth
+
+        i_ref.opencv_data = cv2.cvtColor(data, debayer_algorithm)
 
 
     def getLatestImage(self):
@@ -721,16 +686,16 @@ class ImageProcessor(object):
             return
 
 
-        if i_ref['calibrated']:
+        if i_ref.calibrated:
             # already calibrated
             return
 
 
         try:
-            calibrated_data = self._apply_calibration(i_ref['hdulist'][0].data, i_ref['exposure'], i_ref['camera_id'], i_ref['image_bitpix'])
-            i_ref['hdulist'][0].data = calibrated_data
+            calibrated_data = self._apply_calibration(i_ref.hdulist[0].data, i_ref.exposure, i_ref.camera_id, i_ref.image_bitpix)
+            i_ref.hdulist[0].data = calibrated_data
 
-            i_ref['calibrated'] = True
+            i_ref.calibrated = True
         except CalibrationNotFound:
             # only subtract dark level if dark frame is not found
 
@@ -740,10 +705,9 @@ class ImageProcessor(object):
                     black_level_scaled = int(libcamera_black_level) >> (16 - self.max_bit_depth)
 
                     # use opencv to prevent underruns
-                    i_ref['hdulist'][0].data = cv2.subtract(i_ref['hdulist'][0].data, black_level_scaled)
-                    #i_ref['hdulist'][0].data -= (black_level_scaled - 15)  # offset slightly
+                    i_ref.hdulist[0].data = cv2.subtract(i_ref.hdulist[0].data, black_level_scaled)
 
-                    i_ref['calibrated'] = True
+                    i_ref.calibrated = True
 
 
     def _apply_calibration(self, data, exposure, camera_id, image_bitpix):
@@ -942,10 +906,10 @@ class ImageProcessor(object):
             adu = cv2.mean(src=data_mono, mask=self._adu_mask)[0]
 
 
-        if i_ref['image_bitpix'] == 8:
+        if i_ref.image_bitpix == 8:
             # nothing to scale
             adu_8 = int(adu)
-        elif i_ref['image_bitpix'] == 16:
+        elif i_ref.image_bitpix == 16:
             shift_factor = self.max_bit_depth - 8
             adu_8 = int(adu) >> shift_factor
         else:
@@ -963,26 +927,21 @@ class ImageProcessor(object):
 
         if self.focus_mode:
             # disable processing in focus mode
-            i_ref['sqm_value'] = 0
+            i_ref.sqm_value = 0
             return
 
-        i_ref['sqm_value'] = self._sqm.calculate(i_ref['opencv_data'], i_ref['exposure'], self.gain_v.value)
+        i_ref.sqm_value = self._sqm.calculate(i_ref.opencv_data, i_ref.exposure, self.gain_v.value)
 
 
     def stack(self):
-        # self.image and self.non_stacked_image are first populated by this method
+        # self.image is first populated by this method
         i_ref = self.getLatestImage()
 
 
         if self.focus_mode:
             # disable processing in focus mode
-            self.image = i_ref['opencv_data']
+            self.image = i_ref.opencv_data
             return
-
-
-        if self.config.get('IMAGE_EXPORT_RAW'):
-            # set aside non-stacked data for raw export
-            self.non_stacked_image = i_ref['opencv_data']
 
 
         stack_i_ref_list = list()
@@ -998,11 +957,11 @@ class ImageProcessor(object):
 
         if stack_list_len == 1:
             # no reason to stack a single image
-            self.image = i_ref['opencv_data']
+            self.image = i_ref.opencv_data
             return
 
 
-        image_bitpix = i_ref['image_bitpix']
+        image_bitpix = i_ref.image_bitpix
 
 
         if image_bitpix == 16:
@@ -1013,10 +972,10 @@ class ImageProcessor(object):
             raise Exception('Unknown bits per pixel')
 
 
-        if self.config.get('IMAGE_STACK_ALIGN') and i_ref['exposure'] > self.registration_exposure_thresh:
+        if self.config.get('IMAGE_STACK_ALIGN') and i_ref.exposure > self.registration_exposure_thresh:
             # only perform registration once the exposure exceeds 5 seconds
 
-            stack_i_ref_list = list(filter(lambda x: x['exposure'] > self.registration_exposure_thresh, stack_i_ref_list))
+            stack_i_ref_list = list(filter(lambda x: x.exposure > self.registration_exposure_thresh, stack_i_ref_list))
 
 
             # if the registration takes longer than the exposure period, kill it
@@ -1028,12 +987,12 @@ class ImageProcessor(object):
             except TimeOutException:
                 # stack unaligned images
                 logger.error('Registration exceeded the exposure period, cancel alignment')
-                stack_data_list = [x['opencv_data'] for x in stack_i_ref_list]
+                stack_data_list = [x.opencv_data for x in stack_i_ref_list]
 
             signal.alarm(0)
         else:
             # stack unaligned images
-            stack_data_list = [x['opencv_data'] for x in stack_i_ref_list]
+            stack_data_list = [x.opencv_data for x in stack_i_ref_list]
 
 
         stack_start = time.time()
@@ -1044,55 +1003,16 @@ class ImageProcessor(object):
             self.image = stacker_method(stack_data_list, numpy_type)
         except AttributeError:
             logger.error('Unknown stacking method: %s', self.stack_method)
-            self.image = i_ref['opencv_data']
+            self.image = i_ref.opencv_data
             return
 
 
         if self.config.get('IMAGE_STACK_SPLIT'):
-            self.image = self.splitscreen(i_ref['opencv_data'], self.image)
+            self.image = self.splitscreen(i_ref.opencv_data, self.image)
 
 
         stack_elapsed_s = time.time() - stack_start
         logger.info('Stacked %d images (%s) in %0.4f s', len(stack_data_list), self.stack_method, stack_elapsed_s)
-
-
-    def debayer(self):
-        # sanity check
-        if not len(self.image.shape) == 2:
-            # already debayered
-            return
-
-
-        i_ref = self.getLatestImage()
-
-
-        if self.config.get('CFA_PATTERN'):
-            # override detected bayer pattern
-            logger.warning('Overriding CFA pattern: %s', self.config['CFA_PATTERN'])
-            image_bayerpat = self.config['CFA_PATTERN']
-        else:
-            image_bayerpat = i_ref['image_bayerpat']
-
-
-        if not image_bayerpat:
-            logger.error('No bayer pattern detected')
-            return
-
-
-        if self.config.get('NIGHT_GRAYSCALE') and self.night_v.value:
-            debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
-        elif self.config.get('DAYTIME_GRAYSCALE') and not self.night_v.value:
-            debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
-        else:
-            debayer_algorithm = self.__cfa_bgr_map[image_bayerpat]
-
-
-        self.image = cv2.cvtColor(self.image, debayer_algorithm)
-
-
-        # for raw export
-        if not isinstance(self.non_stacked_image, type(None)):
-            self.non_stacked_image = cv2.cvtColor(self.non_stacked_image, debayer_algorithm)
 
 
     #def subtract_black_level(self, libcamera_black_level):
@@ -1146,7 +1066,7 @@ class ImageProcessor(object):
     def convert_16bit_to_8bit(self):
         i_ref = self.getLatestImage()
 
-        self._convert_16bit_to_8bit(i_ref['image_bitpix'])
+        self._convert_16bit_to_8bit(i_ref.image_bitpix)
 
 
     def _convert_16bit_to_8bit(self, image_bitpix):
@@ -1228,10 +1148,9 @@ class ImageProcessor(object):
 
         if self.focus_mode:
             # disable processing in focus mode
-            i_ref['lines'] = list
             return
 
-        i_ref['lines'] = self._lineDetect.detectLines(self.image)
+        i_ref.lines = self._lineDetect.detectLines(self.image)
 
 
     def detectStars(self):
@@ -1239,10 +1158,9 @@ class ImageProcessor(object):
 
         if self.focus_mode:
             # disable processing in focus mode
-            i_ref['stars'] = list()
             return
 
-        i_ref['stars'] = self._stars_detect.detectObjects(self.image)
+        i_ref.stars = self._stars_detect.detectObjects(self.image)
 
 
     def drawDetections(self):
@@ -1980,8 +1898,8 @@ class ImageProcessor(object):
 
 
         # calculate rational exposure ("1 1/4")
-        exp_whole = int(i_ref['exposure'])
-        exp_remain = i_ref['exposure'] - exp_whole
+        exp_whole = int(i_ref.exposure)
+        exp_remain = i_ref.exposure - exp_whole
 
         exp_remain_frac = Fraction(exp_remain).limit_denominator(max_denominator=31250)
 
@@ -1996,21 +1914,21 @@ class ImageProcessor(object):
 
 
         label_data = {
-            'timestamp'    : i_ref['exp_date'],
-            'ts'           : i_ref['exp_date'],  # shortcut
-            'exposure'     : i_ref['exposure'],
-            'day_date'     : i_ref['day_date'],
+            'timestamp'    : i_ref.exp_date,
+            'ts'           : i_ref.exp_date,  # shortcut
+            'exposure'     : i_ref.exposure,
+            'day_date'     : i_ref.day_date,
             'rational_exp' : rational_exp,
             'gain'         : self.gain_v.value,
             'temp_unit'    : temp_unit,
-            'sqm'          : i_ref['sqm_value'],
-            'stars'        : len(i_ref['stars']),
-            'detections'   : str(bool(len(i_ref['lines']))),
-            'owner'        : i_ref['owner'],
-            'location'     : i_ref['location'],
-            'kpindex'      : i_ref['kpindex'],
-            'ovation_max'  : i_ref['ovation_max'],
-            'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref['smoke_rating']],
+            'sqm'          : i_ref.sqm_value,
+            'stars'        : len(i_ref.stars),
+            'detections'   : str(bool(len(i_ref.lines))),
+            'owner'        : i_ref.owner,
+            'location'     : i_ref.location,
+            'kpindex'      : i_ref.kpindex,
+            'ovation_max'  : i_ref.ovation_max,
+            'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'sun_next_rise'     : self.astrometric_data['sun_next_rise'],
             'sun_next_rise_h'   : self.astrometric_data['sun_next_rise_h'],
@@ -2222,7 +2140,7 @@ class ImageProcessor(object):
 
     def orb_image(self):
         # Disabled when focus mode is enabled
-        if self.config.get('FOCUS_MODE', False):
+        if self.focus_mode:
             logger.warning('Focus mode enabled, orbs disabled')
             return
 
@@ -2287,7 +2205,7 @@ class ImageProcessor(object):
 
 
         # Disabled when focus mode is enabled
-        if self.config.get('FOCUS_MODE', False):
+        if self.focus_mode:
             logger.warning('Focus mode enabled, labels disabled')
 
             # indicate focus mode is enabled in indi-allsky
@@ -2301,7 +2219,7 @@ class ImageProcessor(object):
             self.image_xy = [image_width - 250, image_height - 10]
             self.drawText_opencv(
                 self.image,
-                i_ref['exp_date'].strftime('%H:%M:%S'),
+                i_ref.exp_date.strftime('%H:%M:%S'),
                 tuple(self.image_xy),
                 tuple(self.text_color_bgr),
             )
@@ -2370,7 +2288,7 @@ class ImageProcessor(object):
 
 
         # Disabled when focus mode is enabled
-        if self.config.get('FOCUS_MODE', False):
+        if self.focus_mode:
             logger.warning('Focus mode enabled, labels disabled')
 
             # indicate focus mode is enabled in indi-allsky
@@ -2387,7 +2305,7 @@ class ImageProcessor(object):
             self.text_xy = [image_width - 300, image_height - (self.text_font_height * 2)]
             self.drawText_pillow(
                 draw,
-                i_ref['exp_date'].strftime('%H:%M:%S'),
+                i_ref.exp_date.strftime('%H:%M:%S'),
                 pillow_font_file_p,
                 self.text_size_pillow,
                 tuple(self.text_xy),
@@ -3117,5 +3035,229 @@ class ImageProcessor(object):
         alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
 
         return alpha_mask
+
+
+
+class ImageData(object):
+
+    def __init__(
+        self,
+        config,
+        hdulist,
+        exposure,
+        exp_date,
+        exp_elapsed,
+        day_date,
+        camera_id,
+        camera_name,
+        camera_uuid,
+        owner,
+        location,
+        image_bitpix,
+        image_bayerpat,
+        target_adu,
+    ):
+        self.config = config
+
+        self._hdulist = hdulist
+        self._exposure = exposure
+        self._exp_date = exp_date
+        self._exp_elapsed = exp_elapsed
+        self._day_date = day_date
+        self._camera_id = camera_id
+        self._camera_name = camera_name
+        self._camera_uuid = camera_uuid
+        self._owner = owner
+        self._location = location
+        self._image_bitpix = image_bitpix
+        self._image_bayerpat = image_bayerpat
+        self._target_adu = target_adu
+
+        self._detected_bit_depth = 8  # updated below
+        self._calibrated = False
+        self._libcamera_black_level = None
+        self._opencv_data = None
+        self._kpindex = 0.0
+        self._ovation_max = 0
+        self._smoke_rating = constants.SMOKE_RATING_NODATA
+        self._sqm_value = None
+        self._lines = list()
+        self._stars = list()
+
+
+        self.detectBitDepth()
+
+
+    @property
+    def hdulist(self):
+        return self._hdulist
+
+    @property
+    def exposure(self):
+        return self._exposure
+
+    @property
+    def exp_date(self):
+        return self._exp_date
+
+    @property
+    def exp_elapsed(self):
+        return self._exp_elapsed
+
+    @property
+    def day_date(self):
+        return self._day_date
+
+    @property
+    def camera_id(self):
+        return self._camera_id
+
+    @property
+    def camera_name(self):
+        return self._camera_name
+
+    @property
+    def camera_uuid(self):
+        return self._camera_uuid
+
+    @property
+    def owner(self):
+        return self._owner
+
+    @property
+    def location(self):
+        return self._location
+
+    @property
+    def image_bayerpat(self):
+        return self._image_bayerpat
+
+    @property
+    def target_adu(self):
+        return self._target_adu
+
+
+    @property
+    def detected_bit_depth(self):
+        return self._detected_bit_depth
+
+    @detected_bit_depth.setter
+    def detected_bit_depth(self, new_detected_bit_depth):
+        self._detected_bit_depth = int(new_detected_bit_depth)
+
+    @property
+    def calibrated(self):
+        return self._calibrated
+
+    @calibrated.setter
+    def calibrated(self, new_calibrated):
+        self._calibrated = bool(new_calibrated)
+
+    @property
+    def libcamera_black_level(self):
+        return self._libcamera_black_level
+
+    @libcamera_black_level.setter
+    def libcamera_black_level(self, new_libcamera_black_level):
+        self._libcamera_black_level = bool(new_libcamera_black_level)
+
+
+    @property
+    def image_bitpix(self):
+        return self._image_bitpix
+
+    @image_bitpix.setter
+    def image_bitpix(self, new_image_bitpix):
+        self._image_bitpix = int(new_image_bitpix)
+
+    @property
+    def opencv_data(self):
+        return self._opencv_data
+
+    @opencv_data.setter
+    def opencv_data(self, new_opencv_data):
+        self._opencv_data = new_opencv_data
+
+    @property
+    def kpindex(self):
+        return self._kpindex
+
+    @kpindex.setter
+    def kpindex(self, new_kpindex):
+        self._kpindex = float(new_kpindex)
+
+    @property
+    def ovation_max(self):
+        return self._ovation_max
+
+    @ovation_max.setter
+    def ovation_max(self, new_ovation_max):
+        self._ovation_max = int(new_ovation_max)
+
+    @property
+    def smoke_rating(self):
+        return self._smoke_rating
+
+    @smoke_rating.setter
+    def smoke_rating(self, new_smoke_rating):
+        self._smoke_rating = int(new_smoke_rating)
+
+    @property
+    def sqm_value(self):
+        return self._sqm_value
+
+    @sqm_value.setter
+    def sqm_value(self, new_sqm_value):
+        self._sqm_value = float(new_sqm_value)
+
+    @property
+    def lines(self):
+        return self._lines
+
+    @lines.setter
+    def lines(self, new_lines):
+        self._lines = new_lines
+
+    @property
+    def stars(self):
+        return self._stars
+
+    @stars.setter
+    def stars(self, new_stars):
+        self._stars = new_stars
+
+
+    def detectBitDepth(self):
+        max_val = numpy.amax(self.hdulist[0].data)
+        logger.info('Image max value: %d', int(max_val))
+
+        # This method of detecting bit depth can cause the 16->8 bit conversion
+        # to stretch too much.  This most commonly happens with very low gains
+        # during the day when there are no hot pixels.  This can result in a
+        # trippy effect
+        if max_val > 32768:
+            detected_bit_depth = 16
+        elif max_val > 16384:
+            detected_bit_depth = 15
+        elif max_val > 8192:
+            detected_bit_depth = 14
+        elif max_val > 4096:
+            detected_bit_depth = 13
+        elif max_val > 2096:
+            detected_bit_depth = 12
+        elif max_val > 1024:
+            detected_bit_depth = 11
+        elif max_val > 512:
+            detected_bit_depth = 10
+        elif max_val > 256:
+            detected_bit_depth = 9
+        else:
+            detected_bit_depth = 8
+
+        #logger.info('Detected bit depth: %d', detected_bit_depth)
+
+
+        self.detected_bit_depth = detected_bit_depth
+
 
 
