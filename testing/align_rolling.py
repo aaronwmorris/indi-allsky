@@ -19,13 +19,22 @@ logger = logging
 
 
 class AlignRolling(object):
+
+    __cfa_bgr_map = {
+        'RGGB' : cv2.COLOR_BAYER_BG2BGR,
+        'GRBG' : cv2.COLOR_BAYER_GB2BGR,
+        'BGGR' : cv2.COLOR_BAYER_RG2BGR,
+        'GBRG' : cv2.COLOR_BAYER_GR2BGR,  # untested
+    }
+
+
     def __init__(self, method, output_dir):
         self.method = method
         self.output_dir_p = Path(output_dir)
 
         self.transform = None
 
-        self.stack_count = 10
+        self.stack_count = 4
         self.split_screen = True
 
         self.image_list = list()
@@ -54,15 +63,15 @@ class AlignRolling(object):
             start = time.time()
 
 
-            reference_hdulist = self.image_list[0]
-            reg_list = [reference_hdulist[0].data]  # add reference to list
+            reference_data = self.image_list[0]
+            reg_list = [reference_data]  # add reference to list
 
-            ref_crop = self._crop(reference_hdulist[0].data)
+            ref_crop = self._crop(reference_data)
 
 
             last_rotation = 0
 
-            for hdulist in self.image_list[1:]:
+            for data in self.image_list[1:]:
                 # detection_sigma default = 5
                 # max_control_points default = 50
                 # min_area default = 5
@@ -74,17 +83,17 @@ class AlignRolling(object):
                     ### Reusing the tranform does not appear to work
                     #if isinstance(self.transform, type(None)):
                     #    self.transform, (source_list, target_list) = astroalign.find_transform(
-                    #        hdulist[0],
-                    #        reference_hdulist[0],
+                    #        data,
+                    #        reference_data,
                     #        detection_sigma=5,
                     #        max_control_points=50,
                     #        min_area=10,
                     #    )
 
                     ### Find transform using a crop of the image
-                    hdu_crop = self._crop(hdulist[0].data)
+                    data_crop = self._crop(data)
                     self.transform, (source_list, target_list) = astroalign.find_transform(
-                        hdu_crop,
+                        data_crop,
                         ref_crop,
                         detection_sigma=5,
                         max_control_points=50,
@@ -134,15 +143,15 @@ class AlignRolling(object):
                     ### Apply transform
                     reg_image, footprint = astroalign.apply_transform(
                         self.transform,
-                        hdulist[0],
-                        reference_hdulist[0],
+                        data,
+                        reference_data,
                     )
 
 
                     ## Register full image
                     #reg_image, footprint = astroalign.register(
-                    #    hdulist[0],
-                    #    reference_hdulist[0],
+                    #    data,
+                    #    reference_data,
                     #    detection_sigma=5,
                     #    max_control_points=50,
                     #    min_area=10,
@@ -158,27 +167,28 @@ class AlignRolling(object):
                 reg_list.append(reg_image)
 
 
+            elapsed_s = time.time() - start
+            logger.info('Images aligned in %0.4f s', elapsed_s)
+
+
 
             stacker = ImageStacker()
             stacker_method = getattr(stacker, self.method)
 
             stacked_img = stacker_method(reg_list, numpy.uint16)
 
-            elapsed_s = time.time() - start
-            logger.info('Images aligned in %0.4f s', elapsed_s)
-
 
             if self.split_screen:
-                stacked_img = self.splitscreen(reference_hdulist[0].data, stacked_img)
+                stacked_img = self.splitscreen(reference_data, stacked_img)
 
 
             stacked_bitdepth = self._detectBitDepth(stacked_img)
             stacked_img_8bit = self._convert_16bit_to_8bit(stacked_img, 16, stacked_bitdepth)
 
 
-            out_file = self.output_dir_p.joinpath('{0:05d}.png'.format(i))
-            #cv2.imwrite(str(out_file), stacked_img_8bit, [cv2.IMWRITE_JPEG_QUALITY, 90])
-            cv2.imwrite(str(out_file), stacked_img_8bit, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+            out_file = self.output_dir_p.joinpath('{0:05d}.jpg'.format(i))
+            cv2.imwrite(str(out_file), stacked_img_8bit, [cv2.IMWRITE_JPEG_QUALITY, 90])
+            #cv2.imwrite(str(out_file), stacked_img_8bit, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 
             i += 1
 
@@ -195,7 +205,9 @@ class AlignRolling(object):
         ### Open file
         hdulist = fits.open(filename_p)
 
-        self.image_list.insert(0, hdulist)  # new image is first in list
+        data = self.debayer(hdulist)
+
+        self.image_list.insert(0, data)  # new image is first in list
 
 
     def _detectBitDepth(self, data):
@@ -229,6 +241,39 @@ class AlignRolling(object):
         logger.info('Detected bit depth: %d', image_bit_depth)
 
         return image_bit_depth
+
+
+    def debayer(self, hdulist):
+        image_bitpix = hdulist[0].header['BITPIX']
+        image_bayerpat = hdulist[0].header.get('BAYERPAT')
+
+        data = hdulist[0].data
+
+
+        if image_bitpix in (8, 16):
+            pass
+        else:
+            raise Exception('Unsupported bit format: {0:d}'.format(image_bitpix))
+
+
+        if not len(data.shape) == 2:
+            # data is already RGB(fits)
+            data = numpy.swapaxes(data, 0, 2)
+            data = numpy.swapaxes(data, 0, 1)
+
+            return data
+
+
+        if not image_bayerpat:
+            # assume mono data
+            logger.error('No bayer pattern detected')
+            return data
+
+
+        debayer_algorithm = self.__cfa_bgr_map[image_bayerpat]
+
+
+        return cv2.cvtColor(data, debayer_algorithm)
 
 
     def _convert_16bit_to_8bit(self, data, image_bitpix, image_bit_depth):
@@ -303,7 +348,7 @@ class ImageStacker(object):
 
     def average(self, stack_data, numpy_type):
         mean_image = numpy.mean(stack_data, axis=0)
-        return numpy.floor(mean_image).astype(numpy_type)  # no floats
+        return mean_image.astype(numpy_type)  # no floats
 
 
     def maximum(self, stack_data, numpy_type):
@@ -313,7 +358,7 @@ class ImageStacker(object):
         for i in stack_data[1:]:
             image_max = numpy.maximum(image_max, i)
 
-        return image_max
+        return image_max.astype(numpy_type)
 
     def minimum(self, stack_data, numpy_type):
         image_min = stack_data[0]  # start with first image
@@ -322,7 +367,7 @@ class ImageStacker(object):
         for i in stack_data[1:]:
             image_min = numpy.minimum(image_min, i)
 
-        return image_min
+        return image_min.astype(numpy_type)
 
 
 if __name__ == "__main__":

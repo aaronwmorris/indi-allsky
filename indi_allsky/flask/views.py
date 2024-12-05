@@ -5715,11 +5715,9 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
 
-            image_processor.fits2opencv()
+            image_processor.debayer()
 
             image_processor.stack()  # this populates self.image
-
-            image_processor.debayer()
 
             image_processor.convert_16bit_to_8bit()
 
@@ -5763,6 +5761,7 @@ class JsonImageProcessingView(JsonView):
 
                     i_ref = image_processor.add(f_image.getFilesystemPath(), alt_exposure, datetime.now(), 0.0, f_image.camera)
                     image_processor._calibrate(i_ref)
+                    image_processor._debayer(i_ref)
 
                 message_list.append('Stacked {0:d} images'.format(p_config['IMAGE_STACK_COUNT']))
 
@@ -5770,13 +5769,11 @@ class JsonImageProcessingView(JsonView):
             # add image after preloading other images
             image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
 
-            image_processor.calibrate()  # sets opencv_data
-
-            image_processor.fits2opencv()
-
-            image_processor.stack()  # this populates self.image
+            image_processor.calibrate()
 
             image_processor.debayer()
+
+            image_processor.stack()  # this populates self.image
 
             image_processor.stretch()
 
