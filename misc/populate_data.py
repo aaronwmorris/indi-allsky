@@ -54,41 +54,50 @@ class PopulateData(object):
 
 
     def main(self):
-        image_count = db.session.query(
+        image_query = db.session.query(
             IndiAllSkyDbImageTable
         )\
-            .filter(IndiAllSkyDbImageTable.createDate_year == sa_null())\
-            .count()
+            .filter(IndiAllSkyDbImageTable.createDate_year == sa_null())
 
-        panorama_image_count = db.session.query(
+        panorama_image_query = db.session.query(
             IndiAllSkyDbPanoramaImageTable
         )\
-            .filter(IndiAllSkyDbPanoramaImageTable.createDate_year == sa_null())\
-            .count()
+            .filter(IndiAllSkyDbPanoramaImageTable.createDate_year == sa_null())
 
-        fits_image_count = db.session.query(
+        fits_image_query = db.session.query(
             IndiAllSkyDbFitsImageTable
         )\
-            .filter(IndiAllSkyDbFitsImageTable.createDate_year == sa_null())\
-            .count()
+            .filter(IndiAllSkyDbFitsImageTable.createDate_year == sa_null())
 
-        video_count = db.session.query(
+        raw_image_query = db.session.query(
+            IndiAllSkyDbFitsImageTable
+        )\
+            .filter(IndiAllSkyDbFitsImageTable.createDate_year == sa_null())
+
+        video_query = db.session.query(
             IndiAllSkyDbVideoTable
         )\
-            .filter(IndiAllSkyDbVideoTable.dayDate_year == sa_null())\
-            .count()
+            .filter(IndiAllSkyDbVideoTable.dayDate_year == sa_null())
 
-        mini_video_count = db.session.query(
+        mini_video_query = db.session.query(
             IndiAllSkyDbMiniVideoTable
         )\
-            .filter(IndiAllSkyDbMiniVideoTable.dayDate_year == sa_null())\
-            .count()
+            .filter(IndiAllSkyDbMiniVideoTable.dayDate_year == sa_null())
+
+
+        image_count = image_query.count()
+        panorama_image_count = panorama_image_query.count()
+        fits_image_count = fits_image_query.count()
+        raw_image_count = raw_image_query.count()
+        video_count = video_query.count()
+        mini_video_count = mini_video_query.count()
 
 
         print()
         print('Image entries to fix: {0:d}'.format(image_count))
         print('Panorama Image entries to fix: {0:d}'.format(panorama_image_count))
         print('FITS Image entries to fix: {0:d}'.format(fits_image_count))
+        print('Raw Image entries to fix: {0:d}'.format(raw_image_count))
         print('Timelapse entries to fix: {0:d}'.format(video_count))
         print('Mini Timelapse entries to fix: {0:d}'.format(mini_video_count))
         print()
@@ -97,6 +106,7 @@ class PopulateData(object):
         total_count = image_count
         total_count += panorama_image_count
         total_count += fits_image_count
+        total_count += raw_image_count
         total_count += video_count
         total_count += mini_video_count
 
@@ -121,19 +131,15 @@ class PopulateData(object):
         ### images
         logger.warning('Processing images...')
         while True:
-            image_query = db.session.query(
-                IndiAllSkyDbImageTable
-            )\
-                .filter(IndiAllSkyDbImageTable.createDate_year == sa_null())\
-                .limit(500)
+            image_query_500 = image_query.limit(500)
 
 
-            i_count = image_query.count()
+            i_count = image_query_500.count()
             if i_count == 0:
                 break
 
 
-            for i in image_query:
+            for i in image_query_500:
                 i.createDate_year   = i.createDate.year
                 i.createDate_month  = i.createDate.month
                 i.createDate_day    = i.createDate.day
@@ -153,19 +159,15 @@ class PopulateData(object):
         ### panorama images
         logger.warning('Processing panorama images...')
         while True:
-            panorama_image_query = db.session.query(
-                IndiAllSkyDbPanoramaImageTable
-            )\
-                .filter(IndiAllSkyDbPanoramaImageTable.createDate_year == sa_null())\
-                .limit(500)
+            panorama_image_query_500 = panorama_image_query.limit(500)
 
 
-            p_count = panorama_image_query.count()
+            p_count = panorama_image_query_500.count()
             if p_count == 0:
                 break
 
 
-            for p in panorama_image_query:
+            for p in panorama_image_query_500:
                 p.createDate_year   = p.createDate.year
                 p.createDate_month  = p.createDate.month
                 p.createDate_day    = p.createDate.day
@@ -185,19 +187,15 @@ class PopulateData(object):
         ### FITS images
         logger.warning('Processing FITS images...')
         while True:
-            fits_image_query = db.session.query(
-                IndiAllSkyDbFitsImageTable
-            )\
-                .filter(IndiAllSkyDbFitsImageTable.createDate_year == sa_null())\
-                .limit(500)
+            fits_image_query_500 = fits_image_query.limit(500)
 
 
-            f_count = fits_image_query.count()
+            f_count = fits_image_query_500.count()
             if p_count == 0:
                 break
 
 
-            for f in fits_image_query:
+            for f in fits_image_query_500:
                 f.createDate_year   = f.createDate.year
                 f.createDate_month  = f.createDate.month
                 f.createDate_day    = f.createDate.day
@@ -214,22 +212,47 @@ class PopulateData(object):
                 sys.exit(1)
 
 
+        ### Raw images
+        logger.warning('Processing Raw images...')
+        while True:
+            raw_image_query_500 = raw_image_query.limit(500)
+
+
+            r_count = raw_image_query_500.count()
+            if r_count == 0:
+                break
+
+
+            for r in raw_image_query_500:
+                r.createDate_year   = r.createDate.year
+                r.createDate_month  = r.createDate.month
+                r.createDate_day    = r.createDate.day
+                r.createDate_hour   = r.createDate.hour
+
+            db.session.commit()
+
+
+            raw_image_count -= r_count
+            logger.info(' %d remaining...', raw_image_count)
+
+
+            if self._shutdown:
+                sys.exit(1)
+
+
+
         ### videos
         logger.warning('Processing timelapses...')
         while True:
-            video_query = db.session.query(
-                IndiAllSkyDbVideoTable
-            )\
-                .filter(IndiAllSkyDbVideoTable.dayDate_year == sa_null())\
-                .limit(500)
+            video_query_500 = video_query.limit(500)
 
 
-            v_count = video_query.count()
+            v_count = video_query_500.count()
             if v_count == 0:
                 break
 
 
-            for v in video_query:
+            for v in video_query_500:
                 v.dayDate_year   = v.dayDate.year
                 v.dayDate_month  = v.dayDate.month
                 v.dayDate_day    = v.dayDate.day
@@ -248,19 +271,15 @@ class PopulateData(object):
         ### mini videos
         logger.warning('Processing mini-timelapses...')
         while True:
-            mini_video_query = db.session.query(
-                IndiAllSkyDbMiniVideoTable
-            )\
-                .filter(IndiAllSkyDbMiniVideoTable.dayDate_year == sa_null())\
-                .limit(500)
+            mini_video_query_500 = mini_video_query.limit(500)
 
 
-            m_count = mini_video_query.count()
+            m_count = mini_video_query_500.count()
             if m_count == 0:
                 break
 
 
-            for m in mini_video_query:
+            for m in mini_video_query_500:
                 m.dayDate_year   = m.dayDate.year
                 m.dayDate_month  = m.dayDate.month
                 m.dayDate_day    = m.dayDate.day
