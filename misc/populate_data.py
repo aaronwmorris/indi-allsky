@@ -18,6 +18,7 @@ sys.path.append(str(Path(__file__).parent.absolute().parent))
 
 from indi_allsky.flask.models import IndiAllSkyDbImageTable
 from indi_allsky.flask.models import IndiAllSkyDbPanoramaImageTable
+from indi_allsky.flask.models import IndiAllSkyDbFitsImageTable
 from indi_allsky.flask.models import IndiAllSkyDbVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbMiniVideoTable
 
@@ -65,6 +66,12 @@ class PopulateData(object):
             .filter(IndiAllSkyDbPanoramaImageTable.createDate_year == sa_null())\
             .count()
 
+        fits_image_count = db.session.query(
+            IndiAllSkyDbFitsImageTable
+        )\
+            .filter(IndiAllSkyDbFitsImageTable.createDate_year == sa_null())\
+            .count()
+
         video_count = db.session.query(
             IndiAllSkyDbVideoTable
         )\
@@ -81,6 +88,7 @@ class PopulateData(object):
         print()
         print('Image entries to fix: {0:d}'.format(image_count))
         print('Panorama Image entries to fix: {0:d}'.format(panorama_image_count))
+        print('FITS Image entries to fix: {0:d}'.format(fits_image_count))
         print('Timelapse entries to fix: {0:d}'.format(video_count))
         print('Mini Timelapse entries to fix: {0:d}'.format(mini_video_count))
         print()
@@ -88,6 +96,7 @@ class PopulateData(object):
 
         total_count = image_count
         total_count += panorama_image_count
+        total_count += fits_image_count
         total_count += video_count
         total_count += mini_video_count
 
@@ -167,6 +176,38 @@ class PopulateData(object):
 
             panorama_image_count -= p_count
             logger.info(' %d remaining...', panorama_image_count)
+
+
+            if self._shutdown:
+                sys.exit(1)
+
+
+        ### FITS images
+        logger.warning('Processing FITS images...')
+        while True:
+            fits_image_query = db.session.query(
+                IndiAllSkyDbFitsImageTable
+            )\
+                .filter(IndiAllSkyDbFitsImageTable.createDate_year == sa_null())\
+                .limit(500)
+
+
+            f_count = fits_image_query.count()
+            if p_count == 0:
+                break
+
+
+            for f in fits_image_query:
+                f.createDate_year   = f.createDate.year
+                f.createDate_month  = f.createDate.month
+                f.createDate_day    = f.createDate.day
+                f.createDate_hour   = f.createDate.hour
+
+            db.session.commit()
+
+
+            fits_image_count -= f_count
+            logger.info(' %d remaining...', fits_image_count)
 
 
             if self._shutdown:
