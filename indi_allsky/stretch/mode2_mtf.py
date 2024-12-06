@@ -14,6 +14,9 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
 
+    operation_count = 1
+
+
     def __init__(self, *args, **kwargs):
         super(IndiAllSky_Mode2_MTF_Stretch, self).__init__(*args, **kwargs)
 
@@ -63,7 +66,9 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
             self._mtf_lut = lut
 
 
-        stretched_image = self._mtf_lut.take(data, mode='raise')
+        stretched_image = data
+        for x in range(self.operation_count):
+            stretched_image = self._mtf_lut.take(stretched_image, mode='raise')
 
 
         levels_elapsed_s = time.time() - mtf_start
@@ -72,4 +77,8 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
         return stretched_image
 
 
+
+class IndiAllSky_Mode2_MTF_Stretch_x2(IndiAllSky_Mode2_MTF_Stretch):
+
+    operation_count = 2
 
