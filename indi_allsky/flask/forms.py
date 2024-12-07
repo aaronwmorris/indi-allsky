@@ -4623,10 +4623,8 @@ class IndiAllskyFitsImageViewer(FlaskForm):
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
 
-            if img.detections:
-                entry_str = '{0:s} [*]'.format(img.createDate.strftime('%H:%M:%S'))
-            else:
-                entry_str = img.createDate.strftime('%H:%M:%S')
+
+            entry_str = img.createDate.strftime('%H:%M:%S')
 
             image_dict = dict()
             image_dict['id'] = img.id
@@ -4635,13 +4633,49 @@ class IndiAllskyFitsImageViewer(FlaskForm):
             image_dict['ts'] = int(img.createDate.timestamp())
             image_dict['width'] = img.width
             image_dict['height'] = img.height
-            image_dict['exclude'] = img.exclude
 
 
             images_data.append(image_dict)
 
 
         return images_data
+
+
+class IndiAllskyFitsImageViewerPreload(IndiAllskyFitsImageViewer):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyFitsImageViewerPreload, self).__init__(*args, **kwargs)
+
+        last_image = db.session.query(
+            self.model,
+        )\
+            .join(self.model.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .order_by(self.model.createDate.desc())\
+            .first()
+
+        if not last_image:
+            app.logger.warning('No images found in DB')
+
+            self.YEAR_SELECT.choices = (('', 'None'),)
+            self.MONTH_SELECT.choices = (('', 'None'),)
+            self.DAY_SELECT.choices = (('', 'None'),)
+            self.HOUR_SELECT.choices = (('', 'None'),)
+            self.IMG_SELECT.choices = (('', 'None'),)
+
+            return
+
+
+        dates_start = time.time()
+
+        self.YEAR_SELECT.choices = self.getYears()
+        self.MONTH_SELECT.choices = (('', 'Loading'),)
+        self.DAY_SELECT.choices = (('', 'Loading'),)
+        self.HOUR_SELECT.choices = (('', 'Loading'),)
+        self.IMG_SELECT.choices = (('', 'Loading'),)
+
+        dates_elapsed_s = time.time() - dates_start
+        app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
 
 
 class IndiAllskyGalleryViewer(FlaskForm):
