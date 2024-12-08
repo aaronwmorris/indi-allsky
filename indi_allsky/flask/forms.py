@@ -4444,7 +4444,7 @@ class IndiAllskyFitsImageViewer(FlaskForm):
             year_choices.append(entry)
 
 
-        app.logger.info('Years: %s', year_choices)
+        #app.logger.info('Years: %s', year_choices)
 
         return year_choices
 
