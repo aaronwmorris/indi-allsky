@@ -3191,12 +3191,12 @@ class AjaxFitsImageViewerView(BaseView):
         return jsonify(json_data)
 
 
-class FitsConvertView(BaseView):
+class Fits2JpegView(BaseView):
     methods = ['GET']
     decorators = [login_required]
 
     def __init__(self, **kwargs):
-        super(FitsConvertView, self).__init__(**kwargs)
+        super(Fits2JpegView, self).__init__(**kwargs)
 
 
     def dispatch_request(self):
@@ -7444,7 +7444,7 @@ bp_allsky.add_url_rule('/ajax/exclude', view_func=AjaxImageExcludeView.as_view('
 
 bp_allsky.add_url_rule('/fitsimageviewer', view_func=FitsImageViewerView.as_view('fitsimageviewer_view', template_name='fitsimageviewer.html'))
 bp_allsky.add_url_rule('/ajax/fitsimageviewer', view_func=AjaxFitsImageViewerView.as_view('ajax_fitsimageviewer_view'))
-bp_allsky.add_url_rule('/fitsconvert', view_func=FitsConvertView.as_view('fitsconvert_view'))
+bp_allsky.add_url_rule('/fits2jpeg', view_func=Fits2JpegView.as_view('fits2jpeg_view'))
 
 bp_allsky.add_url_rule('/gallery', view_func=GalleryViewerView.as_view('gallery_view', template_name='gallery.html'))
 bp_allsky.add_url_rule('/ajax/gallery', view_func=AjaxGalleryViewerView.as_view('ajax_gallery_view'))

@@ -4563,7 +4563,7 @@ class IndiAllskyFitsImageViewer(FlaskForm):
 
         images_data = list()
         for img in images_query:
-            url = url_for('indi_allsky.fitsconvert_view', id=img.id)
+            url = url_for('indi_allsky.fits2jpeg_view', id=img.id)
 
             entry_str = img.createDate.strftime('%H:%M:%S')
 
