@@ -3207,7 +3207,7 @@ class FitsConvertView(BaseView):
         from multiprocessing import Array
 
         camera_id = int(request.args['camera_id'])
-        fits_id = int(request.args['fits_id'])
+        fits_id = int(request.args['id'])
 
 
         self.cameraSetup(camera_id=camera_id)
