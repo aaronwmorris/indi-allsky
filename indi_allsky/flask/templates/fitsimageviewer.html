@@ -1,0 +1,728 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: FITS Image viewer{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+.loader {
+  display: block;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+canvas {
+    width: 95%;
+    height: auto;
+};
+</style>
+<script type="text/javascript">
+var img;
+var fullscreen = false;  //initial state
+var newest_image_default = true;  // load last image by default
+var camera_id = {{ camera_id }};
+var image_data = [];
+var image_index = -1;
+
+
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    $(window).on("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    //refresh();
+}
+setResizeHandler(resize_callback, 500);
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
+</script>
+
+
+{% endblock %}
+
+{% block content %}
+<form id="form_fits_viewer" onSubmit="return false;">
+    {{ form_fits_viewer.csrf_token }}
+    <div class="text-danger my-2" id="csrf_token-error"></div>
+
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_fits_viewer.YEAR_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            <?-- form-control until there is a better layout -->
+            {{ form_fits_viewer.YEAR_SELECT(class='form-control bg-secondary') }}
+            <div id="YEAR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+
+            {{ form_fits_viewer.CAMERA_ID(class='form-control bg-secondary') }}
+            <div id="CAMERA_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_fits_viewer.MONTH_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_fits_viewer.MONTH_SELECT(class='form-select bg-secondary') }}
+            <div id="MONTH_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_fits_viewer.DAY_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_fits_viewer.DAY_SELECT(class='form-select bg-secondary') }}
+            <div id="DAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_fits_viewer.HOUR_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_fits_viewer.HOUR_SELECT(class='form-select bg-secondary') }}
+            <div id="HOUR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_fits_viewer.IMG_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_fits_viewer.IMG_SELECT(class='form-select bg-secondary') }}
+            <div id="IMG_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+    </div>
+
+    <div id="success-message" class="text-success" style="display: none;"></div>
+    <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+
+</form>
+
+<hr>
+
+<div class="row">
+    <div class="text-center" style="font-size:10px">
+        Use arrow keys, WASD, or VIM keys to cycle images - Hour: Up/Down - Image: Left/Right
+    </div>
+</div>
+
+<div class="row">
+    <div class="text-center">
+        <canvas id="canvas"></canvas>
+    </div>
+</div>
+<div class="row">
+    <div class="text-center">
+        <span id="fits_download"></span>
+        <span id="fits_processing"></span>
+    </div>
+</div>
+
+<script>
+const successMessage = $('#success-message');
+const failureMessage = $('#failure-message');
+const field_names = [
+    'csrf_token',
+    'CAMERA_ID',
+    'YEAR_SELECT',
+    'MONTH_SELECT',
+    'DAY_SELECT',
+    'HOUR_SELECT',
+    'IMG_SELECT',
+];
+
+const checkbox_field_names = [
+];
+
+var fields = {};
+// Populate fields object
+field_names.forEach(item => {
+    fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+// Checkboxes
+checkbox_field_names.forEach(item => {
+    fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+fields['form_global'] = {
+    'input' : failureMessage,
+    'error' : failureMessage,
+};
+
+
+$("#IMG_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+
+    // Populate fields object
+    var json_data = {};
+    field_names.forEach(item => {
+        json_data[item] = fields[item].input.val();
+    });
+
+    // checkboxes
+    checkbox_field_names.forEach(item => {
+        json_data[item] = fields[item].input.prop('checked');
+    });
+
+    img.src = fields['IMG_SELECT'].input.val();
+
+    return false;
+});
+
+
+function hour_change(json_data) {
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_fitsimageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            image_data = rdata['IMAGE_DATA']
+
+            $("#IMG_SELECT").empty()
+            rdata['IMAGE_DATA'].forEach(item => {
+                $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
+            });
+
+            if (newest_image_default) {
+                // newest image is first index
+                $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[0].value).change();
+            } else {
+                // oldst image is last index
+                img_options_count = $('#IMG_SELECT option').length
+                $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
+            }
+
+            img.src = fields['IMG_SELECT'].input.val();
+
+
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+}
+
+
+$("#HOUR_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
+        'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
+        'HOUR_SELECT'       : fields["HOUR_SELECT"].input.val(),
+    };
+
+    hour_change(json_data);
+});
+
+
+function day_change(json_data) {
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_fitsimageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            image_data = rdata['IMAGE_DATA']
+
+            $("#HOUR_SELECT").empty()
+            rdata['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#IMG_SELECT").empty()
+            rdata['IMAGE_DATA'].forEach(item => {
+                $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
+            });
+
+            img.src = fields['IMG_SELECT'].input.val();
+
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+}
+
+
+$("#DAY_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
+        'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
+    };
+
+    day_change(json_data);
+});
+
+
+function month_change(json_data) {
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_fitsimageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            image_data = rdata['IMAGE_DATA']
+
+            $("#DAY_SELECT").empty()
+            rdata['DAY_SELECT'].forEach(item => {
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#HOUR_SELECT").empty()
+            rdata['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#IMG_SELECT").empty()
+            rdata['IMAGE_DATA'].forEach(item => {
+                $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
+            });
+
+            img.src = fields['IMG_SELECT'].input.val();
+
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+}
+
+
+$("#MONTH_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
+    };
+
+    month_change(json_data);
+});
+
+
+function year_change(json_data) {
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_fitsimageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            image_data = rdata['IMAGE_DATA']
+
+            $("#MONTH_SELECT").empty()
+            rdata['MONTH_SELECT'].forEach(item => {
+                $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#DAY_SELECT").empty()
+            rdata['DAY_SELECT'].forEach(item => {
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#HOUR_SELECT").empty()
+            rdata['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#IMG_SELECT").empty()
+            rdata['IMAGE_DATA'].forEach(item => {
+                $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
+            });
+
+            img.src = fields['IMG_SELECT'].input.val();
+
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key][0]);
+                fields[key].error.css({'display' : 'block'});
+            });
+        },
+    });
+};
+
+
+$("#YEAR_SELECT").on("change", function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+    };
+
+    year_change(json_data);
+});
+
+
+function init() {
+    var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+    };
+
+    year_change(json_data);
+
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    img = new Image();
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio =  canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        //context.imageSmoothingEnabled = false;
+        context.drawImage(this, 0, 0, this.width, this.height,
+                                centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+
+        $('#IMG_SELECT option').each(function(index, element) {
+            if (element.value == $("#IMG_SELECT").val()) {
+                image_index = index;
+                return false;
+            };
+        });
+
+
+        if (image_index > -1) {
+            // Add FITS download link if it exists
+            if (image_data[image_index]['fits']) {
+                $('#fits_download').html(
+                    $('<a />', {
+                        'href'   : image_data[image_index]['fits'],
+                        'rel'    : 'noopener noreferrer',
+                        'class'  : "text-decoration-none link-warning",
+                        'download' : '',
+                    }).html(
+                        $('<span />', {
+                            'text'  : 'Download',
+                            'class' : "badge pill bg-danger",
+                        })
+                    )
+                );
+
+                $('#fits_processing').html(
+                    $('<a />', {
+                        'href'   : "{{ url_for('indi_allsky.image_processing_view') }}?type=light&id=" + image_data[image_index]['id'],
+                        'target' : '_blank',
+                        'rel'    : 'noopener noreferrer',
+                        'class'  : "text-decoration-none link-warning",
+                    }).html(
+                        $('<span />', {
+                            'text'  : 'FITS Processing',
+                            'class' : "badge pill bg-success",
+                        })
+                    )
+                );
+            } else {
+                $('#fits_download').empty();
+                $('#fits_processing').empty();
+            };
+
+        } else {
+            // this should never happen, but just in case
+            $('#fits_download').empty();
+            $('#fits_processing').empty();
+        };
+
+    };
+
+
+    img.src = $("#IMG_SELECT").val();
+
+}
+
+
+function nextImage() {
+    var img_select_val = $("#IMG_SELECT").val();
+
+    newest_image_default = false;  // load oldest image when changing hours
+
+    $('#IMG_SELECT option').each(function(index, element) {
+        if (index == 0) {
+            console.log('At newest image');
+        } else if (element.value == img_select_val) {
+            console.log('Next image');
+            $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index - 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function previousImage() {
+    var img_select_val = $("#IMG_SELECT").val();
+
+    newest_image_default = true;  // load newest image when changing hours
+
+    $('#IMG_SELECT option').each(function(index, element) {
+        if (index == $("#IMG_SELECT")[0].options.length - 1) {
+            console.log('At oldest image');
+        } else if (element.value == img_select_val) {
+            console.log('Previous image');
+            $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index + 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function nextHour() {
+    var hour_select_val = $("#HOUR_SELECT").val();
+
+    newest_image_default = false;  // load oldest image when changing hours
+
+    $('#HOUR_SELECT option').each(function(index, element) {
+        if (index == 0) {
+            console.log('At latest hour');
+        } else if (element.value == hour_select_val) {
+            console.log('Next hour');
+            $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index - 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function previousHour() {
+    var hour_select_val = $("#HOUR_SELECT").val();
+
+    newest_image_default = true;  // load newest image when changing hours
+
+    $('#HOUR_SELECT option').each(function(index, element) {
+        if (index == $("#HOUR_SELECT")[0].options.length - 1) {
+            console.log('At oldest hour');
+        } else if (element.value == hour_select_val) {
+            console.log('Previous hour');
+            $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index + 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function firstImage() {
+    console.log('First image');
+    $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[0].value).change();
+    return false;
+}
+
+
+function lastImage() {
+    console.log('Last image');
+    var last_index = $("#IMG_SELECT")[0].options.length - 1;
+    $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[last_index].value).change();
+    return false;
+}
+
+
+$( document ).ready(function() {
+    $('#canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
+    init();
+
+
+    $(document).keydown(function(e) {
+        var key_press = {
+            "left"  : 37,
+            "up"    : 38,
+            "right" : 39,
+            "down"  : 40,
+
+            "w"     : 87,  // up
+            "a"     : 65,  // left
+            "s"     : 83,  // down
+            "d"     : 68,  // right
+
+            "h"     : 72,  // right
+            "j"     : 74,  // down
+            "k"     : 75,  // up
+            "l"     : 76,  // left
+            "g"     : 71,  // end
+            "zero"  : 48,  // start
+
+        };
+
+        switch (e.which) {
+            // arrow keys
+            case key_press.left:
+                previousImage();
+                break;
+            case key_press.right:
+                nextImage();
+                break;
+            case key_press.up:
+                nextHour();
+                break;
+            case key_press.down:
+                previousHour();
+                break;
+
+            // wasd
+            case key_press.w:
+                nextHour();
+                break;
+            case key_press.a:
+                previousImage();
+                break;
+            case key_press.s:
+                previousHour();
+                break;
+            case key_press.d:
+                nextImage();
+                break;
+
+            // vim bindings
+            case key_press.h:
+                previousImage();
+                break;
+            case key_press.l:
+                nextImage();
+                break;
+            case key_press.j:
+                previousHour();
+                break;
+            case key_press.k:
+                nextHour();
+                break;
+            case key_press.g:
+                lastImage();
+                break;
+            case key_press.zero:
+                firstImage();
+                break;
+
+            default:
+                return;
+        }
+
+        e.preventDefault();
+    });
+
+});
+
+</script>
+
+{% endblock %}

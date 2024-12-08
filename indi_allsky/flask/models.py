@@ -610,6 +610,10 @@ class IndiAllSkyDbFitsImageTable(IndiAllSkyDbFileBase):
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
+    createDate_year = db.Column(db.Integer, nullable=True, index=True)
+    createDate_month = db.Column(db.Integer, nullable=True, index=True)
+    createDate_day = db.Column(db.Integer, nullable=True, index=True)
+    createDate_hour = db.Column(db.Integer, nullable=True, index=True)
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
     gain = db.Column(db.Integer, nullable=False)
@@ -627,6 +631,18 @@ class IndiAllSkyDbFitsImageTable(IndiAllSkyDbFileBase):
         return '<FitsImage {0:s}>'.format(self.filename)
 
 
+    db.Index(
+        'idx_fitsimage_createDate_iYmdH_2',
+        camera_id,
+        createDate_year,
+        createDate_month,
+        createDate_day,
+        createDate_hour,
+        remote_url,
+        s3_key,
+    )
+
+
 class IndiAllSkyDbRawImageTable(IndiAllSkyDbFileBase):
     __tablename__ = 'rawimage'
 
@@ -636,6 +652,10 @@ class IndiAllSkyDbRawImageTable(IndiAllSkyDbFileBase):
     remote_url = db.Column(db.String(length=255), nullable=True, index=True)
     s3_key = db.Column(db.String(length=255), nullable=True, index=True)
     createDate = db.Column(db.DateTime(), nullable=False, index=True, server_default=db.func.now())
+    createDate_year = db.Column(db.Integer, nullable=True, index=True)
+    createDate_month = db.Column(db.Integer, nullable=True, index=True)
+    createDate_day = db.Column(db.Integer, nullable=True, index=True)
+    createDate_hour = db.Column(db.Integer, nullable=True, index=True)
     dayDate = db.Column(db.Date, nullable=False, index=True)
     exposure = db.Column(db.Float, nullable=False)
     gain = db.Column(db.Integer, nullable=False)
@@ -651,6 +671,18 @@ class IndiAllSkyDbRawImageTable(IndiAllSkyDbFileBase):
 
     def __repr__(self):
         return '<RawImage {0:s}>'.format(self.filename)
+
+
+    db.Index(
+        'idx_rawimage_createDate_iYmdH_2',
+        camera_id,
+        createDate_year,
+        createDate_month,
+        createDate_day,
+        createDate_hour,
+        remote_url,
+        s3_key,
+    )
 
 
 class IndiAllSkyDbPanoramaImageTable(IndiAllSkyDbFileBase):

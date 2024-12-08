@@ -39,6 +39,7 @@ from sqlalchemy.sql.expression import false as sa_false
 from sqlalchemy.sql.expression import null as sa_null
 
 from flask import current_app as app
+from flask import url_for
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
@@ -4384,6 +4385,220 @@ class IndiAllskyImageViewerPreload(IndiAllskyImageViewer):
             .first()
 
         if not last_image:
+            app.logger.warning('No images found in DB')
+
+            self.YEAR_SELECT.choices = (('', 'None'),)
+            self.MONTH_SELECT.choices = (('', 'None'),)
+            self.DAY_SELECT.choices = (('', 'None'),)
+            self.HOUR_SELECT.choices = (('', 'None'),)
+            self.IMG_SELECT.choices = (('', 'None'),)
+
+            return
+
+
+        dates_start = time.time()
+
+        self.YEAR_SELECT.choices = self.getYears()
+        self.MONTH_SELECT.choices = (('', 'Loading'),)
+        self.DAY_SELECT.choices = (('', 'Loading'),)
+        self.HOUR_SELECT.choices = (('', 'Loading'),)
+        self.IMG_SELECT.choices = (('', 'Loading'),)
+
+        dates_elapsed_s = time.time() - dates_start
+        app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
+
+
+class IndiAllskyFitsImageViewer(FlaskForm):
+    model = IndiAllSkyDbFitsImageTable
+
+    CAMERA_ID            = HiddenField('Camera ID', validators=[DataRequired()])
+    YEAR_SELECT          = SelectField('Year', choices=[], validators=[])
+    MONTH_SELECT         = SelectField('Month', choices=[], validators=[])
+    DAY_SELECT           = SelectField('Day', choices=[], validators=[])
+    HOUR_SELECT          = SelectField('Hour', choices=[], validators=[])
+    IMG_SELECT           = SelectField('Image', choices=[], validators=[])
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyFitsImageViewer, self).__init__(*args, **kwargs)
+
+        self.camera_id = kwargs.get('camera_id')
+
+
+    def getYears(self):
+        years_query = db.session.query(
+            self.model.createDate_year,
+        )\
+            .join(self.model.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)
+
+
+        years_query = years_query\
+            .distinct()\
+            .order_by(self.model.createDate_year.desc())
+
+
+        year_choices = []
+        for y in years_query:
+            entry = (y.createDate_year, str(y.createDate_year))
+            year_choices.append(entry)
+
+
+        app.logger.info('Years: %s', year_choices)
+
+        return year_choices
+
+
+    def getMonths(self, year):
+        months_query = db.session.query(
+            self.model.createDate_year,
+            self.model.createDate_month,
+        )\
+            .join(self.model.camera)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    self.model.createDate_year == year,
+                )
+        )
+
+
+        months_query = months_query\
+            .distinct()\
+            .order_by(self.model.createDate_month.desc())
+
+
+        month_choices = []
+        for m in months_query:
+            month_name = datetime.strptime('{0} {1}'.format(year, m.createDate_month), '%Y %m')\
+                .strftime('%B')
+            entry = (m.createDate_month, month_name)
+            month_choices.append(entry)
+
+
+        return month_choices
+
+
+    def getDays(self, year, month):
+        days_query = db.session.query(
+            self.model.createDate_year,
+            self.model.createDate_month,
+            self.model.createDate_day,
+        )\
+            .join(self.model.camera)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    self.model.createDate_year == year,
+                    self.model.createDate_month == month,
+                )
+        )
+
+
+        days_query = days_query\
+            .distinct()\
+            .order_by(self.model.createDate_day.desc())
+
+
+        day_choices = []
+        for d in days_query:
+            entry = (d.createDate_day, str(d.createDate_day))
+            day_choices.append(entry)
+
+
+        return day_choices
+
+
+    def getHours(self, year, month, day):
+        hours_query = db.session.query(
+            self.model.createDate_year,
+            self.model.createDate_month,
+            self.model.createDate_day,
+            self.model.createDate_hour,
+        )\
+            .join(self.model.camera)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    self.model.createDate_year == year,
+                    self.model.createDate_month == month,
+                    self.model.createDate_day == day,
+                )
+        )
+
+
+        hours_query = hours_query\
+            .distinct()\
+            .order_by(self.model.createDate_hour.desc())
+
+
+        hour_choices = []
+        for h in hours_query:
+            entry = (h.createDate_hour, str(h.createDate_hour))
+            hour_choices.append(entry)
+
+
+        return hour_choices
+
+
+    def getImages(self, year, month, day, hour):
+        images_query = db.session.query(
+            self.model,
+        )\
+            .join(self.model.camera)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera_id,
+                    self.model.createDate_year == year,
+                    self.model.createDate_month == month,
+                    self.model.createDate_day == day,
+                    self.model.createDate_hour == hour,
+                )
+        )
+
+
+        images_query = images_query\
+            .order_by(self.model.createDate.desc())
+
+
+        images_data = list()
+        for img in images_query:
+            url = url_for('indi_allsky.fitsconvert_view', camera_id=self.camera_id, id=img.id)
+
+            entry_str = img.createDate.strftime('%H:%M:%S')
+
+            fits_url = img.getUrl(local=True)
+
+            image_dict = dict()
+            image_dict['id'] = img.id
+            image_dict['url'] = str(url)
+            image_dict['fits'] = str(fits_url)
+            image_dict['date'] = entry_str
+            image_dict['ts'] = int(img.createDate.timestamp())
+            image_dict['width'] = img.width
+            image_dict['height'] = img.height
+
+
+            images_data.append(image_dict)
+
+
+        return images_data
+
+
+class IndiAllskyFitsImageViewerPreload(IndiAllskyFitsImageViewer):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyFitsImageViewerPreload, self).__init__(*args, **kwargs)
+
+        last_fits_image = db.session.query(
+            self.model,
+        )\
+            .join(self.model.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+            .order_by(self.model.createDate.desc())\
+            .first()
+
+        if not last_fits_image:
             app.logger.warning('No images found in DB')
 
             self.YEAR_SELECT.choices = (('', 'None'),)
