@@ -39,6 +39,7 @@ from sqlalchemy.sql.expression import false as sa_false
 from sqlalchemy.sql.expression import null as sa_null
 
 from flask import current_app as app
+from flask import url_for
 
 from .models import IndiAllSkyDbCameraTable
 from .models import IndiAllSkyDbImageTable
@@ -4421,9 +4422,7 @@ class IndiAllskyFitsImageViewer(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyFitsImageViewer, self).__init__(*args, **kwargs)
 
-        #self.s3_prefix = kwargs.get('s3_prefix', '')
         self.camera_id = kwargs.get('camera_id')
-        self.local = kwargs.get('local')
 
 
     def getYears(self):
@@ -4432,17 +4431,6 @@ class IndiAllskyFitsImageViewer(FlaskForm):
         )\
             .join(self.model.camera)\
             .filter(IndiAllSkyDbCameraTable.id == self.camera_id)
-
-
-        #if not self.local:
-        #    # Do not serve local assets
-        #    years_query = years_query\
-        #        .filter(
-        #            or_(
-        #                self.model.remote_url != sa_null(),
-        #                self.model.s3_key != sa_null(),
-        #            )
-        #        )
 
 
         years_query = years_query\
@@ -4455,6 +4443,8 @@ class IndiAllskyFitsImageViewer(FlaskForm):
             entry = (y.createDate_year, str(y.createDate_year))
             year_choices.append(entry)
 
+
+        app.logger.info('Years: %s', year_choices)
 
         return year_choices
 
@@ -4471,17 +4461,6 @@ class IndiAllskyFitsImageViewer(FlaskForm):
                     self.model.createDate_year == year,
                 )
         )
-
-
-        #if not self.local:
-        #    # Do not serve local assets
-        #    months_query = months_query\
-        #        .filter(
-        #            or_(
-        #                self.model.remote_url != sa_null(),
-        #                self.model.s3_key != sa_null(),
-        #            )
-        #        )
 
 
         months_query = months_query\
@@ -4516,17 +4495,6 @@ class IndiAllskyFitsImageViewer(FlaskForm):
         )
 
 
-        #if not self.local:
-        #    # Do not serve local assets
-        #    days_query = days_query\
-        #        .filter(
-        #            or_(
-        #                self.model.remote_url != sa_null(),
-        #                self.model.s3_key != sa_null(),
-        #            )
-        #        )
-
-
         days_query = days_query\
             .distinct()\
             .order_by(self.model.createDate_day.desc())
@@ -4559,17 +4527,6 @@ class IndiAllskyFitsImageViewer(FlaskForm):
         )
 
 
-        #if not self.local:
-        #    # Do not serve local assets
-        #    hours_query = hours_query\
-        #        .filter(
-        #            or_(
-        #                self.model.remote_url != sa_null(),
-        #                self.model.s3_key != sa_null(),
-        #            )
-        #        )
-
-
         hours_query = hours_query\
             .distinct()\
             .order_by(self.model.createDate_hour.desc())
@@ -4600,35 +4557,19 @@ class IndiAllskyFitsImageViewer(FlaskForm):
         )
 
 
-        #if not self.local:
-        #    # Do not serve local assets
-        #    images_query = images_query\
-        #        .filter(
-        #            or_(
-        #                self.model.remote_url != sa_null(),
-        #                self.model.s3_key != sa_null(),
-        #            )
-        #        )
-
-
         images_query = images_query\
             .order_by(self.model.createDate.desc())
 
 
         images_data = list()
         for img in images_query:
-            try:
-                url = img.getUrl(s3_prefix=self.s3_prefix, local=self.local)
-            except ValueError as e:
-                app.logger.error('Error determining relative file name: %s', str(e))
-                continue
-
+            url = url_for('indi_allsky.fitsconvert_view', camera_id=self.camera_id, fits_id=img.id)
 
             entry_str = img.createDate.strftime('%H:%M:%S')
 
             image_dict = dict()
             image_dict['id'] = img.id
-            image_dict['url'] = str(url)
+            image_dict['url'] = url
             image_dict['date'] = entry_str
             image_dict['ts'] = int(img.createDate.timestamp())
             image_dict['width'] = img.width
@@ -4646,7 +4587,7 @@ class IndiAllskyFitsImageViewerPreload(IndiAllskyFitsImageViewer):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyFitsImageViewerPreload, self).__init__(*args, **kwargs)
 
-        last_image = db.session.query(
+        last_fits_image = db.session.query(
             self.model,
         )\
             .join(self.model.camera)\
@@ -4654,7 +4595,7 @@ class IndiAllskyFitsImageViewerPreload(IndiAllskyFitsImageViewer):
             .order_by(self.model.createDate.desc())\
             .first()
 
-        if not last_image:
+        if not last_fits_image:
             app.logger.warning('No images found in DB')
 
             self.YEAR_SELECT.choices = (('', 'None'),)
