@@ -505,64 +505,6 @@ function init() {
 
 
         if (image_index > -1) {
-            $('#img_download').html(
-                $('<a />', {
-                    'href'   : "{{ url_for('indi_allsky.timelapse_image_view')}}?id=" + image_data[image_index]['id'],
-                    'target' : '_blank',
-                    'rel'    : 'noopener noreferrer',
-                }).html(
-                    $('<span />', {
-                        'text'  : 'Image',
-                        'class' : "badge pill bg-info text-dark",
-                    })
-                )
-            );
-
-
-            // Add Loop here link
-            $('#loop_here').html(
-                $('<a />', {
-                    'href' : "{{ url_for('indi_allsky.image_loop_view') }}?timestamp=" + image_data[image_index]['ts'],
-                    'target' : '_blank',
-                    'rel'    : 'noopener noreferrer',
-                }).html(
-                    $('<span />', {
-                        'text'  : 'Loop',
-                        'class' : "badge pill bg-primary",
-                    })
-                )
-            );
-
-
-            // Add Mini Timelapse generator
-            $('#mini_generate_here').html(
-                $('<a />', {
-                    'href' : "{{ url_for('indi_allsky.mini_generate_view') }}?image_id=" + image_data[image_index]['id'],
-                    'target' : '_blank',
-                    'rel'    : 'noopener noreferrer',
-                }).html(
-                    $('<span />', {
-                        'text'  : 'Mini Timelapse',
-                        'class' : "badge pill bg-success",
-                    })
-                )
-            );
-
-
-            $('#chart_here').html(
-                $('<a />', {
-                    'href' : "{{ url_for('indi_allsky.chart_view') }}?timestamp=" + image_data[image_index]['ts'],
-                    'target' : '_blank',
-                    'rel'    : 'noopener noreferrer',
-                }).html(
-                    $('<span />', {
-                        'text'  : 'Chart',
-                        'class' : "badge pill bg-secondary",
-                    })
-                )
-            );
-
-
             // Add FITS download link if it exists
             if (image_data[image_index]['fits']) {
                 $('#fits_download').html(
@@ -581,7 +523,7 @@ function init() {
 
                 $('#fits_processing').html(
                     $('<a />', {
-                        'href'   : "{{ url_for('indi_allsky.image_processing_view') }}?type=light&id=" + image_data[image_index]['fits_id'],
+                        'href'   : "{{ url_for('indi_allsky.image_processing_view') }}?type=light&id=" + image_data[image_index]['id'],
                         'target' : '_blank',
                         'rel'    : 'noopener noreferrer',
                         'class'  : "text-decoration-none link-warning",
@@ -597,66 +539,10 @@ function init() {
                 $('#fits_processing').empty();
             };
 
-            // Add RAW download link if it exists
-            if (image_data[image_index]['raw']) {
-                $('#raw_download').html(
-                    $('<a />', {
-                        'href'   : "{{ url_for('indi_allsky.raw_image_view')}}?id=" + image_data[image_index]['raw_id'],
-                        'target' : '_blank',
-                        'rel'    : 'noopener noreferrer',
-                        'class'  : "text-decoration-none link-warning",
-                    }).html(
-                        $('<span />', {
-                            'text'  : 'RAW',
-                            'class' : "badge pill bg-warning text-dark",
-                        })
-                    )
-                );
-            } else {
-                $('#raw_download').empty();
-            };
-
-            // Add panorama download link if it exists
-            if (image_data[image_index]['panorama']) {
-                $('#panorama_download').html(
-                    $('<a />', {
-                        'href'   : "{{ url_for('indi_allsky.panorama_image_view')}}?id=" + image_data[image_index]['panorama_id'],
-                        'target' : '_blank',
-                        'rel'    : 'noopener noreferrer',
-                        'class'  : "text-decoration-none link-warning",
-                    }).html(
-                        $('<span />', {
-                            'text'  : 'Panorama',
-                            'class' : "badge pill bg-success",
-                        })
-                    )
-                );
-            } else {
-                $('#panorama_download').empty();
-            };
-
-            // Panorama Loop
-            if (panorama__enable) {
-                $('#panorama_loop_here').html(
-                    $('<a />', {
-                        'href' : "{{ url_for('indi_allsky.panorama_loop_view') }}?timestamp=" + image_data[image_index]['ts'],
-                        'target' : '_blank',
-                        'rel'    : 'noopener noreferrer',
-                    }).html(
-                        $('<span />', {
-                            'text'  : 'Panorama Loop',
-                            'class' : "badge pill bg-primary",
-                        })
-                    )
-                );
-            };
-
         } else {
             // this should never happen, but just in case
             $('#fits_download').empty();
             $('#fits_processing').empty();
-            $('#raw_download').empty();
-            $('#panorama_download').empty();
         };
 
     };

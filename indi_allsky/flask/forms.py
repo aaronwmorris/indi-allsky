@@ -4567,9 +4567,12 @@ class IndiAllskyFitsImageViewer(FlaskForm):
 
             entry_str = img.createDate.strftime('%H:%M:%S')
 
+            fits_url = img.getUrl(local=True)
+
             image_dict = dict()
             image_dict['id'] = img.id
-            image_dict['url'] = url
+            image_dict['url'] = str(url)
+            image_dict['fits'] = str(fits_url)
             image_dict['date'] = entry_str
             image_dict['ts'] = int(img.createDate.timestamp())
             image_dict['width'] = img.width
