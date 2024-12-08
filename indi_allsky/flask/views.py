@@ -3206,23 +3206,21 @@ class FitsConvertView(BaseView):
         from multiprocessing import Value
         from multiprocessing import Array
 
-        camera_id = int(request.args['camera_id'])
         fits_id = int(request.args['id'])
 
 
-        self.cameraSetup(camera_id=camera_id)
-
-
         table = IndiAllSkyDbFitsImageTable
-        fits_entry = table.query\
-            .join(table.camera)\
-            .filter(
-                and_(
-                    IndiAllSkyDbCameraTable.id == camera_id,
-                    table.id == fits_id,
-                )
-            )\
-            .one()
+
+        try:
+            fits_entry = table.query\
+                .filter(table.id == fits_id)\
+                .one()
+        except NoResultFound:
+            return 'FITS not found', 404
+
+
+        self.cameraSetup(camera_id=fits_entry.camera_id)
+
 
         filename_p = Path(fits_entry.getFilesystemPath())
 
