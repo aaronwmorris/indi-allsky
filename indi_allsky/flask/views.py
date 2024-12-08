@@ -28,6 +28,7 @@ from flask import session
 from flask import jsonify
 from flask import Blueprint
 from flask import redirect
+from flask import Response
 from flask import url_for
 from flask import send_from_directory
 from flask import current_app as app
@@ -3050,6 +3051,108 @@ class AjaxImageViewerView(BaseView):
 
 
         return jsonify(json_data)
+
+
+class FitsViewView(BaseView):
+    methods = ['GET']
+    decorators = [login_required]
+
+    def __init__(self, **kwargs):
+        super(FitsViewView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        import cv2
+        from astropy.io import fits
+        from PIL import Image
+        from multiprocessing import Value
+        from multiprocessing import Array
+
+        camera_id = int(request.args['camera_id'])
+        fits_id = int(request.args['fits_id'])
+
+
+        self.cameraSetup(camera_id=camera_id)
+
+
+        table = IndiAllSkyDbFitsImageTable
+        fits_entry = table.query\
+            .join(table.camera)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == camera_id,
+                    table.id == fits_id,
+                )
+            )\
+            .one()
+
+        filename_p = Path(fits_entry.getFilesystemPath())
+
+
+        p_config = self.indi_allsky_config.copy()
+
+
+        hdulist = fits.open(filename_p)
+
+        exposure = float(hdulist[0].header['EXPTIME'])
+        position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
+        gain_v = Value('i', int(hdulist[0].header['GAIN']))
+        bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
+        sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
+        sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
+        night_v = Value('i', 1)  # using night values for processing
+
+        hdulist.close()
+
+        moonmode_v = Value('i', 0)
+        image_processor = ImageProcessor(
+            p_config,
+            position_av,
+            gain_v,
+            bin_v,
+            sensors_temp_av,
+            sensors_user_av,
+            night_v,
+            moonmode_v,
+            {},    # astrometric_data
+        )
+
+        processing_start = time.time()
+
+
+        image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
+
+        image_processor.debayer()
+
+        image_processor.stack()  # this populates self.image
+
+        image_processor.convert_16bit_to_8bit()
+
+
+        # verticle flip
+        if p_config.get('IMAGE_FLIP_V'):
+            image_processor.flip_v()
+
+        # horizontal flip
+        if p_config.get('IMAGE_FLIP_H'):
+            image_processor.flip_h()
+
+
+        image_processor.colorize()
+
+
+        processing_elapsed_s = time.time() - processing_start
+        app.logger.info('Image processed in %0.4f s', processing_elapsed_s)
+
+
+        image = image_processor.image
+
+
+        image_f = io.BytesIO()
+        img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        img.save(image_f, format='JPEG', quality=90)
+
+        return Response(image_f.getvalue(), mimetype='image/jpeg')
 
 
 class GalleryViewerView(FormView):
@@ -7202,6 +7305,8 @@ bp_allsky.add_url_rule('/js/charts', view_func=JsonChartView.as_view('js_chart_v
 bp_allsky.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imageviewer_view', template_name='imageviewer.html'))
 bp_allsky.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
 bp_allsky.add_url_rule('/ajax/exclude', view_func=AjaxImageExcludeView.as_view('ajax_image_exclude_view'))
+
+bp_allsky.add_url_rule('/fitsview', view_func=FitsViewView.as_view('fitsload_view'))
 
 bp_allsky.add_url_rule('/gallery', view_func=GalleryViewerView.as_view('gallery_view', template_name='gallery.html'))
 bp_allsky.add_url_rule('/ajax/gallery', view_func=AjaxGalleryViewerView.as_view('ajax_gallery_view'))
