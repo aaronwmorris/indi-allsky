@@ -3192,7 +3192,7 @@ class AjaxFitsImageViewerView(BaseView):
 
 
 class Fits2JpegView(BaseView):
-    methods = ['GET']
+    methods = ['GET']  # this allows the output to be cached by the browser
     decorators = [login_required]
 
     def __init__(self, **kwargs):
