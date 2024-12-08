@@ -79,6 +79,8 @@ from sqlalchemy.sql.expression import null as sa_null
 from .forms import IndiAllskyConfigForm
 from .forms import IndiAllskyImageViewer
 from .forms import IndiAllskyImageViewerPreload
+from .forms import IndiAllskyFitsImageViewer
+from .forms import IndiAllskyFitsImageViewerPreload
 from .forms import IndiAllskyGalleryViewer
 from .forms import IndiAllskyGalleryViewerPreload
 from .forms import IndiAllskyVideoViewer
@@ -3053,12 +3055,148 @@ class AjaxImageViewerView(BaseView):
         return jsonify(json_data)
 
 
-class FitsViewView(BaseView):
+class FitsImageViewerView(FormView):
+    decorators = [login_required]
+
+    def get_context(self):
+        context = super(FitsImageViewerView, self).get_context()
+
+        context['camera_id'] = self.camera.id
+
+        form_data = {
+            'CAMERA_ID'    : self.camera.id,
+            'YEAR_SELECT'  : None,
+            'MONTH_SELECT' : None,
+            'DAY_SELECT'   : None,
+            'HOUR_SELECT'  : None,
+        }
+
+
+        context['form_fits_viewer'] = IndiAllskyFitsImageViewerPreload(
+            data=form_data,
+            camera_id=self.camera.id,
+        )
+
+        return context
+
+
+class AjaxFitsImageViewerView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def __init__(self, **kwargs):
+        super(AjaxFitsImageViewerView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        camera_id  = int(request.json['CAMERA_ID'])
+        form_year  = int(request.json.get('YEAR_SELECT', 0))
+        form_month = int(request.json.get('MONTH_SELECT', 0))
+        form_day   = int(request.json.get('DAY_SELECT', 0))
+        form_hour  = int(request.json.get('HOUR_SELECT', -1))  # 0 is a real hour
+
+        self.cameraSetup(camera_id=camera_id)
+
+
+        form_viewer = IndiAllskyFitsImageViewer(
+            data=request.json,
+            camera_id=camera_id,
+        )
+
+
+        json_data = {}
+
+
+        if form_hour >= 0:
+            form_datetime = datetime.strptime('{0} {1} {2} {3}'.format(form_year, form_month, form_day, form_hour), '%Y %m %d %H')
+
+            year = form_datetime.year
+            month = form_datetime.month
+            day = form_datetime.day
+            hour = form_datetime.hour
+
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+
+        elif form_day:
+            form_datetime = datetime.strptime('{0} {1} {2}'.format(form_year, form_month, form_day), '%Y %m %d')
+
+            year = form_datetime.year
+            month = form_datetime.month
+            day = form_datetime.day
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
+
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+
+        elif form_month:
+            form_datetime = datetime.strptime('{0} {1}'.format(form_year, form_month), '%Y %m')
+
+            year = form_datetime.year
+            month = form_datetime.month
+
+            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            day = json_data['DAY_SELECT'][0][0]
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
+
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+
+        elif form_year:
+            form_datetime = datetime.strptime('{0}'.format(form_year), '%Y')
+
+            year = form_datetime.year
+
+            json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
+            month = json_data['MONTH_SELECT'][0][0]
+
+            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            day = json_data['DAY_SELECT'][0][0]
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
+
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+
+        else:
+            # this happens when filtering images on detections
+            json_data['YEAR_SELECT'] = form_viewer.getYears()
+
+            if not json_data['YEAR_SELECT']:
+                # No images returned
+                json_data['YEAR_SELECT'] = (('', None),)
+                json_data['MONTH_SELECT'] = (('', None),)
+                json_data['DAY_SELECT'] = (('', None),)
+                json_data['HOUR_SELECT'] = (('', None),)
+                json_data['IMG_SELECT'] = (('', None),)
+
+                return json_data
+
+
+            year = json_data['YEAR_SELECT'][0][0]
+
+            json_data['MONTH_SELECT'] = form_viewer.getMonths(year)
+            month = json_data['MONTH_SELECT'][0][0]
+
+            json_data['DAY_SELECT'] = form_viewer.getDays(year, month)
+            day = json_data['DAY_SELECT'][0][0]
+
+            json_data['HOUR_SELECT'] = form_viewer.getHours(year, month, day)
+            hour = json_data['HOUR_SELECT'][0][0]
+
+            json_data['IMAGE_DATA'] = form_viewer.getImages(year, month, day, hour)
+
+
+        return jsonify(json_data)
+
+
+class FitsConvertView(BaseView):
     methods = ['GET']
     decorators = [login_required]
 
     def __init__(self, **kwargs):
-        super(FitsViewView, self).__init__(**kwargs)
+        super(FitsConvertView, self).__init__(**kwargs)
 
 
     def dispatch_request(self):
@@ -7306,7 +7444,9 @@ bp_allsky.add_url_rule('/imageviewer', view_func=ImageViewerView.as_view('imagev
 bp_allsky.add_url_rule('/ajax/imageviewer', view_func=AjaxImageViewerView.as_view('ajax_imageviewer_view'))
 bp_allsky.add_url_rule('/ajax/exclude', view_func=AjaxImageExcludeView.as_view('ajax_image_exclude_view'))
 
-bp_allsky.add_url_rule('/fitsview', view_func=FitsViewView.as_view('fitsload_view'))
+bp_allsky.add_url_rule('/fitsimageviewer', view_func=FitsImageViewerView.as_view('fitsimageviewer_view', template_name='fitsimageviewer.html'))
+bp_allsky.add_url_rule('/ajax/fitsimageviewer', view_func=AjaxFitsImageViewerView.as_view('ajax_fitsimageviewer_view'))
+bp_allsky.add_url_rule('/fitsconvert', view_func=FitsConvertView.as_view('fitsconvert_view'))
 
 bp_allsky.add_url_rule('/gallery', view_func=GalleryViewerView.as_view('gallery_view', template_name='gallery.html'))
 bp_allsky.add_url_rule('/ajax/gallery', view_func=AjaxGalleryViewerView.as_view('ajax_gallery_view'))
