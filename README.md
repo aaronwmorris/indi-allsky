@@ -160,6 +160,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## INDI support
 | Version         | Note |
 | --------------- | ---- |
+| v2.1.1          |      |
 | v2.1.0          | **Recommended** |
 | v2.0.9          |      |
 | v2.0.8          | Minimum for Ubuntu 24.04 (pyindi-client) |
