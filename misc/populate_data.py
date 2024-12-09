@@ -19,6 +19,7 @@ sys.path.append(str(Path(__file__).parent.absolute().parent))
 from indi_allsky.flask.models import IndiAllSkyDbImageTable
 from indi_allsky.flask.models import IndiAllSkyDbPanoramaImageTable
 from indi_allsky.flask.models import IndiAllSkyDbFitsImageTable
+from indi_allsky.flask.models import IndiAllSkyDbRawImageTable
 from indi_allsky.flask.models import IndiAllSkyDbVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbMiniVideoTable
 
@@ -70,9 +71,9 @@ class PopulateData(object):
             .filter(IndiAllSkyDbFitsImageTable.createDate_year == sa_null())
 
         raw_image_query = db.session.query(
-            IndiAllSkyDbFitsImageTable
+            IndiAllSkyDbRawImageTable
         )\
-            .filter(IndiAllSkyDbFitsImageTable.createDate_year == sa_null())
+            .filter(IndiAllSkyDbRawImageTable.createDate_year == sa_null())
 
         video_query = db.session.query(
             IndiAllSkyDbVideoTable
