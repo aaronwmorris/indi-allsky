@@ -1738,6 +1738,11 @@ pip3 install "${PIP_REQ_ARGS[@]}"
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_POST}"
 
 
+if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
+    pip3 uninstall -y RPi.GPIO rpi.lgpio
+
+    pip3 install rpi.lgpio
+fi
 
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
