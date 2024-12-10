@@ -2513,14 +2513,6 @@ else
 
         sudo systemctl enable apache2
         sudo systemctl restart apache2
-
-    elif [[ "$DISTRO_ID" == "centos" ]]; then
-        sudo cp -f "$TMP3" /etc/httpd/conf.d/indi-allsky.conf
-        sudo chown root:root /etc/httpd/conf.d/indi-allsky.conf
-        sudo chmod 644 /etc/httpd/conf.d/indi-allsky.conf
-
-        sudo systemctl enable httpd
-        sudo systemctl restart httpd
     fi
 
 fi
