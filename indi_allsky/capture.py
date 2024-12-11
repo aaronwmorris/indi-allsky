@@ -99,6 +99,8 @@ class CaptureWorker(Process):
         self._miscDb = miscDb(self.config)
         self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
 
+        self.next_forced_transition_time = None
+
         self.indiclient = None
 
         self.night = None
@@ -204,11 +206,12 @@ class CaptureWorker(Process):
 
         self.reconfigure_camera = True  # reconfigure on first run
 
-        next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
+
+        self.next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
         logger.warning(
             'Next forced transition time: %s (%0.1fh)',
-            datetime.fromtimestamp(next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
-            (next_forced_transition_time - time.time()) / 3600,
+            datetime.fromtimestamp(self.next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
+            (self.next_forced_transition_time - time.time()) / 3600,
         )
 
 
@@ -261,12 +264,12 @@ class CaptureWorker(Process):
                     self.reconfigure_camera = True
 
                     # update transition time
-                    next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
+                    self.next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
 
                     logger.warning(
                         'Next forced transition time: %s (%0.1fh)',
-                        datetime.fromtimestamp(next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
-                        (next_forced_transition_time - loop_start_time) / 3600,
+                        datetime.fromtimestamp(self.next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
+                        (self.next_forced_transition_time - loop_start_time) / 3600,
                     )
 
 
@@ -296,7 +299,7 @@ class CaptureWorker(Process):
                     # Switch between night non-moonmode and moonmode
                     self.reconfigure_camera = True
 
-                elif loop_start_time > next_forced_transition_time:
+                elif loop_start_time > self.next_forced_transition_time:
                     # this should only happen when the sun never sets/rises
 
                     self.reconfigure_camera = True
@@ -308,11 +311,11 @@ class CaptureWorker(Process):
 
 
                     # update transition time
-                    next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
+                    self.next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
                     logger.warning(
                         'Next forced transition time: %s (%0.1fh)',
-                        datetime.fromtimestamp(next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
-                        (next_forced_transition_time - loop_start_time) / 3600,
+                        datetime.fromtimestamp(self.next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
+                        (self.next_forced_transition_time - loop_start_time) / 3600,
                     )
 
 
@@ -353,8 +356,8 @@ class CaptureWorker(Process):
 
                 #logger.warning(
                 #    'Next forced transition time: %s (%0.1fh)',
-                #    datetime.fromtimestamp(next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
-                #    (next_forced_transition_time - loop_start_time) / 3600,
+                #    datetime.fromtimestamp(self.next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
+                #    (self.next_forced_transition_time - loop_start_time) / 3600,
                 #)
 
 
@@ -1233,6 +1236,15 @@ class CaptureWorker(Process):
 
 
             self.reparkTelescope()
+
+
+            # update transition time
+            self.next_forced_transition_time = self._dateCalcs.getNextDayNightTransition().timestamp()
+            logger.warning(
+                'Next forced transition time: %s (%0.1fh)',
+                datetime.fromtimestamp(self.next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
+                (self.next_forced_transition_time - time.time()) / 3600,
+            )
 
 
         return gps_lat, gps_long, gps_elev
