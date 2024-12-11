@@ -984,6 +984,13 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         c = json.loads(f_config.read(), object_pairs_hook=OrderedDict)
         f_config.close()
 
+
+        # check a few values to make sure this is a valid config
+        if not c.get('INDI_SERVER') or not c.get('NIGHT_SUN_ALT_DEG') or not c.get('CCD_CONFIG'):
+            logger.error('Not a valid indi-allsky config')
+            sys.exit(1)
+
+
         self.config.update(c)
 
         logger.info('Loading configuration from file')
