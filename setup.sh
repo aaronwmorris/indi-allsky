@@ -331,6 +331,12 @@ sudo find "$(dirname "$0")" -type d ! -perm -555 -exec chmod ugo+rx {} \;
 sudo find "$(dirname "$0")" -type f ! -perm -444 -exec chmod ugo+r {} \;
 
 
+### These are the default requirements which may be overridden
+VIRTUALENV_REQ=requirements/requirements_latest.txt
+VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
+VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+VIRTUALENV_REQ_GPIO=requirements/requirements_gpio.txt
+
 
 echo "**** Installing packages... ****"
 if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
@@ -341,14 +347,13 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
 
     PYTHON_BIN=python3
 
+
     if [ "$CPU_ARCH" == "armv6l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
-        VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
-    else
-        VIRTUALENV_REQ=requirements/requirements_latest.txt
-        VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+    elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
 
@@ -484,14 +489,13 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
 
     PYTHON_BIN=python3
 
+
     if [ "$CPU_ARCH" == "armv6l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
-        VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
-    else
-        VIRTUALENV_REQ=requirements/requirements_latest.txt
-        VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+    elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
 
@@ -627,14 +631,13 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
 
     PYTHON_BIN=python3
 
+
     if [ "$CPU_ARCH" == "armv6l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
-        VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
-    else
-        VIRTUALENV_REQ=requirements/requirements_latest.txt
-        VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+    elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
 
@@ -770,14 +773,13 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
 
     PYTHON_BIN=python3
 
+
     if [ "$CPU_ARCH" == "armv6l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
-        VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
-    else
-        VIRTUALENV_REQ=requirements/requirements_latest.txt
-        VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+    elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
 
@@ -916,7 +918,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
     PYTHON_BIN=python3
 
     VIRTUALENV_REQ=requirements/requirements_debian10.txt
-    VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
+    VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
 
 
     if [[ "$CAMERA_INTERFACE" =~ ^libcamera ]]; then
@@ -1059,7 +1061,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
     PYTHON_BIN=python3
 
     VIRTUALENV_REQ=requirements/requirements_debian10.txt
-    VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
+    VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
 
 
     if [[ "$CAMERA_INTERFACE" =~ ^libcamera ]]; then
@@ -1191,12 +1193,10 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
 
     if [ "$CPU_ARCH" == "armv6l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
-        VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
-    else
-        VIRTUALENV_REQ=requirements/requirements_latest.txt
-        VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+    elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
 
@@ -1349,12 +1349,10 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
 
     if [ "$CPU_ARCH" == "armv6l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
-        VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
-    else
-        VIRTUALENV_REQ=requirements/requirements_latest.txt
-        VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+    elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
 
@@ -1499,9 +1497,14 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
 
     PYTHON_BIN=python3.9
 
-    VIRTUALENV_REQ=requirements/requirements_latest.txt
-    VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
-    VIRTUALENV_REQ_POST=requirements/requirements_latest_post.txt
+
+    if [ "$CPU_ARCH" == "armv6l" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+    elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+    fi
 
 
     if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
@@ -1640,8 +1643,6 @@ else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
 fi
-
-VIRTUALENV_REQ_GPIO=requirements/requirements_gpio.txt
 
 
 if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
