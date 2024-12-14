@@ -43,6 +43,9 @@ WORKDIR /home/allsky
 COPY requirements/requirements_latest.txt /home/allsky
 COPY requirements/requirements_optional.txt /home/allsky
 
+# copy, but do not use
+COPY requirements/requirements_gpio.txt /home/allsky
+
 USER root
 RUN apt-get update \
     && apt-get -y install \
