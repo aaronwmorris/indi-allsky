@@ -42,7 +42,6 @@ WORKDIR /home/allsky
 
 COPY requirements/requirements_latest.txt /home/allsky
 COPY requirements/requirements_optional.txt /home/allsky
-COPY requirements/requirements_latest_post.txt /home/allsky
 
 USER root
 RUN apt-get update \
@@ -68,7 +67,6 @@ RUN apt-get update \
     && export CC=clang \
     && export CXX=clang++ \
     && pip install --no-cache-dir -r requirements_latest.txt -r requirements_optional.txt \
-    && pip install --no-cache-dir -r requirements_latest_post.txt \
     && pip install --no-cache-dir "git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client" \
     && apt-get remove --purge -y \
         clang \
