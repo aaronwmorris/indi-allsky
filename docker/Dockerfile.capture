@@ -16,6 +16,7 @@ RUN apt-get update \
       tzdata \
       procps \
       netcat-traditional \
+      sudo \
       git \
       jq \
       ffmpeg \
@@ -37,14 +38,15 @@ RUN if [ $TARGETARCH == "amd64" ]; then \
 RUN groupadd --gid 10001 allsky \
     && useradd --create-home --no-user-group --uid 10001 --gid allsky --home-dir /home/allsky --shell /bin/bash allsky
 
+RUN echo "allsky ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/allsky
+RUN chmod 0440 /etc/sudoers.d/allsky
+
 USER allsky
 WORKDIR /home/allsky
 
 COPY requirements/requirements_latest.txt /home/allsky
 COPY requirements/requirements_optional.txt /home/allsky
-
-# copy, but do not use
-COPY requirements/requirements_gpio.txt /home/allsky
+#COPY requirements/requirements_gpio.txt /home/allsky
 
 USER root
 RUN apt-get update \

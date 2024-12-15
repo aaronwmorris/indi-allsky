@@ -18,9 +18,8 @@ GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 
 
 # ensure correct permissions
-sudo chown "$USER":"$PGRP" "$ALLSKY_ETC"
-sudo chown "$USER":"$PGRP" "$DB_FOLDER"
-sudo chown "$USER":"$PGRP" "$HTDOCS_FOLDER"
+sudo chown allsky:allsky "$ALLSKY_ETC"
+sudo chown allsky:allsky "$DB_FOLDER"
 
 
 if [ "${INDIALLSKY_MARIADB_SSL:-false}" == "true" ]; then
