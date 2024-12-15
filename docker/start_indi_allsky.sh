@@ -21,6 +21,13 @@ ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 
 
+# ensure correct permissions
+sudo chown "$USER":"$PGRP" "$ALLSKY_ETC"
+sudo chown "$USER":"$PGRP" "$DB_FOLDER"
+sudo chown "$USER":"$PGRP" "$HTDOCS_FOLDER"
+
+
+
 if [ "${INDIALLSKY_MARIADB_SSL:-false}" == "true" ]; then
     SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDIALLSKY_MARIADB_HOST}:${INDIALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}?ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_identity&charset=${INDIALLSKY_MARIADB_CHARSET}&collation=${INDIALLSKY_MARIADB_COLLATION}"
     #SQLALCHEMY_DATABASE_URI="mysql+pymysql://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDIALLSKY_MARIADB_HOST}:${INDIALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}?ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_identity=false&charset=${INDIALLSKY_MARIADB_CHARSET}"
@@ -54,6 +61,7 @@ jq \
 
 
 cp -f "$TMP_FLASK_KEYS" "${ALLSKY_ETC}/flask.json"
+chmod 660 "${ALLSKY_ETC}/flask.json"
 
 [[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
 [[ -f "$TMP_FLASK_KEYS" ]] && rm -f "$TMP_FLASK_KEYS"
@@ -66,6 +74,12 @@ if [ -z "${INDIALLSKY_CAPTURE_NO_WAIT:-}" ]; then
     # wait for database and migrations
     for X in $(seq 24); do
         echo "Waiting on migrations to complete ($((125-(5*X)))s)"
+        sleep 5
+    done
+else
+    # shorter wait
+    for X in $(seq 3); do
+        echo "Waiting on database ($((20-(5*X)))s)"
         sleep 5
     done
 fi
