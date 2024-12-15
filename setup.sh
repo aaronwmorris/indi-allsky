@@ -75,6 +75,7 @@ PYINDI_2_0_0="git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyind
 PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
 PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client"
 
+STELLARMATE="${INDIALLSKY_STELLARMATE:-false}"
 ASTROBERRY="${INDIALLSKY_ASTROBERRY:-false}"
 #### end config ####
 
@@ -169,7 +170,30 @@ if [ -f "/usr/local/bin/indiserver" ]; then
 fi
 
 
-if [[ -f "/etc/astroberry.version" ]]; then
+if [[ -d "/etc/stellarmate" ]]; then
+    echo
+    echo
+    echo "Detected Stellarmate"
+    echo
+
+    STELLARMATE="true"
+
+    # Stellarmate already has services on 80
+    if [ "$HTTP_PORT" -eq 80 ]; then
+        HTTP_PORT="81"
+        echo "Changing HTTP_PORT to 81"
+    fi
+
+    if [ "$HTTPS_PORT" -eq 443 ]; then
+        HTTPS_PORT="444"
+        echo "Changing HTTPS_PORT to 444"
+    fi
+
+    echo
+    echo
+    sleep 3
+
+elif [[ -f "/etc/astroberry.version" ]]; then
     echo
     echo
     echo "Detected Astroberry server"
@@ -390,7 +414,6 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libimath-dev \
@@ -532,7 +555,6 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libimath-dev \
@@ -674,7 +696,6 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -816,7 +837,6 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -962,7 +982,6 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -1105,7 +1124,6 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -1246,7 +1264,6 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -1402,7 +1419,6 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -1553,7 +1569,6 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -1642,6 +1657,18 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
+fi
+
+
+if [[ "$STELLARMATE" == "true" ]]; then
+    # nginx already installed
+    :
+elif [[ "$ASTROBERRY" == "true" ]]; then
+    # nginx already installed
+    :
+else
+    sudo apt-get -y install \
+        apache2
 fi
 
 
@@ -2375,15 +2402,14 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 [[ -f "$TMP_GUNICORN" ]] && rm -f "$TMP_GUNICORN"
 
 
-
-if [[ "$ASTROBERRY" == "true" ]]; then
-    echo "**** Disabling apache web server (Astroberry) ****"
-    sudo systemctl stop apache2 || true
-    sudo systemctl disable apache2 || true
+if [[ "$STELLARMATE" == "true" ]]; then
+    #echo "**** Disabling apache web server (Stellarmate) ****"
+    #sudo systemctl stop apache2 || true
+    #sudo systemctl disable apache2 || true
 
 
     echo "**** Setup nginx ****"
-    TMP3=$(mktemp)
+    TMP_HTTP=$(mktemp)
     sed \
      -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
      -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
@@ -2392,11 +2418,88 @@ if [[ "$ASTROBERRY" == "true" ]]; then
      -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
      -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
      -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
-     "${ALLSKY_DIRECTORY}/service/nginx_astroberry_ssl" > "$TMP3"
+     "${ALLSKY_DIRECTORY}/service/nginx_indi-allsky.conf" > "$TMP_HTTP"
 
 
-    #sudo cp -f /etc/nginx/sites-available/astroberry_ssl "/etc/nginx/sites-available/astroberry_ssl_$(date +%Y%m%d_%H%M%S)"
-    sudo cp -f "$TMP3" /etc/nginx/sites-available/indi-allsky_ssl
+    sudo cp -f "$TMP_HTTP" /etc/nginx/sites-available/indi-allsky.conf
+    sudo chown root:root /etc/nginx/sites-available/indi-allsky.conf
+    sudo chmod 644 /etc/nginx/sites-available/indi-allsky.conf
+    sudo ln -s -f /etc/nginx/sites-available/indi-allsky.conf /etc/nginx/sites-enabled/indi-allsky.conf
+
+
+    if [[ ! -d "/etc/nginx/ssl" ]]; then
+        sudo mkdir /etc/nginx/ssl
+    fi
+
+    sudo chown root:root /etc/nginx/ssl
+    sudo chmod 755 /etc/nginx/ssl
+
+
+    if [[ ! -f "/etc/nginx/ssl/indi-allsky_nginx.key" || ! -f "/etc/nginx/ssl/indi-allsky_nginx.pem" ]]; then
+        sudo rm -f /etc/nginx/ssl/indi-allsky_nginx.key
+        sudo rm -f /etc/nginx/ssl/indi-allsky_nginx.pem
+
+        SHORT_HOSTNAME=$(hostname -s)
+        HTTP_KEY_TMP=$(mktemp)
+        HTTP_CRT_TMP=$(mktemp)
+
+        # sudo has problems with process substitution <()
+        openssl req \
+            -new \
+            -newkey rsa:4096 \
+            -sha512 \
+            -days 3650 \
+            -nodes \
+            -x509 \
+            -subj "/CN=${SHORT_HOSTNAME}.local" \
+            -keyout "$HTTP_KEY_TMP" \
+            -out "$HTTP_CRT_TMP" \
+            -extensions san \
+            -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
+
+        sudo cp -f "$HTTP_KEY_TMP" /etc/nginx/ssl/indi-allsky_nginx.key
+        sudo cp -f "$HTTP_CRT_TMP" /etc/nginx/ssl/indi-allsky_nginx.pem
+
+        rm -f "$HTTP_KEY_TMP"
+        rm -f "$HTTP_CRT_TMP"
+    fi
+
+
+    sudo chown root:root /etc/nginx/ssl/indi-allsky_nginx.key
+    sudo chmod 600 /etc/nginx/ssl/indi-allsky_nginx.key
+    sudo chown root:root /etc/nginx/ssl/indi-allsky_nginx.pem
+    sudo chmod 644 /etc/nginx/ssl/indi-allsky_nginx.pem
+
+    # system certificate store
+    sudo cp -f /etc/nginx/ssl/indi-allsky_nginx.pem /usr/local/share/ca-certificates/indi-allsky_nginx.crt
+    sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_nginx.crt
+    sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_nginx.crt
+    sudo update-ca-certificates
+
+
+    sudo systemctl enable nginx
+    sudo systemctl restart nginx
+
+elif [[ "$ASTROBERRY" == "true" ]]; then
+    #echo "**** Disabling apache web server (Astroberry) ****"
+    #sudo systemctl stop apache2 || true
+    #sudo systemctl disable apache2 || true
+
+
+    echo "**** Setup nginx ****"
+    TMP_HTTP=$(mktemp)
+    sed \
+     -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+     -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+     -e "s|%DOCROOT_FOLDER%|$DOCROOT_FOLDER|g" \
+     -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+     -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
+     -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
+     -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
+     "${ALLSKY_DIRECTORY}/service/nginx_astroberry_ssl" > "$TMP_HTTP"
+
+
+    sudo cp -f "$TMP_HTTP" /etc/nginx/sites-available/indi-allsky_ssl
     sudo chown root:root /etc/nginx/sites-available/indi-allsky_ssl
     sudo chmod 644 /etc/nginx/sites-available/indi-allsky_ssl
     sudo ln -s -f /etc/nginx/sites-available/indi-allsky_ssl /etc/nginx/sites-enabled/indi-allsky_ssl
@@ -2416,7 +2519,7 @@ else
     fi
 
     echo "**** Start apache2 service ****"
-    TMP3=$(mktemp)
+    TMP_HTTP=$(mktemp)
     sed \
      -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
      -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
@@ -2424,11 +2527,11 @@ else
      -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
      -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
      -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock\|http://localhost/indi-allsky|g" \
-     "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP3"
+     "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP_HTTP"
 
 
     if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" ]]; then
-        sudo cp -f "$TMP3" /etc/apache2/sites-available/indi-allsky.conf
+        sudo cp -f "$TMP_HTTP" /etc/apache2/sites-available/indi-allsky.conf
         sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
         sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
 
@@ -2446,8 +2549,8 @@ else
             sudo rm -f /etc/apache2/ssl/indi-allsky_apache.pem
 
             SHORT_HOSTNAME=$(hostname -s)
-            APACHE_KEY_TMP=$(mktemp)
-            APACHE_CRT_TMP=$(mktemp)
+            HTTP_KEY_TMP=$(mktemp)
+            HTTP_CRT_TMP=$(mktemp)
 
             # sudo has problems with process substitution <()
             openssl req \
@@ -2458,16 +2561,16 @@ else
                 -nodes \
                 -x509 \
                 -subj "/CN=${SHORT_HOSTNAME}.local" \
-                -keyout "$APACHE_KEY_TMP" \
-                -out "$APACHE_CRT_TMP" \
+                -keyout "$HTTP_KEY_TMP" \
+                -out "$HTTP_CRT_TMP" \
                 -extensions san \
                 -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
 
-            sudo cp -f "$APACHE_KEY_TMP" /etc/apache2/ssl/indi-allsky_apache.key
-            sudo cp -f "$APACHE_CRT_TMP" /etc/apache2/ssl/indi-allsky_apache.pem
+            sudo cp -f "$HTTP_KEY_TMP" /etc/apache2/ssl/indi-allsky_apache.key
+            sudo cp -f "$HTTP_CRT_TMP" /etc/apache2/ssl/indi-allsky_apache.pem
 
-            rm -f "$APACHE_KEY_TMP"
-            rm -f "$APACHE_CRT_TMP"
+            rm -f "$HTTP_KEY_TMP"
+            rm -f "$HTTP_CRT_TMP"
         fi
 
 
@@ -2518,7 +2621,7 @@ else
 
 fi
 
-[[ -f "$TMP3" ]] && rm -f "$TMP3"
+[[ -f "$TMP_HTTP" ]] && rm -f "$TMP_HTTP"
 
 
 # Allow web server access to mounted media
