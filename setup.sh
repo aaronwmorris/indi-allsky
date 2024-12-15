@@ -1662,7 +1662,12 @@ fi
 
 if [[ "$STELLARMATE" == "true" ]]; then
     # nginx already installed
-    :
+
+    # stellarmate does not install libindi-dev by default
+    if ! dpkg -s libindi-dev >/dev/null; then
+        sudo apt-get -y install \
+            libindi-dev
+    fi
 elif [[ "$ASTROBERRY" == "true" ]]; then
     # nginx already installed
     :
