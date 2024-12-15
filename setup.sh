@@ -158,6 +158,26 @@ if [[ -n "${VIRTUAL_ENV:-}" ]]; then
 fi
 
 
+# basic checks
+if ! [[ "$HTTP_PORT" =~ ^[0-9]+$ ]]; then
+    echo "Invalid HTTP port: $HTTP_PORT"
+    echo
+    exit 1
+fi
+
+if ! [[ "$HTTPS_PORT" =~ ^[0-9]+$ ]]; then
+    echo "Invalid HTTPS port: $HTTPS_PORT"
+    echo
+    exit 1
+fi
+
+if ! [[ "$INDI_PORT" =~ ^[0-9]+$ ]]; then
+    echo "Invalid INDI port: $INDI_PORT"
+    echo
+    exit 1
+fi
+
+
 if [ -f "/usr/local/bin/indiserver" ]; then
     # Do not install INDI
     INSTALL_INDI="false"
@@ -276,6 +296,7 @@ if [[ "$(id -u)" == "0" ]]; then
     echo
     exit 1
 fi
+
 
 if ! ping -c 1 "$(hostname -s)" >/dev/null 2>&1; then
     echo "To avoid the benign warnings 'Name or service not known sudo: unable to resolve host'"
