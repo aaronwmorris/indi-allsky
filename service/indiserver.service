@@ -6,7 +6,7 @@ After=network.target
 #User=%INDISERVER_USER%
 #Environment="PATH=%ALLSKY_DIRECTORY%/virtualenv/indi-allsky/bin:/usr/local/bin:/usr/bin:/bin"
 #Environment="PYTHONPATH=%ALLSKY_DIRECTORY%/virtualenv/indi-allsky/lib/python3.11/site-packages:/usr/local/lib/aarch64-linux-gnu/python3.11/site-packages"
-ExecStart=%INDI_DRIVER_PATH%/indiserver -p 7624 indi_simulator_telescope %INDI_CCD_DRIVER% %INDI_GPS_DRIVER%
+ExecStart=%INDI_DRIVER_PATH%/indiserver -p %INDI_PORT% indi_simulator_telescope %INDI_CCD_DRIVER% %INDI_GPS_DRIVER%
 ExecStop=/bin/kill -TERM $MAINPID
 RestartSec=5
 PrivateTmp=true

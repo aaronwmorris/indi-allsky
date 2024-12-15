@@ -16,6 +16,7 @@ export PATH
 #export INDIALLSKY_INSTALL_INDISERVER=true
 #export INDIALLSKY_HTTP_PORT=80
 #export INDIALLSKY_HTTPS_PORT=443
+#export INDIALLSKY_INDI_PORT=7624
 #export INDIALLSKY_TIMEZONE="America/New_York"
 #export INDIALLSKY_INDI_VERSION=1.9.9
 #export INDIALLSKY_CCD_DRIVER=indi_simulator_ccd
@@ -60,6 +61,7 @@ GPS_DRIVER="${INDIALLSKY_GPS_DRIVER:-}"
 
 HTTP_PORT="${INDIALLSKY_HTTP_PORT:-80}"
 HTTPS_PORT="${INDIALLSKY_HTTPS_PORT:-443}"
+INDI_PORT="${INDIALLSKY_INDI_PORT:-7624}"
 
 FLASK_AUTH_ALL_VIEWS="${INDIALLSKY_FLASK_AUTH_ALL_VIEWS:-}"
 WEB_USER="${INDIALLSKY_WEB_USER:-}"
@@ -261,6 +263,7 @@ echo "HTDOCS_FOLDER: $HTDOCS_FOLDER"
 echo "DB_FOLDER: $DB_FOLDER"
 echo "DB_FILE: $DB_FILE"
 echo "INSTALL_INDI: $INSTALL_INDI"
+echo "INDI_PORT: $INDI_PORT"
 echo "HTTP_PORT: $HTTP_PORT"
 echo "HTTPS_PORT: $HTTPS_PORT"
 echo
@@ -1939,6 +1942,7 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
      -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
      -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
      -e "s|%INDISERVER_USER%|$USER|g" \
+     -e "s|%INDI_PORT%|$INDI_PORT|g" \
      -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
      -e "s|%INDI_GPS_DRIVER%|$GPS_DRIVER|g" \
      "${ALLSKY_DIRECTORY}/service/indiserver.service" > "$TMP1"
@@ -2707,6 +2711,24 @@ cat "$TMP_CAMERA_INT" > "$TMP_CONFIG_DUMP"
 [[ -f "$TMP_CAMERA_INT" ]] && rm -f "$TMP_CAMERA_INT"
 
 
+echo "**** Update indi port ****"
+TMP_INDI_PORT=$(mktemp --suffix=.json)
+jq --argjson indi_port "$INDI_PORT" '.INDI_PORT = $indi_port' "$TMP_CONFIG_DUMP" > "$TMP_INDI_PORT"
+
+cat "$TMP_INDI_PORT" > "$TMP_CONFIG_DUMP"
+
+[[ -f "$TMP_INDI_PORT" ]] && rm -f "$TMP_INDI_PORT"
+
+
+# final config syntax check
+json_pp < "$TMP_CONFIG_DUMP" > /dev/null
+
+
+# load all changes
+"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_CONFIG_DUMP" --force
+[[ -f "$TMP_CONFIG_DUMP" ]] && rm -f "$TMP_CONFIG_DUMP"
+
+
 # final config syntax check
 json_pp < "${ALLSKY_ETC}/flask.json" > /dev/null
 
@@ -2753,11 +2775,6 @@ if [ "$USER_COUNT" -le 1 ]; then
     "$ALLSKY_DIRECTORY/misc/usertool.py" adduser -u "$WEB_USER" -p "$WEB_PASS" -f "$WEB_NAME" -e "$WEB_EMAIL"
     "$ALLSKY_DIRECTORY/misc/usertool.py" setadmin -u "$WEB_USER"
 fi
-
-
-# load all changes
-"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_CONFIG_DUMP" --force
-[[ -f "$TMP_CONFIG_DUMP" ]] && rm -f "$TMP_CONFIG_DUMP"
 
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
