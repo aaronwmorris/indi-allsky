@@ -70,7 +70,7 @@ RUN apt-get update \
     && export CC=clang \
     && export CXX=clang++ \
     && pip install --no-cache-dir -r requirements_latest.txt -r requirements_optional.txt \
-    && pip install --no-cache-dir "git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client" \
+    && pip install --no-cache-dir "git+https://github.com/indilib/pyindi-client.git@6f8fa80#egg=pyindi-client" \
     && apt-get remove --purge -y \
         clang \
         cmake \
