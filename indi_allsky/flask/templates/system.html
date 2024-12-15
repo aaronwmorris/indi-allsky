@@ -488,8 +488,8 @@ $('#form_settime').on('submit', function() {
 </div>
 <div class="row">
     <div class="col-sm-2"></div>
-    <div class="col-sm-2">indiserver</div>
-    <div class="col-sm-2">{{indiserver_service_activestate}}</div>
+    <div class="col-sm-2">indiserver service</div>
+    <div class="col-sm-2">{{indiserver_service_activestate}}{% if indiserver_next_trigger > 0 %} [T-minus {{indiserver_next_trigger}}s]{% endif %}</div>
     <div class="col-sm-2"></div>
     <div class="col-sm-2">
         <button class="btn btn-primary" id="button_indiserver_service_stop">Stop indiserver</button>
@@ -503,16 +503,16 @@ $('#form_settime').on('submit', function() {
 
 <div class="row">
     <div class="col-sm-2"></div>
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">{{indiserver_service_unitstate}}</div>
+    <div class="col-sm-2">indiserver timer</div>
+    <div class="col-sm-2">{{indiserver_timer_unitstate}}</div>
 
     <div class="col-sm-2">
     </div>
     <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indiserver_service_disable">Disable indiserver</button>
+        <button class="btn btn-primary" id="button_indiserver_timer_disable">Disable indiserver</button>
     </div>
     <div class="col-sm-2">
-        <button class="btn btn-primary" id="button_indiserver_service_enable">Enable indiserver</button>
+        <button class="btn btn-primary" id="button_indiserver_timer_enable">Enable indiserver</button>
     </div>
 </div>
 
@@ -808,11 +808,11 @@ $("#button_indiserver_service_stop").on("click", function() {
 $("#button_indiserver_service_start").on("click", function() {
     button_click('indiserver.service', 'start');
 });
-$("#button_indiserver_service_disable").on("click", function() {
-    button_click('indiserver.service', 'disable');
+$("#button_indiserver_timer_disable").on("click", function() {
+    button_click('indiserver.timer', 'disable');
 });
-$("#button_indiserver_service_enable").on("click", function() {
-    button_click('indiserver.service', 'enable');
+$("#button_indiserver_timer_enable").on("click", function() {
+    button_click('indiserver.timer', 'enable');
 });
 
 

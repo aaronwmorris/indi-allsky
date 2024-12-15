@@ -17,6 +17,11 @@ ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 
 
+# ensure correct permissions
+sudo chown allsky:allsky "$ALLSKY_ETC"
+sudo chown allsky:allsky "$DB_FOLDER"
+
+
 if [ "${INDIALLSKY_MARIADB_SSL:-false}" == "true" ]; then
     SQLALCHEMY_DATABASE_URI="mysql+mysqlconnector://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDIALLSKY_MARIADB_HOST}:${INDIALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}?ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_identity&charset=${INDIALLSKY_MARIADB_CHARSET}&collation=${INDIALLSKY_MARIADB_COLLATION}"
     #SQLALCHEMY_DATABASE_URI="mysql+pymysql://${MARIADB_USER}:${MARIADB_PASSWORD}@${INDIALLSKY_MARIADB_HOST}:${INDIALLSKY_MARIADB_PORT}/${MARIADB_DATABASE}?ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_identity=false&charset=${INDIALLSKY_MARIADB_CHARSET}"
@@ -65,6 +70,12 @@ if [ -z "${INDIALLSKY_GUNICORN_NO_WAIT:-}" ]; then
     # wait on database
     for X in $(seq 12); do
         echo "Waiting on database ($((65-(5*X)))s)"
+        sleep 5
+    done
+else
+    # shorter wait
+    for X in $(seq 2); do
+        echo "Waiting on database ($((15-(5*X)))s)"
         sleep 5
     done
 fi

@@ -1,0 +1,15 @@
+[Unit]
+Description=Timer for the indiserver service
+
+[Timer]
+### Start 30 seconds after boot
+OnBootSec=30sec
+
+### Start once an hour
+#OnUnitActiveSec=1h
+
+### Start daily at noon
+#OnCalendar=*-*-* 12:00:00
+
+[Install]
+WantedBy=timers.target

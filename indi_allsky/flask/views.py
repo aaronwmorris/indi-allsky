@@ -3713,8 +3713,10 @@ class SystemInfoView(TemplateView):
         context['net_list'] = self.getNetworkIps()
 
         context['indiserver_service_activestate'], context['indiserver_service_unitstate'] = self.getSystemdUnitStatus(app.config['INDISERVER_SERVICE_NAME'])
+        context['indiserver_timer_activestate'], context['indiserver_timer_unitstate'] = self.getSystemdUnitStatus(app.config['INDISERVER_TIMER_NAME'])
         context['indi_allsky_service_activestate'], context['indi_allsky_service_unitstate'] = self.getSystemdUnitStatus(app.config['ALLSKY_SERVICE_NAME'])
         context['indi_allsky_timer_activestate'], context['indi_allsky_timer_unitstate'] = self.getSystemdUnitStatus(app.config['ALLSKY_TIMER_NAME'])
+        context['indiserver_next_trigger'] = self.getSystemdTimerTrigger(app.config['INDISERVER_TIMER_NAME'])
         context['indi_allsky_next_trigger'] = self.getSystemdTimerTrigger(app.config['ALLSKY_TIMER_NAME'])
         context['gunicorn_indi_allsky_service_activestate'], context['gunicorn_indi_allsky_service_unitstate'] = self.getSystemdUnitStatus(app.config['GUNICORN_SERVICE_NAME'])
         context['gunicorn_indi_allsky_socket_activestate'], context['gunicorn_indi_allsky_socket_unitstate'] = self.getSystemdUnitStatus(app.config['GUNICORN_SOCKET_NAME'])
@@ -4145,10 +4147,10 @@ class AjaxSystemInfoView(BaseView):
                 r = self.stopSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
             elif command == 'start':
                 r = self.startSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
-            elif command == 'disable':
-                r = self.disableSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
-            elif command == 'enable':
-                r = self.enableSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
+            #elif command == 'disable':
+            #    r = self.disableSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
+            #elif command == 'enable':
+            #    r = self.enableSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
             else:
                 errors_data = {
                     'COMMAND_HIDDEN' : ['Unhandled command'],
@@ -4176,6 +4178,21 @@ class AjaxSystemInfoView(BaseView):
                 r = self.stopSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
             elif command == 'start':
                 r = self.startSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
+            #elif command == 'disable':
+            #    r = self.disableSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
+            #elif command == 'enable':
+            #    r = self.enableSystemdUnit(app.config['ALLSKY_SERVICE_NAME'])
+            else:
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Unhandled command'],
+                }
+                return jsonify(errors_data), 400
+
+        elif service == app.config['INDISERVER_TIMER_NAME']:
+            if command == 'disable':
+                r = self.disableSystemdUnit(app.config['INDISERVER_TIMER_NAME'])
+            elif command == 'enable':
+                r = self.enableSystemdUnit(app.config['INDISERVER_TIMER_NAME'])
             else:
                 errors_data = {
                     'COMMAND_HIDDEN' : ['Unhandled command'],
