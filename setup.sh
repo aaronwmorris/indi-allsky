@@ -1955,6 +1955,11 @@ fi
 
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
+    # timer
+    cp -f "${ALLSKY_DIRECTORY}/service/${INDISERVER_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
+    chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
+
+
     echo
     echo
     echo "**** Setting up indiserver service ****"
@@ -2799,7 +2804,9 @@ fi
 
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
-    systemctl --user enable ${INDISERVER_SERVICE_NAME}.service
+    systemctl --user enable ${INDISERVER_SERVICE_NAME}.timer
+    # indiserver service is started by the timer (30 seconds after boot)
+    systemctl --user disable ${INDISERVER_SERVICE_NAME}.service
 
 
     while [ -z "${RESTART_INDISERVER:-}" ]; do
@@ -2817,6 +2824,14 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
         systemctl --user restart ${INDISERVER_SERVICE_NAME}.service
     fi
 fi
+
+
+# ensure indiserver is running
+systemctl --user start ${INDISERVER_SERVICE_NAME}.service
+
+
+# ensure latest code is active
+systemctl --user restart ${GUNICORN_SERVICE_NAME}.service
 
 
 while [ -z "${INDIALLSKY_AUTOSTART:-}" ]; do
@@ -2856,13 +2871,6 @@ if [ "$INDIALLSKY_START" == "true" ]; then
     sleep 3
     systemctl --user start ${ALLSKY_SERVICE_NAME}.service
 fi
-
-
-# ensure indiserver is running
-systemctl --user start ${INDISERVER_SERVICE_NAME}.service
-
-# ensure latest code is active
-systemctl --user restart ${GUNICORN_SERVICE_NAME}.service
 
 
 echo
