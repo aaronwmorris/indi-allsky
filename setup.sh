@@ -159,19 +159,19 @@ fi
 
 
 # basic checks
-if ! [[ "$HTTP_PORT" =~ ^[0-9]+$ ]]; then
+if ! [[ "$HTTP_PORT" =~ ^[^0][0-9]{1,5}$ ]]; then
     echo "Invalid HTTP port: $HTTP_PORT"
     echo
     exit 1
 fi
 
-if ! [[ "$HTTPS_PORT" =~ ^[0-9]+$ ]]; then
+if ! [[ "$HTTPS_PORT" =~ ^[^0][0-9]{1,5}$ ]]; then
     echo "Invalid HTTPS port: $HTTPS_PORT"
     echo
     exit 1
 fi
 
-if ! [[ "$INDI_PORT" =~ ^[0-9]+$ ]]; then
+if ! [[ "$INDI_PORT" =~ ^[^0][0-9]{1,5}$ ]]; then
     echo "Invalid INDI port: $INDI_PORT"
     echo
     exit 1
