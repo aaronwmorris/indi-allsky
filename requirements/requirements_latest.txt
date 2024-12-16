@@ -4,7 +4,7 @@ astropy >= 5.3.3
 # https://www.wheelodex.org/projects/numpy/
 numpy >= 2.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
-opencv-python-headless >= 4.8.1.78
+opencv-python-headless >= 4.10.0.84
 # https://www.wheelodex.org/projects/scipy/
 scipy >= 1.11.3
 # https://www.wheelodex.org/projects/ccdproc/
