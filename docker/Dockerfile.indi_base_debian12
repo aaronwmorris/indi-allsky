@@ -35,10 +35,14 @@ RUN echo "allsky ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/allsky
 RUN chmod 0440 /etc/sudoers.d/allsky
 
 COPY --chown=allsky:allsky misc/build_indi.sh /home/allsky
+RUN chmod 755 /home/allsky/build_indi.sh
 
 USER allsky
 WORKDIR /home/allsky
 
+
+ENV BUILD_INDI_CORE=true
+ENV BUILD_INDI_3RDPARTY=false
 RUN bash build_indi.sh $INDI_VERSION \
     && rm -fR /home/allsky/Projects \
     && sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
