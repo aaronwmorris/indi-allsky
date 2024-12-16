@@ -89,9 +89,13 @@ fi
 cd "$ALLSKY_DIRECTORY"
 
 
+# shellcheck disable=SC1091
+source /home/allsky/venv/bin/activate
+
+
 # dump config for processing
 TMP_CONFIG_DUMP=$(mktemp --suffix=.json)
-"${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_CONFIG_DUMP"
+./config.py dump > "$TMP_CONFIG_DUMP"
 
 
 # replace the flask IMAGE_FOLDER
@@ -140,7 +144,7 @@ fi
 
 
 # load all changes
-"${ALLSKY_DIRECTORY}/config.py" load -c "$TMP_MQTTPUBLISH_HOST" --force
+./config.py load -c "$TMP_MQTTPUBLISH_HOST" --force
 [[ -f "$TMP_CONFIG_DUMP" ]] && rm -f "$TMP_CONFIG_DUMP"
 [[ -f "$TMP_IMAGE_FOLDER" ]] && rm -f "$TMP_IMAGE_FOLDER"
 [[ -f "$TMP_INDI_SERVER" ]] && rm -f "$TMP_INDI_SERVER"

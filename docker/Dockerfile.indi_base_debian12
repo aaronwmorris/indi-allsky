@@ -21,6 +21,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
         netcat-traditional \
         sudo \
         git \
+        jq \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # need the uid and gid to match in all containers
