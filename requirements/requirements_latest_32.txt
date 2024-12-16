@@ -8,11 +8,11 @@ opencv-python-headless >= 4.10.0.84
 # https://www.wheelodex.org/projects/scipy/
 scipy >= 1.11.3
 # https://www.wheelodex.org/projects/ccdproc/
-ccdproc
+ccdproc >= 2.4.2
 # https://www.wheelodex.org/projects/scikit-image/
 scikit-image >= 0.25.0
 astroalign >= 2.6.0
-bottleneck
+bottleneck >= 1.4.0
 python-dateutil
 ephem
 skyfield
