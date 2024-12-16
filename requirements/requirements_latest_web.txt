@@ -1,4 +1,7 @@
 ### Requirements for a web interface only interface
+# https://www.wheelodex.org/projects/astropy/
+astropy >= 6.1.0
+pyerfa >= 2.0.1.4
 # https://www.wheelodex.org/projects/numpy/
 numpy >= 2.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
