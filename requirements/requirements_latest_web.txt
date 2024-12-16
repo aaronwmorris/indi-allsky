@@ -6,7 +6,7 @@ opencv-python-headless >= 4.8.1.78
 # https://www.wheelodex.org/projects/ccdproc/
 ccdproc
 # https://www.wheelodex.org/projects/scikit-image/
-scikit-image
+scikit-image >= 0.25.0
 # https://www.wheelodex.org/projects/Pillow/
 Pillow
 bottleneck
