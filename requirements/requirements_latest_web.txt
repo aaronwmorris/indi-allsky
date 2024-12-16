@@ -4,12 +4,12 @@ numpy >= 2.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
 opencv-python-headless >= 4.10.0.84
 # https://www.wheelodex.org/projects/ccdproc/
-ccdproc
+ccdproc >= 2.4.2
 # https://www.wheelodex.org/projects/scikit-image/
 scikit-image >= 0.25.0
 # https://www.wheelodex.org/projects/Pillow/
 Pillow
-bottleneck
+bottleneck >= 1.4.0
 ephem
 skyfield
 # https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
