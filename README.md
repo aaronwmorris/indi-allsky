@@ -143,16 +143,16 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | **Raspberry Pi OS 12 (bookworm)**  | **aarch64 (64-bit)** | **RECOMMENDED**<br>Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
 | Raspberry Pi OS 12             | armhf (32-bit) | (NOT RECOMMENDED) Some python modules do not have armhf wheels and must be compiled from source.  This will take a few hours. |
 | Raspberry Pi OS 11 (bullseye)  | aarch64/armhf  | Compile INDI with build_indi.sh |
-| Raspberry Pi OS 10 (buster)    | armhf          | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
-| Debian 12 (bookworm)           | x86_64         | Compile INDI with build_indi.sh |
+| Raspberry Pi OS 10 (buster)    | armhf          | (DO NOT USE) |
+| **Debian 12 (bookworm)**       | **x86_64**     | **RECOMMENDED**<br>Compile INDI with build_indi.sh |
 | Debian 11 (bullseye)           | x86_64         | Compile INDI with build_indi.sh |
-| Debian 10 (buster)             | x86_64         | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
+| Debian 10 (buster)             | x86_64         | (DO NOT USE) |
 | Ubuntu 24.04 (noble)           |                | Requires INDI 2.0.8 or newer for pyindi-client<br>INDI installed from ppa:mutlaqja/ppa<br>Compile libcamera with build_libcamera.sh<br>Python 3.11 installed from ppa:deadsnakes/ppa (due to problems with Python 3.12 and pyindi-client) |
 | Ubuntu 22.04 (focal)           | aarch64        | INDI installed from ppa:mutlaqja/ppa |
 | Ubuntu 22.04                   | armhf          | Compile INDI with build_indi.sh |
 | Ubuntu 22.04                   | x86_64         | INDI installed from ppa:mutlaqja/ppa |
-| Ubuntu 20.04 (bionic)          | x86_64         | INDI installed from ppa:mutlaqja/ppa |
-| Ubuntu 20.04                   | aarch64        | Compile INDI with build_indi.sh |
+| Ubuntu 20.04 (bionic)          | x86_64         | (NOT RECOMMENDED) INDI installed from ppa:mutlaqja/ppa |
+| Ubuntu 20.04                   | aarch64        | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
 | Armbian                        | aarch64/armhf  | Compile INDI with build_indi.sh<br>https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
 | ~~Astroberry Server 2.0~~      | armhf          | (DO NOT USE) The Astroberry appears to be abandoned and is no longer supported with indi-allsky |
 
