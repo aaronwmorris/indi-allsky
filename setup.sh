@@ -680,10 +680,9 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
 
     if [ "$CPU_ARCH" == "armv6l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
-    elif [ "$CPU_BITS" == "32" ]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+    else
+        VIRTUALENV_REQ=requirements/requirements_debian11.txt
     fi
 
 
@@ -821,10 +820,9 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
 
     if [ "$CPU_ARCH" == "armv6l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
-    elif [ "$CPU_BITS" == "32" ]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+    else
+        VIRTUALENV_REQ=requirements/requirements_debian11.txt
     fi
 
 
@@ -1540,10 +1538,9 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
 
     if [ "$CPU_ARCH" == "armv6l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
-    elif [ "$CPU_BITS" == "32" ]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
+    else
+        VIRTUALENV_REQ=requirements/requirements_debian11.txt
     fi
 
 

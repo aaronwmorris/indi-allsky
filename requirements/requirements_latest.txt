@@ -1,6 +1,7 @@
-### This file is targeted to Raspbian/Debian 11 and Python 3.9+
+### This file is targeted to Raspbian/Debian 12 and Python 3.10+
 # https://www.wheelodex.org/projects/astropy/
-astropy >= 5.3.3
+astropy >= 6.1.0
+pyerfa >= 2.0.1.4
 # https://www.wheelodex.org/projects/numpy/
 numpy >= 2.0
 # https://www.wheelodex.org/projects/opencv-python-headless/

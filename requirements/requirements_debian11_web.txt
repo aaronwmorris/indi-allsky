@@ -1,18 +1,15 @@
 ### Requirements for a web interface only interface
-# https://www.wheelodex.org/projects/astropy/
-astropy >= 6.1.0
-pyerfa >= 2.0.1.4
 # https://www.wheelodex.org/projects/numpy/
-numpy >= 2.0
+numpy >= 1.22.2, < 2.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
-opencv-python-headless >= 4.10.0.84
+opencv-python-headless >= 4.8.1.78
 # https://www.wheelodex.org/projects/ccdproc/
-ccdproc >= 2.4.2
+ccdproc
 # https://www.wheelodex.org/projects/scikit-image/
-scikit-image >= 0.25.0
+scikit-image
 # https://www.wheelodex.org/projects/Pillow/
 Pillow
-bottleneck >= 1.4.0
+bottleneck
 ephem
 skyfield
 # https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
@@ -29,14 +26,14 @@ werkzeug
 is-safe-url
 certifi >= 2023.7.22
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 43.0.1
+cryptography >= 42.0.5
 dbus-python
 setuptools-rust
 # https://www.wheelodex.org/projects/bcrypt/
 bcrypt
 passlib[argon2] >= 1.7.4
 prettytable
-astroalign >= 2.6.0
+astroalign
 requests[security]
 lxml
 shapely
