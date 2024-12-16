@@ -2,16 +2,16 @@
 # https://www.wheelodex.org/projects/astropy/
 astropy >= 5.3.3
 # https://www.wheelodex.org/projects/numpy/
-numpy >= 1.22.2, < 2.0
+numpy >= 2.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
-opencv-python-headless >= 4.8.1.78
+opencv-python-headless >= 4.10.0.84
 # https://www.wheelodex.org/projects/scipy/
 scipy >= 1.11.3
 # https://www.wheelodex.org/projects/ccdproc/
 ccdproc
 # https://www.wheelodex.org/projects/scikit-image/
-scikit-image >= 0.20.0
-astroalign
+scikit-image >= 0.25.0
+astroalign >= 2.6.0
 bottleneck
 python-dateutil
 ephem
@@ -27,8 +27,7 @@ imageio-ffmpeg
 # https://www.wheelodex.org/projects/imagecodecs/
 #imagecodecs
 cython
-# rawpy v0.22.0 requires numpy 2.0
-rawpy <= 0.21.0
+rawpy >= 0.23.0
 pygifsicle
 gunicorn[gthread] >= 22.0.0
 inotify
@@ -42,7 +41,7 @@ werkzeug
 is-safe-url
 certifi >= 2024.7.4
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 42.0.5
+cryptography >= 43.0.1
 dbus-python
 paho-mqtt >= 2.0.0
 setuptools-rust

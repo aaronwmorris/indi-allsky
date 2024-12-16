@@ -1,12 +1,12 @@
 ### Requirements for a web interface only interface
 # https://www.wheelodex.org/projects/numpy/
-numpy >= 1.22.2, < 2.0
+numpy >= 2.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
-opencv-python-headless >= 4.8.1.78
+opencv-python-headless >= 4.10.0.84
 # https://www.wheelodex.org/projects/ccdproc/
 ccdproc
 # https://www.wheelodex.org/projects/scikit-image/
-scikit-image
+scikit-image >= 0.25.0
 # https://www.wheelodex.org/projects/Pillow/
 Pillow
 bottleneck
@@ -26,14 +26,14 @@ werkzeug
 is-safe-url
 certifi >= 2023.7.22
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 42.0.5
+cryptography >= 43.0.1
 dbus-python
 setuptools-rust
 # https://www.wheelodex.org/projects/bcrypt/
 bcrypt
 passlib[argon2] >= 1.7.4
 prettytable
-astroalign
+astroalign >= 2.6.0
 requests[security]
 lxml
 shapely
