@@ -26,14 +26,14 @@ werkzeug
 is-safe-url
 certifi >= 2023.7.22
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 42.0.5
+cryptography >= 43.0.1
 dbus-python
 setuptools-rust
 # https://www.wheelodex.org/projects/bcrypt/
 bcrypt
 passlib[argon2] >= 1.7.4
 prettytable
-astroalign
+astroalign >= 2.6.0
 requests[security]
 lxml
 shapely
