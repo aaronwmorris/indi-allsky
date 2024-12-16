@@ -348,7 +348,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
 
     PYTHON_BIN=python3
 
-    VIRTUALENV_REQ=requirements/requirements_latest_web.txt
+    VIRTUALENV_REQ=requirements/requirements_debian11_web.txt
 
 
     sudo apt-get update
@@ -431,7 +431,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
 
     PYTHON_BIN=python3
 
-    VIRTUALENV_REQ=requirements/requirements_latest_web.txt
+    VIRTUALENV_REQ=requirements/requirements_debian11_web.txt
 
 
     sudo apt-get update
@@ -682,7 +682,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
 
     PYTHON_BIN=python3.9
 
-    VIRTUALENV_REQ=requirements/requirements_latest_web.txt
+    VIRTUALENV_REQ=requirements/requirements_debian11_web.txt
 
 
     sudo apt-get update

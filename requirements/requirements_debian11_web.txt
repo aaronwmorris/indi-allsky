@@ -1,0 +1,40 @@
+### Requirements for a web interface only interface
+# https://www.wheelodex.org/projects/numpy/
+numpy >= 1.22.2, < 2.0
+# https://www.wheelodex.org/projects/opencv-python-headless/
+opencv-python-headless >= 4.8.1.78
+# https://www.wheelodex.org/projects/ccdproc/
+ccdproc
+# https://www.wheelodex.org/projects/scikit-image/
+scikit-image
+# https://www.wheelodex.org/projects/Pillow/
+Pillow
+bottleneck
+ephem
+skyfield
+# https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
+pycurl
+gunicorn[gthread] >= 22.0.0
+inotify
+psutil
+Flask >= 3.0.0
+Flask-SQLAlchemy >= 3.1.1
+Flask-Migrate >= 4.0.5
+Flask-WTF >= 1.2.1
+Flask-Login >= 0.6.2
+werkzeug
+is-safe-url
+certifi >= 2023.7.22
+# https://www.wheelodex.org/projects/cryptography/
+cryptography >= 42.0.5
+dbus-python
+setuptools-rust
+# https://www.wheelodex.org/projects/bcrypt/
+bcrypt
+passlib[argon2] >= 1.7.4
+prettytable
+astroalign
+requests[security]
+lxml
+shapely
+pytz
