@@ -1,0 +1,56 @@
+### This file is targeted to Raspbian/Debian 11 and Python 3.9
+# https://www.wheelodex.org/projects/astropy/
+astropy >= 5.3.3
+# https://www.wheelodex.org/projects/numpy/
+numpy >= 1.22.2, < 2.0
+# https://www.wheelodex.org/projects/opencv-python-headless/
+opencv-python-headless >= 4.8.1.78
+# https://www.wheelodex.org/projects/scipy/
+scipy >= 1.11.3
+# https://www.wheelodex.org/projects/ccdproc/
+ccdproc
+# https://www.wheelodex.org/projects/scikit-image/
+scikit-image >= 0.20.0
+astroalign
+bottleneck
+python-dateutil
+ephem
+skyfield
+paramiko
+# https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
+pycurl
+# https://www.wheelodex.org/projects/pillow/ or https://www.piwheels.org/project/Pillow/
+Pillow
+piexif
+imageio
+imageio-ffmpeg
+# https://www.wheelodex.org/projects/imagecodecs/
+#imagecodecs
+cython
+#rawpy  # not needed
+pygifsicle
+gunicorn[gthread] >= 22.0.0
+inotify
+psutil
+Flask >= 3.0.0
+Flask-SQLAlchemy >= 3.1.1
+Flask-Migrate >= 4.0.5
+Flask-WTF >= 1.2.1
+Flask-Login >= 0.6.3
+werkzeug
+is-safe-url
+certifi >= 2024.7.4
+# https://www.wheelodex.org/projects/cryptography/
+cryptography >= 42.0.5
+dbus-python
+paho-mqtt >= 2.0.0
+setuptools-rust
+# https://www.wheelodex.org/projects/bcrypt/
+bcrypt
+passlib[argon2] >= 1.7.4
+prettytable
+lxml
+shapely
+requests-toolbelt
+fish2pano >= 0.4.1
+pytz
