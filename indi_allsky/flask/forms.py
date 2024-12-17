@@ -2806,12 +2806,15 @@ class IndiAllskyConfigForm(FlaskForm):
 
     FFMPEG_VFSCALE_choices = (
         ('', 'None'),
-        ('iw*.75:ih*.75', '75%'),
-        ('iw*.5:ih*.5', '50%'),
-        ('iw*.25:ih*.25', '25%'),
-        ('-1:2304', 'V 2304px (imx477)'),
-        ('-1:1520', 'V 1520px (imx477)'),
-        ('-1:760', 'V 760px (imx477)'),
+        ('-2:ih*.75', '75%'),
+        ('-2:ih*.5', '50%'),
+        ('-2:ih*.25', '25%'),
+        #('-2:1440', 'Height 1440px'),
+        #('-2:1080', 'Height 1080px'),
+        #('-2:720', 'Height 720px'),
+        ('-1:2304', 'Height 2304px (75% imx477)'),
+        ('-1:1520', 'Height 1520px (50% imx477)'),
+        ('-1:760', 'Height 760px (25% imx477)'),
     )
 
     FFMPEG_CODEC_choices = (
