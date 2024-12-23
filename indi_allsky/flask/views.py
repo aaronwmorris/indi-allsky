@@ -1524,8 +1524,8 @@ class ConfigView(FormView):
 
 
         if latest_image_entry:
-            if latest_image_entry.data.get('user_sensor_2'):
-                context['dew_point_str'] = '{0:0.1f}°'.format(latest_image_entry['user_sensor_2'])
+            if latest_image_entry.data.get('sensor_user_2'):
+                context['dew_point_str'] = '{0:0.1f}°'.format(latest_image_entry.data['sensor_user_2'])
             else:
                 context['dew_point_str'] = 'Not available'
         else:
