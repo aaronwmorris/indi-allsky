@@ -1506,7 +1506,31 @@ class ConfigView(FormView):
     def get_context(self):
         context = super(ConfigView, self).get_context()
 
-        context['camera_id'] = self.camera.id
+        camera_id = self.camera.id
+
+        context['camera_id'] = camera_id
+
+
+        # query the latest image for dew point
+        camera_now_minus_15m = self.camera_now - timedelta(minutes=15)
+        latest_image_entry = db.session.query(
+            IndiAllSkyDbImageTable,
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.createDate > camera_now_minus_15m)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
+
+
+        if latest_image_entry:
+            if latest_image_entry.data.get('user_sensor_2'):
+                context['dew_point_str'] = '{0:0.1f}°'.format(latest_image_entry['user_sensor_2'])
+            else:
+                context['dew_point_str'] = 'Not available'
+        else:
+            context['dew_point_str'] = 'Not available'
+
 
         form_data = {
             'CAMERA_INTERFACE'               : self.indi_allsky_config.get('CAMERA_INTERFACE', 'indi'),
