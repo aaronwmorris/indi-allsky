@@ -222,7 +222,7 @@ class BaseView(View):
         data = {}
 
         if not self.local_indi_allsky:
-            data['status'] = '<span class="text-muted">REMOTE</span>'
+            data['status'] = '<span class="text-secondary">REMOTE</span>'
             return data
 
 
