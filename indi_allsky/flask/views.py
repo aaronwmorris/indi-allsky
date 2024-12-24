@@ -6098,19 +6098,12 @@ class JsonImageProcessingView(JsonView):
 
 
             # green removal
-            if p_config.get('SCNR_ALGORITHM'):
-                image_processor.scnr()
-
-                message_list.append('SCNR')
+            image_processor.scnr()
 
 
             # white balance
             image_processor.white_balance_manual_bgr()
-
-            if p_config.get('AUTO_WB'):
-                image_processor.white_balance_auto_bgr()
-
-                message_list.append('Auto White Balance')
+            image_processor.white_balance_auto_bgr()
 
 
             # saturation

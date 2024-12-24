@@ -588,19 +588,19 @@ class ImageWorker(Process):
 
 
         # green removal
-        if self.config.get('SCNR_ALGORITHM'):
-            self.image_processor.scnr()
+        self.image_processor.scnr()
 
 
         # white balance
         self.image_processor.white_balance_manual_bgr()
-
-        if self.config.get('AUTO_WB'):
-            self.image_processor.white_balance_auto_bgr()
+        self.image_processor.white_balance_auto_bgr()
 
 
         # saturation
-        self.image_processor.saturation_adjust()
+        if self.night_v.value and self.config.get('SATURATION_FACTOR', 1.0) != 1.0:
+            self.image_processor.saturation_adjust()
+        elif not self.night_v.value and self.config.get('SATURATION_FACTOR_DAY', 1.0) != 1.0:
+            self.image_processor.saturation_adjust()
 
 
         if not self.config.get('CONTRAST_ENHANCE_16BIT'):

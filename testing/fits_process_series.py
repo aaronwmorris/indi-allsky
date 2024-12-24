@@ -215,15 +215,12 @@ class ProcessFitsSeries(object):
 
 
             # green removal
-            if self.config.get('SCNR_ALGORITHM'):
-                image_processor.scnr()
+            image_processor.scnr()
 
 
             # white balance
             image_processor.white_balance_manual_bgr()
-
-            if self.config.get('AUTO_WB'):
-                image_processor.white_balance_auto_bgr()
+            image_processor.white_balance_auto_bgr()
 
 
             # saturation

@@ -1194,7 +1194,23 @@ class ImageProcessor(object):
             return
 
 
-        algo = self.config.get('SCNR_ALGORITHM')
+        if self.night_v.value:
+            # night
+            algo = self.config.get('SCNR_ALGORITHM')
+        else:
+            # day
+            algo = self.config.get('SCNR_ALGORITHM_DAY')
+
+
+        if not algo:
+            return
+
+
+        self._scnr(algo)
+        return True
+
+
+    def _scnr(self, algo):
 
         try:
             scnr_function = getattr(self._scnr, algo)
@@ -1214,14 +1230,28 @@ class ImageProcessor(object):
             return
 
 
-        WBB_FACTOR = float(self.config.get('WBB_FACTOR', 1.0))
-        WBG_FACTOR = float(self.config.get('WBG_FACTOR', 1.0))
-        WBR_FACTOR = float(self.config.get('WBR_FACTOR', 1.0))
+        if self.night_v.value:
+            # night
+            WBB_FACTOR = float(self.config.get('WBB_FACTOR', 1.0))
+            WBG_FACTOR = float(self.config.get('WBG_FACTOR', 1.0))
+            WBR_FACTOR = float(self.config.get('WBR_FACTOR', 1.0))
+        else:
+            # day
+            WBB_FACTOR = float(self.config.get('WBB_FACTOR_DAY', 1.0))
+            WBG_FACTOR = float(self.config.get('WBG_FACTOR_DAY', 1.0))
+            WBR_FACTOR = float(self.config.get('WBR_FACTOR_DAY', 1.0))
+
 
         if WBB_FACTOR == 1.0 and WBG_FACTOR == 1.0 and WBR_FACTOR == 1.0:
             # no action
             return
 
+
+        self._white_balance_manual_bgr(WBB_FACTOR, WBG_FACTOR, WBR_FACTOR)
+        return True
+
+
+    def _white_balance_manual_bgr(self, WBB_FACTOR, WBG_FACTOR, WBR_FACTOR):
         b, g, r = cv2.split(self.image)
 
         logger.info('Applying manual color balance settings')
@@ -1292,6 +1322,16 @@ class ImageProcessor(object):
             # mono
             return
 
+
+        if self.night_v.value and self.config.get('AUTO_WB'):
+            self._white_balance_auto_bgr()
+            return True
+        elif not self.night_v.value and self.config.get('AUTO_WB_DAY'):
+            self._white_balance_auto_bgr()
+            return True
+
+
+    def _white_balance_auto_bgr(self):
         ### This seems to work
         b, g, r = cv2.split(self.image)
         b_avg = cv2.mean(b)[0]
@@ -1334,11 +1374,24 @@ class ImageProcessor(object):
             return
 
 
-        SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR', 1.0))
+        if self.night_v.value:
+            # night
+            SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR', 1.0))
+        else:
+            # day
+            SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR_DAY', 1.0))
+
+
         if SATURATION_FACTOR == 1.0:
             # no action
             return
 
+
+        self._saturation_adjust(SATURATION_FACTOR)
+        return True
+
+
+    def _saturation_adjust(self, SATURATION_FACTOR):
         image_hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
 
         sat = image_hsv[:, :, 1]
