@@ -1081,18 +1081,37 @@ class ImageProcessor(object):
 
 
     def rotate_90(self):
+        if not self.config.get('IMAGE_ROTATE'):
+            return
+
+
         try:
             rotate_enum = getattr(cv2, self.config['IMAGE_ROTATE'])
         except AttributeError:
             logger.error('Unknown rotation option: %s', self.config['IMAGE_ROTATE'])
             return
 
+
+        self._rotate_90(rotate_enum)
+        return True
+
+
+    def _rotate_90(self, rotate_enum):
         self.image = cv2.rotate(self.image, rotate_enum)
 
 
     def rotate_angle(self):
         angle = self.config.get('IMAGE_ROTATE_ANGLE')
 
+        if not angle:
+            return
+
+
+        self._rotate_angle(angle)
+        return True
+
+
+    def _rotate_angle(self, angle):
         rotate_start = time.time()
 
         height, width = self.image.shape[:2]
@@ -1136,11 +1155,19 @@ class ImageProcessor(object):
 
 
     def flip_v(self):
+        if not self.config.get('IMAGE_FLIP_V'):
+            return
+
         self.image = self._flip(self.image, 0)
+        return True
 
 
     def flip_h(self):
+        if not self.config.get('IMAGE_FLIP_H'):
+            return
+
         self.image = self._flip(self.image, 1)
+        return True
 
 
     def detectLines(self):
@@ -1323,12 +1350,20 @@ class ImageProcessor(object):
             return
 
 
-        if self.night_v.value and self.config.get('AUTO_WB'):
-            self._white_balance_auto_bgr()
-            return True
-        elif not self.night_v.value and self.config.get('AUTO_WB_DAY'):
-            self._white_balance_auto_bgr()
-            return True
+        if self.night_v.value:
+            # night
+            auto_wb = self.config.get('AUTO_WB')
+        else:
+            # day
+            auto_wb = self.config.get('AUTO_WB_DAY')
+
+
+        if not auto_wb:
+            return
+
+
+        self._white_balance_auto_bgr()
+        return True
 
 
     def _white_balance_auto_bgr(self):
@@ -1587,11 +1622,23 @@ class ImageProcessor(object):
             # disable processing in focus mode
             return
 
+
+        scale = self.config.get('IMAGE_SCALE', 100)
+
+        if scale == 100:
+            return
+
+
+        self._scale_image(scale)
+        return True
+
+
+    def _scale_image(self, scale):
         image_height, image_width = self.image.shape[:2]
 
-        logger.info('Scaling image by %d%%', self.config['IMAGE_SCALE'])
-        new_height = int(image_height * self.config['IMAGE_SCALE'] / 100.0)
-        new_width = int(image_width * self.config['IMAGE_SCALE'] / 100.0)
+        logger.info('Scaling image by %d%%', scale)
+        new_height = int(image_height * scale / 100.0)
+        new_width = int(image_width * scale / 100.0)
 
         # ensure size is divisible by 2
         new_height = new_height - (new_height % 2)

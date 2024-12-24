@@ -564,22 +564,16 @@ class ImageWorker(Process):
             self.image_processor.drawDetections()
 
 
-        if self.config.get('IMAGE_ROTATE'):
-            self.image_processor.rotate_90()
-
-
         # rotation
-        if self.config.get('IMAGE_ROTATE_ANGLE'):
-            self.image_processor.rotate_angle()
+        self.image_processor.rotate_90()
+        self.image_processor.rotate_angle()
 
 
         # verticle flip
-        if self.config.get('IMAGE_FLIP_V'):
-            self.image_processor.flip_v()
+        self.image_processor.flip_v()
 
         # horizontal flip
-        if self.config.get('IMAGE_FLIP_H'):
-            self.image_processor.flip_h()
+        self.image_processor.flip_h()
 
 
         # crop
@@ -633,8 +627,7 @@ class ImageWorker(Process):
         self.image_processor.apply_logo_overlay()
 
 
-        if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
-            self.image_processor.scale_image()
+        self.image_processor.scale_image()
 
 
         self.image_processor.add_border()
