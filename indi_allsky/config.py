@@ -80,11 +80,17 @@ class IndiAllSkyConfigBase(object):
         "FOCUS_DELAY"          : 4.0,
         "CFA_PATTERN"      : "",  # None, GRBG, RGGB, BGGR, GBRG
         "SCNR_ALGORITHM"   : "",  # empty string, average_neutral, or maximum_neutral
+        "SCNR_ALGORITHM_DAY" : "",
         "WBR_FACTOR"       : 1.0,
         "WBG_FACTOR"       : 1.0,
         "WBB_FACTOR"       : 1.0,
+        "WBR_FACTOR_DAY"   : 1.0,
+        "WBG_FACTOR_DAY"   : 1.0,
+        "WBB_FACTOR_DAY"   : 1.0,
         "AUTO_WB"          : False,
+        "AUTO_WB_DAY"      : False,
         "SATURATION_FACTOR": 1.0,
+        "SATURATION_FACTOR_DAY": 1.0,
         "CCD_COOLING"      : False,
         "CCD_TEMP"         : 15.0,
         "TEMP_DISPLAY"     : "c",  # c = celcius, f = fahrenheit, k = kelvin",

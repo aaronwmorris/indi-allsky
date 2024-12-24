@@ -1563,11 +1563,17 @@ class ConfigView(FormView):
             'FOCUS_DELAY'                    : self.indi_allsky_config.get('FOCUS_DELAY', 4.0),
             'CFA_PATTERN'                    : self.indi_allsky_config.get('CFA_PATTERN', ''),
             'SCNR_ALGORITHM'                 : self.indi_allsky_config.get('SCNR_ALGORITHM', ''),
+            'SCNR_ALGORITHM_DAY'             : self.indi_allsky_config.get('SCNR_ALGORITHM_DAY', ''),
             'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
             'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
             'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
+            'WBR_FACTOR_DAY'                 : self.indi_allsky_config.get('WBR_FACTOR_DAY', 1.0),
+            'WBG_FACTOR_DAY'                 : self.indi_allsky_config.get('WBG_FACTOR_DAY', 1.0),
+            'WBB_FACTOR_DAY'                 : self.indi_allsky_config.get('WBB_FACTOR_DAY', 1.0),
             'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
+            'AUTO_WB_DAY'                    : self.indi_allsky_config.get('AUTO_WB_DAY', False),
             'SATURATION_FACTOR'              : self.indi_allsky_config.get('SATURATION_FACTOR', 1.0),
+            'SATURATION_FACTOR_DAY'          : self.indi_allsky_config.get('SATURATION_FACTOR_DAY', 1.0),
             'CCD_COOLING'                    : self.indi_allsky_config.get('CCD_COOLING', False),
             'CCD_TEMP'                       : self.indi_allsky_config.get('CCD_TEMP', 15.0),
             'TEMP_DISPLAY'                   : self.indi_allsky_config.get('TEMP_DISPLAY', 'c'),
@@ -2290,13 +2296,19 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FOCUS_DELAY']                          = float(request.json['FOCUS_DELAY'])
         self.indi_allsky_config['CFA_PATTERN']                          = str(request.json['CFA_PATTERN'])
         self.indi_allsky_config['SCNR_ALGORITHM']                       = str(request.json['SCNR_ALGORITHM'])
+        self.indi_allsky_config['SCNR_ALGORITHM_DAY']                   = str(request.json['SCNR_ALGORITHM_DAY'])
         self.indi_allsky_config['WBR_FACTOR']                           = float(request.json['WBR_FACTOR'])
         self.indi_allsky_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
         self.indi_allsky_config['WBB_FACTOR']                           = float(request.json['WBB_FACTOR'])
+        self.indi_allsky_config['WBR_FACTOR_DAY']                       = float(request.json['WBR_FACTOR_DAY'])
+        self.indi_allsky_config['WBG_FACTOR_DAY']                       = float(request.json['WBG_FACTOR_DAY'])
+        self.indi_allsky_config['WBB_FACTOR_DAY']                       = float(request.json['WBB_FACTOR_DAY'])
         self.indi_allsky_config['SATURATION_FACTOR']                    = float(request.json['SATURATION_FACTOR'])
+        self.indi_allsky_config['SATURATION_FACTOR_DAY']                = float(request.json['SATURATION_FACTOR_DAY'])
         self.indi_allsky_config['CCD_COOLING']                          = bool(request.json['CCD_COOLING'])
         self.indi_allsky_config['CCD_TEMP']                             = float(request.json['CCD_TEMP'])
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
+        self.indi_allsky_config['AUTO_WB_DAY']                          = bool(request.json['AUTO_WB_DAY'])
         self.indi_allsky_config['TEMP_DISPLAY']                         = str(request.json['TEMP_DISPLAY'])
         self.indi_allsky_config['PRESSURE_DISPLAY']                     = str(request.json['PRESSURE_DISPLAY'])
         self.indi_allsky_config['WINDSPEED_DISPLAY']                    = str(request.json['WINDSPEED_DISPLAY'])
