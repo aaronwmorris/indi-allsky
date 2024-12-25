@@ -79,6 +79,7 @@ class IndiAllSkyConfigBase(object):
         "FOCUS_MODE"           : False,
         "FOCUS_DELAY"          : 4.0,
         "CFA_PATTERN"      : "",  # None, GRBG, RGGB, BGGR, GBRG
+        "USE_NIGHT_COLOR"  : True,
         "SCNR_ALGORITHM"   : "",  # empty string, average_neutral, or maximum_neutral
         "SCNR_ALGORITHM_DAY" : "",
         "WBR_FACTOR"       : 1.0,

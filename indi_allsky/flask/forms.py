@@ -3213,6 +3213,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FOCUS_MODE                       = BooleanField('Focus Mode')
     FOCUS_DELAY                      = FloatField('Focus Delay', validators=[DataRequired(), FOCUS_DELAY_validator])
     CFA_PATTERN                      = SelectField('Bayer Pattern', choices=CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
+    USE_NIGHT_COLOR                  = BooleanField('Use Night Color Settings')
     SCNR_ALGORITHM                   = SelectField('SCNR (Night)', choices=SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
     SCNR_ALGORITHM_DAY               = SelectField('SCNR (Day)', choices=SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
     WBR_FACTOR                       = FloatField('Red Balance Factor (Night)', validators=[WB_FACTOR_validator])

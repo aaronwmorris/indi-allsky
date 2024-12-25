@@ -1221,12 +1221,15 @@ class ImageProcessor(object):
             return
 
 
-        if self.night_v.value:
-            # night
+        if self.config.get('USE_NIGHT_COLOR', True):
             algo = self.config.get('SCNR_ALGORITHM')
         else:
-            # day
-            algo = self.config.get('SCNR_ALGORITHM_DAY')
+            if self.night_v.value:
+                # night
+                algo = self.config.get('SCNR_ALGORITHM')
+            else:
+                # day
+                algo = self.config.get('SCNR_ALGORITHM_DAY')
 
 
         if not algo:
@@ -1257,16 +1260,21 @@ class ImageProcessor(object):
             return
 
 
-        if self.night_v.value:
-            # night
+        if self.config.get('USE_NIGHT_COLOR', True):
             WBB_FACTOR = float(self.config.get('WBB_FACTOR', 1.0))
             WBG_FACTOR = float(self.config.get('WBG_FACTOR', 1.0))
             WBR_FACTOR = float(self.config.get('WBR_FACTOR', 1.0))
         else:
-            # day
-            WBB_FACTOR = float(self.config.get('WBB_FACTOR_DAY', 1.0))
-            WBG_FACTOR = float(self.config.get('WBG_FACTOR_DAY', 1.0))
-            WBR_FACTOR = float(self.config.get('WBR_FACTOR_DAY', 1.0))
+            if self.night_v.value:
+                # night
+                WBB_FACTOR = float(self.config.get('WBB_FACTOR', 1.0))
+                WBG_FACTOR = float(self.config.get('WBG_FACTOR', 1.0))
+                WBR_FACTOR = float(self.config.get('WBR_FACTOR', 1.0))
+            else:
+                # day
+                WBB_FACTOR = float(self.config.get('WBB_FACTOR_DAY', 1.0))
+                WBG_FACTOR = float(self.config.get('WBG_FACTOR_DAY', 1.0))
+                WBR_FACTOR = float(self.config.get('WBR_FACTOR_DAY', 1.0))
 
 
         if WBB_FACTOR == 1.0 and WBG_FACTOR == 1.0 and WBR_FACTOR == 1.0:
@@ -1350,12 +1358,15 @@ class ImageProcessor(object):
             return
 
 
-        if self.night_v.value:
-            # night
+        if self.config.get('USE_NIGHT_COLOR', True):
             auto_wb = self.config.get('AUTO_WB')
         else:
-            # day
-            auto_wb = self.config.get('AUTO_WB_DAY')
+            if self.night_v.value:
+                # night
+                auto_wb = self.config.get('AUTO_WB')
+            else:
+                # day
+                auto_wb = self.config.get('AUTO_WB_DAY')
 
 
         if not auto_wb:
@@ -1409,12 +1420,15 @@ class ImageProcessor(object):
             return
 
 
-        if self.night_v.value:
-            # night
+        if self.config.get('USE_NIGHT_COLOR', True):
             SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR', 1.0))
         else:
-            # day
-            SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR_DAY', 1.0))
+            if self.night_v.value:
+                # night
+                SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR', 1.0))
+            else:
+                # day
+                SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR_DAY', 1.0))
 
 
         if SATURATION_FACTOR == 1.0:
