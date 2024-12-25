@@ -1059,6 +1059,8 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">Color Filter Array/Bayer Pattern</div>
     </div>
 
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.SCNR_ALGORITHM.label(class='col-form-label') }}
@@ -1131,6 +1133,84 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_config.SATURATION_FACTOR(class='form-control bg-secondary') }}
             <div id="SATURATION_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">1.0 is disabled.  1.5 is a good starting point</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SCNR_ALGORITHM_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.SCNR_ALGORITHM_DAY(class='form-select bg-secondary') }}
+            <div id="SCNR_ALGORITHM_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div>SCNR algorithm to apply to reduce green bias in image</div>
+            <div>
+              <ul>
+                <li>Average Neutral</li>
+                <li>Maximum Neutral</li>
+              </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WBR_FACTOR_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WBR_FACTOR_DAY(class='form-control bg-secondary') }}
+            <div id="WBR_FACTOR_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">1.0 is disabled</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WBG_FACTOR_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WBG_FACTOR_DAY(class='form-control bg-secondary') }}
+            <div id="WBG_FACTOR_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WBB_FACTOR_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WBB_FACTOR_DAY(class='form-control bg-secondary') }}
+            <div id="WBB_FACTOR_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.AUTO_WB_DAY.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.AUTO_WB_DAY(class='form-check-input') }}
+                <div id="AUTO_WB_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Auto WB is applied after manual WB settings</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SATURATION_FACTOR_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.SATURATION_FACTOR_DAY(class='form-control bg-secondary') }}
+            <div id="SATURATION_FACTOR_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">1.0 is disabled.  1.5 is a good starting point</div>
     </div>
@@ -6136,9 +6216,14 @@ const field_names = [
     'WBR_FACTOR',
     'WBG_FACTOR',
     'WBB_FACTOR',
+    'WBR_FACTOR_DAY',
+    'WBG_FACTOR_DAY',
+    'WBB_FACTOR_DAY',
     'SATURATION_FACTOR',
+    'SATURATION_FACTOR_DAY',
     'CFA_PATTERN',
     'SCNR_ALGORITHM',
+    'SCNR_ALGORITHM_DAY',
     'CCD_TEMP',
     'TEMP_DISPLAY',
     'PRESSURE_DISPLAY',
@@ -6463,6 +6548,7 @@ const checkbox_field_names = [
     'ENCRYPT_PASSWORDS',
     'FOCUS_MODE',
     'AUTO_WB',
+    'AUTO_WB_DAY',
     'CCD_COOLING',
     'GPS_ENABLE',
     'DETECT_STARS',

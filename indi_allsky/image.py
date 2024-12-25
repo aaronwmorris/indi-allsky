@@ -564,22 +564,16 @@ class ImageWorker(Process):
             self.image_processor.drawDetections()
 
 
-        if self.config.get('IMAGE_ROTATE'):
-            self.image_processor.rotate_90()
-
-
         # rotation
-        if self.config.get('IMAGE_ROTATE_ANGLE'):
-            self.image_processor.rotate_angle()
+        self.image_processor.rotate_90()
+        self.image_processor.rotate_angle()
 
 
         # verticle flip
-        if self.config.get('IMAGE_FLIP_V'):
-            self.image_processor.flip_v()
+        self.image_processor.flip_v()
 
         # horizontal flip
-        if self.config.get('IMAGE_FLIP_H'):
-            self.image_processor.flip_h()
+        self.image_processor.flip_h()
 
 
         # crop
@@ -588,19 +582,19 @@ class ImageWorker(Process):
 
 
         # green removal
-        if self.config.get('SCNR_ALGORITHM'):
-            self.image_processor.scnr()
+        self.image_processor.scnr()
 
 
         # white balance
         self.image_processor.white_balance_manual_bgr()
-
-        if self.config.get('AUTO_WB'):
-            self.image_processor.white_balance_auto_bgr()
+        self.image_processor.white_balance_auto_bgr()
 
 
         # saturation
-        self.image_processor.saturation_adjust()
+        if self.night_v.value and self.config.get('SATURATION_FACTOR', 1.0) != 1.0:
+            self.image_processor.saturation_adjust()
+        elif not self.night_v.value and self.config.get('SATURATION_FACTOR_DAY', 1.0) != 1.0:
+            self.image_processor.saturation_adjust()
 
 
         if not self.config.get('CONTRAST_ENHANCE_16BIT'):
@@ -633,8 +627,7 @@ class ImageWorker(Process):
         self.image_processor.apply_logo_overlay()
 
 
-        if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
-            self.image_processor.scale_image()
+        self.image_processor.scale_image()
 
 
         self.image_processor.add_border()

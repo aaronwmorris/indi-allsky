@@ -1081,18 +1081,37 @@ class ImageProcessor(object):
 
 
     def rotate_90(self):
+        if not self.config.get('IMAGE_ROTATE'):
+            return
+
+
         try:
             rotate_enum = getattr(cv2, self.config['IMAGE_ROTATE'])
         except AttributeError:
             logger.error('Unknown rotation option: %s', self.config['IMAGE_ROTATE'])
             return
 
+
+        self._rotate_90(rotate_enum)
+        return True
+
+
+    def _rotate_90(self, rotate_enum):
         self.image = cv2.rotate(self.image, rotate_enum)
 
 
     def rotate_angle(self):
         angle = self.config.get('IMAGE_ROTATE_ANGLE')
 
+        if not angle:
+            return
+
+
+        self._rotate_angle(angle)
+        return True
+
+
+    def _rotate_angle(self, angle):
         rotate_start = time.time()
 
         height, width = self.image.shape[:2]
@@ -1136,11 +1155,19 @@ class ImageProcessor(object):
 
 
     def flip_v(self):
+        if not self.config.get('IMAGE_FLIP_V'):
+            return
+
         self.image = self._flip(self.image, 0)
+        return True
 
 
     def flip_h(self):
+        if not self.config.get('IMAGE_FLIP_H'):
+            return
+
         self.image = self._flip(self.image, 1)
+        return True
 
 
     def detectLines(self):
@@ -1194,7 +1221,23 @@ class ImageProcessor(object):
             return
 
 
-        algo = self.config.get('SCNR_ALGORITHM')
+        if self.night_v.value:
+            # night
+            algo = self.config.get('SCNR_ALGORITHM')
+        else:
+            # day
+            algo = self.config.get('SCNR_ALGORITHM_DAY')
+
+
+        if not algo:
+            return
+
+
+        self._scnr(algo)
+        return True
+
+
+    def _scnr(self, algo):
 
         try:
             scnr_function = getattr(self._scnr, algo)
@@ -1214,14 +1257,28 @@ class ImageProcessor(object):
             return
 
 
-        WBB_FACTOR = float(self.config.get('WBB_FACTOR', 1.0))
-        WBG_FACTOR = float(self.config.get('WBG_FACTOR', 1.0))
-        WBR_FACTOR = float(self.config.get('WBR_FACTOR', 1.0))
+        if self.night_v.value:
+            # night
+            WBB_FACTOR = float(self.config.get('WBB_FACTOR', 1.0))
+            WBG_FACTOR = float(self.config.get('WBG_FACTOR', 1.0))
+            WBR_FACTOR = float(self.config.get('WBR_FACTOR', 1.0))
+        else:
+            # day
+            WBB_FACTOR = float(self.config.get('WBB_FACTOR_DAY', 1.0))
+            WBG_FACTOR = float(self.config.get('WBG_FACTOR_DAY', 1.0))
+            WBR_FACTOR = float(self.config.get('WBR_FACTOR_DAY', 1.0))
+
 
         if WBB_FACTOR == 1.0 and WBG_FACTOR == 1.0 and WBR_FACTOR == 1.0:
             # no action
             return
 
+
+        self._white_balance_manual_bgr(WBB_FACTOR, WBG_FACTOR, WBR_FACTOR)
+        return True
+
+
+    def _white_balance_manual_bgr(self, WBB_FACTOR, WBG_FACTOR, WBR_FACTOR):
         b, g, r = cv2.split(self.image)
 
         logger.info('Applying manual color balance settings')
@@ -1292,6 +1349,24 @@ class ImageProcessor(object):
             # mono
             return
 
+
+        if self.night_v.value:
+            # night
+            auto_wb = self.config.get('AUTO_WB')
+        else:
+            # day
+            auto_wb = self.config.get('AUTO_WB_DAY')
+
+
+        if not auto_wb:
+            return
+
+
+        self._white_balance_auto_bgr()
+        return True
+
+
+    def _white_balance_auto_bgr(self):
         ### This seems to work
         b, g, r = cv2.split(self.image)
         b_avg = cv2.mean(b)[0]
@@ -1334,11 +1409,24 @@ class ImageProcessor(object):
             return
 
 
-        SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR', 1.0))
+        if self.night_v.value:
+            # night
+            SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR', 1.0))
+        else:
+            # day
+            SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR_DAY', 1.0))
+
+
         if SATURATION_FACTOR == 1.0:
             # no action
             return
 
+
+        self._saturation_adjust(SATURATION_FACTOR)
+        return True
+
+
+    def _saturation_adjust(self, SATURATION_FACTOR):
         image_hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
 
         sat = image_hsv[:, :, 1]
@@ -1534,11 +1622,23 @@ class ImageProcessor(object):
             # disable processing in focus mode
             return
 
+
+        scale = self.config.get('IMAGE_SCALE', 100)
+
+        if scale == 100:
+            return
+
+
+        self._scale_image(scale)
+        return True
+
+
+    def _scale_image(self, scale):
         image_height, image_width = self.image.shape[:2]
 
-        logger.info('Scaling image by %d%%', self.config['IMAGE_SCALE'])
-        new_height = int(image_height * self.config['IMAGE_SCALE'] / 100.0)
-        new_width = int(image_width * self.config['IMAGE_SCALE'] / 100.0)
+        logger.info('Scaling image by %d%%', scale)
+        new_height = int(image_height * scale / 100.0)
+        new_width = int(image_width * scale / 100.0)
 
         # ensure size is divisible by 2
         new_height = new_height - (new_height % 2)

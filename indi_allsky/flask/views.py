@@ -1563,11 +1563,17 @@ class ConfigView(FormView):
             'FOCUS_DELAY'                    : self.indi_allsky_config.get('FOCUS_DELAY', 4.0),
             'CFA_PATTERN'                    : self.indi_allsky_config.get('CFA_PATTERN', ''),
             'SCNR_ALGORITHM'                 : self.indi_allsky_config.get('SCNR_ALGORITHM', ''),
+            'SCNR_ALGORITHM_DAY'             : self.indi_allsky_config.get('SCNR_ALGORITHM_DAY', ''),
             'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
             'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
             'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
+            'WBR_FACTOR_DAY'                 : self.indi_allsky_config.get('WBR_FACTOR_DAY', 1.0),
+            'WBG_FACTOR_DAY'                 : self.indi_allsky_config.get('WBG_FACTOR_DAY', 1.0),
+            'WBB_FACTOR_DAY'                 : self.indi_allsky_config.get('WBB_FACTOR_DAY', 1.0),
             'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
+            'AUTO_WB_DAY'                    : self.indi_allsky_config.get('AUTO_WB_DAY', False),
             'SATURATION_FACTOR'              : self.indi_allsky_config.get('SATURATION_FACTOR', 1.0),
+            'SATURATION_FACTOR_DAY'          : self.indi_allsky_config.get('SATURATION_FACTOR_DAY', 1.0),
             'CCD_COOLING'                    : self.indi_allsky_config.get('CCD_COOLING', False),
             'CCD_TEMP'                       : self.indi_allsky_config.get('CCD_TEMP', 15.0),
             'TEMP_DISPLAY'                   : self.indi_allsky_config.get('TEMP_DISPLAY', 'c'),
@@ -2290,13 +2296,19 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FOCUS_DELAY']                          = float(request.json['FOCUS_DELAY'])
         self.indi_allsky_config['CFA_PATTERN']                          = str(request.json['CFA_PATTERN'])
         self.indi_allsky_config['SCNR_ALGORITHM']                       = str(request.json['SCNR_ALGORITHM'])
+        self.indi_allsky_config['SCNR_ALGORITHM_DAY']                   = str(request.json['SCNR_ALGORITHM_DAY'])
         self.indi_allsky_config['WBR_FACTOR']                           = float(request.json['WBR_FACTOR'])
         self.indi_allsky_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
         self.indi_allsky_config['WBB_FACTOR']                           = float(request.json['WBB_FACTOR'])
+        self.indi_allsky_config['WBR_FACTOR_DAY']                       = float(request.json['WBR_FACTOR_DAY'])
+        self.indi_allsky_config['WBG_FACTOR_DAY']                       = float(request.json['WBG_FACTOR_DAY'])
+        self.indi_allsky_config['WBB_FACTOR_DAY']                       = float(request.json['WBB_FACTOR_DAY'])
         self.indi_allsky_config['SATURATION_FACTOR']                    = float(request.json['SATURATION_FACTOR'])
+        self.indi_allsky_config['SATURATION_FACTOR_DAY']                = float(request.json['SATURATION_FACTOR_DAY'])
         self.indi_allsky_config['CCD_COOLING']                          = bool(request.json['CCD_COOLING'])
         self.indi_allsky_config['CCD_TEMP']                             = float(request.json['CCD_TEMP'])
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
+        self.indi_allsky_config['AUTO_WB_DAY']                          = bool(request.json['AUTO_WB_DAY'])
         self.indi_allsky_config['TEMP_DISPLAY']                         = str(request.json['TEMP_DISPLAY'])
         self.indi_allsky_config['PRESSURE_DISPLAY']                     = str(request.json['PRESSURE_DISPLAY'])
         self.indi_allsky_config['WINDSPEED_DISPLAY']                    = str(request.json['WINDSPEED_DISPLAY'])
@@ -6002,22 +6014,16 @@ class JsonImageProcessingView(JsonView):
             image_processor.convert_16bit_to_8bit()
 
 
-            if p_config.get('IMAGE_ROTATE'):
-                image_processor.rotate_90()
-
-
             # rotation
-            if p_config.get('IMAGE_ROTATE_ANGLE'):
-                image_processor.rotate_angle()
+            image_processor.rotate_90()
+            image_processor.rotate_angle()
 
 
             # verticle flip
-            if p_config.get('IMAGE_FLIP_V'):
-                image_processor.flip_v()
+            image_processor.flip_v()
 
             # horizontal flip
-            if p_config.get('IMAGE_FLIP_H'):
-                image_processor.flip_h()
+            image_processor.flip_h()
 
 
             image_processor.colorize()
@@ -6086,19 +6092,12 @@ class JsonImageProcessingView(JsonView):
 
 
             # green removal
-            if p_config.get('SCNR_ALGORITHM'):
-                image_processor.scnr()
-
-                message_list.append('SCNR')
+            image_processor.scnr()
 
 
             # white balance
             image_processor.white_balance_manual_bgr()
-
-            if p_config.get('AUTO_WB'):
-                image_processor.white_balance_auto_bgr()
-
-                message_list.append('Auto White Balance')
+            image_processor.white_balance_auto_bgr()
 
 
             # saturation

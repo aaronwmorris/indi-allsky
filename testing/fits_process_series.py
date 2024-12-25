@@ -196,34 +196,25 @@ class ProcessFitsSeries(object):
             image_processor.convert_16bit_to_8bit()
 
 
-            if self.config.get('IMAGE_ROTATE'):
-                image_processor.rotate_90()
-
-
             # rotation
-            if self.config.get('IMAGE_ROTATE_ANGLE'):
-                image_processor.rotate_angle()
+            image_processor.rotate_90()
+            image_processor.rotate_angle()
 
 
             # verticle flip
-            if self.config.get('IMAGE_FLIP_V'):
-                image_processor.flip_v()
+            image_processor.flip_v()
 
             # horizontal flip
-            if self.config.get('IMAGE_FLIP_H'):
-                image_processor.flip_h()
+            image_processor.flip_h()
 
 
             # green removal
-            if self.config.get('SCNR_ALGORITHM'):
-                image_processor.scnr()
+            image_processor.scnr()
 
 
             # white balance
             image_processor.white_balance_manual_bgr()
-
-            if self.config.get('AUTO_WB'):
-                image_processor.white_balance_auto_bgr()
+            image_processor.white_balance_auto_bgr()
 
 
             # saturation
@@ -242,8 +233,7 @@ class ProcessFitsSeries(object):
             #image_processor.apply_logo_overlay()
 
 
-            if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
-                image_processor.scale_image()
+            image_processor.scale_image()
 
 
             #image_processor.orb_image()
