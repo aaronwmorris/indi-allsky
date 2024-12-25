@@ -339,7 +339,7 @@ class ImageProcessor(object):
         elif filename_p.suffix in ['.jpg', '.jpeg']:
             try:
                 with Image.open(str(filename_p)) as img:
-                    data = numpy.array(img)
+                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
             except PIL.UnidentifiedImageError:
                 raise BadImage('Bad jpeg image')
 

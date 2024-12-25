@@ -12,6 +12,7 @@ from pathlib import Path
 import logging
 
 import numpy
+import cv2
 
 from multiprocessing import Queue
 from multiprocessing import Value
@@ -393,7 +394,7 @@ class IndiAllSkyDarks(object):
 
             try:
                 with Image.open(str(filename_p)) as img:
-                    data = numpy.array(img)
+                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
             except PIL.UnidentifiedImageError:
                 raise BadImage('Bad jpeg image')
 
@@ -420,7 +421,7 @@ class IndiAllSkyDarks(object):
         elif filename_p.suffix in ['.png']:
             try:
                 with Image.open(str(filename_p)) as img:
-                    data = numpy.array(img)
+                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
             except PIL.UnidentifiedImageError:
                 raise BadImage('Bad png image')
 
