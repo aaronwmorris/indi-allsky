@@ -161,7 +161,7 @@ class ImageProcessor(object):
         self._stars_detect = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
         self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)
-        self._scnr = IndiAllskyScnr(self.config)
+        self._ia_scnr = IndiAllskyScnr(self.config)
         self._cardinal_dirs_label = IndiAllskyCardinalDirsLabel(self.config)
         self._moon_overlay = IndiAllSkyMoonOverlay(self.config)
 
@@ -1240,7 +1240,7 @@ class ImageProcessor(object):
     def _scnr(self, algo):
 
         try:
-            scnr_function = getattr(self._scnr, algo)
+            scnr_function = getattr(self._ia_scnr, algo)
             self.image = scnr_function(self.image)
         except AttributeError:
             logger.error('Unknown SCNR algorithm: %s', algo)
