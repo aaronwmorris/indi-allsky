@@ -1141,6 +1141,19 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.USE_NIGHT_COLOR.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.USE_NIGHT_COLOR(class='form-check-input') }}
+                <div id="USE_NIGHT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.SCNR_ALGORITHM_DAY.label(class='col-form-label') }}
         </div>
         <div class="col-sm-3">
@@ -6547,6 +6560,7 @@ const field_names = [
 const checkbox_field_names = [
     'ENCRYPT_PASSWORDS',
     'FOCUS_MODE',
+    'USE_NIGHT_COLOR',
     'AUTO_WB',
     'AUTO_WB_DAY',
     'CCD_COOLING',
@@ -6855,6 +6869,35 @@ $('#CARDINAL_DIRS__ENABLE').on('change', function() {
     }
 });
 
+// Night color settings
+$('#USE_NIGHT_COLOR').on('change', function() {
+    if ($('#USE_NIGHT_COLOR').prop('checked')) {
+        $('#SCNR_ALGORITHM_DAY').attr('readonly', true);
+        $('#SCNR_ALGORITHM_DAY').attr('disabled', true);
+        $('#WBR_FACTOR_DAY').attr('readonly', true);
+        $('#WBR_FACTOR_DAY').attr('disabled', true);
+        $('#WBG_FACTOR_DAY').attr('readonly', true);
+        $('#WBG_FACTOR_DAY').attr('disabled', true);
+        $('#WBB_FACTOR_DAY').attr('readonly', true);
+        $('#WBB_FACTOR_DAY').attr('disabled', true);
+        $('#AUTO_WB_DAY').attr('disabled', true);
+        $('#SATURATION_FACTOR_DAY').attr('readonly', true);
+        $('#SATURATION_FACTOR_DAY').attr('disabled', true);
+    } else {
+        $('#SCNR_ALGORITHM_DAY').removeAttr('readonly');
+        $('#SCNR_ALGORITHM_DAY').removeAttr('disabled');
+        $('#WBR_FACTOR_DAY').removeAttr('readonly');
+        $('#WBR_FACTOR_DAY').removeAttr('disabled');
+        $('#WBG_FACTOR_DAY').removeAttr('readonly');
+        $('#WBG_FACTOR_DAY').removeAttr('disabled');
+        $('#WBB_FACTOR_DAY').removeAttr('readonly');
+        $('#WBB_FACTOR_DAY').removeAttr('disabled');
+        $('#AUTO_WB_DAY').removeAttr('disabled');
+        $('#SATURATION_FACTOR_DAY').removeAttr('readonly');
+        $('#SATURATION_FACTOR_DAY').removeAttr('disabled');
+    }
+});
+
 
 $( document ).ready(function() {
     // Global timelapse
@@ -6916,6 +6959,22 @@ $( document ).ready(function() {
     if (!$('#CARDINAL_DIRS__ENABLE').prop('checked')) {
         $('#FISH2PANO__ENABLE_CARDINAL_DIRS').attr('disabled', true);
     }
+
+    // Night color settings
+    if ($('#USE_NIGHT_COLOR').prop('checked')) {
+        $('#SCNR_ALGORITHM_DAY').attr('readonly', true);
+        $('#SCNR_ALGORITHM_DAY').attr('disabled', true);
+        $('#WBR_FACTOR_DAY').attr('readonly', true);
+        $('#WBR_FACTOR_DAY').attr('disabled', true);
+        $('#WBG_FACTOR_DAY').attr('readonly', true);
+        $('#WBG_FACTOR_DAY').attr('disabled', true);
+        $('#WBB_FACTOR_DAY').attr('readonly', true);
+        $('#WBB_FACTOR_DAY').attr('disabled', true);
+        $('#AUTO_WB_DAY').attr('disabled', true);
+        $('#SATURATION_FACTOR_DAY').attr('readonly', true);
+        $('#SATURATION_FACTOR_DAY').attr('disabled', true);
+    }
+
 });
 
 </script>
