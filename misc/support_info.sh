@@ -100,6 +100,21 @@ echo "Memory: $MEM_TOTAL kB"
 echo
 echo "System: $SYSTEM_MODEL"
 
+
+if [[ -d "/etc/stellarmate" ]]; then
+    echo
+    echo "Detected Stellarmate"
+    if [[ -f "/etc/stellarmate/version" ]]; then
+        head -n 1 /etc/stellarmate/version || true
+    fi
+    echo
+elif [[ -f "/etc/astroberry.version" ]]; then
+    echo
+    echo "Detected Astroberry server"
+    echo
+fi
+
+
 echo
 uname -a
 
