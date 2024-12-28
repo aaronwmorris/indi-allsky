@@ -543,7 +543,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         libgtk-3-0 \
         libssl-dev \
         libxml2-dev \
-        libxslt-dev \
+        libxslt1-dev \
         libgnutls28-dev \
         libcurl4-gnutls-dev \
         libcfitsio-dev \
