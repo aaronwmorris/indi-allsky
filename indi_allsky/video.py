@@ -935,7 +935,7 @@ class VideoWorker(Process):
             tg.codec = codec
             tg.framerate = self.config['FFMPEG_FRAMERATE']
             tg.bitrate = self.config['FFMPEG_BITRATE']
-            tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
+            #tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')  # no vfscale for panorama timelapse
             tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
 
             tg.generate(video_file, timelapse_files)
