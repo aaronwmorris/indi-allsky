@@ -1010,8 +1010,10 @@ if [[ ! -d "$MIGRATION_FOLDER" ]]; then
 fi
 
 
+cd "$ALLSKY_DIRECTORY" || catch_error
 flask db revision --autogenerate
 flask db upgrade head
+cd "$OLDPWD" || catch_error
 
 
 sudo chmod 664 "${DB_FILE}"
