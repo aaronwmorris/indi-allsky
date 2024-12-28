@@ -1305,7 +1305,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         libopenblas-dev \
         libraw-dev \
         libgeos-dev \
-        libtiff5-dev \
+        libtiff-dev \
         libjpeg8-dev \
         libopenjp2-7-dev \
         libpng-dev \
@@ -1321,7 +1321,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         libfribidi-dev \
         libxcb1-dev \
         default-libmysqlclient-dev \
-        pkg-config \
+        pkgconf \
         rustc \
         cargo \
         ffmpeg \
@@ -1330,7 +1330,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         sqlite3 \
         libgpiod2 \
         i2c-tools \
-        policykit-1 \
+        polkitd \
         dbus-user-session
 
 
