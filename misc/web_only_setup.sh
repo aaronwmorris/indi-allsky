@@ -207,12 +207,12 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         apache2 \
         swig \
         libatlas-base-dev \
-        libilmbase-dev \
+        libimath-dev \
         libopenexr-dev \
         libgtk-3-0 \
         libssl-dev \
         libxml2-dev \
-        libxslt-dev \
+        libxslt1-dev \
         libgnutls28-dev \
         libcurl4-gnutls-dev \
         libcfitsio-dev \
@@ -224,12 +224,12 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         libopenblas-dev \
         libraw-dev \
         libgeos-dev \
-        libtiff5-dev \
+        libtiff-dev \
         libjpeg62-turbo-dev \
         libopenjp2-7-dev \
         libpng-dev \
         zlib1g-dev \
-        libfreetype6-dev \
+        libfreetype-dev \
         liblcms2-dev \
         libwebp-dev \
         libcap-dev \
@@ -240,14 +240,14 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         libfribidi-dev \
         libxcb1-dev \
         default-libmysqlclient-dev \
-        pkg-config \
+        pkgconf \
         rustc \
         cargo \
         ffmpeg \
         gifsicle \
         jq \
         sqlite3 \
-        policykit-1 \
+        polkitd \
         dbus-user-session
 
 
@@ -290,12 +290,12 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         apache2 \
         swig \
         libatlas-base-dev \
-        libilmbase-dev \
+        libimath-dev \
         libopenexr-dev \
         libgtk-3-0 \
         libssl-dev \
         libxml2-dev \
-        libxslt-dev \
+        libxslt1-dev \
         libgnutls28-dev \
         libcurl4-gnutls-dev \
         libcfitsio-dev \
@@ -307,12 +307,12 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         libopenblas-dev \
         libraw-dev \
         libgeos-dev \
-        libtiff5-dev \
+        libtiff-dev \
         libjpeg62-turbo-dev \
         libopenjp2-7-dev \
         libpng-dev \
         zlib1g-dev \
-        libfreetype6-dev \
+        libfreetype-dev \
         liblcms2-dev \
         libwebp-dev \
         libcap-dev \
@@ -323,14 +323,14 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         libfribidi-dev \
         libxcb1-dev \
         default-libmysqlclient-dev \
-        pkg-config \
+        pkgconf \
         rustc \
         cargo \
         ffmpeg \
         gifsicle \
         jq \
         sqlite3 \
-        policykit-1 \
+        polkitd \
         dbus-user-session
 
 
@@ -538,12 +538,12 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         apache2 \
         swig \
         libatlas-base-dev \
-        libilmbase-dev \
+        libimath-dev \
         libopenexr-dev \
         libgtk-3-0 \
         libssl-dev \
         libxml2-dev \
-        libxslt-dev \
+        libxslt1-dev \
         libgnutls28-dev \
         libcurl4-gnutls-dev \
         libcfitsio-dev \
@@ -555,12 +555,12 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         libopenblas-dev \
         libraw-dev \
         libgeos-dev \
-        libtiff5-dev \
+        libtiff-dev \
         libjpeg8-dev \
         libopenjp2-7-dev \
         libpng-dev \
         zlib1g-dev \
-        libfreetype6-dev \
+        libfreetype-dev \
         liblcms2-dev \
         libwebp-dev \
         libcap-dev \
@@ -571,14 +571,14 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         libfribidi-dev \
         libxcb1-dev \
         default-libmysqlclient-dev \
-        pkg-config \
+        pkgconf \
         rustc \
         cargo \
         ffmpeg \
         gifsicle \
         jq \
         sqlite3 \
-        policykit-1 \
+        polkitd \
         dbus-user-session
 
 
@@ -1010,8 +1010,10 @@ if [[ ! -d "$MIGRATION_FOLDER" ]]; then
 fi
 
 
+cd "$ALLSKY_DIRECTORY" || catch_error
 flask db revision --autogenerate
 flask db upgrade head
+cd "$OLDPWD" || catch_error
 
 
 sudo chmod 664 "${DB_FILE}"
