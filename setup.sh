@@ -445,7 +445,7 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         libgtk-3-0 \
         libssl-dev \
         libxml2-dev \
-        libxslt-dev \
+        libxslt1-dev \
         libgnutls28-dev \
         libcurl4-gnutls-dev \
         libcfitsio-dev \
@@ -586,7 +586,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         libgtk-3-0 \
         libssl-dev \
         libxml2-dev \
-        libxslt-dev \
+        libxslt1-dev \
         libgnutls28-dev \
         libcurl4-gnutls-dev \
         libcfitsio-dev \
@@ -1288,12 +1288,12 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         avahi-daemon \
         swig \
         libatlas-base-dev \
-        libilmbase-dev \
+        libimath-dev \
         libopenexr-dev \
         libgtk-3-0 \
         libssl-dev \
         libxml2-dev \
-        libxslt-dev \
+        libxslt1-dev \
         libgnutls28-dev \
         libcurl4-gnutls-dev \
         libcfitsio-dev \
@@ -1310,7 +1310,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
         libopenjp2-7-dev \
         libpng-dev \
         zlib1g-dev \
-        libfreetype6-dev \
+        libfreetype-dev \
         liblcms2-dev \
         libwebp-dev \
         libcap-dev \
