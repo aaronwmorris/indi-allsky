@@ -166,7 +166,7 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         ca-certificates \
         cmake \
         fxload \
-        pkg-config \
+        pkgconf \
         libavcodec-dev \
         libavdevice-dev \
         libboost-dev \
@@ -214,7 +214,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         ca-certificates \
         cmake \
         fxload \
-        pkg-config \
+        pkgconf \
         libavcodec-dev \
         libavdevice-dev \
         libboost-dev \

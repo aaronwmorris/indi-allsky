@@ -224,12 +224,12 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         libopenblas-dev \
         libraw-dev \
         libgeos-dev \
-        libtiff5-dev \
+        libtiff-dev \
         libjpeg62-turbo-dev \
         libopenjp2-7-dev \
         libpng-dev \
         zlib1g-dev \
-        libfreetype6-dev \
+        libfreetype-dev \
         liblcms2-dev \
         libwebp-dev \
         libcap-dev \
@@ -240,14 +240,14 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         libfribidi-dev \
         libxcb1-dev \
         default-libmysqlclient-dev \
-        pkg-config \
+        pkgconf \
         rustc \
         cargo \
         ffmpeg \
         gifsicle \
         jq \
         sqlite3 \
-        policykit-1 \
+        polkitd \
         dbus-user-session
 
 
@@ -307,12 +307,12 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         libopenblas-dev \
         libraw-dev \
         libgeos-dev \
-        libtiff5-dev \
+        libtiff-dev \
         libjpeg62-turbo-dev \
         libopenjp2-7-dev \
         libpng-dev \
         zlib1g-dev \
-        libfreetype6-dev \
+        libfreetype-dev \
         liblcms2-dev \
         libwebp-dev \
         libcap-dev \
@@ -323,14 +323,14 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         libfribidi-dev \
         libxcb1-dev \
         default-libmysqlclient-dev \
-        pkg-config \
+        pkgconf \
         rustc \
         cargo \
         ffmpeg \
         gifsicle \
         jq \
         sqlite3 \
-        policykit-1 \
+        polkitd \
         dbus-user-session
 
 
