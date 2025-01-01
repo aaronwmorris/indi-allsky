@@ -804,6 +804,12 @@ while true; do
 done
 
 
+TMP_SPACE=$(df -Pk /tmp | tail -n 1 | awk "{ print \$4 }")
+if [ "$TMP_SPACE" -lt 500000 ]; then
+    whiptail --msgbox "There is less than 512MB available in the /tmp filesystem\n\nThis *MAY* cause python module installations to fail on new installs" 0 0 --title "WARNING"
+fi
+
+
 echo "**** Python virtualenv setup ****"
 [[ ! -d "${ALLSKY_DIRECTORY}/virtualenv" ]] && mkdir "${ALLSKY_DIRECTORY}/virtualenv"
 chmod 775 "${ALLSKY_DIRECTORY}/virtualenv"
