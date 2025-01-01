@@ -7,8 +7,6 @@ import socket
 import ssl
 import urllib3.exceptions
 import requests
-from lxml import etree
-import shapely
 import logging
 
 from . import constants
@@ -81,6 +79,8 @@ class IndiAllskySmokeUpdate(object):
     def update_na_hms(self, camera):
         # this pulls data from NOAA Hazard Mapping System
         # https://www.ospo.noaa.gov/Products/land/hms.html
+        from lxml import etree
+        import shapely
 
         now = datetime.now()
         #now = datetime.now() - timedelta(days=1)  # testing
