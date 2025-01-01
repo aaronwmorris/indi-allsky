@@ -3,7 +3,7 @@
 astropy >= 6.1.0
 pyerfa >= 2.0.1.4
 # https://www.wheelodex.org/projects/numpy/
-numpy >= 2.0
+numpy >= 2.1.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
 opencv-python-headless >= 4.10.0.84
 # https://www.wheelodex.org/projects/ccdproc/
@@ -39,5 +39,5 @@ prettytable
 astroalign >= 2.6.0
 requests[security]
 lxml
-shapely
+shapely >= 2.0.6
 pytz
