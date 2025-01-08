@@ -1800,9 +1800,15 @@ pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_POST}"
 
 
 if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
-    pip3 uninstall -y RPi.GPIO rpi.lgpio
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
+        if [[ "$DISTRO_VERSION_ID" == "12" ]]; then
+            if [[ "$CPU_ARCH" == "aarch64" || "$CPU_ARCH" == "armv7l" ]]; then
+                pip3 uninstall -y RPi.GPIO rpi.lgpio
 
-    pip3 install rpi.lgpio
+                pip3 install rpi.lgpio
+            fi
+        fi
+    fi
 fi
 
 # pyindi-client setup
