@@ -240,6 +240,7 @@ class IndiAllskyAuroraUpdate(object):
         x = numpy.arange(0, len(kp_list))
         y = numpy.array(kp_list)
 
+        # use linear regression to calculate general trend
         p_fitted = numpy.polynomial.Polynomial.fit(x, y, deg=1)
 
         return kp_last, p_fitted.convert()
