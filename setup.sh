@@ -1799,9 +1799,18 @@ pip3 install "${PIP_REQ_ARGS[@]}"
 pip3 install -r "${ALLSKY_DIRECTORY}/${VIRTUALENV_REQ_POST}"
 
 
+# replace rpi.gpio module with rpi.lgpio in some cases
 if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
     if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
         if [[ "$DISTRO_VERSION_ID" == "12" ]]; then
+            if [[ "$CPU_ARCH" == "aarch64" || "$CPU_ARCH" == "armv7l" ]]; then
+                pip3 uninstall -y RPi.GPIO rpi.lgpio
+
+                pip3 install rpi.lgpio
+            fi
+        fi
+    elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
+        if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
             if [[ "$CPU_ARCH" == "aarch64" || "$CPU_ARCH" == "armv7l" ]]; then
                 pip3 uninstall -y RPi.GPIO rpi.lgpio
 
