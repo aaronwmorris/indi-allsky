@@ -794,6 +794,9 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
                 indi-gpsd \
                 indi-gpsnmea
         fi
+    else
+        echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
     fi
 
 elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
@@ -1253,6 +1256,9 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
                 indi-gpsd \
                 indi-gpsnmea
         fi
+    else
+        echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
     fi
 
 else

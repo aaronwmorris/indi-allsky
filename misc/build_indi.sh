@@ -294,6 +294,7 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
 
     else
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
     fi
 elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
     if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
@@ -438,6 +439,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
             zlib1g-dev
     else
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
     fi
 
 else
