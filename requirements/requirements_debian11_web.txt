@@ -38,3 +38,4 @@ requests[security]
 lxml
 shapely
 pytz
+mysql-connector-python
