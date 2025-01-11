@@ -1923,6 +1923,7 @@ class ConfigView(FormView):
             'DEW_HEATER__THOLD_ENABLE'       : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_ENABLE', False),
             'DEW_HEATER__MANUAL_TARGET'      : self.indi_allsky_config.get('DEW_HEATER', {}).get('MANUAL_TARGET', 0.0),
             'DEW_HEATER__TEMP_USER_VAR_SLOT' : str(self.indi_allsky_config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)),  # string in form, int in config
+            'DEW_HEATER__DEWPOINT_USER_VAR_SLOT' : str(self.indi_allsky_config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 2)),  # string in form, int in config
             'DEW_HEATER__LEVEL_LOW'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_LOW', 33),
             'DEW_HEATER__LEVEL_MED'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_MED', 66),
             'DEW_HEATER__LEVEL_HIGH'         : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_HIGH', 100),
@@ -2671,6 +2672,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['DEW_HEATER']['THOLD_ENABLE']           = bool(request.json['DEW_HEATER__THOLD_ENABLE'])
         self.indi_allsky_config['DEW_HEATER']['MANUAL_TARGET']          = float(request.json['DEW_HEATER__MANUAL_TARGET'])
         self.indi_allsky_config['DEW_HEATER']['TEMP_USER_VAR_SLOT']     = int(request.json['DEW_HEATER__TEMP_USER_VAR_SLOT'])
+        self.indi_allsky_config['DEW_HEATER']['DEWPOINT_USER_VAR_SLOT'] = int(request.json['DEW_HEATER__DEWPOINT_USER_VAR_SLOT'])
         self.indi_allsky_config['DEW_HEATER']['LEVEL_LOW']              = int(request.json['DEW_HEATER__LEVEL_LOW'])
         self.indi_allsky_config['DEW_HEATER']['LEVEL_MED']              = int(request.json['DEW_HEATER__LEVEL_MED'])
         self.indi_allsky_config['DEW_HEATER']['LEVEL_HIGH']             = int(request.json['DEW_HEATER__LEVEL_HIGH'])

@@ -459,6 +459,7 @@ class IndiAllSkyConfigBase(object):
             "THOLD_ENABLE "          : False,
             "MANUAL_TARGET"          : 0.0,
             "TEMP_USER_VAR_SLOT"     : 10,
+            "DEWPOINT_USER_VAR_SLOT" : 2,
             "LEVEL_LOW"              : 33,
             "LEVEL_MED"              : 66,
             "LEVEL_HIGH"             : 100,

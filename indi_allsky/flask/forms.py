@@ -3557,6 +3557,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__THOLD_ENABLE         = BooleanField('Enable Dew Heater Thresholds')
     DEW_HEATER__MANUAL_TARGET        = FloatField('Manual Target', validators=[DEW_HEATER__MANUAL_TARGET_validator])
     DEW_HEATER__TEMP_USER_VAR_SLOT   = SelectField('Temperature Sensor Slot', choices=[], validators=[SENSOR_SLOT_validator])
+    DEW_HEATER__DEWPOINT_USER_VAR_SLOT = SelectField('Dew Point Sensor Slot', choices=[], validators=[SENSOR_SLOT_validator])
     DEW_HEATER__LEVEL_LOW            = IntegerField('Low Setting', validators=[DEW_HEATER__LEVEL_validator])
     DEW_HEATER__LEVEL_MED            = IntegerField('Medium Setting', validators=[DEW_HEATER__LEVEL_validator])
     DEW_HEATER__LEVEL_HIGH           = IntegerField('High Setting', validators=[DEW_HEATER__LEVEL_validator])
@@ -3729,6 +3730,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
         ### Update the choices
         self.DEW_HEATER__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
+        self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
         self.FAN__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
         self.CHARTS__CUSTOM_SLOT_1.choices = self.SENSOR_SLOT_choices
         self.CHARTS__CUSTOM_SLOT_2.choices = self.SENSOR_SLOT_choices
