@@ -1255,6 +1255,8 @@ class JsonChartView(JsonView):
             'custom_2'  : [],
             'custom_3'  : [],
             'custom_4'  : [],
+            'custom_5'  : [],
+            'custom_6'  : [],
             'histogram' : {
                 'red'   : [],
                 'green' : [],
