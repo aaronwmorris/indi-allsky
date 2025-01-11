@@ -66,7 +66,7 @@ RUN export CC=clang \
     && export CXX=clang++ \
     && /home/allsky/venv/bin/pip3 install --no-cache-dir --upgrade pip setuptools wheel packaging \
     && /home/allsky/venv/bin/pip3 install --no-cache-dir -r requirements_latest.txt -r requirements_optional.txt \
-    && /home/allsky/venv/bin/pip3 install --no-cache-dir "git+https://github.com/indilib/pyindi-client.git@6f8fa80#egg=pyindi-client"
+    && /home/allsky/venv/bin/pip3 install --no-cache-dir "git+https://github.com/indilib/pyindi-client.git@d8ad88f#egg=pyindi-client"
 
 
 USER root

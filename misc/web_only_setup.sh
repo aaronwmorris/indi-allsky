@@ -182,7 +182,7 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
 
         MYSQL_ETC="/etc/mysql"
 
-        PYTHON_BIN=python3
+        PYTHON_BIN=python3.11
 
         VIRTUALENV_REQ=requirements/requirements_latest_web.txt
 
@@ -264,7 +264,7 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
 
         MYSQL_ETC="/etc/mysql"
 
-        PYTHON_BIN=python3
+        PYTHON_BIN=python3.9
 
         VIRTUALENV_REQ=requirements/requirements_debian11_web.txt
 
@@ -351,7 +351,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
 
         MYSQL_ETC="/etc/mysql"
 
-        PYTHON_BIN=python3
+        PYTHON_BIN=python3.12
 
         VIRTUALENV_REQ=requirements/requirements_latest_web.txt
 

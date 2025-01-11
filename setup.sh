@@ -72,7 +72,7 @@ WEB_EMAIL="${INDIALLSKY_WEB_EMAIL:-}"
 OPTIONAL_PYTHON_MODULES="${INDIALLSKY_OPTIONAL_PYTHON_MODULES:-false}"
 GPIO_PYTHON_MODULES="${INDIALLSKY_GPIO_PYTHON_MODULES:-false}"
 
-PYINDI_2_0_4="git+https://github.com/indilib/pyindi-client.git@6f8fa80#egg=pyindi-client"
+PYINDI_2_0_4="git+https://github.com/indilib/pyindi-client.git@d8ad88f#egg=pyindi-client"
 PYINDI_2_0_0="git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
 PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
 PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client"
@@ -394,7 +394,7 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
 
         MYSQL_ETC="/etc/mysql"
 
-        PYTHON_BIN=python3
+        PYTHON_BIN=python3.11
 
 
         if [ "$CPU_ARCH" == "armv6l" ]; then
@@ -535,7 +535,7 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
 
         MYSQL_ETC="/etc/mysql"
 
-        PYTHON_BIN=python3
+        PYTHON_BIN=python3.9
 
 
         if [ "$CPU_ARCH" == "armv6l" ]; then
@@ -677,7 +677,7 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
 
         MYSQL_ETC="/etc/mysql"
 
-        PYTHON_BIN=python3
+        PYTHON_BIN=python3.7
 
         VIRTUALENV_REQ=requirements/requirements_debian10.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
@@ -806,12 +806,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
 
         MYSQL_ETC="/etc/mysql"
 
-
-        # Use Python 3.11 due to problems with Python 3.12 and pyindi-client
-        # https://github.com/indilib/pyindi-client/issues/46
-        sudo add-apt-repository -y ppa:deadsnakes/ppa
-
-        PYTHON_BIN=python3.11
+        PYTHON_BIN=python3.12
 
 
         if [ "$CPU_ARCH" == "armv6l" ]; then
@@ -849,9 +844,6 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
         sudo apt-get update
         sudo apt-get -y install \
             build-essential \
-            python3.11 \
-            python3.11-dev \
-            python3.11-venv \
             python3 \
             python3-dev \
             python3-venv \
@@ -968,6 +960,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
         MYSQL_ETC="/etc/mysql"
 
         PYTHON_BIN=python3.11
+
 
         if [ "$CPU_ARCH" == "armv6l" ]; then
             VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
