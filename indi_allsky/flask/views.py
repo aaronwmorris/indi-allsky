@@ -1573,12 +1573,34 @@ class ConfigView(FormView):
 
 
         if latest_image_entry:
-            if latest_image_entry.data.get('sensor_user_2'):
-                context['dew_point_str'] = '{0:0.1f}°'.format(latest_image_entry.data['sensor_user_2'])
+            dh_temp_user_slot = self.indi_allsky_config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
+            dh_temp_slot_var = 'sensor_user_{0:d}'.format(dh_temp_user_slot)
+
+            dh_dewpoint_user_slot = self.indi_allsky_config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 2)
+            dh_dewpoint_slot_var = 'sensor_user_{0:d}'.format(dh_dewpoint_user_slot)
+
+            fan_temp_user_slot = self.indi_allsky_config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 10)
+            fan_temp_slot_var = 'sensor_user_{0:d}'.format(fan_temp_user_slot)
+
+
+            if latest_image_entry.data.get(dh_temp_slot_var):
+                context['dh_temp_str'] = '{0:0.1f}°'.format(latest_image_entry.data[dh_temp_slot_var])
             else:
-                context['dew_point_str'] = 'Not available'
+                context['dh_temp_str'] = 'Not available'
+
+            if latest_image_entry.data.get(dh_dewpoint_slot_var):
+                context['dh_dewpoint_str'] = '{0:0.1f}°'.format(latest_image_entry.data[dh_dewpoint_slot_var])
+            else:
+                context['dh_dewpoint_str'] = 'Not available'
+
+            if latest_image_entry.data.get(fan_temp_slot_var):
+                context['fan_temp_str'] = '{0:0.1f}°'.format(latest_image_entry.data[fan_temp_slot_var])
+            else:
+                context['fan_temp_str'] = 'Not available'
         else:
-            context['dew_point_str'] = 'Not available'
+            context['dh_temp_str'] = 'Not available'
+            context['dh_dewpoint_str'] = 'Not available'
+            context['fan_temp_str'] = 'Not available'
 
 
         form_data = {

@@ -5587,6 +5587,7 @@ var camera_id = {{ camera_id }};
             <div id="DEW_HEATER__TEMP_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
+            <div>Last measurement: <b>{{ dh_temp_str }}</b></div>
             <div>This should be the slot containing the current temperature to be compared against the dew point (or manual target)</div>
         </div>
     </div>
@@ -5600,7 +5601,7 @@ var camera_id = {{ camera_id }};
             <div id="DEW_HEATER__DEWPOINT_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div></div>
+            <div>Last measurement: <b>{{ dh_dewpoint_str }}</b></div>
         </div>
     </div>
 
@@ -5614,7 +5615,6 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>Manual target temperature if dew point calculations are not available.  0 = disabled</div>
-            <div>Last dew point measurement: <b>{{ dew_point_str }}</b></div>
         </div>
     </div>
 
@@ -5791,6 +5791,7 @@ var camera_id = {{ camera_id }};
             <div id="FAN__TEMP_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
+            <div>Last measurement: <b>{{ fan_temp_str }}</b></div>
             <div>This should be the slot containing the current temperature to be compared with the target temperature</div>
         </div>
     </div>
