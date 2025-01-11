@@ -539,6 +539,8 @@ class IndiAllSkyConfigBase(object):
             "CUSTOM_SLOT_2"          : 11,
             "CUSTOM_SLOT_3"          : 12,
             "CUSTOM_SLOT_4"          : 13,
+            "CUSTOM_SLOT_5"          : 14,
+            "CUSTOM_SLOT_6"          : 15,
         },
         "ADSB" : {
             "ENABLE"                 : False,

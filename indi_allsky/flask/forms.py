@@ -3626,6 +3626,8 @@ class IndiAllskyConfigForm(FlaskForm):
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_4            = SelectField('Extra Chart Slot 4', choices=[], validators=[SENSOR_SLOT_validator])
+    CHARTS__CUSTOM_SLOT_5            = SelectField('Extra Chart Slot 5', choices=[], validators=[SENSOR_SLOT_validator])
+    CHARTS__CUSTOM_SLOT_6            = SelectField('Extra Chart Slot 6', choices=[], validators=[SENSOR_SLOT_validator])
     ADSB__ENABLE                     = BooleanField('Enable ADS-B Tracking')
     ADSB__DUMP1090_URL               = StringField('Dump1090 URL', validators=[ADSB__DUMP1090_URL_validator])
     ADSB__USERNAME                   = StringField('Username', validators=[ADSB__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
@@ -3732,6 +3734,8 @@ class IndiAllskyConfigForm(FlaskForm):
         self.CHARTS__CUSTOM_SLOT_2.choices = self.SENSOR_SLOT_choices
         self.CHARTS__CUSTOM_SLOT_3.choices = self.SENSOR_SLOT_choices
         self.CHARTS__CUSTOM_SLOT_4.choices = self.SENSOR_SLOT_choices
+        self.CHARTS__CUSTOM_SLOT_5.choices = self.SENSOR_SLOT_choices
+        self.CHARTS__CUSTOM_SLOT_6.choices = self.SENSOR_SLOT_choices
 
 
 

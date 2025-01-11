@@ -1141,6 +1141,8 @@ class ChartView(TemplateView):
         custom_2_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)
         custom_3_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)
         custom_4_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 13)
+        custom_5_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 14)
+        custom_6_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 15)
 
 
         # fix system temp offset
@@ -1156,11 +1158,19 @@ class ChartView(TemplateView):
         if custom_4_index >= 100:
             custom_4_index -= 79
 
+        if custom_5_index >= 100:
+            custom_5_index -= 79
+
+        if custom_6_index >= 100:
+            custom_6_index -= 79
+
 
         context['label_custom_chart_1'] = self.SENSOR_SLOT_choices[custom_1_index][1]
         context['label_custom_chart_2'] = self.SENSOR_SLOT_choices[custom_2_index][1]
         context['label_custom_chart_3'] = self.SENSOR_SLOT_choices[custom_3_index][1]
         context['label_custom_chart_4'] = self.SENSOR_SLOT_choices[custom_4_index][1]
+        context['label_custom_chart_5'] = self.SENSOR_SLOT_choices[custom_5_index][1]
+        context['label_custom_chart_6'] = self.SENSOR_SLOT_choices[custom_6_index][1]
 
 
         return context
@@ -1258,6 +1268,8 @@ class JsonChartView(JsonView):
         custom_2_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)
         custom_3_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)
         custom_4_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 13)
+        custom_5_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 14)
+        custom_6_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 15)
 
 
         for i in chart_query:
@@ -1389,6 +1401,43 @@ class JsonChartView(JsonView):
             }
             chart_data['custom_4'].append(custom_4_data)
 
+
+            # custom chart 5
+            if custom_5_index < 100:
+                try:
+                    custom_5_y = i.data['sensor_user_{0:d}'.format(custom_5_index)]
+                except KeyError:
+                    custom_5_y = 0
+            else:
+                try:
+                    custom_5_y = i.data['sensor_temp_{0:d}'.format(custom_5_index - 100)]
+                except KeyError:
+                    custom_5_y = 0
+
+            custom_5_data = {
+                'x' : x,
+                'y' : custom_5_y,
+            }
+            chart_data['custom_5'].append(custom_5_data)
+
+
+            # custom chart 6
+            if custom_6_index < 100:
+                try:
+                    custom_6_y = i.data['sensor_user_{0:d}'.format(custom_6_index)]
+                except KeyError:
+                    custom_6_y = 0
+            else:
+                try:
+                    custom_6_y = i.data['sensor_temp_{0:d}'.format(custom_6_index - 100)]
+                except KeyError:
+                    custom_6_y = 0
+
+            custom_6_data = {
+                'x' : x,
+                'y' : custom_6_y,
+            }
+            chart_data['custom_6'].append(custom_6_data)
 
 
         # build last image histogram
@@ -1943,6 +1992,8 @@ class ConfigView(FormView):
             'CHARTS__CUSTOM_SLOT_2'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)),  # string in form, int in config
             'CHARTS__CUSTOM_SLOT_3'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)),  # string in form, int in config
             'CHARTS__CUSTOM_SLOT_4'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 13)),  # string in form, int in config
+            'CHARTS__CUSTOM_SLOT_5'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 14)),  # string in form, int in config
+            'CHARTS__CUSTOM_SLOT_6'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 15)),  # string in form, int in config
             'ADSB__ENABLE'                   : self.indi_allsky_config.get('ADSB', {}).get('ENABLE', False),
             'ADSB__DUMP1090_URL'             : self.indi_allsky_config.get('ADSB', {}).get('DUMP1090_URL', 'https://localhost/dump1090/data/aircraft.json'),
             'ADSB__USERNAME'                 : self.indi_allsky_config.get('ADSB', {}).get('USERNAME', ''),
@@ -2689,6 +2740,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2']              = int(request.json['CHARTS__CUSTOM_SLOT_2'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_3']              = int(request.json['CHARTS__CUSTOM_SLOT_3'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_4']              = int(request.json['CHARTS__CUSTOM_SLOT_4'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_5']              = int(request.json['CHARTS__CUSTOM_SLOT_5'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_6']              = int(request.json['CHARTS__CUSTOM_SLOT_6'])
         self.indi_allsky_config['ADSB']['ENABLE']                       = bool(request.json['ADSB__ENABLE'])
         self.indi_allsky_config['ADSB']['DUMP1090_URL']                 = str(request.json['ADSB__DUMP1090_URL'])
         self.indi_allsky_config['ADSB']['USERNAME']                     = str(request.json['ADSB__USERNAME'])

@@ -3433,6 +3433,30 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_5.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.CHARTS__CUSTOM_SLOT_5(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_5-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CHARTS__CUSTOM_SLOT_6.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.CHARTS__CUSTOM_SLOT_6(class='form-select bg-secondary') }}
+            <div id="CHARTS__CUSTOM_SLOT_6-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -6276,6 +6300,8 @@ const field_names = [
     'CHARTS__CUSTOM_SLOT_2',
     'CHARTS__CUSTOM_SLOT_3',
     'CHARTS__CUSTOM_SLOT_4',
+    'CHARTS__CUSTOM_SLOT_5',
+    'CHARTS__CUSTOM_SLOT_6',
     'CLAHE_CLIPLIMIT',
     'CLAHE_GRIDSIZE',
     'IMAGE_STRETCH__CLASSNAME',
