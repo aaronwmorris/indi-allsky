@@ -1,5 +1,4 @@
-# Additional optional modules
-mysql-connector-python
+# Optional modules
 PyMySQL
 boto3
 apache-libcloud

@@ -82,9 +82,11 @@ class ConnectAp(object):
 
         # At this point we have all the data we need. Let's prepare our connection
         # parameters so that we can tell the NetworkManager what is the passphrase.
+        # https://networkmanager.dev/docs/api/latest/settings-802-11-wireless.html
         connection_params = {
             "802-11-wireless": {
                 "security": "802-11-wireless-security",
+                "powersave": 2,  # disable power saving
             },
             "802-11-wireless-security": {
                 "key-mgmt": "wpa-psk",

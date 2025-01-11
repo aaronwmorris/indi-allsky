@@ -57,3 +57,4 @@ shapely
 requests-toolbelt
 fish2pano
 pytz
+mysql-connector-python

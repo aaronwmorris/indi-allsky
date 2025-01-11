@@ -33,7 +33,7 @@ RUN chmod 0440 /etc/sudoers.d/allsky
 
 
 COPY requirements/requirements_latest_web.txt /home/allsky
-COPY requirements/requirements_optional.txt /home/allsky
+#COPY requirements/requirements_optional.txt /home/allsky
 #COPY requirements/requirements_gpio.txt /home/allsky
 
 
@@ -64,7 +64,7 @@ ENV VIRTUAL_ENV=/home/allsky/venv
 RUN export CC=clang \
     && export CXX=clang++ \
     && /home/allsky/venv/bin/pip3 install --no-cache-dir --upgrade pip setuptools wheel packaging \
-    && /home/allsky/venv/bin/pip3 install --no-cache-dir -r requirements_latest_web.txt -r requirements_optional.txt
+    && /home/allsky/venv/bin/pip3 install --no-cache-dir -r requirements_latest_web.txt
 
 
 USER root
