@@ -55,6 +55,7 @@ class SensorWorker(Process):
 
         # dew heater
         self.dh_temp_user_slot = self.config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
+        self.dh_dewpoint_user_slot = self.config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 2)
 
         self.dh_level_default = self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100)
         self.dh_level_low = self.config.get('DEW_HEATER', {}).get('LEVEL_LOW', 33)
@@ -495,7 +496,7 @@ class SensorWorker(Process):
         if manual_target:
             target_val = manual_target
         else:
-            target_val = self.sensors_user_av[2]  # dew point
+            target_val = self.sensors_user_av[self.dh_dewpoint_user_slot]  # dew point
 
 
         if not target_val:
