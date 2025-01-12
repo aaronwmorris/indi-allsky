@@ -140,12 +140,12 @@ function loadJS(url, data, onDone, onError) {
         data: data,
         success: function(rdata){
             $("#loader_loop").css({'display' : 'none'});
-            json_data = rdata
+            json_data = rdata
             $('#message').html(json_data['message']);
         },
         error: function(rdata){
             $("#loader_loop").css({'display' : 'none'});
-            onError(rdata.status);
+            onError(rdata.status);
             $('#message').text('Error loading data.  Please check the logs.');
         },
     });
