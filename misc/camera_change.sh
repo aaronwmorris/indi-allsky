@@ -15,7 +15,7 @@ INDISERVER_SERVICE_NAME="indiserver"
 INSTALL_INDISERVER="${INDIALLSKY_INSTALL_INDISERVER:-}"
 CCD_DRIVER="${INDIALLSKY_CCD_DRIVER:-}"
 GPS_DRIVER="${INDIALLSKY_GPS_DRIVER:-}"
-
+INDI_PORT="${INDIALLSKY_INDI_PORT:-7624}"
 
 
 
@@ -51,6 +51,13 @@ trap catch_sigint SIGINT
 echo "#######################################################"
 echo "### Welcome to the indi-allsky camera change script ###"
 echo "#######################################################"
+
+
+if ! [[ "$INDI_PORT" =~ ^[^0][0-9]{1,5}$ ]]; then
+    echo "Invalid INDI port: $INDI_PORT"
+    echo
+    exit 1
+fi
 
 
 if [ -f "/usr/local/bin/indiserver" ]; then
@@ -197,6 +204,7 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
      -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
      -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
      -e "s|%INDISERVER_USER%|$USER|g" \
+     -e "s|%INDI_PORT%|$INDI_PORT|g" \
      -e "s|%INDI_CCD_DRIVER%|$CCD_DRIVER|g" \
      -e "s|%INDI_GPS_DRIVER%|$GPS_DRIVER|g" \
      "${ALLSKY_DIRECTORY}/service/indiserver.service" > "$TMP1"
