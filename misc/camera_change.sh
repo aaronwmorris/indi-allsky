@@ -205,6 +205,13 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     cp -f "$TMP1" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
     chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
     [[ -f "$TMP1" ]] && rm -f "$TMP1"
+
+
+    systemctl --user daemon-reload
+
+    # service started by timer
+    systemctl --user disable ${INDISERVER_SERVICE_NAME}.service
+
 else
     echo
     echo
@@ -214,9 +221,6 @@ fi
 
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
-    systemctl --user enable ${INDISERVER_SERVICE_NAME}.service
-
-
     while [ -z "${RESTART_INDISERVER:-}" ]; do
         if whiptail --title "Restart indiserver" --yesno "Do you want to restart the indiserver now?\n\nNot recommended if the indi-allsky service is active." 0 0 --defaultno; then
             RESTART_INDISERVER="true"
