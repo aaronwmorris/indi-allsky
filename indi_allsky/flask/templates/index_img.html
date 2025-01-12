@@ -7,7 +7,7 @@
 <style>
 .fit {
     max-width:100%;
-    max-height:auto;   
+    height:auto;
 }
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_latest.js') }}"></script>
@@ -54,8 +54,8 @@ function showImage(entry) {
 
     $('#latest-image').attr({
         'src': entry["url"],
-        'width': entry["width"] * ratio,
-        'height': entry["height"] * ratio - 50
+        'width': (entry["width"] * ratio) * 0.95,
+        'height': (entry["height"] * ratio) * 0.95
     });
 }
 
