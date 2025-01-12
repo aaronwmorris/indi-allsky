@@ -20,10 +20,10 @@
   100% { transform: rotate(360deg); }
 }
 
-canvas {
-    width: 100%;
-    height: auto;
-};
+.fit {
+    max-width:100%;
+    height:auto;
+}
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
@@ -74,42 +74,16 @@ async function loop() {
 function showImage(entry, idx) {
     console.log('Showing image ' + entry["url"]);
 
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
+    var hRatio = window.innerWidth / entry["width"];
+    var vRatio = window.innerHeight / entry["height"];
+    var ratio  = Math.min ( hRatio, vRatio );
 
-    var img = new Image();
-    img.src = entry["url"];
-    img.onload = function() {
-        canvas.setAttribute("width", window.innerWidth);
-        canvas.setAttribute("height", window.innerHeight);
 
-        var hRatio = canvas.width  / this.width;
-        var vRatio = canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
-        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
-
-        //context.imageSmoothingEnabled = false;
-        context.drawImage(this, 0, 0, this.width, this.height,
-            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
-        // round the background strokes to prevent spikes
-        context.lineJoin = 'round';
-
-        if(drawIndex) {
-            var text = idx;
-            var maxWidth = 10;
-            var x = canvas.width-10-maxWidth;
-            var y = canvas.height-10;
-
-            context.strokeStyle = 'black';
-            context.lineWidth = 2;
-            context.strokeText(idx, x, y, maxWidth);
-            context.fillStyle = 'lightgrey';
-            context.fillText(idx, x, y, maxWidth);
-        }
-
-    };
+    $('#loop-image').attr({
+        'src': entry["url"],
+        'width': (entry["width"] * ratio) * 0.85,
+        'height': (entry["height"] * ratio) * 0.85
+    });
 }
 
 
@@ -140,12 +114,12 @@ function loadJS(url, data, onDone, onError) {
         data: data,
         success: function(rdata){
             $("#loader_loop").css({'display' : 'none'});
-            json_data = rdata
+            json_data = rdata
             $('#message').html(json_data['message']);
         },
         error: function(rdata){
             $("#loader_loop").css({'display' : 'none'});
-            onError(rdata.status);
+            onError(rdata.status);
             $('#message').text('Error loading data.  Please check the logs.');
         },
     });
@@ -214,7 +188,7 @@ $( document ).ready(function() {
     frame_delay_ms = $('#FRAMEDELAY_SELECT').val();
     rock = $('#ROCK_CHECKBOX').prop('checked');
 
-    $('#canvas').on("click", function() {
+    $('#loop-image').on("click", function() {
         goFullscreen(this);
     });
 
@@ -262,7 +236,7 @@ $( document ).ready(function() {
 </div>
 <div class="row">
     <div class="text-center">
-        <canvas id="canvas"></canvas>
+        <img id="loop-image" class="fit">
     </div>
 </div>
 

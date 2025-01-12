@@ -598,6 +598,10 @@ function init() {
         var hRatio = canvas.width  / this.width;
         var vRatio =  canvas.height / this.height;
         var ratio  = Math.min ( hRatio, vRatio );
+
+        //canvas.width = this.width * ratio;
+        //canvas.height = this.height * ratio;
+
         var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
         var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
 

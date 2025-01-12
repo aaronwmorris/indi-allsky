@@ -5,9 +5,9 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
-canvas {
-    width: 100%;
-    height: auto;
+.fit {
+    max-width:100%;
+    height:auto;
 }
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_latest.js') }}"></script>
@@ -15,6 +15,8 @@ canvas {
 var json_data = {
     'latest_image' : {
         'url' : null,
+        'width': 0,
+        'height': 0,
         'message' : ''
     }
 };
@@ -45,30 +47,16 @@ async function loop() {
 function showImage(entry) {
     console.log('Showing image ' + entry["url"]);
 
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
+    var hRatio = window.innerWidth / entry["width"];
+    var vRatio = window.innerHeight / entry["height"];
+    var ratio  = Math.min ( hRatio, vRatio );
 
-    var img = new Image();
-    img.src = entry["url"];
-    img.onload = function() {
-        canvas.setAttribute("width", window.innerWidth);
-        canvas.setAttribute("height", window.innerHeight);
 
-        var hRatio = canvas.width  / this.width;
-        var vRatio = canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
-
-        //canvas.width = this.width * ratio;
-        //canvas.height = this.height * ratio;
-
-        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
-
-        //context.imageSmoothingEnabled = false;
-        context.drawImage(this, 0, 0, this.width, this.height,
-            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
-    };
+    $('#latest-image').attr({
+        'src': entry["url"],
+        'width': (entry["width"] * ratio) * 0.95,
+        'height': (entry["height"] * ratio) * 0.95
+    });
 }
 
 
@@ -92,11 +80,11 @@ function loadJS(url, data, onDone, onError) {
         contentType: "application/json",
         data: data,
         success: function(rdata){
-            json_data = rdata
+            json_data = rdata
             $('#message').html(json_data['latest_image']['message']);
         },
         error: function(rdata){
-            onError(rdata.status);
+            onError(rdata.status);
             $('#message').html('Error loading data.  Please check the logs.');
         },
     });
@@ -159,7 +147,7 @@ function closeFullscreen() {
 
 
 $( document ).ready(function() {
-    $('#canvas').on("click", function() {
+    $('#latest-image').on("click", function() {
         goFullscreen(this);
     });
 
@@ -175,7 +163,7 @@ $( document ).ready(function() {
 </div>
 <div class="row">
     <div class="text-center">
-        <canvas id="canvas"></canvas>
+        <img id="latest-image" class="fit">
     </div>
 </div>
 {% endblock %}
