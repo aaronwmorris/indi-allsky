@@ -1011,8 +1011,11 @@ class JsonImageLoopView(JsonView):
                 app.logger.error('Error determining relative file name: %s', str(e))
                 continue
 
+
             data = {
-                'url'        : str(url),
+                'url'    : str(url),
+                'width'  : i.width,
+                'height' : i.height,
             }
 
 
@@ -1090,6 +1093,27 @@ class JsonImageLoopView(JsonView):
         }
 
         return stars_data
+
+
+class ImageLoopImgView(TemplateView):
+    title = 'Loop'
+    image_loop_view = 'indi_allsky.js_image_loop_view'
+
+    def get_context(self):
+        context = super(ImageLoopImgView, self).get_context()
+
+        context['title'] = self.title
+        context['camera_id'] = self.camera.id
+        context['image_loop_view'] = self.image_loop_view
+
+        context['timestamp'] = int(request.args.get('timestamp', 0))
+
+        refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0) * 1000)
+        context['refreshInterval'] = refreshInterval_ms
+
+        context['form_history'] = IndiAllskyLoopHistoryForm()
+
+        return context
 
 
 class PanoramaLoopView(ImageLoopView):
@@ -7577,6 +7601,7 @@ bp_allsky.add_url_rule('/raw', view_func=LatestRawImageView.as_view('latest_rawi
 bp_allsky.add_url_rule('/js/latest_rawimage', view_func=JsonLatestRawImageView.as_view('js_latest_rawimage_view'))
 
 bp_allsky.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
+bp_allsky.add_url_rule('/loop_img', view_func=ImageLoopImgView.as_view('image_loop_img_view', template_name='loop_img.html'))
 bp_allsky.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
 bp_allsky.add_url_rule('/looppanorama', view_func=PanoramaLoopView.as_view('panorama_loop_view', template_name='loop.html'))
 bp_allsky.add_url_rule('/js/looppanorama', view_func=JsonPanoramaLoopView.as_view('js_panorama_loop_view'))
