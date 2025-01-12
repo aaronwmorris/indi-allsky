@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: {{ title }}{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+.fit {
+    max-width:100%;
+    max-height:auto;   
+}
+</style>
+<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_latest.js') }}"></script>
+<script type="text/javascript">
+var json_data = {
+    'latest_image' : {
+        'url' : null,
+        'width': 0,
+        'height': 0,
+        'message' : ''
+    }
+};
+var max_age = 900;
+var camera_id = {{ camera_id }};
+var refreshInterval = {{ refreshInterval | int }};
+var night = {{ night }};
+var fullscreen = false;  //initial state
+
+function init() {
+    loadNextImage();
+    loop();
+}
+
+async function loop() {
+    //console.log('Starting loop');
+
+    while(json_data['latest_image']['url'] == null) {
+        await sleep(100);
+    }
+
+    showImage(json_data['latest_image']);
+
+    setTimeout(loop, refreshInterval);
+}
+
+
+function showImage(entry) {
+    console.log('Showing image ' + entry["url"]);
+
+    var hRatio = window.innerWidth / entry["width"];
+    var vRatio = window.innerHeight / entry["height"];
+    var ratio  = Math.min ( hRatio, vRatio );
+
+
+    $('#latest-image').attr({
+        'src': entry["url"],
+        'width': entry["width"] * ratio,
+        'height': entry["height"] * ratio - 50
+    });
+}
+
+
+function loadNextImage() {
+    console.log('Loading next image');
+    loadJS("{{ url_for(latest_image_view) }}", {'camera_id' : camera_id, 'limit_s' : max_age, 'night' : night}, function() {});
+    setTimeout(loadNextImage, refreshInterval);
+}
+
+function sleep(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function loadJS(url, data, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json",
+        data: data,
+        success: function(rdata){
+            json_data = rdata
+            $('#message').html(json_data['latest_image']['message']);
+        },
+        error: function(rdata){
+            onError(rdata.status);
+            $('#message').html('Error loading data.  Please check the logs.');
+        },
+    });
+
+}
+
+
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    $(window).on("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    showImage(json_data['latest_image']);
+}
+setResizeHandler(resize_callback, 500);
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
+
+
+$( document ).ready(function() {
+    $('#latest-image').on("click", function() {
+        goFullscreen(this);
+    });
+
+    init();
+});
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="text-muted text-center" id="message">Loading...</div>
+</div>
+<div class="row">
+    <div class="text-center">
+        <img id="latest-image" class="fit">
+    </div>
+</div>
+{% endblock %}
