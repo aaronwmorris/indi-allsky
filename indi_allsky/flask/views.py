@@ -200,8 +200,8 @@ class JsonLatestImageView(JsonView):
             'latest_image' : {
                 'url'     : None,
                 'message' : no_image_message,
-                'width'   : 0,
-                'height'  : 0,
+                'width'   : 1,
+                'height'  : 1,
             },
         }
 
@@ -328,14 +328,14 @@ class JsonLatestImageView(JsonView):
 
 
         if not latest_image:
-            return {'url': None, 'width': 0, 'height': 0}
+            return {'url': None}
 
 
         try:
             url = latest_image.getUrl(s3_prefix=self.s3_prefix, local=local)
         except ValueError as e:
             app.logger.error('Error determining relative file name: %s', str(e))
-            return {'url': None, 'width': 0, 'height': 0}
+            return {'url': None}
 
 
         image_data = {
