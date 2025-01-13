@@ -2363,9 +2363,6 @@ def FAN__THOLD_DIFF_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter a valid number')
 
-    if field.data < 0:
-        raise ValidationError('Threshold difference must be 0 or greater')
-
 
 def FAN__TARGET_validator(form, field):
     if not isinstance(field.data, (int, float)):
@@ -3880,13 +3877,13 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
         if self.DEW_HEATER__THOLD_DIFF_HIGH.data >= self.DEW_HEATER__THOLD_DIFF_MED.data:
-            self.DEW_HEATER__THOLD_DIFF_HIGH.errors.append('HIGH value must be less than MEDIUM value')
-            self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM value must be greater than HIGH value')
+            self.DEW_HEATER__THOLD_DIFF_HIGH.errors.append('HIGH must be less than MEDIUM')
+            self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM must be greater than HIGH')
             result = False
 
         if self.DEW_HEATER__THOLD_DIFF_MED.data >= self.DEW_HEATER__THOLD_DIFF_LOW.data:
-            self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM value must be less than LOW value')
-            self.DEW_HEATER__THOLD_DIFF_LOW.errors.append('LOW value must be greater than MEDIUM value')
+            self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM must be less than LOW')
+            self.DEW_HEATER__THOLD_DIFF_LOW.errors.append('LOW must be greater than MEDIUM')
             result = False
 
 
@@ -3917,6 +3914,17 @@ class IndiAllskyConfigForm(FlaskForm):
                 except PermissionError:
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
+
+
+        if self.FAN__THOLD_DIFF_HIGH.data <= self.FAN__THOLD_DIFF_MED.data:
+            self.FAN__THOLD_DIFF_HIGH.errors.append('HIGH must be greater than MEDIUM')
+            self.FAN__THOLD_DIFF_MED.errors.append('MEDIUM must be less than HIGH')
+            result = False
+
+        if self.DEW_HEATER__THOLD_DIFF_MED.data <= self.FAN__THOLD_DIFF_LOW.data:
+            self.FAN__THOLD_DIFF_MED.errors.append('MEDIUM must be greater than LOW')
+            self.FAN__THOLD_DIFF_LOW.errors.append('LOW must be less than MEDIUM')
+            result = False
 
 
         # generic gpio
