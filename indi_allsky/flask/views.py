@@ -1647,23 +1647,55 @@ class ConfigView(FormView):
 
 
             if latest_image_entry.data.get(dh_temp_slot_var):
-                context['dh_temp_str'] = '{0:0.1f}°'.format(latest_image_entry.data[dh_temp_slot_var])
+                dh_temp = latest_image_entry.data[dh_temp_slot_var]
+                context['dh_temp_str'] = '{0:0.1f}°'.format(dh_temp)
             else:
+                dh_temp = None
                 context['dh_temp_str'] = 'Not available'
 
             if latest_image_entry.data.get(dh_dewpoint_slot_var):
-                context['dh_dewpoint_str'] = '{0:0.1f}°'.format(latest_image_entry.data[dh_dewpoint_slot_var])
+                dh_dewpoint = latest_image_entry.data[dh_dewpoint_slot_var]
+                context['dh_dewpoint_str'] = '{0:0.1f}°'.format(dh_dewpoint)
             else:
+                dh_dewpoint = None
                 context['dh_dewpoint_str'] = 'Not available'
 
-            if latest_image_entry.data.get(fan_temp_slot_var):
-                context['fan_temp_str'] = '{0:0.1f}°'.format(latest_image_entry.data[fan_temp_slot_var])
+
+            dh_manual_target = self.indi_allsky_config.get('DEW_HEATER', {}).get('MANUAL_TARGET', 0.0)
+            if not dh_manual_target:
+                if not isinstance(dh_temp, type(None)) and not isinstance(dh_dewpoint, type(None)):
+                    dh_temp_delta = dh_temp - dh_dewpoint
+                    context['dh_temp_delta_str'] = '{0:0.1f}°'.format(dh_temp_delta)
+                else:
+                    context['dh_temp_delta_str'] = 'Not available'
             else:
+                if not isinstance(dh_temp, type(None)):
+                    dh_delta = dh_temp - dh_manual_target
+                    context['dh_temp_delta_str'] = '{0:0.1f}° (manual)'.format(dh_delta)
+                else:
+                    context['dh_temp_delta_str'] = 'Not available'
+
+
+            if latest_image_entry.data.get(fan_temp_slot_var):
+                fan_temp = latest_image_entry.data[fan_temp_slot_var]
+                context['fan_temp_str'] = '{0:0.1f}°'.format(fan_temp)
+            else:
+                fan_temp = None
                 context['fan_temp_str'] = 'Not available'
+
+
+            fan_target = self.indi_allsky_config.get('FAN', {}).get('TARGET', 30.0)
+            if not isinstance(fan_temp, type(None)):
+                fan_temp_delta = fan_temp - fan_target
+                context['fan_temp_delta_str'] = '{0:0.1f}°'.format(fan_temp_delta)
+            else:
+                context['fan_temp_delta_str'] = 'Not available'
         else:
             context['dh_temp_str'] = 'Not available'
             context['dh_dewpoint_str'] = 'Not available'
+            context['dh_temp_delta_str'] = 'Not available'
             context['fan_temp_str'] = 'Not available'
+            context['fan_temp_delta_str'] = 'Not available'
 
 
         form_data = {
