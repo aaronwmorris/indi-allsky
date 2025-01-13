@@ -2809,6 +2809,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('iw*.75:-2', '75% - [iw*.75:-2]'),
         ('iw*.5:-2', '50% - [iw*.5:-2]'),
         ('iw*.25:-2', '25% - [iw*.25:-2]'),
+        ('-2:2160', 'Height 2160px - [-2:2160] - (keep aspect ratio)'),
         ('-2:1440', 'Height 1440px - [-2:1440] - (keep aspect ratio)'),
         ('-2:1080', 'Height 1080px - [-2:1080] - (keep aspect ratio)'),
         ('-2:720', 'Height 720px - [-2:720] - (keep aspect ratio)'),
