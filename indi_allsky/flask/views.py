@@ -1665,13 +1665,13 @@ class ConfigView(FormView):
             if not dh_manual_target:
                 if not isinstance(dh_temp, type(None)) and not isinstance(dh_dewpoint, type(None)):
                     dh_temp_delta = dh_temp - dh_dewpoint
-                    context['dh_temp_delta_str'] = '{0:0.1f}°'.format(dh_temp_delta)
+                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}°'.format(dh_temp_delta)
                 else:
                     context['dh_temp_delta_str'] = 'Not available'
             else:
                 if not isinstance(dh_temp, type(None)):
                     dh_delta = dh_temp - dh_manual_target
-                    context['dh_temp_delta_str'] = '{0:0.1f}° (manual)'.format(dh_delta)
+                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}° (manual)'.format(dh_delta)
                 else:
                     context['dh_temp_delta_str'] = 'Not available'
 
@@ -1687,7 +1687,7 @@ class ConfigView(FormView):
             fan_target = self.indi_allsky_config.get('FAN', {}).get('TARGET', 30.0)
             if not isinstance(fan_temp, type(None)):
                 fan_temp_delta = fan_temp - fan_target
-                context['fan_temp_delta_str'] = '{0:0.1f}°'.format(fan_temp_delta)
+                context['fan_temp_delta_str'] = 'Δ{0:0.1f}°'.format(fan_temp_delta)
             else:
                 context['fan_temp_delta_str'] = 'Not available'
         else:
