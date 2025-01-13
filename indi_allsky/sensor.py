@@ -54,8 +54,8 @@ class SensorWorker(Process):
         self.next_run_offset = 15
 
         # dew heater
-        self.dh_temp_user_slot = self.config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
-        self.dh_dewpoint_user_slot = self.config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 2)
+        self.dh_temp_slot = self.config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
+        self.dh_dewpoint_slot = self.config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 2)
 
         self.dh_level_default = self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100)
         self.dh_level_low = self.config.get('DEW_HEATER', {}).get('LEVEL_LOW', 33)
@@ -68,7 +68,7 @@ class SensorWorker(Process):
 
         # fan
         self.fan_target = self.config.get('FAN', {}).get('TARGET', 30.0)
-        self.fan_temp_user_slot = self.config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 10)
+        self.fan_temp_slot = self.config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 10)
 
         self.fan_level_default = self.config.get('FAN', {}).get('LEVEL_DEF', 100)
         self.fan_level_low = self.config.get('FAN', {}).get('LEVEL_LOW', 33)
@@ -496,20 +496,22 @@ class SensorWorker(Process):
         if manual_target:
             target_val = manual_target
         else:
-            target_val = self.sensors_user_av[self.dh_dewpoint_user_slot]  # dew point
+            if self.dh_dewpoint_slot < 100:
+                target_val = self.sensors_user_av[self.dh_dewpoint_slot]  # dew point
+            else:
+                target_val = self.sensors_temp_av[self.dh_dewpoint_slot - 100]  # dew point
 
 
         if not target_val:
             logger.warning('Dew heater target dew point is 0, possible misconfiguration')
 
 
-        if self.dh_temp_user_slot < 100:
+        if self.dh_temp_slot < 100:
             # user slots
-            current_temp = self.sensors_user_av[self.dh_temp_user_slot]
+            current_temp = self.sensors_user_av[self.dh_temp_slot]
         else:
             # use system temps
-            slot = self.dh_temp_user_slot - 100
-            temp_c = self.sensors_temp_av[slot]
+            temp_c = self.sensors_temp_av[self.dh_temp_slot - 100]
 
 
             if self.config.get('TEMP_DISPLAY') == 'f':
@@ -547,13 +549,12 @@ class SensorWorker(Process):
             return
 
 
-        if self.fan_temp_user_slot < 100:
+        if self.fan_temp_slot < 100:
             # user slots
-            current_temp = self.sensors_user_av[self.fan_temp_user_slot]
+            current_temp = self.sensors_user_av[self.fan_temp_slot]
         else:
             # use system temps
-            slot = self.fan_temp_user_slot - 100
-            temp_c = self.sensors_temp_av[slot]
+            temp_c = self.sensors_temp_av[self.fan_temp_slot - 100]
 
 
             if self.config.get('TEMP_DISPLAY') == 'f':
