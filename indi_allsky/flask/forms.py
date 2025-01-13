@@ -3496,7 +3496,7 @@ class IndiAllskyConfigForm(FlaskForm):
     MQTTPUBLISH__CERT_BYPASS         = BooleanField('Disable Certificate Validation')
     MQTTPUBLISH__PUBLISH_IMAGE       = BooleanField('Enable Image Publishing')
     SYNCAPI__ENABLE                  = BooleanField('Enable Sync API')
-    SYNCAPI__BASEURL                 = StringField('URL', validators=[SYNCAPI__BASEURL_validator])
+    SYNCAPI__BASEURL                 = StringField('URL', validators=[SYNCAPI__BASEURL_validator], render_kw={'autocomplete' : 'new-password'})  # prevent saving BASEURL as username
     SYNCAPI__USERNAME                = StringField('Username', validators=[SYNCAPI__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
     SYNCAPI__APIKEY                  = PasswordField('API Key', widget=PasswordInput(hide_value=False), validators=[SYNCAPI__APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     SYNCAPI__CERT_BYPASS             = BooleanField('Disable Certificate Validation')
