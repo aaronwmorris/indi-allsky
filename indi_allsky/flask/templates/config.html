@@ -6845,9 +6845,11 @@ $('#FOCUS_MODE').on('change', function() {
     if ($('#FOCUS_MODE').prop('checked')) {
         $('#FOCUS_DELAY').removeAttr('readonly');
         $('#FOCUS_DELAY').removeAttr('disabled');
+        $('#FOCUS_DELAY').removeClass('bg-dark');
     } else {
         $('#FOCUS_DELAY').attr('readonly', true);
         $('#FOCUS_DELAY').attr('disabled', true);
+        $('#FOCUS_DELAY').addClass('bg-dark');
     }
 });
 
@@ -6856,9 +6858,11 @@ $('#CCD_COOLING').on('change', function() {
     if ($('#CCD_COOLING').prop('checked')) {
         $('#CCD_TEMP').removeAttr('readonly');
         $('#CCD_TEMP').removeAttr('disabled');
+        $('#CCD_TEMP').removeClass('bg-dark');
     } else {
         $('#CCD_TEMP').attr('readonly', true);
         $('#CCD_TEMP').attr('disabled', true);
+        $('#CCD_TEMP').addClass('bg-dark');
     }
 });
 
@@ -6885,13 +6889,17 @@ $('#STARTRAILS_MOONMODE_THOLD').on('change', function() {
     if ($('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
         $('#STARTRAILS_MOON_ALT_THOLD').attr('disabled', true);
         $('#STARTRAILS_MOON_ALT_THOLD').attr('readonly', true);
+        $('#STARTRAILS_MOON_ALT_THOLD').addClass('bg-dark');
         $('#STARTRAILS_MOON_PHASE_THOLD').attr('disabled', true);
         $('#STARTRAILS_MOON_PHASE_THOLD').attr('readonly', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').addClass('bg-dark');
     } else {
         $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('disabled');
         $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('readonly');
+        $('#STARTRAILS_MOON_ALT_THOLD').removeClass('bg-dark');
         $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('disabled');
         $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('readonly');
+        $('#STARTRAILS_MOON_PHASE_THOLD').removeClass('bg-dark');
     }
 });
 
@@ -6921,27 +6929,37 @@ $('#USE_NIGHT_COLOR').on('change', function() {
     if ($('#USE_NIGHT_COLOR').prop('checked')) {
         $('#SCNR_ALGORITHM_DAY').attr('readonly', true);
         $('#SCNR_ALGORITHM_DAY').attr('disabled', true);
+        $('#SCNR_ALGORITHM_DAY').addClass('bg-dark');
         $('#WBR_FACTOR_DAY').attr('readonly', true);
         $('#WBR_FACTOR_DAY').attr('disabled', true);
+        $('#WBR_FACTOR_DAY').addClass('bg-dark');
         $('#WBG_FACTOR_DAY').attr('readonly', true);
         $('#WBG_FACTOR_DAY').attr('disabled', true);
+        $('#WBG_FACTOR_DAY').addClass('bg-dark');
         $('#WBB_FACTOR_DAY').attr('readonly', true);
         $('#WBB_FACTOR_DAY').attr('disabled', true);
+        $('#WBB_FACTOR_DAY').addClass('bg-dark');
         $('#AUTO_WB_DAY').attr('disabled', true);
         $('#SATURATION_FACTOR_DAY').attr('readonly', true);
         $('#SATURATION_FACTOR_DAY').attr('disabled', true);
+        $('#SATURATION_FACTOR_DAY').addClass('bg-dark');
     } else {
         $('#SCNR_ALGORITHM_DAY').removeAttr('readonly');
         $('#SCNR_ALGORITHM_DAY').removeAttr('disabled');
+        $('#SCNR_ALGORITHM_DAY').removeClass('bg-dark');
         $('#WBR_FACTOR_DAY').removeAttr('readonly');
         $('#WBR_FACTOR_DAY').removeAttr('disabled');
+        $('#WBR_FACTOR_DAY').removeClass('bg-dark');
         $('#WBG_FACTOR_DAY').removeAttr('readonly');
         $('#WBG_FACTOR_DAY').removeAttr('disabled');
+        $('#WBG_FACTOR_DAY').removeClass('bg-dark');
         $('#WBB_FACTOR_DAY').removeAttr('readonly');
         $('#WBB_FACTOR_DAY').removeAttr('disabled');
+        $('#WBB_FACTOR_DAY').removeClass('bg-dark');
         $('#AUTO_WB_DAY').removeAttr('disabled');
         $('#SATURATION_FACTOR_DAY').removeAttr('readonly');
         $('#SATURATION_FACTOR_DAY').removeAttr('disabled');
+        $('#SATURATION_FACTOR_DAY').removeClass('bg-dark');
     }
 });
 
@@ -7094,12 +7112,14 @@ $( document ).ready(function() {
     if (!$('#FOCUS_MODE').prop('checked')) {
         $('#FOCUS_DELAY').attr('readonly', true);
         $('#FOCUS_DELAY').attr('disabled', true);
+        $('#FOCUS_DELAY').addClass('bg-dark');
     }
 
     // CCD_COOLING
     if (!$('#CCD_COOLING').prop('checked')) {
         $('#CCD_TEMP').attr('readonly', true);
         $('#CCD_TEMP').attr('disabled', true);
+        $('#CCD_TEMP').addClass('bg-dark');
     }
 
     // libcamera AWB
@@ -7113,11 +7133,13 @@ $( document ).ready(function() {
     }
 
     // startrails moonmode
-    if (!$('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
-        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('disabled');
-        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('readonly');
-        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('disabled');
-        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('readonly');
+    if ($('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
+        $('#STARTRAILS_MOON_ALT_THOLD').attr('disabled', true);
+        $('#STARTRAILS_MOON_ALT_THOLD').attr('readonly', true);
+        $('#STARTRAILS_MOON_ALT_THOLD').addClass('bg-dark');
+        $('#STARTRAILS_MOON_PHASE_THOLD').attr('disabled', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').attr('readonly', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').addClass('bg-dark');
     }
 
     // nonlocal assets
@@ -7134,15 +7156,20 @@ $( document ).ready(function() {
     if ($('#USE_NIGHT_COLOR').prop('checked')) {
         $('#SCNR_ALGORITHM_DAY').attr('readonly', true);
         $('#SCNR_ALGORITHM_DAY').attr('disabled', true);
+        $('#SCNR_ALGORITHM_DAY').addClass('bg-dark');
         $('#WBR_FACTOR_DAY').attr('readonly', true);
         $('#WBR_FACTOR_DAY').attr('disabled', true);
+        $('#WBR_FACTOR_DAY').addClass('bg-dark');
         $('#WBG_FACTOR_DAY').attr('readonly', true);
         $('#WBG_FACTOR_DAY').attr('disabled', true);
+        $('#WBG_FACTOR_DAY').addClass('bg-dark');
         $('#WBB_FACTOR_DAY').attr('readonly', true);
         $('#WBB_FACTOR_DAY').attr('disabled', true);
+        $('#WBB_FACTOR_DAY').addClass('bg-dark');
         $('#AUTO_WB_DAY').attr('disabled', true);
         $('#SATURATION_FACTOR_DAY').attr('readonly', true);
         $('#SATURATION_FACTOR_DAY').attr('disabled', true);
+        $('#SATURATION_FACTOR_DAY').addClass('bg-dark');
     }
 
     // Dew Heater thresholds
