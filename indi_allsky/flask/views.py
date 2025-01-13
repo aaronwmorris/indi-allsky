@@ -1627,14 +1627,23 @@ class ConfigView(FormView):
 
 
         if latest_image_entry:
-            dh_temp_user_slot = self.indi_allsky_config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
-            dh_temp_slot_var = 'sensor_user_{0:d}'.format(dh_temp_user_slot)
+            dh_temp_slot = self.indi_allsky_config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
+            if dh_temp_slot < 100:
+                dh_temp_slot_var = 'sensor_user_{0:d}'.format(dh_temp_slot)
+            else:
+                dh_temp_slot_var = 'sensor_temp_{0:d}'.format(dh_temp_slot - 100)
 
-            dh_dewpoint_user_slot = self.indi_allsky_config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 2)
-            dh_dewpoint_slot_var = 'sensor_user_{0:d}'.format(dh_dewpoint_user_slot)
+            dh_dewpoint_slot = self.indi_allsky_config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 2)
+            if dh_dewpoint_slot < 100:
+                dh_dewpoint_slot_var = 'sensor_user_{0:d}'.format(dh_dewpoint_slot)
+            else:
+                dh_dewpoint_slot_var = 'sensor_temp_{0:d}'.format(dh_dewpoint_slot - 100)
 
-            fan_temp_user_slot = self.indi_allsky_config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 10)
-            fan_temp_slot_var = 'sensor_user_{0:d}'.format(fan_temp_user_slot)
+            fan_temp_slot = self.indi_allsky_config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 10)
+            if fan_temp_slot < 100:
+                fan_temp_slot_var = 'sensor_user_{0:d}'.format(fan_temp_slot)
+            else:
+                fan_temp_slot_var = 'sensor_temp_{0:d}'.format(fan_temp_slot - 100)
 
 
             if latest_image_entry.data.get(dh_temp_slot_var):
