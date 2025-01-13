@@ -479,9 +479,9 @@ class IndiAllSkyConfigBase(object):
             "LEVEL_LOW"              : 33,
             "LEVEL_MED"              : 66,
             "LEVEL_HIGH"             : 100,
-            "THOLD_DIFF_LOW"         : 0,
-            "THOLD_DIFF_MED"         : 5,
-            "THOLD_DIFF_HIGH"        : 10,
+            "THOLD_DIFF_LOW"         : -10,
+            "THOLD_DIFF_MED"         : -5,
+            "THOLD_DIFF_HIGH"        : 0,
         },
         "GENERIC_GPIO" : {
             "A_CLASSNAME"            : "",

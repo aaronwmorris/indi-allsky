@@ -75,9 +75,9 @@ class SensorWorker(Process):
         self.fan_level_med = self.config.get('FAN', {}).get('LEVEL_MED', 66)
         self.fan_level_high = self.config.get('FAN', {}).get('LEVEL_HIGH', 100)
 
-        self.fan_thold_diff_low = self.config.get('FAN', {}).get('THOLD_DIFF_LOW', 0)
-        self.fan_thold_diff_med = self.config.get('FAN', {}).get('THOLD_DIFF_MED', 5)
-        self.fan_thold_diff_high = self.config.get('FAN', {}).get('THOLD_DIFF_HIGH', 10)
+        self.fan_thold_diff_low = self.config.get('FAN', {}).get('THOLD_DIFF_LOW', -10)
+        self.fan_thold_diff_med = self.config.get('FAN', {}).get('THOLD_DIFF_MED', -5)
+        self.fan_thold_diff_high = self.config.get('FAN', {}).get('THOLD_DIFF_HIGH', 0)
 
 
         self._shutdown = False
