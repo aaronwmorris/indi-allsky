@@ -25,6 +25,10 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+.strikethrough{
+  text-decoration: line-through;
+}
 </style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
@@ -6841,9 +6845,11 @@ $('#FOCUS_MODE').on('change', function() {
     if ($('#FOCUS_MODE').prop('checked')) {
         $('#FOCUS_DELAY').removeAttr('readonly');
         $('#FOCUS_DELAY').removeAttr('disabled');
+        $('#FOCUS_DELAY').removeClass('bg-dark');
     } else {
         $('#FOCUS_DELAY').attr('readonly', true);
         $('#FOCUS_DELAY').attr('disabled', true);
+        $('#FOCUS_DELAY').addClass('bg-dark');
     }
 });
 
@@ -6852,9 +6858,11 @@ $('#CCD_COOLING').on('change', function() {
     if ($('#CCD_COOLING').prop('checked')) {
         $('#CCD_TEMP').removeAttr('readonly');
         $('#CCD_TEMP').removeAttr('disabled');
+        $('#CCD_TEMP').removeClass('bg-dark');
     } else {
         $('#CCD_TEMP').attr('readonly', true);
         $('#CCD_TEMP').attr('disabled', true);
+        $('#CCD_TEMP').addClass('bg-dark');
     }
 });
 
@@ -6881,13 +6889,17 @@ $('#STARTRAILS_MOONMODE_THOLD').on('change', function() {
     if ($('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
         $('#STARTRAILS_MOON_ALT_THOLD').attr('disabled', true);
         $('#STARTRAILS_MOON_ALT_THOLD').attr('readonly', true);
+        $('#STARTRAILS_MOON_ALT_THOLD').addClass('bg-dark');
         $('#STARTRAILS_MOON_PHASE_THOLD').attr('disabled', true);
         $('#STARTRAILS_MOON_PHASE_THOLD').attr('readonly', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').addClass('bg-dark');
     } else {
         $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('disabled');
         $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('readonly');
+        $('#STARTRAILS_MOON_ALT_THOLD').removeClass('bg-dark');
         $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('disabled');
         $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('readonly');
+        $('#STARTRAILS_MOON_PHASE_THOLD').removeClass('bg-dark');
     }
 });
 
@@ -6917,29 +6929,162 @@ $('#USE_NIGHT_COLOR').on('change', function() {
     if ($('#USE_NIGHT_COLOR').prop('checked')) {
         $('#SCNR_ALGORITHM_DAY').attr('readonly', true);
         $('#SCNR_ALGORITHM_DAY').attr('disabled', true);
+        $('#SCNR_ALGORITHM_DAY').addClass('bg-dark');
         $('#WBR_FACTOR_DAY').attr('readonly', true);
         $('#WBR_FACTOR_DAY').attr('disabled', true);
+        $('#WBR_FACTOR_DAY').addClass('bg-dark');
         $('#WBG_FACTOR_DAY').attr('readonly', true);
         $('#WBG_FACTOR_DAY').attr('disabled', true);
+        $('#WBG_FACTOR_DAY').addClass('bg-dark');
         $('#WBB_FACTOR_DAY').attr('readonly', true);
         $('#WBB_FACTOR_DAY').attr('disabled', true);
+        $('#WBB_FACTOR_DAY').addClass('bg-dark');
         $('#AUTO_WB_DAY').attr('disabled', true);
         $('#SATURATION_FACTOR_DAY').attr('readonly', true);
         $('#SATURATION_FACTOR_DAY').attr('disabled', true);
+        $('#SATURATION_FACTOR_DAY').addClass('bg-dark');
     } else {
         $('#SCNR_ALGORITHM_DAY').removeAttr('readonly');
         $('#SCNR_ALGORITHM_DAY').removeAttr('disabled');
+        $('#SCNR_ALGORITHM_DAY').removeClass('bg-dark');
         $('#WBR_FACTOR_DAY').removeAttr('readonly');
         $('#WBR_FACTOR_DAY').removeAttr('disabled');
+        $('#WBR_FACTOR_DAY').removeClass('bg-dark');
         $('#WBG_FACTOR_DAY').removeAttr('readonly');
         $('#WBG_FACTOR_DAY').removeAttr('disabled');
+        $('#WBG_FACTOR_DAY').removeClass('bg-dark');
         $('#WBB_FACTOR_DAY').removeAttr('readonly');
         $('#WBB_FACTOR_DAY').removeAttr('disabled');
+        $('#WBB_FACTOR_DAY').removeClass('bg-dark');
         $('#AUTO_WB_DAY').removeAttr('disabled');
         $('#SATURATION_FACTOR_DAY').removeAttr('readonly');
         $('#SATURATION_FACTOR_DAY').removeAttr('disabled');
+        $('#SATURATION_FACTOR_DAY').removeClass('bg-dark');
     }
 });
+
+
+// Dew Heater thresholds
+$('#DEW_HEATER__THOLD_ENABLE').on('change', function() {
+    if ($('#DEW_HEATER__THOLD_ENABLE').prop('checked')) {
+        $('#DEW_HEATER__LEVEL_DEF').val(0);
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').removeAttr('readonly');
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').removeAttr('disabled');
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').removeClass('bg-dark');
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').removeAttr('readonly');
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').removeAttr('disabled');
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').removeClass('bg-dark');
+        $('#DEW_HEATER__MANUAL_TARGET').removeAttr('readonly');
+        $('#DEW_HEATER__MANUAL_TARGET').removeAttr('disabled');
+        $('#DEW_HEATER__MANUAL_TARGET').removeClass('bg-dark');
+        $('#DEW_HEATER__LEVEL_LOW').removeAttr('readonly');
+        $('#DEW_HEATER__LEVEL_LOW').removeAttr('disabled');
+        $('#DEW_HEATER__LEVEL_LOW').removeClass('bg-dark');
+        $('#DEW_HEATER__LEVEL_MED').removeAttr('readonly');
+        $('#DEW_HEATER__LEVEL_MED').removeAttr('disabled');
+        $('#DEW_HEATER__LEVEL_MED').removeClass('bg-dark');
+        $('#DEW_HEATER__LEVEL_HIGH').removeAttr('readonly');
+        $('#DEW_HEATER__LEVEL_HIGH').removeAttr('disabled');
+        $('#DEW_HEATER__LEVEL_HIGH').removeClass('bg-dark');
+        $('#DEW_HEATER__THOLD_DIFF_LOW').removeAttr('readonly');
+        $('#DEW_HEATER__THOLD_DIFF_LOW').removeAttr('disabled');
+        $('#DEW_HEATER__THOLD_DIFF_LOW').removeClass('bg-dark');
+        $('#DEW_HEATER__THOLD_DIFF_MED').removeAttr('readonly');
+        $('#DEW_HEATER__THOLD_DIFF_MED').removeAttr('disabled');
+        $('#DEW_HEATER__THOLD_DIFF_MED').removeClass('bg-dark');
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').removeAttr('readonly');
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').removeAttr('disabled');
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').removeClass('bg-dark');
+    } else {
+        $('#DEW_HEATER__LEVEL_DEF').val(100);
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').attr('readonly', true);
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').attr('disabled', true);
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').addClass('bg-dark');
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').attr('readonly', true);
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').attr('disabled', true);
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').addClass('bg-dark');
+        $('#DEW_HEATER__MANUAL_TARGET').attr('readonly', true);
+        $('#DEW_HEATER__MANUAL_TARGET').attr('disabled', true);
+        $('#DEW_HEATER__MANUAL_TARGET').addClass('bg-dark');
+        $('#DEW_HEATER__LEVEL_LOW').attr('readonly', true);
+        $('#DEW_HEATER__LEVEL_LOW').attr('disabled', true);
+        $('#DEW_HEATER__LEVEL_LOW').addClass('bg-dark');
+        $('#DEW_HEATER__LEVEL_MED').attr('readonly', true);
+        $('#DEW_HEATER__LEVEL_MED').attr('disabled', true);
+        $('#DEW_HEATER__LEVEL_MED').addClass('bg-dark');
+        $('#DEW_HEATER__LEVEL_HIGH').attr('readonly', true);
+        $('#DEW_HEATER__LEVEL_HIGH').attr('disabled', true);
+        $('#DEW_HEATER__LEVEL_HIGH').addClass('bg-dark');
+        $('#DEW_HEATER__THOLD_DIFF_LOW').attr('readonly', true);
+        $('#DEW_HEATER__THOLD_DIFF_LOW').attr('disabled', true);
+        $('#DEW_HEATER__THOLD_DIFF_LOW').addClass('bg-dark');
+        $('#DEW_HEATER__THOLD_DIFF_MED').attr('readonly', true);
+        $('#DEW_HEATER__THOLD_DIFF_MED').attr('disabled', true);
+        $('#DEW_HEATER__THOLD_DIFF_MED').addClass('bg-dark');
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').attr('readonly', true);
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').attr('disabled', true);
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').addClass('bg-dark');
+    }
+});
+
+
+// Fan thresholds
+$('#FAN__THOLD_ENABLE').on('change', function() {
+    if ($('#FAN__THOLD_ENABLE').prop('checked')) {
+        $('#FAN__LEVEL_DEF').val(0);
+        $('#FAN__TEMP_USER_VAR_SLOT').removeAttr('readonly');
+        $('#FAN__TEMP_USER_VAR_SLOT').removeAttr('disabled');
+        $('#FAN__TEMP_USER_VAR_SLOT').removeClass('bg-dark');
+        $('#FAN__TARGET').removeAttr('readonly');
+        $('#FAN__TARGET').removeAttr('disabled');
+        $('#FAN__TARGET').removeClass('bg-dark');
+        $('#FAN__LEVEL_LOW').removeAttr('readonly');
+        $('#FAN__LEVEL_LOW').removeAttr('disabled');
+        $('#FAN__LEVEL_LOW').removeClass('bg-dark');
+        $('#FAN__LEVEL_MED').removeAttr('readonly');
+        $('#FAN__LEVEL_MED').removeAttr('disabled');
+        $('#FAN__LEVEL_MED').removeClass('bg-dark');
+        $('#FAN__LEVEL_HIGH').removeAttr('readonly');
+        $('#FAN__LEVEL_HIGH').removeAttr('disabled');
+        $('#FAN__LEVEL_HIGH').removeClass('bg-dark');
+        $('#FAN__THOLD_DIFF_LOW').removeAttr('readonly');
+        $('#FAN__THOLD_DIFF_LOW').removeAttr('disabled');
+        $('#FAN__THOLD_DIFF_LOW').removeClass('bg-dark');
+        $('#FAN__THOLD_DIFF_MED').removeAttr('readonly');
+        $('#FAN__THOLD_DIFF_MED').removeAttr('disabled');
+        $('#FAN__THOLD_DIFF_MED').removeClass('bg-dark');
+        $('#FAN__THOLD_DIFF_HIGH').removeAttr('readonly');
+        $('#FAN__THOLD_DIFF_HIGH').removeAttr('disabled');
+        $('#FAN__THOLD_DIFF_HIGH').removeClass('bg-dark');
+    } else {
+        $('#FAN__LEVEL_DEF').val(100);
+        $('#FAN__TEMP_USER_VAR_SLOT').attr('readonly', true);
+        $('#FAN__TEMP_USER_VAR_SLOT').attr('disabled', true);
+        $('#FAN__TEMP_USER_VAR_SLOT').addClass('bg-dark');
+        $('#FAN__TARGET').attr('readonly', true);
+        $('#FAN__TARGET').attr('disabled', true);
+        $('#FAN__TARGET').addClass('bg-dark');
+        $('#FAN__LEVEL_LOW').attr('readonly', true);
+        $('#FAN__LEVEL_LOW').attr('disabled', true);
+        $('#FAN__LEVEL_LOW').addClass('bg-dark');
+        $('#FAN__LEVEL_MED').attr('readonly', true);
+        $('#FAN__LEVEL_MED').attr('disabled', true);
+        $('#FAN__LEVEL_MED').addClass('bg-dark');
+        $('#FAN__LEVEL_HIGH').attr('readonly', true);
+        $('#FAN__LEVEL_HIGH').attr('disabled', true);
+        $('#FAN__LEVEL_HIGH').addClass('bg-dark');
+        $('#FAN__THOLD_DIFF_LOW').attr('readonly', true);
+        $('#FAN__THOLD_DIFF_LOW').attr('disabled', true);
+        $('#FAN__THOLD_DIFF_LOW').addClass('bg-dark');
+        $('#FAN__THOLD_DIFF_MED').attr('readonly', true);
+        $('#FAN__THOLD_DIFF_MED').attr('disabled', true);
+        $('#FAN__THOLD_DIFF_MED').addClass('bg-dark');
+        $('#FAN__THOLD_DIFF_HIGH').attr('readonly', true);
+        $('#FAN__THOLD_DIFF_HIGH').attr('disabled', true);
+        $('#FAN__THOLD_DIFF_HIGH').addClass('bg-dark');
+    }
+});
+
 
 
 $( document ).ready(function() {
@@ -6967,12 +7112,14 @@ $( document ).ready(function() {
     if (!$('#FOCUS_MODE').prop('checked')) {
         $('#FOCUS_DELAY').attr('readonly', true);
         $('#FOCUS_DELAY').attr('disabled', true);
+        $('#FOCUS_DELAY').addClass('bg-dark');
     }
 
     // CCD_COOLING
     if (!$('#CCD_COOLING').prop('checked')) {
         $('#CCD_TEMP').attr('readonly', true);
         $('#CCD_TEMP').attr('disabled', true);
+        $('#CCD_TEMP').addClass('bg-dark');
     }
 
     // libcamera AWB
@@ -6986,11 +7133,13 @@ $( document ).ready(function() {
     }
 
     // startrails moonmode
-    if (!$('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
-        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('disabled');
-        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('readonly');
-        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('disabled');
-        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('readonly');
+    if ($('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
+        $('#STARTRAILS_MOON_ALT_THOLD').attr('disabled', true);
+        $('#STARTRAILS_MOON_ALT_THOLD').attr('readonly', true);
+        $('#STARTRAILS_MOON_ALT_THOLD').addClass('bg-dark');
+        $('#STARTRAILS_MOON_PHASE_THOLD').attr('disabled', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').attr('readonly', true);
+        $('#STARTRAILS_MOON_PHASE_THOLD').addClass('bg-dark');
     }
 
     // nonlocal assets
@@ -7007,15 +7156,79 @@ $( document ).ready(function() {
     if ($('#USE_NIGHT_COLOR').prop('checked')) {
         $('#SCNR_ALGORITHM_DAY').attr('readonly', true);
         $('#SCNR_ALGORITHM_DAY').attr('disabled', true);
+        $('#SCNR_ALGORITHM_DAY').addClass('bg-dark');
         $('#WBR_FACTOR_DAY').attr('readonly', true);
         $('#WBR_FACTOR_DAY').attr('disabled', true);
+        $('#WBR_FACTOR_DAY').addClass('bg-dark');
         $('#WBG_FACTOR_DAY').attr('readonly', true);
         $('#WBG_FACTOR_DAY').attr('disabled', true);
+        $('#WBG_FACTOR_DAY').addClass('bg-dark');
         $('#WBB_FACTOR_DAY').attr('readonly', true);
         $('#WBB_FACTOR_DAY').attr('disabled', true);
+        $('#WBB_FACTOR_DAY').addClass('bg-dark');
         $('#AUTO_WB_DAY').attr('disabled', true);
         $('#SATURATION_FACTOR_DAY').attr('readonly', true);
         $('#SATURATION_FACTOR_DAY').attr('disabled', true);
+        $('#SATURATION_FACTOR_DAY').addClass('bg-dark');
+    }
+
+    // Dew Heater thresholds
+    if (!$('#DEW_HEATER__THOLD_ENABLE').prop('checked')) {
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').attr('readonly', true);
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').attr('disabled', true);
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').addClass('bg-dark');
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').attr('readonly', true);
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').attr('disabled', true);
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').addClass('bg-dark');
+        $('#DEW_HEATER__MANUAL_TARGET').attr('readonly', true);
+        $('#DEW_HEATER__MANUAL_TARGET').attr('disabled', true);
+        $('#DEW_HEATER__MANUAL_TARGET').addClass('bg-dark');
+        $('#DEW_HEATER__LEVEL_LOW').attr('readonly', true);
+        $('#DEW_HEATER__LEVEL_LOW').attr('disabled', true);
+        $('#DEW_HEATER__LEVEL_LOW').addClass('bg-dark');
+        $('#DEW_HEATER__LEVEL_MED').attr('readonly', true);
+        $('#DEW_HEATER__LEVEL_MED').attr('disabled', true);
+        $('#DEW_HEATER__LEVEL_MED').addClass('bg-dark');
+        $('#DEW_HEATER__LEVEL_HIGH').attr('readonly', true);
+        $('#DEW_HEATER__LEVEL_HIGH').attr('disabled', true);
+        $('#DEW_HEATER__LEVEL_HIGH').addClass('bg-dark');
+        $('#DEW_HEATER__THOLD_DIFF_LOW').attr('readonly', true);
+        $('#DEW_HEATER__THOLD_DIFF_LOW').attr('disabled', true);
+        $('#DEW_HEATER__THOLD_DIFF_LOW').addClass('bg-dark');
+        $('#DEW_HEATER__THOLD_DIFF_MED').attr('readonly', true);
+        $('#DEW_HEATER__THOLD_DIFF_MED').attr('disabled', true);
+        $('#DEW_HEATER__THOLD_DIFF_MED').addClass('bg-dark');
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').attr('readonly', true);
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').attr('disabled', true);
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').addClass('bg-dark');
+    }
+
+    // Fan thresholds
+    if (!$('#FAN__THOLD_ENABLE').prop('checked')) {
+        $('#FAN__TEMP_USER_VAR_SLOT').attr('readonly', true);
+        $('#FAN__TEMP_USER_VAR_SLOT').attr('disabled', true);
+        $('#FAN__TEMP_USER_VAR_SLOT').addClass('bg-dark');
+        $('#FAN__TARGET').attr('readonly', true);
+        $('#FAN__TARGET').attr('disabled', true);
+        $('#FAN__TARGET').addClass('bg-dark');
+        $('#FAN__LEVEL_LOW').attr('readonly', true);
+        $('#FAN__LEVEL_LOW').attr('disabled', true);
+        $('#FAN__LEVEL_LOW').addClass('bg-dark');
+        $('#FAN__LEVEL_MED').attr('readonly', true);
+        $('#FAN__LEVEL_MED').attr('disabled', true);
+        $('#FAN__LEVEL_MED').addClass('bg-dark');
+        $('#FAN__LEVEL_HIGH').attr('readonly', true);
+        $('#FAN__LEVEL_HIGH').attr('disabled', true);
+        $('#FAN__LEVEL_HIGH').addClass('bg-dark');
+        $('#FAN__THOLD_DIFF_LOW').attr('readonly', true);
+        $('#FAN__THOLD_DIFF_LOW').attr('disabled', true);
+        $('#FAN__THOLD_DIFF_LOW').addClass('bg-dark');
+        $('#FAN__THOLD_DIFF_MED').attr('readonly', true);
+        $('#FAN__THOLD_DIFF_MED').attr('disabled', true);
+        $('#FAN__THOLD_DIFF_MED').addClass('bg-dark');
+        $('#FAN__THOLD_DIFF_HIGH').attr('readonly', true);
+        $('#FAN__THOLD_DIFF_HIGH').attr('disabled', true);
+        $('#FAN__THOLD_DIFF_HIGH').addClass('bg-dark');
     }
 
 });
