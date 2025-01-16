@@ -5,7 +5,7 @@ set -o errexit
 set -o nounset
 shopt -s nullglob
 
-PATH=/usr/local/bin:/usr/bin:/bin
+PATH=/usr/local/sbin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 export PATH
 
 
@@ -210,6 +210,11 @@ echo
 
 echo "Module info"
 lsmod || true
+echo
+
+
+echo "I2C info"
+i2cdetect -y 1 || true
 echo
 
 

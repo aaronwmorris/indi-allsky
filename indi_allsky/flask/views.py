@@ -643,6 +643,11 @@ class LatestPanoramaView(IndexView):
     latest_image_view = 'indi_allsky.js_latest_panorama_view'
 
 
+class LatestPanoramaImgView(IndexImgView):
+    title = 'Panorama'
+    latest_image_view = 'indi_allsky.js_latest_panorama_view'
+
+
 class JsonLatestPanoramaView(JsonLatestImageView):
     model = IndiAllSkyDbPanoramaImageTable
     latest_image_t = 'images/panorama.{0}'
@@ -7637,6 +7642,7 @@ bp_allsky.add_url_rule('/', view_func=IndexView.as_view('index_view', template_n
 bp_allsky.add_url_rule('/index_img', view_func=IndexImgView.as_view('index_img_view', template_name='index_img.html'))
 bp_allsky.add_url_rule('/js/latest', view_func=JsonLatestImageView.as_view('js_latest_image_view'))
 bp_allsky.add_url_rule('/panorama', view_func=LatestPanoramaView.as_view('latest_panorama_view', template_name='index.html'))
+bp_allsky.add_url_rule('/panorama_img', view_func=LatestPanoramaImgView.as_view('latest_panorama_img_view', template_name='index_img.html'))
 bp_allsky.add_url_rule('/js/latest_panorama', view_func=JsonLatestPanoramaView.as_view('js_latest_panorama_view'))
 bp_allsky.add_url_rule('/raw', view_func=LatestRawImageView.as_view('latest_rawimage_view', template_name='index.html'))
 bp_allsky.add_url_rule('/js/latest_rawimage', view_func=JsonLatestRawImageView.as_view('js_latest_rawimage_view'))
