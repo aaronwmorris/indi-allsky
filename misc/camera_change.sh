@@ -115,10 +115,21 @@ while [ -z "${CAMERA_INTERFACE:-}" ]; do
 done
 
 
+if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
+    echo
+    echo
+    echo "The DBUS user session is not defined"
+    echo
+    echo "WARNING: If you use screen, tmux, or byobu for virtual sessions, this check may always fail"
+    echo
+    exit 1
+fi
+
+
 if systemctl -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     # system
     INSTALL_INDISERVER="false"
-elif systemctl --user -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
+elif systemctl --user -q is-enabled "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null; then
     while [ -z "${INSTALL_INDISERVER:-}" ]; do
         # user
         if whiptail --title "indiserver update" --yesno "An indiserver service is already defined, would you like to replace it?" 0 0 --defaultno; then
@@ -199,6 +210,13 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     echo
     echo
     echo "**** Setting up indiserver service ****"
+
+
+    # timer
+    cp -f "${ALLSKY_DIRECTORY}/service/${INDISERVER_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
+    chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
+
+
     TMP1=$(mktemp)
     sed \
      -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
@@ -214,12 +232,6 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.service"
     [[ -f "$TMP1" ]] && rm -f "$TMP1"
 
-
-    systemctl --user daemon-reload
-
-    # service started by timer
-    systemctl --user disable ${INDISERVER_SERVICE_NAME}.service
-
 else
     echo
     echo
@@ -228,7 +240,15 @@ else
 fi
 
 
+systemctl --user daemon-reload
+
+
 if [ "$INSTALL_INDISERVER" == "true" ]; then
+    # service started by timer
+    systemctl --user disable ${INDISERVER_SERVICE_NAME}.service
+    systemctl --user enable ${INDISERVER_SERVICE_NAME}.timer
+
+
     while [ -z "${RESTART_INDISERVER:-}" ]; do
         if whiptail --title "Restart indiserver" --yesno "Do you want to restart the indiserver now?\n\nNot recommended if the indi-allsky service is active." 0 0 --defaultno; then
             RESTART_INDISERVER="true"
