@@ -48,9 +48,9 @@ trap catch_sigint SIGINT
 
 
 
-echo "#######################################################"
-echo "### Welcome to the indi-allsky camera change script ###"
-echo "#######################################################"
+echo "##########################################################"
+echo "### Welcome to the indi-allsky indiserver setup script ###"
+echo "##########################################################"
 
 
 if ! [[ "$INDI_PORT" =~ ^[^0][0-9]{1,5}$ ]]; then
