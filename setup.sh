@@ -1306,7 +1306,7 @@ fi
 if systemctl -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     # system
     INSTALL_INDISERVER="false"
-elif systemctl --user -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
+elif systemctl --user -q is-enabled "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null; then
     while [ -z "${INSTALL_INDISERVER:-}" ]; do
         # user
         if whiptail --title "indiserver update" --yesno "An indiserver service is already defined, would you like to replace it?" 0 0 --defaultno; then
@@ -1565,14 +1565,16 @@ fi
 
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
+    echo
+    echo
+    echo "**** Setting up indiserver service ****"
+
+
     # timer
     cp -f "${ALLSKY_DIRECTORY}/service/${INDISERVER_SERVICE_NAME}.timer" "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
     chmod 644 "${HOME}/.config/systemd/user/${INDISERVER_SERVICE_NAME}.timer"
 
 
-    echo
-    echo
-    echo "**** Setting up indiserver service ****"
     TMP1=$(mktemp)
     sed \
      -e "s|%INDI_DRIVER_PATH%|$INDI_DRIVER_PATH|g" \
