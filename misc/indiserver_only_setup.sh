@@ -14,6 +14,7 @@ INDI_DRIVER_PATH="/usr/bin"
 INDISERVER_SERVICE_NAME="indiserver"
 INSTALL_INDI="${INDIALLSKY_INSTALL_INDI:-true}"
 INSTALL_INDISERVER="${INDIALLSKY_INSTALL_INDISERVER:-}"
+INSTALL_LIBCAMERA="${INDIALLSKY_INSTALL_LIBCAMERA:-false}"
 CCD_DRIVER="${INDIALLSKY_CCD_DRIVER:-}"
 GPS_DRIVER="${INDIALLSKY_GPS_DRIVER:-}"
 INDI_PORT="${INDIALLSKY_INDI_PORT:-7624}"
@@ -157,6 +158,8 @@ while [ -z "${CAMERA_INTERFACE:-}" ]; do
 
     # more specific libcamera selection
     if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
+        INSTALL_LIBCAMERA="true"
+
         echo
         PS3="Select a libcamera interface: "
         select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_imx708 libcamera_imx519 libcamera_imx500_ai libcamera_imx283 libcamera_imx462 libcamera_imx327 libcamera_imx678 libcamera_ov5647 libcamera_imx219 libcamera_imx296_gs libcamera_imx290 libcamera_imx298 libcamera_64mp_hawkeye libcamera_64mp_owlsight; do
@@ -169,6 +172,17 @@ while [ -z "${CAMERA_INTERFACE:-}" ]; do
     fi
 done
 
+
+if [[ -f "/usr/local/bin/libcamera-still" || -f "/usr/local/bin/rpicam-still" ]]; then
+    INSTALL_LIBCAMERA="false"
+
+    echo
+    echo
+    echo "Detected a custom installation of libcamera in /usr/local"
+    echo
+    echo
+    sleep 3
+fi
 
 
 echo "**** Installing packages... ****"
@@ -185,6 +199,12 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
             echo
             echo
             exit 1
+        fi
+
+
+        if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
+            sudo apt-get -y install \
+                rpicam-apps
         fi
 
     elif [[ "$DISTRO_VERSION_ID" == "11" ]]; then
@@ -541,6 +561,18 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
         echo
     fi
 fi
+
+
+# for GPS and serial port access
+echo "**** Ensure user is a member of the dialout, video groups ****"
+for GRP in dialout video; do
+    if getent group "$GRP" >/dev/null 2>&1; then
+        sudo usermod -a -G "$GRP" "$USER"
+    fi
+done
+
+
+
 
 END_TIME=$(date +%s)
 
