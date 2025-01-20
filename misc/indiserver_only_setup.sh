@@ -12,6 +12,7 @@ export PATH
 #### config ####
 INDI_DRIVER_PATH="/usr/bin"
 INDISERVER_SERVICE_NAME="indiserver"
+INSTALL_INDI="${INDIALLSKY_INSTALL_INDI:-true}"
 INSTALL_INDISERVER="${INDIALLSKY_INSTALL_INDISERVER:-}"
 CCD_DRIVER="${INDIALLSKY_CCD_DRIVER:-}"
 GPS_DRIVER="${INDIALLSKY_GPS_DRIVER:-}"
@@ -47,6 +48,24 @@ function catch_sigint() {
 trap catch_sigint SIGINT
 
 
+if [ ! -f "/etc/os-release" ]; then
+    echo
+    echo "Unable to determine OS from /etc/os-release"
+    echo
+    exit 1
+fi
+
+source /etc/os-release
+
+
+DISTRO_ID="${ID:-unknown}"
+DISTRO_VERSION_ID="${VERSION_ID:-unknown}"
+CPU_ARCH=$(uname -m)
+CPU_BITS=$(getconf LONG_BIT)
+CPU_TOTAL=$(grep -c "^proc" /proc/cpuinfo)
+MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
+
+
 
 echo "##########################################################"
 echo "### Welcome to the indi-allsky indiserver setup script ###"
@@ -61,6 +80,8 @@ fi
 
 
 if [ -f "/usr/local/bin/indiserver" ]; then
+    # Do not install INDI
+    INSTALL_INDI="false"
     INDI_DRIVER_PATH="/usr/local/bin"
 
     echo
@@ -71,6 +92,40 @@ if [ -f "/usr/local/bin/indiserver" ]; then
     sleep 3
 fi
 
+
+echo
+echo
+echo "Distribution: $DISTRO_ID"
+echo "Release: $DISTRO_VERSION_ID"
+echo "Arch: $CPU_ARCH"
+echo "Bits: $CPU_BITS"
+echo
+echo "CPUs: $CPU_TOTAL"
+echo "Memory: $MEM_TOTAL kB"
+echo
+echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
+echo "INDISERVER_SERVICE_NAME: $INDISERVER_SERVICE_NAME"
+echo "INSTALL_INDI: $INSTALL_INDI"
+echo
+echo
+
+
+if [[ "$(id -u)" == "0" ]]; then
+    echo "Please do not run $(basename "$0") as root"
+    echo "Re-run this script as the user which will execute the indi-allsky software"
+    echo
+    echo
+    exit 1
+fi
+
+
+echo "Setup proceeding in 10 seconds... (control-c to cancel)"
+echo
+sleep 10
+
+
+# Run sudo to ask for initial password
+sudo true
 
 
 START_TIME=$(date +%s)
@@ -113,6 +168,219 @@ while [ -z "${CAMERA_INTERFACE:-}" ]; do
         done
     fi
 done
+
+
+
+echo "**** Installing packages... ****"
+if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "12" ]]; then
+
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
+        fi
+
+    elif [[ "$DISTRO_VERSION_ID" == "11" ]]; then
+
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
+        fi
+
+    else
+        echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
+    fi
+
+elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
+
+        if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
+            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+                sudo add-apt-repository -y ppa:mutlaqja/ppa
+            fi
+        elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
+            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+                sudo add-apt-repository -y ppa:mutlaqja/ppa
+            fi
+        else
+            INSTALL_INDI="false"
+
+            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+                echo
+                echo
+                echo "There are not prebuilt indi packages for this distribution"
+                echo "Please run ./misc/build_indi.sh before running setup.sh"
+                echo
+                echo
+                exit 1
+            fi
+        fi
+
+        if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+            if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+                INSTALL_INDI="false"
+            fi
+        fi
+
+        if [[ "$INSTALL_INDI" == "true" ]]; then
+            sudo apt-get -y install \
+                indi-full \
+                libindi-dev \
+                indi-webcam \
+                indi-asi \
+                libasi \
+                indi-qhy \
+                libqhy \
+                indi-playerone \
+                libplayerone \
+                indi-svbony \
+                libsvbony \
+                libaltaircam \
+                libmallincam \
+                libmicam \
+                libnncam \
+                indi-toupbase \
+                libtoupcam \
+                indi-gphoto \
+                indi-sx \
+                indi-gpsd \
+                indi-gpsnmea
+        fi
+
+
+    elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
+
+        if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
+            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+                sudo add-apt-repository -y ppa:mutlaqja/ppa
+            fi
+        elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
+            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+                sudo add-apt-repository -y ppa:mutlaqja/ppa
+            fi
+        else
+            INSTALL_INDI="false"
+
+            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+                echo
+                echo
+                echo "There are not prebuilt indi packages for this distribution"
+                echo "Please run ./misc/build_indi.sh before running setup.sh"
+                echo
+                echo
+                exit 1
+            fi
+        fi
+
+        if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+            if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+                INSTALL_INDI="false"
+            fi
+        fi
+
+        if [[ "$INSTALL_INDI" == "true" ]]; then
+            sudo apt-get -y install \
+                indi-full \
+                libindi-dev \
+                indi-webcam \
+                indi-asi \
+                libasi \
+                indi-qhy \
+                libqhy \
+                indi-playerone \
+                libplayerone \
+                indi-svbony \
+                libsvbony \
+                libaltaircam \
+                libmallincam \
+                libmicam \
+                libnncam \
+                indi-toupbase \
+                libtoupcam \
+                indi-gphoto \
+                indi-sx \
+                indi-gpsd \
+                indi-gpsnmea
+        fi
+
+    elif [[ "$DISTRO_VERSION_ID" == "20.04" ]]; then
+
+        if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
+            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+                sudo add-apt-repository -y ppa:mutlaqja/ppa
+            fi
+        elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
+            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+                sudo add-apt-repository -y ppa:mutlaqja/ppa
+            fi
+        else
+            INSTALL_INDI="false"
+
+            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+                echo
+                echo
+                echo "There are not prebuilt indi packages for this distribution"
+                echo "Please run ./misc/build_indi.sh before running setup.sh"
+                echo
+                echo
+                exit 1
+            fi
+        fi
+
+        if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+            if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+                INSTALL_INDI="false"
+            fi
+        fi
+
+        if [[ "$INSTALL_INDI" == "true" ]]; then
+            sudo apt-get -y install \
+                indi-full \
+                libindi-dev \
+                indi-webcam \
+                indi-asi \
+                libasi \
+                indi-qhy \
+                libqhy \
+                indi-playerone \
+                libplayerone \
+                indi-svbony \
+                libsvbony \
+                libaltaircam \
+                libmallincam \
+                libmicam \
+                libnncam \
+                indi-toupbase \
+                libtoupcam \
+                indi-gphoto \
+                indi-sx \
+                indi-gpsd \
+                indi-gpsnmea
+        fi
+    else
+        echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
+    fi
+
+else
+    echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+    exit 1
+fi
 
 
 if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
