@@ -572,6 +572,8 @@ for GRP in dialout video; do
 done
 
 
+# ensure indiserver is running
+systemctl --user start ${INDISERVER_SERVICE_NAME}.service
 
 
 END_TIME=$(date +%s)
