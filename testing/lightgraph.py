@@ -80,8 +80,7 @@ class LightGraphGenerator(object):
         logger.warning('Total lightgraph processing in %0.4f s', generate_elapsed_s)
 
 
-        lightgraph = numpy.array(lightgraph_list, dtype=numpy.uint8)
-        lightgraph = numpy.rot90(lightgraph)
+        lightgraph = numpy.array([lightgraph_list], dtype=numpy.uint8)
         lightgraph = cv2.resize(lightgraph, (1440, 50), interpolation=cv2.INTER_AREA)
 
         cv2.imwrite('lightgraph.jpg', lightgraph, [cv2.IMWRITE_JPEG_QUALITY, 90])
