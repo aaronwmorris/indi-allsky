@@ -29,8 +29,8 @@ class LightGraphGenerator(object):
     light_color = (200, 200, 200)
     dark_color = (15, 15, 15)
     line_color = (15, 15, 200)
-    border_color = (15, 200, 15)
-    now_color = (200, 200, 15)
+    border_color = (1, 1, 1)
+    now_color = (15, 150, 200)
 
     font_face = cv2.FONT_HERSHEY_SIMPLEX
     font_color = (200, 200, 200)
