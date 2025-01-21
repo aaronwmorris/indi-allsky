@@ -31,6 +31,12 @@ class LightGraphGenerator(object):
     border_color = (15, 200, 15)
     now_color = (200, 200, 15)
 
+    font_face = cv2.FONT_HERSHEY_SIMPLEX
+    font_color = (200, 200, 200)
+    font_scale = 0.5
+    font_thickness = 1
+    line_type = cv2.LINE_AA
+
 
     def __init__(self):
         self.obs = ephem.Observer()
@@ -132,7 +138,7 @@ class LightGraphGenerator(object):
                 pt2=(60 * x, self.graph_height),
                 color=tuple(self.line_color),
                 thickness=1,
-                lineType=cv2.LINE_AA,
+                lineType=self.line_type,
             )
 
 
@@ -162,7 +168,34 @@ class LightGraphGenerator(object):
         )
 
 
+        self.label_opencv(lightgraph)
+
+
         return lightgraph
+
+
+    def label_opencv(self, lightgraph):
+        for x, hour in enumerate([13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]):
+            cv2.putText(
+                img=lightgraph,
+                text=str(hour),
+                org=((60 * (x + 1)) - 5, 15),
+                fontFace=self.font_face,
+                color=(1, 1, 1),
+                lineType=self.line_type,
+                fontScale=self.font_scale,
+                thickness=self.font_thickness + 1,
+            )
+            cv2.putText(
+                img=lightgraph,
+                text=str(hour),
+                org=((60 * (x + 1)) - 5, 15),
+                fontFace=self.font_face,
+                color=self.font_color,
+                lineType=self.line_type,
+                fontScale=self.font_scale,
+                thickness=self.font_thickness,
+            )
 
 
     def mapColor(self, scale, color_high, color_low):
