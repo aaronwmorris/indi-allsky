@@ -85,7 +85,8 @@ class LightGraphGenerator(object):
             color=self.now_color,
         )
 
-        cv2.imwrite('lightgraph.jpg', lightgraph, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #cv2.imwrite('lightgraph.jpg', lightgraph, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        cv2.imwrite('lightgraph.png', lightgraph, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 
 
     def generate(self):
