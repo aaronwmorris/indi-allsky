@@ -710,6 +710,8 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'elevation' : 0,
         'sidereal_time' : '',
         'mode' : '',
+        'mode_next_change'  : '',
+        'mode_next_change_h': 0.0,
         'sun_alt' : 0.0,
         'sun_dir' : '',
         'sun_next_rise' : '',
