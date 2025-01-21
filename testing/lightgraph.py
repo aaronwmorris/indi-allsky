@@ -23,12 +23,13 @@ class LightGraphGenerator(object):
 
     graph_height = 50
     graph_border = 5
+    text_area_height = 25
     now_size = 8
     light_color = (200, 200, 200)
     dark_color = (15, 15, 15)
     line_color = (15, 15, 200)
-    border_color = (200, 200, 15)
-    now_color = (15, 200, 15)
+    border_color = (15, 200, 15)
+    now_color = (200, 200, 15)
 
 
     def __init__(self):
@@ -145,6 +146,19 @@ class LightGraphGenerator(object):
             cv2.BORDER_CONSTANT,
             None,
             self.border_color,
+        )
+
+
+        # draw text area
+        lightgraph = cv2.copyMakeBorder(
+            lightgraph,
+            self.text_area_height,
+            0,
+            0,
+            0,
+            cv2.BORDER_CONSTANT,
+            None,
+            (0, 0, 0)
         )
 
 
