@@ -23,7 +23,7 @@ class LightGraphGenerator(object):
 
     graph_height = 50
     graph_border = 5
-    text_area_height = 25
+    text_area_height = 20
     now_size = 8
     light_color = (200, 200, 200)
     dark_color = (15, 15, 15)
@@ -71,9 +71,9 @@ class LightGraphGenerator(object):
 
         # draw now triangle
         now_tri = numpy.array([
-            (now_offset - self.now_size, graph_height - (self.graph_border + self.now_size)),
-            (now_offset + self.now_size, graph_height - (self.graph_border + self.now_size)),
-            (now_offset, graph_height - self.graph_border),
+            (now_offset - self.now_size, graph_height - ((self.graph_border + self.graph_height) - self.now_size)),
+            (now_offset + self.now_size, graph_height - ((self.graph_border + self.graph_height) - self.now_size)),
+            (now_offset, graph_height - (self.graph_border + self.graph_height)),
         ],
             dtype=numpy.int32,
         )
