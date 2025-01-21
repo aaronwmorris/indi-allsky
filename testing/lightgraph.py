@@ -21,9 +21,10 @@ logger = logging
 
 class LightGraphGenerator(object):
 
+    # no color should be black (0, 0, 0)
     graph_height = 50
-    graph_border = 5
-    text_area_height = 20
+    graph_border = 3
+    text_area_height = 40
     now_size = 8
     light_color = (200, 200, 200)
     dark_color = (15, 15, 15)
@@ -33,7 +34,7 @@ class LightGraphGenerator(object):
 
     font_face = cv2.FONT_HERSHEY_SIMPLEX
     font_color = (200, 200, 200)
-    font_scale = 0.5
+    font_scale = 0.8
     font_thickness = 1
     line_type = cv2.LINE_AA
 
@@ -85,7 +86,13 @@ class LightGraphGenerator(object):
             color=self.now_color,
         )
 
-        #cv2.imwrite('lightgraph.jpg', lightgraph, [cv2.IMWRITE_JPEG_QUALITY, 90])
+
+        # create alpha channel, anything pixel that is full black (0, 0, 0) is transparent
+        alpha = numpy.max(lightgraph, axis=2)
+        alpha[alpha > 0] = 254
+        lightgraph = numpy.dstack((lightgraph, alpha))
+
+
         cv2.imwrite('lightgraph.png', lightgraph, [cv2.IMWRITE_PNG_COMPRESSION, 9])
 
 
@@ -180,9 +187,9 @@ class LightGraphGenerator(object):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((60 * (x + 1)) - 5, 15),
+                org=((60 * (x + 1)) - 10, 35),
                 fontFace=self.font_face,
-                color=(1, 1, 1),
+                color=(1, 1, 1),  # not full black
                 lineType=self.line_type,
                 fontScale=self.font_scale,
                 thickness=self.font_thickness + 1,
@@ -190,7 +197,7 @@ class LightGraphGenerator(object):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((60 * (x + 1)) - 5, 15),
+                org=((60 * (x + 1)) - 10, 35),
                 fontFace=self.font_face,
                 color=self.font_color,
                 lineType=self.line_type,
