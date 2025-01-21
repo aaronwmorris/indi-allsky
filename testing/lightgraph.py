@@ -23,6 +23,8 @@ class LightGraphGenerator(object):
 
     light_color = (200, 200, 200)
     dark_color = (15, 15, 15)
+    line_color = (15, 200, 200)
+    border_color = (200, 200, 15)
 
 
     def __init__(self):
@@ -82,6 +84,21 @@ class LightGraphGenerator(object):
 
         lightgraph = numpy.array([lightgraph_list], dtype=numpy.uint8)
         lightgraph = cv2.resize(lightgraph, (1440, 50), interpolation=cv2.INTER_AREA)
+
+        for x in range(22):
+            cv2.line(
+                img=lightgraph,
+                pt1=(60 * (x + 1), 0),
+                pt2=(60 * (x + 1), 50),
+                color=tuple(self.line_color),
+                thickness=1,
+                lineType=cv2.LINE_AA,
+            )
+
+
+        lightgraph = cv2.copyMakeBorder(lightgraph, 5, 5, 5, 5, cv2.BORDER_CONSTANT, None, self.border_color)
+
+        logger.info(lightgraph.shape)
 
         cv2.imwrite('lightgraph.jpg', lightgraph, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
