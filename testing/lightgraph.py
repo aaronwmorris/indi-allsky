@@ -22,6 +22,7 @@ logger = logging
 class LightGraphGenerator(object):
 
     graph_height = 50
+    graph_border = 5
     now_size = 8
     light_color = (200, 200, 200)
     dark_color = (15, 15, 15)
@@ -48,7 +49,36 @@ class LightGraphGenerator(object):
 
     def main(self):
         #utcnow_notz = now - utc_offset
-        self.generate()
+        lightgraph = self.generate()
+
+        #logger.info(lightgraph.shape)
+        graph_height, graph_width = lightgraph.shape[:2]
+
+
+        now = datetime.now()
+        noon = datetime.strptime(now.strftime('%Y%m%d12'), '%Y%m%d%H')
+
+        now_offset = int((now - noon).seconds / 60) + self.graph_border
+        #logger.info('Now offset: %d', now_offset)
+
+
+        # draw now triangle
+        now_tri = numpy.array([
+            (now_offset - self.now_size, graph_height - (self.graph_border + self.now_size)),
+            (now_offset + self.now_size, graph_height - (self.graph_border + self.now_size)),
+            (now_offset, graph_height - self.graph_border),
+        ],
+            dtype=numpy.int32,
+        )
+        #logger.info(now_tri)
+
+        cv2.fillPoly(
+            img=lightgraph,
+            pts=[now_tri],
+            color=self.now_color,
+        )
+
+        cv2.imwrite('lightgraph.jpg', lightgraph, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
     def generate(self):
@@ -62,10 +92,6 @@ class LightGraphGenerator(object):
         self.next_generate = noon + timedelta(hours=24)
 
         noon_utc = noon - self.utc_offset
-
-
-        now_offset = int((now - noon).seconds / 60)
-        #logger.info('Now offset: %d', now_offset)
 
 
         lightgraph_list = list()
@@ -109,38 +135,20 @@ class LightGraphGenerator(object):
             )
 
 
-        # draw now triangle
-        now_tri = numpy.array([
-            [now_offset - self.now_size, self.graph_height - self.now_size],
-            [now_offset + self.now_size, self.graph_height - self.now_size],
-            [now_offset, self.graph_height]
-        ],
-            dtype=numpy.int32,
-        )
-
-        cv2.fillPoly(
-            img=lightgraph,
-            pts=[now_tri],
-            color=self.now_color,
-        )
-
-
         # draw border
         lightgraph = cv2.copyMakeBorder(
             lightgraph,
-            5,
-            5,
-            5,
-            5,
+            self.graph_border,
+            self.graph_border,
+            self.graph_border,
+            self.graph_border,
             cv2.BORDER_CONSTANT,
             None,
             self.border_color,
         )
 
 
-        logger.info(lightgraph.shape)
-
-        cv2.imwrite('lightgraph.jpg', lightgraph, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        return lightgraph
 
 
     def mapColor(self, scale, color_high, color_low):
