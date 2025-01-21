@@ -28,7 +28,7 @@ class LightGraphGenerator(object):
     now_size = 8
     light_color = (200, 200, 200)
     dark_color = (15, 15, 15)
-    line_color = (15, 15, 200)
+    line_color = (15, 15, 100)
     border_color = (1, 1, 1)
     now_color = (15, 150, 200)
 
