@@ -40,7 +40,7 @@ logger.addHandler(LOG_HANDLER_STREAM)
 class HADiscovery(object):
 
 
-    discovery_base_topic = 'homeass/foo'
+    discovery_base_topic = 'homeassistant'
     unique_id_base = '001'
 
 
@@ -298,6 +298,7 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_gain',
                 'config' : {
                     'name' : 'Camera Gain',
+                    'unit_of_measurement' : '',
                     'unique_id' : 'indi_allsky_gain_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'gain')),
                     'device'   : {
@@ -313,6 +314,7 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_bin',
                 'config' : {
                     'name' : 'Camera Binmode',
+                    'unit_of_measurement' : '',
                     'unique_id' : 'indi_allsky_bin_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'bin')),
                     'device'   : {
@@ -426,6 +428,7 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_sqm',
                 'config' : {
                     'name' : 'SQM',
+                    'unit_of_measurement' : '',
                     'unique_id' : 'indi_allsky_sqm_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'sqm')),
                     'device'   : {
@@ -441,6 +444,7 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_stars',
                 'config' : {
                     'name' : 'Stars',
+                    'unit_of_measurement' : '',
                     'unique_id' : 'indi_allsky_stars_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'stars')),
                     'device'   : {
@@ -504,6 +508,7 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_kpindex',
                 'config' : {
                     'name' : 'K-P Index',
+                    'unit_of_measurement' : '',
                     'unique_id' : 'indi_allsky_kpindex_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'kpindex')),
                     'device'   : {
@@ -589,6 +594,7 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_cpu_total',
                 'config' : {
                     'name' : 'CPU Total',
+                    'unit_of_measurement' : '',
                     'unique_id' : 'indi_allsky_cpu_total_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'cpu', 'total')),
                     'device'   : {
@@ -734,6 +740,7 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_sensor_user_{0}'.format(i),
                 'config' : {
                     'name' : self.SENSOR_SLOT_choices[i][0],
+                    'unit_of_measurement' : '',
                     'unique_id' : 'indi_allsky_sensor_user_{0}_{1}'.format(i, self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'sensor_user_{0}'.format(str(i)))),
                     'device'   : {
