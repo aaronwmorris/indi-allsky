@@ -140,7 +140,7 @@ class IndiAllSkyConfigBase(object):
         "WEB_NONLOCAL_IMAGES"      : False,
         "WEB_LOCAL_IMAGES_ADMIN"   : False,
         "WEB_EXTRA_TEXT"           : "",
-        "WEB_STATUS_TEMPLATE"      : "Status: {status:s}\nLat: {latitude:0.1f}/Long: {longitude:0.1f}\nSidereal: {sidereal_time:s}\nMode: {mode:s}\nSun: {sun_alt:0.1f}&deg; {sun_dir:s}\nMoon: {moon_alt:0.1f}&deg; {moon_dir:s}\nPhase: {moon_phase_str:s} <span data-bs-toggle=\"tooltip\" data-bs-placement=\"right\" title=\"{moon_phase:0.0f}%\">{moon_glyph:s}</span>\nSmoke: {smoke_rating:s} {smoke_rating_status}\nKp-index: {kpindex:0.2f} {kpindex_rating:s} {kpindex_trend:s} {kpindex_status:s}\nAurora: {ovation_max:d}% {ovation_max_status}",
+        "WEB_STATUS_TEMPLATE"      : "Status: {status:s}\nLat: {latitude:0.1f}/Long: {longitude:0.1f}\nSidereal: {sidereal_time:s}\nMode: {mode:s}\nNext change: {mode_next_change:s} [{mode_next_change_h:0.1f}h]\nSun: {sun_alt:0.1f}&deg; {sun_dir:s}\nMoon: {moon_alt:0.1f}&deg; {moon_dir:s}\nRise: {moon_next_rise:s} [{moon_next_rise_h:0.1f}h]\nSet: {moon_next_set:s} [{moon_next_set_h:0.1f}h]\nPhase: {moon_phase_str:s} <span data-bs-toggle=\"tooltip\" data-bs-placement=\"right\" title=\"{moon_phase:0.0f}%\">{moon_glyph:s}</span>\nSmoke: {smoke_rating:s} {smoke_rating_status}\nKp-index: {kpindex:0.2f} {kpindex_rating:s} {kpindex_trend:s} {kpindex_status:s}\nAurora: {ovation_max:d}% {ovation_max_status}",
         "HEALTHCHECK" : {
             "DISK_USAGE"     : 90.0,
             "SWAP_USAGE"     : 90.0,

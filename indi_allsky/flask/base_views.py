@@ -455,6 +455,26 @@ class BaseView(View):
         sun.compute(obs)
 
         try:
+            obs.horizon = math.radians(self.indi_allsky_config['NIGHT_SUN_ALT_DEG'])
+            if self.night:
+                mode_next_change_date = obs.next_rising(sun).datetime()
+            else:
+                mode_next_change_date = obs.next_setting(sun).datetime()
+
+            data['mode_next_change'] = (mode_next_change_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
+            data['mode_next_change_h'] = (mode_next_change_date - utcnow.replace(tzinfo=None)).total_seconds() / 3600
+        except ephem.NeverUpError:
+            data['mode_next_change'] = '--:--'
+            data['mode_next_change_h'] = 0.0
+        except ephem.AlwaysUpError:
+            data['mode_next_change'] = '--:--'
+            data['mode_next_change_h'] = 0.0
+
+
+        obs.date = utcnow  # reset
+        sun.compute(obs)
+
+        try:
             sun_next_rise_date = obs.next_rising(sun).datetime()
             data['sun_next_rise'] = (sun_next_rise_date + timedelta(seconds=camera_utc_offset)).strftime('%H:%M')
             data['sun_next_rise_h'] = (sun_next_rise_date - utcnow.replace(tzinfo=None)).total_seconds() / 3600
