@@ -1,7 +1,7 @@
 from .generic import GenericFileTransfer
 from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
-#from .exceptions import TransferFailure
+from .exceptions import TransferFailure
 
 from pathlib import Path
 import ssl
@@ -125,6 +125,9 @@ class paho_mqtt(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except MQTTException as e:
             raise AuthenticationFailure(str(e)) from e
+        except ValueError as e:
+            # this can happen if msgs is empty
+            raise TransferFailure(str(e)) from e
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size
