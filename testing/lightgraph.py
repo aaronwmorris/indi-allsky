@@ -72,9 +72,9 @@ class LightGraphGenerator(object):
 
         # draw now triangle
         now_tri = numpy.array([
-            (now_offset - self.now_size, graph_height - ((self.graph_border + self.graph_height) - self.now_size)),
-            (now_offset + self.now_size, graph_height - ((self.graph_border + self.graph_height) - self.now_size)),
-            (now_offset, graph_height - (self.graph_border + self.graph_height)),
+            (now_offset - self.now_size, (self.graph_height + self.graph_border) - self.now_size),
+            (now_offset + self.now_size, (self.graph_height + self.graph_border) - self.now_size),
+            (now_offset, self.graph_height + self.graph_border),
         ],
             dtype=numpy.int32,
         )
@@ -166,8 +166,8 @@ class LightGraphGenerator(object):
         # draw text area
         lightgraph = cv2.copyMakeBorder(
             lightgraph,
-            self.text_area_height,
             0,
+            self.text_area_height,
             0,
             0,
             cv2.BORDER_CONSTANT,
@@ -187,7 +187,7 @@ class LightGraphGenerator(object):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((60 * (x + 1)) - 10, 35),
+                org=((60 * (x + 1)) - 10, self.graph_height + (self.graph_border * 2) + 20),
                 fontFace=self.font_face,
                 color=(1, 1, 1),  # not full black
                 lineType=self.line_type,
@@ -197,7 +197,7 @@ class LightGraphGenerator(object):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((60 * (x + 1)) - 10, 35),
+                org=((60 * (x + 1)) - 10, self.graph_height + (self.graph_border * 2) + 20),
                 fontFace=self.font_face,
                 color=self.font_color,
                 lineType=self.line_type,
