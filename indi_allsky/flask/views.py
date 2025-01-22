@@ -1619,6 +1619,12 @@ class ConfigView(FormView):
         context['camera_id'] = camera_id
 
 
+        if not self.validate_longitude_timezone():
+            context['longitude_validation_message'] = '<span class="badge rounded-pill bg-warning text-dark">Warning</span><span class="text-warning"> Longitude validation failed.  Incorrect time, timezone, or longitude could cause this condition</span>'
+        else:
+            context['longitude_validation_message'] = ''
+
+
         # query the latest image for dew point
         camera_now_minus_15m = self.camera_now - timedelta(minutes=15)
         latest_image_entry = db.session.query(
