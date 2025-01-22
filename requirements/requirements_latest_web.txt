@@ -41,3 +41,4 @@ requests[security]
 lxml
 shapely >= 2.0.6
 pytz
+mysql-connector-python
