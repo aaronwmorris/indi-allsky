@@ -61,6 +61,10 @@ var camera_id = {{ camera_id }};
 </nav>
 
 
+<!-- should be above tab contents -->
+<div>{{ longitude_validation_message | safe }}</div>
+
+
 <div class="tab-content" id="nav-tabContent">
   <div class="tab-pane fade show active" id="nav-camera" role="tabpanel" aria-labelledby="nav-camera-tab">
 
@@ -3105,7 +3109,9 @@ var camera_id = {{ camera_id }};
             {{ form_config.LOCATION_LATITUDE(class='form-control bg-secondary') }}
             <div id="LOCATION_LATITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Min: -90, Max: 90 [Positive = Northern Hemisphere / Negative = Southern Hemisphere]</div>
+        <div class="col-sm-8">
+            <div>Min: -90, Max: 90 [Positive = Northern Hemisphere / Negative = Southern Hemisphere]</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -3116,7 +3122,10 @@ var camera_id = {{ camera_id }};
             {{ form_config.LOCATION_LONGITUDE(class='form-control bg-secondary') }}
             <div id="LOCATION_LONGITUDE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Min: -180, Max: 180 [Positive = Eastern Hemisphere / Negative = Western Hemisphere]</div>
+        <div class="col-sm-8">
+            <div>{{ longitude_validation_message | safe }}</div>
+            <div>Min: -180, Max: 180 [Positive = Eastern Hemisphere / Negative = Western Hemisphere]</div>
+        </div>
     </div>
 
     <div class="form-group row">

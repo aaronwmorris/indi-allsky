@@ -672,6 +672,45 @@ class BaseView(View):
         return data
 
 
+    def validate_longitude_timezone(self):
+        # The theory behind timezones is the sun should be relatively near zenith at noon
+        # If there is significant (6+ hours) offset between noon and the suns next transit, the longitude is probably wrong
+
+        now = datetime.now()
+        utc_offset = now.astimezone().utcoffset()
+
+
+        noon = datetime.strptime(now.strftime('%Y%m%d12'), '%Y%m%d%H')
+        midnight = datetime.strptime(now.strftime('%Y%m%d00'), '%Y%m%d%H')
+        midnight_utc = midnight - utc_offset
+
+
+        obs = ephem.Observer()
+        obs.lon = math.radians(self.indi_allsky_config['LOCATION_LONGITUDE'])
+        obs.lat = math.radians(self.indi_allsky_config['LOCATION_LATITUDE'])
+
+        sun = ephem.Sun()
+
+        obs.date = midnight_utc
+        sun.compute(obs)
+
+
+        next_sun_transit = obs.next_transit(sun)
+        local_next_sun_transit = next_sun_transit.datetime() + utc_offset
+
+
+        if noon > local_next_sun_transit:
+            transit_noon_diff_hours = (noon - local_next_sun_transit).seconds / 3600
+        else:
+            transit_noon_diff_hours = (local_next_sun_transit - noon).seconds / 3600
+
+
+        if transit_noon_diff_hours < 6:
+            return True
+
+        return False
+
+
     def get_status_text(self, data):
         status_lines = list()
         for line in self.indi_allsky_config.get('WEB_STATUS_TEMPLATE', 'Status: {status:s}').splitlines():
