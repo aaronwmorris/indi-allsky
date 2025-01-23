@@ -1,16 +1,16 @@
 ### This file is targeted to Raspbian/Debian 11 and Python 3.9
 # https://www.wheelodex.org/projects/astropy/
-astropy >= 5.3.3
+astropy >= 5.3.3, <= 6.0.1
 # https://www.wheelodex.org/projects/numpy/
 numpy >= 1.22.2, < 2.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
-opencv-python-headless >= 4.8.1.78
+opencv-python-headless >= 4.8.1.78, <= 4.11.0.86
 # https://www.wheelodex.org/projects/scipy/
-scipy >= 1.11.3
+scipy >= 1.11.3, <= 1.13.1
 # https://www.wheelodex.org/projects/ccdproc/
 ccdproc
 # https://www.wheelodex.org/projects/scikit-image/
-scikit-image >= 0.20.0
+scikit-image <= 0.19.3
 astroalign
 bottleneck
 python-dateutil
@@ -41,7 +41,7 @@ werkzeug
 is-safe-url
 certifi >= 2024.7.4
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 42.0.5
+cryptography <= 42.0.8
 dbus-python
 paho-mqtt >= 2.0.0
 setuptools-rust
