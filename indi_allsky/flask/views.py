@@ -1204,22 +1204,22 @@ class ChartView(TemplateView):
 
         # fix system temp offset
         if custom_1_index >= 100:
-            custom_1_index -= 79
+            custom_1_index -= 70
 
         if custom_2_index >= 100:
-            custom_2_index -= 79
+            custom_2_index -= 70
 
         if custom_3_index >= 100:
-            custom_3_index -= 79
+            custom_3_index -= 70
 
         if custom_4_index >= 100:
-            custom_4_index -= 79
+            custom_4_index -= 70
 
         if custom_5_index >= 100:
-            custom_5_index -= 79
+            custom_5_index -= 70
 
         if custom_6_index >= 100:
-            custom_6_index -= 79
+            custom_6_index -= 70
 
 
         context['label_custom_chart_1'] = self.SENSOR_SLOT_choices[custom_1_index][1]
