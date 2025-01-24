@@ -638,7 +638,7 @@ class ImageProcessor(object):
             data = numpy.swapaxes(data, 0, 2)
             data = numpy.swapaxes(data, 0, 1)
 
-            i_ref.opencv_data = data
+            i_ref.opencv_data = cv2.cvtColor(data, cv2.COLOR_RGB2BGR)
             return
 
 
