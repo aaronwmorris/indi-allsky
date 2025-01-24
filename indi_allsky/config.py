@@ -508,6 +508,8 @@ class IndiAllSkyConfigBase(object):
             "OPENWEATHERMAP_APIKEY_E": "",
             "WUNDERGROUND_APIKEY"    : "",
             "WUNDERGROUND_APIKEY_E"  : "",
+            "ASTROSPHERIC_APIKEY"    : "",
+            "ASTROSPHERIC_APIKEY_E"  : "",
             "MQTT_TRANSPORT"         : "tcp",  # tcp or websockets
             "MQTT_HOST"              : "localhost",
             "MQTT_PORT"              : 8883,  # 1883 = mqtt, 8883 = TLS
@@ -720,6 +722,14 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__wunderground_apikey = config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', '')
 
 
+            temp_sensor__astrospheric_apikey_e = config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY_E', '')
+            if temp_sensor__astrospheric_apikey_e:
+                # not catching InvalidToken
+                temp_sensor__astrospheric_apikey = f_key.decrypt(temp_sensor__astrospheric_apikey_e.encode()).decode()
+            else:
+                temp_sensor__astrospheric_apikey = config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', '')
+
+
             temp_sensor__mqtt_password_e = config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD_E', '')
             if temp_sensor__mqtt_password_e:
                 # not catching InvalidToken
@@ -744,6 +754,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             pycurl_camera__password = config.get('PYCURL_CAMERA', {}).get('PASSWORD', '')
             temp_sensor__openweathermap_apikey = config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
             temp_sensor__wunderground_apikey = config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', '')
+            temp_sensor__astrospheric_apikey = config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', '')
             temp_sensor__mqtt_password = config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD', '')
             adsb__password = config.get('ADSB', {}).get('PASSWORD', '')
 
@@ -762,6 +773,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY_E'] = ''
         config['TEMP_SENSOR']['WUNDERGROUND_APIKEY'] = temp_sensor__wunderground_apikey
         config['TEMP_SENSOR']['WUNDERGROUND_APIKEY_E'] = ''
+        config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY'] = temp_sensor__astrospheric_apikey
+        config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY_E'] = ''
         config['TEMP_SENSOR']['MQTT_PASSWORD'] = temp_sensor__mqtt_password
         config['TEMP_SENSOR']['MQTT_PASSWORD_E'] = ''
         config['ADSB']['PASSWORD'] = adsb__password
@@ -856,6 +869,15 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__wunderground_apikey = ''
 
 
+            temp_sensor__astrospheric_apikey = str(config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY'])
+            if temp_sensor__astrospheric_apikey:
+                temp_sensor__astrospheric_apikey_e = f_key.encrypt(temp_sensor__astrospheric_apikey.encode()).decode()
+                temp_sensor__astrospheric_apikey = ''
+            else:
+                temp_sensor__astrospheric_apikey_e = ''
+                temp_sensor__astrospheric_apikey = ''
+
+
             temp_sensor__mqtt_password = str(config['TEMP_SENSOR']['MQTT_PASSWORD'])
             if temp_sensor__mqtt_password:
                 temp_sensor__mqtt_password_e = f_key.encrypt(temp_sensor__mqtt_password.encode()).decode()
@@ -891,6 +913,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             temp_sensor__openweathermap_apikey_e = ''
             temp_sensor__wunderground_apikey = str(config['TEMP_SENSOR']['WUNDERGROUND_APIKEY'])
             temp_sensor__wunderground_apikey_e = ''
+            temp_sensor__astrospheric_apikey = str(config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY'])
+            temp_sensor__astrospheric_apikey_e = ''
             temp_sensor__mqtt_password = str(config['TEMP_SENSOR']['MQTT_PASSWORD'])
             temp_sensor__mqtt_password_e = ''
             adsb__password = str(config['ADSB']['PASSWORD'])
@@ -911,6 +935,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY_E'] = temp_sensor__openweathermap_apikey_e
         config['TEMP_SENSOR']['WUNDERGROUND_APIKEY'] = temp_sensor__wunderground_apikey
         config['TEMP_SENSOR']['WUNDERGROUND_APIKEY_E'] = temp_sensor__wunderground_apikey_e
+        config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY'] = temp_sensor__astrospheric_apikey
+        config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY_E'] = temp_sensor__astrospheric_apikey_e
         config['TEMP_SENSOR']['MQTT_PASSWORD'] = temp_sensor__mqtt_password
         config['TEMP_SENSOR']['MQTT_PASSWORD_E'] = temp_sensor__mqtt_password_e
         config['ADSB']['PASSWORD'] = adsb__password
