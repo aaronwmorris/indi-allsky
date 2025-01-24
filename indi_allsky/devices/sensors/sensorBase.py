@@ -39,6 +39,11 @@ class SensorBase(object):
         return c + 273.15
 
 
+    def k2c(self, k):
+        # kelvin to celcius
+        return k - 273.15
+
+
     def hPa2psi(self, hpa):
         # hectopascals to pounds/sq in
         return hpa * 0.014503768077999999
