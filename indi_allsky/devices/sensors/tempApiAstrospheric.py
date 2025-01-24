@@ -64,7 +64,11 @@ class TempApiAstrospheric(SensorBase):
         }
 
         self.next_run = time.time()  # run immediately
-        self.next_run_offset = 1800  # 30 minutes
+        self.next_run_offset = 7200  # 120 minutes
+
+        ### As of Jan 2024, 100 api credits are given per day and each API call incurs a cost of 5 credits
+        ### This would effectively limit you to 20 API calls per day
+        ### An API call every 2 hours would mean no more than 12 automated calls per day
 
 
     def update(self):
