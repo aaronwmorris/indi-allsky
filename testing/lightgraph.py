@@ -32,6 +32,8 @@ class LightGraphGenerator(object):
     border_color = (1, 1, 1)
     now_color = (15, 150, 200)
 
+    opacity = 75
+
     font_face = cv2.FONT_HERSHEY_SIMPLEX
     font_color = (200, 200, 200)
     font_scale = 0.8
@@ -49,6 +51,9 @@ class LightGraphGenerator(object):
 
         self.sun = ephem.Sun()
         self.moon = ephem.Moon()
+
+
+        self.random_rgb = numpy.random.randint(255, size=(self.graph_height + self.text_area_height + (self.graph_border * 2), 1440 + (self.graph_border * 2), 3), dtype=numpy.uint8)
 
 
         self.utc_offset = None
@@ -89,11 +94,31 @@ class LightGraphGenerator(object):
 
         # create alpha channel, anything pixel that is full black (0, 0, 0) is transparent
         alpha = numpy.max(lightgraph, axis=2)
-        alpha[alpha > 0] = 254
+        alpha[alpha > 0] = int(255 * (self.opacity / 100))
         lightgraph = numpy.dstack((lightgraph, alpha))
 
 
-        cv2.imwrite('lightgraph.png', lightgraph, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        # separate layers
+        lightgraph_bgr = lightgraph[:, :, :3]
+        lightgraph_alpha = (lightgraph[:, :, 3] / 255).astype(numpy.float32)
+
+        # create alpha mask
+        alpha_mask = numpy.dstack((
+            lightgraph_alpha,
+            lightgraph_alpha,
+            lightgraph_alpha,
+        ))
+
+
+        # apply alpha mask
+        lightgraph_final = (self.random_rgb * (1 - alpha_mask) + lightgraph_bgr * alpha_mask).astype(numpy.uint8)
+
+
+        self.label_opencv(lightgraph_final)
+
+
+        #cv2.imwrite('lightgraph.png', lightgraph_final, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        cv2.imwrite('lightgraph.jpg', lightgraph_final, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
     def generate(self):
@@ -174,9 +199,6 @@ class LightGraphGenerator(object):
             None,
             (0, 0, 0)
         )
-
-
-        self.label_opencv(lightgraph)
 
 
         return lightgraph
