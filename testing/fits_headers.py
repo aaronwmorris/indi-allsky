@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+###
+### Processes FITS files using the indi-allsky processing pipeline
+###
+
 import sys
 import argparse
 from pathlib import Path

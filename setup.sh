@@ -1896,8 +1896,8 @@ if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo rm -f "$MYSQL_ETC/ssl/indi-allsky_mysql.pem"
 
         SHORT_HOSTNAME=$(hostname -s)
-        MYSQL_KEY_TMP=$(mktemp)
-        MYSQL_CRT_TMP=$(mktemp)
+        MYSQL_KEY_TMP=$(mktemp --suffix=.key)
+        MYSQL_CRT_TMP=$(mktemp --suffix=.pem)
 
         # sudo has problems with process substitution <()
         openssl req \
@@ -2089,8 +2089,8 @@ if [[ "$STELLARMATE" == "true" ]]; then
         sudo rm -f /etc/nginx/ssl/indi-allsky_nginx.pem
 
         SHORT_HOSTNAME=$(hostname -s)
-        HTTP_KEY_TMP=$(mktemp)
-        HTTP_CRT_TMP=$(mktemp)
+        HTTP_KEY_TMP=$(mktemp --suffix=.key)
+        HTTP_CRT_TMP=$(mktemp --suffix=.pem)
 
         # sudo has problems with process substitution <()
         openssl req \
@@ -2198,8 +2198,8 @@ else
             sudo rm -f /etc/apache2/ssl/indi-allsky_apache.pem
 
             SHORT_HOSTNAME=$(hostname -s)
-            HTTP_KEY_TMP=$(mktemp)
-            HTTP_CRT_TMP=$(mktemp)
+            HTTP_KEY_TMP=$(mktemp --suffix=.key)
+            HTTP_CRT_TMP=$(mktemp --suffix=.pem)
 
             # sudo has problems with process substitution <()
             openssl req \
