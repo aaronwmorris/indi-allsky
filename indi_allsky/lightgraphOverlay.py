@@ -158,7 +158,7 @@ class IndiAllSkyLightgraphOverlay(object):
 
         day_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('DAY_COLOR', (150, 150, 150)))
         day_color_bgr.reverse()
-        night_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NIGHT_COLOR', (15, 15, 15)))
+        night_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NIGHT_COLOR', (30, 30, 30)))
         night_color_bgr.reverse()
 
 
@@ -295,7 +295,7 @@ class IndiAllSkyLightgraphOverlay(object):
 
         if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
             # black outline
-            stroke_width = 4
+            stroke_width = 2
         else:
             stroke_width = 0
 

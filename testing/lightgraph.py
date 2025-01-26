@@ -28,13 +28,13 @@ class LightGraphGenerator(object):
     top_offset = 10
     text_area_height = 75
     now_marker_size = 8
-    day_color = (200, 200, 200)
-    night_color = (15, 15, 15)
+    day_color = (150, 150, 150)
+    night_color = (30, 30, 30)
     hour_color = (100, 15, 15)
     border_color = (1, 1, 1)
     now_color = (200, 150, 15)
 
-    opacity = 75
+    opacity = 100
     hour_lines = True
 
     label = True
