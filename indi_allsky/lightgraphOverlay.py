@@ -17,8 +17,8 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSkyLightgraphOverlay(object):
 
-    top_offset = 10
-    text_area_height = 75
+    top_border = 10
+    text_area_height = 50
 
 
     def __init__(self, config, position_av):
@@ -62,9 +62,9 @@ class IndiAllSkyLightgraphOverlay(object):
 
         # draw now triangle
         now_tri = numpy.array([
-            (now_offset - self.now_marker_size, (self.top_offset + self.graph_height + self.graph_border) - self.now_marker_size),
-            (now_offset + self.now_marker_size, (self.top_offset + self.graph_height + self.graph_border) - self.now_marker_size),
-            (now_offset, self.top_offset + self.graph_height + self.graph_border),
+            (now_offset - self.now_marker_size, (self.top_border + self.graph_height + self.graph_border) - self.now_marker_size),
+            (now_offset + self.now_marker_size, (self.top_border + self.graph_height + self.graph_border) - self.now_marker_size),
+            (now_offset, self.top_border + self.graph_height + self.graph_border),
         ],
             dtype=numpy.int32,
         )
@@ -228,7 +228,7 @@ class IndiAllSkyLightgraphOverlay(object):
         # draw text area
         lightgraph = cv2.copyMakeBorder(
             lightgraph,
-            self.top_offset,
+            self.top_border,
             self.text_area_height,
             0,
             0,
@@ -252,7 +252,7 @@ class IndiAllSkyLightgraphOverlay(object):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((60 * (x + 1)) + self.graph_border - 7, self.top_offset + self.graph_height + (self.graph_border * 2) + 20),
+                org=((60 * (x + 1)) + self.graph_border - 7, self.top_border + self.graph_height + (self.graph_border * 2) + 20),
                 fontFace=fontFace,
                 color=(1, 1, 1),  # not full black
                 lineType=lineType,
@@ -262,7 +262,7 @@ class IndiAllSkyLightgraphOverlay(object):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((60 * (x + 1)) + self.graph_border - 7, self.top_offset + self.graph_height + (self.graph_border * 2) + 20),
+                org=((60 * (x + 1)) + self.graph_border - 7, self.top_border + self.graph_height + (self.graph_border * 2) + 20),
                 fontFace=fontFace,
                 color=tuple(font_color_bgr),
                 lineType=lineType,
@@ -302,7 +302,7 @@ class IndiAllSkyLightgraphOverlay(object):
 
         for x, hour in enumerate([13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]):
             draw.text(
-                ((60 * (x + 1)) + self.graph_border, self.top_offset + self.graph_height + (self.graph_border * 2) + 1),
+                ((60 * (x + 1)) + self.graph_border, self.top_border + self.graph_height + (self.graph_border * 2) + 1),
                 str(hour),
                 fill=tuple(color_rgb),
                 font=font,
