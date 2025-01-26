@@ -93,20 +93,20 @@ class IndiAllSkyLightgraphOverlay(object):
 
 
         image_height, image_width = image_data.shape[:2]
-        lightgraph_height, lightgraph_width = lightgraph.shape[:2]
+        orig_lightgraph_height, orig_lightgraph_width = lightgraph.shape[:2]
 
 
         # scale image
-        new_lightgraph_width = int(lightgraph_width * self.scale)
-        new_lightgraph_height = int(lightgraph_height * self.scale)
+        new_lightgraph_width = int(orig_lightgraph_width * self.scale)
+        new_lightgraph_height = int(orig_lightgraph_height * self.scale)
 
 
         if new_lightgraph_width > image_width:
-            new_scale = lightgraph_width / image_width
-            logger.error('Rescaling lightgraph to fit image: %0.2f', self.scale)
+            new_scale = image_width / orig_lightgraph_width
+            logger.error('Rescaling lightgraph to fit image: %0.4f', new_scale)
 
-            new_lightgraph_width = int(lightgraph_width * new_scale)
-            new_lightgraph_height = int(lightgraph_height * new_scale)
+            new_lightgraph_width = int(orig_lightgraph_width * new_scale)
+            new_lightgraph_height = int(orig_lightgraph_height * new_scale)
 
             self.scale = new_scale
 
@@ -142,11 +142,12 @@ class IndiAllSkyLightgraphOverlay(object):
 
 
         if x < 0:
-            logger.error('Moon overlay X offset places lightgraph outside image boundary')
+            logger.error('Lightgraph overlay X offset places lightgraph outside image boundary')
             x = 0
 
         if x + new_lightgraph_width > image_width:
-            logger.error('Moon overlay X offset places lightgraph outside image boundary')
+            logger.error('Lightgraph overlay X offset places lightgraph outside image boundary')
+            x = image_width - new_lightgraph_width
 
 
         crop_y1 = y
