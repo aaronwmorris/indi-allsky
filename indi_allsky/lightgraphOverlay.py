@@ -17,7 +17,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSkyLightgraphOverlay(object):
 
-    top_offset = 20
+    top_offset = 10
     text_area_height = 75
 
 
