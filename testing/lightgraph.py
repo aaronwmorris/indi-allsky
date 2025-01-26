@@ -236,7 +236,7 @@ class LightGraphGenerator(object):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((60 * (x + 1)) - 10, self.top_offset + self.graph_height + (self.graph_border * 2) + 20),
+                org=((60 * (x + 1)) + self.graph_border - 7, self.top_offset + self.graph_height + (self.graph_border * 2) + 20),
                 fontFace=self.font_face,
                 color=(1, 1, 1),  # not full black
                 lineType=self.line_type,
@@ -246,7 +246,7 @@ class LightGraphGenerator(object):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((60 * (x + 1)) - 10, self.top_offset + self.graph_height + (self.graph_border * 2) + 20),
+                org=((60 * (x + 1)) + self.graph_border - 7, self.top_offset + self.graph_height + (self.graph_border * 2) + 20),
                 fontFace=self.font_face,
                 color=tuple(font_color_bgr),
                 lineType=self.line_type,

@@ -1,10 +1,14 @@
 import math
 from datetime import datetime
 from datetime import timedelta
+from pathlib import Path
 import time
 import ephem
 import numpy
 import cv2
+from PIL import Image
+from PIL import ImageFont
+from PIL import ImageDraw
 import logging
 
 
@@ -32,6 +36,9 @@ class IndiAllSkyLightgraphOverlay(object):
 
         self.label = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('LABEL', False)
         self.hour_lines = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_LINES', True)
+
+        base_path  = Path(__file__).parent
+        self.font_path  = base_path.joinpath('fonts')
 
 
     def apply(self, image_data):
@@ -111,10 +118,10 @@ class IndiAllSkyLightgraphOverlay(object):
             image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
 
             if image_label_system == 'opencv':
-                self.drawText_opencv(image_crop)
+                image_crop = self.drawText_opencv(image_crop)
             else:
                 # pillow is default
-                image_crop = self.applyLabels_pillow(image_crop)
+                image_crop = self.drawText_pillow(image_crop)
         else:
             logger.warning('Lightgraph labels disabled')
 
@@ -245,7 +252,7 @@ class IndiAllSkyLightgraphOverlay(object):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((60 * (x + 1)) - 10, self.top_offset + self.graph_height + (self.graph_border * 2) + 20),
+                org=((60 * (x + 1)) + self.graph_border - 7, self.top_offset + self.graph_height + (self.graph_border * 2) + 20),
                 fontFace=fontFace,
                 color=(1, 1, 1),  # not full black
                 lineType=lineType,
@@ -255,13 +262,58 @@ class IndiAllSkyLightgraphOverlay(object):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((60 * (x + 1)) - 10, self.top_offset + self.graph_height + (self.graph_border * 2) + 20),
+                org=((60 * (x + 1)) + self.graph_border - 7, self.top_offset + self.graph_height + (self.graph_border * 2) + 20),
                 fontFace=fontFace,
                 color=tuple(font_color_bgr),
                 lineType=lineType,
                 fontScale=self.config['LIGHTGRAPH_OVERLAY']['OPENCV_FONT_SCALE'],
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
             )
+
+
+        return lightgraph
+
+
+    def drawText_pillow(self, lightgraph):
+        lightgraph_rgb = Image.fromarray(cv2.cvtColor(lightgraph, cv2.COLOR_BGR2RGB))
+        width, height  = lightgraph_rgb.size  # backwards from opencv
+
+
+        if self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'] == 'custom':
+            pillow_font_file_p = Path(self.config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM'])
+        else:
+            pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
+
+
+        pillow_font_size = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('PIL_FONT_SIZE', 20)
+
+        font = ImageFont.truetype(str(pillow_font_file_p), pillow_font_size)
+        draw = ImageDraw.Draw(lightgraph_rgb)
+
+        color_rgb = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('FONT_COLOR', (200, 200, 200)))  # RGB for pillow
+
+
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            # black outline
+            stroke_width = 4
+        else:
+            stroke_width = 0
+
+
+        for x, hour in enumerate([13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]):
+            draw.text(
+                ((60 * (x + 1)) + self.graph_border, self.top_offset + self.graph_height + (self.graph_border * 2) + 1),
+                str(hour),
+                fill=tuple(color_rgb),
+                font=font,
+                stroke_width=stroke_width,
+                stroke_fill=(0, 0, 0),
+                anchor='ma',  # middle-ascender
+            )
+
+
+        # convert back to numpy array
+        return cv2.cvtColor(numpy.array(lightgraph_rgb), cv2.COLOR_RGB2BGR)
 
 
     def mapColor(self, scale, color_high, color_low):
