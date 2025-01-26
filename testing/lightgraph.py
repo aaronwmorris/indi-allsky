@@ -40,7 +40,7 @@ class LightGraphGenerator(object):
     label = True
     font_face = cv2.FONT_HERSHEY_SIMPLEX
     font_color = (200, 200, 200)
-    font_scale = 0.8
+    font_scale = 0.5
     font_thickness = 1
     line_type = cv2.LINE_AA
 
