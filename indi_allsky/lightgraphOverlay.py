@@ -92,12 +92,25 @@ class IndiAllSkyLightgraphOverlay(object):
         lightgraph = numpy.dstack((lightgraph, alpha))
 
 
+        image_height, image_width = image_data.shape[:2]
         lightgraph_height, lightgraph_width = lightgraph.shape[:2]
 
 
         # scale image
         new_lightgraph_width = int(lightgraph_width * self.scale)
         new_lightgraph_height = int(lightgraph_height * self.scale)
+
+
+        if new_lightgraph_width > image_width:
+            new_scale = lightgraph_width / image_width
+            logger.error('Rescaling lightgraph to fit image: %0.2f', self.scale)
+
+            new_lightgraph_width = int(lightgraph_width * new_scale)
+            new_lightgraph_height = int(lightgraph_height * new_scale)
+
+            self.scale = new_scale
+
+
         lightgraph = cv2.resize(lightgraph, (new_lightgraph_width, new_lightgraph_height), interpolation=cv2.INTER_AREA)
 
 
@@ -113,18 +126,14 @@ class IndiAllSkyLightgraphOverlay(object):
         ))
 
 
-        image_height, image_width = image_data.shape[:2]
-
-
         # calculate coordinates
         if self.y < 0:
             y = image_height + self.y  # minus
         else:
             y = self.y
 
+        x = int(int(image_width / 2) - (new_lightgraph_width / 2) + self.offset_x)
 
-        image_x_center = int(image_width / 2)
-        x = int(image_x_center - (new_lightgraph_width / 2) + self.offset_x)
 
         # sanity check coordinates
         if y > image_height - new_lightgraph_height:
