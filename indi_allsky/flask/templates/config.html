@@ -1937,7 +1937,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.LIGHTGRAPH_OVERLAY__GRAPH_BORDER(class='form-control bg-secondary') }}
             <div id="LIGHTGRAPH_OVERLAY__GRAPH_BORDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Font color in R,G,B</div>
+        <div class="col-sm-8"></div>
     </div>
 
     <div class="form-group row">
@@ -1953,13 +1953,15 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.LIGHTGRAPH_OVERLAY__OFFSET_Y.label(class='col-form-label') }}
+            {{ form_config.LIGHTGRAPH_OVERLAY__Y.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.LIGHTGRAPH_OVERLAY__OFFSET_Y(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.LIGHTGRAPH_OVERLAY__Y(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8"></div>
+        <div class="col-sm-8">
+            <div>Negative is offset from the bottom of image</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -1970,7 +1972,22 @@ var camera_id = {{ camera_id }};
             {{ form_config.LIGHTGRAPH_OVERLAY__OFFSET_X(class='form-control bg-secondary') }}
             <div id="LIGHTGRAPH_OVERLAY__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Offset from center</div>
+        <div class="col-sm-8">
+            <div>Offset from center</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__SCALE(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default size: 1446 x 86 (including borders)</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -1981,7 +1998,9 @@ var camera_id = {{ camera_id }};
             {{ form_config.LIGHTGRAPH_OVERLAY__DAY_COLOR(class='form-control bg-secondary') }}
             <div id="LIGHTGRAPH_OVERLAY__DAY_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Color in R,G,B</div>
+        <div class="col-sm-8">
+            <div>Color in R,G,B</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -1992,7 +2011,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.LIGHTGRAPH_OVERLAY__NIGHT_COLOR(class='form-control bg-secondary') }}
             <div id="LIGHTGRAPH_OVERLAY__NIGHT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Color in R,G,B</div>
+        <div class="col-sm-8"></div>
     </div>
 
     <div class="form-group row">
@@ -2003,7 +2022,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.LIGHTGRAPH_OVERLAY__HOUR_COLOR(class='form-control bg-secondary') }}
             <div id="LIGHTGRAPH_OVERLAY__HOUR_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Color in R,G,B</div>
+        <div class="col-sm-8"></div>
     </div>
 
     <div class="form-group row">
@@ -2014,7 +2033,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.LIGHTGRAPH_OVERLAY__BORDER_COLOR(class='form-control bg-secondary') }}
             <div id="LIGHTGRAPH_OVERLAY__BORDER_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Color in R,G,B</div>
+        <div class="col-sm-8"></div>
     </div>
 
     <div class="form-group row">
@@ -2025,7 +2044,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.LIGHTGRAPH_OVERLAY__NOW_COLOR(class='form-control bg-secondary') }}
             <div id="LIGHTGRAPH_OVERLAY__NOW_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Color in R,G,B</div>
+        <div class="col-sm-8"></div>
     </div>
 
     <div class="form-group row">
@@ -2036,7 +2055,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.LIGHTGRAPH_OVERLAY__FONT_COLOR(class='form-control bg-secondary') }}
             <div id="LIGHTGRAPH_OVERLAY__FONT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Color in R,G,B</div>
+        <div class="col-sm-8"></div>
     </div>
 
     <div class="form-group row">
@@ -6586,8 +6605,9 @@ const field_names = [
     'LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT',
     'LIGHTGRAPH_OVERLAY__GRAPH_BORDER',
     'LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE',
-    'LIGHTGRAPH_OVERLAY__OFFSET_Y',
+    'LIGHTGRAPH_OVERLAY__Y',
     'LIGHTGRAPH_OVERLAY__OFFSET_X',
+    'LIGHTGRAPH_OVERLAY__SCALE',
     'LIGHTGRAPH_OVERLAY__DAY_COLOR',
     'LIGHTGRAPH_OVERLAY__NIGHT_COLOR',
     'LIGHTGRAPH_OVERLAY__HOUR_COLOR',

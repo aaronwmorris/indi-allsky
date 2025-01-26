@@ -33,9 +33,10 @@ class IndiAllSkyLightgraphOverlay(object):
         self.graph_border = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_BORDER', 3)
         self.now_marker_size = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_MARKER_SIZE', 8)
 
-        self.offset_y = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('OFFSET_Y', -10)
+        self.y = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('Y', 10)
         self.offset_x = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('OFFSET_X', 0)
 
+        self.scale = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('SCALE', 1.0)
         self.opacity = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('OPACITY', 100)
 
         self.label = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('LABEL', False)
@@ -91,6 +92,15 @@ class IndiAllSkyLightgraphOverlay(object):
         lightgraph = numpy.dstack((lightgraph, alpha))
 
 
+        lightgraph_height, lightgraph_width = lightgraph.shape[:2]
+
+
+        # scale image
+        new_lightgraph_width = int(lightgraph_width * self.scale)
+        new_lightgraph_height = int(lightgraph_height * self.scale)
+        lightgraph = cv2.resize(lightgraph, (new_lightgraph_width, new_lightgraph_height), interpolation=cv2.INTER_AREA)
+
+
         # separate layers
         lightgraph_bgr = lightgraph[:, :, :3]
         lightgraph_alpha = (lightgraph[:, :, 3] / 255).astype(numpy.float32)
@@ -103,14 +113,13 @@ class IndiAllSkyLightgraphOverlay(object):
         ))
 
 
-        lightgraph_height, lightgraph_width = lightgraph_bgr.shape[:2]
         image_height, image_width = image_data.shape[:2]
 
 
-        crop_y1 = 0 - self.offset_y  # y is usually negative
-        crop_y2 = lightgraph_height - self.offset_y
-        crop_x1 = int((image_width / 2) - (lightgraph_width / 2) + self.offset_x)
-        crop_x2 = int((image_width / 2) + (lightgraph_width / 2) + self.offset_x)
+        crop_y1 = self.y
+        crop_y2 = new_lightgraph_height + self.y
+        crop_x1 = int((image_width / 2) - (new_lightgraph_width / 2) + self.offset_x)
+        crop_x2 = int((image_width / 2) + (new_lightgraph_width / 2) + self.offset_x)
 
 
         # extract are where lightgraph is to be applied

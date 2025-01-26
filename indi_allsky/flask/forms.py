@@ -1562,8 +1562,13 @@ def LIGHTGRAPH_OVERLAY__OFFSET_X_validator(form, field):
         raise ValidationError('Please enter valid number')
 
 
-def LIGHTGRAPH_OVERLAY__OFFSET_Y_validator(form, field):
+def LIGHTGRAPH_OVERLAY__Y_validator(form, field):
     if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+
+def LIGHTGRAPH_OVERLAY__SCALE_validator(form, field):
+    if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
 
@@ -3439,8 +3444,9 @@ class IndiAllskyConfigForm(FlaskForm):
     LIGHTGRAPH_OVERLAY__ENABLE       = BooleanField('Enable Lightgraph Overlay')
     LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT = IntegerField('Lightgraph Height', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT_validator])
     LIGHTGRAPH_OVERLAY__GRAPH_BORDER = IntegerField('Lightgraph Border', validators=[LIGHTGRAPH_OVERLAY__GRAPH_BORDER_validator])
-    LIGHTGRAPH_OVERLAY__OFFSET_Y     = IntegerField('Y Offset', validators=[LIGHTGRAPH_OVERLAY__OFFSET_Y_validator])
+    LIGHTGRAPH_OVERLAY__Y            = IntegerField('Y', validators=[LIGHTGRAPH_OVERLAY__Y_validator])
     LIGHTGRAPH_OVERLAY__OFFSET_X     = IntegerField('X Offset', validators=[LIGHTGRAPH_OVERLAY__OFFSET_X_validator])
+    LIGHTGRAPH_OVERLAY__SCALE        = FloatField('Scale', validators=[LIGHTGRAPH_OVERLAY__SCALE_validator])
     LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE = IntegerField('Now Marker Size', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE_validator])
     LIGHTGRAPH_OVERLAY__DAY_COLOR    = StringField('Day Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
     LIGHTGRAPH_OVERLAY__NIGHT_COLOR  = StringField('Night Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
