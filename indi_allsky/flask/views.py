@@ -1870,6 +1870,15 @@ class ConfigView(FormView):
             'MOON_OVERLAY__DARK_SIDE_SCALE'  : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('DARK_SIDE_SCALE', 0.4),
             'MOON_OVERLAY__FLIP_V'           : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('FLIP_V', False),
             'MOON_OVERLAY__FLIP_H'           : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('FLIP_H', False),
+            'LIGHTGRAPH_OVERLAY__ENABLE'     : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('ENABLE', False),
+            'LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_HEIGHT', 50),
+            'LIGHTGRAPH_OVERLAY__GRAPH_BORDER' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_BORDER', 3),
+            'LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_MARKER_SIZE', 8),
+            'LIGHTGRAPH_OVERLAY__OPACITY'    : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('OPACITY', 100),
+            'LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('PIL_FONT_SIZE', 20),
+            'LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('OPENCV_FONT_SCALE', 0.5),
+            'LIGHTGRAPH_OVERLAY__LABEL'      : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('LABEL', True),
+            'LIGHTGRAPH_OVERLAY__HOUR_LINES' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_LINES', True),
             'IMAGE_EXPORT_RAW'               : self.indi_allsky_config.get('IMAGE_EXPORT_RAW', ''),
             'IMAGE_EXPORT_FOLDER'            : self.indi_allsky_config.get('IMAGE_EXPORT_FOLDER', '/var/www/html/allsky/images/export'),
             'IMAGE_EXPORT_FLIP_V'            : self.indi_allsky_config.get('IMAGE_EXPORT_FLIP_V', False),
@@ -2231,31 +2240,45 @@ class ConfigView(FormView):
             form_data['IMAGE_CROP_ROI_Y2'] = 0
 
 
-
         # Font color
         text_properties__font_color = self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_COLOR', [200, 200, 200])
-        text_properties__font_color_str = [str(x) for x in text_properties__font_color]
-        form_data['TEXT_PROPERTIES__FONT_COLOR'] = ','.join(text_properties__font_color_str)
+        form_data['TEXT_PROPERTIES__FONT_COLOR'] = ','.join([str(x) for x in text_properties__font_color])
 
         # Cardinal directions color
         cardinal_dirs__font_color = self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('FONT_COLOR', [200, 0, 0])
-        cardinal_dirs__font_color_str = [str(x) for x in cardinal_dirs__font_color]
-        form_data['CARDINAL_DIRS__FONT_COLOR'] = ','.join(cardinal_dirs__font_color_str)
+        form_data['CARDINAL_DIRS__FONT_COLOR'] = ','.join([str(x) for x in cardinal_dirs__font_color])
 
         # Sun orb color
         orb_properties__sun_color = self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('SUN_COLOR', [200, 200, 100])
-        orb_properties__sun_color_str = [str(x) for x in orb_properties__sun_color]
-        form_data['ORB_PROPERTIES__SUN_COLOR'] = ','.join(orb_properties__sun_color_str)
+        form_data['ORB_PROPERTIES__SUN_COLOR'] = ','.join([str(x) for x in orb_properties__sun_color])
 
         # Moon orb color
         orb_properties__moon_color = self.indi_allsky_config.get('ORB_PROPERTIES', {}).get('MOON_COLOR', [128, 128, 128])
-        orb_properties__moon_color_str = [str(x) for x in orb_properties__moon_color]
-        form_data['ORB_PROPERTIES__MOON_COLOR'] = ','.join(orb_properties__moon_color_str)
+        form_data['ORB_PROPERTIES__MOON_COLOR'] = ','.join([str(x) for x in orb_properties__moon_color])
 
         # Border color
         image_border__color = self.indi_allsky_config.get('IMAGE_BORDER', {}).get('COLOR', [0, 0, 0])
-        image_border__color_str = [str(x) for x in image_border__color]
-        form_data['IMAGE_BORDER__COLOR'] = ','.join(image_border__color_str)
+        form_data['IMAGE_BORDER__COLOR'] = ','.join([str(x) for x in image_border__color])
+
+        # Lightgraph colors
+        lightgraph_overlay__day_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('DAY_COLOR', [200, 200, 200])
+        form_data['LIGHTGRAPH_OVERLAY__DAY_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__day_color])
+
+        lightgraph_overlay__night_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NIGHT_COLOR', [15, 15, 15])
+        form_data['LIGHTGRAPH_OVERLAY__NIGHT_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__night_color])
+
+        lightgraph_overlay__hour_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_COLOR', [100, 15, 15])
+        form_data['LIGHTGRAPH_OVERLAY__HOUR_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__hour_color])
+
+        lightgraph_overlay__border_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('BORDER_COLOR', [1, 1, 1])
+        form_data['LIGHTGRAPH_OVERLAY__BORDER_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__border_color])
+
+        lightgraph_overlay__now_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_COLOR', [200, 150, 15])
+        form_data['LIGHTGRAPH_OVERLAY__NOW_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__now_color])
+
+        lightgraph_overlay__font_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('FONT_COLOR', [200, 150, 15])
+        form_data['LIGHTGRAPH_OVERLAY__FONT_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__font_color])
+
 
         # Youtube
         youtube_tags = self.indi_allsky_config.get('YOUTUBE', {}).get('TAGS', [])
@@ -2424,6 +2447,7 @@ class AjaxConfigView(BaseView):
             'CHARTS',
             'TIMELAPSE',
             'MOON_OVERLAY',
+            'LIGHTGRAPH_OVERLAY',
             'ADSB',
             'SATELLITE_TRACK',
         )
@@ -2610,6 +2634,15 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['MOON_OVERLAY']['DARK_SIDE_SCALE']      = float(request.json['MOON_OVERLAY__DARK_SIDE_SCALE'])
         self.indi_allsky_config['MOON_OVERLAY']['FLIP_V']               = bool(request.json['MOON_OVERLAY__FLIP_V'])
         self.indi_allsky_config['MOON_OVERLAY']['FLIP_H']               = bool(request.json['MOON_OVERLAY__FLIP_H'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['ENABLE']         = bool(request.json['LIGHTGRAPH_OVERLAY__ENABLE'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['GRAPH_HEIGHT']   = int(request.json['LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['GRAPH_BORDER']   = int(request.json['LIGHTGRAPH_OVERLAY__GRAPH_BORDER'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['NOW_MARKER_SIZE']  = int(request.json['LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['OPACITY']        = int(request.json['LIGHTGRAPH_OVERLAY__OPACITY'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['PIL_FONT_SIZE']  = int(request.json['LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['OPENCV_FONT_SCALE'] = float(request.json['LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['LABEL']          = bool(request.json['LIGHTGRAPH_OVERLAY__LABEL'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['HOUR_LINES']     = bool(request.json['LIGHTGRAPH_OVERLAY__HOUR_LINES'])
         self.indi_allsky_config['IMAGE_EXPORT_RAW']                     = str(request.json['IMAGE_EXPORT_RAW'])
         self.indi_allsky_config['IMAGE_EXPORT_FOLDER']                  = str(request.json['IMAGE_EXPORT_FOLDER'])
         self.indi_allsky_config['IMAGE_EXPORT_FLIP_V']                  = bool(request.json['IMAGE_EXPORT_FLIP_V'])
@@ -2944,28 +2977,42 @@ class AjaxConfigView(BaseView):
 
         # TEXT_PROPERTIES FONT_COLOR
         font_color_str = str(request.json['TEXT_PROPERTIES__FONT_COLOR'])
-        font_r, font_g, font_b = font_color_str.split(',')
-        self.indi_allsky_config['TEXT_PROPERTIES']['FONT_COLOR'] = [int(font_r), int(font_g), int(font_b)]
+        self.indi_allsky_config['TEXT_PROPERTIES']['FONT_COLOR'] = [int(x) for x in font_color_str.split(',')]
 
         # CARDINAL_DIRS FONT_COLOR
         cardinal_dirs_color_str = str(request.json['CARDINAL_DIRS__FONT_COLOR'])
-        cardinal_r, cardinal_g, cardinal_b = cardinal_dirs_color_str.split(',')
-        self.indi_allsky_config['CARDINAL_DIRS']['FONT_COLOR'] = [int(cardinal_r), int(cardinal_g), int(cardinal_b)]
+        self.indi_allsky_config['CARDINAL_DIRS']['FONT_COLOR'] = [int(x) for x in cardinal_dirs_color_str.split(',')]
 
         # ORB_PROPERTIES SUN_COLOR
         sun_color_str = str(request.json['ORB_PROPERTIES__SUN_COLOR'])
-        sun_r, sun_g, sun_b = sun_color_str.split(',')
-        self.indi_allsky_config['ORB_PROPERTIES']['SUN_COLOR'] = [int(sun_r), int(sun_g), int(sun_b)]
+        self.indi_allsky_config['ORB_PROPERTIES']['SUN_COLOR'] = [int(x) for x in sun_color_str.split(',')]
 
         # ORB_PROPERTIES MOON_COLOR
         moon_color_str = str(request.json['ORB_PROPERTIES__MOON_COLOR'])
-        moon_r, moon_g, moon_b = moon_color_str.split(',')
-        self.indi_allsky_config['ORB_PROPERTIES']['MOON_COLOR'] = [int(moon_r), int(moon_g), int(moon_b)]
+        self.indi_allsky_config['ORB_PROPERTIES']['MOON_COLOR'] = [int(x) for x in moon_color_str.split(',')]
 
         # IMAGE_BORDER COLOR
         image_border__color_str = str(request.json['IMAGE_BORDER__COLOR'])
-        border_r, border_g, border_b = image_border__color_str.split(',')
-        self.indi_allsky_config['IMAGE_BORDER']['COLOR'] = [int(border_r), int(border_g), int(border_b)]
+        self.indi_allsky_config['IMAGE_BORDER']['COLOR'] = [int(x) for x in image_border__color_str.split(',')]
+
+        # LIGHTGRAPH COLORS
+        lightgraph_overlay__day_color_str = str(request.json['LIGHTGRAPH_OVERLAY__DAY_COLOR'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['DAY_COLOR'] = [int(x) for x in lightgraph_overlay__day_color_str.split(',')]
+
+        lightgraph_overlay__night_color_str = str(request.json['LIGHTGRAPH_OVERLAY__NIGHT_COLOR'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['NIGHT_COLOR'] = [int(x) for x in lightgraph_overlay__night_color_str.split(',')]
+
+        lightgraph_overlay__hour_color_str = str(request.json['LIGHTGRAPH_OVERLAY__HOUR_COLOR'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['HOUR_COLOR'] = [int(x) for x in lightgraph_overlay__hour_color_str.split(',')]
+
+        lightgraph_overlay__border_color_str = str(request.json['LIGHTGRAPH_OVERLAY__BORDER_COLOR'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['BORDER_COLOR'] = [int(x) for x in lightgraph_overlay__border_color_str.split(',')]
+
+        lightgraph_overlay__now_color_str = str(request.json['LIGHTGRAPH_OVERLAY__NOW_COLOR'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['NOW_COLOR'] = [int(x) for x in lightgraph_overlay__now_color_str.split(',')]
+
+        lightgraph_overlay__font_color_str = str(request.json['LIGHTGRAPH_OVERLAY__FONT_COLOR'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['FONT_COLOR'] = [int(x) for x in lightgraph_overlay__font_color_str.split(',')]
 
 
         # Youtube tags

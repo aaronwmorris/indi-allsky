@@ -1512,6 +1512,68 @@ def MOON_OVERLAY__DARK_SIDE_SCALE_validator(form, field):
         raise ValidationError('Dark side scale must 0.9 or less')
 
 
+def LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 10:
+        raise ValidationError('Height must be 10 or more')
+
+    if field.data > 100:
+        raise ValidationError('Height must 100 or less')
+
+
+def LIGHTGRAPH_OVERLAY__GRAPH_BORDER_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Border must be 0 or more')
+
+    if field.data > 10:
+        raise ValidationError('Border must 10 or less')
+
+
+def LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 3:
+        raise ValidationError('Must be 3 or more')
+
+    if field.data > 20:
+        raise ValidationError('Must 20 or less')
+
+
+def LIGHTGRAPH_OVERLAY__OPACITY_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Opacity must be 0 or more')
+
+
+    if field.data > 100:
+        raise ValidationError('Blur must be 100 or less')
+
+
+def LIGHTGRAPH_OVERLAY__RGB_COLOR_validator(form, field):
+    color_regex = r'^\d+\,\d+\,\d+$'
+
+    if not re.search(color_regex, field.data):
+        raise ValidationError('Invalid syntax')
+
+    rgb = field.data.split(',')
+    for c in rgb:
+        if int(c) < 0:
+            raise ValidationError('Invalid syntax')
+        elif int(c) > 255:
+            raise ValidationError('Invalid syntax')
+
+    if sum([int(c) for c in rgb]) == 0:
+        raise ValidationError('Color cannot be (0, 0, 0)')
+
+
 def CARDINAL_DIRS__CHAR_validator(form, field):
     if not field.data:
         return
@@ -3364,6 +3426,21 @@ class IndiAllskyConfigForm(FlaskForm):
     MOON_OVERLAY__DARK_SIDE_SCALE    = FloatField('Dark Side Brightness', validators=[MOON_OVERLAY__DARK_SIDE_SCALE_validator])
     MOON_OVERLAY__FLIP_V             = BooleanField('Flip Vertically')
     MOON_OVERLAY__FLIP_H             = BooleanField('Flip Horizontally')
+    LIGHTGRAPH_OVERLAY__ENABLE       = BooleanField('Enable Lightgraph Overlay')
+    LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT = IntegerField('Lightgraph Height', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT_validator])
+    LIGHTGRAPH_OVERLAY__GRAPH_BORDER = IntegerField('Lightgraph Border', validators=[LIGHTGRAPH_OVERLAY__GRAPH_BORDER_validator])
+    LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE = IntegerField('Now Marker Size', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE_validator])
+    LIGHTGRAPH_OVERLAY__DAY_COLOR    = StringField('Day Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
+    LIGHTGRAPH_OVERLAY__NIGHT_COLOR  = StringField('Night Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
+    LIGHTGRAPH_OVERLAY__HOUR_COLOR   = StringField('Hour Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
+    LIGHTGRAPH_OVERLAY__BORDER_COLOR = StringField('Border Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
+    LIGHTGRAPH_OVERLAY__NOW_COLOR    = StringField('Now Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
+    LIGHTGRAPH_OVERLAY__FONT_COLOR   = StringField('Font Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
+    LIGHTGRAPH_OVERLAY__OPACITY      = IntegerField('Opacity ', validators=[LIGHTGRAPH_OVERLAY__OPACITY_validator])
+    LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE = IntegerField('Font Size (Pillow)', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
+    LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE = FloatField('Font Scale (opencv)', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
+    LIGHTGRAPH_OVERLAY__LABEL        = BooleanField('Lightgraph Label')
+    LIGHTGRAPH_OVERLAY__HOUR_LINES   = BooleanField('Lightgraph Hour Lines')
     IMAGE_EXPORT_RAW                 = SelectField('Export RAW image type', choices=IMAGE_EXPORT_RAW_choices, validators=[IMAGE_EXPORT_RAW_validator])
     IMAGE_EXPORT_FOLDER              = StringField('Export RAW folder', validators=[DataRequired(), IMAGE_EXPORT_FOLDER_validator])
     IMAGE_EXPORT_FLIP_V              = BooleanField('Flip RAW Vertically')
