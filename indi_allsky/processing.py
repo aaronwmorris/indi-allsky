@@ -32,7 +32,7 @@ from .stack import IndiAllskyStacker
 from .cardinalDirsLabel import IndiAllskyCardinalDirsLabel
 from .utils import IndiAllSkyDateCalcs
 from .moonOverlay import IndiAllSkyMoonOverlay
-from .lightgraph import IndiAllSkyLightgraphOverlay
+from .lightgraphOverlay import IndiAllSkyLightgraphOverlay
 
 from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
