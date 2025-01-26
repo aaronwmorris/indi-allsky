@@ -13,6 +13,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSkyLightgraphOverlay(object):
 
+    top_offset = 20
     text_area_height = 100
 
 
@@ -54,9 +55,9 @@ class IndiAllSkyLightgraphOverlay(object):
 
         # draw now triangle
         now_tri = numpy.array([
-            (now_offset - self.now_marker_size, (self.graph_height + self.graph_border) - self.now_marker_size),
-            (now_offset + self.now_marker_size, (self.graph_height + self.graph_border) - self.now_marker_size),
-            (now_offset, self.graph_height + self.graph_border),
+            (now_offset - self.now_marker_size, (self.top_offset + self.graph_height + self.graph_border) - self.now_marker_size),
+            (now_offset + self.now_marker_size, (self.top_offset + self.graph_height + self.graph_border) - self.now_marker_size),
+            (now_offset, self.top_offset + self.graph_height + self.graph_border),
         ],
             dtype=numpy.int32,
         )
@@ -220,7 +221,7 @@ class IndiAllSkyLightgraphOverlay(object):
         # draw text area
         lightgraph = cv2.copyMakeBorder(
             lightgraph,
-            0,
+            self.top_offset,
             self.text_area_height,
             0,
             0,
@@ -244,7 +245,7 @@ class IndiAllSkyLightgraphOverlay(object):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((60 * (x + 1)) - 10, self.graph_height + (self.graph_border * 2) + 20),
+                org=((60 * (x + 1)) - 10, self.top_offset + self.graph_height + (self.graph_border * 2) + 20),
                 fontFace=fontFace,
                 color=(1, 1, 1),  # not full black
                 lineType=lineType,
@@ -254,7 +255,7 @@ class IndiAllSkyLightgraphOverlay(object):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((60 * (x + 1)) - 10, self.graph_height + (self.graph_border * 2) + 20),
+                org=((60 * (x + 1)) - 10, self.top_offset + self.graph_height + (self.graph_border * 2) + 20),
                 fontFace=fontFace,
                 color=tuple(font_color_bgr),
                 lineType=lineType,
