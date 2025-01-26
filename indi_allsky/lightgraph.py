@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger('indi_allsky')
 
 
-class LightGraphOverlay(object):
+class IndiAllSkyLightgraphOverlay(object):
 
     text_area_height = 100
 
