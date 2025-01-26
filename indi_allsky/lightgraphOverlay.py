@@ -53,6 +53,8 @@ class IndiAllSkyLightgraphOverlay(object):
             self.lightgraph = self.generate()
 
 
+        lightgraph_overlay_start = time.time()
+
         lightgraph = self.lightgraph.copy()
 
 
@@ -187,6 +189,10 @@ class IndiAllSkyLightgraphOverlay(object):
         ] = image_crop
 
 
+        lightgraph_overlay_elapsed_s = time.time() - lightgraph_overlay_start
+        logger.warning('Lightgraph Overlay processing in %0.4f s', lightgraph_overlay_elapsed_s)
+
+
     def generate(self):
         generate_start = time.time()
 
@@ -234,7 +240,7 @@ class IndiAllSkyLightgraphOverlay(object):
         #logger.info(lightgraph_list)
 
         generate_elapsed_s = time.time() - generate_start
-        logger.warning('Total lightgraph processing in %0.4f s', generate_elapsed_s)
+        logger.warning('Generate lightgraph in %0.4f s', generate_elapsed_s)
 
 
         lightgraph = numpy.array([lightgraph_list], dtype=numpy.uint8)
