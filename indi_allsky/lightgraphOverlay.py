@@ -302,13 +302,18 @@ class IndiAllSkyLightgraphOverlay(object):
         font_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('FONT_COLOR', (150, 150, 150)))
         font_color_bgr.reverse()
 
+
         hour_scaled = int(60 * self.scale)
+        top_border_scaled = int(self.top_border * self.scale)
+        graph_border_scaled = int(self.graph_border * self.scale)
+        graph_height_scaled = int(self.graph_height * self.scale)
+
 
         for x, hour in enumerate([13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((hour_scaled * (x + 1)) + self.graph_border - 7, self.top_border + self.graph_height + (self.graph_border * 2) + 20),
+                org=((hour_scaled * (x + 1)) + graph_border_scaled - 7, top_border_scaled + graph_height_scaled + (graph_border_scaled * 2) + 20),
                 fontFace=fontFace,
                 color=(1, 1, 1),  # not full black
                 lineType=lineType,
@@ -318,7 +323,7 @@ class IndiAllSkyLightgraphOverlay(object):
             cv2.putText(
                 img=lightgraph,
                 text=str(hour),
-                org=((hour_scaled * (x + 1)) + self.graph_border - 7, self.top_border + self.graph_height + (self.graph_border * 2) + 20),
+                org=((hour_scaled * (x + 1)) + graph_border_scaled - 7, top_border_scaled + graph_height_scaled + (graph_border_scaled * 2) + 20),
                 fontFace=fontFace,
                 color=tuple(font_color_bgr),
                 lineType=lineType,
@@ -357,10 +362,14 @@ class IndiAllSkyLightgraphOverlay(object):
 
 
         hour_scaled = int(60 * self.scale)
+        top_border_scaled = int(self.top_border * self.scale)
+        graph_border_scaled = int(self.graph_border * self.scale)
+        graph_height_scaled = int(self.graph_height * self.scale)
+
 
         for x, hour in enumerate([13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]):
             draw.text(
-                ((hour_scaled * (x + 1)) + self.graph_border, self.top_border + self.graph_height + (self.graph_border * 2) + 1),
+                ((hour_scaled * (x + 1)) + graph_border_scaled, top_border_scaled + graph_height_scaled + (graph_border_scaled * 2) + 1),
                 str(hour),
                 fill=tuple(color_rgb),
                 font=font,
