@@ -1242,7 +1242,7 @@ def IMAGE_CIRCLE_MASK__OPACITY_validator(form, field):
 
 
     if field.data > 100:
-        raise ValidationError('Blur must be 100 or less')
+        raise ValidationError('Opacity must be 100 or less')
 
 
 def FISH2PANO__DIAMETER_validator(form, field):
@@ -1554,7 +1554,7 @@ def LIGHTGRAPH_OVERLAY__OPACITY_validator(form, field):
 
 
     if field.data > 100:
-        raise ValidationError('Blur must be 100 or less')
+        raise ValidationError('Opacity must be 100 or less')
 
 
 def LIGHTGRAPH_OVERLAY__RGB_COLOR_validator(form, field):

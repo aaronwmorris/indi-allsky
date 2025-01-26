@@ -33,7 +33,7 @@ class IndiAllSkyLightgraphOverlay(object):
         self.hour_lines = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_LINES', True)
 
 
-    def main(self):
+    def apply(self, image_data):
         now = time.time()
 
         if now > self.next_generate:
@@ -91,8 +91,18 @@ class IndiAllSkyLightgraphOverlay(object):
         ))
 
 
+        lightgraph_height, lightgraph_width = lightgraph_bgr.shape[:2]
+        image_height, image_width = image_data.shape[:2]
+
+        # extract are where lightgraph is to be applied
+        image_crop = image_data[
+            0:lightgraph_height,
+            int(image_width / 2) - int(lightgraph_width / 2):int(image_width / 2) + int(lightgraph_width / 2),
+        ]
+
+
         # apply alpha mask
-        lightgraph_final = (self.random_rgb * (1 - alpha_mask) + lightgraph_bgr * alpha_mask).astype(numpy.uint8)
+        image_crop = (image_crop * (1 - alpha_mask) + lightgraph_bgr * alpha_mask).astype(numpy.uint8)
 
 
         if self.label:
@@ -100,19 +110,19 @@ class IndiAllSkyLightgraphOverlay(object):
             image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
 
             if image_label_system == 'opencv':
-                lightgraph_final = self.drawText_opencv(lightgraph_final)
+                self.drawText_opencv(image_crop)
             else:
                 # pillow is default
-                lightgraph_final = self.applyLabels_pillow(lightgraph_final)
+                image_crop = self.applyLabels_pillow(image_crop)
         else:
-            logger.warning('Keogram labels disabled')
+            logger.warning('Lightgraph labels disabled')
 
 
-            self.drawText_opencv(lightgraph_final)
-
-
-        #cv2.imwrite('lightgraph.png', lightgraph_final, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        cv2.imwrite('lightgraph.jpg', lightgraph_final, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        # add overlayed lightgraph area back to image
+        image_data[
+            0:lightgraph_height,
+            int(image_width / 2) - int(lightgraph_width / 2):int(image_width / 2) + int(lightgraph_width / 2),
+        ] = image_crop
 
 
     def generate(self):
@@ -138,7 +148,7 @@ class IndiAllSkyLightgraphOverlay(object):
         sun = ephem.Sun()
 
 
-        day_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('DAY_COLOR', (200, 200, 200)))
+        day_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('DAY_COLOR', (150, 150, 150)))
         day_color_bgr.reverse()
         night_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NIGHT_COLOR', (15, 15, 15)))
         night_color_bgr.reverse()
@@ -147,9 +157,9 @@ class IndiAllSkyLightgraphOverlay(object):
         lightgraph_list = list()
         for x in range(1440):
             obs.date = noon_utc + timedelta(minutes=x)
-            sun.compute(self.obs)
+            sun.compute(obs)
 
-            sun_alt_deg = math.degrees(self.sun.alt)
+            sun_alt_deg = math.degrees(sun.alt)
 
             if sun_alt_deg < -18:
                 lightgraph_list.append(night_color_bgr)
@@ -175,6 +185,8 @@ class IndiAllSkyLightgraphOverlay(object):
 
         if self.hour_lines:
             # draw hour ticks
+            lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
+
             hour_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_COLOR', (15, 15, 100)))
             hour_color_bgr.reverse()
 
@@ -185,7 +197,7 @@ class IndiAllSkyLightgraphOverlay(object):
                     pt2=(60 * x, self.graph_height),
                     color=tuple(hour_color_bgr),
                     thickness=1,
-                    lineType=self.line_type,
+                    lineType=lineType,
                 )
 
 
@@ -225,7 +237,7 @@ class IndiAllSkyLightgraphOverlay(object):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
 
-        font_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('FONT_COLOR', (200, 200, 200)))
+        font_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('FONT_COLOR', (150, 150, 150)))
         font_color_bgr.reverse()
 
         for x, hour in enumerate([13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]):
@@ -236,7 +248,7 @@ class IndiAllSkyLightgraphOverlay(object):
                 fontFace=fontFace,
                 color=(1, 1, 1),  # not full black
                 lineType=lineType,
-                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                fontScale=self.config['LIGHTGRAPH_OVERLAY']['OPENCV_FONT_SCALE'],
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
             )
             cv2.putText(
@@ -246,7 +258,7 @@ class IndiAllSkyLightgraphOverlay(object):
                 fontFace=fontFace,
                 color=tuple(font_color_bgr),
                 lineType=lineType,
-                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                fontScale=self.config['LIGHTGRAPH_OVERLAY']['OPENCV_FONT_SCALE'],
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
             )
 

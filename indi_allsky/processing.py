@@ -2946,6 +2946,13 @@ class ImageProcessor(object):
         self._moon_overlay.apply(self.image, self.astrometric_data['moon_cycle'], self.astrometric_data['moon_phase'])
 
 
+    def lightgraph_overlay(self):
+        if not self.config.get('LIGHTGRAPH_OVERLAY', {}).get('ENABLE', True):
+            return
+
+        self._lightgraph_overlay.apply(self.image)
+
+
     def add_border(self):
         top = self.config.get('IMAGE_BORDER', {}).get('TOP', 0)
         left = self.config.get('IMAGE_BORDER', {}).get('LEFT', 0)

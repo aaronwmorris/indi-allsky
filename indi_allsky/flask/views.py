@@ -2261,7 +2261,7 @@ class ConfigView(FormView):
         form_data['IMAGE_BORDER__COLOR'] = ','.join([str(x) for x in image_border__color])
 
         # Lightgraph colors
-        lightgraph_overlay__day_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('DAY_COLOR', [200, 200, 200])
+        lightgraph_overlay__day_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('DAY_COLOR', [150, 150, 150])
         form_data['LIGHTGRAPH_OVERLAY__DAY_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__day_color])
 
         lightgraph_overlay__night_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NIGHT_COLOR', [15, 15, 15])
@@ -2276,7 +2276,7 @@ class ConfigView(FormView):
         lightgraph_overlay__now_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_COLOR', [200, 150, 15])
         form_data['LIGHTGRAPH_OVERLAY__NOW_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__now_color])
 
-        lightgraph_overlay__font_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('FONT_COLOR', [200, 150, 15])
+        lightgraph_overlay__font_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('FONT_COLOR', [150, 150, 150])
         form_data['LIGHTGRAPH_OVERLAY__FONT_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__font_color])
 
 
