@@ -208,6 +208,8 @@ class IndiAllSkyConfigBase(object):
             "GRAPH_HEIGHT"  : 30,
             "GRAPH_BORDER"  : 3,
             "NOW_MARKER_SIZE" : 8,
+            "OFFSET_Y"      : -10,
+            "OFFSET_X"      : 0,
             "LABEL"         : True,
             "HOUR_LINES"    : True,
             "DAY_COLOR"     : [150, 150, 150],

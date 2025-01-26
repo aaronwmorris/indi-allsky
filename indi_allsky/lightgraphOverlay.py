@@ -17,7 +17,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSkyLightgraphOverlay(object):
 
-    top_border = 10
+    top_border = 0
     text_area_height = 50
 
 
@@ -32,6 +32,10 @@ class IndiAllSkyLightgraphOverlay(object):
         self.graph_height = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_HEIGHT', 30)
         self.graph_border = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_BORDER', 3)
         self.now_marker_size = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_MARKER_SIZE', 8)
+
+        self.offset_y = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('OFFSET_Y', -10)
+        self.offset_x = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('OFFSET_X', 0)
+
         self.opacity = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('OPACITY', 100)
 
         self.label = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('LABEL', False)
@@ -102,10 +106,17 @@ class IndiAllSkyLightgraphOverlay(object):
         lightgraph_height, lightgraph_width = lightgraph_bgr.shape[:2]
         image_height, image_width = image_data.shape[:2]
 
+
+        crop_y1 = 0 - self.offset_y  # y is usually negative
+        crop_y2 = lightgraph_height - self.offset_y
+        crop_x1 = int((image_width / 2) - (lightgraph_width / 2) + self.offset_x)
+        crop_x2 = int((image_width / 2) + (lightgraph_width / 2) + self.offset_x)
+
+
         # extract are where lightgraph is to be applied
         image_crop = image_data[
-            0:lightgraph_height,
-            int(image_width / 2) - int(lightgraph_width / 2):int(image_width / 2) + int(lightgraph_width / 2),
+            crop_y1:crop_y2,
+            crop_x1:crop_x2,
         ]
 
 
@@ -128,8 +139,8 @@ class IndiAllSkyLightgraphOverlay(object):
 
         # add overlayed lightgraph area back to image
         image_data[
-            0:lightgraph_height,
-            int(image_width / 2) - int(lightgraph_width / 2):int(image_width / 2) + int(lightgraph_width / 2),
+            crop_y1:crop_y2,
+            crop_x1:crop_x2,
         ] = image_crop
 
 
