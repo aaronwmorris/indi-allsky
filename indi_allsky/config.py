@@ -205,7 +205,7 @@ class IndiAllSkyConfigBase(object):
         },
         "LIGHTGRAPH_OVERLAY" : {
             "ENABLE"        : False,
-            "GRAPH_HEIGHT"  : 50,
+            "GRAPH_HEIGHT"  : 30,
             "GRAPH_BORDER"  : 3,
             "NOW_MARKER_SIZE" : 8,
             "LABEL"         : True,

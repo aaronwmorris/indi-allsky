@@ -1871,7 +1871,7 @@ class ConfigView(FormView):
             'MOON_OVERLAY__FLIP_V'           : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('FLIP_V', False),
             'MOON_OVERLAY__FLIP_H'           : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('FLIP_H', False),
             'LIGHTGRAPH_OVERLAY__ENABLE'     : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('ENABLE', False),
-            'LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_HEIGHT', 50),
+            'LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_HEIGHT', 30),
             'LIGHTGRAPH_OVERLAY__GRAPH_BORDER' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_BORDER', 3),
             'LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_MARKER_SIZE', 8),
             'LIGHTGRAPH_OVERLAY__OPACITY'    : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('OPACITY', 100),

@@ -14,7 +14,7 @@ logger = logging.getLogger('indi_allsky')
 class IndiAllSkyLightgraphOverlay(object):
 
     top_offset = 20
-    text_area_height = 100
+    text_area_height = 75
 
 
     def __init__(self, config, position_av):
@@ -25,7 +25,7 @@ class IndiAllSkyLightgraphOverlay(object):
         self.next_generate = 0  # generate immediately
 
 
-        self.graph_height = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_HEIGHT', 50)
+        self.graph_height = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_HEIGHT', 30)
         self.graph_border = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_BORDER', 3)
         self.now_marker_size = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_MARKER_SIZE', 8)
         self.opacity = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('OPACITY', 100)

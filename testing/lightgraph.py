@@ -3,6 +3,7 @@
 import math
 from datetime import datetime
 from datetime import timedelta
+from pathlib import Path
 import time
 import ephem
 import numpy
@@ -22,10 +23,10 @@ logger = logging
 class LightGraphGenerator(object):
 
     # no color should be black (0, 0, 0)
-    graph_height = 50
+    graph_height = 30
     graph_border = 3
     top_offset = 10
-    text_area_height = 100
+    text_area_height = 75
     now_marker_size = 8
     day_color = (200, 200, 200)
     night_color = (15, 15, 15)
@@ -119,8 +120,8 @@ class LightGraphGenerator(object):
             self.drawText_opencv(lightgraph_final)
 
 
-        #cv2.imwrite('lightgraph.png', lightgraph_final, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-        cv2.imwrite('lightgraph.jpg', lightgraph_final, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #cv2.imwrite(Path(__file__).parent.joinpath('lightgraph.png'), lightgraph_final, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+        cv2.imwrite(Path(__file__).parent.joinpath('lightgraph.jpg'), lightgraph_final, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
     def generate(self):
