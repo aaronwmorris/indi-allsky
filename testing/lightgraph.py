@@ -28,9 +28,9 @@ class LightGraphGenerator(object):
     now_marker_size = 8
     day_color = (200, 200, 200)
     night_color = (15, 15, 15)
-    hour_color = (15, 15, 100)
+    hour_color = (100, 15, 15)
     border_color = (1, 1, 1)
-    now_color = (15, 150, 200)
+    now_color = (200, 150, 15)
 
     opacity = 75
     hour_lines = True
@@ -81,10 +81,14 @@ class LightGraphGenerator(object):
         )
         #logger.info(now_tri)
 
+
+        now_color_bgr = list(self.now_color)
+        now_color_bgr.reverse()
+
         cv2.fillPoly(
             img=lightgraph,
             pts=[now_tri],
-            color=self.now_color,
+            color=tuple(now_color_bgr),
         )
 
 
@@ -140,6 +144,10 @@ class LightGraphGenerator(object):
 
         sun = ephem.Sun()
 
+        day_color_bgr = list(self.day_color)
+        day_color_bgr.reverse()
+        night_color_bgr = list(self.night_color)
+        night_color_bgr.reverse()
 
         lightgraph_list = list()
         for x in range(1440):
@@ -149,12 +157,12 @@ class LightGraphGenerator(object):
             sun_alt_deg = math.degrees(sun.alt)
 
             if sun_alt_deg < -18:
-                lightgraph_list.append(self.night_color)
+                lightgraph_list.append(night_color_bgr)
             elif sun_alt_deg > 0:
-                lightgraph_list.append(self.day_color)
+                lightgraph_list.append(day_color_bgr)
             else:
                 norm = (18 + sun_alt_deg) / 18  # alt is negative
-                lightgraph_list.append(self.mapColor(norm, self.day_color, self.night_color))
+                lightgraph_list.append(self.mapColor(norm, day_color_bgr, night_color_bgr))
 
         #logger.info(lightgraph_list)
 
@@ -170,6 +178,9 @@ class LightGraphGenerator(object):
         )
 
 
+        hour_color_bgr = list(self.hour_color)
+        hour_color_bgr.reverse()
+
         if self.hour_lines:
             # draw hour ticks
             for x in range(1, 24):
@@ -177,11 +188,14 @@ class LightGraphGenerator(object):
                     img=lightgraph,
                     pt1=(60 * x, 0),
                     pt2=(60 * x, self.graph_height),
-                    color=tuple(self.hour_color),
+                    color=tuple(hour_color_bgr),
                     thickness=1,
                     lineType=self.line_type,
                 )
 
+
+        border_color_bgr = list(self.border_color)
+        border_color_bgr.reverse()
 
         # draw border
         lightgraph = cv2.copyMakeBorder(
@@ -192,7 +206,7 @@ class LightGraphGenerator(object):
             self.graph_border,
             cv2.BORDER_CONSTANT,
             None,
-            self.border_color,
+            tuple(border_color_bgr),
         )
 
 
@@ -213,6 +227,9 @@ class LightGraphGenerator(object):
 
 
     def drawText_opencv(self, lightgraph):
+        font_color_bgr = list(self.font_color)
+        font_color_bgr.reverse()
+
         for x, hour in enumerate([13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]):
             cv2.putText(
                 img=lightgraph,
@@ -229,7 +246,7 @@ class LightGraphGenerator(object):
                 text=str(hour),
                 org=((60 * (x + 1)) - 10, self.graph_height + (self.graph_border * 2) + 20),
                 fontFace=self.font_face,
-                color=self.font_color,
+                color=tuple(font_color_bgr),
                 lineType=self.line_type,
                 fontScale=self.font_scale,
                 thickness=self.font_thickness,

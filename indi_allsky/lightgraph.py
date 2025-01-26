@@ -27,12 +27,6 @@ class LightGraphOverlay(object):
         self.graph_height = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_HEIGHT', 50)
         self.graph_border = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_BORDER', 3)
         self.now_marker_size = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_MARKER_SIZE', 8)
-        self.day_color = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('DAY_COLOR', (200, 200, 200)))
-        self.night_color = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NIGHT_COLOR', (15, 15, 15)))
-        self.hour_color = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_COLOR', (15, 15, 100)))
-        self.border_color = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('BORDER_COLOR', (1, 1, 1)))
-        self.now_color = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_COLOR', (15, 150, 200)))
-        self.font_color = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('FONT_COLOR', (200, 200, 200)))
         self.opacity = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('OPACITY', 100)
 
         self.label = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('LABEL', False)
@@ -68,10 +62,14 @@ class LightGraphOverlay(object):
         )
         #logger.info(now_tri)
 
+
+        now_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_COLOR', (15, 150, 200)))
+        now_color_bgr.reverse()
+
         cv2.fillPoly(
             img=lightgraph,
             pts=[now_tri],
-            color=self.now_color,
+            color=tuple(now_color_bgr),
         )
 
 
@@ -98,6 +96,18 @@ class LightGraphOverlay(object):
 
 
         if self.label:
+            # Keogram labels enabled by default
+            image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
+
+            if image_label_system == 'opencv':
+                lightgraph_final = self.drawText_opencv(lightgraph_final)
+            else:
+                # pillow is default
+                lightgraph_final = self.applyLabels_pillow(lightgraph_final)
+        else:
+            logger.warning('Keogram labels disabled')
+
+
             self.drawText_opencv(lightgraph_final)
 
 
@@ -128,6 +138,12 @@ class LightGraphOverlay(object):
         sun = ephem.Sun()
 
 
+        day_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('DAY_COLOR', (200, 200, 200)))
+        day_color_bgr.reverse()
+        night_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NIGHT_COLOR', (15, 15, 15)))
+        night_color_bgr.reverse()
+
+
         lightgraph_list = list()
         for x in range(1440):
             obs.date = noon_utc + timedelta(minutes=x)
@@ -136,12 +152,12 @@ class LightGraphOverlay(object):
             sun_alt_deg = math.degrees(self.sun.alt)
 
             if sun_alt_deg < -18:
-                lightgraph_list.append(self.night_color)
+                lightgraph_list.append(night_color_bgr)
             elif sun_alt_deg > 0:
-                lightgraph_list.append(self.day_color)
+                lightgraph_list.append(day_color_bgr)
             else:
                 norm = (18 + sun_alt_deg) / 18  # alt is negative
-                lightgraph_list.append(self.mapColor(norm, self.day_color, self.night_color))
+                lightgraph_list.append(self.mapColor(norm, day_color_bgr, night_color_bgr))
 
         #logger.info(lightgraph_list)
 
@@ -159,18 +175,24 @@ class LightGraphOverlay(object):
 
         if self.hour_lines:
             # draw hour ticks
+            hour_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_COLOR', (15, 15, 100)))
+            hour_color_bgr.reverse()
+
             for x in range(1, 24):
                 cv2.line(
                     img=lightgraph,
                     pt1=(60 * x, 0),
                     pt2=(60 * x, self.graph_height),
-                    color=tuple(self.hour_color),
+                    color=tuple(hour_color_bgr),
                     thickness=1,
                     lineType=self.line_type,
                 )
 
 
         # draw border
+        border_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('BORDER_COLOR', (1, 1, 1)))
+        border_color_bgr.reverse()
+
         lightgraph = cv2.copyMakeBorder(
             lightgraph,
             self.graph_border,
@@ -179,7 +201,7 @@ class LightGraphOverlay(object):
             self.graph_border,
             cv2.BORDER_CONSTANT,
             None,
-            self.border_color,
+            tuple(border_color_bgr),
         )
 
 
@@ -199,9 +221,12 @@ class LightGraphOverlay(object):
         return lightgraph
 
 
-    def drawText_opencv(self, lightgraph, font_color_bgr):
+    def drawText_opencv(self, lightgraph):
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
+
+        font_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('FONT_COLOR', (200, 200, 200)))
+        font_color_bgr.reverse()
 
         for x, hour in enumerate([13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]):
             cv2.putText(
