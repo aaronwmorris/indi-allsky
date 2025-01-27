@@ -309,6 +309,16 @@ if [ -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
 
     echo "\`\`\`"  # markdown
 
+
+    echo
+    echo "Flask config"
+    echo "\`\`\`json"  # markdown
+    # Remove all secrets from config
+    # SQLALCHEMY_DATABASE_URI will contain passwords if using mysql
+    jq --arg redacted "REDACTED" '.SQLALCHEMY_DATABASE_URI = $redacted | .SECRET_KEY = $redacted | .PASSWORD_KEY = $redacted' < /etc/indi-allsky/flask.json || true
+    echo "\`\`\`"  # markdown
+
+
     echo
     echo "indi-allsky config (passwords redacted)"
     INDI_ALLSKY_CONFIG=$("${ALLSKY_DIRECTORY}/config.py" dump)
