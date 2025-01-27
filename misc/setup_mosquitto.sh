@@ -196,8 +196,8 @@ if [[ ! -f "/etc/mosquitto/certs/indi-allsky_mosquitto.key" || ! -f "/etc/mosqui
     sudo rm -f /etc/mosquitto/certs/indi-allsky_mosquitto.crt
 
     SHORT_HOSTNAME=$(hostname -s)
-    KEY_TMP=$(mktemp)
-    CRT_TMP=$(mktemp)
+    KEY_TMP=$(mktemp --suffix=.key)
+    CRT_TMP=$(mktemp --suffix=.crt)
 
     # sudo has problems with process substitution <()
     openssl req \

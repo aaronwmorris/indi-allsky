@@ -1907,6 +1907,220 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.LIGHTGRAPH_OVERLAY__ENABLE(class='form-check-input') }}
+                <div id="LIGHTGRAPH_OVERLAY__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__GRAPH_BORDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__GRAPH_BORDER(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__GRAPH_BORDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__Y(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Negative is offset from the bottom of image</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__OFFSET_X(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Offset from center</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__SCALE(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default size: 1446 x 86 (including borders)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__DAY_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__DAY_COLOR(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__DAY_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Color in R,G,B</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__NIGHT_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__NIGHT_COLOR(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__NIGHT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__HOUR_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__HOUR_COLOR(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__HOUR_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__BORDER_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__BORDER_COLOR(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__BORDER_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__NOW_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__NOW_COLOR(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__NOW_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__FONT_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__FONT_COLOR(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__FONT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__OPACITY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__OPACITY(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__OPACITY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__LABEL.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.LIGHTGRAPH_OVERLAY__LABEL(class='form-check-input') }}
+                <div id="LIGHTGRAPH_OVERLAY__LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIGHTGRAPH_OVERLAY__HOUR_LINES.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.LIGHTGRAPH_OVERLAY__HOUR_LINES(class='form-check-input') }}
+                <div id="LIGHTGRAPH_OVERLAY__HOUR_LINES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CARDINAL_DIRS__ENABLE.label }}
         </div>
         <div class="col-sm-2">
@@ -6388,6 +6602,21 @@ const field_names = [
     'MOON_OVERLAY__Y',
     'MOON_OVERLAY__SCALE',
     'MOON_OVERLAY__DARK_SIDE_SCALE',
+    'LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT',
+    'LIGHTGRAPH_OVERLAY__GRAPH_BORDER',
+    'LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE',
+    'LIGHTGRAPH_OVERLAY__Y',
+    'LIGHTGRAPH_OVERLAY__OFFSET_X',
+    'LIGHTGRAPH_OVERLAY__SCALE',
+    'LIGHTGRAPH_OVERLAY__DAY_COLOR',
+    'LIGHTGRAPH_OVERLAY__NIGHT_COLOR',
+    'LIGHTGRAPH_OVERLAY__HOUR_COLOR',
+    'LIGHTGRAPH_OVERLAY__BORDER_COLOR',
+    'LIGHTGRAPH_OVERLAY__NOW_COLOR',
+    'LIGHTGRAPH_OVERLAY__FONT_COLOR',
+    'LIGHTGRAPH_OVERLAY__OPACITY',
+    'LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE',
+    'LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE',
     'FISH2PANO__DIAMETER',
     'FISH2PANO__OFFSET_X',
     'FISH2PANO__OFFSET_Y',
@@ -6678,6 +6907,9 @@ const checkbox_field_names = [
     'MOON_OVERLAY__ENABLE',
     'MOON_OVERLAY__FLIP_V',
     'MOON_OVERLAY__FLIP_H',
+    'LIGHTGRAPH_OVERLAY__ENABLE',
+    'LIGHTGRAPH_OVERLAY__LABEL',
+    'LIGHTGRAPH_OVERLAY__HOUR_LINES',
     'TEXT_PROPERTIES__FONT_OUTLINE',
     'CARDINAL_DIRS__ENABLE',
     'CARDINAL_DIRS__SWAP_NS',

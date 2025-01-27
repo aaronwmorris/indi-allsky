@@ -892,8 +892,8 @@ if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo rm -f "$MYSQL_ETC/ssl/indi-allsky_mysql.pem"
 
         SHORT_HOSTNAME=$(hostname -s)
-        MYSQL_KEY_TMP=$(mktemp)
-        MYSQL_CRT_TMP=$(mktemp)
+        MYSQL_KEY_TMP=$(mktemp --suffix=.key)
+        MYSQL_CRT_TMP=$(mktemp --suffix=.pem)
 
         # sudo has problems with process substitution <()
         openssl req \
@@ -1010,8 +1010,8 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
             sudo rm -f /etc/apache2/ssl/indi-allsky_apache.pem
 
             SHORT_HOSTNAME=$(hostname -s)
-            APACHE_KEY_TMP=$(mktemp)
-            APACHE_CRT_TMP=$(mktemp)
+            APACHE_KEY_TMP=$(mktemp --suffix=.key)
+            APACHE_CRT_TMP=$(mktemp --suffix=.pem)
 
             # sudo has problems with process substitution <()
             openssl req \

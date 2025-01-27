@@ -156,6 +156,7 @@ class IndiAllSkyMoonOverlay(object):
         moon = numpy.dstack((moon, moon_alpha))
 
 
+        # scale image
         new_moon_width = int(moon_width * self.scale)
         new_moon_height = int(moon_height * self.scale)
         moon = cv2.resize(moon, (new_moon_width, new_moon_height), interpolation=cv2.INTER_AREA)

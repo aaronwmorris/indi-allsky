@@ -32,6 +32,7 @@ from .stack import IndiAllskyStacker
 from .cardinalDirsLabel import IndiAllskyCardinalDirsLabel
 from .utils import IndiAllSkyDateCalcs
 from .moonOverlay import IndiAllSkyMoonOverlay
+from .lightgraphOverlay import IndiAllSkyLightgraphOverlay
 
 from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
@@ -164,6 +165,7 @@ class ImageProcessor(object):
         self._ia_scnr = IndiAllskyScnr(self.config)
         self._cardinal_dirs_label = IndiAllskyCardinalDirsLabel(self.config)
         self._moon_overlay = IndiAllSkyMoonOverlay(self.config)
+        self._lightgraph_overlay = IndiAllSkyLightgraphOverlay(self.config, self.position_av)
 
         self._orb = IndiAllskyOrbGenerator(self.config)
         self._orb.sun_alt_deg = self.config['NIGHT_SUN_ALT_DEG']
@@ -2942,6 +2944,13 @@ class ImageProcessor(object):
             return
 
         self._moon_overlay.apply(self.image, self.astrometric_data['moon_cycle'], self.astrometric_data['moon_phase'])
+
+
+    def lightgraph_overlay(self):
+        if not self.config.get('LIGHTGRAPH_OVERLAY', {}).get('ENABLE', True):
+            return
+
+        self._lightgraph_overlay.apply(self.image)
 
 
     def add_border(self):
