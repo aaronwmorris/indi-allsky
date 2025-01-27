@@ -73,6 +73,9 @@ class LightGraphGenerator(object):
         #logger.info('Now offset: %d', now_offset)
 
 
+        now_color_bgr = list(self.now_color)
+        now_color_bgr.reverse()
+
         # draw now triangle
         now_tri = numpy.array([
             (now_offset - self.now_marker_size, (self.top_border + self.graph_height + self.graph_border) - self.now_marker_size),
@@ -84,13 +87,20 @@ class LightGraphGenerator(object):
         #logger.info(now_tri)
 
 
-        now_color_bgr = list(self.now_color)
-        now_color_bgr.reverse()
-
         cv2.fillPoly(
             img=lightgraph,
             pts=[now_tri],
             color=tuple(now_color_bgr),
+        )
+
+        # outline
+        cv2.polylines(
+            img=lightgraph,
+            pts=[now_tri],
+            isClosed=True,
+            color=(1, 1, 1),  # not full black
+            thickness=1,
+            lineType=self.line_type,
         )
 
 

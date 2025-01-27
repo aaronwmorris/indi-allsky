@@ -67,6 +67,9 @@ class IndiAllSkyLightgraphOverlay(object):
         now_offset = int((now - noon).seconds / 60) + self.graph_border
 
 
+        now_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_COLOR', (15, 150, 200)))
+        now_color_bgr.reverse()
+
         # draw now triangle
         now_tri = numpy.array([
             (now_offset - self.now_marker_size, (self.top_border + self.graph_height + self.graph_border) - self.now_marker_size),
@@ -78,13 +81,20 @@ class IndiAllSkyLightgraphOverlay(object):
         #logger.info(now_tri)
 
 
-        now_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_COLOR', (15, 150, 200)))
-        now_color_bgr.reverse()
-
         cv2.fillPoly(
             img=lightgraph,
             pts=[now_tri],
             color=tuple(now_color_bgr),
+        )
+
+        # outline
+        cv2.polylines(
+            img=lightgraph,
+            pts=[now_tri],
+            isClosed=True,
+            color=(1, 1, 1),  # not full black
+            thickness=1,
+            lineType=self.line_type,
         )
 
 
