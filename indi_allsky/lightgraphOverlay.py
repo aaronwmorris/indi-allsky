@@ -67,6 +67,7 @@ class IndiAllSkyLightgraphOverlay(object):
         now_offset = int((now - noon).seconds / 60) + self.graph_border
 
 
+        lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
         now_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_COLOR', (15, 150, 200)))
         now_color_bgr.reverse()
 
@@ -94,7 +95,7 @@ class IndiAllSkyLightgraphOverlay(object):
             isClosed=True,
             color=(1, 1, 1),  # not full black
             thickness=1,
-            lineType=self.line_type,
+            lineType=lineType,
         )
 
 
