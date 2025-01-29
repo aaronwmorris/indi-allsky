@@ -1,3 +1,4 @@
+import time
 import logging
 
 from .sensorBase import SensorBase
@@ -11,6 +12,10 @@ logger = logging.getLogger('indi_allsky')
 class TempSensorSht4x(SensorBase):
 
     def update(self):
+        if self.night != bool(self.night_v.value):
+            self.night = bool(self.night_v.value)
+            self.update_sensor_settings()
+
 
         try:
             temp_c = float(self.sht4x.temperature)
@@ -64,6 +69,17 @@ class TempSensorSht4x(SensorBase):
         return data
 
 
+    def update_sensor_settings(self):
+        if self.night:
+            logger.info('[%s] Switching SHT4X to night mode - Mode %s', self.name, hex(self.mode_night))
+            self.sht4x.mode = self.mode_night
+        else:
+            logger.info('[%s] Switching SHT4X to day mode - Mode %s', self.name, hex(self.mode_day))
+            self.sht4x.mode = self.mode_day
+
+        time.sleep(1.0)
+
+
 class TempSensorSht4x_I2C(TempSensorSht4x):
 
     METADATA = {
@@ -95,12 +111,15 @@ class TempSensorSht4x_I2C(TempSensorSht4x):
         i2c = board.I2C()
         self.sht4x = adafruit_sht4x.SHT4x(i2c, address=i2c_address)
 
+        self.night = None  # force update on first run
+
+
+        self.mode_night = getattr(adafruit_sht4x.Mode, self.config.get('TEMP_SENSOR', {}).get('SHT4X_MODE_NIGHT', 'NOHEAT_HIGHPRECISION'))
+        self.mode_day = getattr(adafruit_sht4x.Mode, self.config.get('TEMP_SENSOR', {}).get('SHT4X_MODE_DAY', 'NOHEAT_HIGHPRECISION'))
+
+
         # this should be the default
-        self.sht4x.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
-
-        # Can also set the mode to enable heater
-        # self.sht4x.mode = adafruit_sht4x.Mode.LOWHEAT_100MS
-
+        #self.sht4x.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
 
         # NOHEAT_HIGHPRECISION   No heater, high precision
         # NOHEAT_MEDPRECISION    No heater, med precision

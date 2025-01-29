@@ -1,3 +1,4 @@
+import time
 import logging
 
 from .sensorBase import SensorBase
@@ -11,6 +12,10 @@ logger = logging.getLogger('indi_allsky')
 class TempSensorSht3x(SensorBase):
 
     def update(self):
+        if self.night != bool(self.night_v.value):
+            self.night = bool(self.night_v.value)
+            self.update_sensor_settings()
+
 
         try:
             temp_c = float(self.sht3x.temperature)
@@ -64,6 +69,18 @@ class TempSensorSht3x(SensorBase):
         return data
 
 
+    def update_sensor_settings(self):
+        if self.night:
+            logger.info('[%s] Switching SHT3X to night mode - Heater %s', self.name, str(self.heater_night))
+            self.sht3x.heater = self.heater_night
+        else:
+            logger.info('[%s] Switching SHT3X to day mode - Heater %s', self.name, str(self.heater_day))
+            self.sht3x.heater = self.heater_day
+
+
+        time.sleep(1.0)
+
+
 class TempSensorSht3x_I2C(TempSensorSht3x):
 
     METADATA = {
@@ -94,6 +111,12 @@ class TempSensorSht3x_I2C(TempSensorSht3x):
         logger.warning('Initializing [%s] SHT3x I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
         self.sht3x = adafruit_sht31d.SHT31D(i2c, address=i2c_address)
+
+        self.night = None  # force update on first run
+
+
+        self.heater_night = self.config.get('TEMP_SENSOR', {}).get('SHT3X_HEATER_NIGHT', False)
+        self.heater_day = self.config.get('TEMP_SENSOR', {}).get('SHT3X_HEATER_DAY', False)
 
 
         # single shot data acquisition mode

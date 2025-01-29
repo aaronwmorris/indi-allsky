@@ -1,3 +1,4 @@
+import time
 import logging
 
 from .sensorBase import SensorBase
@@ -11,6 +12,10 @@ logger = logging.getLogger('indi_allsky')
 class TempSensorHtu31d(SensorBase):
 
     def update(self):
+        if self.night != bool(self.night_v.value):
+            self.night = bool(self.night_v.value)
+            self.update_sensor_settings()
+
 
         try:
             temp_c = float(self.htu31d.temperature)
@@ -64,6 +69,18 @@ class TempSensorHtu31d(SensorBase):
         return data
 
 
+    def update_sensor_settings(self):
+        if self.night:
+            logger.info('[%s] Switching HTU31D to night mode - Heater %s', self.name, str(self.heater_night))
+            self.htu31d.heater = self.heater_night
+        else:
+            logger.info('[%s] Switching HTU31D to day mode - Heater %s', self.name, str(self.heater_day))
+            self.htu31d.heater = self.heater_day
+
+
+        time.sleep(1.0)
+
+
 class TempSensorHtu31d_I2C(TempSensorHtu31d):
 
     METADATA = {
@@ -95,3 +112,7 @@ class TempSensorHtu31d_I2C(TempSensorHtu31d):
         i2c = board.I2C()
         self.htu31d = adafruit_htu31d.HTU31D(i2c, address=i2c_address)
 
+        self.night = None  # force update on first run
+
+        self.heater_night = self.config.get('TEMP_SENSOR', {}).get('HTU31D_HEATER_NIGHT', False)
+        self.heater_day = self.config.get('TEMP_SENSOR', {}).get('HTU31D_HEATER_DAY', False)
