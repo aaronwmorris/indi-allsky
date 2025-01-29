@@ -2,8 +2,6 @@ import math
 
 
 class SensorBase(object):
-    rh_heater_on_level = 85.0
-    rh_heater_off_level = 80.0
 
 
     def __init__(self, *args, **kwargs):
@@ -16,6 +14,10 @@ class SensorBase(object):
 
         self.heater_on = False  # Sensor Heater
         self.heater_available = False
+
+        # basic hysteresis settings
+        self.rh_heater_on_level = 80.0
+        self.rh_heater_off_level = 75.0
 
 
     def update(self):
