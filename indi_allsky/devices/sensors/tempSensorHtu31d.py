@@ -27,6 +27,9 @@ class TempSensorHtu31d(SensorBase):
         logger.info('[%s] HTU31D - temp: %0.1fc, humidity: %0.1f%%', self.name, temp_c, rel_h)
 
 
+        self.check_humidity_heater(rel_h)
+
+
         try:
             dew_point_c = self.get_dew_point_c(temp_c, rel_h)
             frost_point_c = self.get_frost_point_c(temp_c, dew_point_c)
@@ -71,14 +74,29 @@ class TempSensorHtu31d(SensorBase):
 
     def update_sensor_settings(self):
         if self.night:
-            logger.info('[%s] Switching HTU31D to night mode - Heater %s', self.name, str(self.heater_night))
-            self.htu31d.heater = self.heater_night
+            self.heater_available = self.heater_night
         else:
-            logger.info('[%s] Switching HTU31D to day mode - Heater %s', self.name, str(self.heater_day))
-            self.htu31d.heater = self.heater_day
+            self.heater_available = self.heater_day
 
 
-        time.sleep(1.0)
+    def check_humidity_heater(self, rh):
+        if not self.heater_available:
+            return
+
+
+        if rh <= self.rh_heater_off_level:
+            if self.heater_on:
+                self.heater_on = False
+                self.htu31d.heater = False
+                logger.warning('[%s] HTU31D Heater Disabled')
+                time.sleep(1.0)
+
+        elif rh >= self.rh_heather_on_level:
+            if not self.heater_on:
+                self.heater_on = True
+                self.htu31d.heater = True
+                logger.warning('[%s] HTU31D Heater Enabled')
+                time.sleep(1.0)
 
 
 class TempSensorHtu31d_I2C(TempSensorHtu31d):
@@ -111,8 +129,6 @@ class TempSensorHtu31d_I2C(TempSensorHtu31d):
         logger.warning('Initializing [%s] HTU31D I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
         self.htu31d = adafruit_htu31d.HTU31D(i2c, address=i2c_address)
-
-        self.night = None  # force update on first run
 
         self.heater_night = self.config.get('TEMP_SENSOR', {}).get('HTU31D_HEATER_NIGHT', False)
         self.heater_day = self.config.get('TEMP_SENSOR', {}).get('HTU31D_HEATER_DAY', False)

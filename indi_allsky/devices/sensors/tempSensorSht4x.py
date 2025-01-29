@@ -111,9 +111,6 @@ class TempSensorSht4x_I2C(TempSensorSht4x):
         i2c = board.I2C()
         self.sht4x = adafruit_sht4x.SHT4x(i2c, address=i2c_address)
 
-        self.night = None  # force update on first run
-
-
         self.mode_night = getattr(adafruit_sht4x.Mode, self.config.get('TEMP_SENSOR', {}).get('SHT4X_MODE_NIGHT', 'NOHEAT_HIGHPRECISION'))
         self.mode_day = getattr(adafruit_sht4x.Mode, self.config.get('TEMP_SENSOR', {}).get('SHT4X_MODE_DAY', 'NOHEAT_HIGHPRECISION'))
 

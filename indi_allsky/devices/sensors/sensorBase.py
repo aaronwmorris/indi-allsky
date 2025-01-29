@@ -2,17 +2,52 @@ import math
 
 
 class SensorBase(object):
+    rh_heater_on_level = 85.0
+    rh_heater_off_level = 80.0
+
+
     def __init__(self, *args, **kwargs):
         self.config = args[0]
         self.name = args[1]
         self.night_v = args[2]
 
         self._slot = None  # var slot
+        self._night = None
+
+        self.heater_on = False  # Sensor Heater
+        self.heater_available = False
 
 
     def update(self):
         # override in child class
         raise Exception('Not implemented')
+
+
+    @property
+    def night(self):
+        return self._night
+
+    @night.setter
+    def night(self, new_night):
+        self._night = bool(new_night)
+
+
+    @property
+    def heater_available(self):
+        return self._heater_available
+
+    @heater_available.setter
+    def heater_available(self, new_heater_available):
+        self._heater_available = bool(new_heater_available)
+
+
+    @property
+    def heater_on(self):
+        return self._heater_on
+
+    @heater_on.setter
+    def heater_on(self, new_heater_on):
+        self._heater_on = bool(new_heater_on)
 
 
     @property
