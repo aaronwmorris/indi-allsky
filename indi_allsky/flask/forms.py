@@ -2527,6 +2527,11 @@ def DEVICE_PIN_NAME_validator(form, field):
         raise ValidationError('Invalid PIN name')
 
 
+def TEMP_SENSOR__SHT4X_MODE_validator(form, field):
+    if field.data not in list(zip(*form.TEMP_SENSOR__SHT4X_MODE_choices))[0]:
+        raise ValidationError('Invalid mode selection')
+
+
 def TEMP_SENSOR__TSL2561_GAIN_validator(form, field):
     try:
         data_i = int(field.data)
@@ -3212,6 +3217,19 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
 
+    TEMP_SENSOR__SHT4X_MODE_choices = (
+        ('NOHEAT_HIGHPRECISION', '[0xFD] No Heater - High Precision'),
+        ('NOHEAT_MEDPRECISION', '[0xF6] No Heater - Medium Precision'),
+        ('NOHEAT_LOWPRECISION', '[0xE0] No Heater - Low Precision'),
+        ('HIGHHEAT_1S', '[0x39] High Heat - 1s'),
+        ('HIGHHEAT_100MS', '[0x32] High Heat - 0.1s'),
+        ('MEDHEAT_1S', '[0x2F] Medium Heat - 1s'),
+        ('MEDHEAT_100MS', '[0x24] Medium Heat - 0.1s'),
+        ('LOWHEAT_1S', '[0x1E] Low Heat - 1s'),
+        ('LOWHEAT_100MS', '[0x15] Low Heat - 0.1s'),
+    )
+
+
     TEMP_SENSOR__TSL2591_GAIN_choices = (
         ('GAIN_LOW', '[0] Low - 1x'),
         ('GAIN_MED', '[16] Medium - 25x (default)'),
@@ -3708,6 +3726,12 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__MQTT_PASSWORD       = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[MQTTPUBLISH__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__MQTT_TLS            = BooleanField('Use TLS')
     TEMP_SENSOR__MQTT_CERT_BYPASS    = BooleanField('Disable Certificate Validation')
+    TEMP_SENSOR__SHT3X_HEATER_NIGHT  = BooleanField('SHT3x Heater (Night)')
+    TEMP_SENSOR__SHT3X_HEATER_DAY    = BooleanField('SHT3x Heater (Day)')
+    TEMP_SENSOR__SHT4X_MODE_NIGHT    = SelectField('SHT4x Mode (Night)', choices=TEMP_SENSOR__SHT4X_MODE_choices, validators=[TEMP_SENSOR__SHT4X_MODE_validator])
+    TEMP_SENSOR__SHT4X_MODE_DAY      = SelectField('SHT4x Mode (Day)', choices=TEMP_SENSOR__SHT4X_MODE_choices, validators=[TEMP_SENSOR__SHT4X_MODE_validator])
+    TEMP_SENSOR__HTU31D_HEATER_NIGHT = BooleanField('HTU31D Heater (Night)')
+    TEMP_SENSOR__HTU31D_HEATER_DAY   = BooleanField('HTU31D Heater (Day)')
     TEMP_SENSOR__TSL2561_GAIN_NIGHT  = SelectField('TSL2561 Gain (Night)', choices=TEMP_SENSOR__TSL2561_GAIN_choices, validators=[TEMP_SENSOR__TSL2561_GAIN_validator])
     TEMP_SENSOR__TSL2561_GAIN_DAY    = SelectField('TSL2561 Gain (Day)', choices=TEMP_SENSOR__TSL2561_GAIN_choices, validators=[TEMP_SENSOR__TSL2561_GAIN_validator])
     TEMP_SENSOR__TSL2561_INT_NIGHT   = SelectField('TSL2561 Integration (Night)', choices=TEMP_SENSOR__TSL2561_INT_choices, validators=[TEMP_SENSOR__TSL2561_INT_validator])

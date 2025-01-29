@@ -538,6 +538,12 @@ class IndiAllSkyConfigBase(object):
             "MQTT_PASSWORD_E"        : "",
             "MQTT_TLS"               : True,
             "MQTT_CERT_BYPASS"       : True,
+            "SHT3X_HEATER_NIGHT"     : False,
+            "SHT3X_HEATER_DAY"       : False,
+            "HTU31D_HEATER_NIGHT"    : False,
+            "HTU31D_HEATER_DAY"      : False,
+            "SHT4X_MODE_NIGHT"       : "NOHEAT_HIGHPRECISION",
+            "SHT4X_MODE_DAY"         : "NOHEAT_HIGHPRECISION",
             "TSL2561_GAIN_NIGHT"     : 1,  # 0=1x, 1=16x
             "TSL2561_GAIN_DAY"       : 0,
             "TSL2561_INT_NIGHT"      : 1,  # 0=13.7ms, 1=101ms, 2=402ms, or 3=manual
