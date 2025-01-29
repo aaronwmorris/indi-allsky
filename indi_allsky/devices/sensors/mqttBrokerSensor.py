@@ -17,11 +17,11 @@ class MqttBrokerSensor(SensorBase):
         'description' : 'MQTT Broker Sensor',
         'count' : 5,
         'labels' : (
-            'Value 1',
-            'Value 2',
-            'Value 3',
-            'Value 4',
-            'Value 5',
+            'Topic 1',
+            'Topic 2',
+            'Topic 3',
+            'Topic 4',
+            'Topic 5',
         ),
         'types' : (
             constants.SENSOR_MISC,
