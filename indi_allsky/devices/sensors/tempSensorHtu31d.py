@@ -75,8 +75,12 @@ class TempSensorHtu31d(SensorBase):
     def update_sensor_settings(self):
         if self.night:
             self.heater_available = self.heater_night
+            self.heater_on = False
+            self.htu31d.heater = False
         else:
             self.heater_available = self.heater_day
+            self.heater_on = False
+            self.htu31d.heater = False
 
 
     def check_humidity_heater(self, rh):
