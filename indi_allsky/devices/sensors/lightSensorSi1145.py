@@ -101,9 +101,6 @@ class LightSensorSi1145_I2C(LightSensorSi1145):
         self.si1145.uv_index_enabled = True
 
 
-        self.night = None  # force update on first run
-
-
         self.vis_gain_night = getattr(adafruit_si1145, self.config.get('TEMP_SENSOR', {}).get('SI1145_VIS_GAIN_NIGHT', 'GAIN_ADC_CLOCK_DIV_32'))
         self.vis_gain_day = getattr(adafruit_si1145, self.config.get('TEMP_SENSOR', {}).get('SI1145_VIS_GAIN_DAY', 'GAIN_ADC_CLOCK_DIV_1'))
         self.ir_gain_night = getattr(adafruit_si1145, self.config.get('TEMP_SENSOR', {}).get('SI1145_IR_GAIN_NIGHT', 'GAIN_ADC_CLOCK_DIV_32'))

@@ -101,8 +101,6 @@ class LightSensorLtr390_I2C(LightSensorLtr390):
         i2c = board.I2C()
         self.ltr390 = adafruit_ltr390.LTR390(i2c, address=i2c_address)
 
-        self.night = None  # force update on first run
-
         self.gain_night = getattr(adafruit_ltr390.Gain, self.config.get('TEMP_SENSOR', {}).get('LTR390_GAIN_NIGHT', 'GAIN_9X'))
         self.gain_day = getattr(adafruit_ltr390.Gain, self.config.get('TEMP_SENSOR', {}).get('LTR390_GAIN_DAY', 'GAIN_1X'))
 
