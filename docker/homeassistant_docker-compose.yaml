@@ -1,3 +1,4 @@
+---
 services:
   homeassistant.indi.allsky:
     image: "ghcr.io/home-assistant/home-assistant:stable"
@@ -13,4 +14,3 @@ services:
 
 volumes:
   homeassistant_config_indi_allsky:
-

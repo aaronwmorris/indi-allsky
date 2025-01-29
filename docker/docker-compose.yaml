@@ -1,3 +1,4 @@
+---
 services:
   indi.base:
     build:
@@ -46,8 +47,8 @@ services:
     volumes:
       - images_indi_allsky:/var/www/html/allsky
       - migrations_indi_allsky:/var/lib/indi-allsky
-    #ports:
-    #  - "8000:8000"
+  #  ports:
+  #    - "8000:8000"
 
 
   capture.indi.allsky:
@@ -102,4 +103,3 @@ volumes:
   migrations_indi_allsky:
   images_indi_allsky:
   mosquitto_data_indi_allsky:
-
