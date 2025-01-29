@@ -1,3 +1,4 @@
+import time
 import logging
 
 from .sensorBase import SensorBase
@@ -11,6 +12,9 @@ logger = logging.getLogger('indi_allsky')
 class TempSensorSht3x(SensorBase):
 
     def update(self):
+        if self.night != bool(self.night_v.value):
+            self.night = bool(self.night_v.value)
+            self.update_sensor_settings()
 
         try:
             temp_c = float(self.sht3x.temperature)
@@ -20,6 +24,9 @@ class TempSensorSht3x(SensorBase):
 
 
         logger.info('[%s] SHT3x - temp: %0.1fc, humidity: %0.1f%%', self.name, temp_c, rel_h)
+
+
+        self.check_humidity_heater(rel_h)
 
 
         try:
@@ -64,6 +71,37 @@ class TempSensorSht3x(SensorBase):
         return data
 
 
+    def update_sensor_settings(self):
+        if self.night:
+            self.heater_available = self.heater_night
+            self.heater_on = False
+            self.sht3x.heater = False
+        else:
+            self.heater_available = self.heater_day
+            self.heater_on = False
+            self.sht3x.heater = False
+
+
+    def check_humidity_heater(self, rh):
+        if not self.heater_available:
+            return
+
+
+        if rh <= self.rh_heater_off_level:
+            if self.heater_on:
+                self.heater_on = False
+                self.sht3x.heater = False
+                logger.warning('[%s] SHT3X Heater Disabled')
+                time.sleep(1.0)
+
+        elif rh >= self.rh_heather_on_level:
+            if not self.heater_on:
+                self.heater_on = True
+                self.sht3x.heater = True
+                logger.warning('[%s] SHT3X Heater Enabled')
+                time.sleep(1.0)
+
+
 class TempSensorSht3x_I2C(TempSensorSht3x):
 
     METADATA = {
@@ -94,6 +132,9 @@ class TempSensorSht3x_I2C(TempSensorSht3x):
         logger.warning('Initializing [%s] SHT3x I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
         self.sht3x = adafruit_sht31d.SHT31D(i2c, address=i2c_address)
+
+        self.heater_night = self.config.get('TEMP_SENSOR', {}).get('SHT3X_HEATER_NIGHT', False)
+        self.heater_day = self.config.get('TEMP_SENSOR', {}).get('SHT3X_HEATER_DAY', False)
 
 
         # single shot data acquisition mode

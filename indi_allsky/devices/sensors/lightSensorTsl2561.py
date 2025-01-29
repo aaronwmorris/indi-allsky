@@ -101,8 +101,6 @@ class LightSensorTsl2561_I2C(LightSensorTsl2561):
         i2c = busio.I2C(board.SCL, board.SDA)
         self.tsl2561 = adafruit_tsl2561.TSL2561(i2c, address=i2c_address)
 
-        self.night = None  # force update on first run
-
         self.gain_night = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_NIGHT', 1))
         self.gain_day = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_DAY', 0))
         self.integration_night = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_INT_NIGHT', 1))

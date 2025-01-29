@@ -2112,6 +2112,14 @@ class ConfigView(FormView):
             'TEMP_SENSOR__MQTT_PASSWORD'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD', ''),
             'TEMP_SENSOR__MQTT_TLS'          : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_TLS', True),
             'TEMP_SENSOR__MQTT_CERT_BYPASS'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_CERT_BYPASS', True),
+            'TEMP_SENSOR__SHT3X_HEATER_NIGHT': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SHT3X_HEATER_NIGHT', False),
+            'TEMP_SENSOR__SHT3X_HEATER_DAY'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SHT3X_HEATER_DAY', False),
+            'TEMP_SENSOR__SHT4X_MODE_NIGHT'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SHT4X_MODE_NIGHT', 'NOHEAT_HIGHPRECISION'),
+            'TEMP_SENSOR__SHT4X_MODE_DAY'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SHT4X_MODE_DAY', 'NOHEAT_HIGHPRECISION'),
+            'TEMP_SENSOR__SI7021_HEATER_LEVEL_NIGHT' : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI7021_HEATER_LEVEL_NIGHT', -1)),  # string in form, int in config
+            'TEMP_SENSOR__SI7021_HEATER_LEVEL_DAY' : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI7021_HEATER_LEVEL_DAY', -1)),  # string in form, int in config
+            'TEMP_SENSOR__HTU31D_HEATER_NIGHT': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('HTU31D_HEATER_NIGHT', False),
+            'TEMP_SENSOR__HTU31D_HEATER_DAY'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('HTU31D_HEATER_DAY', False),
             'TEMP_SENSOR__TSL2561_GAIN_NIGHT': str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_NIGHT', 1)),  # string in form, int in config
             'TEMP_SENSOR__TSL2561_GAIN_DAY'  : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_DAY', 0)),  # string in form, int in config
             'TEMP_SENSOR__TSL2561_INT_NIGHT' : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_INT_NIGHT', 1)),  # string in form, int in config
@@ -2889,6 +2897,14 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_PASSWORD']         = str(request.json['TEMP_SENSOR__MQTT_PASSWORD'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_TLS']              = bool(request.json['TEMP_SENSOR__MQTT_TLS'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_CERT_BYPASS']      = bool(request.json['TEMP_SENSOR__MQTT_CERT_BYPASS'])
+        self.indi_allsky_config['TEMP_SENSOR']['SHT3X_HEATER_NIGHT']    = bool(request.json['TEMP_SENSOR__SHT3X_HEATER_NIGHT'])
+        self.indi_allsky_config['TEMP_SENSOR']['SHT3X_HEATER_DAY']      = bool(request.json['TEMP_SENSOR__SHT3X_HEATER_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['SHT4X_MODE_NIGHT']      = str(request.json['TEMP_SENSOR__SHT4X_MODE_NIGHT'])
+        self.indi_allsky_config['TEMP_SENSOR']['SHT4X_MODE_DAY']        = str(request.json['TEMP_SENSOR__SHT4X_MODE_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['SI7021_HEATER_LEVEL_NIGHT'] = int(request.json['TEMP_SENSOR__SI7021_HEATER_LEVEL_NIGHT'])
+        self.indi_allsky_config['TEMP_SENSOR']['SI7021_HEATER_LEVEL_DAY'] = int(request.json['TEMP_SENSOR__SI7021_HEATER_LEVEL_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['HTU31D_HEATER_NIGHT']   = bool(request.json['TEMP_SENSOR__HTU31D_HEATER_NIGHT'])
+        self.indi_allsky_config['TEMP_SENSOR']['HTU31D_HEATER_DAY']     = bool(request.json['TEMP_SENSOR__HTU31D_HEATER_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2561_GAIN_NIGHT']    = int(request.json['TEMP_SENSOR__TSL2561_GAIN_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2561_GAIN_DAY']      = int(request.json['TEMP_SENSOR__TSL2561_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2561_INT_NIGHT']     = int(request.json['TEMP_SENSOR__TSL2561_INT_NIGHT'])

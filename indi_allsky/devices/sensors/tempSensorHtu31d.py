@@ -9,7 +9,7 @@ from ..exceptions import SensorReadException
 logger = logging.getLogger('indi_allsky')
 
 
-class TempSensorSht4x(SensorBase):
+class TempSensorHtu31d(SensorBase):
 
     def update(self):
         if self.night != bool(self.night_v.value):
@@ -18,13 +18,16 @@ class TempSensorSht4x(SensorBase):
 
 
         try:
-            temp_c = float(self.sht4x.temperature)
-            rel_h = float(self.sht4x.relative_humidity)
+            temp_c = float(self.htu31d.temperature)
+            rel_h = float(self.htu31d.relative_humidity)
         except RuntimeError as e:
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('[%s] SHT4x - temp: %0.1fc, humidity: %0.1f%%', self.name, temp_c, rel_h)
+        logger.info('[%s] HTU31D - temp: %0.1fc, humidity: %0.1f%%', self.name, temp_c, rel_h)
+
+
+        self.check_humidity_heater(rel_h)
 
 
         try:
@@ -71,20 +74,40 @@ class TempSensorSht4x(SensorBase):
 
     def update_sensor_settings(self):
         if self.night:
-            logger.info('[%s] Switching SHT4X to night mode - Mode %s', self.name, hex(self.mode_night))
-            self.sht4x.mode = self.mode_night
+            self.heater_available = self.heater_night
+            self.heater_on = False
+            self.htu31d.heater = False
         else:
-            logger.info('[%s] Switching SHT4X to day mode - Mode %s', self.name, hex(self.mode_day))
-            self.sht4x.mode = self.mode_day
+            self.heater_available = self.heater_day
+            self.heater_on = False
+            self.htu31d.heater = False
 
-        time.sleep(1.0)
+
+    def check_humidity_heater(self, rh):
+        if not self.heater_available:
+            return
 
 
-class TempSensorSht4x_I2C(TempSensorSht4x):
+        if rh <= self.rh_heater_off_level:
+            if self.heater_on:
+                self.heater_on = False
+                self.htu31d.heater = False
+                logger.warning('[%s] HTU31D Heater Disabled')
+                time.sleep(1.0)
+
+        elif rh >= self.rh_heather_on_level:
+            if not self.heater_on:
+                self.heater_on = True
+                self.htu31d.heater = True
+                logger.warning('[%s] HTU31D Heater Enabled')
+                time.sleep(1.0)
+
+
+class TempSensorHtu31d_I2C(TempSensorHtu31d):
 
     METADATA = {
-        'name' : 'SHT4x (i2c)',
-        'description' : 'SHT4x i2c Temperature Sensor',
+        'name' : 'HTU31D (i2c)',
+        'description' : 'HTU31D i2c Temperature Sensor',
         'count' : 2,
         'labels' : (
             'Temperature',
@@ -98,33 +121,18 @@ class TempSensorSht4x_I2C(TempSensorSht4x):
 
 
     def __init__(self, *args, **kwargs):
-        super(TempSensorSht4x_I2C, self).__init__(*args, **kwargs)
+        super(TempSensorHtu31d_I2C, self).__init__(*args, **kwargs)
 
         i2c_address_str = kwargs['i2c_address']
 
         import board
-        import adafruit_sht4x
+        import adafruit_htu31d
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        logger.warning('Initializing [%s] SHT4x I2C temperature device @ %s', self.name, hex(i2c_address))
+        logger.warning('Initializing [%s] HTU31D I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
-        self.sht4x = adafruit_sht4x.SHT4x(i2c, address=i2c_address)
+        self.htu31d = adafruit_htu31d.HTU31D(i2c, address=i2c_address)
 
-        self.mode_night = getattr(adafruit_sht4x.Mode, self.config.get('TEMP_SENSOR', {}).get('SHT4X_MODE_NIGHT', 'NOHEAT_HIGHPRECISION'))
-        self.mode_day = getattr(adafruit_sht4x.Mode, self.config.get('TEMP_SENSOR', {}).get('SHT4X_MODE_DAY', 'NOHEAT_HIGHPRECISION'))
-
-
-        # this should be the default
-        #self.sht4x.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
-
-        # NOHEAT_HIGHPRECISION   No heater, high precision
-        # NOHEAT_MEDPRECISION    No heater, med precision
-        # NOHEAT_LOWPRECISION    No heater, low precision
-        # HIGHHEAT_1S            High heat, 1 second
-        # HIGHHEAT_100MS         High heat, 0.1 second
-        # MEDHEAT_1S             Med heat, 1 second
-        # MEDHEAT_100MS          Med heat, 0.1 second
-        # LOWHEAT_1S             Low heat, 1 second
-        # LOWHEAT_100MS          Low heat, 0.1 second
-
+        self.heater_night = self.config.get('TEMP_SENSOR', {}).get('HTU31D_HEATER_NIGHT', False)
+        self.heater_day = self.config.get('TEMP_SENSOR', {}).get('HTU31D_HEATER_DAY', False)
