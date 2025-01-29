@@ -1,3 +1,4 @@
+import time
 import logging
 
 from .sensorBase import SensorBase
@@ -11,6 +12,10 @@ logger = logging.getLogger('indi_allsky')
 class TempSensorSi7021(SensorBase):
 
     def update(self):
+        if self.night != bool(self.night_v.value):
+            self.night = bool(self.night_v.value)
+            self.update_sensor_settings()
+
 
         try:
             temp_c = float(self.si7021.temperature)
@@ -64,6 +69,28 @@ class TempSensorSi7021(SensorBase):
         return data
 
 
+    def update_sensor_settings(self):
+        if self.night:
+            if self.heater_level_night >= 0:
+                logger.info('[%s] Switching SI7021 to night mode - Heater level %d', self.name, self.heater_level_night)
+                self.si7021.heater_enable = True
+                self.si7021.heater_level = self.heater_level_day
+            else:
+                logger.info('[%s] Switching SI7021 to night mode - Heater OFF', self.name)
+                self.si7021.heater_enable = False
+        else:
+            if self.heater_level_day >= 0:
+                logger.info('[%s] Switching SI7021 to day mode - Heater level %d', self.name, self.heater_level_day)
+                self.si7021.heater_enable = True
+                self.si7021.heater_level = self.heater_level_day
+            else:
+                logger.info('[%s] Switching SI7021 to day mode - Heater OFF', self.name)
+                self.si7021.heater_enable = False
+
+        time.sleep(1.0)
+
+
+
 class TempSensorSi7021_I2C(TempSensorSi7021):
 
     METADATA = {
@@ -96,8 +123,10 @@ class TempSensorSi7021_I2C(TempSensorSi7021):
         self.si7021 = adafruit_si7021.SI7021(i2c, address=i2c_address)
 
 
-        ### If you'd like to use the heater, you can uncomment the code below
-        ### and pick a heater level that works for your purposes
+        self.heater_level_night = int(self.config.get('TEMP_SENSOR', {}).get('SI7021_HEATER_LEVEL_NIGHT', -1))
+        self.heater_level_day = int(self.config.get('TEMP_SENSOR', {}).get('SI7021_HEATER_LEVEL_DAY', -1))
+
+
         #self.si7021.heater_enable = True
         #self.si7021.heater_level = 0  # Use any level from 0 to 15 inclusive
 
