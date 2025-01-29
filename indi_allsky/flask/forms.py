@@ -2532,6 +2532,17 @@ def TEMP_SENSOR__SHT4X_MODE_validator(form, field):
         raise ValidationError('Invalid mode selection')
 
 
+def TEMP_SENSOR__SI7021_HEATER_LEVEL_validator(form, field):
+    try:
+        data_str = str(field.data)
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
+    if data_str not in list(zip(*form.TEMP_SENSOR__SI7021_HEATER_LEVEL_choices))[0]:
+        raise ValidationError('Invalid heater level')
+
+
 def TEMP_SENSOR__TSL2561_GAIN_validator(form, field):
     try:
         data_i = int(field.data)
@@ -3229,6 +3240,25 @@ class IndiAllskyConfigForm(FlaskForm):
         ('LOWHEAT_100MS', '[0x15] Low Heat - 0.1s'),
     )
 
+    TEMP_SENSOR__SI7021_HEATER_LEVEL_choices = (
+        ('-1', 'Off'),
+        ('0', '0 - 3 mA'),
+        ('1', '1 - 9 mA'),
+        ('2', '2 - 15 mA'),
+        ('3', '3 - 21 mA'),
+        ('4', '4 - 27 mA'),
+        ('5', '5 - 33 mA'),
+        ('6', '6 - 40 mA'),
+        ('7', '7 - 46 mA'),
+        ('8', '8 - 52 mA'),
+        ('9', '9 - 58 mA'),
+        ('10', '10 - 64 mA'),
+        ('11', '11 - 70 mA'),
+        ('12', '12 - 76 mA'),
+        ('13', '13 - 82 mA'),
+        ('14', '14 - 88 mA'),
+        ('15', '15 - 94 mA'),
+    )
 
     TEMP_SENSOR__TSL2591_GAIN_choices = (
         ('GAIN_LOW', '[0] Low - 1x'),
@@ -3730,6 +3760,8 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__SHT3X_HEATER_DAY    = BooleanField('SHT3x Heater (Day)')
     TEMP_SENSOR__SHT4X_MODE_NIGHT    = SelectField('SHT4x Mode (Night)', choices=TEMP_SENSOR__SHT4X_MODE_choices, validators=[TEMP_SENSOR__SHT4X_MODE_validator])
     TEMP_SENSOR__SHT4X_MODE_DAY      = SelectField('SHT4x Mode (Day)', choices=TEMP_SENSOR__SHT4X_MODE_choices, validators=[TEMP_SENSOR__SHT4X_MODE_validator])
+    TEMP_SENSOR__SI7021_HEATER_LEVEL_NIGHT = SelectField('SI7021 Heater Level (Night)', choices=TEMP_SENSOR__SI7021_HEATER_LEVEL_choices, validators=[TEMP_SENSOR__SI7021_HEATER_LEVEL_validator])
+    TEMP_SENSOR__SI7021_HEATER_LEVEL_DAY   = SelectField('SI7021 Heater Level (Day)', choices=TEMP_SENSOR__SI7021_HEATER_LEVEL_choices, validators=[TEMP_SENSOR__SI7021_HEATER_LEVEL_validator])
     TEMP_SENSOR__HTU31D_HEATER_NIGHT = BooleanField('HTU31D Heater (Night)')
     TEMP_SENSOR__HTU31D_HEATER_DAY   = BooleanField('HTU31D Heater (Day)')
     TEMP_SENSOR__TSL2561_GAIN_NIGHT  = SelectField('TSL2561 Gain (Night)', choices=TEMP_SENSOR__TSL2561_GAIN_choices, validators=[TEMP_SENSOR__TSL2561_GAIN_validator])
