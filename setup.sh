@@ -402,7 +402,6 @@ else
     echo "     indi_passive: Connect a second instance of indi-allsky to an existing indi-allsky indiserver"
     echo
 
-    # whiptail might not be installed yet
     while [ -z "${CAMERA_INTERFACE:-}" ]; do
         PS3="Select a camera interface: "
         select camera_interface in indi libcamera pycurl_camera indi_accumulator indi_passive ; do
