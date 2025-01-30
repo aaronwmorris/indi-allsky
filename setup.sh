@@ -1290,6 +1290,9 @@ fi
 
 
 if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
+    #sudo systemctl start "user@${UID}.service"
+    #export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${UID}/bus"
+
     echo
     echo
     echo "The DBUS user session is not defined"
