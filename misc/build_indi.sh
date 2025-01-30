@@ -478,14 +478,14 @@ if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
             --nocancel \
             --notags \
             --radiolist "Select which camera vendor to build\n\nPress space to select" 0 0 0 \
-                "supported" "All Supported Cameras" "OFF" \
+                "supported" "Supported Cameras" "OFF" \
                 "asi" "ZWO ASI Camera" "OFF" \
                 "playerone" "PlayerOne Astronomy" "OFF" \
                 "touptek" "ToupTek / Altair / Omegon / Meade / etc" "OFF" \
                 "svbony" "SVBony" "OFF" \
                 "qhy" "QHY" "OFF" \
                 "sx" "Starlight Xpress" "OFF" \
-                "libcamera" "libcamera (beta)" "OFF" \
+                "libcamera" "indi-libcamera [BETA] (this is not the standard libcamera support)" "OFF" \
                 "gphoto" "DSLR - Canon / Nikon / Sony / Pentax / Fuji / etc" "OFF" \
                 "webcam" "Web Camera - indi_webcam_ccd" "OFF" \
                 "all" "All drivers" "OFF" \
@@ -502,9 +502,6 @@ if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "playerone" ]]; then
         INDI_3RDPARTY_LIBRARIES="libplayerone"
         INDI_3RDPARTY_DRIVERS="indi-playerone indi-gpsd"
-    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "touptek" ]]; then
-        INDI_3RDPARTY_LIBRARIES="libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam indi-gpsd"
-        INDI_3RDPARTY_DRIVERS="indi-toupbase"
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "svbony" ]]; then
         INDI_3RDPARTY_LIBRARIES="libsvbony"
         INDI_3RDPARTY_DRIVERS="indi-svbony indi-gpsd"
@@ -523,9 +520,12 @@ if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "webcam" ]]; then
         INDI_3RDPARTY_LIBRARIES=""
         INDI_3RDPARTY_DRIVERS="indi-webcam indi-gpsd"
+    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "touptek" ]]; then
+        INDI_3RDPARTY_LIBRARIES="libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam indi-gpsd"
+        INDI_3RDPARTY_DRIVERS="indi-toupbase"
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "supported" ]]; then
-        INDI_3RDPARTY_LIBRARIES="libasi libqhy libplayerone libplayerone libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam"
-        INDI_3RDPARTY_DRIVERS="indi-asi indi-qhy indi-playerone indi-svbony indi-sx indi-toupbase indi-gphoto indi-webcam indi-gpsd"
+        INDI_3RDPARTY_LIBRARIES="libasi libplayerone libsvbony libqhy libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam"
+        INDI_3RDPARTY_DRIVERS="indi-asi indi-playerone indi-svbony indi-qhy indi-sx indi-toupbase indi-gphoto indi-webcam indi-gpsd"
     else
         echo
         echo "Invalid selection"
