@@ -232,6 +232,12 @@ else
 fi
 
 
+echo
+echo "Selected interface: $CAMERA_INTERFACE"
+echo
+sleep 3
+
+
 if [[ -f "/usr/local/bin/libcamera-still" || -f "/usr/local/bin/rpicam-still" ]]; then
     INSTALL_LIBCAMERA="false"
 
