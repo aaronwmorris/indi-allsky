@@ -341,7 +341,7 @@ class ImageProcessor(object):
         elif filename_p.suffix in ['.jpg', '.jpeg']:
             try:
                 with Image.open(str(filename_p)) as img:
-                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+                    data = numpy.array(img)  # pillow returns RGB
             except PIL.UnidentifiedImageError:
                 raise BadImage('Bad jpeg image')
 
@@ -385,7 +385,7 @@ class ImageProcessor(object):
 
         elif filename_p.suffix in ['.png']:
             # PNGs may be 16-bit, use OpenCV
-            data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+            data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)  # opencv returns BGR
 
             if isinstance(data, type(None)):
                 raise BadImage('Bad png image')
@@ -397,6 +397,7 @@ class ImageProcessor(object):
                     data = data[:, :, :3]
 
                 # swap axes for FITS
+                data = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)  # opencv returns BGR
                 data = numpy.swapaxes(data, 1, 0)
                 data = numpy.swapaxes(data, 2, 0)
 
