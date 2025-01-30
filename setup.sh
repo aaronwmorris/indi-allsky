@@ -184,11 +184,8 @@ if [ -f "/usr/local/bin/indiserver" ]; then
     INDI_DRIVER_PATH="/usr/local/bin"
 
     echo
-    echo
     echo "Detected a custom installation of INDI in /usr/local/bin"
     echo
-    echo
-    sleep 3
 fi
 
 
@@ -276,6 +273,22 @@ if systemctl --user -q is-active "${ALLSKY_SERVICE_NAME}.service" >/dev/null 2>&
 fi
 
 
+if [[ "$(id -u)" == "0" ]]; then
+    echo "Please do not run $(basename "$0") as root"
+    echo "Re-run this script as the user which will execute the indi-allsky software"
+    echo
+    echo
+    exit 1
+fi
+
+
+if which whiptail >/dev/null 2>&1; then
+    whiptail \
+        --title "Welcome to indi-allsky" \
+        --msgbox "*** Welcome to the indi-allsky setup script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nINDI Port: $INDI_PORT\nHTTP Port: $HTTP_PORT\nHTTPS Port: $HTTPS_PORT" 0 0
+fi
+
+
 echo
 echo
 echo "Distribution: $DISTRO_ID"
@@ -301,14 +314,6 @@ echo "HTTPS_PORT: $HTTPS_PORT"
 echo
 echo
 
-if [[ "$(id -u)" == "0" ]]; then
-    echo "Please do not run $(basename "$0") as root"
-    echo "Re-run this script as the user which will execute the indi-allsky software"
-    echo
-    echo
-    exit 1
-fi
-
 
 if ! ping -c 1 "$(hostname -s)" >/dev/null 2>&1; then
     echo "To avoid the benign warnings 'Name or service not known sudo: unable to resolve host'"
@@ -330,45 +335,105 @@ sudo true
 START_TIME=$(date +%s)
 
 
-echo
-echo
-echo "indi-allsky supports the following camera interfaces."
-echo
-echo "Wiki:  https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces"
-echo
-echo "             indi: For astro/planetary cameras normally connected via USB (ZWO, QHY, PlayerOne, SVBony, Altair, Touptek, etc)"
-echo "        libcamera: Supports cameras connected via CSI interface on Raspberry Pi SBCs (Raspi HQ Camera, Camera Module 3, etc)"
-echo "    pycurl_camera: Download images from a remote web camera"
-echo " indi_accumulator: Create synthetic exposures using multiple sub-exposures"
-echo "     indi_passive: Connect a second instance of indi-allsky to an existing indi-allsky indiserver"
-echo
+if which whiptail >/dev/null 2>&1; then
+    while [ -z "${CAMERA_INTERFACE:-}" ]; do
+        # shellcheck disable=SC2068
+        CAMERA_INTERFACE=$(whiptail \
+            --title "Select camera interface" \
+            --nocancel \
+            --radiolist "indi-allsky supports the following camera interfaces.\n\nWiki:  https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces\n\nPress space to select" 0 0 0 \
+                "indi" "For astro/planetary cameras normally connected via USB (ZWO, QHY, PlayerOne, SVBony, Altair, Touptek, etc)" "OFF" \
+                "libcamera" "Supports cameras connected via CSI interface on Raspberry Pi SBCs (Raspi HQ Camera, Camera Module 3, etc)" "OFF" \
+                "pycurl_camera" "Download images from a remote web camera" "OFF" \
+                "indi_accumulator" "Create synthetic exposures using multiple sub-exposures" "OFF" \
+                "indi_passive" "Connect a second instance of indi-allsky to an existing indi-allsky indiserver" "OFF" \
+            3>&1 1>&2 2>&3)
 
-# whiptail might not be installed yet
-while [ -z "${CAMERA_INTERFACE:-}" ]; do
-    PS3="Select a camera interface: "
-    select camera_interface in indi libcamera pycurl_camera indi_accumulator indi_passive ; do
-        if [ -n "$camera_interface" ]; then
-            CAMERA_INTERFACE="$camera_interface"
-            break
+
+        # more specific libcamera selection
+        if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
+
+            while [ -z "${LIBCAMERA_INTERFACE:-}" ]; do
+                LIBCAMERA_INTERFACE=$(whiptail \
+                    --title "Select a libcamera interface: " \
+                    --nocancel \
+                    --notags \
+                    --radiolist "https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces\n\nPress space to select" 0 0 0 \
+                        "libcamera_imx477" "IMX477 - Raspberry Pi HQ Camera" "OFF" \
+                        "libcamera_imx378" "IMX378" "OFF" \
+                        "libcamera_imx708" "IMX708 - Camera Module 3" "OFF" \
+                        "libcamera_imx519" "IMX519" "OFF" \
+                        "libcamera_imx500_ai" "IMX500 - AI Camera" "OFF" \
+                        "libcamera_imx283" "IMX283 - Klarity/OneInchEye" "OFF" \
+                        "libcamera_imx462" "IMX462" "OFF" \
+                        "libcamera_imx327" "IMX327" "OFF" \
+                        "libcamera_imx678" "IMX678 - Darksee" "OFF" \
+                        "libcamera_ov5647" "OV5647" "OFF" \
+                        "libcamera_imx219" "IMX219 - Camera Module 2" "OFF" \
+                        "libcamera_imx296_gs" "IMX296 - Global Shutter" "OFF" \
+                        "libcamera_imx290" "IMX290" "OFF" \
+                        "libcamera_imx298" "IMX298" "OFF" \
+                        "libcamera_64mp_hawkeye" "64MP Hawkeye (IMX682)" "OFF" \
+                        "libcamera_64mp_owlsight" "64MP Owlsight (OV64A40)" "OFF" \
+                        "restart" "Restart camera selection" "OFF" \
+                    3>&1 1>&2 2>&3)
+            done
+
+            if [ "$LIBCAMERA_INTERFACE" == "restart" ]; then
+                CAMERA_INTERFACE=""
+                LIBCAMERA_INTERFACE=""
+                continue
+            fi
+
+            CAMERA_INTERFACE="$LIBCAMERA_INTERFACE"
         fi
     done
+else
+    echo
+    echo
+    echo "indi-allsky supports the following camera interfaces."
+    echo
+    echo "Wiki:  https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces"
+    echo
+    echo "             indi: For astro/planetary cameras normally connected via USB (ZWO, QHY, PlayerOne, SVBony, Altair, Touptek, etc)"
+    echo "        libcamera: Supports cameras connected via CSI interface on Raspberry Pi SBCs (Raspi HQ Camera, Camera Module 3, etc)"
+    echo "    pycurl_camera: Download images from a remote web camera"
+    echo " indi_accumulator: Create synthetic exposures using multiple sub-exposures"
+    echo "     indi_passive: Connect a second instance of indi-allsky to an existing indi-allsky indiserver"
+    echo
 
-
-    # more specific libcamera selection
-    if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
-        INSTALL_LIBCAMERA="true"
-
-        echo
-        PS3="Select a libcamera interface: "
-        select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_imx708 libcamera_imx519 libcamera_imx500_ai libcamera_imx283 libcamera_imx462 libcamera_imx327 libcamera_imx678 libcamera_ov5647 libcamera_imx219 libcamera_imx296_gs libcamera_imx290 libcamera_imx298 libcamera_64mp_hawkeye libcamera_64mp_owlsight; do
-            if [ -n "$libcamera_interface" ]; then
-                # overwrite variable
-                CAMERA_INTERFACE="$libcamera_interface"
+    while [ -z "${CAMERA_INTERFACE:-}" ]; do
+        PS3="Select a camera interface: "
+        select camera_interface in indi libcamera pycurl_camera indi_accumulator indi_passive ; do
+            if [ -n "$camera_interface" ]; then
+                CAMERA_INTERFACE="$camera_interface"
                 break
             fi
         done
-    fi
-done
+
+
+        # more specific libcamera selection
+        if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
+            INSTALL_LIBCAMERA="true"
+
+            echo
+            PS3="Select a libcamera interface: "
+            select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_imx708 libcamera_imx519 libcamera_imx500_ai libcamera_imx283 libcamera_imx462 libcamera_imx327 libcamera_imx678 libcamera_ov5647 libcamera_imx219 libcamera_imx296_gs libcamera_imx290 libcamera_imx298 libcamera_64mp_hawkeye libcamera_64mp_owlsight; do
+                if [ -n "$libcamera_interface" ]; then
+                    # overwrite variable
+                    CAMERA_INTERFACE="$libcamera_interface"
+                    break
+                fi
+            done
+        fi
+    done
+fi
+
+
+echo
+echo "Selected interface: $CAMERA_INTERFACE"
+echo
+sleep 3
 
 
 if [[ -f "/usr/local/bin/libcamera-still" || -f "/usr/local/bin/rpicam-still" ]]; then
@@ -1290,6 +1355,9 @@ fi
 
 
 if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
+    #sudo systemctl start "user@${UID}.service"
+    #export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${UID}/bus"
+
     echo
     echo
     echo "The DBUS user session is not defined"

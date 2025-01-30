@@ -64,11 +64,8 @@ if [ -f "/usr/local/bin/indiserver" ]; then
     #INDI_DRIVER_PATH="/usr/local/bin"
 
     echo
-    echo
     echo "Detected a custom installation of INDI in /usr/local/bin"
     echo
-    echo
-    sleep 3
 fi
 
 
