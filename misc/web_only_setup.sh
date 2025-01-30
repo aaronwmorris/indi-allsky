@@ -97,9 +97,9 @@ MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 PGRP=$(id -ng)
 
 
-echo "###############################################"
-echo "### Welcome to the indi-allsky setup script ###"
-echo "###############################################"
+echo "###################################################"
+echo "### Welcome to the indi-allsky web setup script ###"
+echo "###################################################"
 
 
 if [[ -n "${VIRTUAL_ENV:-}" ]]; then
@@ -118,6 +118,22 @@ if systemctl --user -q is-active "${ALLSKY_SERVICE_NAME}" >/dev/null 2>&1; then
     echo "WARNING: indi-allsky is running.  It is recommended to stop the service before running this script."
     echo
     sleep 5
+fi
+
+
+if [[ "$(id -u)" == "0" ]]; then
+    echo "Please do not run $(basename "$0") as root"
+    echo "Re-run this script as the user which will execute the indi-allsky software"
+    echo
+    echo
+    exit 1
+fi
+
+
+if which whiptail >/dev/null 2>&1; then
+    whiptail \
+        --title "Welcome to indi-allsky" \
+        --msgbox "*** Welcome to the indi-allsky web setup script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nHTTP Port: $HTTP_PORT\nHTTPS Port: $HTTPS_PORT" 0 0
 fi
 
 
@@ -140,14 +156,6 @@ echo "HTTP_PORT: $HTTP_PORT"
 echo "HTTPS_PORT: $HTTPS_PORT"
 echo
 echo
-
-if [[ "$(id -u)" == "0" ]]; then
-    echo "Please do not run $(basename "$0") as root"
-    echo "Re-run this script as the user which will execute the indi-allsky software"
-    echo
-    echo
-    exit 1
-fi
 
 if ! ping -c 1 "$(hostname -s)" >/dev/null 2>&1; then
     echo "To avoid the benign warnings 'Name or service not known sudo: unable to resolve host'"
