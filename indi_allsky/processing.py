@@ -338,6 +338,16 @@ class ImageProcessor(object):
             aperture = camera.lensFocalLength / camera.lensFocalRatio
             hdulist[0].header['FOCALLEN'] = round(camera.lensFocalLength, 2)
             hdulist[0].header['APTDIA'] = round(aperture, 2)
+
+
+            if isinstance(hdulist[0].header.get('EXPTIME'), type(None)):
+                logger.warning('FITS exposure is not populated')
+                hdulist[0].header['EXPTIME'] = float(exposure)
+
+            # in case a driver does not populate this info (libcamera)
+            if isinstance(hdulist[0].header.get('GAIN'), type(None)):
+                logger.warning('FITS gain is not populated')
+                hdulist[0].header['GAIN'] = float(self.gain_v.value)
         elif filename_p.suffix in ['.jpg', '.jpeg']:
             try:
                 with Image.open(str(filename_p)) as img:
