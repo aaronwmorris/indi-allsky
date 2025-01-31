@@ -7,9 +7,11 @@ set -o nounset
 PATH=/bin:/usr/bin
 export PATH
 
+
 # can be overridden by environment variables
 #BUILD_INDI_CORE="true"
 #BUILD_INDI_3RDPARTY="true"
+#BUILD_INDI_CAMERA_VENDOR="zwo"
 #MAKE_CONCURRENT=x
 
 
@@ -47,7 +49,6 @@ CPU_ARCH=$(uname -m)
 CPU_BITS=$(getconf LONG_BIT)
 CPU_TOTAL=$(grep -c "^proc" /proc/cpuinfo)
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
-
 
 PROJECTS_FOLDER="$HOME/Projects"
 
@@ -130,6 +131,7 @@ echo "Existing INDI: ${DETECTED_INDIVERSION:-none}"
 echo
 echo "BUILD_INDI_CORE: ${BUILD_INDI_CORE:-true}"
 echo "BUILD_INDI_3RDPARTY: ${BUILD_INDI_3RDPARTY:-true}"
+echo "BUILD_INDI_CAMERA_VENDOR: ${BUILD_INDI_CAMERA_VENDOR:-ask}"
 echo
 echo "Running make with $MAKE_CONCURRENT processes"
 echo
@@ -166,6 +168,7 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
             git \
             ca-certificates \
             cmake \
+            whiptail \
             fxload \
             pkgconf \
             libavcodec-dev \
@@ -194,6 +197,8 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
             libnutclient-dev \
             libzmq3-dev \
             libahp-gt-dev \
+            libcamera-dev \
+            libboost-program-options1.74-dev \
             zlib1g-dev
 
 
@@ -216,6 +221,7 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
             git \
             ca-certificates \
             cmake \
+            whiptail \
             fxload \
             pkg-config \
             libavcodec-dev \
@@ -265,6 +271,7 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
             git \
             ca-certificates \
             cmake \
+            whiptail \
             fxload \
             pkg-config \
             libavcodec-dev \
@@ -315,6 +322,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
             git \
             ca-certificates \
             cmake \
+            whiptail \
             fxload \
             pkgconf \
             libavcodec-dev \
@@ -343,6 +351,8 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
             libnutclient-dev \
             libzmq3-dev \
             libahp-gt-dev \
+            libcamera-dev \
+            libboost-program-options1.74-dev \
             zlib1g-dev
 
     elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
@@ -363,6 +373,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
             git \
             ca-certificates \
             cmake \
+            whiptail \
             fxload \
             pkg-config \
             libavcodec-dev \
@@ -410,6 +421,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
             git \
             ca-certificates \
             cmake \
+            whiptail \
             fxload \
             pkg-config \
             libavcodec-dev \
@@ -463,6 +475,69 @@ sudo ldconfig
 [[ ! -d "${PROJECTS_FOLDER}/build" ]] && mkdir "${PROJECTS_FOLDER}/build"
 
 
+if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
+    while [ "${BUILD_INDI_CAMERA_VENDOR:-ask}" == "ask" ]; do
+        BUILD_INDI_CAMERA_VENDOR=$(whiptail \
+            --title "Camera Vendor" \
+            --nocancel \
+            --notags \
+            --radiolist "Select which camera vendor to build\n\nPress space to select" 0 0 0 \
+                "supported" "Supported Cameras" "OFF" \
+                "asi" "ZWO ASI Camera" "OFF" \
+                "playerone" "PlayerOne Astronomy" "OFF" \
+                "touptek" "ToupTek / Altair / Omegon / Meade / etc" "OFF" \
+                "svbony" "SVBony" "OFF" \
+                "qhy" "QHY" "OFF" \
+                "sx" "Starlight Xpress" "OFF" \
+                "libcamera" "indi-libcamera [BETA] (this is not the standard libcamera support)" "OFF" \
+                "gphoto" "DSLR - Canon / Nikon / Sony / Pentax / Fuji / etc" "OFF" \
+                "webcam" "Web Camera - indi_webcam_ccd" "OFF" \
+                "all" "All drivers" "OFF" \
+            3>&1 1>&2 2>&3)
+    done
+
+
+    if [[ "$BUILD_INDI_CAMERA_VENDOR" == "all" ]]; then
+        INDI_3RDPARTY_LIBRARIES="all"
+        INDI_3RDPARTY_DRIVERS="all"
+    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "asi" || "$BUILD_INDI_CAMERA_VENDOR" == "zwo" ]]; then
+        INDI_3RDPARTY_LIBRARIES="libasi"
+        INDI_3RDPARTY_DRIVERS="indi-asi indi-gpsd"
+    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "playerone" ]]; then
+        INDI_3RDPARTY_LIBRARIES="libplayerone"
+        INDI_3RDPARTY_DRIVERS="indi-playerone indi-gpsd"
+    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "svbony" ]]; then
+        INDI_3RDPARTY_LIBRARIES="libsvbony"
+        INDI_3RDPARTY_DRIVERS="indi-svbony indi-gpsd"
+    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "qhy" ]]; then
+        INDI_3RDPARTY_LIBRARIES="libqhy"
+        INDI_3RDPARTY_DRIVERS="indi-qhy indi-gpsd"
+    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "sx" ]]; then
+        INDI_3RDPARTY_LIBRARIES=""
+        INDI_3RDPARTY_DRIVERS="indi-sx indi-gpsd"
+    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "libcamera" ]]; then
+        INDI_3RDPARTY_LIBRARIES=""
+        INDI_3RDPARTY_DRIVERS="indi-libcamera indi-gpsd"
+    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "gphoto" ]]; then
+        INDI_3RDPARTY_LIBRARIES=""
+        INDI_3RDPARTY_DRIVERS="indi-gphoto indi-gpsd"
+    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "webcam" ]]; then
+        INDI_3RDPARTY_LIBRARIES=""
+        INDI_3RDPARTY_DRIVERS="indi-webcam indi-gpsd"
+    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "touptek" ]]; then
+        INDI_3RDPARTY_LIBRARIES="libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam indi-gpsd"
+        INDI_3RDPARTY_DRIVERS="indi-toupbase"
+    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "supported" ]]; then
+        INDI_3RDPARTY_LIBRARIES="libasi libplayerone libsvbony libqhy libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam"
+        INDI_3RDPARTY_DRIVERS="indi-asi indi-playerone indi-svbony indi-qhy indi-sx indi-toupbase indi-gphoto indi-webcam indi-gpsd"
+    else
+        echo
+        echo "Invalid selection"
+        exit 1
+    fi
+fi
+
+
 ### INDI Core ###
 if [ "${BUILD_INDI_CORE:-true}" == "true" ]; then
     [[ -d "${PROJECTS_FOLDER}/src/indi_core" ]] && rm -fR "${PROJECTS_FOLDER}/src/indi_core"
@@ -514,20 +589,48 @@ if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
 
     if [ "${BUILD_INDI_3RDPARTY_LIB:-true}" == "true" ]; then
         #### libs ####
-        INDI_3RDPARTY_LIB_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_lib.XXXXXXXX")
-        cd "$INDI_3RDPARTY_LIB_BUILD"
+        if [ "$INDI_3RDPARTY_LIBRARIES" == "all" ]; then
+            INDI_3RDPARTY_LIB_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_lib.XXXXXXXX")
+            cd "$INDI_3RDPARTY_LIB_BUILD"
 
-        # Setup library build
-        $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBS=1 "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
-        # Compile
-        make -j "$MAKE_CONCURRENT"
-        sudo make install
+            # Setup library build
+            $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBS=1 "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
-        cd "$OLDPWD"
+            # Compile
+            make -j "$MAKE_CONCURRENT"
+            sudo make install
 
-        # Cleanup
-        [[ -d "$INDI_3RDPARTY_LIB_BUILD" ]] && rm -fR "$INDI_3RDPARTY_LIB_BUILD"
+            cd "$OLDPWD"
+
+
+            # Cleanup
+            [[ -d "$INDI_3RDPARTY_LIB_BUILD" ]] && rm -fR "$INDI_3RDPARTY_LIB_BUILD"
+        else
+            for INDI_LIB in $INDI_3RDPARTY_LIBRARIES; do
+                echo
+                echo "Building library: $INDI_LIB"
+                echo
+                sleep 3
+
+                INDI_3RDPARTY_LIB_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_lib.XXXXXXXX")
+                cd "$INDI_3RDPARTY_LIB_BUILD"
+
+
+                # Setup library build
+                $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_LIB"
+
+                # Compile
+                make -j "$MAKE_CONCURRENT"
+                sudo make install
+
+                cd "$OLDPWD"
+
+
+                # Cleanup
+                [[ -d "$INDI_3RDPARTY_LIB_BUILD" ]] && rm -fR "$INDI_3RDPARTY_LIB_BUILD"
+            done
+        fi
         #### libs ####
     else
         echo
@@ -539,20 +642,44 @@ if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
 
     if [ "${BUILD_INDI_3RDPARTY_DRIVER:-true}" == "true" ]; then
         #### drivers ####
-        INDI_3RDPARTY_DRIVER_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_driver.XXXXXXXX")
-        cd "$INDI_3RDPARTY_DRIVER_BUILD"
+        if [ "$INDI_3RDPARTY_DRIVERS" == "all" ]; then
+            INDI_3RDPARTY_DRIVER_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_driver.XXXXXXXX")
+            cd "$INDI_3RDPARTY_DRIVER_BUILD"
 
-        # Setup driver build
-        $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty"
+            # Setup driver build
+            $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
-        # Compile
-        make -j "$MAKE_CONCURRENT"
-        sudo make install
-        cd "$OLDPWD"
+            # Compile
+            make -j "$MAKE_CONCURRENT"
+            sudo make install
+            cd "$OLDPWD"
 
 
-        # Cleanup
-        [[ -d "$INDI_3RDPARTY_DRIVER_BUILD" ]] && rm -fR "$INDI_3RDPARTY_DRIVER_BUILD"
+            # Cleanup
+            [[ -d "$INDI_3RDPARTY_DRIVER_BUILD" ]] && rm -fR "$INDI_3RDPARTY_DRIVER_BUILD"
+        else
+            for INDI_DRIVER in $INDI_3RDPARTY_DRIVERS; do
+                echo
+                echo "Building driver: $INDI_DRIVER"
+                echo
+                sleep 3
+
+                INDI_3RDPARTY_DRIVER_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_driver.XXXXXXXX")
+                cd "$INDI_3RDPARTY_DRIVER_BUILD"
+
+                # Setup driver build
+                $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_DRIVER"
+
+                # Compile
+                make -j "$MAKE_CONCURRENT"
+                sudo make install
+                cd "$OLDPWD"
+
+
+                # Cleanup
+                [[ -d "$INDI_3RDPARTY_DRIVER_BUILD" ]] && rm -fR "$INDI_3RDPARTY_DRIVER_BUILD"
+            done
+        fi
         #### drivers ####
     else
         echo
