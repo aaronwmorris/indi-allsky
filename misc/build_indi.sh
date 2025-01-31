@@ -198,6 +198,7 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
             libzmq3-dev \
             libahp-gt-dev \
             libcamera-dev \
+            libboost-program-options1.74-dev \
             zlib1g-dev
 
 
@@ -351,6 +352,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
             libzmq3-dev \
             libahp-gt-dev \
             libcamera-dev \
+            libboost-program-options1.74-dev \
             zlib1g-dev
 
     elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
