@@ -442,8 +442,8 @@ class IndiAllSkyConfigBase(object):
             "UPLOAD_PANORAMA_VIDEO"  : False,
         },
         "LIBCAMERA" : {
-            "IMAGE_FILE_TYPE"        : "dng",
-            "IMAGE_FILE_TYPE_DAY"    : "dng",
+            "IMAGE_FILE_TYPE"        : "jpg",
+            "IMAGE_FILE_TYPE_DAY"    : "jpg",
             "AWB"                    : "auto",
             "AWB_DAY"                : "auto",
             "AWB_ENABLE"             : False,
