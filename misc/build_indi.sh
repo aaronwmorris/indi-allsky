@@ -197,6 +197,7 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
             libnutclient-dev \
             libzmq3-dev \
             libahp-gt-dev \
+            libcamera-dev \
             zlib1g-dev
 
 
@@ -349,6 +350,7 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
             libnutclient-dev \
             libzmq3-dev \
             libahp-gt-dev \
+            libcamera-dev \
             zlib1g-dev
 
     elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
