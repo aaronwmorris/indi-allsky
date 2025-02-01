@@ -1327,7 +1327,7 @@ class CaptureWorker(Process):
 
 
             if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
-                libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
+                libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'jpg')
                 if libcamera_image_type == 'dng':
                     self.indiclient.libcamera_bit_depth = 16
                 else:
@@ -1346,7 +1346,7 @@ class CaptureWorker(Process):
 
 
             if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
-                libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'dng')
+                libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'jpg')
                 if libcamera_image_type == 'dng':
                     self.indiclient.libcamera_bit_depth = 16
                 else:

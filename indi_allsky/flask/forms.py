@@ -3023,8 +3023,8 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     LIBCAMERA__IMAGE_FILE_TYPE_choices = (
-        ('dng', 'DNG (raw)'),
         ('jpg', 'JPEG'),
+        ('dng', 'DNG (raw)'),
         ('png', 'PNG'),
     )
 

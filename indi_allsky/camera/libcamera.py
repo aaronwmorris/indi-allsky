@@ -134,10 +134,10 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         if self.night_v.value:
             # night
-            image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng')
+            image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'jpg')
         else:
             # day
-            image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'dng')
+            image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'jpg')
 
 
         if image_type == 'dng' and self.memory_total_mb <= 768:

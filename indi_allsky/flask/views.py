@@ -2035,8 +2035,8 @@ class ConfigView(FormView):
             'YOUTUBE__UPLOAD_MINI_VIDEO'     : self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_MINI_VIDEO', False),
             'YOUTUBE__UPLOAD_STARTRAIL_VIDEO': self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_STARTRAIL_VIDEO', False),
             'YOUTUBE__UPLOAD_PANORAMA_VIDEO' : self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_PANORAMA_VIDEO', False),
-            'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'dng'),
-            'LIBCAMERA__IMAGE_FILE_TYPE_DAY' : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'dng'),
+            'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'jpg'),
+            'LIBCAMERA__IMAGE_FILE_TYPE_DAY' : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'jpg'),
             'LIBCAMERA__AWB'                 : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB', 'auto'),
             'LIBCAMERA__AWB_DAY'             : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_DAY', 'auto'),
             'LIBCAMERA__AWB_ENABLE'          : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_ENABLE', False),
@@ -3522,9 +3522,9 @@ class Fits2JpegView(BaseView):
 
         hdulist = fits.open(filename_p)
 
-        exposure = float(hdulist[0].header['EXPTIME'])
+        exposure = float(hdulist[0].header.get('EXPTIME', 0))
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
-        gain_v = Value('i', int(hdulist[0].header['GAIN']))
+        gain_v = Value('i', int(hdulist[0].header.get('GAIN', 0)))
         bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
         sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
@@ -6230,9 +6230,9 @@ class JsonImageProcessingView(JsonView):
 
         hdulist = fits.open(filename_p)
 
-        exposure = float(hdulist[0].header['EXPTIME'])
+        exposure = float(hdulist[0].header.get('EXPTIME', 0))
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
-        gain_v = Value('i', int(hdulist[0].header['GAIN']))
+        gain_v = Value('i', int(hdulist[0].header.get('GAIN', 0)))
         bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
         sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
@@ -6298,7 +6298,7 @@ class JsonImageProcessingView(JsonView):
 
                 for f_image in fits_image_query:
                     alt_hdulist = fits.open(filename_p)
-                    alt_exposure = float(alt_hdulist[0].header['EXPTIME'])
+                    alt_exposure = float(alt_hdulist[0].header.get('EXPTIME', 0))
                     alt_hdulist.close()
 
                     i_ref = image_processor.add(f_image.getFilesystemPath(), alt_exposure, datetime.now(), 0.0, f_image.camera)
