@@ -143,6 +143,7 @@ class TempApiAstrospheric(SensorBase):
         if self.config.get('TEMP_DISPLAY') == 'f':
             current_temp = self.c2f(temp_c)
             current_dp = self.c2f(dew_point_c)
+            current_fp = self.c2f(frost_point_c)
         elif self.config.get('TEMP_DISPLAY') == 'k':
             current_temp = temp_k
             current_dp = temp_k
