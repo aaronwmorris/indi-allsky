@@ -5262,6 +5262,7 @@ class IndiAllskyVideoViewer(FlaskForm):
             entry = {
                 'id'                : v.id,
                 'url'               : str(url),
+                'success'           : v.success,
                 'dayDate_long'      : v.dayDate.strftime('%B %d, %Y'),
                 'dayDate'           : v.dayDate.strftime('%Y%m%d'),
                 'night'             : v.night,
@@ -5315,10 +5316,12 @@ class IndiAllskyVideoViewer(FlaskForm):
                 try:
                     keogram_url = keogram_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
                     keogram_id = keogram_entry.id
+                    keogram_success = keogram_entry.success
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     keogram_url = None
                     keogram_id = 0
+                    keogram_success = False
 
 
                 if keogram_entry.thumbnail_uuid:
@@ -5337,8 +5340,9 @@ class IndiAllskyVideoViewer(FlaskForm):
                     keogram_thumbnail_url = None
             else:
                 keogram_url = None
-                keogram_id = 0
+                keogram_id = -1
                 keogram_thumbnail_url = None
+                keogram_success = False
 
 
             ### Star trail
@@ -5373,10 +5377,12 @@ class IndiAllskyVideoViewer(FlaskForm):
                 try:
                     startrail_url = startrail_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
                     startrail_id = startrail_entry.id
+                    startrail_success = startrail_entry.success
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_url = None
                     startrail_id = -1
+                    startrail_success = False
 
 
                 if startrail_entry.thumbnail_uuid:
@@ -5397,6 +5403,7 @@ class IndiAllskyVideoViewer(FlaskForm):
                 startrail_url = None
                 startrail_id = -1
                 startrail_thumbnail_url = None
+                startrail_success = False
 
 
             ### Star trail timelapses
@@ -5437,15 +5444,18 @@ class IndiAllskyVideoViewer(FlaskForm):
                     startrail_video_url = startrail_video_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
                     startrail_video_id = startrail_video_entry.id
                     startrail_video_youtube = bool(st_v_data.get('youtube_id', False))
+                    startrail_video_success = startrail_video_entry.success
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     startrail_video_url = None
                     startrail_video_id = -1
                     startrail_video_youtube = False
+                    startrail_video_success = False
             else:
                 startrail_video_url = None
                 startrail_video_id = -1
                 startrail_video_youtube = False
+                startrail_video_success = False
 
 
             ### Panorama timelapses
@@ -5486,29 +5496,36 @@ class IndiAllskyVideoViewer(FlaskForm):
                     panorama_video_url = panorama_video_entry.getUrl(s3_prefix=self.s3_prefix, local=self.local)
                     panorama_video_id = panorama_video_entry.id
                     panorama_video_youtube = bool(p_v_data.get('youtube_id', False))
+                    panorama_video_success = panorama_video_entry.success
                 except ValueError as e:
                     app.logger.error('Error determining relative file name: %s', str(e))
                     panorama_video_url = None
                     panorama_video_id = -1
                     panorama_video_youtube = False
+                    panorama_video_success = False
             else:
                 panorama_video_url = None
                 panorama_video_id = -1
                 panorama_video_youtube = False
+                panorama_video_success = False
 
 
             entry['keogram']    = str(keogram_url)
             entry['keogram_id'] = keogram_id
             entry['keogram_thumbnail']  = str(keogram_thumbnail_url)
+            entry['keogram_success']  = keogram_success
             entry['startrail']  = str(startrail_url)
             entry['startrail_thumbnail']  = str(startrail_thumbnail_url)
             entry['startrail_id']  = startrail_id
+            entry['startrail_success']  = startrail_success
             entry['startrail_timelapse']  = str(startrail_video_url)
             entry['startrail_timelapse_id']  = startrail_video_id
             entry['startrail_timelapse_youtube_uploaded']  = startrail_video_youtube
+            entry['startrail_timelapse_success']  = startrail_video_success
             entry['panorama_timelapse']  = str(panorama_video_url)
             entry['panorama_timelapse_id']  = panorama_video_id
             entry['panorama_timelapse_youtube_uploaded']  = panorama_video_youtube
+            entry['panorama_timelapse_success']  = panorama_video_success
 
 
         return videos_data
@@ -5690,6 +5707,7 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
             entry = {
                 'id'                : v.id,
                 'url'               : str(url),
+                'success'           : v.success,
                 'thumbnail_url'     : str(thumbnail_url),
                 'dayDate_long'      : v.dayDate.strftime('%B %d, %Y'),
                 'dayDate'           : v.dayDate.strftime('%Y%m%d'),
