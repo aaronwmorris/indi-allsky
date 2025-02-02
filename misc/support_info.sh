@@ -266,7 +266,7 @@ fi
 
 
 echo "libcamera packages"
-dpkg -l | grep libcamera || true
+dpkg -l | grep -E "libcamera|rpicam" || true
 echo
 
 echo "libcamera cameras"
