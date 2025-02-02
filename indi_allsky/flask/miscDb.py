@@ -444,6 +444,7 @@ class miscDb(object):
             createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
+            success=metadata.get('success', False),  # original default was true
             dayDate=dayDate,
             dayDate_year=dayDate.year,
             dayDate_month=dayDate.month,
@@ -524,6 +525,7 @@ class miscDb(object):
             createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
+            success=metadata.get('success', False),  # original default was true
             dayDate=dayDate,
             dayDate_year=dayDate.year,
             dayDate_month=dayDate.month,
@@ -587,6 +589,7 @@ class miscDb(object):
             createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
+            success=metadata.get('success', False),  # original default was true
             dayDate=dayDate,
             night=metadata['night'],
             framerate=float(metadata.get('framerate', 0.0)),
@@ -643,6 +646,7 @@ class miscDb(object):
             createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
+            success=metadata.get('success', False),  # original default was true
             dayDate=dayDate,
             night=metadata['night'],
             frames=metadata.get('frames', 0),
@@ -699,6 +703,7 @@ class miscDb(object):
             createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
+            success=metadata.get('success', False),  # original default was true
             dayDate=dayDate,
             night=metadata['night'],
             frames=metadata.get('frames', 0),
@@ -754,6 +759,7 @@ class miscDb(object):
             createDate=createDate,
             camera_id=camera_id,
             filename=str(filename_p),
+            success=metadata.get('success', False),  # original default was true
             dayDate=dayDate,
             night=metadata['night'],
             framerate=float(metadata.get('framerate', 0.0)),
