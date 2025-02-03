@@ -2178,7 +2178,7 @@ class ImageProcessor(object):
 
         # wind direction
         try:
-            label_data['wind_dir'] = self.cardinal_directions[round(self.sensors_user_av[6] / 22.5)]
+            label_data['wind_dir'] = self.cardinal_directions[round(self.sensors_user_av[6] / (360 / (len(self.cardinal_directions) - 1)))]
         except IndexError:
             logger.error('Unable to calculate wind direction')
             label_data['wind_dir'] = 'Error'

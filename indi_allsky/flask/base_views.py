@@ -425,30 +425,24 @@ class BaseView(View):
         moon_cycle_percent = (sm_angle / math.tau) * 100
         data['moon_cycle_percent'] = moon_cycle_percent
 
+
+        # html glyphs for moon phases
+        moon_glyphs_waxing = ['&#127761;', '&#127762;', '&#127763;', '&#127764;', '&#127765;']
+        moon_glyphs_waning = ['&#127765;', '&#127766;', '&#127767;', '&#127768;', '&#127761;']
+
+        if latitude < 0:
+            # southern hemisphere perspective
+            moon_glyphs_waxing, moon_glyphs_waning = moon_glyphs_waning, moon_glyphs_waxing
+            moon_glyphs_waxing.reverse()
+            moon_glyphs_waning.reverse()
+
+
         if moon_cycle_percent <= 50:
             # waxing
-            if moon_phase_percent >= 0 and moon_phase_percent < 15:
-                data['moon_glyph'] = '&#127761;'
-            elif moon_phase_percent >= 15 and moon_phase_percent < 35:
-                data['moon_glyph'] = '&#127762;'
-            elif moon_phase_percent >= 35 and moon_phase_percent < 65:
-                data['moon_glyph'] = '&#127763;'
-            elif moon_phase_percent >= 65 and moon_phase_percent < 85:
-                data['moon_glyph'] = '&#127764;'
-            elif moon_phase_percent >= 85 and moon_phase_percent <= 100:
-                data['moon_glyph'] = '&#127765;'
+            data['moon_glyph'] = moon_glyphs_waxing[round(moon_phase_percent / (100 / (len(moon_glyphs_waxing) - 1)))]
         else:
             # waning
-            if moon_phase_percent >= 85 and moon_phase_percent <= 100:
-                data['moon_glyph'] = '&#127765;'
-            elif moon_phase_percent >= 65 and moon_phase_percent < 85:
-                data['moon_glyph'] = '&#127766;'
-            elif moon_phase_percent >= 35 and moon_phase_percent < 65:
-                data['moon_glyph'] = '&#127767;'
-            elif moon_phase_percent >= 15 and moon_phase_percent < 35:
-                data['moon_glyph'] = '&#127768;'
-            elif moon_phase_percent >= 0 and moon_phase_percent < 15:
-                data['moon_glyph'] = '&#127761;'
+            data['moon_glyph'] = moon_glyphs_waning[round((100 - moon_phase_percent) / (100 / (len(moon_glyphs_waning) - 1)))]
 
 
         obs.date = utcnow  # reset
