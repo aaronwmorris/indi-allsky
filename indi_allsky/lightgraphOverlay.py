@@ -68,7 +68,7 @@ class IndiAllSkyLightgraphOverlay(object):
 
 
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
-        now_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_COLOR', (15, 150, 200)))
+        now_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_COLOR', (120, 120, 200)))
         now_color_bgr.reverse()
 
         # draw now triangle

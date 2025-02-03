@@ -33,7 +33,7 @@ class LightGraphGenerator(object):
     night_color = (30, 30, 30)
     hour_color = (100, 15, 15)
     border_color = (1, 1, 1)
-    now_color = (200, 150, 15)
+    now_color = (120, 120, 200)
 
     opacity = 100
     hour_lines = True

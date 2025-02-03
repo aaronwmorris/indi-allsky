@@ -218,7 +218,7 @@ class IndiAllSkyConfigBase(object):
             "NIGHT_COLOR"   : [30, 30, 30],
             "HOUR_COLOR"    : [100, 15, 15],
             "BORDER_COLOR"  : [1, 1, 1],
-            "NOW_COLOR"     : [200, 150, 15],
+            "NOW_COLOR"     : [120, 120, 200],
             "FONT_COLOR"    : [150, 150, 150],
             "OPACITY"       : 100,
             "PIL_FONT_SIZE" : 20,
