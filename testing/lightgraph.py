@@ -29,6 +29,7 @@ class LightGraphGenerator(object):
     text_area_height = 50
     now_marker_size = 8
     day_color = (150, 150, 150)
+    dusk_color = (200, 100, 60)
     night_color = (30, 30, 30)
     hour_color = (100, 15, 15)
     border_color = (1, 1, 1)
@@ -158,6 +159,8 @@ class LightGraphGenerator(object):
 
         day_color_bgr = list(self.day_color)
         day_color_bgr.reverse()
+        dusk_color_bgr = list(self.dusk_color)
+        dusk_color_bgr.reverse()
         night_color_bgr = list(self.night_color)
         night_color_bgr.reverse()
 
@@ -173,8 +176,17 @@ class LightGraphGenerator(object):
             elif sun_alt_deg > 0:
                 lightgraph_list.append(day_color_bgr)
             else:
-                norm = (18 + sun_alt_deg) / 18  # alt is negative
-                lightgraph_list.append(self.mapColor(norm, day_color_bgr, night_color_bgr))
+                # tranition through dusk color
+                if sun_alt_deg <= -9:
+                    norm = (18 + sun_alt_deg) / 9  # alt is negative
+                    color_1 = dusk_color_bgr
+                    color_2 = night_color_bgr
+                else:
+                    norm = (9 + sun_alt_deg) / 9  # alt is negative
+                    color_1 = day_color_bgr
+                    color_2 = dusk_color_bgr
+
+                lightgraph_list.append(self.mapColor(norm, color_1, color_2))
 
         #logger.info(lightgraph_list)
 

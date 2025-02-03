@@ -214,6 +214,7 @@ class IndiAllSkyConfigBase(object):
             "LABEL"         : True,
             "HOUR_LINES"    : True,
             "DAY_COLOR"     : [150, 150, 150],
+            "DUSK_COLOR"    : [200, 100, 60],
             "NIGHT_COLOR"   : [30, 30, 30],
             "HOUR_COLOR"    : [100, 15, 15],
             "BORDER_COLOR"  : [1, 1, 1],
