@@ -814,6 +814,7 @@ class IndiAllSky(object):
 
             video_dict = {
                 'filename'   : str(f.relative_to(self.image_dir)),
+                'success'    : True,
                 'createDate' : d_createDate,
                 'dayDate'    : d_dayDate,
                 'dayDate_year'  : d_dayDate.year,
@@ -873,6 +874,7 @@ class IndiAllSky(object):
 
             keogram_dict = {
                 'filename'   : str(f.relative_to(self.image_dir)),
+                'success'    : True,
                 'createDate' : d_createDate,
                 'dayDate'    : d_dayDate,
                 'night'      : night,
@@ -923,6 +925,7 @@ class IndiAllSky(object):
 
             startrail_dict = {
                 'filename'   : str(f.relative_to(self.image_dir)),
+                'success'    : True,
                 'createDate' : d_createDate,
                 'dayDate'    : d_dayDate,
                 'night'      : night,
@@ -974,6 +977,7 @@ class IndiAllSky(object):
 
             startrail_video_dict = {
                 'filename'   : str(f.relative_to(self.image_dir)),
+                'success'    : True,
                 'createDate' : d_createDate,
                 'dayDate'    : d_dayDate,
                 'night'      : night,
@@ -1025,6 +1029,7 @@ class IndiAllSky(object):
 
             panorama_video_dict = {
                 'filename'   : str(f.relative_to(self.image_dir)),
+                'success'    : True,
                 'createDate' : d_createDate,
                 'dayDate'    : d_dayDate,
                 'night'      : night,

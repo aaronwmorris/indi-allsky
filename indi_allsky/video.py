@@ -439,10 +439,10 @@ class VideoWorker(Process):
             tg.pre_processor.pre_scale = self.config.get('TIMELAPSE', {}).get('PRE_SCALE', 50)
 
             tg.generate(video_file, timelapse_files)
-        except TimelapseException:
-            video_entry.success = False
-            db.session.commit()
 
+            video_entry.success = True
+            db.session.commit()
+        except TimelapseException:
             self._miscDb.addNotification(
                 NotificationCategory.MEDIA,
                 'timelapse_video',
@@ -455,6 +455,7 @@ class VideoWorker(Process):
 
 
         task.setSuccess('Generated timelapse: {0:s}'.format(str(video_file)))
+
 
         ### Upload ###
         self._miscUpload.syncapi_video(video_entry, video_metadata)  # syncapi before s3
@@ -702,10 +703,10 @@ class VideoWorker(Process):
             tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
 
             tg.generate(video_file, timelapse_files)
-        except TimelapseException:
-            mini_video_entry.success = False
-            db.session.commit()
 
+            mini_video_entry.success = True
+            db.session.commit()
+        except TimelapseException:
             self._miscDb.addNotification(
                 NotificationCategory.MEDIA,
                 'mini_timelapse_video',
@@ -939,10 +940,10 @@ class VideoWorker(Process):
             tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
 
             tg.generate(video_file, timelapse_files)
-        except TimelapseException:
-            video_entry.success = False
-            db.session.commit()
 
+            video_entry.success = True
+            db.session.commit()
+        except TimelapseException:
             self._miscDb.addNotification(
                 NotificationCategory.MEDIA,
                 'timelapse_video',
@@ -1376,6 +1377,8 @@ class VideoWorker(Process):
         keogram_entry.height = keogram_height
         keogram_entry.width = keogram_width
         keogram_entry.frames = keogram_width  # one frame per line
+
+        keogram_entry.success = True
         db.session.commit()
 
 
@@ -1411,6 +1414,8 @@ class VideoWorker(Process):
             startrail_entry.height = st_height
             startrail_entry.width = st_width
             startrail_entry.frames = stg.trail_count
+
+            startrail_entry.success = True
             db.session.commit()
 
 
@@ -1456,11 +1461,11 @@ class VideoWorker(Process):
                     st_tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
 
                     st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
+
+                    startrail_video_entry.success = True
+                    db.session.commit()
                 except TimelapseException:
                     logger.error('Failed to generate startrails timelapse')
-
-                    startrail_video_entry.success = False
-                    db.session.commit()
 
                     self._miscDb.addNotification(
                         NotificationCategory.MEDIA,
@@ -1471,6 +1476,7 @@ class VideoWorker(Process):
             else:
                 logger.error('Not enough frames to generate star trails timelapse: %d', st_frame_count)
                 startrail_video_entry = None
+
 
 
         processing_elapsed_s = time.time() - processing_start
