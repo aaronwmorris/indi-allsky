@@ -31,6 +31,7 @@ WORKDIR /home/allsky
 ENV BUILD_INDI_CORE=false
 ENV BUILD_INDI_3RDPARTY=true
 ENV BUILD_INDI_CAMERA_VENDOR=all
+ENV BUILD_INDI_OS_PACKAGE_UPGRADE=false
 RUN bash build_indi.sh $INDI_VERSION \
     && rm -fR /home/allsky/Projects \
     && sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

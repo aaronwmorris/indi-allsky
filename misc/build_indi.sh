@@ -15,6 +15,9 @@ export PATH
 #MAKE_CONCURRENT=x
 
 
+OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
+
+
 function handler_SIGINT() {
     #stty echo
     echo "Caught SIGINT, quitting"
@@ -74,6 +77,15 @@ fi
 
 if pkg-config --modversion libindi >/dev/null 2>&1; then
     DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
+fi
+
+
+if which whiptail >/dev/null 2>&1; then
+    ### whiptail might not be installed on first run
+    WHIPTAIL_BIN=$(which whiptail)
+
+    ### testing
+    #WHIPTAIL_BIN=""
 fi
 
 
@@ -145,6 +157,31 @@ sleep 10
 sudo true
 
 
+while [ -z "${OS_PACKAGE_UPGRADE:-}" ]; do
+    if [ -n "${WHIPTAIL_BIN:-}" ]; then
+        if "$WHIPTAIL_BIN" --title "Upgrade system packages" --yesno "Would you like to upgrade all of the system packages to the latest versions?" 0 0 --defaultno; then
+            OS_PACKAGE_UPGRADE="true"
+        else
+            OS_PACKAGE_UPGRADE="false"
+        fi
+    else
+        echo
+        echo
+        echo "Would you like to upgrade all of the system packages to the latest versions? "
+        PS3="? "
+        select package_upgrade in no yes ; do
+            if [ "${package_upgrade:-}" == "yes" ]; then
+                OS_PACKAGE_UPGRADE="true"
+                break
+            else
+                OS_PACKAGE_UPGRADE="false"
+                break
+            fi
+        done
+    fi
+done
+
+
 START_TIME=$(date +%s)
 
 
@@ -163,6 +200,13 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
         done
 
         sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
         sudo apt-get -y install \
             build-essential \
             git \
@@ -216,6 +260,13 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
 
 
         sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
         sudo apt-get -y install \
             build-essential \
             git \
@@ -266,6 +317,13 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
 
 
         sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
         sudo apt-get -y install \
             build-essential \
             git \
@@ -317,6 +375,13 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
         done
 
         sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
         sudo apt-get -y install \
             build-essential \
             git \
@@ -368,6 +433,13 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
         done
 
         sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
         sudo apt-get -y install \
             build-essential \
             git \
@@ -416,6 +488,13 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
         done
 
         sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
         sudo apt-get -y install \
             build-essential \
             git \

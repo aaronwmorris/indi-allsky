@@ -7,6 +7,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
+    && apt-get -y upgrade \
     && apt-get -y install \
       --no-install-recommends \
       --no-install-suggests \
@@ -43,6 +44,7 @@ WORKDIR /home/allsky
 
 ENV BUILD_INDI_CORE=true
 ENV BUILD_INDI_3RDPARTY=false
+ENV BUILD_INDI_OS_PACKAGE_UPGRADE=false
 RUN bash build_indi.sh $INDI_VERSION \
     && rm -fR /home/allsky/Projects \
     && sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
