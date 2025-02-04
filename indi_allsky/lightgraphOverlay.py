@@ -68,7 +68,7 @@ class IndiAllSkyLightgraphOverlay(object):
 
 
         lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
-        now_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_COLOR', (15, 150, 200)))
+        now_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_COLOR', (120, 120, 200)))
         now_color_bgr.reverse()
 
         # draw now triangle
@@ -229,6 +229,8 @@ class IndiAllSkyLightgraphOverlay(object):
 
         day_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('DAY_COLOR', (150, 150, 150)))
         day_color_bgr.reverse()
+        dusk_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('DUSK_COLOR', (200, 100, 60)))
+        dusk_color_bgr.reverse()
         night_color_bgr = list(self.config.get('LIGHTGRAPH_OVERLAY', {}).get('NIGHT_COLOR', (30, 30, 30)))
         night_color_bgr.reverse()
 
@@ -245,8 +247,17 @@ class IndiAllSkyLightgraphOverlay(object):
             elif sun_alt_deg > 0:
                 lightgraph_list.append(day_color_bgr)
             else:
-                norm = (18 + sun_alt_deg) / 18  # alt is negative
-                lightgraph_list.append(self.mapColor(norm, day_color_bgr, night_color_bgr))
+                # tranition through dusk color
+                if sun_alt_deg <= -9:
+                    norm = (18 + sun_alt_deg) / 9  # alt is negative
+                    color_1 = dusk_color_bgr
+                    color_2 = night_color_bgr
+                else:
+                    norm = (9 + sun_alt_deg) / 9  # alt is negative
+                    color_1 = day_color_bgr
+                    color_2 = dusk_color_bgr
+
+                lightgraph_list.append(self.mapColor(norm, color_1, color_2))
 
         #logger.info(lightgraph_list)
 
