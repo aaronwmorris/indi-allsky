@@ -141,8 +141,8 @@ echo "Indi 3rdparty: $INDI_3RDPARTY_TAG"
 echo
 echo "Existing INDI: ${DETECTED_INDIVERSION:-none}"
 echo
-echo "BUILD_INDI_CORE: ${BUILD_INDI_CORE:-true}"
-echo "BUILD_INDI_3RDPARTY: ${BUILD_INDI_3RDPARTY:-true}"
+echo "BUILD_INDI_CORE: ${BUILD_INDI_CORE:-ask}"
+echo "BUILD_INDI_3RDPARTY: ${BUILD_INDI_3RDPARTY:-ask}"
 echo "BUILD_INDI_CAMERA_VENDOR: ${BUILD_INDI_CAMERA_VENDOR:-ask}"
 echo
 echo "Running make with $MAKE_CONCURRENT processes"
@@ -554,7 +554,50 @@ sudo ldconfig
 [[ ! -d "${PROJECTS_FOLDER}/build" ]] && mkdir "${PROJECTS_FOLDER}/build"
 
 
-if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
+if [[ "${BUILD_INDI_CORE:-ask}" == "ask" || "${BUILD_INDI_3RDPARTY:-ask}" == "ask" ]]; then
+    while [ -z "${INDI_COMPONENT:-}" ]; do
+        INDI_COMPONENT=$(whiptail \
+            --title "INDI Components" \
+            --nocancel \
+            --notags \
+            --radiolist "Select which INDI components to build\n\nIf you plan on using a CSI connected camera like\nthe Raspberry Pi HQ Camera, the 3rd party drivers\nare not necessary\n\nPress space to select" 0 0 0 \
+                "both" "INDI Core & 3rd Party Drivers" "ON" \
+                "core" "Only INDI Core" "OFF" \
+                "3rdparty" "Only INDI 3rd Party Drivers" "OFF" \
+            3>&1 1>&2 2>&3)
+    done
+
+    if [ "$INDI_COMPONENT" == "core" ]; then
+        BUILD_INDI_CORE="true"
+        BUILD_INDI_3RDPARTY="false"
+        echo
+        echo "Building INDI core only"
+        echo
+        sleep 3
+    elif [ "$INDI_COMPONENT" == "3rdparty" ]; then
+        BUILD_INDI_CORE="false"
+        BUILD_INDI_3RDPARTY="true"
+        echo
+        echo "Building INDI 3rd party drivers only"
+        echo
+        sleep 3
+    elif [ "$INDI_COMPONENT" == "both" ]; then
+        BUILD_INDI_CORE="true"
+        BUILD_INDI_3RDPARTY="true"
+        echo
+        echo "Building both INDI core and 3rd party drivers"
+        echo
+        sleep 3
+    else
+        echo
+        echo "Invalid selection"
+        echo
+        exit 1
+    fi
+fi
+
+
+if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
     while [ "${BUILD_INDI_CAMERA_VENDOR:-ask}" == "ask" ]; do
         BUILD_INDI_CAMERA_VENDOR=$(whiptail \
             --title "Camera Vendor" \
@@ -579,36 +622,80 @@ if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
     if [[ "$BUILD_INDI_CAMERA_VENDOR" == "all" ]]; then
         INDI_3RDPARTY_LIBRARIES="all"
         INDI_3RDPARTY_DRIVERS="all"
+        echo
+        echo "Building all drivers"
+        echo
+        sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "asi" || "$BUILD_INDI_CAMERA_VENDOR" == "zwo" ]]; then
         INDI_3RDPARTY_LIBRARIES="libasi"
         INDI_3RDPARTY_DRIVERS="indi-asi indi-gpsd"
+        echo
+        echo "Building ZWO ASI drivers"
+        echo
+        sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "playerone" ]]; then
         INDI_3RDPARTY_LIBRARIES="libplayerone"
         INDI_3RDPARTY_DRIVERS="indi-playerone indi-gpsd"
+        echo
+        echo "Building PlayerOne Astronomy drivers"
+        echo
+        sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "svbony" ]]; then
         INDI_3RDPARTY_LIBRARIES="libsvbony"
         INDI_3RDPARTY_DRIVERS="indi-svbony indi-gpsd"
+        echo
+        echo "Building SVBony drivers"
+        echo
+        sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "qhy" ]]; then
         INDI_3RDPARTY_LIBRARIES="libqhy"
         INDI_3RDPARTY_DRIVERS="indi-qhy indi-gpsd"
+        echo
+        echo "Building QHY drivers"
+        echo
+        sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "sx" ]]; then
         INDI_3RDPARTY_LIBRARIES=""
         INDI_3RDPARTY_DRIVERS="indi-sx indi-gpsd"
+        echo
+        echo "Building Starlight Xpress drivers"
+        echo
+        sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "libcamera" ]]; then
         INDI_3RDPARTY_LIBRARIES=""
         INDI_3RDPARTY_DRIVERS="indi-libcamera indi-gpsd"
+        echo
+        echo "Building libcamera driver"
+        echo
+        sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "gphoto" ]]; then
         INDI_3RDPARTY_LIBRARIES=""
         INDI_3RDPARTY_DRIVERS="indi-gphoto indi-gpsd"
+        echo
+        echo "Building gphoto DSLR drivers"
+        echo
+        sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "webcam" ]]; then
         INDI_3RDPARTY_LIBRARIES=""
         INDI_3RDPARTY_DRIVERS="indi-webcam indi-gpsd"
+        echo
+        echo "Building INDI webcam driver"
+        echo
+        sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "touptek" ]]; then
         INDI_3RDPARTY_LIBRARIES="libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam indi-gpsd"
         INDI_3RDPARTY_DRIVERS="indi-toupbase"
+        echo
+        echo "Building ToupTek (including Altair, Omegon, Meade, etc) drivers"
+        echo
+        sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "supported" ]]; then
         INDI_3RDPARTY_LIBRARIES="libasi libplayerone libsvbony libqhy libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam"
         INDI_3RDPARTY_DRIVERS="indi-asi indi-playerone indi-svbony indi-qhy indi-sx indi-toupbase indi-gphoto indi-webcam indi-gpsd"
+        echo
+        echo "Building supported camera drivers"
+        echo
+        sleep 3
     else
         echo
         echo "Invalid selection"
@@ -618,7 +705,7 @@ fi
 
 
 ### INDI Core ###
-if [ "${BUILD_INDI_CORE:-true}" == "true" ]; then
+if [ "${BUILD_INDI_CORE:-ask}" == "true" ]; then
     [[ -d "${PROJECTS_FOLDER}/src/indi_core" ]] && rm -fR "${PROJECTS_FOLDER}/src/indi_core"
 
     if [ "$INDI_CORE_TAG" == "HEAD" ]; then
@@ -656,7 +743,7 @@ sudo ldconfig
 
 
 ### INDI 3rdparty ###
-if [ "${BUILD_INDI_3RDPARTY:-true}" == "true" ]; then
+if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
     [[ -d "${PROJECTS_FOLDER}/src/indi_core" ]] && rm -fR "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
     if [ "$INDI_3RDPARTY_TAG" == "HEAD" ]; then
