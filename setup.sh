@@ -50,6 +50,8 @@ USE_MYSQL_DATABASE="${INDIALLSKY_USE_MYSQL_DATABASE:-false}"
 
 CAMERA_INTERFACE="${INDIALLSKY_CAMERA_INTERFACE:-}"
 
+OS_PACKAGE_UPGRADE="${INDI_ALLSKY_OS_PACKAGE_UPGRADE:-}"
+
 INSTALL_INDI="${INDIALLSKY_INSTALL_INDI:-true}"
 INSTALL_LIBCAMERA="${INDIALLSKY_INSTALL_LIBCAMERA:-false}"
 
@@ -143,6 +145,15 @@ MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 PGRP=$(id -ng)
 
 
+if which whiptail >/dev/null 2>&1; then
+    ### whiptail might not be installed on first run
+    WHIPTAIL_BIN=$(which whiptail)
+
+    ### testing
+    #WHIPTAIL_BIN=""
+fi
+
+
 echo "###############################################"
 echo "### Welcome to the indi-allsky setup script ###"
 echo "###############################################"
@@ -231,8 +242,8 @@ elif [[ -f "/etc/astroberry.version" ]]; then
     echo
 
 
-    if which whiptail >/dev/null 2>&1; then
-        if ! whiptail --title "WARNING" --yesno "Astroberry is no longer supported.  Please use Raspbian or Ubuntu.\n\nDo you want to proceed anyway?" 0 0 --defaultno; then
+    if [ -n "${WHIPTAIL_BIN:-}" ]; then
+        if ! "$WHIPTAIL_BIN" --title "WARNING" --yesno "Astroberry is no longer supported.  Please use Raspbian or Ubuntu.\n\nDo you want to proceed anyway?" 0 0 --defaultno; then
             exit 1
         fi
     else
@@ -282,8 +293,9 @@ if [[ "$(id -u)" == "0" ]]; then
 fi
 
 
-if which whiptail >/dev/null 2>&1; then
-    whiptail \
+
+if [ -n "${WHIPTAIL_BIN:-}" ]; then
+    "$WHIPTAIL_BIN" \
         --title "Welcome to indi-allsky" \
         --msgbox "*** Welcome to the indi-allsky setup script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nINDI Port: $INDI_PORT\nHTTP Port: $HTTP_PORT\nHTTPS Port: $HTTPS_PORT" 0 0
 fi
@@ -335,10 +347,10 @@ sudo true
 START_TIME=$(date +%s)
 
 
-if which whiptail >/dev/null 2>&1; then
+if [ -n "${WHIPTAIL_BIN:-}" ]; then
     while [ -z "${CAMERA_INTERFACE:-}" ]; do
         # shellcheck disable=SC2068
-        CAMERA_INTERFACE=$(whiptail \
+        CAMERA_INTERFACE=$("$WHIPTAIL_BIN" \
             --title "Select camera interface" \
             --nocancel \
             --radiolist "indi-allsky supports the following camera interfaces.\n\nWiki:  https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces\n\nPress space to select" 0 0 0 \
@@ -354,7 +366,7 @@ if which whiptail >/dev/null 2>&1; then
         if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
 
             while [ -z "${LIBCAMERA_INTERFACE:-}" ]; do
-                LIBCAMERA_INTERFACE=$(whiptail \
+                LIBCAMERA_INTERFACE=$("$WHIPTAIL_BIN" \
                     --title "Select a libcamera interface: " \
                     --nocancel \
                     --notags \
@@ -456,6 +468,32 @@ sudo find "$(dirname "$0")" -type d ! -perm -555 -exec chmod ugo+rx {} \;
 sudo find "$(dirname "$0")" -type f ! -perm -444 -exec chmod ugo+r {} \;
 
 
+
+while [ -z "${OS_PACKAGE_UPGRADE:-}" ]; do
+    if [ -n "${WHIPTAIL_BIN:-}" ]; then
+        if "$WHIPTAIL_BIN" --title "Upgrade system packages" --yesno "Would you like to upgrade all of the system packages to the latest versions?" 0 0 --defaultno; then
+            OS_PACKAGE_UPGRADE="true"
+        else
+            OS_PACKAGE_UPGRADE="false"
+        fi
+    else
+        echo
+        echo
+        echo "Would you like to upgrade all of the system packages to the latest versions? "
+        PS3="? "
+        select package_upgrade in no yes ; do
+            if [ "${package_upgrade:-}" == "yes" ]; then
+                OS_PACKAGE_UPGRADE="true"
+                break
+            else
+                OS_PACKAGE_UPGRADE="false"
+                break
+            fi
+        done
+    fi
+done
+
+
 ### These are the default requirements which may be overridden
 VIRTUALENV_REQ=requirements/requirements_latest.txt
 VIRTUALENV_REQ_OPT=requirements/requirements_optional.txt
@@ -497,6 +535,13 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
 
 
         sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
         sudo apt-get -y install \
             build-essential \
             python3 \
@@ -637,6 +682,13 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
 
 
         sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
         sudo apt-get -y install \
             build-essential \
             python3 \
@@ -782,6 +834,13 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
 
 
         sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
         sudo apt-get -y install \
             build-essential \
             python3 \
@@ -919,6 +978,13 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
 
 
         sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
         sudo apt-get -y install \
             build-essential \
             python3 \
@@ -1072,6 +1138,13 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
 
 
         sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
         sudo apt-get -y install \
             build-essential \
             python3.11 \
@@ -1220,6 +1293,13 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
 
 
         sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
         sudo apt-get -y install \
             build-essential \
             python3.9 \

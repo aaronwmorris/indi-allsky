@@ -12,6 +12,7 @@ export PATH
 #### config ####
 INDI_DRIVER_PATH="/usr/bin"
 INDISERVER_SERVICE_NAME="indiserver"
+OS_PACKAGE_UPGRADE="${INDI_ALLSKY_OS_PACKAGE_UPGRADE:-}"
 INSTALL_INDI="${INDIALLSKY_INSTALL_INDI:-true}"
 INSTALL_INDISERVER="${INDIALLSKY_INSTALL_INDISERVER:-}"
 INSTALL_LIBCAMERA="${INDIALLSKY_INSTALL_LIBCAMERA:-false}"
@@ -67,6 +68,14 @@ CPU_TOTAL=$(grep -c "^proc" /proc/cpuinfo)
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 
 
+if which whiptail >/dev/null 2>&1; then
+    ### whiptail might not be installed on first run
+    #WHIPTAIL_BIN=$(which whiptail)
+
+    ### testing
+    WHIPTAIL_BIN=""
+fi
+
 
 echo "##########################################################"
 echo "### Welcome to the indi-allsky indiserver setup script ###"
@@ -100,8 +109,8 @@ if [[ "$(id -u)" == "0" ]]; then
 fi
 
 
-if which whiptail >/dev/null 2>&1; then
-    whiptail \
+if [ -n "${WHIPTAIL_BIN:-}" ]; then
+    "$WHIPTAIL_BIN" \
         --title "Welcome to indi-allsky" \
         --msgbox "*** Welcome to the indi-allsky indiserver setup script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nINDI Port: $INDI_PORT" 0 0
 fi
@@ -136,10 +145,10 @@ sudo true
 START_TIME=$(date +%s)
 
 
-if which whiptail >/dev/null 2>&1; then
+if [ -n "${WHIPTAIL_BIN:-}" ]; then
     while [ -z "${CAMERA_INTERFACE:-}" ]; do
         # shellcheck disable=SC2068
-        CAMERA_INTERFACE=$(whiptail \
+        CAMERA_INTERFACE=$("$WHIPTAIL_BIN" \
             --title "Select camera interface" \
             --nocancel \
             --radiolist "indi-allsky supports the following camera interfaces.\n\nWiki:  https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces\n\nPress space to select" 0 0 0 \
@@ -155,7 +164,7 @@ if which whiptail >/dev/null 2>&1; then
         if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
 
             while [ -z "${LIBCAMERA_INTERFACE:-}" ]; do
-                LIBCAMERA_INTERFACE=$(whiptail \
+                LIBCAMERA_INTERFACE=$("$WHIPTAIL_BIN" \
                     --title "Select a libcamera interface: " \
                     --nocancel \
                     --notags \
@@ -250,6 +259,31 @@ if [[ -f "/usr/local/bin/libcamera-still" || -f "/usr/local/bin/rpicam-still" ]]
 fi
 
 
+while [ -z "${OS_PACKAGE_UPGRADE:-}" ]; do
+    if [ -n "${WHIPTAIL_BIN:-}" ]; then
+        if "$WHIPTAIL_BIN" --title "Upgrade system packages" --yesno "Would you like to upgrade all of the system packages to the latest versions?" 0 0 --defaultno; then
+            OS_PACKAGE_UPGRADE="true"
+        else
+            OS_PACKAGE_UPGRADE="false"
+        fi
+    else
+        echo
+        echo
+        echo "Would you like to upgrade all of the system packages to the latest versions? "
+        PS3="? "
+        select package_upgrade in no yes ; do
+            if [ "${package_upgrade:-}" == "yes" ]; then
+                OS_PACKAGE_UPGRADE="true"
+                break
+            else
+                OS_PACKAGE_UPGRADE="false"
+                break
+            fi
+        done
+    fi
+done
+
+
 echo "**** Installing packages... ****"
 if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
     if [[ "$DISTRO_VERSION_ID" == "12" ]]; then
@@ -265,6 +299,15 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
             echo
             exit 1
         fi
+
+
+        sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
 
 
         if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
@@ -284,6 +327,14 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
             echo
             echo
             exit 1
+        fi
+
+
+        sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
         fi
 
     else
@@ -315,6 +366,19 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
                 exit 1
             fi
         fi
+
+
+        sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
+        sudo apt-get -y install \
+            whiptail
+
 
         if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
             if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
@@ -372,6 +436,19 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
             fi
         fi
 
+
+        sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
+        sudo apt-get -y install \
+            whiptail
+
+
         if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
             if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
                 INSTALL_INDI="false"
@@ -426,6 +503,19 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
                 exit 1
             fi
         fi
+
+
+        sudo apt-get update
+
+
+        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+            sudo apt-get -y dist-upgrade
+        fi
+
+
+        sudo apt-get -y install \
+            whiptail
+
 
         if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
             if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
