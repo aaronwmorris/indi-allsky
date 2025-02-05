@@ -133,6 +133,7 @@ class IndiAllSkyDarks(object):
     @temp_delta.setter
     def temp_delta(self, new_temp_delta):
         self._temp_delta = float(abs(new_temp_delta))
+        logger.warning('New Temp delta: %0.2f', self.temp_delta)
 
 
     @property
@@ -142,6 +143,7 @@ class IndiAllSkyDarks(object):
     @time_delta.setter
     def time_delta(self, new_time_delta):
         self._time_delta = int(abs(new_time_delta))
+        logger.warning('New Time delta: %d', self.time_delta)
 
 
     @property
@@ -687,22 +689,23 @@ class IndiAllSkyDarks(object):
 
 
     def _run(self, stacking_class):
+        dark_exposures_set = set()  # prevent duplicate exposures
+        dark_exposures_set.add(1)  # 1s is the shortest exposure
 
-        # exposures start with 1 and then every 5s until the max exposure
-        dark_exposures = [1]
-        dark_exposures.extend(
-            list(
-                range(
-                    self.time_delta,
-                    math.ceil(self.config['CCD_EXPOSURE_MAX'] / self.time_delta) * self.time_delta,
-                    self.time_delta,
-                )
-            )
-        )
-        dark_exposures.append(math.ceil(self.config['CCD_EXPOSURE_MAX']))  # round up
+        x = math.ceil(self.config['CCD_EXPOSURE_MAX'])
+        while x > 1:
+            dark_exposures_set.add(int(x))
+            x -= self.time_delta
+
+
+        dark_exposures = sorted(dark_exposures_set)
+
 
         if self.reverse:
             dark_exposures.reverse()  # take longer exposures first
+
+
+        logger.info('Exposures: %s', ', '.join([str(x) for x in dark_exposures]))
 
 
         bpm_filename_t = 'bpm_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
