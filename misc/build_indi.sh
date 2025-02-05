@@ -560,10 +560,10 @@ if [[ "${BUILD_INDI_CORE:-ask}" == "ask" || "${BUILD_INDI_3RDPARTY:-ask}" == "as
             --title "INDI Components" \
             --nocancel \
             --notags \
-            --radiolist "Select which INDI components to build\n\nPress space to select" 0 0 0 \
+            --radiolist "Select which INDI components to build\n\nIf you plan on using a CSI connected camera like\nthe Raspberry Pi HQ Camera, the 3rd party drivers\nare not necessary\n\nPress space to select" 0 0 0 \
                 "both" "INDI Core & 3rd Party Drivers" "ON" \
-                "core" "INDI Core" "OFF" \
-                "3rdparty" "INDI 3rd Party Drivers" "OFF" \
+                "core" "Only INDI Core" "OFF" \
+                "3rdparty" "Only INDI 3rd Party Drivers" "OFF" \
             3>&1 1>&2 2>&3)
     done
 
