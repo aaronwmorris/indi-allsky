@@ -18,7 +18,7 @@ class focuser_a4988(FocuserBase):
         pin1 = getattr(board, pin_names[0])
         pin2 = getattr(board, pin_names[1])
         pin3 = getattr(board, pin_names[2])
-        pin4 = getattr(board, pin_names[4])
+        pin4 = getattr(board, pin_names[3])
 
         self.pins = {
             'step'    : digitalio.DigitalInOut(pin1),
