@@ -63,7 +63,7 @@ class focuser_a4988_nema17_full(focuser_a4988):
 
 
     def __init__(self, *args, **kwargs):
-        super(focuser_a4988, self).__init__(*args, **kwargs)
+        super(focuser_a4988_nema17_full, self).__init__(*args, **kwargs)
 
         self.pins['ms1'].value = 0
         self.pins['ms2'].value = 0
@@ -75,7 +75,7 @@ class focuser_a4988_nema17_half(focuser_a4988):
 
 
     def __init__(self, *args, **kwargs):
-        super(focuser_a4988, self).__init__(*args, **kwargs)
+        super(focuser_a4988_nema17_half, self).__init__(*args, **kwargs)
 
         self.pins['ms1'].value = 1
         self.pins['ms2'].value = 0
@@ -87,7 +87,7 @@ class focuser_a4988_nema17_quarter(focuser_a4988):
 
 
     def __init__(self, *args, **kwargs):
-        super(focuser_a4988, self).__init__(*args, **kwargs)
+        super(focuser_a4988_nema17_quarter, self).__init__(*args, **kwargs)
 
         self.pins['ms1'].value = 0
         self.pins['ms2'].value = 1
@@ -99,7 +99,7 @@ class focuser_a4988_nema17_eighth(focuser_a4988):
 
 
     def __init__(self, *args, **kwargs):
-        super(focuser_a4988, self).__init__(*args, **kwargs)
+        super(focuser_a4988_nema17_eighth, self).__init__(*args, **kwargs)
 
         self.pins['ms1'].value = 1
         self.pins['ms2'].value = 1
