@@ -51,6 +51,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * Subscribe to topics as sensor input
 * Mechanical focuser support
     * 28BYJ-48 Stepper
+    * A4988 with NEMA17 Stepper
 * Use star metrics (in addition to ADU) for star trails generation
 * Generate thumbnails to reduce load time in Timelapse view
 * Panorama timelapse generation
@@ -422,7 +423,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/Fan-Control
 
 ## Focuser support
 
-If you built your system with a focuser, it is now possible to control the focuser within the Focus view.  `28BYJ-48` steppers are currently supported.
+If you built your system with a focuser, it is now possible to control the focuser within the Focus view.  `28BYJ-48` and `NEMA17` steppers are currently supported.
 
 https://github.com/aaronwmorris/indi-allsky/wiki/Focuser-Device
 
