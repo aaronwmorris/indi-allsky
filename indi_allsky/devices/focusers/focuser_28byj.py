@@ -30,8 +30,6 @@ class focuser_28byj(FocuserBase):
     def __init__(self, *args, **kwargs):
         super(focuser_28byj, self).__init__(*args, **kwargs)
 
-        self._sleep = False
-
         pin_names = kwargs['pin_names']
 
         pin1 = getattr(board, pin_names[0])
@@ -49,16 +47,6 @@ class focuser_28byj(FocuserBase):
         for pin in self.pins:
             # set all pins to output
             pin.direction = digitalio.Direction.OUTPUT
-
-
-    @property
-    def sleep(self):
-        return self._sleep
-
-
-    @sleep.setter
-    def sleep(self, new_sleep):
-        pass
 
 
     def move(self, direction, degrees):
