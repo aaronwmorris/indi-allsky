@@ -4,12 +4,19 @@ import logging
 logger = logging.getLogger('indi_allsky')
 
 
-class IndiAllSkyFocuser(object):
+class IndiAllSkyFocuserInterface(object):
 
     def __init__(self, config):
         self.config = config
 
-        focuser_class = getattr(focusers, self.config.get('FOCUSER', {}).get('CLASSNAME', 'NotConfigured'))
+
+        focuser_class_str = self.config.get('FOCUSER', {}).get('CLASSNAME', '')
+
+        if not focuser_class_str:
+            focuser_class_str = 'focuser_simulator'
+
+        focuser_class = getattr(focusers, focuser_class_str)
+
 
         pin1 = self.config.get('FOCUSER', {}).get('GPIO_PIN_1', 'notdefined')
         pin2 = self.config.get('FOCUSER', {}).get('GPIO_PIN_2', 'notdefined')
@@ -26,4 +33,8 @@ class IndiAllSkyFocuser(object):
 
     def move(self, direction, step):
         return self.focuser.move(direction, step)
+
+
+    def deinit(self):
+        self.focuser.deinit()
 

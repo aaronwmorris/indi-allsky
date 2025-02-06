@@ -3073,6 +3073,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_focuser_a4988_nema17_full', 'A4988 NEMA17 Stepper - Full Step - GPIO'),
         ('blinka_focuser_a4988_nema17_half', 'A4988 NEMA17 Stepper - Half Step - GPIO'),
         ('serial_focuser_28byj_64', '28BYJ-48 Stepper (1/64) ULN2003 - Serial Port'),
+        ('focuser_simulator', 'Focuser Simulator'),
     )
 
     DEW_HEATER__CLASSNAME_choices = (

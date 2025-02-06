@@ -13,6 +13,7 @@ from .devices import generic as indi_allsky_gpios
 from .devices import dew_heaters
 from .devices import fans
 from .devices import sensors as indi_allsky_sensors
+from .focuser import IndiAllSkyFocuserInterface
 from .devices.exceptions import SensorReadException
 from .devices.exceptions import DeviceControlException
 
@@ -48,6 +49,7 @@ class SensorWorker(Process):
         self.gpio = None
         self.dew_heater = None
         self.fan = None
+        self.focuser = None
         self.sensors = [None, None, None]
 
         self.next_run = time.time()  # run immediately
@@ -139,6 +141,7 @@ class SensorWorker(Process):
         self.init_gpio()
         self.init_dew_heater()
         self.init_fan()
+        self.init_focuser()
 
 
         while True:
@@ -163,6 +166,7 @@ class SensorWorker(Process):
                 self.gpio.deinit()
                 self.fan.deinit()
                 self.dew_heater.deinit()
+                self.focuser.deinit()
 
                 return
 
@@ -344,6 +348,12 @@ class SensorWorker(Process):
 
             with self.sensors_user_av.get_lock():
                 self.sensors_user_av[4] = float(self.fan.state)
+
+
+    def init_focuser(self):
+        focuser_interface = IndiAllSkyFocuserInterface(self.config)
+        self.focuser = focuser_interface.focuser
+        self.focuser.sleep = True
 
 
     def init_sensors(self):

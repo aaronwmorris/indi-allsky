@@ -87,6 +87,13 @@ class focuser_a4988(FocuserBase):
         self.sleep = True
 
 
+    def deinit(self):
+        super(focuser_a4988, self).deinit()
+
+        for label, pin in self.pins.items():
+            pin.deinit()
+
+
 class focuser_a4988_nema17_full(focuser_a4988):
     # full step 1.8 degrees per step
     STEPS = 200
