@@ -25,5 +25,10 @@ class FocuserSimulator(FocuserBase):
         pass
 
 
-    def move(self, *args):
-        pass
+    def move(self, direction, degrees):
+        steps = degrees
+
+        if direction == 'ccw':
+            steps *= -1  # negative for CCW
+
+        return steps
