@@ -18,13 +18,13 @@ class focuser_a4988(FocuserBase):
         pin1 = getattr(board, pin_names[0])
         pin2 = getattr(board, pin_names[1])
         pin3 = getattr(board, pin_names[2])
-        pin4 = getattr(board, pin_names[3])
+        #pin4 = getattr(board, pin_names[3])
 
         self.pins = {
             'step'    : digitalio.DigitalInOut(pin1),
             'dir'     : digitalio.DigitalInOut(pin2),
             'ms1'     : digitalio.DigitalInOut(pin3),
-            'ms2'     : digitalio.DigitalInOut(pin4),
+            #'ms2'     : digitalio.DigitalInOut(pin4),
         }
 
         for label, pin in self.pins.items():
@@ -57,6 +57,13 @@ class focuser_a4988(FocuserBase):
             time.sleep(0.005)
 
 
+    def deinit(self):
+        super(focuser_a4988, self).deinit()
+
+        for label, pin in self.pins.items():
+            pin.deinit()
+
+
 class focuser_a4988_nema17_full(focuser_a4988):
     # full step 1.8 degrees per step
     STEPS = 200
@@ -66,7 +73,7 @@ class focuser_a4988_nema17_full(focuser_a4988):
         super(focuser_a4988_nema17_full, self).__init__(*args, **kwargs)
 
         self.pins['ms1'].value = 0
-        self.pins['ms2'].value = 0
+        #self.pins['ms2'].value = 0
 
 
 class focuser_a4988_nema17_half(focuser_a4988):
@@ -78,29 +85,29 @@ class focuser_a4988_nema17_half(focuser_a4988):
         super(focuser_a4988_nema17_half, self).__init__(*args, **kwargs)
 
         self.pins['ms1'].value = 1
-        self.pins['ms2'].value = 0
+        #self.pins['ms2'].value = 0
 
 
-class focuser_a4988_nema17_quarter(focuser_a4988):
-    # quarter step 0.45 degrees per step
-    STEPS = 800
-
-
-    def __init__(self, *args, **kwargs):
-        super(focuser_a4988_nema17_quarter, self).__init__(*args, **kwargs)
-
-        self.pins['ms1'].value = 0
-        self.pins['ms2'].value = 1
-
-
-class focuser_a4988_nema17_eighth(focuser_a4988):
-    # eighth step 0.225 degrees per step
-    STEPS = 1600
-
-
-    def __init__(self, *args, **kwargs):
-        super(focuser_a4988_nema17_eighth, self).__init__(*args, **kwargs)
-
-        self.pins['ms1'].value = 1
-        self.pins['ms2'].value = 1
+#class focuser_a4988_nema17_quarter(focuser_a4988):
+#    # quarter step 0.45 degrees per step
+#    STEPS = 800
+#
+#
+#    def __init__(self, *args, **kwargs):
+#        super(focuser_a4988_nema17_quarter, self).__init__(*args, **kwargs)
+#
+#        self.pins['ms1'].value = 0
+#        self.pins['ms2'].value = 1
+#
+#
+#class focuser_a4988_nema17_eighth(focuser_a4988):
+#    # eighth step 0.225 degrees per step
+#    STEPS = 1600
+#
+#
+#    def __init__(self, *args, **kwargs):
+#        super(focuser_a4988_nema17_eighth, self).__init__(*args, **kwargs)
+#
+#        self.pins['ms1'].value = 1
+#        self.pins['ms2'].value = 1
 

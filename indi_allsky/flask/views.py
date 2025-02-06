@@ -5934,7 +5934,7 @@ class AjaxFocusControllerView(BaseView):
 
 
     def dispatch_request(self):
-        from ..focuser import IndiAllSkyFocuser
+        from ..focuser import IndiAllSkyFocuserInterface
         from ..devices.exceptions import DeviceControlException
 
 
@@ -5965,7 +5965,7 @@ class AjaxFocusControllerView(BaseView):
         app.logger.info('Focusing: {0:s}', direction)
 
         try:
-            focuser = IndiAllSkyFocuser(self.indi_allsky_config)
+            focuser_interface = IndiAllSkyFocuserInterface(self.indi_allsky_config)
         except SystemError as e:
             json_data = {
                 'focuser_error' : ['Error initializing focuser: {0:s}'.format(str(e))],
@@ -5984,7 +5984,7 @@ class AjaxFocusControllerView(BaseView):
 
 
         try:
-            steps_offset = focuser.move(direction, degrees)
+            steps_offset = focuser_interface.move(direction, degrees)
         except DeviceControlException as e:
             json_data = {
                 'focuser_error' : ['Error moving focuser: {0:s}'.format(str(e))],

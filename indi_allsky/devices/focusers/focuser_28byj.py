@@ -82,6 +82,13 @@ class focuser_28byj(FocuserBase):
                 time.sleep(0.005)
 
 
+    def deinit(self):
+        super(focuser_28byj, self).deinit()
+
+        for pin in self.pins:
+            pin.deinit()
+
+
 class focuser_28byj_64(focuser_28byj):
     # 1/64 ratio
 
