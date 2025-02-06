@@ -15,14 +15,17 @@ canvas {
 var json_data = {
     'image_b64'  : null,
     'blur_score' : 0.0,
+    'star_count' : 0,
     'focus_mode' : false,
 };
 var focuser_device = {{ focuser_device }};
-var focus_data = [];
 var camera_id = {{ camera_id }};
 var refreshInterval = 5000;
 var zoom = 2;  // 2 is no zoom
-var blur_score = 0.0
+var blur_score = 0.0;
+var star_count = 0;
+var focus_score_data = [];
+var star_count_data = [];
 var fullscreen = false;  //initial state
 var steps_offset = 0;
 
@@ -67,6 +70,11 @@ function showImage(image_b64) {
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
 
+        // round the background strokes to prevent spikes
+        context.lineJoin = 'round';
+        //context.miterLimit = 2;
+
+
         context.textAlign = 'left';
         context.lineWidth = 10;
         var maxWidth = 200;
@@ -77,15 +85,22 @@ function showImage(image_b64) {
 
         var blur_score_text = "Score: " + parseFloat(blur_score).toFixed(2);
         context.strokeStyle = 'black';
-        context.strokeText(blur_score_text, x-175, y+75, maxWidth);
+        context.strokeText(blur_score_text, x-175, y+40, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(blur_score_text, x-175, y+75, maxWidth);
+        context.fillText(blur_score_text, x-175, y+40, maxWidth);
+
+        var star_count_text = "Stars: " + star_count;
+        context.strokeStyle = 'black';
+        context.strokeText(star_count_text, x-175, y+75, maxWidth);
+        context.fillStyle = 'lightgrey';
+        context.fillText(star_count_text, x-175, y+75, maxWidth);
 
         var blur_score_text = "Focus Mode: " + json_data['focus_mode'];
         context.strokeStyle = 'black';
         context.strokeText(blur_score_text, x-175, y+110, maxWidth);
         context.fillStyle = 'lightgrey';
         context.fillText(blur_score_text, x-175, y+110, maxWidth);
+
     };
 }
 
@@ -117,18 +132,28 @@ function loadJS(url, data, onDone, onError) {
         success: function(data){
             json_data = data;
 
-            // update score
+            // update data
             blur_score = json_data['blur_score'].toFixed(2);
+            star_count = json_data['star_count'];
 
             // javascript is stupid
-            focus_data.reverse()
-            focus_data.unshift({
-                'x': focus_data.length.toString(),
-                'y': json_data['blur_score']
+            focus_score_data.reverse()
+            focus_score_data.unshift({
+                'x': focus_score_data.length.toString(),
+                'y': blur_score
             });
-            focus_data.reverse()
+            focus_score_data.reverse()
 
-            focus_chart.data.datasets[0].data = focus_data;
+            star_count_data.reverse()
+            star_count_data.unshift({
+                'x': star_count_data.length.toString(),
+                'y': star_count
+            });
+            star_count_data.reverse()
+
+
+            focus_chart.data.datasets[0].data = focus_score_data;
+            focus_chart.data.datasets[1].data = star_count_data;
             focus_chart.update();
 
         },
@@ -328,14 +353,25 @@ function init() {
     focus_chart = new Chart(ctx_focus, {
         type: "line",
         data: {
-            datasets: [{
+            datasets: [
+            {
                 label: 'Focus',
                 pointRadius: 3,
                 backgroundColor: "rgba(192, 0, 0, 1)",
                 borderColor: "rgba(128, 0, 0, 1)",
                 tension: 0.1,
                 data: []
-            }],
+            },
+            {
+                label: 'Stars',
+                pointRadius: 3,
+                backgroundColor: "rgba(0, 0, 192, 1)",
+                borderColor: "rgba(0, 0, 128, 1)",
+                tension: 0.1,
+                data: []
+            },
+
+            ],
         },
         options: {
             plugins: {
