@@ -2259,6 +2259,9 @@ class ImageProcessor(object):
 
 
     def cardinal_dirs_label(self):
+        if self.focus_mode:
+            return
+
         if not self.config.get('CARDINAL_DIRS', {}).get('ENABLE'):
             return
 
@@ -2268,7 +2271,6 @@ class ImageProcessor(object):
     def orb_image(self):
         # Disabled when focus mode is enabled
         if self.focus_mode:
-            logger.warning('Focus mode enabled, orbs disabled')
             return
 
         orb_mode = self.config.get('ORB_PROPERTIES', {}).get('MODE', 'ha')
@@ -2951,6 +2953,10 @@ class ImageProcessor(object):
 
 
     def moon_overlay(self):
+        if self.focus_mode:
+            return
+
+
         if not self.config.get('MOON_OVERLAY', {}).get('ENABLE', True):
             return
 
@@ -2958,6 +2964,10 @@ class ImageProcessor(object):
 
 
     def lightgraph_overlay(self):
+        if self.focus_mode:
+            return
+
+
         if not self.config.get('LIGHTGRAPH_OVERLAY', {}).get('ENABLE', True):
             return
 
