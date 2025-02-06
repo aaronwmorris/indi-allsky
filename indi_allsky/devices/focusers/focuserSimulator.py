@@ -1,4 +1,5 @@
 # This is a fake device that acts like a focuser but does not actually do anything
+import time
 import logging
 
 from .focuserBase import FocuserBase
@@ -18,5 +19,8 @@ class FocuserSimulator(FocuserBase):
 
         if direction == 'ccw':
             steps *= -1  # negative for CCW
+
+        # simulate waiting for movement to complete
+        time.sleep(1.0)
 
         return steps
