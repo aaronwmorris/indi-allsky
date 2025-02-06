@@ -86,13 +86,13 @@ function showImage(image_b64) {
         var blur_score_text = "Score: " + parseFloat(blur_score).toFixed(2);
         context.strokeStyle = 'black';
         context.strokeText(blur_score_text, x-175, y+40, maxWidth);
-        context.fillStyle = 'lightgrey';
+        context.fillStyle = 'rgba(192, 75, 75, 1)';
         context.fillText(blur_score_text, x-175, y+40, maxWidth);
 
         var star_count_text = "Stars: " + star_count;
         context.strokeStyle = 'black';
         context.strokeText(star_count_text, x-175, y+75, maxWidth);
-        context.fillStyle = 'lightgrey';
+        context.fillStyle = 'rgba(75, 75, 192, 1)';
         context.fillText(star_count_text, x-175, y+75, maxWidth);
 
         var blur_score_text = "Focus Mode: " + json_data['focus_mode'];
@@ -357,16 +357,16 @@ function init() {
             {
                 label: 'Focus',
                 pointRadius: 3,
-                backgroundColor: "rgba(192, 0, 0, 1)",
-                borderColor: "rgba(128, 0, 0, 1)",
+                backgroundColor: "rgba(192, 75, 75, 1)",
+                borderColor: "rgba(128, 75, 75, 1)",
                 tension: 0.1,
                 data: []
             },
             {
                 label: 'Stars',
                 pointRadius: 3,
-                backgroundColor: "rgba(0, 0, 192, 1)",
-                borderColor: "rgba(0, 0, 128, 1)",
+                backgroundColor: "rgba(75, 75, 192, 1)",
+                borderColor: "rgba(75, 75, 128, 1)",
                 tension: 0.1,
                 data: []
             },
@@ -376,7 +376,7 @@ function init() {
         options: {
             plugins: {
                 legend: {
-                    display: false
+                    display: true
                 },
             },
             animation : false,
@@ -391,12 +391,32 @@ function init() {
                     }
                 },
                 y: {
+                    position: 'left',
                     beginAtZero:true,
                     grid: {
-                        display: true,
+                        display: false,
                         color: 'rgba(75, 75, 75, 1)',
                         stacked: true,
                     },
+                    title: {
+                        display: false,
+                        text: "Score",
+                        color: 'rgba(192, 75, 75, 1)'
+                    }
+                },
+                y2: {
+                    position: 'right',
+                    beginAtZero:true,
+                    grid: {
+                        display: false,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: true,
+                    },
+                    title: {
+                        display: false,
+                        text: "Stars",
+                        color: 'rgba(75, 75, 192, 1)'
+                    }
                 },
             }
         }
