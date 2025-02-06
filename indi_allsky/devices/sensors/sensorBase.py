@@ -81,6 +81,12 @@ class SensorBase(object):
         return k - 273.15
 
 
+    def f2k(self, f):
+        # fahrenheit to kelvin
+        return (f - 32) * 5 / 9 + 273.15
+
+
+
     def hPa2psi(self, hpa):
         # hectopascals to pounds/sq in
         return hpa * 0.014503768077999999
@@ -94,6 +100,26 @@ class SensorBase(object):
     def hPa2mmHg(self, hpa):
         # hectopascals to millimeters mercury
         return hpa * 0.7500637554192107
+
+
+    def inHg2mb(self, inHg):
+        # inches mercurty to millibars mercury
+        return inHg * 0.029529983071445
+
+
+    def inHg2psi(self, inHg):
+        # inches mercurty to pounds/sq in
+        return inHg * 14.5037744
+
+
+    def inHg2hpa(self, inHg):
+        # inches mercurty to hectpascals
+        return inHg * 33.86389
+
+
+    def inHg2mmHg(self, inHg):
+        # inches mercury to millimeters mercury
+        return inHg * 25.400
 
 
     def mps2kmph(self, mps):
@@ -114,6 +140,21 @@ class SensorBase(object):
     def mps2knots(self, mps):
         # meters/sec to knots
         return mps * 1.9438445
+
+
+    def mph2knots(self, mph):
+        # miles/hour to knots
+        return mph * 0.8689762419
+
+
+    def mph2kph(self, mph):
+        # miles/hour to kilometers/hour
+        return mph * 1.609344
+
+
+    def mph2mps(self, mph):
+        # miles/hour to meters/second
+        return mph * 0.44704
 
 
     def mm2in(self, mm):
