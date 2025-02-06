@@ -2005,19 +2005,6 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.LIGHTGRAPH_OVERLAY__DUSK_COLOR.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.LIGHTGRAPH_OVERLAY__DUSK_COLOR(class='form-control bg-secondary') }}
-            <div id="LIGHTGRAPH_OVERLAY__DUSK_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
             {{ form_config.LIGHTGRAPH_OVERLAY__NIGHT_COLOR.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -5173,7 +5160,7 @@ var camera_id = {{ camera_id }};
             <div id="TEMP_SENSOR__A_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Hexadecimal address - Example: 0x77</div>
+            <div>Hexidecimal address - Example: 0x77</div>
         </div>
     </div>
 
@@ -5240,7 +5227,7 @@ var camera_id = {{ camera_id }};
             <div id="TEMP_SENSOR__B_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Hexadecimal address - Example: 0x76</div>
+            <div>Hexidecimal address - Example: 0x76</div>
         </div>
     </div>
 
@@ -5307,7 +5294,7 @@ var camera_id = {{ camera_id }};
             <div id="TEMP_SENSOR__C_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Hexadecimal address - Example: 0x40</div>
+            <div>Hexidecimal address - Example: 0x40</div>
         </div>
     </div>
 
@@ -5358,6 +5345,48 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-4">
             {{ form_config.TEMP_SENSOR__ASTROSPHERIC_APIKEY(class='form-control bg-secondary') }}
             <div id="TEMP_SENSOR__ASTROSPHERIC_APIKEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_APIKEY.label(class='col-form-label') }}
+
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_APIKEY(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__AMBIENTWEATHER_APIKEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY.label(class='col-form-label') }}
+
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS.label(class='col-form-label') }}
+
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
             <div></div>
@@ -6734,7 +6763,6 @@ const field_names = [
     'LIGHTGRAPH_OVERLAY__OFFSET_X',
     'LIGHTGRAPH_OVERLAY__SCALE',
     'LIGHTGRAPH_OVERLAY__DAY_COLOR',
-    'LIGHTGRAPH_OVERLAY__DUSK_COLOR',
     'LIGHTGRAPH_OVERLAY__NIGHT_COLOR',
     'LIGHTGRAPH_OVERLAY__HOUR_COLOR',
     'LIGHTGRAPH_OVERLAY__BORDER_COLOR',
@@ -6945,6 +6973,9 @@ const field_names = [
     'TEMP_SENSOR__OPENWEATHERMAP_APIKEY',
     'TEMP_SENSOR__WUNDERGROUND_APIKEY',
     'TEMP_SENSOR__ASTROSPHERIC_APIKEY',
+    'TEMP_SENSOR__AMBIENTWEATHER_APIKEY',
+    'TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY',
+    'TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS',
     'TEMP_SENSOR__MQTT_TRANSPORT',
     'TEMP_SENSOR__MQTT_HOST',
     'TEMP_SENSOR__MQTT_PORT',

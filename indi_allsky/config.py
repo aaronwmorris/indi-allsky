@@ -214,11 +214,10 @@ class IndiAllSkyConfigBase(object):
             "LABEL"         : True,
             "HOUR_LINES"    : True,
             "DAY_COLOR"     : [150, 150, 150],
-            "DUSK_COLOR"    : [200, 100, 60],
             "NIGHT_COLOR"   : [30, 30, 30],
             "HOUR_COLOR"    : [100, 15, 15],
             "BORDER_COLOR"  : [1, 1, 1],
-            "NOW_COLOR"     : [120, 120, 200],
+            "NOW_COLOR"     : [200, 150, 15],
             "FONT_COLOR"    : [150, 150, 150],
             "OPACITY"       : 100,
             "PIL_FONT_SIZE" : 20,
@@ -531,6 +530,12 @@ class IndiAllSkyConfigBase(object):
             "WUNDERGROUND_APIKEY_E"  : "",
             "ASTROSPHERIC_APIKEY"    : "",
             "ASTROSPHERIC_APIKEY_E"  : "",
+            "AMBIENTWEATHER_APIKEY"          : "",
+            "AMBIENTWEATHER_APIKEY_E"        : "",
+            "AMBIENTWEATHER_APPLICATIONKEY"  : "",
+            "AMBIENTWEATHER_APPLICATIONKEY_E": "",
+            "AMBIENTWEATHER_MACADDRESS"      : "",
+            "AMBIENTWEATHER_MACADDRESS_E"    : "",
             "MQTT_TRANSPORT"         : "tcp",  # tcp or websockets
             "MQTT_HOST"              : "localhost",
             "MQTT_PORT"              : 8883,  # 1883 = mqtt, 8883 = TLS
@@ -759,6 +764,30 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__astrospheric_apikey = config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', '')
 
 
+            temp_sensor__ambientweather_apikey_e = config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_APIKEY_E', '')
+            if temp_sensor__ambientweather_apikey_e:
+                # not catching InvalidToken
+                temp_sensor__ambientweather_apikey = f_key.decrypt(temp_sensor__ambientweather_apikey_e.encode()).decode()
+            else:
+                temp_sensor__ambientweather_apikey = config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_APIKEY', '')
+
+
+            temp_sensor__ambientweather_applicationkey_e = config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_APPLICATIONKEY_E', '')
+            if temp_sensor__ambientweather_applicationkey_e:
+                # not catching InvalidToken
+                temp_sensor__ambientweather_applicationkey = f_key.decrypt(temp_sensor__ambientweather_applicationkey_e.encode()).decode()
+            else:
+                temp_sensor__ambientweather_applicationkey = config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_APPLICATIONKEY', '')
+
+
+            temp_sensor__ambientweather_macaddress_e = config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_MACADDRESS_E', '')
+            if temp_sensor__ambientweather_macaddress_e:
+                # not catching InvalidToken
+                temp_sensor__ambientweather_macaddress = f_key.decrypt(temp_sensor__ambientweather_macaddress_e.encode()).decode()
+            else:
+                temp_sensor__ambientweather_macaddress = config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_MACADDRESS', '')
+
+
             temp_sensor__mqtt_password_e = config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD_E', '')
             if temp_sensor__mqtt_password_e:
                 # not catching InvalidToken
@@ -784,6 +813,9 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             temp_sensor__openweathermap_apikey = config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', '')
             temp_sensor__wunderground_apikey = config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', '')
             temp_sensor__astrospheric_apikey = config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', '')
+            temp_sensor__ambientweather_apikey = config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_APIKEY', '')
+            temp_sensor__ambientweather_applicationkey = config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_APPLICATIONKEY', '')
+            temp_sensor__ambientweather_macaddress = config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_MACADDRESS', '')
             temp_sensor__mqtt_password = config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD', '')
             adsb__password = config.get('ADSB', {}).get('PASSWORD', '')
 
@@ -804,6 +836,12 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['TEMP_SENSOR']['WUNDERGROUND_APIKEY_E'] = ''
         config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY'] = temp_sensor__astrospheric_apikey
         config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY_E'] = ''
+        config['TEMP_SENSOR']['AMBIENTWEATHER_APIKEY'] = temp_sensor__ambientweather_apikey
+        config['TEMP_SENSOR']['AMBIENTWEATHER_APIKEY_E'] = ''
+        config['TEMP_SENSOR']['AMBIENTWEATHER_APPLICATIONKEY'] = temp_sensor__ambientweather_applicationkey
+        config['TEMP_SENSOR']['AMBIENTWEATHER_APPLICATIONKEY_E'] = ''
+        config['TEMP_SENSOR']['AMBIENTWEATHER_MACADDRESS'] = temp_sensor__ambientweather_macaddress
+        config['TEMP_SENSOR']['AMBIENTWEATHER_MACADDRESS_E'] = ''
         config['TEMP_SENSOR']['MQTT_PASSWORD'] = temp_sensor__mqtt_password
         config['TEMP_SENSOR']['MQTT_PASSWORD_E'] = ''
         config['ADSB']['PASSWORD'] = adsb__password
@@ -907,6 +945,33 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__astrospheric_apikey = ''
 
 
+            temp_sensor__ambientweather_apikey = str(config['TEMP_SENSOR']['AMBIENTWEATHER_APIKEY'])
+            if temp_sensor__ambientweather_apikey:
+                temp_sensor__ambientweather_apikey_e = f_key.encrypt(temp_sensor__ambientweather_apikey.encode()).decode()
+                temp_sensor__ambientweather_apikey = ''
+            else:
+                temp_sensor__ambientweather_apikey_e = ''
+                temp_sensor__ambientweather_apikey = ''
+
+
+            temp_sensor__ambientweather_applicationkey = str(config['TEMP_SENSOR']['AMBIENTWEATHER_APPLICATIONKEY'])
+            if temp_sensor__ambientweather_applicationkey:
+                temp_sensor__ambientweather_applicationkey_e = f_key.encrypt(temp_sensor__ambientweather_applicationkey.encode()).decode()
+                temp_sensor__ambientweather_applicationkey = ''
+            else:
+                temp_sensor__ambientweather_applicationkey_e = ''
+                temp_sensor__ambientweather_applicationkey = ''
+
+
+            temp_sensor__ambientweather_macaddress = str(config['TEMP_SENSOR']['AMBIENTWEATHER_MACADDRESS'])
+            if temp_sensor__ambientweather_macaddress:
+                temp_sensor__ambientweather_macaddress_e = f_key.encrypt(temp_sensor__ambientweather_macaddress.encode()).decode()
+                temp_sensor__ambientweather_macaddress = ''
+            else:
+                temp_sensor__ambientweather_macaddress_e = ''
+                temp_sensor__ambientweather_macaddress = ''
+
+
             temp_sensor__mqtt_password = str(config['TEMP_SENSOR']['MQTT_PASSWORD'])
             if temp_sensor__mqtt_password:
                 temp_sensor__mqtt_password_e = f_key.encrypt(temp_sensor__mqtt_password.encode()).decode()
@@ -944,6 +1009,12 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             temp_sensor__wunderground_apikey_e = ''
             temp_sensor__astrospheric_apikey = str(config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY'])
             temp_sensor__astrospheric_apikey_e = ''
+            temp_sensor__ambientweather_apikey = str(config['TEMP_SENSOR']['AMBIENTWEATHER_APIKEY'])
+            temp_sensor__ambientweather_apikey_e = ''
+            temp_sensor__ambientweather_applicationkey = str(config['TEMP_SENSOR']['AMBIENTWEATHER_APPLICATIONKEY'])
+            temp_sensor__ambientweather_applicationkey_e = ''
+            temp_sensor__ambientweather_macaddress = str(config['TEMP_SENSOR']['AMBIENTWEATHER_MACADDRESS'])
+            temp_sensor__ambientweather_macaddress_e = ''
             temp_sensor__mqtt_password = str(config['TEMP_SENSOR']['MQTT_PASSWORD'])
             temp_sensor__mqtt_password_e = ''
             adsb__password = str(config['ADSB']['PASSWORD'])
