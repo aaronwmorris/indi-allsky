@@ -225,6 +225,13 @@ class FileUploader(Thread):
                 'remote_file' : Path(remote_file),
             }
 
+
+            if not connect_kwargs['hostname']:
+                logger.error('Hostname not set for file transfer')
+                task.setFailed('Hostname not set for file transfer')
+                return
+
+
             try:
                 client_class = getattr(filetransfer, self.config['FILETRANSFER']['CLASSNAME'])
             except AttributeError:
@@ -337,6 +344,13 @@ class FileUploader(Thread):
                 'mq_data'     : metadata,
                 'publish_image' : self.config['MQTTPUBLISH'].get('PUBLISH_IMAGE', True),
             }
+
+
+            if not connect_kwargs['hostname']:
+                logger.error('Hostname not set for MQTT')
+                task.setFailed('Hostname not set for MQTT')
+                return
+
 
             try:
                 client_class = getattr(filetransfer, 'paho_mqtt')
