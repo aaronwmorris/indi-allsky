@@ -70,10 +70,10 @@ MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 
 if which whiptail >/dev/null 2>&1; then
     ### whiptail might not be installed on first run
-    #WHIPTAIL_BIN=$(which whiptail)
+    WHIPTAIL_BIN=$(which whiptail)
 
     ### testing
-    WHIPTAIL_BIN=""
+    #WHIPTAIL_BIN=""
 fi
 
 

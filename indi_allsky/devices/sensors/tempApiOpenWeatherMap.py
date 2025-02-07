@@ -56,7 +56,7 @@ class TempApiOpenWeatherMap(SensorBase):
         'count' : 9,
         'labels' : (
             'Temperature',
-            '"Feels Like" Temperature',
+            'Feels Like Temperature',
             'Relative Humidity',
             'Pressure',
             'Clouds',

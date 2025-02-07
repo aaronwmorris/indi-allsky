@@ -5865,12 +5865,19 @@ class JsonFocusView(JsonView):
     def dispatch_request(self):
         import numpy
         import cv2
+        from multiprocessing import Value
         import PIL
         from PIL import Image
+        from ..stars import IndiAllSkyStars
 
         zoom = int(request.args.get('zoom', 2))
         x_offset = int(request.args.get('x_offset', 0))
         y_offset = int(request.args.get('y_offset', 0))
+
+
+        bin_v = Value('i', 1)
+        stars_detect = IndiAllSkyStars(self.indi_allsky_config, bin_v, mask=None)
+
 
         json_data = dict()
         json_data['focus_mode'] = self.indi_allsky_config.get('FOCUS_MODE', False)
@@ -5884,6 +5891,9 @@ class JsonFocusView(JsonView):
         except PIL.UnidentifiedImageError:
             app.logger.error('Unable to read %s', latest_image_p)
             return jsonify({}), 400
+
+
+        stars = stars_detect.detectObjects(image_data)
 
 
         image_height, image_width = image_data.shape[:2]
@@ -5916,6 +5926,7 @@ class JsonFocusView(JsonView):
         ### determine variance of laplacian
         blur_score = cv2.Laplacian(image_roi, cv2.CV_32F).var()
         json_data['blur_score'] = float(blur_score)
+        json_data['star_count'] = len(stars)
 
         vl_elapsed_s = time.time() - vl_start
         app.logger.info('Variance of laplacien in %0.4f s', vl_elapsed_s)
@@ -5946,6 +5957,7 @@ class AjaxFocusControllerView(BaseView):
 
 
         form_focuscontroller = IndiAllskyFocusControllerForm(data=request.json)
+
 
         if not form_focuscontroller.validate():
             form_errors = form_focuscontroller.errors  # this must be a property
