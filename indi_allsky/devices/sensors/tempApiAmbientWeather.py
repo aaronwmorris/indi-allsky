@@ -82,13 +82,11 @@ class TempApiAmbientWeather(SensorBase):
     def __init__(self, *args, **kwargs):
         super(TempApiAmbientWeather, self).__init__(*args, **kwargs)
 
-        stationId = kwargs['pin_1_name']
-
         logger.warning('Initializing [%s] Ambient Weather API Sensor', self.name)
 
         apikey = self.config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_APIKEY', '')
         applicationkey = self.config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_APPLICATIONKEY', '')
-        macaddress = self.config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_MACADDRESS', '')#.replace(':', '%3a')
+        macaddress = self.config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_MACADDRESS', '')
 
         if not apikey:
             raise Exception('Ambient Weather API key is empty')
