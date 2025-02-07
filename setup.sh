@@ -1561,6 +1561,7 @@ fi
 
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
+    "2.1.2"
     "2.1.1"
     "2.1.0"
     "2.0.9"
@@ -1617,7 +1618,9 @@ done
 
 
 
-if [ "$INDI_VERSION" == "2.1.1" ]; then
+if [ "$INDI_VERSION" == "2.1.2" ]; then
+    pip3 install "$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.1" ]; then
     pip3 install "$PYINDI_2_0_4"
 elif [ "$INDI_VERSION" == "2.1.0" ]; then
     pip3 install "$PYINDI_2_0_4"
