@@ -166,6 +166,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## INDI support
 | Version         | Note |
 | --------------- | ---- |
+| v2.1.2          |      |
 | v2.1.1          | **Recommended** |
 | v2.1.0          |      |
 | v2.0.9          |      |
