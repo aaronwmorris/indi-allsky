@@ -18,7 +18,7 @@ INDI_VERSION="${INDIALLSKY_INDI_VERSION:-}"
 #### end config ####
 
 
-PYINDI_2_0_4="git+https://github.com/indilib/pyindi-client.git@d8ad88f#egg=pyindi-client"
+PYINDI_2_0_4="git+https://github.com/indilib/pyindi-client.git@577ce4b#egg=pyindi-client"
 PYINDI_2_0_0="git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
 PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
 PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client"
@@ -138,7 +138,10 @@ START_TIME=$(date +%s)
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 
 
-if [ "$INDI_VERSION" == "2.1.1" ]; then
+if [ "$INDI_VERSION" == "2.1.2" ]; then
+    pip3 uninstall -y pyindi-client
+    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.1" ]; then
     pip3 uninstall -y pyindi-client
     pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
 elif [ "$INDI_VERSION" == "2.1.0" ]; then

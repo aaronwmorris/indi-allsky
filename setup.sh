@@ -74,7 +74,7 @@ WEB_EMAIL="${INDIALLSKY_WEB_EMAIL:-}"
 OPTIONAL_PYTHON_MODULES="${INDIALLSKY_OPTIONAL_PYTHON_MODULES:-false}"
 GPIO_PYTHON_MODULES="${INDIALLSKY_GPIO_PYTHON_MODULES:-false}"
 
-PYINDI_2_0_4="git+https://github.com/indilib/pyindi-client.git@d8ad88f#egg=pyindi-client"
+PYINDI_2_0_4="git+https://github.com/indilib/pyindi-client.git@577ce4b#egg=pyindi-client"
 PYINDI_2_0_0="git+https://github.com/indilib/pyindi-client.git@674706f#egg=pyindi-client"
 PYINDI_1_9_9="git+https://github.com/indilib/pyindi-client.git@ce808b7#egg=pyindi-client"
 PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyindi-client"
@@ -1561,6 +1561,7 @@ fi
 
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
+    "2.1.2"
     "2.1.1"
     "2.1.0"
     "2.0.9"
@@ -1617,7 +1618,9 @@ done
 
 
 
-if [ "$INDI_VERSION" == "2.1.1" ]; then
+if [ "$INDI_VERSION" == "2.1.2" ]; then
+    pip3 install "$PYINDI_2_0_4"
+elif [ "$INDI_VERSION" == "2.1.1" ]; then
     pip3 install "$PYINDI_2_0_4"
 elif [ "$INDI_VERSION" == "2.1.0" ]; then
     pip3 install "$PYINDI_2_0_4"

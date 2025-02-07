@@ -683,14 +683,14 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
         echo
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "touptek" ]]; then
-        INDI_3RDPARTY_LIBRARIES="libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam indi-gpsd"
-        INDI_3RDPARTY_DRIVERS="indi-toupbase"
+        INDI_3RDPARTY_LIBRARIES="libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam libsvbonycam"
+        INDI_3RDPARTY_DRIVERS="indi-toupbase indi-gpsd"
         echo
         echo "Building ToupTek (including Altair, Omegon, Meade, etc) drivers"
         echo
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "supported" ]]; then
-        INDI_3RDPARTY_LIBRARIES="libasi libplayerone libsvbony libqhy libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam"
+        INDI_3RDPARTY_LIBRARIES="libasi libplayerone libsvbony libqhy libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam libsvbonycam"
         INDI_3RDPARTY_DRIVERS="indi-asi indi-playerone indi-svbony indi-qhy indi-sx indi-toupbase indi-gphoto indi-webcam indi-gpsd"
         echo
         echo "Building supported camera drivers"
@@ -779,6 +779,17 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
                 echo
                 sleep 3
 
+
+                if [ ! -d "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_LIB" ]; then
+                    echo
+                    echo "WARNING: Library not found: $INDI_LIB"
+                    echo
+                    sleep 3
+
+                    continue
+                fi
+
+
                 INDI_3RDPARTY_LIB_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_lib.XXXXXXXX")
                 cd "$INDI_3RDPARTY_LIB_BUILD"
 
@@ -829,6 +840,17 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
                 echo "Building driver: $INDI_DRIVER"
                 echo
                 sleep 3
+
+
+                if [ ! -d "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_DRIVER" ]; then
+                    echo
+                    echo "WARNING: Driver not found: $INDI_DRIVER"
+                    echo
+                    sleep 3
+
+                    continue
+                fi
+
 
                 INDI_3RDPARTY_DRIVER_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_driver.XXXXXXXX")
                 cd "$INDI_3RDPARTY_DRIVER_BUILD"
