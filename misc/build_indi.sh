@@ -628,70 +628,70 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "asi" || "$BUILD_INDI_CAMERA_VENDOR" == "zwo" ]]; then
         INDI_3RDPARTY_LIBRARIES="libasi"
-        INDI_3RDPARTY_DRIVERS="indi-asi indi-gpsd"
+        INDI_3RDPARTY_DRIVERS="indi-asi indi-gpsd indi-gpsnmea"
         echo
         echo "Building ZWO ASI drivers"
         echo
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "playerone" ]]; then
         INDI_3RDPARTY_LIBRARIES="libplayerone"
-        INDI_3RDPARTY_DRIVERS="indi-playerone indi-gpsd"
+        INDI_3RDPARTY_DRIVERS="indi-playerone indi-gpsd indi-gpsnmea"
         echo
         echo "Building PlayerOne Astronomy drivers"
         echo
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "svbony" ]]; then
         INDI_3RDPARTY_LIBRARIES="libsvbony"
-        INDI_3RDPARTY_DRIVERS="indi-svbony indi-gpsd"
+        INDI_3RDPARTY_DRIVERS="indi-svbony indi-gpsd indi-gpsnmea"
         echo
         echo "Building SVBony drivers"
         echo
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "qhy" ]]; then
         INDI_3RDPARTY_LIBRARIES="libqhy"
-        INDI_3RDPARTY_DRIVERS="indi-qhy indi-gpsd"
+        INDI_3RDPARTY_DRIVERS="indi-qhy indi-gpsd indi-gpsnmea"
         echo
         echo "Building QHY drivers"
         echo
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "sx" ]]; then
         INDI_3RDPARTY_LIBRARIES=""
-        INDI_3RDPARTY_DRIVERS="indi-sx indi-gpsd"
+        INDI_3RDPARTY_DRIVERS="indi-sx indi-gpsd indi-gpsnmea"
         echo
         echo "Building Starlight Xpress drivers"
         echo
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "libcamera" ]]; then
         INDI_3RDPARTY_LIBRARIES=""
-        INDI_3RDPARTY_DRIVERS="indi-libcamera indi-gpsd"
+        INDI_3RDPARTY_DRIVERS="indi-libcamera indi-gpsd indi-gpsnmea"
         echo
         echo "Building libcamera driver"
         echo
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "gphoto" ]]; then
         INDI_3RDPARTY_LIBRARIES=""
-        INDI_3RDPARTY_DRIVERS="indi-gphoto indi-gpsd"
+        INDI_3RDPARTY_DRIVERS="indi-gphoto indi-gpsd indi-gpsnmea"
         echo
         echo "Building gphoto DSLR drivers"
         echo
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "webcam" ]]; then
         INDI_3RDPARTY_LIBRARIES=""
-        INDI_3RDPARTY_DRIVERS="indi-webcam indi-gpsd"
+        INDI_3RDPARTY_DRIVERS="indi-webcam indi-gpsd indi-gpsnmea"
         echo
         echo "Building INDI webcam driver"
         echo
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "touptek" ]]; then
         INDI_3RDPARTY_LIBRARIES="libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam libsvbonycam"
-        INDI_3RDPARTY_DRIVERS="indi-toupbase indi-gpsd"
+        INDI_3RDPARTY_DRIVERS="indi-toupbase indi-gpsd indi-gpsnmea"
         echo
         echo "Building ToupTek (including Altair, Omegon, Meade, etc) drivers"
         echo
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "supported" ]]; then
         INDI_3RDPARTY_LIBRARIES="libasi libplayerone libsvbony libqhy libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam libsvbonycam"
-        INDI_3RDPARTY_DRIVERS="indi-asi indi-playerone indi-svbony indi-qhy indi-sx indi-toupbase indi-gphoto indi-webcam indi-gpsd"
+        INDI_3RDPARTY_DRIVERS="indi-asi indi-playerone indi-svbony indi-qhy indi-sx indi-toupbase indi-gphoto indi-webcam indi-gpsd indi-gpsnmea"
         echo
         echo "Building supported camera drivers"
         echo
