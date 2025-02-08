@@ -403,6 +403,7 @@ class BaseView(View):
             self.night = False
         else:
             data['mode'] = 'Night'
+            self.night = True
 
 
 
