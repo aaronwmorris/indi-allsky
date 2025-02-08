@@ -85,7 +85,14 @@ class StarTrailGenerator(object):
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
 
-        self.timelapse_tmpdir = tempfile.TemporaryDirectory(dir=self.image_dir, suffix='_startrail_timelapse')    # context manager automatically deletes files when finished
+        # setup a folder for scratch files which can be deleted if orphaned
+        scratch_base_dir = self.image_dir.joinpath('scratch')
+        if not scratch_base_dir.exists():
+            scratch_base_dir.mkdir(parents=True)
+
+
+        # this needs to be a class variable
+        self.timelapse_tmpdir = tempfile.TemporaryDirectory(dir=scratch_base_dir, suffix='_startrail_timelapse')    # context manager automatically deletes files when finished
         self.timelapse_tmpdir_p = Path(self.timelapse_tmpdir.name)
 
 

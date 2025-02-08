@@ -15,6 +15,7 @@ class PreProcessorStandard(PreProcessorBase):
 
 
         # this needs to be a class variable
+        # tmp folder needs to be in /tmp so symlinks are supported (image_dir might be fat32)
         self.temp_seqfolder = tempfile.TemporaryDirectory(suffix='_timelapse')  # context manager automatically deletes files when finished
         self._seqfolder = Path(self.temp_seqfolder.name)
 

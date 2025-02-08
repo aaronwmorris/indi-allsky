@@ -37,8 +37,14 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         #logger.info('X Offset: %d, Y Offset: %d', self.x_offset, self.y_offset)
 
 
+        # setup a folder for scratch files which can be deleted if orphaned
+        scratch_base_dir = self.image_dir.joinpath('scratch')
+        if not scratch_base_dir.exists():
+            scratch_base_dir.mkdir(parents=True)
+
+
         # this needs to be a class variable
-        self.temp_seqfolder = tempfile.TemporaryDirectory(dir=self.image_dir, suffix='_timelapse')  # context manager automatically deletes files when finished
+        self.temp_seqfolder = tempfile.TemporaryDirectory(dir=scratch_base_dir, suffix='_timelapse')  # context manager automatically deletes files when finished
         self._seqfolder = Path(self.temp_seqfolder.name)
 
 
