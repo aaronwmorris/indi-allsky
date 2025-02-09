@@ -531,6 +531,18 @@ class IndiAllSkyConfigBase(object):
             "WUNDERGROUND_APIKEY_E"  : "",
             "ASTROSPHERIC_APIKEY"    : "",
             "ASTROSPHERIC_APIKEY_E"  : "",
+            "AMBIENTWEATHER_APIKEY"           : "",
+            "AMBIENTWEATHER_APIKEY_E"         : "",
+            "AMBIENTWEATHER_APPLICATIONKEY"   : "",
+            "AMBIENTWEATHER_APPLICATIONKEY_E" : "",
+            "AMBIENTWEATHER_MACADDRESS"       : "",
+            "AMBIENTWEATHER_MACADDRESS_E"     : "",
+            "ECOWITT_APIKEY"           : "",
+            "ECOWITT_APIKEY_E"         : "",
+            "ECOWITT_MACADDRESS_E"     : "",
+            "ECOWITT_APPLICATIONKEY"   : "",
+            "ECOWITT_APPLICATIONKEY_E" : "",
+            "ECOWITT_MACADDRESS"       : "",
             "MQTT_TRANSPORT"         : "tcp",  # tcp or websockets
             "MQTT_HOST"              : "localhost",
             "MQTT_PORT"              : 8883,  # 1883 = mqtt, 8883 = TLS

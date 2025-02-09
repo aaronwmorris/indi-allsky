@@ -2108,6 +2108,9 @@ class ConfigView(FormView):
             'TEMP_SENSOR__AMBIENTWEATHER_APIKEY'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_APIKEY', ''),
             'TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_APPLICATIONKEY', ''),
             'TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AMBIENTWEATHER_MACADDRESS', ''),
+            'TEMP_SENSOR__ECOWITT_APIKEY'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ECOWITT_APIKEY', ''),
+            'TEMP_SENSOR__ECOWITT_APPLICATIONKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ECOWITT_APPLICATIONKEY', ''),
+            'TEMP_SENSOR__ECOWITT_MACADDRESS'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ECOWITT_MACADDRESS', ''),
             'TEMP_SENSOR__MQTT_TRANSPORT'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_TRANSPORT', 'tcp'),
             'TEMP_SENSOR__MQTT_HOST'         : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_HOST', 'localhost'),
             'TEMP_SENSOR__MQTT_PORT'         : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_PORT', 8883),
@@ -2899,6 +2902,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['AMBIENTWEATHER_APIKEY']         = str(request.json['TEMP_SENSOR__AMBIENTWEATHER_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['AMBIENTWEATHER_APPLICATIONKEY'] = str(request.json['TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['AMBIENTWEATHER_MACADDRESS']     = str(request.json['TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS'])
+        self.indi_allsky_config['TEMP_SENSOR']['ECOWITT_APIKEY']         = str(request.json['TEMP_SENSOR__ECOWITT_APIKEY'])
+        self.indi_allsky_config['TEMP_SENSOR']['ECOWITT_APPLICATIONKEY'] = str(request.json['TEMP_SENSOR__ECOWITT_APPLICATIONKEY'])
+        self.indi_allsky_config['TEMP_SENSOR']['ECOWITT_MACADDRESS']     = str(request.json['TEMP_SENSOR__ECOWITT_MACADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_TRANSPORT']        = str(request.json['TEMP_SENSOR__MQTT_TRANSPORT'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_HOST']             = str(request.json['TEMP_SENSOR__MQTT_HOST'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_PORT']             = int(request.json['TEMP_SENSOR__MQTT_PORT'])

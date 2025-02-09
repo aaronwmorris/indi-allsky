@@ -2499,7 +2499,15 @@ def TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY_validator(form, field):
     pass
 
 
-def TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS_validator(form, field):
+def TEMP_SENSOR__ECOWITT_APIKEY_validator(form, field):
+    pass
+
+
+def TEMP_SENSOR__ECOWITT_APPLICATIONKEY_validator(form, field):
+    pass
+
+
+def TEMP_SENSOR__MACADDRESS_validator(form, field):
     if not field.data:
         return
 
@@ -3119,6 +3127,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('temp_api_weatherunderground', 'Weather Underground API (8)'),
         ('temp_api_astrospheric', 'Astrospheric API (5)'),
         ('temp_api_ambientweather', 'AmbientWeather API (9)'),
+        ('temp_api_ecowitt', 'Ecowitt API (9)'),
         ('kernel_temp_sensor_ds18x20_w1', 'DS18x20 - Temp (1)'),
         ('blinka_temp_sensor_dht22', 'DHT22/AM2302 - Temp/RH (2)'),
         ('blinka_temp_sensor_dht21', 'DHT21/AM2301 - Temp/RH (2)'),
@@ -3774,7 +3783,11 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__ASTROSPHERIC_APIKEY = PasswordField('Astrospheric API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ASTROSPHERIC_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__AMBIENTWEATHER_APIKEY         = PasswordField('Ambient Weather API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__AMBIENTWEATHER_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY = PasswordField('Ambient Weather Application Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__AMBIENTWEATHER_APPLICATIONKEY_validator], render_kw={'autocomplete' : 'new-password'})
-    TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS     = StringField('Ambient Weather Device MAC Address', validators=[TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS_validator])
+    TEMP_SENSOR__AMBIENTWEATHER_MACADDRESS     = StringField('Ambient Weather Device MAC Address', validators=[TEMP_SENSOR__MACADDRESS_validator])
+    TEMP_SENSOR__ECOWITT_APIKEY         = PasswordField('Ecowitt API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ECOWITT_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
+    TEMP_SENSOR__ECOWITT_APPLICATIONKEY = PasswordField('Ecowitt Application Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ECOWITT_APPLICATIONKEY_validator], render_kw={'autocomplete' : 'new-password'})
+    TEMP_SENSOR__ECOWITT_MACADDRESS     = StringField('Ecowitt Device MAC Address', validators=[TEMP_SENSOR__MACADDRESS_validator])
+    TEMP_SENSOR__MQTT_TRANSPORT      = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     TEMP_SENSOR__MQTT_TRANSPORT      = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     TEMP_SENSOR__MQTT_HOST           = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
     TEMP_SENSOR__MQTT_PORT           = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
