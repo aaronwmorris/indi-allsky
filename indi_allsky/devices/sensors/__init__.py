@@ -46,6 +46,7 @@ from .tempApiOpenWeatherMap import TempApiOpenWeatherMap as temp_api_openweather
 from .tempApiWeatherUnderground import TempApiWeatherUnderground as temp_api_weatherunderground
 from .tempApiAstrospheric import TempApiAstrospheric as temp_api_astrospheric
 from .tempApiAmbientWeather import TempApiAmbientWeather as temp_api_ambientweather
+from .tempApiEcowitt import TempApiEcowitt as temp_api_ecowitt
 
 from .tempSensorDs18x20 import TempSensorDs18x20 as kernel_temp_sensor_ds18x20_w1
 
@@ -87,4 +88,5 @@ __all__ = (
     'temp_api_weatherunderground',
     'temp_api_astrospheric',
     'temp_api_ambientweather',
+    'temp_api_ecowitt',
 )
