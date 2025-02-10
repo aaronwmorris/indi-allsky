@@ -1685,11 +1685,11 @@ class ConfigView(FormView):
             if not dh_manual_target:
                 if not isinstance(dh_temp, type(None)) and not isinstance(dh_dewpoint, type(None)):
                     dh_temp_delta = dh_temp - dh_dewpoint
+                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}°'.format(dh_temp_delta)
+
                     dh_target_low = dh_dewpoint + dh_thold_diff_low
                     dh_target_med = dh_dewpoint + dh_thold_diff_med
                     dh_target_high = dh_dewpoint + dh_thold_diff_high
-
-                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}°'.format(dh_temp_delta)
                     context['dh_target_low_str'] = '{0:0.1f}°'.format(dh_target_low)
                     context['dh_target_med_str'] = '{0:0.1f}°'.format(dh_target_med)
                     context['dh_target_high_str'] = '{0:0.1f}°'.format(dh_target_high)
@@ -1701,10 +1701,14 @@ class ConfigView(FormView):
             else:
                 if not isinstance(dh_temp, type(None)):
                     dh_delta = dh_temp - dh_manual_target
+                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}° (manual)'.format(dh_delta)
+
                     dh_target_low = dh_manual_target + dh_thold_diff_low
                     dh_target_med = dh_manual_target + dh_thold_diff_med
                     dh_target_high = dh_manual_target + dh_thold_diff_high
-                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}° (manual)'.format(dh_delta)
+                    context['dh_target_low_str'] = '{0:0.1f}°'.format(dh_target_low)
+                    context['dh_target_med_str'] = '{0:0.1f}°'.format(dh_target_med)
+                    context['dh_target_high_str'] = '{0:0.1f}°'.format(dh_target_high)
                 else:
                     context['dh_temp_delta_str'] = 'Not available'
                     context['dh_target_low_str'] = 'n/a'
@@ -1723,11 +1727,11 @@ class ConfigView(FormView):
             fan_target = self.indi_allsky_config.get('FAN', {}).get('TARGET', 30.0)
             if not isinstance(fan_temp, type(None)):
                 fan_temp_delta = fan_temp - fan_target
+                context['fan_temp_delta_str'] = 'Δ{0:0.1f}°'.format(fan_temp_delta)
+
                 fan_target_low = fan_target + fan_thold_diff_low
                 fan_target_med = fan_target + fan_thold_diff_med
                 fan_target_high = fan_target + fan_thold_diff_high
-
-                context['fan_temp_delta_str'] = 'Δ{0:0.1f}°'.format(fan_temp_delta)
                 context['fan_target_low_str'] = '{0:0.1f}°'.format(fan_target_low)
                 context['fan_target_med_str'] = '{0:0.1f}°'.format(fan_target_med)
                 context['fan_target_high_str'] = '{0:0.1f}°'.format(fan_target_high)
