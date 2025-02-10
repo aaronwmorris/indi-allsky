@@ -1701,7 +1701,7 @@ class ConfigView(FormView):
             else:
                 if not isinstance(dh_temp, type(None)):
                     dh_delta = dh_temp - dh_manual_target
-                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}° (manual)'.format(dh_delta)
+                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}° (manual target)'.format(dh_delta)
 
                     dh_target_low = dh_manual_target + dh_thold_diff_low
                     dh_target_med = dh_manual_target + dh_thold_diff_med
