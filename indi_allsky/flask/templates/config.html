@@ -6037,7 +6037,6 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-6">
             <div>Last measurement: <b>{{ dh_temp_str }}</b></div>
-            <div>Last delta: <b>{{ dh_temp_delta_str }}</b></div>
             <div>This should be the slot containing the current temperature to be compared against the dew point (or manual target)</div>
         </div>
     </div>
@@ -6052,6 +6051,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-6">
             <div>Last measurement: <b>{{ dh_dewpoint_str }}</b></div>
+            <div>Last delta: <b>{{ dh_temp_delta_str }}</b></div>
         </div>
     </div>
 
@@ -6240,7 +6240,6 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-6">
             <div>Last measurement: <b>{{ fan_temp_str }}</b></div>
-            <div>Last delta: <b>{{ fan_temp_delta_str }}</b></div>
             <div>This should be the slot containing the current temperature to be compared with the target temperature</div>
         </div>
     </div>
@@ -6255,6 +6254,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>Target temperature</div>
+            <div>Last delta: <b>{{ fan_temp_delta_str }}</b></div>
         </div>
     </div>
 
