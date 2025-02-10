@@ -3947,10 +3947,9 @@ class IndiAllskyConfigForm(FlaskForm):
 
         for x, label in enumerate(temp_label_list[:30]):  # limit to 30
             self.SENSOR_SLOT_choices[x + 40] = (
-                str(temp_sensor__c_user_var_slot + x + 40),
-                '({0:d}) {1:s}'.format(x + 40, label)
+                str(x + 100),  # these offsets are not confusing at all
+                '({0:d}) {1:s}'.format(x + 10, label)
             )
-
 
 
         ### Update the choices
