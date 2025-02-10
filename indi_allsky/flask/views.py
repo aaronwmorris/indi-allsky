@@ -1639,6 +1639,10 @@ class ConfigView(FormView):
 
         if latest_image_entry:
             dh_temp_slot = self.indi_allsky_config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
+            dh_thold_diff_low = self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_LOW', -15)
+            dh_thold_diff_med = self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_MED', -10)
+            dh_thold_diff_high = self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', -5)
+
             if dh_temp_slot < 100:
                 dh_temp_slot_var = 'sensor_user_{0:d}'.format(dh_temp_slot)
             else:
@@ -1651,6 +1655,9 @@ class ConfigView(FormView):
                 dh_dewpoint_slot_var = 'sensor_temp_{0:d}'.format(dh_dewpoint_slot - 100)
 
             fan_temp_slot = self.indi_allsky_config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 10)
+            fan_thold_diff_low = self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_LOW', -10)
+            fan_thold_diff_med = self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_MED', -5)
+            fan_thold_diff_high = self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_HIGH', 0)
             if fan_temp_slot < 100:
                 fan_temp_slot_var = 'sensor_user_{0:d}'.format(fan_temp_slot)
             else:
@@ -1659,10 +1666,20 @@ class ConfigView(FormView):
 
             if latest_image_entry.data.get(dh_temp_slot_var):
                 dh_temp = latest_image_entry.data[dh_temp_slot_var]
+                dh_target_low = dh_temp - dh_thold_diff_low
+                dh_target_med = dh_temp - dh_thold_diff_med
+                dh_target_high = dh_temp - dh_thold_diff_high
+
                 context['dh_temp_str'] = '{0:0.1f}°'.format(dh_temp)
+                context['dh_target_low_str'] = '{0:0.1f}°'.format(dh_target_low)
+                context['dh_target_med_str'] = '{0:0.1f}°'.format(dh_target_med)
+                context['dh_target_high_str'] = '{0:0.1f}°'.format(dh_target_high)
             else:
                 dh_temp = None
                 context['dh_temp_str'] = 'Not available'
+                context['dh_target_low_str'] = 'n/a'
+                context['dh_target_med_str'] = 'n/a'
+                context['dh_target_high_str'] = 'n/a'
 
             if latest_image_entry.data.get(dh_dewpoint_slot_var):
                 dh_dewpoint = latest_image_entry.data[dh_dewpoint_slot_var]
@@ -1689,10 +1706,20 @@ class ConfigView(FormView):
 
             if latest_image_entry.data.get(fan_temp_slot_var):
                 fan_temp = latest_image_entry.data[fan_temp_slot_var]
+                fan_target_low = fan_temp - fan_thold_diff_low
+                fan_target_med = fan_temp - fan_thold_diff_med
+                fan_target_high = fan_temp - fan_thold_diff_high
+
                 context['fan_temp_str'] = '{0:0.1f}°'.format(fan_temp)
+                context['fan_target_low_str'] = '{0:0.1f}°'.format(fan_target_low)
+                context['fan_target_med_str'] = '{0:0.1f}°'.format(fan_target_med)
+                context['fan_target_high_str'] = '{0:0.1f}°'.format(fan_target_high)
             else:
                 fan_temp = None
                 context['fan_temp_str'] = 'Not available'
+                context['fan_target_low_str'] = 'n/a'
+                context['fan_target_med_str'] = 'n/a'
+                context['fan_target_high_str'] = 'n/a'
 
 
             fan_target = self.indi_allsky_config.get('FAN', {}).get('TARGET', 30.0)
@@ -1705,8 +1732,15 @@ class ConfigView(FormView):
             context['dh_temp_str'] = 'Not available'
             context['dh_dewpoint_str'] = 'Not available'
             context['dh_temp_delta_str'] = 'Not available'
+            context['dh_target_low_str'] = 'n/a'
+            context['dh_target_med_str'] = 'n/a'
+            context['dh_target_high_str'] = 'n/a'
+
             context['fan_temp_str'] = 'Not available'
             context['fan_temp_delta_str'] = 'Not available'
+            context['fan_target_low_str'] = 'n/a'
+            context['fan_target_med_str'] = 'n/a'
+            context['fan_target_high_str'] = 'n/a'
 
 
         form_data = {

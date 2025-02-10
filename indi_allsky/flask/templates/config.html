@@ -6077,7 +6077,6 @@ var camera_id = {{ camera_id }};
             <div id="DEW_HEATER__LEVEL_LOW-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
         </div>
     </div>
 
@@ -6090,7 +6089,6 @@ var camera_id = {{ camera_id }};
             <div id="DEW_HEATER__LEVEL_MED-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
         </div>
     </div>
 
@@ -6103,7 +6101,6 @@ var camera_id = {{ camera_id }};
             <div id="DEW_HEATER__LEVEL_HIGH-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
         </div>
     </div>
 
@@ -6117,6 +6114,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>If the difference is above the LOW threshold, the default level is used</div>
+            <div><b>Current Target: {{ dh_target_low_str }}</b></div>
         </div>
     </div>
 
@@ -6129,7 +6127,7 @@ var camera_id = {{ camera_id }};
             <div id="DEW_HEATER__THOLD_DIFF_MED-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
+            <div><b>Current Target: {{ dh_target_med_str }}</b></div>
         </div>
     </div>
 
@@ -6142,7 +6140,7 @@ var camera_id = {{ camera_id }};
             <div id="DEW_HEATER__THOLD_DIFF_HIGH-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
+            <div><b>Current Target: {{ dh_target_high_str }}</b></div>
         </div>
     </div>
 
@@ -6309,6 +6307,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>If the difference is below the LOW threshold, the default level is used</div>
+            <div><b>Current Target: {{ fan_target_low_str }}</b></div>
         </div>
     </div>
 
@@ -6321,7 +6320,7 @@ var camera_id = {{ camera_id }};
             <div id="FAN__THOLD_DIFF_MED-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
+            <div><b>Current Target: {{ fan_target_med_str }}</b></div>
         </div>
     </div>
 
@@ -6334,7 +6333,7 @@ var camera_id = {{ camera_id }};
             <div id="FAN__THOLD_DIFF_HIGH-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
+            <div><b>Current Target: {{ fan_target_high_str }}</b></div>
         </div>
     </div>
 
