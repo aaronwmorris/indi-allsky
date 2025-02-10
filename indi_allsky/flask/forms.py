@@ -3927,7 +3927,6 @@ class IndiAllskyConfigForm(FlaskForm):
                 app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
 
 
-
         # Set system temp names
         temp_info = psutil.sensors_temperatures()
 

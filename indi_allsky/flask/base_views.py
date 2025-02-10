@@ -1107,6 +1107,28 @@ class TemplateView(BaseView):
                 app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
 
 
+        # Set system temp names
+        temp_info = psutil.sensors_temperatures()
+
+        temp_label_list = list()
+        for t_key in sorted(temp_info):  # always return the keys in the same order
+            for i, t in enumerate(temp_info[t_key]):
+                # these names will match the mqtt topics
+                if not t.label:
+                    # use index for label name
+                    label = str(i)
+                else:
+                    label = t.label
+
+                topic = '{0:s}/{1:s}'.format(t_key, label)
+                temp_label_list.append(topic)
+
+
+        for x, label in enumerate(temp_label_list[:30]):  # limit to 30
+            self.SENSOR_SLOT_choices[x + 40] = (
+                str(x + 110),  # these offsets are not confusing at all
+                '{0:s}'.format(label)
+            )
 
 
 class FormView(TemplateView):
