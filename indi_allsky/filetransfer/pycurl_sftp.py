@@ -164,9 +164,9 @@ class pycurl_sftp(GenericFileTransfer):
                 pass
             else:
                 raise e from e
+        finally:
+            f_localfile.close()
 
-
-        f_localfile.close()
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size

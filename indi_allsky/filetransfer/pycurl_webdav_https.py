@@ -185,9 +185,9 @@ class pycurl_webdav_https(GenericFileTransfer):
                 raise TransferFailure(msg) from e
             else:
                 raise e from e
+        finally:
+            f_localfile.close()
 
-
-        f_localfile.close()
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size
