@@ -12,6 +12,7 @@ class GenericFileTransfer(object):
         self._port = 0
         self._connect_timeout = 10.0
         self._timeout = 60.0
+        self._atomic = False
 
 
         self._client = None
@@ -42,6 +43,15 @@ class GenericFileTransfer(object):
     @connect_timeout.setter
     def connect_timeout(self, new_connect_timeout):
         self._connect_timeout = float(new_connect_timeout)
+
+
+    @property
+    def atomic(self):
+        return self._atomic
+
+    @atomic.setter
+    def atomic(self, new_atomic):
+        self._atomic = bool(new_atomic)
 
 
     def connect(self, *args, **kwargs):
