@@ -1638,6 +1638,15 @@ class ConfigView(FormView):
 
 
         if latest_image_entry:
+            dh_thold_diff_low = self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_LOW', -15)
+            dh_thold_diff_med = self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_MED', -10)
+            dh_thold_diff_high = self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', -5)
+
+            fan_thold_diff_low = self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_LOW', -10)
+            fan_thold_diff_med = self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_MED', -5)
+            fan_thold_diff_high = self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_HIGH', 0)
+
+
             dh_temp_slot = self.indi_allsky_config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
             if dh_temp_slot < 100:
                 dh_temp_slot_var = 'sensor_user_{0:d}'.format(dh_temp_slot)
@@ -1677,14 +1686,34 @@ class ConfigView(FormView):
                 if not isinstance(dh_temp, type(None)) and not isinstance(dh_dewpoint, type(None)):
                     dh_temp_delta = dh_temp - dh_dewpoint
                     context['dh_temp_delta_str'] = 'Δ{0:0.1f}°'.format(dh_temp_delta)
+
+                    dh_target_low = dh_dewpoint + dh_thold_diff_low
+                    dh_target_med = dh_dewpoint + dh_thold_diff_med
+                    dh_target_high = dh_dewpoint + dh_thold_diff_high
+                    context['dh_target_low_str'] = '{0:0.1f}°'.format(dh_target_low)
+                    context['dh_target_med_str'] = '{0:0.1f}°'.format(dh_target_med)
+                    context['dh_target_high_str'] = '{0:0.1f}°'.format(dh_target_high)
                 else:
                     context['dh_temp_delta_str'] = 'Not available'
+                    context['dh_target_low_str'] = 'n/a'
+                    context['dh_target_med_str'] = 'n/a'
+                    context['dh_target_high_str'] = 'n/a'
             else:
                 if not isinstance(dh_temp, type(None)):
                     dh_delta = dh_temp - dh_manual_target
-                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}° (manual)'.format(dh_delta)
+                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}° (manual target)'.format(dh_delta)
+
+                    dh_target_low = dh_manual_target + dh_thold_diff_low
+                    dh_target_med = dh_manual_target + dh_thold_diff_med
+                    dh_target_high = dh_manual_target + dh_thold_diff_high
+                    context['dh_target_low_str'] = '{0:0.1f}°'.format(dh_target_low)
+                    context['dh_target_med_str'] = '{0:0.1f}°'.format(dh_target_med)
+                    context['dh_target_high_str'] = '{0:0.1f}°'.format(dh_target_high)
                 else:
                     context['dh_temp_delta_str'] = 'Not available'
+                    context['dh_target_low_str'] = 'n/a'
+                    context['dh_target_med_str'] = 'n/a'
+                    context['dh_target_high_str'] = 'n/a'
 
 
             if latest_image_entry.data.get(fan_temp_slot_var):
@@ -1699,14 +1728,31 @@ class ConfigView(FormView):
             if not isinstance(fan_temp, type(None)):
                 fan_temp_delta = fan_temp - fan_target
                 context['fan_temp_delta_str'] = 'Δ{0:0.1f}°'.format(fan_temp_delta)
+
+                fan_target_low = fan_target + fan_thold_diff_low
+                fan_target_med = fan_target + fan_thold_diff_med
+                fan_target_high = fan_target + fan_thold_diff_high
+                context['fan_target_low_str'] = '{0:0.1f}°'.format(fan_target_low)
+                context['fan_target_med_str'] = '{0:0.1f}°'.format(fan_target_med)
+                context['fan_target_high_str'] = '{0:0.1f}°'.format(fan_target_high)
             else:
                 context['fan_temp_delta_str'] = 'Not available'
+                context['fan_target_low_str'] = 'n/a'
+                context['fan_target_med_str'] = 'n/a'
+                context['fan_target_high_str'] = 'n/a'
         else:
             context['dh_temp_str'] = 'Not available'
             context['dh_dewpoint_str'] = 'Not available'
             context['dh_temp_delta_str'] = 'Not available'
+            context['dh_target_low_str'] = 'n/a'
+            context['dh_target_med_str'] = 'n/a'
+            context['dh_target_high_str'] = 'n/a'
+
             context['fan_temp_str'] = 'Not available'
             context['fan_temp_delta_str'] = 'Not available'
+            context['fan_target_low_str'] = 'n/a'
+            context['fan_target_med_str'] = 'n/a'
+            context['fan_target_high_str'] = 'n/a'
 
 
         form_data = {

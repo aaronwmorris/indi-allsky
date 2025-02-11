@@ -6037,7 +6037,6 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-6">
             <div>Last measurement: <b>{{ dh_temp_str }}</b></div>
-            <div>Last delta: <b>{{ dh_temp_delta_str }}</b></div>
             <div>This should be the slot containing the current temperature to be compared against the dew point (or manual target)</div>
         </div>
     </div>
@@ -6052,6 +6051,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-6">
             <div>Last measurement: <b>{{ dh_dewpoint_str }}</b></div>
+            <div>Last delta: <b>{{ dh_temp_delta_str }}</b></div>
         </div>
     </div>
 
@@ -6077,7 +6077,6 @@ var camera_id = {{ camera_id }};
             <div id="DEW_HEATER__LEVEL_LOW-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
         </div>
     </div>
 
@@ -6090,7 +6089,6 @@ var camera_id = {{ camera_id }};
             <div id="DEW_HEATER__LEVEL_MED-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
         </div>
     </div>
 
@@ -6103,7 +6101,6 @@ var camera_id = {{ camera_id }};
             <div id="DEW_HEATER__LEVEL_HIGH-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
         </div>
     </div>
 
@@ -6116,7 +6113,8 @@ var camera_id = {{ camera_id }};
             <div id="DEW_HEATER__THOLD_DIFF_LOW-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>If the difference is above the LOW threshold, the default level is used</div>
+            <div>If the delta is above the LOW threshold, the default level is used</div>
+            <div><b>Threshold: {{ dh_target_low_str }}</b></div>
         </div>
     </div>
 
@@ -6129,7 +6127,7 @@ var camera_id = {{ camera_id }};
             <div id="DEW_HEATER__THOLD_DIFF_MED-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
+            <div><b>Threshold: {{ dh_target_med_str }}</b></div>
         </div>
     </div>
 
@@ -6142,7 +6140,7 @@ var camera_id = {{ camera_id }};
             <div id="DEW_HEATER__THOLD_DIFF_HIGH-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
+            <div><b>Threshold: {{ dh_target_high_str }}</b></div>
         </div>
     </div>
 
@@ -6242,7 +6240,6 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-6">
             <div>Last measurement: <b>{{ fan_temp_str }}</b></div>
-            <div>Last delta: <b>{{ fan_temp_delta_str }}</b></div>
             <div>This should be the slot containing the current temperature to be compared with the target temperature</div>
         </div>
     </div>
@@ -6257,6 +6254,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>Target temperature</div>
+            <div>Last delta: <b>{{ fan_temp_delta_str }}</b></div>
         </div>
     </div>
 
@@ -6308,7 +6306,8 @@ var camera_id = {{ camera_id }};
             <div id="FAN__THOLD_DIFF_LOW-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>If the difference is below the LOW threshold, the default level is used</div>
+            <div>If the delta is below the LOW threshold, the default level is used</div>
+            <div><b>Threshold: {{ fan_target_low_str }}</b></div>
         </div>
     </div>
 
@@ -6321,7 +6320,7 @@ var camera_id = {{ camera_id }};
             <div id="FAN__THOLD_DIFF_MED-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
+            <div><b>Threshold: {{ fan_target_med_str }}</b></div>
         </div>
     </div>
 
@@ -6334,7 +6333,7 @@ var camera_id = {{ camera_id }};
             <div id="FAN__THOLD_DIFF_HIGH-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div></div>
+            <div><b>Threshold: {{ fan_target_high_str }}</b></div>
         </div>
     </div>
 
