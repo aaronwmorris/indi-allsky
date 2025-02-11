@@ -977,7 +977,18 @@ class ImageWorker(Process):
         file_data_dict = {
             'timestamp'    : i_ref.exp_date,
             'ts'           : i_ref.exp_date,  # shortcut
+            'camera_uuid'  : i_ref.camera_uuid,
+            'camera_id'    : i_ref.camera_id,
         }
+
+
+        if self.night_v.value:
+            file_data_dict['timeofday'] = 'night'
+            file_data_dict['tod'] = 'night'
+        else:
+            file_data_dict['timeofday'] = 'day'
+            file_data_dict['tod'] = 'day'
+
 
         # Replace parameters in names
         remote_dir = self.config['FILETRANSFER']['REMOTE_METADATA_FOLDER'].format(**file_data_dict)
@@ -1002,8 +1013,6 @@ class ImageWorker(Process):
         db.session.commit()
 
         self.upload_q.put({'task_id' : upload_task.id})
-
-
 
 
     def getSqmData(self, camera_id):
