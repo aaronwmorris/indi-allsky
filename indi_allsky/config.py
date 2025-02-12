@@ -1121,7 +1121,12 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         self._config = self._decrypt_passwords()
 
         config_temp_f = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json')
-        config_temp_f.write(json.dumps(self.config, indent=4))
+        json.dump(
+            self.config,
+            config_temp_f,
+            indent=4,
+            ensure_ascii=False,
+        )
         config_temp_f.close()
 
         config_temp_p = Path(config_temp_f.name)
@@ -1198,7 +1203,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
         logger.info('Dumping config')
 
-        print(json.dumps(self._config, indent=4))
+        print(json.dumps(self._config, indent=4, ensure_ascii=False))
 
 
     def user_count(self, **kwargs):
