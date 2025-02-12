@@ -92,14 +92,12 @@ class python_ftpes(GenericFileTransfer):
 
         start = time.time()
 
-        with io.open(str(local_file_p), 'rb') as f_localfile:
-            try:
+        try:
+            with io.open(str(local_file_p), 'rb') as f_localfile:
                 self.client.storbinary('STOR {0}'.format(str(remote_file_p)), f_localfile, blocksize=262144)
-            except ftplib.error_perm as e:
-                f_localfile.close()
-                raise TransferFailure(str(e)) from e
+        except ftplib.error_perm as e:
+            raise TransferFailure(str(e)) from e
 
-            f_localfile.close()
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size

@@ -180,14 +180,16 @@ class pycurl_webdav_https(GenericFileTransfer):
                 raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_PEER_FAILED_VERIFICATION]:
                 raise CertificateValidationFailure(msg) from e
+            elif rc in [pycurl.E_REMOTE_ACCESS_DENIED]:
+                raise TransferFailure(msg) from e
             elif rc in [pycurl.E_REMOTE_FILE_NOT_FOUND]:
                 logger.error('Upload failed.  PycURL does not support relative path names')
                 raise TransferFailure(msg) from e
             else:
                 raise e from e
+        finally:
+            f_localfile.close()
 
-
-        f_localfile.close()
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size

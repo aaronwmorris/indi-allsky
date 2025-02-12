@@ -5,7 +5,7 @@ set -o errexit
 set -o nounset
 shopt -s nullglob
 
-PATH=/usr/local/sbin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export PATH
 
 

@@ -53,10 +53,19 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : image_entry.createDate,
             'ts'           : image_entry.createDate,  # shortcut
-            'ext'          : self.config['IMAGE_FILE_TYPE'],
-            'camera_uuid'  : image_entry.camera.uuid,
             'day_date'     : image_entry.dayDate,
+            'ext'          : Path(image_entry.filename).suffix.replace('.', ''),
+            'camera_uuid'  : image_entry.camera.uuid,
+            'camera_id'    : image_entry.camera.id,
         }
+
+
+        if image_entry.night:
+            file_data_dict['timeofday'] = 'night'
+            file_data_dict['tod'] = 'night'  # shortcut
+        else:
+            file_data_dict['timeofday'] = 'day'
+            file_data_dict['tod'] = 'day'  # shortcut
 
 
         # Replace parameters in names
@@ -99,8 +108,19 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'day_date'     : video_entry.dayDate,
+            'ext'          : Path(video_entry.filename).suffix.replace('.', ''),
             'camera_uuid'  : video_entry.camera.uuid,
+            'camera_id'    : video_entry.camera.id,
         }
+
+
+        if video_entry.night:
+            file_data_dict['timeofday'] = 'night'
+            file_data_dict['tod'] = 'night'  # shortcut
+        else:
+            file_data_dict['timeofday'] = 'day'
+            file_data_dict['tod'] = 'day'  # shortcut
 
 
         # Replace parameters in names
@@ -141,8 +161,19 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'day_date'     : video_entry.dayDate,
+            'ext'          : Path(video_entry.filename).suffix.replace('.', ''),
             'camera_uuid'  : video_entry.camera.uuid,
+            'camera_id'    : video_entry.camera.id,
         }
+
+
+        if video_entry.night:
+            file_data_dict['timeofday'] = 'night'
+            file_data_dict['tod'] = 'night'  # shortcut
+        else:
+            file_data_dict['timeofday'] = 'day'
+            file_data_dict['tod'] = 'day'  # shortcut
 
 
         # Replace parameters in names
@@ -183,8 +214,19 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'day_date'     : video_entry.dayDate,
+            'ext'          : Path(video_entry.filename).suffix.replace('.', ''),
             'camera_uuid'  : video_entry.camera.uuid,
+            'camera_id'    : video_entry.camera.id,
         }
+
+
+        if video_entry.night:
+            file_data_dict['timeofday'] = 'night'
+            file_data_dict['tod'] = 'night'  # shortcut
+        else:
+            file_data_dict['timeofday'] = 'day'
+            file_data_dict['tod'] = 'day'  # shortcut
 
 
         # Replace parameters in names
@@ -225,8 +267,19 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'day_date'     : keogram_entry.dayDate,
+            'ext'          : Path(keogram_entry.filename).suffix.replace('.', ''),
             'camera_uuid'  : keogram_entry.camera.uuid,
+            'camera_id'    : keogram_entry.camera.id,
         }
+
+
+        if keogram_entry.night:
+            file_data_dict['timeofday'] = 'night'
+            file_data_dict['tod'] = 'night'  # shortcut
+        else:
+            file_data_dict['timeofday'] = 'day'
+            file_data_dict['tod'] = 'day'  # shortcut
 
 
         # Replace parameters in names
@@ -268,8 +321,19 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'day_date'     : startrail_entry.dayDate,
+            'ext'          : Path(startrail_entry.filename).suffix.replace('.', ''),
             'camera_uuid'  : startrail_entry.camera.uuid,
+            'camera_id'    : startrail_entry.camera.id,
         }
+
+
+        if startrail_entry.night:
+            file_data_dict['timeofday'] = 'night'
+            file_data_dict['tod'] = 'night'  # shortcut
+        else:
+            file_data_dict['timeofday'] = 'day'
+            file_data_dict['tod'] = 'day'  # shortcut
 
 
         # Replace parameters in names
@@ -312,8 +376,19 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'day_date'     : startrail_video_entry.dayDate,
+            'ext'          : Path(startrail_video_entry.filename).suffix.replace('.', ''),
             'camera_uuid'  : startrail_video_entry.camera.uuid,
+            'camera_id'    : startrail_video_entry.camera.id,
         }
+
+
+        if startrail_video_entry.night:
+            file_data_dict['timeofday'] = 'night'
+            file_data_dict['tod'] = 'night'  # shortcut
+        else:
+            file_data_dict['timeofday'] = 'day'
+            file_data_dict['tod'] = 'day'  # shortcut
 
 
         # Replace parameters in names
@@ -365,11 +440,19 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : panorama_entry.createDate,
             'ts'           : panorama_entry.createDate,  # shortcut
-            'ext'          : self.config['IMAGE_FILE_TYPE'],
-            'camera_uuid'  : panorama_entry.camera.uuid,
             'day_date'     : panorama_entry.dayDate,
+            'ext'          : Path(panorama_entry.filename).suffix.replace('.', ''),
+            'camera_uuid'  : panorama_entry.camera.uuid,
+            'camera_id'    : panorama_entry.camera.id,
         }
 
+
+        if panorama_entry.night:
+            file_data_dict['timeofday'] = 'night'
+            file_data_dict['tod'] = 'night'  # shortcut
+        else:
+            file_data_dict['timeofday'] = 'day'
+            file_data_dict['tod'] = 'day'  # shortcut
 
 
         # Replace parameters in names
@@ -411,8 +494,19 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'day_date'     : raw_image_entry.dayDate,
+            'ext'          : Path(raw_image_entry.filename).suffix.replace('.', ''),
             'camera_uuid'  : raw_image_entry.camera.uuid,
+            'camera_id'    : raw_image_entry.camera.id,
         }
+
+
+        if raw_image_entry.night:
+            file_data_dict['timeofday'] = 'night'
+            file_data_dict['tod'] = 'night'  # shortcut
+        else:
+            file_data_dict['timeofday'] = 'day'
+            file_data_dict['tod'] = 'day'  # shortcut
 
 
         # Replace parameters in names
@@ -454,8 +548,19 @@ class miscUpload(object):
         file_data_dict = {
             'timestamp'    : now,
             'ts'           : now,  # shortcut
+            'day_date'     : fits_image_entry.dayDate,
+            'ext'          : Path(fits_image_entry.filename).suffix.replace('.', ''),
             'camera_uuid'  : fits_image_entry.camera.uuid,
+            'camera_id'    : fits_image_entry.camera.id,
         }
+
+
+        if fits_image_entry.night:
+            file_data_dict['timeofday'] = 'night'
+            file_data_dict['tod'] = 'night'  # shortcut
+        else:
+            file_data_dict['timeofday'] = 'day'
+            file_data_dict['tod'] = 'day'  # shortcut
 
 
         # Replace parameters in names

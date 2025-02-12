@@ -2000,22 +2000,31 @@ class ConfigView(FormView):
             'FILETRANSFER__CONNECT_TIMEOUT'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('CONNECT_TIMEOUT', 10.0),
             'FILETRANSFER__TIMEOUT'          : self.indi_allsky_config.get('FILETRANSFER', {}).get('TIMEOUT', 60.0),
             'FILETRANSFER__CERT_BYPASS'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('CERT_BYPASS', True),
+            'FILETRANSFER__ATOMIC_TRANSFERS' : self.indi_allsky_config.get('FILETRANSFER', {}).get('ATOMIC_TRANSFERS', False),
             'FILETRANSFER__FORCE_IPV4'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('FORCE_IPV4', False),
             'FILETRANSFER__FORCE_IPV6'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('FORCE_IPV6', False),
-            'FILETRANSFER__REMOTE_IMAGE_NAME'         : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_NAME', 'image.{ext}'),
-            'FILETRANSFER__REMOTE_PANORAMA_NAME'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_NAME', 'panorama.{ext}'),
-            'FILETRANSFER__REMOTE_IMAGE_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_FOLDER', '/home/allsky/upload/allsky'),
-            'FILETRANSFER__REMOTE_PANORAMA_FOLDER'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_FOLDER', '/home/allsky/upload/allsky'),
+            'FILETRANSFER__REMOTE_IMAGE_NAME'         : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_NAME', 'image_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}.{ext}'),
+            'FILETRANSFER__REMOTE_IMAGE_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_IMAGE_FOLDER', '/home/allsky/upload/allsky/images/{day_date:%Y%m%d}/{timeofday:s}/{ts:%H}'),
+            'FILETRANSFER__REMOTE_PANORAMA_NAME'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_NAME', 'panorama_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}.{ext}'),
+            'FILETRANSFER__REMOTE_PANORAMA_FOLDER'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_FOLDER', '/home/allsky/upload/allsky/panoramas/{day_date:%Y%m%d}/{timeofday:s}/{ts:%H}'),
             'FILETRANSFER__REMOTE_METADATA_NAME'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_METADATA_NAME', 'latest_metadata.json'),
             'FILETRANSFER__REMOTE_METADATA_FOLDER'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_METADATA_FOLDER', '/home/allsky/upload/allsky'),
-            'FILETRANSFER__REMOTE_RAW_FOLDER'         : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_RAW_FOLDER', '/home/allsky/upload/allsky/export'),
-            'FILETRANSFER__REMOTE_FITS_FOLDER'        : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_FITS_FOLDER', '/home/allsky/upload/allsky/fits'),
-            'FILETRANSFER__REMOTE_VIDEO_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos'),
-            'FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_MINI_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos'),
-            'FILETRANSFER__REMOTE_KEOGRAM_FOLDER'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_KEOGRAM_FOLDER', '/home/allsky/upload/allsky/keograms'),
-            'FILETRANSFER__REMOTE_STARTRAIL_FOLDER'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_FOLDER', '/home/allsky/upload/allsky/startrails'),
-            'FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER' : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos'),
-            'FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos'),
+            'FILETRANSFER__REMOTE_RAW_NAME'           : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_RAW_NAME', 'raw_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}.{ext}'),
+            'FILETRANSFER__REMOTE_RAW_FOLDER'         : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_RAW_FOLDER', '/home/allsky/upload/allsky/export/{day_date:%Y%m%d}/{timeofday:s}/{ts:%H}'),
+            'FILETRANSFER__REMOTE_FITS_NAME'          : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_FITS_NAME', 'image_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}.{ext}'),
+            'FILETRANSFER__REMOTE_FITS_FOLDER'        : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_FITS_FOLDER', '/home/allsky/upload/allsky/fits/{day_date:%Y%m%d}/{timeofday:s}/{ts:%H}'),
+            'FILETRANSFER__REMOTE_VIDEO_NAME'         : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_VIDEO_NAME', 'allsky-timelapse_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}_{timeofday:s}.{ext}'),
+            'FILETRANSFER__REMOTE_VIDEO_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos/{day_date:%Y%m%d}'),
+            'FILETRANSFER__REMOTE_MINI_VIDEO_NAME'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_MINI_VIDEO_NAME', 'allsky-minitimelapse_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}_{timeofday:s}.{ext}'),
+            'FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_MINI_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos/{day_date:%Y%m%d}'),
+            'FILETRANSFER__REMOTE_KEOGRAM_NAME'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_KEOGRAM_NAME', 'allsky-keogram_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}_{timeofday:s}.{ext}'),
+            'FILETRANSFER__REMOTE_KEOGRAM_FOLDER'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_KEOGRAM_FOLDER', '/home/allsky/upload/allsky/keograms/{day_date:%Y%m%d}'),
+            'FILETRANSFER__REMOTE_STARTRAIL_NAME'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_NAME', 'allsky-startrail_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}_{timeofday:s}.{ext}'),
+            'FILETRANSFER__REMOTE_STARTRAIL_FOLDER'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_FOLDER', '/home/allsky/upload/allsky/startrails/{day_date:%Y%m%d}'),
+            'FILETRANSFER__REMOTE_STARTRAIL_VIDEO_NAME'   : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_VIDEO_NAME', 'allsky-startrail_timelapse_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}_{timeofday:s}.{ext}'),
+            'FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER' : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos/{day_date:%Y%m%d}'),
+            'FILETRANSFER__REMOTE_PANORAMA_VIDEO_NAME'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_VIDEO_NAME', 'allsky-panorama_timelapse_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}_{timeofday:s}.{ext}'),
+            'FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos/{day_date:%Y%m%d}'),
             'FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_ENDOFNIGHT_FOLDER', '/home/allsky/upload/allsky'),
             'FILETRANSFER__UPLOAD_IMAGE'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE', 0),
             'FILETRANSFER__UPLOAD_PANORAMA'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA', 0),
@@ -2784,21 +2793,30 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['CONNECT_TIMEOUT']      = float(request.json['FILETRANSFER__CONNECT_TIMEOUT'])
         self.indi_allsky_config['FILETRANSFER']['TIMEOUT']              = float(request.json['FILETRANSFER__TIMEOUT'])
         self.indi_allsky_config['FILETRANSFER']['CERT_BYPASS']          = bool(request.json['FILETRANSFER__CERT_BYPASS'])
+        self.indi_allsky_config['FILETRANSFER']['ATOMIC_TRANSFERS']     = bool(request.json['FILETRANSFER__ATOMIC_TRANSFERS'])
         self.indi_allsky_config['FILETRANSFER']['FORCE_IPV4']           = bool(request.json['FILETRANSFER__FORCE_IPV4'])
         self.indi_allsky_config['FILETRANSFER']['FORCE_IPV6']           = bool(request.json['FILETRANSFER__FORCE_IPV6'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_IMAGE_NAME']        = str(request.json['FILETRANSFER__REMOTE_IMAGE_NAME'])
-        self.indi_allsky_config['FILETRANSFER']['REMOTE_PANORAMA_NAME']     = str(request.json['FILETRANSFER__REMOTE_PANORAMA_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_IMAGE_FOLDER']      = str(request.json['FILETRANSFER__REMOTE_IMAGE_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_PANORAMA_NAME']     = str(request.json['FILETRANSFER__REMOTE_PANORAMA_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_PANORAMA_FOLDER']   = str(request.json['FILETRANSFER__REMOTE_PANORAMA_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_METADATA_NAME']     = str(request.json['FILETRANSFER__REMOTE_METADATA_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_METADATA_FOLDER']   = str(request.json['FILETRANSFER__REMOTE_METADATA_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_RAW_NAME']          = str(request.json['FILETRANSFER__REMOTE_RAW_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_RAW_FOLDER']        = str(request.json['FILETRANSFER__REMOTE_RAW_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_FITS_NAME']         = str(request.json['FILETRANSFER__REMOTE_FITS_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_FITS_FOLDER']       = str(request.json['FILETRANSFER__REMOTE_FITS_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_VIDEO_NAME']        = str(request.json['FILETRANSFER__REMOTE_VIDEO_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_VIDEO_FOLDER']      = str(request.json['FILETRANSFER__REMOTE_VIDEO_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_MINI_VIDEO_NAME']   = str(request.json['FILETRANSFER__REMOTE_MINI_VIDEO_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_MINI_VIDEO_FOLDER'] = str(request.json['FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_KEOGRAM_NAME']      = str(request.json['FILETRANSFER__REMOTE_KEOGRAM_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER']    = str(request.json['FILETRANSFER__REMOTE_KEOGRAM_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_STARTRAIL_NAME']    = str(request.json['FILETRANSFER__REMOTE_STARTRAIL_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_STARTRAIL_FOLDER']  = str(request.json['FILETRANSFER__REMOTE_STARTRAIL_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_STARTRAIL_VIDEO_NAME']   = str(request.json['FILETRANSFER__REMOTE_STARTRAIL_VIDEO_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_STARTRAIL_VIDEO_FOLDER'] = str(request.json['FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_PANORAMA_VIDEO_NAME']    = str(request.json['FILETRANSFER__REMOTE_PANORAMA_VIDEO_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_PANORAMA_VIDEO_FOLDER']  = str(request.json['FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER'] = str(request.json['FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_IMAGE']         = int(request.json['FILETRANSFER__UPLOAD_IMAGE'])

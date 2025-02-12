@@ -118,6 +118,7 @@ class pycurl_sftp(GenericFileTransfer):
         local_file_p = Path(local_file)
         remote_file_p = Path(remote_file)
 
+
         #pre_commands = [
         #]
 
@@ -125,6 +126,19 @@ class pycurl_sftp(GenericFileTransfer):
             'chmod 644 {0:s}'.format(str(remote_file_p)),
             'chmod 755 {0:s}'.format(str(remote_file_p.parent)),
         ]
+
+
+        if self.atomic:
+            # upload to a tmp name and rename
+            remote_parent = remote_file_p.parent
+            temp_filename = self.tempname(suffix=remote_file_p.suffix)
+
+            final_file_p = remote_file_p
+            remote_file_p = remote_parent.joinpath(temp_filename)
+
+            post_commands.insert(0, '*rm "{0:s}"'.format(str(final_file_p)))  # asterisk command allowed to fail
+            post_commands.insert(1, 'rename "{0:s}" "{1:s}"'.format(str(remote_file_p), str(final_file_p)))
+
 
         url = '{0:s}/{1:s}'.format(self.url, str(remote_file_p))
         logger.info('pycurl URL: %s', url)
@@ -156,17 +170,19 @@ class pycurl_sftp(GenericFileTransfer):
                 raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_PEER_FAILED_VERIFICATION]:
                 raise CertificateValidationFailure(msg) from e
+            elif rc in [pycurl.E_REMOTE_ACCESS_DENIED]:
+                raise TransferFailure(msg) from e
             elif rc in [pycurl.E_REMOTE_FILE_NOT_FOUND]:
                 logger.error('Upload failed.  PycURL does not support relative path names')
                 raise TransferFailure(msg) from e
             elif rc in [pycurl.E_QUOTE_ERROR]:
-                #logger.warning('PycURL quoted commands encountered an error (safe to ignore)')
+                logger.warning('PycURL quoted commands encountered an error (safe to ignore)')
                 pass
             else:
                 raise e from e
+        finally:
+            f_localfile.close()
 
-
-        f_localfile.close()
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size

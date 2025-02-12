@@ -1,4 +1,6 @@
 #from pathlib import Path
+import string
+import random
 import logging
 
 logger = logging.getLogger('indi_allsky')
@@ -12,6 +14,7 @@ class GenericFileTransfer(object):
         self._port = 0
         self._connect_timeout = 10.0
         self._timeout = 60.0
+        self._atomic = False
 
 
         self._client = None
@@ -44,6 +47,15 @@ class GenericFileTransfer(object):
         self._connect_timeout = float(new_connect_timeout)
 
 
+    @property
+    def atomic(self):
+        return self._atomic
+
+    @atomic.setter
+    def atomic(self, new_atomic):
+        self._atomic = bool(new_atomic)
+
+
     def connect(self, *args, **kwargs):
         hostname = kwargs['hostname']
         username = kwargs['username']
@@ -68,4 +80,9 @@ class GenericFileTransfer(object):
 
     def delete(self, *args, **kwargs):
         pass
+
+
+    def tempname(self, suffix='.bin', size=8, chars=string.ascii_letters + string.digits):
+        # generate random filename
+        return 'tmp{0:s}{1:s}'.format(''.join(random.choice(chars) for _ in range(size)), suffix)  # suffix usually includes dot
 

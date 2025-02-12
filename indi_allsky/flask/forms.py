@@ -1699,18 +1699,7 @@ def UPLOAD_WORKERS_validator(form, field):
 
 
 def FILETRANSFER__CLASSNAME_validator(form, field):
-    class_names = (
-        'pycurl_sftp',
-        'paramiko_sftp',
-        'pycurl_ftpes',
-        'pycurl_ftps',
-        'pycurl_ftp',
-        'python_ftp',
-        'python_ftpes',
-        'pycurl_webdav_https',
-    )
-
-    if field.data not in class_names:
+    if field.data not in list(zip(*form.FILETRANSFER__CLASSNAME_choices))[0]:
         raise ValidationError('Invalid selection')
 
 
@@ -1926,7 +1915,7 @@ def FILETRANSFER__PUBLIC_KEY_validator(form, field):
         raise ValidationError(str(e))
 
 
-def FILETRANSFER__REMOTE_IMAGE_NAME_validator(form, field):
+def FILETRANSFER__REMOTE_NAME_validator(form, field):
     image_name_regex = r'^[a-zA-Z0-9_\.\-\{\}\:\%]+$'
 
     if not re.search(image_name_regex, field.data):
@@ -1941,6 +1930,10 @@ def FILETRANSFER__REMOTE_IMAGE_NAME_validator(form, field):
         'ts'         : now,
         'ext'        : 'jpg',
         'day_date'   : now.date(),
+        'camera_uuid': '',
+        'camera_id'  : 0,
+        'timeofday'  : 'night',
+        'tod'        : 'night',
     }
 
     try:
@@ -1964,6 +1957,10 @@ def FILETRANSFER__REMOTE_METADATA_NAME_validator(form, field):
         'timestamp'  : now,
         'ts'         : now,
         'day_date'   : now.date(),
+        'camera_uuid': '',
+        'camera_id'  : 0,
+        'timeofday'  : 'night',
+        'tod'        : 'night',
     }
 
     try:
@@ -1974,7 +1971,7 @@ def FILETRANSFER__REMOTE_METADATA_NAME_validator(form, field):
         raise ValidationError('ValueError: {0:s}'.format(str(e)))
 
 
-def REMOTE_FOLDER_validator(form, field):
+def FILETRANSFER__REMOTE_FOLDER_validator(form, field):
     folder_regex = r'^[a-zA-Z0-9_\.\-\/\{\}\:\%\~]+$'
 
     if not re.search(folder_regex, field.data):
@@ -1987,6 +1984,10 @@ def REMOTE_FOLDER_validator(form, field):
         'timestamp'  : now,
         'ts'         : now,
         'day_date'   : now.date(),
+        'camera_uuid': '',
+        'camera_id'  : 0,
+        'timeofday'  : 'night',
+        'tod'        : 'night',
     }
 
     try:
@@ -3027,13 +3028,13 @@ class IndiAllskyConfigForm(FlaskForm):
 
     FILETRANSFER__CLASSNAME_choices = (
         ('pycurl_sftp', 'PycURL SFTP [22]'),
-        ('pycurl_ftpes', 'PycURL FTPES [21]'),
-        ('pycurl_ftps', 'PycURL FTPS [990]'),
+        ('pycurl_ftpes', 'PycURL FTPS [21] (FTPES)'),
         ('pycurl_ftp', 'PycURL FTP [21] *no encryption*'),
         ('pycurl_webdav_https', 'PycURL WebDAV HTTPS [443]'),
         ('paramiko_sftp', 'Paramiko SFTP [22]'),
         ('python_ftp', 'Python FTP [21] *no encryption*'),
-        ('python_ftpes', 'Python FTPES [21]'),
+        ('python_ftpes', 'Python FTPS [21] (FTPES)'),
+        ('pycurl_ftps', 'PycURL FTPS [990] (Uncommon)'),
     )
 
     S3UPLOAD__CLASSNAME_choices = (
@@ -3617,24 +3618,33 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__CONNECT_TIMEOUT    = FloatField('Connect Timeout', validators=[DataRequired(), FILETRANSFER__TIMEOUT_validator])
     FILETRANSFER__TIMEOUT            = FloatField('Read Timeout', validators=[DataRequired(), FILETRANSFER__TIMEOUT_validator])
     FILETRANSFER__CERT_BYPASS        = BooleanField('Disable Certificate Validation')
+    FILETRANSFER__ATOMIC_TRANSFERS   = BooleanField('Atomic File Transfers')
     FILETRANSFER__FORCE_IPV4         = BooleanField('Force IPv4')
     FILETRANSFER__FORCE_IPV6         = BooleanField('Force IPv6')
     FILETRANSFER__LIBCURL_OPTIONS    = TextAreaField('PycURL Options', validators=[DataRequired(), FILETRANSFER__LIBCURL_OPTIONS_validator])
-    FILETRANSFER__REMOTE_IMAGE_NAME        = StringField('Remote Image Name', validators=[DataRequired(), FILETRANSFER__REMOTE_IMAGE_NAME_validator])
-    FILETRANSFER__REMOTE_PANORAMA_NAME     = StringField('Remote Panorama Name', validators=[DataRequired(), FILETRANSFER__REMOTE_IMAGE_NAME_validator])
-    FILETRANSFER__REMOTE_IMAGE_FOLDER      = StringField('Remote Image Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
-    FILETRANSFER__REMOTE_PANORAMA_FOLDER   = StringField('Remote Panorama Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_IMAGE_NAME        = StringField('Remote Image Name', validators=[DataRequired(), FILETRANSFER__REMOTE_NAME_validator])
+    FILETRANSFER__REMOTE_IMAGE_FOLDER      = StringField('Remote Image Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_PANORAMA_NAME     = StringField('Remote Panorama Name', validators=[DataRequired(), FILETRANSFER__REMOTE_NAME_validator])
+    FILETRANSFER__REMOTE_PANORAMA_FOLDER   = StringField('Remote Panorama Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_METADATA_NAME     = StringField('Remote Metadata Name', validators=[DataRequired(), FILETRANSFER__REMOTE_METADATA_NAME_validator])
-    FILETRANSFER__REMOTE_METADATA_FOLDER   = StringField('Remote Metadata Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
-    FILETRANSFER__REMOTE_RAW_FOLDER        = StringField('Remote RAW Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
-    FILETRANSFER__REMOTE_FITS_FOLDER       = StringField('Remote FITS Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
-    FILETRANSFER__REMOTE_VIDEO_FOLDER      = StringField('Remote Timelapse Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
-    FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER = StringField('Remote Mini Timelapse Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
-    FILETRANSFER__REMOTE_KEOGRAM_FOLDER    = StringField('Remote Keogram Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
-    FILETRANSFER__REMOTE_STARTRAIL_FOLDER  = StringField('Remote Star Trails Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
-    FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER = StringField('Remote Star Trail Video Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
-    FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER  = StringField('Remote Panorama Video Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
-    FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER = StringField('Remote EndOfNight Folder', validators=[DataRequired(), REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_METADATA_FOLDER   = StringField('Remote Metadata Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_RAW_NAME          = StringField('Remote RAW Image Name', validators=[DataRequired(), FILETRANSFER__REMOTE_NAME_validator])
+    FILETRANSFER__REMOTE_RAW_FOLDER        = StringField('Remote RAW Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_FITS_NAME         = StringField('Remote FITS Image Name', validators=[DataRequired(), FILETRANSFER__REMOTE_NAME_validator])
+    FILETRANSFER__REMOTE_FITS_FOLDER       = StringField('Remote FITS Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_VIDEO_NAME        = StringField('Remote Timelapse Name', validators=[DataRequired(), FILETRANSFER__REMOTE_NAME_validator])
+    FILETRANSFER__REMOTE_VIDEO_FOLDER      = StringField('Remote Timelapse Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_MINI_VIDEO_NAME   = StringField('Remote Mini-Timelapse Name', validators=[DataRequired(), FILETRANSFER__REMOTE_NAME_validator])
+    FILETRANSFER__REMOTE_MINI_VIDEO_FOLDER = StringField('Remote Mini-Timelapse Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_KEOGRAM_NAME      = StringField('Remote Keogram Name', validators=[DataRequired(), FILETRANSFER__REMOTE_NAME_validator])
+    FILETRANSFER__REMOTE_KEOGRAM_FOLDER    = StringField('Remote Keogram Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_STARTRAIL_NAME    = StringField('Remote Star Trail Name', validators=[DataRequired(), FILETRANSFER__REMOTE_NAME_validator])
+    FILETRANSFER__REMOTE_STARTRAIL_FOLDER  = StringField('Remote Star Trail Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_STARTRAIL_VIDEO_NAME   = StringField('Remote Star Trail Video Name', validators=[DataRequired(), FILETRANSFER__REMOTE_NAME_validator])
+    FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER = StringField('Remote Star Trail Video Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_PANORAMA_VIDEO_NAME    = StringField('Remote Panorama Video Name', validators=[DataRequired(), FILETRANSFER__REMOTE_NAME_validator])
+    FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER  = StringField('Remote Panorama Video Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER = StringField('Remote EndOfNight Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
     FILETRANSFER__UPLOAD_IMAGE       = IntegerField('Transfer images', validators=[FILETRANSFER__UPLOAD_IMAGE_validator])
     FILETRANSFER__UPLOAD_PANORAMA    = IntegerField('Transfer panoramas', validators=[FILETRANSFER__UPLOAD_IMAGE_validator])
     FILETRANSFER__UPLOAD_METADATA    = BooleanField('Transfer metadata')
