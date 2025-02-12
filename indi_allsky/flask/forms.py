@@ -3629,6 +3629,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__CONNECT_TIMEOUT    = FloatField('Connect Timeout', validators=[DataRequired(), FILETRANSFER__TIMEOUT_validator])
     FILETRANSFER__TIMEOUT            = FloatField('Read Timeout', validators=[DataRequired(), FILETRANSFER__TIMEOUT_validator])
     FILETRANSFER__CERT_BYPASS        = BooleanField('Disable Certificate Validation')
+    FILETRANSFER__ATOMIC_TRANSFERS   = BooleanField('Atomic File Transfers')
     FILETRANSFER__FORCE_IPV4         = BooleanField('Force IPv4')
     FILETRANSFER__FORCE_IPV6         = BooleanField('Force IPv6')
     FILETRANSFER__LIBCURL_OPTIONS    = TextAreaField('PycURL Options', validators=[DataRequired(), FILETRANSFER__LIBCURL_OPTIONS_validator])

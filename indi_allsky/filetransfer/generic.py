@@ -1,4 +1,6 @@
 #from pathlib import Path
+import string
+import random
 import logging
 
 logger = logging.getLogger('indi_allsky')
@@ -78,4 +80,9 @@ class GenericFileTransfer(object):
 
     def delete(self, *args, **kwargs):
         pass
+
+
+    def rand_str(size=8, chars=string.ascii_letters + string.digits):
+        # generate random string
+        return ''.join(random.choice(chars) for _ in range(size))
 

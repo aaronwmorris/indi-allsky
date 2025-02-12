@@ -242,6 +242,7 @@ class FileUploader(Thread):
             client = client_class(self.config)
             client.connect_timeout = self.config.get('FILETRANSFER', {}).get('CONNECT_TIMEOUT', 10)
             client.timeout = self.config.get('FILETRANSFER', {}).get('TIMEOUT', 60)
+            client.atomic = self.config.get('FILETRANSFER', {}).get('ATOMIC_TRANSFERS', False)
 
             if self.config['FILETRANSFER']['PORT']:
                 client.port = self.config['FILETRANSFER']['PORT']

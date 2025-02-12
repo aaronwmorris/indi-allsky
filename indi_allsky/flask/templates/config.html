@@ -3927,6 +3927,23 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__ATOMIC_TRANSFERS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__ATOMIC_TRANSFERS(class='form-check-input') }}
+                <div id="FILETRANSFER__ATOMIC_TRANSFERS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Transfer files to a temporary name before renaming to the final name</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.FILETRANSFER__FORCE_IPV4.label }}
         </div>
         <div class="col-sm-2">
@@ -7252,6 +7269,7 @@ const checkbox_field_names = [
     'CARDINAL_DIRS__OUTLINE_CIRCLE',
     'ORB_PROPERTIES__RETROGRADE',
     'FILETRANSFER__CERT_BYPASS',
+    'FILETRANSFER__ATOMIC_TRANSFERS',
     'FILETRANSFER__UPLOAD_METADATA',
     'FILETRANSFER__UPLOAD_RAW',
     'FILETRANSFER__UPLOAD_FITS',

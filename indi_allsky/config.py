@@ -347,6 +347,7 @@ class IndiAllSkyConfigBase(object):
             "CONNECT_TIMEOUT"        : 10.0,
             "TIMEOUT"                : 60.0,
             "CERT_BYPASS"            : True,
+            "ATOMIC_TRANSFERS"       : False,
             "REMOTE_IMAGE_NAME"          : "image_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}.{ext}",
             "REMOTE_IMAGE_FOLDER"        : "/home/allsky/upload/allsky/images/{day_date:%Y%m%d}/{timeofday:s}/{ts:%H}",
             "REMOTE_PANORAMA_NAME"       : "panorama_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}.{ext}",

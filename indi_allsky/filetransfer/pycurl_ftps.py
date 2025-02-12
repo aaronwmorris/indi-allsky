@@ -109,6 +109,20 @@ class pycurl_ftps(GenericFileTransfer):
             'SITE CHMOD 755 {0:s}'.format(str(remote_file_p.parent)),
         ]
 
+
+        if self.atomic:
+            # upload to a tmp name and rename
+            remote_parent = remote_file_p.parent
+            temp_filename = 'tmp{0:s}{1:s}'.format(self.rand_str(), remote_file_p.suffix)
+
+            final_file_p = remote_file_p
+            remote_file_p = remote_parent.joinpath(temp_filename)
+
+            post_commands.insert(0, '*DELE {0:s}'.format(str(final_file_p)))  # asterisk command allowed to fail
+            post_commands.insert(1, 'RNFR {0:s}'.format(str(remote_file_p)))
+            post_commands.insert(2, 'RNTO {0:s}'.format(str(final_file_p)))
+
+
         url = '{0:s}/{1:s}'.format(self.url, str(remote_file_p))
         logger.info('pycurl URL: %s', url)
 

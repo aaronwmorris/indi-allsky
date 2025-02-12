@@ -131,7 +131,7 @@ class pycurl_sftp(GenericFileTransfer):
         if self.atomic:
             # upload to a tmp name and rename
             remote_parent = remote_file_p.parent
-            temp_filename = '_{0:s}'.format(remote_file_p.name)
+            temp_filename = 'tmp{0:s}{1:s}'.format(self.rand_str(), remote_file_p.suffix)
 
             final_file_p = remote_file_p
             remote_file_p = remote_parent.joinpath(temp_filename)
