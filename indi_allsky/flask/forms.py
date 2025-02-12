@@ -1699,18 +1699,7 @@ def UPLOAD_WORKERS_validator(form, field):
 
 
 def FILETRANSFER__CLASSNAME_validator(form, field):
-    class_names = (
-        'pycurl_sftp',
-        'paramiko_sftp',
-        'pycurl_ftpes',
-        'pycurl_ftps',
-        'pycurl_ftp',
-        'python_ftp',
-        'python_ftpes',
-        'pycurl_webdav_https',
-    )
-
-    if field.data not in class_names:
+    if field.data not in list(zip(*form.FILETRANSFER__CLASSNAME_choices))[0]:
         raise ValidationError('Invalid selection')
 
 
@@ -3039,13 +3028,13 @@ class IndiAllskyConfigForm(FlaskForm):
 
     FILETRANSFER__CLASSNAME_choices = (
         ('pycurl_sftp', 'PycURL SFTP [22]'),
-        ('pycurl_ftpes', 'PycURL FTPES [21]'),
-        ('pycurl_ftps', 'PycURL FTPS [990]'),
+        ('pycurl_ftpes', 'PycURL FTPS [21] (FTPES)'),
         ('pycurl_ftp', 'PycURL FTP [21] *no encryption*'),
         ('pycurl_webdav_https', 'PycURL WebDAV HTTPS [443]'),
         ('paramiko_sftp', 'Paramiko SFTP [22]'),
         ('python_ftp', 'Python FTP [21] *no encryption*'),
-        ('python_ftpes', 'Python FTPES [21]'),
+        ('python_ftpes', 'Python FTPS [21] (FTPES)'),
+        ('pycurl_ftps', 'PycURL FTPS [990] (Uncommon)'),
     )
 
     S3UPLOAD__CLASSNAME_choices = (
