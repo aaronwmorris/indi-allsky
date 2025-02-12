@@ -82,7 +82,7 @@ class GenericFileTransfer(object):
         pass
 
 
-    def rand_str(size=8, chars=string.ascii_letters + string.digits):
-        # generate random string
-        return ''.join(random.choice(chars) for _ in range(size))
+    def tempname(self, suffix='.bin', size=8, chars=string.ascii_letters + string.digits):
+        # generate random filename
+        return 'tmp{0:s}{1:s}'.format(''.join(random.choice(chars) for _ in range(size)), suffix)  # suffix usually includes dot
 

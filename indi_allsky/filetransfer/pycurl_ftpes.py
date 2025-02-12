@@ -116,7 +116,7 @@ class pycurl_ftpes(GenericFileTransfer):
         if self.atomic:
             # upload to a tmp name and rename
             remote_parent = remote_file_p.parent
-            temp_filename = 'tmp{0:s}{1:s}'.format(self.rand_str(), remote_file_p.suffix)
+            temp_filename = self.tempname(suffix=remote_file_p.suffix)
 
             final_file_p = remote_file_p
             remote_file_p = remote_parent.joinpath(temp_filename)
@@ -164,7 +164,7 @@ class pycurl_ftpes(GenericFileTransfer):
                 logger.error('Upload failed.  PycURL does not support relative path names')
                 raise TransferFailure(msg) from e
             elif rc in [pycurl.E_QUOTE_ERROR]:
-                #logger.warning('PycURL quoted commands encountered an error (safe to ignore)')
+                logger.warning('PycURL quoted commands encountered an error (safe to ignore)')
                 pass
             else:
                 raise e from e

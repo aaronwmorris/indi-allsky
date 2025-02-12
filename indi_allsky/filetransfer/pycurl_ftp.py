@@ -106,7 +106,7 @@ class pycurl_ftp(GenericFileTransfer):
         if self.atomic:
             # upload to a tmp name and rename
             remote_parent = remote_file_p.parent
-            temp_filename = 'tmp{0:s}{1:s}'.format(self.rand_str(), remote_file_p.suffix)
+            temp_filename = self.tempname(suffix=remote_file_p.suffix)
 
             final_file_p = remote_file_p
             remote_file_p = remote_parent.joinpath(temp_filename)
