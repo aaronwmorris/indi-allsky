@@ -7922,7 +7922,7 @@ bp_allsky.add_url_rule('/latestpanoramavideo', view_func=LatestPanoramaVideoRedi
 
 bp_allsky.add_url_rule('/latestimageview', view_func=LatestImageViewRedirect.as_view('latest_image_view_redirect_view'))
 bp_allsky.add_url_rule('/latestkeogramview', view_func=LatestKeogramViewRedirect.as_view('latest_keogram_view_redirect_view'))
-bp_allsky.add_url_rule('/lateststartrailview', view_func=LatestKeogramViewRedirect.as_view('latest_startrail_view_redirect_view'))
+bp_allsky.add_url_rule('/lateststartrailview', view_func=LatestStartrailViewRedirect.as_view('latest_startrail_view_redirect_view'))
 bp_allsky.add_url_rule('/latestpanoramaview', view_func=LatestPanoramaImageViewRedirect.as_view('latest_panorama_image_view_redirect_view'))
 bp_allsky.add_url_rule('/latestrawview', view_func=LatestRawImageViewRedirect.as_view('latest_raw_image_view_redirect_view'))
 bp_allsky.add_url_rule('/latesttimelapsewatch', view_func=LatestTimelapseVideoWatchRedirect.as_view('latest_timelapse_video_watch_redirect_view'))
