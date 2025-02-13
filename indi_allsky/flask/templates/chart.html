@@ -30,6 +30,8 @@ canvas {
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
+var loadCountdown = 0;  // load immediately
+var redraw = false;
 var timestamp = {{ timestamp | int }};
 var page_settings;  // set later
 var history_seconds;  // set later
@@ -658,19 +660,30 @@ function init() {
 }
 
 async function loop() {
-    while(json_data['chart_data']['sqm'].length == 0) {
+    while(!redraw) {
         await sleep(100);
     }
 
-    drawChart();
-    setTimeout(loop, refreshInterval);
+    if(redraw) {
+        redraw = false;
+        drawChart();
+    }
+
+    setTimeout(loop, 1000);
 }
 
 
 function loadChartData() {
-    console.log('Loading chart data');
-    loadJS("{{ url_for('indi_allsky.js_chart_view') }}", {'camera_id' : camera_id, 'limit_s' : history_seconds, 'timestamp' : timestamp});
-    setTimeout(loadChartData, refreshInterval);
+    if(loadCountdown <= 0) {
+        loadCountdown = refreshInterval;
+
+        console.log('Loading chart data');
+        loadJS("{{ url_for('indi_allsky.js_chart_view') }}", {'camera_id' : camera_id, 'limit_s' : history_seconds, 'timestamp' : timestamp});
+    }
+
+    loadCountdown -= 1000;
+
+    setTimeout(loadChartData, 1000);
 }
 
 
@@ -727,12 +740,13 @@ function loadJS(url, data, onDone, onError) {
         data: data,
         success: function(rdata){
             $("#loader_chart").css({'display' : 'none'});
-            json_data = rdata
+            json_data = rdata
             $('#message').html(json_data['message']);
+            redraw = true;
         },
         error: function(rdata){
             $("#loader_chart").css({'display' : 'none'});
-            onError(rdata.status);
+            onError(rdata.status);
             $('#message').text('Error loading data.  Please check the logs.');
         },
     });
@@ -889,6 +903,9 @@ $( document ).ready(function() {
 
 $("#HISTORY_SELECT").on("change", function() {
     history_seconds = $('#HISTORY_SELECT').val();
+
+    loadCountdown = 0;
+
     console.log('Changing chart history: ' + history_seconds);
 
     if(localStorage) {

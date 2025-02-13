@@ -29,6 +29,8 @@ canvas {
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
+var loadCountdown = 0;  // load immediately
+var redraw = false;
 var timestamp = {{ timestamp | int }};
 var history_seconds;  // set later
 var frame_delay_ms;  // set later
@@ -41,7 +43,7 @@ var json_data = {
 var fullscreen = false;  //initial state
 
 function init() {
-    loadNextImage();
+    loadImages();
     loop();
 }
 
@@ -113,19 +115,24 @@ function showImage(entry, idx) {
 }
 
 
-function loadNextImage() {
-    console.log('Loading next images');
-    loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : history_seconds, 'timestamp' : timestamp}, function() {
-        //while (json_data['image_list'].length > maxFrames) {
-        //    json_data['image_list'].splice(0, 1);  // remove first image
-        //};
-    });
-    setTimeout(loadNextImage, refreshInterval);
+function loadImages() {
+    if(loadCountdown <= 0) {
+        loadCountdown = refreshInterval;
+
+        console.log('Loading next images');
+        loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : history_seconds, 'timestamp' : timestamp}, function() {});
+    }
+
+    loadCountdown -= 1000;
+
+    setTimeout(loadImages, 1000);
 }
+
 
 function sleep(time) {
     return new Promise(resolve => setTimeout(resolve, time));
 }
+
 
 function loadJS(url, data, onDone, onError) {
     if(!onDone)onDone=function(){};
@@ -271,6 +278,8 @@ $( document ).ready(function() {
 $("#HISTORY_SELECT").on("change", function() {
     history_seconds = $('#HISTORY_SELECT').val();
     console.log('Changing loop history: ' + history_seconds);
+
+    loadCountdown = 0;
 
     if(localStorage) {
         page_settings["history_seconds"] = history_seconds;
