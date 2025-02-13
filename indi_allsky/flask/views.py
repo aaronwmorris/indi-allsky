@@ -160,7 +160,7 @@ class IndexView(TemplateView):
         context['latest_image_view'] = self.latest_image_view
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
-        context['refreshInterval'] = refreshInterval_ms + 2000  # additional time for exposures to download
+        context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
 
         return context
 
@@ -360,7 +360,7 @@ class IndexImgView(TemplateView):
         context['latest_image_view'] = self.latest_image_view
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
-        context['refreshInterval'] = refreshInterval_ms + 2000  # additional time for exposures to download
+        context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
 
         return context
 
@@ -902,7 +902,7 @@ class SqmView(TemplateView):
         context['camera_id'] = self.camera.id
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
-        context['refreshInterval'] = refreshInterval_ms + 2000  # additional time for exposures to download
+        context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
 
         return context
 
@@ -921,7 +921,7 @@ class ImageLoopView(TemplateView):
         context['timestamp'] = int(request.args.get('timestamp', 0))
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
-        context['refreshInterval'] = refreshInterval_ms + 2000  # additional time for exposures to download
+        context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
 
         context['form_history'] = IndiAllskyLoopHistoryForm()
 
@@ -1114,7 +1114,7 @@ class ImageLoopImgView(TemplateView):
         context['timestamp'] = int(request.args.get('timestamp', 0))
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
-        context['refreshInterval'] = refreshInterval_ms + 2000  # additional time for exposures to download
+        context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
 
         context['form_history'] = IndiAllskyLoopHistoryForm()
 
@@ -1187,7 +1187,7 @@ class ChartView(TemplateView):
         context['timestamp'] = int(request.args.get('timestamp', 0))
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
-        context['refreshInterval'] = refreshInterval_ms + 2000  # additional time for exposures to download
+        context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
 
         context['form_history'] = IndiAllskyChartHistoryForm()
 
