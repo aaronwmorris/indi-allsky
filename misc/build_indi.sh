@@ -708,6 +708,10 @@ fi
 if [ "${BUILD_INDI_CORE:-ask}" == "true" ]; then
     [[ -d "${PROJECTS_FOLDER}/src/indi_core" ]] && rm -fR "${PROJECTS_FOLDER}/src/indi_core"
 
+    # log this for debugging
+    echo "git core tag: $INDI_CORE_TAG"
+    echo
+
     if [ "$INDI_CORE_TAG" == "HEAD" ]; then
         git clone --depth 1 "https://github.com/indilib/indi.git" "${PROJECTS_FOLDER}/src/indi_core"
     else
@@ -745,6 +749,10 @@ sudo ldconfig
 ### INDI 3rdparty ###
 if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
     [[ -d "${PROJECTS_FOLDER}/src/indi_core" ]] && rm -fR "${PROJECTS_FOLDER}/src/indi_3rdparty"
+
+    # log this for debugging
+    echo "git 3rdparty tag: $INDI_3RDPARTY_TAG"
+    echo
 
     if [ "$INDI_3RDPARTY_TAG" == "HEAD" ]; then
         git clone --depth 1 "https://github.com/indilib/indi-3rdparty.git" "${PROJECTS_FOLDER}/src/indi_3rdparty"

@@ -302,6 +302,10 @@ sudo ldconfig
 if [ "${BUILD_LIBCAMERA:-true}" == "true" ]; then
     [[ -d "${PROJECTS_FOLDER}/src/libcamera" ]] && rm -fR "${PROJECTS_FOLDER}/src/libcamera"
 
+    # log this for debugging
+    echo "git libcamera tag: $LIBCAMERA_TAG"
+    echo
+
     if [ "$LIBCAMERA_TAG" == "HEAD" ]; then
         git clone --depth 1 "$LIBCAMERA_GIT_URL=" "${PROJECTS_FOLDER}/src/libcamera"
     else
@@ -339,6 +343,10 @@ sudo ldconfig
 ### rpicam-apps ###
 if [ "${BUILD_RPICAM_APPS:-true}" == "true" ]; then
     [[ -d "${PROJECTS_FOLDER}/src/rpicam-apps" ]] && rm -fR "${PROJECTS_FOLDER}/src/rpicam-apps"
+
+    # log this for debugging
+    echo "git rpicam apps tag: $RPICAM_APPS_TAG"
+    echo
 
     if [ "$RPICAM_APPS_TAG" == "HEAD" ]; then
         git clone --depth 1 "$RPICAM_APPS_GIT_URL" "${PROJECTS_FOLDER}/src/rpicam-apps"
