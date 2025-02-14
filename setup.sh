@@ -1876,7 +1876,7 @@ chmod 600 "${ALLSKY_ETC}/indi-allsky.env"
 echo "**** Flask config ****"
 
 while [ -z "${FLASK_AUTH_ALL_VIEWS:-}" ]; do
-    if whiptail --title "Web Authentication" --yesno "Do you want to require authentication for all web site views?\n\nIf \"no\", privileged actions are still protected by authentication." 0 0 --defaultno; then
+    if whiptail --title "Web Authentication" --yesno "Do you want to require authentication for all web site views?\n\nIf \"no\", privileged actions are still protected by authentication.\n\n(Hint: Most people should pick \"no\")" 0 0 --defaultno; then
         FLASK_AUTH_ALL_VIEWS="true"
     else
         FLASK_AUTH_ALL_VIEWS="false"
@@ -2633,6 +2633,64 @@ if [ "$INDIALLSKY_START" == "true" ]; then
     echo "Starting indi-allsky..."
     sleep 3
     systemctl --user start ${ALLSKY_SERVICE_NAME}.service
+fi
+
+
+while [ -z "${INDIALLSKY_SYSTEM_OPTIMIZE:-}" ]; do
+    if whiptail --title "Setup System Optimizations" --yesno "Would you like to apply some common optimizations to your system for better performance?" 0 0 --defaultno; then
+        INDIALLSKY_SYSTEM_OPTIMIZE="true"
+    else
+        INDIALLSKY_SYSTEM_OPTIMIZE="false"
+    fi
+done
+
+
+if [ "$INDIALLSKY_SYSTEM_OPTIMIZE" == "true" ]; then
+    echo
+    echo "Setting up optimizations..."
+
+    ### reduces unnecessary swapping
+    sudo tee /etc/sysctl.d/90-indi-allsky.conf <<EOF
+vm.swappiness = 1
+EOF
+
+    sudo sysctl --system
+
+
+    ### reduces disk i/o for system journal
+    [[ ! -d "/etc/systemd/journald.conf.d" ]] && sudo mkdir -m 755 /etc/systemd/journald.conf.d
+    sudo tee /etc/systemd/journald.conf.d/90-indi-allsky.conf <<EOF
+[Journal]
+Storage=volatile
+Compress=yes
+RateLimitIntervalSec=30s
+RateLimitBurst=10000
+SystemMaxUse=20M
+EOF
+
+    sudo systemctl restart systemd-journald
+    sleep 3
+fi
+
+
+SYSTEM_RUNLEVEL=$(systemctl get-default)
+if [ "$SYSTEM_RUNLEVEL" == "graphical.target" ]; then
+    while [ -z "${INDIALLSKY_MULTIUSER_RUNLEVEL:-}" ]; do
+        if whiptail --title "Runlevel" --yesno "The operating system is currently configured to boot using the graphical user interface.  Disabling the operating system GUI can save system resources for better performance.\n\nWould you like to disable the OS GUI Interface? (Change will be made active on next reboot)" 0 0 --defaultno; then
+            INDIALLSKY_MULTIUSER_RUNLEVEL="true"
+        else
+            INDIALLSKY_MULTIUSER_RUNLEVEL="false"
+        fi
+    done
+fi
+
+
+if [ "$INDIALLSKY_MULTIUSER_RUNLEVEL" == "true" ]; then
+    echo
+    echo "Switching to multi-user.target (runlevel 3)"
+    sudo systemctl set-default multi-user.target
+    #sudo systemctl isolate multi-user.target
+    sleep 3
 fi
 
 
