@@ -148,6 +148,18 @@ echo
 echo "Running make with $MAKE_CONCURRENT processes"
 echo
 
+
+if [ "$INDI_CORE_TAG" == "HEAD" ]; then
+    :  # noop
+elif echo "$INDI_CORE_TAG" | grep "^v" >/dev/null 2>&1; then
+    :  # noop
+else
+    echo
+    echo "WARNING: indi git tags usually start with \"v\" ie v2.#.#"
+    echo
+fi
+
+
 echo "Setup proceeding in 10 seconds... (control-c to cancel)"
 echo
 sleep 10
