@@ -248,11 +248,9 @@ ss -ant | grep 7624 || true
 echo
 
 
-if which indi_getprop >/dev/null 2>&1; then
-    echo "Detected indi properties"
-    indi_getprop -v 2>&1 || true
-    echo
-fi
+echo "Detected indi properties"
+indi_getprop -v 2>&1 || true
+echo
 
 
 if pkg-config --exists libcamera; then
