@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
+from pathlib import Path
 import math
 import logging
 
@@ -74,9 +75,9 @@ class YearKeogramTest(object):
 
 
         q = self.session.query(
-            func.avg(TestTable.r).label('r_a'),
-            func.avg(TestTable.b).label('b_a'),
-            func.avg(TestTable.g).label('g_a'),
+            func.max(TestTable.r).label('r_max'),
+            func.max(TestTable.b).label('b_max'),
+            func.max(TestTable.g).label('g_max'),
             func.floor(TestTable.ts / ALIGNMENT).label('interval'),
         )\
             .filter(TestTable.ts >= start_ts_utc)\
@@ -91,8 +92,8 @@ class YearKeogramTest(object):
         numpy_data = numpy.zeros((int(86400 / ALIGNMENT) * 365, 1, 3), dtype=numpy.uint8)
 
         for x in q:
-            #logger.info('Entry: %s, (%d, %d, %d)', x.interval - start_offset, x.r_a, x.b_a, x.g_a)
-            numpy_data[x.interval - start_offset] = x.b_a, x.g_a, x.r_a
+            #logger.info('Entry: %s, (%d, %d, %d)', x.interval - start_offset, x.r_max, x.b_max, x.g_max)
+            numpy_data[x.interval - start_offset] = x.b_max, x.g_max, x.r_max
 
         numpy_elapsed_s = time.time() - numpy_start
         logger.warning('Total numpy in %0.4f s', numpy_elapsed_s)
@@ -108,7 +109,7 @@ class YearKeogramTest(object):
 
         keogram_height, keogram_width = keogram_data.shape[:2]
         keogram_data = cv2.resize(keogram_data, (keogram_width, keogram_height * 3), interpolation=cv2.INTER_AREA)
-        cv2.imwrite('year.jpg', keogram_data, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        cv2.imwrite(Path(__file__).parent.joinpath('year.jpg'), keogram_data, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
         total_elapsed_s = time.time() - start_time
         logger.warning('Total in %0.4f s', total_elapsed_s)
