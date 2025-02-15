@@ -1418,8 +1418,9 @@ fi
 
 
 if [[ "$STELLARMATE" == "true" ]]; then
-    sudo apt-get -y install \
-        nginx
+    # nginx already installed
+    #sudo apt-get -y install \
+    #    nginx
 
     # stellarmate does not install libindi-dev by default
     if ! dpkg -s libindi-dev >/dev/null; then
