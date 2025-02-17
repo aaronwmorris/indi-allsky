@@ -30,9 +30,6 @@ LATITUDE = 33
 LONGITUDE = -85
 
 
-ALIGNMENT = 60
-
-
 logging.basicConfig(level=logging.INFO)
 logger = logging
 
@@ -54,7 +51,15 @@ class YearKeogramTest(object):
     def __init__(self):
         self.session = self._getDbConn()
 
-        self.ppd = int(86400 / ALIGNMENT)  # periods per day
+        self.alignment_seconds = 60
+
+        self.query_days = 365
+        #self.query_days = 400  # testing
+
+        self.db_days = 365
+        #self.db_days = 31  # testing
+
+        self.periods_per_day = int(86400 / self.alignment_seconds)
         self.period_pixels = 3
 
         self._stop = False
@@ -70,14 +75,13 @@ class YearKeogramTest(object):
         self.build_db(rows)
 
 
-
         start_date = datetime.strptime(now.strftime('%Y0101_120000'), '%Y%m%d_%H%M%S')
-        end_date = datetime.strptime(now.strftime('%Y1231_120000'), '%Y%m%d_%H%M%S')
+        end_date = start_date + timedelta(days=self.query_days)
 
         start_ts_utc = start_date.astimezone(timezone.utc).timestamp()
         end_ts_utc = end_date.astimezone(timezone.utc).timestamp()
 
-        start_offset = int(start_ts_utc / ALIGNMENT)
+        start_offset = int(start_ts_utc / self.alignment_seconds)
 
 
         q = self.session.query(
@@ -90,7 +94,7 @@ class YearKeogramTest(object):
             func.max(TestTable.r3).label('r3_avg'),
             func.max(TestTable.b3).label('b3_avg'),
             func.max(TestTable.g3).label('g3_avg'),
-            func.floor(TestTable.ts / ALIGNMENT).label('interval'),
+            func.floor(TestTable.ts / self.alignment_seconds).label('interval'),
         )\
             .filter(TestTable.ts >= start_ts_utc)\
             .filter(TestTable.ts < end_ts_utc)\
@@ -101,20 +105,20 @@ class YearKeogramTest(object):
 
         numpy_start = time.time()
 
-        numpy_data = numpy.zeros(((self.ppd * 365) * self.period_pixels, 1, 3), dtype=numpy.uint8)
+        numpy_data = numpy.zeros(((self.periods_per_day * self.query_days) * self.period_pixels, 1, 3), dtype=numpy.uint8)
         logger.info(numpy_data.shape)
         logger.info('Rows: %d', q.count())
 
         try:
             for i, row in enumerate(q):
                 second_offset = row.interval - start_offset
-                day = int(second_offset / self.ppd)
-                index = second_offset + ((self.ppd * (self.period_pixels - 1)) * day)
+                day = int(second_offset / self.periods_per_day)
+                index = second_offset + (day * (self.periods_per_day * (self.period_pixels - 1)))
                 #logger.info('Row: %d, second_offset: %d, day: %d, index: %d', i, second_offset, day, index)
 
-                numpy_data[index + (self.ppd * 0)] = row.b1_avg, row.g1_avg, row.r1_avg
-                numpy_data[index + (self.ppd * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
-                numpy_data[index + (self.ppd * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                numpy_data[index + (self.periods_per_day * 0)] = row.b1_avg, row.g1_avg, row.r1_avg
+                numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+                numpy_data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
 
         except IndexError:
             logger.error('Row: %d', i)
@@ -123,10 +127,9 @@ class YearKeogramTest(object):
         numpy_elapsed_s = time.time() - numpy_start
         logger.warning('Total numpy in %0.4f s', numpy_elapsed_s)
 
-        logger.info(numpy_data.shape)
         #logger.info(numpy_data[0:3])
 
-        keogram_data = numpy.reshape(numpy_data, ((365 * self.period_pixels), self.ppd, 3))
+        keogram_data = numpy.reshape(numpy_data, ((self.query_days * self.period_pixels), self.periods_per_day, 3))
 
         logger.info(keogram_data.shape)
         #logger.info(keogram_data[0:3])
@@ -165,8 +168,8 @@ class YearKeogramTest(object):
 
         now = datetime.now()
         start_date = datetime.strptime(now.strftime('%Y0101_000000'), '%Y%m%d_%H%M%S')
-        end_date = datetime.strptime(now.strftime('%Y1231_235959'), '%Y%m%d_%H%M%S')
-        #end_date = datetime.strptime(now.strftime('%Y0131_235959'), '%Y%m%d_%H%M%S')  # test
+        end_date = start_date + timedelta(days=self.db_days)
+
 
         start_date_utc = start_date.astimezone(timezone.utc)
         end_date_utc = end_date.astimezone(timezone.utc)
