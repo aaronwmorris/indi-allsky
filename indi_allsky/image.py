@@ -609,6 +609,9 @@ class ImageWorker(Process):
         self.image_processor.colorize()
 
 
+        self.save_longterm_keogram_data(exp_date, camera_id)
+
+
         self.image_processor.apply_image_circle_mask()
 
 
@@ -1746,4 +1749,25 @@ class ImageWorker(Process):
         with self.exposure_av.get_lock():
             self.exposure_av[0] = new_exposure
 
+
+    def save_longterm_keogram_data(self, exp_date, camera_id):
+        if self.image_processor.focus_mode:
+            # disable processing in focus mode
+            return
+
+
+        image_height, image_width = self.image_processor.image.shape[:2]
+
+
+        center_y = int(image_height / 2)
+        center_x = int(image_width / 2)
+
+
+        self._miscDb.add_long_term_keogram_data(
+            exp_date,
+            camera_id,
+            self.image_processor.image[center_y, center_x],
+            self.image_processor.image[center_y + 1, center_x],
+            self.image_processor.image[center_y + 2, center_x],
+        )
 
