@@ -91,10 +91,10 @@ class YearKeogramTest(object):
         #query_start_date = now - timedelta(days=self.query_days)
 
 
-        query_start_ts_utc = query_start_date.astimezone(timezone.utc).timestamp()
-        query_end_ts_utc = query_end_date.astimezone(timezone.utc).timestamp()
+        query_start_ts = query_start_date.timestamp()
+        query_end_ts = query_end_date.timestamp()
 
-        total_days = math.ceil((query_end_ts_utc - query_start_ts_utc) / 86400)
+        total_days = math.ceil((query_end_ts - query_start_ts) / 86400)
         logger.info('Total days: %d', total_days)
 
 
@@ -111,13 +111,13 @@ class YearKeogramTest(object):
             func.max(TestTable.g3).label('g3_avg'),
             func.floor(TestTable.ts / self.alignment_seconds).label('interval'),
         )\
-            .filter(TestTable.ts >= query_start_ts_utc)\
-            .filter(TestTable.ts < query_end_ts_utc)\
+            .filter(TestTable.ts >= query_start_ts)\
+            .filter(TestTable.ts < query_end_ts)\
             .group_by('interval')\
             .order_by(TestTable.ts.asc())
 
 
-        query_start_offset = int(query_start_ts_utc / self.alignment_seconds)
+        query_start_offset = int(query_start_ts / self.alignment_seconds)
         logger.info('Query start offset: %d', query_start_offset)
 
 
@@ -240,7 +240,7 @@ class YearKeogramTest(object):
 
             #logger.info('Red: %d, Green: %d, Blue: %d', r, g, b)
             lightgraph_list.append({
-                'ts' : current_date_utc.timestamp(),
+                'ts'  : int(current_date_utc.timestamp()),
                 'r1'  : r,
                 'g1'  : g,
                 'b1'  : b,
