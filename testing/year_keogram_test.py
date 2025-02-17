@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+#import sys
 import time
 from datetime import datetime
 from datetime import timedelta
@@ -53,6 +54,11 @@ class YearKeogramTest(object):
     def __init__(self):
         self.session = self._getDbConn()
 
+        self.ppd = int(86400 / ALIGNMENT)  # periods per day
+        self.period_pixels = 3
+
+        self._stop = False
+
 
     def main(self):
         now = datetime.now()
@@ -75,9 +81,15 @@ class YearKeogramTest(object):
 
 
         q = self.session.query(
-            func.max(TestTable.r).label('r_avg'),
-            func.max(TestTable.b).label('b_avg'),
-            func.max(TestTable.g).label('g_avg'),
+            func.max(TestTable.r1).label('r1_avg'),
+            func.max(TestTable.b1).label('b1_avg'),
+            func.max(TestTable.g1).label('g1_avg'),
+            func.max(TestTable.r2).label('r2_avg'),
+            func.max(TestTable.b2).label('b2_avg'),
+            func.max(TestTable.g2).label('g2_avg'),
+            func.max(TestTable.r3).label('r3_avg'),
+            func.max(TestTable.b3).label('b3_avg'),
+            func.max(TestTable.g3).label('g3_avg'),
             func.floor(TestTable.ts / ALIGNMENT).label('interval'),
         )\
             .filter(TestTable.ts >= start_ts_utc)\
@@ -89,11 +101,24 @@ class YearKeogramTest(object):
 
         numpy_start = time.time()
 
-        numpy_data = numpy.zeros((int(86400 / ALIGNMENT) * 365, 1, 3), dtype=numpy.uint8)
+        numpy_data = numpy.zeros(((self.ppd * 365) * self.period_pixels, 1, 3), dtype=numpy.uint8)
+        logger.info(numpy_data.shape)
+        logger.info('Rows: %d', q.count())
 
-        for x in q:
-            #logger.info('Entry: %s, (%d, %d, %d)', x.interval - start_offset, x.r_avg, x.b_avg, x.g_avg)
-            numpy_data[x.interval - start_offset] = x.b_avg, x.g_avg, x.r_avg
+        try:
+            for i, row in enumerate(q):
+                second_offset = row.interval - start_offset
+                day = int(second_offset / self.ppd)
+                index = second_offset + ((self.ppd * (self.period_pixels - 1)) * day)
+                #logger.info('Row: %d, second_offset: %d, day: %d, index: %d', i, second_offset, day, index)
+
+                numpy_data[index + (self.ppd * 0)] = row.b1_avg, row.g1_avg, row.r1_avg
+                numpy_data[index + (self.ppd * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+                numpy_data[index + (self.ppd * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+
+        except IndexError:
+            logger.error('Row: %d', i)
+            raise
 
         numpy_elapsed_s = time.time() - numpy_start
         logger.warning('Total numpy in %0.4f s', numpy_elapsed_s)
@@ -101,14 +126,14 @@ class YearKeogramTest(object):
         logger.info(numpy_data.shape)
         #logger.info(numpy_data[0:3])
 
-        keogram_data = numpy.reshape(numpy_data, (365, int(86400 / ALIGNMENT), 3))
+        keogram_data = numpy.reshape(numpy_data, ((365 * self.period_pixels), self.ppd, 3))
 
         logger.info(keogram_data.shape)
         #logger.info(keogram_data[0:3])
 
 
         keogram_height, keogram_width = keogram_data.shape[:2]
-        keogram_data = cv2.resize(keogram_data, (keogram_width, keogram_height * 3), interpolation=cv2.INTER_AREA)
+        #keogram_data = cv2.resize(keogram_data, (keogram_width, keogram_height * 3), interpolation=cv2.INTER_AREA)
         cv2.imwrite(Path(__file__).parent.joinpath('year.jpg'), keogram_data, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
         total_elapsed_s = time.time() - start_time
@@ -184,9 +209,15 @@ class YearKeogramTest(object):
             #logger.info('Red: %d, Green: %d, Blue: %d', r, g, b)
             lightgraph_list.append({
                 'ts' : current_date_utc.timestamp(),
-                'r'  : r,
-                'g'  : g,
-                'b'  : b,
+                'r1'  : r,
+                'g1'  : g,
+                'b1'  : b,
+                'r2'  : r,
+                'g2'  : g,
+                'b2'  : b,
+                'r3'  : r,
+                'g3'  : g,
+                'b3'  : b,
             })
 
 
@@ -214,9 +245,15 @@ class TestTable(Base):
 
     id          = Column(Integer, primary_key=True)
     ts          = Column(Integer, nullable=False, index=True)
-    r           = Column(Integer, nullable=False)
-    g           = Column(Integer, nullable=False)
-    b           = Column(Integer, nullable=False)
+    r1          = Column(Integer, nullable=False)
+    g1          = Column(Integer, nullable=False)
+    b1          = Column(Integer, nullable=False)
+    r2          = Column(Integer, nullable=False)
+    g2          = Column(Integer, nullable=False)
+    b2          = Column(Integer, nullable=False)
+    r3          = Column(Integer, nullable=False)
+    g3          = Column(Integer, nullable=False)
+    b3          = Column(Integer, nullable=False)
 
 
 if __name__ == '__main__':
