@@ -30,8 +30,13 @@ LATITUDE = 33
 LONGITUDE = -85
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.INFO)
+
+LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(funcName)s() [%(lineno)d]: %(message)s')
+LOG_HANDLER_STREAM = logging.StreamHandler()
+LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
+logger.addHandler(LOG_HANDLER_STREAM)
 
 
 
@@ -44,7 +49,8 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 class YearKeogramTest(object):
 
-    day_color = (150, 150, 150)
+    day_color = (150, 190, 200)
+    dusk_color = (200, 100, 60)
     night_color = (30, 30, 30)
 
 
@@ -81,10 +87,15 @@ class YearKeogramTest(object):
 
         query_start_date = datetime.strptime(now.strftime('%Y0101_120000'), '%Y%m%d_%H%M%S')
         query_end_date = query_start_date + timedelta(days=self.query_days)
+        #query_end_date = datetime.strptime((now + timedelta(hours=24)).strftime('%Y%m%d_120000'), '%Y%m%d_%H%M%S')
+        #query_start_date = now - timedelta(days=self.query_days)
 
 
         query_start_ts_utc = query_start_date.astimezone(timezone.utc).timestamp()
         query_end_ts_utc = query_end_date.astimezone(timezone.utc).timestamp()
+
+        total_days = math.ceil((query_end_ts_utc - query_start_ts_utc) / 86400)
+        logger.info('Total days: %d', total_days)
 
 
         q = self.session.query(
@@ -112,31 +123,31 @@ class YearKeogramTest(object):
 
         numpy_start = time.time()
 
-        numpy_data = numpy.zeros(((self.periods_per_day * self.query_days) * self.period_pixels, 1, 3), dtype=numpy.uint8)
+        numpy_data = numpy.zeros(((self.periods_per_day * total_days) * self.period_pixels, 1, 3), dtype=numpy.uint8)
         logger.info(numpy_data.shape)
         logger.info('Rows: %d', q.count())
 
-        try:
-            for i, row in enumerate(q):
-                second_offset = row.interval - query_start_offset
-                day = int(second_offset / self.periods_per_day)
-                index = second_offset + (day * (self.periods_per_day * (self.period_pixels - 1)))
-                #logger.info('Row: %d, second_offset: %d, day: %d, index: %d', i, second_offset, day, index)
+        for i, row in enumerate(q):
+            second_offset = row.interval - query_start_offset
+            day = int(second_offset / self.periods_per_day)
+            index = second_offset + (day * (self.periods_per_day * (self.period_pixels - 1)))
+            #logger.info('Row: %d, second_offset: %d, day: %d, index: %d', i, second_offset, day, index)
 
+            try:
                 numpy_data[index + (self.periods_per_day * 0)] = row.b1_avg, row.g1_avg, row.r1_avg
                 numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
                 numpy_data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+            except IndexError:
+                logger.error('Row: %d', i)
+                raise
 
-        except IndexError:
-            logger.error('Row: %d', i)
-            raise
 
         numpy_elapsed_s = time.time() - numpy_start
         logger.warning('Total numpy in %0.4f s', numpy_elapsed_s)
 
         #logger.info(numpy_data[0:3])
 
-        keogram_data = numpy.reshape(numpy_data, ((self.query_days * self.period_pixels), self.periods_per_day, 3))
+        keogram_data = numpy.reshape(numpy_data, ((total_days * self.period_pixels), self.periods_per_day, 3))
 
         logger.info(keogram_data.shape)
         #logger.info(keogram_data[0:3])
@@ -209,9 +220,16 @@ class YearKeogramTest(object):
             elif sun_alt_deg > 0:
                 r, g, b = self.day_color
             else:
-                norm = (18 + sun_alt_deg) / 18  # alt is negative
-                color_1 = self.day_color
-                color_2 = self.night_color
+                # tranition through dusk color
+                if sun_alt_deg <= -9:
+                    norm = (18 + sun_alt_deg) / 9  # alt is negative
+                    color_1 = self.dusk_color
+                    color_2 = self.night_color
+                else:
+                    norm = (9 + sun_alt_deg) / 9  # alt is negative
+                    color_1 = self.day_color
+                    color_2 = self.dusk_color
+
 
                 r, g, b = self.mapColor(norm, color_1, color_2)
 
