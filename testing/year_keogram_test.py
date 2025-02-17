@@ -51,7 +51,12 @@ class YearKeogramTest(object):
     def __init__(self):
         self.session = self._getDbConn()
 
+
         self.alignment_seconds = 60
+
+        self.db_entry_seconds = 60
+        #self.db_entry_seconds = 65  # testing
+
 
         self.query_days = 365
         #self.query_days = 400  # testing
@@ -59,10 +64,9 @@ class YearKeogramTest(object):
         self.db_days = 365
         #self.db_days = 31  # testing
 
+
         self.periods_per_day = int(86400 / self.alignment_seconds)
         self.period_pixels = 3
-
-        self._stop = False
 
 
     def main(self):
@@ -224,8 +228,7 @@ class YearKeogramTest(object):
             })
 
 
-            current_date_utc += timedelta(seconds=60)
-            #current_date_utc += timedelta(seconds=90)  # testing
+            current_date_utc += timedelta(seconds=self.db_entry_seconds)
 
 
         generate_elapsed_s = time.time() - generate_start
