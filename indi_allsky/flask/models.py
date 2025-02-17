@@ -28,6 +28,7 @@ __all__ = (
     'IndiAllSkyDbRawImageTable',
     'IndiAllSkyDbPanoramaImageTable',
     'IndiAllSkyDbPanoramaVideoTable',
+    'IndiAllSkyDbLongTermKeogramTable',
     'TaskQueueState', 'TaskQueueQueue', 'IndiAllSkyDbTaskQueueTable',
     'NotificationCategory', 'IndiAllSkyDbNotificationTable',
     'IndiAllSkyDbStateTable',
@@ -105,6 +106,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     rawimages = db.relationship('IndiAllSkyDbRawImageTable', back_populates='camera')
     panoramaimages = db.relationship('IndiAllSkyDbPanoramaImageTable', back_populates='camera')
     panoramavideos = db.relationship('IndiAllSkyDbPanoramaVideoTable', back_populates='camera')
+    longtermkeograms = db.relationship('IndiAllSkyDbLongTermKeogramTable', back_populates='camera')
 
 
     @property
@@ -771,6 +773,25 @@ class IndiAllSkyDbPanoramaVideoTable(IndiAllSkyDbFileBase):
         remote_url,
         s3_key,
         camera_id,
+    )
+
+
+class IndiAllSkyDbLongTermKeogramTable(db.Model):
+    __tablename__ = 'longtermkeogram'
+
+    id = db.Column(db.Integer, primary_key=True)
+    ts = db.Column(db.Integer, nullable=False, index=True)
+    r = db.Column(db.Integer, nullable=False)
+    g = db.Column(db.Integer, nullable=False)
+    b = db.Column(db.Integer, nullable=False)
+    camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
+    camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='longtermkeograms')
+
+
+    db.Index(
+        'idx_longterm_keogram_it_2',
+        camera_id,
+        ts,
     )
 
 

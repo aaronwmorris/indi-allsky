@@ -75,9 +75,9 @@ class YearKeogramTest(object):
 
 
         q = self.session.query(
-            func.max(TestTable.r).label('r_max'),
-            func.max(TestTable.b).label('b_max'),
-            func.max(TestTable.g).label('g_max'),
+            func.max(TestTable.r).label('r_avg'),
+            func.max(TestTable.b).label('b_avg'),
+            func.max(TestTable.g).label('g_avg'),
             func.floor(TestTable.ts / ALIGNMENT).label('interval'),
         )\
             .filter(TestTable.ts >= start_ts_utc)\
@@ -92,8 +92,8 @@ class YearKeogramTest(object):
         numpy_data = numpy.zeros((int(86400 / ALIGNMENT) * 365, 1, 3), dtype=numpy.uint8)
 
         for x in q:
-            #logger.info('Entry: %s, (%d, %d, %d)', x.interval - start_offset, x.r_max, x.b_max, x.g_max)
-            numpy_data[x.interval - start_offset] = x.b_max, x.g_max, x.r_max
+            #logger.info('Entry: %s, (%d, %d, %d)', x.interval - start_offset, x.r_avg, x.b_avg, x.g_avg)
+            numpy_data[x.interval - start_offset] = x.b_avg, x.g_avg, x.r_avg
 
         numpy_elapsed_s = time.time() - numpy_start
         logger.warning('Total numpy in %0.4f s', numpy_elapsed_s)
