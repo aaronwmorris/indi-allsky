@@ -49,7 +49,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 class YearKeogramTest(object):
 
-    day_color = (150, 190, 200)
+    day_color = (130, 200, 220)
     dusk_color = (200, 100, 60)
     night_color = (30, 30, 30)
 
@@ -220,7 +220,11 @@ class YearKeogramTest(object):
             elif sun_alt_deg > 0:
                 r, g, b = self.day_color
             else:
-                # tranition through dusk color
+                #norm = (18 + sun_alt_deg) / 18  # alt is negative
+                #color_1 = self.day_color
+                #color_2 = self.night_color
+
+                ### tranition through dusk color
                 if sun_alt_deg <= -9:
                     norm = (18 + sun_alt_deg) / 9  # alt is negative
                     color_1 = self.dusk_color
