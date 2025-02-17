@@ -79,16 +79,16 @@ class YearKeogramTest(object):
         self.build_db(rows)
 
 
-        start_date = datetime.strptime(now.strftime('%Y0101_120000'), '%Y%m%d_%H%M%S')
-        end_date = start_date + timedelta(days=self.query_days)
+        query_start_date = datetime.strptime(now.strftime('%Y0101_120000'), '%Y%m%d_%H%M%S')
+        query_end_date = query_start_date + timedelta(days=self.query_days)
 
-        start_ts_utc = start_date.astimezone(timezone.utc).timestamp()
-        end_ts_utc = end_date.astimezone(timezone.utc).timestamp()
 
-        start_offset = int(start_ts_utc / self.alignment_seconds)
+        query_start_ts_utc = query_start_date.astimezone(timezone.utc).timestamp()
+        query_end_ts_utc = query_end_date.astimezone(timezone.utc).timestamp()
 
 
         q = self.session.query(
+            #TestTable.ts,
             func.max(TestTable.r1).label('r1_avg'),
             func.max(TestTable.b1).label('b1_avg'),
             func.max(TestTable.g1).label('g1_avg'),
@@ -100,11 +100,14 @@ class YearKeogramTest(object):
             func.max(TestTable.g3).label('g3_avg'),
             func.floor(TestTable.ts / self.alignment_seconds).label('interval'),
         )\
-            .filter(TestTable.ts >= start_ts_utc)\
-            .filter(TestTable.ts < end_ts_utc)\
+            .filter(TestTable.ts >= query_start_ts_utc)\
+            .filter(TestTable.ts < query_end_ts_utc)\
             .group_by('interval')\
             .order_by(TestTable.ts.asc())
 
+
+        query_start_offset = int(query_start_ts_utc / self.alignment_seconds)
+        logger.info('Query start offset: %d', query_start_offset)
 
 
         numpy_start = time.time()
@@ -115,7 +118,7 @@ class YearKeogramTest(object):
 
         try:
             for i, row in enumerate(q):
-                second_offset = row.interval - start_offset
+                second_offset = row.interval - query_start_offset
                 day = int(second_offset / self.periods_per_day)
                 index = second_offset + (day * (self.periods_per_day * (self.period_pixels - 1)))
                 #logger.info('Row: %d, second_offset: %d, day: %d, index: %d', i, second_offset, day, index)
