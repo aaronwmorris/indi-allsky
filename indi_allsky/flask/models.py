@@ -780,10 +780,16 @@ class IndiAllSkyDbLongTermKeogramTable(db.Model):
     __tablename__ = 'longtermkeogram'
 
     id = db.Column(db.Integer, primary_key=True)
-    ts = db.Column(db.Integer, nullable=False, index=True)
-    r = db.Column(db.Integer, nullable=False)
-    g = db.Column(db.Integer, nullable=False)
-    b = db.Column(db.Integer, nullable=False)
+    ts = db.Column(db.Integer, nullable=False, index=True)  # utc
+    r1 = db.Column(db.Integer, nullable=False)
+    g1 = db.Column(db.Integer, nullable=False)
+    b1 = db.Column(db.Integer, nullable=False)
+    r2 = db.Column(db.Integer, nullable=False)
+    g2 = db.Column(db.Integer, nullable=False)
+    b2 = db.Column(db.Integer, nullable=False)
+    r3 = db.Column(db.Integer, nullable=False)
+    g3 = db.Column(db.Integer, nullable=False)
+    b3 = db.Column(db.Integer, nullable=False)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
     camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='longtermkeograms')
 
