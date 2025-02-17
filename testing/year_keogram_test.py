@@ -144,8 +144,8 @@ class YearKeogramTest(object):
 
 
     def _getDbConn(self):
-        #engine = create_engine('sqlite:///foo.sqlite', echo=False)
         engine = create_engine('sqlite://', echo=False)  # In memory db
+        #engine = create_engine('sqlite:///{0:s}'.format(str(Path(__file__).parent.joinpath('year.sqlite'))), echo=False)
         Base.metadata.create_all(bind=engine)
         Session = sessionmaker(bind=engine)
 
