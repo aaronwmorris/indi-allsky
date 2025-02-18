@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: {{ title }}{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+.loader {
+  display: none;
+  border: 3px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+canvas {
+    width: 100%;
+    height: auto;
+};
+</style>
+<script type="text/javascript">
+var camera_id = {{ camera_id }};
+var json_data = {
+    'message' : '',
+};
+var fullscreen = false;  //initial state
+
+function init() {
+}
+
+function showImage(entry, idx) {
+    console.log('Showing image ' + entry["url"]);
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    var img = new Image();
+    img.src = entry["url"];
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio = canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        //context.imageSmoothingEnabled = false;
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+        // round the background strokes to prevent spikes
+        context.lineJoin = 'round';
+
+        if(drawIndex) {
+            var text = idx;
+            var maxWidth = 10;
+            var x = canvas.width-10-maxWidth;
+            var y = canvas.height-10;
+
+            context.strokeStyle = 'black';
+            context.lineWidth = 2;
+            context.strokeText(idx, x, y, maxWidth);
+            context.fillStyle = 'lightgrey';
+            context.fillText(idx, x, y, maxWidth);
+        }
+
+    };
+}
+
+
+function loadJS(url, data, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $("#loader_generate").css({'display' : 'block'});
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json",
+        data: data,
+        success: function(rdata){
+            $("#loader_generate").css({'display' : 'none'});
+            json_data = rdata
+
+            var image_count = rdata['image_list'].length;
+            $('#video_length').html(image_count + ' Frames - Approximately ' + image_count / parseFloat(framerate) + 's');
+
+            $('#message').html(json_data['message']);
+        },
+        error: function(rdata){
+            $("#loader_generate").css({'display' : 'none'});
+            onError(rdata.status);
+            $('#message').text('Error loading data.  Please check the logs.');
+            $('#video_length').html('');
+        },
+    });
+
+}
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
+$( document ).ready(function() {
+    $('#canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
+    init();
+});
+
+</script>
+{% endblock %}
+
+{% block content %}
+<form id="form_longterm_keogram" onSubmit="return false; "autocomplete="off">
+    <div class="form-group row">
+        {{ form_longterm_keogram.CAMERA_ID() }}
+
+        <div class="col-sm-1">
+            {{ form_longterm_keogram.END_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_longterm_keogram.END_SELECT(class='form-select bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_longterm_keogram.DAYS_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_longterm_keogram.DAYS_SELECT(class='form-select bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_longterm_keogram.PPD_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_longterm_keogram.PPD_SELECT(class='form-select bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_longterm_keogram.ALIGNMENT_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_longterm_keogram.ALIGNMENT_SELECT(class='form-select bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            <button class="btn btn-success">Generate</button>
+        </div>
+
+        <div class="col-sm-1">
+            <div class="loader" id="loader_generate"></div>
+        </div>
+    </div>
+</form>
+
+<hr>
+
+<div class="row">
+    <div class="text-success text-center" id="success_message" style="display: none;"></div>
+    <div class="text-danger text-center" id="failure_message" style="display: none;"></div>
+    <div class="text-muted text-center" id="message"></div>
+</div>
+<div class="row">
+    <div class="text-center">
+        <canvas id="canvas"></canvas>
+    </div>
+</div>
+
+<script>
+
+$('#form_longterm_keogram').on('submit', function() {
+    var form_data = {
+        'CAMERA_ID' : $('#CAMERA_ID').val(),
+        'END_SELECT' : $('#END_SELECT').val(),
+        'DAYS_SELECT' : $('#DAYS_SELECT').val(),
+        'PPD_SELECT' : $('#PPD_SELECT').val(),
+        'ALIGNMENT_SELECT' : $('#ALIGNMENT_SELECT').val(),
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.js_longterm_keogram_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(form_data),
+        success: function(rdata){
+            $("#loader_generate").css({'display' : 'none'});
+
+            $('#success_message').html(rdata['success-message']);
+            $('#success_message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success_message').css({'display' : 'none'});
+            }, 15000);
+        },
+        error: function(rdata){
+            $("#loader_config").css({'display' : 'none'});
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure_message').html(errors['failure-message']);
+            $('#failure_message').css({'display' : 'block'});
+
+            setTimeout(function() {
+                $('#failure_message').css({'display' : 'none'});
+            }, 15000);
+        },
+    });
+
+});
+
+</script>
+
+{% endblock %}

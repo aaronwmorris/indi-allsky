@@ -100,6 +100,7 @@ from .forms import IndiAllskyImageProcessingForm
 from .forms import IndiAllskyCameraSimulatorForm
 from .forms import IndiAllskyFocusControllerForm
 from .forms import IndiAllskyMiniTimelapseForm
+from .forms import IndiAllskyLongTermKeogramForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -7424,6 +7425,40 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
         return jsonify(message)
 
 
+class LongTermKeogramView(TemplateView):
+    decorators = [login_required]
+    title = 'Long Term Keogram'
+
+
+    def get_context(self):
+        context = super(LongTermKeogramView, self).get_context()
+
+        context['camera_id'] = self.camera.id
+        context['form_longterm_keogram'] = IndiAllskyLongTermKeogramForm()
+
+        return context
+
+
+class JsonLongTermKeogramView(JsonView):
+    methods = ['POST']
+    decorators = [login_required]
+
+
+    def __init__(self, **kwargs):
+        super(JsonLongTermKeogramView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        #camera_id = int(request.json['CAMERA_ID'])
+
+        form_longterm_keogram = IndiAllskyImageExcludeForm(data=request.json)
+
+        if not form_longterm_keogram.validate():
+            form_errors = form_longterm_keogram.errors  # this must be a property
+            return jsonify(form_errors), 400
+
+
+
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
@@ -7942,4 +7977,7 @@ bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
 bp_allsky.add_url_rule('/configlist', view_func=ConfigListView.as_view('configlist_view', template_name='configlist.html'))
+
+bp_allsky.add_url_rule('/longtermkeogram', view_func=LongTermKeogramView.as_view('longterm_keogram_view', template_name='longterm_keogram.html'))
+bp_allsky.add_url_rule('/js/longtermkeogram', view_func=JsonLongTermKeogramView.as_view('js_longterm_keogram_view'))
 

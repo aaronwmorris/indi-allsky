@@ -6507,7 +6507,7 @@ class IndiAllskyLongTermKeogramForm(FlaskForm):
     DAYS_SELECT                      = SelectField('Time', choices=DAYS_SELECT_choices, validators=[DataRequired()])
     END_SELECT                       = SelectField('End', choices=END_SELECT_choices, validators=[DataRequired()])
     PPD_SELECT                       = SelectField('Pixels per Day', choices=PPD_SELECT_choices, validators=[DataRequired()])
-    ALIGNMENT_SELECT                 = SelectField('Alignment', choices=PPD_SELECT_choices, validators=[DataRequired()])
+    ALIGNMENT_SELECT                 = SelectField('Alignment', choices=ALIGNMENT_SELECT_choices, validators=[DataRequired()])
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):
