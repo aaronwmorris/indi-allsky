@@ -6475,7 +6475,7 @@ class IndiAllskyMiniTimelapseForm(FlaskForm):
 class IndiAllskyLongTermKeogramForm(FlaskForm):
     END_SELECT_choices = (
         ('today', 'Today'),
-        ('endofyear', 'End of this year'),
+        ('thisyear', 'End of this year'),
         ('lastyear', 'End of last year'),
     )
 

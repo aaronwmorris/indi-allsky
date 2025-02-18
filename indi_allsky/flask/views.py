@@ -7480,8 +7480,20 @@ class JsonLongTermKeogramView(JsonView):
             now = datetime.now()
             query_end_date = datetime.strptime(now.strftime('%Y%m%d_120000'), '%Y%m%d_%H%M%S')
             query_start_date = query_end_date - timedelta(days=query_days)
+        elif end == 'thisyear':
+            now = datetime.now()
+            query_end_date = datetime.strptime(now.strftime('%Y1231_120000'), '%Y%m%d_%H%M%S')
+            query_start_date = query_end_date - timedelta(days=query_days)
+        elif end == 'lastyear':
+            now = datetime.now()
+            lastyear = now.year - 1
+            query_end_date = datetime.strptime(now.strftime('{0:d}1231_120000'.format(lastyear)), '%Y%m%d_%H%M%S')
+            query_start_date = query_end_date - timedelta(days=query_days)
         else:
-            return jsonify({}), 400
+            json_data = {
+                'error-message' : 'Invalid end selection',
+            }
+            return jsonify(json_data), 400
 
 
 
