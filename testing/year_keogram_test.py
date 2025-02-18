@@ -21,9 +21,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column
 from sqlalchemy import Integer
-#from sqlalchemy import DateTime
 from sqlalchemy.sql import func
-#from sqlalchemy import cast
+#from sqlalchemy.orm import relationship
+#from sqlalchemy import Index
+#from sqlalchemy import ForeignKey
+#from sqlalchemy import String
 
 
 LATITUDE = 33
@@ -43,8 +45,11 @@ logger.addHandler(LOG_HANDLER_STREAM)
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
+    #cursor.execute('PRAGMA journal_mode=WAL')
+    #cursor.execute('PRAGMA synchronous=NORMAL')
     cursor.execute("PRAGMA synchronous=OFF")
     cursor.close()
+
 
 
 class YearKeogramTest(object):
@@ -99,28 +104,31 @@ class YearKeogramTest(object):
 
 
         q = self.session.query(
-            #TestTable.ts,
-            func.max(TestTable.r1).label('r1_avg'),
-            func.max(TestTable.b1).label('b1_avg'),
-            func.max(TestTable.g1).label('g1_avg'),
-            func.max(TestTable.r2).label('r2_avg'),
-            func.max(TestTable.b2).label('b2_avg'),
-            func.max(TestTable.g2).label('g2_avg'),
-            func.max(TestTable.r3).label('r3_avg'),
-            func.max(TestTable.b3).label('b3_avg'),
-            func.max(TestTable.g3).label('g3_avg'),
-            func.max(TestTable.r4).label('r4_avg'),
-            func.max(TestTable.b4).label('b4_avg'),
-            func.max(TestTable.g4).label('g4_avg'),
-            func.max(TestTable.r5).label('r5_avg'),
-            func.max(TestTable.b5).label('b5_avg'),
-            func.max(TestTable.g5).label('g5_avg'),
-            func.floor(TestTable.ts / self.alignment_seconds).label('interval'),
+            #LongTermKeogramTable.ts,
+            func.max(LongTermKeogramTable.r1).label('r1_avg'),
+            func.max(LongTermKeogramTable.b1).label('b1_avg'),
+            func.max(LongTermKeogramTable.g1).label('g1_avg'),
+            func.max(LongTermKeogramTable.r2).label('r2_avg'),
+            func.max(LongTermKeogramTable.b2).label('b2_avg'),
+            func.max(LongTermKeogramTable.g2).label('g2_avg'),
+            func.max(LongTermKeogramTable.r3).label('r3_avg'),
+            func.max(LongTermKeogramTable.b3).label('b3_avg'),
+            func.max(LongTermKeogramTable.g3).label('g3_avg'),
+            func.max(LongTermKeogramTable.r4).label('r4_avg'),
+            func.max(LongTermKeogramTable.b4).label('b4_avg'),
+            func.max(LongTermKeogramTable.g4).label('g4_avg'),
+            func.max(LongTermKeogramTable.r5).label('r5_avg'),
+            func.max(LongTermKeogramTable.b5).label('b5_avg'),
+            func.max(LongTermKeogramTable.g5).label('g5_avg'),
+            func.floor(LongTermKeogramTable.ts / self.alignment_seconds).label('interval'),
         )\
-            .filter(TestTable.ts >= query_start_ts)\
-            .filter(TestTable.ts < query_end_ts)\
+            .filter(LongTermKeogramTable.ts >= query_start_ts)\
+            .filter(LongTermKeogramTable.ts < query_end_ts)\
             .group_by('interval')\
-            .order_by(TestTable.ts.asc())
+            .order_by(LongTermKeogramTable.ts.asc())
+
+        #    .join(CameraTable)\
+        #    .filter(CameraTable.id == 1)\
 
 
         query_start_offset = int(query_start_ts / self.alignment_seconds)
@@ -170,8 +178,8 @@ class YearKeogramTest(object):
 
 
     def _getDbConn(self):
-        #engine = create_engine('sqlite://', echo=False)  # In memory db
-        engine = create_engine('sqlite:///{0:s}'.format(str(Path(__file__).parent.joinpath('year.sqlite'))), echo=False)
+        engine = create_engine('sqlite://', echo=False)  # In memory db
+        #engine = create_engine('sqlite:///{0:s}'.format(str(Path(__file__).parent.joinpath('year.sqlite'))), echo=False)
         Base.metadata.create_all(bind=engine)
         Session = sessionmaker(bind=engine)
 
@@ -181,7 +189,17 @@ class YearKeogramTest(object):
     def build_db(self, rows):
         insert_start = time.time()
 
-        self.session.bulk_insert_mappings(TestTable, rows)
+
+        ### insert dummy camera
+        #camera = CameraTable(
+        #    id=1,
+        #    name='foobar',
+        #)
+        #self.session.add(camera)
+        #self.session.commit()
+
+
+        self.session.bulk_insert_mappings(LongTermKeogramTable, rows)
         self.session.commit()
 
         insert_elapsed_s = time.time() - insert_start
@@ -264,6 +282,7 @@ class YearKeogramTest(object):
                 'r5'  : r,
                 'g5'  : g,
                 'b5'  : b,
+                #'camera_id' : 1,
             })
 
 
@@ -285,8 +304,18 @@ class Base(DeclarativeBase):
     pass
 
 
-class TestTable(Base):
-    __tablename__ = 'test'
+
+#class CameraTable(Base):
+#    __tablename__ = 'camera'
+#
+#    id          = Column(Integer, primary_key=True)
+#    name        = Column(String(length=100), unique=True, nullable=False, index=True)
+#    longtermkeograms = relationship('LongTermKeogramTable', back_populates='camera')
+
+
+
+class LongTermKeogramTable(Base):
+    __tablename__ = 'longtermkeogram'
 
     id          = Column(Integer, primary_key=True)
     ts          = Column(Integer, nullable=False, index=True)
@@ -305,6 +334,15 @@ class TestTable(Base):
     r5          = Column(Integer, nullable=False)
     g5          = Column(Integer, nullable=False)
     b5          = Column(Integer, nullable=False)
+    #camera_id   = Column(Integer, ForeignKey('camera.id'), nullable=False)
+    #camera      = relationship('CameraTable', back_populates='longtermkeograms')
+
+
+    #Index(
+    #    'idx_longterm_keogram_it_2',
+    #    camera_id,
+    #    ts,
+    #)
 
 
 if __name__ == '__main__':
