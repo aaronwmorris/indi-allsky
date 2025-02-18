@@ -7435,6 +7435,8 @@ class LongTermKeogramView(TemplateView):
         context = super(LongTermKeogramView, self).get_context()
 
 
+        context['camera_id'] = self.camera.id
+
         data = {
             'CAMERA_ID' : self.camera.id
         }

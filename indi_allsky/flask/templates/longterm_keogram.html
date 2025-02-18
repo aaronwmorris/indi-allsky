@@ -27,21 +27,23 @@ canvas {
 </style>
 <script type="text/javascript">
 var json_data = {
-    'message' : '',
+    'image_b64'  : null,
+    'message'    : '',
 };
+var camera_id = {{ camera_id }};
 var fullscreen = false;  //initial state
 
-function init() {
-}
+function showImage(image_b64) {
 
-function showImage(entry, idx) {
-    console.log('Showing image ' + entry["url"]);
+    if (image_b64 == null) {
+        return;
+    }
 
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
     var img = new Image();
-    img.src = entry["url"];
+    img.src = "data:image/jpg;base64," + image_b64;
     img.onload = function() {
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
@@ -59,51 +61,7 @@ function showImage(entry, idx) {
         // round the background strokes to prevent spikes
         context.lineJoin = 'round';
 
-        if(drawIndex) {
-            var text = idx;
-            var maxWidth = 10;
-            var x = canvas.width-10-maxWidth;
-            var y = canvas.height-10;
-
-            context.strokeStyle = 'black';
-            context.lineWidth = 2;
-            context.strokeText(idx, x, y, maxWidth);
-            context.fillStyle = 'lightgrey';
-            context.fillText(idx, x, y, maxWidth);
-        }
-
     };
-}
-
-
-function loadJS(url, data, onDone, onError) {
-    if(!onDone)onDone=function(){};
-    if(!onError)onError=function(){};
-
-    $("#loader_generate").css({'display' : 'block'});
-
-    $.ajax({
-        type: "GET",
-        url: url,
-        contentType: "application/json",
-        data: data,
-        success: function(rdata){
-            $("#loader_generate").css({'display' : 'none'});
-            json_data = rdata
-
-            var image_count = rdata['image_list'].length;
-            $('#video_length').html(image_count + ' Frames - Approximately ' + image_count / parseFloat(framerate) + 's');
-
-            $('#message').html(json_data['message']);
-        },
-        error: function(rdata){
-            $("#loader_generate").css({'display' : 'none'});
-            onError(rdata.status);
-            $('#message').text('Error loading data.  Please check the logs.');
-            $('#video_length').html('');
-        },
-    });
-
 }
 
 
@@ -138,14 +96,6 @@ function closeFullscreen() {
 
     fullscreen = false;
 }
-
-$( document ).ready(function() {
-    $('#canvas').on("click", function() {
-        goFullscreen(this);
-    });
-
-    init();
-});
 
 </script>
 {% endblock %}
@@ -207,6 +157,18 @@ $( document ).ready(function() {
 </div>
 
 <script>
+function init() {
+}
+
+
+$( document ).ready(function() {
+    $('#canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
+    init();
+});
+
 
 $('#form_longterm_keogram').on('submit', function() {
     var form_data = {
@@ -223,7 +185,11 @@ $('#form_longterm_keogram').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(form_data),
         success: function(rdata){
+            json_data = rdata;
+
             $("#loader_generate").css({'display' : 'none'});
+
+            showImage(rdata['image_b64']);
 
             $('#success_message').html(rdata['success-message']);
             $('#success_message').css({'display' : 'block'});
