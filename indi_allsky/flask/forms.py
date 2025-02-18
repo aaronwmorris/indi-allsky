@@ -6484,6 +6484,7 @@ class IndiAllskyLongTermKeogramForm(FlaskForm):
         ('90', '3 Months'),
         ('180', '6 Months'),
         ('365', '1 Year'),
+        ('730', '2 Years'),
     )
 
     PPD_SELECT_choices = (
