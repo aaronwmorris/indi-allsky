@@ -28,6 +28,7 @@ canvas {
 <script type="text/javascript">
 var json_data = {
     'image_b64'  : null,
+    'processing_time' : 0,
     'message'    : '',
 };
 var camera_id = {{ camera_id }};
@@ -156,6 +157,14 @@ function closeFullscreen() {
     </div>
 </div>
 
+<div class="row">
+    <div class="text-center">
+        <span id="processing_time"></span>
+        <span id="img_download"></span>
+    </div>
+</div>
+
+
 <script>
 function init() {
 }
@@ -179,6 +188,9 @@ $('#form_longterm_keogram').on('submit', function() {
         'ALIGNMENT_SELECT' : $('#ALIGNMENT_SELECT').val(),
     }
 
+
+    $("#loader_generate").css({'display' : 'block'});
+
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.js_longterm_keogram_view') }}",
@@ -189,16 +201,31 @@ $('#form_longterm_keogram').on('submit', function() {
 
             $("#loader_generate").css({'display' : 'none'});
 
-            showImage(rdata['image_b64']);
+            showImage(json_data['image_b64']);
 
-            $('#success_message').html(rdata['success-message']);
+
+            $("#img_download").html(
+                $('<a />', {
+                    'href'     : "data:image/jpg;base64," + json_data['image_b64'],
+                    'download' : "keogram_longterm_" + Math.floor(Date.now() / 1000) + ".jpg",
+                }).html(
+                    $('<span />', {
+                        'text'  : 'Download',
+                        'class' : "badge pill bg-info text-dark",
+                    })
+                )
+            );
+
+            $('#processing_time').text('Processed in ' + json_data['processing_time'] + 's');
+
+            $('#success_message').html(json_data['success-message']);
             $('#success_message').css({'display' : 'block'});
             setTimeout(function() {
                 $('#success_message').css({'display' : 'none'});
             }, 15000);
         },
         error: function(rdata){
-            $("#loader_config").css({'display' : 'none'});
+            $("#loader_generate").css({'display' : 'none'});
 
             var errors = JSON.parse(rdata.responseText);
 

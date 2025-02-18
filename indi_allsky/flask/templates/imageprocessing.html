@@ -869,13 +869,13 @@ function submitProcessingData() {
         url: "{{ url_for('indi_allsky.js_image_processing_view') }}",
         contentType: "application/json",
         data: JSON.stringify(submit_data),
-        success: function(data){
-            successMessage.html(data['success-message']);
+        success: function(rdata){
+            successMessage.html(rdata['success-message']);
             successMessage.css({'display' : 'block'});
             setTimeout(function() {
                 successMessage.css({'display' : 'none'});
             }, 10000);
-            json_data = data;
+            json_data = rdata;
 
             showImage(json_data['image_b64']);
 
@@ -899,8 +899,8 @@ function submitProcessingData() {
             $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
             $('#processing_message').text(json_data['message']);
         },
-        error: function(data){
-            var errors = JSON.parse(data.responseText);
+        error: function(rdata){
+            var errors = JSON.parse(rdata.responseText);
             Object.keys(errors).forEach((key) => {
                 fields[key].input.addClass('is-invalid');
                 fields[key].error.html(errors[key][0]);

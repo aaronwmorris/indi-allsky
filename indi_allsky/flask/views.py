@@ -7491,7 +7491,7 @@ class JsonLongTermKeogramView(JsonView):
             query_start_date = query_end_date - timedelta(days=query_days)
         else:
             json_data = {
-                'error-message' : 'Invalid end selection',
+                'failure-message' : 'Invalid end selection',
             }
             return jsonify(json_data), 400
 
@@ -7581,14 +7581,15 @@ class JsonLongTermKeogramView(JsonView):
         json_image_b64 = base64.b64encode(image_buffer.getvalue())
 
 
-        json_data = {
-            'image_b64' : json_image_b64.decode('utf-8'),
-            'success-message' : '',
-        }
-
-
         keogram_elapsed_s = time.time() - keogram_start
         app.logger.warning('Long Term Keogram in %0.4f s', keogram_elapsed_s)
+
+
+        json_data = {
+            'image_b64' : json_image_b64.decode('utf-8'),
+            'processing_time' : round(keogram_elapsed_s, 3),
+            'success-message' : '',
+        }
 
 
         return jsonify(json_data)
