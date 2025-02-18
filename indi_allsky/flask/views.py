@@ -7433,8 +7433,12 @@ class LongTermKeogramView(TemplateView):
     def get_context(self):
         context = super(LongTermKeogramView, self).get_context()
 
-        context['camera_id'] = self.camera.id
-        context['form_longterm_keogram'] = IndiAllskyLongTermKeogramForm()
+
+        data = {
+            'CAMERA_ID' : self.camera.id
+        }
+
+        context['form_longterm_keogram'] = IndiAllskyLongTermKeogramForm(data=data)
 
         return context
 
@@ -7449,14 +7453,19 @@ class JsonLongTermKeogramView(JsonView):
 
 
     def dispatch_request(self):
-        #camera_id = int(request.json['CAMERA_ID'])
-
-        form_longterm_keogram = IndiAllskyImageExcludeForm(data=request.json)
+        form_longterm_keogram = IndiAllskyLongTermKeogramForm(data=request.json)
 
         if not form_longterm_keogram.validate():
             form_errors = form_longterm_keogram.errors  # this must be a property
             return jsonify(form_errors), 400
 
+        #camera_id = int(request.json['CAMERA_ID'])
+
+        message = {
+            'success-message' : 'Oh yeah',
+        }
+
+        return jsonify(message)
 
 
 class AstroPanelView(TemplateView):
