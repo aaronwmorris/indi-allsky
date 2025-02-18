@@ -44,7 +44,7 @@ function showImage(image_b64) {
     var context = canvas.getContext("2d");
 
     var img = new Image();
-    img.src = "data:image/jpg;base64," + image_b64;
+    img.src = "data:image/png;base64," + image_b64;
     img.onload = function() {
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
@@ -206,8 +206,8 @@ $('#form_longterm_keogram').on('submit', function() {
 
             $("#img_download").html(
                 $('<a />', {
-                    'href'     : "data:image/jpg;base64," + json_data['image_b64'],
-                    'download' : "keogram_longterm_" + Math.floor(Date.now() / 1000) + ".jpg",
+                    'href'     : "data:image/png;base64," + json_data['image_b64'],
+                    'download' : "keogram_longterm_" + Math.floor(Date.now() / 1000) + ".png",
                 }).html(
                     $('<span />', {
                         'text'  : 'Download',

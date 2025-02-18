@@ -7603,9 +7603,13 @@ class JsonLongTermKeogramView(JsonView):
         #app.logger.info(keogram_data.shape)
 
 
+
+        png_compression = self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 5)
+
+
         image_buffer = io.BytesIO()
         img = Image.fromarray(cv2.cvtColor(keogram_data, cv2.COLOR_BGR2RGB))
-        img.save(image_buffer, format='JPEG', quality=90)
+        img.save(image_buffer, format='PNG', compress_level=png_compression)
 
 
         json_image_b64 = base64.b64encode(image_buffer.getvalue())
