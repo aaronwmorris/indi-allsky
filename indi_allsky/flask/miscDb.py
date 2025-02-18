@@ -1283,7 +1283,7 @@ class miscDb(object):
 
 
 
-    def add_long_term_keogram_data(self, exp_date, camera_id, bgr_pixel_1, bgr_pixel_2, bgr_pixel_3):
+    def add_long_term_keogram_data(self, exp_date, camera_id, bgr_pixel_1, bgr_pixel_2, bgr_pixel_3, bgr_pixel_4, bgr_pixel_5):
 
         # timestamps are UTC
         ts = exp_date.timestamp()
@@ -1293,6 +1293,8 @@ class miscDb(object):
         b1, g1, r1 = bgr_pixel_1
         b2, g2, r2 = bgr_pixel_2
         b3, g3, r3 = bgr_pixel_3
+        b4, g4, r4 = bgr_pixel_4
+        b5, g5, r5 = bgr_pixel_5
 
         #logger.info('r1: %s, g1: %s, b1: %s', type(r1), type(g1), type(b1))
         #logger.info('r1: %d, g1: %d, b1: %d', r1, g1, b1)
@@ -1300,15 +1302,21 @@ class miscDb(object):
         keogram_entry = IndiAllSkyDbLongTermKeogramTable(
             ts=int(ts),
             camera_id=camera_id,
-            r1=int(r1),
+            r1=int(r1),  # 1
             g1=int(g1),
             b1=int(b1),
-            r2=int(r2),
+            r2=int(r2),  # 2
             g2=int(g2),
             b2=int(b2),
-            r3=int(r3),
+            r3=int(r3),  # 3
             g3=int(g3),
             b3=int(b3),
+            r4=int(r4),  # 4
+            g4=int(g4),
+            b4=int(b4),
+            r5=int(r5),  # 5
+            g5=int(g5),
+            b5=int(b5),
         )
         db.session.add(keogram_entry)
         db.session.commit()

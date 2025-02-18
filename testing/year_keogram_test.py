@@ -72,7 +72,7 @@ class YearKeogramTest(object):
 
 
         self.periods_per_day = int(86400 / self.alignment_seconds)
-        self.period_pixels = 3
+        self.period_pixels = 5
 
 
     def main(self):
@@ -109,6 +109,12 @@ class YearKeogramTest(object):
             func.max(TestTable.r3).label('r3_avg'),
             func.max(TestTable.b3).label('b3_avg'),
             func.max(TestTable.g3).label('g3_avg'),
+            func.max(TestTable.r4).label('r4_avg'),
+            func.max(TestTable.b4).label('b4_avg'),
+            func.max(TestTable.g4).label('g4_avg'),
+            func.max(TestTable.r5).label('r5_avg'),
+            func.max(TestTable.b5).label('b5_avg'),
+            func.max(TestTable.g5).label('g5_avg'),
             func.floor(TestTable.ts / self.alignment_seconds).label('interval'),
         )\
             .filter(TestTable.ts >= query_start_ts)\
@@ -137,6 +143,8 @@ class YearKeogramTest(object):
                 numpy_data[index + (self.periods_per_day * 0)] = row.b1_avg, row.g1_avg, row.r1_avg
                 numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
                 numpy_data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                numpy_data[index + (self.periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
+                numpy_data[index + (self.periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
             except IndexError:
                 logger.error('Row: %d', i)
                 raise
@@ -162,8 +170,8 @@ class YearKeogramTest(object):
 
 
     def _getDbConn(self):
-        engine = create_engine('sqlite://', echo=False)  # In memory db
-        #engine = create_engine('sqlite:///{0:s}'.format(str(Path(__file__).parent.joinpath('year.sqlite'))), echo=False)
+        #engine = create_engine('sqlite://', echo=False)  # In memory db
+        engine = create_engine('sqlite:///{0:s}'.format(str(Path(__file__).parent.joinpath('year.sqlite'))), echo=False)
         Base.metadata.create_all(bind=engine)
         Session = sessionmaker(bind=engine)
 
@@ -250,6 +258,12 @@ class YearKeogramTest(object):
                 'r3'  : r,
                 'g3'  : g,
                 'b3'  : b,
+                'r4'  : r,
+                'g4'  : g,
+                'b4'  : b,
+                'r5'  : r,
+                'g5'  : g,
+                'b5'  : b,
             })
 
 
@@ -285,6 +299,12 @@ class TestTable(Base):
     r3          = Column(Integer, nullable=False)
     g3          = Column(Integer, nullable=False)
     b3          = Column(Integer, nullable=False)
+    r4          = Column(Integer, nullable=False)
+    g4          = Column(Integer, nullable=False)
+    b4          = Column(Integer, nullable=False)
+    r5          = Column(Integer, nullable=False)
+    g5          = Column(Integer, nullable=False)
+    b5          = Column(Integer, nullable=False)
 
 
 if __name__ == '__main__':

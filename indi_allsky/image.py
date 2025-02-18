@@ -1775,5 +1775,7 @@ class ImageWorker(Process):
             self.image_processor.image[y, x],
             self.image_processor.image[y + 1, x],
             self.image_processor.image[y + 2, x],
+            self.image_processor.image[y + 3, x],
+            self.image_processor.image[y + 4, x],
         )
 
