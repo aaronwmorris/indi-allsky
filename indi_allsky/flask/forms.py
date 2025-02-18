@@ -6473,17 +6473,17 @@ class IndiAllskyMiniTimelapseForm(FlaskForm):
 
 
 class IndiAllskyLongTermKeogramForm(FlaskForm):
+    END_SELECT_choices = (
+        ('now', 'Now'),
+        ('endofyear', 'End of this year'),
+        ('lastyear', 'End of last year'),
+    )
+
     DAYS_SELECT_choices = (
         ('30', '1 Month'),
         ('90', '3 Months'),
         ('180', '6 Months'),
         ('365', '1 Year'),
-    )
-
-    END_SELECT_choices = (
-        ('now', 'Now'),
-        ('endofyear', 'End of Year'),
-        ('lastyear', 'Last Year'),
     )
 
     PPD_SELECT_choices = (
@@ -6504,10 +6504,10 @@ class IndiAllskyLongTermKeogramForm(FlaskForm):
     )
 
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
-    DAYS_SELECT                      = SelectField('Time', choices=DAYS_SELECT_choices, validators=[DataRequired()])
-    END_SELECT                       = SelectField('End', choices=END_SELECT_choices, validators=[DataRequired()])
-    PPD_SELECT                       = SelectField('Pixels per Day', choices=PPD_SELECT_choices, validators=[DataRequired()])
-    ALIGNMENT_SELECT                 = SelectField('Alignment', choices=ALIGNMENT_SELECT_choices, validators=[DataRequired()])
+    END_SELECT                       = SelectField('End', choices=END_SELECT_choices, default=END_SELECT_choices[0][0], validators=[DataRequired()])
+    DAYS_SELECT                      = SelectField('Timeframe', choices=DAYS_SELECT_choices, default=DAYS_SELECT_choices[0][0], validators=[DataRequired()])
+    PPD_SELECT                       = SelectField('Pixels per Day', choices=PPD_SELECT_choices, default=PPD_SELECT_choices[4][0], validators=[DataRequired()])
+    ALIGNMENT_SELECT                 = SelectField('Alignment', choices=ALIGNMENT_SELECT_choices, default=ALIGNMENT_SELECT_choices[3][0], validators=[DataRequired()])
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):
