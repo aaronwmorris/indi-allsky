@@ -22,6 +22,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy.sql import func
+#from sqlalchemy import cast
 #from sqlalchemy.orm import relationship
 #from sqlalchemy import Index
 #from sqlalchemy import ForeignKey
@@ -103,24 +104,47 @@ class YearKeogramTest(object):
         logger.info('Total days: %d', total_days)
 
 
+        query_start_offset = int(query_start_ts / self.alignment_seconds)
+        logger.info('Query start offset: %d', query_start_offset)
+
+
+        ltk_interval = func.floor(LongTermKeogramTable.ts / self.alignment_seconds).label('interval')
+
+        ### database math appears to be slower than performing in python
+        #ltk_second_offset = (ltk_interval - query_start_offset).label('second_offset')
+        #ltk_day = func.floor(ltk_second_offset / self.periods_per_day).label('day')
+        #ltk_index = func.floor(ltk_second_offset + ltk_day * (self.periods_per_day * (self.period_pixels - 1))).label('index')
+        #ltk_index_2 = (ltk_index + (self.periods_per_day * 1)).label('index_2')
+        #ltk_index_3 = (ltk_index + (self.periods_per_day * 2)).label('index_3')
+        #ltk_index_4 = (ltk_index + (self.periods_per_day * 3)).label('index_4')
+        #ltk_index_5 = (ltk_index + (self.periods_per_day * 4)).label('index_5')
+
+
         q = self.session.query(
             #LongTermKeogramTable.ts,
-            func.max(LongTermKeogramTable.r1).label('r1_avg'),
-            func.max(LongTermKeogramTable.b1).label('b1_avg'),
-            func.max(LongTermKeogramTable.g1).label('g1_avg'),
-            func.max(LongTermKeogramTable.r2).label('r2_avg'),
-            func.max(LongTermKeogramTable.b2).label('b2_avg'),
-            func.max(LongTermKeogramTable.g2).label('g2_avg'),
-            func.max(LongTermKeogramTable.r3).label('r3_avg'),
-            func.max(LongTermKeogramTable.b3).label('b3_avg'),
-            func.max(LongTermKeogramTable.g3).label('g3_avg'),
-            func.max(LongTermKeogramTable.r4).label('r4_avg'),
-            func.max(LongTermKeogramTable.b4).label('b4_avg'),
-            func.max(LongTermKeogramTable.g4).label('g4_avg'),
-            func.max(LongTermKeogramTable.r5).label('r5_avg'),
-            func.max(LongTermKeogramTable.b5).label('b5_avg'),
-            func.max(LongTermKeogramTable.g5).label('g5_avg'),
-            func.floor(LongTermKeogramTable.ts / self.alignment_seconds).label('interval'),
+            ltk_interval,
+            #ltk_second_offset,
+            #ltk_day,
+            #ltk_index,
+            #ltk_index_2,
+            #ltk_index_3,
+            #ltk_index_4,
+            #ltk_index_5,
+            func.avg(LongTermKeogramTable.r1).label('r1_avg'),
+            func.avg(LongTermKeogramTable.b1).label('b1_avg'),
+            func.avg(LongTermKeogramTable.g1).label('g1_avg'),
+            func.avg(LongTermKeogramTable.r2).label('r2_avg'),
+            func.avg(LongTermKeogramTable.b2).label('b2_avg'),
+            func.avg(LongTermKeogramTable.g2).label('g2_avg'),
+            func.avg(LongTermKeogramTable.r3).label('r3_avg'),
+            func.avg(LongTermKeogramTable.b3).label('b3_avg'),
+            func.avg(LongTermKeogramTable.g3).label('g3_avg'),
+            func.avg(LongTermKeogramTable.r4).label('r4_avg'),
+            func.avg(LongTermKeogramTable.b4).label('b4_avg'),
+            func.avg(LongTermKeogramTable.g4).label('g4_avg'),
+            func.avg(LongTermKeogramTable.r5).label('r5_avg'),
+            func.avg(LongTermKeogramTable.b5).label('b5_avg'),
+            func.avg(LongTermKeogramTable.g5).label('g5_avg'),
         )\
             .filter(LongTermKeogramTable.ts >= query_start_ts)\
             .filter(LongTermKeogramTable.ts < query_end_ts)\
@@ -131,10 +155,6 @@ class YearKeogramTest(object):
         #    .filter(CameraTable.id == 1)\
 
 
-        query_start_offset = int(query_start_ts / self.alignment_seconds)
-        logger.info('Query start offset: %d', query_start_offset)
-
-
         numpy_start = time.time()
 
         numpy_data = numpy.zeros(((self.periods_per_day * total_days) * self.period_pixels, 1, 3), dtype=numpy.uint8)
@@ -142,17 +162,26 @@ class YearKeogramTest(object):
         logger.info('Rows: %d', q.count())
 
         for i, row in enumerate(q):
+            ### python math
             second_offset = row.interval - query_start_offset
             day = int(second_offset / self.periods_per_day)
             index = second_offset + (day * (self.periods_per_day * (self.period_pixels - 1)))
-            #logger.info('Row: %d, second_offset: %d, day: %d, index: %d', i, second_offset, day, index)
+            #logger.info('Row: %d, second_offset: %d, day: %d, index: %d', i, row.second_offset, row.day, row.index)
 
             try:
-                numpy_data[index + (self.periods_per_day * 0)] = row.b1_avg, row.g1_avg, row.r1_avg
+                ### python math
+                numpy_data[index]                              = row.b1_avg, row.g1_avg, row.r1_avg
                 numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
                 numpy_data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
                 numpy_data[index + (self.periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
                 numpy_data[index + (self.periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
+
+                ### database math
+                #numpy_data[row.index]   = row.b1_avg, row.g1_avg, row.r1_avg
+                #numpy_data[row.index_2] = row.b2_avg, row.g2_avg, row.r2_avg
+                #numpy_data[row.index_3] = row.b3_avg, row.g3_avg, row.r3_avg
+                #numpy_data[row.index_4] = row.b4_avg, row.g4_avg, row.r4_avg
+                #numpy_data[row.index_5] = row.b5_avg, row.g5_avg, row.r5_avg
             except IndexError:
                 logger.error('Row: %d', i)
                 raise
