@@ -914,6 +914,16 @@ def KEOGRAM_CROP_BOTTOM_validator(*args):
     KEOGRAM_CROP_TOP_validator(*args)
 
 
+def LONGTERM_KEOGRAM__OFFSET_X_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+
+def LONGTERM_KEOGRAM__OFFSET_Y_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+
 def STARTRAILS_MAX_ADU_validator(form, field):
     if field.data <= 0:
         raise ValidationError('Star Trails Max ADU must be greater than 0')
@@ -3461,6 +3471,9 @@ class IndiAllskyConfigForm(FlaskForm):
     KEOGRAM_CROP_TOP                 = IntegerField('Keogram Crop Top (%)', validators=[KEOGRAM_CROP_TOP_validator])
     KEOGRAM_CROP_BOTTOM              = IntegerField('Keogram Crop Bottom (%)', validators=[KEOGRAM_CROP_BOTTOM_validator])
     KEOGRAM_LABEL                    = BooleanField('Label Keogram')
+    LONGTERM_KEOGRAM__ENABLE         = BooleanField('Enable Long Term Keogram')
+    LONGTERM_KEOGRAM__OFFSET_X       = IntegerField('X Offset', validators=[LONGTERM_KEOGRAM__OFFSET_X_validator])
+    LONGTERM_KEOGRAM__OFFSET_Y       = IntegerField('Y Offset', validators=[LONGTERM_KEOGRAM__OFFSET_Y_validator])
     STARTRAILS_SUN_ALT_THOLD         = FloatField('Star Trails Max Sun Altitude', validators=[DataRequired(), STARTRAILS_SUN_ALT_THOLD_validator])
     STARTRAILS_MOONMODE_THOLD        = BooleanField('Star Trails Exclude Moon Mode')
     STARTRAILS_MOON_ALT_THOLD        = FloatField('Custom Max Moon Altitude', validators=[DataRequired(), STARTRAILS_MOON_ALT_THOLD_validator])

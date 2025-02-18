@@ -1755,19 +1755,25 @@ class ImageWorker(Process):
             # disable processing in focus mode
             return
 
+        if not self.config.get('LONGTERM_KEOGRAM', {}).get('ENABLE', True):
+            logger.info('Long term keogram data disabled')
+            return
+
+        offset_x = self.config.get('LONGTERM_KEOGRAM', {}).get('OFFSET_X', 0)
+        offset_y = self.config.get('LONGTERM_KEOGRAM', {}).get('OFFSET_Y', 0)
 
         image_height, image_width = self.image_processor.image.shape[:2]
 
 
-        center_y = int(image_height / 2)
-        center_x = int(image_width / 2)
+        x = int(image_width / 2) + offset_x
+        y = int(image_height / 2) - offset_y  # minus
 
 
         self._miscDb.add_long_term_keogram_data(
             exp_date,
             camera_id,
-            self.image_processor.image[center_y, center_x],
-            self.image_processor.image[center_y + 1, center_x],
-            self.image_processor.image[center_y + 2, center_x],
+            self.image_processor.image[y, x],
+            self.image_processor.image[y + 1, x],
+            self.image_processor.image[y + 2, x],
         )
 
