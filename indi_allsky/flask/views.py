@@ -7567,7 +7567,7 @@ class JsonLongTermKeogramView(JsonView):
 
         json_data = {
             'image_b64' : json_image_b64.decode('utf-8'),
-            'success-message' : 'Oh yeah',
+            'success-message' : '',
         }
 
 
