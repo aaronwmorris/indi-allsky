@@ -7474,6 +7474,22 @@ class JsonLongTermKeogramView(JsonView):
         alignment_seconds = int(request.json['ALIGNMENT_SELECT'])
 
 
+        if query_days > 2000:
+            # sanity check (more than 5 years)
+            json_data = {
+                'failure-message' : 'Try again',
+            }
+            return jsonify(json_data), 400
+
+
+        if alignment_seconds < 5:
+            # sanity check
+            json_data = {
+                'failure-message' : 'Try again',
+            }
+            return jsonify(json_data), 400
+
+
         periods_per_day = int(86400 / alignment_seconds)
 
         if end == 'today':
@@ -7495,6 +7511,20 @@ class JsonLongTermKeogramView(JsonView):
             }
             return jsonify(json_data), 400
 
+
+        if query_days == 42:
+            # special condition to show all available data
+            first_entry = db.session.query(
+                IndiAllSkyDbLongTermKeogramTable.ts,
+            )\
+                .join(IndiAllSkyDbCameraTable)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .order_by(IndiAllSkyDbLongTermKeogramTable.ts.asc())\
+                .first()
+
+
+            first_date = datetime.fromtimestamp(first_entry.ts)
+            query_start_date = datetime.strptime(first_date.strftime('%Y%m%d_120000'), '%Y%m%d_%H%M%S')
 
 
         query_start_ts = query_start_date.timestamp()

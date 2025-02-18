@@ -6485,6 +6485,7 @@ class IndiAllskyLongTermKeogramForm(FlaskForm):
         ('180', '6 Months'),
         ('365', '1 Year'),
         ('730', '2 Years'),
+        ('42', 'All Available'),
     )
 
     PIXELS_SELECT_choices = (
