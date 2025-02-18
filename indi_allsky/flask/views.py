@@ -54,6 +54,7 @@ from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbPanoramaImageTable
 from .models import IndiAllSkyDbPanoramaVideoTable
 from .models import IndiAllSkyDbThumbnailTable
+from .models import IndiAllSkyDbLongTermKeogramTable
 from .models import IndiAllSkyDbTaskQueueTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbUserTable
@@ -7453,19 +7454,114 @@ class JsonLongTermKeogramView(JsonView):
 
 
     def dispatch_request(self):
+        import numpy
+        import cv2
+        from PIL import Image
+
         form_longterm_keogram = IndiAllskyLongTermKeogramForm(data=request.json)
 
         if not form_longterm_keogram.validate():
             form_errors = form_longterm_keogram.errors  # this must be a property
             return jsonify(form_errors), 400
 
-        #camera_id = int(request.json['CAMERA_ID'])
 
-        message = {
+        camera_id = int(request.json['CAMERA_ID'])
+        end = str(request.json['END_SELECT'])
+        query_days = int(request.json['DAYS_SELECT'])
+        period_pixels = int(request.json['PIXELS_SELECT'])
+        alignment_seconds = int(request.json['ALIGNMENT_SELECT'])
+
+
+        periods_per_day = int(86400 / alignment_seconds)
+
+        if end == 'today':
+            now = datetime.now()
+            query_end_date = datetime.strptime(now.strftime('%Y%m%d_120000'), '%Y%m%d_%H%M%S')
+            query_start_date = query_end_date - timedelta(days=query_days)
+        else:
+            return jsonify({}), 400
+
+
+
+        query_start_ts = query_start_date.timestamp()
+        query_end_ts = query_end_date.timestamp()
+
+
+        total_days = math.ceil((query_end_ts - query_start_ts) / 86400)
+
+        query_start_offset = int(query_start_ts / alignment_seconds)
+
+
+
+        ltk_interval = func.floor(IndiAllSkyDbLongTermKeogramTable.ts / alignment_seconds).label('interval')
+
+        q = db.session.query(
+            ltk_interval,
+            func.avg(IndiAllSkyDbLongTermKeogramTable.r1).label('r1_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.b1).label('b1_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.g1).label('g1_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.r2).label('r2_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.b2).label('b2_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.g2).label('g2_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.r3).label('r3_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.b3).label('b3_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.g3).label('g3_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.r4).label('r4_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.b4).label('b4_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.g4).label('g4_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.r5).label('r5_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.b5).label('b5_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.g5).label('g5_avg'),
+        )\
+            .join(IndiAllSkyDbCameraTable)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbLongTermKeogramTable.ts >= query_start_ts)\
+            .filter(IndiAllSkyDbLongTermKeogramTable.ts < query_end_ts)\
+            .group_by('interval')\
+            .order_by(IndiAllSkyDbLongTermKeogramTable.ts.asc())
+
+
+        keogram_start = time.time()
+
+        numpy_data = numpy.zeros(((periods_per_day * total_days) * period_pixels, 1, 3), dtype=numpy.uint8)
+        #app.logger.info('Rows: %d', q.count())
+
+
+        for i, row in enumerate(q):
+            second_offset = row.interval - query_start_offset
+            day = int(second_offset / periods_per_day)
+            index = second_offset + (day * (periods_per_day * (period_pixels - 1)))
+
+            numpy_data[index]                         = row.b1_avg, row.g1_avg, row.r1_avg
+            numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+            numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+            numpy_data[index + (periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
+            numpy_data[index + (periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
+
+
+        keogram_data = numpy.reshape(numpy_data, ((total_days * period_pixels), periods_per_day, 3))
+        #app.logger.info(keogram_data.shape)
+
+
+        image_buffer = io.BytesIO()
+        img = Image.fromarray(cv2.cvtColor(keogram_data, cv2.COLOR_BGR2RGB))
+        img.save(image_buffer, format='JPEG', quality=90)
+
+
+        json_image_b64 = base64.b64encode(image_buffer.getvalue())
+
+
+        json_data = {
+            'image_b64' : json_image_b64.decode('utf-8'),
             'success-message' : 'Oh yeah',
         }
 
-        return jsonify(message)
+
+        keogram_elapsed_s = time.time() - keogram_start
+        app.logger.warning('Long Term Keogram in %0.4f s', keogram_elapsed_s)
+
+
+        return jsonify(json_data)
 
 
 class AstroPanelView(TemplateView):

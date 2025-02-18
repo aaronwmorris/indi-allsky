@@ -170,10 +170,10 @@ $( document ).ready(function() {
         </div>
 
         <div class="col-sm-1">
-            {{ form_longterm_keogram.PPD_SELECT.label(class='col-form-label') }}
+            {{ form_longterm_keogram.PIXELS_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-1">
-            {{ form_longterm_keogram.PPD_SELECT(class='form-select bg-secondary') }}
+            {{ form_longterm_keogram.PIXELS_SELECT(class='form-select bg-secondary') }}
         </div>
 
         <div class="col-sm-1">
@@ -213,7 +213,7 @@ $('#form_longterm_keogram').on('submit', function() {
         'CAMERA_ID' : $('#CAMERA_ID').val(),
         'END_SELECT' : $('#END_SELECT').val(),
         'DAYS_SELECT' : $('#DAYS_SELECT').val(),
-        'PPD_SELECT' : $('#PPD_SELECT').val(),
+        'PIXELS_SELECT' : $('#PIXELS_SELECT').val(),
         'ALIGNMENT_SELECT' : $('#ALIGNMENT_SELECT').val(),
     }
 
