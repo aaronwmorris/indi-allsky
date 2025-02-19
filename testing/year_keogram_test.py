@@ -80,6 +80,9 @@ class YearKeogramTest(object):
         self.periods_per_day = int(86400 / self.alignment_seconds)
         self.period_pixels = 5
 
+        # offset full graph
+        self.offset_seconds = 0
+
 
     def main(self):
         now = datetime.now()
@@ -97,8 +100,8 @@ class YearKeogramTest(object):
         #query_start_date = now - timedelta(days=self.query_days)
 
 
-        query_start_ts = query_start_date.timestamp()
-        query_end_ts = query_end_date.timestamp()
+        query_start_ts = query_start_date.timestamp() - self.offset_seconds  # subtract offset
+        query_end_ts = query_end_date.timestamp() - self.offset_seconds
 
         total_days = math.ceil((query_end_ts - query_start_ts) / 86400)
         logger.info('Total days: %d', total_days)
