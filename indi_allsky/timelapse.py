@@ -110,7 +110,7 @@ class TimelapseGenerator(object):
 
         cmd.extend([
             '-y',
-            '-loglevel', 'level+warning',
+            '-loglevel', 'level+error',
             '-r', '{0:0.2f}'.format(self.framerate),
             '-f', 'image2',
             #'-start_number', '0',
@@ -141,9 +141,17 @@ class TimelapseGenerator(object):
 
         logger.info('FFmpeg command: %s', ' '.join(cmd))
 
+
+        ffmpeg_env = dict()
+        if self.config.get('TIMELAPSE', {}).get('FFMPEG_REPORT'):
+            logger.warning('*** FFMPEG debug report will be generated in /tmp ***')
+            ffmpeg_env['FFREPORT'] = 'file=/tmp/ffmpeg-report-%t.log'
+
+
         try:
             ffmpeg_subproc = subprocess.run(
                 cmd,
+                env=ffmpeg_env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 preexec_fn=lambda: os.nice(19),
@@ -152,15 +160,18 @@ class TimelapseGenerator(object):
             elapsed_s = time.time() - start
             logger.info('Timelapse generated in %0.4f s', elapsed_s)
 
-            logger.info('FFMPEG output: %s', ffmpeg_subproc.stdout)
+            for line in ffmpeg_subproc.stdout.decode().split('\n'):
+                logger.info('ffmpeg: %s', line)
         except subprocess.CalledProcessError as e:
             elapsed_s = time.time() - start
 
             logger.info('FFMPEG ran for %0.4f s', elapsed_s)
             logger.error('FFMPEG failed to generate timelapse, return code: %d', e.returncode)
-            logger.error('FFMPEG output: %s', e.stdout)
 
-            # Check if video file was created
+            for line in e.stdout.decode().split('\n'):
+                logger.error('ffmpeg: %s', line)
+
+            ### Check if video file was created
             if video_file_p.is_file():
                 logger.error('FFMPEG created broken video file, cleaning up')
                 video_file_p.unlink()

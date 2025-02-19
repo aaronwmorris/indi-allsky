@@ -125,6 +125,7 @@ class IndiAllSkyConfigBase(object):
             "IMAGE_CIRCLE"   : 2000,
             "KEOGRAM_RATIO"  : 0.15,
             "PRE_SCALE"      : 50,
+            "FFMPEG_REPORT"  : False,
         },
         "DAYTIME_CAPTURE"          : True,
         "DAYTIME_CAPTURE_SAVE"     : True,

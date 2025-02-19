@@ -3440,6 +3440,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TIMELAPSE__IMAGE_CIRCLE          = IntegerField('Image Circle Diameter', validators=[DataRequired(), TIMELAPSE__IMAGE_CIRCLE_validator])
     TIMELAPSE__KEOGRAM_RATIO         = FloatField('Keogram Ratio', validators=[DataRequired(), TIMELAPSE__KEOGRAM_RATIO_validator])
     TIMELAPSE__PRE_SCALE             = IntegerField('Pre-Scale Images', validators=[DataRequired(), TIMELAPSE__PRE_SCALE_validator])
+    TIMELAPSE__FFMPEG_REPORT         = BooleanField('Generate FFMPEG debug report')
     CAPTURE_PAUSE                    = BooleanField('Pause Capture')
     DAYTIME_CAPTURE                  = BooleanField('Daytime Capture')
     DAYTIME_CAPTURE_SAVE             = BooleanField('Daytime Save Images')

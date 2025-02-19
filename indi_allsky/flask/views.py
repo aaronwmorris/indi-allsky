@@ -1831,6 +1831,7 @@ class ConfigView(FormView):
             'TIMELAPSE__IMAGE_CIRCLE'        : self.indi_allsky_config.get('TIMELAPSE', {}).get('IMAGE_CIRCLE', 2000),
             'TIMELAPSE__KEOGRAM_RATIO'       : self.indi_allsky_config.get('TIMELAPSE', {}).get('KEOGRAM_RATIO', 0.15),
             'TIMELAPSE__PRE_SCALE'           : self.indi_allsky_config.get('TIMELAPSE', {}).get('PRE_SCALE', 50),
+            'TIMELAPSE__FFMPEG_REPORT'       : self.indi_allsky_config.get('TIMELAPSE', {}).get('FFMPEG_REPORT', False),
             'CAPTURE_PAUSE'                  : self.indi_allsky_config.get('CAPTURE_PAUSE', False),
             'DAYTIME_CAPTURE'                : self.indi_allsky_config.get('DAYTIME_CAPTURE', True),
             'DAYTIME_CAPTURE_SAVE'           : self.indi_allsky_config.get('DAYTIME_CAPTURE_SAVE', True),
@@ -2626,6 +2627,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TIMELAPSE']['IMAGE_CIRCLE']            = int(request.json['TIMELAPSE__IMAGE_CIRCLE'])
         self.indi_allsky_config['TIMELAPSE']['KEOGRAM_RATIO']           = float(request.json['TIMELAPSE__KEOGRAM_RATIO'])
         self.indi_allsky_config['TIMELAPSE']['PRE_SCALE']               = int(request.json['TIMELAPSE__PRE_SCALE'])
+        self.indi_allsky_config['TIMELAPSE']['FFMPEG_REPORT']           = bool(request.json['TIMELAPSE__FFMPEG_REPORT'])
         self.indi_allsky_config['CAPTURE_PAUSE']                        = bool(request.json['CAPTURE_PAUSE'])
         self.indi_allsky_config['DAYTIME_CAPTURE']                      = bool(request.json['DAYTIME_CAPTURE'])
         self.indi_allsky_config['DAYTIME_CAPTURE_SAVE']                 = bool(request.json['DAYTIME_CAPTURE_SAVE'])
