@@ -462,13 +462,10 @@ class SyncApiCameraView(SyncApiBaseView):
         return jsonify({'error' : 'not_implemented'}), 400
 
 
-class SyncApiImageView(SyncApiBaseView):
+class SyncApiBaseImageView(SyncApiBaseView):
     decorators = []
 
-    model = IndiAllSkyDbImageTable
-    filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
-    add_function = 'addImage'
-    type_folder = 'exposures'
+    type_folder = None
 
 
     def processPost(self, camera, image_metadata, tmp_file_p, overwrite=False):
@@ -569,6 +566,26 @@ class SyncApiImageView(SyncApiBaseView):
         return hour_folder
 
 
+class SyncApiImageView(SyncApiBaseImageView):
+    decorators = []
+
+    model = IndiAllSkyDbImageTable
+    filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
+    add_function = 'addImage'
+    type_folder = 'exposures'
+
+
+    def processPost(self, camera, image_metadata, tmp_file_p, overwrite=False):
+        if image_metadata['keogram_pixels']:
+            self._miscDb.add_long_term_keogram_data(
+                image_metadata['exp_date'],
+                image_metadata['camera_id'],
+                image_metadata['keogram_pixels'],
+            )
+
+        return super(SyncApiImageView, self).processPost(camera, image_metadata, tmp_file_p, overwrite=False)
+
+
 class SyncApiVideoView(SyncApiBaseView):
     decorators = []
 
@@ -617,7 +634,7 @@ class SyncApiStartrailVideoView(SyncApiBaseView):
     add_function = 'addStarTrailVideo'
 
 
-class SyncApiRawImageView(SyncApiImageView):  # image parent
+class SyncApiRawImageView(SyncApiBaseImageView):  # image parent
     decorators = []
 
     model = IndiAllSkyDbRawImageTable
@@ -626,7 +643,7 @@ class SyncApiRawImageView(SyncApiImageView):  # image parent
     type_folder = 'export'  # fixme need processImage/getImageFolder function for export folder
 
 
-class SyncApiFitsImageView(SyncApiImageView):  # image parent
+class SyncApiFitsImageView(SyncApiBaseImageView):  # image parent
     decorators = []
 
     model = IndiAllSkyDbFitsImageTable
@@ -635,7 +652,7 @@ class SyncApiFitsImageView(SyncApiImageView):  # image parent
     type_folder = 'fits'
 
 
-class SyncApiPanoramaImageView(SyncApiImageView):  # image parent
+class SyncApiPanoramaImageView(SyncApiBaseImageView):  # image parent
     decorators = []
 
     model = IndiAllSkyDbPanoramaImageTable

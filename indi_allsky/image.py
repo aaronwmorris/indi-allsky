@@ -609,7 +609,7 @@ class ImageWorker(Process):
         self.image_processor.colorize()
 
 
-        self.save_longterm_keogram_data(exp_date, camera_id)
+        longterm_keogram_pixels = self.save_longterm_keogram_data(exp_date, camera_id)
 
 
         self.image_processor.apply_image_circle_mask()
@@ -702,6 +702,7 @@ class ImageWorker(Process):
                 'smoke_rating'    : i_ref.smoke_rating,
                 'height'          : final_height,
                 'width'           : final_width,
+                'keogram_pixels'  : longterm_keogram_pixels,
                 'camera_uuid'     : i_ref.camera_uuid,
             }
 

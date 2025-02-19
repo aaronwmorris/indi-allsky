@@ -1285,8 +1285,11 @@ class miscDb(object):
 
     def add_long_term_keogram_data(self, exp_date, camera_id, rgb_pixel_list):
 
-        # timestamps are UTC
-        ts = exp_date.timestamp()
+        if isinstance(exp_date, (int, float)):
+            ts = exp_date
+        else:
+            # timestamps are UTC
+            ts = exp_date.timestamp()
 
 
         # data is probably numpy types
