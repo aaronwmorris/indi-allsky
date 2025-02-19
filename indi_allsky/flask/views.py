@@ -7539,7 +7539,7 @@ class JsonLongTermKeogramView(JsonView):
             query_start_date = datetime.strptime(first_date.strftime('%Y%m%d_120000'), '%Y%m%d_%H%M%S')
 
 
-        query_start_ts = query_start_date.timestamp() + offset_seconds
+        query_start_ts = query_start_date.timestamp() + offset_seconds  # add offset
         query_end_ts = query_end_date.timestamp() + offset_seconds
 
 
