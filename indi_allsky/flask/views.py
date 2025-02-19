@@ -7475,6 +7475,7 @@ class JsonLongTermKeogramView(JsonView):
         query_days = int(request.json['DAYS_SELECT'])
         period_pixels = int(request.json['PIXELS_SELECT'])
         alignment_seconds = int(request.json['ALIGNMENT_SELECT'])
+        offset_seconds = int(request.json['OFFSET_SELECT'])
 
 
         if query_days > 2000:
@@ -7486,6 +7487,13 @@ class JsonLongTermKeogramView(JsonView):
 
 
         if alignment_seconds < 5:
+            # sanity check
+            json_data = {
+                'failure-message' : 'Try again',
+            }
+            return jsonify(json_data), 400
+
+        if offset_seconds > 43200:
             # sanity check
             json_data = {
                 'failure-message' : 'Try again',
@@ -7531,8 +7539,8 @@ class JsonLongTermKeogramView(JsonView):
             query_start_date = datetime.strptime(first_date.strftime('%Y%m%d_120000'), '%Y%m%d_%H%M%S')
 
 
-        query_start_ts = query_start_date.timestamp()
-        query_end_ts = query_end_date.timestamp()
+        query_start_ts = query_start_date.timestamp() + offset_seconds
+        query_end_ts = query_end_date.timestamp() + offset_seconds
 
 
         total_days = math.ceil((query_end_ts - query_start_ts) / 86400)

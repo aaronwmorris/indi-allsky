@@ -6512,11 +6512,40 @@ class IndiAllskyLongTermKeogramForm(FlaskForm):
         ('120', '120 Seconds'),
     )
 
-    CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
-    END_SELECT                       = SelectField('Start', choices=END_SELECT_choices, default=END_SELECT_choices[0][0], validators=[DataRequired()])
-    DAYS_SELECT                      = SelectField('Timeframe', choices=DAYS_SELECT_choices, default=DAYS_SELECT_choices[0][0], validators=[DataRequired()])
-    PIXELS_SELECT                    = SelectField('Pixels per Day', choices=PIXELS_SELECT_choices, default=PIXELS_SELECT_choices[4][0], validators=[DataRequired()])
-    ALIGNMENT_SELECT                 = SelectField('Alignment', choices=ALIGNMENT_SELECT_choices, default=ALIGNMENT_SELECT_choices[4][0], validators=[DataRequired()])
+    OFFSET_SELECT_choices = (
+        ('-43200', '-12'),
+        ('-39600', '-11'),
+        ('-36000', '-10'),
+        ('-32400', '-9'),
+        ('-28800', '-8'),
+        ('-25200', '-7'),
+        ('-21600', '-6'),
+        ('-18000', '-5'),
+        ('-14400', '-4'),
+        ('-10800', '-3'),
+        ('-7200', '-2'),
+        ('-3600', '-1'),
+        ('0', '0'),
+        ('3600', '1'),
+        ('7200', '2'),
+        ('10800', '3'),
+        ('14400', '4'),
+        ('18000', '5'),
+        ('21600', '6'),
+        ('25200', '7'),
+        ('28800', '8'),
+        ('32400', '9'),
+        ('36000', '10'),
+        ('39600', '11'),
+        ('43200', '12'),
+    )
+
+    CAMERA_ID               = HiddenField('Camera ID', validators=[DataRequired()])
+    END_SELECT              = SelectField('Start', choices=END_SELECT_choices, default=END_SELECT_choices[0][0], validators=[DataRequired()])
+    DAYS_SELECT             = SelectField('Timeframe', choices=DAYS_SELECT_choices, default=DAYS_SELECT_choices[0][0], validators=[DataRequired()])
+    PIXELS_SELECT           = SelectField('Pixels per Day', choices=PIXELS_SELECT_choices, default=PIXELS_SELECT_choices[4][0], validators=[DataRequired()])
+    ALIGNMENT_SELECT        = SelectField('Alignment', choices=ALIGNMENT_SELECT_choices, default=ALIGNMENT_SELECT_choices[4][0], validators=[DataRequired()])
+    OFFSET_SELECT           = SelectField('Hour Offset', choices=OFFSET_SELECT_choices, default=OFFSET_SELECT_choices[12][0], validators=[DataRequired()])
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):

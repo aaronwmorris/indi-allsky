@@ -106,40 +106,43 @@ function closeFullscreen() {
     <div class="form-group row">
         {{ form_longterm_keogram.CAMERA_ID() }}
 
-        <div class="col-sm-1">
+        <div class="col-sm-2">
             {{ form_longterm_keogram.END_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_longterm_keogram.END_SELECT(class='form-select bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
             {{ form_longterm_keogram.DAYS_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_longterm_keogram.PIXELS_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_longterm_keogram.ALIGNMENT_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_longterm_keogram.OFFSET_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            <div class="loader" id="loader_generate"></div>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_longterm_keogram.END_SELECT(class='form-select bg-secondary') }}
         </div>
         <div class="col-sm-2">
             {{ form_longterm_keogram.DAYS_SELECT(class='form-select bg-secondary') }}
         </div>
-
-        <div class="col-sm-1">
-            {{ form_longterm_keogram.PIXELS_SELECT.label(class='col-form-label') }}
-        </div>
         <div class="col-sm-1">
             {{ form_longterm_keogram.PIXELS_SELECT(class='form-select bg-secondary') }}
         </div>
-
-        <div class="col-sm-1">
-            {{ form_longterm_keogram.ALIGNMENT_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
+        <div class="col-sm-2">
             {{ form_longterm_keogram.ALIGNMENT_SELECT(class='form-select bg-secondary') }}
         </div>
-
+        <div class="col-sm-1">
+            {{ form_longterm_keogram.OFFSET_SELECT(class='form-select bg-secondary') }}
+        </div>
         <div class="col-sm-1">
             <button class="btn btn-success">Generate</button>
-        </div>
-
-        <div class="col-sm-1">
-            <div class="loader" id="loader_generate"></div>
         </div>
     </div>
 </form>
@@ -186,6 +189,7 @@ $('#form_longterm_keogram').on('submit', function() {
         'DAYS_SELECT' : $('#DAYS_SELECT').val(),
         'PIXELS_SELECT' : $('#PIXELS_SELECT').val(),
         'ALIGNMENT_SELECT' : $('#ALIGNMENT_SELECT').val(),
+        'OFFSET_SELECT' : $('#OFFSET_SELECT').val(),
     }
 
 
