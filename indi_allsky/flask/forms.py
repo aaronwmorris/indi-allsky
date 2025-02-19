@@ -2941,10 +2941,10 @@ class IndiAllskyConfigForm(FlaskForm):
     FFMPEG_VFSCALE_choices = {
         'Standard' : (
             ('', 'No Scaling'),
-            ('-2:2160', 'Height 2160px - [-2:2160] - Keep aspect ratio'),
-            ('-2:1440', 'Height 1440px - [-2:1440] - Keep aspect ratio'),
-            ('-2:1080', 'Height 1080px - [-2:1080] - Keep aspect ratio'),
-            ('-2:720', 'Height 720px - [-2:720] - Keep aspect ratio')),
+            ('-2:2160', 'Height 2160px - [-2:2160] - 2GB RAM'),
+            ('-2:1440', 'Height 1440px - [-2:1440] - 2GB RAM'),
+            ('-2:1080', 'Height 1080px - [-2:1080] - 1GB RAM'),
+            ('-2:720', 'Height 720px - [-2:720] - 1GB RAM')),
         'Legacy' : (
             ('-1:2304', 'Height 2304px - [-1:2304] - 75% (imx477-only)'),
             ('-1:1520', 'Height 1520px - [-1:1520] - 50% (imx477-only)'),
