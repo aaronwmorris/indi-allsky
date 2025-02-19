@@ -1283,18 +1283,21 @@ class miscDb(object):
 
 
 
-    def add_long_term_keogram_data(self, exp_date, camera_id, bgr_pixel_1, bgr_pixel_2, bgr_pixel_3, bgr_pixel_4, bgr_pixel_5):
+    def add_long_term_keogram_data(self, exp_date, camera_id, rgb_pixel_list):
 
-        # timestamps are UTC
-        ts = exp_date.timestamp()
+        if isinstance(exp_date, (int, float)):
+            ts = exp_date
+        else:
+            # timestamps are UTC
+            ts = exp_date.timestamp()
 
 
         # data is probably numpy types
-        b1, g1, r1 = bgr_pixel_1
-        b2, g2, r2 = bgr_pixel_2
-        b3, g3, r3 = bgr_pixel_3
-        b4, g4, r4 = bgr_pixel_4
-        b5, g5, r5 = bgr_pixel_5
+        r1, g1, b1 = rgb_pixel_list[0]
+        r2, g2, b2 = rgb_pixel_list[1]
+        r3, g3, b3 = rgb_pixel_list[2]
+        r4, g4, b4 = rgb_pixel_list[3]
+        r5, g5, b5 = rgb_pixel_list[4]
 
         #logger.info('r1: %s, g1: %s, b1: %s', type(r1), type(g1), type(b1))
         #logger.info('r1: %d, g1: %d, b1: %d', r1, g1, b1)

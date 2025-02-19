@@ -39,6 +39,7 @@ from indi_allsky.flask.models import IndiAllSkyDbRawImageTable
 from indi_allsky.flask.models import IndiAllSkyDbPanoramaImageTable
 from indi_allsky.flask.models import IndiAllSkyDbPanoramaVideoTable
 from indi_allsky.flask.models import IndiAllSkyDbThumbnailTable
+from indi_allsky.flask.models import IndiAllSkyDbLongTermKeogramTable
 
 
 from indi_allsky import constants
@@ -605,6 +606,9 @@ class UploadSync(object):
                         self.addThumbnailSyncapi(entry, image_metadata)
 
 
+                    self.fetch_longterm_keogram_data(entry, image_metadata)
+
+
                     self._miscUpload.syncapi_image(entry, image_metadata)
                 elif x['table'].__name__ == 'IndiAllSkyDbPanoramaImageTable':
                     panorama_metadata = {
@@ -876,6 +880,33 @@ class UploadSync(object):
             thumbnail_metadata['data'] = dict()
 
         self._miscUpload.syncapi_thumbnail(thumbnail_entry, thumbnail_metadata)
+
+
+    def fetch_longterm_keogram_data(self, entry, image_metadata):
+        ts = int(image_metadata['createDate'])
+        camera_id = entry.camera_id
+
+
+        # it is possible to have multiple entries, we will only sync one
+        keogram_data = IndiAllSkyDbLongTermKeogramTable.query\
+            .join(IndiAllSkyDbLongTermKeogramTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbLongTermKeogramTable.ts == ts)\
+            .first()
+
+
+        if not keogram_data:
+            image_metadata['keogram_pixels'] = None
+            return
+
+
+        image_metadata['keogram_pixels'] = [
+            [keogram_data.r1, keogram_data.g1, keogram_data.b1],
+            [keogram_data.r2, keogram_data.g2, keogram_data.b2],
+            [keogram_data.r3, keogram_data.g3, keogram_data.b3],
+            [keogram_data.r4, keogram_data.g4, keogram_data.b4],
+            [keogram_data.r5, keogram_data.g5, keogram_data.b5],
+        ]
 
 
     def report(self):

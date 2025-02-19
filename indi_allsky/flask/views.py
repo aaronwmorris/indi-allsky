@@ -7605,6 +7605,10 @@ class JsonLongTermKeogramView(JsonView):
         #app.logger.info(keogram_data.shape)
 
 
+        # sanity check
+        keogram_data[keogram_data < 0] = 0
+        keogram_data[keogram_data > 255] = 255
+
 
         png_compression = self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 5)
 
