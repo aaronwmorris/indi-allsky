@@ -887,24 +887,26 @@ class UploadSync(object):
         camera_id = entry.camera_id
 
 
-        try:
-            # it is possible to have multiple entries, we will only sync one
-            keogram_data = IndiAllSkyDbLongTermKeogramTable.query\
-                .join(IndiAllSkyDbLongTermKeogramTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-                .filter(IndiAllSkyDbLongTermKeogramTable.ts == ts)\
-                .one()
+        # it is possible to have multiple entries, we will only sync one
+        keogram_data = IndiAllSkyDbLongTermKeogramTable.query\
+            .join(IndiAllSkyDbLongTermKeogramTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbLongTermKeogramTable.ts == ts)\
+            .first()
 
 
-            image_metadata['keogram_pixels'] = [
-                [keogram_data.r1, keogram_data.g1, keogram_data.b1],
-                [keogram_data.r2, keogram_data.g2, keogram_data.b2],
-                [keogram_data.r3, keogram_data.g3, keogram_data.b3],
-                [keogram_data.r4, keogram_data.g4, keogram_data.b4],
-                [keogram_data.r5, keogram_data.g5, keogram_data.b5],
-            ]
-        except NoResultFound:
+        if not keogram_data:
             image_metadata['keogram_pixels'] = None
+            return
+
+
+        image_metadata['keogram_pixels'] = [
+            [keogram_data.r1, keogram_data.g1, keogram_data.b1],
+            [keogram_data.r2, keogram_data.g2, keogram_data.b2],
+            [keogram_data.r3, keogram_data.g3, keogram_data.b3],
+            [keogram_data.r4, keogram_data.g4, keogram_data.b4],
+            [keogram_data.r5, keogram_data.g5, keogram_data.b5],
+        ]
 
 
     def report(self):
