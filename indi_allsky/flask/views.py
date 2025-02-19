@@ -7491,6 +7491,8 @@ class JsonLongTermKeogramView(JsonView):
             return jsonify(json_data), 400
 
 
+        keogram_start = time.time()
+
         periods_per_day = int(86400 / alignment_seconds)
 
         if end == 'today':
@@ -7564,8 +7566,6 @@ class JsonLongTermKeogramView(JsonView):
             .group_by('interval')\
             .order_by(IndiAllSkyDbLongTermKeogramTable.ts.asc())
 
-
-        keogram_start = time.time()
 
         numpy_data = numpy.zeros(((periods_per_day * total_days) * period_pixels, 1, 3), dtype=numpy.uint8)
         #app.logger.info('Rows: %d', q.count())
