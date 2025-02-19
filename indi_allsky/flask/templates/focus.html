@@ -129,8 +129,8 @@ function loadJS(url, data, onDone, onError) {
         url: url,
         contentType: "application/json",
         data: data,
-        success: function(data){
-            json_data = data;
+        success: function(rdata){
+            json_data = rdata;
 
             // update data
             blur_score = json_data['blur_score'].toFixed(2);
@@ -157,8 +157,8 @@ function loadJS(url, data, onDone, onError) {
             focus_chart.update();
 
         },
-        error: function(data){
-            onError(data.status);
+        error: function(rdata){
+            onError(rdata.status);
         },
     });
 }

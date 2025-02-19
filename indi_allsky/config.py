@@ -162,6 +162,11 @@ class IndiAllSkyConfigBase(object):
         "KEOGRAM_CROP_TOP"      : 0,  # percent
         "KEOGRAM_CROP_BOTTOM"   : 0,  # percent
         "KEOGRAM_LABEL"         : True,
+        "LONGTERM_KEOGRAM"      : {
+            "ENABLE"        : True,
+            "OFFSET_X"      : 0,
+            "OFFSET_Y"      : 0,
+        },
         "STARTRAILS_MAX_ADU"    : 65,
         "STARTRAILS_MASK_THOLD" : 190,
         "STARTRAILS_PIXEL_THOLD": 1.0,

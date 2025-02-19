@@ -28,6 +28,7 @@ __all__ = (
     'IndiAllSkyDbRawImageTable',
     'IndiAllSkyDbPanoramaImageTable',
     'IndiAllSkyDbPanoramaVideoTable',
+    'IndiAllSkyDbLongTermKeogramTable',
     'TaskQueueState', 'TaskQueueQueue', 'IndiAllSkyDbTaskQueueTable',
     'NotificationCategory', 'IndiAllSkyDbNotificationTable',
     'IndiAllSkyDbStateTable',
@@ -105,6 +106,7 @@ class IndiAllSkyDbCameraTable(db.Model):
     rawimages = db.relationship('IndiAllSkyDbRawImageTable', back_populates='camera')
     panoramaimages = db.relationship('IndiAllSkyDbPanoramaImageTable', back_populates='camera')
     panoramavideos = db.relationship('IndiAllSkyDbPanoramaVideoTable', back_populates='camera')
+    longtermkeograms = db.relationship('IndiAllSkyDbLongTermKeogramTable', back_populates='camera')
 
 
     @property
@@ -771,6 +773,37 @@ class IndiAllSkyDbPanoramaVideoTable(IndiAllSkyDbFileBase):
         remote_url,
         s3_key,
         camera_id,
+    )
+
+
+class IndiAllSkyDbLongTermKeogramTable(db.Model):
+    __tablename__ = 'longtermkeogram'
+
+    id = db.Column(db.Integer, primary_key=True)
+    ts = db.Column(db.Integer, nullable=False, index=True)
+    r1 = db.Column(db.Integer, nullable=False)
+    g1 = db.Column(db.Integer, nullable=False)
+    b1 = db.Column(db.Integer, nullable=False)
+    r2 = db.Column(db.Integer, nullable=False)
+    g2 = db.Column(db.Integer, nullable=False)
+    b2 = db.Column(db.Integer, nullable=False)
+    r3 = db.Column(db.Integer, nullable=False)
+    g3 = db.Column(db.Integer, nullable=False)
+    b3 = db.Column(db.Integer, nullable=False)
+    r4 = db.Column(db.Integer, nullable=False)
+    g4 = db.Column(db.Integer, nullable=False)
+    b4 = db.Column(db.Integer, nullable=False)
+    r5 = db.Column(db.Integer, nullable=False)
+    g5 = db.Column(db.Integer, nullable=False)
+    b5 = db.Column(db.Integer, nullable=False)
+    camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
+    camera = db.relationship('IndiAllSkyDbCameraTable', back_populates='longtermkeograms')
+
+
+    db.Index(
+        'idx_longterm_keogram_it_2',
+        camera_id,
+        ts,
     )
 
 

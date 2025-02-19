@@ -2978,6 +2978,46 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LONGTERM_KEOGRAM__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.LONGTERM_KEOGRAM__ENABLE(class='form-check-input') }}
+                <div id="LONGTERM_KEOGRAM__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Gather long term keogram data</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LONGTERM_KEOGRAM__OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LONGTERM_KEOGRAM__OFFSET_X(class='form-control bg-secondary') }}
+            <div id="LONGTERM_KEOGRAM__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Allows you to offset pixels for keogram if they are obstructed</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LONGTERM_KEOGRAM__OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LONGTERM_KEOGRAM__OFFSET_Y(class='form-control bg-secondary') }}
+            <div id="LONGTERM_KEOGRAM__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.STARTRAILS_SUN_ALT_THOLD.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -6904,6 +6944,8 @@ const field_names = [
     'KEOGRAM_V_SCALE',
     'KEOGRAM_CROP_TOP',
     'KEOGRAM_CROP_BOTTOM',
+    'LONGTERM_KEOGRAM__OFFSET_X',
+    'LONGTERM_KEOGRAM__OFFSET_Y',
     'STARTRAILS_MAX_ADU',
     'STARTRAILS_MASK_THOLD',
     'STARTRAILS_PIXEL_THOLD',
@@ -7233,6 +7275,7 @@ const checkbox_field_names = [
     'IMAGE_STRETCH__MOONMODE',
     'IMAGE_STRETCH__DAYTIME',
     'KEOGRAM_LABEL',
+    'LONGTERM_KEOGRAM__ENABLE',
     'STARTRAILS_MOONMODE_THOLD',
     'STARTRAILS_USE_DB_DATA',
     'STARTRAILS_TIMELAPSE',

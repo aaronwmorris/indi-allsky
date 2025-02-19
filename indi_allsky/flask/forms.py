@@ -914,6 +914,16 @@ def KEOGRAM_CROP_BOTTOM_validator(*args):
     KEOGRAM_CROP_TOP_validator(*args)
 
 
+def LONGTERM_KEOGRAM__OFFSET_X_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+
+def LONGTERM_KEOGRAM__OFFSET_Y_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+
 def STARTRAILS_MAX_ADU_validator(form, field):
     if field.data <= 0:
         raise ValidationError('Star Trails Max ADU must be greater than 0')
@@ -3461,6 +3471,9 @@ class IndiAllskyConfigForm(FlaskForm):
     KEOGRAM_CROP_TOP                 = IntegerField('Keogram Crop Top (%)', validators=[KEOGRAM_CROP_TOP_validator])
     KEOGRAM_CROP_BOTTOM              = IntegerField('Keogram Crop Bottom (%)', validators=[KEOGRAM_CROP_BOTTOM_validator])
     KEOGRAM_LABEL                    = BooleanField('Label Keogram')
+    LONGTERM_KEOGRAM__ENABLE         = BooleanField('Enable Long Term Keogram')
+    LONGTERM_KEOGRAM__OFFSET_X       = IntegerField('X Offset', validators=[LONGTERM_KEOGRAM__OFFSET_X_validator])
+    LONGTERM_KEOGRAM__OFFSET_Y       = IntegerField('Y Offset', validators=[LONGTERM_KEOGRAM__OFFSET_Y_validator])
     STARTRAILS_SUN_ALT_THOLD         = FloatField('Star Trails Max Sun Altitude', validators=[DataRequired(), STARTRAILS_SUN_ALT_THOLD_validator])
     STARTRAILS_MOONMODE_THOLD        = BooleanField('Star Trails Exclude Moon Mode')
     STARTRAILS_MOON_ALT_THOLD        = FloatField('Custom Max Moon Altitude', validators=[DataRequired(), STARTRAILS_MOON_ALT_THOLD_validator])
@@ -6457,6 +6470,49 @@ class IndiAllskyMiniTimelapseForm(FlaskForm):
     POST_SECONDS_SELECT              = SelectField('Post-Selection Time', choices=SECONDS_choices, validators=[DataRequired()])
     FRAMERATE_SELECT                 = SelectField('Speed', choices=FRAMERATE_SELECT_choices, validators=[DataRequired()])
     NOTE                             = StringField('Description', validators=[DataRequired()])
+
+
+class IndiAllskyLongTermKeogramForm(FlaskForm):
+    END_SELECT_choices = (
+        ('today', 'Today'),
+        ('thisyear', 'End of this year'),
+        ('lastyear', 'End of last year'),
+    )
+
+    DAYS_SELECT_choices = (
+        ('30', '1 Month'),
+        ('90', '3 Months'),
+        ('180', '6 Months'),
+        ('365', '1 Year'),
+        ('730', '2 Years'),
+        ('1095', '3 Years'),
+        ('42', 'All Available'),  # special
+    )
+
+    PIXELS_SELECT_choices = (
+        ('1', '1'),
+        ('2', '2'),
+        ('3', '3'),
+        ('4', '4'),
+        ('5', '5'),
+    )
+
+    ALIGNMENT_SELECT_choices = (
+        ('20', '20 Seconds'),
+        ('30', '30 Seconds'),
+        ('40', '40 Seconds'),
+        ('50', '50 Seconds'),
+        ('60', '60 Seconds'),
+        ('75', '75 Seconds'),
+        ('90', '90 Seconds'),
+        ('120', '120 Seconds'),
+    )
+
+    CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
+    END_SELECT                       = SelectField('Start', choices=END_SELECT_choices, default=END_SELECT_choices[0][0], validators=[DataRequired()])
+    DAYS_SELECT                      = SelectField('Timeframe', choices=DAYS_SELECT_choices, default=DAYS_SELECT_choices[0][0], validators=[DataRequired()])
+    PIXELS_SELECT                    = SelectField('Pixels per Day', choices=PIXELS_SELECT_choices, default=PIXELS_SELECT_choices[4][0], validators=[DataRequired()])
+    ALIGNMENT_SELECT                 = SelectField('Alignment', choices=ALIGNMENT_SELECT_choices, default=ALIGNMENT_SELECT_choices[4][0], validators=[DataRequired()])
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):

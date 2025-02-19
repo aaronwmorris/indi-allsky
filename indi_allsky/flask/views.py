@@ -54,6 +54,7 @@ from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbPanoramaImageTable
 from .models import IndiAllSkyDbPanoramaVideoTable
 from .models import IndiAllSkyDbThumbnailTable
+from .models import IndiAllSkyDbLongTermKeogramTable
 from .models import IndiAllSkyDbTaskQueueTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbUserTable
@@ -100,6 +101,7 @@ from .forms import IndiAllskyImageProcessingForm
 from .forms import IndiAllskyCameraSimulatorForm
 from .forms import IndiAllskyFocusControllerForm
 from .forms import IndiAllskyMiniTimelapseForm
+from .forms import IndiAllskyLongTermKeogramForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -1860,6 +1862,9 @@ class ConfigView(FormView):
             'KEOGRAM_CROP_TOP'               : self.indi_allsky_config.get('KEOGRAM_CROP_TOP', 0),
             'KEOGRAM_CROP_BOTTOM'            : self.indi_allsky_config.get('KEOGRAM_CROP_BOTTOM', 0),
             'KEOGRAM_LABEL'                  : self.indi_allsky_config.get('KEOGRAM_LABEL', True),
+            'LONGTERM_KEOGRAM__ENABLE'       : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('ENABLE', True),
+            'LONGTERM_KEOGRAM__OFFSET_X'     : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('OFFSET_X', 0),
+            'LONGTERM_KEOGRAM__OFFSET_Y'     : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('OFFSET_Y', 0),
             'STARTRAILS_SUN_ALT_THOLD'       : self.indi_allsky_config.get('STARTRAILS_SUN_ALT_THOLD', -15.0),
             'STARTRAILS_MOONMODE_THOLD'      : self.indi_allsky_config.get('STARTRAILS_MOONMODE_THOLD', True),
             'STARTRAILS_MOON_ALT_THOLD'      : self.indi_allsky_config.get('STARTRAILS_MOON_ALT_THOLD', 91.0),
@@ -2525,6 +2530,7 @@ class AjaxConfigView(BaseView):
             'LIGHTGRAPH_OVERLAY',
             'ADSB',
             'SATELLITE_TRACK',
+            'LONGTERM_KEOGRAM',
         )
 
         for leaf in leaf_list:
@@ -2651,6 +2657,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['KEOGRAM_CROP_TOP']                     = int(request.json['KEOGRAM_CROP_TOP'])
         self.indi_allsky_config['KEOGRAM_CROP_BOTTOM']                  = int(request.json['KEOGRAM_CROP_BOTTOM'])
         self.indi_allsky_config['KEOGRAM_LABEL']                        = bool(request.json['KEOGRAM_LABEL'])
+        self.indi_allsky_config['LONGTERM_KEOGRAM']['ENABLE']           = bool(request.json['LONGTERM_KEOGRAM__ENABLE'])
+        self.indi_allsky_config['LONGTERM_KEOGRAM']['OFFSET_X']         = int(request.json['LONGTERM_KEOGRAM__OFFSET_X'])
+        self.indi_allsky_config['LONGTERM_KEOGRAM']['OFFSET_Y']         = int(request.json['LONGTERM_KEOGRAM__OFFSET_Y'])
         self.indi_allsky_config['STARTRAILS_SUN_ALT_THOLD']             = float(request.json['STARTRAILS_SUN_ALT_THOLD'])
         self.indi_allsky_config['STARTRAILS_MOONMODE_THOLD']            = bool(request.json['STARTRAILS_MOONMODE_THOLD'])
         self.indi_allsky_config['STARTRAILS_MOON_ALT_THOLD']            = float(request.json['STARTRAILS_MOON_ALT_THOLD'])
@@ -7417,6 +7426,209 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
         return jsonify(message)
 
 
+class LongTermKeogramView(TemplateView):
+    decorators = [login_required]
+    title = 'Long Term Keogram'
+
+
+    def get_context(self):
+        context = super(LongTermKeogramView, self).get_context()
+
+
+        context['title'] = self.title
+        context['camera_id'] = self.camera.id
+
+        data = {
+            'CAMERA_ID' : self.camera.id
+        }
+
+        context['form_longterm_keogram'] = IndiAllskyLongTermKeogramForm(data=data)
+
+        return context
+
+
+class JsonLongTermKeogramView(JsonView):
+    methods = ['POST']
+    decorators = [login_required]
+
+
+    def __init__(self, **kwargs):
+        super(JsonLongTermKeogramView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        import numpy
+        import cv2
+        from PIL import Image
+
+        form_longterm_keogram = IndiAllskyLongTermKeogramForm(data=request.json)
+
+        if not form_longterm_keogram.validate():
+            form_errors = form_longterm_keogram.errors  # this must be a property
+            return jsonify(form_errors), 400
+
+
+        camera_id = int(request.json['CAMERA_ID'])
+        end = str(request.json['END_SELECT'])
+        query_days = int(request.json['DAYS_SELECT'])
+        period_pixels = int(request.json['PIXELS_SELECT'])
+        alignment_seconds = int(request.json['ALIGNMENT_SELECT'])
+
+
+        if query_days > 2000:
+            # sanity check (more than 5 years)
+            json_data = {
+                'failure-message' : 'Try again',
+            }
+            return jsonify(json_data), 400
+
+
+        if alignment_seconds < 5:
+            # sanity check
+            json_data = {
+                'failure-message' : 'Try again',
+            }
+            return jsonify(json_data), 400
+
+
+        keogram_start = time.time()
+
+        periods_per_day = int(86400 / alignment_seconds)
+
+        if end == 'today':
+            tomorrow = datetime.now() + timedelta(hours=24)  # need to start noon tomorrow
+            query_end_date = datetime.strptime(tomorrow.strftime('%Y%m%d_120000'), '%Y%m%d_%H%M%S')
+            query_start_date = query_end_date - timedelta(days=query_days)
+        elif end == 'thisyear':
+            thisyear = datetime.now().year
+            query_end_date = datetime.strptime('{0:d}1231_120000'.format(thisyear), '%Y%m%d_%H%M%S')
+            query_start_date = query_end_date - timedelta(days=query_days)
+        elif end == 'lastyear':
+            lastyear = datetime.now().year - 1
+            query_end_date = datetime.strptime('{0:d}1231_120000'.format(lastyear), '%Y%m%d_%H%M%S')
+            query_start_date = query_end_date - timedelta(days=query_days)
+        else:
+            json_data = {
+                'failure-message' : 'Invalid end selection',
+            }
+            return jsonify(json_data), 400
+
+
+        if query_days == 42:
+            # special condition to show all available data
+            first_entry = db.session.query(
+                IndiAllSkyDbLongTermKeogramTable.ts,
+            )\
+                .join(IndiAllSkyDbCameraTable)\
+                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+                .order_by(IndiAllSkyDbLongTermKeogramTable.ts.asc())\
+                .first()
+
+
+            first_date = datetime.fromtimestamp(first_entry.ts)
+            query_start_date = datetime.strptime(first_date.strftime('%Y%m%d_120000'), '%Y%m%d_%H%M%S')
+
+
+        query_start_ts = query_start_date.timestamp()
+        query_end_ts = query_end_date.timestamp()
+
+
+        total_days = math.ceil((query_end_ts - query_start_ts) / 86400)
+
+        query_start_offset = int(query_start_ts / alignment_seconds)
+
+
+
+        ltk_interval = func.floor(IndiAllSkyDbLongTermKeogramTable.ts / alignment_seconds).label('interval')
+
+        q = db.session.query(
+            ltk_interval,
+            func.avg(IndiAllSkyDbLongTermKeogramTable.r1).label('r1_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.b1).label('b1_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.g1).label('g1_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.r2).label('r2_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.b2).label('b2_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.g2).label('g2_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.r3).label('r3_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.b3).label('b3_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.g3).label('g3_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.r4).label('r4_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.b4).label('b4_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.g4).label('g4_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.r5).label('r5_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.b5).label('b5_avg'),
+            func.avg(IndiAllSkyDbLongTermKeogramTable.g5).label('g5_avg'),
+        )\
+            .join(IndiAllSkyDbCameraTable)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbLongTermKeogramTable.ts >= query_start_ts)\
+            .filter(IndiAllSkyDbLongTermKeogramTable.ts < query_end_ts)\
+            .group_by('interval')\
+            .order_by(IndiAllSkyDbLongTermKeogramTable.ts.asc())
+
+
+        numpy_data = numpy.zeros(((periods_per_day * total_days) * period_pixels, 1, 3), dtype=numpy.uint8)
+        #app.logger.info('Rows: %d', q.count())
+
+
+        for i, row in enumerate(q):
+            second_offset = row.interval - query_start_offset
+            day = int(second_offset / periods_per_day)
+            index = second_offset + (day * (periods_per_day * (period_pixels - 1)))
+
+            if period_pixels == 5:
+                numpy_data[index + (periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
+                numpy_data[index + (periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
+                numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+
+            elif period_pixels == 4:
+                numpy_data[index + (periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
+                numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+
+            elif period_pixels == 3:
+                numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+
+            elif period_pixels == 2:
+                numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+
+
+            # always add 1 row
+            numpy_data[index] = row.b1_avg, row.g1_avg, row.r1_avg
+
+
+        keogram_data = numpy.reshape(numpy_data, ((total_days * period_pixels), periods_per_day, 3))
+        #app.logger.info(keogram_data.shape)
+
+
+
+        png_compression = self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 5)
+
+
+        image_buffer = io.BytesIO()
+        img = Image.fromarray(cv2.cvtColor(keogram_data, cv2.COLOR_BGR2RGB))
+        img.save(image_buffer, format='PNG', compress_level=png_compression)
+
+
+        json_image_b64 = base64.b64encode(image_buffer.getvalue())
+
+
+        keogram_elapsed_s = time.time() - keogram_start
+        app.logger.warning('Long Term Keogram in %0.4f s', keogram_elapsed_s)
+
+
+        json_data = {
+            'image_b64' : json_image_b64.decode('utf-8'),
+            'processing_time' : round(keogram_elapsed_s, 3),
+            'success-message' : '',
+        }
+
+
+        return jsonify(json_data)
+
+
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
@@ -7890,6 +8102,9 @@ bp_allsky.add_url_rule('/ajax/astropanel', view_func=AjaxAstroPanelView.as_view(
 
 bp_allsky.add_url_rule('/processing', view_func=ImageProcessingView.as_view('image_processing_view', template_name='imageprocessing.html'))
 bp_allsky.add_url_rule('/js/processing', view_func=JsonImageProcessingView.as_view('js_image_processing_view'))
+
+bp_allsky.add_url_rule('/longtermkeogram', view_func=LongTermKeogramView.as_view('longterm_keogram_view', template_name='longterm_keogram.html'))
+bp_allsky.add_url_rule('/js/longtermkeogram', view_func=JsonLongTermKeogramView.as_view('js_longterm_keogram_view'))
 
 bp_allsky.add_url_rule('/camera', view_func=CameraLensView.as_view('camera_lens_view', template_name='cameraLens.html'))
 bp_allsky.add_url_rule('/lag', view_func=ImageLagView.as_view('image_lag_view', template_name='lag.html'))
