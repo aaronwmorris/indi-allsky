@@ -141,10 +141,17 @@ class TimelapseGenerator(object):
 
         logger.info('FFmpeg command: %s', ' '.join(cmd))
 
+
+        ffmpeg_env = dict()
+        if self.config.get('TIMELAPSE', {}).get('FFMPEG_REPORT'):
+            logger.warning('*** FFMPEG debug report will be generated in /tmp ***')
+            ffmpeg_env['FFREPORT'] = 'file=/tmp/ffmpeg-report-%t.log'
+
+
         try:
             ffmpeg_subproc = subprocess.run(
                 cmd,
-                cwd='/tmp',  # logs will be created here
+                env=ffmpeg_env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 preexec_fn=lambda: os.nice(19),

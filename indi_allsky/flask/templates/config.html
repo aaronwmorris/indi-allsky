@@ -2543,6 +2543,24 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TIMELAPSE__FFMPEG_REPORT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TIMELAPSE__FFMPEG_REPORT(class='form-check-input') }}
+                <div id="TIMELAPSE__FFMPEG_REPORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Generate ffmpeg reports in /tmp (debugging)</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Report files are not automatically deleted</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TIMELAPSE__IMAGE_CIRCLE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -7265,6 +7283,7 @@ const checkbox_field_names = [
     'DETECT_DRAW',
     'CAPTURE_PAUSE',
     'TIMELAPSE_ENABLE',
+    'TIMELAPSE__FFMPEG_REPORT',
     'DAYTIME_CAPTURE',
     'DAYTIME_CAPTURE_SAVE',
     'DAYTIME_TIMELAPSE',
