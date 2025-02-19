@@ -33,6 +33,7 @@ var json_data = {
 };
 var camera_id = {{ camera_id }};
 var fullscreen = false;  //initial state
+var page_settings;  // set later
 
 function showImage(image_b64) {
 
@@ -174,6 +175,44 @@ function init() {
 
 
 $( document ).ready(function() {
+    if(localStorage) {
+        ltk_settings = localStorage.getItem("longterm_keogram_settings");
+        if(ltk_settings) {
+            page_settings = JSON.parse(ltk_settings);
+        } else {
+            console.log('Recording new settings');
+            page_settings = new Object();
+            page_settings["end"] = $("#END_SELECT").val();
+            page_settings["days"] = $("#DAYS_SELECT").val();
+            page_settings["pixels_per_day"] = $("#PIXELS_SELECT").val();
+            page_settings["alignment_seconds"] = $("#ALIGNMENT_SELECT").val();
+            page_settings["offset_seconds"] = $("#OFFSET_SELECT").val();
+
+            localStorage.setItem("longterm_keogram_settings", JSON.stringify(page_settings));
+        }
+    }
+
+    if(typeof page_settings["end"] !== "undefined") {
+        $("#END_SELECT").val(page_settings["end"]);
+    }
+
+    if(typeof page_settings["days"] !== "undefined") {
+        $("#DAYS_SELECT").val(page_settings["days"]);
+    }
+
+    if(typeof page_settings["pixels_per_day"] !== "undefined") {
+        $("#PIXELS_SELECT").val(page_settings["pixels_per_day"]);
+    }
+
+    if(typeof page_settings["alignment_seconds"] !== "undefined") {
+        $("#ALIGNMENT_SELECT").val(page_settings["alignment_seconds"]);
+    }
+
+    if(typeof page_settings["offset_seconds"] !== "undefined") {
+        $("#OFFSET_SELECT").val(page_settings["offset_seconds"]);
+    }
+
+
     $('#canvas').on("click", function() {
         goFullscreen(this);
     });
@@ -190,6 +229,16 @@ $('#form_longterm_keogram').on('submit', function() {
         'PIXELS_SELECT' : $('#PIXELS_SELECT').val(),
         'ALIGNMENT_SELECT' : $('#ALIGNMENT_SELECT').val(),
         'OFFSET_SELECT' : $('#OFFSET_SELECT').val(),
+    }
+
+
+    if(localStorage) {
+        page_settings["end"] = form_data['END_SELECT'];
+        page_settings["days"] = form_data['DAYS_SELECT'];
+        page_settings["pixels_per_day"] = form_data['PIXELS_SELECT'];
+        page_settings["alignment_seconds"] = form_data['ALIGNMENT_SELECT'];
+        page_settings["offset_seconds"] = form_data['OFFSET_SELECT'];
+        localStorage.setItem("longterm_keogram_settings", JSON.stringify(page_settings));
     }
 
 
