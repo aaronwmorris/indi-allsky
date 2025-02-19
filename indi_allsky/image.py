@@ -1769,13 +1769,18 @@ class ImageWorker(Process):
         y = int(image_height / 2) - offset_y  # minus
 
 
+        rgb_pixel_list = list()
+        for p_y in range(5):
+            pixel = self.image_processor.image[y + p_y, x]
+            rgb_pixel_list.append([int(pixel[2]), int(pixel[1]), int(pixel[0])])  # bgr
+
+
         self._miscDb.add_long_term_keogram_data(
             exp_date,
             camera_id,
-            self.image_processor.image[y, x],
-            self.image_processor.image[y + 1, x],
-            self.image_processor.image[y + 2, x],
-            self.image_processor.image[y + 3, x],
-            self.image_processor.image[y + 4, x],
+            rgb_pixel_list,
         )
+
+
+        return rgb_pixel_list
 
