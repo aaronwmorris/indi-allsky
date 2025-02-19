@@ -577,6 +577,7 @@ class SyncApiImageView(SyncApiBaseImageView):
 
     def processPost(self, camera, image_metadata, tmp_file_p, overwrite=False):
         if image_metadata.get('keogram_pixels'):
+            # do not offset timestamp
             self._miscDb.add_long_term_keogram_data(
                 image_metadata['createDate'],
                 camera.id,
