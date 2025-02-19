@@ -7493,17 +7493,16 @@ class JsonLongTermKeogramView(JsonView):
         periods_per_day = int(86400 / alignment_seconds)
 
         if end == 'today':
-            now = datetime.now()
-            query_end_date = datetime.strptime(now.strftime('%Y%m%d_120000'), '%Y%m%d_%H%M%S')
+            tomorrow = datetime.now() + timedelta(hours=24)  # need to start noon tomorrow
+            query_end_date = datetime.strptime(tomorrow.strftime('%Y%m%d_120000'), '%Y%m%d_%H%M%S')
             query_start_date = query_end_date - timedelta(days=query_days)
         elif end == 'thisyear':
-            now = datetime.now()
-            query_end_date = datetime.strptime(now.strftime('%Y1231_120000'), '%Y%m%d_%H%M%S')
+            thisyear = datetime.now().year
+            query_end_date = datetime.strptime('{0:d}1231_120000'.format(thisyear), '%Y%m%d_%H%M%S')
             query_start_date = query_end_date - timedelta(days=query_days)
         elif end == 'lastyear':
-            now = datetime.now()
-            lastyear = now.year - 1
-            query_end_date = datetime.strptime(now.strftime('{0:d}1231_120000'.format(lastyear)), '%Y%m%d_%H%M%S')
+            lastyear = datetime.now().year - 1
+            query_end_date = datetime.strptime('{0:d}1231_120000'.format(lastyear), '%Y%m%d_%H%M%S')
             query_start_date = query_end_date - timedelta(days=query_days)
         else:
             json_data = {
