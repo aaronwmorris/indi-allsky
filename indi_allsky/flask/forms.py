@@ -6485,7 +6485,8 @@ class IndiAllskyLongTermKeogramForm(FlaskForm):
         ('180', '6 Months'),
         ('365', '1 Year'),
         ('730', '2 Years'),
-        ('42', 'All Available'),
+        ('1095', '3 Years'),
+        ('42', 'All Available'),  # special
     )
 
     PIXELS_SELECT_choices = (
@@ -6499,17 +6500,19 @@ class IndiAllskyLongTermKeogramForm(FlaskForm):
     ALIGNMENT_SELECT_choices = (
         ('20', '20 Seconds'),
         ('30', '30 Seconds'),
-        ('45', '45 Seconds'),
+        ('40', '40 Seconds'),
+        ('50', '50 Seconds'),
         ('60', '60 Seconds'),
         ('75', '75 Seconds'),
         ('90', '90 Seconds'),
+        ('120', '120 Seconds'),
     )
 
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
-    END_SELECT                       = SelectField('End', choices=END_SELECT_choices, default=END_SELECT_choices[0][0], validators=[DataRequired()])
+    END_SELECT                       = SelectField('Start', choices=END_SELECT_choices, default=END_SELECT_choices[0][0], validators=[DataRequired()])
     DAYS_SELECT                      = SelectField('Timeframe', choices=DAYS_SELECT_choices, default=DAYS_SELECT_choices[0][0], validators=[DataRequired()])
     PIXELS_SELECT                    = SelectField('Pixels per Day', choices=PIXELS_SELECT_choices, default=PIXELS_SELECT_choices[4][0], validators=[DataRequired()])
-    ALIGNMENT_SELECT                 = SelectField('Alignment', choices=ALIGNMENT_SELECT_choices, default=ALIGNMENT_SELECT_choices[3][0], validators=[DataRequired()])
+    ALIGNMENT_SELECT                 = SelectField('Alignment', choices=ALIGNMENT_SELECT_choices, default=ALIGNMENT_SELECT_choices[4][0], validators=[DataRequired()])
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):
