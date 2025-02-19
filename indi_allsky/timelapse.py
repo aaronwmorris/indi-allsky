@@ -144,6 +144,7 @@ class TimelapseGenerator(object):
         try:
             ffmpeg_subproc = subprocess.run(
                 cmd,
+                cwd='/tmp',  # logs will be created here
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 preexec_fn=lambda: os.nice(19),
