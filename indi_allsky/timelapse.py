@@ -172,9 +172,9 @@ class TimelapseGenerator(object):
                 logger.error('ffmpeg: %s', line)
 
             ### Check if video file was created
-            #if video_file_p.is_file():
-            #    logger.error('FFMPEG created broken video file, cleaning up')
-            #    video_file_p.unlink()
+            if video_file_p.is_file():
+                logger.error('FFMPEG created broken video file, cleaning up')
+                video_file_p.unlink()
 
             raise TimelapseException('FFMPEG return code %d', e.returncode)
 
