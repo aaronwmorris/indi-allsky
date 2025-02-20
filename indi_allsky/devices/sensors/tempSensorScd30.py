@@ -13,7 +13,7 @@ class TempSensorScd30(SensorBase):
 
     def update(self):
 
-        if not self.scd.data_available:
+        if not self.scd30.data_available:
             logger.warning('SCD-30 data not available')
             return self.data
 

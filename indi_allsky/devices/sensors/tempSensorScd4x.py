@@ -13,7 +13,7 @@ class TempSensorScd4x(SensorBase):
 
     def update(self):
 
-        if not self.scd.data_ready:
+        if not self.scd4x.data_ready:
             logger.warning('SCD-4x data not available')
             return self.data
 
