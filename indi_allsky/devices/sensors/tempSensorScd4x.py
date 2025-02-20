@@ -103,7 +103,7 @@ class TempSensorScd4x_I2C(TempSensorScd4x):
 
         logger.warning('Initializing [%s] SCD-4x I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
-        self.scd4x = adafruit_scd4x.SCD4x(i2c, address=i2c_address, frequency=50000)
+        self.scd4x = adafruit_scd4x.SCD4x(i2c, address=i2c_address)
 
         self.scd4x.start_periodic_measurement()
 
