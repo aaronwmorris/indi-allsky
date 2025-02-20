@@ -129,7 +129,9 @@ while [ -z "${INDI_VERSION:-}" ]; do
     INDI_VERSION=$(whiptail --title "Installed INDI Version for pyindi-client" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_VERSIONS[@]} 3>&1 1>&2 2>&3)
 done
 
-#echo "Selected: $INDI_VERSION"
+echo
+echo "Selected: $INDI_VERSION"
+sleep 3
 
 
 

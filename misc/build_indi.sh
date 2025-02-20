@@ -28,11 +28,7 @@ trap handler_SIGINT SIGINT
 
 if [ -n "${1:-}" ]; then
     INDI_CORE_TAG="$1"
-    INDI_3RDPARTY_TAG=$INDI_CORE_TAG
-else
-    #INDI_CORE_TAG="HEAD"
-    INDI_CORE_TAG="v2.1.1"
-    INDI_3RDPARTY_TAG=$INDI_CORE_TAG
+    INDI_3RDPARTY_TAG="$1"
 fi
 
 
@@ -136,8 +132,7 @@ echo
 echo "CPUs: $CPU_TOTAL"
 echo "Memory: $MEM_TOTAL kB"
 echo
-echo "Indi core:     $INDI_CORE_TAG"
-echo "Indi 3rdparty: $INDI_3RDPARTY_TAG"
+echo "Build indi version: ${INDI_CORE_TAG:-ask}"
 echo
 echo "Existing INDI: ${DETECTED_INDIVERSION:-none}"
 echo
@@ -149,9 +144,11 @@ echo "Running make with $MAKE_CONCURRENT processes"
 echo
 
 
-if [ "$INDI_CORE_TAG" == "HEAD" ]; then
+if [ "${INDI_CORE_TAG:-}" == "HEAD" ]; then
     :  # noop
-elif echo "$INDI_CORE_TAG" | grep "^v" >/dev/null 2>&1; then
+elif [ "${INDI_CORE_TAG:-ask}" == "ask" ]; then
+    :  # noop
+elif echo "${INDI_CORE_TAG:-}" | grep "^v" >/dev/null 2>&1; then
     :  # noop
 else
     echo
@@ -564,6 +561,30 @@ sudo ldconfig
 [[ ! -d "${PROJECTS_FOLDER}" ]] && mkdir "${PROJECTS_FOLDER}"
 [[ ! -d "${PROJECTS_FOLDER}/src" ]] && mkdir "${PROJECTS_FOLDER}/src"
 [[ ! -d "${PROJECTS_FOLDER}/build" ]] && mkdir "${PROJECTS_FOLDER}/build"
+
+
+while [ -z "${INDI_CORE_TAG:-}" ]; do
+    # shellcheck disable=SC2068
+    INDI_CORE_TAG=$(whiptail \
+        --title "INDI version" \
+        --nocancel \
+        --notags \
+        --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
+            "v2.1.2.1" "v2.1.2.1" "OFF" \
+            "v2.1.2" "v2.1.2" "OFF" \
+            "v2.1.1" "v2.1.1 - Recommended" "ON" \
+            "v2.1.0" "v2.1.0" "OFF" \
+            "HEAD" "HEAD - Development" "OFF" \
+        3>&1 1>&2 2>&3)
+done
+
+
+INDI_3RDPARTY_TAG="$INDI_CORE_TAG"
+
+
+echo
+echo "Selected $INDI_CORE_TAG"
+sleep 3
 
 
 if [[ "${BUILD_INDI_CORE:-ask}" == "ask" || "${BUILD_INDI_3RDPARTY:-ask}" == "ask" ]]; then
