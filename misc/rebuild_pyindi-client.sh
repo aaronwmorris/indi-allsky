@@ -81,6 +81,7 @@ sleep 10
 
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
+    "2.1.2.1"
     "2.1.2"
     "2.1.1"
     "2.1.0"
@@ -139,34 +140,7 @@ START_TIME=$(date +%s)
 source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
 
 
-if [ "$INDI_VERSION" == "2.1.2" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
-elif [ "$INDI_VERSION" == "2.1.1" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
-elif [ "$INDI_VERSION" == "2.1.0" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
-elif [ "$INDI_VERSION" == "2.0.9" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
-elif [ "$INDI_VERSION" == "2.0.8" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
-elif [ "$INDI_VERSION" == "2.0.7" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
-elif [ "$INDI_VERSION" == "2.0.6" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
-elif [ "$INDI_VERSION" == "2.0.5" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
-elif [ "$INDI_VERSION" == "2.0.4" ]; then
-    pip3 uninstall -y pyindi-client
-    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
-elif [ "$INDI_VERSION" == "2.0.3" ]; then
+if [ "$INDI_VERSION" == "2.0.3" ]; then
     pip3 uninstall -y pyindi-client
     pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_0"
 elif [ "$INDI_VERSION" == "2.0.2" ]; then
@@ -188,8 +162,9 @@ elif [ "$INDI_VERSION" == "1.9.7" ]; then
     pip3 uninstall -y pyindi-client
     pip3 install --no-cache-dir --upgrade "$PYINDI_1_9_8"
 else
-    # assuming skip
-    echo "Skipping pyindi-client install"
+    # default latest release
+    pip3 uninstall -y pyindi-client
+    pip3 install --no-cache-dir --upgrade "$PYINDI_2_0_4"
 fi
 
 
