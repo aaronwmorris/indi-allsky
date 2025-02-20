@@ -20,6 +20,8 @@ adafruit-circuitpython-si1145
 adafruit-circuitpython-ltr390
 adafruit-circuitpython-htu21d
 adafruit-circuitpython-htu31d
+adafruit-circuitpython-scd30
+adafruit-circuitpython-scd4x
 
 ### does not work on raspi
 #adafruit-circuitpython-ds18x20
