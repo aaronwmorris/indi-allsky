@@ -2,6 +2,7 @@
 # docker- prefix due to files in docker/ folder
 FROM docker-indi.base
 
+ARG INDI_VERSION
 ARG DEBIAN_FRONTEND=noninteractive
 
 USER root
