@@ -1115,29 +1115,39 @@ class ImageProcessor(object):
 
     def rotate_angle(self):
         angle = self.config.get('IMAGE_ROTATE_ANGLE')
+        keep_size = self.config.get('IMAGE_ROTATE_KEEP_SIZE')
 
         if not angle:
             return
 
 
-        self._rotate_angle(angle)
+        self._rotate_angle(angle, keep_size)
         return True
 
 
-    def _rotate_angle(self, angle):
+    def _rotate_angle(self, angle, keep_size):
         rotate_start = time.time()
 
         height, width = self.image.shape[:2]
         center_x = int(width / 2)
         center_y = int(height / 2)
 
+
+        # consider rotating at center offset
         rot = cv2.getRotationMatrix2D((center_x, center_y), int(angle), 1.0)
 
-        abs_cos = abs(rot[0, 0])
-        abs_sin = abs(rot[0, 1])
 
-        bound_w = int(height * abs_sin + width * abs_cos)
-        bound_h = int(height * abs_cos + width * abs_sin)
+        if keep_size:
+            bound_w = width
+            bound_h = height
+        else:
+            # rotating will change the size of the resulting image
+            abs_cos = abs(rot[0, 0])
+            abs_sin = abs(rot[0, 1])
+
+            bound_w = int(height * abs_sin + width * abs_cos)
+            bound_h = int(height * abs_cos + width * abs_sin)
+
 
         rot[0, 2] += bound_w / 2 - center_x
         rot[1, 2] += bound_h / 2 - center_y
