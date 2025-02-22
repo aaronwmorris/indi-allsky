@@ -29,6 +29,9 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.indiserver_debian12
       #dockerfile: docker/Dockerfile.indiserver_ubuntu2204
+      args:
+        - INDI_VERSION=${INDIALLSKY_INDI_VERSION}
+        - INDI_CAMERA_VENDOR=${INDIALLSKY_CAMERA_VENDOR}
     env_file: .env
     depends_on:
       - indi.base
