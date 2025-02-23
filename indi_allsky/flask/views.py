@@ -7610,6 +7610,7 @@ class JsonLongTermKeogramView(JsonView):
 
 
         keogram_data = numpy.reshape(numpy_data, ((total_days * period_pixels), periods_per_day, 3))
+        #keogram_data = numpy.flip(keogram_data, axis=0)  # newer data at top
         #app.logger.info(keogram_data.shape)
 
 
