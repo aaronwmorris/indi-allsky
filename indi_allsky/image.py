@@ -967,6 +967,18 @@ class ImageWorker(Process):
         }
 
 
+        # system temp sensors
+        for i, v in enumerate(self.sensors_temp_av):
+            sensor_topic = 'sensor_temp_{0:d}'.format(i)
+            metadata[sensor_topic] = v
+
+
+        # user sensors
+        for i, v in enumerate(self.sensors_user_av):
+            sensor_topic = 'sensor_user_{0:d}'.format(i)
+            metadata[sensor_topic] = v
+
+
         f_tmp_metadata = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json')
 
         json.dump(metadata, f_tmp_metadata, indent=4)
