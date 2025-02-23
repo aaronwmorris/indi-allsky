@@ -66,7 +66,7 @@ class YearKeogramTest(object):
 
         self.alignment_seconds = 60
 
-        self.db_entry_seconds = 60
+        self.db_entry_seconds = 30  # exposure period
         #self.db_entry_seconds = 65  # testing
 
 
@@ -158,36 +158,49 @@ class YearKeogramTest(object):
         #    .filter(CameraTable.id == 1)\
 
 
+        logger.info('Rows: %d', q.count())
+
+
         numpy_start = time.time()
 
         numpy_data = numpy.zeros(((self.periods_per_day * total_days) * self.period_pixels, 1, 3), dtype=numpy.uint8)
         logger.info(numpy_data.shape)
-        logger.info('Rows: %d', q.count())
 
-        for i, row in enumerate(q):
-            ### python math
-            second_offset = row.interval - query_start_offset
-            day = int(second_offset / self.periods_per_day)
-            index = second_offset + (day * (self.periods_per_day * (self.period_pixels - 1)))
-            #logger.info('Row: %d, second_offset: %d, day: %d, index: %d', i, row.second_offset, row.day, row.index)
 
-            try:
+        query_limit = 300000  # limit memory impact on database
+
+        i = 0
+        while i % query_limit == 0:
+            q_offset = q.offset(i).limit(query_limit)
+
+            for row in q_offset:
+
                 ### python math
-                numpy_data[index]                              = row.b1_avg, row.g1_avg, row.r1_avg
-                numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
-                numpy_data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                numpy_data[index + (self.periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
-                numpy_data[index + (self.periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
+                second_offset = row.interval - query_start_offset
+                day = int(second_offset / self.periods_per_day)
+                index = second_offset + (day * (self.periods_per_day * (self.period_pixels - 1)))
+                #logger.info('Row: %d, second_offset: %d, day: %d, index: %d', i, row.second_offset, row.day, row.index)
 
-                ### database math
-                #numpy_data[row.index]   = row.b1_avg, row.g1_avg, row.r1_avg
-                #numpy_data[row.index_2] = row.b2_avg, row.g2_avg, row.r2_avg
-                #numpy_data[row.index_3] = row.b3_avg, row.g3_avg, row.r3_avg
-                #numpy_data[row.index_4] = row.b4_avg, row.g4_avg, row.r4_avg
-                #numpy_data[row.index_5] = row.b5_avg, row.g5_avg, row.r5_avg
-            except IndexError:
-                logger.error('Row: %d', i)
-                raise
+                try:
+                    ### python math
+                    numpy_data[index]                              = row.b1_avg, row.g1_avg, row.r1_avg
+                    numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+                    numpy_data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                    numpy_data[index + (self.periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
+                    numpy_data[index + (self.periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
+
+                    ### database math
+                    #numpy_data[row.index]   = row.b1_avg, row.g1_avg, row.r1_avg
+                    #numpy_data[row.index_2] = row.b2_avg, row.g2_avg, row.r2_avg
+                    #numpy_data[row.index_3] = row.b3_avg, row.g3_avg, row.r3_avg
+                    #numpy_data[row.index_4] = row.b4_avg, row.g4_avg, row.r4_avg
+                    #numpy_data[row.index_5] = row.b5_avg, row.g5_avg, row.r5_avg
+                except IndexError:
+                    logger.error('Row: %d', i)
+                    raise
+
+
+                i += 1
 
 
         numpy_elapsed_s = time.time() - numpy_start
@@ -319,7 +332,7 @@ class YearKeogramTest(object):
             })
 
 
-            current_date_utc += timedelta(seconds=self.db_entry_seconds)
+            current_date_utc += timedelta(seconds=self.db_entry_seconds + 1.5)  # small offset to simulate camera behavior
 
 
         generate_elapsed_s = time.time() - generate_start
