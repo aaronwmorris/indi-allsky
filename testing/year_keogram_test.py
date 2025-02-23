@@ -196,6 +196,7 @@ class YearKeogramTest(object):
         #logger.info(numpy_data[0:3])
 
         keogram_data = numpy.reshape(numpy_data, ((total_days * self.period_pixels), self.periods_per_day, 3))
+        #keogram_data = numpy.flip(keogram_data, axis=0)  # newer data at top
 
         logger.info(keogram_data.shape)
         #logger.info(keogram_data[0:3])

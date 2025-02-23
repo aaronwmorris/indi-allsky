@@ -226,6 +226,28 @@ $( document ).ready(function() {
 });
 
 
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    $(window).on("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    if (json_data['image_b64']) {
+        showImage(json_data['image_b64']);
+    };
+}
+setResizeHandler(resize_callback, 200);
+
+
 $('#form_longterm_keogram').on('submit', function() {
     var form_data = {
         'CAMERA_ID' : $('#CAMERA_ID').val(),
