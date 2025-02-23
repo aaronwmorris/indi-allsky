@@ -217,9 +217,11 @@ function setResizeHandler(callback, timeout) {
 }
 
 function resize_callback() {
-    showImage(json_data['image_b64']);
+    if (json_data['image_b64']) {
+        showImage(json_data['image_b64']);
+    };
 }
-setResizeHandler(resize_callback, 500);
+setResizeHandler(resize_callback, 200);
 
 
 function goFullscreen(elem) {
