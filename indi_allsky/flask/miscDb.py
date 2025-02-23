@@ -225,13 +225,6 @@ class miscDb(object):
             dayDate = metadata['dayDate']
 
 
-        # If temp is 0, write null
-        if metadata['temp']:
-            temp_val = float(metadata['temp'])
-        else:
-            temp_val = None
-
-
         moonmode_val = bool(metadata['moonmode'])
 
         night_val = bool(metadata['night'])  # integer to boolean
@@ -250,7 +243,7 @@ class miscDb(object):
             exp_elapsed=metadata['exp_elapsed'],
             gain=metadata['gain'],
             binmode=metadata['binmode'],
-            temp=temp_val,
+            temp=metadata['temp'],
             calibrated=metadata['calibrated'],
             night=night_val,
             adu=metadata['adu'],
