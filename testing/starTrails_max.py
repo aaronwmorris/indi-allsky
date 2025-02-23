@@ -43,7 +43,15 @@ class StarTrailGenerator(object):
 
         self.trail_image = None
         self.pixels_cutoff = None
-        self.excluded_images = 0
+        self.excluded_images = {
+            'adu'       : 0,
+            'sun_alt'   : 0,
+            'moon_mode' : 0,  # not in test
+            'moon_alt'  : 0,
+            'stars'     : 0,
+            'pixels'    : 0,
+        }
+
 
         self._trail_count = 0
 
@@ -257,7 +265,7 @@ class StarTrailGenerator(object):
 
         if sun_alt > self.sun_alt_threshold:
             logger.warning(' Excluding image due to sun altitude: %0.1f', sun_alt)
-            self.excluded_images += 1
+            self.excluded_images['sun_alt'] += 1
             return
 
 
@@ -267,14 +275,14 @@ class StarTrailGenerator(object):
 
         if moon_alt > self.moon_alt_threshold and moon_phase > self.moon_phase_threshold:
             logger.warning(' Excluding image due to moon altitude/phase: %0.1f/%0.1f%%', moon_alt, moon_phase)
-            self.excluded_images += 1
+            self.excluded_images['moon_alt'] += 1
             return
 
 
         m_avg = cv2.mean(image_gray, mask=self._sqm_mask)[0]
         if m_avg > self.max_adu:
             logger.warning(' Excluding image due to brightness: %0.2f', m_avg)
-            self.excluded_images += 1
+            self.excluded_images['adu'] += 1
             return
 
 
@@ -283,7 +291,7 @@ class StarTrailGenerator(object):
         pixels_above_cutoff = (image_gray > self.mask_threshold).sum()
         if pixels_above_cutoff > self.pixels_cutoff:
             logger.warning(' Excluding image due to pixel cutoff: %d', pixels_above_cutoff)
-            self.excluded_images += 1
+            self.excluded_images['pixels'] += 1
             return
 
 
@@ -292,7 +300,7 @@ class StarTrailGenerator(object):
 
             if star_count < self.min_stars:
                 logger.warning(' Excluding image due to stars: %d', star_count)
-                self.excluded_images += 1
+                self.excluded_images['stars'] += 1
                 return
 
 
@@ -305,8 +313,17 @@ class StarTrailGenerator(object):
 
 
     def finalize(self, outfile):
-        logger.warning('Star trails images processed in %0.1f s', self.image_processing_elapsed_s)
-        logger.warning('Excluded %d images', self.excluded_images)
+        logger.info('Star trails images processed in %0.1f s', self.image_processing_elapsed_s)
+        logger.info(
+            'Excluded %d images - adu: %d, sun alt: %d, moon mode: %d, moon alt: %d, stars: %d, pixels: %d',
+            sum(self.excluded_images.values()),
+            self.excluded_images['adu'],
+            self.excluded_images['sun_alt'],
+            self.excluded_images['moon_mode'],
+            self.excluded_images['moon_alt'],
+            self.excluded_images['stars'],
+            self.excluded_images['pixels'],
+        )
 
 
         if self.trail_count < 20:
