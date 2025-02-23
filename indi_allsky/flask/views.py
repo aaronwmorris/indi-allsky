@@ -7581,32 +7581,40 @@ class JsonLongTermKeogramView(JsonView):
         #app.logger.info('Rows: %d', q.count())
 
 
-        for i, row in enumerate(q):
-            second_offset = row.interval - query_start_offset
-            day = int(second_offset / periods_per_day)
-            index = second_offset + (day * (periods_per_day * (period_pixels - 1)))
+        query_limit = 300000  # limit memory impact on database
 
-            if period_pixels == 5:
-                numpy_data[index + (periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
-                numpy_data[index + (periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
-                numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+        i = 0
+        while i % query_limit == 0:
+            q_offset = q.offset(i).limit(query_limit)
 
-            elif period_pixels == 4:
-                numpy_data[index + (periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
-                numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+            for row in q_offset:
+                second_offset = row.interval - query_start_offset
+                day = int(second_offset / periods_per_day)
+                index = second_offset + (day * (periods_per_day * (period_pixels - 1)))
 
-            elif period_pixels == 3:
-                numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+                if period_pixels == 5:
+                    numpy_data[index + (periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
+                    numpy_data[index + (periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
+                    numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                    numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
 
-            elif period_pixels == 2:
-                numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+                elif period_pixels == 4:
+                    numpy_data[index + (periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
+                    numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                    numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+
+                elif period_pixels == 3:
+                    numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                    numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+
+                elif period_pixels == 2:
+                    numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
 
 
-            # always add 1 row
-            numpy_data[index] = row.b1_avg, row.g1_avg, row.r1_avg
+                # always add 1 row
+                numpy_data[index] = row.b1_avg, row.g1_avg, row.r1_avg
+
+                i += 1
 
 
         keogram_data = numpy.reshape(numpy_data, ((total_days * period_pixels), periods_per_day, 3))
