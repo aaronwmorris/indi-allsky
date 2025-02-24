@@ -380,7 +380,8 @@ class SensorWorker(Process):
                 self.night_v,
             )
 
-        self.sensors[0].slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 10)
+        sensor_0_key = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 'sensor_user_10')
+        self.sensors[0].slot = constants.SENSOR_INDEX_MAP[sensor_0_key]
 
 
         ### Sensor B
@@ -414,7 +415,8 @@ class SensorWorker(Process):
                 self.night_v,
             )
 
-        self.sensors[1].slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 15)
+        sensor_1_key = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_15')
+        self.sensors[1].slot = constants.SENSOR_INDEX_MAP[sensor_1_key]
 
 
         ### Sensor C
@@ -448,7 +450,8 @@ class SensorWorker(Process):
                 self.night_v,
             )
 
-        self.sensors[2].slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 15)
+        sensor_2_key = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_15')
+        self.sensors[2].slot = constants.SENSOR_INDEX_MAP[sensor_2_key]
 
 
     def update_sensors(self):
@@ -498,14 +501,14 @@ class SensorWorker(Process):
         if manual_target:
             target_val = manual_target
         else:
-            target_val = self.sensors_user_av[constants.SENSOR_INDEX_MAP.index(self.dh_dewpoint_slot)]  # dew point
+            target_val = self.sensors_user_av[constants.SENSOR_INDEX_MAP[self.dh_dewpoint_slot]]  # dew point
 
 
         if not target_val:
             logger.warning('Dew heater target dew point is 0, possible misconfiguration')
 
 
-        current_temp = self.sensors_user_av[constants.SENSOR_INDEX_MAP.index(self.dh_temp_slot)]
+        current_temp = self.sensors_user_av[constants.SENSOR_INDEX_MAP[self.dh_temp_slot]]
 
 
         if str(self.dh_temp_slot).startswith('sensor_temp'):
@@ -544,7 +547,7 @@ class SensorWorker(Process):
             return
 
 
-        current_temp = self.sensors_user_av[constants.SENSOR_INDEX_MAP.index(self.fan_temp_slot)]
+        current_temp = self.sensors_user_av[constants.SENSOR_INDEX_MAP[self.fan_temp_slot]]
 
 
         if str(self.fan_temp_slot).startswith('sensor_temp'):

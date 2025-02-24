@@ -2535,17 +2535,8 @@ def SENSOR_SLOT_validator(form, field):
 
 
 def SENSOR_USER_VAR_SLOT_validator(form, field):
-    try:
-        slot_i = int(field.data)
-    except ValueError as e:
-        raise ValidationError('ValueError: {0:s}'.format(str(e)))
-
-
-    if slot_i < 0:
-        raise ValidationError('Slot must be 0 or greater')
-
-    if slot_i > 30:
-        raise ValidationError('Slot must be less than 30')
+    if field.data not in list(zip(*form.SENSOR_USER_VAR_SLOT_choices))[0]:
+        raise ValidationError('Invalid selection')
 
 
 def DEVICE_PIN_NAME_validator(form, field):
@@ -3175,26 +3166,26 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     SENSOR_USER_VAR_SLOT_choices = (
-        ('10', 'User Slot 10'),
-        ('11', 'User Slot 11'),
-        ('12', 'User Slot 12'),
-        ('13', 'User Slot 13'),
-        ('14', 'User Slot 14'),
-        ('15', 'User Slot 15'),
-        ('16', 'User Slot 16'),
-        ('17', 'User Slot 17'),
-        ('18', 'User Slot 18'),
-        ('19', 'User Slot 19'),
-        ('20', 'User Slot 20'),
-        ('21', 'User Slot 21'),
-        ('22', 'User Slot 22'),
-        ('23', 'User Slot 23'),
-        ('24', 'User Slot 24'),
-        ('25', 'User Slot 25'),
-        ('26', 'User Slot 26'),
-        ('27', 'User Slot 27'),
-        ('28', 'User Slot 28'),
-        ('29', 'User Slot 29'),
+        ('sensor_user_10', 'User Slot 10'),
+        ('sensor_user_11', 'User Slot 11'),
+        ('sensor_user_12', 'User Slot 12'),
+        ('sensor_user_13', 'User Slot 13'),
+        ('sensor_user_14', 'User Slot 14'),
+        ('sensor_user_15', 'User Slot 15'),
+        ('sensor_user_16', 'User Slot 16'),
+        ('sensor_user_17', 'User Slot 17'),
+        ('sensor_user_18', 'User Slot 18'),
+        ('sensor_user_19', 'User Slot 19'),
+        ('sensor_user_20', 'User Slot 20'),
+        ('sensor_user_21', 'User Slot 21'),
+        ('sensor_user_22', 'User Slot 22'),
+        ('sensor_user_23', 'User Slot 23'),
+        ('sensor_user_24', 'User Slot 24'),
+        ('sensor_user_25', 'User Slot 25'),
+        ('sensor_user_26', 'User Slot 26'),
+        ('sensor_user_27', 'User Slot 27'),
+        ('sensor_user_28', 'User Slot 28'),
+        ('sensor_user_29', 'User Slot 29'),
     )
 
     SENSOR_SLOT_choices = [  # mutable
