@@ -206,6 +206,7 @@ Memory requirements are primarily driven by the resolution of the timelapse gene
 
 | Output Resolution  | Recommended Memory | Minimum Memory        | FFMPEG Process Memory |
 | ------------------ | ------------------ | --------------------- | --------------------- |
+| 852 x 480 (0.4MP)  | 1GB                | <1GB with swap        | 0.2GB                 |
 | 1280 x 960 (1.2MP) | 2GB                | 1GB with 1GB swap     | 0.4GB                 |
 | 1920 x 1080 (2MP)  | 2GB                | 1GB with 1GB swap     | 0.6GB                 |
 | 3840 x 2160 (8MP)  | 4GB                | 2GB with 1GB swap     | 1.7GB                 |
