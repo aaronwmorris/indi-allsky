@@ -1752,21 +1752,22 @@ class CaptureWorker(Process):
 
         temp_sensor__a_classname = self.config.get('TEMP_SENSOR', {}).get('A_CLASSNAME', '')
         temp_sensor__a_label = self.config.get('TEMP_SENSOR', {}).get('A_LABEL', 'Sensor A')
-        temp_sensor__a_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT')
+        temp_sensor__a_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 'sensor_user_10')
         temp_sensor__b_classname = self.config.get('TEMP_SENSOR', {}).get('B_CLASSNAME', '')
         temp_sensor__b_label = self.config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B')
-        temp_sensor__b_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT')
+        temp_sensor__b_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_15')
         temp_sensor__c_classname = self.config.get('TEMP_SENSOR', {}).get('C_CLASSNAME', '')
         temp_sensor__c_label = self.config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C')
-        temp_sensor__c_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT')
+        temp_sensor__c_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_20')
 
 
         if temp_sensor__a_classname:
             try:
                 temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
+                sensor_a_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__a_user_var_slot)]
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
-                    self.SENSOR_SLOTS[temp_sensor__a_user_var_slot + x] = '{0:s} - {1:s} - {2:s}'.format(
+                    self.SENSOR_SLOTS[sensor_a_index + x] = '{0:s} - {1:s} - {2:s}'.format(
                         temp_sensor__a_class.METADATA['name'],
                         temp_sensor__a_label,
                         temp_sensor__a_class.METADATA['labels'][x],
@@ -1778,29 +1779,31 @@ class CaptureWorker(Process):
         if temp_sensor__b_classname:
             try:
                 temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
+                sensor_b_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__b_user_var_slot)]
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
-                    self.SENSOR_SLOTS[temp_sensor__b_user_var_slot + x] = '{0:s} - {1:s} - {2:s}'.format(
+                    self.SENSOR_SLOTS[sensor_b_index + x] = '{0:s} - {1:s} - {2:s}'.format(
                         temp_sensor__b_class.METADATA['name'],
                         temp_sensor__b_label,
                         temp_sensor__b_class.METADATA['labels'][x],
                     )
             except AttributeError:
-                logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+                logger.error('Unknown sensor class: %s', temp_sensor__b_classname)
 
 
         if temp_sensor__c_classname:
             try:
                 temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
+                sensor_c_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__c_user_var_slot)]
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
-                    self.SENSOR_SLOTS[temp_sensor__c_user_var_slot + x] = '{0:s} - {1:s} - {2:s}'.format(
+                    self.SENSOR_SLOTS[sensor_c_index + x] = '{0:s} - {1:s} - {2:s}'.format(
                         temp_sensor__c_class.METADATA['name'],
                         temp_sensor__c_label,
                         temp_sensor__c_class.METADATA['labels'][x],
                     )
             except AttributeError:
-                logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+                logger.error('Unknown sensor class: %s', temp_sensor__c_classname)
 
 
         # Set system temp names

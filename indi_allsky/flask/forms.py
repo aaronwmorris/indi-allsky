@@ -3882,26 +3882,25 @@ class IndiAllskyConfigForm(FlaskForm):
 
         temp_sensor__a_classname = str(data['TEMP_SENSOR__A_CLASSNAME'])
         temp_sensor__a_label = str(data['TEMP_SENSOR__A_LABEL'])
-        temp_sensor__a_user_var_slot = int(data['TEMP_SENSOR__A_USER_VAR_SLOT'])
+        temp_sensor__a_user_var_slot = str(data['TEMP_SENSOR__A_USER_VAR_SLOT'])
         temp_sensor__b_classname = str(data['TEMP_SENSOR__B_CLASSNAME'])
         temp_sensor__b_label = str(data['TEMP_SENSOR__B_LABEL'])
-        temp_sensor__b_user_var_slot = int(data['TEMP_SENSOR__B_USER_VAR_SLOT'])
+        temp_sensor__b_user_var_slot = str(data['TEMP_SENSOR__B_USER_VAR_SLOT'])
         temp_sensor__c_classname = str(data['TEMP_SENSOR__C_CLASSNAME'])
         temp_sensor__c_label = str(data['TEMP_SENSOR__C_LABEL'])
-        temp_sensor__c_user_var_slot = int(data['TEMP_SENSOR__C_USER_VAR_SLOT'])
+        temp_sensor__c_user_var_slot = str(data['TEMP_SENSOR__C_USER_VAR_SLOT'])
 
 
         if temp_sensor__a_classname:
             try:
                 temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
+                slot_a_index = constants.SENSOR_INDEX_MAP[temp_sensor__a_user_var_slot]
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
-                    slot_key = self.SENSOR_SLOT_choices[temp_sensor__a_user_var_slot + x][0]
-
-                    self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x] = (
-                        str(slot_key),
+                    self.SENSOR_SLOT_choices[slot_a_index + x] = (
+                        str(temp_sensor__a_user_var_slot),
                         '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            temp_sensor__a_user_var_slot + x,
+                            slot_a_index + x,
                             temp_sensor__a_class.METADATA['name'],
                             temp_sensor__a_label,
                             temp_sensor__a_class.METADATA['labels'][x],
@@ -3914,41 +3913,39 @@ class IndiAllskyConfigForm(FlaskForm):
         if temp_sensor__b_classname:
             try:
                 temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
+                slot_b_index = constants.SENSOR_INDEX_MAP[temp_sensor__b_user_var_slot]
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
-                    slot_key = self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x][0]
-
-                    self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x] = (
-                        str(slot_key),
+                    self.SENSOR_SLOT_choices[slot_b_index + x] = (
+                        str(temp_sensor__b_user_var_slot),
                         '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            temp_sensor__b_user_var_slot + x,
+                            slot_b_index + x,
                             temp_sensor__b_class.METADATA['name'],
                             temp_sensor__b_label,
                             temp_sensor__b_class.METADATA['labels'][x],
                         )
                     )
             except AttributeError:
-                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+                app.logger.error('Unknown sensor class: %s', temp_sensor__b_classname)
 
 
         if temp_sensor__c_classname:
             try:
                 temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
+                slot_c_index = constants.SENSOR_INDEX_MAP[temp_sensor__c_user_var_slot]
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
-                    slot_key = self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x][0]
-
-                    self.SENSOR_SLOT_choices[temp_sensor__c_user_var_slot + x] = (
-                        str(slot_key),
+                    self.SENSOR_SLOT_choices[slot_c_index + x] = (
+                        str(temp_sensor__c_user_var_slot),
                         '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            temp_sensor__c_user_var_slot + x,
+                            slot_c_index + x,
                             temp_sensor__c_class.METADATA['name'],
                             temp_sensor__c_label,
                             temp_sensor__c_class.METADATA['labels'][x],
                         )
                     )
             except AttributeError:
-                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+                app.logger.error('Unknown sensor class: %s', temp_sensor__c_classname)
 
 
         # Set system temp names
