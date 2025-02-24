@@ -903,8 +903,6 @@ class CaptureWorker(Process):
 
         for x in range(30):
             camera_metadata['data']['sensor_user_{0:d}'.format(x)] = self.SENSOR_SLOTS[x]
-
-        for x in range(30):
             camera_metadata['data']['sensor_temp_{0:d}'.format(x)] = self.SENSOR_SLOTS[x + 40]
 
 

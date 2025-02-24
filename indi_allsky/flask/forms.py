@@ -2530,14 +2530,8 @@ def TEMP_SENSOR__MACADDRESS_validator(form, field):
 
 
 def SENSOR_SLOT_validator(form, field):
-    try:
-        slot_i = int(field.data)
-    except ValueError as e:
-        raise ValidationError('ValueError: {0:s}'.format(str(e)))
-
-
-    if slot_i < 0:
-        raise ValidationError('Slot must be 0 or greater')
+    if field.data not in list(zip(*form.SENSOR_SLOT_choices))[0]:
+        raise ValidationError('Invalid selection')
 
 
 def SENSOR_USER_VAR_SLOT_validator(form, field):
@@ -3204,66 +3198,66 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     SENSOR_SLOT_choices = [  # mutable
-        ('0', '(0) User Slot - Camera Temp'),
-        ('1', '(1) User Slot - Dew Heater Level'),
-        ('2', '(2) User Slot - Dew Point'),
-        ('3', '(3) User Slot - Frost Point'),
-        ('4', '(4) User Slot - Fan Level'),
-        ('5', '(5) User Slot - Heat Index'),
-        ('6', '(6) User Slot - Wind Dir (Degrees)'),
-        ('7', '(7) User Slot - SQM'),
-        ('8', 'User Slot - Future'),
-        ('9', 'User Slot - Future'),
-        ('10', 'User Slot 10'),
-        ('11', 'User Slot 11'),
-        ('12', 'User Slot 12'),
-        ('13', 'User Slot 13'),
-        ('14', 'User Slot 14'),
-        ('15', 'User Slot 15'),
-        ('16', 'User Slot 16'),
-        ('17', 'User Slot 17'),
-        ('18', 'User Slot 18'),
-        ('19', 'User Slot 19'),
-        ('20', 'User Slot 20'),
-        ('21', 'User Slot 21'),
-        ('22', 'User Slot 22'),
-        ('23', 'User Slot 23'),
-        ('24', 'User Slot 24'),
-        ('25', 'User Slot 25'),
-        ('26', 'User Slot 26'),
-        ('27', 'User Slot 27'),
-        ('28', 'User Slot 28'),
-        ('29', 'User Slot 29'),
-        ('100', '(0) System Temp - Camera Temp'),
-        ('101', 'System Temp - Future'),
-        ('102', 'System Temp - Future'),
-        ('103', 'System Temp - Future'),
-        ('104', 'System Temp - Future'),
-        ('105', 'System Temp - Future'),
-        ('106', 'System Temp - Future'),
-        ('107', 'System Temp - Future'),
-        ('108', 'System Temp - Future'),
-        ('109', 'System Temp - Future'),
-        ('110', 'System Temp 10'),
-        ('111', 'System Temp 11'),
-        ('112', 'System Temp 12'),
-        ('113', 'System Temp 13'),
-        ('114', 'System Temp 14'),
-        ('115', 'System Temp 15'),
-        ('116', 'System Temp 16'),
-        ('117', 'System Temp 17'),
-        ('118', 'System Temp 18'),
-        ('119', 'System Temp 19'),
-        ('120', 'System Temp 20'),
-        ('121', 'System Temp 21'),
-        ('122', 'System Temp 22'),
-        ('123', 'System Temp 23'),
-        ('124', 'System Temp 24'),
-        ('125', 'System Temp 25'),
-        ('126', 'System Temp 26'),
-        ('127', 'System Temp 27'),
-        ('128', 'System Temp 28'),
-        ('129', 'System Temp 29'),
+        ('sensor_user_0', '(0) User Slot - Camera Temp'),
+        ('sensor_user_1', '(1) User Slot - Dew Heater Level'),
+        ('sensor_user_2', '(2) User Slot - Dew Point'),
+        ('sensor_user_3', '(3) User Slot - Frost Point'),
+        ('sensor_user_4', '(4) User Slot - Fan Level'),
+        ('sensor_user_5', '(5) User Slot - Heat Index'),
+        ('sensor_user_6', '(6) User Slot - Wind Dir (Degrees)'),
+        ('sensor_user_7', '(7) User Slot - SQM'),
+        ('sensor_user_8', 'User Slot - Future'),
+        ('sensor_user_9', 'User Slot - Future'),
+        ('sensor_user_10', 'User Slot 10'),
+        ('sensor_user_12', 'User Slot 11'),
+        ('sensor_user_12', 'User Slot 12'),
+        ('sensor_user_13', 'User Slot 13'),
+        ('sensor_user_14', 'User Slot 14'),
+        ('sensor_user_15', 'User Slot 15'),
+        ('sensor_user_16', 'User Slot 16'),
+        ('sensor_user_17', 'User Slot 17'),
+        ('sensor_user_18', 'User Slot 18'),
+        ('sensor_user_19', 'User Slot 19'),
+        ('sensor_user_20', 'User Slot 20'),
+        ('sensor_user_21', 'User Slot 21'),
+        ('sensor_user_22', 'User Slot 22'),
+        ('sensor_user_23', 'User Slot 23'),
+        ('sensor_user_24', 'User Slot 24'),
+        ('sensor_user_25', 'User Slot 25'),
+        ('sensor_user_26', 'User Slot 26'),
+        ('sensor_user_27', 'User Slot 27'),
+        ('sensor_user_28', 'User Slot 28'),
+        ('sensor_user_29', 'User Slot 29'),
+        ('sensor_temp_0', '(0) System Temp - Camera Temp'),
+        ('sensor_temp_1', 'System Temp - Future'),
+        ('sensor_temp_2', 'System Temp - Future'),
+        ('sensor_temp_3', 'System Temp - Future'),
+        ('sensor_temp_4', 'System Temp - Future'),
+        ('sensor_temp_5', 'System Temp - Future'),
+        ('sensor_temp_6', 'System Temp - Future'),
+        ('sensor_temp_7', 'System Temp - Future'),
+        ('sensor_temp_8', 'System Temp - Future'),
+        ('sensor_temp_9', 'System Temp - Future'),
+        ('sensor_temp_10', 'System Temp 10'),
+        ('sensor_temp_11', 'System Temp 11'),
+        ('sensor_temp_12', 'System Temp 12'),
+        ('sensor_temp_13', 'System Temp 13'),
+        ('sensor_temp_14', 'System Temp 14'),
+        ('sensor_temp_15', 'System Temp 15'),
+        ('sensor_temp_16', 'System Temp 16'),
+        ('sensor_temp_17', 'System Temp 17'),
+        ('sensor_temp_18', 'System Temp 18'),
+        ('sensor_temp_19', 'System Temp 19'),
+        ('sensor_temp_20', 'System Temp 20'),
+        ('sensor_temp_21', 'System Temp 21'),
+        ('sensor_temp_22', 'System Temp 22'),
+        ('sensor_temp_23', 'System Temp 23'),
+        ('sensor_temp_24', 'System Temp 24'),
+        ('sensor_temp_25', 'System Temp 25'),
+        ('sensor_temp_26', 'System Temp 26'),
+        ('sensor_temp_27', 'System Temp 27'),
+        ('sensor_temp_28', 'System Temp 28'),
+        ('sensor_temp_29', 'System Temp 29'),
     ]
 
 
@@ -3911,8 +3905,10 @@ class IndiAllskyConfigForm(FlaskForm):
                 temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
-                    self.SENSOR_SLOT_choices[temp_sensor__a_user_var_slot + x] = (
-                        str(temp_sensor__a_user_var_slot + x),
+                    slot_key = self.SENSOR_SLOT_choices[temp_sensor__a_user_var_slot + x][0]
+
+                    self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x] = (
+                        str(slot_key),
                         '({0:d}) {1:s} - {2:s} - {3:s}'.format(
                             temp_sensor__a_user_var_slot + x,
                             temp_sensor__a_class.METADATA['name'],
@@ -3929,8 +3925,10 @@ class IndiAllskyConfigForm(FlaskForm):
                 temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
+                    slot_key = self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x][0]
+
                     self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x] = (
-                        str(temp_sensor__b_user_var_slot + x),
+                        str(slot_key),
                         '({0:d}) {1:s} - {2:s} - {3:s}'.format(
                             temp_sensor__b_user_var_slot + x,
                             temp_sensor__b_class.METADATA['name'],
@@ -3947,8 +3945,10 @@ class IndiAllskyConfigForm(FlaskForm):
                 temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
+                    slot_key = self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x][0]
+
                     self.SENSOR_SLOT_choices[temp_sensor__c_user_var_slot + x] = (
-                        str(temp_sensor__c_user_var_slot + x),
+                        str(slot_key),
                         '({0:d}) {1:s} - {2:s} - {3:s}'.format(
                             temp_sensor__c_user_var_slot + x,
                             temp_sensor__c_class.METADATA['name'],
