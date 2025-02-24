@@ -1204,32 +1204,32 @@ class ChartView(TemplateView):
 
         # fix system temp offset
         if custom_1_index >= 100:
-            custom_1_var_name = 'sensor_temp_{0:d}'.format(custom_1_index - 70)
+            custom_1_var_name = 'sensor_temp_{0:d}'.format(custom_1_index - 100)
         else:
             custom_1_var_name = 'sensor_user_{0:d}'.format(custom_1_index)
 
         if custom_2_index >= 100:
-            custom_2_var_name = 'sensor_temp_{0:d}'.format(custom_2_index - 70)
+            custom_2_var_name = 'sensor_temp_{0:d}'.format(custom_2_index - 100)
         else:
             custom_2_var_name = 'sensor_user_{0:d}'.format(custom_2_index)
 
         if custom_3_index >= 100:
-            custom_3_var_name = 'sensor_temp_{0:d}'.format(custom_3_index - 70)
+            custom_3_var_name = 'sensor_temp_{0:d}'.format(custom_3_index - 100)
         else:
             custom_3_var_name = 'sensor_user_{0:d}'.format(custom_3_index)
 
         if custom_4_index >= 100:
-            custom_4_var_name = 'sensor_temp_{0:d}'.format(custom_4_index - 70)
+            custom_4_var_name = 'sensor_temp_{0:d}'.format(custom_4_index - 100)
         else:
             custom_4_var_name = 'sensor_user_{0:d}'.format(custom_4_index)
 
         if custom_5_index >= 100:
-            custom_5_var_name = 'sensor_temp_{0:d}'.format(custom_5_index - 70)
+            custom_5_var_name = 'sensor_temp_{0:d}'.format(custom_5_index - 100)
         else:
             custom_5_var_name = 'sensor_user_{0:d}'.format(custom_5_index)
 
         if custom_6_index >= 100:
-            custom_6_var_name = 'sensor_temp_{0:d}'.format(custom_6_index - 70)
+            custom_6_var_name = 'sensor_temp_{0:d}'.format(custom_6_index - 100)
         else:
             custom_6_var_name = 'sensor_user_{0:d}'.format(custom_6_index)
 
