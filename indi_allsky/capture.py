@@ -895,6 +895,15 @@ class CaptureWorker(Process):
             camera_metadata['data'][k] = v
 
 
+        camera_metadata['data']['custom_chart_1_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 'sensor_user_10')
+        camera_metadata['data']['custom_chart_2_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 'sensor_user_11')
+        camera_metadata['data']['custom_chart_3_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 'sensor_user_12')
+        camera_metadata['data']['custom_chart_4_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 'sensor_user_13')
+        camera_metadata['data']['custom_chart_5_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 'sensor_user_14')
+        camera_metadata['data']['custom_chart_6_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 'sensor_user_15')
+
+
+
         try:
             camera = self._miscDb.addCamera(camera_metadata)
         except MultipleResultsFound:

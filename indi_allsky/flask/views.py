@@ -1194,27 +1194,26 @@ class ChartView(TemplateView):
         context['form_history'] = IndiAllskyChartHistoryForm()
 
 
-        custom_1_key = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 'sensor_user_10')
-        custom_2_key = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 'sensor_user_11')
-        custom_3_key = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 'sensor_user_12')
-        custom_4_key = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 'sensor_user_13')
-        custom_5_key = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 'sensor_user_14')
-        custom_6_key = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 'sensor_user_15')
-
-
-
         if self.camera.data:
             camera_data = dict(self.camera.data)
         else:
             camera_data = dict()
 
 
-        context['label_custom_chart_1'] = camera_data.get(custom_1_key, 'Unset')
-        context['label_custom_chart_2'] = camera_data.get(custom_2_key, 'Unset')
-        context['label_custom_chart_3'] = camera_data.get(custom_3_key, 'Unset')
-        context['label_custom_chart_4'] = camera_data.get(custom_4_key, 'Unset')
-        context['label_custom_chart_5'] = camera_data.get(custom_5_key, 'Unset')
-        context['label_custom_chart_6'] = camera_data.get(custom_6_key, 'Unset')
+        custom_chart_1_key = camera_data.get('custom_chart_1_key', 'sensor_user_10')
+        custom_chart_2_key = camera_data.get('custom_chart_2_key', 'sensor_user_11')
+        custom_chart_3_key = camera_data.get('custom_chart_3_key', 'sensor_user_12')
+        custom_chart_4_key = camera_data.get('custom_chart_4_key', 'sensor_user_13')
+        custom_chart_5_key = camera_data.get('custom_chart_5_key', 'sensor_user_14')
+        custom_chart_6_key = camera_data.get('custom_chart_6_key', 'sensor_user_15')
+
+
+        context['label_custom_chart_1'] = camera_data.get(custom_chart_1_key, 'Unset')
+        context['label_custom_chart_2'] = camera_data.get(custom_chart_2_key, 'Unset')
+        context['label_custom_chart_3'] = camera_data.get(custom_chart_3_key, 'Unset')
+        context['label_custom_chart_4'] = camera_data.get(custom_chart_4_key, 'Unset')
+        context['label_custom_chart_5'] = camera_data.get(custom_chart_5_key, 'Unset')
+        context['label_custom_chart_6'] = camera_data.get(custom_chart_6_key, 'Unset')
 
 
         return context
