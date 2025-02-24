@@ -1309,12 +1309,18 @@ class JsonChartView(JsonView):
         }
 
 
-        custom_1_key = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 'sensor_user_10')
-        custom_2_key = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 'sensor_user_11')
-        custom_3_key = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 'sensor_user_12')
-        custom_4_key = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 'sensor_user_13')
-        custom_5_key = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 'sensor_user_14')
-        custom_6_key = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 'sensor_user_15')
+        if self.camera.data:
+            camera_data = dict(self.camera.data)
+        else:
+            camera_data = dict()
+
+
+        custom_chart_1_key = camera_data.get('custom_chart_1_key', 'sensor_user_10')
+        custom_chart_2_key = camera_data.get('custom_chart_2_key', 'sensor_user_11')
+        custom_chart_3_key = camera_data.get('custom_chart_3_key', 'sensor_user_12')
+        custom_chart_4_key = camera_data.get('custom_chart_4_key', 'sensor_user_13')
+        custom_chart_5_key = camera_data.get('custom_chart_5_key', 'sensor_user_14')
+        custom_chart_6_key = camera_data.get('custom_chart_6_key', 'sensor_user_15')
 
 
         for i in chart_query:
@@ -1373,7 +1379,7 @@ class JsonChartView(JsonView):
 
             # custom chart 1
             try:
-                custom_1_y = i.data[custom_1_key]
+                custom_1_y = i.data[custom_chart_1_key]
             except KeyError:
                 custom_1_y = 0
 
@@ -1386,7 +1392,7 @@ class JsonChartView(JsonView):
 
             # custom chart 2
             try:
-                custom_2_y = i.data[custom_2_key]
+                custom_2_y = i.data[custom_chart_2_key]
             except KeyError:
                 custom_2_y = 0
 
@@ -1399,7 +1405,7 @@ class JsonChartView(JsonView):
 
             # custom chart 3
             try:
-                custom_3_y = i.data[custom_3_key]
+                custom_3_y = i.data[custom_chart_3_key]
             except KeyError:
                 custom_3_y = 0
 
@@ -1412,7 +1418,7 @@ class JsonChartView(JsonView):
 
             # custom chart 4
             try:
-                custom_4_y = i.data[custom_4_key]
+                custom_4_y = i.data[custom_chart_4_key]
             except KeyError:
                 custom_4_y = 0
 
@@ -1425,7 +1431,7 @@ class JsonChartView(JsonView):
 
             # custom chart 5
             try:
-                custom_5_y = i.data[custom_5_key]
+                custom_5_y = i.data[custom_chart_5_key]
             except KeyError:
                 custom_5_y = 0
 
@@ -1438,7 +1444,7 @@ class JsonChartView(JsonView):
 
             # custom chart 6
             try:
-                custom_6_y = i.data[custom_6_key]
+                custom_6_y = i.data[custom_chart_6_key]
             except KeyError:
                 custom_6_y = 0
 
