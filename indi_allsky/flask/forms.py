@@ -3188,68 +3188,68 @@ class IndiAllskyConfigForm(FlaskForm):
         ('sensor_user_29', 'User Slot 29'),
     )
 
-    SENSOR_SLOT_choices = [  # mutable
-        ('sensor_user_0', '(0) User Slot - Camera Temp'),
-        ('sensor_user_1', '(1) User Slot - Dew Heater Level'),
-        ('sensor_user_2', '(2) User Slot - Dew Point'),
-        ('sensor_user_3', '(3) User Slot - Frost Point'),
-        ('sensor_user_4', '(4) User Slot - Fan Level'),
-        ('sensor_user_5', '(5) User Slot - Heat Index'),
-        ('sensor_user_6', '(6) User Slot - Wind Dir (Degrees)'),
-        ('sensor_user_7', '(7) User Slot - SQM'),
-        ('sensor_user_8', 'User Slot - Future'),
-        ('sensor_user_9', 'User Slot - Future'),
-        ('sensor_user_10', 'User Slot 10'),
-        ('sensor_user_12', 'User Slot 11'),
-        ('sensor_user_12', 'User Slot 12'),
-        ('sensor_user_13', 'User Slot 13'),
-        ('sensor_user_14', 'User Slot 14'),
-        ('sensor_user_15', 'User Slot 15'),
-        ('sensor_user_16', 'User Slot 16'),
-        ('sensor_user_17', 'User Slot 17'),
-        ('sensor_user_18', 'User Slot 18'),
-        ('sensor_user_19', 'User Slot 19'),
-        ('sensor_user_20', 'User Slot 20'),
-        ('sensor_user_21', 'User Slot 21'),
-        ('sensor_user_22', 'User Slot 22'),
-        ('sensor_user_23', 'User Slot 23'),
-        ('sensor_user_24', 'User Slot 24'),
-        ('sensor_user_25', 'User Slot 25'),
-        ('sensor_user_26', 'User Slot 26'),
-        ('sensor_user_27', 'User Slot 27'),
-        ('sensor_user_28', 'User Slot 28'),
-        ('sensor_user_29', 'User Slot 29'),
-        ('sensor_temp_0', '(0) System Temp - Camera Temp'),
-        ('sensor_temp_1', 'System Temp - Future'),
-        ('sensor_temp_2', 'System Temp - Future'),
-        ('sensor_temp_3', 'System Temp - Future'),
-        ('sensor_temp_4', 'System Temp - Future'),
-        ('sensor_temp_5', 'System Temp - Future'),
-        ('sensor_temp_6', 'System Temp - Future'),
-        ('sensor_temp_7', 'System Temp - Future'),
-        ('sensor_temp_8', 'System Temp - Future'),
-        ('sensor_temp_9', 'System Temp - Future'),
-        ('sensor_temp_10', 'System Temp 10'),
-        ('sensor_temp_11', 'System Temp 11'),
-        ('sensor_temp_12', 'System Temp 12'),
-        ('sensor_temp_13', 'System Temp 13'),
-        ('sensor_temp_14', 'System Temp 14'),
-        ('sensor_temp_15', 'System Temp 15'),
-        ('sensor_temp_16', 'System Temp 16'),
-        ('sensor_temp_17', 'System Temp 17'),
-        ('sensor_temp_18', 'System Temp 18'),
-        ('sensor_temp_19', 'System Temp 19'),
-        ('sensor_temp_20', 'System Temp 20'),
-        ('sensor_temp_21', 'System Temp 21'),
-        ('sensor_temp_22', 'System Temp 22'),
-        ('sensor_temp_23', 'System Temp 23'),
-        ('sensor_temp_24', 'System Temp 24'),
-        ('sensor_temp_25', 'System Temp 25'),
-        ('sensor_temp_26', 'System Temp 26'),
-        ('sensor_temp_27', 'System Temp 27'),
-        ('sensor_temp_28', 'System Temp 28'),
-        ('sensor_temp_29', 'System Temp 29'),
-    ]
+    SENSOR_SLOT_choices = (
+        ['sensor_user_0', '(0) User Slot - Camera Temp'],  # mutable
+        ['sensor_user_1', '(1) User Slot - Dew Heater Level'],
+        ['sensor_user_2', '(2) User Slot - Dew Point'],
+        ['sensor_user_3', '(3) User Slot - Frost Point'],
+        ['sensor_user_4', '(4) User Slot - Fan Level'],
+        ['sensor_user_5', '(5) User Slot - Heat Index'],
+        ['sensor_user_6', '(6) User Slot - Wind Dir (Degrees)'],
+        ['sensor_user_7', '(7) User Slot - SQM'],
+        ['sensor_user_8', 'User Slot - Future'],
+        ['sensor_user_9', 'User Slot - Future'],
+        ['sensor_user_10', 'User Slot 10'],
+        ['sensor_user_12', 'User Slot 11'],
+        ['sensor_user_12', 'User Slot 12'],
+        ['sensor_user_13', 'User Slot 13'],
+        ['sensor_user_14', 'User Slot 14'],
+        ['sensor_user_15', 'User Slot 15'],
+        ['sensor_user_16', 'User Slot 16'],
+        ['sensor_user_17', 'User Slot 17'],
+        ['sensor_user_18', 'User Slot 18'],
+        ['sensor_user_19', 'User Slot 19'],
+        ['sensor_user_20', 'User Slot 20'],
+        ['sensor_user_21', 'User Slot 21'],
+        ['sensor_user_22', 'User Slot 22'],
+        ['sensor_user_23', 'User Slot 23'],
+        ['sensor_user_24', 'User Slot 24'],
+        ['sensor_user_25', 'User Slot 25'],
+        ['sensor_user_26', 'User Slot 26'],
+        ['sensor_user_27', 'User Slot 27'],
+        ['sensor_user_28', 'User Slot 28'],
+        ['sensor_user_29', 'User Slot 29'],
+        ['sensor_temp_0', '(0) System Temp - Camera Temp'],
+        ['sensor_temp_1', 'System Temp - Future'],
+        ['sensor_temp_2', 'System Temp - Future'],
+        ['sensor_temp_3', 'System Temp - Future'],
+        ['sensor_temp_4', 'System Temp - Future'],
+        ['sensor_temp_5', 'System Temp - Future'],
+        ['sensor_temp_6', 'System Temp - Future'],
+        ['sensor_temp_7', 'System Temp - Future'],
+        ['sensor_temp_8', 'System Temp - Future'],
+        ['sensor_temp_9', 'System Temp - Future'],
+        ['sensor_temp_10', 'System Temp 10'],
+        ['sensor_temp_11', 'System Temp 11'],
+        ['sensor_temp_12', 'System Temp 12'],
+        ['sensor_temp_13', 'System Temp 13'],
+        ['sensor_temp_14', 'System Temp 14'],
+        ['sensor_temp_15', 'System Temp 15'],
+        ['sensor_temp_16', 'System Temp 16'],
+        ['sensor_temp_17', 'System Temp 17'],
+        ['sensor_temp_18', 'System Temp 18'],
+        ['sensor_temp_19', 'System Temp 19'],
+        ['sensor_temp_20', 'System Temp 20'],
+        ['sensor_temp_21', 'System Temp 21'],
+        ['sensor_temp_22', 'System Temp 22'],
+        ['sensor_temp_23', 'System Temp 23'],
+        ['sensor_temp_24', 'System Temp 24'],
+        ['sensor_temp_25', 'System Temp 25'],
+        ['sensor_temp_26', 'System Temp 26'],
+        ['sensor_temp_27', 'System Temp 27'],
+        ['sensor_temp_28', 'System Temp 28'],
+        ['sensor_temp_29', 'System Temp 29'],
+    )
 
 
     TEMP_SENSOR__TSL2561_GAIN_choices = (
@@ -3897,14 +3897,11 @@ class IndiAllskyConfigForm(FlaskForm):
                 slot_a_index = constants.SENSOR_INDEX_MAP[temp_sensor__a_user_var_slot]
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
-                    self.SENSOR_SLOT_choices[slot_a_index + x] = (
-                        str(temp_sensor__a_user_var_slot),
-                        '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_a_index + x,
-                            temp_sensor__a_class.METADATA['name'],
-                            temp_sensor__a_label,
-                            temp_sensor__a_class.METADATA['labels'][x],
-                        )
+                    self.SENSOR_SLOT_choices[slot_a_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
+                        slot_a_index + x,
+                        temp_sensor__a_class.METADATA['name'],
+                        temp_sensor__a_label,
+                        temp_sensor__a_class.METADATA['labels'][x],
                     )
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
@@ -3916,14 +3913,11 @@ class IndiAllskyConfigForm(FlaskForm):
                 slot_b_index = constants.SENSOR_INDEX_MAP[temp_sensor__b_user_var_slot]
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
-                    self.SENSOR_SLOT_choices[slot_b_index + x] = (
-                        str(temp_sensor__b_user_var_slot),
-                        '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_b_index + x,
-                            temp_sensor__b_class.METADATA['name'],
-                            temp_sensor__b_label,
-                            temp_sensor__b_class.METADATA['labels'][x],
-                        )
+                    self.SENSOR_SLOT_choices[slot_b_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
+                        slot_b_index + x,
+                        temp_sensor__b_class.METADATA['name'],
+                        temp_sensor__b_label,
+                        temp_sensor__b_class.METADATA['labels'][x],
                     )
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__b_classname)
@@ -3935,14 +3929,11 @@ class IndiAllskyConfigForm(FlaskForm):
                 slot_c_index = constants.SENSOR_INDEX_MAP[temp_sensor__c_user_var_slot]
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
-                    self.SENSOR_SLOT_choices[slot_c_index + x] = (
-                        str(temp_sensor__c_user_var_slot),
-                        '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_c_index + x,
-                            temp_sensor__c_class.METADATA['name'],
-                            temp_sensor__c_label,
-                            temp_sensor__c_class.METADATA['labels'][x],
-                        )
+                    self.SENSOR_SLOT_choices[slot_c_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
+                        slot_c_index + x,
+                        temp_sensor__c_class.METADATA['name'],
+                        temp_sensor__c_label,
+                        temp_sensor__c_class.METADATA['labels'][x],
                     )
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__c_classname)
@@ -3966,10 +3957,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
         for x, label in enumerate(temp_label_list[:30]):  # limit to 30
-            self.SENSOR_SLOT_choices[x + 40] = (
-                str(x + 110),  # these offsets are not confusing at all
-                '({0:d}) {1:s}'.format(x + 10, label)
-            )
+            self.SENSOR_SLOT_choices[x + 40][1] = '({0:d}) {1:s}'.format(x + 10, label)
 
 
         ### Update the choices
