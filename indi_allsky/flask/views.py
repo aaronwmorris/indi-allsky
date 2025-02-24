@@ -1194,8 +1194,6 @@ class ChartView(TemplateView):
         context['form_history'] = IndiAllskyChartHistoryForm()
 
 
-        self.update_sensor_slot_labels()
-
         custom_1_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 10)
         custom_2_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)
         custom_3_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)
@@ -1206,30 +1204,48 @@ class ChartView(TemplateView):
 
         # fix system temp offset
         if custom_1_index >= 100:
-            custom_1_index -= 70
+            custom_1_var_name = 'sensor_temp_{0:d}'.format(custom_1_index - 70)
+        else:
+            custom_1_var_name = 'sensor_user_{0:d}'.format(custom_1_index)
 
         if custom_2_index >= 100:
-            custom_2_index -= 70
+            custom_2_var_name = 'sensor_temp_{0:d}'.format(custom_2_index - 70)
+        else:
+            custom_2_var_name = 'sensor_user_{0:d}'.format(custom_2_index)
 
         if custom_3_index >= 100:
-            custom_3_index -= 70
+            custom_3_var_name = 'sensor_temp_{0:d}'.format(custom_3_index - 70)
+        else:
+            custom_3_var_name = 'sensor_user_{0:d}'.format(custom_3_index)
 
         if custom_4_index >= 100:
-            custom_4_index -= 70
+            custom_4_var_name = 'sensor_temp_{0:d}'.format(custom_4_index - 70)
+        else:
+            custom_4_var_name = 'sensor_user_{0:d}'.format(custom_4_index)
 
         if custom_5_index >= 100:
-            custom_5_index -= 70
+            custom_5_var_name = 'sensor_temp_{0:d}'.format(custom_5_index - 70)
+        else:
+            custom_5_var_name = 'sensor_user_{0:d}'.format(custom_5_index)
 
         if custom_6_index >= 100:
-            custom_6_index -= 70
+            custom_6_var_name = 'sensor_temp_{0:d}'.format(custom_6_index - 70)
+        else:
+            custom_6_var_name = 'sensor_user_{0:d}'.format(custom_6_index)
 
 
-        context['label_custom_chart_1'] = self.SENSOR_SLOT_choices[custom_1_index][1]
-        context['label_custom_chart_2'] = self.SENSOR_SLOT_choices[custom_2_index][1]
-        context['label_custom_chart_3'] = self.SENSOR_SLOT_choices[custom_3_index][1]
-        context['label_custom_chart_4'] = self.SENSOR_SLOT_choices[custom_4_index][1]
-        context['label_custom_chart_5'] = self.SENSOR_SLOT_choices[custom_5_index][1]
-        context['label_custom_chart_6'] = self.SENSOR_SLOT_choices[custom_6_index][1]
+        if self.camera.data:
+            camera_data = dict(self.camera.data)
+        else:
+            camera_data = dict()
+
+
+        context['label_custom_chart_1'] = camera_data.get(custom_1_var_name, 'Unset')
+        context['label_custom_chart_2'] = camera_data.get(custom_2_var_name, 'Unset')
+        context['label_custom_chart_3'] = camera_data.get(custom_3_var_name, 'Unset')
+        context['label_custom_chart_4'] = camera_data.get(custom_4_var_name, 'Unset')
+        context['label_custom_chart_5'] = camera_data.get(custom_5_var_name, 'Unset')
+        context['label_custom_chart_6'] = camera_data.get(custom_6_var_name, 'Unset')
 
 
         return context
