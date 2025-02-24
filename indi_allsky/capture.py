@@ -55,78 +55,68 @@ class CaptureWorker(Process):
     periodic_tasks_offset = 300.0  # 5 minutes
 
 
-    SENSOR_SLOTS = [  # mutable
-        'Camera Temp',
-        'Dew Heater Level',
-        'Dew Point',
-        'Frost Point',
-        'Fan Level',
-        'Heat Index',
-        'Wind Dir Degrees',
-        'SQM',
-        'Future Use 8',
-        'Future Use 9',
-        'User Slot 10',
-        'User Slot 11',
-        'User Slot 12',
-        'User Slot 13',
-        'User Slot 14',
-        'User Slot 15',
-        'User Slot 16',
-        'User Slot 17',
-        'User Slot 18',
-        'User Slot 19',
-        'User Slot 20',
-        'User Slot 21',
-        'User Slot 22',
-        'User Slot 23',
-        'User Slot 24',
-        'User Slot 25',
-        'User Slot 26',
-        'User Slot 27',
-        'User Slot 28',
-        'User Slot 29',
-        'notused',
-        'notused',
-        'notused',
-        'notused',
-        'notused',
-        'notused',
-        'notused',
-        'notused',
-        'notused',
-        'notused',
-        'Camera Temp',
-        'Future Use 1',
-        'Future Use 2',
-        'Future Use 3',
-        'Future Use 4',
-        'Future Use 5',
-        'Future Use 6',
-        'Future Use 7',
-        'Future Use 8',
-        'Future Use 9',
-        'System Temp 10',
-        'System Temp 11',
-        'System Temp 12',
-        'System Temp 13',
-        'System Temp 14',
-        'System Temp 15',
-        'System Temp 16',
-        'System Temp 17',
-        'System Temp 18',
-        'System Temp 19',
-        'System Temp 20',
-        'System Temp 21',
-        'System Temp 22',
-        'System Temp 23',
-        'System Temp 24',
-        'System Temp 25',
-        'System Temp 26',
-        'System Temp 27',
-        'System Temp 28',
-        'System Temp 29',
-    ]
+    SENSOR_SLOTS = (
+        ['sensor_user_0', 'Camera Temp'],  # mutable
+        ['sensor_user_1', 'Dew Heater Level'],
+        ['sensor_user_2', 'Dew Point'],
+        ['sensor_user_3', 'Frost Point'],
+        ['sensor_user_4', 'Fan Level'],
+        ['sensor_user_5', 'Heat Index'],
+        ['sensor_user_6', 'Wind Dir Degrees'],
+        ['sensor_user_7', 'SQM'],
+        ['sensor_user_8', 'Future Use 8'],
+        ['sensor_user_9', 'Future Use 9'],
+        ['sensor_user_10', 'User Slot 10'],
+        ['sensor_user_11', 'User Slot 11'],
+        ['sensor_user_12', 'User Slot 12'],
+        ['sensor_user_13', 'User Slot 13'],
+        ['sensor_user_14', 'User Slot 14'],
+        ['sensor_user_15', 'User Slot 15'],
+        ['sensor_user_16', 'User Slot 16'],
+        ['sensor_user_17', 'User Slot 17'],
+        ['sensor_user_18', 'User Slot 18'],
+        ['sensor_user_19', 'User Slot 19'],
+        ['sensor_user_20', 'User Slot 20'],
+        ['sensor_user_21', 'User Slot 21'],
+        ['sensor_user_22', 'User Slot 22'],
+        ['sensor_user_23', 'User Slot 23'],
+        ['sensor_user_24', 'User Slot 24'],
+        ['sensor_user_25', 'User Slot 25'],
+        ['sensor_user_26', 'User Slot 26'],
+        ['sensor_user_27', 'User Slot 27'],
+        ['sensor_user_28', 'User Slot 28'],
+        ['sensor_user_29', 'User Slot 29'],
+        ['sensor_temp_0', 'Camera Temp'],
+        ['sensor_temp_1', 'Future Use 1'],
+        ['sensor_temp_2', 'Future Use 2'],
+        ['sensor_temp_3', 'Future Use 3'],
+        ['sensor_temp_4', 'Future Use 4'],
+        ['sensor_temp_5', 'Future Use 5'],
+        ['sensor_temp_6', 'Future Use 6'],
+        ['sensor_temp_7', 'Future Use 7'],
+        ['sensor_temp_8', 'Future Use 8'],
+        ['sensor_temp_9', 'Future Use 9'],
+        ['sensor_temp_10', 'System Temp 10'],
+        ['sensor_temp_11', 'System Temp 11'],
+        ['sensor_temp_12', 'System Temp 12'],
+        ['sensor_temp_13', 'System Temp 13'],
+        ['sensor_temp_14', 'System Temp 14'],
+        ['sensor_temp_15', 'System Temp 15'],
+        ['sensor_temp_16', 'System Temp 16'],
+        ['sensor_temp_17', 'System Temp 17'],
+        ['sensor_temp_18', 'System Temp 18'],
+        ['sensor_temp_19', 'System Temp 19'],
+        ['sensor_temp_20', 'System Temp 20'],
+        ['sensor_temp_21', 'System Temp 21'],
+        ['sensor_temp_22', 'System Temp 22'],
+        ['sensor_temp_23', 'System Temp 23'],
+        ['sensor_temp_24', 'System Temp 24'],
+        ['sensor_temp_25', 'System Temp 25'],
+        ['sensor_temp_26', 'System Temp 26'],
+        ['sensor_temp_27', 'System Temp 27'],
+        ['sensor_temp_28', 'System Temp 28'],
+        ['sensor_temp_29', 'System Temp 29'],
+    )
 
 
     def __init__(
@@ -901,9 +891,8 @@ class CaptureWorker(Process):
         self.update_sensor_slot_labels()
 
 
-        for x in range(30):
-            camera_metadata['data']['sensor_user_{0:d}'.format(x)] = self.SENSOR_SLOTS[x]
-            camera_metadata['data']['sensor_temp_{0:d}'.format(x)] = self.SENSOR_SLOTS[x + 40]
+        for k, v in self.SENSOR_SLOTS:
+            camera_metadata['data'][k] = v
 
 
         try:
@@ -1767,7 +1756,7 @@ class CaptureWorker(Process):
                 sensor_a_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__a_user_var_slot)]
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
-                    self.SENSOR_SLOTS[sensor_a_index + x] = '{0:s} - {1:s} - {2:s}'.format(
+                    self.SENSOR_SLOTS[sensor_a_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
                         temp_sensor__a_class.METADATA['name'],
                         temp_sensor__a_label,
                         temp_sensor__a_class.METADATA['labels'][x],
@@ -1782,7 +1771,7 @@ class CaptureWorker(Process):
                 sensor_b_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__b_user_var_slot)]
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
-                    self.SENSOR_SLOTS[sensor_b_index + x] = '{0:s} - {1:s} - {2:s}'.format(
+                    self.SENSOR_SLOTS[sensor_b_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
                         temp_sensor__b_class.METADATA['name'],
                         temp_sensor__b_label,
                         temp_sensor__b_class.METADATA['labels'][x],
@@ -1797,7 +1786,7 @@ class CaptureWorker(Process):
                 sensor_c_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__c_user_var_slot)]
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
-                    self.SENSOR_SLOTS[sensor_c_index + x] = '{0:s} - {1:s} - {2:s}'.format(
+                    self.SENSOR_SLOTS[sensor_c_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
                         temp_sensor__c_class.METADATA['name'],
                         temp_sensor__c_label,
                         temp_sensor__c_class.METADATA['labels'][x],
@@ -1824,5 +1813,5 @@ class CaptureWorker(Process):
 
 
         for x, label in enumerate(temp_label_list[:30]):  # limit to 30
-            self.SENSOR_SLOTS[x + 50] = '{0:s}'.format(label)
+            self.SENSOR_SLOTS[x + 40][1] = '{0:s}'.format(label)
 
