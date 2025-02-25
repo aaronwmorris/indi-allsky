@@ -2806,28 +2806,36 @@ def INDI_CONFIG_DAY_validator(*args):
 
 
 class IndiAllskyConfigForm(FlaskForm):
-    CAMERA_INTERFACE_choices = (
-        ('indi', 'INDI'),
-        ('libcamera_imx477', 'libcamera IMX477'),
-        ('libcamera_imx378', 'libcamera IMX378'),
-        ('libcamera_imx708', 'libcamera IMX708'),
-        ('libcamera_imx519', 'libcamera IMX519'),
-        ('libcamera_imx462', 'libcamera IMX462'),
-        ('libcamera_imx327', 'libcamera IMX327'),
-        ('libcamera_imx678', 'libcamera IMX678 Darksee'),
-        ('libcamera_imx500_ai', 'libcamera IMX500 AI'),
-        ('libcamera_imx283', 'libcamera IMX283 Klarity/OneInchEye'),
-        ('libcamera_imx296_gs', 'libcamera IMX296 GS'),
-        ('libcamera_imx290', 'libcamera IMX290'),
-        ('libcamera_imx298', 'libcamera IMX298'),
-        ('libcamera_imx219', 'libcamera IMX219'),
-        ('libcamera_ov5647', 'libcamera OV5647'),
-        ('libcamera_64mp_hawkeye', 'libcamera 64mp HawkEye'),
-        ('libcamera_64mp_owlsight', 'libcamera 64mp OwlSight'),
-        ('pycurl_camera', 'pyCurl Camera'),
-        ('indi_accumulator', 'INDI Accumulator'),
-        ('indi_passive', 'INDI (Passive)'),
-    )
+    CAMERA_INTERFACE_choices = {
+        'INDI' : (
+            ('indi', 'INDI'),
+        ),
+        'libcamera' : (
+            ('libcamera_imx477', 'libcamera IMX477'),
+            ('libcamera_imx378', 'libcamera IMX378'),
+            ('libcamera_imx708', 'libcamera IMX708'),
+            ('libcamera_imx519', 'libcamera IMX519'),
+            ('libcamera_imx462', 'libcamera IMX462'),
+            ('libcamera_imx327', 'libcamera IMX327'),
+            ('libcamera_imx678', 'libcamera IMX678 Darksee'),
+            ('libcamera_imx500_ai', 'libcamera IMX500 AI'),
+            ('libcamera_imx283', 'libcamera IMX283 Klarity/OneInchEye'),
+            ('libcamera_imx296_gs', 'libcamera IMX296 GS'),
+            ('libcamera_imx290', 'libcamera IMX290'),
+            ('libcamera_imx298', 'libcamera IMX298'),
+            ('libcamera_imx219', 'libcamera IMX219'),
+            ('libcamera_ov5647', 'libcamera OV5647'),
+            ('libcamera_64mp_hawkeye', 'libcamera 64mp HawkEye'),
+            ('libcamera_64mp_owlsight', 'libcamera 64mp OwlSight'),
+        ),
+        'Network Web Cameras' : (
+            ('pycurl_camera', 'pyCurl Camera'),
+        ),
+        'Special Function' : (
+            ('indi_accumulator', 'INDI Accumulator'),
+            ('indi_passive', 'INDI (Passive)'),
+        ),
+    }
 
     CCD_BIT_DEPTH_choices = (
         ('0', 'Auto Detect'),
@@ -3169,6 +3177,8 @@ class IndiAllskyConfigForm(FlaskForm):
             ('blinka_light_sensor_si1145_i2c', 'SI1145 i2c - Vis/IR/UV (3)'),
             ('blinka_light_sensor_ltr390_i2c', 'LTR390 i2c - UV/Vis/UVI/Lux (4)'),
             ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5)'),
+        ),
+        'Testing' : (
             ('sensor_data_generator', 'Test Data Generator - (4)'),
         ),
     }
