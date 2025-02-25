@@ -55,6 +55,70 @@ class CaptureWorker(Process):
     periodic_tasks_offset = 300.0  # 5 minutes
 
 
+    SENSOR_SLOTS = (
+        ['sensor_user_0', 'Camera Temp'],  # mutable
+        ['sensor_user_1', 'Dew Heater Level'],
+        ['sensor_user_2', 'Dew Point'],
+        ['sensor_user_3', 'Frost Point'],
+        ['sensor_user_4', 'Fan Level'],
+        ['sensor_user_5', 'Heat Index'],
+        ['sensor_user_6', 'Wind Dir Degrees'],
+        ['sensor_user_7', 'SQM'],
+        ['sensor_user_8', 'Future Use 8'],
+        ['sensor_user_9', 'Future Use 9'],
+        ['sensor_user_10', 'User Slot 10'],
+        ['sensor_user_11', 'User Slot 11'],
+        ['sensor_user_12', 'User Slot 12'],
+        ['sensor_user_13', 'User Slot 13'],
+        ['sensor_user_14', 'User Slot 14'],
+        ['sensor_user_15', 'User Slot 15'],
+        ['sensor_user_16', 'User Slot 16'],
+        ['sensor_user_17', 'User Slot 17'],
+        ['sensor_user_18', 'User Slot 18'],
+        ['sensor_user_19', 'User Slot 19'],
+        ['sensor_user_20', 'User Slot 20'],
+        ['sensor_user_21', 'User Slot 21'],
+        ['sensor_user_22', 'User Slot 22'],
+        ['sensor_user_23', 'User Slot 23'],
+        ['sensor_user_24', 'User Slot 24'],
+        ['sensor_user_25', 'User Slot 25'],
+        ['sensor_user_26', 'User Slot 26'],
+        ['sensor_user_27', 'User Slot 27'],
+        ['sensor_user_28', 'User Slot 28'],
+        ['sensor_user_29', 'User Slot 29'],
+        ['sensor_temp_0', 'Camera Temp'],
+        ['sensor_temp_1', 'Future Use 1'],
+        ['sensor_temp_2', 'Future Use 2'],
+        ['sensor_temp_3', 'Future Use 3'],
+        ['sensor_temp_4', 'Future Use 4'],
+        ['sensor_temp_5', 'Future Use 5'],
+        ['sensor_temp_6', 'Future Use 6'],
+        ['sensor_temp_7', 'Future Use 7'],
+        ['sensor_temp_8', 'Future Use 8'],
+        ['sensor_temp_9', 'Future Use 9'],
+        ['sensor_temp_10', 'System Temp 10'],
+        ['sensor_temp_11', 'System Temp 11'],
+        ['sensor_temp_12', 'System Temp 12'],
+        ['sensor_temp_13', 'System Temp 13'],
+        ['sensor_temp_14', 'System Temp 14'],
+        ['sensor_temp_15', 'System Temp 15'],
+        ['sensor_temp_16', 'System Temp 16'],
+        ['sensor_temp_17', 'System Temp 17'],
+        ['sensor_temp_18', 'System Temp 18'],
+        ['sensor_temp_19', 'System Temp 19'],
+        ['sensor_temp_20', 'System Temp 20'],
+        ['sensor_temp_21', 'System Temp 21'],
+        ['sensor_temp_22', 'System Temp 22'],
+        ['sensor_temp_23', 'System Temp 23'],
+        ['sensor_temp_24', 'System Temp 24'],
+        ['sensor_temp_25', 'System Temp 25'],
+        ['sensor_temp_26', 'System Temp 26'],
+        ['sensor_temp_27', 'System Temp 27'],
+        ['sensor_temp_28', 'System Temp 28'],
+        ['sensor_temp_29', 'System Temp 29'],
+    )
+
+
     def __init__(
         self,
         idx,
@@ -819,7 +883,25 @@ class CaptureWorker(Process):
             's3_prefix'             : s3_prefix,
             'web_nonlocal_images'   : self.config.get('WEB_NONLOCAL_IMAGES', False),
             'web_local_images_admin': self.config.get('WEB_LOCAL_IMAGES_ADMIN', False),
+
+            'data'                  : {},
         }
+
+
+        self.update_sensor_slot_labels()
+
+
+        for k, v in self.SENSOR_SLOTS:
+            camera_metadata['data'][k] = v
+
+
+        camera_metadata['data']['custom_chart_1_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 'sensor_user_10')
+        camera_metadata['data']['custom_chart_2_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 'sensor_user_11')
+        camera_metadata['data']['custom_chart_3_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 'sensor_user_12')
+        camera_metadata['data']['custom_chart_4_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 'sensor_user_13')
+        camera_metadata['data']['custom_chart_5_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 'sensor_user_14')
+        camera_metadata['data']['custom_chart_6_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 'sensor_user_15')
+
 
 
         try:
@@ -838,6 +920,7 @@ class CaptureWorker(Process):
 
             time.sleep(60)
             raise
+
 
 
         self.camera_id = camera.id
@@ -1659,4 +1742,85 @@ class CaptureWorker(Process):
         db.session.commit()
 
         self.video_q.put({'task_id' : task.id})
+
+
+    def update_sensor_slot_labels(self):
+        import psutil
+        from .devices import sensors as indi_allsky_sensors
+
+        temp_sensor__a_classname = self.config.get('TEMP_SENSOR', {}).get('A_CLASSNAME', '')
+        temp_sensor__a_label = self.config.get('TEMP_SENSOR', {}).get('A_LABEL', 'Sensor A')
+        temp_sensor__a_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 'sensor_user_10')
+        temp_sensor__b_classname = self.config.get('TEMP_SENSOR', {}).get('B_CLASSNAME', '')
+        temp_sensor__b_label = self.config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B')
+        temp_sensor__b_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_15')
+        temp_sensor__c_classname = self.config.get('TEMP_SENSOR', {}).get('C_CLASSNAME', '')
+        temp_sensor__c_label = self.config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C')
+        temp_sensor__c_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_20')
+
+
+        if temp_sensor__a_classname:
+            try:
+                temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
+                sensor_a_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__a_user_var_slot)]
+
+                for x in range(temp_sensor__a_class.METADATA['count']):
+                    self.SENSOR_SLOTS[sensor_a_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
+                        temp_sensor__a_class.METADATA['name'],
+                        temp_sensor__a_label,
+                        temp_sensor__a_class.METADATA['labels'][x],
+                    )
+            except AttributeError:
+                logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+
+
+        if temp_sensor__b_classname:
+            try:
+                temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
+                sensor_b_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__b_user_var_slot)]
+
+                for x in range(temp_sensor__b_class.METADATA['count']):
+                    self.SENSOR_SLOTS[sensor_b_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
+                        temp_sensor__b_class.METADATA['name'],
+                        temp_sensor__b_label,
+                        temp_sensor__b_class.METADATA['labels'][x],
+                    )
+            except AttributeError:
+                logger.error('Unknown sensor class: %s', temp_sensor__b_classname)
+
+
+        if temp_sensor__c_classname:
+            try:
+                temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
+                sensor_c_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__c_user_var_slot)]
+
+                for x in range(temp_sensor__c_class.METADATA['count']):
+                    self.SENSOR_SLOTS[sensor_c_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
+                        temp_sensor__c_class.METADATA['name'],
+                        temp_sensor__c_label,
+                        temp_sensor__c_class.METADATA['labels'][x],
+                    )
+            except AttributeError:
+                logger.error('Unknown sensor class: %s', temp_sensor__c_classname)
+
+
+        # Set system temp names
+        temp_info = psutil.sensors_temperatures()
+
+        temp_label_list = list()
+        for t_key in sorted(temp_info):  # always return the keys in the same order
+            for i, t in enumerate(temp_info[t_key]):
+                # these names will match the mqtt topics
+                if not t.label:
+                    # use index for label name
+                    label = str(i)
+                else:
+                    label = t.label
+
+                topic = '{0:s}/{1:s}'.format(t_key, label)
+                temp_label_list.append(topic)
+
+
+        for x, label in enumerate(temp_label_list[:20]):  # limit to 20
+            self.SENSOR_SLOTS[x + 40][1] = '{0:s}'.format(label)
 

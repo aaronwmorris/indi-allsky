@@ -1194,42 +1194,26 @@ class ChartView(TemplateView):
         context['form_history'] = IndiAllskyChartHistoryForm()
 
 
-        self.update_sensor_slot_labels()
-
-        custom_1_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 10)
-        custom_2_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)
-        custom_3_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)
-        custom_4_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 13)
-        custom_5_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 14)
-        custom_6_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 15)
+        if self.camera.data:
+            camera_data = dict(self.camera.data)
+        else:
+            camera_data = dict()
 
 
-        # fix system temp offset
-        if custom_1_index >= 100:
-            custom_1_index -= 70
-
-        if custom_2_index >= 100:
-            custom_2_index -= 70
-
-        if custom_3_index >= 100:
-            custom_3_index -= 70
-
-        if custom_4_index >= 100:
-            custom_4_index -= 70
-
-        if custom_5_index >= 100:
-            custom_5_index -= 70
-
-        if custom_6_index >= 100:
-            custom_6_index -= 70
+        custom_chart_1_key = camera_data.get('custom_chart_1_key', 'sensor_user_10')
+        custom_chart_2_key = camera_data.get('custom_chart_2_key', 'sensor_user_11')
+        custom_chart_3_key = camera_data.get('custom_chart_3_key', 'sensor_user_12')
+        custom_chart_4_key = camera_data.get('custom_chart_4_key', 'sensor_user_13')
+        custom_chart_5_key = camera_data.get('custom_chart_5_key', 'sensor_user_14')
+        custom_chart_6_key = camera_data.get('custom_chart_6_key', 'sensor_user_15')
 
 
-        context['label_custom_chart_1'] = self.SENSOR_SLOT_choices[custom_1_index][1]
-        context['label_custom_chart_2'] = self.SENSOR_SLOT_choices[custom_2_index][1]
-        context['label_custom_chart_3'] = self.SENSOR_SLOT_choices[custom_3_index][1]
-        context['label_custom_chart_4'] = self.SENSOR_SLOT_choices[custom_4_index][1]
-        context['label_custom_chart_5'] = self.SENSOR_SLOT_choices[custom_5_index][1]
-        context['label_custom_chart_6'] = self.SENSOR_SLOT_choices[custom_6_index][1]
+        context['label_custom_chart_1'] = camera_data.get(custom_chart_1_key, 'Unset')
+        context['label_custom_chart_2'] = camera_data.get(custom_chart_2_key, 'Unset')
+        context['label_custom_chart_3'] = camera_data.get(custom_chart_3_key, 'Unset')
+        context['label_custom_chart_4'] = camera_data.get(custom_chart_4_key, 'Unset')
+        context['label_custom_chart_5'] = camera_data.get(custom_chart_5_key, 'Unset')
+        context['label_custom_chart_6'] = camera_data.get(custom_chart_6_key, 'Unset')
 
 
         return context
@@ -1325,12 +1309,18 @@ class JsonChartView(JsonView):
         }
 
 
-        custom_1_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 10)
-        custom_2_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)
-        custom_3_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)
-        custom_4_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 13)
-        custom_5_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 14)
-        custom_6_index = self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 15)
+        if self.camera.data:
+            camera_data = dict(self.camera.data)
+        else:
+            camera_data = dict()
+
+
+        custom_chart_1_key = camera_data.get('custom_chart_1_key', 'sensor_user_10')
+        custom_chart_2_key = camera_data.get('custom_chart_2_key', 'sensor_user_11')
+        custom_chart_3_key = camera_data.get('custom_chart_3_key', 'sensor_user_12')
+        custom_chart_4_key = camera_data.get('custom_chart_4_key', 'sensor_user_13')
+        custom_chart_5_key = camera_data.get('custom_chart_5_key', 'sensor_user_14')
+        custom_chart_6_key = camera_data.get('custom_chart_6_key', 'sensor_user_15')
 
 
         for i in chart_query:
@@ -1388,16 +1378,10 @@ class JsonChartView(JsonView):
 
 
             # custom chart 1
-            if custom_1_index < 100:
-                try:
-                    custom_1_y = i.data['sensor_user_{0:d}'.format(custom_1_index)]
-                except KeyError:
-                    custom_1_y = 0
-            else:
-                try:
-                    custom_1_y = i.data['sensor_temp_{0:d}'.format(custom_1_index - 100)]
-                except KeyError:
-                    custom_1_y = 0
+            try:
+                custom_1_y = i.data[custom_chart_1_key]
+            except KeyError:
+                custom_1_y = 0
 
             custom_1_data = {
                 'x' : x,
@@ -1407,16 +1391,10 @@ class JsonChartView(JsonView):
 
 
             # custom chart 2
-            if custom_2_index < 100:
-                try:
-                    custom_2_y = i.data['sensor_user_{0:d}'.format(custom_2_index)]
-                except KeyError:
-                    custom_2_y = 0
-            else:
-                try:
-                    custom_2_y = i.data['sensor_temp_{0:d}'.format(custom_2_index - 100)]
-                except KeyError:
-                    custom_2_y = 0
+            try:
+                custom_2_y = i.data[custom_chart_2_key]
+            except KeyError:
+                custom_2_y = 0
 
             custom_2_data = {
                 'x' : x,
@@ -1426,16 +1404,10 @@ class JsonChartView(JsonView):
 
 
             # custom chart 3
-            if custom_3_index < 100:
-                try:
-                    custom_3_y = i.data['sensor_user_{0:d}'.format(custom_3_index)]
-                except KeyError:
-                    custom_3_y = 0
-            else:
-                try:
-                    custom_3_y = i.data['sensor_temp_{0:d}'.format(custom_3_index - 100)]
-                except KeyError:
-                    custom_3_y = 0
+            try:
+                custom_3_y = i.data[custom_chart_3_key]
+            except KeyError:
+                custom_3_y = 0
 
             custom_3_data = {
                 'x' : x,
@@ -1445,16 +1417,10 @@ class JsonChartView(JsonView):
 
 
             # custom chart 4
-            if custom_4_index < 100:
-                try:
-                    custom_4_y = i.data['sensor_user_{0:d}'.format(custom_4_index)]
-                except KeyError:
-                    custom_4_y = 0
-            else:
-                try:
-                    custom_4_y = i.data['sensor_temp_{0:d}'.format(custom_4_index - 100)]
-                except KeyError:
-                    custom_4_y = 0
+            try:
+                custom_4_y = i.data[custom_chart_4_key]
+            except KeyError:
+                custom_4_y = 0
 
             custom_4_data = {
                 'x' : x,
@@ -1464,16 +1430,10 @@ class JsonChartView(JsonView):
 
 
             # custom chart 5
-            if custom_5_index < 100:
-                try:
-                    custom_5_y = i.data['sensor_user_{0:d}'.format(custom_5_index)]
-                except KeyError:
-                    custom_5_y = 0
-            else:
-                try:
-                    custom_5_y = i.data['sensor_temp_{0:d}'.format(custom_5_index - 100)]
-                except KeyError:
-                    custom_5_y = 0
+            try:
+                custom_5_y = i.data[custom_chart_5_key]
+            except KeyError:
+                custom_5_y = 0
 
             custom_5_data = {
                 'x' : x,
@@ -1483,16 +1443,10 @@ class JsonChartView(JsonView):
 
 
             # custom chart 6
-            if custom_6_index < 100:
-                try:
-                    custom_6_y = i.data['sensor_user_{0:d}'.format(custom_6_index)]
-                except KeyError:
-                    custom_6_y = 0
-            else:
-                try:
-                    custom_6_y = i.data['sensor_temp_{0:d}'.format(custom_6_index - 100)]
-                except KeyError:
-                    custom_6_y = 0
+            try:
+                custom_6_y = i.data[custom_chart_6_key]
+            except KeyError:
+                custom_6_y = 0
 
             custom_6_data = {
                 'x' : x,
@@ -1649,23 +1603,10 @@ class ConfigView(FormView):
             fan_thold_diff_high = self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_HIGH', 0)
 
 
-            dh_temp_slot = self.indi_allsky_config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)
-            if dh_temp_slot < 100:
-                dh_temp_slot_var = 'sensor_user_{0:d}'.format(dh_temp_slot)
-            else:
-                dh_temp_slot_var = 'sensor_temp_{0:d}'.format(dh_temp_slot - 100)
+            dh_temp_slot_var = self.indi_allsky_config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 'sensor_user_10')
+            dh_dewpoint_slot_var = self.indi_allsky_config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 'sensor_user_2')
 
-            dh_dewpoint_slot = self.indi_allsky_config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 2)
-            if dh_dewpoint_slot < 100:
-                dh_dewpoint_slot_var = 'sensor_user_{0:d}'.format(dh_dewpoint_slot)
-            else:
-                dh_dewpoint_slot_var = 'sensor_temp_{0:d}'.format(dh_dewpoint_slot - 100)
-
-            fan_temp_slot = self.indi_allsky_config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 10)
-            if fan_temp_slot < 100:
-                fan_temp_slot_var = 'sensor_user_{0:d}'.format(fan_temp_slot)
-            else:
-                fan_temp_slot_var = 'sensor_temp_{0:d}'.format(fan_temp_slot - 100)
+            fan_temp_slot_var = self.indi_allsky_config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 'sensor_user_10')
 
 
             if latest_image_entry.data.get(dh_temp_slot_var):
@@ -2123,8 +2064,8 @@ class ConfigView(FormView):
             'DEW_HEATER__LEVEL_DEF'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100),
             'DEW_HEATER__THOLD_ENABLE'       : self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_ENABLE', False),
             'DEW_HEATER__MANUAL_TARGET'      : self.indi_allsky_config.get('DEW_HEATER', {}).get('MANUAL_TARGET', 0.0),
-            'DEW_HEATER__TEMP_USER_VAR_SLOT' : str(self.indi_allsky_config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 10)),  # string in form, int in config
-            'DEW_HEATER__DEWPOINT_USER_VAR_SLOT' : str(self.indi_allsky_config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 2)),  # string in form, int in config
+            'DEW_HEATER__TEMP_USER_VAR_SLOT' : self.indi_allsky_config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 'sensor_user_10'),
+            'DEW_HEATER__DEWPOINT_USER_VAR_SLOT' : self.indi_allsky_config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 'sensor_user_2'),
             'DEW_HEATER__LEVEL_LOW'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_LOW', 33),
             'DEW_HEATER__LEVEL_MED'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_MED', 66),
             'DEW_HEATER__LEVEL_HIGH'         : self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_HIGH', 100),
@@ -2138,7 +2079,7 @@ class ConfigView(FormView):
             'FAN__LEVEL_DEF'                 : self.indi_allsky_config.get('FAN', {}).get('LEVEL_DEF', 100),
             'FAN__THOLD_ENABLE'              : self.indi_allsky_config.get('FAN', {}).get('THOLD_ENABLE', False),
             'FAN__TARGET'                    : self.indi_allsky_config.get('FAN', {}).get('TARGET', 30.0),
-            'FAN__TEMP_USER_VAR_SLOT'        : str(self.indi_allsky_config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 10)),  # string in form, int in config
+            'FAN__TEMP_USER_VAR_SLOT'        : self.indi_allsky_config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 'sensor_user_10'),
             'FAN__LEVEL_LOW'                 : self.indi_allsky_config.get('FAN', {}).get('LEVEL_LOW', 33),
             'FAN__LEVEL_MED'                 : self.indi_allsky_config.get('FAN', {}).get('LEVEL_MED', 66),
             'FAN__LEVEL_HIGH'                : self.indi_allsky_config.get('FAN', {}).get('LEVEL_HIGH', 100),
@@ -2152,17 +2093,17 @@ class ConfigView(FormView):
             'TEMP_SENSOR__A_LABEL'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_LABEL', 'Sensor A'),
             'TEMP_SENSOR__A_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'D5'),
             'TEMP_SENSOR__A_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77'),
-            'TEMP_SENSOR__A_USER_VAR_SLOT'   : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 10)),  # string in form, int in config
+            'TEMP_SENSOR__A_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 'sensor_user_10'),
             'TEMP_SENSOR__B_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_CLASSNAME', ''),
             'TEMP_SENSOR__B_LABEL'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B'),
             'TEMP_SENSOR__B_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'D6'),
             'TEMP_SENSOR__B_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76'),
-            'TEMP_SENSOR__B_USER_VAR_SLOT'   : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 15)),  # string in form, int in config
+            'TEMP_SENSOR__B_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_15'),
             'TEMP_SENSOR__C_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_CLASSNAME', ''),
             'TEMP_SENSOR__C_LABEL'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C'),
             'TEMP_SENSOR__C_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_PIN_1', 'D16'),
             'TEMP_SENSOR__C_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40'),
-            'TEMP_SENSOR__C_USER_VAR_SLOT'   : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 20)),  # string in form, int in config
+            'TEMP_SENSOR__C_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_20'),
             'TEMP_SENSOR__OPENWEATHERMAP_APIKEY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', ''),
             'TEMP_SENSOR__WUNDERGROUND_APIKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', ''),
             'TEMP_SENSOR__ASTROSPHERIC_APIKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', ''),
@@ -2205,12 +2146,12 @@ class ConfigView(FormView):
             'TEMP_SENSOR__SI1145_IR_GAIN_DAY'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_IR_GAIN_DAY', 'GAIN_ADC_CLOCK_DIV_1'),
             'TEMP_SENSOR__LTR390_GAIN_NIGHT'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('LTR390_GAIN_NIGHT', 'GAIN_9X'),
             'TEMP_SENSOR__LTR390_GAIN_DAY'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('LTR390_GAIN_DAY', 'GAIN_1X'),
-            'CHARTS__CUSTOM_SLOT_1'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 10)),  # string in form, int in config
-            'CHARTS__CUSTOM_SLOT_2'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 11)),  # string in form, int in config
-            'CHARTS__CUSTOM_SLOT_3'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 12)),  # string in form, int in config
-            'CHARTS__CUSTOM_SLOT_4'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 13)),  # string in form, int in config
-            'CHARTS__CUSTOM_SLOT_5'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 14)),  # string in form, int in config
-            'CHARTS__CUSTOM_SLOT_6'          : str(self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 15)),  # string in form, int in config
+            'CHARTS__CUSTOM_SLOT_1'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 'sensor_user_10'),
+            'CHARTS__CUSTOM_SLOT_2'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 'sensor_user_11'),
+            'CHARTS__CUSTOM_SLOT_3'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 'sensor_user_12'),
+            'CHARTS__CUSTOM_SLOT_4'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 'sensor_user_13'),
+            'CHARTS__CUSTOM_SLOT_5'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 'sensor_user_14'),
+            'CHARTS__CUSTOM_SLOT_6'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 'sensor_user_15'),
             'ADSB__ENABLE'                   : self.indi_allsky_config.get('ADSB', {}).get('ENABLE', False),
             'ADSB__DUMP1090_URL'             : self.indi_allsky_config.get('ADSB', {}).get('DUMP1090_URL', 'https://localhost/dump1090/data/aircraft.json'),
             'ADSB__USERNAME'                 : self.indi_allsky_config.get('ADSB', {}).get('USERNAME', ''),
@@ -2931,8 +2872,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['DEW_HEATER']['LEVEL_DEF']              = int(request.json['DEW_HEATER__LEVEL_DEF'])
         self.indi_allsky_config['DEW_HEATER']['THOLD_ENABLE']           = bool(request.json['DEW_HEATER__THOLD_ENABLE'])
         self.indi_allsky_config['DEW_HEATER']['MANUAL_TARGET']          = float(request.json['DEW_HEATER__MANUAL_TARGET'])
-        self.indi_allsky_config['DEW_HEATER']['TEMP_USER_VAR_SLOT']     = int(request.json['DEW_HEATER__TEMP_USER_VAR_SLOT'])
-        self.indi_allsky_config['DEW_HEATER']['DEWPOINT_USER_VAR_SLOT'] = int(request.json['DEW_HEATER__DEWPOINT_USER_VAR_SLOT'])
+        self.indi_allsky_config['DEW_HEATER']['TEMP_USER_VAR_SLOT']     = str(request.json['DEW_HEATER__TEMP_USER_VAR_SLOT'])
+        self.indi_allsky_config['DEW_HEATER']['DEWPOINT_USER_VAR_SLOT'] = str(request.json['DEW_HEATER__DEWPOINT_USER_VAR_SLOT'])
         self.indi_allsky_config['DEW_HEATER']['LEVEL_LOW']              = int(request.json['DEW_HEATER__LEVEL_LOW'])
         self.indi_allsky_config['DEW_HEATER']['LEVEL_MED']              = int(request.json['DEW_HEATER__LEVEL_MED'])
         self.indi_allsky_config['DEW_HEATER']['LEVEL_HIGH']             = int(request.json['DEW_HEATER__LEVEL_HIGH'])
@@ -2946,7 +2887,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FAN']['LEVEL_DEF']                     = int(request.json['FAN__LEVEL_DEF'])
         self.indi_allsky_config['FAN']['THOLD_ENABLE']                  = bool(request.json['FAN__THOLD_ENABLE'])
         self.indi_allsky_config['FAN']['TARGET']                        = float(request.json['FAN__TARGET'])
-        self.indi_allsky_config['FAN']['TEMP_USER_VAR_SLOT']            = int(request.json['FAN__TEMP_USER_VAR_SLOT'])
+        self.indi_allsky_config['FAN']['TEMP_USER_VAR_SLOT']            = str(request.json['FAN__TEMP_USER_VAR_SLOT'])
         self.indi_allsky_config['FAN']['LEVEL_LOW']                     = int(request.json['FAN__LEVEL_LOW'])
         self.indi_allsky_config['FAN']['LEVEL_MED']                     = int(request.json['FAN__LEVEL_MED'])
         self.indi_allsky_config['FAN']['LEVEL_HIGH']                    = int(request.json['FAN__LEVEL_HIGH'])
@@ -2959,17 +2900,17 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['A_CLASSNAME']           = str(request.json['TEMP_SENSOR__A_CLASSNAME'])
         self.indi_allsky_config['TEMP_SENSOR']['A_LABEL']               = str(request.json['TEMP_SENSOR__A_LABEL'])
         self.indi_allsky_config['TEMP_SENSOR']['A_PIN_1']               = str(request.json['TEMP_SENSOR__A_PIN_1'])
-        self.indi_allsky_config['TEMP_SENSOR']['A_USER_VAR_SLOT']       = int(request.json['TEMP_SENSOR__A_USER_VAR_SLOT'])
+        self.indi_allsky_config['TEMP_SENSOR']['A_USER_VAR_SLOT']       = str(request.json['TEMP_SENSOR__A_USER_VAR_SLOT'])
         self.indi_allsky_config['TEMP_SENSOR']['A_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__A_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['B_CLASSNAME']           = str(request.json['TEMP_SENSOR__B_CLASSNAME'])
         self.indi_allsky_config['TEMP_SENSOR']['B_LABEL']               = str(request.json['TEMP_SENSOR__B_LABEL'])
         self.indi_allsky_config['TEMP_SENSOR']['B_PIN_1']               = str(request.json['TEMP_SENSOR__B_PIN_1'])
-        self.indi_allsky_config['TEMP_SENSOR']['B_USER_VAR_SLOT']       = int(request.json['TEMP_SENSOR__B_USER_VAR_SLOT'])
+        self.indi_allsky_config['TEMP_SENSOR']['B_USER_VAR_SLOT']       = str(request.json['TEMP_SENSOR__B_USER_VAR_SLOT'])
         self.indi_allsky_config['TEMP_SENSOR']['B_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__B_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['C_CLASSNAME']           = str(request.json['TEMP_SENSOR__C_CLASSNAME'])
         self.indi_allsky_config['TEMP_SENSOR']['C_LABEL']               = str(request.json['TEMP_SENSOR__C_LABEL'])
         self.indi_allsky_config['TEMP_SENSOR']['C_PIN_1']               = str(request.json['TEMP_SENSOR__C_PIN_1'])
-        self.indi_allsky_config['TEMP_SENSOR']['C_USER_VAR_SLOT']       = int(request.json['TEMP_SENSOR__C_USER_VAR_SLOT'])
+        self.indi_allsky_config['TEMP_SENSOR']['C_USER_VAR_SLOT']       = str(request.json['TEMP_SENSOR__C_USER_VAR_SLOT'])
         self.indi_allsky_config['TEMP_SENSOR']['C_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__C_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = str(request.json['TEMP_SENSOR__OPENWEATHERMAP_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['WUNDERGROUND_APIKEY']   = str(request.json['TEMP_SENSOR__WUNDERGROUND_APIKEY'])
@@ -3013,12 +2954,12 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['SI1145_IR_GAIN_DAY']    = str(request.json['TEMP_SENSOR__SI1145_IR_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['LTR390_GAIN_NIGHT']     = str(request.json['TEMP_SENSOR__LTR390_GAIN_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['LTR390_GAIN_DAY']       = str(request.json['TEMP_SENSOR__LTR390_GAIN_DAY'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1']              = int(request.json['CHARTS__CUSTOM_SLOT_1'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2']              = int(request.json['CHARTS__CUSTOM_SLOT_2'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_3']              = int(request.json['CHARTS__CUSTOM_SLOT_3'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_4']              = int(request.json['CHARTS__CUSTOM_SLOT_4'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_5']              = int(request.json['CHARTS__CUSTOM_SLOT_5'])
-        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_6']              = int(request.json['CHARTS__CUSTOM_SLOT_6'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1']              = str(request.json['CHARTS__CUSTOM_SLOT_1'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2']              = str(request.json['CHARTS__CUSTOM_SLOT_2'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_3']              = str(request.json['CHARTS__CUSTOM_SLOT_3'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_4']              = str(request.json['CHARTS__CUSTOM_SLOT_4'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_5']              = str(request.json['CHARTS__CUSTOM_SLOT_5'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_6']              = str(request.json['CHARTS__CUSTOM_SLOT_6'])
         self.indi_allsky_config['ADSB']['ENABLE']                       = bool(request.json['ADSB__ENABLE'])
         self.indi_allsky_config['ADSB']['DUMP1090_URL']                 = str(request.json['ADSB__DUMP1090_URL'])
         self.indi_allsky_config['ADSB']['USERNAME']                     = str(request.json['ADSB__USERNAME'])

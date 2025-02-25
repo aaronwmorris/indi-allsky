@@ -97,6 +97,7 @@ class miscDb(object):
             's3_key',
             'remote_url',
             'file_size',
+            'data',  # manually handle data
             #'sync_id',
             #'friendlyName',
         ]
@@ -107,6 +108,19 @@ class miscDb(object):
                 continue
 
             setattr(camera, k, v)
+
+
+        if camera.data:
+            camera_data = dict(camera.data)
+        else:
+            camera_data = dict()
+
+
+        # update entries
+        for k, v in metadata.get('data', {}).items():
+            camera_data[k] = v
+
+        camera.data = camera_data
 
 
         db.session.commit()
@@ -130,7 +144,7 @@ class miscDb(object):
                 name=metadata['uuid'],  # use uuid initially for uniqueness
                 connectDate=now,
                 local=False,
-                uuid=metadata['uuid']
+                uuid=metadata['uuid'],
             )
 
             db.session.add(camera)
@@ -161,6 +175,7 @@ class miscDb(object):
             'file_size',
             'web_nonlocal_images',
             'web_local_images_admin',
+            'data',  # manually handle data
         ]
 
         # populate camera info
@@ -169,6 +184,19 @@ class miscDb(object):
                 continue
 
             setattr(camera, k, v)
+
+
+        if camera.data:
+            camera_data = dict(camera.data)
+        else:
+            camera_data = dict()
+
+
+        # update entries
+        for k, v in metadata.get('data', {}).items():
+            camera_data[k] = v
+
+        camera.data = camera_data
 
 
         db.session.commit()

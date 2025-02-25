@@ -339,8 +339,17 @@ else
     echo "indi-allsky virtualenv is not created"
     echo
 fi
-
 echo "\`\`\`"  # markdown
+
+
+echo
+echo "indi-allky log errors"
+echo "\`\`\`"  # markdown
+grep -i "error" /var/log/indi-allsky/indi-allsky.log | tail -n 30 || true
+echo "\`\`\`"  # markdown
+
+
+echo
 echo "#################################"
 echo "###     end support info      ###"
 echo "#################################"

@@ -66,7 +66,11 @@ def SQLALCHEMY_DATABASE_URI_validator(form, field):
 
 
 def CAMERA_INTERFACE_validator(form, field):
-    if field.data not in list(zip(*form.CAMERA_INTERFACE_choices))[0]:
+    interfaces = list()
+    for v in form.CAMERA_INTERFACE_choices.values():
+        interfaces.extend(list(zip(*v))[0])
+
+    if field.data not in interfaces:
         raise ValidationError('Invalid camera interface')
 
 
@@ -2386,23 +2390,13 @@ def PYCURL_CAMERA__IMAGE_FILE_TYPE_validator(form, field):
 
 
 def FOCUSER__CLASSNAME_validator(form, field):
-    if not field.data:
-        return
-
-    class_regex = r'^[a-zA-Z0-9_\-]+$'
-
-    if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid class syntax')
+    if field.data not in list(zip(*form.FOCUSER__CLASSNAME_choices))[0]:
+        raise ValidationError('Invalid selection')
 
 
 def DEW_HEATER__CLASSNAME_validator(form, field):
-    if not field.data:
-        return
-
-    class_regex = r'^[a-zA-Z0-9_\-]+$'
-
-    if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid class syntax')
+    if field.data not in list(zip(*form.DEW_HEATER__CLASSNAME_choices))[0]:
+        raise ValidationError('Invalid selection')
 
 
 def DEW_HEATER__LEVEL_validator(form, field):
@@ -2430,13 +2424,8 @@ def DEW_HEATER__MANUAL_TARGET_validator(form, field):
 
 
 def FAN__CLASSNAME_validator(form, field):
-    if not field.data:
-        return
-
-    class_regex = r'^[a-zA-Z0-9_\-]+$'
-
-    if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid class syntax')
+    if field.data not in list(zip(*form.FAN__CLASSNAME_choices))[0]:
+        raise ValidationError('Invalid selection')
 
 
 def FAN__LEVEL_validator(form, field):
@@ -2461,23 +2450,17 @@ def FAN__TARGET_validator(form, field):
 
 
 def GENERIC_GPIO__CLASSNAME_validator(form, field):
-    if not field.data:
-        return
-
-    class_regex = r'^[a-zA-Z0-9_\-]+$'
-
-    if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid class syntax')
+    if field.data not in list(zip(*form.GENERIC_GPIO__CLASSNAME_choices))[0]:
+        raise ValidationError('Invalid selection')
 
 
 def TEMP_SENSOR__CLASSNAME_validator(form, field):
-    if not field.data:
-        return
+    sensors = list()
+    for v in form.TEMP_SENSOR__CLASSNAME_choices.values():
+        sensors.extend(list(zip(*v))[0])
 
-    class_regex = r'^[a-zA-Z0-9_\-]+$'
-
-    if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid class syntax')
+    if field.data not in sensors:
+        raise ValidationError('Invalid selection')
 
 
 def TEMP_SENSOR__LABEL_validator(form, field):
@@ -2530,28 +2513,17 @@ def TEMP_SENSOR__MACADDRESS_validator(form, field):
 
 
 def SENSOR_SLOT_validator(form, field):
-    try:
-        slot_i = int(field.data)
-    except ValueError as e:
-        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+    slots = list()
+    for v in form.SENSOR_SLOT_choices.values():
+        slots.extend(list(zip(*v))[0])
 
-
-    if slot_i < 0:
-        raise ValidationError('Slot must be 0 or greater')
+    if field.data not in slots:
+        raise ValidationError('Invalid selection')
 
 
 def SENSOR_USER_VAR_SLOT_validator(form, field):
-    try:
-        slot_i = int(field.data)
-    except ValueError as e:
-        raise ValidationError('ValueError: {0:s}'.format(str(e)))
-
-
-    if slot_i < 0:
-        raise ValidationError('Slot must be 0 or greater')
-
-    if slot_i > 30:
-        raise ValidationError('Slot must be less than 30')
+    if field.data not in list(zip(*form.SENSOR_USER_VAR_SLOT_choices))[0]:
+        raise ValidationError('Invalid selection')
 
 
 def DEVICE_PIN_NAME_validator(form, field):
@@ -2821,28 +2793,36 @@ def INDI_CONFIG_DAY_validator(*args):
 
 
 class IndiAllskyConfigForm(FlaskForm):
-    CAMERA_INTERFACE_choices = (
-        ('indi', 'INDI'),
-        ('libcamera_imx477', 'libcamera IMX477'),
-        ('libcamera_imx378', 'libcamera IMX378'),
-        ('libcamera_imx708', 'libcamera IMX708'),
-        ('libcamera_imx519', 'libcamera IMX519'),
-        ('libcamera_imx462', 'libcamera IMX462'),
-        ('libcamera_imx327', 'libcamera IMX327'),
-        ('libcamera_imx678', 'libcamera IMX678 Darksee'),
-        ('libcamera_imx500_ai', 'libcamera IMX500 AI'),
-        ('libcamera_imx283', 'libcamera IMX283 Klarity/OneInchEye'),
-        ('libcamera_imx296_gs', 'libcamera IMX296 GS'),
-        ('libcamera_imx290', 'libcamera IMX290'),
-        ('libcamera_imx298', 'libcamera IMX298'),
-        ('libcamera_imx219', 'libcamera IMX219'),
-        ('libcamera_ov5647', 'libcamera OV5647'),
-        ('libcamera_64mp_hawkeye', 'libcamera 64mp HawkEye'),
-        ('libcamera_64mp_owlsight', 'libcamera 64mp OwlSight'),
-        ('pycurl_camera', 'pyCurl Camera'),
-        ('indi_accumulator', 'INDI Accumulator'),
-        ('indi_passive', 'INDI (Passive)'),
-    )
+    CAMERA_INTERFACE_choices = {
+        'INDI' : (
+            ('indi', 'INDI'),
+        ),
+        'libcamera' : (
+            ('libcamera_imx477', 'libcamera IMX477'),
+            ('libcamera_imx378', 'libcamera IMX378'),
+            ('libcamera_imx708', 'libcamera IMX708'),
+            ('libcamera_imx519', 'libcamera IMX519'),
+            ('libcamera_imx462', 'libcamera IMX462'),
+            ('libcamera_imx327', 'libcamera IMX327'),
+            ('libcamera_imx678', 'libcamera IMX678 Darksee'),
+            ('libcamera_imx500_ai', 'libcamera IMX500 AI'),
+            ('libcamera_imx283', 'libcamera IMX283 Klarity/OneInchEye'),
+            ('libcamera_imx296_gs', 'libcamera IMX296 GS'),
+            ('libcamera_imx290', 'libcamera IMX290'),
+            ('libcamera_imx298', 'libcamera IMX298'),
+            ('libcamera_imx219', 'libcamera IMX219'),
+            ('libcamera_ov5647', 'libcamera OV5647'),
+            ('libcamera_64mp_hawkeye', 'libcamera 64mp HawkEye'),
+            ('libcamera_64mp_owlsight', 'libcamera 64mp OwlSight'),
+        ),
+        'Network Web Cameras' : (
+            ('pycurl_camera', 'pyCurl Camera'),
+        ),
+        'Special Function' : (
+            ('indi_accumulator', 'INDI Accumulator'),
+            ('indi_passive', 'INDI (Passive)'),
+        ),
+    }
 
     CCD_BIT_DEPTH_choices = (
         ('0', 'Auto Detect'),
@@ -3140,131 +3120,145 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_gpio_standard', 'GPIO - Standard'),
     )
 
-    TEMP_SENSOR__CLASSNAME_choices = (
-        ('', 'None'),
-        ('temp_api_openweathermap', 'OpenWeather API (9)'),
-        ('temp_api_weatherunderground', 'Weather Underground API (8)'),
-        ('temp_api_astrospheric', 'Astrospheric API (5)'),
-        ('temp_api_ambientweather', 'AmbientWeather API (9)'),
-        ('temp_api_ecowitt', 'Ecowitt API (9)'),
-        ('kernel_temp_sensor_ds18x20_w1', 'DS18x20 - Temp (1)'),
-        ('blinka_temp_sensor_dht22', 'DHT22/AM2302 - Temp/RH (2)'),
-        ('blinka_temp_sensor_dht21', 'DHT21/AM2301 - Temp/RH (2)'),
-        ('blinka_temp_sensor_dht11', 'DHT11 - Temp/RH (2)'),
-        ('blinka_temp_sensor_bmp180_i2c', 'BMP180 i2c - Temp/Pres (2)'),
-        ('blinka_temp_sensor_bme280_i2c', 'BMP/BME280 i2c - Temp/RH/Pres (3)'),
-        ('blinka_temp_sensor_bme280_spi', 'BMP/BME280 SPI - Temp/RH/Pres (3)'),
-        ('blinka_temp_sensor_bme680_i2c', 'BME680 i2c - Temp/RH/Pres/Gas (4)'),
-        ('blinka_temp_sensor_bme680_spi', 'BME680 SPI - Temp/RH/Pres/Gas (4)'),
-        ('blinka_temp_sensor_si7021_i2c', 'Si7021 i2c - Temp/RH (2)'),
-        ('blinka_temp_sensor_sht3x_i2c', 'SHT3x i2c - Temp/RH (2)'),
-        ('blinka_temp_sensor_sht4x_i2c', 'SHT40/41/45 i2c - Temp/RH (2)'),
-        ('blinka_temp_sensor_htu21d_i2c', 'HTU21D i2c - Temp/RH (2)'),
-        ('blinka_temp_sensor_htu31d_i2c', 'HTU31D i2c - Temp/RH (2)'),
-        ('blinka_temp_sensor_ahtx0_i2c', 'AHT10/20 i2c - Temp/RH (2)'),
-        ('blinka_temp_sensor_scd30_i2c', 'SCD-30 i2c - Temp/RH/CO2 (3)'),
-        ('blinka_temp_sensor_scd4x_i2c', 'SCD-4x i2c - Temp/RH/CO2 (3)'),
-        ('cpads_temp_sensor_tmp36_ads1015_i2c', 'TMP36 ADS1015 i2c - Temp (1)'),
-        ('cpads_temp_sensor_tmp36_ads1115_i2c', 'TMP36 ADS1115 i2c - Temp (1)'),
-        ('cpads_temp_sensor_lm35_ads1015_i2c', 'LM35 ADS1015 i2c - Temp (1)'),
-        ('cpads_temp_sensor_lm35_ads1115_i2c', 'LM35 ADS1115 i2c - Temp (1)'),
-        ('blinka_temp_sensor_mlx90614_i2c', 'MLX90614 i2c - Temp/SkyTemp (2)'),
-        ('blinka_temp_sensor_mlx90640_i2c', 'MLX90640 i2c - SkyTemp (1)'),
-        ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR (3)'),
-        ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full (4)'),
-        ('blinka_light_sensor_veml7700_i2c', 'VEML7700 i2c - Lux/Light/White (3)'),
-        ('blinka_light_sensor_bh1750_i2c', 'BH1750 i2c - Lux (1)'),
-        ('blinka_light_sensor_si1145_i2c', 'SI1145 i2c - Vis/IR/UV (3)'),
-        ('blinka_light_sensor_ltr390_i2c', 'LTR390 i2c - UV/Vis/UVI/Lux (4)'),
-        ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5)'),
-        ('sensor_data_generator', 'Test Data Generator - (4)'),
-    )
+    TEMP_SENSOR__CLASSNAME_choices = {
+        'Disabled' : (
+            ('', 'None'),
+        ),
+        'API Services' : (
+            ('temp_api_openweathermap', 'OpenWeather API (9)'),
+            ('temp_api_weatherunderground', 'Weather Underground API (8)'),
+            ('temp_api_astrospheric', 'Astrospheric API (5)'),
+            ('temp_api_ambientweather', 'AmbientWeather API (9)'),
+            ('temp_api_ecowitt', 'Ecowitt API (9)'),
+        ),
+        'Temperature Sensors' : (
+            ('kernel_temp_sensor_ds18x20_w1', 'DS18x20 - Temp (1)'),
+            ('blinka_temp_sensor_dht22', 'DHT22/AM2302 - Temp/RH (2)'),
+            ('blinka_temp_sensor_dht21', 'DHT21/AM2301 - Temp/RH (2)'),
+            ('blinka_temp_sensor_dht11', 'DHT11 - Temp/RH (2)'),
+            ('blinka_temp_sensor_bmp180_i2c', 'BMP180 i2c - Temp/Pres (2)'),
+            ('blinka_temp_sensor_bme280_i2c', 'BMP/BME280 i2c - Temp/RH/Pres (3)'),
+            ('blinka_temp_sensor_bme280_spi', 'BMP/BME280 SPI - Temp/RH/Pres (3)'),
+            ('blinka_temp_sensor_bme680_i2c', 'BME680 i2c - Temp/RH/Pres/Gas (4)'),
+            ('blinka_temp_sensor_bme680_spi', 'BME680 SPI - Temp/RH/Pres/Gas (4)'),
+            ('blinka_temp_sensor_si7021_i2c', 'Si7021 i2c - Temp/RH (2)'),
+            ('blinka_temp_sensor_sht3x_i2c', 'SHT3x i2c - Temp/RH (2)'),
+            ('blinka_temp_sensor_sht4x_i2c', 'SHT40/41/45 i2c - Temp/RH (2)'),
+            ('blinka_temp_sensor_htu21d_i2c', 'HTU21D i2c - Temp/RH (2)'),
+            ('blinka_temp_sensor_htu31d_i2c', 'HTU31D i2c - Temp/RH (2)'),
+            ('blinka_temp_sensor_ahtx0_i2c', 'AHT10/20 i2c - Temp/RH (2)'),
+            ('blinka_temp_sensor_scd30_i2c', 'SCD-30 i2c - Temp/RH/CO2 (3)'),
+            ('blinka_temp_sensor_scd4x_i2c', 'SCD-4x i2c - Temp/RH/CO2 (3)'),
+            ('cpads_temp_sensor_tmp36_ads1015_i2c', 'TMP36 ADS1015 i2c - Temp (1)'),
+            ('cpads_temp_sensor_tmp36_ads1115_i2c', 'TMP36 ADS1115 i2c - Temp (1)'),
+            ('cpads_temp_sensor_lm35_ads1015_i2c', 'LM35 ADS1015 i2c - Temp (1)'),
+            ('cpads_temp_sensor_lm35_ads1115_i2c', 'LM35 ADS1115 i2c - Temp (1)'),
+            ('blinka_temp_sensor_mlx90614_i2c', 'MLX90614 i2c - Temp/SkyTemp (2)'),
+            ('blinka_temp_sensor_mlx90640_i2c', 'MLX90640 i2c - SkyTemp (1)'),
+        ),
+        'Light/Lux Sensors' : (
+            ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR (3)'),
+            ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full (4)'),
+            ('blinka_light_sensor_veml7700_i2c', 'VEML7700 i2c - Lux/Light/White (3)'),
+            ('blinka_light_sensor_bh1750_i2c', 'BH1750 i2c - Lux (1)'),
+            ('blinka_light_sensor_si1145_i2c', 'SI1145 i2c - Vis/IR/UV (3)'),
+            ('blinka_light_sensor_ltr390_i2c', 'LTR390 i2c - UV/Vis/UVI/Lux (4)'),
+            ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5)'),
+        ),
+        'Testing' : (
+            ('sensor_data_generator', 'Test Data Generator - (4)'),
+        ),
+    }
 
     SENSOR_USER_VAR_SLOT_choices = (
-        ('10', 'User Slot 10'),
-        ('11', 'User Slot 11'),
-        ('12', 'User Slot 12'),
-        ('13', 'User Slot 13'),
-        ('14', 'User Slot 14'),
-        ('15', 'User Slot 15'),
-        ('16', 'User Slot 16'),
-        ('17', 'User Slot 17'),
-        ('18', 'User Slot 18'),
-        ('19', 'User Slot 19'),
-        ('20', 'User Slot 20'),
-        ('21', 'User Slot 21'),
-        ('22', 'User Slot 22'),
-        ('23', 'User Slot 23'),
-        ('24', 'User Slot 24'),
-        ('25', 'User Slot 25'),
-        ('26', 'User Slot 26'),
-        ('27', 'User Slot 27'),
-        ('28', 'User Slot 28'),
-        ('29', 'User Slot 29'),
+        ('sensor_user_10', 'User Slot 10'),
+        ('sensor_user_11', 'User Slot 11'),
+        ('sensor_user_12', 'User Slot 12'),
+        ('sensor_user_13', 'User Slot 13'),
+        ('sensor_user_14', 'User Slot 14'),
+        ('sensor_user_15', 'User Slot 15'),
+        ('sensor_user_16', 'User Slot 16'),
+        ('sensor_user_17', 'User Slot 17'),
+        ('sensor_user_18', 'User Slot 18'),
+        ('sensor_user_19', 'User Slot 19'),
+        ('sensor_user_20', 'User Slot 20'),
+        ('sensor_user_21', 'User Slot 21'),
+        ('sensor_user_22', 'User Slot 22'),
+        ('sensor_user_23', 'User Slot 23'),
+        ('sensor_user_24', 'User Slot 24'),
+        ('sensor_user_25', 'User Slot 25'),
+        ('sensor_user_26', 'User Slot 26'),
+        ('sensor_user_27', 'User Slot 27'),
+        ('sensor_user_28', 'User Slot 28'),
+        ('sensor_user_29', 'User Slot 29'),
     )
 
-    SENSOR_SLOT_choices = [  # mutable
-        ('0', '(0) User Slot - Camera Temp'),
-        ('1', '(1) User Slot - Dew Heater Level'),
-        ('2', '(2) User Slot - Dew Point'),
-        ('3', '(3) User Slot - Frost Point'),
-        ('4', '(4) User Slot - Fan Level'),
-        ('5', '(5) User Slot - Heat Index'),
-        ('6', '(6) User Slot - Wind Dir (Degrees)'),
-        ('7', '(7) User Slot - SQM'),
-        ('8', 'User Slot - Future'),
-        ('9', 'User Slot - Future'),
-        ('10', 'User Slot 10'),
-        ('11', 'User Slot 11'),
-        ('12', 'User Slot 12'),
-        ('13', 'User Slot 13'),
-        ('14', 'User Slot 14'),
-        ('15', 'User Slot 15'),
-        ('16', 'User Slot 16'),
-        ('17', 'User Slot 17'),
-        ('18', 'User Slot 18'),
-        ('19', 'User Slot 19'),
-        ('20', 'User Slot 20'),
-        ('21', 'User Slot 21'),
-        ('22', 'User Slot 22'),
-        ('23', 'User Slot 23'),
-        ('24', 'User Slot 24'),
-        ('25', 'User Slot 25'),
-        ('26', 'User Slot 26'),
-        ('27', 'User Slot 27'),
-        ('28', 'User Slot 28'),
-        ('29', 'User Slot 29'),
-        ('100', '(0) System Temp - Camera Temp'),
-        ('101', 'System Temp - Future'),
-        ('102', 'System Temp - Future'),
-        ('103', 'System Temp - Future'),
-        ('104', 'System Temp - Future'),
-        ('105', 'System Temp - Future'),
-        ('106', 'System Temp - Future'),
-        ('107', 'System Temp - Future'),
-        ('108', 'System Temp - Future'),
-        ('109', 'System Temp - Future'),
-        ('110', 'System Temp 10'),
-        ('111', 'System Temp 11'),
-        ('112', 'System Temp 12'),
-        ('113', 'System Temp 13'),
-        ('114', 'System Temp 14'),
-        ('115', 'System Temp 15'),
-        ('116', 'System Temp 16'),
-        ('117', 'System Temp 17'),
-        ('118', 'System Temp 18'),
-        ('119', 'System Temp 19'),
-        ('120', 'System Temp 20'),
-        ('121', 'System Temp 21'),
-        ('122', 'System Temp 22'),
-        ('123', 'System Temp 23'),
-        ('124', 'System Temp 24'),
-        ('125', 'System Temp 25'),
-        ('126', 'System Temp 26'),
-        ('127', 'System Temp 27'),
-        ('128', 'System Temp 28'),
-        ('129', 'System Temp 29'),
-    ]
+    SENSOR_SLOT_choices = {
+        'User Sensors' : (
+            ['sensor_user_0', '(0) User Slot - Camera Temp'],  # mutable
+            ['sensor_user_1', '(1) User Slot - Dew Heater Level'],
+            ['sensor_user_2', '(2) User Slot - Dew Point'],
+            ['sensor_user_3', '(3) User Slot - Frost Point'],
+            ['sensor_user_4', '(4) User Slot - Fan Level'],
+            ['sensor_user_5', '(5) User Slot - Heat Index'],
+            ['sensor_user_6', '(6) User Slot - Wind Dir (Degrees)'],
+            ['sensor_user_7', '(7) User Slot - SQM'],
+            ['sensor_user_8', 'User Slot - Future'],
+            ['sensor_user_9', 'User Slot - Future'],
+            ['sensor_user_10', 'User Slot 10'],
+            ['sensor_user_12', 'User Slot 11'],
+            ['sensor_user_12', 'User Slot 12'],
+            ['sensor_user_13', 'User Slot 13'],
+            ['sensor_user_14', 'User Slot 14'],
+            ['sensor_user_15', 'User Slot 15'],
+            ['sensor_user_16', 'User Slot 16'],
+            ['sensor_user_17', 'User Slot 17'],
+            ['sensor_user_18', 'User Slot 18'],
+            ['sensor_user_19', 'User Slot 19'],
+            ['sensor_user_20', 'User Slot 20'],
+            ['sensor_user_21', 'User Slot 21'],
+            ['sensor_user_22', 'User Slot 22'],
+            ['sensor_user_23', 'User Slot 23'],
+            ['sensor_user_24', 'User Slot 24'],
+            ['sensor_user_25', 'User Slot 25'],
+            ['sensor_user_26', 'User Slot 26'],
+            ['sensor_user_27', 'User Slot 27'],
+            ['sensor_user_28', 'User Slot 28'],
+            ['sensor_user_29', 'User Slot 29'],
+        ),
+        'System Sensors' : (
+            ['sensor_temp_0', '(0) System Temp - Camera Temp'],
+            ['sensor_temp_1', 'System Temp - Future'],
+            ['sensor_temp_2', 'System Temp - Future'],
+            ['sensor_temp_3', 'System Temp - Future'],
+            ['sensor_temp_4', 'System Temp - Future'],
+            ['sensor_temp_5', 'System Temp - Future'],
+            ['sensor_temp_6', 'System Temp - Future'],
+            ['sensor_temp_7', 'System Temp - Future'],
+            ['sensor_temp_8', 'System Temp - Future'],
+            ['sensor_temp_9', 'System Temp - Future'],
+            ['sensor_temp_10', 'System Temp 10'],
+            ['sensor_temp_11', 'System Temp 11'],
+            ['sensor_temp_12', 'System Temp 12'],
+            ['sensor_temp_13', 'System Temp 13'],
+            ['sensor_temp_14', 'System Temp 14'],
+            ['sensor_temp_15', 'System Temp 15'],
+            ['sensor_temp_16', 'System Temp 16'],
+            ['sensor_temp_17', 'System Temp 17'],
+            ['sensor_temp_18', 'System Temp 18'],
+            ['sensor_temp_19', 'System Temp 19'],
+            ['sensor_temp_20', 'System Temp 20'],
+            ['sensor_temp_21', 'System Temp 21'],
+            ['sensor_temp_22', 'System Temp 22'],
+            ['sensor_temp_23', 'System Temp 23'],
+            ['sensor_temp_24', 'System Temp 24'],
+            ['sensor_temp_25', 'System Temp 25'],
+            ['sensor_temp_26', 'System Temp 26'],
+            ['sensor_temp_27', 'System Temp 27'],
+            ['sensor_temp_28', 'System Temp 28'],
+            ['sensor_temp_29', 'System Temp 29'],
+        )
+    }
 
 
     TEMP_SENSOR__TSL2561_GAIN_choices = (
@@ -3897,28 +3891,26 @@ class IndiAllskyConfigForm(FlaskForm):
 
         temp_sensor__a_classname = str(data['TEMP_SENSOR__A_CLASSNAME'])
         temp_sensor__a_label = str(data['TEMP_SENSOR__A_LABEL'])
-        temp_sensor__a_user_var_slot = int(data['TEMP_SENSOR__A_USER_VAR_SLOT'])
+        temp_sensor__a_user_var_slot = str(data['TEMP_SENSOR__A_USER_VAR_SLOT'])
         temp_sensor__b_classname = str(data['TEMP_SENSOR__B_CLASSNAME'])
         temp_sensor__b_label = str(data['TEMP_SENSOR__B_LABEL'])
-        temp_sensor__b_user_var_slot = int(data['TEMP_SENSOR__B_USER_VAR_SLOT'])
+        temp_sensor__b_user_var_slot = str(data['TEMP_SENSOR__B_USER_VAR_SLOT'])
         temp_sensor__c_classname = str(data['TEMP_SENSOR__C_CLASSNAME'])
         temp_sensor__c_label = str(data['TEMP_SENSOR__C_LABEL'])
-        temp_sensor__c_user_var_slot = int(data['TEMP_SENSOR__C_USER_VAR_SLOT'])
+        temp_sensor__c_user_var_slot = str(data['TEMP_SENSOR__C_USER_VAR_SLOT'])
 
 
         if temp_sensor__a_classname:
             try:
                 temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
+                slot_a_index = constants.SENSOR_INDEX_MAP[temp_sensor__a_user_var_slot]
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
-                    self.SENSOR_SLOT_choices[temp_sensor__a_user_var_slot + x] = (
-                        str(temp_sensor__a_user_var_slot + x),
-                        '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            temp_sensor__a_user_var_slot + x,
-                            temp_sensor__a_class.METADATA['name'],
-                            temp_sensor__a_label,
-                            temp_sensor__a_class.METADATA['labels'][x],
-                        )
+                    self.SENSOR_SLOT_choices['User Sensors'][slot_a_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
+                        slot_a_index + x,
+                        temp_sensor__a_class.METADATA['name'],
+                        temp_sensor__a_label,
+                        temp_sensor__a_class.METADATA['labels'][x],
                     )
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
@@ -3927,37 +3919,33 @@ class IndiAllskyConfigForm(FlaskForm):
         if temp_sensor__b_classname:
             try:
                 temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
+                slot_b_index = constants.SENSOR_INDEX_MAP[temp_sensor__b_user_var_slot]
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
-                    self.SENSOR_SLOT_choices[temp_sensor__b_user_var_slot + x] = (
-                        str(temp_sensor__b_user_var_slot + x),
-                        '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            temp_sensor__b_user_var_slot + x,
-                            temp_sensor__b_class.METADATA['name'],
-                            temp_sensor__b_label,
-                            temp_sensor__b_class.METADATA['labels'][x],
-                        )
+                    self.SENSOR_SLOT_choices['User Sensors'][slot_b_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
+                        slot_b_index + x,
+                        temp_sensor__b_class.METADATA['name'],
+                        temp_sensor__b_label,
+                        temp_sensor__b_class.METADATA['labels'][x],
                     )
             except AttributeError:
-                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+                app.logger.error('Unknown sensor class: %s', temp_sensor__b_classname)
 
 
         if temp_sensor__c_classname:
             try:
                 temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
+                slot_c_index = constants.SENSOR_INDEX_MAP[temp_sensor__c_user_var_slot]
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
-                    self.SENSOR_SLOT_choices[temp_sensor__c_user_var_slot + x] = (
-                        str(temp_sensor__c_user_var_slot + x),
-                        '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            temp_sensor__c_user_var_slot + x,
-                            temp_sensor__c_class.METADATA['name'],
-                            temp_sensor__c_label,
-                            temp_sensor__c_class.METADATA['labels'][x],
-                        )
+                    self.SENSOR_SLOT_choices['User Sensors'][slot_c_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
+                        slot_c_index + x,
+                        temp_sensor__c_class.METADATA['name'],
+                        temp_sensor__c_label,
+                        temp_sensor__c_class.METADATA['labels'][x],
                     )
             except AttributeError:
-                app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
+                app.logger.error('Unknown sensor class: %s', temp_sensor__c_classname)
 
 
         # Set system temp names
@@ -3977,11 +3965,8 @@ class IndiAllskyConfigForm(FlaskForm):
                 temp_label_list.append(topic)
 
 
-        for x, label in enumerate(temp_label_list[:30]):  # limit to 30
-            self.SENSOR_SLOT_choices[x + 40] = (
-                str(x + 110),  # these offsets are not confusing at all
-                '({0:d}) {1:s}'.format(x + 10, label)
-            )
+        for x, label in enumerate(temp_label_list[:20]):  # limit to 20
+            self.SENSOR_SLOT_choices['System Sensors'][x + 10][1] = '({0:d}) {1:s}'.format(x + 10, label)
 
 
         ### Update the choices
@@ -4353,6 +4338,17 @@ class IndiAllskyConfigForm(FlaskForm):
                 except ImportError:
                     self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
+
+
+        ### these never seem to be hit
+        #from ..devices import sensors as indi_allsky_sensors
+        #temp_sensor__a_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__A_CLASSNAME.data)
+        #sensor_a_count = temp_sensor__a_class.METADATA['count']
+        #slot_a_index = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__A_USER_VAR_SLOT.data]
+
+        #if sensor_a_count + slot_a_index > 30:
+        #    self.TEMP_SENSOR__A_USER_VAR_SLOT.errors.append('Not enough sensor slots')
+        #    result = False
 
 
         return result
