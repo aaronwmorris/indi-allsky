@@ -66,7 +66,11 @@ def SQLALCHEMY_DATABASE_URI_validator(form, field):
 
 
 def CAMERA_INTERFACE_validator(form, field):
-    if field.data not in list(zip(*form.CAMERA_INTERFACE_choices))[0]:
+    interfaces = list()
+    for v in form.CAMERA_INTERFACE_choices.values():
+        interfaces.extend(list(zip(*v))[0])
+
+    if field.data not in interfaces:
         raise ValidationError('Invalid camera interface')
 
 
@@ -2530,7 +2534,11 @@ def TEMP_SENSOR__MACADDRESS_validator(form, field):
 
 
 def SENSOR_SLOT_validator(form, field):
-    if field.data not in list(zip(*form.SENSOR_SLOT_choices))[0]:
+    slots = list()
+    for v in form.SENSOR_SLOT_choices.values():
+        slots.extend(list(zip(*v))[0])
+
+    if field.data not in slots:
         raise ValidationError('Invalid selection')
 
 
