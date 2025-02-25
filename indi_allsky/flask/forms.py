@@ -2390,23 +2390,13 @@ def PYCURL_CAMERA__IMAGE_FILE_TYPE_validator(form, field):
 
 
 def FOCUSER__CLASSNAME_validator(form, field):
-    if not field.data:
-        return
-
-    class_regex = r'^[a-zA-Z0-9_\-]+$'
-
-    if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid class syntax')
+    if field.data not in list(zip(*form.FOCUSER__CLASSNAME_choices))[0]:
+        raise ValidationError('Invalid selection')
 
 
 def DEW_HEATER__CLASSNAME_validator(form, field):
-    if not field.data:
-        return
-
-    class_regex = r'^[a-zA-Z0-9_\-]+$'
-
-    if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid class syntax')
+    if field.data not in list(zip(*form.DEW_HEATER__CLASSNAME_choices))[0]:
+        raise ValidationError('Invalid selection')
 
 
 def DEW_HEATER__LEVEL_validator(form, field):
@@ -2434,13 +2424,8 @@ def DEW_HEATER__MANUAL_TARGET_validator(form, field):
 
 
 def FAN__CLASSNAME_validator(form, field):
-    if not field.data:
-        return
-
-    class_regex = r'^[a-zA-Z0-9_\-]+$'
-
-    if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid class syntax')
+    if field.data not in list(zip(*form.FAN__CLASSNAME_choices))[0]:
+        raise ValidationError('Invalid selection')
 
 
 def FAN__LEVEL_validator(form, field):
@@ -2465,23 +2450,17 @@ def FAN__TARGET_validator(form, field):
 
 
 def GENERIC_GPIO__CLASSNAME_validator(form, field):
-    if not field.data:
-        return
-
-    class_regex = r'^[a-zA-Z0-9_\-]+$'
-
-    if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid class syntax')
+    if field.data not in list(zip(*form.GENERIC_GPIO__CLASSNAME_choices))[0]:
+        raise ValidationError('Invalid selection')
 
 
 def TEMP_SENSOR__CLASSNAME_validator(form, field):
-    if not field.data:
-        return
+    sensors = list()
+    for v in form.TEMP_SENSOR__CLASSNAME_choices.values():
+        sensors.extend(list(zip(*v))[0])
 
-    class_regex = r'^[a-zA-Z0-9_\-]+$'
-
-    if not re.search(class_regex, field.data):
-        raise ValidationError('Invalid class syntax')
+    if field.data not in sensors:
+        raise ValidationError('Invalid selection')
 
 
 def TEMP_SENSOR__LABEL_validator(form, field):
