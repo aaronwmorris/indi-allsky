@@ -1821,6 +1821,6 @@ class CaptureWorker(Process):
                 temp_label_list.append(topic)
 
 
-        for x, label in enumerate(temp_label_list[:30]):  # limit to 30
+        for x, label in enumerate(temp_label_list[:20]):  # limit to 20
             self.SENSOR_SLOTS[x + 40][1] = '{0:s}'.format(label)
 
