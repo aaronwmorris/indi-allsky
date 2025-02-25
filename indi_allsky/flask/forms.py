@@ -4361,6 +4361,17 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
 
+        ### these never seem to be hit
+        #from ..devices import sensors as indi_allsky_sensors
+        #temp_sensor__a_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__A_CLASSNAME.data)
+        #sensor_a_count = temp_sensor__a_class.METADATA['count']
+        #slot_a_index = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__A_USER_VAR_SLOT.data]
+
+        #if sensor_a_count + slot_a_index > 30:
+        #    self.TEMP_SENSOR__A_USER_VAR_SLOT.errors.append('Not enough sensor slots')
+        #    result = False
+
+
         return result
 
 
