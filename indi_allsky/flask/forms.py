@@ -3206,7 +3206,7 @@ class IndiAllskyConfigForm(FlaskForm):
             ['sensor_user_8', 'User Slot - Future'],
             ['sensor_user_9', 'User Slot - Future'],
             ['sensor_user_10', 'User Slot 10'],
-            ['sensor_user_12', 'User Slot 11'],
+            ['sensor_user_11', 'User Slot 11'],
             ['sensor_user_12', 'User Slot 12'],
             ['sensor_user_13', 'User Slot 13'],
             ['sensor_user_14', 'User Slot 14'],
