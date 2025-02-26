@@ -6533,7 +6533,7 @@ class JsonLogView(JsonView):
             filtered_lines = list()
             for line in log_lines:
                 ### this is probably insecure
-                if re.search(filter_regex, line):
+                if not re.search(filter_regex, line):
                     continue
 
                 filtered_lines.append(line)
