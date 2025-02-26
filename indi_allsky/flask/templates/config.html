@@ -6864,6 +6864,7 @@ var camera_id = {{ camera_id }};
             <div class="loader" id="loader_config"></div>
             <div id="success-message" class="text-success" style="display: none;"></div>
             <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+            <div id="failure-fields" class="invalid-feedback text-warning" style="display: none;"></div>
         </div>
     </div>
 
@@ -7423,6 +7424,7 @@ $('#form_config').on('submit', function() {
     Object.keys(fields).forEach((key) => {
         fields[key].error.css({'display' : 'none'});
     });
+    $('#failure-fields').css({'display' : 'none'});
 
 
     // Populate fields object
@@ -7447,10 +7449,10 @@ $('#form_config').on('submit', function() {
         url: "{{ url_for('indi_allsky.ajax_config_view') }}",
         contentType: "application/json",
         data: JSON.stringify(json_data),
-        success: function(data){
+        success: function(rdata){
             $("#loader_config").css({'display' : 'none'});
 
-            successMessage.html(data['success-message']);
+            successMessage.html(rdata['success-message']);
             successMessage.css({'display' : 'block'});
             setTimeout(function() {
                 successMessage.css({'display' : 'none'});
@@ -7458,15 +7460,24 @@ $('#form_config').on('submit', function() {
 
             $('#CONFIG_NOTE').val('');
         },
-        error: function(data){
+        error: function(rdata){
             $("#loader_config").css({'display' : 'none'});
 
-            var errors = JSON.parse(data.responseText);
+            var errors = JSON.parse(rdata.responseText);
+
+            var error_fields = new Array();
             Object.keys(errors).forEach((key) => {
                 fields[key].input.addClass('is-invalid');
                 fields[key].error.html(errors[key][0]);
                 fields[key].error.css({'display' : 'block'});
+
+                if (key != 'form_global') {
+                    error_fields.push(key);
+                };
             });
+
+            $('#failure-fields').html(error_fields.join('<br>'));
+            $('#failure-fields').css({'display' : 'block'});
         },
     });
 
