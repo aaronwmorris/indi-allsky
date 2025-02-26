@@ -3164,6 +3164,8 @@ class IndiAllskyConfigForm(FlaskForm):
             ('blinka_light_sensor_bh1750_i2c', 'BH1750 i2c - Lux (1)'),
             ('blinka_light_sensor_si1145_i2c', 'SI1145 i2c - Vis/IR/UV (3)'),
             ('blinka_light_sensor_ltr390_i2c', 'LTR390 i2c - UV/Vis/UVI/Lux (4)'),
+        ),
+        'Remote' : (
             ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5)'),
         ),
         'Testing' : (
@@ -4359,13 +4361,18 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
 
-        sensor_slots = (
-            self.TEMP_SENSOR__A_USER_VAR_SLOT,
-            self.TEMP_SENSOR__B_USER_VAR_SLOT,
-            self.TEMP_SENSOR__C_USER_VAR_SLOT,
-        )
+        check_sensor_slots = list()
+        if self.TEMP_SENSOR__A_CLASSNAME.data:
+            check_sensor_slots.append(self.TEMP_SENSOR__A_USER_VAR_SLOT)
 
-        for slot1, slot2 in itertools.combinations(sensor_slots, 2):
+        if self.TEMP_SENSOR__B_CLASSNAME.data:
+            check_sensor_slots.append(self.TEMP_SENSOR__B_USER_VAR_SLOT)
+
+        if self.TEMP_SENSOR__C_CLASSNAME.data:
+            check_sensor_slots.append(self.TEMP_SENSOR__C_USER_VAR_SLOT)
+
+
+        for slot1, slot2 in itertools.combinations(check_sensor_slots, 2):
             if slot1.data == slot2.data:
                 slot1.errors.append('Duplicate slot defined')
                 slot2.errors.append('Duplicate slot defined')
