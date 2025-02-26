@@ -259,10 +259,11 @@ class VideoWorker(Process):
         vid_folder = self._getVideoFolder(d_dayDate, camera)
 
         video_file = vid_folder.joinpath(
-            'allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+            'allsky-timelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
                 timespec,
                 timeofday,
+                int(now.timestamp()),
                 video_format,
             )
         )
@@ -779,10 +780,11 @@ class VideoWorker(Process):
         vid_folder = self._getVideoFolder(d_dayDate, camera)
 
         video_file = vid_folder.joinpath(
-            'allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+            'allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
                 timespec,
                 timeofday,
+                int(now.timestamp()),
                 video_format,
             )
         )
@@ -1005,28 +1007,31 @@ class VideoWorker(Process):
         vid_folder = self._getVideoFolder(d_dayDate, camera)
 
         keogram_file = vid_folder.joinpath(
-            'allsky-keogram_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+            'allsky-keogram_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
                 timespec,
                 timeofday,
+                int(now.timestamp()),
                 self.config['IMAGE_FILE_TYPE'],
             )
         )
 
         startrail_file = vid_folder.joinpath(
-            'allsky-startrail_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+            'allsky-startrail_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
                 timespec,
                 timeofday,
+                int(now.timestamp()),
                 self.config['IMAGE_FILE_TYPE'],
             )
         )
 
         startrail_video_file = vid_folder.joinpath(
-            'allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+            'allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
                 timespec,
                 timeofday,
+                int(now.timestamp()),
                 video_format,
             )
         )
