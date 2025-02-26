@@ -38,6 +38,7 @@ from .models import IndiAllSkyDbThumbnailTable
 from .models import IndiAllSkyDbUserTable
 
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy import and_
 
 
@@ -210,9 +211,11 @@ class SyncApiBaseView(BaseView):
 
             db.session.delete(old_entry)
             db.session.commit()
+        except MultipleResultsFound as e:
+            # this should never happen
+            raise EntryError('Multiple entries for the same dayDate and night') from e
         except NoResultFound:
             pass
-
 
 
         filename_p = date_folder.joinpath(
@@ -806,6 +809,10 @@ class EntryMissing(Exception):
 
 
 class AuthenticationFailure(Exception):
+    pass
+
+
+class EntryError(Exception):
     pass
 
 
