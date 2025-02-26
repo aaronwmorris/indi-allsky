@@ -1583,6 +1583,9 @@ class ConfigView(FormView):
             context['camera_maxExposure'] = self.camera.maxExposure
 
 
+        context['fits_enabled'] = self.indi_allsky_config.get('IMAGE_SAVE_FITS')
+
+
         if not self.validate_longitude_timezone():
             context['longitude_validation_message'] = '<span class="badge rounded-pill bg-warning text-dark">Warning</span><span class="text-warning"> Longitude validation failed.  Incorrect time, timezone, or longitude could cause this condition</span>'
         else:

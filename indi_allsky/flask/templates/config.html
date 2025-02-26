@@ -64,6 +64,10 @@ var camera_id = {{ camera_id }};
 <!-- should be above tab contents -->
 <div>{{ longitude_validation_message | safe }}</div>
 
+{% if fits_enabled %}
+<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Saving FITS files is enabled</div>
+{% endif %}
+
 
 <div class="tab-content" id="nav-tabContent">
   <div class="tab-pane fade show active" id="nav-camera" role="tabpanel" aria-labelledby="nav-camera-tab">
@@ -7479,7 +7483,7 @@ $('#form_config').on('submit', function() {
             var error_fields = new Array();
             Object.keys(errors).forEach((key) => {
                 fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key].join('<br>');
+                fields[key].error.html(errors[key].join('<br>'));
                 fields[key].error.css({'display' : 'block'});
 
                 if (key != 'form_global') {
