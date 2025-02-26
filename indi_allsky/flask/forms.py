@@ -8,6 +8,7 @@ from datetime import datetime
 import tempfile
 import psutil
 import subprocess
+import itertools
 
 from passlib.hash import argon2
 
@@ -4338,6 +4339,43 @@ class IndiAllskyConfigForm(FlaskForm):
                 except ImportError:
                     self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
+
+
+        # ensure sensor slots are unique
+        custom_charts = (
+            self.CHARTS__CUSTOM_SLOT_1,
+            self.CHARTS__CUSTOM_SLOT_2,
+            self.CHARTS__CUSTOM_SLOT_3,
+            self.CHARTS__CUSTOM_SLOT_4,
+            self.CHARTS__CUSTOM_SLOT_5,
+            self.CHARTS__CUSTOM_SLOT_6,
+        )
+
+        for chart1, chart2 in itertools.combinations(custom_charts, 2):
+            if chart1.data == chart2.data:
+                chart1.errors.append('Duplicate chart defined')
+                chart2.errors.append('Duplicate chart defined')
+                result = False
+
+
+
+        sensor_slots = (
+            self.TEMP_SENSOR__A_USER_VAR_SLOT,
+            self.TEMP_SENSOR__B_USER_VAR_SLOT,
+            self.TEMP_SENSOR__C_USER_VAR_SLOT,
+        )
+
+        for slot1, slot2 in itertools.combinations(sensor_slots, 2):
+            if slot1.data == slot2.data:
+                slot1.errors.append('Duplicate slot defined')
+                slot2.errors.append('Duplicate slot defined')
+                result = False
+
+
+        if self.DEW_HEATER__TEMP_USER_VAR_SLOT.data == self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.data:
+            self.DEW_HEATER__TEMP_USER_VAR_SLOT.errors.append('Sensor same as dew point')
+            self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.errors.append('Sensor same as temperature')
+            result = False
 
 
         ### these never seem to be hit
