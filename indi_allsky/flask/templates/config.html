@@ -136,7 +136,7 @@ var camera_id = {{ camera_id }};
             <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Camera dependent</div>
+            <div>Max Gain: <b>{{ camera_maxGain }}</b></div>
         </div>
     </div>
     <div class="form-group row">
@@ -158,7 +158,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_CONFIG__MOONMODE__GAIN(class='form-control bg-secondary') }}
             <div id="CCD_CONFIG__MOONMODE__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Camera dependent</div>
+        <div class="col-sm-8"></div>
     </div>
     <div class="form-group row">
         <div class="col-sm-2">
@@ -168,7 +168,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_CONFIG__MOONMODE__BINNING(class='form-control bg-secondary') }}
             <div id="CCD_CONFIG__MOONMODE__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Min 1, Max 4 - Camera dependent</div>
+        <div class="col-sm-8"></div>
     </div>
 
     <div class="form-group row">
@@ -179,7 +179,9 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_CONFIG__DAY__GAIN(class='form-control bg-secondary') }}
             <div id="CCD_CONFIG__DAY__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Camera dependent</div>
+        <div class="col-sm-8">
+            <div>Min Gain: <b>{{ camera_minGain }}</b></div>
+        </div>
     </div>
     <div class="form-group row">
         <div class="col-sm-2">
@@ -189,7 +191,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_CONFIG__DAY__BINNING(class='form-control bg-secondary') }}
             <div id="CCD_CONFIG__DAY__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Min 1, Max 4 - Camera dependent</div>
+        <div class="col-sm-8"></div>
     </div>
 
     <hr>
@@ -207,7 +209,7 @@ var camera_id = {{ camera_id }};
             <div id="CCD_EXPOSURE_MAX-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Min: 1 - Max: 120 seconds</div>
+            <div>Max Exposure: <b>{{ "%0.1f" | format(camera_maxExposure | float) }}s</b></div>
         </div>
     </div>
     <div class="form-group row">
@@ -218,7 +220,9 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_EXPOSURE_DEF(class='form-control bg-secondary') }}
             <div id="CCD_EXPOSURE_DEF-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">0 = auto</div>
+        <div class="col-sm-8">
+            <div>0 = auto</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -229,7 +233,9 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_EXPOSURE_MIN(class='form-control bg-secondary') }}
             <div id="CCD_EXPOSURE_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">0 = auto</div>
+        <div class="col-sm-8">
+            <div>Min Exposure: <b>{{ "%0.6f" | format(camera_minExposure | float) }}s</b></div>
+        </div>
     </div>
     <div class="form-group row">
         <div class="col-sm-2">
