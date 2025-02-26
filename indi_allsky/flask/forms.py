@@ -6261,6 +6261,7 @@ class IndiAllskyLogViewerForm(FlaskForm):
 
     LINES_SELECT      = SelectField('Lines', choices=LINES_SELECT_choices, default=LINES_SELECT_choices[0][0], validators=[])
     REFRESH_SELECT    = SelectField('Refresh', choices=REFRESH_SELECT_choices, default=REFRESH_SELECT_choices[1][0], validators=[])
+    FILTER            = StringField('Filter', validators=[])
 
 
 

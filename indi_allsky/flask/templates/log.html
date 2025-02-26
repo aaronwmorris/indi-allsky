@@ -30,7 +30,6 @@ var json_data = {
     'log' : null,
 };
 var refreshInterval;  // set later
-var lines;  // set later
 
 function init() {
     loadLog();
@@ -72,7 +71,13 @@ function showLog(log_data) {
 function loadLog() {
     console.log('Loading log data');
     $("#loader_log").css({'display' : 'block'});
-    loadJS("{{ url_for('indi_allsky.js_log_view') }}", {'lines' : lines}, function() {});
+
+    var data = {
+        'lines' : $('#LINES_SELECT').val(),
+        'filter' : $('#FILTER').val(),
+    };
+
+    loadJS("{{ url_for('indi_allsky.js_log_view') }}", data, function() {});
     setTimeout(loadLog, refreshInterval);
 }
 
@@ -85,15 +90,15 @@ function loadJS(url, data, onDone, onError) {
     if(!onError)onError=function(){};
 
     $.ajax({
-        type: "GET",
+        type: "POST",
         url: url,
         contentType: "application/json",
-        data: data,
-        success: function(data){
-            json_data = data;
+        data: JSON.stringify(data),
+        success: function(rdata){
+            json_data = rdata;
             $("#loader_log").css({'display' : 'none'});
         },
-        error: function(data){
+        error: function(rdata){
             onError(data.status);
         },
     });
@@ -123,7 +128,6 @@ $( document ).ready(function() {
     }
 
     refreshInterval = $('#REFRESH_SELECT').val() * 1000;
-    lines = $('#LINES_SELECT').val();
 
     init();
 });
@@ -145,6 +149,17 @@ $( document ).ready(function() {
         </div>
         <div class="col-sm-2">
             {{ form_logviewer.LINES_SELECT(class='form-select bg-secondary') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_logviewer.FILTER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            <div>
+                {{ form_logviewer.FILTER(class='form-control bg-secondary') }}
+            </div>
+            <div class="text-center" style="font-size:10px">
+                Limited to 30 characters [a-z] [A-Z] [0-9] [.-_]
+            </div>
         </div>
         <div class="col-sm-1">
             <div class="col-sm-1 loader" id="loader_log"></div>
@@ -173,7 +188,7 @@ $("#REFRESH_SELECT").on("change", function() {
 });
 
 $("#LINES_SELECT").on("change", function() {
-    lines = $('#LINES_SELECT').val();
+    var lines = $('#LINES_SELECT').val();
     console.log('Changing lines: ' + lines);
 
     if(localStorage) {
