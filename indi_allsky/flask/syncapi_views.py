@@ -38,6 +38,7 @@ from .models import IndiAllSkyDbThumbnailTable
 from .models import IndiAllSkyDbUserTable
 
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import and_
 
 
 bp_syncapi_allsky = Blueprint(
@@ -185,6 +186,35 @@ class SyncApiBaseView(BaseView):
         else:
             timeofday_str = 'day'
 
+
+
+        try:
+            # delete old entry if it exists
+            old_entry = self.model.query\
+                .join(self.model.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
+                .filter(
+                    and_(
+                        self.model.dayDate == d_dayDate,
+                        self.model.night == bool(metadata['night']),
+                    )
+                )\
+                .one()
+
+
+            if not overwrite:
+                raise EntryExists()
+
+
+            old_entry.deleteAsset()
+
+            db.session.delete(old_entry)
+            db.session.commit()
+        except NoResultFound:
+            pass
+
+
+
         filename_p = date_folder.joinpath(
             self.filename_t.format(
                 camera.id,
@@ -195,36 +225,9 @@ class SyncApiBaseView(BaseView):
             )
         )
 
-        if not filename_p.exists():
-            try:
-                # delete old entry if it exists
-                old_entry = self.model.query\
-                    .filter(self.model.filename == str(filename_p))\
-                    .one()
-
-                app.logger.warning('Removing orphaned video entry')
-                db.session.delete(old_entry)
-                db.session.commit()
-            except NoResultFound:
-                pass
-
-        else:
-            if not overwrite:
-                raise EntryExists()
-
-            app.logger.warning('Replacing file')
+        if filename_p.exists():
+            app.logger.warning('Removing orphaned file: %s', filename_p)
             filename_p.unlink()
-
-            try:
-                old_entry = self.model.query\
-                    .filter(self.model.filename == str(filename_p))\
-                    .one()
-
-                app.logger.warning('Removing old entry')
-                db.session.delete(old_entry)
-                db.session.commit()
-            except NoResultFound:
-                pass
 
 
         # do not sync these metadata keys for now

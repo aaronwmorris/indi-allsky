@@ -272,6 +272,8 @@ class VideoWorker(Process):
         try:
             # delete old video entry if it exists
             old_video_entry = IndiAllSkyDbVideoTable.query\
+                .join(IndiAllSkyDbVideoTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(
                     and_(
                         IndiAllSkyDbVideoTable.dayDate == d_dayDate,
@@ -408,8 +410,10 @@ class VideoWorker(Process):
 
 
         try:
-            # delete old video entry if it exists
+            # find existing keogram
             keogram_entry = IndiAllSkyDbKeogramTable.query\
+                .join(IndiAllSkyDbKeogramTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(
                     and_(
                         IndiAllSkyDbKeogramTable.dayDate == d_dayDate,
@@ -532,11 +536,13 @@ class VideoWorker(Process):
 
         try:
             # delete old video entry if it exists
-            old_mini_video_entry = IndiAllSkyDbVideoTable.query\
+            old_mini_video_entry = IndiAllSkyDbMiniVideoTable.query\
+                .join(IndiAllSkyDbMiniVideoTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(
                     or_(
-                        IndiAllSkyDbVideoTable.filename == str(video_file),
-                        IndiAllSkyDbVideoTable.filename == str(video_file.relative_to(self.image_dir)),
+                        IndiAllSkyDbMiniVideoTable.filename == str(video_file),
+                        IndiAllSkyDbMiniVideoTable.filename == str(video_file.relative_to(self.image_dir)),
                     )
                 )\
                 .one()
@@ -793,6 +799,8 @@ class VideoWorker(Process):
         try:
             # delete old video entry if it exists
             old_panorama_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
+                .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(
                     and_(
                         IndiAllSkyDbPanoramaVideoTable.dayDate == d_dayDate,
@@ -1040,6 +1048,8 @@ class VideoWorker(Process):
         try:
             # delete old keogram entry if it exists
             old_keogram_entry = IndiAllSkyDbKeogramTable.query\
+                .join(IndiAllSkyDbKeogramTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(
                     and_(
                         IndiAllSkyDbKeogramTable.dayDate == d_dayDate,
@@ -1068,6 +1078,8 @@ class VideoWorker(Process):
         try:
             # delete old star trail entry if it exists
             old_startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                .join(IndiAllSkyDbStarTrailsTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(
                     and_(
                         IndiAllSkyDbStarTrailsTable.dayDate == d_dayDate,
@@ -1096,6 +1108,8 @@ class VideoWorker(Process):
         try:
             # delete old star trail video entry if it exists
             old_startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(
                     and_(
                         IndiAllSkyDbStarTrailsVideoTable.dayDate == d_dayDate,
