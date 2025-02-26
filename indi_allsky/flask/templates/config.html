@@ -7468,7 +7468,7 @@ $('#form_config').on('submit', function() {
             var error_fields = new Array();
             Object.keys(errors).forEach((key) => {
                 fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key][0]);
+                fields[key].error.html(errors[key].join('<br>');
                 fields[key].error.css({'display' : 'block'});
 
                 if (key != 'form_global') {
