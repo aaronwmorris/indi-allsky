@@ -1004,5 +1004,9 @@ class FakeCamera(object):
     web_nonlocal_images = False
     web_local_images_admin = False
     utc_offset = 0
+    minGain = -1
+    maxGain = -1
+    minExposure = -1.0
+    maxExposure = -1.0
     data = {}
 

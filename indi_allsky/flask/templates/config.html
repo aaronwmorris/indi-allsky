@@ -64,6 +64,10 @@ var camera_id = {{ camera_id }};
 <!-- should be above tab contents -->
 <div>{{ longitude_validation_message | safe }}</div>
 
+{% if fits_enabled %}
+<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Saving FITS files is enabled</div>
+{% endif %}
+
 
 <div class="tab-content" id="nav-tabContent">
   <div class="tab-pane fade show active" id="nav-camera" role="tabpanel" aria-labelledby="nav-camera-tab">
@@ -124,6 +128,7 @@ var camera_id = {{ camera_id }};
     <hr>
 
     <div><span class="badge rounded-pill bg-info text-dark">Note</span> A full service restart (not reload) is recommended when changing gain controls</div>
+    <div><span class="badge rounded-pill bg-info text-dark">Note </span> Many cameras will switch from analog to digital gain once the gain exceeds a certain value. For example, with ZWO cameras, you usually do not want to exceed gain 300</div>
 
     <hr>
 
@@ -136,7 +141,7 @@ var camera_id = {{ camera_id }};
             <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Camera dependent</div>
+            <div>Max Gain: <b>{{ camera_maxGain }}</b></div>
         </div>
     </div>
     <div class="form-group row">
@@ -158,7 +163,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_CONFIG__MOONMODE__GAIN(class='form-control bg-secondary') }}
             <div id="CCD_CONFIG__MOONMODE__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Camera dependent</div>
+        <div class="col-sm-8"></div>
     </div>
     <div class="form-group row">
         <div class="col-sm-2">
@@ -168,7 +173,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_CONFIG__MOONMODE__BINNING(class='form-control bg-secondary') }}
             <div id="CCD_CONFIG__MOONMODE__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Min 1, Max 4 - Camera dependent</div>
+        <div class="col-sm-8"></div>
     </div>
 
     <div class="form-group row">
@@ -179,7 +184,9 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_CONFIG__DAY__GAIN(class='form-control bg-secondary') }}
             <div id="CCD_CONFIG__DAY__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Camera dependent</div>
+        <div class="col-sm-8">
+            <div>Min Gain: <b>{{ camera_minGain }}</b></div>
+        </div>
     </div>
     <div class="form-group row">
         <div class="col-sm-2">
@@ -189,7 +196,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_CONFIG__DAY__BINNING(class='form-control bg-secondary') }}
             <div id="CCD_CONFIG__DAY__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Min 1, Max 4 - Camera dependent</div>
+        <div class="col-sm-8"></div>
     </div>
 
     <hr>
@@ -207,7 +214,7 @@ var camera_id = {{ camera_id }};
             <div id="CCD_EXPOSURE_MAX-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Min: 1 - Max: 120 seconds</div>
+            <div>Max Exposure: <b>{{ "%0.1f" | format(camera_maxExposure | float) }}s</b></div>
         </div>
     </div>
     <div class="form-group row">
@@ -218,7 +225,9 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_EXPOSURE_DEF(class='form-control bg-secondary') }}
             <div id="CCD_EXPOSURE_DEF-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">0 = auto</div>
+        <div class="col-sm-8">
+            <div>0 = auto</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -229,7 +238,9 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_EXPOSURE_MIN(class='form-control bg-secondary') }}
             <div id="CCD_EXPOSURE_MIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">0 = auto</div>
+        <div class="col-sm-8">
+            <div>Min Exposure: <b>{{ "%0.6f" | format(camera_minExposure | float) }}s</b></div>
+        </div>
     </div>
     <div class="form-group row">
         <div class="col-sm-2">
@@ -1246,7 +1257,11 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_FILE_TYPE(class='form-select bg-secondary') }}
             <div id="IMAGE_FILE_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">File type for timelapse images.  Restart gunicorn if you change this setting.<br><span class="badge rounded-pill bg-warning text-dark">Warning</span><b>Some browsers do *NOT* support TIFF files.</b></div>
+        <div class="col-sm-8">
+            <div>File type for timelapse images.  Restart gunicorn if you change this setting.</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> PNGs will use 10x space compared to JPEGs.</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Some browsers do *NOT* support TIFF files.</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -7468,7 +7483,7 @@ $('#form_config').on('submit', function() {
             var error_fields = new Array();
             Object.keys(errors).forEach((key) => {
                 fields[key].input.addClass('is-invalid');
-                fields[key].error.html(errors[key].join('<br>');
+                fields[key].error.html(errors[key].join('<br>'));
                 fields[key].error.css({'display' : 'block'});
 
                 if (key != 'form_global') {

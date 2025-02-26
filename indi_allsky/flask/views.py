@@ -1573,6 +1573,17 @@ class ConfigView(FormView):
         camera_id = self.camera.id
 
         context['camera_id'] = camera_id
+        context['camera_minGain'] = self.camera.minGain
+        context['camera_maxGain'] = self.camera.maxGain
+        context['camera_minExposure'] = self.camera.minExposure
+
+        if self.camera.maxExposure > 120:
+            context['camera_maxExposure'] = 120
+        else:
+            context['camera_maxExposure'] = self.camera.maxExposure
+
+
+        context['fits_enabled'] = self.indi_allsky_config.get('IMAGE_SAVE_FITS')
 
 
         if not self.validate_longitude_timezone():
