@@ -1576,7 +1576,11 @@ class ConfigView(FormView):
         context['camera_minGain'] = self.camera.minGain
         context['camera_maxGain'] = self.camera.maxGain
         context['camera_minExposure'] = self.camera.minExposure
-        context['camera_maxExposure'] = self.camera.maxExposure
+
+        if self.camera.maxExposure > 120:
+            context['camera_maxExposure'] = 120
+        else:
+            context['camera_maxExposure'] = self.camera.maxExposure
 
 
         if not self.validate_longitude_timezone():
