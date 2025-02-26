@@ -4372,10 +4372,11 @@ class IndiAllskyConfigForm(FlaskForm):
                 result = False
 
 
-        if self.DEW_HEATER__TEMP_USER_VAR_SLOT.data == self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.data:
-            self.DEW_HEATER__TEMP_USER_VAR_SLOT.errors.append('Sensor same as dew point')
-            self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.errors.append('Sensor same as temperature')
-            result = False
+        if self.DEW_HEATER__THOLD_ENABLE.data:
+            if self.DEW_HEATER__TEMP_USER_VAR_SLOT.data == self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.data:
+                self.DEW_HEATER__TEMP_USER_VAR_SLOT.errors.append('Sensor same as dew point')
+                self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.errors.append('Sensor same as temperature')
+                result = False
 
 
         ### these never seem to be hit
