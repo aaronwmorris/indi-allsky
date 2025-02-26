@@ -190,6 +190,7 @@ class SyncApiBaseView(BaseView):
                 camera.id,
                 d_dayDate.strftime('%Y%m%d'),
                 timeofday_str,
+                int(metadata['createDate']),
                 tmp_file_p.suffix,  # suffix includes dot
             )
         )
@@ -476,7 +477,13 @@ class SyncApiBaseImageView(SyncApiBaseView):
         folder = self.getImageFolder(camera_createDate, image_metadata['night'], camera)
 
         date_str = camera_createDate.strftime('%Y%m%d_%H%M%S')
-        image_file_p = folder.joinpath(self.filename_t.format(camera.id, date_str, tmp_file_p.suffix))  # suffix includes dot
+        image_file_p = folder.joinpath(
+            self.filename_t.format(
+                camera.id,
+                date_str,
+                tmp_file_p.suffix,
+            )
+        )
 
 
         if not image_file_p.exists():
@@ -570,7 +577,7 @@ class SyncApiImageView(SyncApiBaseImageView):
     decorators = []
 
     model = IndiAllSkyDbImageTable
-    filename_t = 'ccd{0:d}_{1:s}{2:s}'  # no dot for extension
+    filename_t = 'ccd{0:d}_{1:s}{2:s}'  # extension includes dot
     add_function = 'addImage'
     type_folder = 'exposures'
 
@@ -591,7 +598,7 @@ class SyncApiVideoView(SyncApiBaseView):
     decorators = []
 
     model = IndiAllSkyDbVideoTable
-    filename_t = 'allsky-timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'
+    filename_t = 'allsky-timelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}{4:s}'  # extension includes dot
     add_function = 'addVideo'
 
 
@@ -606,7 +613,7 @@ class SyncApiMiniVideoView(SyncApiBaseView):
     def processPost(self, *args, **kwargs):
         # each mini timelapse needs a unique name
         now = datetime.now()
-        self.filename_t = 'allsky-minitimelapse_ccd{0:d}_{1:s}_{2:s}_' + str(int(now.timestamp())) + '{3:s}'
+        self.filename_t = 'allsky-minitimelapse_ccd{0:d}_{1:s}_{2:s}_' + str(int(now.timestamp())) + '{3:s}'  # extension includes dot
 
         return super(SyncApiMiniVideoView, self).processPost(*args, **kwargs)
 
@@ -615,7 +622,7 @@ class SyncApiKeogramView(SyncApiBaseView):
     decorators = []
 
     model = IndiAllSkyDbKeogramTable
-    filename_t = 'allsky-keogram_ccd{0:d}_{1:s}_{2:s}{3:s}'
+    filename_t = 'allsky-keogram_ccd{0:d}_{1:s}_{2:s}_{3:d}{4:s}'  # extension includes dot
     add_function = 'addKeogram'
 
 
@@ -623,7 +630,7 @@ class SyncApiStartrailView(SyncApiBaseView):
     decorators = []
 
     model = IndiAllSkyDbStarTrailsTable
-    filename_t = 'allsky-startrail_ccd{0:d}_{1:s}_{2:s}{3:s}'
+    filename_t = 'allsky-startrail_ccd{0:d}_{1:s}_{2:s}_{3:d}{4:s}'  # extension includes dot
     add_function = 'addStarTrail'
 
 
@@ -631,7 +638,7 @@ class SyncApiStartrailVideoView(SyncApiBaseView):
     decorators = []
 
     model = IndiAllSkyDbStarTrailsVideoTable
-    filename_t = 'allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'
+    filename_t = 'allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}{3:d}{4:s}'  # extension includes dot
     add_function = 'addStarTrailVideo'
 
 
@@ -639,7 +646,7 @@ class SyncApiRawImageView(SyncApiBaseImageView):  # image parent
     decorators = []
 
     model = IndiAllSkyDbRawImageTable
-    filename_t = 'raw_ccd{0:d}_{1:s}{2:s}'
+    filename_t = 'raw_ccd{0:d}_{1:s}{2:s}'  # extension includes dot
     add_function = 'addRawImage'
     type_folder = 'export'  # fixme need processImage/getImageFolder function for export folder
 
@@ -648,7 +655,7 @@ class SyncApiFitsImageView(SyncApiBaseImageView):  # image parent
     decorators = []
 
     model = IndiAllSkyDbFitsImageTable
-    filename_t = 'ccd{0:d}_{1:s}{2:s}'
+    filename_t = 'ccd{0:d}_{1:s}{2:s}'  # extension includes dot
     add_function = 'addFitsImage'
     type_folder = 'fits'
 
@@ -657,7 +664,7 @@ class SyncApiPanoramaImageView(SyncApiBaseImageView):  # image parent
     decorators = []
 
     model = IndiAllSkyDbPanoramaImageTable
-    filename_t = 'panorama_ccd{0:d}_{1:s}{2:s}'
+    filename_t = 'panorama_ccd{0:d}_{1:s}{2:s}'  # extension includes dot
     add_function = 'addPanoramaImage'
     type_folder = 'panoramas'
 
@@ -666,7 +673,7 @@ class SyncApiPanoramaVideoView(SyncApiBaseView):
     decorators = []
 
     model = IndiAllSkyDbPanoramaVideoTable
-    filename_t = 'allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}{3:s}'
+    filename_t = 'allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}{3:d}{4:s}'  # extension includes dot
     add_function = 'addPanoramaVideo'
 
 
@@ -674,7 +681,7 @@ class SyncApiThumbnailView(SyncApiBaseView):
     decorators = []
 
     model = IndiAllSkyDbThumbnailTable
-    filename_t = '{0:s}{1:s}'
+    filename_t = '{0:s}{1:s}'  # extension includes dot
     add_function = 'addThumbnail_remote'
 
 
