@@ -6479,7 +6479,7 @@ class JsonLogView(JsonView):
         json_data = dict()
 
 
-        filter_regex = r'^[a-zA-Z0-9_\.\-\\]+$'
+        filter_regex = r'^[a-zA-Z0-9_\.\-\\\ ]*$'
         if not re.search(filter_regex, filter_str):
             json_data['log'] = 'ERROR: Log filter has illegal characters'
             return jsonify(json_data)
@@ -6527,7 +6527,7 @@ class JsonLogView(JsonView):
             log_lines = list()
 
 
-        if filter:
+        if filter_str:
             filter_regex = re.compile(filter_str, re.IGNORECASE)
 
             filtered_lines = list()
