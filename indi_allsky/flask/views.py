@@ -6462,6 +6462,7 @@ class LogView(TemplateView):
 
 
 class JsonLogView(JsonView):
+    methods = ['POST']
     decorators = [login_required]
 
     def __init__(self, **kwargs):
@@ -6471,9 +6472,17 @@ class JsonLogView(JsonView):
     def dispatch_request(self):
         line_size = 150  # assuming lines have an average length
 
-        lines = int(request.args.get('lines', 500))
+        lines = int(request.json.get('lines', 500))
+        filter_str = str(request.json.get('filter', ''))[:30]  # limit to 30 characters
+
 
         json_data = dict()
+
+
+        filter_regex = r'^[a-zA-Z0-9_\.\-\\\ ]*$'
+        if not re.search(filter_regex, filter_str):
+            json_data['log'] = 'ERROR: Log filter has illegal characters'
+            return jsonify(json_data)
 
 
         if lines > 5000:
@@ -6516,6 +6525,21 @@ class JsonLogView(JsonView):
         except IndexError:
             app.logger.warning('indi-allsky log empty')
             log_lines = list()
+
+
+        if filter_str:
+            filter_regex = re.compile(filter_str, re.IGNORECASE)
+
+            filtered_lines = list()
+            for line in log_lines:
+                ### this is probably insecure
+                if not re.search(filter_regex, line):
+                    continue
+
+                filtered_lines.append(line)
+
+            # replace original
+            log_lines = filtered_lines
 
 
         json_data['log'] = ''.join(log_lines)
