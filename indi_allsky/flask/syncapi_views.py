@@ -193,9 +193,9 @@ class SyncApiBaseView(BaseView):
             # delete old entry if it exists
             old_entry = self.model.query\
                 .join(self.model.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(
                     and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
                         self.model.dayDate == d_dayDate,
                         self.model.night == bool(metadata['night']),
                     )
