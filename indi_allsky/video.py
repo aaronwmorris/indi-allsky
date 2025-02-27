@@ -259,10 +259,11 @@ class VideoWorker(Process):
         vid_folder = self._getVideoFolder(d_dayDate, camera)
 
         video_file = vid_folder.joinpath(
-            'allsky-timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+            'allsky-timelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
                 timespec,
                 timeofday,
+                int(now.timestamp()),
                 video_format,
             )
         )
@@ -271,8 +272,10 @@ class VideoWorker(Process):
         try:
             # delete old video entry if it exists
             old_video_entry = IndiAllSkyDbVideoTable.query\
+                .join(IndiAllSkyDbVideoTable.camera)\
                 .filter(
                     and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
                         IndiAllSkyDbVideoTable.dayDate == d_dayDate,
                         IndiAllSkyDbVideoTable.night == night,
                     )
@@ -407,10 +410,12 @@ class VideoWorker(Process):
 
 
         try:
-            # delete old video entry if it exists
+            # find existing keogram
             keogram_entry = IndiAllSkyDbKeogramTable.query\
+                .join(IndiAllSkyDbKeogramTable.camera)\
                 .filter(
                     and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
                         IndiAllSkyDbKeogramTable.dayDate == d_dayDate,
                         IndiAllSkyDbKeogramTable.night == night,
                     )
@@ -531,11 +536,13 @@ class VideoWorker(Process):
 
         try:
             # delete old video entry if it exists
-            old_mini_video_entry = IndiAllSkyDbVideoTable.query\
+            old_mini_video_entry = IndiAllSkyDbMiniVideoTable.query\
+                .join(IndiAllSkyDbMiniVideoTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == camera.id)\
                 .filter(
                     or_(
-                        IndiAllSkyDbVideoTable.filename == str(video_file),
-                        IndiAllSkyDbVideoTable.filename == str(video_file.relative_to(self.image_dir)),
+                        IndiAllSkyDbMiniVideoTable.filename == str(video_file),
+                        IndiAllSkyDbMiniVideoTable.filename == str(video_file.relative_to(self.image_dir)),
                     )
                 )\
                 .one()
@@ -779,10 +786,11 @@ class VideoWorker(Process):
         vid_folder = self._getVideoFolder(d_dayDate, camera)
 
         video_file = vid_folder.joinpath(
-            'allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+            'allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
                 timespec,
                 timeofday,
+                int(now.timestamp()),
                 video_format,
             )
         )
@@ -791,8 +799,10 @@ class VideoWorker(Process):
         try:
             # delete old video entry if it exists
             old_panorama_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
+                .join(IndiAllSkyDbPanoramaVideoTable.camera)\
                 .filter(
                     and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
                         IndiAllSkyDbPanoramaVideoTable.dayDate == d_dayDate,
                         IndiAllSkyDbPanoramaVideoTable.night == night,
                     )
@@ -1005,28 +1015,31 @@ class VideoWorker(Process):
         vid_folder = self._getVideoFolder(d_dayDate, camera)
 
         keogram_file = vid_folder.joinpath(
-            'allsky-keogram_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+            'allsky-keogram_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
                 timespec,
                 timeofday,
+                int(now.timestamp()),
                 self.config['IMAGE_FILE_TYPE'],
             )
         )
 
         startrail_file = vid_folder.joinpath(
-            'allsky-startrail_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+            'allsky-startrail_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
                 timespec,
                 timeofday,
+                int(now.timestamp()),
                 self.config['IMAGE_FILE_TYPE'],
             )
         )
 
         startrail_video_file = vid_folder.joinpath(
-            'allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}.{3:s}'.format(
+            'allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
                 timespec,
                 timeofday,
+                int(now.timestamp()),
                 video_format,
             )
         )
@@ -1035,8 +1048,10 @@ class VideoWorker(Process):
         try:
             # delete old keogram entry if it exists
             old_keogram_entry = IndiAllSkyDbKeogramTable.query\
+                .join(IndiAllSkyDbKeogramTable.camera)\
                 .filter(
                     and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
                         IndiAllSkyDbKeogramTable.dayDate == d_dayDate,
                         IndiAllSkyDbKeogramTable.night == night,
                     )
@@ -1063,8 +1078,10 @@ class VideoWorker(Process):
         try:
             # delete old star trail entry if it exists
             old_startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                .join(IndiAllSkyDbStarTrailsTable.camera)\
                 .filter(
                     and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
                         IndiAllSkyDbStarTrailsTable.dayDate == d_dayDate,
                         IndiAllSkyDbStarTrailsTable.night == night,
                     )
@@ -1091,8 +1108,10 @@ class VideoWorker(Process):
         try:
             # delete old star trail video entry if it exists
             old_startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
                 .filter(
                     and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
                         IndiAllSkyDbStarTrailsVideoTable.dayDate == d_dayDate,
                         IndiAllSkyDbStarTrailsVideoTable.night == night,
                     )
