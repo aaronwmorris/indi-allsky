@@ -492,37 +492,35 @@ class SyncApiBaseImageView(SyncApiBaseView):
         )
 
 
-        if not image_file_p.exists():
-            try:
-                # delete old entry if it exists
-                old_image_entry = self.model.query\
-                    .filter(self.model.filename == str(image_file_p))\
-                    .one()
+        try:
+            # delete old entry if it exists
+            old_entry = self.model.query\
+                .join(self.model.camera)\
+                .filter(
+                    and_(
+                        IndiAllSkyDbCameraTable.id == camera.id,
+                        self.model.createDate == camera_createDate,
+                    )
+                )\
+                .one()
 
-                app.logger.warning('Removing orphaned image entry')
-                db.session.delete(old_image_entry)
-                db.session.commit()
-            except NoResultFound:
-                pass
 
-
-        else:
             if not overwrite:
                 raise EntryExists()
 
-            app.logger.warning('Replacing image')
+
+            app.logger.warning('Removing orphaned image entry')
+            old_entry.deleteAsset()
+
+            db.session.delete(old_entry)
+            db.session.commit()
+        except NoResultFound:
+            pass
+
+
+
+        if image_file_p.exists():
             image_file_p.unlink()
-
-            try:
-                old_image_entry = self.model.query\
-                    .filter(self.model.filename == str(image_file_p))\
-                    .one()
-
-                app.logger.warning('Removing old image entry')
-                db.session.delete(old_image_entry)
-                db.session.commit()
-            except NoResultFound:
-                pass
 
 
         addFunction_method = getattr(self._miscDb, self.add_function)
@@ -612,16 +610,9 @@ class SyncApiMiniVideoView(SyncApiBaseView):
     decorators = []
 
     model = IndiAllSkyDbMiniVideoTable
-    #filename_t = None  # updated below
+    ### filename now includes a timestamp to ensure uniqueness
+    filename_t = 'allsky-minitimelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}{4:s}'  # extension includes dot
     add_function = 'addMiniVideo'
-
-
-    def processPost(self, *args, **kwargs):
-        # each mini timelapse needs a unique name
-        now = datetime.now()
-        self.filename_t = 'allsky-minitimelapse_ccd{0:d}_{1:s}_{2:s}_' + str(int(now.timestamp())) + '{3:s}'  # extension includes dot
-
-        return super(SyncApiMiniVideoView, self).processPost(*args, **kwargs)
 
 
 class SyncApiKeogramView(SyncApiBaseView):
