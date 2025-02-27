@@ -678,7 +678,7 @@ class ImageWorker(Process):
         if new_filename:
             image_metadata = {
                 'type'            : constants.IMAGE,
-                'createDate'      : exp_date.timestamp(),
+                'createDate'      : int(exp_date.timestamp()),
                 'dayDate'         : i_ref.day_date.strftime('%Y%m%d'),
                 'utc_offset'      : exp_date.astimezone().utcoffset().total_seconds(),
                 'exposure'        : exposure,
@@ -735,7 +735,7 @@ class ImageWorker(Process):
             image_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
                 'origin'     : constants.IMAGE,
-                'createDate' : exp_date.timestamp(),
+                'createDate' : int(exp_date.timestamp()),
                 'dayDate'    : i_ref.day_date.strftime('%Y%m%d'),
                 'utc_offset' : exp_date.astimezone().utcoffset().total_seconds(),
                 'night'      : bool(self.night_v.value),
@@ -1104,7 +1104,7 @@ class ImageWorker(Process):
 
         fits_metadata = {
             'type'       : constants.FITS_IMAGE,
-            'createDate' : i_ref.exp_date.timestamp(),
+            'createDate' : int(i_ref.exp_date.timestamp()),
             'dayDate'    : i_ref.day_date.strftime('%Y%m%d'),
             'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref.exposure,
@@ -1280,7 +1280,7 @@ class ImageWorker(Process):
 
         raw_metadata = {
             'type'       : constants.RAW_IMAGE,
-            'createDate' : i_ref.exp_date.timestamp(),
+            'createDate' : int(i_ref.exp_date.timestamp()),
             'dayDate'    : i_ref.day_date.strftime('%Y%m%d'),
             'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref.exposure,
@@ -1605,7 +1605,7 @@ class ImageWorker(Process):
 
         panorama_metadata = {
             'type'       : constants.PANORAMA_IMAGE,
-            'createDate' : i_ref.exp_date.timestamp(),
+            'createDate' : int(i_ref.exp_date.timestamp()),
             'dayDate'    : i_ref.day_date.strftime('%Y%m%d'),
             'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref.exposure,

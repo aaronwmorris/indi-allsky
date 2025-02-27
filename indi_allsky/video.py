@@ -382,7 +382,7 @@ class VideoWorker(Process):
 
         video_metadata = {
             'type'          : constants.VIDEO,
-            'createDate'    : now.timestamp(),
+            'createDate'    : int(now.timestamp()),
             'utc_offset'    : now.astimezone().utcoffset().total_seconds(),
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'night'         : night,
@@ -645,7 +645,7 @@ class VideoWorker(Process):
 
         mini_video_metadata = {
             'type'          : constants.MINI_VIDEO,
-            'createDate'    : now.timestamp(),
+            'createDate'    : int(now.timestamp()),
             'utc_offset'    : now.astimezone().utcoffset().total_seconds(),
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'targetDate'    : targetDate.timestamp(),
@@ -679,7 +679,7 @@ class VideoWorker(Process):
         mini_video_thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
             'origin'     : constants.MINI_VIDEO,
-            'createDate' : now.timestamp(),
+            'createDate' : int(now.timestamp()),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'night'      : night,
@@ -909,7 +909,7 @@ class VideoWorker(Process):
 
         video_metadata = {
             'type'          : constants.PANORAMA_VIDEO,
-            'createDate'    : now.timestamp(),
+            'createDate'    : int(now.timestamp()),
             'utc_offset'    : now.astimezone().utcoffset().total_seconds(),
             'dayDate'       : d_dayDate.strftime('%Y%m%d'),
             'night'         : night,
@@ -1227,7 +1227,7 @@ class VideoWorker(Process):
 
         keogram_metadata = {
             'type'       : constants.KEOGRAM,
-            'createDate' : now.timestamp(),
+            'createDate' : int(now.timestamp()),
             'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
@@ -1250,7 +1250,7 @@ class VideoWorker(Process):
 
         startrail_metadata = {
             'type'       : constants.STARTRAIL,
-            'createDate' : now.timestamp(),
+            'createDate' : int(now.timestamp()),
             'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
@@ -1273,7 +1273,7 @@ class VideoWorker(Process):
 
         startrail_video_metadata = {
             'type'       : constants.STARTRAIL_VIDEO,
-            'createDate' : now.timestamp(),
+            'createDate' : int(now.timestamp()),
             'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'night'      : night,
@@ -1404,7 +1404,7 @@ class VideoWorker(Process):
         keogram_thumbnail_metadata = {
             'type'       : constants.THUMBNAIL,
             'origin'     : constants.KEOGRAM,
-            'createDate' : now.timestamp(),
+            'createDate' : int(now.timestamp()),
             'dayDate'    : d_dayDate.strftime('%Y%m%d'),
             'utc_offset' : now.astimezone().utcoffset().total_seconds(),
             'night'      : night,
@@ -1441,7 +1441,7 @@ class VideoWorker(Process):
             startrail_thumbnail_metadata = {
                 'type'       : constants.THUMBNAIL,
                 'origin'     : constants.STARTRAIL,
-                'createDate' : now.timestamp(),
+                'createDate' : int(now.timestamp()),
                 'dayDate'    : d_dayDate.strftime('%Y%m%d'),
                 'utc_offset' : now.astimezone().utcoffset().total_seconds(),
                 'night'      : night,
