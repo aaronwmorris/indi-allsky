@@ -30,7 +30,7 @@ class TempApiWeatherUnderground(SensorBase):
     METADATA = {
         'name' : 'Weather Underground API',
         'description' : 'Weather Underground API Sensor',
-        'count' : 8,
+        'count' : 9,
         'labels' : (
             'Temperature',
             'Relative Humidity',
@@ -40,6 +40,7 @@ class TempApiWeatherUnderground(SensorBase):
             'Total Precipitation',
             'Solar Radiation',
             'UV',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
@@ -50,6 +51,7 @@ class TempApiWeatherUnderground(SensorBase):
             constants.SENSOR_PRECIPITATION,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 
@@ -164,6 +166,12 @@ class TempApiWeatherUnderground(SensorBase):
             rain_total = 0.0
 
 
+        if r_data['observations'][0][units].get('dewpt'):
+            dewpt_c = float(r_data['observations'][0][units]['dewpt'])
+        else:
+            dewpt_c = 0.0
+
+
         if r_data['observations'][0].get('solarRadiation'):
             solar_radiation = float(r_data['observations'][0]['solarRadiation'])
         else:
@@ -194,6 +202,7 @@ class TempApiWeatherUnderground(SensorBase):
         if self.config.get('TEMP_DISPLAY') == 'f':
             current_temp = self.c2f(temp_c)
             current_dp = self.c2f(dew_point_c)
+            current_dewpt = self.c2f(dewpt_c)  # api measurement
             current_fp = self.c2f(frost_point_c)
             current_hi = self.c2f(heat_index_c)
 
@@ -202,6 +211,7 @@ class TempApiWeatherUnderground(SensorBase):
         elif self.config.get('TEMP_DISPLAY') == 'k':
             current_temp = self.c2k(temp_c)
             current_dp = self.c2k(dew_point_c)
+            current_dewpt = self.c2k(dewpt_c)  # api measurement
             current_fp = self.c2k(frost_point_c)
             current_hi = self.c2k(heat_index_c)
 
@@ -209,6 +219,7 @@ class TempApiWeatherUnderground(SensorBase):
         else:
             current_temp = temp_c
             current_dp = dew_point_c
+            current_dewpt = dewpt_c  # api measurement
             current_fp = frost_point_c
             current_hi = heat_index_c
 
@@ -254,6 +265,7 @@ class TempApiWeatherUnderground(SensorBase):
                 current_rain,
                 solar_radiation,
                 uv,
+                current_dewpt,  # api measurement
             ),
         }
 

@@ -3127,7 +3127,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ),
         'API Services' : (
             ('temp_api_openweathermap', 'OpenWeather API (9)'),
-            ('temp_api_weatherunderground', 'Weather Underground API (8)'),
+            ('temp_api_weatherunderground', 'Weather Underground API (9)'),
             ('temp_api_astrospheric', 'Astrospheric API (5)'),
             ('temp_api_ambientweather', 'AmbientWeather API (9)'),
             ('temp_api_ecowitt', 'Ecowitt API (9)'),
