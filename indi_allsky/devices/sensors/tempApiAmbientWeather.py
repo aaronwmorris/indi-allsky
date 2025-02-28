@@ -249,7 +249,7 @@ class TempApiAmbientWeather(SensorBase):
         elif self.config.get('TEMP_DISPLAY') == 'k':
             current_temp = self.f2k(temp_f)
             current_dp = self.c2k(dew_point_c)
-            current_dewpt = self.c2k(dewpt_c)
+            current_dewpt = self.c2k(dewpt_c)  # api
             current_fp = self.c2k(frost_point_c)
             current_hi = self.c2k(heat_index_c)
             current_fl = self.f2k(feels_like_f)
@@ -258,11 +258,10 @@ class TempApiAmbientWeather(SensorBase):
         else:
             current_temp = self.f2c(temp_f)
             current_dp = dew_point_c
-            current_dewpt = dewpt_c
+            current_dewpt = dewpt_c  # api
             current_fp = frost_point_c
             current_hi = heat_index_c
             current_fl = self.f2c(feels_like_f)
-
 
             current_rain = rain_total
 
@@ -307,7 +306,7 @@ class TempApiAmbientWeather(SensorBase):
                 current_rain,
                 solar_radiation,
                 uv,
-                current_dewpt,
+                current_dewpt,  # api
             ),
         }
 
