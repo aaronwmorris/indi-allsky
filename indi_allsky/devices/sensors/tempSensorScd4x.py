@@ -66,6 +66,7 @@ class TempSensorScd4x(SensorBase):
                 current_temp,
                 rel_h,
                 CO2,
+                current_dp,
             ),
         }
 
@@ -77,16 +78,18 @@ class TempSensorScd4x_I2C(TempSensorScd4x):
     METADATA = {
         'name' : 'SCD-4x',
         'description' : 'SCD-4x i2c Temperature Sensor',
-        'count' : 3,
+        'count' : 4,
         'labels' : (
             'Temperature',
             'Relative Humidity',
             'CO2 (ppm)',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
             constants.SENSOR_CONCENTRATION,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 
