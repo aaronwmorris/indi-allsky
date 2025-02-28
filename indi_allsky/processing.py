@@ -866,7 +866,9 @@ class ImageProcessor(object):
 
 
         if master_dark.shape != data.shape:
-            logger.error('Dark frame calibration dimensions mismatch')
+            image_height, image_width = data.shape[:2]  # there might be a 3rd dimension for RGB data
+            dark_height, dark_width = master_dark.shape[:2]
+            logger.error('Dark frame calibration dimensions mismatch - %dx%d vs %dx%d', image_width, image_height, dark_width, dark_height)
             raise CalibrationNotFound('Dark frame calibration dimension mismatch')
 
 
@@ -1115,32 +1117,53 @@ class ImageProcessor(object):
 
     def rotate_angle(self):
         angle = self.config.get('IMAGE_ROTATE_ANGLE')
+        keep_size = self.config.get('IMAGE_ROTATE_KEEP_SIZE')
+        use_offset = self.config.get('IMAGE_ROTATE_WITH_OFFSET')
 
         if not angle:
             return
 
 
-        self._rotate_angle(angle)
+        self._rotate_angle(angle, keep_size, use_offset)
         return True
 
 
-    def _rotate_angle(self, angle):
+    def _rotate_angle(self, angle, keep_size=False, use_offset=False):
         rotate_start = time.time()
 
         height, width = self.image.shape[:2]
         center_x = int(width / 2)
         center_y = int(height / 2)
 
+
+        # not sure what to do here (or if its in the right place)
+        if use_offset:
+            #x_offset = self.config.get('LENS_OFFSET_X', 0)
+            #y_offset = self.config.get('LENS_OFFSET_Y', 0)
+            pass
+        else:
+            pass
+
+
+        # consider rotating at center offset
         rot = cv2.getRotationMatrix2D((center_x, center_y), int(angle), 1.0)
 
-        abs_cos = abs(rot[0, 0])
-        abs_sin = abs(rot[0, 1])
 
-        bound_w = int(height * abs_sin + width * abs_cos)
-        bound_h = int(height * abs_cos + width * abs_sin)
+        if keep_size:
+            bound_w = width
+            bound_h = height
+        else:
+            # rotating will change the size of the resulting image
+            abs_cos = abs(rot[0, 0])
+            abs_sin = abs(rot[0, 1])
 
-        rot[0, 2] += bound_w / 2 - center_x
-        rot[1, 2] += bound_h / 2 - center_y
+            bound_w = int(height * abs_sin + width * abs_cos)
+            bound_h = int(height * abs_cos + width * abs_sin)
+
+
+        rot[0, 2] += (bound_w / 2) - center_x
+        rot[1, 2] += (bound_h / 2) - center_y
+
 
         self.image = cv2.warpAffine(self.image, rot, (bound_w, bound_h))
 
