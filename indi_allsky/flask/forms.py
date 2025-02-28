@@ -3129,7 +3129,7 @@ class IndiAllskyConfigForm(FlaskForm):
             ('temp_api_openweathermap', 'OpenWeather API (10)'),
             ('temp_api_weatherunderground', 'Weather Underground API (9)'),
             ('temp_api_astrospheric', 'Astrospheric API (6)'),
-            ('temp_api_ambientweather', 'AmbientWeather API (9)'),
+            ('temp_api_ambientweather', 'AmbientWeather API (10)'),
             ('temp_api_ecowitt', 'Ecowitt API (10)'),
         ),
         'Temperature Sensors' : (
