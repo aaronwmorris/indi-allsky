@@ -63,6 +63,7 @@ class TempSensorSht4x(SensorBase):
             'data' : (
                 current_temp,
                 rel_h,
+                current_dp,
             ),
         }
 
@@ -85,14 +86,16 @@ class TempSensorSht4x_I2C(TempSensorSht4x):
     METADATA = {
         'name' : 'SHT4x (i2c)',
         'description' : 'SHT4x i2c Temperature Sensor',
-        'count' : 2,
+        'count' : 3,
         'labels' : (
             'Temperature',
             'Relative Humidity',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 

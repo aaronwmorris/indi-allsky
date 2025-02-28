@@ -65,6 +65,7 @@ class TempSensorSht3x(SensorBase):
             'data' : (
                 current_temp,
                 rel_h,
+                current_dp,
             ),
         }
 
@@ -107,14 +108,16 @@ class TempSensorSht3x_I2C(TempSensorSht3x):
     METADATA = {
         'name' : 'SHT3x (i2c)',
         'description' : 'SHT3x i2c Temperature Sensor',
-        'count' : 2,
+        'count' : 3,
         'labels' : (
             'Temperature',
             'Relative Humidity',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 
