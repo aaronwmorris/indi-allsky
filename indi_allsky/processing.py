@@ -1118,13 +1118,13 @@ class ImageProcessor(object):
     def rotate_angle(self):
         angle = self.config.get('IMAGE_ROTATE_ANGLE')
         keep_size = self.config.get('IMAGE_ROTATE_KEEP_SIZE')
-        use_offset = self.config.get('IMAGE_ROTATE_WITH_OFFSET')
+        #use_offset = self.config.get('IMAGE_ROTATE_WITH_OFFSET')
 
         if not angle:
             return
 
 
-        self._rotate_angle(angle, keep_size, use_offset)
+        self._rotate_angle(angle, keep_size=keep_size, use_offset=False)
         return True
 
 
