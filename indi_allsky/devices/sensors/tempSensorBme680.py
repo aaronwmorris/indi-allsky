@@ -73,6 +73,7 @@ class TempSensorBme680(SensorBase):
                 rel_h,
                 current_pressure,
                 gas_ohm,
+                current_dp,
             ),
         }
 
@@ -84,18 +85,20 @@ class TempSensorBme680_I2C(TempSensorBme680):
     METADATA = {
         'name' : 'BME680 (i2c)',
         'description' : 'BME680 i2c Temperature Sensor',
-        'count' : 4,
+        'count' : 5,
         'labels' : (
             'Temperature',
             'Relative Humidity',
             'Pressure',
             'Gas',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
             constants.SENSOR_ATMOSPHERIC_PRESSURE,
             constants.SENSOR_MISC,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 
@@ -135,18 +138,20 @@ class TempSensorBme680_SPI(TempSensorBme680):
     METADATA = {
         'name' : 'BME680 (SPI)',
         'description' : 'BME680 SPI Temperature Sensor',
-        'count' : 4,
+        'count' : 5,
         'labels' : (
             'Temperature',
             'Relative Humidity',
             'Pressure',
             'Gas',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
             constants.SENSOR_ATMOSPHERIC_PRESSURE,
             constants.SENSOR_MISC,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 

@@ -13,6 +13,8 @@ from ..exceptions import SensorReadException
 logger = logging.getLogger('indi_allsky')
 
 
+### https://www.astrospheric.com/DynamicContent/api_info.html
+
 class TempApiAstrospheric(SensorBase):
 
     URL = 'https://astrosphericpublicaccess.azurewebsites.net/api/GetForecastData_V1'
@@ -21,13 +23,14 @@ class TempApiAstrospheric(SensorBase):
     METADATA = {
         'name' : 'Astrospheric API',
         'description' : 'Astrospheric API Sensor',
-        'count' : 5,
+        'count' : 6,
         'labels' : (
             'Temperature',
             'Atmospheric Seeing',
             'Atmospheric Transparency',
             'Cloud Cover',
             'Wind Speed',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
@@ -35,6 +38,7 @@ class TempApiAstrospheric(SensorBase):
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
             constants.SENSOR_WIND_SPEED,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 
@@ -118,7 +122,7 @@ class TempApiAstrospheric(SensorBase):
 
 
         temp_k = float(r_data['RDPS_Temperature'][0]['Value']['ActualValue'])
-        dew_point_k = float(r_data['RDPS_DewPoint'][0]['Value']['ActualValue'])
+        dewpt_k = float(r_data['RDPS_DewPoint'][0]['Value']['ActualValue'])
         seeing = float(r_data['Astrospheric_Seeing'][0]['Value']['ActualValue'])
         transparency = float(r_data['Astrospheric_Transparency'][0]['Value']['ActualValue'])
         clouds_percent = float(r_data['RDPS_CloudCover'][0]['Value']['ActualValue'])
@@ -126,15 +130,15 @@ class TempApiAstrospheric(SensorBase):
         wind_deg = float(r_data['RDPS_WindDirection'][0]['Value']['ActualValue'])
 
 
-        logger.info('[%s] Astrospheric API - temp: %0.1fk, dew point: %0.1fk, clouds: %0.1f%%', self.name, temp_k, dew_point_k, clouds_percent)
+        logger.info('[%s] Astrospheric API - temp: %0.1fk, dew point: %0.1fk, clouds: %0.1f%%', self.name, temp_k, dewpt_k, clouds_percent)
 
 
         temp_c = self.k2c(temp_k)
-        dew_point_c = self.k2c(temp_k)
+        dewpt_c = self.k2c(dewpt_k)
 
 
         try:
-            frost_point_c = self.get_frost_point_c(temp_c, dew_point_c)
+            frost_point_c = self.get_frost_point_c(temp_c, dewpt_c)
         except ValueError as e:
             logger.error('Frost Point calculation error - ValueError: %s', str(e))
             frost_point_c = 0.0
@@ -142,15 +146,15 @@ class TempApiAstrospheric(SensorBase):
 
         if self.config.get('TEMP_DISPLAY') == 'f':
             current_temp = self.c2f(temp_c)
-            current_dp = self.c2f(dew_point_c)
+            current_dewpt = self.c2f(dewpt_c)  # api
             current_fp = self.c2f(frost_point_c)
         elif self.config.get('TEMP_DISPLAY') == 'k':
             current_temp = temp_k
-            current_dp = temp_k
+            current_dewpt = dewpt_k  # api
             current_fp = self.c2k(frost_point_c)
         else:
             current_temp = temp_c
-            current_dp = dew_point_c
+            current_dewpt = dewpt_c  # api
             current_fp = frost_point_c
 
 
@@ -166,7 +170,7 @@ class TempApiAstrospheric(SensorBase):
 
 
         self.data = {
-            'dew_point' : current_dp,
+            'dew_point' : current_dewpt,  # api
             'frost_point' : current_fp,
             'wind_degrees' : wind_deg,
             'data' : (
@@ -175,6 +179,7 @@ class TempApiAstrospheric(SensorBase):
                 transparency,
                 clouds_percent,
                 current_wind_speed,
+                current_dewpt,  # api
             ),
         }
 

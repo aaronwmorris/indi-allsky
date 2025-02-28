@@ -63,6 +63,7 @@ class TempSensorSi7021(SensorBase):
             'data' : (
                 current_temp,
                 rel_h,
+                current_dp,
             ),
         }
 
@@ -96,14 +97,16 @@ class TempSensorSi7021_I2C(TempSensorSi7021):
     METADATA = {
         'name' : 'SI7021 (i2c)',
         'description' : 'SI7021 i2c Temperature Sensor',
-        'count' : 2,
+        'count' : 3,
         'labels' : (
             'Temperature',
             'Relative Humidity',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 

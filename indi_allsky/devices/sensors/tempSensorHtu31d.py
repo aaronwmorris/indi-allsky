@@ -66,6 +66,7 @@ class TempSensorHtu31d(SensorBase):
             'data' : (
                 current_temp,
                 rel_h,
+                current_dp,
             ),
         }
 
@@ -108,14 +109,16 @@ class TempSensorHtu31d_I2C(TempSensorHtu31d):
     METADATA = {
         'name' : 'HTU31D (i2c)',
         'description' : 'HTU31D i2c Temperature Sensor',
-        'count' : 2,
+        'count' : 3,
         'labels' : (
             'Temperature',
             'Relative Humidity',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 

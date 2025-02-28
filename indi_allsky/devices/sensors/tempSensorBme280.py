@@ -71,6 +71,7 @@ class TempSensorBme280(SensorBase):
                 current_temp,
                 rel_h,
                 current_pressure,
+                current_dp,
             ),
         }
 
@@ -82,16 +83,18 @@ class TempSensorBme280_I2C(TempSensorBme280):
     METADATA = {
         'name' : 'BME280 (i2c)',
         'description' : 'BME280 i2c Temperature Sensor',
-        'count' : 3,
+        'count' : 4,
         'labels' : (
             'Temperature',
             'Relative Humidity',
             'Pressure',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
             constants.SENSOR_ATMOSPHERIC_PRESSURE,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 
@@ -130,16 +133,18 @@ class TempSensorBme280_SPI(TempSensorBme280):
     METADATA = {
         'name' : 'BME280 (SPI)',
         'description' : 'BME280 SPI Temperature Sensor',
-        'count' : 3,
+        'count' : 4,
         'labels' : (
             'Temperature',
             'Relative Humidity',
             'Pressure',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
             constants.SENSOR_ATMOSPHERIC_PRESSURE,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 
