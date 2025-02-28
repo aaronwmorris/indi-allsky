@@ -73,6 +73,7 @@ class TempSensorBme680(SensorBase):
                 rel_h,
                 current_pressure,
                 gas_ohm,
+                current_dp,
             ),
         }
 
@@ -90,12 +91,14 @@ class TempSensorBme680_I2C(TempSensorBme680):
             'Relative Humidity',
             'Pressure',
             'Gas',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
             constants.SENSOR_ATMOSPHERIC_PRESSURE,
             constants.SENSOR_MISC,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 
@@ -141,12 +144,14 @@ class TempSensorBme680_SPI(TempSensorBme680):
             'Relative Humidity',
             'Pressure',
             'Gas',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
             constants.SENSOR_ATMOSPHERIC_PRESSURE,
             constants.SENSOR_MISC,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 
