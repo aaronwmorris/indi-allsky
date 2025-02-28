@@ -53,7 +53,7 @@ class TempApiOpenWeatherMap(SensorBase):
     METADATA = {
         'name' : 'OpenWeatherMap API',
         'description' : 'OpenWeatherMap API Sensor',
-        'count' : 9,
+        'count' : 10,
         'labels' : (
             'Temperature',
             'Feels Like Temperature',
@@ -64,6 +64,7 @@ class TempApiOpenWeatherMap(SensorBase):
             'Wind Gusts',
             'Rain (1h)',
             'Snow (1h)',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
@@ -75,6 +76,7 @@ class TempApiOpenWeatherMap(SensorBase):
             constants.SENSOR_WIND_SPEED,
             constants.SENSOR_PRECIPITATION,
             constants.SENSOR_PRECIPITATION,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 
@@ -273,6 +275,7 @@ class TempApiOpenWeatherMap(SensorBase):
                 current_wind_gust,
                 current_rain_1h,
                 current_snow_1h,
+                current_dp,
             ),
         }
 
