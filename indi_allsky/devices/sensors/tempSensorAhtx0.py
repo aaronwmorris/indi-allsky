@@ -58,6 +58,7 @@ class TempSensorAhtx0(SensorBase):
             'data' : (
                 current_temp,
                 rel_h,
+                current_dp,
             ),
         }
 
@@ -69,14 +70,16 @@ class TempSensorAhtx0_I2C(TempSensorAhtx0):
     METADATA = {
         'name' : 'AHTx0 (i2c)',
         'description' : 'AHTx0 i2c Temperature Sensor',
-        'count' : 2,
+        'count' : 3,
         'labels' : (
             'Temperature',
             'Relative Humidity',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 
