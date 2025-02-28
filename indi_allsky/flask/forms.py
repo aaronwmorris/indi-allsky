@@ -3142,7 +3142,7 @@ class IndiAllskyConfigForm(FlaskForm):
             ('blinka_temp_sensor_bme280_spi', 'BMP/BME280 SPI - Temp/RH/Pres (4)'),
             ('blinka_temp_sensor_bme680_i2c', 'BME680 i2c - Temp/RH/Pres/Gas (5)'),
             ('blinka_temp_sensor_bme680_spi', 'BME680 SPI - Temp/RH/Pres/Gas (5)'),
-            ('blinka_temp_sensor_si7021_i2c', 'Si7021 i2c - Temp/RH (2)'),
+            ('blinka_temp_sensor_si7021_i2c', 'Si7021 i2c - Temp/RH (3)'),
             ('blinka_temp_sensor_sht3x_i2c', 'SHT3x i2c - Temp/RH (3)'),
             ('blinka_temp_sensor_sht4x_i2c', 'SHT40/41/45 i2c - Temp/RH (3)'),
             ('blinka_temp_sensor_htu21d_i2c', 'HTU21D i2c - Temp/RH (3)'),
