@@ -78,7 +78,7 @@ class TempApiEcowitt(SensorBase):
     METADATA = {
         'name' : 'Ecowitt API',
         'description' : 'Ecowitt Device API Sensor',
-        'count' : 9,
+        'count' : 10,
         'labels' : (
             'Temperature',
             'Feels Like Temperature',
@@ -89,6 +89,7 @@ class TempApiEcowitt(SensorBase):
             '1 Hour Rain',
             'Solar Radiation',
             'UV',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
@@ -100,6 +101,7 @@ class TempApiEcowitt(SensorBase):
             constants.SENSOR_PRECIPITATION,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 
@@ -195,6 +197,12 @@ class TempApiEcowitt(SensorBase):
             rel_h = 0.0
 
 
+        if r_data['data']['outdoor']['dew_point'].get('value'):
+            dewpt_f = float(r_data['data']['outdoor']['dew_point']['value'])
+        else:
+            dewpt_f = 0.0
+
+
         if r_data['data']['pressure']['relative'].get('value'):
             pressure_in = float(r_data['data']['pressure']['relative']['value'])
         else:
@@ -240,6 +248,9 @@ class TempApiEcowitt(SensorBase):
         logger.info('[%s] Ecowitt API - temp: %0.1ff, feels like: %0.1ff humidity: %d%%', self.name, temp_f, feels_like_f, rel_h)
 
 
+        dewpt_c = self.f2c(dewpt_f)
+
+
         try:
             dew_point_c = self.get_dew_point_c(self.f2c(temp_f), rel_h)
             frost_point_c = self.get_frost_point_c(self.f2c(temp_f), dew_point_c)
@@ -255,6 +266,7 @@ class TempApiEcowitt(SensorBase):
         if self.config.get('TEMP_DISPLAY') == 'f':
             current_temp = temp_f
             current_dp = self.c2f(dew_point_c)
+            current_dewpt = dewpt_f  # api
             current_fp = self.c2f(frost_point_c)
             current_hi = self.c2f(heat_index_c)
             current_fl = feels_like_f
@@ -264,6 +276,7 @@ class TempApiEcowitt(SensorBase):
         elif self.config.get('TEMP_DISPLAY') == 'k':
             current_temp = self.f2k(temp_f)
             current_dp = self.c2k(dew_point_c)
+            current_dewpt = self.c2k(dewpt_c)  # api
             current_fp = self.c2k(frost_point_c)
             current_hi = self.c2k(heat_index_c)
             current_fl = self.f2k(feels_like_f)
@@ -272,6 +285,7 @@ class TempApiEcowitt(SensorBase):
         else:
             current_temp = self.f2c(temp_f)
             current_dp = dew_point_c
+            current_dewpt = dewpt_c  # api
             current_fp = frost_point_c
             current_hi = heat_index_c
             current_fl = self.f2c(feels_like_f)
@@ -320,6 +334,7 @@ class TempApiEcowitt(SensorBase):
                 current_rain,
                 solar_radiation,
                 uv,
+                current_dewpt,  # api
             ),
         }
 

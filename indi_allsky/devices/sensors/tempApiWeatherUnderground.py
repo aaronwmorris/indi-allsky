@@ -144,6 +144,12 @@ class TempApiWeatherUnderground(SensorBase):
             pressure_mb = 0
 
 
+        if r_data['observations'][0][units].get('dewpt'):
+            dewpt_c = float(r_data['observations'][0][units]['dewpt'])
+        else:
+            dewpt_c = 0.0
+
+
         if r_data['observations'][0].get('winddir'):
             wind_deg = int(r_data['observations'][0]['winddir'])
         else:
@@ -164,12 +170,6 @@ class TempApiWeatherUnderground(SensorBase):
             rain_total = float(r_data['observations'][0][units]['precipTotal'])
         else:
             rain_total = 0.0
-
-
-        if r_data['observations'][0][units].get('dewpt'):
-            dewpt_c = float(r_data['observations'][0][units]['dewpt'])
-        else:
-            dewpt_c = 0.0
 
 
         if r_data['observations'][0].get('solarRadiation'):
