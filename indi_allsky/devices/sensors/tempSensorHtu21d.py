@@ -58,6 +58,7 @@ class TempSensorHtu21d(SensorBase):
             'data' : (
                 current_temp,
                 rel_h,
+                current_dp,
             ),
         }
 
@@ -69,14 +70,16 @@ class TempSensorHtu21d_I2C(TempSensorHtu21d):
     METADATA = {
         'name' : 'HTU21D (i2c)',
         'description' : 'HTU21D i2c Temperature Sensor',
-        'count' : 2,
+        'count' : 3,
         'labels' : (
             'Temperature',
             'Relative Humidity',
+            'Dew Point',
         ),
         'types' : (
             constants.SENSOR_TEMPERATURE,
             constants.SENSOR_RELATIVE_HUMIDITY,
+            constants.SENSOR_TEMPERATURE,
         ),
     }
 
