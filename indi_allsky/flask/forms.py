@@ -3134,9 +3134,9 @@ class IndiAllskyConfigForm(FlaskForm):
         ),
         'Temperature Sensors' : (
             ('kernel_temp_sensor_ds18x20_w1', 'DS18x20 - Temp (1)'),
-            ('blinka_temp_sensor_dht22', 'DHT22/AM2302 - Temp/RH (2)'),
-            ('blinka_temp_sensor_dht21', 'DHT21/AM2301 - Temp/RH (2)'),
-            ('blinka_temp_sensor_dht11', 'DHT11 - Temp/RH (2)'),
+            ('blinka_temp_sensor_dht22', 'DHT22/AM2302 - Temp/RH (3)'),
+            ('blinka_temp_sensor_dht21', 'DHT21/AM2301 - Temp/RH (3)'),
+            ('blinka_temp_sensor_dht11', 'DHT11 - Temp/RH (3)'),
             ('blinka_temp_sensor_bmp180_i2c', 'BMP180 i2c - Temp/Pres (2)'),
             ('blinka_temp_sensor_bme280_i2c', 'BMP/BME280 i2c - Temp/RH/Pres (4)'),
             ('blinka_temp_sensor_bme280_spi', 'BMP/BME280 SPI - Temp/RH/Pres (4)'),

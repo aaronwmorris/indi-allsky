@@ -133,7 +133,7 @@ class TempSensorBme280_SPI(TempSensorBme280):
     METADATA = {
         'name' : 'BME280 (SPI)',
         'description' : 'BME280 SPI Temperature Sensor',
-        'count' : 3,
+        'count' : 4,
         'labels' : (
             'Temperature',
             'Relative Humidity',

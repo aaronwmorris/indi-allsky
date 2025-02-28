@@ -85,7 +85,7 @@ class TempSensorBme680_I2C(TempSensorBme680):
     METADATA = {
         'name' : 'BME680 (i2c)',
         'description' : 'BME680 i2c Temperature Sensor',
-        'count' : 4,
+        'count' : 5,
         'labels' : (
             'Temperature',
             'Relative Humidity',
@@ -138,7 +138,7 @@ class TempSensorBme680_SPI(TempSensorBme680):
     METADATA = {
         'name' : 'BME680 (SPI)',
         'description' : 'BME680 SPI Temperature Sensor',
-        'count' : 4,
+        'count' : 5,
         'labels' : (
             'Temperature',
             'Relative Humidity',
