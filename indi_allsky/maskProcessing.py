@@ -43,6 +43,7 @@ class MaskProcessor(object):
 
     def rotate_angle(self):
         angle = self.config.get('IMAGE_ROTATE_ANGLE')
+        keep_size = self.config.get('IMAGE_ROTATE_KEEP_SIZE')
 
         #rotate_start = time.time()
 
@@ -50,16 +51,24 @@ class MaskProcessor(object):
         center_x = int(width / 2)
         center_y = int(height / 2)
 
+
         rot = cv2.getRotationMatrix2D((center_x, center_y), int(angle), 1.0)
 
-        abs_cos = abs(rot[0, 0])
-        abs_sin = abs(rot[0, 1])
 
-        bound_w = int(height * abs_sin + width * abs_cos)
-        bound_h = int(height * abs_cos + width * abs_sin)
+        if keep_size:
+            bound_w = width
+            bound_h = height
+        else:
+            abs_cos = abs(rot[0, 0])
+            abs_sin = abs(rot[0, 1])
 
-        rot[0, 2] += bound_w / 2 - center_x
-        rot[1, 2] += bound_h / 2 - center_y
+            bound_w = int(height * abs_sin + width * abs_cos)
+            bound_h = int(height * abs_cos + width * abs_sin)
+
+
+        rot[0, 2] += (bound_w / 2) - center_x
+        rot[1, 2] += (bound_h / 2) - center_y
+
 
         self.image = cv2.warpAffine(self.image, rot, (bound_w, bound_h))
 

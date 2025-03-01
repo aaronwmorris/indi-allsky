@@ -1312,6 +1312,8 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.IMAGE_ROTATE.label(class='col-form-label') }}
@@ -1334,10 +1336,27 @@ var camera_id = {{ camera_id }};
             <div id="IMAGE_ROTATE_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Rotate by arbitrary angle (0 == disabled)</div>
-            <div>Combine with cropping and image circle mask to clean up image</div>
+            <div>Rotate by arbitrary angle (0 = disabled)</div>
         </div>
     </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_ROTATE_KEEP_SIZE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_ROTATE_KEEP_SIZE(class='form-check-input') }}
+                <div id="IMAGE_ROTATE_KEEP_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Rotating an image changes the dimensions, using this option will maintain the current size and cutoff anything outside the current bounds.</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Only works with rotation by angle</div>
+        </div>
+    </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -7326,6 +7345,7 @@ const checkbox_field_names = [
     'FISH2PANO__ENABLE',
     'FISH2PANO__FLIP_H',
     'FISH2PANO__ENABLE_CARDINAL_DIRS',
+    'IMAGE_ROTATE_KEEP_SIZE',
     'IMAGE_EXPORT_FLIP_V',
     'IMAGE_EXPORT_FLIP_H',
     'IMAGE_SAVE_FITS',

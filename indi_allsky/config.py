@@ -195,6 +195,8 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_CROP_ROI"   : [],
         "IMAGE_ROTATE"     : "",  # empty, ROTATE_90_CLOCKWISE, ROTATE_90_COUNTERCLOCKWISE, ROTATE_180
         "IMAGE_ROTATE_ANGLE" : 0,
+        "IMAGE_ROTATE_KEEP_SIZE"   : False,
+        #"IMAGE_ROTATE_WITH_OFFSET" : False,
         "IMAGE_FLIP_V"     : True,
         "IMAGE_FLIP_H"     : True,
         "IMAGE_SCALE"      : 100,
