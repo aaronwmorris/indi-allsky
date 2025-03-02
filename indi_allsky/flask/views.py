@@ -7553,8 +7553,8 @@ class JsonLongTermKeogramView(JsonView):
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbLongTermKeogramTable.ts >= query_start_ts)\
             .filter(IndiAllSkyDbLongTermKeogramTable.ts < query_end_ts)\
-            .group_by('interval')\
-            .order_by(IndiAllSkyDbLongTermKeogramTable.ts.asc())
+            .group_by(ltk_interval)\
+            .order_by(ltk_interval.asc())
 
 
         numpy_data = numpy.zeros(((periods_per_day * total_days) * period_pixels, 1, 3), dtype=numpy.uint8)
