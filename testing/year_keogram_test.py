@@ -181,13 +181,30 @@ class YearKeogramTest(object):
                 index = second_offset + (day * (self.periods_per_day * (self.period_pixels - 1)))
                 #logger.info('Row: %d, second_offset: %d, day: %d, index: %d', i, row.second_offset, row.day, row.index)
 
+
                 try:
-                    ### python math
-                    numpy_data[index]                              = row.b1_avg, row.g1_avg, row.r1_avg
-                    numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
-                    numpy_data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                    numpy_data[index + (self.periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
-                    numpy_data[index + (self.periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
+                    if self.period_pixels == 5:
+                        numpy_data[index + (self.periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
+                        numpy_data[index + (self.periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
+                        numpy_data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                        numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+
+                    elif self.period_pixels == 4:
+                        numpy_data[index + (self.periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
+                        numpy_data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                        numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+
+                    elif self.period_pixels == 3:
+                        numpy_data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                        numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+
+                    elif self.period_pixels == 2:
+                        numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+
+
+                    # always add 1 row
+                    numpy_data[index] = row.b1_avg, row.g1_avg, row.r1_avg
+
 
                     ### database math
                     #numpy_data[row.index]   = row.b1_avg, row.g1_avg, row.r1_avg
