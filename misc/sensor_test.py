@@ -17,6 +17,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 sys.path.append(str(Path(__file__).parent.absolute().parent))
 
+from indi_allsky import constants
 from indi_allsky.flask import create_app
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.devices import sensors as indi_allsky_sensors
@@ -132,7 +133,8 @@ class TestSensors(object):
                 self.night_v,
             )
 
-        self.sensors[0].slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 10)
+        sensor_0_key = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 'sensor_user_10')
+        self.sensors[0].slot = constants.SENSOR_INDEX_MAP[sensor_0_key]
 
 
         ### Sensor B
@@ -167,7 +169,8 @@ class TestSensors(object):
                 self.night_v,
             )
 
-        self.sensors[1].slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 15)
+        sensor_1_key = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_15')
+        self.sensors[1].slot = constants.SENSOR_INDEX_MAP[sensor_1_key]
 
 
         ### Sensor C
@@ -202,7 +205,8 @@ class TestSensors(object):
                 self.night_v,
             )
 
-        self.sensors[2].slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 15)
+        sensor_2_key = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_20')
+        self.sensors[2].slot = constants.SENSOR_INDEX_MAP[sensor_2_key]
 
 
 if __name__ == "__main__":
