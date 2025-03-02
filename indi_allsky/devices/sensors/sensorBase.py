@@ -62,22 +62,22 @@ class SensorBase(object):
 
 
     def c2f(self, c):
-        # celcius to fahrenheit
+        # celsius to fahrenheit
         return (c * 9.0 / 5.0) + 32
 
 
     def f2c(self, f):
-        # fahrenheit to celcius
+        # fahrenheit to celsius
         return (f - 32) * 5.0 / 9.0
 
 
     def c2k(self, c):
-        # celcius to kelvin
+        # celsius to kelvin
         return c + 273.15
 
 
     def k2c(self, k):
-        # kelvin to celcius
+        # kelvin to celsius
         return k - 273.15
 
 

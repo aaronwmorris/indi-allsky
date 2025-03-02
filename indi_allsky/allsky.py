@@ -123,7 +123,7 @@ class IndiAllSky(object):
         ])
 
 
-        ### temperature values in this array should always be in Celcius
+        ### temperature values in this array should always be in Celsius
         # 0 ccd temp
         # 1-9 reserved for future use
         # 10-29 system temperatures

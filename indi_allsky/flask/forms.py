@@ -2835,7 +2835,7 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     TEMP_DISPLAY_choices = (
-        ('c', 'Celcius'),
+        ('c', 'Celsius'),
         ('f', 'Fahrenheit'),
         ('k', 'Kelvin'),
     )
