@@ -868,7 +868,7 @@ class ImageWorker(Process):
 
 
                     # update share array
-                    # temperatures always Celcius here
+                    # temperatures always Celsius here
                     with self.sensors_temp_av.get_lock():
                         # index 0 is always ccd_temp
                         self.sensors_temp_av[10 + offset] = temp_c
