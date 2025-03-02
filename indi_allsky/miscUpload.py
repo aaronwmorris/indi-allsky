@@ -125,9 +125,10 @@ class miscUpload(object):
 
         # Replace parameters in names
         remote_dir = self.config['FILETRANSFER']['REMOTE_VIDEO_FOLDER'].format(**file_data_dict)
+        remote_file = self.config['FILETRANSFER']['REMOTE_VIDEO_NAME'].format(**file_data_dict)
 
-        video_file_p = Path(video_entry.getFilesystemPath())
-        remote_file_p = Path(remote_dir).joinpath(video_file_p.name)
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
+
 
         # tell worker to upload file
         jobdata = {
@@ -178,9 +179,10 @@ class miscUpload(object):
 
         # Replace parameters in names
         remote_dir = self.config['FILETRANSFER']['REMOTE_MINI_VIDEO_FOLDER'].format(**file_data_dict)
+        remote_file = self.config['FILETRANSFER']['REMOTE_MINI_VIDEO_NAME'].format(**file_data_dict)
 
-        video_file_p = Path(video_entry.getFilesystemPath())
-        remote_file_p = Path(remote_dir).joinpath(video_file_p.name)
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
+
 
         # tell worker to upload file
         jobdata = {
@@ -231,9 +233,10 @@ class miscUpload(object):
 
         # Replace parameters in names
         remote_dir = self.config['FILETRANSFER']['REMOTE_PANORAMA_VIDEO_FOLDER'].format(**file_data_dict)
+        remote_file = self.config['FILETRANSFER']['REMOTE_PANORAMA_VIDEO_NAME'].format(**file_data_dict)
 
-        video_file_p = Path(video_entry.getFilesystemPath())
-        remote_file_p = Path(remote_dir).joinpath(video_file_p.name)
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
+
 
         # tell worker to upload file
         jobdata = {
@@ -284,10 +287,9 @@ class miscUpload(object):
 
         # Replace parameters in names
         remote_dir = self.config['FILETRANSFER']['REMOTE_KEOGRAM_FOLDER'].format(**file_data_dict)
+        remote_file = self.config['FILETRANSFER']['REMOTE_KEOGRAM_NAME'].format(**file_data_dict)
 
-
-        keogram_file_p = Path(keogram_entry.getFilesystemPath())
-        remote_file_p = Path(remote_dir).joinpath(keogram_file_p.name)
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
 
 
         # tell worker to upload file
@@ -338,10 +340,9 @@ class miscUpload(object):
 
         # Replace parameters in names
         remote_dir = self.config['FILETRANSFER']['REMOTE_STARTRAIL_FOLDER'].format(**file_data_dict)
+        remote_file = self.config['FILETRANSFER']['REMOTE_STARTRAIL_NAME'].format(**file_data_dict)
 
-
-        startrail_file_p = Path(startrail_entry.getFilesystemPath())
-        remote_file_p = Path(remote_dir).joinpath(startrail_file_p.name)
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
 
 
         # tell worker to upload file
@@ -393,10 +394,10 @@ class miscUpload(object):
 
         # Replace parameters in names
         remote_dir = self.config['FILETRANSFER']['REMOTE_STARTRAIL_VIDEO_FOLDER'].format(**file_data_dict)
+        remote_file = self.config['FILETRANSFER']['REMOTE_STARTRAIL_VIDEO_NAME'].format(**file_data_dict)
 
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
 
-        startrail_video_file_p = Path(startrail_video_entry.getFilesystemPath())
-        remote_file_p = Path(remote_dir).joinpath(startrail_video_file_p.name)
 
         # tell worker to upload file
         jobdata = {
@@ -459,8 +460,8 @@ class miscUpload(object):
         remote_dir = self.config['FILETRANSFER']['REMOTE_PANORAMA_FOLDER'].format(**file_data_dict)
         remote_file = self.config['FILETRANSFER']['REMOTE_PANORAMA_NAME'].format(*file_data_list, **file_data_dict)
 
-
         remote_file_p = Path(remote_dir).joinpath(remote_file)
+
 
         # tell worker to upload file
         jobdata = {
@@ -511,10 +512,10 @@ class miscUpload(object):
 
         # Replace parameters in names
         remote_dir = self.config['FILETRANSFER']['REMOTE_RAW_FOLDER'].format(**file_data_dict)
+        remote_file = self.config['FILETRANSFER']['REMOTE_RAW_NAME'].format(**file_data_dict)
 
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
 
-        raw_image_file_p = Path(raw_image_entry.getFilesystemPath())
-        remote_file_p = Path(remote_dir).joinpath(raw_image_file_p.name)
 
         # tell worker to upload file
         jobdata = {
@@ -565,10 +566,10 @@ class miscUpload(object):
 
         # Replace parameters in names
         remote_dir = self.config['FILETRANSFER']['REMOTE_FITS_FOLDER'].format(**file_data_dict)
+        remote_file = self.config['FILETRANSFER']['REMOTE_FITS_NAME'].format(**file_data_dict)
 
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
 
-        raw_image_file_p = Path(fits_image_entry.getFilesystemPath())
-        remote_file_p = Path(remote_dir).joinpath(raw_image_file_p.name)
 
         # tell worker to upload file
         jobdata = {
