@@ -501,23 +501,27 @@ class SensorWorker(Process):
         if manual_target:
             target_val = manual_target
         else:
-            target_val = self.sensors_user_av[constants.SENSOR_INDEX_MAP[self.dh_dewpoint_slot]]  # dew point
+            if str(self.dh_temp_slot).startswith('sensor_temp'):
+                target_val = self.sensors_temp_av[constants.SENSOR_INDEX_MAP[self.dh_dewpoint_slot]]  # dew point
+            else:
+                target_val = self.sensors_user_av[constants.SENSOR_INDEX_MAP[self.dh_dewpoint_slot]]  # dew point
 
 
         if not target_val:
             logger.warning('Dew heater target dew point is 0, possible misconfiguration')
 
 
-        current_temp = self.sensors_user_av[constants.SENSOR_INDEX_MAP[self.dh_temp_slot]]
-
-
         if str(self.dh_temp_slot).startswith('sensor_temp'):
+            current_temp = self.sensors_temp_av[constants.SENSOR_INDEX_MAP[self.dh_temp_slot]]
+
             if self.config.get('TEMP_DISPLAY') == 'f':
                 current_temp = (current_temp * 9.0 / 5.0) + 32
             elif self.config.get('TEMP_DISPLAY') == 'k':
                 current_temp = current_temp + 273.15
             else:
                 pass
+        else:
+            current_temp = self.sensors_user_av[constants.SENSOR_INDEX_MAP[self.dh_temp_slot]]
 
 
         temp_diff = current_temp - target_val
@@ -547,16 +551,17 @@ class SensorWorker(Process):
             return
 
 
-        current_temp = self.sensors_user_av[constants.SENSOR_INDEX_MAP[self.fan_temp_slot]]
-
-
         if str(self.fan_temp_slot).startswith('sensor_temp'):
+            current_temp = self.sensors_temp_av[constants.SENSOR_INDEX_MAP[self.fan_temp_slot]]
+
             if self.config.get('TEMP_DISPLAY') == 'f':
                 current_temp = (current_temp * 9.0 / 5.0) + 32
             elif self.config.get('TEMP_DISPLAY') == 'k':
                 current_temp = current_temp + 273.15
             else:
                 pass
+        else:
+            current_temp = self.sensors_user_av[constants.SENSOR_INDEX_MAP[self.fan_temp_slot]]
 
 
         temp_diff = current_temp - self.fan_target
