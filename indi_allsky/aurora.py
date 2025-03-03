@@ -23,6 +23,7 @@ class IndiAllskyAuroraUpdate(object):
     ovation_json_url = 'https://services.swpc.noaa.gov/json/ovation_aurora_latest.json'
     kpindex_json_url = 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'
     solar_wind_mag_json_url = 'https://services.swpc.noaa.gov/products/solar-wind/mag-5-minute.json'
+    solar_wind_plasma_json_url = 'https://services.swpc.noaa.gov/products/solar-wind/plasma-5-minute.json'
     hemi_power_url = 'https://services.swpc.noaa.gov/text/aurora-nowcast-hemi-power.txt'
 
 
@@ -35,7 +36,8 @@ class IndiAllskyAuroraUpdate(object):
         ### caching the data allows multiple cameras to be updated in the same run
         self.ovation_json_data = None
         self.kpindex_json_data = None
-        self.solar_ind_mag_json_data = None
+        self.solar_wind_mag_json_data = None
+        self.solar_wind_plasma_json_data = None
         self.hemi_power_data = None
 
 
@@ -67,7 +69,14 @@ class IndiAllskyAuroraUpdate(object):
 
 
         try:
-            self.update_solar_wind_data(camera_data)
+            self.update_solar_wind_mag_data(camera_data)
+            camera_update = True
+        except AuroraDataUpdateFailure:
+            pass
+
+
+        try:
+            self.update_solar_wind_plasma_data(camera_data)
             camera_update = True
         except AuroraDataUpdateFailure:
             pass
@@ -233,10 +242,10 @@ class IndiAllskyAuroraUpdate(object):
         return kp_last, p_fitted.convert()
 
 
-    def update_solar_wind_data(self, camera_data):
-        if not self.solar_ind_mag_json_data:
+    def update_solar_wind_mag_data(self, camera_data):
+        if not self.solar_wind_mag_json_data:
             try:
-                self.solar_ind_mag_json_data = self.download_json(self.solar_wind_mag_json_url)
+                self.solar_wind_mag_json_data = self.download_json(self.solar_wind_mag_json_url)
             except json.JSONDecodeError as e:
                 logger.error('JSON parse error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
@@ -264,7 +273,7 @@ class IndiAllskyAuroraUpdate(object):
 
 
         try:
-            Bt, gsm_Bz = self.processSolarWindData(self.solar_ind_mag_json_data)
+            Bt, gsm_Bz = self.processSolarWindMagData(self.solar_ind_mag_json_data)
         except ValueError as e:
             logger.error('Solar Wind processing error: %s', str(e))
             raise AuroraDataUpdateFailure from e
@@ -275,11 +284,11 @@ class IndiAllskyAuroraUpdate(object):
 
         logger.info('Aurora - Bt: %0.2f, GSM Bz: %0.2f', gsm_Bz, Bt)
 
-        camera_data['AURORA_BT'] = round(Bt, 2)
-        camera_data['AURORA_GSM_BZ'] = round(gsm_Bz, 2)
+        camera_data['AURORA_MAG_BT'] = round(Bt, 2)
+        camera_data['AURORA_MAG_GSM_BZ'] = round(gsm_Bz, 2)
 
 
-    def processSolarWindData(self, json_data):
+    def processSolarWindMagData(self, json_data):
         data_index = json_data[0]
 
         last_Bt = float(json_data[-1][data_index.index('bt')])
@@ -287,6 +296,62 @@ class IndiAllskyAuroraUpdate(object):
 
 
         return last_Bt, last_gsm_Bz
+
+
+    def update_solar_wind_plasma_data(self, camera_data):
+        if not self.solar_wind_plasma_json_data:
+            try:
+                self.solar_wind_plasma_json_data = self.download_json(self.solar_wind_plasma_json_url)
+            except json.JSONDecodeError as e:
+                logger.error('JSON parse error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except socket.gaierror as e:
+                logger.error('Name resolution error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except socket.timeout as e:
+                logger.error('Timeout error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.ConnectTimeout as e:
+                logger.error('Connection timeout: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.ConnectionError as e:
+                logger.error('Connection error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except urllib3.exceptions.ReadTimeoutError as e:
+                logger.error('Connection error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except ssl.SSLCertVerificationError as e:
+                logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.SSLError as e:
+                logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+
+
+        try:
+            density, speed = self.processSolarWindMagData(self.solar_ind_mag_json_data)
+        except ValueError as e:
+            logger.error('Solar Wind processing error: %s', str(e))
+            raise AuroraDataUpdateFailure from e
+        except IndexError as e:
+            logger.error('Solar Wind processing error: %s', str(e))
+            raise AuroraDataUpdateFailure from e
+
+
+        logger.info('Solar Wind - Density: %0.2f, Speed: %0.2f', density, speed)
+
+        camera_data['AURORA_PLASMA_DENSITY'] = round(density, 2)
+        camera_data['AURORA_PLASMA_SPEED'] = round(speed, 2)
+
+
+    def processSolarPlasmaMagData(self, json_data):
+        data_index = json_data[0]
+
+        last_density = float(json_data[-1][data_index.index('density')])
+        last_speed = float(json_data[-1][data_index.index('speed')])
+
+
+        return last_density, last_speed
 
 
     def update_hemi_power_data(self, camera_data):

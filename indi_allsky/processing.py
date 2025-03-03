@@ -590,8 +590,8 @@ class ImageProcessor(object):
         if camera_data:
             image_data.kpindex = float(camera_data.get('KPINDEX_CURRENT', 0.0))
             image_data.ovation_max = int(camera_data.get('OVATION_MAX', 0))
-            image_data.aurora_bt = float(camera_data.get('AURORA_BT', 0.0))
-            image_data.aurora_gsm_bz = float(camera_data.get('AURORA_GSM_BZ', 0.0))
+            image_data.aurora_mag_bt = float(camera_data.get('AURORA_MAG_BT', 0.0))
+            image_data.aurora_mag_gsm_bz = float(camera_data.get('AURORA_MAG_GSM_BZ', 0.0))
             image_data.aurora_n_hemi_gw = int(camera_data.get('AURORA_N_HEMI_GW', 0))
             image_data.aurora_s_hemi_gw = int(camera_data.get('AURORA_S_HEMI_GW', 0))
 
@@ -2082,8 +2082,8 @@ class ImageProcessor(object):
             'location'     : i_ref.location,
             'kpindex'      : i_ref.kpindex,
             'ovation_max'  : i_ref.ovation_max,
-            'aurora_bt'    : i_ref.aurora_bt,
-            'aurora_gsm_bz': i_ref.aurora_gsm_bz,
+            'aurora_mag_bt'    : i_ref.aurora_mag_bt,
+            'aurora_mag_gsm_bz': i_ref.aurora_mag_gsm_bz,
             'aurora_n_hemi_gw' : i_ref.aurora_n_hemi_gw,
             'aurora_s_hemi_gw' : i_ref.aurora_s_hemi_gw,
             'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
@@ -3255,8 +3255,8 @@ class ImageData(object):
 
         self._kpindex = 0.0
         self._ovation_max = 0
-        self._aurora_bt = 0.0
-        self._aurora_gsm_bz = 0.0
+        self._aurora_mag_bt = 0.0
+        self._aurora_mag_gsm_bz = 0.0
         self._aurora_n_hemi_gw = 0
         self._aurora_s_hemi_gw = 0
 
@@ -3378,20 +3378,20 @@ class ImageData(object):
         self._ovation_max = int(new_ovation_max)
 
     @property
-    def aurora_bt(self):
-        return self._aurora_bt
+    def aurora_mag_bt(self):
+        return self._aurora_mag_bt
 
-    @aurora_bt.setter
-    def aurora_bt(self, new_aurora_bt):
-        self._aurora_bt = float(new_aurora_bt)
+    @aurora_mag_bt.setter
+    def aurora_mag_bt(self, new_aurora_mag_bt):
+        self._aurora_mag_bt = float(new_aurora_mag_bt)
 
     @property
-    def aurora_gsm_bz(self):
-        return self._aurora_gsm_bz
+    def aurora_mag_gsm_bz(self):
+        return self._aurora_mag_gsm_bz
 
-    @aurora_gsm_bz.setter
-    def aurora_gsm_bz(self, new_aurora_gsm_bz):
-        self._aurora_gsm_bz = float(new_aurora_gsm_bz)
+    @aurora_mag_gsm_bz.setter
+    def aurora_mag_gsm_bz(self, new_aurora_mag_gsm_bz):
+        self._aurora_mag_gsm_bz = float(new_aurora_mag_gsm_bz)
 
     @property
     def aurora_n_hemi_gw(self):

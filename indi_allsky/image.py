@@ -708,8 +708,8 @@ class ImageWorker(Process):
 
 
             image_add_data = {
-                'aurora_bt'         : i_ref.aurora_bt,
-                'aurora_gsm_bz'     : i_ref.aurora_gsm_bz,
+                'aurora_mag_bt'     : i_ref.aurora_mag_bt,
+                'aurora_mag_gsm_bz' : i_ref.aurora_mag_gsm_bz,
                 'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
                 'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
             }
@@ -789,10 +789,10 @@ class ImageWorker(Process):
                 'sidereal_time' : self.astrometric_data['sidereal_time'],
                 'kpindex'       : round(i_ref.kpindex, 2),
                 'ovation_max'   : int(i_ref.ovation_max),
-                'aurora_bt'     : round(i_ref.aurora_bt, 2),
-                'aurora_gsm_bz' : round(i_ref.aurora_gsm_bz, 2),
-                'aurora_n_hemi_gw' : i_ref.aurora_n_hemi_gw,
-                'aurora_s_hemi_gw' : i_ref.aurora_s_hemi_gw,
+                'aurora_mag_bt'     : round(i_ref.aurora_mag_bt, 2),
+                'aurora_mag_gsm_bz' : round(i_ref.aurora_mag_gsm_bz, 2),
+                'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
+                'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
 
             }
 
@@ -972,8 +972,8 @@ class ImageWorker(Process):
             'elevation'           : int(self.position_av[2]),
             'sidereal_time'       : self.astrometric_data['sidereal_time'],
             'kpindex'             : i_ref.kpindex,
-            'aurora_bt'           : i_ref.aurora_bt,
-            'aurora_gsm_bz'       : i_ref.aurora_gsm_bz,
+            'aurora_mag_bt'       : i_ref.aurora_mag_bt,
+            'aurora_mag_gsm_bz'   : i_ref.aurora_mag_gsm_bz,
             'aurora_n_hemi_gw'    : i_ref.aurora_n_hemi_gw,
             'aurora_s_hemi_gw'    : i_ref.aurora_s_hemi_gw,
             'ovation_max'         : i_ref.ovation_max,
@@ -1140,10 +1140,10 @@ class ImageWorker(Process):
             'kpindex'         : i_ref.kpindex,
             'ovation_max'     : i_ref.ovation_max,
             'smoke_rating'    : i_ref.smoke_rating,
-            'aurora_bt'       : i_ref.aurora_bt,
-            'aurora_gsm_bz'   : i_ref.aurora_gsm_bz,
-            'aurora_n_hemi_gw': i_ref.aurora_n_hemi_gw,
-            'aurora_s_hemi_gw': i_ref.aurora_s_hemi_gw,
+            'aurora_mag_bt'     : i_ref.aurora_mag_bt,
+            'aurora_mag_gsm_bz' : i_ref.aurora_mag_gsm_bz,
+            'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
         }
 
         fits_entry = self._miscDb.addFitsImage(
@@ -1319,11 +1319,11 @@ class ImageWorker(Process):
             'detections'      : len(i_ref.lines),
             'kpindex'         : i_ref.kpindex,
             'ovation_max'     : i_ref.ovation_max,
-            'aurora_bt'       : i_ref.aurora_bt,
-            'aurora_gsm_bz'   : i_ref.aurora_gsm_bz,
-            'aurora_n_hemi_gw': i_ref.aurora_n_hemi_gw,
-            'aurora_s_hemi_gw': i_ref.aurora_s_hemi_gw,
             'smoke_rating'    : i_ref.smoke_rating,
+            'aurora_mag_bt'     : i_ref.aurora_mag_bt,
+            'aurora_mag_gsm_bz' : i_ref.aurora_mag_gsm_bz,
+            'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
         }
 
         try:
@@ -1496,8 +1496,8 @@ class ImageWorker(Process):
             'elevation'           : int(self.position_av[2]),
             'kpindex'             : i_ref.kpindex,
             'ovation_max'         : int(i_ref.ovation_max),
-            'aurora_bt'           : i_ref.aurora_bt,
-            'aurora_gsm_bz'       : i_ref.aurora_gsm_bz,
+            'aurora_mag_bt'       : i_ref.aurora_mag_bt,
+            'aurora_mag_gsm_bz'   : i_ref.aurora_mag_gsm_bz,
             'aurora_n_hemi_gw'    : i_ref.aurora_n_hemi_gw,
             'aurora_s_hemi_gw'    : i_ref.aurora_s_hemi_gw,
             'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
@@ -1652,11 +1652,11 @@ class ImageWorker(Process):
             'detections'      : len(i_ref.lines),
             'kpindex'         : i_ref.kpindex,
             'ovation_max'     : i_ref.ovation_max,
-            'aurora_bt'       : i_ref.aurora_bt,
-            'aurora_gsm_bz'   : i_ref.aurora_gsm_bz,
-            'aurora_n_hemi_gw': i_ref.aurora_n_hemi_gw,
-            'aurora_s_hemi_gw': i_ref.aurora_s_hemi_gw,
             'smoke_rating'    : i_ref.smoke_rating,
+            'aurora_mag_bt'     : i_ref.aurora_mag_bt,
+            'aurora_mag_gsm_bz' : i_ref.aurora_mag_gsm_bz,
+            'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
         }
 
 
