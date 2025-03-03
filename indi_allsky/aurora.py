@@ -1,10 +1,10 @@
 import time
-from datetime import datetime
-from datetime import timezone
+#from datetime import datetime
+#from datetime import timezone
 import socket
 import re
 import ssl
-import math
+#import math
 import json
 import urllib3.exceptions
 import requests
@@ -135,46 +135,15 @@ class IndiAllskyAuroraUpdate(object):
             longitude = 360 + longitude  # logitude is negative
 
 
-        # 1 degree is ~69 miles, 7 degrees should be just under 500 miles
+        # 1 degree is ~69 miles (equator), 7 degrees should be just under 500 miles
 
-        lat_floor = math.floor(latitude)
         # this will not work exactly right at the north and south poles above 80 degrees latitude
-        lat_list = [
-            lat_floor - 7,
-            lat_floor - 6,
-            lat_floor - 5,
-            lat_floor - 4,
-            lat_floor - 3,
-            lat_floor - 2,
-            lat_floor - 1,
-            lat_floor,
-            lat_floor + 1,
-            lat_floor + 2,
-            lat_floor + 3,
-            lat_floor + 4,
-            lat_floor + 5,
-            lat_floor + 6,
-            lat_floor + 7,
-        ]
+        lat_int = round(latitude)
+        lat_list = [lat_int + x for x in range(-7, 8)]
 
-        long_floor = math.floor(longitude)
-        long_list = [
-            long_floor - 7,  # this should cover northern and southern hemispheres
-            long_floor - 6,
-            long_floor - 5,
-            long_floor - 4,
-            long_floor - 3,
-            long_floor - 2,
-            long_floor - 1,
-            long_floor,
-            long_floor + 1,
-            long_floor + 2,
-            long_floor + 3,
-            long_floor + 4,
-            long_floor + 5,
-            long_floor + 6,
-            long_floor + 7,
-        ]
+        # longitude gets more compressed the further north/south from equator
+        long_int = round(longitude)
+        long_list = [long_int + x for x in range(-9, 10)]  # expand a bit
 
 
         # fix longitudes that cross 0/360
@@ -297,17 +266,17 @@ class IndiAllskyAuroraUpdate(object):
         try:
             Bt, gsm_Bz = self.processSolarWindData(self.solar_ind_mag_json_data)
         except ValueError as e:
-            logger.error('Solar Wind processing error')
+            logger.error('Solar Wind processing error: %s', str(e))
             raise AuroraDataUpdateFailure from e
         except IndexError as e:
-            logger.error('Solar Wind processing error')
+            logger.error('Solar Wind processing error: %s', str(e))
             raise AuroraDataUpdateFailure from e
 
 
         logger.info('Aurora - Bt: %0.2f, GSM Bz: %0.2f', gsm_Bz, Bt)
 
-        camera_data['AURORA_BT_CURRENT'] = round(Bt, 2)
-        camera_data['GSM_BZ_CURRENT'] = round(gsm_Bz, 2)
+        camera_data['AURORA_BT'] = round(Bt, 2)
+        camera_data['AURORA_GSM_BZ'] = round(gsm_Bz, 2)
 
 
     def processSolarWindData(self, json_data):
@@ -347,21 +316,42 @@ class IndiAllskyAuroraUpdate(object):
                 raise AuroraDataUpdateFailure from e
 
 
-        re_power = re.compile(r'(?P<obs_str>[0-9\-\_\:]+)\s+(?P<forecast_str>[0-9\-\_\:]+)\s+(?P<n_gw>\d+)\s+(?P<s_gw>\d+)')
+        try:
+            n_hemi_gw, s_hemi_gw = self.processHemiPowerData(self.hemi_power_data)
+        except IndexError as e:
+            logger.error('Hemispheric power processing error: %s', str(e))
+            raise AuroraDataUpdateFailure from e
+        except KeyError as e:
+            logger.error('Hemispheric power processing error: %s', str(e))
+            raise AuroraDataUpdateFailure from e
+        except ValueError as e:
+            logger.error('Hemispheric power processing error: %s', str(e))
+            raise AuroraDataUpdateFailure from e
+
+
+        logger.info('Hemispheric Power - N: %d GW, S: %d GW', n_hemi_gw, s_hemi_gw)
+
+        camera_data['AURORA_N_HEMI_GW'] = n_hemi_gw
+        camera_data['AURORA_S_HEMI_GW'] = s_hemi_gw
+
+
+    def processHemiPowerData(self, text_data):
+        re_power = re.compile(r'^(?P<obs_str>\S+)\s+(?P<forecast_str>\S+)\s+(?P<n_gw>\d+)\s+(?P<s_gw>\d+)$')
 
         power_data = list()
-        for line in self.hemi_power_data.splitlines():
+        for line in text_data.splitlines():
             if line.startswith('#'):
                 continue
 
             m = re.search(re_power, line)
             if not m:
-                logger.error('Regex parse error')
+                #logger.error('Hemispheric power regex parse error')
                 continue
 
             d = {
-                'obs' : datetime.strptime(m.group('obs_str'), '%Y-%m-%d_%H:%M').replace(tzinfo=timezone.utc),
-                'forecast' : datetime.strptime(m.group('forecast_str'), '%Y-%m-%d_%H:%M').replace(tzinfo=timezone.utc),
+                ### do not need timestamps at this time
+                #'obs' : datetime.strptime(m.group('obs_str'), '%Y-%m-%d_%H:%M').replace(tzinfo=timezone.utc),
+                #'forecast' : datetime.strptime(m.group('forecast_str'), '%Y-%m-%d_%H:%M').replace(tzinfo=timezone.utc),
                 'n_gw' : int(m.group('n_gw')),
                 's_gw' : int(m.group('s_gw')),
             }
@@ -369,7 +359,11 @@ class IndiAllskyAuroraUpdate(object):
             power_data.append(d)
 
 
-        logger.warning('Hemispheric data: %s', power_data)
+        # use last value
+        last_n_hemi_gw = power_data[-1]['n_gw']
+        last_s_hemi_gw = power_data[-1]['s_gw']
+
+        return last_n_hemi_gw, last_s_hemi_gw
 
 
     def download_json(self, url):
