@@ -707,8 +707,14 @@ class ImageWorker(Process):
             }
 
 
+            image_add_data = {
+                'aurora_bt'         : i_ref.aurora_bt,
+                'aurora_gsm_bz'     : i_ref.aurora_gsm_bz,
+                'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
+                'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
+            }
 
-            image_add_data = dict()
+
             for i, v in enumerate(self.sensors_temp_av):
                 image_add_data['sensor_temp_{0:d}'.format(i)] = v
 
@@ -778,11 +784,16 @@ class ImageWorker(Process):
                 'latitude' : round(self.position_av[0], 3),
                 'longitude': round(self.position_av[1], 3),
                 'elevation': int(self.position_av[2]),
-                'kpindex'  : round(i_ref.kpindex, 2),
-                'ovation_max'  : int(i_ref.ovation_max),
-                'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
-                'aircraft' : len(self.adsb_aircraft_list),
-                'sidereal_time': self.astrometric_data['sidereal_time'],
+                'smoke_rating'  : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
+                'aircraft'      : len(self.adsb_aircraft_list),
+                'sidereal_time' : self.astrometric_data['sidereal_time'],
+                'kpindex'       : round(i_ref.kpindex, 2),
+                'ovation_max'   : int(i_ref.ovation_max),
+                'aurora_bt'     : round(i_ref.aurora_bt, 2),
+                'aurora_gsm_bz' : round(i_ref.aurora_gsm_bz, 2),
+                'aurora_n_hemi_gw' : i_ref.aurora_n_hemi_gw,
+                'aurora_s_hemi_gw' : i_ref.aurora_s_hemi_gw,
+
             }
 
 
@@ -961,6 +972,10 @@ class ImageWorker(Process):
             'elevation'           : int(self.position_av[2]),
             'sidereal_time'       : self.astrometric_data['sidereal_time'],
             'kpindex'             : i_ref.kpindex,
+            'aurora_bt'           : i_ref.aurora_bt,
+            'aurora_gsm_bz'       : i_ref.aurora_gsm_bz,
+            'aurora_n_hemi_gw'    : i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw'    : i_ref.aurora_s_hemi_gw,
             'ovation_max'         : i_ref.ovation_max,
             'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'aircraft'            : len(self.adsb_aircraft_list),
@@ -1125,6 +1140,10 @@ class ImageWorker(Process):
             'kpindex'         : i_ref.kpindex,
             'ovation_max'     : i_ref.ovation_max,
             'smoke_rating'    : i_ref.smoke_rating,
+            'aurora_bt'       : i_ref.aurora_bt,
+            'aurora_gsm_bz'   : i_ref.aurora_gsm_bz,
+            'aurora_n_hemi_gw': i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw': i_ref.aurora_s_hemi_gw,
         }
 
         fits_entry = self._miscDb.addFitsImage(
@@ -1300,6 +1319,10 @@ class ImageWorker(Process):
             'detections'      : len(i_ref.lines),
             'kpindex'         : i_ref.kpindex,
             'ovation_max'     : i_ref.ovation_max,
+            'aurora_bt'       : i_ref.aurora_bt,
+            'aurora_gsm_bz'   : i_ref.aurora_gsm_bz,
+            'aurora_n_hemi_gw': i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw': i_ref.aurora_s_hemi_gw,
             'smoke_rating'    : i_ref.smoke_rating,
         }
 
@@ -1473,6 +1496,10 @@ class ImageWorker(Process):
             'elevation'           : int(self.position_av[2]),
             'kpindex'             : i_ref.kpindex,
             'ovation_max'         : int(i_ref.ovation_max),
+            'aurora_bt'           : i_ref.aurora_bt,
+            'aurora_gsm_bz'       : i_ref.aurora_gsm_bz,
+            'aurora_n_hemi_gw'    : i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw'    : i_ref.aurora_s_hemi_gw,
             'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'aircraft'            : len(self.adsb_aircraft_list),
 
@@ -1625,6 +1652,10 @@ class ImageWorker(Process):
             'detections'      : len(i_ref.lines),
             'kpindex'         : i_ref.kpindex,
             'ovation_max'     : i_ref.ovation_max,
+            'aurora_bt'       : i_ref.aurora_bt,
+            'aurora_gsm_bz'   : i_ref.aurora_gsm_bz,
+            'aurora_n_hemi_gw': i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw': i_ref.aurora_s_hemi_gw,
             'smoke_rating'    : i_ref.smoke_rating,
         }
 

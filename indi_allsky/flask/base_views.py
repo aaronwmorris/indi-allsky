@@ -567,12 +567,17 @@ class BaseView(View):
     def get_aurora_info(self):
         if not self.camera_data:
             data = {
+                'aurora_status' : 'No data',
                 'kpindex' : 0.0,
-                'kpindex_status' : 'No data',
+                'kpindex_status' : 'No data',  # legacy
                 'kpindex_trend' : '',
                 'kpindex_rating' : '',
                 'ovation_max' : 0,
-                'ovation_max_status' : 'No data',
+                'ovation_max_status' : 'No data',  # legacy
+                'aurora_bt' : 0.0,
+                'aurora_gsm_bz' : 0.0,
+                'aurora_n_hemi_gw' : 0.0,
+                'aurora_s_hemi_gw' : 0.0,
             }
             return data
 
@@ -580,6 +585,23 @@ class BaseView(View):
         kpindex_current = float(self.camera_data.get('KPINDEX_CURRENT', 0))
         kpindex_coef = float(self.camera_data.get('KPINDEX_COEF', 0))
         ovation_max = int(self.camera_data.get('OVATION_MAX', 0))
+        aurora_bt = float(self.camera_data.get('AURORA_BT', 0.0))
+        aurora_gsm_bz = float(self.camera_data.get('AURORA_GSM_BZ', 0.0))
+        n_hemi_gw = int(self.camera_data.get('AURORA_N_HEMI_GW', 0))
+        s_hemi_gw = int(self.camera_data.get('AURORA_S_HEMI_GW', 0))
+
+
+        data = {
+            'aurora_status' : '',  # just use this for all statuses
+            'kpindex' : kpindex_current,
+            'kpindex_status' : '',  # legacy
+            'ovation_max' : ovation_max,
+            'ovation_max_status' : '',  # legacy
+            'aurora_bt' : aurora_bt,
+            'aurora_gsm_bz' : aurora_gsm_bz,
+            'aurora_n_hemi_gw' : n_hemi_gw,
+            'aurora_s_hemi_gw' : s_hemi_gw,
+        }
 
 
         now = datetime.now()
@@ -589,24 +611,16 @@ class BaseView(View):
         if data_timestamp:
             if data_timestamp < now_minus_6h.timestamp():
                 data = {
-                    'kpindex' : kpindex_current,
-                    'kpindex_status' : '[old]',
+                    'aurora_bt_status' : '[old]',
+                    'kpindex_status' : '[old]',  # legacy
                     'kpindex_trend' : '',
                     'kpindex_rating' : '',
-                    'ovation_max' : ovation_max,
-                    'ovation_max_status' : '[old]',
+                    'ovation_max_status' : '[old]',  # legacy
                 }
                 return data
 
 
-        data = {
-            'kpindex' : kpindex_current,
-            'kpindex_status' : '',
-            'ovation_max' : ovation_max,
-            'ovation_max_status' : '',
-        }
-
-
+        ### synthetic data below here
 
         if kpindex_coef == 0:
             kpindex_trend = ''
