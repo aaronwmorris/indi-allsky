@@ -567,7 +567,7 @@ class BaseView(View):
     def get_aurora_info(self):
         if not self.camera_data:
             data = {
-                'aurora_status' : 'No data',
+                'aurora_data_status' : 'No data',
                 'kpindex' : 0.0,
                 'kpindex_status' : 'No data',  # legacy
                 'kpindex_trend' : '',
@@ -596,7 +596,7 @@ class BaseView(View):
 
 
         data = {
-            'aurora_status' : '',  # just use this for all statuses
+            'aurora_data_status' : '',  # just use this for all statuses
             'kpindex' : kpindex_current,
             'kpindex_status' : '',  # legacy
             'ovation_max' : ovation_max,
@@ -617,7 +617,7 @@ class BaseView(View):
         if data_timestamp:
             if data_timestamp < now_minus_6h.timestamp():
                 data = {
-                    'aurora_status' : '[old]',
+                    'aurora_data_status' : '[old]',
                     'kpindex_status' : '[old]',  # legacy
                     'kpindex_trend' : '',
                     'kpindex_rating' : '',
