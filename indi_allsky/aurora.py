@@ -332,7 +332,7 @@ class IndiAllskyAuroraUpdate(object):
 
 
         try:
-            density, speed = self.processSolarWindMagData(self.solar_wind_mag_json_data)
+            density, speed = self.processSolarWindPlasmaData(self.solar_wind_mag_json_data)
         except ValueError as e:
             logger.error('Solar Wind processing error: %s', str(e))
             raise AuroraDataUpdateFailure from e
@@ -350,7 +350,7 @@ class IndiAllskyAuroraUpdate(object):
         camera_data['AURORA_PLASMA_SPEED'] = round(speed, 2)
 
 
-    def processSolarPlasmaMagData(self, json_data):
+    def processSolarWindPlasmaData(self, json_data):
         data_index = json_data[0]
 
         last_density = float(json_data[-1][data_index.index('density')])
