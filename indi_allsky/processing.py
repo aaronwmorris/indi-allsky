@@ -592,6 +592,8 @@ class ImageProcessor(object):
             image_data.ovation_max = int(camera_data.get('OVATION_MAX', 0))
             image_data.aurora_mag_bt = float(camera_data.get('AURORA_MAG_BT', 0.0))
             image_data.aurora_mag_gsm_bz = float(camera_data.get('AURORA_MAG_GSM_BZ', 0.0))
+            image_data.aurora_plasma_density = float(camera_data.get('AURORA_PLASMA_DENSITY', 0.0))
+            image_data.aurora_plasma_speed = float(camera_data.get('AURORA_PLASMA_SPEED', 0.0))
             image_data.aurora_n_hemi_gw = int(camera_data.get('AURORA_N_HEMI_GW', 0))
             image_data.aurora_s_hemi_gw = int(camera_data.get('AURORA_S_HEMI_GW', 0))
 
@@ -2084,6 +2086,8 @@ class ImageProcessor(object):
             'ovation_max'  : i_ref.ovation_max,
             'aurora_mag_bt'    : i_ref.aurora_mag_bt,
             'aurora_mag_gsm_bz': i_ref.aurora_mag_gsm_bz,
+            'aurora_plasma_density' : i_ref.aurora_plasma_density,
+            'aurora_plasma_speed' : i_ref.aurora_plasma_speed,
             'aurora_n_hemi_gw' : i_ref.aurora_n_hemi_gw,
             'aurora_s_hemi_gw' : i_ref.aurora_s_hemi_gw,
             'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
@@ -3257,6 +3261,8 @@ class ImageData(object):
         self._ovation_max = 0
         self._aurora_mag_bt = 0.0
         self._aurora_mag_gsm_bz = 0.0
+        self._aurora_plasma_density = 0.0
+        self._aurora_plasma_speed = 0.0
         self._aurora_n_hemi_gw = 0
         self._aurora_s_hemi_gw = 0
 
@@ -3392,6 +3398,22 @@ class ImageData(object):
     @aurora_mag_gsm_bz.setter
     def aurora_mag_gsm_bz(self, new_aurora_mag_gsm_bz):
         self._aurora_mag_gsm_bz = float(new_aurora_mag_gsm_bz)
+
+    @property
+    def aurora_plasma_density(self):
+        return self._aurora_plasma_density
+
+    @aurora_plasma_density.setter
+    def aurora_plasma_density(self, new_aurora_plasma_density):
+        self._aurora_plasma_density = float(new_aurora_plasma_density)
+
+    @property
+    def aurora_plasma_speed(self):
+        return self._aurora_plasma_speed
+
+    @aurora_plasma_speed.setter
+    def aurora_plasma_speed(self, new_aurora_plasma_speed):
+        self._aurora_plasma_speed = float(new_aurora_plasma_speed)
 
     @property
     def aurora_n_hemi_gw(self):

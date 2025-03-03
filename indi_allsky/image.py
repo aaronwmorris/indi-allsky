@@ -710,6 +710,8 @@ class ImageWorker(Process):
             image_add_data = {
                 'aurora_mag_bt'     : i_ref.aurora_mag_bt,
                 'aurora_mag_gsm_bz' : i_ref.aurora_mag_gsm_bz,
+                'aurora_plasma_density' : i_ref.aurora_plasma_density,
+                'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
                 'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
                 'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
             }
@@ -791,6 +793,8 @@ class ImageWorker(Process):
                 'ovation_max'   : int(i_ref.ovation_max),
                 'aurora_mag_bt'     : round(i_ref.aurora_mag_bt, 2),
                 'aurora_mag_gsm_bz' : round(i_ref.aurora_mag_gsm_bz, 2),
+                'aurora_plasma_density' : round(i_ref.aurora_plasma_density, 2),
+                'aurora_plasma_speed'   : round(i_ref.aurora_plasma_speed, 2),
                 'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
                 'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
 
@@ -974,6 +978,8 @@ class ImageWorker(Process):
             'kpindex'             : i_ref.kpindex,
             'aurora_mag_bt'       : i_ref.aurora_mag_bt,
             'aurora_mag_gsm_bz'   : i_ref.aurora_mag_gsm_bz,
+            'aurora_plasma_density' : i_ref.aurora_plasma_density,
+            'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
             'aurora_n_hemi_gw'    : i_ref.aurora_n_hemi_gw,
             'aurora_s_hemi_gw'    : i_ref.aurora_s_hemi_gw,
             'ovation_max'         : i_ref.ovation_max,
@@ -1142,6 +1148,8 @@ class ImageWorker(Process):
             'smoke_rating'    : i_ref.smoke_rating,
             'aurora_mag_bt'     : i_ref.aurora_mag_bt,
             'aurora_mag_gsm_bz' : i_ref.aurora_mag_gsm_bz,
+            'aurora_plasma_density' : i_ref.aurora_plasma_density,
+            'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
             'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
             'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
         }
@@ -1322,6 +1330,8 @@ class ImageWorker(Process):
             'smoke_rating'    : i_ref.smoke_rating,
             'aurora_mag_bt'     : i_ref.aurora_mag_bt,
             'aurora_mag_gsm_bz' : i_ref.aurora_mag_gsm_bz,
+            'aurora_plasma_density' : i_ref.aurora_plasma_density,
+            'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
             'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
             'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
         }
@@ -1498,6 +1508,8 @@ class ImageWorker(Process):
             'ovation_max'         : int(i_ref.ovation_max),
             'aurora_mag_bt'       : i_ref.aurora_mag_bt,
             'aurora_mag_gsm_bz'   : i_ref.aurora_mag_gsm_bz,
+            'aurora_plasma_density' : i_ref.aurora_plasma_density,
+            'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
             'aurora_n_hemi_gw'    : i_ref.aurora_n_hemi_gw,
             'aurora_s_hemi_gw'    : i_ref.aurora_s_hemi_gw,
             'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
@@ -1655,6 +1667,8 @@ class ImageWorker(Process):
             'smoke_rating'    : i_ref.smoke_rating,
             'aurora_mag_bt'     : i_ref.aurora_mag_bt,
             'aurora_mag_gsm_bz' : i_ref.aurora_mag_gsm_bz,
+            'aurora_plasma_density' : i_ref.aurora_plasma_density,
+            'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
             'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
             'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
         }

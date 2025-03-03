@@ -273,8 +273,11 @@ class IndiAllskyAuroraUpdate(object):
 
 
         try:
-            Bt, gsm_Bz = self.processSolarWindMagData(self.solar_ind_mag_json_data)
+            Bt, gsm_Bz = self.processSolarWindMagData(self.solar_wind_mag_json_data)
         except ValueError as e:
+            logger.error('Solar Wind processing error: %s', str(e))
+            raise AuroraDataUpdateFailure from e
+        except KeyError as e:
             logger.error('Solar Wind processing error: %s', str(e))
             raise AuroraDataUpdateFailure from e
         except IndexError as e:
@@ -329,8 +332,11 @@ class IndiAllskyAuroraUpdate(object):
 
 
         try:
-            density, speed = self.processSolarWindMagData(self.solar_ind_mag_json_data)
+            density, speed = self.processSolarWindMagData(self.solar_wind_mag_json_data)
         except ValueError as e:
+            logger.error('Solar Wind processing error: %s', str(e))
+            raise AuroraDataUpdateFailure from e
+        except KeyError as e:
             logger.error('Solar Wind processing error: %s', str(e))
             raise AuroraDataUpdateFailure from e
         except IndexError as e:
