@@ -62,7 +62,7 @@ class IndiAllSky(object):
 
     periodic_tasks_offset = 300         # 5 minutes
     cleanup_tasks_offset = 43200        # 12 hours
-    aurora_tasks_offset = 3600          # 60 minutes
+    aurora_tasks_offset = 1800          # 30 minutes
     smoke_tasks_offset = 10800          # 3 hours
     sat_data_tasks_offset = 259200      # 3 days
 
