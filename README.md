@@ -301,12 +301,14 @@ Smoke data is updated every 3 hours from NOAA.  Smoke data is also published wit
 *Note: Data is only available for **North America**.*
 
 
-## Aurora & Kp-index
+## Aurora, Kp-index, and Solar Wind
 indi-allsky utilizes data from [NOAA Space Weather Prediction Center](https://www.swpc.noaa.gov/) to predict the possibility of Aurora in your location.  The SWPC provides data using the Ovation Aurora Model for aurora predictions.  indi-allsky uses the Ovation data to create an aggregate score within a ~500 mile radius around your location.
 
 The current Kp-index value is also polled from NOAA.  This is the measurement of the disturbance of the Earth's magnetic field, ranging from 0-9.  Values higher than 5 are good indicators of stronger solor storm activity which creates aurora.
 
 The Kp-index data, combined with the Ovation data, gives an objective prediction of the visibility of Aurora for your location.
+
+Also available are Magnetic field Bt, Bz, Hemispheric power, and Solar Wind speed and density data.
 
 Aurora data is updated every 60 minutes from NOAA.  Aurora data is also published with the MQTT data.
 
