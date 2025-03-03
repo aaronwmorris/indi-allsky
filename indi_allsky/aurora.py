@@ -1,5 +1,8 @@
 import time
+from datetime import datetime
+from datetime import timezone
 import socket
+import re
 import ssl
 import math
 import json
@@ -20,6 +23,7 @@ class IndiAllskyAuroraUpdate(object):
     ovation_json_url = 'https://services.swpc.noaa.gov/json/ovation_aurora_latest.json'
     kpindex_json_url = 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'
     solar_wind_mag_json_url = 'https://services.swpc.noaa.gov/products/solar-wind/mag-5-minute.json'
+    hemi_power_url = 'https://services.swpc.noaa.gov/text/aurora-nowcast-hemi-power.txt'
 
 
     def __init__(self, config):
@@ -31,8 +35,8 @@ class IndiAllskyAuroraUpdate(object):
         ### caching the data allows multiple cameras to be updated in the same run
         self.ovation_json_data = None
         self.kpindex_json_data = None
-
         self.solar_ind_mag_json_data = None
+        self.hemi_power_data = None
 
 
     def update(self, camera):
@@ -64,6 +68,13 @@ class IndiAllskyAuroraUpdate(object):
 
         try:
             self.update_solar_wind_data(camera_data)
+            camera_update = True
+        except AuroraDataUpdateFailure:
+            pass
+
+
+        try:
+            self.update_hemi_power_data(camera_data)
             camera_update = True
         except AuroraDataUpdateFailure:
             pass
@@ -309,6 +320,58 @@ class IndiAllskyAuroraUpdate(object):
         return last_Bt, last_gsm_Bz
 
 
+    def update_hemi_power_data(self, camera_data):
+        if not self.hemi_power_data:
+            try:
+                self.hemi_power_data = self.download_txt(self.hemi_power_url)
+            except socket.gaierror as e:
+                logger.error('Name resolution error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except socket.timeout as e:
+                logger.error('Timeout error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.ConnectTimeout as e:
+                logger.error('Connection timeout: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.ConnectionError as e:
+                logger.error('Connection error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except urllib3.exceptions.ReadTimeoutError as e:
+                logger.error('Connection error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except ssl.SSLCertVerificationError as e:
+                logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.SSLError as e:
+                logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+
+
+        re_power = re.compile(r'(?P<obs_str>[0-9\-\_\:]+)\s+(?P<forecast_str>[0-9\-\_\:]+)\s+(?P<n_gw>\d+)\s+(?P<s_gw>\d+)')
+
+        power_data = list()
+        for line in self.hemi_power_data.splitlines():
+            if line.startswith('#'):
+                continue
+
+            m = re.search(re_power, line)
+            if not m:
+                logger.error('Regex parse error')
+                continue
+
+            d = {
+                'obs' : datetime.strptime(m.group('obs_str'), '%Y-%m-%d_%H:%M').replace(tzinfo=timezone.utc),
+                'forecast' : datetime.strptime(m.group('forecast_str'), '%Y-%m-%d_%H:%M').replace(tzinfo=timezone.utc),
+                'n_gw' : int(m.group('n_gw')),
+                's_gw' : int(m.group('s_gw')),
+            }
+
+            power_data.append(d)
+
+
+        logger.warning('Hemispheric data: %s', power_data)
+
+
     def download_json(self, url):
         logger.warning('Downloading %s', url)
 
@@ -322,6 +385,21 @@ class IndiAllskyAuroraUpdate(object):
         #logger.warning('Response: %s', json_data)
 
         return json_data
+
+
+    def download_txt(self, url):
+        logger.warning('Downloading %s', url)
+
+        r = requests.get(url, allow_redirects=True, verify=True, timeout=(15.0, 30.0))
+
+        if r.status_code >= 400:
+            logger.error('URL returned %d', r.status_code)
+            return None
+
+        data = r.text
+        #logger.warning('Response: %s', data)
+
+        return data
 
 
 class AuroraDataUpdateFailure(Exception):
