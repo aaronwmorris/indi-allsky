@@ -26,74 +26,13 @@ class IndiAllskyAuroraUpdate(object):
 
         self._miscDb = miscDb(self.config)
 
+
+        ### caching the data allows multiple cameras to be updated in the same run
         self.ovation_json_data = None
         self.kpindex_json_data = None
 
 
     def update(self, camera):
-        # allow data to be reused
-        if not self.ovation_json_data:
-            try:
-                self.ovation_json_data = self.download_json(self.ovation_json_url)
-            except json.JSONDecodeError as e:
-                logger.error('JSON parse error: %s', str(e))
-                self.ovation_json_data = None
-            except socket.gaierror as e:
-                logger.error('Name resolution error: %s', str(e))
-                self.ovation_json_data = None
-            except socket.timeout as e:
-                logger.error('Timeout error: %s', str(e))
-                self.ovation_json_data = None
-            except requests.exceptions.ConnectTimeout as e:
-                logger.error('Connection timeout: %s', str(e))
-                self.ovation_json_data = None
-            except requests.exceptions.ConnectionError as e:
-                logger.error('Connection error: %s', str(e))
-                self.ovation_json_data = None
-            except requests.exceptions.ReadTimeout as e:
-                logger.error('Connection error: %s', str(e))
-                self.ovation_json_data = None
-            except urllib3.exceptions.ReadTimeoutError as e:
-                logger.error('Connection error: %s', str(e))
-                self.ovation_json_data = None
-            except ssl.SSLCertVerificationError as e:
-                logger.error('Certificate error: %s', str(e))
-                self.ovation_json_data = None
-            except requests.exceptions.SSLError as e:
-                logger.error('Certificate error: %s', str(e))
-                self.ovation_json_data = None
-
-
-        # allow data to be reused
-        if not self.kpindex_json_data:
-            try:
-                self.kpindex_json_data = self.download_json(self.kpindex_json_url)
-            except json.JSONDecodeError as e:
-                logger.error('JSON parse error: %s', str(e))
-                self.kpindex_json_data = None
-            except socket.gaierror as e:
-                logger.error('Name resolution error: %s', str(e))
-                self.kpindex_json_data = None
-            except socket.timeout as e:
-                logger.error('Timeout error: %s', str(e))
-                self.kpindex_json_data = None
-            except requests.exceptions.ConnectTimeout as e:
-                logger.error('Connection timeout: %s', str(e))
-                self.kpindex_json_data = None
-            except requests.exceptions.ConnectionError as e:
-                logger.error('Connection error: %s', str(e))
-                self.kpindex_json_data = None
-            except urllib3.exceptions.ReadTimeoutError as e:
-                logger.error('Connection error: %s', str(e))
-                self.kpindex_json_data = None
-            except ssl.SSLCertVerificationError as e:
-                logger.error('Certificate error: %s', str(e))
-                self.kpindex_json_data = None
-            except requests.exceptions.SSLError as e:
-                logger.error('Certificate error: %s', str(e))
-                self.kpindex_json_data = None
-
-
         latitude = camera.latitude
         longitude = camera.longitude
 
@@ -104,31 +43,104 @@ class IndiAllskyAuroraUpdate(object):
             camera_data = dict()
 
 
-        update_camera = False
+        camera_update = False
 
-        if self.ovation_json_data:
-            max_ovation, avg_ovation = self.processOvationLocationData(self.ovation_json_data, latitude, longitude)
-            logger.info('Max Ovation: %d', max_ovation)
-            logger.info('Avg Ovation: %0.2f', avg_ovation)
-
-            camera_data['OVATION_MAX'] = max_ovation
-            update_camera = True
+        try:
+            self.update_ovation(camera_data, latitude, longitude)
+            camera_update = True
+        except AuroraDataUpdateFailure:
+            pass
 
 
-        if self.kpindex_json_data:
-            kpindex, kpindex_poly = self.processKpindexPoly(self.kpindex_json_data)
-            logger.info('kpindex: %0.2f', kpindex)
-            logger.info('Data: x = %0.2f, b = %0.2f', kpindex_poly.coef[0], kpindex_poly.coef[1])
-
-            camera_data['KPINDEX_CURRENT'] = round(kpindex, 2)
-            camera_data['KPINDEX_COEF'] = round(kpindex_poly.coef[0], 2)
-            update_camera = True
+        try:
+            self.update_kpindex(camera_data)
+            camera_update = True
+        except AuroraDataUpdateFailure:
+            pass
 
 
-        if update_camera:
+        if camera_update:
             camera_data['AURORA_DATA_TS'] = int(time.time())
             camera.data = camera_data
             db.session.commit()
+
+
+    def update_ovation(self, camera_data, latitude, longitude):
+        if not self.ovation_json_data:
+            try:
+                self.ovation_json_data = self.download_json(self.ovation_json_url)
+            except json.JSONDecodeError as e:
+                logger.error('JSON parse error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except socket.gaierror as e:
+                logger.error('Name resolution error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except socket.timeout as e:
+                logger.error('Timeout error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.ConnectTimeout as e:
+                logger.error('Connection timeout: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.ConnectionError as e:
+                logger.error('Connection error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.ReadTimeout as e:
+                logger.error('Connection error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except urllib3.exceptions.ReadTimeoutError as e:
+                logger.error('Connection error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except ssl.SSLCertVerificationError as e:
+                logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.SSLError as e:
+                logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+
+
+        max_ovation, avg_ovation = self.processOvationLocationData(self.ovation_json_data, latitude, longitude)
+        logger.info('Max Ovation: %d', max_ovation)
+        logger.info('Avg Ovation: %0.2f', avg_ovation)
+
+        camera_data['OVATION_MAX'] = max_ovation
+
+
+    def update_kpindex(self, camera_data):
+        if not self.kpindex_json_data:
+            try:
+                self.kpindex_json_data = self.download_json(self.kpindex_json_url)
+            except json.JSONDecodeError as e:
+                logger.error('JSON parse error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except socket.gaierror as e:
+                logger.error('Name resolution error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except socket.timeout as e:
+                logger.error('Timeout error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.ConnectTimeout as e:
+                logger.error('Connection timeout: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.ConnectionError as e:
+                logger.error('Connection error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except urllib3.exceptions.ReadTimeoutError as e:
+                logger.error('Connection error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except ssl.SSLCertVerificationError as e:
+                logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+            except requests.exceptions.SSLError as e:
+                logger.error('Certificate error: %s', str(e))
+                raise AuroraDataUpdateFailure from e
+
+
+        kpindex, kpindex_poly = self.processKpindexPoly(self.kpindex_json_data)
+        logger.info('kpindex: %0.2f', kpindex)
+        logger.info('Data: x = %0.2f, b = %0.2f', kpindex_poly.coef[0], kpindex_poly.coef[1])
+
+        camera_data['KPINDEX_CURRENT'] = round(kpindex, 2)
+        camera_data['KPINDEX_COEF'] = round(kpindex_poly.coef[0], 2)
 
 
     def download_json(self, url):
@@ -245,4 +257,7 @@ class IndiAllskyAuroraUpdate(object):
 
         return kp_last, p_fitted.convert()
 
+
+class AuroraDataUpdateFailure(Exception):
+    pass
 
