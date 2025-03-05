@@ -619,13 +619,13 @@ class BaseView(View):
         data_timestamp = int(self.camera_data.get('AURORA_DATA_TS', 0))
         if data_timestamp:
             if data_timestamp < now_minus_6h.timestamp():
-                data = {
+                data.update({
                     'aurora_data_status' : '[old]',
                     'kpindex_status' : '[old]',  # legacy
                     'kpindex_trend' : '',
                     'kpindex_rating' : '',
                     'ovation_max_status' : '[old]',  # legacy
-                }
+                })
                 return data
 
 
@@ -917,6 +917,8 @@ class TemplateView(BaseView):
         status_data.update(self.get_astrometric_info())
         status_data.update(self.get_smoke_info())
         status_data.update(self.get_aurora_info())
+
+        #app.logger.info('Status data: %s', status_data)
 
         context = {
             'status_text'        : self.get_status_text(status_data) + self.get_web_extra_text(),
