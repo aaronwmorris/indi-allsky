@@ -580,6 +580,7 @@ class BaseView(View):
                 'aurora_s_hemi_gw' : 0.0,
                 'aurora_plasma_density' : 0.0,
                 'aurora_plasma_speed' : 0.0,
+                'aurora_plasma_temp' : 0,
             }
             return data
 
@@ -591,6 +592,7 @@ class BaseView(View):
         aurora_mag_gsm_bz = float(self.camera_data.get('AURORA_MAG_GSM_BZ', 0.0))
         aurora_plasma_density = float(self.camera_data.get('AURORA_PLASMA_DENSITY', 0.0))
         aurora_plasma_speed = float(self.camera_data.get('AURORA_PLASMA_SPEED', 0.0))
+        aurora_plasma_temp = int(self.camera_data.get('AURORA_PLASMA_TEMP', 0))
         n_hemi_gw = int(self.camera_data.get('AURORA_N_HEMI_GW', 0))
         s_hemi_gw = int(self.camera_data.get('AURORA_S_HEMI_GW', 0))
 
@@ -605,6 +607,7 @@ class BaseView(View):
             'aurora_mag_gsm_bz' : aurora_mag_gsm_bz,
             'aurora_plasma_density' : aurora_plasma_density,
             'aurora_plasma_speed' : aurora_plasma_speed,
+            'aurora_plasma_temp' : aurora_plasma_temp,
             'aurora_n_hemi_gw' : n_hemi_gw,
             'aurora_s_hemi_gw' : s_hemi_gw,
         }
