@@ -1,9 +1,11 @@
 import time
-#from datetime import datetime
-#from datetime import timezone
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 import socket
 import re
 import ssl
+import statistics
 #import math
 import json
 import urllib3.exceptions
@@ -22,7 +24,7 @@ class IndiAllskyAuroraUpdate(object):
 
     ovation_json_url = 'https://services.swpc.noaa.gov/json/ovation_aurora_latest.json'
     kpindex_json_url = 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'
-    solar_wind_mag_json_url = 'https://services.swpc.noaa.gov/products/solar-wind/mag-5-minute.json'
+    solar_wind_mag_json_url = 'https://services.swpc.noaa.gov/products/solar-wind/mag-2-hour.json'
     solar_wind_plasma_json_url = 'https://services.swpc.noaa.gov/products/solar-wind/plasma-5-minute.json'
     hemi_power_url = 'https://services.swpc.noaa.gov/text/aurora-nowcast-hemi-power.txt'
 
@@ -59,12 +61,16 @@ class IndiAllskyAuroraUpdate(object):
             camera_update = True
         except AuroraDataUpdateFailure:
             pass
+        except AuroraDataProcessingError:
+            pass
 
 
         try:
             self.update_kpindex(camera_data)
             camera_update = True
         except AuroraDataUpdateFailure:
+            pass
+        except AuroraDataProcessingError:
             pass
 
 
@@ -73,6 +79,8 @@ class IndiAllskyAuroraUpdate(object):
             camera_update = True
         except AuroraDataUpdateFailure:
             pass
+        except AuroraDataProcessingError:
+            pass
 
 
         try:
@@ -80,12 +88,16 @@ class IndiAllskyAuroraUpdate(object):
             camera_update = True
         except AuroraDataUpdateFailure:
             pass
+        except AuroraDataProcessingError:
+            pass
 
 
         try:
             self.update_hemi_power_data(camera_data)
             camera_update = True
         except AuroraDataUpdateFailure:
+            pass
+        except AuroraDataProcessingError:
             pass
 
 
@@ -273,32 +285,60 @@ class IndiAllskyAuroraUpdate(object):
 
 
         try:
-            Bt, gsm_Bz = self.processSolarWindMagData(self.solar_wind_mag_json_data)
+            mean_Bt, mean_gsm_Bz = self.processSolarWindMagData(self.solar_wind_mag_json_data)
         except ValueError as e:
             logger.error('Solar Wind processing error: %s', str(e))
-            raise AuroraDataUpdateFailure from e
+            raise AuroraDataProcessingError from e
         except KeyError as e:
             logger.error('Solar Wind processing error: %s', str(e))
-            raise AuroraDataUpdateFailure from e
+            raise AuroraDataProcessingError from e
         except IndexError as e:
             logger.error('Solar Wind processing error: %s', str(e))
-            raise AuroraDataUpdateFailure from e
+            raise AuroraDataProcessingError from e
 
 
-        logger.info('Aurora - Bt: %0.2f, GSM Bz: %0.2f', gsm_Bz, Bt)
+        logger.info('Aurora - Bt: %0.2f, GSM Bz: %0.2f', mean_Bt, mean_gsm_Bz)
 
-        camera_data['AURORA_MAG_BT'] = round(Bt, 2)
-        camera_data['AURORA_MAG_GSM_BZ'] = round(gsm_Bz, 2)
+        camera_data['AURORA_MAG_BT'] = round(mean_Bt, 2)
+        camera_data['AURORA_MAG_GSM_BZ'] = round(mean_gsm_Bz, 2)
 
 
     def processSolarWindMagData(self, json_data):
         data_index = json_data[0]
 
-        last_Bt = float(json_data[-1][data_index.index('bt')])
-        last_gsm_Bz = float(json_data[-1][data_index.index('bz_gsm')])
+        time_tag_idx = data_index.index('time_tag')
+        bt_idx = data_index.index('bt')
+        bz_gsm_idx = data_index.index('bz_gsm')
 
 
-        return last_Bt, last_gsm_Bz
+        mag_data_list = list()
+        for x in json_data[1:]:
+            data = {
+                'time_tag'  : datetime.strptime(x[time_tag_idx], '%Y-%m-%d %H:%M:%S.%f').astimezone(timezone.utc),
+                'bt'        : float(x[bt_idx]),
+                'bz_gsm'    : float(x[bz_gsm_idx]),
+            }
+
+            mag_data_list.append(data)
+
+
+        now_utc_minus_20m = datetime.now(timezone.utc) - timedelta(minutes=20)
+
+        mag_data_15m = filter(lambda x: x['time_tag'] > now_utc_minus_20m, mag_data_list)
+
+
+        bt_list = list()
+        bz_gsm_list = list()
+        for x in mag_data_15m:
+            bt_list.append(x['bt'])
+            bz_gsm_list.append(x['bz_gsm'])
+
+
+        mean_Bt = statistics.mean(bt_list)
+        mean_gsm_Bz = statistics.mean(bz_gsm_list)
+
+
+        return mean_Bt, mean_gsm_Bz
 
 
     def update_solar_wind_plasma_data(self, camera_data):
@@ -335,13 +375,13 @@ class IndiAllskyAuroraUpdate(object):
             density, speed = self.processSolarWindPlasmaData(self.solar_wind_plasma_json_data)
         except ValueError as e:
             logger.error('Solar Wind processing error: %s', str(e))
-            raise AuroraDataUpdateFailure from e
+            raise AuroraDataProcessingError from e
         except KeyError as e:
             logger.error('Solar Wind processing error: %s', str(e))
-            raise AuroraDataUpdateFailure from e
+            raise AuroraDataProcessingError from e
         except IndexError as e:
             logger.error('Solar Wind processing error: %s', str(e))
-            raise AuroraDataUpdateFailure from e
+            raise AuroraDataProcessingError from e
 
 
         logger.info('Solar Wind - Density: %0.2f, Speed: %0.2f', density, speed)
@@ -391,13 +431,13 @@ class IndiAllskyAuroraUpdate(object):
             n_hemi_gw, s_hemi_gw = self.processHemiPowerData(self.hemi_power_data)
         except IndexError as e:
             logger.error('Hemispheric power processing error: %s', str(e))
-            raise AuroraDataUpdateFailure from e
+            raise AuroraDataProcessingError from e
         except KeyError as e:
             logger.error('Hemispheric power processing error: %s', str(e))
-            raise AuroraDataUpdateFailure from e
+            raise AuroraDataProcessingError from e
         except ValueError as e:
             logger.error('Hemispheric power processing error: %s', str(e))
-            raise AuroraDataUpdateFailure from e
+            raise AuroraDataProcessingError from e
 
 
         logger.info('Hemispheric Power - N: %d GW, S: %d GW', n_hemi_gw, s_hemi_gw)
@@ -470,3 +510,6 @@ class IndiAllskyAuroraUpdate(object):
 class AuroraDataUpdateFailure(Exception):
     pass
 
+
+class AuroraDataProcessingError(Exception):
+    pass
