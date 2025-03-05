@@ -25,7 +25,7 @@ class IndiAllskyAuroraUpdate(object):
     ovation_json_url = 'https://services.swpc.noaa.gov/json/ovation_aurora_latest.json'
     kpindex_json_url = 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'
     solar_wind_mag_json_url = 'https://services.swpc.noaa.gov/products/solar-wind/mag-2-hour.json'
-    solar_wind_plasma_json_url = 'https://services.swpc.noaa.gov/products/solar-wind/plasma-5-minute.json'
+    solar_wind_plasma_json_url = 'https://services.swpc.noaa.gov/products/solar-wind/plasma-2-hour.json'
     hemi_power_url = 'https://services.swpc.noaa.gov/text/aurora-nowcast-hemi-power.txt'
 
 
@@ -323,13 +323,12 @@ class IndiAllskyAuroraUpdate(object):
 
 
         now_utc_minus_20m = datetime.now(timezone.utc) - timedelta(minutes=20)
-
-        mag_data_15m = filter(lambda x: x['time_tag'] > now_utc_minus_20m, mag_data_list)
+        mag_data_20m = filter(lambda x: x['time_tag'] > now_utc_minus_20m, mag_data_list)
 
 
         bt_list = list()
         bz_gsm_list = list()
-        for x in mag_data_15m:
+        for x in mag_data_20m:
             bt_list.append(x['bt'])
             bz_gsm_list.append(x['bz_gsm'])
 
@@ -372,7 +371,7 @@ class IndiAllskyAuroraUpdate(object):
 
 
         try:
-            density, speed = self.processSolarWindPlasmaData(self.solar_wind_plasma_json_data)
+            mean_density, mean_speed, mean_temperature = self.processSolarWindPlasmaData(self.solar_wind_plasma_json_data)
         except ValueError as e:
             logger.error('Solar Wind processing error: %s', str(e))
             raise AuroraDataProcessingError from e
@@ -384,20 +383,53 @@ class IndiAllskyAuroraUpdate(object):
             raise AuroraDataProcessingError from e
 
 
-        logger.info('Solar Wind - Density: %0.2f, Speed: %0.2f', density, speed)
+        logger.info('Solar Wind - Density: %0.2f 1/cm^3, Speed: %0.2fkm/s, Temp: %dK', mean_density, mean_speed, mean_temperature)
 
-        camera_data['AURORA_PLASMA_DENSITY'] = round(density, 2)
-        camera_data['AURORA_PLASMA_SPEED'] = round(speed, 2)
+        camera_data['AURORA_PLASMA_DENSITY'] = round(mean_density, 2)
+        camera_data['AURORA_PLASMA_SPEED'] = round(mean_speed, 2)
+        camera_data['AURORA_PLASMA_TEMP'] = mean_temperature
 
 
     def processSolarWindPlasmaData(self, json_data):
         data_index = json_data[0]
 
-        last_density = float(json_data[-1][data_index.index('density')])
-        last_speed = float(json_data[-1][data_index.index('speed')])
+        time_tag_idx = data_index.index('time_tag')
+        density_idx = data_index.index('density')
+        speed_idx = data_index.index('speed')
+        temperature_idx = data_index.index('temperature')
 
 
-        return last_density, last_speed
+        plasma_data_list = list()
+        for x in json_data[1:]:
+            data = {
+                'time_tag'    : datetime.strptime(x[time_tag_idx], '%Y-%m-%d %H:%M:%S.%f').astimezone(timezone.utc),
+                'density'     : float(x[density_idx]),
+                'speed'       : float(x[speed_idx]),
+                'temperature' : int(x[temperature_idx]),
+            }
+
+            plasma_data_list.append(data)
+
+
+        now_utc_minus_20m = datetime.now(timezone.utc) - timedelta(minutes=20)
+        plasma_data_20m = filter(lambda x: x['time_tag'] > now_utc_minus_20m, plasma_data_list)
+
+
+        density_list = list()
+        speed_list = list()
+        temperature_list = list()
+        for x in plasma_data_20m:
+            density_list.append(x['density'])
+            speed_list.append(x['speed'])
+            temperature_list.append(x['temperature'])
+
+
+        mean_density = statistics.mean(density_list)
+        mean_speed = statistics.mean(speed_list)
+        mean_temperature = int(statistics.mean(temperature_list))
+
+
+        return mean_density, mean_speed, mean_temperature
 
 
     def update_hemi_power_data(self, camera_data):
