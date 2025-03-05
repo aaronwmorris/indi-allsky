@@ -312,11 +312,27 @@ class IndiAllskyAuroraUpdate(object):
 
 
         mag_data_list = list()
-        for x in json_data[1:]:
+        for entry in json_data[1:]:
+            time_tag = entry[time_tag_idx]
+            bt = entry[bt_idx]
+            bz_gsm = entry[bz_gsm_idx]
+
+
+            # skip entries with null values
+            if isinstance(time_tag, type(None)):
+                continue
+
+            if isinstance(bt, type(None)):
+                continue
+
+            if isinstance(bt, type(None)):
+                continue
+
+
             data = {
-                'time_tag'  : datetime.strptime(x[time_tag_idx], '%Y-%m-%d %H:%M:%S.%f').astimezone(timezone.utc),
-                'bt'        : float(x[bt_idx]),
-                'bz_gsm'    : float(x[bz_gsm_idx]),
+                'time_tag'  : datetime.strptime(time_tag, '%Y-%m-%d %H:%M:%S.%f').astimezone(timezone.utc),
+                'bt'        : float(bt),
+                'bz_gsm'    : float(bz_gsm),
             }
 
             mag_data_list.append(data)
@@ -400,12 +416,32 @@ class IndiAllskyAuroraUpdate(object):
 
 
         plasma_data_list = list()
-        for x in json_data[1:]:
+        for entry in json_data[1:]:
+            time_tag = entry[time_tag_idx]
+            density = entry[density_idx]
+            speed = entry[speed_idx]
+            temperature = entry[temperature_idx]
+
+
+            # skip entries with null values
+            if isinstance(time_tag, type(None)):
+                continue
+
+            if isinstance(density, type(None)):
+                continue
+
+            if isinstance(speed, type(None)):
+                continue
+
+            if isinstance(temperature, type(None)):
+                continue
+
+
             data = {
-                'time_tag'    : datetime.strptime(x[time_tag_idx], '%Y-%m-%d %H:%M:%S.%f').astimezone(timezone.utc),
-                'density'     : float(x[density_idx]),
-                'speed'       : float(x[speed_idx]),
-                'temperature' : int(x[temperature_idx]),
+                'time_tag'    : datetime.strptime(time_tag, '%Y-%m-%d %H:%M:%S.%f').astimezone(timezone.utc),
+                'density'     : float(density),
+                'speed'       : float(speed),
+                'temperature' : int(temperature),
             }
 
             plasma_data_list.append(data)
