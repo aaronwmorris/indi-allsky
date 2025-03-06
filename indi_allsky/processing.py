@@ -590,6 +590,13 @@ class ImageProcessor(object):
         if camera_data:
             image_data.kpindex = float(camera_data.get('KPINDEX_CURRENT', 0.0))
             image_data.ovation_max = int(camera_data.get('OVATION_MAX', 0))
+            image_data.aurora_mag_bt = float(camera_data.get('AURORA_MAG_BT', 0.0))
+            image_data.aurora_mag_gsm_bz = float(camera_data.get('AURORA_MAG_GSM_BZ', 0.0))
+            image_data.aurora_plasma_density = float(camera_data.get('AURORA_PLASMA_DENSITY', 0.0))
+            image_data.aurora_plasma_speed = float(camera_data.get('AURORA_PLASMA_SPEED', 0.0))
+            image_data.aurora_plasma_temp = int(camera_data.get('AURORA_PLASMA_TEMP', 0))
+            image_data.aurora_n_hemi_gw = int(camera_data.get('AURORA_N_HEMI_GW', 0))
+            image_data.aurora_s_hemi_gw = int(camera_data.get('AURORA_S_HEMI_GW', 0))
 
             try:
                 image_data.smoke_rating = int(camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA))
@@ -1057,11 +1064,15 @@ class ImageProcessor(object):
     def apply_color_correction_matrix(self, libcamera_ccm):
         ccm_start = time.time()
 
+        # do not convert to uint16 yet
+        ccm_image = numpy.matmul(self.image, numpy.array(libcamera_ccm).T)
+
+
         max_value = (2 ** self.max_bit_depth) - 1
 
-        ccm_image = numpy.matmul(self.image, numpy.array(libcamera_ccm).T)
         ccm_image[ccm_image > max_value] = max_value  # clip high end
         ccm_image[ccm_image < 0] = 0  # clip low end
+
 
         self.image = ccm_image.astype(self.image.dtype)
 
@@ -2078,6 +2089,13 @@ class ImageProcessor(object):
             'location'     : i_ref.location,
             'kpindex'      : i_ref.kpindex,
             'ovation_max'  : i_ref.ovation_max,
+            'aurora_mag_bt'    : i_ref.aurora_mag_bt,
+            'aurora_mag_gsm_bz': i_ref.aurora_mag_gsm_bz,
+            'aurora_plasma_density' : i_ref.aurora_plasma_density,
+            'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
+            'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
+            'aurora_n_hemi_gw' : i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw' : i_ref.aurora_s_hemi_gw,
             'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'sun_next_rise'     : self.astrometric_data['sun_next_rise'],
@@ -3244,9 +3262,19 @@ class ImageData(object):
         self._calibrated = False
         self._libcamera_black_level = None
         self._opencv_data = None
+
         self._kpindex = 0.0
         self._ovation_max = 0
+        self._aurora_mag_bt = 0.0
+        self._aurora_mag_gsm_bz = 0.0
+        self._aurora_plasma_density = 0.0
+        self._aurora_plasma_speed = 0.0
+        self._aurora_plasma_temp = 0
+        self._aurora_n_hemi_gw = 0
+        self._aurora_s_hemi_gw = 0
+
         self._smoke_rating = constants.SMOKE_RATING_NODATA
+
         self._sqm_value = None
         self._lines = list()
         self._stars = list()
@@ -3345,6 +3373,7 @@ class ImageData(object):
     def opencv_data(self, new_opencv_data):
         self._opencv_data = new_opencv_data
 
+
     @property
     def kpindex(self):
         return self._kpindex
@@ -3360,6 +3389,63 @@ class ImageData(object):
     @ovation_max.setter
     def ovation_max(self, new_ovation_max):
         self._ovation_max = int(new_ovation_max)
+
+    @property
+    def aurora_mag_bt(self):
+        return self._aurora_mag_bt
+
+    @aurora_mag_bt.setter
+    def aurora_mag_bt(self, new_aurora_mag_bt):
+        self._aurora_mag_bt = float(new_aurora_mag_bt)
+
+    @property
+    def aurora_mag_gsm_bz(self):
+        return self._aurora_mag_gsm_bz
+
+    @aurora_mag_gsm_bz.setter
+    def aurora_mag_gsm_bz(self, new_aurora_mag_gsm_bz):
+        self._aurora_mag_gsm_bz = float(new_aurora_mag_gsm_bz)
+
+    @property
+    def aurora_plasma_density(self):
+        return self._aurora_plasma_density
+
+    @aurora_plasma_density.setter
+    def aurora_plasma_density(self, new_aurora_plasma_density):
+        self._aurora_plasma_density = float(new_aurora_plasma_density)
+
+    @property
+    def aurora_plasma_speed(self):
+        return self._aurora_plasma_speed
+
+    @aurora_plasma_speed.setter
+    def aurora_plasma_speed(self, new_aurora_plasma_speed):
+        self._aurora_plasma_speed = float(new_aurora_plasma_speed)
+
+    @property
+    def aurora_plasma_temp(self):
+        return self._aurora_plasma_temp
+
+    @aurora_plasma_temp.setter
+    def aurora_plasma_temp(self, new_aurora_plasma_temp):
+        self._aurora_plasma_temp = int(new_aurora_plasma_temp)
+
+    @property
+    def aurora_n_hemi_gw(self):
+        return self._aurora_n_hemi_gw
+
+    @aurora_n_hemi_gw.setter
+    def aurora_n_hemi_gw(self, new_aurora_n_hemi_gw):
+        self._aurora_n_hemi_gw = int(new_aurora_n_hemi_gw)
+
+    @property
+    def aurora_s_hemi_gw(self):
+        return self._aurora_s_hemi_gw
+
+    @aurora_s_hemi_gw.setter
+    def aurora_s_hemi_gw(self, new_aurora_s_hemi_gw):
+        self._aurora_s_hemi_gw = int(new_aurora_s_hemi_gw)
+
 
     @property
     def smoke_rating(self):

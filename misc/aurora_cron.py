@@ -38,10 +38,15 @@ app = create_app()
 app.app_context().push()
 
 
+LOG_FORMATTER_STREAM = logging.Formatter('%(asctime)s [%(levelname)s] %(processName)s %(funcName)s() [%(lineno)d]: %(message)s')
+LOG_HANDLER_STREAM = logging.StreamHandler()
+LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 
-logging.basicConfig(level=logging.INFO)
-logger = logging
 
+logger = logging.getLogger('indi_allsky')
+logger.handlers.clear()
+logger.addHandler(LOG_HANDLER_STREAM)
+logger.setLevel(logging.INFO)
 
 
 class AuroraDataUpdater(object):
