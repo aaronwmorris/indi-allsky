@@ -1438,7 +1438,7 @@ def FFMPEG_EXTRA_OPTIONS_validator(form, field):
     if not field.data:
         return
 
-    options_regex = r'^[a-zA-Z0-9_\.\-\:\/\ ]+$'
+    options_regex = r'^[a-zA-Z0-9_\.\,\-\:\;\/\ \=\'\*\[\]\(\)]+$'
     if not re.search(options_regex, field.data):
         raise ValidationError('Invalid characters')
 
@@ -2390,7 +2390,7 @@ def LIBCAMERA__EXTRA_OPTIONS_validator(form, field):
     if not field.data:
         return
 
-    options_regex = r'^[a-zA-Z0-9_\.\-\:\/\ ]+$'
+    options_regex = r'^[a-zA-Z0-9_\.\,\-\:\/\ ]+$'
     if not re.search(options_regex, field.data):
         raise ValidationError('Invalid characters')
 
