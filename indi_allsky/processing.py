@@ -1064,11 +1064,15 @@ class ImageProcessor(object):
     def apply_color_correction_matrix(self, libcamera_ccm):
         ccm_start = time.time()
 
+        # do not convert to uint16 yet
+        ccm_image = numpy.matmul(self.image, numpy.array(libcamera_ccm).T)
+
+
         max_value = (2 ** self.max_bit_depth) - 1
 
-        ccm_image = numpy.matmul(self.image, numpy.array(libcamera_ccm).T)
         ccm_image[ccm_image > max_value] = max_value  # clip high end
         ccm_image[ccm_image < 0] = 0  # clip low end
+
 
         self.image = ccm_image.astype(self.image.dtype)
 
