@@ -614,7 +614,9 @@ class CaptureWorker(Process):
 
                         # if the image queue grows too large, introduce delays to new exposures
                         image_queue_size = self.image_q.qsize()
-                        logger.info('Image queue depth: %d', image_queue_size)
+                        if image_queue_size > 0:
+                            logger.warning('Image queue depth: %d', image_queue_size)
+
 
                         if image_queue_size <= self.image_queue_min:
                             if self.add_period_delay > 0:

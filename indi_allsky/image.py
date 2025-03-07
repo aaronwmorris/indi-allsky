@@ -1406,7 +1406,7 @@ class ImageWorker(Process):
         tmpfile_name = Path(f_tmpfile.name)
 
 
-        write_img_start = time.time()
+        #write_img_start = time.time()
 
         # write to temporary file
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
@@ -1430,8 +1430,8 @@ class ImageWorker(Process):
             tmpfile_name.unlink()
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
-        write_img_elapsed_s = time.time() - write_img_start
-        logger.info('Image compressed in %0.4f s', write_img_elapsed_s)
+        #write_img_elapsed_s = time.time() - write_img_start
+        #logger.info('Image compressed in %0.4f s', write_img_elapsed_s)
 
 
         ### Always write the latest file for web access
@@ -1583,7 +1583,7 @@ class ImageWorker(Process):
         tmpfile_name = Path(f_tmpfile.name)
 
 
-        write_img_start = time.time()
+        #write_img_start = time.time()
 
         # write to temporary file
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
@@ -1607,8 +1607,8 @@ class ImageWorker(Process):
             tmpfile_name.unlink()
             raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
 
-        write_img_elapsed_s = time.time() - write_img_start
-        logger.info('Panorama image compressed in %0.4f s', write_img_elapsed_s)
+        #write_img_elapsed_s = time.time() - write_img_start
+        #logger.info('Panorama image compressed in %0.4f s', write_img_elapsed_s)
 
 
         ### Always write the latest file for web access
