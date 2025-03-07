@@ -683,7 +683,9 @@ class ImageWorker(Process):
         self.write_status_json(i_ref, adu, adu_average)  # write json status file
 
 
-        self.write_realtime_keogram(self.image_processor.realtime_keogram_trimmed)
+        if not isinstance(self.image_processor.realtime_keogram_data, type(None)):
+            # keogram might be empty on dimension mismatch
+            self.write_realtime_keogram(self.image_processor.realtime_keogram_trimmed)
 
 
         latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, jpeg_exif=jpeg_exif)

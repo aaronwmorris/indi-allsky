@@ -3083,9 +3083,6 @@ class ImageProcessor(object):
         image_height, image_width = self.image.shape[:2]
 
 
-        center_line = self.image[:, [int(image_width / 2)]]
-
-
         if isinstance(self.realtime_keogram_data, type(None)):
             if self._keogram_store_p.exists() and self._keogram_store_p.stat().st_size > 0:
                 # load stored data
@@ -3094,11 +3091,6 @@ class ImageProcessor(object):
                 except ValueError:
                     logger.error('Invalid numpy data for realtime keogram')
                     self._keogram_store_p.unlink()
-                    # try again next time
-                    return
-            else:
-                # initialize new array
-                self.realtime_keogram_data = numpy.empty(center_line.shape, dtype=center_line.dtype)
 
 
         #keogram_height, keogram_width = self.realtime_keogram_data.shape[:2]
@@ -3106,9 +3098,6 @@ class ImageProcessor(object):
         #if keogram_height != image_height:
         #    logger.warning('Image height does not match realtime keogram, resetting')
         #    self.realtime_keogram_data = None
-
-        #    if self._keogram_store_p.exists():
-        #        self._keogram_store_p.unlink()
 
         #    return
 
@@ -3118,9 +3107,6 @@ class ImageProcessor(object):
         except ValueError as e:
             logger.error('Error processing keogram image: %s', str(e))
             self.realtime_keogram_data = None
-
-            if self._keogram_store_p.exists():
-                self._keogram_store_p.unlink()
 
             return
 
