@@ -53,7 +53,7 @@ class IndiAllSkyLightgraphOverlay(object):
             self.lightgraph = self.generate()
 
 
-        lightgraph_overlay_start = time.time()
+        #lightgraph_overlay_start = time.time()
 
         lightgraph = self.lightgraph.copy()
 
@@ -190,7 +190,8 @@ class IndiAllSkyLightgraphOverlay(object):
                 # pillow is default
                 image_crop = self.drawText_pillow(image_crop)
         else:
-            logger.warning('Lightgraph labels disabled')
+            pass
+            #logger.warning('Lightgraph labels disabled')
 
 
         # add overlayed lightgraph area back to image
@@ -200,12 +201,12 @@ class IndiAllSkyLightgraphOverlay(object):
         ] = image_crop
 
 
-        lightgraph_overlay_elapsed_s = time.time() - lightgraph_overlay_start
-        logger.warning('Lightgraph Overlay processing in %0.4f s', lightgraph_overlay_elapsed_s)
+        #lightgraph_overlay_elapsed_s = time.time() - lightgraph_overlay_start
+        #logger.warning('Lightgraph Overlay processing in %0.4f s', lightgraph_overlay_elapsed_s)
 
 
     def generate(self):
-        generate_start = time.time()
+        #generate_start = time.time()
 
 
         now = datetime.now()
@@ -261,8 +262,8 @@ class IndiAllSkyLightgraphOverlay(object):
 
         #logger.info(lightgraph_list)
 
-        generate_elapsed_s = time.time() - generate_start
-        logger.warning('Generate lightgraph in %0.4f s', generate_elapsed_s)
+        #generate_elapsed_s = time.time() - generate_start
+        #logger.warning('Generate lightgraph in %0.4f s', generate_elapsed_s)
 
 
         lightgraph = numpy.array([lightgraph_list], dtype=numpy.uint8)

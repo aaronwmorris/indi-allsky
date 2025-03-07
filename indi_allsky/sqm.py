@@ -18,7 +18,7 @@ class IndiAllskySqm(object):
 
 
     def calculate(self, img, exposure, gain):
-        logger.info('Exposure: %0.6f, gain: %d', exposure, gain)
+        #logger.info('Exposure: %0.6f, gain: %d', exposure, gain)
 
         if isinstance(self._sqm_mask, type(None)):
             # This only needs to be done once if a mask is not provided
@@ -34,12 +34,11 @@ class IndiAllskySqm(object):
 
 
         sqm_avg = cv2.mean(src=img_gray, mask=self._sqm_mask)[0]
-        logger.info('Raw SQM average: %0.2f', sqm_avg)
 
         # offset the sqm based on the exposure and gain
         weighted_sqm_avg = (((self.config['CCD_EXPOSURE_MAX'] - exposure) / 10) + 1) * (sqm_avg * (((self.config['CCD_CONFIG']['NIGHT']['GAIN'] - gain) / 10) + 1))
 
-        logger.info('Weighted SQM average: %0.2f', weighted_sqm_avg)
+        logger.info('Raw SQM: %0.2f, Weighted SQM: %0.2f', sqm_avg, weighted_sqm_avg)
 
         return weighted_sqm_avg
 

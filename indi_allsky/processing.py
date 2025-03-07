@@ -754,7 +754,7 @@ class ImageProcessor(object):
                 .first()
 
             if not bpm_entry:
-                logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensors_temp_av[0])
+                #logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensors_temp_av[0])
 
                 # pick a bad pixel map that matches the exposure at the hightest temperature found
                 bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
@@ -807,7 +807,7 @@ class ImageProcessor(object):
             .first()
 
         if not dark_frame_entry:
-            logger.warning('Temperature matched dark not found: %0.2fc', self.sensors_temp_av[0])
+            #logger.warning('Temperature matched dark not found: %0.2fc', self.sensors_temp_av[0])
 
             # pick a dark frame that matches the exposure at the hightest temperature found
             dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
@@ -1099,7 +1099,7 @@ class ImageProcessor(object):
         if image_bitpix == 8:
             return
 
-        logger.info('Resampling image from %d to 8 bits', image_bitpix)
+        #logger.info('Resampling image from %d to 8 bits', image_bitpix)
 
         # shifting is 5x faster than division
         shift_factor = self.max_bit_depth - 8
@@ -1140,7 +1140,7 @@ class ImageProcessor(object):
 
 
     def _rotate_angle(self, angle, keep_size=False, use_offset=False):
-        rotate_start = time.time()
+        #rotate_start = time.time()
 
         height, width = self.image.shape[:2]
         center_x = int(width / 2)
@@ -1193,8 +1193,8 @@ class ImageProcessor(object):
             ]
 
 
-        processing_elapsed_s = time.time() - rotate_start
-        logger.warning('Rotation in %0.4f s', processing_elapsed_s)
+        #processing_elapsed_s = time.time() - rotate_start
+        #logger.warning('Rotation in %0.4f s', processing_elapsed_s)
 
 
     def _flip(self, data, cv2_axis):
@@ -1593,7 +1593,7 @@ class ImageProcessor(object):
             self._image_circle_alpha_mask = self._generate_image_circle_mask(self.image)
 
 
-        alpha_start = time.time()
+        #alpha_start = time.time()
 
         self.image = (self.image * self._image_circle_alpha_mask).astype(numpy.uint8)
 
@@ -1614,8 +1614,8 @@ class ImageProcessor(object):
             )
 
 
-        alpha_elapsed_s = time.time() - alpha_start
-        logger.info('Image circle mask in %0.4f s', alpha_elapsed_s)
+        #alpha_elapsed_s = time.time() - alpha_start
+        #logger.info('Image circle mask in %0.4f s', alpha_elapsed_s)
 
 
     def apply_logo_overlay(self):
@@ -1635,12 +1635,12 @@ class ImageProcessor(object):
             return
 
 
-        alpha_start = time.time()
+        #alpha_start = time.time()
 
         self.image = (self.image * (1 - self._alpha_mask) + self._overlay * self._alpha_mask).astype(numpy.uint8)
 
-        alpha_elapsed_s = time.time() - alpha_start
-        logger.info('Alpha transparency in %0.4f s', alpha_elapsed_s)
+        #alpha_elapsed_s = time.time() - alpha_start
+        #logger.info('Alpha transparency in %0.4f s', alpha_elapsed_s)
 
 
     #def equalizeHistogram(self, data):
@@ -2818,7 +2818,7 @@ class ImageProcessor(object):
     def fish2pano_module(self):
         import fish2pano
 
-        fish2pano_start = time.time()
+        #fish2pano_start = time.time()
 
         image_height, image_width = self.image.shape[:2]
 
@@ -2889,15 +2889,15 @@ class ImageProcessor(object):
             img_pano = cv2.flip(img_pano, 1)
 
 
-        fish2pano_elapsed_s = time.time() - fish2pano_start
-        logger.info('Panorama in %0.4f s', fish2pano_elapsed_s)
+        #fish2pano_elapsed_s = time.time() - fish2pano_start
+        #logger.info('Panorama in %0.4f s', fish2pano_elapsed_s)
 
         # original image not replaced
         return img_pano
 
 
     def fish2pano_warpPolar(self):
-        fish2pano_start = time.time()
+        #fish2pano_start = time.time()
 
         image_height, image_width = self.image.shape[:2]
 
@@ -2974,8 +2974,8 @@ class ImageProcessor(object):
             img_pano = cv2.flip(img_pano, 1)
 
 
-        fish2pano_elapsed_s = time.time() - fish2pano_start
-        logger.info('Panorama in %0.4f s', fish2pano_elapsed_s)
+        #fish2pano_elapsed_s = time.time() - fish2pano_start
+        #logger.info('Panorama in %0.4f s', fish2pano_elapsed_s)
 
         # original image not replaced
         return img_pano

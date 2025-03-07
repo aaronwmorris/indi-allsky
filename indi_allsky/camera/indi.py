@@ -878,7 +878,7 @@ class IndiClient(PyIndi.BaseClient):
         ra = float(equatorial_eod_coord[0].getValue())   # RA
         dec = float(equatorial_eod_coord[1].getValue())  # DEC
 
-        logger.info("Telescope Coord: RA %0.2f, Dec %0.2f", ra, dec)
+        #logger.info("Telescope Coord: RA %0.2f, Dec %0.2f", ra, dec)
 
         return ra, dec
 

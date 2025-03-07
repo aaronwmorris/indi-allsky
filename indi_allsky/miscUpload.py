@@ -98,7 +98,7 @@ class miscUpload(object):
     def upload_video(self, video_entry):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO'):
-            logger.warning('Video uploading disabled')
+            #logger.warning('Video uploading disabled')
             return
 
 
@@ -152,7 +152,7 @@ class miscUpload(object):
     def upload_mini_video(self, video_entry):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_MINI_VIDEO'):
-            logger.warning('Video uploading disabled')
+            #logger.warning('Video uploading disabled')
             return
 
 
@@ -206,7 +206,7 @@ class miscUpload(object):
     def upload_panorama_video(self, video_entry):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA_VIDEO'):
-            logger.warning('Video uploading disabled')
+            #logger.warning('Video uploading disabled')
             return
 
 
@@ -260,7 +260,7 @@ class miscUpload(object):
     def upload_keogram(self, keogram_entry):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM'):
-            logger.warning('Keogram uploading disabled')
+            #logger.warning('Keogram uploading disabled')
             return
 
 
@@ -313,7 +313,7 @@ class miscUpload(object):
 
     def upload_startrail(self, startrail_entry):
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL'):
-            logger.warning('Star trail uploading disabled')
+            #logger.warning('Star trail uploading disabled')
             return
 
 
@@ -367,7 +367,7 @@ class miscUpload(object):
     def upload_startrail_video(self, startrail_video_entry):
         ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL_VIDEO'):
-            logger.warning('Startrail video uploading disabled')
+            #logger.warning('Startrail video uploading disabled')
             return
 
 

@@ -1225,7 +1225,7 @@ class IndiAllSky(object):
 
 
     def _queueManualTasks(self):
-        logger.info('Checking for manually submitted tasks')
+        #logger.info('Checking for manually submitted tasks')
         manual_tasks = IndiAllSkyDbTaskQueueTable.query\
             .filter(IndiAllSkyDbTaskQueueTable.state == TaskQueueState.MANUAL)\
             .filter(

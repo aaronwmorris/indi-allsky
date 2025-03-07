@@ -614,7 +614,9 @@ class CaptureWorker(Process):
 
                         # if the image queue grows too large, introduce delays to new exposures
                         image_queue_size = self.image_q.qsize()
-                        logger.info('Image queue depth: %d', image_queue_size)
+                        if image_queue_size > 0:
+                            logger.warning('Image queue depth: %d', image_queue_size)
+
 
                         if image_queue_size <= self.image_queue_min:
                             if self.add_period_delay > 0:
@@ -1467,18 +1469,17 @@ class CaptureWorker(Process):
         moon.compute(obs)
 
         # Night
-        logger.info('Sun altitude: %0.1f', math.degrees(sun.alt))
         self.night = sun.alt < self.night_sun_radians  # boolean
-
 
         # Moonmode
         moon_phase = moon.moon_phase * 100.0
 
-        logger.info('Moon altitude: %0.1f, phase %0.1f%%', math.degrees(moon.alt), moon_phase)
+        logger.info('Sun alt: %0.1f, Moon alt: %0.1f, phase %0.1f%%', math.degrees(sun.alt), math.degrees(moon.alt), moon_phase)
+
         if self.night:
             if moon.alt >= self.night_moonmode_radians:
                 if moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
-                    logger.info('Moon Mode conditions detected')
+                    #logger.info('Moon Mode conditions detected')
                     self.moonmode = True
                     return
 
