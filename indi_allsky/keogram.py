@@ -201,11 +201,14 @@ class KeogramGenerator(object):
 
         rotated_center_line = rotated_image[:, [int(rot_width / 2)]]
 
+
+        # set every image for reasons
+        self.original_height = recenter_height
+        self.original_width = recenter_width
+
+
         if isinstance(self.keogram_data, type(None)):
             # this only happens on the first image
-
-            self.original_height = recenter_height
-            self.original_width = recenter_width
 
             new_shape = rotated_center_line.shape
             logger.info('New Shape: %s', pformat(new_shape))
@@ -397,7 +400,7 @@ class KeogramGenerator(object):
         return rotated
 
 
-    def trimEdges(self, image):
+    def trimEdges(self, keogram):
         # if the rotation angle exceeds the diagonal angle of the original image, use the height as the hypotenuse
         switch_angle = 90 - math.degrees(math.atan(self.original_height / self.original_width))
         logger.info('Switch angle: %0.2f', switch_angle)
@@ -420,10 +423,10 @@ class KeogramGenerator(object):
 
         #logger.info('Trim angle: %d', c_angle)
 
-        height, width = image.shape[:2]
+        height, width = keogram.shape[:2]
         #logger.info('Keogram dimensions: %d x %d', width, height)
-        #logger.info('Original image dimensions: %d x %d', self.original_width, self.original_height)
-        #logger.info('Original rotated image dimensions: %d x %d', self.rotated_width, self.rotated_height)
+        #logger.info('Original keogram dimensions: %d x %d', self.original_width, self.original_height)
+        #logger.info('Original rotated keogram dimensions: %d x %d', self.rotated_width, self.rotated_height)
 
 
         adj_1 = math.cos(math.radians(c_angle)) * hyp_1
@@ -444,15 +447,15 @@ class KeogramGenerator(object):
         y2 = height - trim_height_int
 
         #logger.info('Calculated trimmed area: (%d, %d) (%d, %d)', x1, y1, x2, y2)
-        trimmed_image = image[
+        trimmed_keogram = keogram[
             y1:y2,
             x1:x2,
         ]
 
-        trimmed_height, trimmed_width = trimmed_image.shape[:2]
-        #logger.info('New trimmed image: %d x %d', trimmed_width, trimmed_height)
+        trimmed_height, trimmed_width = trimmed_keogram.shape[:2]
+        #logger.info('New trimmed keogram: %d x %d', trimmed_width, trimmed_height)
 
-        return trimmed_image
+        return trimmed_keogram
 
 
     def applyLabels_opencv(self, keogram):

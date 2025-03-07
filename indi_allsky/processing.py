@@ -327,6 +327,11 @@ class ImageProcessor(object):
         self._keogram_gen.keogram_data = new_data
 
 
+    @property
+    def realtime_keogram_trimmed(self):
+        return self._keogram_gen.trimEdges(self.realtime_keogram_data)
+
+
     def add(self, filename, exposure, exp_date, exp_elapsed, camera):
         from astropy.io import fits
 
