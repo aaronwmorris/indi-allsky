@@ -754,7 +754,7 @@ class ImageProcessor(object):
                 .first()
 
             if not bpm_entry:
-                logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensors_temp_av[0])
+                #logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensors_temp_av[0])
 
                 # pick a bad pixel map that matches the exposure at the hightest temperature found
                 bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
@@ -807,7 +807,7 @@ class ImageProcessor(object):
             .first()
 
         if not dark_frame_entry:
-            logger.warning('Temperature matched dark not found: %0.2fc', self.sensors_temp_av[0])
+            #logger.warning('Temperature matched dark not found: %0.2fc', self.sensors_temp_av[0])
 
             # pick a dark frame that matches the exposure at the hightest temperature found
             dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
@@ -1099,7 +1099,7 @@ class ImageProcessor(object):
         if image_bitpix == 8:
             return
 
-        logger.info('Resampling image from %d to 8 bits', image_bitpix)
+        #logger.info('Resampling image from %d to 8 bits', image_bitpix)
 
         # shifting is 5x faster than division
         shift_factor = self.max_bit_depth - 8

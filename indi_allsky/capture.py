@@ -1469,14 +1469,13 @@ class CaptureWorker(Process):
         moon.compute(obs)
 
         # Night
-        logger.info('Sun altitude: %0.1f', math.degrees(sun.alt))
         self.night = sun.alt < self.night_sun_radians  # boolean
-
 
         # Moonmode
         moon_phase = moon.moon_phase * 100.0
 
-        logger.info('Moon altitude: %0.1f, phase %0.1f%%', math.degrees(moon.alt), moon_phase)
+        logger.info('Sun alt: %0.1f, Moon alt: %0.1f, phase %0.1f%%', math.degrees(sun.alt), math.degrees(moon.alt), moon_phase)
+
         if self.night:
             if moon.alt >= self.night_moonmode_radians:
                 if moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
