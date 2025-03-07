@@ -1479,7 +1479,7 @@ class CaptureWorker(Process):
         if self.night:
             if moon.alt >= self.night_moonmode_radians:
                 if moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
-                    logger.info('Moon Mode conditions detected')
+                    #logger.info('Moon Mode conditions detected')
                     self.moonmode = True
                     return
 
