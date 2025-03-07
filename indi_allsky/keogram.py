@@ -44,8 +44,8 @@ class KeogramGenerator(object):
         border_right = self.config.get('IMAGE_BORDER', {}).get('RIGHT', 0)
         border_bottom = self.config.get('IMAGE_BORDER', {}).get('BOTTOM', 0)
 
-        self.x_offset = self.config.get('LENS_OFFSET_X', 0) + int((border_left - border_right) / 2)
-        self.y_offset = self.config.get('LENS_OFFSET_Y', 0) - int((border_top - border_bottom) / 2)
+        self._x_offset = self.config.get('LENS_OFFSET_X', 0) + int((border_left - border_right) / 2)
+        self._y_offset = self.config.get('LENS_OFFSET_Y', 0) - int((border_top - border_bottom) / 2)
         #logger.info('X Offset: %d, Y Offset: %d', self.x_offset, self.y_offset)
 
 
@@ -55,10 +55,10 @@ class KeogramGenerator(object):
         self.rotated_width = None
         self.rotated_height = None
 
-        self.keogram_data = None
-        self.keogram_final = None  # will contain final resized keogram
+        self._keogram_data = None
+        self._keogram_final = None  # will contain final resized keogram
 
-        self.timestamps_list = list()
+        self._timestamps_list = list()
         self.image_processing_elapsed_s = 0
 
         base_path  = Path(__file__).parent
@@ -93,6 +93,23 @@ class KeogramGenerator(object):
 
 
     @property
+    def x_offset(self):
+        return self._x_offset
+
+    @x_offset.setter
+    def x_offset(self, new_offset):
+        self._x_offset = int(new_offset)
+
+    @property
+    def y_offset(self):
+        return self._y_offset
+
+    @y_offset.setter
+    def y_offset(self, new_offset):
+        self._y_offset = int(new_offset)
+
+
+    @property
     def crop_top(self):
         return self._crop_top
 
@@ -111,12 +128,36 @@ class KeogramGenerator(object):
 
 
     @property
+    def timestamps_list(self):
+        return self._timestamps_list
+
+    @timestamps_list.setter
+    def timestamps_list(self, new_timestamps):
+        self._timestamps_list = list(new_timestamps)
+
+
+    @property
+    def keogram_data(self):
+        return self._keogram_data
+
+    @keogram_data.setter
+    def keogram_data(self, new_data):
+        self._keogram_data = new_data
+
+
+    @property
+    def keogram_final(self):
+        return self._keogram_final
+
+    @keogram_final.setter
+    def keogram_final(self, new_keogram):
+        self._keogram_final = new_keogram
+
+
+    @property
     def shape(self):
         return self.keogram_final.shape
 
-    @shape.setter
-    def shape(self, *args):
-        pass  # read only
 
 
     ### To be removed
