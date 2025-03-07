@@ -3115,8 +3115,8 @@ class ImageProcessor(object):
             return
 
 
-        if keogram_width >= 500:
-            numpy.delete(self._realtime_kegoram_data, -1, 1)
+        while self._realtime_keogram_data.shape[1] > 50:
+            self._realtime_keogram_data = numpy.delete(self._realtime_keogram_data, 0, 1)
 
 
     def realtimeKeogramDataLoad(self):

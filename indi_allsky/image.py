@@ -1729,8 +1729,20 @@ class ImageWorker(Process):
 
 
         if self.image_count % 10 == 0:
-            # save keogram data every 10th image
+            # store keogram data every 10th image
             self.image_processor.realtimeKeogramDataSave()
+
+
+        keogram_height, keogram_width = data.shape[:2]
+
+        # scale size
+        h_scale_factor = int(self.config.get('KEOGRAM_H_SCALE', 100))
+        v_scale_factor = int(self.config.get('KEOGRAM_V_SCALE', 33))
+        new_width = int(keogram_width * h_scale_factor / 100)
+        new_height = int(keogram_height * v_scale_factor / 100)
+
+        #logger.info('Keogram: %d x %d', new_width, new_height)
+        data = cv2.resize(data, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
