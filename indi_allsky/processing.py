@@ -3093,20 +3093,15 @@ class ImageProcessor(object):
                     self._keogram_store_p.unlink()
 
 
-        #keogram_height, keogram_width = self.realtime_keogram_data.shape[:2]
-
-        #if keogram_height != image_height:
-        #    logger.warning('Image height does not match realtime keogram, resetting')
-        #    self.realtime_keogram_data = None
-
-        #    return
-
-
         try:
             self._keogram_gen.processImage(self.image, int(time.time()))
         except ValueError as e:
             logger.error('Error processing keogram image: %s', str(e))
             self.realtime_keogram_data = None
+
+            if self._keogram_store_p.exists():
+                # remove any existing data store
+                self._keogram_store_p.unlink()
 
             return
 
