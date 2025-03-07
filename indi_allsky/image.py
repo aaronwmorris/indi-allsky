@@ -1759,12 +1759,11 @@ class ImageWorker(Process):
         self.hist_adu.append(adu)
         self.hist_adu = self.hist_adu[(history_max_vals * -1):]  # remove oldest values, up to history_max_vals
 
-        logger.info('Current target ADU: %0.2f (%0.2f/%0.2f)', self.current_adu_target, current_adu_target_min, current_adu_target_max)
-        logger.info('Current ADU history: (%d) [%s]', len(self.hist_adu), ', '.join(['{0:0.2f}'.format(x) for x in self.hist_adu]))
-
-
         adu_average = functools.reduce(lambda a, b: a + b, self.hist_adu) / len(self.hist_adu)
-        logger.info('ADU average: %0.2f', adu_average)
+
+        #logger.info('ADU average: %0.2f', adu_average)
+        #logger.info('Current target ADU: %0.2f (%0.2f/%0.2f)', self.current_adu_target, current_adu_target_min, current_adu_target_max)
+        #logger.info('Current ADU history: (%d) [%s]', len(self.hist_adu), ', '.join(['{0:0.2f}'.format(x) for x in self.hist_adu]))
 
 
         ### Need at least x values to continue
