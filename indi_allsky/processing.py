@@ -183,6 +183,21 @@ class ImageProcessor(object):
         self.font_path  = base_path.joinpath('fonts')
 
 
+        if self.config['IMAGE_FOLDER']:
+            self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
+        else:
+            self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
+
+
+        # setup a folder for scratch files which can be deleted if orphaned
+        scratch_base_dir = self.image_dir.joinpath('scratch')
+        if not scratch_base_dir.exists():
+            scratch_base_dir.mkdir(parents=True)
+
+
+        self._realtime_keogram_data = None
+        self._keogram_store_p = scratch_base_dir.joinpath('keogram_realtime_store.npy')
+
 
     @property
     def image(self):
@@ -301,6 +316,11 @@ class ImageProcessor(object):
     @text_font_height.setter
     def text_font_height(self, new_height):
         self._text_font_height = int(new_height)
+
+
+    @property
+    def realtime_keogram_data(self):
+        return self._realtime_keogram_data
 
 
     def add(self, filename, exposure, exp_date, exp_elapsed, camera):
@@ -3045,6 +3065,76 @@ class ImageProcessor(object):
 
 
         self.image = new_image
+
+
+    def realtimeKeogramUpdate(self):
+        if self.focus_mode:
+            return
+
+        image_height, image_width = self.image.shape[:2]
+
+
+        center_line = self.image[:, [int(image_width / 2)]]
+
+
+        if isinstance(self.realtime_keogram_data, type(None)):
+            if self._keogram_store_p.exists() and self._keogram_store_p.stat().st_size > 0:
+                # load stored data
+                try:
+                    self._realtime_keogram_data = self.realtimeKeogramDataLoad()
+                except ValueError:
+                    logger.error('Invalid numpy data for realtime keogram')
+                    self._keogram_store_p.unlink()
+                    # try again next time
+                    return
+            else:
+                # initialize new array
+                self._realtime_keogram_data = numpy.empty(center_line.shape, dtype=center_line.dtype)
+
+
+        keogram_height, keogram_width = self.realtime_keogram_data.shape[:2]
+
+        if keogram_height != image_height:
+            logger.warning('Image height does not match realtime keogram, resetting')
+            self._realtime_keogram_data = None
+
+            if self._keogram_store_p.exists():
+                self._keogram_store_p.unlink()
+
+            return
+
+
+        try:
+            self._realtime_keogram_data = numpy.append(self._realtime_keogram_data, center_line, 1)
+        except ValueError:
+            self._realtime_keogram_data = None
+
+            if self._keogram_store_p.exists():
+                self._keogram_store_p.unlink()
+
+            return
+
+
+        if keogram_width >= 500:
+            numpy.delete(self._realtime_kegoram_data, -1, 1)
+
+
+    def realtimeKeogramDataLoad(self):
+        logger.info('Loading stored realtime keogram data')
+        with io.open(str(self._keogram_store_p), 'r+b') as f_numpy:
+            keogram_data = numpy.load(f_numpy)
+
+        return keogram_data
+
+
+    def realtimeKeogramDataSave(self):
+        if isinstance(self._realtime_keogram_data, type(None)):
+            logger.warning('Realtime keogram data is empty')
+            return
+
+        logger.info('Storing realtime keogram data')
+        with io.open(str(self._keogram_store_p), 'w+b') as f_numpy:
+            numpy.save(f_numpy, self._realtime_keogram_data)
 
 
     def _load_detection_mask(self):
