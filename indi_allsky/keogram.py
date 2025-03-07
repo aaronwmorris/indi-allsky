@@ -159,39 +159,7 @@ class KeogramGenerator(object):
         return self.keogram_final.shape
 
 
-
-    ### To be removed
-    #def generate(self, outfile, file_list):
-    #    # Exclude empty files
-    #    file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
-
-    #    # Sort by timestamp
-    #    file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
-
-
-    #    processing_start = time.time()
-
-    #    for filename in file_list_ordered:
-    #        logger.info('Reading file: %s', filename)
-
-    #        try:
-    #            with Image.open(str(filename)) as img:
-    #                image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-    #        except PIL.UnidentifiedImageError:
-    #            logger.error('Unable to read %s', filename)
-    #            continue
-
-
-    #        self.processImage(filename, image)
-
-
-    #    self.finalize(outfile)
-
-    #    processing_elapsed_s = time.time() - processing_start
-    #    logger.warning('Total keogram processing in %0.1f s', processing_elapsed_s)
-
-
-    def processImage(self, filename, image):
+    def processImage(self, image, timestamp):
         self.process_count += 1
 
         if self.process_count <= self.skip_frames:
@@ -199,7 +167,7 @@ class KeogramGenerator(object):
 
         image_processing_start = time.time()
 
-        self.timestamps_list.append(filename.stat().st_mtime)
+        self.timestamps_list.append(timestamp)
 
         image_height, image_width = image.shape[:2]
         #logger.info('Original: %d x %d', image_width, image_height)
@@ -248,12 +216,12 @@ class KeogramGenerator(object):
             self.keogram_data = numpy.empty(new_shape, dtype=new_dtype)
 
 
-        if recenter_height != self.original_height or recenter_width != self.original_width:
-            # all images have to match dimensions of the first image
-            logger.error('Image with dimension mismatch: %s', filename)
-            return
+        #if recenter_height != self.original_height or recenter_width != self.original_width:
+        #    # all images have to match dimensions of the first image
+        #    logger.error('Image with dimension mismatch: %s', filename)
+        #    return
 
-
+        # will raise ValueError if dimensions do not match
         self.keogram_data = numpy.append(self.keogram_data, rotated_center_line, 1)
 
         self.image_processing_elapsed_s += time.time() - image_processing_start
@@ -450,12 +418,12 @@ class KeogramGenerator(object):
             c_angle = 90 - angle_90_r
 
 
-        logger.info('Trim angle: %d', c_angle)
+        #logger.info('Trim angle: %d', c_angle)
 
         height, width = image.shape[:2]
-        logger.info('Keogram dimensions: %d x %d', width, height)
-        logger.info('Original image dimensions: %d x %d', self.original_width, self.original_height)
-        logger.info('Original rotated image dimensions: %d x %d', self.rotated_width, self.rotated_height)
+        #logger.info('Keogram dimensions: %d x %d', width, height)
+        #logger.info('Original image dimensions: %d x %d', self.original_width, self.original_height)
+        #logger.info('Original rotated image dimensions: %d x %d', self.rotated_width, self.rotated_height)
 
 
         adj_1 = math.cos(math.radians(c_angle)) * hyp_1
@@ -467,7 +435,7 @@ class KeogramGenerator(object):
         trim_height = trim_height_pre + (self.config['ORB_PROPERTIES']['RADIUS'] * 2)
 
         trim_height_int = int(trim_height)
-        logger.info('Trim height: %d', trim_height_int)
+        #logger.info('Trim height: %d', trim_height_int)
 
 
         x1 = 0
@@ -475,14 +443,14 @@ class KeogramGenerator(object):
         x2 = width
         y2 = height - trim_height_int
 
-        logger.info('Calculated trimmed area: (%d, %d) (%d, %d)', x1, y1, x2, y2)
+        #logger.info('Calculated trimmed area: (%d, %d) (%d, %d)', x1, y1, x2, y2)
         trimmed_image = image[
             y1:y2,
             x1:x2,
         ]
 
         trimmed_height, trimmed_width = trimmed_image.shape[:2]
-        logger.info('New trimmed image: %d x %d', trimmed_width, trimmed_height)
+        #logger.info('New trimmed image: %d x %d', trimmed_width, trimmed_height)
 
         return trimmed_image
 

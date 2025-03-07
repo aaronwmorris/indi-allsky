@@ -26,6 +26,7 @@ from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
 from .detectLines import IndiAllskyDetectLines
+from .keogram import KeogramGenerator
 from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
 from .stack import IndiAllskyStacker
@@ -179,10 +180,22 @@ class ImageProcessor(object):
         self._stacker.max_control_points = self.config.get('IMAGE_ALIGN_POINTS', 50)
         self._stacker.min_area = self.config.get('IMAGE_ALIGN_SOURCEMINAREA', 10)
 
+
+        self._keogram_gen = KeogramGenerator(
+            self.config,
+        )
+        self._keogram_gen.angle = self.config.get('KEOGRAM_ANGLE', 0)
+        self._keogram_gen.h_scale_factor = self.config.get('KEOGRAM_H_SCALE', 100)
+        self._keogram_gen.v_scale_factor = self.config.get('KEOGRAM_V_SCALE', 33)
+        self._keogram_gen.crop_top = self.config.get('KEOGRAM_CROP_TOP', 0)
+        self._keogram_gen.crop_bottom = self.config.get('KEOGRAM_CROP_BOTTOM', 0)
+        self._keogram_gen.x_offset = 0  # reset
+        self._keogram_gen.y_offset = 0  # reset
+
+
         base_path  = Path(__file__).parent
         self.font_path  = base_path.joinpath('fonts')
 
-        self._realtime_keogram_data = None
         self._keogram_store_p = Path('/var/lib/indi-allsky/realtime_keogram_store.npy')
 
 
@@ -307,7 +320,11 @@ class ImageProcessor(object):
 
     @property
     def realtime_keogram_data(self):
-        return self._realtime_keogram_data
+        return self._keogram_gen.keogram_data
+
+    @realtime_keogram_data.setter
+    def realtime_keogram_data(self, new_data):
+        self._keogram_gen.keogram_data = new_data
 
 
     def add(self, filename, exposure, exp_date, exp_elapsed, camera):
@@ -3068,7 +3085,7 @@ class ImageProcessor(object):
             if self._keogram_store_p.exists() and self._keogram_store_p.stat().st_size > 0:
                 # load stored data
                 try:
-                    self._realtime_keogram_data = self.realtimeKeogramDataLoad()
+                    self.realtime_keogram_data = self.realtimeKeogramDataLoad()
                 except ValueError:
                     logger.error('Invalid numpy data for realtime keogram')
                     self._keogram_store_p.unlink()
@@ -3076,25 +3093,26 @@ class ImageProcessor(object):
                     return
             else:
                 # initialize new array
-                self._realtime_keogram_data = numpy.empty(center_line.shape, dtype=center_line.dtype)
+                self.realtime_keogram_data = numpy.empty(center_line.shape, dtype=center_line.dtype)
 
 
-        keogram_height, keogram_width = self.realtime_keogram_data.shape[:2]
+        #keogram_height, keogram_width = self.realtime_keogram_data.shape[:2]
 
-        if keogram_height != image_height:
-            logger.warning('Image height does not match realtime keogram, resetting')
-            self._realtime_keogram_data = None
+        #if keogram_height != image_height:
+        #    logger.warning('Image height does not match realtime keogram, resetting')
+        #    self.realtime_keogram_data = None
 
-            if self._keogram_store_p.exists():
-                self._keogram_store_p.unlink()
+        #    if self._keogram_store_p.exists():
+        #        self._keogram_store_p.unlink()
 
-            return
+        #    return
 
 
         try:
-            self._realtime_keogram_data = numpy.append(self._realtime_keogram_data, center_line, 1)
-        except ValueError:
-            self._realtime_keogram_data = None
+            self._keogram_gen.processImage(self.image, int(time.time()))
+        except ValueError as e:
+            logger.error('Error processing keogram image: %s', str(e))
+            self.realtime_keogram_data = None
 
             if self._keogram_store_p.exists():
                 self._keogram_store_p.unlink()
@@ -3102,8 +3120,10 @@ class ImageProcessor(object):
             return
 
 
-        while self._realtime_keogram_data.shape[1] > 500:
-            self._realtime_keogram_data = numpy.delete(self._realtime_keogram_data, 0, 1)
+        while self.realtime_keogram_data.shape[1] > 500:
+            self.realtime_keogram_data = numpy.delete(self.realtime_keogram_data, 0, 1)
+
+        # remove timestamps
 
 
     def realtimeKeogramDataLoad(self):
@@ -3115,13 +3135,13 @@ class ImageProcessor(object):
 
 
     def realtimeKeogramDataSave(self):
-        if isinstance(self._realtime_keogram_data, type(None)):
+        if isinstance(self.realtime_keogram_data, type(None)):
             logger.warning('Realtime keogram data is empty')
             return
 
         logger.info('Storing realtime keogram data')
         with io.open(str(self._keogram_store_p), 'w+b') as f_numpy:
-            numpy.save(f_numpy, self._realtime_keogram_data)
+            numpy.save(f_numpy, self.realtime_keogram_data)
 
 
     def _load_detection_mask(self):

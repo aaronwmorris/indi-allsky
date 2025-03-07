@@ -1372,7 +1372,12 @@ class VideoWorker(Process):
                     continue
 
 
-            kg.processImage(image_file_p, image_data)
+            try:
+                image_ts = image_file_p.stat().st_mtime
+                kg.processImage(image_file_p, image_ts)
+            except ValueError as e:
+                logger.error('Error processing keogram image: %s', str(e))
+
 
             if night:
                 if self.config.get('STARTRAILS_USE_DB_DATA', True):

@@ -84,6 +84,8 @@ class KeogramGenerator(object):
         for filename in file_list_ordered:
             logger.info('Reading file: %s', filename)
 
+            image_ts = filename.stat().st_mtime
+
             try:
                 with Image.open(str(filename)) as img:
                     image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
@@ -92,7 +94,10 @@ class KeogramGenerator(object):
                 continue
 
 
-            self.processImage(filename, image)
+            try:
+                self.processImage(image, image_ts)
+            except ValueError as e:
+                logger.error('Error processing keogram image: %s', str(e))
 
 
         self.finalize(outfile)
@@ -101,10 +106,10 @@ class KeogramGenerator(object):
         logger.warning('Total keogram processing in %0.1f s', processing_elapsed_s)
 
 
-    def processImage(self, filename, image):
+    def processImage(self, image, timestamp):
         image_processing_start = time.time()
 
-        self.timestamps_list.append(filename.stat().st_mtime)
+        self.timestamps_list.append(timestamp)
 
         #logger.info('Data: %s', pformat(image))
         height, width = image.shape[:2]
@@ -138,12 +143,7 @@ class KeogramGenerator(object):
             self.keogram_data = numpy.empty(new_shape, dtype=new_dtype)
 
 
-        if height != self.original_height or width != self.original_width:
-            # all images have to match dimensions of the first image
-            logger.error('Image with dimension mismatch: %s', filename)
-            return
-
-
+        # will raise ValueError on dimension mismatch
         self.keogram_data = numpy.append(self.keogram_data, rotated_center_line, 1)
 
 
