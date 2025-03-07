@@ -3072,6 +3072,34 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.REALTIME_KEOGRAM__MAX_ENTRIES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.REALTIME_KEOGRAM__MAX_ENTRIES(class='form-control bg-secondary') }}
+            <div id="REALTIME_KEOGRAM__MAX_ENTRIES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>History of images/vertical pixels to retain in the realtime keogram</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.REALTIME_KEOGRAM__SAVE_INTERVAL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.REALTIME_KEOGRAM__SAVE_INTERVAL(class='form-control bg-secondary') }}
+            <div id="REALTIME_KEOGRAM__SAVE_INTERVAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Store realtime keogram every X image</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.STARTRAILS_SUN_ALT_THOLD.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -7002,6 +7030,8 @@ const field_names = [
     'KEOGRAM_CROP_BOTTOM',
     'LONGTERM_KEOGRAM__OFFSET_X',
     'LONGTERM_KEOGRAM__OFFSET_Y',
+    'REALTIME_KEOGRAM__MAX_ENTRIES',
+    'REALTIME_KEOGRAM__SAVE_INTERVAL',
     'STARTRAILS_MAX_ADU',
     'STARTRAILS_MASK_THOLD',
     'STARTRAILS_PIXEL_THOLD',

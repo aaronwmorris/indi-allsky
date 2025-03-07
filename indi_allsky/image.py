@@ -1730,8 +1730,9 @@ class ImageWorker(Process):
             return
 
 
-        if self.image_count % 15 == 0:
-            # store keogram data every 15 images
+        save_interval = self.config.get('REALTIME_KEOGRAM', {}).get('SAVE_INTERVAL', 25)
+        if self.image_count % save_interval == 0:
+            # store keogram data every X images
             self.image_processor.realtimeKeogramDataSave()
 
 

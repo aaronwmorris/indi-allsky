@@ -944,6 +944,30 @@ def LONGTERM_KEOGRAM__OFFSET_Y_validator(form, field):
         raise ValidationError('Please enter valid number')
 
 
+def REALTIME_KEOGRAM__MAX_ENTRIES_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+
+    if field.data < 0:
+        raise ValidationError('Entries must be 0 or greater')
+
+    if field.data > 10000:
+        raise ValidationError('Entries must be 5000 or less')
+
+
+def REALTIME_KEOGRAM__SAVE_INTERVAL_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+
+    if field.data < 1:
+        raise ValidationError('Entries must be 1 or greater')
+
+    if field.data > 100:
+        raise ValidationError('Entries must be 100 or less')
+
+
 def STARTRAILS_MAX_ADU_validator(form, field):
     if field.data <= 0:
         raise ValidationError('Star Trails Max ADU must be greater than 0')
@@ -3496,6 +3520,8 @@ class IndiAllskyConfigForm(FlaskForm):
     LONGTERM_KEOGRAM__ENABLE         = BooleanField('Enable Long Term Keogram')
     LONGTERM_KEOGRAM__OFFSET_X       = IntegerField('X Offset', validators=[LONGTERM_KEOGRAM__OFFSET_X_validator])
     LONGTERM_KEOGRAM__OFFSET_Y       = IntegerField('Y Offset', validators=[LONGTERM_KEOGRAM__OFFSET_Y_validator])
+    REALTIME_KEOGRAM__MAX_ENTRIES    = IntegerField('Realtime Keogram Max Entries', validators=[REALTIME_KEOGRAM__MAX_ENTRIES_validator])
+    REALTIME_KEOGRAM__SAVE_INTERVAL  = IntegerField('Save Interval', validators=[REALTIME_KEOGRAM__SAVE_INTERVAL_validator])
     STARTRAILS_SUN_ALT_THOLD         = FloatField('Star Trails Max Sun Altitude', validators=[DataRequired(), STARTRAILS_SUN_ALT_THOLD_validator])
     STARTRAILS_MOONMODE_THOLD        = BooleanField('Star Trails Exclude Moon Mode')
     STARTRAILS_MOON_ALT_THOLD        = FloatField('Custom Max Moon Altitude', validators=[DataRequired(), STARTRAILS_MOON_ALT_THOLD_validator])

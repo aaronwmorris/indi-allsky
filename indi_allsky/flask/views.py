@@ -1818,6 +1818,8 @@ class ConfigView(FormView):
             'LONGTERM_KEOGRAM__ENABLE'       : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('ENABLE', True),
             'LONGTERM_KEOGRAM__OFFSET_X'     : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('OFFSET_X', 0),
             'LONGTERM_KEOGRAM__OFFSET_Y'     : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('OFFSET_Y', 0),
+            'REALTIME_KEOGRAM__MAX_ENTRIES'  : self.indi_allsky_config.get('REALTIME_KEOGRAM', {}).get('MAX_ENTRIES', 1000),
+            'REALTIME_KEOGRAM__SAVE_INTERVAL': self.indi_allsky_config.get('REALTIME_KEOGRAM', {}).get('SAVE_INTERVAL', 25),
             'STARTRAILS_SUN_ALT_THOLD'       : self.indi_allsky_config.get('STARTRAILS_SUN_ALT_THOLD', -15.0),
             'STARTRAILS_MOONMODE_THOLD'      : self.indi_allsky_config.get('STARTRAILS_MOONMODE_THOLD', True),
             'STARTRAILS_MOON_ALT_THOLD'      : self.indi_allsky_config.get('STARTRAILS_MOON_ALT_THOLD', 91.0),
@@ -2486,6 +2488,7 @@ class AjaxConfigView(BaseView):
             'ADSB',
             'SATELLITE_TRACK',
             'LONGTERM_KEOGRAM',
+            'REALTIME_KEOGRAM',
         )
 
         for leaf in leaf_list:
@@ -2616,6 +2619,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LONGTERM_KEOGRAM']['ENABLE']           = bool(request.json['LONGTERM_KEOGRAM__ENABLE'])
         self.indi_allsky_config['LONGTERM_KEOGRAM']['OFFSET_X']         = int(request.json['LONGTERM_KEOGRAM__OFFSET_X'])
         self.indi_allsky_config['LONGTERM_KEOGRAM']['OFFSET_Y']         = int(request.json['LONGTERM_KEOGRAM__OFFSET_Y'])
+        self.indi_allsky_config['REALTIME_KEOGRAM']['MAX_ENTRIES']      = int(request.json['REALTIME_KEOGRAM__MAX_ENTRIES'])
+        self.indi_allsky_config['REALTIME_KEOGRAM']['SAVE_INTERVAL']    = int(request.json['REALTIME_KEOGRAM__SAVE_INTERVAL'])
         self.indi_allsky_config['STARTRAILS_SUN_ALT_THOLD']             = float(request.json['STARTRAILS_SUN_ALT_THOLD'])
         self.indi_allsky_config['STARTRAILS_MOONMODE_THOLD']            = bool(request.json['STARTRAILS_MOONMODE_THOLD'])
         self.indi_allsky_config['STARTRAILS_MOON_ALT_THOLD']            = float(request.json['STARTRAILS_MOON_ALT_THOLD'])

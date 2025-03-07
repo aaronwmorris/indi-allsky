@@ -3106,7 +3106,8 @@ class ImageProcessor(object):
             return
 
 
-        while self.realtime_keogram_data.shape[1] > 500:
+        max_entries = self.config.get('REALTIME_KEOGRAM', {}).get('MAX_ENTRIES', 1000)
+        while self.realtime_keogram_data.shape[1] > max_entries:
             self.realtime_keogram_data = numpy.delete(self.realtime_keogram_data, 0, 1)
 
         # remove timestamps
