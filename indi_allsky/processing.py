@@ -1140,7 +1140,7 @@ class ImageProcessor(object):
 
 
     def _rotate_angle(self, angle, keep_size=False, use_offset=False):
-        rotate_start = time.time()
+        #rotate_start = time.time()
 
         height, width = self.image.shape[:2]
         center_x = int(width / 2)
@@ -1193,8 +1193,8 @@ class ImageProcessor(object):
             ]
 
 
-        processing_elapsed_s = time.time() - rotate_start
-        logger.warning('Rotation in %0.4f s', processing_elapsed_s)
+        #processing_elapsed_s = time.time() - rotate_start
+        #logger.warning('Rotation in %0.4f s', processing_elapsed_s)
 
 
     def _flip(self, data, cv2_axis):
@@ -1593,7 +1593,7 @@ class ImageProcessor(object):
             self._image_circle_alpha_mask = self._generate_image_circle_mask(self.image)
 
 
-        alpha_start = time.time()
+        #alpha_start = time.time()
 
         self.image = (self.image * self._image_circle_alpha_mask).astype(numpy.uint8)
 
@@ -1614,8 +1614,8 @@ class ImageProcessor(object):
             )
 
 
-        alpha_elapsed_s = time.time() - alpha_start
-        logger.info('Image circle mask in %0.4f s', alpha_elapsed_s)
+        #alpha_elapsed_s = time.time() - alpha_start
+        #logger.info('Image circle mask in %0.4f s', alpha_elapsed_s)
 
 
     def apply_logo_overlay(self):
@@ -1635,12 +1635,12 @@ class ImageProcessor(object):
             return
 
 
-        alpha_start = time.time()
+        #alpha_start = time.time()
 
         self.image = (self.image * (1 - self._alpha_mask) + self._overlay * self._alpha_mask).astype(numpy.uint8)
 
-        alpha_elapsed_s = time.time() - alpha_start
-        logger.info('Alpha transparency in %0.4f s', alpha_elapsed_s)
+        #alpha_elapsed_s = time.time() - alpha_start
+        #logger.info('Alpha transparency in %0.4f s', alpha_elapsed_s)
 
 
     #def equalizeHistogram(self, data):
@@ -2818,7 +2818,7 @@ class ImageProcessor(object):
     def fish2pano_module(self):
         import fish2pano
 
-        fish2pano_start = time.time()
+        #fish2pano_start = time.time()
 
         image_height, image_width = self.image.shape[:2]
 
@@ -2889,15 +2889,15 @@ class ImageProcessor(object):
             img_pano = cv2.flip(img_pano, 1)
 
 
-        fish2pano_elapsed_s = time.time() - fish2pano_start
-        logger.info('Panorama in %0.4f s', fish2pano_elapsed_s)
+        #fish2pano_elapsed_s = time.time() - fish2pano_start
+        #logger.info('Panorama in %0.4f s', fish2pano_elapsed_s)
 
         # original image not replaced
         return img_pano
 
 
     def fish2pano_warpPolar(self):
-        fish2pano_start = time.time()
+        #fish2pano_start = time.time()
 
         image_height, image_width = self.image.shape[:2]
 
@@ -2974,8 +2974,8 @@ class ImageProcessor(object):
             img_pano = cv2.flip(img_pano, 1)
 
 
-        fish2pano_elapsed_s = time.time() - fish2pano_start
-        logger.info('Panorama in %0.4f s', fish2pano_elapsed_s)
+        #fish2pano_elapsed_s = time.time() - fish2pano_start
+        #logger.info('Panorama in %0.4f s', fish2pano_elapsed_s)
 
         # original image not replaced
         return img_pano
