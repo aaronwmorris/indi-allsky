@@ -3,7 +3,7 @@
 # https://www.pixinsight.com/doc/legacy/LE/21_noise_reduction/scnr/scnr.html
 ####################################################################################
 
-import time
+#import time
 #from pathlib import Path
 import cv2
 import numpy
@@ -34,7 +34,7 @@ class IndiAllskyScnr(object):
         image_height, image_width = scidata.shape[:2]
         b, g, r = cv2.split(scidata)
 
-        start = time.time()
+        #start = time.time()
 
         ones = numpy.ones([image_height, image_width])
 
@@ -43,8 +43,8 @@ class IndiAllskyScnr(object):
         #g * (1 - self.amount) * (1 - m) + m * g
         g = numpy.multiply(g * (1 - self.amount), numpy.sum(numpy.subtract(ones, m), numpy.multiply(m, g)))  # oom
 
-        elapsed_s = time.time() - start
-        logger.info('SCNR additive mask in %0.4f s', elapsed_s)
+        #elapsed_s = time.time() - start
+        #logger.info('SCNR additive mask in %0.4f s', elapsed_s)
 
         return cv2.merge((b, g, r))
 
@@ -59,14 +59,14 @@ class IndiAllskyScnr(object):
 
         b, g, r = cv2.split(scidata)
 
-        start = time.time()
+        #start = time.time()
 
         # casting to uint16 (for uint8 data) to fix the magenta cast caused by overflows
         m = numpy.add(r.astype(numpy.uint16), b.astype(numpy.uint16)) * 0.5
         g = numpy.minimum(g, m.astype(numpy.uint8))
 
-        elapsed_s = time.time() - start
-        logger.info('SCNR average neutral in %0.4f s', elapsed_s)
+        #elapsed_s = time.time() - start
+        #logger.info('SCNR average neutral in %0.4f s', elapsed_s)
 
         return cv2.merge((b, g, r))
 
@@ -81,13 +81,13 @@ class IndiAllskyScnr(object):
 
         b, g, r = cv2.split(scidata)
 
-        start = time.time()
+        #start = time.time()
 
         m = numpy.maximum(r, b)
         g = numpy.minimum(g, m)
 
-        elapsed_s = time.time() - start
-        logger.info('SCNR maximum neutral in %0.4f s', elapsed_s)
+        #elapsed_s = time.time() - start
+        #logger.info('SCNR maximum neutral in %0.4f s', elapsed_s)
 
         return cv2.merge((b, g, r))
 
