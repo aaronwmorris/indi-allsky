@@ -202,11 +202,6 @@ class KeogramGenerator(object):
         rotated_center_line = rotated_image[:, [int(rot_width / 2)]]
 
 
-        # set every image for reasons
-        self.original_height = recenter_height
-        self.original_width = recenter_width
-
-
         if isinstance(self.keogram_data, type(None)):
             # this only happens on the first image
 
@@ -226,6 +221,12 @@ class KeogramGenerator(object):
 
         # will raise ValueError if dimensions do not match
         self.keogram_data = numpy.append(self.keogram_data, rotated_center_line, 1)
+
+
+        # set every image for reasons
+        self.original_height = recenter_height
+        self.original_width = recenter_width
+
 
         self.image_processing_elapsed_s += time.time() - image_processing_start
 

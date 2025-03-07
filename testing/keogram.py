@@ -128,10 +128,6 @@ class KeogramGenerator(object):
         #logger.info('Size: %s', pformat(rotated_center_line.size))
 
 
-        # set every image for reasons
-        self.original_height = height
-        self.original_width = width
-
         if isinstance(self.keogram_data, type(None)):
             # this only happens on the first image
 
@@ -146,6 +142,11 @@ class KeogramGenerator(object):
 
         # will raise ValueError on dimension mismatch
         self.keogram_data = numpy.append(self.keogram_data, rotated_center_line, 1)
+
+
+        # set every image for reasons
+        self.original_height = height
+        self.original_width = width
 
 
         self.image_processing_elapsed_s += time.time() - image_processing_start
