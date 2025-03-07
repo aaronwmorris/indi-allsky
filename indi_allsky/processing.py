@@ -182,21 +182,8 @@ class ImageProcessor(object):
         base_path  = Path(__file__).parent
         self.font_path  = base_path.joinpath('fonts')
 
-
-        if self.config['IMAGE_FOLDER']:
-            self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
-        else:
-            self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
-
-
-        # setup a folder for scratch files which can be deleted if orphaned
-        scratch_base_dir = self.image_dir.joinpath('scratch')
-        if not scratch_base_dir.exists():
-            scratch_base_dir.mkdir(parents=True)
-
-
         self._realtime_keogram_data = None
-        self._keogram_store_p = self.image_dir.joinpath('keogram_realtime_store.npy')
+        self._keogram_store_p = Path('/var/lib/indi-allsky/realtime_keogram_store.npy')
 
 
     @property
