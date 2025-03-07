@@ -1,4 +1,4 @@
-import time
+#import time
 import math
 from pathlib import Path
 import numpy
@@ -45,7 +45,7 @@ class IndiAllSkyMoonOverlay(object):
             self.moon_orig = cv2.imread(str(self.moon_file), cv2.IMREAD_UNCHANGED)
 
 
-        moon_overlay_start = time.time()
+        #moon_overlay_start = time.time()
 
         moon = self.moon_orig.copy()
 
@@ -224,6 +224,6 @@ class IndiAllSkyMoonOverlay(object):
         ] = image_crop
 
 
-        moon_overlay_elapsed_s = time.time() - moon_overlay_start
-        logger.warning('Moon Overlay processing in %0.4f s', moon_overlay_elapsed_s)
+        #moon_overlay_elapsed_s = time.time() - moon_overlay_start
+        #logger.warning('Moon Overlay processing in %0.4f s', moon_overlay_elapsed_s)
 
