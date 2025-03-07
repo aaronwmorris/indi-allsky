@@ -57,11 +57,13 @@ class GenericFileTransfer(object):
 
 
     def connect(self, *args, **kwargs):
-        hostname = kwargs['hostname']
-        username = kwargs['username']
+        #hostname = kwargs['hostname']
+        #username = kwargs['username']
         #password = kwargs['password']
 
-        logger.info('Connecting to %s (%d) as %s with %s', hostname, self._port, username, self.__class__.__name__)
+        #logger.info('Connecting to %s (%d) as %s with %s', hostname, self._port, username, self.__class__.__name__)
+
+        pass
 
 
     def close(self):
