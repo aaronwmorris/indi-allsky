@@ -3115,7 +3115,7 @@ class ImageProcessor(object):
             return
 
 
-        while self._realtime_keogram_data.shape[1] > 50:
+        while self._realtime_keogram_data.shape[1] > 500:
             self._realtime_keogram_data = numpy.delete(self._realtime_keogram_data, 0, 1)
 
 

@@ -1728,8 +1728,8 @@ class ImageWorker(Process):
             return
 
 
-        if self.image_count % 10 == 0:
-            # store keogram data every 10th image
+        if self.image_count % 15 == 0:
+            # store keogram data every 15 images
             self.image_processor.realtimeKeogramDataSave()
 
 
