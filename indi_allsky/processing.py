@@ -196,7 +196,7 @@ class ImageProcessor(object):
 
 
         self._realtime_keogram_data = None
-        self._keogram_store_p = scratch_base_dir.joinpath('keogram_realtime_store.npy')
+        self._keogram_store_p = self.image_dir.joinpath('keogram_realtime_store.npy')
 
 
     @property
