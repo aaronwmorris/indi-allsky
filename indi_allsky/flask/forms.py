@@ -3960,7 +3960,7 @@ class IndiAllskyConfigForm(FlaskForm):
                             temp_sensor__a_class.METADATA['labels'][x],
                         )
                     except IndexError:
-                        app.logger.error('Not enough sensor slots for sensor')
+                        app.logger.error('Not enough slots for sensor values')
                         pass
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
@@ -3980,7 +3980,7 @@ class IndiAllskyConfigForm(FlaskForm):
                             temp_sensor__b_class.METADATA['labels'][x],
                         )
                     except IndexError:
-                        app.logger.error('Not enough sensor slots for sensor')
+                        app.logger.error('Not enough slots for sensor values')
                         pass
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__b_classname)
@@ -4000,7 +4000,7 @@ class IndiAllskyConfigForm(FlaskForm):
                             temp_sensor__c_class.METADATA['labels'][x],
                         )
                     except IndexError:
-                        app.logger.error('Not enough sensor slots for sensor')
+                        app.logger.error('Not enough slots for sensor values')
                         pass
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__c_classname)
