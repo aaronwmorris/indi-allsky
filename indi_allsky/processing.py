@@ -3108,10 +3108,12 @@ class ImageProcessor(object):
 
 
         max_entries = self.config.get('REALTIME_KEOGRAM', {}).get('MAX_ENTRIES', 1000)
-        while self.realtime_keogram_data.shape[1] > max_entries:
-            self.realtime_keogram_data = numpy.delete(self.realtime_keogram_data, 0, 1)
+        while self._keogram_gen.keogram_data.shape[1] > max_entries:
+            self._keogram_gen.keogram_data = numpy.delete(self.realtime_keogram_data, 0, 1)
 
-        # remove timestamps
+        # timestamps might not be populated if numpy data loaded from file
+        while len(self._keogram_gen.timestamps_list) > max_entries:
+            self._keogram_gen.timestamps_list.pop(0)
 
 
     def realtimeKeogramDataLoad(self):
