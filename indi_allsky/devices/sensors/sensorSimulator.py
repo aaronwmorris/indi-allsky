@@ -57,7 +57,6 @@ class SensorDataGenerator(SensorBase):
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
-            constants.SENSOR_MISC,
         ),
     }
 

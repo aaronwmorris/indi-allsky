@@ -3208,7 +3208,7 @@ class IndiAllskyConfigForm(FlaskForm):
             ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5)'),
         ),
         'Testing' : (
-            ('sensor_data_generator', 'Test Data Generator - (4)'),
+            ('sensor_data_generator', 'Test Data Generator - (7)'),
         ),
     }
 
@@ -3952,12 +3952,16 @@ class IndiAllskyConfigForm(FlaskForm):
                 slot_a_index = constants.SENSOR_INDEX_MAP[temp_sensor__a_user_var_slot]
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
-                    self.SENSOR_SLOT_choices['User Sensors'][slot_a_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                        slot_a_index + x,
-                        temp_sensor__a_class.METADATA['name'],
-                        temp_sensor__a_label,
-                        temp_sensor__a_class.METADATA['labels'][x],
-                    )
+                    try:
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_a_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
+                            slot_a_index + x,
+                            temp_sensor__a_class.METADATA['name'],
+                            temp_sensor__a_label,
+                            temp_sensor__a_class.METADATA['labels'][x],
+                        )
+                    except IndexError:
+                        app.logger.error('Not enough sensor slots for sensor')
+                        pass
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
 
@@ -3968,12 +3972,16 @@ class IndiAllskyConfigForm(FlaskForm):
                 slot_b_index = constants.SENSOR_INDEX_MAP[temp_sensor__b_user_var_slot]
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
-                    self.SENSOR_SLOT_choices['User Sensors'][slot_b_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                        slot_b_index + x,
-                        temp_sensor__b_class.METADATA['name'],
-                        temp_sensor__b_label,
-                        temp_sensor__b_class.METADATA['labels'][x],
-                    )
+                    try:
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_b_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
+                            slot_b_index + x,
+                            temp_sensor__b_class.METADATA['name'],
+                            temp_sensor__b_label,
+                            temp_sensor__b_class.METADATA['labels'][x],
+                        )
+                    except IndexError:
+                        app.logger.error('Not enough sensor slots for sensor')
+                        pass
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__b_classname)
 
@@ -3984,12 +3992,16 @@ class IndiAllskyConfigForm(FlaskForm):
                 slot_c_index = constants.SENSOR_INDEX_MAP[temp_sensor__c_user_var_slot]
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
-                    self.SENSOR_SLOT_choices['User Sensors'][slot_c_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                        slot_c_index + x,
-                        temp_sensor__c_class.METADATA['name'],
-                        temp_sensor__c_label,
-                        temp_sensor__c_class.METADATA['labels'][x],
-                    )
+                    try:
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_c_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
+                            slot_c_index + x,
+                            temp_sensor__c_class.METADATA['name'],
+                            temp_sensor__c_label,
+                            temp_sensor__c_class.METADATA['labels'][x],
+                        )
+                    except IndexError:
+                        app.logger.error('Not enough sensor slots for sensor')
+                        pass
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__c_classname)
 
