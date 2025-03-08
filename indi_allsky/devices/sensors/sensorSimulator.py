@@ -86,7 +86,7 @@ class SensorDataGenerator(SensorBase):
         rand_value = random.randrange(-100, 100, 1)
 
 
-        sine_wave = (math.sin(math.radians(self.value_sin_deg)) * 20) + 30
+        sine_wave = (math.sin(math.radians(self.value_sin_deg)) * 30) + 20
 
 
         logger.info('[%s] Test Sensor - %d, %0.1f, %d, %d, %0.1f', self.name, self.value_add, self.value_sub, self.fib_1, rand_value, sine_wave)
