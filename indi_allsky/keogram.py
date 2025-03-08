@@ -14,6 +14,8 @@ from pathlib import Path
 import logging
 from pprint import pformat
 
+from .exceptions import KeogramMismatchException
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -220,7 +222,10 @@ class KeogramGenerator(object):
         #    return
 
         # will raise ValueError if dimensions do not match
-        self.keogram_data = numpy.append(self.keogram_data, rotated_center_line, 1)
+        try:
+            self.keogram_data = numpy.append(self.keogram_data, rotated_center_line, 1)
+        except ValueError as e:
+            raise KeogramMismatchException from e
 
 
         # set every image for reasons

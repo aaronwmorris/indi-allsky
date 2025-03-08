@@ -44,6 +44,7 @@ from sqlalchemy.sql.expression import true as sa_true
 from .exceptions import TimeOutException
 from .exceptions import CalibrationNotFound
 from .exceptions import BadImage
+from .exceptions import KeogramMismatchException
 
 
 try:
@@ -3095,7 +3096,7 @@ class ImageProcessor(object):
 
         try:
             self._keogram_gen.processImage(self.image, int(time.time()))
-        except ValueError as e:
+        except KeogramMismatchException as e:
             logger.error('Error processing keogram image: %s', str(e))
             self.realtime_keogram_data = None
 

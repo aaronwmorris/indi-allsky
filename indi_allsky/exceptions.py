@@ -30,3 +30,6 @@ class ConfigSaveException(Exception):
 class BadImage(Exception):
     pass
 
+
+class KeogramMismatchException(Exception):
+    pass

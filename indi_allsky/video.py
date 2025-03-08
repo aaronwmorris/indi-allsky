@@ -63,6 +63,7 @@ import queue
 
 from .exceptions import TimelapseException
 from .exceptions import TimeOutException
+from .exceptions import KeogramMismatchException
 
 
 app = create_app()
@@ -1375,7 +1376,7 @@ class VideoWorker(Process):
             try:
                 image_ts = image_file_p.stat().st_mtime
                 kg.processImage(image_data, image_ts)
-            except ValueError as e:
+            except KeogramMismatchException as e:
                 logger.error('Error processing keogram image: %s', str(e))
 
 
