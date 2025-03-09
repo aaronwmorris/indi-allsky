@@ -52,6 +52,21 @@ function init() {
 function loop() {
     showImage(url);
 
+
+    $('#download').html(
+        $('<a />', {
+            'href' : "{{ keogram_uri }}",
+            'rel' : "noopener noreferrer",
+            'download' : '',
+        }).html(
+            $('<span />', {
+                'text'  : 'Download',
+                'class' : "badge pill bg-danger",
+            })
+        )
+    );
+
+
     setTimeout(loop, refreshInterval);
 }
 
@@ -135,6 +150,11 @@ $( document ).ready(function() {
 <div class="row">
     <div class="text-center">
         <canvas id="canvas"></canvas>
+    </div>
+</div>
+<div class="row">
+    <div class="text-center">
+        <span id="download"></span>
     </div>
 </div>
 {% endblock %}
