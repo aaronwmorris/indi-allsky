@@ -1790,6 +1790,8 @@ class ImageWorker(Process):
         shutil.copy2(str(tmpfile_name), str(keogram_file))
         keogram_file.chmod(0o644)
 
+        tmpfile_name.unlink()
+
 
     def calculate_exposure(self, adu, exposure):
         if adu <= 0.0:
