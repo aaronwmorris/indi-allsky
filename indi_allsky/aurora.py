@@ -330,7 +330,7 @@ class IndiAllskyAuroraUpdate(object):
 
 
             data = {
-                'time_tag'  : datetime.strptime(time_tag, '%Y-%m-%d %H:%M:%S.%f').astimezone(timezone.utc),
+                'time_tag'  : datetime.strptime(time_tag, '%Y-%m-%d %H:%M:%S.%f').replace(tzinfo=timezone.utc),
                 'bt'        : float(bt),
                 'bz_gsm'    : float(bz_gsm),
             }
@@ -438,7 +438,7 @@ class IndiAllskyAuroraUpdate(object):
 
 
             data = {
-                'time_tag'    : datetime.strptime(time_tag, '%Y-%m-%d %H:%M:%S.%f').astimezone(timezone.utc),
+                'time_tag'    : datetime.strptime(time_tag, '%Y-%m-%d %H:%M:%S.%f').replace(tzinfo=timezone.utc),
                 'density'     : float(density),
                 'speed'       : float(speed),
                 'temperature' : int(temperature),
