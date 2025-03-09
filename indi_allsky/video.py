@@ -63,6 +63,7 @@ import queue
 
 from .exceptions import TimelapseException
 from .exceptions import TimeOutException
+from .exceptions import KeogramMismatchException
 
 
 app = create_app()
@@ -1218,9 +1219,9 @@ class VideoWorker(Process):
             self.config,
             skip_frames=timelapse_skip_frames,
         )
-        kg.angle = self.config['KEOGRAM_ANGLE']
-        kg.h_scale_factor = self.config['KEOGRAM_H_SCALE']
-        kg.v_scale_factor = self.config['KEOGRAM_V_SCALE']
+        kg.angle = self.config.get('KEOGRAM_ANGLE', 0)
+        kg.h_scale_factor = self.config.get('KEOGRAM_H_SCALE', 100)
+        kg.v_scale_factor = self.config.get('KEOGRAM_V_SCALE', 33)
         kg.crop_top = self.config.get('KEOGRAM_CROP_TOP', 0)
         kg.crop_bottom = self.config.get('KEOGRAM_CROP_BOTTOM', 0)
 
@@ -1372,7 +1373,12 @@ class VideoWorker(Process):
                     continue
 
 
-            kg.processImage(image_file_p, image_data)
+            try:
+                image_ts = image_file_p.stat().st_mtime
+                kg.processImage(image_data, image_ts)
+            except KeogramMismatchException as e:
+                logger.error('Error processing keogram image: %s', str(e))
+
 
             if night:
                 if self.config.get('STARTRAILS_USE_DB_DATA', True):

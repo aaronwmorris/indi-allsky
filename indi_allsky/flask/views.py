@@ -367,6 +367,23 @@ class IndexImgView(TemplateView):
         return context
 
 
+class RealtimeKeogramView(TemplateView):
+    title = 'Realtime Keogram'
+
+
+    def get_context(self):
+        context = super(RealtimeKeogramView, self).get_context()
+
+        context['title'] = self.title
+        context['camera_id'] = self.camera.id
+        context['keogram_uri'] = str(Path('images').joinpath('ccd_{0:s}'.format(self.camera.uuid), 'realtime_keogram.{0:s}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'))))
+
+        refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
+        context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
+
+        return context
+
+
 class LatestImageRedirect(BaseView):
     model = IndiAllSkyDbImageTable
 
@@ -1818,6 +1835,8 @@ class ConfigView(FormView):
             'LONGTERM_KEOGRAM__ENABLE'       : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('ENABLE', True),
             'LONGTERM_KEOGRAM__OFFSET_X'     : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('OFFSET_X', 0),
             'LONGTERM_KEOGRAM__OFFSET_Y'     : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('OFFSET_Y', 0),
+            'REALTIME_KEOGRAM__MAX_ENTRIES'  : self.indi_allsky_config.get('REALTIME_KEOGRAM', {}).get('MAX_ENTRIES', 1000),
+            'REALTIME_KEOGRAM__SAVE_INTERVAL': self.indi_allsky_config.get('REALTIME_KEOGRAM', {}).get('SAVE_INTERVAL', 25),
             'STARTRAILS_SUN_ALT_THOLD'       : self.indi_allsky_config.get('STARTRAILS_SUN_ALT_THOLD', -15.0),
             'STARTRAILS_MOONMODE_THOLD'      : self.indi_allsky_config.get('STARTRAILS_MOONMODE_THOLD', True),
             'STARTRAILS_MOON_ALT_THOLD'      : self.indi_allsky_config.get('STARTRAILS_MOON_ALT_THOLD', 91.0),
@@ -2486,6 +2505,7 @@ class AjaxConfigView(BaseView):
             'ADSB',
             'SATELLITE_TRACK',
             'LONGTERM_KEOGRAM',
+            'REALTIME_KEOGRAM',
         )
 
         for leaf in leaf_list:
@@ -2616,6 +2636,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LONGTERM_KEOGRAM']['ENABLE']           = bool(request.json['LONGTERM_KEOGRAM__ENABLE'])
         self.indi_allsky_config['LONGTERM_KEOGRAM']['OFFSET_X']         = int(request.json['LONGTERM_KEOGRAM__OFFSET_X'])
         self.indi_allsky_config['LONGTERM_KEOGRAM']['OFFSET_Y']         = int(request.json['LONGTERM_KEOGRAM__OFFSET_Y'])
+        self.indi_allsky_config['REALTIME_KEOGRAM']['MAX_ENTRIES']      = int(request.json['REALTIME_KEOGRAM__MAX_ENTRIES'])
+        self.indi_allsky_config['REALTIME_KEOGRAM']['SAVE_INTERVAL']    = int(request.json['REALTIME_KEOGRAM__SAVE_INTERVAL'])
         self.indi_allsky_config['STARTRAILS_SUN_ALT_THOLD']             = float(request.json['STARTRAILS_SUN_ALT_THOLD'])
         self.indi_allsky_config['STARTRAILS_MOONMODE_THOLD']            = bool(request.json['STARTRAILS_MOONMODE_THOLD'])
         self.indi_allsky_config['STARTRAILS_MOON_ALT_THOLD']            = float(request.json['STARTRAILS_MOON_ALT_THOLD'])
@@ -8034,6 +8056,7 @@ bp_allsky.add_url_rule('/panorama_img', view_func=LatestPanoramaImgView.as_view(
 bp_allsky.add_url_rule('/js/latest_panorama', view_func=JsonLatestPanoramaView.as_view('js_latest_panorama_view'))
 bp_allsky.add_url_rule('/raw', view_func=LatestRawImageView.as_view('latest_rawimage_view', template_name='index.html'))
 bp_allsky.add_url_rule('/js/latest_rawimage', view_func=JsonLatestRawImageView.as_view('js_latest_rawimage_view'))
+bp_allsky.add_url_rule('/realtime_keogram', view_func=RealtimeKeogramView.as_view('realtime_keogram_view', template_name='realtime_keogram.html'))
 
 bp_allsky.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp_allsky.add_url_rule('/loop_img', view_func=ImageLoopImgView.as_view('image_loop_img_view', template_name='loop_img.html'))

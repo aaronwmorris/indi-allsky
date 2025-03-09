@@ -168,6 +168,10 @@ class IndiAllSkyConfigBase(object):
             "OFFSET_X"      : 0,
             "OFFSET_Y"      : 0,
         },
+        "REALTIME_KEOGRAM" : {
+            "MAX_ENTRIES"   : 1000,
+            "SAVE_INTERVAL" : 25,
+        },
         "STARTRAILS_MAX_ADU"    : 65,
         "STARTRAILS_MASK_THOLD" : 190,
         "STARTRAILS_PIXEL_THOLD": 1.0,

@@ -26,6 +26,7 @@ from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
 from .detectLines import IndiAllskyDetectLines
+from .keogram import KeogramGenerator
 from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
 from .stack import IndiAllskyStacker
@@ -43,6 +44,7 @@ from sqlalchemy.sql.expression import true as sa_true
 from .exceptions import TimeOutException
 from .exceptions import CalibrationNotFound
 from .exceptions import BadImage
+from .exceptions import KeogramMismatchException
 
 
 try:
@@ -179,9 +181,23 @@ class ImageProcessor(object):
         self._stacker.max_control_points = self.config.get('IMAGE_ALIGN_POINTS', 50)
         self._stacker.min_area = self.config.get('IMAGE_ALIGN_SOURCEMINAREA', 10)
 
+
+        self._keogram_gen = KeogramGenerator(
+            self.config,
+        )
+        self._keogram_gen.angle = self.config.get('KEOGRAM_ANGLE', 0)
+        self._keogram_gen.h_scale_factor = self.config.get('KEOGRAM_H_SCALE', 100)
+        self._keogram_gen.v_scale_factor = self.config.get('KEOGRAM_V_SCALE', 33)
+        self._keogram_gen.crop_top = self.config.get('KEOGRAM_CROP_TOP', 0)
+        self._keogram_gen.crop_bottom = self.config.get('KEOGRAM_CROP_BOTTOM', 0)
+        self._keogram_gen.x_offset = 0  # reset
+        self._keogram_gen.y_offset = 0  # reset
+
+
         base_path  = Path(__file__).parent
         self.font_path  = base_path.joinpath('fonts')
 
+        self._keogram_store_p = Path('/var/lib/indi-allsky/realtime_keogram_store.npy')
 
 
     @property
@@ -301,6 +317,20 @@ class ImageProcessor(object):
     @text_font_height.setter
     def text_font_height(self, new_height):
         self._text_font_height = int(new_height)
+
+
+    @property
+    def realtime_keogram_data(self):
+        return self._keogram_gen.keogram_data
+
+    @realtime_keogram_data.setter
+    def realtime_keogram_data(self, new_data):
+        self._keogram_gen.keogram_data = new_data
+
+
+    @property
+    def realtime_keogram_trimmed(self):
+        return self._keogram_gen.trimEdges(self.realtime_keogram_data)
 
 
     def add(self, filename, exposure, exp_date, exp_elapsed, camera):
@@ -3045,6 +3075,63 @@ class ImageProcessor(object):
 
 
         self.image = new_image
+
+
+    def realtimeKeogramUpdate(self):
+        if self.focus_mode:
+            return
+
+        image_height, image_width = self.image.shape[:2]
+
+
+        if isinstance(self.realtime_keogram_data, type(None)):
+            if self._keogram_store_p.exists() and self._keogram_store_p.stat().st_size > 0:
+                # load stored data
+                try:
+                    self.realtime_keogram_data = self.realtimeKeogramDataLoad()
+                except ValueError:
+                    logger.error('Invalid numpy data for realtime keogram')
+                    self._keogram_store_p.unlink()
+
+
+        try:
+            self._keogram_gen.processImage(self.image, int(time.time()))
+        except KeogramMismatchException as e:
+            logger.error('Error processing keogram image: %s', str(e))
+            self.realtime_keogram_data = None
+
+            if self._keogram_store_p.exists():
+                # remove any existing data store
+                self._keogram_store_p.unlink()
+
+            return
+
+
+        max_entries = self.config.get('REALTIME_KEOGRAM', {}).get('MAX_ENTRIES', 1000)
+        while self._keogram_gen.keogram_data.shape[1] > max_entries:
+            self._keogram_gen.keogram_data = numpy.delete(self.realtime_keogram_data, 0, 1)
+
+        # timestamps might not be populated if numpy data loaded from file
+        while len(self._keogram_gen.timestamps_list) > max_entries:
+            self._keogram_gen.timestamps_list.pop(0)
+
+
+    def realtimeKeogramDataLoad(self):
+        logger.info('Loading stored realtime keogram data')
+        with io.open(str(self._keogram_store_p), 'r+b') as f_numpy:
+            keogram_data = numpy.load(f_numpy)
+
+        return keogram_data
+
+
+    def realtimeKeogramDataSave(self):
+        if isinstance(self.realtime_keogram_data, type(None)):
+            logger.warning('Realtime keogram data is empty')
+            return
+
+        logger.info('Storing realtime keogram data')
+        with io.open(str(self._keogram_store_p), 'w+b') as f_numpy:
+            numpy.save(f_numpy, self.realtime_keogram_data)
 
 
     def _load_detection_mask(self):

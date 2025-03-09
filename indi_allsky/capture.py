@@ -1766,11 +1766,15 @@ class CaptureWorker(Process):
                 sensor_a_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__a_user_var_slot)]
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
-                    self.SENSOR_SLOTS[sensor_a_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
-                        temp_sensor__a_class.METADATA['name'],
-                        temp_sensor__a_label,
-                        temp_sensor__a_class.METADATA['labels'][x],
-                    )
+                    try:
+                        self.SENSOR_SLOTS[sensor_a_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
+                            temp_sensor__a_class.METADATA['name'],
+                            temp_sensor__a_label,
+                            temp_sensor__a_class.METADATA['labels'][x],
+                        )
+                    except IndexError:
+                        logger.error('Not enough slots for sensor values')
+                        pass
             except AttributeError:
                 logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
 
@@ -1781,11 +1785,15 @@ class CaptureWorker(Process):
                 sensor_b_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__b_user_var_slot)]
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
-                    self.SENSOR_SLOTS[sensor_b_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
-                        temp_sensor__b_class.METADATA['name'],
-                        temp_sensor__b_label,
-                        temp_sensor__b_class.METADATA['labels'][x],
-                    )
+                    try:
+                        self.SENSOR_SLOTS[sensor_b_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
+                            temp_sensor__b_class.METADATA['name'],
+                            temp_sensor__b_label,
+                            temp_sensor__b_class.METADATA['labels'][x],
+                        )
+                    except IndexError:
+                        logger.error('Not enough slots for sensor values')
+                        pass
             except AttributeError:
                 logger.error('Unknown sensor class: %s', temp_sensor__b_classname)
 
@@ -1796,11 +1804,15 @@ class CaptureWorker(Process):
                 sensor_c_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__c_user_var_slot)]
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
-                    self.SENSOR_SLOTS[sensor_c_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
-                        temp_sensor__c_class.METADATA['name'],
-                        temp_sensor__c_label,
-                        temp_sensor__c_class.METADATA['labels'][x],
-                    )
+                    try:
+                        self.SENSOR_SLOTS[sensor_c_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
+                            temp_sensor__c_class.METADATA['name'],
+                            temp_sensor__c_label,
+                            temp_sensor__c_class.METADATA['labels'][x],
+                        )
+                    except IndexError:
+                        logger.error('Not enough slots for sensor values')
+                        pass
             except AttributeError:
                 logger.error('Unknown sensor class: %s', temp_sensor__c_classname)
 

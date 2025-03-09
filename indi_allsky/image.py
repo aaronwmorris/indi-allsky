@@ -256,11 +256,17 @@ class ImageWorker(Process):
 
 
             if i_dict.get('stop'):
+                self.image_processor.realtimeKeogramDataSave()
+
                 logger.warning('Goodbye')
+
                 return
 
             if self._shutdown:
+                self.image_processor.realtimeKeogramDataSave()
+
                 logger.warning('Goodbye')
+
                 return
 
 
@@ -615,6 +621,9 @@ class ImageWorker(Process):
         self.image_processor.apply_image_circle_mask()
 
 
+        self.image_processor.realtimeKeogramUpdate()
+
+
         if self.config.get('FISH2PANO', {}).get('ENABLE'):
             if not self.image_count % self.config.get('FISH2PANO', {}).get('MODULUS', 2):
                 pano_data = self.image_processor.fish2pano()
@@ -672,6 +681,12 @@ class ImageWorker(Process):
         #task.setSuccess('Image processed')
 
         self.write_status_json(i_ref, adu, adu_average)  # write json status file
+
+
+        if not isinstance(self.image_processor.realtime_keogram_data, type(None)):
+            # keogram might be empty on dimension mismatch
+            self.write_realtime_keogram(self.image_processor.realtime_keogram_trimmed, camera)
+
 
         latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, jpeg_exif=jpeg_exif)
 
@@ -1707,6 +1722,75 @@ class ImageWorker(Process):
         self._miscUpload.s3_upload_panorama(panorama_entry, panorama_metadata)
         self._miscUpload.mqtt_publish_image(filename, 'panorama', {})
         self._miscUpload.upload_panorama(panorama_entry)
+
+
+    def write_realtime_keogram(self, data, camera):
+        if isinstance(data, type(None)):
+            logger.warning('Realtime keogram data empty')
+            return
+
+
+        save_interval = self.config.get('REALTIME_KEOGRAM', {}).get('SAVE_INTERVAL', 25)
+        if self.image_count % save_interval == 0:
+            # store keogram data every X images
+            self.image_processor.realtimeKeogramDataSave()
+
+
+        keogram_height, keogram_width = data.shape[:2]
+
+        # scale size
+        h_scale_factor = int(self.config.get('KEOGRAM_H_SCALE', 100))
+        v_scale_factor = int(self.config.get('KEOGRAM_V_SCALE', 33))
+        new_width = int(keogram_width * h_scale_factor / 100)
+        new_height = int(keogram_height * v_scale_factor / 100)
+
+        #logger.info('Keogram: %d x %d', new_width, new_height)
+        data = cv2.resize(data, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
+        f_tmpfile.close()
+
+        tmpfile_name = Path(f_tmpfile.name)
+
+
+        #write_img_start = time.time()
+
+        # write to temporary file
+        if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
+            img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
+            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'])
+        elif self.config['IMAGE_FILE_TYPE'] in ('png',):
+            # opencv is faster than Pillow with PNG
+            cv2.imwrite(str(tmpfile_name), data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+        elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
+            img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
+            img_rgb.save(str(tmpfile_name), quality=90, lossless=False)
+        elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
+            # exif does not appear to work with tiff
+            img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
+            img_rgb.save(str(tmpfile_name), compression='tiff_lzw')
+        else:
+            tmpfile_name.unlink()
+            raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
+
+        #write_img_elapsed_s = time.time() - write_img_start
+        #logger.info('Image compressed in %0.4f s', write_img_elapsed_s)
+
+
+        ### Always write the latest file for web access
+        keogram_file = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), 'realtime_keogram.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
+
+        try:
+            keogram_file.unlink()
+        except FileNotFoundError:
+            pass
+
+
+        shutil.copy2(str(tmpfile_name), str(keogram_file))
+        keogram_file.chmod(0o644)
+
+        tmpfile_name.unlink()
 
 
     def calculate_exposure(self, adu, exposure):

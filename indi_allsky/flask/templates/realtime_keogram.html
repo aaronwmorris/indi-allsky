@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: {{ title }}{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+canvas {
+    width: 100%;
+    height: auto;
+}
+</style>
+<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_latest.js') }}"></script>
+<script type="text/javascript">
+var camera_id = {{ camera_id }};
+var url = '{{ keogram_uri }}';
+var refreshInterval = {{ refreshInterval | int }};
+var img;
+var fullscreen = false;  //initial state
+
+function init() {
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    img = new Image();
+    img.src = url;
+    img.onload = function() {
+        $('#message').empty();
+
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio = canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+
+        //canvas.width = this.width * ratio;
+        //canvas.height = this.height * ratio;
+
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        //context.imageSmoothingEnabled = false;
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+    };
+
+    loop();
+}
+
+function loop() {
+    showImage(url);
+
+
+    $('#download').html(
+        $('<a />', {
+            'href' : "{{ keogram_uri }}",
+            'rel' : "noopener noreferrer",
+            'download' : '',
+        }).html(
+            $('<span />', {
+                'text'  : 'Download',
+                'class' : "badge pill bg-danger",
+            })
+        )
+    );
+
+
+    setTimeout(loop, refreshInterval);
+}
+
+
+function showImage(url) {
+    console.log('Showing image ' + url);
+    
+    img.src = url + "?t=" + new Date().getTime();
+}
+
+
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    $(window).on("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    showImage(url);
+}
+setResizeHandler(resize_callback, 200);
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
+
+
+$( document ).ready(function() {
+    $('#canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
+    init();
+});
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="text-muted text-center" id="message">Loading...</div>
+</div>
+<div class="row">
+    <div class="text-center">
+        <canvas id="canvas"></canvas>
+    </div>
+</div>
+<div class="row">
+    <div class="text-center">
+        <span id="download"></span>
+    </div>
+</div>
+{% endblock %}

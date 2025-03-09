@@ -1,4 +1,5 @@
 # This is a fake device that acts like a temperature sensor but does not actually do anything
+import math
 import random
 import logging
 
@@ -38,14 +39,20 @@ class SensorDataGenerator(SensorBase):
     METADATA = {
         'name' : 'Test Data Generator',
         'description' : 'Test Data Generator',
-        'count' : 4,
+        'count' : 7,
         'labels' : (
             'Add',
             'Subtract',
             'Fibonacci',
             'Random',
+            'Sine Wave (20-50)',
+            '20',
+            '30',
         ),
         'types' : (
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
@@ -58,35 +65,45 @@ class SensorDataGenerator(SensorBase):
 
         logger.info('Initializing [%s] test data generator sensor', self.name)
 
-        self.value_1 = 0
-        self.value_2 = 25.0
+        self.value_add = 0
+        self.value_sub = 10.0
 
         # fibonacci
         self.fib_1 = 0
         self.fib_2 = 1
 
+        # sine
+        self.value_sin_deg = 0
+
 
     def update(self):
-        self.value_1 += 1
-        self.value_2 -= 0.3
+        self.value_add += 1
+        self.value_sub -= 0.3
 
 
         # random
         rand_value = random.randrange(-100, 100, 1)
 
-        logger.info('[%s] Test Sensor - %d, %0.1f, %d, %d', self.name, self.value_1, self.value_2, self.fib_1, rand_value)
+
+        sine_wave = (math.sin(math.radians(self.value_sin_deg)) * 15) + 35
+
+
+        logger.info('[%s] Test Sensor - %d, %0.1f, %d, %d, %0.1f', self.name, self.value_add, self.value_sub, self.fib_1, rand_value, sine_wave)
 
         data = {
             'data' : (
-                self.value_1,
-                self.value_2,
+                self.value_add,
+                self.value_sub,
                 self.fib_1,
                 rand_value,
+                sine_wave,
+                20,
+                30,
             ),
         }
 
 
-        # fibonacci
+        # update fibonacci
         self.fib_1, self.fib_2 = self.fib_2, self.fib_1 + self.fib_2
         if self.fib_1 > 2 ** 24:
             # reset values
@@ -94,6 +111,9 @@ class SensorDataGenerator(SensorBase):
             self.fib_2 = 1
 
 
-        return data
+        # update sine
+        self.value_sin_deg += 15
 
+
+        return data
 
