@@ -685,7 +685,7 @@ class ImageWorker(Process):
 
         if not isinstance(self.image_processor.realtime_keogram_data, type(None)):
             # keogram might be empty on dimension mismatch
-            self.write_realtime_keogram(self.image_processor.realtime_keogram_trimmed)
+            self.write_realtime_keogram(self.image_processor.realtime_keogram_trimmed, camera)
 
 
         latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, jpeg_exif=jpeg_exif)
@@ -1724,7 +1724,7 @@ class ImageWorker(Process):
         self._miscUpload.upload_panorama(panorama_entry)
 
 
-    def write_realtime_keogram(self, data):
+    def write_realtime_keogram(self, data, camera):
         if isinstance(data, type(None)):
             logger.warning('Realtime keogram data empty')
             return
@@ -1779,7 +1779,7 @@ class ImageWorker(Process):
 
 
         ### Always write the latest file for web access
-        keogram_file = self.image_dir.joinpath('keogram_realtime.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
+        keogram_file = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), 'realtime_keogram.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
 
         try:
             keogram_file.unlink()

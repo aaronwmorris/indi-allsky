@@ -367,6 +367,23 @@ class IndexImgView(TemplateView):
         return context
 
 
+class RealtimeKeogramView(TemplateView):
+    title = 'Realtime Keogram'
+
+
+    def get_context(self):
+        context = super(RealtimeKeogramView, self).get_context()
+
+        context['title'] = self.title
+        context['camera_id'] = self.camera.id
+        context['keogram_uri'] = str(Path('images').joinpath('ccd_{0:s}'.format(self.camera.uuid), 'realtime_keogram.{0:s}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'))))
+
+        refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
+        context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
+
+        return context
+
+
 class LatestImageRedirect(BaseView):
     model = IndiAllSkyDbImageTable
 
@@ -8039,6 +8056,7 @@ bp_allsky.add_url_rule('/panorama_img', view_func=LatestPanoramaImgView.as_view(
 bp_allsky.add_url_rule('/js/latest_panorama', view_func=JsonLatestPanoramaView.as_view('js_latest_panorama_view'))
 bp_allsky.add_url_rule('/raw', view_func=LatestRawImageView.as_view('latest_rawimage_view', template_name='index.html'))
 bp_allsky.add_url_rule('/js/latest_rawimage', view_func=JsonLatestRawImageView.as_view('js_latest_rawimage_view'))
+bp_allsky.add_url_rule('/realtime_keogram', view_func=RealtimeKeogramView.as_view('realtime_keogram_view', template_name='realtime_keogram.html'))
 
 bp_allsky.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop.html'))
 bp_allsky.add_url_rule('/loop_img', view_func=ImageLoopImgView.as_view('image_loop_img_view', template_name='loop_img.html'))
