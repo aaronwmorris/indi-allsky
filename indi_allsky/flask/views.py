@@ -1622,9 +1622,20 @@ class ConfigView(FormView):
 
 
         if latest_image_entry:
+            dh_level_default = self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_DEF', 0)
+            dh_level_low = self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_LOW', 33)
+            dh_level_med = self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_MED', 66)
+            dh_level_high = self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_HIGH', 100)
+
             dh_thold_diff_low = self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_LOW', -15)
             dh_thold_diff_med = self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_MED', -10)
             dh_thold_diff_high = self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', -5)
+
+
+            fan_level_default = self.indi_allsky_config.get('FAN', {}).get('LEVEL_DEF', 0)
+            fan_level_low = self.indi_allsky_config.get('FAN', {}).get('LEVEL_LOW', 33)
+            fan_level_med = self.indi_allsky_config.get('FAN', {}).get('LEVEL_MED', 66)
+            fan_level_high = self.indi_allsky_config.get('FAN', {}).get('LEVEL_HIGH', 100)
 
             fan_thold_diff_low = self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_LOW', -10)
             fan_thold_diff_med = self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_MED', -5)
@@ -1664,15 +1675,30 @@ class ConfigView(FormView):
                     context['dh_target_low_str'] = '{0:0.1f}°'.format(dh_target_low)
                     context['dh_target_med_str'] = '{0:0.1f}°'.format(dh_target_med)
                     context['dh_target_high_str'] = '{0:0.1f}°'.format(dh_target_high)
+
+
+                    if dh_temp_delta <= dh_thold_diff_high:
+                        # set dew heater to high
+                        context['dh_status_str'] = '{0:d}% (High)'.format(dh_level_high)
+                    elif dh_temp_delta <= dh_thold_diff_med:
+                        # set dew heater to medium
+                        context['dh_status_str'] = '{0:d}% (Medium)'.format(dh_level_med)
+                    elif dh_temp_delta <= dh_thold_diff_low:
+                        # set dew heater to low
+                        context['dh_status_str'] = '{0:d}% (Low)'.format(dh_level_low)
+                    else:
+                        context['dh_status_str'] = '{0:d}% (Default)'.format(dh_level_default)
+
                 else:
                     context['dh_temp_delta_str'] = 'Not available'
                     context['dh_target_low_str'] = 'n/a'
                     context['dh_target_med_str'] = 'n/a'
                     context['dh_target_high_str'] = 'n/a'
+                    context['dh_status_str'] = 'n/a'
             else:
                 if not isinstance(dh_temp, type(None)):
-                    dh_delta = dh_temp - dh_manual_target
-                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}° (manual target)'.format(dh_delta)
+                    dh_temp_delta = dh_temp - dh_manual_target
+                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}° (manual target)'.format(dh_temp_delta)
 
                     dh_target_low = dh_manual_target + dh_thold_diff_low
                     dh_target_med = dh_manual_target + dh_thold_diff_med
@@ -1680,11 +1706,24 @@ class ConfigView(FormView):
                     context['dh_target_low_str'] = '{0:0.1f}°'.format(dh_target_low)
                     context['dh_target_med_str'] = '{0:0.1f}°'.format(dh_target_med)
                     context['dh_target_high_str'] = '{0:0.1f}°'.format(dh_target_high)
+
+                    if dh_temp_delta <= dh_thold_diff_high:
+                        # set dew heater to high
+                        context['dh_status_str'] = '{0:d}% (High)'.format(dh_level_high)
+                    elif dh_temp_delta <= dh_thold_diff_med:
+                        # set dew heater to medium
+                        context['dh_status_str'] = '{0:d}% (Medium)'.format(dh_level_med)
+                    elif dh_temp_delta <= dh_thold_diff_low:
+                        # set dew heater to low
+                        context['dh_status_str'] = '{0:d}% (Low)'.format(dh_level_low)
+                    else:
+                        context['dh_status_str'] = '{0:d}% (Default)'.format(dh_level_default)
                 else:
                     context['dh_temp_delta_str'] = 'Not available'
                     context['dh_target_low_str'] = 'n/a'
                     context['dh_target_med_str'] = 'n/a'
                     context['dh_target_high_str'] = 'n/a'
+                    context['dh_status_str'] = 'n/a'
 
 
             if latest_image_entry.data.get(fan_temp_slot_var):
@@ -1706,11 +1745,26 @@ class ConfigView(FormView):
                 context['fan_target_low_str'] = '{0:0.1f}°'.format(fan_target_low)
                 context['fan_target_med_str'] = '{0:0.1f}°'.format(fan_target_med)
                 context['fan_target_high_str'] = '{0:0.1f}°'.format(fan_target_high)
+
+
+                if fan_temp_delta > fan_thold_diff_high:
+                    # set fan to high
+                    context['fan_status_str'] = '{0:d}% (High)'.format(fan_level_high)
+                elif fan_temp_delta > fan_thold_diff_med:
+                    # set fan to medium
+                    context['fan_status_str'] = '{0:d}% (Medium)'.format(fan_level_med)
+                elif fan_temp_delta > fan_thold_diff_low:
+                    # set fan to low
+                    context['fan_status_str'] = '{0:d}% (Low)'.format(fan_level_low)
+                else:
+                    context['fan_status_str'] = '{0:d}% (Default)'.format(fan_level_default)
+
             else:
                 context['fan_temp_delta_str'] = 'Not available'
                 context['fan_target_low_str'] = 'n/a'
                 context['fan_target_med_str'] = 'n/a'
                 context['fan_target_high_str'] = 'n/a'
+                context['fan_status_str'] = 'n/a'
         else:
             context['dh_temp_str'] = 'Not available'
             context['dh_dewpoint_str'] = 'Not available'
@@ -1718,12 +1772,14 @@ class ConfigView(FormView):
             context['dh_target_low_str'] = 'n/a'
             context['dh_target_med_str'] = 'n/a'
             context['dh_target_high_str'] = 'n/a'
+            context['dh_status_str'] = 'n/a'
 
             context['fan_temp_str'] = 'Not available'
             context['fan_temp_delta_str'] = 'Not available'
             context['fan_target_low_str'] = 'n/a'
             context['fan_target_med_str'] = 'n/a'
             context['fan_target_high_str'] = 'n/a'
+            context['fan_status_str'] = 'n/a'
 
 
         form_data = {

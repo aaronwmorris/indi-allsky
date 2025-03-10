@@ -2966,7 +2966,7 @@ var camera_id = {{ camera_id }};
             <div id="KEOGRAM_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Keogram-Rotation" class="text-decoration-none link-info" target="_blank">Keogram Wiki</a></div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Keogram" class="text-decoration-none link-info" target="_blank">Keogram Wiki</a></div>
             <div>Min: -180, Max: 180 - Image rotation for Keogram data</div>
         </div>
     </div>
@@ -6300,6 +6300,7 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-6">
             <div>Last measurement: <b>{{ dh_dewpoint_str }}</b></div>
             <div>Last delta: <b>{{ dh_temp_delta_str }}</b></div>
+            <div>Expected status: <b>{{ dh_status_str }}</b></div>
         </div>
     </div>
 
@@ -6503,6 +6504,7 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">
             <div>Target temperature</div>
             <div>Last delta: <b>{{ fan_temp_delta_str }}</b></div>
+            <div>Expected status: <b>{{ fan_status_str }}</b></div>
         </div>
     </div>
 

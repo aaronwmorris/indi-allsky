@@ -6,6 +6,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 
 
 ## New Features
+* Real-Time Keogram
+    * A keogram is generated in realtime with every image that is taken
 * Long Term Keogram
     * Automates the generation of Keograms that could span months or years
 * Moon Overlay
