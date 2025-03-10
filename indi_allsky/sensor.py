@@ -59,7 +59,7 @@ class SensorWorker(Process):
         self.dh_temp_slot = self.config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 'sensor_user_10')
         self.dh_dewpoint_slot = self.config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 'sensor_user_2')
 
-        self.dh_level_default = self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 100)
+        self.dh_level_default = self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 0)
         self.dh_level_low = self.config.get('DEW_HEATER', {}).get('LEVEL_LOW', 33)
         self.dh_level_med = self.config.get('DEW_HEATER', {}).get('LEVEL_MED', 66)
         self.dh_level_high = self.config.get('DEW_HEATER', {}).get('LEVEL_HIGH', 100)
@@ -72,7 +72,7 @@ class SensorWorker(Process):
         self.fan_target = self.config.get('FAN', {}).get('TARGET', 30.0)
         self.fan_temp_slot = self.config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 'sensor_user_10')
 
-        self.fan_level_default = self.config.get('FAN', {}).get('LEVEL_DEF', 100)
+        self.fan_level_default = self.config.get('FAN', {}).get('LEVEL_DEF', 0)
         self.fan_level_low = self.config.get('FAN', {}).get('LEVEL_LOW', 33)
         self.fan_level_med = self.config.get('FAN', {}).get('LEVEL_MED', 66)
         self.fan_level_high = self.config.get('FAN', {}).get('LEVEL_HIGH', 100)
@@ -526,16 +526,16 @@ class SensorWorker(Process):
             current_temp = self.sensors_user_av[constants.SENSOR_INDEX_MAP[self.dh_temp_slot]]
 
 
-        temp_diff = current_temp - target_val
-        logger.info('Dew Heater threshold current: %0.1f, target: %0.1f, delta: %0.1f (%0.0f%%)', current_temp, target_val, temp_diff, self.dew_heater.state)
+        dh_temp_delta = current_temp - target_val
+        logger.info('Dew Heater threshold current: %0.1f, target: %0.1f, delta: %0.1f (%0.0f%%)', current_temp, target_val, dh_temp_delta, self.dew_heater.state)
 
-        if temp_diff <= self.dh_thold_diff_high:
+        if dh_temp_delta <= self.dh_thold_diff_high:
             # set dew heater to high
             self.set_dew_heater(self.dh_level_high)
-        elif temp_diff <= self.dh_thold_diff_med:
+        elif dh_temp_delta <= self.dh_thold_diff_med:
             # set dew heater to medium
             self.set_dew_heater(self.dh_level_med)
-        elif temp_diff <= self.dh_thold_diff_low:
+        elif dh_temp_delta <= self.dh_thold_diff_low:
             # set dew heater to low
             self.set_dew_heater(self.dh_level_low)
         else:
@@ -566,16 +566,16 @@ class SensorWorker(Process):
             current_temp = self.sensors_user_av[constants.SENSOR_INDEX_MAP[self.fan_temp_slot]]
 
 
-        temp_diff = current_temp - self.fan_target
-        logger.info('Fan threshold current: %0.1f, target: %0.1f, delta: %0.1f (%0.0f%%)', current_temp, self.fan_target, temp_diff, self.fan.state)
+        fan_temp_delta = current_temp - self.fan_target
+        logger.info('Fan threshold current: %0.1f, target: %0.1f, delta: %0.1f (%0.0f%%)', current_temp, self.fan_target, fan_temp_delta, self.fan.state)
 
-        if temp_diff > self.fan_thold_diff_high:
+        if fan_temp_delta > self.fan_thold_diff_high:
             # set fan to high
             self.set_fan(self.fan_level_high)
-        elif temp_diff > self.fan_thold_diff_med:
+        elif fan_temp_delta > self.fan_thold_diff_med:
             # set fan to medium
             self.set_fan(self.fan_level_med)
-        elif temp_diff > self.fan_thold_diff_low:
+        elif fan_temp_delta > self.fan_thold_diff_low:
             # set fan to low
             self.set_fan(self.fan_level_low)
         else:
