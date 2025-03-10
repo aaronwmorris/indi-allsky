@@ -11,6 +11,10 @@ import rawpy
 import logging
 
 
+### Produce DNG and jpeg
+# rpicam-still --immediate --nopreview --camera 0 --raw --denoise off --gain 1 --shutter 500000 --metadata metadata.json --metadata-format json --awbgains 1,1   --tuning-file /usr/share/libcamera/ipa/rpi/pisp/imx477.json --output input.jpg
+
+
 BLACK_LEVEL = 4096
 CFA = 'BGGR'  # IMX477 CFA
 
@@ -32,11 +36,11 @@ class DNG2JPEG(object):
     def main(self, input_file, output_file, metadata_file):
         input_file_p = Path(input_file)
         output_file_p = Path(output_file)
-        metadata_file_p = Path(output_file)
+        metadata_file_p = Path(metadata_file)
 
         if input_file_p.suffix in ('.dng', '.DNG'):
             logger.info('Read %s', input_file_p)
-            raw = rawpy.imread(input_file_p)
+            raw = rawpy.imread(str(input_file_p))
             raw_data_16 = raw.raw_image
 
             max_bits = self.detectBitDepth(raw_data_16)
@@ -71,7 +75,7 @@ class DNG2JPEG(object):
 
 
         logger.info('Write %s', output_file_p)
-        cv2.imwrite(output_file_p)
+        cv2.imwrite(output_file_p, bgr_data_8)
 
 
     def detectBitDepth(self, data):
