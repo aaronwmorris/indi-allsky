@@ -29,13 +29,14 @@ class DNG2JPEG(object):
     }
 
 
-    def main(self, inputfile, outputfile):
-        inputfile_p = Path(inputfile)
-        outputfile_p = Path(outputfile)
+    def main(self, input_file, output_file, metadata_file):
+        input_file_p = Path(input_file)
+        output_file_p = Path(output_file)
+        metadata_file_p = Path(output_file)
 
-        if inputfile_p.suffix in ('.dng', '.DNG'):
-            logger.info('Read %s', inputfile_p)
-            raw = rawpy.imread(inputfile_p)
+        if input_file_p.suffix in ('.dng', '.DNG'):
+            logger.info('Read %s', input_file_p)
+            raw = rawpy.imread(input_file_p)
             raw_data_16 = raw.raw_image
 
             max_bits = self.detectBitDepth(raw_data_16)
@@ -51,7 +52,7 @@ class DNG2JPEG(object):
 
 
             ### CCM
-            with io.open('metadata.json', 'r') as f_metadata:
+            with io.open(metadata_file_p, 'r') as f_metadata:
                 libcamera_metadata = json.loads(f_metadata.read())  # noqa: F841
 
             #bgr_data_16 = self.apply_color_correction_matrix(bgr_data_16, max_bits, libcamera_metadata)
@@ -62,15 +63,15 @@ class DNG2JPEG(object):
             bgr_data_8 = np.right_shift(bgr_data_16, shift_factor).astype(np.uint8)
 
         else:
-            bgr_data_8 = cv2.imread(inputfile_p)
+            bgr_data_8 = cv2.imread(input_file_p)
 
 
         ### remove green bias
         bgr_data_8 = self.scnr_average_neutral(bgr_data_8)
 
 
-        logger.info('Write %s', outputfile_p)
-        cv2.imwrite(outputfile_p)
+        logger.info('Write %s', output_file_p)
+        cv2.imwrite(output_file_p)
 
 
     def detectBitDepth(self, data):
@@ -143,8 +144,15 @@ if __name__ == "__main__":
         type=str,
         default='output.jpg',
     )
+    argparser.add_argument(
+        '--metadata',
+        '-m',
+        help='Metadata file (default: metadata.json)',
+        type=str,
+        default='metadata.json',
+    )
 
 
     args = argparser.parse_args()
 
-    DNG2JPEG().main(args.input, args.output)
+    DNG2JPEG().main(args.input, args.output, args.metadata)
