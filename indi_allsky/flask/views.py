@@ -1747,13 +1747,13 @@ class ConfigView(FormView):
                 context['fan_target_high_str'] = '{0:0.1f}°'.format(fan_target_high)
 
 
-                if fan_temp_delta > self.fan_thold_diff_high:
+                if fan_temp_delta > fan_thold_diff_high:
                     # set fan to high
                     context['fan_status_str'] = '{0:d}% (High)'.format(fan_level_high)
-                elif fan_temp_delta > self.fan_thold_diff_med:
+                elif fan_temp_delta > fan_thold_diff_med:
                     # set fan to medium
                     context['fan_status_str'] = '{0:d}% (Medium)'.format(fan_level_med)
-                elif fan_temp_delta > self.fan_thold_diff_low:
+                elif fan_temp_delta > fan_thold_diff_low:
                     # set fan to low
                     context['fan_status_str'] = '{0:d}% (Low)'.format(fan_level_low)
                 else:
