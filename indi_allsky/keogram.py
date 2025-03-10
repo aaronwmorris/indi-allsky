@@ -276,17 +276,7 @@ class KeogramGenerator(object):
 
 
         # apply time labels
-        if self.config.get('KEOGRAM_LABEL', True):
-            # Keogram labels enabled by default
-            image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
-
-            if image_label_system == 'opencv':
-                self.keogram_final = self.applyLabels_opencv(self.keogram_final)
-            else:
-                # pillow is default
-                self.keogram_final = self.applyLabels_pillow(self.keogram_final)
-        else:
-            logger.warning('Keogram labels disabled')
+        self.keogram_final = self.applyLabels(self.keogram_final)
 
 
         ### EXIF tags ###
@@ -462,6 +452,23 @@ class KeogramGenerator(object):
         #logger.info('New trimmed keogram: %d x %d', trimmed_width, trimmed_height)
 
         return trimmed_keogram
+
+
+    def applyLabels(self, keogram):
+        if self.config.get('KEOGRAM_LABEL', True):
+            # Keogram labels enabled by default
+            image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
+
+            if image_label_system == 'opencv':
+                keogram = self.applyLabels_opencv(keogram)
+            else:
+                # pillow is default
+                keogram = self.applyLabels_pillow(keogram)
+        else:
+            logger.warning('Keogram labels disabled')
+
+
+        return keogram
 
 
     def applyLabels_opencv(self, keogram):
