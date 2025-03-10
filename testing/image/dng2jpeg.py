@@ -43,7 +43,9 @@ class DNG2JPEG(object):
             raw = rawpy.imread(str(input_file_p))
             raw_data_16 = raw.raw_image
 
+
             max_bits = self.detectBitDepth(raw_data_16)
+
 
             logger.info('Subtract offset: %d', BLACK_LEVEL)
             black_level_scaled = BLACK_LEVEL >> (16 - max_bits)
@@ -82,22 +84,14 @@ class DNG2JPEG(object):
         max_val = np.amax(data)
         logger.info('Image max value: %d', int(max_val))
 
-        if max_val > 32768:
+        if max_val > 16383:
             return 16
-        elif max_val > 16384:
-            return 15
-        elif max_val > 8192:
+        elif max_val > 4095:
             return 14
-        elif max_val > 4096:
-            return 13
-        elif max_val > 2096:
+        elif max_val > 1023:
             return 12
-        elif max_val > 1024:
-            return 11
-        elif max_val > 512:
+        elif max_val > 255:
             return 10
-        elif max_val > 256:
-            return 9
         else:
             return 8
 
