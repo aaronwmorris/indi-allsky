@@ -45,6 +45,7 @@ class DNG2JPEG(object):
 
 
             max_bits = self.detectBitDepth(raw_data_16)
+            logger.info('Bits: %d', max_bits)
 
 
             logger.info('Subtract offset: %d', BLACK_LEVEL)
