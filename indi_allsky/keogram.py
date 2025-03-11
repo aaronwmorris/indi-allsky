@@ -4,7 +4,6 @@ import numpy
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
-import piexif
 import math
 import time
 #import copy
@@ -237,6 +236,8 @@ class KeogramGenerator(object):
 
 
     def finalize(self, outfile, camera):
+        import piexif
+
         outfile_p = Path(outfile)
 
         logger.info('Images processed for keogram in %0.1f s', self.image_processing_elapsed_s)

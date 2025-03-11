@@ -7,7 +7,6 @@ from datetime import datetime
 from datetime import timezone
 #import PIL
 from PIL import Image
-import piexif
 import time
 from pathlib import Path
 import tempfile
@@ -414,6 +413,8 @@ class StarTrailGenerator(object):
 
 
     def finalize(self, outfile, camera):
+        import piexif
+
         outfile_p = Path(outfile)
 
         logger.info('Star trails images processed in %0.1f s', self.image_processing_elapsed_s)

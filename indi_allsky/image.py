@@ -26,7 +26,6 @@ import numpy
 
 from PIL import Image
 
-import piexif
 from fractions import Fraction
 
 from . import constants
@@ -276,6 +275,8 @@ class ImageWorker(Process):
 
 
     def processImage(self, i_dict):
+        import piexif
+
         ### Not using DB task queue for image processing to reduce database I/O
         #task_id = i_dict['task_id']
 
