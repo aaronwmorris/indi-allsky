@@ -3575,22 +3575,14 @@ class ImageData(object):
         # to stretch too much.  This most commonly happens with very low gains
         # during the day when there are no hot pixels.  This can result in a
         # trippy effect
-        if max_val > 32768:
+        if max_val > 16383:
             detected_bit_depth = 16
-        elif max_val > 16384:
-            detected_bit_depth = 15
-        elif max_val > 8192:
+        elif max_val > 4095:
             detected_bit_depth = 14
-        elif max_val > 4096:
-            detected_bit_depth = 13
-        elif max_val > 2096:
+        elif max_val > 1023:
             detected_bit_depth = 12
-        elif max_val > 1024:
-            detected_bit_depth = 11
-        elif max_val > 512:
+        elif max_val > 255:
             detected_bit_depth = 10
-        elif max_val > 256:
-            detected_bit_depth = 9
         else:
             detected_bit_depth = 8
 

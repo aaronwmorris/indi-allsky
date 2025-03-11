@@ -262,7 +262,7 @@ class VideoWorker(Process):
         video_file = vid_folder.joinpath(
             'allsky-timelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
-                timespec,
+                d_dayDate.strftime('%Y%m%d'),
                 timeofday,
                 int(now.timestamp()),
                 video_format,
@@ -789,7 +789,7 @@ class VideoWorker(Process):
         video_file = vid_folder.joinpath(
             'allsky-panorama_timelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
-                timespec,
+                d_dayDate.strftime('%Y%m%d'),
                 timeofday,
                 int(now.timestamp()),
                 video_format,
@@ -1018,7 +1018,7 @@ class VideoWorker(Process):
         keogram_file = vid_folder.joinpath(
             'allsky-keogram_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
-                timespec,
+                d_dayDate.strftime('%Y%m%d'),
                 timeofday,
                 int(now.timestamp()),
                 self.config['IMAGE_FILE_TYPE'],
@@ -1028,7 +1028,7 @@ class VideoWorker(Process):
         startrail_file = vid_folder.joinpath(
             'allsky-startrail_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
-                timespec,
+                d_dayDate.strftime('%Y%m%d'),
                 timeofday,
                 int(now.timestamp()),
                 self.config['IMAGE_FILE_TYPE'],
@@ -1038,7 +1038,7 @@ class VideoWorker(Process):
         startrail_video_file = vid_folder.joinpath(
             'allsky-startrail_timelapse_ccd{0:d}_{1:s}_{2:s}_{3:d}.{4:s}'.format(
                 camera.id,
-                timespec,
+                d_dayDate.strftime('%Y%m%d'),
                 timeofday,
                 int(now.timestamp()),
                 video_format,

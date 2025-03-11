@@ -7255,7 +7255,7 @@ class TimelapseImageView(TemplateView):
         else:
             context['timeofday'] = 'Day'
 
-        context['createDate_full'] = image.createDate.strftime('%B %d, %Y - %H:%M:%S')
+        context['createDate_full'] = image.dayDate.strftime('%B %d, %Y - %H:%M:%S')
         context['image_url'] = image.getUrl(s3_prefix=self.s3_prefix, local=local)
 
 
