@@ -1779,8 +1779,14 @@ class ImageWorker(Process):
         #logger.info('Image compressed in %0.4f s', write_img_elapsed_s)
 
 
+        ccd_folder = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid))
+
+        if not ccd_folder.exists():
+            ccd_folder.mkdir(mode=0o755, parents=True)
+
+
         ### Always write the latest file for web access
-        keogram_file = self.image_dir.joinpath('ccd_{0:s}'.format(camera.uuid), 'realtime_keogram.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
+        keogram_file = ccd_folder.joinpath('realtime_keogram.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
 
         try:
             keogram_file.unlink()

@@ -154,32 +154,22 @@ class Align(object):
         max_val = numpy.amax(data)
         logger.info('Image max value: %d', int(max_val))
 
-        # This method of detecting bit depth can cause the 16->8 bit conversion
-        # to stretch too much.  This most commonly happens with very low gains
-        # during the day when there are no hot pixels.  This can result in a
-        # trippy effect
-        if max_val > 32768:
-            image_bit_depth = 16
-        elif max_val > 16384:
-            image_bit_depth = 15
-        elif max_val > 8192:
-            image_bit_depth = 14
-        elif max_val > 4096:
-            image_bit_depth = 13
-        elif max_val > 2096:
-            image_bit_depth = 12
-        elif max_val > 1024:
-            image_bit_depth = 11
-        elif max_val > 512:
-            image_bit_depth = 10
-        elif max_val > 256:
-            image_bit_depth = 9
+
+        if max_val > 16383:
+            detected_bit_depth = 16
+        elif max_val > 4095:
+            detected_bit_depth = 14
+        elif max_val > 1023:
+            detected_bit_depth = 12
+        elif max_val > 255:
+            detected_bit_depth = 10
         else:
-            image_bit_depth = 8
+            detected_bit_depth = 8
 
-        logger.info('Detected bit depth: %d', image_bit_depth)
 
-        return image_bit_depth
+        logger.info('Detected bit depth: %d', detected_bit_depth)
+
+        return detected_bit_depth
 
 
     def _convert_16bit_to_8bit(self, data, image_bitpix, image_bit_depth):
