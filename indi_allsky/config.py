@@ -578,6 +578,8 @@ class IndiAllSkyConfigBase(object):
             "HTU31D_HEATER_DAY"      : False,
             "SHT4X_MODE_NIGHT"       : "NOHEAT_HIGHPRECISION",
             "SHT4X_MODE_DAY"         : "NOHEAT_HIGHPRECISION",
+            "HDC302X_HEATER_NIGHT"   : "OFF",
+            "HDC302X_HEATER_DAY"     : "OFF",
             "SI7021_HEATER_LEVEL_NIGHT" : -1,
             "SI7021_HEATER_LEVEL_DAY"   : -1,
             "TSL2561_GAIN_NIGHT"     : 1,  # 0=1x, 1=16x

@@ -29,6 +29,8 @@ from .tempSensorMlx90640 import TempSensorMlx90640_I2C as blinka_temp_sensor_mlx
 from .tempSensorScd30 import TempSensorScd30_I2C as blinka_temp_sensor_scd30_i2c
 from .tempSensorScd4x import TempSensorScd4x_I2C as blinka_temp_sensor_scd4x_i2c
 
+from .tempSensorHdc302x import TempSensorHdc302x_I2C as blinka_temp_sensor_hdc302x_i2c
+
 from .lightSensorTsl2561 import LightSensorTsl2561_I2C as blinka_light_sensor_tsl2561_i2c
 from .lightSensorTsl2591 import LightSensorTsl2591_I2C as blinka_light_sensor_tsl2591_i2c
 
@@ -77,6 +79,7 @@ __all__ = (
     'blinka_temp_sensor_mlx90640_i2c',
     'blinka_temp_sensor_scd30_i2c',
     'blinka_temp_sensor_scd4x_i2c',
+    'blinka_temp_sensor_hdc302x_i2c',
     'blinka_light_sensor_tsl2561_i2c',
     'blinka_light_sensor_tsl2591_i2c',
     'blinka_light_sensor_veml7700_i2c',
