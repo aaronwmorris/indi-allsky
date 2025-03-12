@@ -2267,6 +2267,8 @@ class ConfigView(FormView):
             'TEMP_SENSOR__SI7021_HEATER_LEVEL_DAY' : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI7021_HEATER_LEVEL_DAY', -1)),  # string in form, int in config
             'TEMP_SENSOR__HTU31D_HEATER_NIGHT': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('HTU31D_HEATER_NIGHT', False),
             'TEMP_SENSOR__HTU31D_HEATER_DAY'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('HTU31D_HEATER_DAY', False),
+            'TEMP_SENSOR__HDC302X_HEATER_NIGHT'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('HDC302X_HEATER_NIGHT', 'OFF'),
+            'TEMP_SENSOR__HDC302X_HEATER_DAY'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('HDC302X_HEATER_DAY', 'OFF'),
             'TEMP_SENSOR__TSL2561_GAIN_NIGHT': str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_NIGHT', 1)),  # string in form, int in config
             'TEMP_SENSOR__TSL2561_GAIN_DAY'  : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_DAY', 0)),  # string in form, int in config
             'TEMP_SENSOR__TSL2561_INT_NIGHT' : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_INT_NIGHT', 1)),  # string in form, int in config
@@ -3083,6 +3085,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['SI7021_HEATER_LEVEL_DAY'] = int(request.json['TEMP_SENSOR__SI7021_HEATER_LEVEL_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['HTU31D_HEATER_NIGHT']   = bool(request.json['TEMP_SENSOR__HTU31D_HEATER_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['HTU31D_HEATER_DAY']     = bool(request.json['TEMP_SENSOR__HTU31D_HEATER_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['HDC302X_HEATER_NIGHT']  = str(request.json['TEMP_SENSOR__HDC302X_HEATER_NIGHT'])
+        self.indi_allsky_config['TEMP_SENSOR']['HDC302X_HEATER_DAY']    = str(request.json['TEMP_SENSOR__HDC302X_HEATER_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2561_GAIN_NIGHT']    = int(request.json['TEMP_SENSOR__TSL2561_GAIN_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2561_GAIN_DAY']      = int(request.json['TEMP_SENSOR__TSL2561_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2561_INT_NIGHT']     = int(request.json['TEMP_SENSOR__TSL2561_INT_NIGHT'])

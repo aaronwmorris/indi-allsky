@@ -2582,6 +2582,11 @@ def TEMP_SENSOR__SHT4X_MODE_validator(form, field):
         raise ValidationError('Invalid mode selection')
 
 
+def TEMP_SENSOR__HDC302X_HEATER_validator(form, field):
+    if field.data not in list(zip(*form.TEMP_SENSOR__HDC302X_HEATER_choices))[0]:
+        raise ValidationError('Invalid heater selection')
+
+
 def TEMP_SENSOR__SI7021_HEATER_LEVEL_validator(form, field):
     try:
         data_str = str(field.data)
@@ -3181,6 +3186,8 @@ class IndiAllskyConfigForm(FlaskForm):
             ('blinka_temp_sensor_bme280_spi', 'BMP/BME280 SPI - Temp/RH/Pres/DP (4)'),
             ('blinka_temp_sensor_bme680_i2c', 'BME680 i2c - Temp/RH/Pres/Gas/DP (5)'),
             ('blinka_temp_sensor_bme680_spi', 'BME680 SPI - Temp/RH/Pres/Gas/DP (5)'),
+            ('blinka_temp_sensor_bmp3xx_i2c', 'BMP3xx i2c - Temp/Pres (2)'),
+            ('blinka_temp_sensor_bmp3xx_spi', 'BMP3xx SPI - Temp/Pres (2)'),
             ('blinka_temp_sensor_si7021_i2c', 'Si7021 i2c - Temp/RH/DP (3)'),
             ('blinka_temp_sensor_sht3x_i2c', 'SHT3x i2c - Temp/RH/DP (3)'),
             ('blinka_temp_sensor_sht4x_i2c', 'SHT40/41/45 i2c - Temp/RH/DP (3)'),
@@ -3189,6 +3196,7 @@ class IndiAllskyConfigForm(FlaskForm):
             ('blinka_temp_sensor_ahtx0_i2c', 'AHT10/20 i2c - Temp/RH/DP (3)'),
             ('blinka_temp_sensor_scd30_i2c', 'SCD-30 i2c - Temp/RH/CO2/DP (4)'),
             ('blinka_temp_sensor_scd4x_i2c', 'SCD-4x i2c - Temp/RH/CO2/DP (4)'),
+            ('blinka_temp_sensor_hdc302x_i2c', 'HDC302x i2c - Temp/RH/DP (3)'),
             ('cpads_temp_sensor_tmp36_ads1015_i2c', 'TMP36 ADS1015 i2c - Temp (1)'),
             ('cpads_temp_sensor_tmp36_ads1115_i2c', 'TMP36 ADS1115 i2c - Temp (1)'),
             ('cpads_temp_sensor_lm35_ads1015_i2c', 'LM35 ADS1015 i2c - Temp (1)'),
@@ -3346,6 +3354,13 @@ class IndiAllskyConfigForm(FlaskForm):
         ('13', '13 - 82 mA'),
         ('14', '14 - 88 mA'),
         ('15', '15 - 94 mA'),
+    )
+
+    TEMP_SENSOR__HDC302X_HEATER_choices = (
+        ('OFF', '[OFF] - Off'),
+        ('QUARTER_POWER', '[QUARTER_POWER] - 25%'),
+        ('HALF_POWER', '[HALF_POWER] - 50%'),
+        ('FULL_POWER', '[FULL_POWER] - 100%'),
     )
 
     TEMP_SENSOR__TSL2591_GAIN_choices = (
@@ -3877,6 +3892,8 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__SI7021_HEATER_LEVEL_DAY   = SelectField('SI7021 Heater Level (Day)', choices=TEMP_SENSOR__SI7021_HEATER_LEVEL_choices, validators=[TEMP_SENSOR__SI7021_HEATER_LEVEL_validator])
     TEMP_SENSOR__HTU31D_HEATER_NIGHT = BooleanField('HTU31D Heater (Night)')
     TEMP_SENSOR__HTU31D_HEATER_DAY   = BooleanField('HTU31D Heater (Day)')
+    TEMP_SENSOR__HDC302X_HEATER_NIGHT = SelectField('HDC302x Heater (Night)', choices=TEMP_SENSOR__HDC302X_HEATER_choices, validators=[TEMP_SENSOR__HDC302X_HEATER_validator])
+    TEMP_SENSOR__HDC302X_HEATER_DAY   = SelectField('HDC302x Heater (Day)', choices=TEMP_SENSOR__HDC302X_HEATER_choices, validators=[TEMP_SENSOR__HDC302X_HEATER_validator])
     TEMP_SENSOR__TSL2561_GAIN_NIGHT  = SelectField('TSL2561 Gain (Night)', choices=TEMP_SENSOR__TSL2561_GAIN_choices, validators=[TEMP_SENSOR__TSL2561_GAIN_validator])
     TEMP_SENSOR__TSL2561_GAIN_DAY    = SelectField('TSL2561 Gain (Day)', choices=TEMP_SENSOR__TSL2561_GAIN_choices, validators=[TEMP_SENSOR__TSL2561_GAIN_validator])
     TEMP_SENSOR__TSL2561_INT_NIGHT   = SelectField('TSL2561 Integration (Night)', choices=TEMP_SENSOR__TSL2561_INT_choices, validators=[TEMP_SENSOR__TSL2561_INT_validator])

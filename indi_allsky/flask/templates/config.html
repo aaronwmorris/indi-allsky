@@ -5848,6 +5848,34 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__HDC302X_HEATER_NIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__HDC302X_HEATER_NIGHT(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__HDC302X_HEATER_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__HDC302X_HEATER_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__HDC302X_HEATER_DAY(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__HDC302X_HEATER_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__TSL2561_GAIN_NIGHT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -7343,6 +7371,8 @@ const field_names = [
     'TEMP_SENSOR__MQTT_PASSWORD',
     'TEMP_SENSOR__SHT4X_MODE_NIGHT',
     'TEMP_SENSOR__SHT4X_MODE_DAY',
+    'TEMP_SENSOR__HDC302X_HEATER_NIGHT',
+    'TEMP_SENSOR__HDC302X_HEATER_DAY',
     'TEMP_SENSOR__SI7021_HEATER_LEVEL_NIGHT',
     'TEMP_SENSOR__SI7021_HEATER_LEVEL_DAY',
     'TEMP_SENSOR__TSL2561_GAIN_NIGHT',
