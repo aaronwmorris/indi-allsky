@@ -56,7 +56,7 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
 
 
         range_array = numpy.arange(0, data_max + 1, dtype=numpy.float32)
-        lut = (((range_array / data_max) ** (1 / float(self.gamma))) * data_max).astype(numpy_dtype)
+        lut = (((range_array / data_max) ** (1.0 / self.gamma)) * data_max).astype(numpy_dtype)
 
 
         # apply lookup table

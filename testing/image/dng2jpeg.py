@@ -64,6 +64,8 @@ class DNG2JPEG(object):
 
             #bgr_data_16 = self.apply_color_correction_matrix(bgr_data_16, max_bits, libcamera_metadata)
 
+            bgr_data_16 = self.apply_gamma_correction(bgr_data_16, max_bits, gamma=1.5)
+
 
             logger.info('Downsample to 8 bits')
             shift_factor = max_bits - 8
@@ -127,6 +129,23 @@ class DNG2JPEG(object):
         ccm_image[ccm_image < 0] = 0  # clip low end
 
         return ccm_image.astype(np.uint16)
+
+
+    def apply_gamma_correction(self, data, max_bits, gamma=1.0):
+        logger.info('Apply gamma correction')
+        if max_bits == 8:
+            numpy_dtype = np.uint8
+        else:
+            numpy_dtype = np.uint16
+
+
+        data_max = (2 ** max_bits) - 1
+
+        range_array = np.arange(0, data_max + 1, dtype=np.float32)
+        lut = (((range_array / data_max) ** (1.0 / gamma)) * data_max).astype(numpy_dtype)
+
+
+        return lut.take(data, mode='raise')
 
 
 if __name__ == "__main__":

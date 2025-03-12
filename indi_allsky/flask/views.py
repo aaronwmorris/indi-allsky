@@ -1223,6 +1223,9 @@ class ChartView(TemplateView):
         custom_chart_4_key = camera_data.get('custom_chart_4_key', 'sensor_user_13')
         custom_chart_5_key = camera_data.get('custom_chart_5_key', 'sensor_user_14')
         custom_chart_6_key = camera_data.get('custom_chart_6_key', 'sensor_user_15')
+        custom_chart_7_key = camera_data.get('custom_chart_7_key', 'sensor_user_16')
+        custom_chart_8_key = camera_data.get('custom_chart_8_key', 'sensor_user_17')
+        custom_chart_9_key = camera_data.get('custom_chart_9_key', 'sensor_user_18')
 
 
         context['label_custom_chart_1'] = camera_data.get(custom_chart_1_key, 'Unset')
@@ -1231,6 +1234,9 @@ class ChartView(TemplateView):
         context['label_custom_chart_4'] = camera_data.get(custom_chart_4_key, 'Unset')
         context['label_custom_chart_5'] = camera_data.get(custom_chart_5_key, 'Unset')
         context['label_custom_chart_6'] = camera_data.get(custom_chart_6_key, 'Unset')
+        context['label_custom_chart_7'] = camera_data.get(custom_chart_7_key, 'Unset')
+        context['label_custom_chart_8'] = camera_data.get(custom_chart_8_key, 'Unset')
+        context['label_custom_chart_9'] = camera_data.get(custom_chart_9_key, 'Unset')
 
 
         return context
@@ -1317,6 +1323,9 @@ class JsonChartView(JsonView):
             'custom_4'  : [],
             'custom_5'  : [],
             'custom_6'  : [],
+            'custom_7'  : [],
+            'custom_8'  : [],
+            'custom_9'  : [],
             'histogram' : {
                 'red'   : [],
                 'green' : [],
@@ -1338,6 +1347,9 @@ class JsonChartView(JsonView):
         custom_chart_4_key = camera_data.get('custom_chart_4_key', 'sensor_user_13')
         custom_chart_5_key = camera_data.get('custom_chart_5_key', 'sensor_user_14')
         custom_chart_6_key = camera_data.get('custom_chart_6_key', 'sensor_user_15')
+        custom_chart_7_key = camera_data.get('custom_chart_7_key', 'sensor_user_16')
+        custom_chart_8_key = camera_data.get('custom_chart_8_key', 'sensor_user_17')
+        custom_chart_9_key = camera_data.get('custom_chart_9_key', 'sensor_user_18')
 
 
         for i in chart_query:
@@ -1470,6 +1482,45 @@ class JsonChartView(JsonView):
                 'y' : custom_6_y,
             }
             chart_data['custom_6'].append(custom_6_data)
+
+
+            # custom chart 7
+            try:
+                custom_7_y = i.data[custom_chart_7_key]
+            except KeyError:
+                custom_7_y = 0
+
+            custom_7_data = {
+                'x' : x,
+                'y' : custom_7_y,
+            }
+            chart_data['custom_7'].append(custom_7_data)
+
+
+            # custom chart 8
+            try:
+                custom_8_y = i.data[custom_chart_8_key]
+            except KeyError:
+                custom_8_y = 0
+
+            custom_8_data = {
+                'x' : x,
+                'y' : custom_8_y,
+            }
+            chart_data['custom_8'].append(custom_8_data)
+
+
+            # custom chart 9
+            try:
+                custom_9_y = i.data[custom_chart_9_key]
+            except KeyError:
+                custom_9_y = 0
+
+            custom_9_data = {
+                'x' : x,
+                'y' : custom_9_y,
+            }
+            chart_data['custom_9'].append(custom_9_data)
 
 
         # build last image histogram
@@ -2240,6 +2291,9 @@ class ConfigView(FormView):
             'CHARTS__CUSTOM_SLOT_4'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 'sensor_user_13'),
             'CHARTS__CUSTOM_SLOT_5'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 'sensor_user_14'),
             'CHARTS__CUSTOM_SLOT_6'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 'sensor_user_15'),
+            'CHARTS__CUSTOM_SLOT_7'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_7', 'sensor_user_16'),
+            'CHARTS__CUSTOM_SLOT_8'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_8', 'sensor_user_14'),
+            'CHARTS__CUSTOM_SLOT_9'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_9', 'sensor_user_15'),
             'ADSB__ENABLE'                   : self.indi_allsky_config.get('ADSB', {}).get('ENABLE', False),
             'ADSB__DUMP1090_URL'             : self.indi_allsky_config.get('ADSB', {}).get('DUMP1090_URL', 'https://localhost/dump1090/data/aircraft.json'),
             'ADSB__USERNAME'                 : self.indi_allsky_config.get('ADSB', {}).get('USERNAME', ''),
@@ -3053,6 +3107,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_4']              = str(request.json['CHARTS__CUSTOM_SLOT_4'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_5']              = str(request.json['CHARTS__CUSTOM_SLOT_5'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_6']              = str(request.json['CHARTS__CUSTOM_SLOT_6'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_7']              = str(request.json['CHARTS__CUSTOM_SLOT_7'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_8']              = str(request.json['CHARTS__CUSTOM_SLOT_8'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_9']              = str(request.json['CHARTS__CUSTOM_SLOT_9'])
         self.indi_allsky_config['ADSB']['ENABLE']                       = bool(request.json['ADSB__ENABLE'])
         self.indi_allsky_config['ADSB']['DUMP1090_URL']                 = str(request.json['ADSB__DUMP1090_URL'])
         self.indi_allsky_config['ADSB']['USERNAME']                     = str(request.json['ADSB__USERNAME'])

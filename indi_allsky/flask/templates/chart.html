@@ -49,6 +49,10 @@ var json_data = {
         'custom_4'  : [],
         'custom_5'  : [],
         'custom_6'  : [],
+        'custom_7'  : [],
+        'custom_8'  : [],
+        'custom_9'  : [],
+        'custom_10' : [],
         'histogram' : {
             'red'   : [],
             'green' : [],
@@ -612,6 +616,141 @@ function init() {
         }
     });
 
+    ctx_custom_7 = $('#custom-7-chart')[0].getContext('2d');
+    custom_7_chart = new Chart(ctx_custom_7, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: '{{ label_custom_chart_7 }}',
+                backgroundColor: "rgba(192, 128, 64, 1)",
+                borderColor: "rgba(64, 92, 64, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        drawTicks: false,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:false,
+                    grid: {
+                        display: true,
+                        drawTicks: false,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: false,
+                    },
+                    suggestedMin: 0,
+                },
+            }
+        }
+    });
+
+    ctx_custom_8 = $('#custom-8-chart')[0].getContext('2d');
+    custom_8_chart = new Chart(ctx_custom_8, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: '{{ label_custom_chart_8 }}',
+                backgroundColor: "rgba(128, 64, 92, 1)",
+                borderColor: "rgba(92, 64, 92, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        drawTicks: false,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:false,
+                    grid: {
+                        display: true,
+                        drawTicks: false,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: false,
+                    },
+                    suggestedMin: 0,
+                },
+            }
+        }
+    });
+
+    ctx_custom_9 = $('#custom-9-chart')[0].getContext('2d');
+    custom_9_chart = new Chart(ctx_custom_9, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: '{{ label_custom_chart_9 }}',
+                backgroundColor: "rgba(0, 0, 128, 1)",
+                borderColor: "rgba(0, 0, 92, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        drawTicks: false,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:false,
+                    grid: {
+                        display: true,
+                        drawTicks: false,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: false,
+                    },
+                    suggestedMin: 0,
+                },
+            }
+        }
+    });
+
 
     ctx_histogram = $('#histogram-chart')[0].getContext('2d');
     histogram_chart = new Chart(ctx_histogram, {
@@ -730,6 +869,9 @@ function drawChart() {
     custom_4_chart.data.datasets[0].data = json_data['chart_data']['custom_4'];
     custom_5_chart.data.datasets[0].data = json_data['chart_data']['custom_5'];
     custom_6_chart.data.datasets[0].data = json_data['chart_data']['custom_6'];
+    custom_7_chart.data.datasets[0].data = json_data['chart_data']['custom_7'];
+    custom_8_chart.data.datasets[0].data = json_data['chart_data']['custom_8'];
+    custom_9_chart.data.datasets[0].data = json_data['chart_data']['custom_9'];
 
     histogram_chart.data.datasets[0].data = json_data['chart_data']['histogram']['red'];
     histogram_chart.data.datasets[1].data = json_data['chart_data']['histogram']['green'];
@@ -748,6 +890,9 @@ function drawChart() {
     custom_4_chart.update();
     custom_5_chart.update();
     custom_6_chart.update();
+    custom_7_chart.update();
+    custom_8_chart.update();
+    custom_9_chart.update();
     histogram_chart.update();
 }
 
@@ -921,12 +1066,28 @@ $( document ).ready(function() {
 <div class="row">
     <div class="col-sm-6">
         <div class="bg-dark" style="margin:3px">
-            <canvas id="histogram-chart"></canvas>
+            <canvas id="custom-7-chart"></canvas>
         </div>
     </div>
+
     <div class="col-sm-6">
         <div class="bg-dark" style="margin:3px">
-            <canvas id="xxx"></canvas>
+            <canvas id="custom-8-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="bg-dark" style="margin:3px">
+            <canvas id="custom-9-chart"></canvas>
+        </div>
+    </div>
+
+    <div class="col-sm-6">
+        <div class="bg-dark" style="margin:3px">
+            <canvas id="histogram-chart"></canvas>
         </div>
     </div>
 </div>

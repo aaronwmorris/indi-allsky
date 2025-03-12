@@ -606,6 +606,9 @@ class IndiAllSkyConfigBase(object):
             "CUSTOM_SLOT_4"          : "sensor_user_13",
             "CUSTOM_SLOT_5"          : "sensor_user_14",
             "CUSTOM_SLOT_6"          : "sensor_user_15",
+            "CUSTOM_SLOT_7"          : "sensor_user_16",
+            "CUSTOM_SLOT_8"          : "sensor_user_17",
+            "CUSTOM_SLOT_9"          : "sensor_user_18",
         },
         "ADSB" : {
             "ENABLE"                 : False,
