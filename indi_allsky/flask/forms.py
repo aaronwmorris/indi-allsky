@@ -3901,6 +3901,9 @@ class IndiAllskyConfigForm(FlaskForm):
     CHARTS__CUSTOM_SLOT_4            = SelectField('Extra Chart Slot 4', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_5            = SelectField('Extra Chart Slot 5', choices=[], validators=[SENSOR_SLOT_validator])
     CHARTS__CUSTOM_SLOT_6            = SelectField('Extra Chart Slot 6', choices=[], validators=[SENSOR_SLOT_validator])
+    CHARTS__CUSTOM_SLOT_7            = SelectField('Extra Chart Slot 7', choices=[], validators=[SENSOR_SLOT_validator])
+    CHARTS__CUSTOM_SLOT_8            = SelectField('Extra Chart Slot 8', choices=[], validators=[SENSOR_SLOT_validator])
+    CHARTS__CUSTOM_SLOT_9            = SelectField('Extra Chart Slot 9', choices=[], validators=[SENSOR_SLOT_validator])
     ADSB__ENABLE                     = BooleanField('Enable ADS-B Tracking')
     ADSB__DUMP1090_URL               = StringField('Dump1090 URL', validators=[ADSB__DUMP1090_URL_validator])
     ADSB__USERNAME                   = StringField('Username', validators=[ADSB__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
@@ -4037,7 +4040,9 @@ class IndiAllskyConfigForm(FlaskForm):
         self.CHARTS__CUSTOM_SLOT_4.choices = self.SENSOR_SLOT_choices
         self.CHARTS__CUSTOM_SLOT_5.choices = self.SENSOR_SLOT_choices
         self.CHARTS__CUSTOM_SLOT_6.choices = self.SENSOR_SLOT_choices
-
+        self.CHARTS__CUSTOM_SLOT_7.choices = self.SENSOR_SLOT_choices
+        self.CHARTS__CUSTOM_SLOT_8.choices = self.SENSOR_SLOT_choices
+        self.CHARTS__CUSTOM_SLOT_9.choices = self.SENSOR_SLOT_choices
 
 
     def validate(self):
@@ -4398,21 +4403,25 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
 
-        # ensure sensor slots are unique
-        custom_charts = (
-            self.CHARTS__CUSTOM_SLOT_1,
-            self.CHARTS__CUSTOM_SLOT_2,
-            self.CHARTS__CUSTOM_SLOT_3,
-            self.CHARTS__CUSTOM_SLOT_4,
-            self.CHARTS__CUSTOM_SLOT_5,
-            self.CHARTS__CUSTOM_SLOT_6,
-        )
+        ### ensure sensor slots are unique
+        ### (disabled, let them be duplicate)
+        #custom_charts = (
+        #    self.CHARTS__CUSTOM_SLOT_1,
+        #    self.CHARTS__CUSTOM_SLOT_2,
+        #    self.CHARTS__CUSTOM_SLOT_3,
+        #    self.CHARTS__CUSTOM_SLOT_4,
+        #    self.CHARTS__CUSTOM_SLOT_5,
+        #    self.CHARTS__CUSTOM_SLOT_6,
+        #    self.CHARTS__CUSTOM_SLOT_7,
+        #    self.CHARTS__CUSTOM_SLOT_8,
+        #    self.CHARTS__CUSTOM_SLOT_9,
+        #)
 
-        for chart1, chart2 in itertools.combinations(custom_charts, 2):
-            if chart1.data == chart2.data:
-                chart1.errors.append('Duplicate chart defined')
-                chart2.errors.append('Duplicate chart defined')
-                result = False
+        #for chart1, chart2 in itertools.combinations(custom_charts, 2):
+        #    if chart1.data == chart2.data:
+        #        chart1.errors.append('Duplicate chart defined')
+        #        chart2.errors.append('Duplicate chart defined')
+        #        result = False
 
 
 
