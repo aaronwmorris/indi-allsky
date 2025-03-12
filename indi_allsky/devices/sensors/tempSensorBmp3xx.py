@@ -80,7 +80,7 @@ class TempSensorBmp3xx_I2C(TempSensorBmp3xx):
 
         logger.warning('Initializing [%s] BMP3xx I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
-        self.bmp3xx = adafruit_bmp3xx.Adafruit_BMP3XX_I2C(i2c, address=i2c_address)
+        self.bmp3xx = adafruit_bmp3xx.BMP3XX_I2C(i2c, address=i2c_address)
 
 
         self.bmp3xx.pressure_oversample = 8
@@ -125,7 +125,7 @@ class TempSensorBmp3xx_SPI(TempSensorBmp3xx):
 
         logger.warning('Initializing [%s] BMP3xx SPI temperature device', self.name)
         spi = board.SPI()
-        self.bmp3xx = adafruit_bmp3xx.Adafruit_BMP3xx_SPI(spi, cs)
+        self.bmp3xx = adafruit_bmp3xx.BMP3xx_SPI(spi, cs)
 
 
         self.bmp3xx.pressure_oversample = 8
