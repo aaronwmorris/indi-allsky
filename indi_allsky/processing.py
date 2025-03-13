@@ -1623,7 +1623,7 @@ class ImageProcessor(object):
                 GAMMA_CORRECTION = float(self.config.get('GAMMA_CORRECTION', 1.0))
             else:
                 # day
-                GAMMA_CORRECTION = float(self.config.get('GAMMA_CORRECTIONSATURATION_FACTOR_DAY', 1.0))
+                GAMMA_CORRECTION = float(self.config.get('GAMMA_CORRECTION_DAY', 1.0))
 
 
         if GAMMA_CORRECTION == 1.0:
