@@ -903,6 +903,9 @@ class CaptureWorker(Process):
         camera_metadata['data']['custom_chart_4_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 'sensor_user_13')
         camera_metadata['data']['custom_chart_5_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 'sensor_user_14')
         camera_metadata['data']['custom_chart_6_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 'sensor_user_15')
+        camera_metadata['data']['custom_chart_7_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_7', 'sensor_user_16')
+        camera_metadata['data']['custom_chart_8_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_8', 'sensor_user_17')
+        camera_metadata['data']['custom_chart_9_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_9', 'sensor_user_18')
 
 
 
