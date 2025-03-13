@@ -523,6 +523,17 @@ var fullscreen = false;  //initial state
         <div class="col-sm-8">1.0 is disabled.  1.5 is a good starting point</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.GAMMA_CORRECTION.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.GAMMA_CORRECTION(class='form-control bg-secondary') }}
+            <div id="GAMMA_CORRECTION-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">1.0 is disabled.</div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -787,6 +798,7 @@ const field_names = [
     'WBG_FACTOR',
     'WBB_FACTOR',
     'SATURATION_FACTOR',
+    'GAMMA_CORRECTION',
     'IMAGE_ROTATE',
     'IMAGE_ROTATE_ANGLE',
     'DETECT_MASK',

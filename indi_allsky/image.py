@@ -598,10 +598,11 @@ class ImageWorker(Process):
 
 
         # saturation
-        if self.night_v.value and self.config.get('SATURATION_FACTOR', 1.0) != 1.0:
-            self.image_processor.saturation_adjust()
-        elif not self.night_v.value and self.config.get('SATURATION_FACTOR_DAY', 1.0) != 1.0:
-            self.image_processor.saturation_adjust()
+        self.image_processor.saturation_adjust()
+
+
+        # gamma correction
+        self.image_processor.apply_gamma_correction()
 
 
         if not self.config.get('CONTRAST_ENHANCE_16BIT'):

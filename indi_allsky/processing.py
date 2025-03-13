@@ -131,6 +131,8 @@ class ImageProcessor(object):
         self._overlay = None
         self._alpha_mask = None
 
+        self._gamma_lut = None
+
         self.focus_mode = self.config.get('FOCUS_MODE', False)
 
         self.stack_method = self.config.get('IMAGE_STACK_METHOD', 'average')
@@ -1605,6 +1607,41 @@ class ImageProcessor(object):
 
         # convert back to uint8 or uint16
         self.image = (cv2.cvtColor(lab, cv2.COLOR_LAB2BGR) * max_value).astype(numpy_dtype)
+
+
+    def apply_gamma_correction(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
+
+        if self.config.get('USE_NIGHT_COLOR', True):
+            GAMMA_CORRECTION = float(self.config.get('GAMMA_CORRECTION', 1.0))
+        else:
+            if self.night_v.value:
+                # night
+                GAMMA_CORRECTION = float(self.config.get('GAMMA_CORRECTION', 1.0))
+            else:
+                # day
+                GAMMA_CORRECTION = float(self.config.get('GAMMA_CORRECTIONSATURATION_FACTOR_DAY', 1.0))
+
+
+        if GAMMA_CORRECTION == 1.0:
+            # no action
+            return
+
+
+        self._apply_gamma_correction(GAMMA_CORRECTION)
+        return True
+
+
+    def _apply_gamma_correction(self, gamma):
+        if isinstance(self._gamma_lut, type(None)):
+            range_array = numpy.arange(0, 256, dtype=numpy.float32)
+            self._gamma_lut = (((range_array / 255) ** (1.0 / gamma)) * 255).astype(numpy.uint8)
+
+
+        self.image = self._gamma_lut.take(self.image, mode='raise')
 
 
     def colorize(self):
