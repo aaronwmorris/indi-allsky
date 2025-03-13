@@ -334,6 +334,17 @@ def SATURATION_FACTOR_validator(form, field):
         raise ValidationError('Saturation factor must be less than 4.0')
 
 
+def GAMMA_CORRECTION_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.0:
+        raise ValidationError('Gamma must be 0 or greater')
+
+    if field.data > 3.0:
+        raise ValidationError('Gamma must be less than 3.0')
+
+
 def SCNR_ALGORITHM_validator(form, field):
     if not field.data:
         return
@@ -3461,6 +3472,8 @@ class IndiAllskyConfigForm(FlaskForm):
     AUTO_WB_DAY                      = BooleanField('Auto White Balance (Day)')
     SATURATION_FACTOR                = FloatField('Saturation Factor (Night)', validators=[SATURATION_FACTOR_validator])
     SATURATION_FACTOR_DAY            = FloatField('Saturation Factor (Day)', validators=[SATURATION_FACTOR_validator])
+    GAMMA_CORRECTION                 = FloatField('Gamma Correction (Night)', validators=[GAMMA_CORRECTION_validator])
+    GAMMA_CORRECTION_DAY             = FloatField('Gamma Correction (Day)', validators=[GAMMA_CORRECTION_validator])
     CCD_COOLING                      = BooleanField('CCD Cooling')
     CCD_TEMP                         = FloatField('Target CCD Temp', validators=[CCD_TEMP_validator])
     TEMP_DISPLAY                     = SelectField('Temperature Display', choices=TEMP_DISPLAY_choices, validators=[DataRequired(), TEMP_DISPLAY_validator])
@@ -6536,6 +6549,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[WB_FACTOR_validator])
     AUTO_WB                          = BooleanField('Auto White Balance')
     SATURATION_FACTOR                = FloatField('Saturation Factor', validators=[SATURATION_FACTOR_validator])
+    GAMMA_CORRECTION                 = FloatField('Gamma Correction', validators=[GAMMA_CORRECTION_validator])
     IMAGE_ROTATE                     = SelectField('Rotate Image', choices=IndiAllskyConfigForm.IMAGE_ROTATE_choices, validators=[IMAGE_ROTATE_validator])
     IMAGE_ROTATE_ANGLE               = IntegerField('Rotation Angle', validators=[IMAGE_ROTATE_ANGLE_validator])
     IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')

@@ -1156,6 +1156,17 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">1.0 is disabled.  1.5 is a good starting point</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.GAMMA_CORRECTION.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.GAMMA_CORRECTION(class='form-control bg-secondary') }}
+            <div id="GAMMA_CORRECTION-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">1.0 is disabled.</div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -1245,6 +1256,17 @@ var camera_id = {{ camera_id }};
             <div id="SATURATION_FACTOR_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">1.0 is disabled.  1.5 is a good starting point</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.GAMMA_CORRECTION_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.GAMMA_CORRECTION_DAY(class='form-control bg-secondary') }}
+            <div id="GAMMA_CORRECTION_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">1.0 is disabled.</div>
     </div>
 
     <hr>
@@ -7039,6 +7061,8 @@ const field_names = [
     'WBB_FACTOR_DAY',
     'SATURATION_FACTOR',
     'SATURATION_FACTOR_DAY',
+    'GAMMA_CORRECTION',
+    'GAMMA_CORRECTION_DAY',
     'CFA_PATTERN',
     'SCNR_ALGORITHM',
     'SCNR_ALGORITHM_DAY',
@@ -7782,6 +7806,10 @@ $('#USE_NIGHT_COLOR').on('change', function() {
         $('#SATURATION_FACTOR_DAY').attr('disabled', true);
         $('#SATURATION_FACTOR_DAY').addClass('bg-dark');
         $('#SATURATION_FACTOR_DAY').addClass('text-secondary');
+        $('#GAMMA_CORRECTION_DAY').attr('readonly', true);
+        $('#GAMMA_CORRECTION_DAY').attr('disabled', true);
+        $('#GAMMA_CORRECTION_DAY').addClass('bg-dark');
+        $('#GAMMA_CORRECTION_DAY').addClass('text-secondary');
     } else {
         $('#SCNR_ALGORITHM_DAY').removeAttr('readonly');
         $('#SCNR_ALGORITHM_DAY').removeAttr('disabled');
@@ -7804,6 +7832,10 @@ $('#USE_NIGHT_COLOR').on('change', function() {
         $('#SATURATION_FACTOR_DAY').removeAttr('disabled');
         $('#SATURATION_FACTOR_DAY').removeClass('bg-dark');
         $('#SATURATION_FACTOR_DAY').removeClass('text-secondary');
+        $('#GAMMA_CORRECTION_DAY').removeAttr('readonly');
+        $('#GAMMA_CORRECTION_DAY').removeAttr('disabled');
+        $('#GAMMA_CORRECTION_DAY').removeClass('bg-dark');
+        $('#GAMMA_CORRECTION_DAY').removeClass('text-secondary');
     }
 });
 
@@ -8057,6 +8089,10 @@ $( document ).ready(function() {
         $('#SATURATION_FACTOR_DAY').attr('disabled', true);
         $('#SATURATION_FACTOR_DAY').addClass('bg-dark');
         $('#SATURATION_FACTOR_DAY').addClass('text-secondary');
+        $('#GAMMA_CORRECTION_DAY').attr('readonly', true);
+        $('#GAMMA_CORRECTION_DAY').attr('disabled', true);
+        $('#GAMMA_CORRECTION_DAY').addClass('bg-dark');
+        $('#GAMMA_CORRECTION_DAY').addClass('text-secondary');
     }
 
     // Dew Heater thresholds

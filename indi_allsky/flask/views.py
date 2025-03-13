@@ -1876,6 +1876,8 @@ class ConfigView(FormView):
             'AUTO_WB_DAY'                    : self.indi_allsky_config.get('AUTO_WB_DAY', False),
             'SATURATION_FACTOR'              : self.indi_allsky_config.get('SATURATION_FACTOR', 1.0),
             'SATURATION_FACTOR_DAY'          : self.indi_allsky_config.get('SATURATION_FACTOR_DAY', 1.0),
+            'GAMMA_CORRECTION'               : self.indi_allsky_config.get('GAMMA_CORRECTION', 1.0),
+            'GAMMA_CORRECTION_DAY'           : self.indi_allsky_config.get('GAMMA_CORRECTION_DAY', 1.0),
             'CCD_COOLING'                    : self.indi_allsky_config.get('CCD_COOLING', False),
             'CCD_TEMP'                       : self.indi_allsky_config.get('CCD_TEMP', 15.0),
             'TEMP_DISPLAY'                   : self.indi_allsky_config.get('TEMP_DISPLAY', 'c'),
@@ -2680,6 +2682,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['WBB_FACTOR_DAY']                       = float(request.json['WBB_FACTOR_DAY'])
         self.indi_allsky_config['SATURATION_FACTOR']                    = float(request.json['SATURATION_FACTOR'])
         self.indi_allsky_config['SATURATION_FACTOR_DAY']                = float(request.json['SATURATION_FACTOR_DAY'])
+        self.indi_allsky_config['GAMMA_CORRECTION']                     = float(request.json['GAMMA_CORRECTION'])
+        self.indi_allsky_config['GAMMA_CORRECtION_DAY']                 = float(request.json['GAMMA_CORRECTION_DAY'])
         self.indi_allsky_config['CCD_COOLING']                          = bool(request.json['CCD_COOLING'])
         self.indi_allsky_config['CCD_TEMP']                             = float(request.json['CCD_TEMP'])
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
@@ -6251,6 +6255,7 @@ class ImageProcessingView(TemplateView):
             'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
             'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
             'SATURATION_FACTOR'              : self.indi_allsky_config.get('SATURATION_FACTOR', 1.0),
+            'GAMMA_CORRECTION'               : self.indi_allsky_config.get('GAMMA_CORRECTION', 1.0),
             'IMAGE_ROTATE'                   : self.indi_allsky_config.get('IMAGE_ROTATE', ''),
             'IMAGE_ROTATE_ANGLE'             : self.indi_allsky_config.get('IMAGE_ROTATE_ANGLE', 0),
             'IMAGE_FLIP_V'                   : self.indi_allsky_config.get('IMAGE_FLIP_V', True),
@@ -6394,6 +6399,7 @@ class JsonImageProcessingView(JsonView):
         p_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
         p_config['WBB_FACTOR']                           = float(request.json['WBB_FACTOR'])
         p_config['SATURATION_FACTOR']                    = float(request.json['SATURATION_FACTOR'])
+        p_config['GAMMA_CORRECTION']                     = float(request.json['GAMMA_CORRECTION'])
         p_config['IMAGE_ROTATE']                         = str(request.json['IMAGE_ROTATE'])
         p_config['IMAGE_ROTATE_ANGLE']                   = int(request.json['IMAGE_ROTATE_ANGLE'])
         p_config['IMAGE_FLIP_V']                         = bool(request.json['IMAGE_FLIP_V'])
@@ -6558,6 +6564,10 @@ class JsonImageProcessingView(JsonView):
 
             # saturation
             image_processor.saturation_adjust()
+
+
+            # gamma correction
+            image_processor.apply_gamma_correction()
 
 
             if p_config['NIGHT_CONTRAST_ENHANCE']:
