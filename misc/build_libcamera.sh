@@ -309,7 +309,7 @@ if [ "${BUILD_LIBCAMERA:-true}" == "true" ]; then
     if [ "$LIBCAMERA_TAG" == "HEAD" ]; then
         git clone --depth 1 "$LIBCAMERA_GIT_URL=" "${PROJECTS_FOLDER}/src/libcamera"
     else
-        git clone --depth 1 --branch "$LIBCAMERA_TAG" "$LIBCAMERA_GIT_URL=" "${PROJECTS_FOLDER}/src/libcamera"
+        git clone --depth 1 --branch "$LIBCAMERA_TAG" "$LIBCAMERA_GIT_URL" "${PROJECTS_FOLDER}/src/libcamera"
     fi
 
 
