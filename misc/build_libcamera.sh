@@ -26,15 +26,14 @@ if [ -n "${1:-}" ]; then
     LIBCAMERA_TAG="$1"
 else
     #LIBCAMERA_TAG="HEAD"
-    LIBCAMERA_TAG="v0.3.0+rpt20240617"
-    #LIBCAMERA_TAG="v0.3.1"
+    LIBCAMERA_TAG="v0.4.0+rpt20250213"
 fi
 
 if [ -n "${2:-}" ]; then
     RPICAM_APPS_TAG="$2"
 else
     #RPICAM_APPS_TAG="HEAD"
-    RPICAM_APPS_TAG="v1.5.0"
+    RPICAM_APPS_TAG="v1.6.0"
 fi
 
 
