@@ -12,7 +12,7 @@ import logging
 
 
 ### Produce DNG and jpeg
-# rpicam-still --immediate --nopreview --camera 0 --raw --denoise off --gain 1 --shutter 500000 --metadata metadata.json --metadata-format json --awbgains 1,1   --tuning-file /usr/share/libcamera/ipa/rpi/pisp/imx477.json --output input.jpg
+# rpicam-still --immediate --nopreview --camera 0 --raw --denoise off --gain 1 --shutter 500000 --metadata metadata.json --metadata-format json --awbgains 1,1 --tuning-file /usr/share/libcamera/ipa/rpi/pisp/imx477.json --output input.jpg
 
 
 BLACK_LEVEL = 4096
@@ -123,6 +123,8 @@ class DNG2JPEG(object):
             [ccm[5], ccm[4], ccm[3]],
             [ccm[2], ccm[1], ccm[0]],
         ]
+
+        #logger.info('CCM: %s', numpy_ccm)
 
 
         ccm_image = np.matmul(data, np.array(numpy_ccm).T)
