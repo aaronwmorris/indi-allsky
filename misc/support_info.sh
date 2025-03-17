@@ -143,8 +143,12 @@ echo "Filesystems"
 df -k
 
 echo
+echo "systemctl runlevel"
+systemctl get-default || true
+
+echo
 echo "sysctl info"
-/usr/sbin/sysctl vm.swappiness
+/usr/sbin/sysctl vm.swappiness || true
 
 echo
 echo "Thermal info"

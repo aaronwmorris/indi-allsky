@@ -576,8 +576,8 @@ class BaseView(View):
                 'ovation_max_status' : 'No data',  # legacy
                 'aurora_mag_bt' : 0.0,
                 'aurora_mag_gsm_bz' : 0.0,
-                'aurora_n_hemi_gw' : 0.0,
-                'aurora_s_hemi_gw' : 0.0,
+                'aurora_n_hemi_gw' : 0,
+                'aurora_s_hemi_gw' : 0,
                 'aurora_plasma_density' : 0.0,
                 'aurora_plasma_speed' : 0.0,
                 'aurora_plasma_temp' : 0,
