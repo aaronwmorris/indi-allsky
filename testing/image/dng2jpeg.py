@@ -127,7 +127,7 @@ class DNG2JPEG(object):
         ccm_image = np.matmul(data, np.array(numpy_ccm).T)
 
 
-        return np.clip(ccm_image, 0, max_value).astype(np.uint8)
+        return np.clip(ccm_image, 0, max_value).astype(data.dtype)
 
 
     def apply_gamma_correction(self, data, max_bits, gamma=1.0):
