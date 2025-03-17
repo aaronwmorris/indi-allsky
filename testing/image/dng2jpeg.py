@@ -124,6 +124,7 @@ class DNG2JPEG(object):
             [ccm[2], ccm[1], ccm[0]],
         ]
 
+
         ccm_image = np.matmul(data, np.array(numpy_ccm).T)
 
 
