@@ -801,6 +801,7 @@ class ImageWorker(Process):
                 'night'    : bool(self.night_v.value),
                 'sqm'      : round(i_ref.sqm_value, 1),
                 'stars'    : len(i_ref.stars),
+                'detections' : len(i_ref.lines),
                 'latitude' : round(self.position_av[0], 3),
                 'longitude': round(self.position_av[1], 3),
                 'elevation': int(self.position_av[2]),
