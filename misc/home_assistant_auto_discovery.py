@@ -457,6 +457,22 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
+                'object_id' : 'indi_allsky_detections',
+                'config' : {
+                    'name' : 'Detections',
+                    'unit_of_measurement' : '',
+                    'unique_id' : 'indi_allsky_detections_{0}'.format(self.unique_id_base),
+                    'state_topic' : '/'.join((indi_allsky_base_topic, 'detections')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
+                },
+            },
+            {
+                'component' : 'sensor',
                 'object_id' : 'indi_allsky_latitude',
                 'config' : {
                     'name' : 'Latitude',
