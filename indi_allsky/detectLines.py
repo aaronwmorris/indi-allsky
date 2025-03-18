@@ -74,15 +74,15 @@ class IndiAllskyDetectLines(object):
             self.max_line_gap,
         )
 
+
         lines_elapsed_s = time.time() - lines_start
-        logger.info('Line detection in %0.4f s', lines_elapsed_s)
 
         if isinstance(lines, type(None)):
-            logger.info('Detected 0 lines')
+            logger.info('Detected 0 lines in %0.4f s', lines_elapsed_s)
             return list()
 
+        logger.info('Detected %d lines in %0.4f s', len(lines), lines_elapsed_s)
 
-        logger.info('Detected %d lines', len(lines))
 
         self._drawLines(original_img, lines)
 
