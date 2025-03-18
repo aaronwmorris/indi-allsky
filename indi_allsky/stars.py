@@ -81,9 +81,7 @@ class IndiAllSkyStars(object):
 
 
         sep_elapsed_s = time.time() - sep_start
-        logger.info('Star detection in %0.4f s', sep_elapsed_s)
-
-        logger.info('Found %d objects', len(blobs))
+        logger.info('Detected %d stars in %0.4f s', len(blobs), sep_elapsed_s)
 
         self._drawCircles(original_data, blobs)
 
