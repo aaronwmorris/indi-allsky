@@ -12,10 +12,10 @@ import argparse
 
 #if 'VIRTUAL_ENV' not in os.environ:
 #    # dynamically initialize virtualenv
-#    venv_p = Path(__file__).parent.joinpath('virtualenv', 'indi-allsky')
+#    venv_p = Path(__file__).parent.joinpath('virtualenv', 'indi-allsky').absolute()
 #
 #    if venv_p.is_dir():
-#        site.addsitedir(str(venv_p.joinpath('lib', 'python{0:d}.{1:d}'.format(*sys.version_info), 'site-packages').absolute()))
+#        site.addsitedir(str(venv_p.joinpath('lib', 'python{0:d}.{1:d}'.format(*sys.version_info), 'site-packages')))
 #        site.PREFIXES = [str(venv_p)]
 
 
