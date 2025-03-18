@@ -12,7 +12,7 @@ import logging
 
 
 ### Produce DNG and jpeg
-# rpicam-still --immediate --nopreview --camera 0 --raw --denoise off --gain 1 --shutter 500000 --metadata metadata.json --metadata-format json --awbgains 1,1   --tuning-file /usr/share/libcamera/ipa/rpi/pisp/imx477.json --output input.jpg
+# rpicam-still --immediate --nopreview --camera 0 --raw --denoise off --gain 1 --shutter 500000 --metadata metadata.json --metadata-format json --awbgains 1,1 --tuning-file /usr/share/libcamera/ipa/rpi/pisp/imx477.json --output input.jpg
 
 
 BLACK_LEVEL = 4096
@@ -113,6 +113,10 @@ class DNG2JPEG(object):
 
     def apply_color_correction_matrix(self, data, max_bits, libcamera_metadata):
         logger.info('Applying CCM')
+
+        max_value = (2 ** max_bits) - 1
+
+
         ccm = libcamera_metadata['ColourCorrectionMatrix']
         numpy_ccm = [
             [ccm[8], ccm[7], ccm[6]],
@@ -120,15 +124,13 @@ class DNG2JPEG(object):
             [ccm[2], ccm[1], ccm[0]],
         ]
 
+        #logger.info('CCM: %s', numpy_ccm)
+
 
         ccm_image = np.matmul(data, np.array(numpy_ccm).T)
 
 
-        max_value = (2 ** max_bits) - 1
-        ccm_image[ccm_image > max_value] = max_value  # clip high end
-        ccm_image[ccm_image < 0] = 0  # clip low end
-
-        return ccm_image.astype(np.uint16)
+        return np.clip(ccm_image, 0, max_value).astype(data.dtype)
 
 
     def apply_gamma_correction(self, data, max_bits, gamma=1.0):
