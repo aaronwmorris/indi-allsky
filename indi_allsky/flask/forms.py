@@ -3271,15 +3271,15 @@ class IndiAllskyConfigForm(FlaskForm):
     # SENSOR_SLOT_choices will be merged with this var
     CUSTOM_CHART_choices = {
         'Aurora' : (
-            ['kpindex', 'Planetary K-Index (kpindex)'],  # mutable
-            ['ovation_max', 'Aurora Chance'],  # mutable
+            ['kpindex', 'Planetary K-Index (kpindex)'],
+            ['ovation_max', 'Aurora Chance'],
             ['aurora_mag_bt', 'Aurora Bt (nT)'],
             ['aurora_mag_gsm_bz', 'Aurora Bz'],
             ['aurora_plasma_density', 'Plasma Density [1/cm³]'],
             ['aurora_plasma_speed', 'Plasma Speed [km/s]'],
             ['aurora_plasma_temp', 'Plasma Temperature [K]'],
-            ['aurora_n_hemi_gw', 'Hemispheric Power - Northern [Gigawatts]'],
-            ['aurora_s_hemi_gw', 'Hemispheric Power - Southern [Gigawatts]'],
+            ['aurora_n_hemi_gw', 'Hemispheric Power - Northern [GW]'],
+            ['aurora_s_hemi_gw', 'Hemispheric Power - Southern [GW]'],
         ),
     }
 

@@ -116,6 +116,15 @@ class CaptureWorker(Process):
         ['sensor_temp_27', 'System Temp 27'],
         ['sensor_temp_28', 'System Temp 28'],
         ['sensor_temp_29', 'System Temp 29'],
+        ['kpindex', 'Planetary K-Index (kpindex)'],
+        ['ovation_max', 'Aurora Chance'],
+        ['aurora_mag_bt', 'Aurora Bt (nT)'],
+        ['aurora_mag_gsm_bz', 'Aurora Bz'],
+        ['aurora_plasma_density', 'Plasma Density [1/cm³]'],
+        ['aurora_plasma_speed', 'Plasma Speed [km/s]'],
+        ['aurora_plasma_temp', 'Plasma Temperature [K]'],
+        ['aurora_n_hemi_gw', 'Hemispheric Power - Northern [GW]'],
+        ['aurora_s_hemi_gw', 'Hemispheric Power - Southern [GW]'],
     )
 
 
