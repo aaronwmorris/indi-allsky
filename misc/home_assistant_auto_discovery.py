@@ -1,8 +1,21 @@
 #!/usr/bin/env python3
 
+import os
 import sys
+import site
 import argparse
 from pathlib import Path
+
+
+if 'VIRTUAL_ENV' not in os.environ:
+    # dynamically initialize virtualenv
+    venv_p = Path(__file__).parent.parent.joinpath('virtualenv', 'indi-allsky').absolute()
+
+    if venv_p.is_dir():
+        site.addsitedir(str(venv_p.joinpath('lib', 'python{0:d}.{1:d}'.format(*sys.version_info), 'site-packages')))
+        site.PREFIXES = [str(venv_p)]
+
+
 from pprint import pformat  # noqa: F401
 import time
 import json
