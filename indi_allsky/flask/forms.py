@@ -2572,6 +2572,19 @@ def SENSOR_SLOT_validator(form, field):
         raise ValidationError('Invalid selection')
 
 
+def CUSTOM_CHART_validator(form, field):
+    slots = list()
+    for v in form.CUSTOM_CHART_choices.values():
+        slots.extend(list(zip(*v))[0])
+
+    for v in form.SENSOR_SLOT_choices.values():
+        slots.extend(list(zip(*v))[0])
+
+
+    if field.data not in slots:
+        raise ValidationError('Invalid selection')
+
+
 def SENSOR_USER_VAR_SLOT_validator(form, field):
     if field.data not in list(zip(*form.SENSOR_USER_VAR_SLOT_choices))[0]:
         raise ValidationError('Invalid selection')
@@ -3254,6 +3267,23 @@ class IndiAllskyConfigForm(FlaskForm):
         ('sensor_user_29', 'User Slot 29'),
     )
 
+
+    # SENSOR_SLOT_choices will be merged with this var
+    CUSTOM_CHART_choices = {
+        'Aurora' : (
+            ['kpindex', 'Planetary K-Index (kpindex)'],  # mutable
+            ['ovation_max', 'Aurora Chance'],  # mutable
+            ['aurora_mag_bt', 'Aurora Bt (nT)'],
+            ['aurora_mag_gsm_bz', 'Aurora Bz'],
+            ['aurora_plasma_density', 'Plasma Density [1/cm³]'],
+            ['aurora_plasma_speed', 'Plasma Speed [km/s]'],
+            ['aurora_plasma_temp', 'Plasma Temperature [K]'],
+            ['aurora_n_hemi_gw', 'Hemispheric Power - Northern [Gigawatts]'],
+            ['aurora_s_hemi_gw', 'Hemispheric Power - Southern [Gigawatts]'],
+        ),
+    }
+
+
     SENSOR_SLOT_choices = {
         'User Sensors' : (
             ['sensor_user_0', '(0) User Slot - Camera Temp'],  # mutable
@@ -3925,15 +3955,15 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__SI1145_IR_GAIN_DAY    = SelectField('SI1145 IR Gain (Day)', choices=TEMP_SENSOR__SI1145_GAIN_choices, validators=[TEMP_SENSOR__SI1145_GAIN_validator])
     TEMP_SENSOR__LTR390_GAIN_NIGHT     = SelectField('LTR390 Gain (Night)', choices=TEMP_SENSOR__LTR390_GAIN_choices, validators=[TEMP_SENSOR__LTR390_GAIN_validator])
     TEMP_SENSOR__LTR390_GAIN_DAY       = SelectField('LTR390 Gain (Day)', choices=TEMP_SENSOR__LTR390_GAIN_choices, validators=[TEMP_SENSOR__LTR390_GAIN_validator])
-    CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[SENSOR_SLOT_validator])
-    CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[SENSOR_SLOT_validator])
-    CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[SENSOR_SLOT_validator])
-    CHARTS__CUSTOM_SLOT_4            = SelectField('Extra Chart Slot 4', choices=[], validators=[SENSOR_SLOT_validator])
-    CHARTS__CUSTOM_SLOT_5            = SelectField('Extra Chart Slot 5', choices=[], validators=[SENSOR_SLOT_validator])
-    CHARTS__CUSTOM_SLOT_6            = SelectField('Extra Chart Slot 6', choices=[], validators=[SENSOR_SLOT_validator])
-    CHARTS__CUSTOM_SLOT_7            = SelectField('Extra Chart Slot 7', choices=[], validators=[SENSOR_SLOT_validator])
-    CHARTS__CUSTOM_SLOT_8            = SelectField('Extra Chart Slot 8', choices=[], validators=[SENSOR_SLOT_validator])
-    CHARTS__CUSTOM_SLOT_9            = SelectField('Extra Chart Slot 9', choices=[], validators=[SENSOR_SLOT_validator])
+    CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_4            = SelectField('Extra Chart Slot 4', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_5            = SelectField('Extra Chart Slot 5', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_6            = SelectField('Extra Chart Slot 6', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_7            = SelectField('Extra Chart Slot 7', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_8            = SelectField('Extra Chart Slot 8', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_9            = SelectField('Extra Chart Slot 9', choices=[], validators=[CUSTOM_CHART_validator])
     ADSB__ENABLE                     = BooleanField('Enable ADS-B Tracking')
     ADSB__DUMP1090_URL               = StringField('Dump1090 URL', validators=[ADSB__DUMP1090_URL_validator])
     ADSB__USERNAME                   = StringField('Username', validators=[ADSB__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
@@ -4064,15 +4094,18 @@ class IndiAllskyConfigForm(FlaskForm):
         self.DEW_HEATER__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
         self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
         self.FAN__TEMP_USER_VAR_SLOT.choices = self.SENSOR_SLOT_choices
-        self.CHARTS__CUSTOM_SLOT_1.choices = self.SENSOR_SLOT_choices
-        self.CHARTS__CUSTOM_SLOT_2.choices = self.SENSOR_SLOT_choices
-        self.CHARTS__CUSTOM_SLOT_3.choices = self.SENSOR_SLOT_choices
-        self.CHARTS__CUSTOM_SLOT_4.choices = self.SENSOR_SLOT_choices
-        self.CHARTS__CUSTOM_SLOT_5.choices = self.SENSOR_SLOT_choices
-        self.CHARTS__CUSTOM_SLOT_6.choices = self.SENSOR_SLOT_choices
-        self.CHARTS__CUSTOM_SLOT_7.choices = self.SENSOR_SLOT_choices
-        self.CHARTS__CUSTOM_SLOT_8.choices = self.SENSOR_SLOT_choices
-        self.CHARTS__CUSTOM_SLOT_9.choices = self.SENSOR_SLOT_choices
+
+        # Merge dictionaries
+        self.CUSTOM_CHART_choices.update(self.SENSOR_SLOT_choices)
+        self.CHARTS__CUSTOM_SLOT_1.choices = self.CUSTOM_CHART_choices
+        self.CHARTS__CUSTOM_SLOT_2.choices = self.CUSTOM_CHART_choices
+        self.CHARTS__CUSTOM_SLOT_3.choices = self.CUSTOM_CHART_choices
+        self.CHARTS__CUSTOM_SLOT_4.choices = self.CUSTOM_CHART_choices
+        self.CHARTS__CUSTOM_SLOT_5.choices = self.CUSTOM_CHART_choices
+        self.CHARTS__CUSTOM_SLOT_6.choices = self.CUSTOM_CHART_choices
+        self.CHARTS__CUSTOM_SLOT_7.choices = self.CUSTOM_CHART_choices
+        self.CHARTS__CUSTOM_SLOT_8.choices = self.CUSTOM_CHART_choices
+        self.CHARTS__CUSTOM_SLOT_9.choices = self.CUSTOM_CHART_choices
 
 
     def validate(self):
