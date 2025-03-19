@@ -725,6 +725,8 @@ class ImageWorker(Process):
 
 
             image_add_data = {
+                'kpindex'           : i_ref.kpindex,
+                'ovation_max'       : i_ref.ovation_max,
                 'aurora_mag_bt'     : i_ref.aurora_mag_bt,
                 'aurora_mag_gsm_bz' : i_ref.aurora_mag_gsm_bz,
                 'aurora_plasma_density' : i_ref.aurora_plasma_density,
