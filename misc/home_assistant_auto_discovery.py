@@ -566,6 +566,118 @@ class HADiscovery(object):
             },
             {
                 'component' : 'sensor',
+                'object_id' : 'indi_allsky_aurora_mag_bt',
+                'config' : {
+                    'name' : 'Solar Wind Bt [nT]',
+                    'unit_of_measurement' : '',
+                    'unique_id' : 'indi_allsky_aurora_mag_bt_{0}'.format(self.unique_id_base),
+                    'state_topic' : '/'.join((indi_allsky_base_topic, 'aurora_mag_bt')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
+                },
+            },
+            {
+                'component' : 'sensor',
+                'object_id' : 'indi_allsky_aurora_mag_gsm_bz',
+                'config' : {
+                    'name' : 'Solar Wind Bz',
+                    'unit_of_measurement' : '',
+                    'unique_id' : 'indi_allsky_aurora_mag_gsm_bz_{0}'.format(self.unique_id_base),
+                    'state_topic' : '/'.join((indi_allsky_base_topic, 'aurora_mag_gsm_bz')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
+                },
+            },
+            {
+                'component' : 'sensor',
+                'object_id' : 'indi_allsky_aurora_plasma_density',
+                'config' : {
+                    'name' : 'Solar Wind Plasma Density [1/cm³]',
+                    'unit_of_measurement' : '',
+                    'unique_id' : 'indi_allsky_aurora_plasma_density_{0}'.format(self.unique_id_base),
+                    'state_topic' : '/'.join((indi_allsky_base_topic, 'aurora_plasma_density')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
+                },
+            },
+            {
+                'component' : 'sensor',
+                'object_id' : 'indi_allsky_aurora_plasma_speed',
+                'config' : {
+                    'name' : 'Solar Wind Plasma Speed [km/s]',
+                    'unit_of_measurement' : '',
+                    'unique_id' : 'indi_allsky_aurora_plasma_speed_{0}'.format(self.unique_id_base),
+                    'state_topic' : '/'.join((indi_allsky_base_topic, 'aurora_plasma_speed')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
+                },
+            },
+            {
+                'component' : 'sensor',
+                'object_id' : 'indi_allsky_aurora_plasma_temp',
+                'config' : {
+                    'name' : 'Solar Wind Plasma Temperature [K]',
+                    'unit_of_measurement' : 'K',
+                    'unique_id' : 'indi_allsky_aurora_plasma_temp_{0}'.format(self.unique_id_base),
+                    'state_topic' : '/'.join((indi_allsky_base_topic, 'aurora_plasma_temp')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
+                },
+            },
+            {
+                'component' : 'sensor',
+                'object_id' : 'indi_allsky_aurora_n_hemi_gw',
+                'config' : {
+                    'name' : 'Hemispheric Power - Northern [GW]',
+                    'unit_of_measurement' : '',
+                    'unique_id' : 'indi_allsky_aurora_n_hemi_gw_{0}'.format(self.unique_id_base),
+                    'state_topic' : '/'.join((indi_allsky_base_topic, 'aurora_n_hemi_gw')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
+                },
+            },
+            {
+                'component' : 'sensor',
+                'object_id' : 'indi_allsky_aurora_s_hemi_gw',
+                'config' : {
+                    'name' : 'Hemispheric Power - Southern [GW]',
+                    'unit_of_measurement' : '',
+                    'unique_id' : 'indi_allsky_aurora_s_hemi_gw_{0}'.format(self.unique_id_base),
+                    'state_topic' : '/'.join((indi_allsky_base_topic, 'aurora_s_hemi_gw')),
+                    'device'   : {
+                        'name' : self.device_name,
+                        'identifiers' : [
+                            self.device_name,
+                        ],
+                    },
+                },
+            },
+            {
+                'component' : 'sensor',
                 'object_id' : 'indi_allsky_smoke_rating',
                 'config' : {
                     'name' : 'Smoke Rating',
