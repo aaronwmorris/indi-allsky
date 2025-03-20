@@ -83,7 +83,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
             if i % 25 == 0:
                 process_elapsed_s = time.time() - process_start
-                logger.info('Pre-processed %d of %d images (%0.3fs/image)', i, self.file_list_len, process_elapsed_s / (i + 1))
+                logger.info('Pre-processed %d of %d images (%0.1f images/s)', i, self.file_list_len, (i + 1) / process_elapsed_s)
 
             self.wrap(
                 i,
@@ -96,7 +96,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
 
         process_elapsed_s = time.time() - process_start
-        logger.info('Pre-processing in %0.4f s (%0.3fs/image)', process_elapsed_s, process_elapsed_s / len(file_list))
+        logger.info('Pre-processing in %0.4f s (%0.1f images/s)', process_elapsed_s, len(file_list) / process_elapsed_s)
 
 
     def wrap(self, i, f, seqfolder_p, image_circle, x_offset, y_offset):
