@@ -1344,7 +1344,7 @@ class VideoWorker(Process):
         for i, entry in enumerate(files_entries):
             if i % 50 == 0:
                 processing_elapsed_s = time.time() - processing_start
-                logger.info('Processed %d of %d images (%0.3fs/image)', i, image_count, processing_elapsed_s / (i + 1))
+                logger.info('Processed %d of %d images (%0.2f images/s)', i, image_count, (i + 1) / processing_elapsed_s)
 
             image_file_p = Path(entry.getFilesystemPath())
 
