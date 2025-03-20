@@ -366,6 +366,7 @@ class ImageProcessor(object):
             image_bayerpat = hdulist[0].header.get('BAYERPAT')
             image_xbayroff = int(hdulist[0].header.get('XBAYROFF', 0))
             image_ybayroff = int(hdulist[0].header.get('YBAYROFF', 0))
+            image_roworder = str(hdulist[0].header.get('ROWORDER', 'unset'))
 
             # older versions of indi (<= 2.0.6) do not allow focal lengths lower than 10mm
             # so we are just going to set this manually
@@ -399,6 +400,7 @@ class ImageProcessor(object):
             image_bayerpat = None
             image_xbayroff = 0
             image_ybayroff = 0
+            image_roworder = 'na'
 
             # create a new fits container
             hdu = fits.PrimaryHDU(data)
@@ -452,6 +454,7 @@ class ImageProcessor(object):
             image_bayerpat = None
             image_xbayroff = 0
             image_ybayroff = 0
+            image_roworder = 'na'
 
             # create a new fits container
             hdu = fits.PrimaryHDU(data)
@@ -540,6 +543,7 @@ class ImageProcessor(object):
             image_bayerpat = hdulist[0].header.get('BAYERPAT')
             image_xbayroff = 0
             image_ybayroff = 0
+            image_roworder = 'na'
 
 
         # Override these
@@ -571,7 +575,7 @@ class ImageProcessor(object):
         #logger.info('Final HDU Header = %s', pformat(hdulist[0].header))
 
 
-        logger.info('Image data - bits: %d, cfa: %s, offsets: X %d, Y %d', image_bitpix, str(image_bayerpat), image_xbayroff, image_ybayroff)
+        logger.info('Image data - bits: %d, cfa: %s, offsets: X %d, Y %d, row order: %s', image_bitpix, str(image_bayerpat), image_xbayroff, image_ybayroff, image_roworder)
 
 
         dayDate = self._dateCalcs.calcDayDate(exp_date)
