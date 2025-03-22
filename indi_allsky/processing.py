@@ -2700,7 +2700,10 @@ class ImageProcessor(object):
                 aircraft_data['dir'] = 'Error'
 
 
-            aircraft_lines.append(aircraft_tmpl.format(**aircraft_data))  # fill in the data
+            line = aircraft_tmpl.format(**aircraft_data)
+
+            for x in line.split('\\n'):  # new line is not an escape character in template
+                aircraft_lines.append(x)
 
 
         return aircraft_lines
@@ -2821,7 +2824,10 @@ class ImageProcessor(object):
                 break
 
 
-            satellite_lines.append(satellite_tmpl.format(**sat_data))  # fill in the data
+            line = satellite_tmpl.format(**sat_data)
+
+            for x in line.split('\\n'):  # new line is not an escape character in template
+                satellite_lines.append(x)
 
 
         return satellite_lines
