@@ -6746,7 +6746,7 @@ class JsonSupportInfoView(JsonView):
                 check=True
             )
 
-            json_data['support_info'] = (support_subproc.stdout).decode()
+            json_data['support_info'] = (support_subproc.stdout).decode('utf-8', errors='replace')
         except subprocess.CalledProcessError as e:
             app.logger.error('Support info generate failed: %s', e.stdout)
             return jsonify({}), 400
