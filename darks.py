@@ -21,7 +21,7 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         'action',
-        help='dark frame algorithm, sigmaclip is recommended',
+        help='dark frame algorithm, sigmaclip is recommended. Note: you must use AVERAGE mode when generating darks from RGB/JPEG data',
         choices=(
             'flush',
             'average',
