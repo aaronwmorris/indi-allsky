@@ -1106,7 +1106,7 @@ class ImageProcessor(object):
 
 
     def apply_color_correction_matrix(self, libcamera_ccm):
-        ccm_start = time.time()
+        #ccm_start = time.time()
 
 
         max_value = (2 ** self.max_bit_depth) - 1
@@ -1132,8 +1132,8 @@ class ImageProcessor(object):
         self.image = numpy.clip(ccm_image, 0, max_value).astype(self.image.dtype)
 
 
-        ccm_elapsed_s = time.time() - ccm_start
-        logger.info('CCM in %0.4f s', ccm_elapsed_s)
+        #ccm_elapsed_s = time.time() - ccm_start
+        #logger.info('CCM in %0.4f s', ccm_elapsed_s)
 
 
     def convert_16bit_to_8bit(self):
@@ -1383,7 +1383,7 @@ class ImageProcessor(object):
     def _white_balance_manual_bgr(self, WBB_FACTOR, WBG_FACTOR, WBR_FACTOR):
         b, g, r = cv2.split(self.image)
 
-        logger.info('Applying manual color balance settings')
+        #logger.info('Applying manual color balance settings')
         if WBB_FACTOR == 1.0:
             wbb = b
         else:
@@ -1539,7 +1539,7 @@ class ImageProcessor(object):
 
         sat = image_hsv[:, :, 1]
 
-        logger.info('Applying saturation settings')
+        #logger.info('Applying saturation settings')
         image_hsv[:, :, 1] = cv2.multiply(sat, SATURATION_FACTOR)
 
         self.image = cv2.cvtColor(image_hsv, cv2.COLOR_HSV2BGR)
@@ -1550,7 +1550,7 @@ class ImageProcessor(object):
             # disable processing in focus mode
             return
 
-        logger.info('Performing CLAHE contrast enhance')
+        #logger.info('Performing CLAHE contrast enhance')
 
         clip_limit = self.config.get('CLAHE_CLIPLIMIT', 3.0)
         grid_size = self.config.get('CLAHE_GRIDSIZE', 8)
@@ -1578,7 +1578,7 @@ class ImageProcessor(object):
             # disable processing in focus mode
             return
 
-        logger.info('Performing 16-bit CLAHE contrast enhance')
+        #logger.info('Performing 16-bit CLAHE contrast enhance')
 
         clip_limit = self.config.get('CLAHE_CLIPLIMIT', 3.0)
         grid_size = self.config.get('CLAHE_GRIDSIZE', 8)
@@ -1779,7 +1779,6 @@ class ImageProcessor(object):
     def _scale_image(self, scale):
         image_height, image_width = self.image.shape[:2]
 
-        logger.info('Scaling image by %d%%', scale)
         new_height = int(image_height * scale / 100.0)
         new_width = int(image_width * scale / 100.0)
 
@@ -1787,7 +1786,7 @@ class ImageProcessor(object):
         new_height = new_height - (new_height % 2)
         new_width = new_width - (new_width % 2)
 
-        logger.info('New size: %d x %d', new_width, new_height)
+        logger.info('Scaling image by %d%%, new size: %d x %d', new_width, new_height)
 
         self.image = cv2.resize(self.image, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
@@ -2337,7 +2336,7 @@ class ImageProcessor(object):
         # aircraft lines
         adsb_aircraft_lines = self.get_adsb_aircraft_text(adsb_aircraft_list)
         if adsb_aircraft_lines:
-            logger.info('Adding aircraft text')
+            #logger.info('Adding aircraft text')
 
             for line in adsb_aircraft_lines:
                 image_label += '\n{0:s}'.format(line)
@@ -2346,7 +2345,7 @@ class ImageProcessor(object):
         # satellite tracking lines
         satellite_tracking_lines = self.get_satellite_tracking_text()
         if satellite_tracking_lines:
-            logger.info('Adding satellite text')
+            #logger.info('Adding satellite text')
 
             for line in satellite_tracking_lines:
                 image_label += '\n{0:s}'.format(line)
@@ -2720,7 +2719,7 @@ class ImageProcessor(object):
             return list()
 
 
-        sat_track_start = time.time()
+        #sat_track_start = time.time()
 
 
         utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
@@ -2808,8 +2807,8 @@ class ImageProcessor(object):
             sat_list.append(sat_data)
 
 
-        sat_track_elapsed_s = time.time() - sat_track_start
-        logger.info('Satellite tracking in %0.4f s', sat_track_elapsed_s)
+        #sat_track_elapsed_s = time.time() - sat_track_start
+        #logger.info('Satellite tracking in %0.4f s', sat_track_elapsed_s)
 
 
         # sort by highest satellites
