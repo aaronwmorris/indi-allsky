@@ -5,21 +5,6 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
-.loader {
-  display: none;
-  border: 3px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 canvas {
     width: 100%;
     height: auto;
@@ -145,7 +130,7 @@ function closeFullscreen() {
             {{ form_longterm_keogram.OFFSET_SELECT(class='form-select bg-secondary') }}
         </div>
         <div class="col-sm-1">
-            <button class="btn btn-success">Generate</button>
+            <button id="generate-button" class="btn btn-success">Generate</button>
         </div>
         <div class="col-sm-1">
             <div class="loader" id="loader_generate"></div>
@@ -269,7 +254,10 @@ $('#form_longterm_keogram').on('submit', function() {
     }
 
 
-    $("#loader_generate").css({'display' : 'block'});
+    $("#generate-button").attr("class", "btn btn-primary");
+    $("#generate-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Loading</span>'
+    );
 
     $.ajax({
         type: "POST",
@@ -279,7 +267,10 @@ $('#form_longterm_keogram').on('submit', function() {
         success: function(rdata){
             json_data = rdata;
 
-            $("#loader_generate").css({'display' : 'none'});
+            $("#generate-button").attr("class", "btn btn-success");
+            $("#generate-button").html(
+              'Generate'
+            );
 
             showImage(json_data['image_b64']);
 
@@ -305,7 +296,10 @@ $('#form_longterm_keogram').on('submit', function() {
             }, 15000);
         },
         error: function(rdata){
-            $("#loader_generate").css({'display' : 'none'});
+            $("#generate-button").attr("class", "btn btn-success");
+            $("#generate-button").html(
+              'Generate'
+            );
 
             var errors = JSON.parse(rdata.responseText);
 
