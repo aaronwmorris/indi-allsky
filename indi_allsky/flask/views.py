@@ -2683,7 +2683,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['SATURATION_FACTOR']                    = float(request.json['SATURATION_FACTOR'])
         self.indi_allsky_config['SATURATION_FACTOR_DAY']                = float(request.json['SATURATION_FACTOR_DAY'])
         self.indi_allsky_config['GAMMA_CORRECTION']                     = float(request.json['GAMMA_CORRECTION'])
-        self.indi_allsky_config['GAMMA_CORRECtION_DAY']                 = float(request.json['GAMMA_CORRECTION_DAY'])
+        self.indi_allsky_config['GAMMA_CORRECTION_DAY']                 = float(request.json['GAMMA_CORRECTION_DAY'])
         self.indi_allsky_config['CCD_COOLING']                          = bool(request.json['CCD_COOLING'])
         self.indi_allsky_config['CCD_TEMP']                             = float(request.json['CCD_TEMP'])
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
