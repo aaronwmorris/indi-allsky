@@ -5,6 +5,13 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
+#nav-image-tab, #nav-processing-tab {
+	width: 150px;
+	margin-top: 10px;
+	margin-right: 5px;
+	height: 50px;
+}
+
 .loader {
   display: none;
   border: 3px solid #f3f3f3;
@@ -95,6 +102,19 @@ var fullscreen = false;  //initial state
             <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
     </div>
+
+    <hr>
+
+<nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <button class="nav-link link-light bg-dark active" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="true">Image</button>
+    <button class="nav-link link-success bg-dark" id="nav-processing-tab" data-bs-toggle="tab" data-bs-target="#nav-processing" type="button" role="tab" aria-controls="nav-processing" aria-selected="false">Processing</button>
+  </div>
+</nav>
+
+
+<div class="tab-content" id="nav-tabContent">
+  <div class="tab-pane fade show active" id="nav-image" role="tabpanel" aria-labelledby="nav-image-tab">
 
     <hr>
 
@@ -536,73 +556,6 @@ var fullscreen = false;  //initial state
 
     <hr>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.FISH2PANO__ENABLE(class='form-check-input') }}
-                <div id="FISH2PANO__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__DIAMETER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__DIAMETER(class='form-control bg-secondary') }}
-            <div id="FISH2PANO__DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Diameter in pixels</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__ROTATE_ANGLE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__ROTATE_ANGLE(class='form-control bg-secondary') }}
-            <div id="FISH2PANO__ROTATE_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Min: -180, Max: 180 - Image rotation for panorama</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__FLIP_H.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.FISH2PANO__FLIP_H(class='form-check-input') }}
-                <div id="FISH2PANO__FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__SCALE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.FISH2PANO__SCALE(class='form-control bg-secondary') }}
-            <div id="FISH2PANO__SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Increasing scale increases processing time</div>
-        </div>
-    </div>
-
-    <hr>
-
     <div>
       <h5>These options are applied to the unprocessed image automatically</h5>
     </div>
@@ -685,6 +638,79 @@ var fullscreen = false;  //initial state
         </div>
         <div class="col-sm-8">Flip timelapse images horizontally</div>
     </div>
+
+  </div><!-- end image tab -->
+  <div class="tab-pane fade" id="nav-processing" role="tabpanel" aria-labelledby="nav-processing-tab">
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.FISH2PANO__ENABLE(class='form-check-input') }}
+                <div id="FISH2PANO__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__DIAMETER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__DIAMETER(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Diameter in pixels</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__ROTATE_ANGLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__ROTATE_ANGLE(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__ROTATE_ANGLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Min: -180, Max: 180 - Image rotation for panorama</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__FLIP_H.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.FISH2PANO__FLIP_H(class='form-check-input') }}
+                <div id="FISH2PANO__FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__SCALE(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Increasing scale increases processing time</div>
+        </div>
+    </div>
+
+  </div><!-- end processing tab -->
+</div>
 
     </form>
 
