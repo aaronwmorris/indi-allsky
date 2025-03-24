@@ -381,84 +381,6 @@ var fullscreen = false;  //initial state
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STACK_COUNT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STACK_COUNT(class='form-select bg-secondary') }}
-            <div id="IMAGE_STACK_COUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Number of images to be stacked</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STACK_METHOD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STACK_METHOD(class='form-select bg-secondary') }}
-            <div id="IMAGE_STACK_METHOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Method to use for image stacking</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_STACK_ALIGN.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.IMAGE_STACK_ALIGN(class='form-check-input') }}
-                <div id="IMAGE_STACK_ALIGN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span>Here be dragons</div>
-            <div>Align images before stacking.</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ALIGN_DETECTSIGMA.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ALIGN_DETECTSIGMA(class='form-control bg-secondary') }}
-            <div id="IMAGE_ALIGN_DETECTSIGMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Factor of background std-dev above which is considered a detection.</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ALIGN_POINTS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ALIGN_POINTS(class='form-control bg-secondary') }}
-            <div id="IMAGE_ALIGN_POINTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">The maximum number of control point-sources to find the transformation.</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ALIGN_SOURCEMINAREA.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_ALIGN_SOURCEMINAREA(class='form-control bg-secondary') }}
-            <div id="IMAGE_ALIGN_SOURCEMINAREA-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Minimum number of connected pixels to be considered a source.</div>
-    </div>
-
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
             {{ form_image_processing.CFA_PATTERN.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -642,6 +564,83 @@ var fullscreen = false;  //initial state
 
   </div><!-- end image tab -->
   <div class="tab-pane fade" id="nav-processing" role="tabpanel" aria-labelledby="nav-processing-tab">
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STACK_COUNT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STACK_COUNT(class='form-select bg-secondary') }}
+            <div id="IMAGE_STACK_COUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Number of images to be stacked</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STACK_METHOD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STACK_METHOD(class='form-select bg-secondary') }}
+            <div id="IMAGE_STACK_METHOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Method to use for image stacking</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_STACK_ALIGN.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.IMAGE_STACK_ALIGN(class='form-check-input') }}
+                <div id="IMAGE_STACK_ALIGN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span>Here be dragons</div>
+            <div>Align images before stacking.</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_ALIGN_DETECTSIGMA.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_ALIGN_DETECTSIGMA(class='form-control bg-secondary') }}
+            <div id="IMAGE_ALIGN_DETECTSIGMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Factor of background std-dev above which is considered a detection.</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_ALIGN_POINTS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_ALIGN_POINTS(class='form-control bg-secondary') }}
+            <div id="IMAGE_ALIGN_POINTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">The maximum number of control point-sources to find the transformation.</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_ALIGN_SOURCEMINAREA.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_ALIGN_SOURCEMINAREA(class='form-control bg-secondary') }}
+            <div id="IMAGE_ALIGN_SOURCEMINAREA-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Minimum number of connected pixels to be considered a source.</div>
+    </div>
 
     <hr>
 
