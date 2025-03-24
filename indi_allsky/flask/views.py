@@ -6457,6 +6457,9 @@ class JsonImageProcessingView(JsonView):
         p_config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM']   = str(request.json['TEXT_PROPERTIES__PIL_FONT_CUSTOM'])
         p_config['TEXT_PROPERTIES']['PIL_FONT_SIZE']     = int(request.json['TEXT_PROPERTIES__PIL_FONT_SIZE'])
 
+        # disable these
+        p_config['ADSB']['ENABLE']                       = False
+        p_config['SATELLITE_TRACK']['ENABLE']            = False
 
         # SQM_ROI
         sqm_roi_x1 = int(request.json['SQM_ROI_X1'])
