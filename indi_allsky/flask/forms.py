@@ -6555,6 +6555,10 @@ class IndiAllskyFocusControllerForm(FlaskForm):
 
 
 class IndiAllskyImageProcessingForm(FlaskForm):
+
+    TEXT_PROPERTIES__PIL_FONT_FILE_choices = IndiAllskyConfigForm.TEXT_PROPERTIES__PIL_FONT_FILE_choices
+
+
     DISABLE_PROCESSING               = BooleanField('Disable processing')
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
     FRAME_TYPE                       = HiddenField('FRAME_TYPE', validators=[DataRequired()])
@@ -6606,6 +6610,22 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     FISH2PANO__FLIP_H                = BooleanField('Flip Horizontally')
     #IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     PROCESSING_SPLIT_SCREEN          = BooleanField('Split screen')
+    IMAGE_LABEL_TEMPLATE             = TextAreaField('Label Template', validators=[DataRequired(), IMAGE_LABEL_TEMPLATE_validator])
+    IMAGE_EXTRA_TEXT                 = StringField('Extra Image Text File', validators=[IMAGE_EXTRA_TEXT_validator])
+    IMAGE_LABEL_SYSTEM               = SelectField('Label Images', choices=IndiAllskyConfigForm.IMAGE_LABEL_SYSTEM_choices, validators=[IMAGE_LABEL_SYSTEM_validator])
+    TEXT_PROPERTIES__FONT_FACE       = SelectField('OpenCV Font', choices=IndiAllskyConfigForm.TEXT_PROPERTIES__FONT_FACE_choices, validators=[DataRequired(), TEXT_PROPERTIES__FONT_FACE_validator])
+    #TEXT_PROPERTIES__FONT_AA
+    TEXT_PROPERTIES__FONT_SCALE      = FloatField('Font Scale', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
+    TEXT_PROPERTIES__FONT_THICKNESS  = IntegerField('Font Thickness', validators=[DataRequired(), TEXT_PROPERTIES__FONT_THICKNESS_validator])
+    TEXT_PROPERTIES__FONT_OUTLINE    = BooleanField('Font Outline')
+    TEXT_PROPERTIES__FONT_HEIGHT     = IntegerField('Text Height Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_HEIGHT_validator])
+    TEXT_PROPERTIES__FONT_X          = IntegerField('Text X Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_X_validator])
+    TEXT_PROPERTIES__FONT_Y          = IntegerField('Text Y Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_Y_validator])
+    TEXT_PROPERTIES__FONT_COLOR      = StringField('Text Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
+    TEXT_PROPERTIES__PIL_FONT_FILE   = SelectField('Pillow Font', choices=IndiAllskyConfigForm.TEXT_PROPERTIES__PIL_FONT_FILE_choices, validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_FILE_validator])
+    TEXT_PROPERTIES__PIL_FONT_CUSTOM = StringField('Custom Font', validators=[TEXT_PROPERTIES__PIL_FONT_CUSTOM_validator])
+    TEXT_PROPERTIES__PIL_FONT_SIZE   = IntegerField('Font Size', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
+
 
 
 class IndiAllskyMiniTimelapseForm(FlaskForm):

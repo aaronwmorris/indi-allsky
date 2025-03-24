@@ -5,7 +5,7 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
-#nav-image-tab, #nav-processing-tab {
+#nav-image-tab, #nav-processing-tab, #nav-overlays-tab {
 	width: 150px;
 	margin-top: 10px;
 	margin-right: 5px;
@@ -109,6 +109,7 @@ var fullscreen = false;  //initial state
   <div class="nav nav-tabs" id="nav-tab" role="tablist">
     <button class="nav-link link-light bg-dark active" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="true">Image</button>
     <button class="nav-link link-success bg-dark" id="nav-processing-tab" data-bs-toggle="tab" data-bs-target="#nav-processing" type="button" role="tab" aria-controls="nav-processing" aria-selected="false">Processing</button>
+    <button class="nav-link link-secondary bg-dark" id="nav-overlays-tab" data-bs-toggle="tab" data-bs-target="#nav-overlays" type="button" role="tab" aria-controls="nav-overlays" aria-selected="false">Overlays</button>
   </div>
 </nav>
 
@@ -710,6 +711,182 @@ var fullscreen = false;  //initial state
     </div>
 
   </div><!-- end processing tab -->
+  <div class="tab-pane fade" id="nav-overlays" role="tabpanel" aria-labelledby="nav-overlays-tab">
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_LABEL_SYSTEM.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_LABEL_SYSTEM(class='form-select bg-secondary') }}
+            <div id="IMAGE_LABEL_SYSTEM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Image Label System</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_LABEL_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_image_processing.IMAGE_LABEL_TEMPLATE(class='form-control bg-secondary', rows='12') }}
+            <div id="IMAGE_LABEL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
+            <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" class="text-decoration-none link-info" target="_blank">Python datetime format codes</a></div>
+            <div>Available variables:</div>
+            <div><pre>timestamp, ts, day_date, exposure, rational_exp, gain, temp, temp_unit,<br>sidereal_time, sqm, stars, detections, stack_method, stack_count, stretch<br>location, owner, latitude, longitude, kpindex, ovation_max,<br>sun_alt, moon_alt, moon_phase, sun_moon_sep, moon_up, sun_moon_sep,<br>mercury_alt, mercury_up, venus_alt, venus_up, venus_phase,<br>mars_alt, mars_up, jupiter_alt, jupiter_up, saturn_alt, saturn_up,<br>iss_alt, iss_up, iss_next_h, iss_next_alt, hst_alt, hst_up, hst_next_h,<br>hst_next_alt, tiangong_alt, tiangong_up, tiangong_next_h, tiangong_next_alt</pre></div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Image-Labels" class="text-decoration-none link-info" target="_blank">Image Labels Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_EXTRA_TEXT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_image_processing.IMAGE_EXTRA_TEXT(class='form-control bg-secondary') }}
+            <div id="IMAGE_EXTRA_TEXT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>File containing extra text for image</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_FILE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_FILE(class='form-select bg-secondary') }}
+            <div id="TEXT_PROPERTIES__PIL_FONT_FILE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Pillow supports TrueType and OpenType fonts</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_SIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_SIZE(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Size may be overridden in template</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_CUSTOM.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_image_processing.TEXT_PROPERTIES__PIL_FONT_CUSTOM(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__PIL_FONT_CUSTOM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">Custom TrueType font</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_FACE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_FACE(class='form-select bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_FACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Font face for image metadata</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_SCALE(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Font size</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_THICKNESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_THICKNESS(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_THICKNESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Font thickness</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_HEIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_HEIGHT(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_HEIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Font height for row spacing</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_X(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">X coordinate to start writing metadata - Maybe overriden in template</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_Y(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Y coordinate to start writing metadata</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_COLOR(class='form-control bg-secondary') }}
+            <div id="TEXT_PROPERTIES__FONT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Font color in R,G,B - May be overriden in template</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.TEXT_PROPERTIES__FONT_OUTLINE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.TEXT_PROPERTIES__FONT_OUTLINE(class='form-check-input') }}
+                <div id="TEXT_PROPERTIES__FONT_OUTLINE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Add black outline to text</div>
+    </div>
+
+  </div><!-- end overlays tab -->
+
 </div>
 
     </form>
@@ -841,6 +1018,19 @@ const field_names = [
     'FISH2PANO__DIAMETER',
     'FISH2PANO__ROTATE_ANGLE',
     'FISH2PANO__SCALE',
+    'IMAGE_LABEL_SYSTEM',
+    'IMAGE_LABEL_TEMPLATE',
+    'IMAGE_EXTRA_TEXT',
+    'TEXT_PROPERTIES__FONT_FACE',
+    'TEXT_PROPERTIES__FONT_SCALE',
+    'TEXT_PROPERTIES__FONT_THICKNESS',
+    'TEXT_PROPERTIES__FONT_HEIGHT',
+    'TEXT_PROPERTIES__FONT_X',
+    'TEXT_PROPERTIES__FONT_Y',
+    'TEXT_PROPERTIES__FONT_COLOR',
+    'TEXT_PROPERTIES__PIL_FONT_FILE',
+    'TEXT_PROPERTIES__PIL_FONT_CUSTOM',
+    'TEXT_PROPERTIES__PIL_FONT_SIZE',
 ];
 
 const checkbox_field_names = [
@@ -856,6 +1046,7 @@ const checkbox_field_names = [
     //'PROCESSING_SPLIT_SCREEN',
     'FISH2PANO__ENABLE',
     'FISH2PANO__FLIP_H',
+    'TEXT_PROPERTIES__FONT_OUTLINE',
 ];
 
 var fields = {};
