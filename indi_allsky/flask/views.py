@@ -3724,8 +3724,6 @@ class Fits2JpegView(BaseView):
 
         hdulist.close()
 
-        astrometric_data = {}
-
         moonmode_v = Value('i', 0)
         image_processor = ImageProcessor(
             p_config,
@@ -3736,13 +3734,12 @@ class Fits2JpegView(BaseView):
             sensors_user_av,
             night_v,
             moonmode_v,
-            astrometric_data,
         )
 
         processing_start = time.time()
 
 
-        self.image_processor.get_astrometric_data()
+        self.image_processor.update_astrometric_data()
 
 
         image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
@@ -6494,7 +6491,6 @@ class JsonImageProcessingView(JsonView):
             sensors_user_av,
             night_v,
             moonmode_v,
-            {},    # astrometric_data
         )
 
         processing_start = time.time()

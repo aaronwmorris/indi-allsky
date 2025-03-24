@@ -100,51 +100,6 @@ class ImageWorker(Process):
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
-        # shared between objects
-        self.astrometric_data = {
-            'sun_alt'       : 0.0,
-            'moon_alt'      : 0.0,
-            'moon_phase'    : 0.0,
-            'sun_moon_sep'  : 90.0,
-            'sun_next_rise' : 'unset',
-            'sun_next_rise_h' : 0.0,
-            'sun_next_set'  : 'unset',
-            'sun_next_set_h': 0.0,
-            'sun_next_astro_twilight_rise'  : 'unset',
-            'sun_next_astro_twilight_rise_h': 0.0,
-            'sun_next_astro_twilight_set'   : 'unset',
-            'sun_next_astro_twilight_set_h' : 0.0,
-            'moon_cycle'    : 0.0,
-            'sidereal_time' : 'unset',
-            'moon_up'       : 'unset',
-            'moon_next_rise': 'unset',
-            'moon_next_rise_h' : 0.0,
-            'moon_next_set' : 'unset',
-            'moon_next_set_h' : 0.0,
-            'mercury_alt'   : 0.0,
-            'mercury_up'    : 'unset',
-            'venus_alt'     : 0.0,
-            'venus_up'      : 'unset',
-            'venus_phase'   : 0.0,
-            'mars_alt'      : 0.0,
-            'mars_up'       : 'unset',
-            'jupiter_alt'   : 0.0,
-            'jupiter_up'    : 'unset',
-            'saturn_alt'    : 0.0,
-            'saturn_up'     : 'unset',
-            'iss_up'        : 'No data',
-            'iss_alt'       : 0.0,
-            'iss_next_h'    : 0.0,
-            'iss_next_alt'  : 0.0,
-            'hst_up'        : 'No data',
-            'hst_alt'       : 0.0,
-            'hst_next_h'    : 0.0,
-            'hst_next_alt'  : 0.0,
-            'tiangong_up'       : 'No data',
-            'tiangong_alt'      : 0.0,
-            'tiangong_next_h'   : 0.0,
-            'tiangong_next_alt' : 0.0,
-        }
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
@@ -173,7 +128,6 @@ class ImageWorker(Process):
             self.sensors_user_av,
             self.night_v,
             self.moonmode_v,
-            self.astrometric_data,
         )
 
         self._miscDb = miscDb(self.config)
@@ -369,7 +323,7 @@ class ImageWorker(Process):
             self.adsb_worker.start()
 
 
-        self.image_processor.get_astrometric_data()
+        self.image_processor.update_astrometric_data()
 
 
         try:
@@ -706,7 +660,7 @@ class ImageWorker(Process):
                 'adu'             : adu,
                 'stable'          : self.target_adu_found,
                 'moonmode'        : bool(self.moonmode_v.value),
-                'moonphase'       : self.astrometric_data['moon_phase'],
+                'moonphase'       : self.image_processor.astrometric_data['moon_phase'],
                 'night'           : bool(self.night_v.value),
                 'adu_roi'         : self.config['ADU_ROI'],
                 'calibrated'      : i_ref.calibrated,
@@ -795,10 +749,10 @@ class ImageWorker(Process):
                 'gain'     : self.gain_v.value,
                 'bin'      : self.bin_v.value,
                 'temp'     : round(self.sensors_temp_av[0], 1),
-                'sunalt'   : round(self.astrometric_data['sun_alt'], 1),
-                'moonalt'  : round(self.astrometric_data['moon_alt'], 1),
-                'moonphase': round(self.astrometric_data['moon_phase'], 1),
-                'mooncycle': round(self.astrometric_data['moon_cycle'], 1),
+                'sunalt'   : round(self.image_processor.astrometric_data['sun_alt'], 1),
+                'moonalt'  : round(self.image_processor.astrometric_data['moon_alt'], 1),
+                'moonphase': round(self.image_processor.astrometric_data['moon_phase'], 1),
+                'mooncycle': round(self.image_processor.astrometric_data['moon_cycle'], 1),
                 'moonmode' : bool(self.moonmode_v.value),
                 'night'    : bool(self.night_v.value),
                 'sqm'      : round(i_ref.sqm_value, 1),
@@ -809,7 +763,7 @@ class ImageWorker(Process):
                 'elevation': int(self.position_av[2]),
                 'smoke_rating'  : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
                 'aircraft'      : len(self.adsb_aircraft_list),
-                'sidereal_time' : self.astrometric_data['sidereal_time'],
+                'sidereal_time' : self.image_processor.astrometric_data['sidereal_time'],
                 'kpindex'       : round(i_ref.kpindex, 2),
                 'ovation_max'   : int(i_ref.ovation_max),
                 'aurora_mag_bt'     : round(i_ref.aurora_mag_bt, 2),
@@ -996,7 +950,7 @@ class ImageWorker(Process):
             'latitude'            : self.position_av[0],
             'longitude'           : self.position_av[1],
             'elevation'           : int(self.position_av[2]),
-            'sidereal_time'       : self.astrometric_data['sidereal_time'],
+            'sidereal_time'       : self.image_processor.astrometric_data['sidereal_time'],
             'kpindex'             : i_ref.kpindex,
             'aurora_mag_bt'       : i_ref.aurora_mag_bt,
             'aurora_mag_gsm_bz'   : i_ref.aurora_mag_gsm_bz,
@@ -1162,7 +1116,7 @@ class ImageWorker(Process):
 
         fits_metadata['data'] = {
             'moonmode'        : bool(self.moonmode_v.value),
-            'moonphase'       : self.astrometric_data['moon_phase'],
+            'moonphase'       : self.image_processor.astrometric_data['moon_phase'],
             'sqm'             : i_ref.sqm_value,
             'stars'           : len(i_ref.stars),
             'detections'      : len(i_ref.lines),
@@ -1345,7 +1299,7 @@ class ImageWorker(Process):
 
         raw_metadata['data'] = {
             'moonmode'        : bool(self.moonmode_v.value),
-            'moonphase'       : self.astrometric_data['moon_phase'],
+            'moonphase'       : self.image_processor.astrometric_data['moon_phase'],
             'sqm'             : i_ref.sqm_value,
             'stars'           : len(i_ref.stars),
             'detections'      : len(i_ref.lines),
@@ -1684,7 +1638,7 @@ class ImageWorker(Process):
 
         panorama_metadata['data'] = {
             'moonmode'        : bool(self.moonmode_v.value),
-            'moonphase'       : self.astrometric_data['moon_phase'],
+            'moonphase'       : self.image_processor.astrometric_data['moon_phase'],
             'sqm'             : i_ref.sqm_value,
             'stars'           : len(i_ref.stars),
             'detections'      : len(i_ref.lines),
