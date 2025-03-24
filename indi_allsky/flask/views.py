@@ -2041,7 +2041,7 @@ class ConfigView(FormView):
             'FFMPEG_VFSCALE'                 : self.indi_allsky_config.get('FFMPEG_VFSCALE', ''),
             'FFMPEG_CODEC'                   : self.indi_allsky_config.get('FFMPEG_CODEC', 'libx264'),
             'FFMPEG_EXTRA_OPTIONS'           : self.indi_allsky_config.get('FFMPEG_EXTRA_OPTIONS', '-level 3.1'),
-            'IMAGE_LABEL_SYSTEM'             : self.indi_allsky_config.get('IMAGE_LABEL_SYSTEM', 'opencv'),
+            'IMAGE_LABEL_SYSTEM'             : self.indi_allsky_config.get('IMAGE_LABEL_SYSTEM', 'pillow'),
             'TEXT_PROPERTIES__FONT_FACE'     : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_FACE', 'FONT_HERSHEY_SIMPLEX'),
             'TEXT_PROPERTIES__FONT_SCALE'    : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_SCALE', 0.8),
             'TEXT_PROPERTIES__FONT_THICKNESS': self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_THICKNESS', 1),
@@ -3743,7 +3743,7 @@ class Fits2JpegView(BaseView):
         image_date = datetime.fromtimestamp(filename_p.stat().st_mtime)
 
 
-        self.image_processor.update_astrometric_data(image_date)
+        image_processor.update_astrometric_data(image_date)
 
 
         image_processor.add(filename_p, exposure, image_date, 0.0, fits_entry.camera)
@@ -6443,6 +6443,9 @@ class JsonImageProcessingView(JsonView):
         p_config['FISH2PANO']['SCALE']                   = float(request.json['FISH2PANO__SCALE'])
         p_config['FISH2PANO']['FLIP_H']                  = bool(request.json['FISH2PANO__FLIP_H'])
         p_config['PROCESSING_SPLIT_SCREEN']              = bool(request.json.get('PROCESSING_SPLIT_SCREEN', False))
+        p_config['IMAGE_LABEL_TEMPLATE']                 = str(request.json['IMAGE_LABEL_TEMPLATE'])
+        p_config['IMAGE_EXTRA_TEXT']                     = str(request.json['IMAGE_EXTRA_TEXT'])
+        p_config['IMAGE_LABEL_SYSTEM']                   = str(request.json['IMAGE_LABEL_SYSTEM'])
         p_config['TEXT_PROPERTIES']['FONT_FACE']         = str(request.json['TEXT_PROPERTIES__FONT_FACE'])
         p_config['TEXT_PROPERTIES']['FONT_SCALE']        = float(request.json['TEXT_PROPERTIES__FONT_SCALE'])
         p_config['TEXT_PROPERTIES']['FONT_THICKNESS']    = int(request.json['TEXT_PROPERTIES__FONT_THICKNESS'])
@@ -6479,8 +6482,10 @@ class JsonImageProcessingView(JsonView):
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
         gain_v = Value('i', int(hdulist[0].header.get('GAIN', 0)))
         bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
-        sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
-        sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
+        #sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
+        #sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
+        sensors_temp_av = Array('f', [0.0 for x in range(30)])
+        sensors_user_av = Array('f', [0.0 for x in range(30)])
         night_v = Value('i', 1)  # using night values for processing
 
         hdulist.close()
@@ -6497,6 +6502,8 @@ class JsonImageProcessingView(JsonView):
             moonmode_v,
         )
 
+
+
         processing_start = time.time()
 
 
@@ -6505,7 +6512,10 @@ class JsonImageProcessingView(JsonView):
         if disable_processing:
             # just return original image with no processing
 
-            image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
+            # use mtime for date
+            image_date = datetime.fromtimestamp(filename_p.stat().st_mtime)
+
+            image_processor.add(filename_p, exposure, image_date, 0.0, fits_entry.camera)
 
             image_processor.debayer()
 
@@ -6541,15 +6551,27 @@ class JsonImageProcessingView(JsonView):
                     .limit(p_config['IMAGE_STACK_COUNT'] - 1)
 
                 for f_image in fits_image_query:
-                    alt_hdulist = fits.open(filename_p)
+                    f_image_p = f_image.getFilesystemPath()
+
+                    # use mtime for date
+                    pre_image_date = datetime.fromtimestamp(f_image_p.stat().st_mtime)
+
+                    alt_hdulist = fits.open(f_image_p)
                     alt_exposure = float(alt_hdulist[0].header.get('EXPTIME', 0))
                     alt_hdulist.close()
 
-                    i_ref = image_processor.add(f_image.getFilesystemPath(), alt_exposure, datetime.now(), 0.0, f_image.camera)
+                    i_ref = image_processor.add(f_image_p, alt_exposure, pre_image_date, 0.0, f_image.camera)
                     image_processor._calibrate(i_ref)
                     image_processor._debayer(i_ref)
 
                 message_list.append('Stacked {0:d} images'.format(p_config['IMAGE_STACK_COUNT']))
+
+
+            # use mtime for date
+            image_date = datetime.fromtimestamp(filename_p.stat().st_mtime)
+
+
+            image_processor.update_astrometric_data(image_date)
 
 
             # add image after preloading other images
@@ -6627,6 +6649,10 @@ class JsonImageProcessingView(JsonView):
 
 
                 image_processor.image = pano_data
+
+            else:
+                if p_config['IMAGE_LABEL_SYSTEM']:
+                    image_processor.label_image()
 
 
         processing_elapsed_s = time.time() - processing_start
