@@ -323,7 +323,8 @@ class ImageWorker(Process):
             self.adsb_worker.start()
 
 
-        self.image_processor.update_astrometric_data()
+        now = datetime.now()
+        self.image_processor.update_astrometric_data(now)
 
 
         try:

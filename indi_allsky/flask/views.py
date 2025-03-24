@@ -3739,10 +3739,14 @@ class Fits2JpegView(BaseView):
         processing_start = time.time()
 
 
-        self.image_processor.update_astrometric_data()
+        # use mtime for date
+        image_date = datetime.fromtimestamp(filename_p.stat().st_mtime)
 
 
-        image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
+        self.image_processor.update_astrometric_data(image_date)
+
+
+        image_processor.add(filename_p, exposure, image_date, 0.0, fits_entry.camera)
 
         image_processor.debayer()
 

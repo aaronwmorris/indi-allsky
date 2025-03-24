@@ -1837,9 +1837,9 @@ class ImageProcessor(object):
         return numpy.maximum(masked_left, masked_right)
 
 
-    def update_astrometric_data(self):
-        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
-        #utcnow = datetime.now(tz=timezone.utc) - timedelta(hours=13)  # testing
+    def update_astrometric_data(self, now):
+        utcnow = now.astimezone(timezone.utc)  # ephem expects UTC dates
+        #utcnow = now.astimezone(timezone.utc) - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
         obs.lon = math.radians(self.position_av[1])
