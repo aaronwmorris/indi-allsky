@@ -89,17 +89,9 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
     fi
 
 elif [[ "$DISTRO_ID" == "linuxmint" ]]; then
-    if [[ "$DISTRO_VERSION_ID" == "22.1" ]]; then
+    if [[ "$DISTRO_VERSION_ID" =~ ^22 ]]; then
         DISTRO="ubuntu_24.04"
-    elif [[ "$DISTRO_VERSION_ID" == "22" ]]; then
-        DISTRO="ubuntu_24.04"
-    elif [[ "$DISTRO_VERSION_ID" == "21.3" ]]; then
-        DISTRO="ubuntu_22.04"
-    elif [[ "$DISTRO_VERSION_ID" == "21.2" ]]; then
-        DISTRO="ubuntu_22.04"
-    elif [[ "$DISTRO_VERSION_ID" == "21.1" ]]; then
-        DISTRO="ubuntu_22.04"
-    elif [[ "$DISTRO_VERSION_ID" == "21" ]]; then
+    elif [[ "$DISTRO_VERSION_ID" =~ ^21 ]]; then
         DISTRO="ubuntu_22.04"
     elif [[ "$DISTRO_VERSION_ID" == "6" ]]; then
         DISTRO="debian_12"
