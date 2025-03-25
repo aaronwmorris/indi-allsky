@@ -59,8 +59,36 @@ sleep 10
 sudo true
 
 
+if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "12" ]]; then
+        DISTRO="debian_12"
+    elif [[ "$DISTRO_VERSION_ID" == "11" ]]; then
+        DISTRO="debian_11"
+    elif [[ "$DISTRO_VERSION_ID" == "10" ]]; then
+        DISTRO="debian_10"
+    else
+        echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
+    fi
+elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
+        DISTRO="ubuntu_24.04"
+    elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
+        DISTRO="ubuntu_22.04"
+    elif [[ "$DISTRO_VERSION_ID" == "20.04" ]]; then
+        DISTRO="ubuntu_20.04"
+    else
+        echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
+    fi
+else
+    echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+    exit 1
+fi
+
+
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
+if [[ "$DISTRO" == "debian_12" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
@@ -72,7 +100,7 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         whiptail \
         ca-certificates
 
-elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
+elif [[ "$DISTRO" == "debian_11" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
@@ -84,7 +112,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         whiptail \
         ca-certificates
 
-elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
+elif [[ "$DISTRO" == "debian_10" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
@@ -96,7 +124,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         whiptail \
         ca-certificates
 
-elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
+elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
@@ -108,7 +136,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         whiptail \
         ca-certificates
 
-elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
+elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
@@ -120,43 +148,7 @@ elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         whiptail \
         ca-certificates
 
-elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
-    #MOSQUITTO_USER=mosquitto
-    MOSQUITTO_GROUP=mosquitto
-
-    sudo apt-get update
-    sudo apt-get -y install \
-        mosquitto \
-        mosquitto-clients \
-        mosquitto-dev \
-        whiptail \
-        ca-certificates
-
-elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
-    #MOSQUITTO_USER=mosquitto
-    MOSQUITTO_GROUP=mosquitto
-
-    sudo apt-get update
-    sudo apt-get -y install \
-        mosquitto \
-        mosquitto-clients \
-        mosquitto-dev \
-        whiptail \
-        ca-certificates
-
-elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
-    #MOSQUITTO_USER=mosquitto
-    MOSQUITTO_GROUP=mosquitto
-
-    sudo apt-get update
-    sudo apt-get -y install \
-        mosquitto \
-        mosquitto-clients \
-        mosquitto-dev \
-        whiptail \
-        ca-certificates
-
-elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
+elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     #MOSQUITTO_USER=mosquitto
     MOSQUITTO_GROUP=mosquitto
 
