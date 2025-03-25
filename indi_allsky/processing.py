@@ -106,7 +106,6 @@ class ImageProcessor(object):
         sensors_user_av,
         night_v,
         moonmode_v,
-        astrometric_data,
     ):
         self.config = config
 
@@ -119,7 +118,7 @@ class ImageProcessor(object):
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
-        self.astrometric_data = astrometric_data
+        self._astrometric_data = dict()
 
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
 
@@ -333,6 +332,11 @@ class ImageProcessor(object):
     @property
     def realtime_keogram_trimmed(self):
         return self._keogram_gen.trimEdges(self.realtime_keogram_data)
+
+
+    @property
+    def astrometric_data(self):
+        return self._astrometric_data
 
 
     def add(self, filename, exposure, exp_date, exp_elapsed, camera):
@@ -1833,9 +1837,9 @@ class ImageProcessor(object):
         return numpy.maximum(masked_left, masked_right)
 
 
-    def get_astrometric_data(self):
-        utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
-        #utcnow = datetime.now(tz=timezone.utc) - timedelta(hours=13)  # testing
+    def update_astrometric_data(self, now):
+        utcnow = now.astimezone(timezone.utc)  # ephem expects UTC dates
+        #utcnow = now.astimezone(timezone.utc) - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
         obs.lon = math.radians(self.position_av[1])
