@@ -346,11 +346,7 @@ def GAMMA_CORRECTION_validator(form, field):
 
 
 def SCNR_ALGORITHM_validator(form, field):
-    if not field.data:
-        return
-
-    scnr_list = ('average_neutral', 'maximum_neutral')
-    if field.data not in scnr_list:
+    if field.data not in list(zip(*form.SCNR_ALGORITHM_choices))[0]:
         raise ValidationError('Please select a valid algorithm')
 
 
@@ -6556,6 +6552,7 @@ class IndiAllskyFocusControllerForm(FlaskForm):
 
 class IndiAllskyImageProcessingForm(FlaskForm):
 
+    SCNR_ALGORITHM_choices = IndiAllskyConfigForm.SCNR_ALGORITHM_choices
     TEXT_PROPERTIES__PIL_FONT_FILE_choices = IndiAllskyConfigForm.TEXT_PROPERTIES__PIL_FONT_FILE_choices
 
 
