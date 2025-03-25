@@ -226,6 +226,7 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
         exit 1
     fi
+
 elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
     if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
         DISTRO="ubuntu_24.04"
@@ -237,11 +238,31 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
         exit 1
     fi
+
+elif [[ "$DISTRO_ID" == "linuxmint" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "22.1" ]]; then
+        DISTRO="ubuntu_24.04"
+    elif [[ "$DISTRO_VERSION_ID" == "22" ]]; then
+        DISTRO="ubuntu_24.04"
+    elif [[ "$DISTRO_VERSION_ID" == "21.3" ]]; then
+        DISTRO="ubuntu_22.04"
+    elif [[ "$DISTRO_VERSION_ID" == "21.2" ]]; then
+        DISTRO="ubuntu_22.04"
+    elif [[ "$DISTRO_VERSION_ID" == "21.1" ]]; then
+        DISTRO="ubuntu_22.04"
+    elif [[ "$DISTRO_VERSION_ID" == "21" ]]; then
+        DISTRO="ubuntu_22.04"
+    elif [[ "$DISTRO_VERSION_ID" == "6" ]]; then
+        DISTRO="debian_12"
+    else
+        echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
+    fi
+
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
 fi
-
 
 
 echo "**** Installing packages... ****"
@@ -512,7 +533,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
             mariadb-server
     fi
 
-elif [[ "$DISTRO" == "22.04" ]]; then
+elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
@@ -1085,7 +1106,7 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
      "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP3"
 
 
-    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" ]]; then
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
         sudo cp -f "$TMP3" /etc/apache2/sites-available/indi-allsky.conf
         sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
         sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
