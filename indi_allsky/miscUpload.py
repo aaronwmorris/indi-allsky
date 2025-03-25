@@ -498,7 +498,7 @@ class miscUpload(object):
         keogram_remain = self._realtime_keogram_count % int(self.config['FILETRANSFER']['UPLOAD_REALTIME_KEOGRAM'])
         if keogram_remain != 0:
             next_image = int(self.config['FILETRANSFER']['UPLOAD_REALTIME_KEOGRAM']) - keogram_remain
-            logger.info('Next panorama upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
+            logger.info('Next realtime keogram upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
             return
 
 
@@ -535,7 +535,6 @@ class miscUpload(object):
             'action'         : constants.TRANSFER_UPLOAD,
             'local_file'     : str(keogram_p),
             'remote_file'    : str(remote_file_p),
-            'remove_local'   : True,
         }
 
         upload_task = IndiAllSkyDbTaskQueueTable(
