@@ -2113,7 +2113,7 @@ class ConfigView(FormView):
             'FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER' : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos/{day_date:%Y%m%d}'),
             'FILETRANSFER__REMOTE_PANORAMA_VIDEO_NAME'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_VIDEO_NAME', 'allsky-panorama_timelapse_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}_{timeofday:s}.{ext}'),
             'FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos/{day_date:%Y%m%d}'),
-            'FILETRANSFER__REMOTE_REALTIME_KEOGRAM_NAME'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_REALTIME_KEOGRAM_NAME', 'allsky-realtime_keogram_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}_{timeofday:s}.{ext}'),
+            'FILETRANSFER__REMOTE_REALTIME_KEOGRAM_NAME'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_REALTIME_KEOGRAM_NAME', 'allsky-realtime_keogram_ccd{camera_id:d}.{ext}'),
             'FILETRANSFER__REMOTE_REALTIME_KEOGRAM_FOLDER': self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_REALTIME_KEOGRAM_FOLDER', '/home/allsky/upload/allsky/keograms/{day_date:%Y%m%d}'),
             'FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_ENDOFNIGHT_FOLDER', '/home/allsky/upload/allsky'),
             'FILETRANSFER__UPLOAD_IMAGE'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE', 0),
