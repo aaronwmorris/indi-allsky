@@ -284,59 +284,11 @@ while [ -z "${OS_PACKAGE_UPGRADE:-}" ]; do
 done
 
 
-echo "**** Installing packages... ****"
 if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
     if [[ "$DISTRO_VERSION_ID" == "12" ]]; then
-
-        INSTALL_INDI="false"
-
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            echo
-            echo
-            echo "There are not prebuilt indi packages for this distribution"
-            echo "Please run ./misc/build_indi.sh before running setup.sh"
-            echo
-            echo
-            exit 1
-        fi
-
-
-        sudo apt-get update
-
-
-        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-            sudo apt-get -y dist-upgrade
-        fi
-
-
-
-        if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-            sudo apt-get -y install \
-                rpicam-apps
-        fi
-
+        DISTRO="debian_12"
     elif [[ "$DISTRO_VERSION_ID" == "11" ]]; then
-
-        INSTALL_INDI="false"
-
-        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-            echo
-            echo
-            echo "There are not prebuilt indi packages for this distribution"
-            echo "Please run ./misc/build_indi.sh before running setup.sh"
-            echo
-            echo
-            exit 1
-        fi
-
-
-        sudo apt-get update
-
-
-        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-            sudo apt-get -y dist-upgrade
-        fi
-
+        DISTRO="debian_11"
     else
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
         exit 1
@@ -344,212 +296,285 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
 
 elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
     if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
-
-        if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
-            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-                sudo add-apt-repository -y ppa:mutlaqja/ppa
-            fi
-        elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
-            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-                sudo add-apt-repository -y ppa:mutlaqja/ppa
-            fi
-        else
-            INSTALL_INDI="false"
-
-            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-                echo
-                echo
-                echo "There are not prebuilt indi packages for this distribution"
-                echo "Please run ./misc/build_indi.sh before running setup.sh"
-                echo
-                echo
-                exit 1
-            fi
-        fi
-
-
-        sudo apt-get update
-
-
-        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-            sudo apt-get -y dist-upgrade
-        fi
-
-
-        sudo apt-get -y install \
-            whiptail
-
-
-        if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
-            if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
-                INSTALL_INDI="false"
-            fi
-        fi
-
-        if [[ "$INSTALL_INDI" == "true" ]]; then
-            sudo apt-get -y install \
-                indi-full \
-                libindi-dev \
-                indi-webcam \
-                indi-asi \
-                libasi \
-                indi-qhy \
-                libqhy \
-                indi-playerone \
-                libplayerone \
-                indi-svbony \
-                libsvbony \
-                libaltaircam \
-                libmallincam \
-                libmicam \
-                libnncam \
-                indi-toupbase \
-                libtoupcam \
-                indi-gphoto \
-                indi-sx \
-                indi-gpsd \
-                indi-gpsnmea
-        fi
-
-
+        DISTRO="ubuntu_24.04"
     elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
-
-        if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
-            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-                sudo add-apt-repository -y ppa:mutlaqja/ppa
-            fi
-        elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
-            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-                sudo add-apt-repository -y ppa:mutlaqja/ppa
-            fi
-        else
-            INSTALL_INDI="false"
-
-            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-                echo
-                echo
-                echo "There are not prebuilt indi packages for this distribution"
-                echo "Please run ./misc/build_indi.sh before running setup.sh"
-                echo
-                echo
-                exit 1
-            fi
-        fi
-
-
-        sudo apt-get update
-
-
-        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-            sudo apt-get -y dist-upgrade
-        fi
-
-
-        sudo apt-get -y install \
-            whiptail
-
-
-        if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
-            if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
-                INSTALL_INDI="false"
-            fi
-        fi
-
-        if [[ "$INSTALL_INDI" == "true" ]]; then
-            sudo apt-get -y install \
-                indi-full \
-                libindi-dev \
-                indi-webcam \
-                indi-asi \
-                libasi \
-                indi-qhy \
-                libqhy \
-                indi-playerone \
-                libplayerone \
-                indi-svbony \
-                libsvbony \
-                libaltaircam \
-                libmallincam \
-                libmicam \
-                libnncam \
-                indi-toupbase \
-                libtoupcam \
-                indi-gphoto \
-                indi-sx \
-                indi-gpsd \
-                indi-gpsnmea
-        fi
-
+        DISTRO="ubuntu_22.04"
     elif [[ "$DISTRO_VERSION_ID" == "20.04" ]]; then
-
-        if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
-            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-                sudo add-apt-repository -y ppa:mutlaqja/ppa
-            fi
-        elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
-            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-                sudo add-apt-repository -y ppa:mutlaqja/ppa
-            fi
-        else
-            INSTALL_INDI="false"
-
-            if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
-                echo
-                echo
-                echo "There are not prebuilt indi packages for this distribution"
-                echo "Please run ./misc/build_indi.sh before running setup.sh"
-                echo
-                echo
-                exit 1
-            fi
-        fi
-
-
-        sudo apt-get update
-
-
-        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-            sudo apt-get -y dist-upgrade
-        fi
-
-
-        sudo apt-get -y install \
-            whiptail
-
-
-        if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
-            if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
-                INSTALL_INDI="false"
-            fi
-        fi
-
-        if [[ "$INSTALL_INDI" == "true" ]]; then
-            sudo apt-get -y install \
-                indi-full \
-                libindi-dev \
-                indi-webcam \
-                indi-asi \
-                libasi \
-                indi-qhy \
-                libqhy \
-                indi-playerone \
-                libplayerone \
-                indi-svbony \
-                libsvbony \
-                libaltaircam \
-                libmallincam \
-                libmicam \
-                libnncam \
-                indi-toupbase \
-                libtoupcam \
-                indi-gphoto \
-                indi-sx \
-                indi-gpsd \
-                indi-gpsnmea
-        fi
+        DISTRO="ubuntu_20.04"
     else
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
         exit 1
+    fi
+
+elif [[ "$DISTRO_ID" == "linuxmint" ]]; then
+    if [[ "$DISTRO_VERSION_ID" =~ ^22 ]]; then
+        DISTRO="ubuntu_24.04"
+    elif [[ "$DISTRO_VERSION_ID" =~ ^21 ]]; then
+        DISTRO="ubuntu_22.04"
+    elif [[ "$DISTRO_VERSION_ID" == "6" ]]; then
+        DISTRO="debian_12"
+    else
+        echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
+    fi
+
+else
+    echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+    exit 1
+fi
+
+
+echo "**** Installing packages... ****"
+if [[ "$DISTRO" == "debian_12" ]]; then
+    INSTALL_INDI="false"
+
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
+    fi
+
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
+        sudo apt-get -y install \
+            rpicam-apps
+    fi
+
+elif [[ "$DISTRO" == "debian_11" ]]; then
+    INSTALL_INDI="false"
+
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
+    fi
+
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
+    if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
+        fi
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
+        fi
+    else
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
+        fi
+    fi
+
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    sudo apt-get -y install \
+        whiptail
+
+
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            libindi-dev \
+            indi-webcam \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-svbony \
+            libsvbony \
+            libaltaircam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
+            indi-sx \
+            indi-gpsd \
+            indi-gpsnmea
+    fi
+
+
+elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
+
+    if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
+        fi
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
+        fi
+    else
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
+        fi
+    fi
+
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    sudo apt-get -y install \
+        whiptail
+
+
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            libindi-dev \
+            indi-webcam \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-svbony \
+            libsvbony \
+            libaltaircam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
+            indi-sx \
+            indi-gpsd \
+            indi-gpsnmea
+    fi
+
+elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
+
+    if [[ "$CPU_ARCH" == "x86_64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
+        fi
+    elif [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "64" ]]; then
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            sudo add-apt-repository -y ppa:mutlaqja/ppa
+        fi
+    else
+        INSTALL_INDI="false"
+
+        if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+            echo
+            echo
+            echo "There are not prebuilt indi packages for this distribution"
+            echo "Please run ./misc/build_indi.sh before running setup.sh"
+            echo
+            echo
+            exit 1
+        fi
+    fi
+
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    sudo apt-get -y install \
+        whiptail
+
+
+    if [[ "$INSTALL_INDI" == "true" && -f "/usr/bin/indiserver" ]]; then
+        if ! whiptail --title "indi software update" --yesno "INDI is already installed, would you like to upgrade the software?" 0 0 --defaultno; then
+            INSTALL_INDI="false"
+        fi
+    fi
+
+    if [[ "$INSTALL_INDI" == "true" ]]; then
+        sudo apt-get -y install \
+            indi-full \
+            libindi-dev \
+            indi-webcam \
+            indi-asi \
+            libasi \
+            indi-qhy \
+            libqhy \
+            indi-playerone \
+            libplayerone \
+            indi-svbony \
+            libsvbony \
+            libaltaircam \
+            libmallincam \
+            libmicam \
+            libnncam \
+            indi-toupbase \
+            libtoupcam \
+            indi-gphoto \
+            indi-sx \
+            indi-gpsd \
+            indi-gpsnmea
     fi
 
 else

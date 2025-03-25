@@ -194,353 +194,385 @@ done
 START_TIME=$(date +%s)
 
 
-echo "**** Installing packages... ****"
 if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
     if [[ "$DISTRO_VERSION_ID" == "12" ]]; then
-        BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
-        for p in $BLOCKING_PACKAGES; do
-            if dpkg -s "$p" >/dev/null 2>&1; then
-                echo
-                echo
-                echo "Package $p needs to be uninstalled"
-                echo
-                exit 1
-            fi
-        done
-
-        sudo apt-get update
-
-
-        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-            sudo apt-get -y dist-upgrade
-        fi
-
-
-        sudo apt-get -y install \
-            build-essential \
-            git \
-            ca-certificates \
-            cmake \
-            whiptail \
-            fxload \
-            pkgconf \
-            libavcodec-dev \
-            libavdevice-dev \
-            libboost-dev \
-            libboost-regex-dev \
-            libcfitsio-dev \
-            libcurl4-gnutls-dev \
-            libdc1394-dev \
-            libev-dev \
-            libfftw3-dev \
-            libftdi1-dev \
-            libftdi-dev \
-            libgmock-dev \
-            libgphoto2-dev \
-            libgps-dev \
-            libgsl-dev \
-            libjpeg-dev \
-            liblimesuite-dev \
-            libnova-dev \
-            libraw-dev \
-            librtlsdr-dev \
-            libtheora-dev \
-            libtiff-dev \
-            libusb-1.0-0-dev \
-            libnutclient-dev \
-            libzmq3-dev \
-            libahp-gt-dev \
-            libcamera-dev \
-            libboost-program-options1.74-dev \
-            zlib1g-dev
-
-
+        DISTRO="debian_12"
     elif [[ "$DISTRO_VERSION_ID" == "11" ]]; then
-        BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
-        for p in $BLOCKING_PACKAGES; do
-            if dpkg -s "$p" >/dev/null 2>&1; then
-                echo
-                echo
-                echo "Package $p needs to be uninstalled"
-                echo
-                exit 1
-            fi
-        done
-
-
-        sudo apt-get update
-
-
-        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-            sudo apt-get -y dist-upgrade
-        fi
-
-
-        sudo apt-get -y install \
-            build-essential \
-            git \
-            ca-certificates \
-            cmake \
-            whiptail \
-            fxload \
-            pkg-config \
-            libavcodec-dev \
-            libavdevice-dev \
-            libboost-dev \
-            libboost-regex-dev \
-            libcfitsio-dev \
-            libcurl4-gnutls-dev \
-            libdc1394-22-dev \
-            libev-dev \
-            libfftw3-dev \
-            libftdi1-dev \
-            libftdi-dev \
-            libgmock-dev \
-            libgphoto2-dev \
-            libgps-dev \
-            libgsl-dev \
-            libjpeg-dev \
-            liblimesuite-dev \
-            libnova-dev \
-            libraw-dev \
-            librtlsdr-dev \
-            libtheora-dev \
-            libtiff-dev \
-            libusb-1.0-0-dev \
-            libnutclient-dev \
-            libzmq3-dev \
-            zlib1g-dev
-
-
+        DISTRO="debian_11"
     elif [[ "$DISTRO_VERSION_ID" == "10" ]]; then
-        BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
-        for p in $BLOCKING_PACKAGES; do
-            if dpkg -s "$p" >/dev/null 2>&1; then
-                echo
-                echo
-                echo "Package $p needs to be uninstalled"
-                echo
-                exit 1
-            fi
-        done
-
-
-        sudo apt-get update
-
-
-        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-            sudo apt-get -y dist-upgrade
-        fi
-
-
-        sudo apt-get -y install \
-            build-essential \
-            git \
-            ca-certificates \
-            cmake \
-            whiptail \
-            fxload \
-            pkg-config \
-            libavcodec-dev \
-            libavdevice-dev \
-            libboost-dev \
-            libboost-regex-dev \
-            libcfitsio-dev \
-            libcurl4-gnutls-dev \
-            libdc1394-22-dev \
-            libev-dev \
-            libfftw3-dev \
-            libftdi1-dev \
-            libftdi-dev \
-            libgmock-dev \
-            libgphoto2-dev \
-            libgps-dev \
-            libgsl-dev \
-            libjpeg-dev \
-            liblimesuite-dev \
-            libnova-dev \
-            libraw-dev \
-            librtlsdr-dev \
-            libtheora-dev \
-            libtiff-dev \
-            libusb-1.0-0-dev \
-            zlib1g-dev
-
+        DISTRO="debian_10"
     else
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
         exit 1
     fi
+
 elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
     if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
-        BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
-        for p in $BLOCKING_PACKAGES; do
-            if dpkg -s "$p" >/dev/null 2>&1; then
-                echo
-                echo
-                echo "Package $p needs to be uninstalled"
-                echo
-                exit 1
-            fi
-        done
-
-        sudo apt-get update
-
-
-        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-            sudo apt-get -y dist-upgrade
-        fi
-
-
-        sudo apt-get -y install \
-            build-essential \
-            git \
-            ca-certificates \
-            cmake \
-            whiptail \
-            fxload \
-            pkgconf \
-            libavcodec-dev \
-            libavdevice-dev \
-            libboost-dev \
-            libboost-regex-dev \
-            libcfitsio-dev \
-            libcurl4-gnutls-dev \
-            libdc1394-dev \
-            libev-dev \
-            libfftw3-dev \
-            libftdi1-dev \
-            libftdi-dev \
-            libgmock-dev \
-            libgphoto2-dev \
-            libgps-dev \
-            libgsl-dev \
-            libjpeg-dev \
-            liblimesuite-dev \
-            libnova-dev \
-            libraw-dev \
-            librtlsdr-dev \
-            libtheora-dev \
-            libtiff-dev \
-            libusb-1.0-0-dev \
-            libnutclient-dev \
-            libzmq3-dev \
-            libahp-gt-dev \
-            libcamera-dev \
-            libboost-program-options1.74-dev \
-            zlib1g-dev
-
+        DISTRO="ubuntu_24.04"
     elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
-        BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
-        for p in $BLOCKING_PACKAGES; do
-            if dpkg -s "$p" >/dev/null 2>&1; then
-                echo
-                echo
-                echo "Package $p needs to be uninstalled"
-                echo
-                exit 1
-            fi
-        done
-
-        sudo apt-get update
-
-
-        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-            sudo apt-get -y dist-upgrade
-        fi
-
-
-        sudo apt-get -y install \
-            build-essential \
-            git \
-            ca-certificates \
-            cmake \
-            whiptail \
-            fxload \
-            pkg-config \
-            libavcodec-dev \
-            libavdevice-dev \
-            libboost-dev \
-            libboost-regex-dev \
-            libcfitsio-dev \
-            libcurl4-gnutls-dev \
-            libdc1394-dev \
-            libev-dev \
-            libfftw3-dev \
-            libftdi1-dev \
-            libftdi-dev \
-            libgmock-dev \
-            libgphoto2-dev \
-            libgps-dev \
-            libgsl-dev \
-            libjpeg-dev \
-            liblimesuite-dev \
-            libnova-dev \
-            libraw-dev \
-            librtlsdr-dev \
-            libtheora-dev \
-            libtiff-dev \
-            libusb-1.0-0-dev \
-            libnutclient-dev \
-            libzmq3-dev \
-            zlib1g-dev
-
+        DISTRO="ubuntu_22.04"
     elif [[ "$DISTRO_VERSION_ID" == "20.04" ]]; then
-        BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
-        for p in $BLOCKING_PACKAGES; do
-            if dpkg -s "$p" >/dev/null 2>&1; then
-                echo
-                echo
-                echo "Package $p needs to be uninstalled"
-                echo
-                exit 1
-            fi
-        done
-
-        sudo apt-get update
-
-
-        if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
-            sudo apt-get -y dist-upgrade
-        fi
-
-
-        sudo apt-get -y install \
-            build-essential \
-            git \
-            ca-certificates \
-            cmake \
-            whiptail \
-            fxload \
-            pkg-config \
-            libavcodec-dev \
-            libavdevice-dev \
-            libboost-dev \
-            libboost-regex-dev \
-            libcfitsio-dev \
-            libcurl4-gnutls-dev \
-            libdc1394-22-dev \
-            libev-dev \
-            libfftw3-dev \
-            libftdi1-dev \
-            libftdi-dev \
-            libgmock-dev \
-            libgphoto2-dev \
-            libgps-dev \
-            libgsl-dev \
-            libjpeg-dev \
-            liblimesuite-dev \
-            libnova-dev \
-            libraw-dev \
-            librtlsdr-dev \
-            libtheora-dev \
-            libtiff-dev \
-            libusb-1.0-0-dev \
-            libzmq3-dev \
-            zlib1g-dev
+        DISTRO="ubuntu_20.04"
     else
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
         exit 1
     fi
+
+elif [[ "$DISTRO_ID" == "linuxmint" ]]; then
+    if [[ "$DISTRO_VERSION_ID" =~ ^22 ]]; then
+        DISTRO="ubuntu_24.04"
+    elif [[ "$DISTRO_VERSION_ID" =~ ^21 ]]; then
+        DISTRO="ubuntu_22.04"
+    elif [[ "$DISTRO_VERSION_ID" == "6" ]]; then
+        DISTRO="debian_12"
+    else
+        echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
+    fi
+
+else
+    echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+    exit 1
+fi
+
+
+echo "**** Installing packages... ****"
+if [[ "$DISTRO" == "debian_12" ]]; then
+    BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
+    for p in $BLOCKING_PACKAGES; do
+        if dpkg -s "$p" >/dev/null 2>&1; then
+            echo
+            echo
+            echo "Package $p needs to be uninstalled"
+            echo
+            exit 1
+        fi
+    done
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    sudo apt-get -y install \
+        build-essential \
+        git \
+        ca-certificates \
+        cmake \
+        whiptail \
+        fxload \
+        pkgconf \
+        libavcodec-dev \
+        libavdevice-dev \
+        libboost-dev \
+        libboost-regex-dev \
+        libcfitsio-dev \
+        libcurl4-gnutls-dev \
+        libdc1394-dev \
+        libev-dev \
+        libfftw3-dev \
+        libftdi1-dev \
+        libftdi-dev \
+        libgmock-dev \
+        libgphoto2-dev \
+        libgps-dev \
+        libgsl-dev \
+        libjpeg-dev \
+        liblimesuite-dev \
+        libnova-dev \
+        libraw-dev \
+        librtlsdr-dev \
+        libtheora-dev \
+        libtiff-dev \
+        libusb-1.0-0-dev \
+        libnutclient-dev \
+        libzmq3-dev \
+        libahp-gt-dev \
+        libcamera-dev \
+        libboost-program-options1.74-dev \
+        zlib1g-dev
+
+
+elif [[ "$DISTRO" == "debian_11" ]]; then
+    BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
+    for p in $BLOCKING_PACKAGES; do
+        if dpkg -s "$p" >/dev/null 2>&1; then
+            echo
+            echo
+            echo "Package $p needs to be uninstalled"
+            echo
+            exit 1
+        fi
+    done
+
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    sudo apt-get -y install \
+        build-essential \
+        git \
+        ca-certificates \
+        cmake \
+        whiptail \
+        fxload \
+        pkg-config \
+        libavcodec-dev \
+        libavdevice-dev \
+        libboost-dev \
+        libboost-regex-dev \
+        libcfitsio-dev \
+        libcurl4-gnutls-dev \
+        libdc1394-22-dev \
+        libev-dev \
+        libfftw3-dev \
+        libftdi1-dev \
+        libftdi-dev \
+        libgmock-dev \
+        libgphoto2-dev \
+        libgps-dev \
+        libgsl-dev \
+        libjpeg-dev \
+        liblimesuite-dev \
+        libnova-dev \
+        libraw-dev \
+        librtlsdr-dev \
+        libtheora-dev \
+        libtiff-dev \
+        libusb-1.0-0-dev \
+        libnutclient-dev \
+        libzmq3-dev \
+        zlib1g-dev
+
+
+elif [[ "$DISTRO" == "debian_10" ]]; then
+    BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
+    for p in $BLOCKING_PACKAGES; do
+        if dpkg -s "$p" >/dev/null 2>&1; then
+            echo
+            echo
+            echo "Package $p needs to be uninstalled"
+            echo
+            exit 1
+        fi
+    done
+
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    sudo apt-get -y install \
+        build-essential \
+        git \
+        ca-certificates \
+        cmake \
+        whiptail \
+        fxload \
+        pkg-config \
+        libavcodec-dev \
+        libavdevice-dev \
+        libboost-dev \
+        libboost-regex-dev \
+        libcfitsio-dev \
+        libcurl4-gnutls-dev \
+        libdc1394-22-dev \
+        libev-dev \
+        libfftw3-dev \
+        libftdi1-dev \
+        libftdi-dev \
+        libgmock-dev \
+        libgphoto2-dev \
+        libgps-dev \
+        libgsl-dev \
+        libjpeg-dev \
+        liblimesuite-dev \
+        libnova-dev \
+        libraw-dev \
+        librtlsdr-dev \
+        libtheora-dev \
+        libtiff-dev \
+        libusb-1.0-0-dev \
+        zlib1g-dev
+
+elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
+    BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
+    for p in $BLOCKING_PACKAGES; do
+        if dpkg -s "$p" >/dev/null 2>&1; then
+            echo
+            echo
+            echo "Package $p needs to be uninstalled"
+            echo
+            exit 1
+        fi
+    done
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    sudo apt-get -y install \
+        build-essential \
+        git \
+        ca-certificates \
+        cmake \
+        whiptail \
+        fxload \
+        pkgconf \
+        libavcodec-dev \
+        libavdevice-dev \
+        libboost-dev \
+        libboost-regex-dev \
+        libcfitsio-dev \
+        libcurl4-gnutls-dev \
+        libdc1394-dev \
+        libev-dev \
+        libfftw3-dev \
+        libftdi1-dev \
+        libftdi-dev \
+        libgmock-dev \
+        libgphoto2-dev \
+        libgps-dev \
+        libgsl-dev \
+        libjpeg-dev \
+        liblimesuite-dev \
+        libnova-dev \
+        libraw-dev \
+        librtlsdr-dev \
+        libtheora-dev \
+        libtiff-dev \
+        libusb-1.0-0-dev \
+        libnutclient-dev \
+        libzmq3-dev \
+        libahp-gt-dev \
+        libcamera-dev \
+        libboost-program-options1.74-dev \
+        zlib1g-dev
+
+elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
+    BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
+    for p in $BLOCKING_PACKAGES; do
+        if dpkg -s "$p" >/dev/null 2>&1; then
+            echo
+            echo
+            echo "Package $p needs to be uninstalled"
+            echo
+            exit 1
+        fi
+    done
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    sudo apt-get -y install \
+        build-essential \
+        git \
+        ca-certificates \
+        cmake \
+        whiptail \
+        fxload \
+        pkg-config \
+        libavcodec-dev \
+        libavdevice-dev \
+        libboost-dev \
+        libboost-regex-dev \
+        libcfitsio-dev \
+        libcurl4-gnutls-dev \
+        libdc1394-dev \
+        libev-dev \
+        libfftw3-dev \
+        libftdi1-dev \
+        libftdi-dev \
+        libgmock-dev \
+        libgphoto2-dev \
+        libgps-dev \
+        libgsl-dev \
+        libjpeg-dev \
+        liblimesuite-dev \
+        libnova-dev \
+        libraw-dev \
+        librtlsdr-dev \
+        libtheora-dev \
+        libtiff-dev \
+        libusb-1.0-0-dev \
+        libnutclient-dev \
+        libzmq3-dev \
+        zlib1g-dev
+
+elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
+    BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
+    for p in $BLOCKING_PACKAGES; do
+        if dpkg -s "$p" >/dev/null 2>&1; then
+            echo
+            echo
+            echo "Package $p needs to be uninstalled"
+            echo
+            exit 1
+        fi
+    done
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    sudo apt-get -y install \
+        build-essential \
+        git \
+        ca-certificates \
+        cmake \
+        whiptail \
+        fxload \
+        pkg-config \
+        libavcodec-dev \
+        libavdevice-dev \
+        libboost-dev \
+        libboost-regex-dev \
+        libcfitsio-dev \
+        libcurl4-gnutls-dev \
+        libdc1394-22-dev \
+        libev-dev \
+        libfftw3-dev \
+        libftdi1-dev \
+        libftdi-dev \
+        libgmock-dev \
+        libgphoto2-dev \
+        libgps-dev \
+        libgsl-dev \
+        libjpeg-dev \
+        liblimesuite-dev \
+        libnova-dev \
+        libraw-dev \
+        librtlsdr-dev \
+        libtheora-dev \
+        libtiff-dev \
+        libusb-1.0-0-dev \
+        libzmq3-dev \
+        zlib1g-dev
 
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
