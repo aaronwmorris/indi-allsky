@@ -2113,6 +2113,8 @@ class ConfigView(FormView):
             'FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER' : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_STARTRAIL_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos/{day_date:%Y%m%d}'),
             'FILETRANSFER__REMOTE_PANORAMA_VIDEO_NAME'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_VIDEO_NAME', 'allsky-panorama_timelapse_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}_{timeofday:s}.{ext}'),
             'FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_PANORAMA_VIDEO_FOLDER', '/home/allsky/upload/allsky/videos/{day_date:%Y%m%d}'),
+            'FILETRANSFER__REMOTE_REALTIME_KEOGRAM_NAME'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_REALTIME_KEOGRAM_NAME', 'allsky-realtime_keogram_ccd{camera_id:d}_{ts:%Y%m%d_%H%M%S}_{timeofday:s}.{ext}'),
+            'FILETRANSFER__REMOTE_REALTIME_KEOGRAM_FOLDER': self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_REALTIME_KEOGRAM_FOLDER', '/home/allsky/upload/allsky/keograms/{day_date:%Y%m%d}'),
             'FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_ENDOFNIGHT_FOLDER', '/home/allsky/upload/allsky'),
             'FILETRANSFER__UPLOAD_IMAGE'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE', 0),
             'FILETRANSFER__UPLOAD_PANORAMA'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA', 0),
@@ -2125,6 +2127,7 @@ class ConfigView(FormView):
             'FILETRANSFER__UPLOAD_STARTRAIL' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL', False),
             'FILETRANSFER__UPLOAD_STARTRAIL_VIDEO' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL_VIDEO', False),
             'FILETRANSFER__UPLOAD_PANORAMA_VIDEO'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA_VIDEO', False),
+            'FILETRANSFER__UPLOAD_REALTIME_KEOGRAM': self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_REALTIME_KEOGRAM', 0),
             'FILETRANSFER__UPLOAD_ENDOFNIGHT'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_ENDOFNIGHT', False),
             'S3UPLOAD__CLASSNAME'            : self.indi_allsky_config.get('S3UPLOAD', {}).get('CLASSNAME', 'boto3_s3'),
             'S3UPLOAD__ENABLE'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('ENABLE', False),
@@ -2923,6 +2926,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['REMOTE_STARTRAIL_VIDEO_FOLDER'] = str(request.json['FILETRANSFER__REMOTE_STARTRAIL_VIDEO_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_PANORAMA_VIDEO_NAME']    = str(request.json['FILETRANSFER__REMOTE_PANORAMA_VIDEO_NAME'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_PANORAMA_VIDEO_FOLDER']  = str(request.json['FILETRANSFER__REMOTE_PANORAMA_VIDEO_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_REALTIME_KEOGRAM_NAME']  = str(request.json['FILETRANSFER__REMOTE_REALTIME_KEOGRAM_NAME'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_REALTIME_KEOGRAM_FOLDER'] = str(request.json['FILETRANSFER__REMOTE_REALTIME_KEOGRAM_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER'] = str(request.json['FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_IMAGE']         = int(request.json['FILETRANSFER__UPLOAD_IMAGE'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_PANORAMA']      = int(request.json['FILETRANSFER__UPLOAD_PANORAMA'])
@@ -2935,6 +2940,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL']     = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL_VIDEO'] = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL_VIDEO'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_PANORAMA_VIDEO']  = bool(request.json['FILETRANSFER__UPLOAD_PANORAMA_VIDEO'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_REALTIME_KEOGRAM'] = int(request.json['FILETRANSFER__UPLOAD_REALTIME_KEOGRAM'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_ENDOFNIGHT']    = bool(request.json['FILETRANSFER__UPLOAD_ENDOFNIGHT'])
         self.indi_allsky_config['S3UPLOAD']['CLASSNAME']                = str(request.json['S3UPLOAD__CLASSNAME'])
         self.indi_allsky_config['S3UPLOAD']['ENABLE']                   = bool(request.json['S3UPLOAD__ENABLE'])
