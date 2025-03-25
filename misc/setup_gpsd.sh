@@ -76,8 +76,58 @@ sleep 10
 sudo true
 
 
+if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "12" ]]; then
+        DISTRO="debian_12"
+    elif [[ "$DISTRO_VERSION_ID" == "11" ]]; then
+        DISTRO="debian_11"
+    elif [[ "$DISTRO_VERSION_ID" == "10" ]]; then
+        DISTRO="debian_10"
+    else
+        echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
+    fi
+
+elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "24.04" ]]; then
+        DISTRO="ubuntu_24.04"
+    elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
+        DISTRO="ubuntu_22.04"
+    elif [[ "$DISTRO_VERSION_ID" == "20.04" ]]; then
+        DISTRO="ubuntu_20.04"
+    else
+        echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
+    fi
+
+elif [[ "$DISTRO_ID" == "linuxmint" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "22.1" ]]; then
+        DISTRO="ubuntu_24.04"
+    elif [[ "$DISTRO_VERSION_ID" == "22" ]]; then
+        DISTRO="ubuntu_24.04"
+    elif [[ "$DISTRO_VERSION_ID" == "21.3" ]]; then
+        DISTRO="ubuntu_22.04"
+    elif [[ "$DISTRO_VERSION_ID" == "21.2" ]]; then
+        DISTRO="ubuntu_22.04"
+    elif [[ "$DISTRO_VERSION_ID" == "21.1" ]]; then
+        DISTRO="ubuntu_22.04"
+    elif [[ "$DISTRO_VERSION_ID" == "21" ]]; then
+        DISTRO="ubuntu_22.04"
+    elif [[ "$DISTRO_VERSION_ID" == "6" ]]; then
+        DISTRO="debian_12"
+    else
+        echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+        exit 1
+    fi
+
+else
+    echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
+    exit 1
+fi
+
+
 echo "**** Installing packages... ****"
-if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
+if [[ "$DISTRO" == "debian_12" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         telnet \
@@ -85,7 +135,7 @@ if [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "12" ]]; then
         gpsd-tools \
         gpsd-clients
 
-elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
+elif [[ "$DISTRO" == "debian_11" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         telnet \
@@ -93,7 +143,7 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "11" ]]; then
         gpsd-tools \
         gpsd-clients
 
-elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
+elif [[ "$DISTRO" == "debian_10" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         telnet \
@@ -101,45 +151,21 @@ elif [[ "$DISTRO_ID" == "raspbian" && "$DISTRO_VERSION_ID" == "10" ]]; then
         gpsd-tools \
         gpsd-clients
 
-elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "12" ]]; then
-    sudo apt-get update
-    sudo apt-get -y install \
-        telnet \
-        gpsd \
-        gpsd-tools \
-        gpsd-clients
-
-elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "11" ]]; then
-    sudo apt-get update
-    sudo apt-get -y install \
-        telnet \
-        gpsd \
-        gpsd-tools \
-        gpsd-clients
-
-elif [[ "$DISTRO_ID" == "debian" && "$DISTRO_VERSION_ID" == "10" ]]; then
-    sudo apt-get update
-    sudo apt-get -y install \
-        telnet \
-        gpsd \
-        gpsd-tools \
-        gpsd-clients
-
-elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "24.04" ]]; then
+elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         telnet \
         gpsd \
         gpsd-clients
 
-elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "22.04" ]]; then
+elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         telnet \
         gpsd \
         gpsd-clients
 
-elif [[ "$DISTRO_ID" == "ubuntu" && "$DISTRO_VERSION_ID" == "20.04" ]]; then
+elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         telnet \
