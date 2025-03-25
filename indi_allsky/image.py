@@ -131,7 +131,11 @@ class ImageWorker(Process):
         )
 
         self._miscDb = miscDb(self.config)
-        self._miscUpload = miscUpload(self.config, self.upload_q)
+        self._miscUpload = miscUpload(
+            self.config,
+            self.upload_q,
+            self.night_v,
+        )
 
 
         self._libcamera_raw = False
@@ -1757,6 +1761,8 @@ class ImageWorker(Process):
         keogram_file.chmod(0o644)
 
         tmpfile_name.unlink()
+
+        self._miscUpload.upload_realtime_keogram(keogram_file, camera)
 
 
     def calculate_exposure(self, adu, exposure):
