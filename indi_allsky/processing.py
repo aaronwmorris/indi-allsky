@@ -198,7 +198,8 @@ class ImageProcessor(object):
         base_path  = Path(__file__).parent
         self.font_path  = base_path.joinpath('fonts')
 
-        self._keogram_store_p = Path('/var/lib/indi-allsky/realtime_keogram_store.npy')
+        self._keogram_store_tmpl = '/var/lib/indi-allsky/realtime_keogram_store_ccd{0:d}.npy'
+        self._keogram_store_p = None
 
 
     @property
@@ -347,6 +348,10 @@ class ImageProcessor(object):
 
         # clear old data as soon as possible
         self.image = None
+
+
+        # update keogram store path
+        self._keogram_store_p = Path(self._keogram_store_tmpl.format(camera.id))
 
 
         if self.night_v.value and not self.moonmode_v.value:
