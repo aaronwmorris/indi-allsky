@@ -2056,6 +2056,11 @@ class ImageProcessor(object):
                 logger.error('ISS next pass error: %s', str(e))
                 self.astrometric_data['iss_next_h'] = 0.0
                 self.astrometric_data['iss_next_alt'] = 0.0
+        else:
+            self.astrometric_data['iss_alt'] = 0.0
+            self.astrometric_data['iss_up'] = 'No data'
+            self.astrometric_data['iss_next_h'] = 0.0
+            self.astrometric_data['iss_next_alt'] = 0.0
 
 
         hst = satellite_data.get('hst')
@@ -2078,6 +2083,11 @@ class ImageProcessor(object):
                 logger.error('HST next pass error: %s', str(e))
                 self.astrometric_data['hst_next_h'] = 0.0
                 self.astrometric_data['hst_next_alt'] = 0.0
+        else:
+            self.astrometric_data['hst_alt'] = 0.0
+            self.astrometric_data['hst_up'] = 'No data'
+            self.astrometric_data['hst_next_h'] = 0.0
+            self.astrometric_data['hst_next_alt'] = 0.0
 
 
         tiangong = satellite_data.get('tiangong')
@@ -2100,6 +2110,11 @@ class ImageProcessor(object):
                 logger.error('TIANGONG next pass error: %s', str(e))
                 self.astrometric_data['tiangong_next_h'] = 0.0
                 self.astrometric_data['tiangong_next_alt'] = 0.0
+        else:
+            self.astrometric_data['tiangong_alt'] = 0.0
+            self.astrometric_data['tiangong_up'] = 'No data'
+            self.astrometric_data['tiangong_next_h'] = 0.0
+            self.astrometric_data['tiangong_next_alt'] = 0.0
 
 
     def populateSatelliteData(self):
