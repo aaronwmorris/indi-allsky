@@ -168,6 +168,9 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Ubuntu 20.04 (bionic)          | x86_64         | (NOT RECOMMENDED) INDI installed from ppa:mutlaqja/ppa |
 | Ubuntu 20.04                   | aarch64        | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
 | Armbian                        | aarch64/armhf  | Compile INDI with build_indi.sh<br>https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
+| Linux Mint 22                  | x86_64         | INDI installed from ppa:mutlaqja/ppa |
+| Linux Mint 21                  | x86_64         | INDI installed from ppa:mutlaqja/ppa |
+| LMDE 6 (Linux Mint)            | x86_64         | Compile INDI with build_indi.sh |
 | Stellarmate 1.8.x              | x86_64/aarch64 | INDI pre-installed |
 | ~~Astroberry Server 2.0~~      | armhf          | (DO NOT USE) The Astroberry appears to be abandoned and is no longer supported with indi-allsky |
 
