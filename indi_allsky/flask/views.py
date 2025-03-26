@@ -6301,6 +6301,25 @@ class ImageProcessingView(TemplateView):
             'TEXT_PROPERTIES__PIL_FONT_FILE' : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_FILE', 'fonts-freefont-ttf/FreeSans.ttf'),
             'TEXT_PROPERTIES__PIL_FONT_CUSTOM': self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_CUSTOM', ''),
             'TEXT_PROPERTIES__PIL_FONT_SIZE' : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_SIZE', 30),
+            'MOON_OVERLAY__ENABLE'           : False,
+            'MOON_OVERLAY__X'                : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('X', -500),
+            'MOON_OVERLAY__Y'                : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('Y', -200),
+            'MOON_OVERLAY__SCALE'            : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('SCALE', 0.5),
+            'MOON_OVERLAY__DARK_SIDE_SCALE'  : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('DARK_SIDE_SCALE', 0.4),
+            'MOON_OVERLAY__FLIP_V'           : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('FLIP_V', False),
+            'MOON_OVERLAY__FLIP_H'           : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('FLIP_H', False),
+            'LIGHTGRAPH_OVERLAY__ENABLE'     : False,
+            'LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_HEIGHT', 30),
+            'LIGHTGRAPH_OVERLAY__GRAPH_BORDER' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_BORDER', 3),
+            'LIGHTGRAPH_OVERLAY__Y'          : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('Y', 10),
+            'LIGHTGRAPH_OVERLAY__OFFSET_X'   : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('OFFSET_X', 0),
+            'LIGHTGRAPH_OVERLAY__SCALE'      : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('SCALE', 1.0),
+            'LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_MARKER_SIZE', 8),
+            'LIGHTGRAPH_OVERLAY__OPACITY'    : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('OPACITY', 100),
+            'LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('PIL_FONT_SIZE', 20),
+            'LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('OPENCV_FONT_SCALE', 0.5),
+            'LIGHTGRAPH_OVERLAY__LABEL'      : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('LABEL', True),
+            'LIGHTGRAPH_OVERLAY__HOUR_LINES' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_LINES', True),
         }
 
 
@@ -6335,10 +6354,32 @@ class ImageProcessingView(TemplateView):
         # Font color
         text_properties__font_color = self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_COLOR', [200, 200, 200])
         form_data['TEXT_PROPERTIES__FONT_COLOR'] = ','.join([str(x) for x in text_properties__font_color])
-        form_image_processing = IndiAllskyImageProcessingForm(data=form_data)
 
 
-        context['form_image_processing'] = form_image_processing
+        # Lightgraph colors
+        lightgraph_overlay__day_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('DAY_COLOR', [150, 150, 150])
+        form_data['LIGHTGRAPH_OVERLAY__DAY_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__day_color])
+
+        lightgraph_overlay__dusk_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('DUSK_COLOR', [200, 100, 60])
+        form_data['LIGHTGRAPH_OVERLAY__DUSK_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__dusk_color])
+
+        lightgraph_overlay__night_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NIGHT_COLOR', [30, 30, 30])
+        form_data['LIGHTGRAPH_OVERLAY__NIGHT_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__night_color])
+
+        lightgraph_overlay__hour_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_COLOR', [100, 15, 15])
+        form_data['LIGHTGRAPH_OVERLAY__HOUR_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__hour_color])
+
+        lightgraph_overlay__border_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('BORDER_COLOR', [1, 1, 1])
+        form_data['LIGHTGRAPH_OVERLAY__BORDER_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__border_color])
+
+        lightgraph_overlay__now_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_COLOR', [120, 120, 200])
+        form_data['LIGHTGRAPH_OVERLAY__NOW_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__now_color])
+
+        lightgraph_overlay__font_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('FONT_COLOR', [150, 150, 150])
+        form_data['LIGHTGRAPH_OVERLAY__FONT_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__font_color])
+
+
+        context['form_image_processing'] = IndiAllskyImageProcessingForm(data=form_data)
 
         return context
 
@@ -6462,6 +6503,26 @@ class JsonImageProcessingView(JsonView):
         p_config['TEXT_PROPERTIES']['PIL_FONT_FILE']     = str(request.json['TEXT_PROPERTIES__PIL_FONT_FILE'])
         p_config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM']   = str(request.json['TEXT_PROPERTIES__PIL_FONT_CUSTOM'])
         p_config['TEXT_PROPERTIES']['PIL_FONT_SIZE']     = int(request.json['TEXT_PROPERTIES__PIL_FONT_SIZE'])
+        p_config['MOON_OVERLAY']['ENABLE']               = bool(request.json['MOON_OVERLAY__ENABLE'])
+        p_config['MOON_OVERLAY']['X']                    = int(request.json['MOON_OVERLAY__X'])
+        p_config['MOON_OVERLAY']['Y']                    = int(request.json['MOON_OVERLAY__Y'])
+        p_config['MOON_OVERLAY']['SCALE']                = float(request.json['MOON_OVERLAY__SCALE'])
+        p_config['MOON_OVERLAY']['DARK_SIDE_SCALE']      = float(request.json['MOON_OVERLAY__DARK_SIDE_SCALE'])
+        p_config['MOON_OVERLAY']['FLIP_V']               = bool(request.json['MOON_OVERLAY__FLIP_V'])
+        p_config['MOON_OVERLAY']['FLIP_H']               = bool(request.json['MOON_OVERLAY__FLIP_H'])
+        p_config['LIGHTGRAPH_OVERLAY']['ENABLE']         = bool(request.json['LIGHTGRAPH_OVERLAY__ENABLE'])
+        p_config['LIGHTGRAPH_OVERLAY']['GRAPH_HEIGHT']   = int(request.json['LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT'])
+        p_config['LIGHTGRAPH_OVERLAY']['GRAPH_BORDER']   = int(request.json['LIGHTGRAPH_OVERLAY__GRAPH_BORDER'])
+        p_config['LIGHTGRAPH_OVERLAY']['Y']              = int(request.json['LIGHTGRAPH_OVERLAY__Y'])
+        p_config['LIGHTGRAPH_OVERLAY']['OFFSET_X']       = int(request.json['LIGHTGRAPH_OVERLAY__OFFSET_X'])
+        p_config['LIGHTGRAPH_OVERLAY']['SCALE']          = float(request.json['LIGHTGRAPH_OVERLAY__SCALE'])
+        p_config['LIGHTGRAPH_OVERLAY']['NOW_MARKER_SIZE']  = int(request.json['LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE'])
+        p_config['LIGHTGRAPH_OVERLAY']['OPACITY']        = int(request.json['LIGHTGRAPH_OVERLAY__OPACITY'])
+        p_config['LIGHTGRAPH_OVERLAY']['PIL_FONT_SIZE']  = int(request.json['LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE'])
+        p_config['LIGHTGRAPH_OVERLAY']['OPENCV_FONT_SCALE'] = float(request.json['LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE'])
+        p_config['LIGHTGRAPH_OVERLAY']['LABEL']          = bool(request.json['LIGHTGRAPH_OVERLAY__LABEL'])
+        p_config['LIGHTGRAPH_OVERLAY']['HOUR_LINES']     = bool(request.json['LIGHTGRAPH_OVERLAY__HOUR_LINES'])
+
 
         # disable these
         p_config['ADSB']['ENABLE']                       = False
@@ -6483,6 +6544,29 @@ class JsonImageProcessingView(JsonView):
         # TEXT_PROPERTIES FONT_COLOR
         font_color_str = str(request.json['TEXT_PROPERTIES__FONT_COLOR'])
         p_config['TEXT_PROPERTIES']['FONT_COLOR'] = [int(x) for x in font_color_str.split(',')]
+
+
+        # LIGHTGRAPH COLORS
+        lightgraph_overlay__day_color_str = str(request.json['LIGHTGRAPH_OVERLAY__DAY_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['DAY_COLOR'] = [int(x) for x in lightgraph_overlay__day_color_str.split(',')]
+
+        lightgraph_overlay__dusk_color_str = str(request.json['LIGHTGRAPH_OVERLAY__DUSK_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['DUSK_COLOR'] = [int(x) for x in lightgraph_overlay__dusk_color_str.split(',')]
+
+        lightgraph_overlay__night_color_str = str(request.json['LIGHTGRAPH_OVERLAY__NIGHT_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['NIGHT_COLOR'] = [int(x) for x in lightgraph_overlay__night_color_str.split(',')]
+
+        lightgraph_overlay__hour_color_str = str(request.json['LIGHTGRAPH_OVERLAY__HOUR_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['HOUR_COLOR'] = [int(x) for x in lightgraph_overlay__hour_color_str.split(',')]
+
+        lightgraph_overlay__border_color_str = str(request.json['LIGHTGRAPH_OVERLAY__BORDER_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['BORDER_COLOR'] = [int(x) for x in lightgraph_overlay__border_color_str.split(',')]
+
+        lightgraph_overlay__now_color_str = str(request.json['LIGHTGRAPH_OVERLAY__NOW_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['NOW_COLOR'] = [int(x) for x in lightgraph_overlay__now_color_str.split(',')]
+
+        lightgraph_overlay__font_color_str = str(request.json['LIGHTGRAPH_OVERLAY__FONT_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['FONT_COLOR'] = [int(x) for x in lightgraph_overlay__font_color_str.split(',')]
 
 
         hdulist = fits.open(filename_p)
@@ -6649,7 +6733,16 @@ class JsonImageProcessingView(JsonView):
             image_processor.colorize()
 
 
-            if p_config.get('FISH2PANO', {}).get('ENABLE'):
+            if not p_config.get('FISH2PANO', {}).get('ENABLE'):
+                image_processor.moon_overlay()
+
+                image_processor.lightgraph_overlay()
+
+                if p_config['IMAGE_LABEL_SYSTEM']:
+                    image_processor.label_image()
+
+            else:
+                # no labels if converting to panorama
                 pano_data = image_processor.fish2pano()
 
 
@@ -6659,9 +6752,6 @@ class JsonImageProcessingView(JsonView):
 
                 image_processor.image = pano_data
 
-            else:
-                if p_config['IMAGE_LABEL_SYSTEM']:
-                    image_processor.label_image()
 
 
         processing_elapsed_s = time.time() - processing_start
