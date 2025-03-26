@@ -487,9 +487,12 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-    def upload_realtime_keogram(self, keogram_p, camera):
+    def upload_realtime_keogram(self, keogram_file, camera):
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_REALTIME_KEOGRAM'):
             return
+
+
+        keogram_file_p = Path(keogram_file)
 
 
         self._realtime_keogram_count += 1
@@ -510,7 +513,7 @@ class miscUpload(object):
             'timestamp'    : now,
             'ts'           : now,  # shortcut
             'day_date'     : now.date(),
-            'ext'          : Path(keogram_p).suffix.replace('.', ''),
+            'ext'          : keogram_file_p.suffix.replace('.', ''),
             'camera_uuid'  : camera.uuid,
             'camera_id'    : camera.id,
         }
@@ -533,7 +536,7 @@ class miscUpload(object):
 
         jobdata = {
             'action'         : constants.TRANSFER_UPLOAD,
-            'local_file'     : str(keogram_p),
+            'local_file'     : str(keogram_file_p),
             'remote_file'    : str(remote_file_p),
         }
 
