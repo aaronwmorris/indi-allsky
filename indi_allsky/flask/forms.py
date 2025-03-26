@@ -2863,19 +2863,19 @@ class IndiAllskyConfigForm(FlaskForm):
             ('indi', 'INDI'),
         ),
         'libcamera' : (
-            ('libcamera_imx477', 'libcamera IMX477'),
+            ('libcamera_imx477', 'libcamera IMX477 - Raspberry Pi HQ Camera'),
             ('libcamera_imx378', 'libcamera IMX378'),
-            ('libcamera_imx708', 'libcamera IMX708'),
+            ('libcamera_imx708', 'libcamera IMX708 - Camera Module 3'),
             ('libcamera_imx519', 'libcamera IMX519'),
             ('libcamera_imx462', 'libcamera IMX462'),
             ('libcamera_imx327', 'libcamera IMX327'),
-            ('libcamera_imx678', 'libcamera IMX678 Darksee'),
-            ('libcamera_imx500_ai', 'libcamera IMX500 AI'),
-            ('libcamera_imx283', 'libcamera IMX283 Klarity/OneInchEye'),
-            ('libcamera_imx296_gs', 'libcamera IMX296 GS'),
+            ('libcamera_imx678', 'libcamera IMX678 - Darksee'),
+            ('libcamera_imx500_ai', 'libcamera IMX500 - AI Camera'),
+            ('libcamera_imx283', 'libcamera IMX283 - Klarity/OneInchEye'),
+            ('libcamera_imx296_gs', 'libcamera IMX296 - Global Shutter'),
             ('libcamera_imx290', 'libcamera IMX290'),
             ('libcamera_imx298', 'libcamera IMX298'),
-            ('libcamera_imx219', 'libcamera IMX219'),
+            ('libcamera_imx219', 'libcamera IMX219 - Camera Module 2'),
             ('libcamera_ov5647', 'libcamera OV5647'),
             ('libcamera_64mp_hawkeye', 'libcamera 64mp HawkEye'),
             ('libcamera_64mp_owlsight', 'libcamera 64mp OwlSight'),
@@ -6563,6 +6563,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
     FRAME_TYPE                       = HiddenField('FRAME_TYPE', validators=[DataRequired()])
     FITS_ID                          = HiddenField('FITS ID', validators=[DataRequired()])
+    LENS_IMAGE_CIRCLE                = IntegerField('Image Circle', validators=[LENS_IMAGE_CIRCLE_validator])
     LENS_OFFSET_X                    = IntegerField('Lens X Offset', validators=[LENS_OFFSET_validator])
     LENS_OFFSET_Y                    = IntegerField('Lens Y Offset', validators=[LENS_OFFSET_validator])
     IMAGE_CALIBRATE_DARK             = BooleanField('Dark Frame Calibration')
@@ -6608,6 +6609,10 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     FISH2PANO__ROTATE_ANGLE          = IntegerField('Rotation Angle', validators=[FISH2PANO__ROTATE_ANGLE_validator])
     FISH2PANO__SCALE                 = FloatField('Scale', validators=[FISH2PANO__SCALE_validator])
     FISH2PANO__FLIP_H                = BooleanField('Flip Horizontally')
+    FISH2PANO__ENABLE_CARDINAL_DIRS  = BooleanField('Panorama Cardinal Directions')
+    FISH2PANO__DIRS_OFFSET_BOTTOM    = IntegerField('Label Bottom Offset', validators=[CARDINAL_DIRS__SIDE_OFFSET_validator])
+    FISH2PANO__OPENCV_FONT_SCALE     = FloatField('Font Scale (opencv)', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
+    FISH2PANO__PIL_FONT_SIZE         = IntegerField('Font Size (pillow)', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
     #IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     PROCESSING_SPLIT_SCREEN          = BooleanField('Split screen')
     IMAGE_LABEL_TEMPLATE             = TextAreaField('Label Template', validators=[DataRequired(), IMAGE_LABEL_TEMPLATE_validator])
@@ -6625,7 +6630,62 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     TEXT_PROPERTIES__PIL_FONT_FILE   = SelectField('Pillow Font', choices=IndiAllskyConfigForm.TEXT_PROPERTIES__PIL_FONT_FILE_choices, validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_FILE_validator])
     TEXT_PROPERTIES__PIL_FONT_CUSTOM = StringField('Custom Font', validators=[TEXT_PROPERTIES__PIL_FONT_CUSTOM_validator])
     TEXT_PROPERTIES__PIL_FONT_SIZE   = IntegerField('Font Size', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
-
+    IMAGE_CIRCLE_MASK__ENABLE        = BooleanField('Enable Image Circle Mask')
+    IMAGE_CIRCLE_MASK__DIAMETER      = IntegerField('Mask Diameter', validators=[DataRequired(), IMAGE_CIRCLE_MASK__DIAMETER_validator])
+    IMAGE_CIRCLE_MASK__OFFSET_X      = IntegerField('Mask X Offset', validators=[IMAGE_CIRCLE_MASK__OFFSET_X_validator], render_kw={'readonly' : True, 'disabled' : 'disabled'})
+    IMAGE_CIRCLE_MASK__OFFSET_Y      = IntegerField('Mask Y Offset', validators=[IMAGE_CIRCLE_MASK__OFFSET_Y_validator], render_kw={'readonly' : True, 'disabled' : 'disabled'})
+    IMAGE_CIRCLE_MASK__BLUR          = IntegerField('Mask Blur', validators=[IMAGE_CIRCLE_MASK__BLUR_validator])
+    IMAGE_CIRCLE_MASK__OPACITY       = IntegerField('Mask Opacity %', validators=[IMAGE_CIRCLE_MASK__OPACITY_validator])
+    IMAGE_CIRCLE_MASK__OUTLINE       = BooleanField('Mask Outline')
+    MOON_OVERLAY__ENABLE             = BooleanField('Enable Moon Overlay')
+    MOON_OVERLAY__X                  = IntegerField('X', validators=[MOON_OVERLAY__X_validator])
+    MOON_OVERLAY__Y                  = IntegerField('Y', validators=[MOON_OVERLAY__Y_validator])
+    MOON_OVERLAY__SCALE              = FloatField('Overlay Scale', validators=[DataRequired(), MOON_OVERLAY__SCALE_validator])
+    MOON_OVERLAY__DARK_SIDE_SCALE    = FloatField('Dark Side Brightness', validators=[MOON_OVERLAY__DARK_SIDE_SCALE_validator])
+    MOON_OVERLAY__FLIP_V             = BooleanField('Flip Vertically')
+    MOON_OVERLAY__FLIP_H             = BooleanField('Flip Horizontally')
+    LIGHTGRAPH_OVERLAY__ENABLE       = BooleanField('Enable Lightgraph Overlay')
+    LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT = IntegerField('Lightgraph Height', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT_validator])
+    LIGHTGRAPH_OVERLAY__GRAPH_BORDER = IntegerField('Lightgraph Border', validators=[LIGHTGRAPH_OVERLAY__GRAPH_BORDER_validator])
+    LIGHTGRAPH_OVERLAY__Y            = IntegerField('Y', validators=[LIGHTGRAPH_OVERLAY__Y_validator])
+    LIGHTGRAPH_OVERLAY__OFFSET_X     = IntegerField('X Offset', validators=[LIGHTGRAPH_OVERLAY__OFFSET_X_validator])
+    LIGHTGRAPH_OVERLAY__SCALE        = FloatField('Scale', validators=[LIGHTGRAPH_OVERLAY__SCALE_validator])
+    LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE = IntegerField('Time Marker Size', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE_validator])
+    LIGHTGRAPH_OVERLAY__DAY_COLOR    = StringField('Day Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
+    LIGHTGRAPH_OVERLAY__DUSK_COLOR   = StringField('Dusk/Dawn Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
+    LIGHTGRAPH_OVERLAY__NIGHT_COLOR  = StringField('Night Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
+    LIGHTGRAPH_OVERLAY__HOUR_COLOR   = StringField('Hour Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
+    LIGHTGRAPH_OVERLAY__BORDER_COLOR = StringField('Border Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
+    LIGHTGRAPH_OVERLAY__NOW_COLOR    = StringField('Time Marker Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
+    LIGHTGRAPH_OVERLAY__FONT_COLOR   = StringField('Font Color', validators=[DataRequired(), LIGHTGRAPH_OVERLAY__RGB_COLOR_validator])
+    LIGHTGRAPH_OVERLAY__OPACITY      = IntegerField('Opacity ', validators=[LIGHTGRAPH_OVERLAY__OPACITY_validator])
+    LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE = IntegerField('Font Size (Pillow)', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
+    LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE = FloatField('Font Scale (opencv)', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
+    LIGHTGRAPH_OVERLAY__LABEL        = BooleanField('Lightgraph Label')
+    LIGHTGRAPH_OVERLAY__HOUR_LINES   = BooleanField('Lightgraph Hour Lines')
+    CARDINAL_DIRS__ENABLE            = BooleanField('Enable Cardinal Directions')
+    CARDINAL_DIRS__FONT_COLOR        = StringField('Text Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
+    CARDINAL_DIRS__SWAP_NS           = BooleanField('Swap North/South')
+    CARDINAL_DIRS__SWAP_EW           = BooleanField('Swap East/West')
+    CARDINAL_DIRS__CHAR_NORTH        = StringField('North Character', validators=[CARDINAL_DIRS__CHAR_validator])
+    CARDINAL_DIRS__CHAR_EAST         = StringField('East Character', validators=[CARDINAL_DIRS__CHAR_validator])
+    CARDINAL_DIRS__CHAR_WEST         = StringField('West Character', validators=[CARDINAL_DIRS__CHAR_validator])
+    CARDINAL_DIRS__CHAR_SOUTH        = StringField('South Character', validators=[CARDINAL_DIRS__CHAR_validator])
+    CARDINAL_DIRS__DIAMETER          = IntegerField('Image Circle Diameter', validators=[CARDINAL_DIRS__DIAMETER_validator])
+    CARDINAL_DIRS__OFFSET_X          = IntegerField('X Offset', validators=[CARDINAL_DIRS__CENTER_OFFSET_validator], render_kw={'readonly' : True, 'disabled' : 'disabled'})
+    CARDINAL_DIRS__OFFSET_Y          = IntegerField('Y Offset', validators=[CARDINAL_DIRS__CENTER_OFFSET_validator], render_kw={'readonly' : True, 'disabled' : 'disabled'})
+    CARDINAL_DIRS__OFFSET_TOP        = IntegerField('Top Offset', validators=[CARDINAL_DIRS__SIDE_OFFSET_validator])
+    CARDINAL_DIRS__OFFSET_LEFT       = IntegerField('Left Offset', validators=[CARDINAL_DIRS__SIDE_OFFSET_validator])
+    CARDINAL_DIRS__OFFSET_RIGHT      = IntegerField('Right Offset', validators=[CARDINAL_DIRS__SIDE_OFFSET_validator])
+    CARDINAL_DIRS__OFFSET_BOTTOM     = IntegerField('Bottom Offset', validators=[CARDINAL_DIRS__SIDE_OFFSET_validator])
+    CARDINAL_DIRS__OPENCV_FONT_SCALE = FloatField('Font Scale (opencv)', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
+    CARDINAL_DIRS__PIL_FONT_SIZE     = IntegerField('Font Size (pillow)', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
+    CARDINAL_DIRS__OUTLINE_CIRCLE    = BooleanField('Image Circle Outline')
+    IMAGE_BORDER__TOP                = IntegerField('Image Border Top', validators=[IMAGE_BORDER_SIDE_validator])
+    IMAGE_BORDER__LEFT               = IntegerField('Image Border Left', validators=[IMAGE_BORDER_SIDE_validator])
+    IMAGE_BORDER__RIGHT              = IntegerField('Image Border Right', validators=[IMAGE_BORDER_SIDE_validator])
+    IMAGE_BORDER__BOTTOM             = IntegerField('Image Border Bottom', validators=[IMAGE_BORDER_SIDE_validator])
+    IMAGE_BORDER__COLOR              = StringField('Border Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
 
 
 class IndiAllskyMiniTimelapseForm(FlaskForm):

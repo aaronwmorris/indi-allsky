@@ -6247,6 +6247,7 @@ class ImageProcessingView(TemplateView):
             'CAMERA_ID'                      : self.camera.id,
             'FRAME_TYPE'                     : frame_type,
             'FITS_ID'                        : fits_id,
+            'LENS_IMAGE_CIRCLE'              : self.indi_allsky_config.get('LENS_IMAGE_CIRCLE', 3000),
             'LENS_OFFSET_X'                  : self.indi_allsky_config.get('LENS_OFFSET_X', 0),
             'LENS_OFFSET_Y'                  : self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
             'CCD_BIT_DEPTH'                  : str(self.indi_allsky_config.get('CCD_BIT_DEPTH', 0)),  # string in form, int in config
@@ -6285,6 +6286,10 @@ class ImageProcessingView(TemplateView):
             'FISH2PANO__ROTATE_ANGLE'        : self.indi_allsky_config.get('FISH2PANO', {}).get('ROTATE_ANGLE', 0),
             'FISH2PANO__SCALE'               : self.indi_allsky_config.get('FISH2PANO', {}).get('SCALE', 0.3),
             'FISH2PANO__FLIP_H'              : self.indi_allsky_config.get('FISH2PANO', {}).get('FLIP_H', False),
+            'FISH2PANO__ENABLE_CARDINAL_DIRS': self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE_CARDINAL_DIRS', True),
+            'FISH2PANO__DIRS_OFFSET_BOTTOM'  : self.indi_allsky_config.get('FISH2PANO', {}).get('DIRS_OFFSET_BOTTOM', 25),
+            'FISH2PANO__OPENCV_FONT_SCALE'   : self.indi_allsky_config.get('FISH2PANO', {}).get('OPENCV_FONT_SCALE', 0.8),
+            'FISH2PANO__PIL_FONT_SIZE'       : self.indi_allsky_config.get('FISH2PANO', {}).get('PIL_FONT_SIZE', 30),
             'PROCESSING_SPLIT_SCREEN'        : False,
             'IMAGE_CALIBRATE_DARK'           : False,  # darks are almost always already applied
             'IMAGE_CALIBRATE_BPM'            : False,
@@ -6301,6 +6306,53 @@ class ImageProcessingView(TemplateView):
             'TEXT_PROPERTIES__PIL_FONT_FILE' : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_FILE', 'fonts-freefont-ttf/FreeSans.ttf'),
             'TEXT_PROPERTIES__PIL_FONT_CUSTOM': self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_CUSTOM', ''),
             'TEXT_PROPERTIES__PIL_FONT_SIZE' : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('PIL_FONT_SIZE', 30),
+            'CARDINAL_DIRS__ENABLE'          : False,
+            'CARDINAL_DIRS__SWAP_NS'         : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('SWAP_NS', False),
+            'CARDINAL_DIRS__SWAP_EW'         : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('SWAP_EW', False),
+            'CARDINAL_DIRS__CHAR_NORTH'      : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('CHAR_NORTH', 'N'),
+            'CARDINAL_DIRS__CHAR_EAST'       : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('CHAR_EAST', 'E'),
+            'CARDINAL_DIRS__CHAR_WEST'       : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('CHAR_WEST', 'W'),
+            'CARDINAL_DIRS__CHAR_SOUTH'      : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('CHAR_SOUTH', 'S'),
+            'CARDINAL_DIRS__DIAMETER'        : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('DIAMETER', 3000),
+            'CARDINAL_DIRS__OFFSET_X'        : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('OFFSET_X', 0),
+            'CARDINAL_DIRS__OFFSET_Y'        : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('OFFSET_Y', 0),
+            'CARDINAL_DIRS__OFFSET_TOP'      : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('OFFSET_TOP', 15),
+            'CARDINAL_DIRS__OFFSET_LEFT'     : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('OFFSET_LEFT', 15),
+            'CARDINAL_DIRS__OFFSET_RIGHT'    : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('OFFSET_RIGHT', 15),
+            'CARDINAL_DIRS__OFFSET_BOTTOM'   : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('OFFSET_BOTTOM', 15),
+            'CARDINAL_DIRS__OPENCV_FONT_SCALE' : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('OPENCV_FONT_SCALE', 0.5),
+            'CARDINAL_DIRS__PIL_FONT_SIZE'   : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('PIL_FONT_SIZE', 20),
+            'CARDINAL_DIRS__OUTLINE_CIRCLE'  : self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('OUTLINE_CIRCLE', False),
+            'IMAGE_CIRCLE_MASK__ENABLE'      : False,
+            'IMAGE_CIRCLE_MASK__DIAMETER'    : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('DIAMETER', 3000),
+            'IMAGE_CIRCLE_MASK__OFFSET_X'    : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('OFFSET_X', 0),
+            'IMAGE_CIRCLE_MASK__OFFSET_Y'    : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('OFFSET_Y', 0),
+            'IMAGE_CIRCLE_MASK__BLUR'        : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('BLUR', 35),
+            'IMAGE_CIRCLE_MASK__OPACITY'     : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('OPACITY', 100),
+            'IMAGE_CIRCLE_MASK__OUTLINE'     : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('OUTLINE', False),
+            'MOON_OVERLAY__ENABLE'           : False,
+            'MOON_OVERLAY__X'                : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('X', -500),
+            'MOON_OVERLAY__Y'                : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('Y', -200),
+            'MOON_OVERLAY__SCALE'            : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('SCALE', 0.5),
+            'MOON_OVERLAY__DARK_SIDE_SCALE'  : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('DARK_SIDE_SCALE', 0.4),
+            'MOON_OVERLAY__FLIP_V'           : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('FLIP_V', False),
+            'MOON_OVERLAY__FLIP_H'           : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('FLIP_H', False),
+            'LIGHTGRAPH_OVERLAY__ENABLE'     : False,
+            'LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_HEIGHT', 30),
+            'LIGHTGRAPH_OVERLAY__GRAPH_BORDER' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('GRAPH_BORDER', 3),
+            'LIGHTGRAPH_OVERLAY__Y'          : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('Y', 10),
+            'LIGHTGRAPH_OVERLAY__OFFSET_X'   : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('OFFSET_X', 0),
+            'LIGHTGRAPH_OVERLAY__SCALE'      : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('SCALE', 1.0),
+            'LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_MARKER_SIZE', 8),
+            'LIGHTGRAPH_OVERLAY__OPACITY'    : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('OPACITY', 100),
+            'LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('PIL_FONT_SIZE', 20),
+            'LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('OPENCV_FONT_SCALE', 0.5),
+            'LIGHTGRAPH_OVERLAY__LABEL'      : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('LABEL', True),
+            'LIGHTGRAPH_OVERLAY__HOUR_LINES' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_LINES', True),
+            'IMAGE_BORDER__TOP'              : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('TOP', 0),
+            'IMAGE_BORDER__LEFT'             : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('LEFT', 0),
+            'IMAGE_BORDER__RIGHT'            : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('RIGHT', 0),
+            'IMAGE_BORDER__BOTTOM'           : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('BOTTOM', 0),
         }
 
 
@@ -6335,10 +6387,39 @@ class ImageProcessingView(TemplateView):
         # Font color
         text_properties__font_color = self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_COLOR', [200, 200, 200])
         form_data['TEXT_PROPERTIES__FONT_COLOR'] = ','.join([str(x) for x in text_properties__font_color])
-        form_image_processing = IndiAllskyImageProcessingForm(data=form_data)
+
+        # Cardinal directions color
+        cardinal_dirs__font_color = self.indi_allsky_config.get('CARDINAL_DIRS', {}).get('FONT_COLOR', [200, 0, 0])
+        form_data['CARDINAL_DIRS__FONT_COLOR'] = ','.join([str(x) for x in cardinal_dirs__font_color])
+
+        # Border color
+        image_border__color = self.indi_allsky_config.get('IMAGE_BORDER', {}).get('COLOR', [0, 0, 0])
+        form_data['IMAGE_BORDER__COLOR'] = ','.join([str(x) for x in image_border__color])
+
+        # Lightgraph colors
+        lightgraph_overlay__day_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('DAY_COLOR', [150, 150, 150])
+        form_data['LIGHTGRAPH_OVERLAY__DAY_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__day_color])
+
+        lightgraph_overlay__dusk_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('DUSK_COLOR', [200, 100, 60])
+        form_data['LIGHTGRAPH_OVERLAY__DUSK_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__dusk_color])
+
+        lightgraph_overlay__night_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NIGHT_COLOR', [30, 30, 30])
+        form_data['LIGHTGRAPH_OVERLAY__NIGHT_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__night_color])
+
+        lightgraph_overlay__hour_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_COLOR', [100, 15, 15])
+        form_data['LIGHTGRAPH_OVERLAY__HOUR_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__hour_color])
+
+        lightgraph_overlay__border_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('BORDER_COLOR', [1, 1, 1])
+        form_data['LIGHTGRAPH_OVERLAY__BORDER_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__border_color])
+
+        lightgraph_overlay__now_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NOW_COLOR', [120, 120, 200])
+        form_data['LIGHTGRAPH_OVERLAY__NOW_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__now_color])
+
+        lightgraph_overlay__font_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('FONT_COLOR', [150, 150, 150])
+        form_data['LIGHTGRAPH_OVERLAY__FONT_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__font_color])
 
 
-        context['form_image_processing'] = form_image_processing
+        context['form_image_processing'] = IndiAllskyImageProcessingForm(data=form_data)
 
         return context
 
@@ -6407,6 +6488,7 @@ class JsonImageProcessingView(JsonView):
 
         p_config = self.indi_allsky_config.copy()
 
+        p_config['LENS_IMAGE_CIRCLE']                    = int(request.json['LENS_IMAGE_CIRCLE'])
         p_config['LENS_OFFSET_X']                        = int(request.json['LENS_OFFSET_X'])
         p_config['LENS_OFFSET_X']                        = int(request.json['LENS_OFFSET_Y'])
         p_config['CCD_BIT_DEPTH']                        = int(request.json['CCD_BIT_DEPTH'])
@@ -6448,6 +6530,10 @@ class JsonImageProcessingView(JsonView):
         p_config['FISH2PANO']['ROTATE_ANGLE']            = int(request.json['FISH2PANO__ROTATE_ANGLE'])
         p_config['FISH2PANO']['SCALE']                   = float(request.json['FISH2PANO__SCALE'])
         p_config['FISH2PANO']['FLIP_H']                  = bool(request.json['FISH2PANO__FLIP_H'])
+        p_config['FISH2PANO']['ENABLE_CARDINAL_DIRS']    = bool(request.json['FISH2PANO__ENABLE_CARDINAL_DIRS'])
+        p_config['FISH2PANO']['DIRS_OFFSET_BOTTOM']      = int(request.json['FISH2PANO__DIRS_OFFSET_BOTTOM'])
+        p_config['FISH2PANO']['OPENCV_FONT_SCALE']       = float(request.json['FISH2PANO__OPENCV_FONT_SCALE'])
+        p_config['FISH2PANO']['PIL_FONT_SIZE']           = int(request.json['FISH2PANO__PIL_FONT_SIZE'])
         p_config['PROCESSING_SPLIT_SCREEN']              = bool(request.json.get('PROCESSING_SPLIT_SCREEN', False))
         p_config['IMAGE_LABEL_TEMPLATE']                 = str(request.json['IMAGE_LABEL_TEMPLATE'])
         p_config['IMAGE_EXTRA_TEXT']                     = str(request.json['IMAGE_EXTRA_TEXT'])
@@ -6462,6 +6548,54 @@ class JsonImageProcessingView(JsonView):
         p_config['TEXT_PROPERTIES']['PIL_FONT_FILE']     = str(request.json['TEXT_PROPERTIES__PIL_FONT_FILE'])
         p_config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM']   = str(request.json['TEXT_PROPERTIES__PIL_FONT_CUSTOM'])
         p_config['TEXT_PROPERTIES']['PIL_FONT_SIZE']     = int(request.json['TEXT_PROPERTIES__PIL_FONT_SIZE'])
+        p_config['CARDINAL_DIRS']['ENABLE']              = bool(request.json['CARDINAL_DIRS__ENABLE'])
+        p_config['CARDINAL_DIRS']['SWAP_NS']             = bool(request.json['CARDINAL_DIRS__SWAP_NS'])
+        p_config['CARDINAL_DIRS']['SWAP_EW']             = bool(request.json['CARDINAL_DIRS__SWAP_EW'])
+        p_config['CARDINAL_DIRS']['CHAR_NORTH']          = str(request.json['CARDINAL_DIRS__CHAR_NORTH'])
+        p_config['CARDINAL_DIRS']['CHAR_EAST']           = str(request.json['CARDINAL_DIRS__CHAR_EAST'])
+        p_config['CARDINAL_DIRS']['CHAR_WEST']           = str(request.json['CARDINAL_DIRS__CHAR_WEST'])
+        p_config['CARDINAL_DIRS']['CHAR_SOUTH']          = str(request.json['CARDINAL_DIRS__CHAR_SOUTH'])
+        p_config['CARDINAL_DIRS']['DIAMETER']            = int(request.json['CARDINAL_DIRS__DIAMETER'])
+        p_config['CARDINAL_DIRS']['OFFSET_X']            = int(request.json['CARDINAL_DIRS__OFFSET_X'])
+        p_config['CARDINAL_DIRS']['OFFSET_Y']            = int(request.json['CARDINAL_DIRS__OFFSET_Y'])
+        p_config['CARDINAL_DIRS']['OFFSET_TOP']          = int(request.json['CARDINAL_DIRS__OFFSET_TOP'])
+        p_config['CARDINAL_DIRS']['OFFSET_LEFT']         = int(request.json['CARDINAL_DIRS__OFFSET_LEFT'])
+        p_config['CARDINAL_DIRS']['OFFSET_RIGHT']        = int(request.json['CARDINAL_DIRS__OFFSET_RIGHT'])
+        p_config['CARDINAL_DIRS']['OFFSET_BOTTOM']       = int(request.json['CARDINAL_DIRS__OFFSET_BOTTOM'])
+        p_config['CARDINAL_DIRS']['OPENCV_FONT_SCALE']   = float(request.json['CARDINAL_DIRS__OPENCV_FONT_SCALE'])
+        p_config['CARDINAL_DIRS']['PIL_FONT_SIZE']       = int(request.json['CARDINAL_DIRS__PIL_FONT_SIZE'])
+        p_config['CARDINAL_DIRS']['OUTLINE_CIRCLE']      = bool(request.json['CARDINAL_DIRS__OUTLINE_CIRCLE'])
+        p_config['IMAGE_CIRCLE_MASK']['ENABLE']          = bool(request.json['IMAGE_CIRCLE_MASK__ENABLE'])
+        p_config['IMAGE_CIRCLE_MASK']['DIAMETER']        = int(request.json['IMAGE_CIRCLE_MASK__DIAMETER'])
+        p_config['IMAGE_CIRCLE_MASK']['OFFSET_X']        = int(request.json['IMAGE_CIRCLE_MASK__OFFSET_X'])
+        p_config['IMAGE_CIRCLE_MASK']['OFFSET_Y']        = int(request.json['IMAGE_CIRCLE_MASK__OFFSET_Y'])
+        p_config['IMAGE_CIRCLE_MASK']['BLUR']            = int(request.json['IMAGE_CIRCLE_MASK__BLUR'])
+        p_config['IMAGE_CIRCLE_MASK']['OPACITY']         = int(request.json['IMAGE_CIRCLE_MASK__OPACITY'])
+        p_config['IMAGE_CIRCLE_MASK']['OUTLINE']         = bool(request.json['IMAGE_CIRCLE_MASK__OUTLINE'])
+        p_config['IMAGE_BORDER']['TOP']                  = int(request.json['IMAGE_BORDER__TOP'])
+        p_config['IMAGE_BORDER']['LEFT']                 = int(request.json['IMAGE_BORDER__LEFT'])
+        p_config['IMAGE_BORDER']['RIGHT']                = int(request.json['IMAGE_BORDER__RIGHT'])
+        p_config['IMAGE_BORDER']['BOTTOM']               = int(request.json['IMAGE_BORDER__BOTTOM'])
+        p_config['MOON_OVERLAY']['ENABLE']               = bool(request.json['MOON_OVERLAY__ENABLE'])
+        p_config['MOON_OVERLAY']['X']                    = int(request.json['MOON_OVERLAY__X'])
+        p_config['MOON_OVERLAY']['Y']                    = int(request.json['MOON_OVERLAY__Y'])
+        p_config['MOON_OVERLAY']['SCALE']                = float(request.json['MOON_OVERLAY__SCALE'])
+        p_config['MOON_OVERLAY']['DARK_SIDE_SCALE']      = float(request.json['MOON_OVERLAY__DARK_SIDE_SCALE'])
+        p_config['MOON_OVERLAY']['FLIP_V']               = bool(request.json['MOON_OVERLAY__FLIP_V'])
+        p_config['MOON_OVERLAY']['FLIP_H']               = bool(request.json['MOON_OVERLAY__FLIP_H'])
+        p_config['LIGHTGRAPH_OVERLAY']['ENABLE']         = bool(request.json['LIGHTGRAPH_OVERLAY__ENABLE'])
+        p_config['LIGHTGRAPH_OVERLAY']['GRAPH_HEIGHT']   = int(request.json['LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT'])
+        p_config['LIGHTGRAPH_OVERLAY']['GRAPH_BORDER']   = int(request.json['LIGHTGRAPH_OVERLAY__GRAPH_BORDER'])
+        p_config['LIGHTGRAPH_OVERLAY']['Y']              = int(request.json['LIGHTGRAPH_OVERLAY__Y'])
+        p_config['LIGHTGRAPH_OVERLAY']['OFFSET_X']       = int(request.json['LIGHTGRAPH_OVERLAY__OFFSET_X'])
+        p_config['LIGHTGRAPH_OVERLAY']['SCALE']          = float(request.json['LIGHTGRAPH_OVERLAY__SCALE'])
+        p_config['LIGHTGRAPH_OVERLAY']['NOW_MARKER_SIZE']  = int(request.json['LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE'])
+        p_config['LIGHTGRAPH_OVERLAY']['OPACITY']        = int(request.json['LIGHTGRAPH_OVERLAY__OPACITY'])
+        p_config['LIGHTGRAPH_OVERLAY']['PIL_FONT_SIZE']  = int(request.json['LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE'])
+        p_config['LIGHTGRAPH_OVERLAY']['OPENCV_FONT_SCALE'] = float(request.json['LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE'])
+        p_config['LIGHTGRAPH_OVERLAY']['LABEL']          = bool(request.json['LIGHTGRAPH_OVERLAY__LABEL'])
+        p_config['LIGHTGRAPH_OVERLAY']['HOUR_LINES']     = bool(request.json['LIGHTGRAPH_OVERLAY__HOUR_LINES'])
+
 
         # disable these
         p_config['ADSB']['ENABLE']                       = False
@@ -6483,6 +6617,36 @@ class JsonImageProcessingView(JsonView):
         # TEXT_PROPERTIES FONT_COLOR
         font_color_str = str(request.json['TEXT_PROPERTIES__FONT_COLOR'])
         p_config['TEXT_PROPERTIES']['FONT_COLOR'] = [int(x) for x in font_color_str.split(',')]
+
+        # CARDINAL_DIRS FONT_COLOR
+        cardinal_dirs_color_str = str(request.json['CARDINAL_DIRS__FONT_COLOR'])
+        p_config['CARDINAL_DIRS']['FONT_COLOR'] = [int(x) for x in cardinal_dirs_color_str.split(',')]
+
+        # IMAGE_BORDER COLOR
+        image_border__color_str = str(request.json['IMAGE_BORDER__COLOR'])
+        p_config['IMAGE_BORDER']['COLOR'] = [int(x) for x in image_border__color_str.split(',')]
+
+        # LIGHTGRAPH COLORS
+        lightgraph_overlay__day_color_str = str(request.json['LIGHTGRAPH_OVERLAY__DAY_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['DAY_COLOR'] = [int(x) for x in lightgraph_overlay__day_color_str.split(',')]
+
+        lightgraph_overlay__dusk_color_str = str(request.json['LIGHTGRAPH_OVERLAY__DUSK_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['DUSK_COLOR'] = [int(x) for x in lightgraph_overlay__dusk_color_str.split(',')]
+
+        lightgraph_overlay__night_color_str = str(request.json['LIGHTGRAPH_OVERLAY__NIGHT_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['NIGHT_COLOR'] = [int(x) for x in lightgraph_overlay__night_color_str.split(',')]
+
+        lightgraph_overlay__hour_color_str = str(request.json['LIGHTGRAPH_OVERLAY__HOUR_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['HOUR_COLOR'] = [int(x) for x in lightgraph_overlay__hour_color_str.split(',')]
+
+        lightgraph_overlay__border_color_str = str(request.json['LIGHTGRAPH_OVERLAY__BORDER_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['BORDER_COLOR'] = [int(x) for x in lightgraph_overlay__border_color_str.split(',')]
+
+        lightgraph_overlay__now_color_str = str(request.json['LIGHTGRAPH_OVERLAY__NOW_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['NOW_COLOR'] = [int(x) for x in lightgraph_overlay__now_color_str.split(',')]
+
+        lightgraph_overlay__font_color_str = str(request.json['LIGHTGRAPH_OVERLAY__FONT_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['FONT_COLOR'] = [int(x) for x in lightgraph_overlay__font_color_str.split(',')]
 
 
         hdulist = fits.open(filename_p)
@@ -6649,7 +6813,23 @@ class JsonImageProcessingView(JsonView):
             image_processor.colorize()
 
 
-            if p_config.get('FISH2PANO', {}).get('ENABLE'):
+            image_processor.apply_image_circle_mask()
+
+
+            if not p_config.get('FISH2PANO', {}).get('ENABLE'):
+                image_processor.add_border()
+
+                image_processor.moon_overlay()
+
+                image_processor.lightgraph_overlay()
+
+                image_processor.cardinal_dirs_label()
+
+                if p_config['IMAGE_LABEL_SYSTEM']:
+                    image_processor.label_image()
+
+            else:
+                # no labels if converting to panorama
                 pano_data = image_processor.fish2pano()
 
 
@@ -6657,11 +6837,11 @@ class JsonImageProcessingView(JsonView):
                     pano_data = image_processor._flip(pano_data, 1)
 
 
-                image_processor.image = pano_data
+                if p_config.get('FISH2PANO', {}).get('ENABLE_CARDINAL_DIRS'):
+                    pano_data = image_processor.fish2pano_cardinal_dirs_label(pano_data)
 
-            else:
-                if p_config['IMAGE_LABEL_SYSTEM']:
-                    image_processor.label_image()
+
+                image_processor.image = pano_data
 
 
         processing_elapsed_s = time.time() - processing_start

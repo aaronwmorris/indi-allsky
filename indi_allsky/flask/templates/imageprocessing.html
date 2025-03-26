@@ -479,8 +479,85 @@ var fullscreen = false;  //initial state
 
     <hr>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_BORDER__TOP.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_BORDER__TOP(class='form-control bg-secondary') }}
+            <div id="IMAGE_BORDER__TOP-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Add additional boarder area to the image</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_BORDER__LEFT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_BORDER__LEFT(class='form-control bg-secondary') }}
+            <div id="IMAGE_BORDER__LEFT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_BORDER__RIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_BORDER__RIGHT(class='form-control bg-secondary') }}
+            <div id="IMAGE_BORDER__RIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_BORDER__BOTTOM.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_BORDER__BOTTOM(class='form-control bg-secondary') }}
+            <div id="IMAGE_BORDER__BOTTOM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_BORDER__COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_BORDER__COLOR(class='form-control bg-secondary') }}
+            <div id="IMAGE_BORDER__COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Border color in R,G,B</div>
+        </div>
+    </div>
+
+    <hr>
+
     <div>
       <h5>These options are applied to the unprocessed image automatically</h5>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LENS_IMAGE_CIRCLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LENS_IMAGE_CIRCLE(class='form-control bg-secondary') }}
+            <div id="LENS_IMAGE_CIRCLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Image circle in pixels.  If you cannot see the edge of the image circle, just ensure this number is larger than the diagonal.</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -709,6 +786,153 @@ var fullscreen = false;  //initial state
         </div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__ENABLE_CARDINAL_DIRS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.FISH2PANO__ENABLE_CARDINAL_DIRS(class='form-check-input') }}
+                <div id="FISH2PANO__ENABLE_CARDINAL_DIRS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Disabling Cardinal Directions (Image Tab) will also disable here</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__DIRS_OFFSET_BOTTOM.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__DIRS_OFFSET_BOTTOM(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__DIRS_OFFSET_BOTTOM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__OPENCV_FONT_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__OPENCV_FONT_SCALE(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__OPENCV_FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__PIL_FONT_SIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__PIL_FONT_SIZE(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CIRCLE_MASK__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.IMAGE_CIRCLE_MASK__ENABLE(class='form-check-input') }}
+                <div id="IMAGE_CIRCLE_MASK__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CIRCLE_MASK__DIAMETER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CIRCLE_MASK__DIAMETER(class='form-control bg-secondary') }}
+            <div id="IMAGE_CIRCLE_MASK__DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Diameter in pixels</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CIRCLE_MASK__OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CIRCLE_MASK__OFFSET_X(class='form-control bg-secondary') }}
+            <div id="IMAGE_CIRCLE_MASK__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Not Used - Use Lens offsets on Image Tab</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CIRCLE_MASK__OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CIRCLE_MASK__OFFSET_Y(class='form-control bg-secondary') }}
+            <div id="IMAGE_CIRCLE_MASK__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CIRCLE_MASK__BLUR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CIRCLE_MASK__BLUR(class='form-control bg-secondary') }}
+            <div id="IMAGE_CIRCLE_MASK__BLUR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CIRCLE_MASK__OPACITY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CIRCLE_MASK__OPACITY(class='form-control bg-secondary') }}
+            <div id="IMAGE_CIRCLE_MASK__OPACITY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CIRCLE_MASK__OUTLINE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.IMAGE_CIRCLE_MASK__OUTLINE(class='form-check-input') }}
+                <div id="IMAGE_CIRCLE_MASK__OUTLINE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Outline image circle.  Opacity will be set to 0%.</div>
+    </div>
+
   </div><!-- end processing tab -->
   <div class="tab-pane fade" id="nav-overlays" role="tabpanel" aria-labelledby="nav-overlays-tab">
 
@@ -884,6 +1108,540 @@ var fullscreen = false;  //initial state
         <div class="col-sm-8">Add black outline to text</div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.MOON_OVERLAY__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.MOON_OVERLAY__ENABLE(class='form-check-input') }}
+                <div id="MOON_OVERLAY__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.MOON_OVERLAY__X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.MOON_OVERLAY__X(class='form-control bg-secondary') }}
+            <div id="MOON_OVERLAY__X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Negative is offset from the right side of image (Not validated with image size)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.MOON_OVERLAY__Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.MOON_OVERLAY__Y(class='form-control bg-secondary') }}
+            <div id="MOON_OVERLAY__Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Negative is offset from the bottom of image</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.MOON_OVERLAY__FLIP_V.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.MOON_OVERLAY__FLIP_V(class='form-check-input') }}
+                <div id="MOON_OVERLAY__FLIP_V-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Flipping Vertically and Horizontal should show view from Southern Hemisphere</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.MOON_OVERLAY__FLIP_H.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.MOON_OVERLAY__FLIP_H(class='form-check-input') }}
+                <div id="MOON_OVERLAY__FLIP_H-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.MOON_OVERLAY__SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.MOON_OVERLAY__SCALE(class='form-control bg-secondary') }}
+            <div id="MOON_OVERLAY__SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Original Moon image is 400x400</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.MOON_OVERLAY__DARK_SIDE_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.MOON_OVERLAY__DARK_SIDE_SCALE(class='form-control bg-secondary') }}
+            <div id="MOON_OVERLAY__DARK_SIDE_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default: 0.4 - 0.0 would make the shaded area completely black</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.LIGHTGRAPH_OVERLAY__ENABLE(class='form-check-input') }}
+                <div id="LIGHTGRAPH_OVERLAY__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__GRAPH_BORDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__GRAPH_BORDER(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__GRAPH_BORDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__Y(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Negative is offset from the bottom of image</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__OFFSET_X(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Offset from center</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__SCALE(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default size: 1446 x 86 (including borders)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__DAY_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__DAY_COLOR(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__DAY_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Color in R,G,B</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__DUSK_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__DUSK_COLOR(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__DUSK_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__NIGHT_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__NIGHT_COLOR(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__NIGHT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__HOUR_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__HOUR_COLOR(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__HOUR_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__BORDER_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__BORDER_COLOR(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__BORDER_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__NOW_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__NOW_COLOR(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__NOW_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__FONT_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__FONT_COLOR(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__FONT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__OPACITY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__OPACITY(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__OPACITY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE(class='form-control bg-secondary') }}
+            <div id="LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__LABEL.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.LIGHTGRAPH_OVERLAY__LABEL(class='form-check-input') }}
+                <div id="LIGHTGRAPH_OVERLAY__LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LIGHTGRAPH_OVERLAY__HOUR_LINES.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.LIGHTGRAPH_OVERLAY__HOUR_LINES(class='form-check-input') }}
+                <div id="LIGHTGRAPH_OVERLAY__HOUR_LINES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.CARDINAL_DIRS__ENABLE(class='form-check-input') }}
+                <div id="CARDINAL_DIRS__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Cardinal directions are based on the Azimuth for the Lens/Camera in the Location Tab</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__SWAP_NS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.CARDINAL_DIRS__SWAP_NS(class='form-check-input') }}
+                <div id="CARDINAL_DIRS__SWAP_NS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__SWAP_EW.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.CARDINAL_DIRS__SWAP_EW(class='form-check-input') }}
+                <div id="CARDINAL_DIRS__SWAP_EW-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__FONT_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__FONT_COLOR(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__FONT_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Font color in R,G,B</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__CHAR_NORTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_image_processing.CARDINAL_DIRS__CHAR_NORTH(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__CHAR_NORTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-9">Blank to not show direction</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__CHAR_EAST.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_image_processing.CARDINAL_DIRS__CHAR_EAST(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__CHAR_EAST-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-9"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__CHAR_WEST.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_image_processing.CARDINAL_DIRS__CHAR_WEST(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__CHAR_WEST-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-9"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__CHAR_SOUTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_image_processing.CARDINAL_DIRS__CHAR_SOUTH(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__CHAR_SOUTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-9"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__DIAMETER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__DIAMETER(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OFFSET_X(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Not Used - Use Lens offsets on Image Tab</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OFFSET_Y(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OFFSET_TOP.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OFFSET_TOP(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__OFFSET_TOP-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OFFSET_LEFT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OFFSET_LEFT(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__OFFSET_LEFT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OFFSET_RIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OFFSET_RIGHT(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__OFFSET_RIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OFFSET_BOTTOM.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OFFSET_BOTTOM(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__OFFSET_BOTTOM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OPENCV_FONT_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OPENCV_FONT_SCALE(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__OPENCV_FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__PIL_FONT_SIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__PIL_FONT_SIZE(class='form-control bg-secondary') }}
+            <div id="CARDINAL_DIRS__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.CARDINAL_DIRS__OUTLINE_CIRCLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.CARDINAL_DIRS__OUTLINE_CIRCLE(class='form-check-input') }}
+                <div id="CARDINAL_DIRS__OUTLINE_CIRCLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Enable for debugging</div>
+        </div>
+    </div>
+
   </div><!-- end overlays tab -->
 
 </div>
@@ -983,6 +1741,7 @@ const field_names = [
     'CAMERA_ID',
     'FRAME_TYPE',
     'FITS_ID',
+    'LENS_IMAGE_CIRCLE',
     'LENS_OFFSET_X',
     'LENS_OFFSET_Y',
     'CCD_BIT_DEPTH',
@@ -1017,6 +1776,9 @@ const field_names = [
     'FISH2PANO__DIAMETER',
     'FISH2PANO__ROTATE_ANGLE',
     'FISH2PANO__SCALE',
+    'FISH2PANO__DIRS_OFFSET_BOTTOM',
+    'FISH2PANO__OPENCV_FONT_SCALE',
+    'FISH2PANO__PIL_FONT_SIZE',
     'IMAGE_LABEL_SYSTEM',
     'IMAGE_LABEL_TEMPLATE',
     'IMAGE_EXTRA_TEXT',
@@ -1030,6 +1792,50 @@ const field_names = [
     'TEXT_PROPERTIES__PIL_FONT_FILE',
     'TEXT_PROPERTIES__PIL_FONT_CUSTOM',
     'TEXT_PROPERTIES__PIL_FONT_SIZE',
+    'IMAGE_CIRCLE_MASK__DIAMETER',
+    'IMAGE_CIRCLE_MASK__OFFSET_X',
+    'IMAGE_CIRCLE_MASK__OFFSET_Y',
+    'IMAGE_CIRCLE_MASK__BLUR',
+    'IMAGE_CIRCLE_MASK__OPACITY',
+    'MOON_OVERLAY__X',
+    'MOON_OVERLAY__Y',
+    'MOON_OVERLAY__SCALE',
+    'MOON_OVERLAY__DARK_SIDE_SCALE',
+    'LIGHTGRAPH_OVERLAY__GRAPH_HEIGHT',
+    'LIGHTGRAPH_OVERLAY__GRAPH_BORDER',
+    'LIGHTGRAPH_OVERLAY__NOW_MARKER_SIZE',
+    'LIGHTGRAPH_OVERLAY__Y',
+    'LIGHTGRAPH_OVERLAY__OFFSET_X',
+    'LIGHTGRAPH_OVERLAY__SCALE',
+    'LIGHTGRAPH_OVERLAY__DAY_COLOR',
+    'LIGHTGRAPH_OVERLAY__DUSK_COLOR',
+    'LIGHTGRAPH_OVERLAY__NIGHT_COLOR',
+    'LIGHTGRAPH_OVERLAY__HOUR_COLOR',
+    'LIGHTGRAPH_OVERLAY__BORDER_COLOR',
+    'LIGHTGRAPH_OVERLAY__NOW_COLOR',
+    'LIGHTGRAPH_OVERLAY__FONT_COLOR',
+    'LIGHTGRAPH_OVERLAY__OPACITY',
+    'LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE',
+    'LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE',
+    'CARDINAL_DIRS__FONT_COLOR',
+    'CARDINAL_DIRS__CHAR_NORTH',
+    'CARDINAL_DIRS__CHAR_EAST',
+    'CARDINAL_DIRS__CHAR_WEST',
+    'CARDINAL_DIRS__CHAR_SOUTH',
+    'CARDINAL_DIRS__DIAMETER',
+    'CARDINAL_DIRS__OFFSET_X',
+    'CARDINAL_DIRS__OFFSET_Y',
+    'CARDINAL_DIRS__OFFSET_TOP',
+    'CARDINAL_DIRS__OFFSET_LEFT',
+    'CARDINAL_DIRS__OFFSET_RIGHT',
+    'CARDINAL_DIRS__OFFSET_BOTTOM',
+    'CARDINAL_DIRS__OPENCV_FONT_SCALE',
+    'CARDINAL_DIRS__PIL_FONT_SIZE',
+    'IMAGE_BORDER__TOP',
+    'IMAGE_BORDER__LEFT',
+    'IMAGE_BORDER__RIGHT',
+    'IMAGE_BORDER__BOTTOM',
+    'IMAGE_BORDER__COLOR',
 ];
 
 const checkbox_field_names = [
@@ -1045,7 +1851,20 @@ const checkbox_field_names = [
     //'PROCESSING_SPLIT_SCREEN',
     'FISH2PANO__ENABLE',
     'FISH2PANO__FLIP_H',
+    'FISH2PANO__ENABLE_CARDINAL_DIRS',
     'TEXT_PROPERTIES__FONT_OUTLINE',
+    'MOON_OVERLAY__ENABLE',
+    'MOON_OVERLAY__FLIP_V',
+    'MOON_OVERLAY__FLIP_H',
+    'LIGHTGRAPH_OVERLAY__ENABLE',
+    'LIGHTGRAPH_OVERLAY__LABEL',
+    'LIGHTGRAPH_OVERLAY__HOUR_LINES',
+    'IMAGE_CIRCLE_MASK__ENABLE',
+    'IMAGE_CIRCLE_MASK__OUTLINE',
+    'CARDINAL_DIRS__ENABLE',
+    'CARDINAL_DIRS__SWAP_NS',
+    'CARDINAL_DIRS__SWAP_EW',
+    'CARDINAL_DIRS__OUTLINE_CIRCLE',
 ];
 
 var fields = {};
