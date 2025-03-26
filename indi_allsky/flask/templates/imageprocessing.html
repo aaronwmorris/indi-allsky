@@ -790,6 +790,60 @@ var fullscreen = false;  //initial state
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__ENABLE_CARDINAL_DIRS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.FISH2PANO__ENABLE_CARDINAL_DIRS(class='form-check-input') }}
+                <div id="FISH2PANO__ENABLE_CARDINAL_DIRS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Disabling Cardinal Directions (Image Tab) will also disable here</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__DIRS_OFFSET_BOTTOM.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__DIRS_OFFSET_BOTTOM(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__DIRS_OFFSET_BOTTOM-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__OPENCV_FONT_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__OPENCV_FONT_SCALE(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__OPENCV_FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__PIL_FONT_SIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.FISH2PANO__PIL_FONT_SIZE(class='form-control bg-secondary') }}
+            <div id="FISH2PANO__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_image_processing.IMAGE_CIRCLE_MASK__ENABLE.label }}
         </div>
         <div class="col-sm-2">
@@ -1722,6 +1776,9 @@ const field_names = [
     'FISH2PANO__DIAMETER',
     'FISH2PANO__ROTATE_ANGLE',
     'FISH2PANO__SCALE',
+    'FISH2PANO__DIRS_OFFSET_BOTTOM',
+    'FISH2PANO__OPENCV_FONT_SCALE',
+    'FISH2PANO__PIL_FONT_SIZE',
     'IMAGE_LABEL_SYSTEM',
     'IMAGE_LABEL_TEMPLATE',
     'IMAGE_EXTRA_TEXT',
@@ -1794,6 +1851,7 @@ const checkbox_field_names = [
     //'PROCESSING_SPLIT_SCREEN',
     'FISH2PANO__ENABLE',
     'FISH2PANO__FLIP_H',
+    'FISH2PANO__ENABLE_CARDINAL_DIRS',
     'TEXT_PROPERTIES__FONT_OUTLINE',
     'MOON_OVERLAY__ENABLE',
     'MOON_OVERLAY__FLIP_V',

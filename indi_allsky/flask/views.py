@@ -6286,6 +6286,10 @@ class ImageProcessingView(TemplateView):
             'FISH2PANO__ROTATE_ANGLE'        : self.indi_allsky_config.get('FISH2PANO', {}).get('ROTATE_ANGLE', 0),
             'FISH2PANO__SCALE'               : self.indi_allsky_config.get('FISH2PANO', {}).get('SCALE', 0.3),
             'FISH2PANO__FLIP_H'              : self.indi_allsky_config.get('FISH2PANO', {}).get('FLIP_H', False),
+            'FISH2PANO__ENABLE_CARDINAL_DIRS': self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE_CARDINAL_DIRS', True),
+            'FISH2PANO__DIRS_OFFSET_BOTTOM'  : self.indi_allsky_config.get('FISH2PANO', {}).get('DIRS_OFFSET_BOTTOM', 25),
+            'FISH2PANO__OPENCV_FONT_SCALE'   : self.indi_allsky_config.get('FISH2PANO', {}).get('OPENCV_FONT_SCALE', 0.8),
+            'FISH2PANO__PIL_FONT_SIZE'       : self.indi_allsky_config.get('FISH2PANO', {}).get('PIL_FONT_SIZE', 30),
             'PROCESSING_SPLIT_SCREEN'        : False,
             'IMAGE_CALIBRATE_DARK'           : False,  # darks are almost always already applied
             'IMAGE_CALIBRATE_BPM'            : False,
@@ -6526,6 +6530,10 @@ class JsonImageProcessingView(JsonView):
         p_config['FISH2PANO']['ROTATE_ANGLE']            = int(request.json['FISH2PANO__ROTATE_ANGLE'])
         p_config['FISH2PANO']['SCALE']                   = float(request.json['FISH2PANO__SCALE'])
         p_config['FISH2PANO']['FLIP_H']                  = bool(request.json['FISH2PANO__FLIP_H'])
+        p_config['FISH2PANO']['ENABLE_CARDINAL_DIRS']    = bool(request.json['FISH2PANO__ENABLE_CARDINAL_DIRS'])
+        p_config['FISH2PANO']['DIRS_OFFSET_BOTTOM']      = int(request.json['FISH2PANO__DIRS_OFFSET_BOTTOM'])
+        p_config['FISH2PANO']['OPENCV_FONT_SCALE']       = float(request.json['FISH2PANO__OPENCV_FONT_SCALE'])
+        p_config['FISH2PANO']['PIL_FONT_SIZE']           = int(request.json['FISH2PANO__PIL_FONT_SIZE'])
         p_config['PROCESSING_SPLIT_SCREEN']              = bool(request.json.get('PROCESSING_SPLIT_SCREEN', False))
         p_config['IMAGE_LABEL_TEMPLATE']                 = str(request.json['IMAGE_LABEL_TEMPLATE'])
         p_config['IMAGE_EXTRA_TEXT']                     = str(request.json['IMAGE_EXTRA_TEXT'])
@@ -6829,8 +6837,11 @@ class JsonImageProcessingView(JsonView):
                     pano_data = image_processor._flip(pano_data, 1)
 
 
-                image_processor.image = pano_data
+                if p_config.get('FISH2PANO', {}).get('ENABLE_CARDINAL_DIRS'):
+                    pano_data = image_processor.fish2pano_cardinal_dirs_label(pano_data)
 
+
+                image_processor.image = pano_data
 
 
         processing_elapsed_s = time.time() - processing_start
