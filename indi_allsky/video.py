@@ -86,6 +86,7 @@ class VideoWorker(Process):
         error_q,
         video_q,
         upload_q,
+        night_v,
         bin_v,
     ):
         super(VideoWorker, self).__init__()
@@ -100,10 +101,15 @@ class VideoWorker(Process):
         self.video_q = video_q
         self.upload_q = upload_q
 
+        self.night_v = night_v
         self.bin_v = bin_v
 
         self._miscDb = miscDb(self.config)
-        self._miscUpload = miscUpload(self.config, self.upload_q)
+        self._miscUpload = miscUpload(
+            self.config,
+            self.upload_q,
+            self.night_v,
+        )
 
         self.f_lock = None
 

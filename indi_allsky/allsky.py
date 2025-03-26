@@ -465,6 +465,7 @@ class IndiAllSky(object):
             self.video_error_q,
             self.video_q,
             self.upload_q,
+            self.night_v,
             self.bin_v,
         )
         self.video_worker.start()

@@ -19,10 +19,15 @@ class miscUpload(object):
         self,
         config,
         upload_q,
+        night_v,
     ):
 
         self.config = config
         self.upload_q = upload_q
+        self.night_v = night_v
+
+
+        self._realtime_keogram_count = 0
 
 
     def upload_image(self, image_entry):
@@ -469,6 +474,70 @@ class miscUpload(object):
             'model'       : panorama_entry.__class__.__name__,
             'id'          : panorama_entry.id,
             'remote_file' : str(remote_file_p),
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
+
+
+    def upload_realtime_keogram(self, keogram_file, camera):
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_REALTIME_KEOGRAM'):
+            return
+
+
+        keogram_file_p = Path(keogram_file)
+
+
+        self._realtime_keogram_count += 1
+
+
+        keogram_remain = self._realtime_keogram_count % int(self.config['FILETRANSFER']['UPLOAD_REALTIME_KEOGRAM'])
+        if keogram_remain != 0:
+            next_image = int(self.config['FILETRANSFER']['UPLOAD_REALTIME_KEOGRAM']) - keogram_remain
+            logger.info('Next realtime keogram upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
+            return
+
+
+        now = datetime.now()
+
+
+        # Parameters for string formatting
+        file_data_dict = {
+            'timestamp'    : now,
+            'ts'           : now,  # shortcut
+            'day_date'     : now.date(),
+            'ext'          : keogram_file_p.suffix.replace('.', ''),
+            'camera_uuid'  : camera.uuid,
+            'camera_id'    : camera.id,
+        }
+
+
+        if self.night_v.value:
+            file_data_dict['timeofday'] = 'night'
+            file_data_dict['tod'] = 'night'  # shortcut
+        else:
+            file_data_dict['timeofday'] = 'day'
+            file_data_dict['tod'] = 'day'  # shortcut
+
+
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_REALTIME_KEOGRAM_FOLDER'].format(**file_data_dict)
+        remote_file = self.config['FILETRANSFER']['REMOTE_REALTIME_KEOGRAM_NAME'].format(**file_data_dict)
+
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
+
+
+        jobdata = {
+            'action'         : constants.TRANSFER_UPLOAD,
+            'local_file'     : str(keogram_file_p),
+            'remote_file'    : str(remote_file_p),
         }
 
         upload_task = IndiAllSkyDbTaskQueueTable(
