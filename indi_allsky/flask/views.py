@@ -802,7 +802,14 @@ class ImageLagView(TemplateView):
 
         context['camera_id'] = self.camera.id
 
-        camera_now_minus_3h = self.camera_now - timedelta(hours=3)
+
+        timestamp = int(request.args.get('timestamp', 0))
+        if not timestamp:
+            timestamp = int(datetime.timestamp(self.camera_now))
+
+
+        ts_dt = datetime.fromtimestamp(timestamp) + timedelta(seconds=self.camera_time_offset)
+        ts_dt_minus_3h = ts_dt - timedelta(hours=3)
 
 
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
@@ -827,7 +834,8 @@ class ImageLagView(TemplateView):
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == self.camera.id,
-                    IndiAllSkyDbImageTable.createDate > camera_now_minus_3h,
+                    IndiAllSkyDbImageTable.createDate < ts_dt,
+                    IndiAllSkyDbImageTable.createDate > ts_dt_minus_3h,
                 )
             )\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
@@ -846,7 +854,14 @@ class RollingAduView(TemplateView):
 
         context['camera_id'] = self.camera.id
 
-        camera_now_minus_7d = self.camera_now - timedelta(days=7)
+
+        timestamp = int(request.args.get('timestamp', 0))
+        if not timestamp:
+            timestamp = int(datetime.timestamp(self.camera_now))
+
+
+        ts_dt = datetime.fromtimestamp(timestamp) + timedelta(seconds=self.camera_time_offset)
+        ts_dt_minus_7d = self.camera_now - timedelta(days=7)
 
 
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
@@ -867,7 +882,8 @@ class RollingAduView(TemplateView):
                 .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(
                     and_(
-                        IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
+                        IndiAllSkyDbImageTable.createDate < ts_dt,
+                        IndiAllSkyDbImageTable.createDate > ts_dt_minus_7d,
                         or_(
                             IndiAllSkyDbImageTable.createDate_hour >= 22,  # night is normally between 10p and 4a, right?
                             IndiAllSkyDbImageTable.createDate_hour <= 4,
@@ -898,7 +914,8 @@ class RollingAduView(TemplateView):
                 .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(
                     and_(
-                        IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
+                        IndiAllSkyDbImageTable.createDate < ts_dt,
+                        IndiAllSkyDbImageTable.createDate > ts_dt_minus_7d,
                         or_(
                             IndiAllSkyDbImageTable.createDate_hour >= 22,  # night is normally between 10p and 4a, right?
                             IndiAllSkyDbImageTable.createDate_hour <= 4,

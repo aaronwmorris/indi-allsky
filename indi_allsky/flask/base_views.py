@@ -81,8 +81,8 @@ class BaseView(View):
         else:
             self.camera_data = dict()
 
-        camera_time_offset = self.camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
-        self.camera_now = datetime.now() + timedelta(seconds=camera_time_offset)
+        self.camera_time_offset = self.camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+        self.camera_now = datetime.now() + timedelta(seconds=self.camera_time_offset)
 
 
     def getLatestCamera(self):
