@@ -5669,6 +5669,73 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__D_CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__D_CLASSNAME(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__D_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__D_LABEL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__D_LABEL(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__D_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__D_PIN_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__D_PIN_1(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__D_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D26 (GPIO16 / Pin 37 Raspi)</div>
+            <div>Example: P0 - Pin for ADS1x15 ADC</div>
+            <div>Unused for most i2c devices</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__D_I2C_ADDRESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__D_I2C_ADDRESS(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__D_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Hexadecimal address - Example: 0x50</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__D_USER_VAR_SLOT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__D_USER_VAR_SLOT(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__D_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__OPENWEATHERMAP_APIKEY.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -7418,6 +7485,11 @@ const field_names = [
     'TEMP_SENSOR__C_PIN_1',
     'TEMP_SENSOR__C_USER_VAR_SLOT',
     'TEMP_SENSOR__C_I2C_ADDRESS',
+    'TEMP_SENSOR__D_CLASSNAME',
+    'TEMP_SENSOR__D_LABEL',
+    'TEMP_SENSOR__D_PIN_1',
+    'TEMP_SENSOR__D_USER_VAR_SLOT',
+    'TEMP_SENSOR__D_I2C_ADDRESS',
     'TEMP_SENSOR__OPENWEATHERMAP_APIKEY',
     'TEMP_SENSOR__WUNDERGROUND_APIKEY',
     'TEMP_SENSOR__ASTROSPHERIC_APIKEY',

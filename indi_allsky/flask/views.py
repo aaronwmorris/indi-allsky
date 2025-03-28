@@ -802,7 +802,14 @@ class ImageLagView(TemplateView):
 
         context['camera_id'] = self.camera.id
 
-        camera_now_minus_3h = self.camera_now - timedelta(hours=3)
+
+        timestamp = int(request.args.get('timestamp', 0))
+        if not timestamp:
+            timestamp = int(datetime.timestamp(self.camera_now))
+
+
+        ts_dt = datetime.fromtimestamp(timestamp) + timedelta(seconds=self.camera_time_offset)
+        ts_dt_minus_3h = ts_dt - timedelta(hours=3)
 
 
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
@@ -827,7 +834,8 @@ class ImageLagView(TemplateView):
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == self.camera.id,
-                    IndiAllSkyDbImageTable.createDate > camera_now_minus_3h,
+                    IndiAllSkyDbImageTable.createDate < ts_dt,
+                    IndiAllSkyDbImageTable.createDate > ts_dt_minus_3h,
                 )
             )\
             .order_by(IndiAllSkyDbImageTable.createDate.desc())\
@@ -846,7 +854,14 @@ class RollingAduView(TemplateView):
 
         context['camera_id'] = self.camera.id
 
-        camera_now_minus_7d = self.camera_now - timedelta(days=7)
+
+        timestamp = int(request.args.get('timestamp', 0))
+        if not timestamp:
+            timestamp = int(datetime.timestamp(self.camera_now))
+
+
+        ts_dt = datetime.fromtimestamp(timestamp) + timedelta(seconds=self.camera_time_offset)
+        ts_dt_minus_7d = self.camera_now - timedelta(days=7)
 
 
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
@@ -867,7 +882,8 @@ class RollingAduView(TemplateView):
                 .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(
                     and_(
-                        IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
+                        IndiAllSkyDbImageTable.createDate < ts_dt,
+                        IndiAllSkyDbImageTable.createDate > ts_dt_minus_7d,
                         or_(
                             IndiAllSkyDbImageTable.createDate_hour >= 22,  # night is normally between 10p and 4a, right?
                             IndiAllSkyDbImageTable.createDate_hour <= 4,
@@ -898,7 +914,8 @@ class RollingAduView(TemplateView):
                 .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
                 .filter(
                     and_(
-                        IndiAllSkyDbImageTable.createDate > camera_now_minus_7d,
+                        IndiAllSkyDbImageTable.createDate < ts_dt,
+                        IndiAllSkyDbImageTable.createDate > ts_dt_minus_7d,
                         or_(
                             IndiAllSkyDbImageTable.createDate_hour >= 22,  # night is normally between 10p and 4a, right?
                             IndiAllSkyDbImageTable.createDate_hour <= 4,
@@ -2248,6 +2265,11 @@ class ConfigView(FormView):
             'TEMP_SENSOR__C_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_PIN_1', 'D16'),
             'TEMP_SENSOR__C_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40'),
             'TEMP_SENSOR__C_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_20'),
+            'TEMP_SENSOR__D_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_CLASSNAME', ''),
+            'TEMP_SENSOR__D_LABEL'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_LABEL', 'Sensor D'),
+            'TEMP_SENSOR__D_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_PIN_1', 'D26'),
+            'TEMP_SENSOR__D_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_I2C_ADDRESS', '0x50'),
+            'TEMP_SENSOR__D_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_25'),
             'TEMP_SENSOR__OPENWEATHERMAP_APIKEY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', ''),
             'TEMP_SENSOR__WUNDERGROUND_APIKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', ''),
             'TEMP_SENSOR__ASTROSPHERIC_APIKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', ''),
@@ -3071,6 +3093,11 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['C_PIN_1']               = str(request.json['TEMP_SENSOR__C_PIN_1'])
         self.indi_allsky_config['TEMP_SENSOR']['C_USER_VAR_SLOT']       = str(request.json['TEMP_SENSOR__C_USER_VAR_SLOT'])
         self.indi_allsky_config['TEMP_SENSOR']['C_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__C_I2C_ADDRESS'])
+        self.indi_allsky_config['TEMP_SENSOR']['D_CLASSNAME']           = str(request.json['TEMP_SENSOR__D_CLASSNAME'])
+        self.indi_allsky_config['TEMP_SENSOR']['D_LABEL']               = str(request.json['TEMP_SENSOR__D_LABEL'])
+        self.indi_allsky_config['TEMP_SENSOR']['D_PIN_1']               = str(request.json['TEMP_SENSOR__D_PIN_1'])
+        self.indi_allsky_config['TEMP_SENSOR']['D_USER_VAR_SLOT']       = str(request.json['TEMP_SENSOR__D_USER_VAR_SLOT'])
+        self.indi_allsky_config['TEMP_SENSOR']['D_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__D_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = str(request.json['TEMP_SENSOR__OPENWEATHERMAP_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['WUNDERGROUND_APIKEY']   = str(request.json['TEMP_SENSOR__WUNDERGROUND_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY']   = str(request.json['TEMP_SENSOR__ASTROSPHERIC_APIKEY'])
