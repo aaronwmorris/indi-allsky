@@ -473,7 +473,7 @@ class SensorWorker(Process):
                 )
             except (OSError, ValueError) as e:
                 logger.error('Error initializing sensor: %s', str(e))
-                self.sensors[e] = indi_allsky_sensors.sensor_simulator(
+                self.sensors[3] = indi_allsky_sensors.sensor_simulator(
                     self.config,
                     'Sensor D',
                     self.night_v,

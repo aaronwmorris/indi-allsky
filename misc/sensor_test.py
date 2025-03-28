@@ -69,7 +69,7 @@ class TestSensors(object):
         self.night_v = Value('i', -1)  # bogus initial value
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
 
-        self.sensors = [None, None, None]
+        self.sensors = [None, None, None, None]
 
 
     def main(self):
@@ -219,6 +219,42 @@ class TestSensors(object):
 
         sensor_2_key = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_20')
         self.sensors[2].slot = constants.SENSOR_INDEX_MAP[sensor_2_key]
+
+
+        ### Sensor D
+        d_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('D_CLASSNAME')
+        if d_sensor_classname:
+            d_sensor = getattr(indi_allsky_sensors, d_sensor_classname)
+
+            d_sensor_label = self.config.get('TEMP_SENSOR', {}).get('D_LABEL', 'Sensor D')
+            d_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('D_I2C_ADDRESS', '0x50')
+            d_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('D_PIN_1', 'notdefined')
+
+            try:
+                self.sensors[3] = d_sensor(
+                    self.config,
+                    d_sensor_label,
+                    self.night_v,
+                    pin_1_name=d_sensor_pin_1_name,
+                    i2c_address=d_sensor_i2c_address,
+                )
+            except (OSError, ValueError) as e:
+                logger.error('Error initializing sensor: %s', str(e))
+                self.sensors[3] = indi_allsky_sensors.sensor_simulator(
+                    self.config,
+                    'Sensor D',
+                    self.night_v,
+                )
+        else:
+            logger.warning('No sensor D - Initializing sensor simulator')
+            self.sensors[3] = indi_allsky_sensors.sensor_simulator(
+                self.config,
+                'Sensor D',
+                self.night_v,
+            )
+
+        sensor_3_key = self.config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_25')
+        self.sensors[3].slot = constants.SENSOR_INDEX_MAP[sensor_3_key]
 
 
 if __name__ == "__main__":
