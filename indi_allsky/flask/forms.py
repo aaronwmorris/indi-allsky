@@ -3909,6 +3909,11 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__C_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__C_USER_VAR_SLOT     = SelectField('Sensor C Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__C_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
+    TEMP_SENSOR__D_CLASSNAME         = SelectField('Sensor D', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
+    TEMP_SENSOR__D_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
+    TEMP_SENSOR__D_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
+    TEMP_SENSOR__D_USER_VAR_SLOT     = SelectField('Sensor D Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
+    TEMP_SENSOR__D_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__WUNDERGROUND_APIKEY = PasswordField('Weather Underground API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__WUNDERGROUND_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__ASTROSPHERIC_APIKEY = PasswordField('Astrospheric API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ASTROSPHERIC_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
@@ -4006,6 +4011,9 @@ class IndiAllskyConfigForm(FlaskForm):
         temp_sensor__c_classname = str(data['TEMP_SENSOR__C_CLASSNAME'])
         temp_sensor__c_label = str(data['TEMP_SENSOR__C_LABEL'])
         temp_sensor__c_user_var_slot = str(data['TEMP_SENSOR__C_USER_VAR_SLOT'])
+        temp_sensor__d_classname = str(data['TEMP_SENSOR__D_CLASSNAME'])
+        temp_sensor__d_label = str(data['TEMP_SENSOR__D_LABEL'])
+        temp_sensor__d_user_var_slot = str(data['TEMP_SENSOR__D_USER_VAR_SLOT'])
 
 
         if temp_sensor__a_classname:
@@ -4066,6 +4074,26 @@ class IndiAllskyConfigForm(FlaskForm):
                         pass
             except AttributeError:
                 app.logger.error('Unknown sensor class: %s', temp_sensor__c_classname)
+
+
+        if temp_sensor__d_classname:
+            try:
+                temp_sensor__d_class = getattr(indi_allsky_sensors, temp_sensor__d_classname)
+                slot_d_index = constants.SENSOR_INDEX_MAP[temp_sensor__d_user_var_slot]
+
+                for x in range(temp_sensor__d_class.METADATA['count']):
+                    try:
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_d_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
+                            slot_d_index + x,
+                            temp_sensor__d_class.METADATA['name'],
+                            temp_sensor__d_label,
+                            temp_sensor__d_class.METADATA['labels'][x],
+                        )
+                    except IndexError:
+                        app.logger.error('Not enough slots for sensor values')
+                        pass
+            except AttributeError:
+                app.logger.error('Unknown sensor class: %s', temp_sensor__d_classname)
 
 
         # Set system temp names
@@ -4341,7 +4369,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         result = False
 
                 except NotImplementedError:
-                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
                     result = False
 
                 except ImportError:
@@ -4388,7 +4416,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         result = False
 
                 except NotImplementedError:
-                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
                     result = False
 
                 except ImportError:
@@ -4435,7 +4463,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         result = False
 
                 except NotImplementedError:
-                    self.FOCUSER__CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
                     result = False
 
                 except ImportError:
@@ -4462,6 +4490,53 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except ImportError:
                     self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+
+        # sensor D
+        if self.TEMP_SENSOR__D_CLASSNAME.data:
+            if self.TEMP_SENSOR__D_CLASSNAME.data.startswith('blinka_'):
+                try:
+                    import board
+
+                    if self.TEMP_SENSOR__D_PIN_1.data:
+                        try:
+                            getattr(board, self.TEMP_SENSOR__D_PIN_1.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__D_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__D_PIN_1.data))
+                            result = False
+                    else:
+                        self.TEMP_SENSOR__D_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except NotImplementedError:
+                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
+                    result = False
+
+                except ImportError:
+                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+                except PermissionError:
+                    self.TEMP_SENSOR__D_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+            elif self.TEMP_SENSOR__D_CLASSNAME.data.startswith('cpads_'):
+                try:
+                    import adafruit_ads1x15.ads1115 as ADS
+
+                    if self.TEMP_SENSOR__D_PIN_1.data:
+                        try:
+                            getattr(ADS, self.TEMP_SENSOR__D_PIN_1.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__D_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__D_PIN_1.data))
+                            result = False
+                    else:
+                        self.TEMP_SENSOR__D_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
 
 
@@ -4496,6 +4571,9 @@ class IndiAllskyConfigForm(FlaskForm):
 
         if self.TEMP_SENSOR__C_CLASSNAME.data:
             check_sensor_slots.append(self.TEMP_SENSOR__C_USER_VAR_SLOT)
+
+        if self.TEMP_SENSOR__D_CLASSNAME.data:
+            check_sensor_slots.append(self.TEMP_SENSOR__D_USER_VAR_SLOT)
 
 
         for slot1, slot2 in itertools.combinations(check_sensor_slots, 2):

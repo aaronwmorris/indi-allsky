@@ -2265,6 +2265,11 @@ class ConfigView(FormView):
             'TEMP_SENSOR__C_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_PIN_1', 'D16'),
             'TEMP_SENSOR__C_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40'),
             'TEMP_SENSOR__C_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_20'),
+            'TEMP_SENSOR__D_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_CLASSNAME', ''),
+            'TEMP_SENSOR__D_LABEL'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_LABEL', 'Sensor D'),
+            'TEMP_SENSOR__D_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_PIN_1', 'D26'),
+            'TEMP_SENSOR__D_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_I2C_ADDRESS', '0x50'),
+            'TEMP_SENSOR__D_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_25'),
             'TEMP_SENSOR__OPENWEATHERMAP_APIKEY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', ''),
             'TEMP_SENSOR__WUNDERGROUND_APIKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', ''),
             'TEMP_SENSOR__ASTROSPHERIC_APIKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', ''),
@@ -3088,6 +3093,11 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['C_PIN_1']               = str(request.json['TEMP_SENSOR__C_PIN_1'])
         self.indi_allsky_config['TEMP_SENSOR']['C_USER_VAR_SLOT']       = str(request.json['TEMP_SENSOR__C_USER_VAR_SLOT'])
         self.indi_allsky_config['TEMP_SENSOR']['C_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__C_I2C_ADDRESS'])
+        self.indi_allsky_config['TEMP_SENSOR']['D_CLASSNAME']           = str(request.json['TEMP_SENSOR__D_CLASSNAME'])
+        self.indi_allsky_config['TEMP_SENSOR']['D_LABEL']               = str(request.json['TEMP_SENSOR__D_LABEL'])
+        self.indi_allsky_config['TEMP_SENSOR']['D_PIN_1']               = str(request.json['TEMP_SENSOR__D_PIN_1'])
+        self.indi_allsky_config['TEMP_SENSOR']['D_USER_VAR_SLOT']       = str(request.json['TEMP_SENSOR__D_USER_VAR_SLOT'])
+        self.indi_allsky_config['TEMP_SENSOR']['D_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__D_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = str(request.json['TEMP_SENSOR__OPENWEATHERMAP_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['WUNDERGROUND_APIKEY']   = str(request.json['TEMP_SENSOR__WUNDERGROUND_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY']   = str(request.json['TEMP_SENSOR__ASTROSPHERIC_APIKEY'])
