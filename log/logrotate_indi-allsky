@@ -1,6 +1,6 @@
 /var/log/indi-allsky/*.log
 {
-    rotate 6
+    rotate 30
     daily
     missingok
     dateext
@@ -8,4 +8,3 @@
     notifempty
     compress
 }
-
