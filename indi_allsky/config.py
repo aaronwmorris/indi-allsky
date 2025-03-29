@@ -489,6 +489,7 @@ class IndiAllSkyConfigBase(object):
         "ACCUM_CAMERA" : {
             "SUB_EXPOSURE_MAX"       : 1.0,
             "EVEN_EXPOSURES"         : True,
+            "CLAMP_16BIT"            : False,
         },
         "FOCUSER" : {
             "CLASSNAME"              : "",

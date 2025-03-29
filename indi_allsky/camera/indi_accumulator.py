@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 import tempfile
 from pprint import pformat  # noqa: F401
+import numpy
 import logging
 
 import PyIndi
@@ -26,6 +27,7 @@ class IndiClientIndiAccumulator(IndiClient):
 
         self._sub_exposure_max = self.config.get('ACCUM_CAMERA', {}).get('SUB_EXPOSURE_MAX', 1.0)
         self._even_exposures = self.config.get('ACCUM_CAMERA', {}).get('EVEN_EXPOSURES', True)
+        self._clamp_16bit = self.config.get('ACCUM_CAMERA', {}).get('CLAMP_16BIT', False)
 
 
         self._total_sub_exposures = 0  # total number of expected sub exposures
@@ -58,6 +60,10 @@ class IndiClientIndiAccumulator(IndiClient):
     @property
     def total_sub_exposures(self):
         return self._total_sub_exposures
+
+    @property
+    def clamp_16bit(self):
+        return self._clamp_16bit
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
@@ -172,6 +178,12 @@ class IndiClientIndiAccumulator(IndiClient):
 
         exposure_elapsed_s = time.time() - self.exposureStartTime
 
+
+        if self.clamp_16bit:
+            # pre-scale data to 16-bits
+            self.data = numpy.clip(self.data, 0, 65535).astype(numpy.uint16)
+
+
         # create a new fits container
         hdu = fits.PrimaryHDU(self.data)
         hdulist = fits.HDUList([hdu])
@@ -241,8 +253,9 @@ class IndiClientIndiAccumulator(IndiClient):
 
 
         if isinstance(self.data, type(None)):
-            #self.data = hdulist[0].data.astype(numpy.float32)
+            # cast to 32-bit
             self.data = hdulist[0].data.astype(numpy.uint32)
+            #self.data = hdulist[0].data.astype(numpy.float32)
 
             # copy headers for later
             self.header = copy.copy(hdulist[0].header)
