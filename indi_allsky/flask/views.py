@@ -2213,6 +2213,7 @@ class ConfigView(FormView):
             'PYCURL_CAMERA__PASSWORD'        : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('PASSWORD', ''),
             'ACCUM_CAMERA__SUB_EXPOSURE_MAX' : self.indi_allsky_config.get('ACCUM_CAMERA', {}).get('SUB_EXPOSURE_MAX', 1.0),
             'ACCUM_CAMERA__EVEN_EXPOSURES'   : self.indi_allsky_config.get('ACCUM_CAMERA', {}).get('EVEN_EXPOSURES', True),
+            'ACCUM_CAMERA__CLAMP_16BIT'      : self.indi_allsky_config.get('ACCUM_CAMERA', {}).get('CLAMP_16BIT', False),
             'FOCUSER__CLASSNAME'             : self.indi_allsky_config.get('FOCUSER', {}).get('CLASSNAME', ''),
             'FOCUSER__GPIO_PIN_1'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_1', 'D17'),
             'FOCUSER__GPIO_PIN_2'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_2', 'D18'),
@@ -3041,6 +3042,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['PYCURL_CAMERA']['PASSWORD']            = str(request.json['PYCURL_CAMERA__PASSWORD'])
         self.indi_allsky_config['ACCUM_CAMERA']['SUB_EXPOSURE_MAX']     = float(request.json['ACCUM_CAMERA__SUB_EXPOSURE_MAX'])
         self.indi_allsky_config['ACCUM_CAMERA']['EVEN_EXPOSURES']       = bool(request.json['ACCUM_CAMERA__EVEN_EXPOSURES'])
+        self.indi_allsky_config['ACCUM_CAMERA']['CLAMP_16BIT']          = bool(request.json['ACCUM_CAMERA__CLAMP_16BIT'])
         self.indi_allsky_config['FOCUSER']['CLASSNAME']                 = str(request.json['FOCUSER__CLASSNAME'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_1']                = str(request.json['FOCUSER__GPIO_PIN_1'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_2']                = str(request.json['FOCUSER__GPIO_PIN_2'])

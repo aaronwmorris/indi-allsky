@@ -311,6 +311,19 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">Ensure each sub-exposure is the same interval</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ACCUM_CAMERA__CLAMP_16BIT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ACCUM_CAMERA__CLAMP_16BIT(class='form-check-input') }}
+                <div id="ACCUM_CAMERA__CLAMP_16BIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Clamp FITS to 16-bits.  FITS and Dark images will be clamped to uint16 (50% smaller than uint32)</div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -7642,6 +7655,7 @@ const checkbox_field_names = [
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
     'ACCUM_CAMERA__EVEN_EXPOSURES',
+    'ACCUM_CAMERA__CLAMP_16BIT',
     'TEMP_SENSOR__SHT3X_HEATER_NIGHT',
     'TEMP_SENSOR__SHT3X_HEATER_DAY',
     'TEMP_SENSOR__HTU31D_HEATER_NIGHT',
