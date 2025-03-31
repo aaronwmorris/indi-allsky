@@ -27,8 +27,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
-var img;
-var draw = true;
+//var img;
 var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
 var loadCountdown = 0;  // load immediately
@@ -45,36 +44,6 @@ var fullscreen = false;  //initial state
 
 
 function init() {
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
-
-    img = new Image();
-    img.onload = function() {
-        if (!draw) {
-            return;
-        }
-
-        // block downloading new images
-        draw = false;
-
-        canvas.setAttribute("width", window.innerWidth);
-        canvas.setAttribute("height", window.innerHeight);
-
-        var hRatio = canvas.width  / this.width;
-        var vRatio = canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
-        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
-
-        //context.imageSmoothingEnabled = false;
-        context.drawImage(this, 0, 0, this.width, this.height,
-            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
-        // allow new images to be loaded
-        draw = true;
-    };
-
-
     loadImages();
     loop();
 }
@@ -107,9 +76,28 @@ async function loop() {
 
 
 function showImage(entry, idx) {
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    // Need separate Image for every image of the loop, otherwise browser will not load properly
+    var img = new Image();
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio = canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        //context.imageSmoothingEnabled = false;
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+    };
+
+
     console.log('Showing image ' + entry["url"]);
-
-
     img.src = entry["url"];
 }
 
