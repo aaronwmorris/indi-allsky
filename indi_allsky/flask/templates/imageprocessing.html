@@ -5,7 +5,7 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
-#nav-image-tab, #nav-processing-tab, #nav-overlays-tab {
+#nav-image-tab, #nav-processing-tab, #nav-overlays-tab, #nav-location-tab {
 	width: 150px;
 	margin-top: 10px;
 	margin-right: 5px;
@@ -110,6 +110,7 @@ var fullscreen = false;  //initial state
     <button class="nav-link link-light bg-dark active" id="nav-image-tab" data-bs-toggle="tab" data-bs-target="#nav-image" type="button" role="tab" aria-controls="nav-image" aria-selected="true">Image</button>
     <button class="nav-link link-success bg-dark" id="nav-processing-tab" data-bs-toggle="tab" data-bs-target="#nav-processing" type="button" role="tab" aria-controls="nav-processing" aria-selected="false">Processing</button>
     <button class="nav-link link-secondary bg-dark" id="nav-overlays-tab" data-bs-toggle="tab" data-bs-target="#nav-overlays" type="button" role="tab" aria-controls="nav-overlays" aria-selected="false">Overlays</button>
+    <button class="nav-link link-info bg-dark" id="nav-location-tab" data-bs-toggle="tab" data-bs-target="#nav-location" type="button" role="tab" aria-controls="nav-location" aria-selected="false">Location</button>
   </div>
 </nav>
 
@@ -545,45 +546,6 @@ var fullscreen = false;  //initial state
 
     <div>
       <h5>These options are applied to the unprocessed image automatically</h5>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_IMAGE_CIRCLE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_IMAGE_CIRCLE(class='form-control bg-secondary') }}
-            <div id="LENS_IMAGE_CIRCLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Image circle in pixels.  If you cannot see the edge of the image circle, just ensure this number is larger than the diagonal.</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_OFFSET_X.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_OFFSET_X(class='form-control bg-secondary') }}
-            <div id="LENS_OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>X Offset from center</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_OFFSET_Y.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_image_processing.LENS_OFFSET_Y(class='form-control bg-secondary') }}
-            <div id="LENS_OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Y Offset from center</div>
-        </div>
     </div>
 
     <div class="form-group row">
@@ -1643,7 +1605,63 @@ var fullscreen = false;  //initial state
     </div>
 
   </div><!-- end overlays tab -->
+  <div class="tab-pane fade" id="nav-location" role="tabpanel" aria-labelledby="nav-location-tab">
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LENS_IMAGE_CIRCLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LENS_IMAGE_CIRCLE(class='form-control bg-secondary') }}
+            <div id="LENS_IMAGE_CIRCLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Image circle in pixels.  If you cannot see the edge of the image circle, just ensure this number is larger than the diagonal.</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LENS_OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LENS_OFFSET_X(class='form-control bg-secondary') }}
+            <div id="LENS_OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>X Offset from center</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LENS_OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LENS_OFFSET_Y(class='form-control bg-secondary') }}
+            <div id="LENS_OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Y Offset from center</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.LENS_AZIMUTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.LENS_AZIMUTH(class='form-control bg-secondary') }}
+            <div id="LENS_AZIMUTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> This affects Cardinal directions</div>
+        </div>
+    </div>
+
+  </div><!-- end location tab -->
 </div>
 
     </form>
@@ -1744,6 +1762,7 @@ const field_names = [
     'LENS_IMAGE_CIRCLE',
     'LENS_OFFSET_X',
     'LENS_OFFSET_Y',
+    'LENS_AZIMUTH',
     'CCD_BIT_DEPTH',
     'CLAHE_CLIPLIMIT',
     'CLAHE_GRIDSIZE',
