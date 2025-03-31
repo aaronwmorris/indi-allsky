@@ -6647,6 +6647,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     LENS_IMAGE_CIRCLE                = IntegerField('Image Circle', validators=[LENS_IMAGE_CIRCLE_validator])
     LENS_OFFSET_X                    = IntegerField('Lens X Offset', validators=[LENS_OFFSET_validator])
     LENS_OFFSET_Y                    = IntegerField('Lens Y Offset', validators=[LENS_OFFSET_validator])
+    LENS_AZIMUTH                     = FloatField('Azimuth', validators=[LENS_AZIMUTH_validator])
     IMAGE_CALIBRATE_DARK             = BooleanField('Dark Frame Calibration')
     IMAGE_CALIBRATE_BPM              = BooleanField('Bad Pixel Map Calibration')
     CCD_BIT_DEPTH                    = SelectField('Camera Bit Depth', choices=IndiAllskyConfigForm.CCD_BIT_DEPTH_choices, validators=[CCD_BIT_DEPTH_validator])

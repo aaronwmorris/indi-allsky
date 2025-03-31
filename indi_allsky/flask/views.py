@@ -6279,6 +6279,7 @@ class ImageProcessingView(TemplateView):
             'LENS_IMAGE_CIRCLE'              : self.indi_allsky_config.get('LENS_IMAGE_CIRCLE', 3000),
             'LENS_OFFSET_X'                  : self.indi_allsky_config.get('LENS_OFFSET_X', 0),
             'LENS_OFFSET_Y'                  : self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
+            'LENS_AZIMUTH'                   : self.indi_allsky_config.get('LENS_AZIMUTH', 0.0),
             'CCD_BIT_DEPTH'                  : str(self.indi_allsky_config.get('CCD_BIT_DEPTH', 0)),  # string in form, int in config
             'NIGHT_CONTRAST_ENHANCE'         : self.indi_allsky_config.get('NIGHT_CONTRAST_ENHANCE', False),
             'CONTRAST_ENHANCE_16BIT'         : self.indi_allsky_config.get('CONTRAST_ENHANCE_16BIT', False),
@@ -6520,6 +6521,7 @@ class JsonImageProcessingView(JsonView):
         p_config['LENS_IMAGE_CIRCLE']                    = int(request.json['LENS_IMAGE_CIRCLE'])
         p_config['LENS_OFFSET_X']                        = int(request.json['LENS_OFFSET_X'])
         p_config['LENS_OFFSET_X']                        = int(request.json['LENS_OFFSET_Y'])
+        p_config['LENS_AZIMUTH']                         = float(request.json['LENS_AZIMUTH'])
         p_config['CCD_BIT_DEPTH']                        = int(request.json['CCD_BIT_DEPTH'])
         p_config['IMAGE_CALIBRATE_DARK']                 = bool(request.json['IMAGE_CALIBRATE_DARK'])
         p_config['IMAGE_CALIBRATE_BPM']                  = bool(request.json['IMAGE_CALIBRATE_BPM'])
