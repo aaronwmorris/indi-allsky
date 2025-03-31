@@ -28,10 +28,10 @@ canvas {
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
 var img;
+var draw = true;
 var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
 var loadCountdown = 0;  // load immediately
-var redraw = false;
 var timestamp = {{ timestamp | int }};
 var history_seconds;  // set later
 var frame_delay_ms;  // set later
@@ -50,6 +50,13 @@ function init() {
 
     img = new Image();
     img.onload = function() {
+        if (!draw) {
+            return;
+        }
+
+        // block downloading new images
+        draw = false;
+
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
 
@@ -63,22 +70,8 @@ function init() {
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
-        // round the background strokes to prevent spikes
-        context.lineJoin = 'round';
-
-        if(drawIndex) {
-            var text = idx;
-            var maxWidth = 10;
-            var x = canvas.width-10-maxWidth;
-            var y = canvas.height-10;
-
-            context.strokeStyle = 'black';
-            context.lineWidth = 2;
-            context.strokeText(idx, x, y, maxWidth);
-            context.fillStyle = 'lightgrey';
-            context.fillText(idx, x, y, maxWidth);
-        }
-
+        // allow new images to be loaded
+        draw = true;
     };
 
 
@@ -115,6 +108,8 @@ async function loop() {
 
 function showImage(entry, idx) {
     console.log('Showing image ' + entry["url"]);
+
+
     img.src = entry["url"];
 }
 
