@@ -157,10 +157,6 @@ function init() {
         //context.imageSmoothingEnabled = false;
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
-        // round the background strokes to prevent spikes
-        context.lineJoin = 'round';
-
     };
 }
 
