@@ -11,6 +11,7 @@ canvas {
 };
 </style>
 <script type="text/javascript">
+var img;
 var json_data = {
     'image_b64'  : null,
     'processing_time' : 0,
@@ -26,29 +27,7 @@ function showImage(image_b64) {
         return;
     }
 
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
-
-    var img = new Image();
     img.src = "data:image/png;base64," + image_b64;
-    img.onload = function() {
-        canvas.setAttribute("width", window.innerWidth);
-        canvas.setAttribute("height", window.innerHeight);
-
-        var hRatio = canvas.width  / this.width;
-        var vRatio = canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
-        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
-
-        //context.imageSmoothingEnabled = false;
-        context.drawImage(this, 0, 0, this.width, this.height,
-            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
-        // round the background strokes to prevent spikes
-        context.lineJoin = 'round';
-
-    };
 }
 
 
@@ -161,6 +140,28 @@ function closeFullscreen() {
 
 <script>
 function init() {
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    img = new Image();
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio = canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        //context.imageSmoothingEnabled = false;
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+        // round the background strokes to prevent spikes
+        context.lineJoin = 'round';
+
+    };
 }
 
 

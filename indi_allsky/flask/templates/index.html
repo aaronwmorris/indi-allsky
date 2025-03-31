@@ -12,6 +12,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_latest.js') }}"></script>
 <script type="text/javascript">
+var img;
 var json_data = {
     'latest_image' : {
         'url' : null,
@@ -24,32 +25,12 @@ var refreshInterval = {{ refreshInterval | int }};
 var night = {{ night }};
 var fullscreen = false;  //initial state
 
+
 function init() {
-    loadNextImage();
-    loop();
-}
-
-async function loop() {
-    //console.log('Starting loop');
-
-    while(json_data['latest_image']['url'] == null) {
-        await sleep(100);
-    }
-
-    showImage(json_data['latest_image']);
-
-    setTimeout(loop, refreshInterval);
-}
-
-
-function showImage(entry) {
-    console.log('Showing image ' + entry["url"]);
-
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
-    var img = new Image();
-    img.src = entry["url"];
+    img = new Image();
     img.onload = function() {
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
@@ -69,6 +50,28 @@ function showImage(entry) {
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
     };
+
+    loadNextImage();
+    loop();
+}
+
+
+async function loop() {
+    //console.log('Starting loop');
+
+    while(json_data['latest_image']['url'] == null) {
+        await sleep(100);
+    }
+
+    showImage(json_data['latest_image']);
+
+    setTimeout(loop, refreshInterval);
+}
+
+
+function showImage(entry) {
+    console.log('Showing image ' + entry["url"]);
+    img.src = entry["url"];
 }
 
 

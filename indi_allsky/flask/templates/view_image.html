@@ -12,6 +12,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/clipboard.min.js') }}"></script>
 <script type="text/javascript">
+var img;
 var fullscreen = false;  //initial state
 var image_id = {{ image_id }};
 var file_view = "{{ file_view }}";
@@ -42,26 +43,7 @@ var image_url = "{{ image_url }}";
 function showImage(url) {
     console.log('Showing image ' + url);
 
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
-
-    var img = new Image();
     img.src = url;
-    img.onload = function() {
-        canvas.setAttribute("width", window.innerWidth);
-        canvas.setAttribute("height", window.innerHeight);
-
-        var hRatio = canvas.width  / this.width;
-        var vRatio = canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
-        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
-
-        //context.imageSmoothingEnabled = false;
-        context.drawImage(this, 0, 0, this.width, this.height,
-            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
-    };
 }
 
 function setResizeHandler(callback, timeout) {
@@ -120,6 +102,28 @@ function closeFullscreen() {
 
 function init() {
     new ClipboardJS('.copy-clipboard');
+
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    img = new Image();
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio = canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        //context.imageSmoothingEnabled = false;
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+    };
+
 
     showImage(image_url);
 
