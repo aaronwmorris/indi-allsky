@@ -81,13 +81,6 @@ function showImage(entry, idx) {
     // Need separate Image for every image of the loop, otherwise browser will not load properly
     var img = new Image();
     img.onload = function() {
-        if (!draw) {
-            return;
-        }
-
-        // block downloading new images
-        draw = false;
-
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
 
@@ -100,9 +93,6 @@ function showImage(entry, idx) {
         //context.imageSmoothingEnabled = false;
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
-        // allow new images to be loaded
-        draw = true;
     };
 
 
