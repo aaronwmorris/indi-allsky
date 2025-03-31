@@ -114,7 +114,7 @@ function setResizeHandler(callback, timeout) {
 
 function resize_callback() {
     if (json_data['latest_image']) {
-        showImage(img, json_data['latest_image']);
+        showImage(json_data['latest_image']);
     };
 }
 setResizeHandler(resize_callback, 200);
