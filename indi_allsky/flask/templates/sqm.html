@@ -24,6 +24,18 @@ var refreshInterval = {{ refreshInterval | int }};
 var fullscreen = false;  //initial state
 
 function init() {
+    loadNextImage();
+    loop();
+}
+
+async function loop() {
+    console.log('Starting loop');
+
+    while(json_data['image_list'].length == 0) {
+        await sleep(100);
+    }
+
+
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
@@ -101,7 +113,6 @@ function init() {
         context.fillText(stars_min_text, x-175, y+120, maxWidth);
 
 
-
         // SQM
         context.font = '32px serif';
 
@@ -134,17 +145,6 @@ function init() {
         context.fillText(sqm_min_text, x, y+120, maxWidth);
     };
 
-
-    loadNextImage();
-    loop();
-}
-
-async function loop() {
-    console.log('Starting loop');
-
-    while(json_data['image_list'].length == 0) {
-        await sleep(100);
-    }
 
     showImage(json_data['image_list'][0]);
 

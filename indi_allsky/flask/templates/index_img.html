@@ -12,6 +12,7 @@
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_latest.js') }}"></script>
 <script type="text/javascript">
+var img;
 var json_data = {
     'latest_image' : {
         'url' : null,
@@ -38,7 +39,7 @@ async function loop() {
     }
 
 
-    var img = new Image();
+    img = new Image();
     img.onload = function() {
         var hRatio = window.innerWidth / json_data['latest_image']["width"];
         var vRatio = window.innerHeight / json_data['latest_image']["height"];
@@ -53,13 +54,13 @@ async function loop() {
     };
 
 
-    showImage(img, json_data['latest_image']);
+    showImage(json_data['latest_image']);
 
     setTimeout(loop, refreshInterval);
 }
 
 
-function showImage(img, entry) {
+function showImage(entry) {
     console.log('Showing image ' + entry["url"]);
     img.src = entry["url"];
 }
@@ -113,7 +114,7 @@ function setResizeHandler(callback, timeout) {
 
 function resize_callback() {
     if (json_data['latest_image']) {
-        showImage(json_data['latest_image']);
+        showImage(img, json_data['latest_image']);
     };
 }
 setResizeHandler(resize_callback, 200);

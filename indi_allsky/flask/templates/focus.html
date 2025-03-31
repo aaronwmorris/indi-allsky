@@ -38,6 +38,60 @@ async function loop() {
         await sleep(100);
     }
 
+
+    var image_canvas = document.getElementById("image-canvas");
+    var context = image_canvas.getContext("2d");
+
+    img = new Image();
+    img.onload = function() {
+        image_canvas.setAttribute("width", window.innerWidth);
+        image_canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = image_canvas.width  / this.width;
+        var vRatio = image_canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( image_canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( image_canvas.height - this.height * ratio ) / 2;
+
+        context.imageSmoothingEnabled = false;
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+
+        // round the background strokes to prevent spikes
+        context.lineJoin = 'round';
+        //context.miterLimit = 2;
+
+
+        context.textAlign = 'left';
+        context.lineWidth = 10;
+        var maxWidth = 200;
+        var x = image_canvas.width-10-maxWidth;
+        var y = image_canvas.height-150;
+
+        context.font = '20px serif';
+
+        var blur_score_text = "Score: " + parseFloat(blur_score).toFixed(2);
+        context.strokeStyle = 'black';
+        context.strokeText(blur_score_text, x-175, y+40, maxWidth);
+        context.fillStyle = 'rgba(192, 75, 75, 1)';
+        context.fillText(blur_score_text, x-175, y+40, maxWidth);
+
+        var star_count_text = "Stars: " + star_count;
+        context.strokeStyle = 'black';
+        context.strokeText(star_count_text, x-175, y+75, maxWidth);
+        context.fillStyle = 'rgba(75, 75, 192, 1)';
+        context.fillText(star_count_text, x-175, y+75, maxWidth);
+
+        var blur_score_text = "Focus Mode: " + json_data['focus_mode'];
+        context.strokeStyle = 'black';
+        context.strokeText(blur_score_text, x-175, y+110, maxWidth);
+        context.fillStyle = 'lightgrey';
+        context.fillText(blur_score_text, x-175, y+110, maxWidth);
+
+    };
+
+
     showImage(json_data['image_b64']);
 
     setTimeout(loop, refreshInterval);
@@ -298,59 +352,6 @@ $("#FOCUS_CW").on("click", function() {
 function init() {
     if (focuser_device) {
         $('#focus_controller_div').css({'display' : 'flex'});
-    };
-
-
-    var image_canvas = document.getElementById("image-canvas");
-    var context = image_canvas.getContext("2d");
-
-    img = new Image();
-    img.onload = function() {
-        image_canvas.setAttribute("width", window.innerWidth);
-        image_canvas.setAttribute("height", window.innerHeight);
-
-        var hRatio = image_canvas.width  / this.width;
-        var vRatio = image_canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
-        var centerShift_x = ( image_canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( image_canvas.height - this.height * ratio ) / 2;
-
-        context.imageSmoothingEnabled = false;
-        context.drawImage(this, 0, 0, this.width, this.height,
-            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
-
-        // round the background strokes to prevent spikes
-        context.lineJoin = 'round';
-        //context.miterLimit = 2;
-
-
-        context.textAlign = 'left';
-        context.lineWidth = 10;
-        var maxWidth = 200;
-        var x = image_canvas.width-10-maxWidth;
-        var y = image_canvas.height-150;
-
-        context.font = '20px serif';
-
-        var blur_score_text = "Score: " + parseFloat(blur_score).toFixed(2);
-        context.strokeStyle = 'black';
-        context.strokeText(blur_score_text, x-175, y+40, maxWidth);
-        context.fillStyle = 'rgba(192, 75, 75, 1)';
-        context.fillText(blur_score_text, x-175, y+40, maxWidth);
-
-        var star_count_text = "Stars: " + star_count;
-        context.strokeStyle = 'black';
-        context.strokeText(star_count_text, x-175, y+75, maxWidth);
-        context.fillStyle = 'rgba(75, 75, 192, 1)';
-        context.fillText(star_count_text, x-175, y+75, maxWidth);
-
-        var blur_score_text = "Focus Mode: " + json_data['focus_mode'];
-        context.strokeStyle = 'black';
-        context.strokeText(blur_score_text, x-175, y+110, maxWidth);
-        context.fillStyle = 'lightgrey';
-        context.fillText(blur_score_text, x-175, y+110, maxWidth);
-
     };
 
 
