@@ -36,6 +36,15 @@ async function loop() {
     }
 
 
+    showImage(json_data['image_list'][0]);
+
+    setTimeout(loop, refreshInterval);
+}
+
+
+function showImage(entry) {
+    console.log('Showing image ' + entry["url"]);
+
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
@@ -146,14 +155,6 @@ async function loop() {
     };
 
 
-    showImage(json_data['image_list'][0]);
-
-    setTimeout(loop, refreshInterval);
-}
-
-
-function showImage(entry) {
-    console.log('Showing image ' + entry["url"]);
     img.src = entry["url"];
 }
 

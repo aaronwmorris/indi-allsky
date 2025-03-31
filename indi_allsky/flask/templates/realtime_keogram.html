@@ -24,6 +24,29 @@ function init() {
 }
 
 function loop() {
+    showImage(url);
+
+    $('#download').html(
+        $('<a />', {
+            'href' : "{{ keogram_uri }}",
+            'rel' : "noopener noreferrer",
+            'download' : '',
+        }).html(
+            $('<span />', {
+                'text'  : 'Download',
+                'class' : "badge pill bg-danger",
+            })
+        )
+    );
+
+
+    setTimeout(loop, refreshInterval);
+}
+
+
+function showImage(url) {
+    console.log('Showing image ' + url);
+
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
@@ -51,29 +74,6 @@ function loop() {
     };
 
 
-    showImage(url);
-
-
-    $('#download').html(
-        $('<a />', {
-            'href' : "{{ keogram_uri }}",
-            'rel' : "noopener noreferrer",
-            'download' : '',
-        }).html(
-            $('<span />', {
-                'text'  : 'Download',
-                'class' : "badge pill bg-danger",
-            })
-        )
-    );
-
-
-    setTimeout(loop, refreshInterval);
-}
-
-
-function showImage(url) {
-    console.log('Showing image ' + url);
     img.src = url + "?t=" + new Date().getTime();
 }
 

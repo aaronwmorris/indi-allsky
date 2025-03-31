@@ -1675,6 +1675,28 @@ function showImage(image_b64) {
         return;
     }
 
+
+    var image_canvas = document.getElementById("image-canvas");
+    var context = image_canvas.getContext("2d");
+
+    img = new Image();
+    img.onload = function() {
+        image_canvas.setAttribute("width", window.innerWidth);
+        image_canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = image_canvas.width  / this.width;
+        var vRatio = image_canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+        var centerShift_x = ( image_canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( image_canvas.height - this.height * ratio ) / 2;
+
+        context.imageSmoothingEnabled = false;
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+    };
+
+
     img.src = "data:image/jpg;base64," + image_b64;
 }
 
@@ -1975,28 +1997,6 @@ function init() {
     $('#processing_time').text('Unprocessed image');
 
     $('#DISABLE_PROCESSING').prop('checked', false);
-
-
-    var image_canvas = document.getElementById("image-canvas");
-    var context = image_canvas.getContext("2d");
-
-    img = new Image();
-    img.onload = function() {
-        image_canvas.setAttribute("width", window.innerWidth);
-        image_canvas.setAttribute("height", window.innerHeight);
-
-        var hRatio = image_canvas.width  / this.width;
-        var vRatio = image_canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
-        var centerShift_x = ( image_canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( image_canvas.height - this.height * ratio ) / 2;
-
-        context.imageSmoothingEnabled = false;
-        context.drawImage(this, 0, 0, this.width, this.height,
-            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
-    };
-
 }
 
 

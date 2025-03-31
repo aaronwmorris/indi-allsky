@@ -39,6 +39,20 @@ async function loop() {
     }
 
 
+    showImage(json_data['image_b64']);
+
+    setTimeout(loop, refreshInterval);
+}
+
+
+function showImage(image_b64) {
+    console.log('Showing image');
+
+    if (image_b64 == null) {
+        return;
+    }
+
+
     var image_canvas = document.getElementById("image-canvas");
     var context = image_canvas.getContext("2d");
 
@@ -91,19 +105,6 @@ async function loop() {
 
     };
 
-
-    showImage(json_data['image_b64']);
-
-    setTimeout(loop, refreshInterval);
-}
-
-
-function showImage(image_b64) {
-    console.log('Showing image');
-
-    if (image_b64 == null) {
-        return;
-    }
 
     img.src = "data:image/jpg;base64," + image_b64;
 }

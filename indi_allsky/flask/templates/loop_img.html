@@ -57,39 +57,15 @@ async function loop() {
     var image_list_copy = JSON.parse(JSON.stringify(json_data['image_list']));
 
 
-    // Need separate Image for every image of the loop, otherwise browser will not load properly
-    var img_list = [];
-    for (var i = 0; i < image_list_copy.length; i++) {
-        var img = new Image();
-        img.onload = function() {
-            var hRatio = window.innerWidth / image_list_copy[i]["width"];
-            var vRatio = window.innerHeight / image_list_copy[i]["height"];
-            var ratio  = Math.min ( hRatio, vRatio );
-
-
-            $('#loop-image').attr({
-                //'src': image_list_copy[i]["url"],
-                'src': this.src,
-                'width': (image_list_copy[i]["width"] * ratio) * 0.85,
-                'height': (image_list_copy[i]["height"] * ratio) * 0.85
-            });
-
-        };
-
-        img_list.push(img);
-    }
-
-
-
     if (rock) {
-        for (var i = 0; i < img_list.length; i++) {
-            showImage(img_list[i], image_list_copy[i]);
+        for (var i = 0; i < image_list_copy.length; i++) {
+            showImage(image_list_copy[i]);
             await sleep(frame_delay_ms);
         };
     };
 
-    for (var i = img_list.length - 1; i >= 0; i--) {
-        showImage(img_list[i], image_list_copy[i]);
+    for (var i = image_list_copy.length - 1; i >= 0; i--) {
+        showImage(image_list_copy[i]);
         await sleep(frame_delay_ms);
     };
 
@@ -97,8 +73,25 @@ async function loop() {
 }
 
 
-function showImage(img, entry) {
+function showImage(entry) {
     console.log('Showing image ' + entry["url"]);
+
+    // Need separate Image for every image of the loop, otherwise browser will not load properly
+    var img = new Image();
+    img.onload = function() {
+        var hRatio = window.innerWidth / entry["width"];
+        var vRatio = window.innerHeight / entry["height"];
+        var ratio  = Math.min ( hRatio, vRatio );
+
+
+        $('#loop-image').attr({
+            'src': this.src,
+            'width': (entry["width"] * ratio) * 0.85,
+            'height': (entry["height"] * ratio) * 0.85
+        });
+    };
+
+
     img.src = entry["url"];
 }
 
