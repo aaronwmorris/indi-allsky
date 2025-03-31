@@ -56,12 +56,16 @@ async function loop() {
     }
 
 
+    // prevent concurrent updates to list
+    var image_list_copy = JSON.parse(JSON.stringify(json_data['image_list']));
+
+
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
     // Need separate Image for every image of the loop, otherwise browser will not load properly
-    var image_list = [];
-    for (var i = 0; i < json_data['image_list'].length; i++) {
+    var img_list = [];
+    for (var i = 0; i < image_list_copy.length; i++) {
         var img = new Image();
         img.onload = function() {
             canvas.setAttribute("width", window.innerWidth);
@@ -78,19 +82,19 @@ async function loop() {
                 centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
         };
 
-        image_list.push(img);
+        img_list.push(img);
     }
 
 
     if (rock) {
-        for (var i = 0; i < image_list.length; i++) {
-            showImage(image_list[i], json_data['image_list'][i]);
+        for (var i = 0; i < img_list.length; i++) {
+            showImage(img_list[i], image_list_copy[i]);
             await sleep(frame_delay_ms);
         };
     };
 
-    for (var i = image_list.length - 1; i >= 0; i--) {
-        showImage(image_list[i], json_data['image_list'][i]);
+    for (var i = img_list.length - 1; i >= 0; i--) {
+        showImage(img_list[i], image_list_copy[i]);
         await sleep(frame_delay_ms);
     };
 
