@@ -2202,8 +2202,8 @@ class ConfigView(FormView):
             'LIBCAMERA__IMAGE_FILE_TYPE_DAY' : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'jpg'),
             'LIBCAMERA__AWB'                 : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB', 'auto'),
             'LIBCAMERA__AWB_DAY'             : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_DAY', 'auto'),
-            'LIBCAMERA__AWB_ENABLE'          : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_ENABLE', False),
-            'LIBCAMERA__AWB_ENABLE_DAY'      : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY', False),
+            'LIBCAMERA__AWB_ENABLE'          : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_ENABLE', True),
+            'LIBCAMERA__AWB_ENABLE_DAY'      : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY', True),
             'LIBCAMERA__CAMERA_ID'           : str(self.indi_allsky_config.get('LIBCAMERA', {}).get('CAMERA_ID', 0)),  # string in form, int in config
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
             'LIBCAMERA__EXTRA_OPTIONS_DAY'   : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS_DAY', ''),
