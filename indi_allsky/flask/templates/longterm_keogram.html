@@ -11,6 +11,7 @@ canvas {
 };
 </style>
 <script type="text/javascript">
+var img;
 var json_data = {
     'image_b64'  : null,
     'processing_time' : 0,
@@ -21,16 +22,15 @@ var fullscreen = false;  //initial state
 var page_settings;  // set later
 
 function showImage(image_b64) {
-
     if (image_b64 == null) {
         return;
     }
 
+
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
-    var img = new Image();
-    img.src = "data:image/png;base64," + image_b64;
+    img = new Image();
     img.onload = function() {
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
@@ -44,11 +44,10 @@ function showImage(image_b64) {
         //context.imageSmoothingEnabled = false;
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
-        // round the background strokes to prevent spikes
-        context.lineJoin = 'round';
-
     };
+
+
+    img.src = "data:image/png;base64," + image_b64;
 }
 
 

@@ -12,6 +12,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/chart.umd.js') }}"></script>
 <script type="text/javascript">
+var img;
 var json_data = {
     'image_b64'  : null,
     'blur_score' : 0.0,
@@ -37,6 +38,7 @@ async function loop() {
         await sleep(100);
     }
 
+
     showImage(json_data['image_b64']);
 
     setTimeout(loop, refreshInterval);
@@ -50,11 +52,11 @@ function showImage(image_b64) {
         return;
     }
 
+
     var image_canvas = document.getElementById("image-canvas");
     var context = image_canvas.getContext("2d");
 
-    var img = new Image();
-    img.src = "data:image/jpg;base64," + image_b64;
+    img = new Image();
     img.onload = function() {
         image_canvas.setAttribute("width", window.innerWidth);
         image_canvas.setAttribute("height", window.innerHeight);
@@ -102,6 +104,9 @@ function showImage(image_b64) {
         context.fillText(blur_score_text, x-175, y+110, maxWidth);
 
     };
+
+
+    img.src = "data:image/jpg;base64," + image_b64;
 }
 
 

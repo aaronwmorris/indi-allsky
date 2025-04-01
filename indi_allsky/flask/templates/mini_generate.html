@@ -27,6 +27,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
+var img;
 var camera_id = {{ camera_id }};
 var timestamp = {{ timestamp | int }};
 var endDate_timestamp;  // set later
@@ -61,11 +62,13 @@ async function loop() {
         await sleep(100);
     }
 
+
     // prevent concurrent updates to list
     var image_list_copy = JSON.parse(JSON.stringify(json_data['image_list']));
 
+
     for (var i = image_list_copy.length - 1; i >= 0; i--) {
-        showImage(image_list_copy[i], i);
+        showImage(image_list_copy[i]);
         await sleep(framerate_delay_lut[framerate]);
     };
 
@@ -73,14 +76,13 @@ async function loop() {
 }
 
 
-function showImage(entry, idx) {
+function showImage(entry) {
     console.log('Showing image ' + entry["url"]);
 
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
-    var img = new Image();
-    img.src = entry["url"];
+    img = new Image();
     img.onload = function() {
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
@@ -94,24 +96,10 @@ function showImage(entry, idx) {
         //context.imageSmoothingEnabled = false;
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
-        // round the background strokes to prevent spikes
-        context.lineJoin = 'round';
-
-        if(drawIndex) {
-            var text = idx;
-            var maxWidth = 10;
-            var x = canvas.width-10-maxWidth;
-            var y = canvas.height-10;
-
-            context.strokeStyle = 'black';
-            context.lineWidth = 2;
-            context.strokeText(idx, x, y, maxWidth);
-            context.fillStyle = 'lightgrey';
-            context.fillText(idx, x, y, maxWidth);
-        }
-
     };
+
+
+    img.src = entry["url"];
 }
 
 

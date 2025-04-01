@@ -33,6 +33,7 @@
 };
 </style>
 <script type="text/javascript">
+var img;
 var camera_id = {{ camera_id }};
 var json_data = {
     'image_b64'  : null,
@@ -1674,11 +1675,11 @@ function showImage(image_b64) {
         return;
     }
 
+
     var image_canvas = document.getElementById("image-canvas");
     var context = image_canvas.getContext("2d");
 
-    var img = new Image();
-    img.src = "data:image/jpg;base64," + image_b64;
+    img = new Image();
     img.onload = function() {
         image_canvas.setAttribute("width", window.innerWidth);
         image_canvas.setAttribute("height", window.innerHeight);
@@ -1694,6 +1695,9 @@ function showImage(image_b64) {
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
     };
+
+
+    img.src = "data:image/jpg;base64," + image_b64;
 }
 
 

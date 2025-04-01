@@ -12,6 +12,7 @@
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_latest.js') }}"></script>
 <script type="text/javascript">
+var img;
 var json_data = {
     'latest_image' : {
         'url' : null,
@@ -33,10 +34,25 @@ function init() {
 
 async function loop() {
     //console.log('Starting loop');
-
     while(json_data['latest_image']['url'] == null) {
         await sleep(100);
     }
+
+
+    img = new Image();
+    img.onload = function() {
+        var hRatio = window.innerWidth / json_data['latest_image']["width"];
+        var vRatio = window.innerHeight / json_data['latest_image']["height"];
+        var ratio  = Math.min ( hRatio, vRatio );
+
+
+        $('#latest-image').attr({
+            'src': this.src,
+            'width': (json_data['latest_image']["width"] * ratio) * 0.95,
+            'height': (json_data['latest_image']["height"] * ratio) * 0.95
+        });
+    };
+
 
     showImage(json_data['latest_image']);
 
@@ -46,17 +62,7 @@ async function loop() {
 
 function showImage(entry) {
     console.log('Showing image ' + entry["url"]);
-
-    var hRatio = window.innerWidth / entry["width"];
-    var vRatio = window.innerHeight / entry["height"];
-    var ratio  = Math.min ( hRatio, vRatio );
-
-
-    $('#latest-image').attr({
-        'src': entry["url"],
-        'width': (entry["width"] * ratio) * 0.95,
-        'height': (entry["height"] * ratio) * 0.95
-    });
+    img.src = entry["url"];
 }
 
 

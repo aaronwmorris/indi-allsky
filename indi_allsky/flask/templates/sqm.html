@@ -12,6 +12,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_latest.js') }}"></script>
 <script type="text/javascript">
+var img;
 var json_data = {
     'image_list'  : [],
     'sqm_data'    : {'min' : 0, 'max' : 0, 'avg' : 0},
@@ -34,6 +35,7 @@ async function loop() {
         await sleep(100);
     }
 
+
     showImage(json_data['image_list'][0]);
 
     setTimeout(loop, refreshInterval);
@@ -46,8 +48,7 @@ function showImage(entry) {
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
-    var img = new Image();
-    img.src = entry["url"];
+    img = new Image();
     img.onload = function() {
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
@@ -80,7 +81,7 @@ function showImage(entry) {
 
 
         // Lines
-        if (entry["detections"] > 0) {
+        if (json_data['image_list'][0]["detections"] > 0) {
             context.font = '20px serif';
 
             var sqm_text = "*** Detection ***";
@@ -94,7 +95,7 @@ function showImage(entry) {
         // Stars
         context.font = '32px serif';
 
-        var sqm_text = "Stars " + parseFloat(entry["stars"]);
+        var sqm_text = "Stars " + parseFloat(json_data['image_list'][0]["stars"]);
         context.strokeStyle = 'black';
         context.strokeText(sqm_text, x-175, y, maxWidth);
         context.fillStyle = 'lightgrey';
@@ -121,11 +122,10 @@ function showImage(entry) {
         context.fillText(stars_min_text, x-175, y+120, maxWidth);
 
 
-
         // SQM
         context.font = '32px serif';
 
-        var sqm_text = "jSQM " + parseFloat(entry["sqm"]).toFixed(1);
+        var sqm_text = "jSQM " + parseFloat(json_data['image_list'][0]["sqm"]).toFixed(1);
         context.strokeStyle = 'black';
         context.strokeText(sqm_text, x, y, maxWidth);
         context.fillStyle = 'lightgrey';
@@ -153,6 +153,9 @@ function showImage(entry) {
         context.fillStyle = 'lightgrey';
         context.fillText(sqm_min_text, x, y+120, maxWidth);
     };
+
+
+    img.src = entry["url"];
 }
 
 

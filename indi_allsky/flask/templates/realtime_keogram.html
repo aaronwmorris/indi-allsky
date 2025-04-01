@@ -12,6 +12,7 @@ canvas {
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_latest.js') }}"></script>
 <script type="text/javascript">
+var img;
 var camera_id = {{ camera_id }};
 var url = '{{ keogram_uri }}';
 var refreshInterval = {{ refreshInterval | int }};
@@ -19,11 +20,37 @@ var img;
 var fullscreen = false;  //initial state
 
 function init() {
+    loop();
+}
+
+function loop() {
+    showImage(url);
+
+    $('#download').html(
+        $('<a />', {
+            'href' : "{{ keogram_uri }}",
+            'rel' : "noopener noreferrer",
+            'download' : '',
+        }).html(
+            $('<span />', {
+                'text'  : 'Download',
+                'class' : "badge pill bg-danger",
+            })
+        )
+    );
+
+
+    setTimeout(loop, refreshInterval);
+}
+
+
+function showImage(url) {
+    console.log('Showing image ' + url);
+
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
     img = new Image();
-    img.src = url;
     img.onload = function() {
         $('#message').empty();
 
@@ -46,34 +73,7 @@ function init() {
 
     };
 
-    loop();
-}
 
-function loop() {
-    showImage(url);
-
-
-    $('#download').html(
-        $('<a />', {
-            'href' : "{{ keogram_uri }}",
-            'rel' : "noopener noreferrer",
-            'download' : '',
-        }).html(
-            $('<span />', {
-                'text'  : 'Download',
-                'class' : "badge pill bg-danger",
-            })
-        )
-    );
-
-
-    setTimeout(loop, refreshInterval);
-}
-
-
-function showImage(url) {
-    console.log('Showing image ' + url);
-    
     img.src = url + "?t=" + new Date().getTime();
 }
 

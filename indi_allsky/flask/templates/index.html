@@ -24,10 +24,12 @@ var refreshInterval = {{ refreshInterval | int }};
 var night = {{ night }};
 var fullscreen = false;  //initial state
 
+
 function init() {
     loadNextImage();
     loop();
 }
+
 
 async function loop() {
     //console.log('Starting loop');
@@ -35,6 +37,7 @@ async function loop() {
     while(json_data['latest_image']['url'] == null) {
         await sleep(100);
     }
+
 
     showImage(json_data['latest_image']);
 
@@ -49,7 +52,6 @@ function showImage(entry) {
     var context = canvas.getContext("2d");
 
     var img = new Image();
-    img.src = entry["url"];
     img.onload = function() {
         canvas.setAttribute("width", window.innerWidth);
         canvas.setAttribute("height", window.innerHeight);
@@ -69,6 +71,9 @@ function showImage(entry) {
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
     };
+
+
+    img.src = entry["url"];
 }
 
 

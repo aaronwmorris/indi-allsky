@@ -402,7 +402,9 @@ class IndiAllSkyConfigBase(object):
             "UPLOAD_REALTIME_KEOGRAM": 0,
             "FORCE_IPV4"             : False,
             "FORCE_IPV6"             : False,
-            "LIBCURL_OPTIONS"        : {},
+            "LIBCURL_OPTIONS"        : {
+                "VERBOSE" : 0,
+            },
         },
         "S3UPLOAD" : {
             "ENABLE"                 : False,
