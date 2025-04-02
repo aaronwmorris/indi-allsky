@@ -79,10 +79,11 @@ class StarTrailGenerator(object):
         self.placeholder_image = None
         self.placeholder_adu = 255
 
-
         self._trail_count = 0
         self._timelapse_frame_count = 0
         self._timelapse_frame_list = list()
+
+        self._image_circle_alpha_mask = None
 
 
         if self.config['IMAGE_FOLDER']:
@@ -371,6 +372,16 @@ class StarTrailGenerator(object):
                 return
 
 
+
+        ### This can be used to mask out the text around the image circle
+        if self.config.get('STARTRAILS', {}).get('IMAGE_CIRCLE_MASK_ENABLE'):
+            if isinstance(self._image_circle_alpha_mask, type(None)):
+                self._image_circle_alpha_mask = self._generate_image_circle_mask(image)
+
+
+            image = (image * self._image_circle_alpha_mask).astype(numpy.uint8)
+
+
         ### Here is the magic
         self.trail_image = cv2.max(self.trail_image, image)
 
@@ -575,4 +586,46 @@ class StarTrailGenerator(object):
         )
 
         self._sqm_mask = mask
+
+
+    def _generate_image_circle_mask(self, image):
+        image_height, image_width = image.shape[:2]
+
+
+        opacity = self.config.get('STARTRAILS', {}).get('IMAGE_CIRCLE_MASK_OPACITY', 100)
+        background = int(255 * (100 - opacity) / 100)
+        #logger.info('Image circle backgound: %d', background)
+
+        channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint8)
+
+        center_x = int(image_width / 2) + self.config.get('LENS_OFFSET_X', 0)
+        center_y = int(image_height / 2) - self.config.get('LENS_OFFSET_Y', 0)  # minus
+        radius = int(self.config.get('STARTRAILS', {}).get('IMAGE_CIRCLE_MASK_DIAMETER', 3000) / 2)
+        blur = self.config.get('STARTRAILS', {}).get('IMAGE_CIRCLE_MASK_BLUR', 35)
+
+
+        # draw a white circle
+        cv2.circle(
+            img=channel_mask,
+            center=(center_x, center_y),
+            radius=radius,
+            color=(255),
+            thickness=cv2.FILLED,
+        )
+
+
+        if blur:
+            # blur circle
+            channel_mask = cv2.blur(
+                src=channel_mask,
+                ksize=(blur, blur),
+                borderType=cv2.BORDER_DEFAULT,
+            )
+
+
+        channel_alpha = (channel_mask / 255).astype(numpy.float32)
+
+        alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
+
+        return alpha_mask
 

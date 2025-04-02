@@ -1974,6 +1974,10 @@ class ConfigView(FormView):
             'STARTRAILS_TIMELAPSE'           : self.indi_allsky_config.get('STARTRAILS_TIMELAPSE', True),
             'STARTRAILS_TIMELAPSE_MINFRAMES' : self.indi_allsky_config.get('STARTRAILS_TIMELAPSE_MINFRAMES', 250),
             'STARTRAILS_USE_DB_DATA'         : self.indi_allsky_config.get('STARTRAILS_USE_DB_DATA', True),
+            'STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE'  : self.indi_allsky_config.get('STARTRAILS', {}).get('IMAGE_CIRCLE_MASK_ENABLE', False),
+            'STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER': self.indi_allsky_config.get('STARTRAILS', {}).get('IMAGE_CIRCLE_MASK_DIAMETER', 3000),
+            'STARTRAILS__IMAGE_CIRCLE_MASK_BLUR'    : self.indi_allsky_config.get('STARTRAILS', {}).get('IMAGE_CIRCLE_MASK_BLUR', 35),
+            'STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY' : self.indi_allsky_config.get('STARTRAILS', {}).get('IMAGE_CIRCLE_MASK_OPACITY', 100),
             'IMAGE_CALIBRATE_DARK'           : self.indi_allsky_config.get('IMAGE_CALIBRATE_DARK', True),
             'IMAGE_CALIBRATE_BPM'            : self.indi_allsky_config.get('IMAGE_CALIBRATE_BPM', False),
             'IMAGE_SAVE_FITS_PRE_DARK'       : self.indi_allsky_config.get('IMAGE_SAVE_FITS_PRE_DARK', False),
@@ -2646,6 +2650,7 @@ class AjaxConfigView(BaseView):
             'SATELLITE_TRACK',
             'LONGTERM_KEOGRAM',
             'REALTIME_KEOGRAM',
+            'STARTRAILS',
         )
 
         for leaf in leaf_list:
@@ -2791,6 +2796,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['STARTRAILS_TIMELAPSE']                 = bool(request.json['STARTRAILS_TIMELAPSE'])
         self.indi_allsky_config['STARTRAILS_TIMELAPSE_MINFRAMES']       = int(request.json['STARTRAILS_TIMELAPSE_MINFRAMES'])
         self.indi_allsky_config['STARTRAILS_USE_DB_DATA']               = bool(request.json['STARTRAILS_USE_DB_DATA'])
+        self.indi_allsky_config['STARTRAILS']['IMAGE_CIRCLE_MASK_ENABLE']   = bool(request.json['STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE'])
+        self.indi_allsky_config['STARTRAILS']['IMAGE_CIRCLE_MASK_DIAMETER'] = int(request.json['STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER'])
+        self.indi_allsky_config['STARTRAILS']['IMAGE_CIRCLE_MASK_BLUR']     = int(request.json['STARTRAILS__IMAGE_CIRCLE_MASK_BLUR'])
+        self.indi_allsky_config['STARTRAILS']['IMAGE_CIRCLE_MASK_OPACITY']  = int(request.json['STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY'])
         self.indi_allsky_config['IMAGE_CALIBRATE_DARK']                 = bool(request.json['IMAGE_CALIBRATE_DARK'])
         self.indi_allsky_config['IMAGE_CALIBRATE_BPM']                  = bool(request.json['IMAGE_CALIBRATE_BPM'])
         self.indi_allsky_config['IMAGE_SAVE_FITS_PRE_DARK']             = bool(request.json['IMAGE_SAVE_FITS_PRE_DARK'])

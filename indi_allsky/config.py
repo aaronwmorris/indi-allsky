@@ -185,6 +185,12 @@ class IndiAllSkyConfigBase(object):
         "STARTRAILS_MOON_ALT_THOLD"      : 91.0,
         "STARTRAILS_MOON_PHASE_THOLD"    : 101.0,
         "STARTRAILS_USE_DB_DATA"         : True,
+        "STARTRAILS" : {
+            "IMAGE_CIRCLE_MASK_ENABLE"   : False,
+            "IMAGE_CIRCLE_MASK_DIAMETER" : 3000,
+            "IMAGE_CIRCLE_MASK_BLUR"     : 35,
+            "IMAGE_CIRCLE_MASK_OPACITY"  : 100,
+        },
         "IMAGE_CALIBRATE_DARK"  : True,
         "IMAGE_CALIBRATE_BPM"   : False,
         "IMAGE_EXIF_PRIVACY"    : False,
