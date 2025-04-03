@@ -146,7 +146,7 @@ fi
 if [ -n "${WHIPTAIL_BIN:-}" ]; then
     "$WHIPTAIL_BIN" \
         --title "Welcome to indi-allsky" \
-        --msgbox "*** Welcome to the indi-allsky web setup script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nHTTP Port: $HTTP_PORT\nHTTPS Port: $HTTPS_PORT" 0 0
+        --msgbox "*** Welcome to the indi-allsky web setup script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nWeb Server: $WEBSERVER\nHTTP Port: $HTTP_PORT\nHTTPS Port: $HTTPS_PORT" 0 0
 fi
 
 
@@ -165,6 +165,7 @@ echo "ALLSKY_ETC: $ALLSKY_ETC"
 echo "HTDOCS_FOLDER: $HTDOCS_FOLDER"
 echo "DB_FOLDER: $DB_FOLDER"
 echo "DB_FILE: $DB_FILE"
+echo "WEBSERVER: $WEBSERVER"
 echo "HTTP_PORT: $HTTP_PORT"
 echo "HTTPS_PORT: $HTTPS_PORT"
 echo
