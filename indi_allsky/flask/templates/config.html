@@ -2725,6 +2725,7 @@ var camera_id = {{ camera_id }};
             <div id="DETECT_MASK-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-5">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Detection-Masks" class="text-decoration-none link-info" target="_blank">Detection Mask Wiki</a></div>
             <div>Image mask file for detection area.  Must be a PNG</div>
         </div>
     </div>
@@ -3265,6 +3266,58 @@ var camera_id = {{ camera_id }};
             <div id="STARTRAILS_TIMELAPSE_MINFRAMES-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Minimum frames for star trails timelapse.  250 frames = 10s @ 25fps</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE(class='form-check-input') }}
+                <div id="STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">This may be used to mask text outside the image circle</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER(class='form-control bg-secondary') }}
+            <div id="STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Diameter in pixels</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_BLUR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_BLUR(class='form-control bg-secondary') }}
+            <div id="STARTRAILS__IMAGE_CIRCLE_MASK_BLUR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY(class='form-control bg-secondary') }}
+            <div id="STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
     </div>
 
     <hr>
@@ -7249,6 +7302,9 @@ const field_names = [
     'STARTRAILS_SUN_ALT_THOLD',
     'STARTRAILS_MOON_ALT_THOLD',
     'STARTRAILS_MOON_PHASE_THOLD',
+    'STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER',
+    'STARTRAILS__IMAGE_CIRCLE_MASK_BLUR',
+    'STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY',
     'IMAGE_FILE_TYPE',
     'IMAGE_FILE_COMPRESSION__JPG',
     'IMAGE_FILE_COMPRESSION__PNG',
@@ -7585,6 +7641,7 @@ const checkbox_field_names = [
     'STARTRAILS_MOONMODE_THOLD',
     'STARTRAILS_USE_DB_DATA',
     'STARTRAILS_TIMELAPSE',
+    'STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE',
     'IMAGE_EXIF_PRIVACY',
     'TIMELAPSE_OVERWRITE',
     'IMAGE_FLIP_V',
