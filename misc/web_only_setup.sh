@@ -35,6 +35,8 @@ WEB_USER="${INDIALLSKY_WEB_USER:-}"
 WEB_PASS="${INDIALLSKY_WEB_PASS:-}"
 WEB_NAME="${INDIALLSKY_WEB_NAME:-}"
 WEB_EMAIL="${INDIALLSKY_WEB_EMAIL:-}"
+
+WEBSERVER="${INDIALLSKY_WEBSERVER:-apache}"
 #### end config ####
  
  
@@ -295,7 +297,6 @@ if [[ "$DISTRO" == "debian_12" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libimath-dev \
@@ -384,7 +385,6 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -473,7 +473,6 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libimath-dev \
@@ -565,7 +564,6 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -657,7 +655,6 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         tzdata \
         ca-certificates \
         avahi-daemon \
-        apache2 \
         swig \
         libatlas-base-dev \
         libilmbase-dev \
@@ -712,6 +709,23 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
+fi
+
+
+if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+    if [ "$WEBSERVER" == "nginx" ]; then
+        sudo apt-get -y install \
+            nginx
+    elif [ "$WEBSERVER" == "apache" ]; then
+        sudo apt-get -y install \
+            apache2
+    else
+        echo
+        echo "Unknown webserver: $WEBSERVER"
+        echo
+
+        exit 1
+    fi
 fi
 
 
@@ -1075,7 +1089,93 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 [[ -f "$TMP_GUNICORN" ]] && rm -f "$TMP_GUNICORN"
 
 
-# indented to match setup.sh
+if [[ "$WEBSERVER" == "nginx" ]]; then
+    if systemctl -q is-active apache2.service; then
+        echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
+        sleep 3
+    fi
+
+    if systemctl -q is-active lighttpd.service; then
+        echo "!!! WARNING - lighttpd is active - This might interfere with nginx !!!"
+        sleep 3
+    fi
+
+
+    echo "**** Setup nginx ****"
+    TMP_HTTP=$(mktemp)
+    sed \
+     -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+     -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+     -e "s|%DOCROOT_FOLDER%|$DOCROOT_FOLDER|g" \
+     -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+     -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
+     -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
+     -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
+     "${ALLSKY_DIRECTORY}/service/nginx_indi-allsky.conf" > "$TMP_HTTP"
+
+
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+        sudo cp -f "$TMP_HTTP" /etc/nginx/sites-available/indi-allsky.conf
+        sudo chown root:root /etc/nginx/sites-available/indi-allsky.conf
+        sudo chmod 644 /etc/nginx/sites-available/indi-allsky.conf
+        sudo ln -s -f /etc/nginx/sites-available/indi-allsky.conf /etc/nginx/sites-enabled/indi-allsky.conf
+
+
+        if [[ ! -d "/etc/nginx/ssl" ]]; then
+            sudo mkdir /etc/nginx/ssl
+        fi
+
+        sudo chown root:root /etc/nginx/ssl
+        sudo chmod 755 /etc/nginx/ssl
+
+
+        if [[ ! -f "/etc/nginx/ssl/indi-allsky_nginx.key" || ! -f "/etc/nginx/ssl/indi-allsky_nginx.pem" ]]; then
+            sudo rm -f /etc/nginx/ssl/indi-allsky_nginx.key
+            sudo rm -f /etc/nginx/ssl/indi-allsky_nginx.pem
+
+            SHORT_HOSTNAME=$(hostname -s)
+            HTTP_KEY_TMP=$(mktemp --suffix=.key)
+            HTTP_CRT_TMP=$(mktemp --suffix=.pem)
+
+            # sudo has problems with process substitution <()
+            openssl req \
+                -new \
+                -newkey rsa:4096 \
+                -sha512 \
+                -days 3650 \
+                -nodes \
+                -x509 \
+                -subj "/CN=${SHORT_HOSTNAME}.local" \
+                -keyout "$HTTP_KEY_TMP" \
+                -out "$HTTP_CRT_TMP" \
+                -extensions san \
+                -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
+
+            sudo cp -f "$HTTP_KEY_TMP" /etc/nginx/ssl/indi-allsky_nginx.key
+            sudo cp -f "$HTTP_CRT_TMP" /etc/nginx/ssl/indi-allsky_nginx.pem
+
+            rm -f "$HTTP_KEY_TMP"
+            rm -f "$HTTP_CRT_TMP"
+        fi
+
+
+        sudo chown root:root /etc/nginx/ssl/indi-allsky_nginx.key
+        sudo chmod 600 /etc/nginx/ssl/indi-allsky_nginx.key
+        sudo chown root:root /etc/nginx/ssl/indi-allsky_nginx.pem
+        sudo chmod 644 /etc/nginx/ssl/indi-allsky_nginx.pem
+
+        # system certificate store
+        sudo cp -f /etc/nginx/ssl/indi-allsky_nginx.pem /usr/local/share/ca-certificates/indi-allsky_nginx.crt
+        sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_nginx.crt
+        sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_nginx.crt
+        sudo update-ca-certificates
+
+
+        sudo systemctl enable nginx
+        sudo systemctl restart nginx
+    fi
+
+elif [[ "$WEBSERVER" == "apache" ]]; then
     if systemctl -q is-active nginx; then
         echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
         sleep 3
@@ -1087,7 +1187,7 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
     fi
 
     echo "**** Start apache2 service ****"
-    TMP3=$(mktemp)
+    TMP_HTTP=$(mktemp)
     sed \
      -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
      -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
@@ -1095,11 +1195,11 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
      -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
      -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
      -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock\|http://localhost/indi-allsky|g" \
-     "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP3"
+     "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP_HTTP"
 
 
     if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
-        sudo cp -f "$TMP3" /etc/apache2/sites-available/indi-allsky.conf
+        sudo cp -f "$TMP_HTTP" /etc/apache2/sites-available/indi-allsky.conf
         sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
         sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
 
@@ -1186,9 +1286,15 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
         sudo systemctl enable apache2
         sudo systemctl restart apache2
     fi
+else
+    echo
+    echo "Unknown web server: $WEBSERVER"
+    echo
 
+    exit 1
+fi
 
-[[ -f "$TMP3" ]] && rm -f "$TMP3"
+[[ -f "$TMP_HTTP" ]] && rm -f "$TMP_HTTP"
 
 
 echo "**** Setup HTDOCS folder ****"
