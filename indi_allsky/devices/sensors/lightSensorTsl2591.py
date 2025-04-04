@@ -48,6 +48,7 @@ class LightSensorTsl2591(SensorBase):
                 visible,
                 infrared,
                 full_spectrum,
+                sqm_mag,
             ),
         }
 
@@ -73,15 +74,17 @@ class LightSensorTsl2591_I2C(LightSensorTsl2591):
     METADATA = {
         'name' : 'TSL2591 (i2c)',
         'description' : 'TSL2591 i2c Light Sensor',
-        'count' : 4,
+        'count' : 5,
         'labels' : (
             'Lux',
             'Visible',
             'Infrared',
             'Full Spectrum',
+            'SQM',
         ),
         'types' : (
             constants.SENSOR_LIGHT_LUX,
+            constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,

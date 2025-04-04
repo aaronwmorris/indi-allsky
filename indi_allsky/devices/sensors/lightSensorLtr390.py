@@ -48,6 +48,7 @@ class LightSensorLtr390(SensorBase):
                 light,
                 uvi,
                 lux,
+                sqm_mag,
             ),
         }
 
@@ -71,18 +72,20 @@ class LightSensorLtr390_I2C(LightSensorLtr390):
     METADATA = {
         'name' : 'LTR390 (i2c)',
         'description' : 'LTR390 i2c UV Light Sensor',
-        'count' : 4,
+        'count' : 5,
         'labels' : (
             'UV',
             'Light',
             'UV Index',
             'Lux',
+            'SQM',
         ),
         'types' : (
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_LUX,
+            constants.SENSOR_LIGHT_MISC,
         ),
     }
 
