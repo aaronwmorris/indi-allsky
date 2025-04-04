@@ -49,6 +49,8 @@ class KeogramGenerator(object):
         self._y_offset = self.config.get('LENS_OFFSET_Y', 0) - int((border_top - border_bottom) / 2)
         #logger.info('X Offset: %d, Y Offset: %d', self.x_offset, self.y_offset)
 
+        self._label = True
+
 
         self.original_width = None
         self.original_height = None
@@ -153,6 +155,15 @@ class KeogramGenerator(object):
     @keogram_final.setter
     def keogram_final(self, new_keogram):
         self._keogram_final = new_keogram
+
+
+    @property
+    def label(self):
+        return self._label
+
+    @label.setter
+    def label(self, new_label):
+        self._label = bool(new_label)
 
 
     @property
@@ -456,7 +467,7 @@ class KeogramGenerator(object):
 
 
     def applyLabels(self, keogram):
-        if self.config.get('KEOGRAM_LABEL', True):
+        if self.label:
             # Keogram labels enabled by default
             image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
 
@@ -466,7 +477,8 @@ class KeogramGenerator(object):
                 # pillow is default
                 keogram = self.applyLabels_pillow(keogram)
         else:
-            logger.warning('Keogram labels disabled')
+            #logger.warning('Keogram labels disabled')
+            pass
 
 
         return keogram
