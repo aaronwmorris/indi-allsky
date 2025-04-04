@@ -48,6 +48,7 @@ class LightSensorVeml7700(SensorBase):
                 lux,
                 light,
                 white,
+                sqm_mag,
             ),
         }
 
@@ -72,14 +73,16 @@ class LightSensorVeml7700_I2C(LightSensorVeml7700):
     METADATA = {
         'name' : 'VEML770 (i2c)',
         'description' : 'VEML7700 i2c Light Sensor',
-        'count' : 3,
+        'count' : 4,
         'labels' : (
             'Lux',
             'Light',
             'White',
+            'SQM',
         ),
         'types' : (
             constants.SENSOR_LIGHT_LUX,
+            constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
         ),

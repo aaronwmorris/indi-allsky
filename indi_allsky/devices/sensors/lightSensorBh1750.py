@@ -35,6 +35,7 @@ class LightSensorBh1750(SensorBase):
             'sqm_mag' : sqm_mag,
             'data' : (
                 lux,
+                sqm_mag,
             ),
         }
 
@@ -46,12 +47,14 @@ class LightSensorBh1750_I2C(LightSensorBh1750):
     METADATA = {
         'name' : 'BH1750 (i2c)',
         'description' : 'BH1750 i2c Light Sensor',
-        'count' : 1,
+        'count' : 2,
         'labels' : (
             'Lux',
+            'SQM',
         ),
         'types' : (
             constants.SENSOR_LIGHT_LUX,
+            constants.SENSOR_LIGHT_MISC,
         ),
     }
 

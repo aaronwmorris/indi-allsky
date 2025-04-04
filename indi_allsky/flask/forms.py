@@ -3225,12 +3225,12 @@ class IndiAllskyConfigForm(FlaskForm):
             ('blinka_temp_sensor_mlx90640_i2c', 'MLX90640 i2c - SkyTemp (1)'),
         ),
         'Light/Lux Sensors' : (
-            ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR (3)'),
-            ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full (4)'),
-            ('blinka_light_sensor_veml7700_i2c', 'VEML7700 i2c - Lux/Light/White (3)'),
-            ('blinka_light_sensor_bh1750_i2c', 'BH1750 i2c - Lux (1)'),
+            ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR/SQM (4)'),
+            ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full/SQM (5)'),
+            ('blinka_light_sensor_veml7700_i2c', 'VEML7700 i2c - Lux/Light/White/SQM (4)'),
+            ('blinka_light_sensor_bh1750_i2c', 'BH1750 i2c - Lux/SQM (2)'),
             ('blinka_light_sensor_si1145_i2c', 'SI1145 i2c - Vis/IR/UV (3)'),
-            ('blinka_light_sensor_ltr390_i2c', 'LTR390 i2c - UV/Vis/UVI/Lux (4)'),
+            ('blinka_light_sensor_ltr390_i2c', 'LTR390 i2c - UV/Vis/UVI/Lux/SQM (5)'),
         ),
         'Remote' : (
             ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5)'),
