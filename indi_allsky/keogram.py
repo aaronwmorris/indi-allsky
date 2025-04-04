@@ -59,7 +59,7 @@ class KeogramGenerator(object):
         self._keogram_data = None
         self._keogram_final = None  # will contain final resized keogram
 
-        self._timestamps_list = list()
+        self._timestamps = list()
         self.image_processing_elapsed_s = 0
 
         base_path  = Path(__file__).parent
@@ -129,12 +129,12 @@ class KeogramGenerator(object):
 
 
     @property
-    def timestamps_list(self):
-        return self._timestamps_list
+    def timestamps(self):
+        return self._timestamps
 
-    @timestamps_list.setter
-    def timestamps_list(self, new_timestamps):
-        self._timestamps_list = list(new_timestamps)
+    @timestamps.setter
+    def timestamps(self, new_timestamps):
+        self._timestamps = list(new_timestamps)
 
 
     @property
@@ -168,7 +168,7 @@ class KeogramGenerator(object):
 
         image_processing_start = time.time()
 
-        self.timestamps_list.append(timestamp)
+        self.timestamps.append(timestamp)
 
         image_height, image_width = image.shape[:2]
         #logger.info('Original: %d x %d', image_width, image_height)
@@ -476,7 +476,7 @@ class KeogramGenerator(object):
         height, width = keogram.shape[:2]
 
         # starting point
-        last_time = datetime.fromtimestamp(self.timestamps_list[0])
+        last_time = datetime.fromtimestamp(self.timestamps[0])
         last_hour_str = last_time.strftime('%H')
 
         fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
@@ -485,7 +485,7 @@ class KeogramGenerator(object):
         color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
         color_bgr.reverse()
 
-        for i, u_ts in enumerate(self.timestamps_list):
+        for i, u_ts in enumerate(self.timestamps):
             ts = datetime.fromtimestamp(u_ts)
             hour_str = ts.strftime('%H')
 
@@ -494,7 +494,7 @@ class KeogramGenerator(object):
 
             last_hour_str = hour_str
 
-            line_x = int(i * width / len(self.timestamps_list))
+            line_x = int(i * width / len(self.timestamps))
 
             line_start = (line_x, height)
             line_end = (line_x, height - self.line_length)
@@ -565,7 +565,7 @@ class KeogramGenerator(object):
 
 
         # starting point
-        last_time = datetime.fromtimestamp(self.timestamps_list[0])
+        last_time = datetime.fromtimestamp(self.timestamps[0])
         last_hour_str = last_time.strftime('%H')
 
 
@@ -576,7 +576,7 @@ class KeogramGenerator(object):
             stroke_width = 0
 
 
-        for i, u_ts in enumerate(self.timestamps_list):
+        for i, u_ts in enumerate(self.timestamps):
             ts = datetime.fromtimestamp(u_ts)
             hour_str = ts.strftime('%H')
 
@@ -585,7 +585,7 @@ class KeogramGenerator(object):
 
             last_hour_str = hour_str
 
-            line_x = int(i * width / len(self.timestamps_list))
+            line_x = int(i * width / len(self.timestamps))
 
             line_start = (line_x, height)
             line_end = (line_x, height - self.line_length)

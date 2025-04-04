@@ -1711,6 +1711,7 @@ class ImageWorker(Process):
         #logger.info('Keogram: %d x %d', new_width, new_height)
         data = cv2.resize(data, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
+        data = self.image_processor.realtimeKeogramApplyLabels(data)
 
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
