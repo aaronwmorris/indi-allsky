@@ -173,6 +173,7 @@ class IndiAllSkyConfigBase(object):
         "REALTIME_KEOGRAM" : {
             "MAX_ENTRIES"   : 1000,
             "SAVE_INTERVAL" : 25,
+            "LABEL"         : False,
         },
         "STARTRAILS_MAX_ADU"    : 65,
         "STARTRAILS_MASK_THOLD" : 190,

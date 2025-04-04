@@ -193,7 +193,7 @@ class ImageProcessor(object):
         self._keogram_gen.crop_bottom = self.config.get('KEOGRAM_CROP_BOTTOM', 0)
         self._keogram_gen.x_offset = 0  # reset
         self._keogram_gen.y_offset = 0  # reset
-        self._keogram_gen.label = self.config.get('KEOGRAM_LABEL', True)
+        self._keogram_gen.label = self.config.get('REALTIME_KEOGRAM', {}).get('LABEL', False)
 
 
         base_path  = Path(__file__).parent
