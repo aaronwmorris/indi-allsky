@@ -200,8 +200,8 @@ class ImageProcessor(object):
 
         self._keogram_store_tmpl = '/var/lib/indi-allsky/realtime_keogram_store_ccd{0:d}.npy'
         self._keogram_store_p = None
-        self._keogram_store_timestamps_tmpl = '/var/lib/indi-allsky/realtime_keogram_store_ccd{0:d}_ts.npy'
-        self._keogram_store_timestamps_p = None
+        self._keogram_store_metadata_tmpl = '/var/lib/indi-allsky/realtime_keogram_store_ccd{0:d}_metadata.npy'
+        self._keogram_store_metadata_p = None
 
 
     @property
@@ -364,7 +364,7 @@ class ImageProcessor(object):
         # update keogram store path
         if isinstance(self._keogram_store_p, type(None)):
             self._keogram_store_p = Path(self._keogram_store_tmpl.format(camera.id))
-            self._keogram_store_timestamps_p = Path(self._keogram_store_timestamps_tmpl.format(camera.id))
+            self._keogram_store_metadata_p = Path(self._keogram_store_metadata_tmpl.format(camera.id))
 
 
         if self.night_v.value and not self.moonmode_v.value:
@@ -3188,24 +3188,24 @@ class ImageProcessor(object):
                 if self._keogram_store_p.exists():
                     self._keogram_store_p.unlink()
 
-                if self._keogram_store_timestamps_p.exists():
-                    self._keogram_store_timestamps_p.unlink()
+                if self._keogram_store_metadata_p.exists():
+                    self._keogram_store_metadata_p.unlink()
             except EOFError:
                 logger.error('Invalid numpy data for realtime keogram')
 
                 if self._keogram_store_p.exists():
                     self._keogram_store_p.unlink()
 
-                if self._keogram_store_timestamps_p.exists():
-                    self._keogram_store_timestamps_p.unlink()
+                if self._keogram_store_metadata_p.exists():
+                    self._keogram_store_metadata_p.unlink()
             except FileNotFoundError:
                 logger.error('Realtime keogram data files missing')
 
                 if self._keogram_store_p.exists():
                     self._keogram_store_p.unlink()
 
-                if self._keogram_store_timestamps_p.exists():
-                    self._keogram_store_timestamps_p.unlink()
+                if self._keogram_store_metadata_p.exists():
+                    self._keogram_store_metadata_p.unlink()
 
 
         try:
@@ -3219,8 +3219,8 @@ class ImageProcessor(object):
                 # remove any existing data store
                 self._keogram_store_p.unlink()
 
-            if self._keogram_store_timestamps_p.exists():
-                self._keogram_store_timestamps_p.unlink()
+            if self._keogram_store_metadata_p.exists():
+                self._keogram_store_metadata_p.unlink()
 
             return
 
@@ -3240,11 +3240,13 @@ class ImageProcessor(object):
             keogram_data = numpy.load(f_numpy)
 
 
-        with io.open(str(self._keogram_store_timestamps_p), 'r+b') as f_numpy:
-            keogram_timestamps = numpy.load(f_numpy)
+        with io.open(str(self._keogram_store_metadata_p), 'r+b') as f_numpy:
+            keogram_metadata = numpy.load(f_numpy)
 
 
-        logger.info('Keogram shape: %s, timestamps %s', keogram_data.shape, keogram_timestamps.shape)
+        #logger.info('Keogram shape: %s, timestamps %s', keogram_data.shape, keogram_metadata.shape)
+        keogram_timestamps = keogram_metadata[0]
+
 
         return keogram_data, keogram_timestamps
 
@@ -3259,8 +3261,14 @@ class ImageProcessor(object):
         with io.open(str(self._keogram_store_p), 'w+b') as f_numpy:
             numpy.save(f_numpy, self.realtime_keogram_data)
 
-        with io.open(str(self._keogram_store_timestamps_p), 'w+b') as f_numpy:
-            numpy.save(f_numpy, numpy.array(self.realtime_keogram_timestamps, dtype=numpy.uint32))
+
+        # Allow multiple datapoints
+        keogram_metadata = numpy.array([
+            self.realtime_keogram_timestamps,
+        ], dtype=numpy.uint32)
+
+        with io.open(str(self._keogram_store_metadata_p), 'w+b') as f_numpy:
+            numpy.save(f_numpy, numpy.array(keogram_metadata, dtype=numpy.uint32))
 
 
     def realtimeKeogramApplyLabels(self, data):
