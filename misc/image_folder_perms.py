@@ -67,10 +67,7 @@ class ImageFolderPermissions(object):
         folder = self.image_dir
 
         while True:
-            logger.info('Folder: %s', folder)
-            logger.info(' Owner: %s', folder.owner())
-            logger.info(' Group, %s', folder.group())
-            logger.info(' Mode: %s', oct(folder.stat().st_mode))
+            logger.info('Folder: %s,  Owner: %s, Group: %s, Mode: %s', folder, folder.owner(), folder.group(), oct(folder.stat().st_mode))
 
             folder = folder.parent
             if folder == Path('/'):
