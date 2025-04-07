@@ -2517,10 +2517,12 @@ for GRP in dialout video gpio i2c spi; do
 done
 
 
-echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"
 # Not trying to push out the competition, these just cannot run at the same time :-)
-sudo systemctl stop allsky || true
-sudo systemctl disable allsky || true
+if systemctl list-unit-files "allsky.service" >/dev/null 2>&1; then
+    echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"
+    sudo systemctl stop allsky || true
+    sudo systemctl disable allsky || true
+fi
 
 
 echo "**** Starting ${GUNICORN_SERVICE_NAME}.socket"
