@@ -124,7 +124,7 @@ if [[ -n "${VIRTUAL_ENV:-}" ]]; then
 fi
 
 
-if systemctl --user -q is-active "${ALLSKY_SERVICE_NAME}" >/dev/null 2>&1; then
+if systemctl --user --quiet is-active "${ALLSKY_SERVICE_NAME}" >/dev/null 2>&1; then
     # this would not normally happen on a web only install
     echo
     echo
@@ -1091,12 +1091,12 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 
 
 if [[ "$WEBSERVER" == "nginx" ]]; then
-    if systemctl -q is-active apache2.service; then
+    if systemctl --quiet is-active apache2.service; then
         echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
         sleep 3
     fi
 
-    if systemctl -q is-active lighttpd.service; then
+    if systemctl --quiet is-active lighttpd.service; then
         echo "!!! WARNING - lighttpd is active - This might interfere with nginx !!!"
         sleep 3
     fi
@@ -1177,12 +1177,12 @@ if [[ "$WEBSERVER" == "nginx" ]]; then
     fi
 
 elif [[ "$WEBSERVER" == "apache" ]]; then
-    if systemctl -q is-active nginx; then
+    if systemctl --quiet is-active nginx; then
         echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
         sleep 3
     fi
 
-    if systemctl -q is-active lighttpd; then
+    if systemctl --quiet is-active lighttpd; then
         echo "!!! WARNING - lighttpd is active - This might interfere with apache !!!"
         sleep 3
     fi
