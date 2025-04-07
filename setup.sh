@@ -276,7 +276,7 @@ elif [[ -f "/etc/astroberry.version" ]]; then
 fi
 
 
-if systemctl --user -q is-active "${ALLSKY_SERVICE_NAME}.service" >/dev/null 2>&1; then
+if systemctl --user --quiet is-active "${ALLSKY_SERVICE_NAME}.service" >/dev/null 2>&1; then
     echo
     echo
     echo "ERROR: indi-allsky is running.  Please stop the service before running this script."
@@ -1501,10 +1501,10 @@ if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
 fi
 
 
-if systemctl -q is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
+if systemctl --quiet is-enabled "${INDISERVER_SERVICE_NAME}" 2>/dev/null; then
     # system
     INSTALL_INDISERVER="false"
-elif systemctl --user -q is-enabled "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null; then
+elif systemctl --user --quiet is-enabled "${INDISERVER_SERVICE_NAME}.timer" 2>/dev/null; then
     while [ -z "${INSTALL_INDISERVER:-}" ]; do
         # user
         if whiptail --title "indiserver update" --yesno "An indiserver service is already defined, would you like to replace it?\n\nThis is normally not needed during an upgrade." 0 0 --defaultno; then
@@ -2254,12 +2254,12 @@ if [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY" == "true" ]]; then
     sudo systemctl restart nginx
 
 elif [[ "$WEBSERVER" == "nginx" ]]; then
-    if systemctl -q is-active apache2.service; then
+    if systemctl --quiet is-active apache2.service; then
         echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
         sleep 3
     fi
 
-    if systemctl -q is-active lighttpd.service; then
+    if systemctl --quiet is-active lighttpd.service; then
         echo "!!! WARNING - lighttpd is active - This might interfere with nginx !!!"
         sleep 3
     fi
@@ -2340,12 +2340,12 @@ elif [[ "$WEBSERVER" == "nginx" ]]; then
     fi
 
 elif [[ "$WEBSERVER" == "apache" ]]; then
-    if systemctl -q is-active nginx.service; then
+    if systemctl --quiet is-active nginx.service; then
         echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
         sleep 3
     fi
 
-    if systemctl -q is-active lighttpd.service; then
+    if systemctl --quiet is-active lighttpd.service; then
         echo "!!! WARNING - lighttpd is active - This might interfere with apache !!!"
         sleep 3
     fi
@@ -2517,10 +2517,12 @@ for GRP in dialout video gpio i2c spi; do
 done
 
 
-echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"
 # Not trying to push out the competition, these just cannot run at the same time :-)
-sudo systemctl stop allsky || true
-sudo systemctl disable allsky || true
+if systemctl list-unit-files "allsky.service" >/dev/null 2>&1; then
+    echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"
+    sudo systemctl stop allsky || true
+    sudo systemctl disable allsky || true
+fi
 
 
 echo "**** Starting ${GUNICORN_SERVICE_NAME}.socket"
@@ -2651,7 +2653,7 @@ fi
 
 
 
-if systemctl --user -q is-active "${ALLSKY_SERVICE_NAME}.service" >/dev/null 2>&1; then
+if systemctl --user --quiet is-active "${ALLSKY_SERVICE_NAME}.service" >/dev/null 2>&1; then
     # no need to start if already running
     INDIALLSKY_START="false"
 fi

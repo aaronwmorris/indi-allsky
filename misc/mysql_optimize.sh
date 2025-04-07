@@ -16,7 +16,7 @@ sudo mysql -u root -e \
     ORDER BY data_length DESC;"
 
 
-if systemctl --user -q is-active indi-allsky >/dev/null 2>&1; then
+if systemctl --user --quiet is-active indi-allsky >/dev/null 2>&1; then
     echo
     echo
     echo "ERROR: indi-allsky is running.  Please stop the service before running this script."

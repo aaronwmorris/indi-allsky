@@ -31,6 +31,7 @@ if __name__ == "__main__":
             'edit',             # edit config in cli
             'revert',           # revert to an older config --id
             'user_count',       # return count of active users to STDOUT
+            'delete',           # deletes config by --id
             'flush',            # deletes all configs
         ),
     )

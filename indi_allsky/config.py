@@ -1214,6 +1214,12 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
             sys.exit(1)
 
 
+        confirm1 = input('\nConfirm revert config id {0:d}? [y/n] '.format(revert_entry.id))
+        if confirm1.lower() != 'y':
+            logger.warning('Cancel revert')
+            sys.exit(1)
+
+
         self._config.update(revert_entry.data)
 
         logger.info('Reverting configuration')
@@ -1241,6 +1247,32 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         logger.info('Dumping config')
 
         print(json.dumps(self._config, indent=4, ensure_ascii=False))
+
+
+    def delete(self, **kwargs):
+        with app.app_context():
+            self._delete(**kwargs)
+
+
+    def _delete(self, **kwargs):
+        delete_id = kwargs['config_id']
+
+        try:
+            delete_entry = self._getConfigEntry(config_id=delete_id)
+        except NoResultFound:
+            logger.error('Configuration ID %d not found', int(delete_id))
+            sys.exit(1)
+
+
+        confirm1 = input('\nConfirm delete config id {0:d}? [y/n] '.format(delete_entry.id))
+        if confirm1.lower() != 'y':
+            logger.warning('Cancel delete')
+            sys.exit(1)
+
+
+        logger.info('Deleting config: %d', delete_entry.id)
+        db.session.delete(delete_entry)
+        db.session.commit()
 
 
     def user_count(self, **kwargs):
