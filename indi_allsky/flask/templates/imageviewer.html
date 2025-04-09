@@ -800,6 +800,8 @@ function exclude_image_post() {
         'EXCLUDE_EXCLUDE'  : $('#EXCLUDE_EXCLUDE').prop('checked'),
     };
 
+    console.log('Setting image exclude: ' + json_data.EXCLUDE_IMAGE_ID)
+
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_image_exclude_view') }}",
