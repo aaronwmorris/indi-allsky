@@ -170,6 +170,8 @@ function exclude_image(el, pswp, image_id, exclude) {
         'EXCLUDE_EXCLUDE'  : exclude,
     };
 
+    console.log('Setting image exclude: ' + json_data.EXCLUDE_IMAGE_ID)
+
     $.ajax({
         type: "POST",
         url: "{{ url_for('indi_allsky.ajax_image_exclude_view') }}",
@@ -276,11 +278,35 @@ function populate_gallery(gallery_data) {
                     el.innerHTML = '<svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true" class="pswp__icn"><path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0"/><path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7"/></svg>';
                 }
               });
+
+
+              $(document).keydown(function(e) {
+                var key_press = {
+                  "x" : 88,
+                };
+
+                switch (e.which) {
+                    case key_press.x:
+                        var image_id = pswp.currSlide.data.element.getAttribute("data-image_id");
+
+                        if (pswp.currSlide.data.element.getAttribute("data-exclude") == "true") {
+                            exclude_image(el, pswp, image_id, false);
+                        } else {
+                            exclude_image(el, pswp, image_id, true);
+                        }
+
+                        break;
+
+                    default:
+                        return;
+                }
+
+                e.preventDefault();
+              });
             },
 
             onClick: (event, el) => {
                 var image_id = pswp.currSlide.data.element.getAttribute("data-image_id");
-                var exclude = pswp.currSlide.data.element.getAttribute("data-exclude");
 
                 if (pswp.currSlide.data.element.getAttribute("data-exclude") == "true") {
                     exclude_image(el, pswp, image_id, false);
