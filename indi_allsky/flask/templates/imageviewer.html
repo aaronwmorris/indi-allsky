@@ -189,7 +189,7 @@ function closeFullscreen() {
 
 <div class="row">
     <div class="text-center" style="font-size:10px">
-        Use arrow keys, WASD, or VIM keys to cycle images - Hour: Up/Down - Image: Left/Right
+        Use arrow keys, WASD, or VIM keys to cycle images - Hour: Up/Down - Image: Left/Right - x: Exclude
     </div>
 </div>
 
@@ -791,7 +791,7 @@ function init() {
 }
 
 
-$("#EXCLUDE_EXCLUDE").on("change", function() {
+function exclude_image_post() {
     $("#loader_filter").css({'display' : 'block'});
 
     var json_data = {
@@ -813,7 +813,23 @@ $("#EXCLUDE_EXCLUDE").on("change", function() {
             $("#loader_filter").css({'display' : 'none'});
         },
     });
+}
+
+
+$("#EXCLUDE_EXCLUDE").on("change", function() {
+    exclude_image_post();
 });
+
+
+function exclude_keypress() {
+    if ($('#EXCLUDE_EXCLUDE').prop('checked')) {
+        $('#EXCLUDE_EXCLUDE').prop('checked', false);
+    } else {
+        $('#EXCLUDE_EXCLUDE').prop('checked', true);
+    };
+
+    exclude_image_post();
+}
 
 
 function nextImage() {
@@ -933,6 +949,7 @@ $( document ).ready(function() {
             "g"     : 71,  // end
             "zero"  : 48,  // start
 
+            "x"     : 88,
         };
 
         switch (e.which) {
@@ -982,6 +999,10 @@ $( document ).ready(function() {
                 break;
             case key_press.zero:
                 firstImage();
+                break;
+
+            case key_press.x:
+                exclude_keypress();
                 break;
 
             default:
