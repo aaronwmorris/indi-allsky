@@ -1109,7 +1109,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
         # check a few values to make sure this is a valid config
-        if not c.get('INDI_SERVER') or not c.get('NIGHT_SUN_ALT_DEG') or not c.get('CCD_CONFIG'):
+        if not c.get('INDI_SERVER') or not c.get('CCD_CONFIG'):
             logger.error('Not a valid indi-allsky config')
             sys.exit(1)
 
