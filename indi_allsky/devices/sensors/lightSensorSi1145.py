@@ -89,12 +89,14 @@ class LightSensorSi1145_I2C(LightSensorSi1145):
         i2c_address_str = kwargs['i2c_address']
 
         import board
+        #import busio
         import adafruit_si1145
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] SI1145 I2C light sensor device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
+        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         self.si1145 = adafruit_si1145.SI1145(i2c, address=i2c_address)
 
         # enable UV index

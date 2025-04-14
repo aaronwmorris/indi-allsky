@@ -18,8 +18,9 @@ class TempSensorSht4x(SensorBase):
 
 
         try:
-            temp_c = float(self.sht4x.temperature)
-            rel_h = float(self.sht4x.relative_humidity)
+            temp_c, rel_h = self.sht4x.measurements
+            temp_c = float(temp_c)
+            rel_h = float(rel_h)
         except RuntimeError as e:
             raise SensorReadException(str(e)) from e
 
@@ -106,12 +107,14 @@ class TempSensorSht4x_I2C(TempSensorSht4x):
         i2c_address_str = kwargs['i2c_address']
 
         import board
+        #import busio
         import adafruit_sht4x
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] SHT4x I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
+        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         self.sht4x = adafruit_sht4x.SHT4x(i2c, address=i2c_address)
 
         self.mode_night = getattr(adafruit_sht4x.Mode, self.config.get('TEMP_SENSOR', {}).get('SHT4X_MODE_NIGHT', 'NOHEAT_HIGHPRECISION'))

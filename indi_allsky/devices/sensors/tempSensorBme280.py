@@ -105,12 +105,14 @@ class TempSensorBme280_I2C(TempSensorBme280):
         i2c_address_str = kwargs['i2c_address']
 
         import board
+        #import busio
         from adafruit_bme280 import advanced as adafruit_bme280
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] BME280 I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
+        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         self.bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c, address=i2c_address)
 
 
@@ -154,6 +156,7 @@ class TempSensorBme280_SPI(TempSensorBme280):
         pin_1_name = kwargs['pin_1_name']
 
         import board
+        #import busio
         import digitalio
         from adafruit_bme280 import advanced as adafruit_bme280
 
@@ -162,6 +165,7 @@ class TempSensorBme280_SPI(TempSensorBme280):
 
         logger.warning('Initializing [%s] BME280 SPI temperature device', self.name)
         spi = board.SPI()
+        #spi = busio.SPI(board.SCLK, board.MOSI, board.MISO)
         self.bme280 = adafruit_bme280.Adafruit_BME280_SPI(spi, cs)
 
 

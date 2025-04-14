@@ -74,12 +74,14 @@ class TempSensorBmp3xx_I2C(TempSensorBmp3xx):
         i2c_address_str = kwargs['i2c_address']
 
         import board
+        #import busio
         import adafruit_bmp3xx
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] BMP3xx I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
+        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         self.bmp3xx = adafruit_bmp3xx.BMP3XX_I2C(i2c, address=i2c_address)
 
 
@@ -117,6 +119,7 @@ class TempSensorBmp3xx_SPI(TempSensorBmp3xx):
         pin_1_name = kwargs['pin_1_name']
 
         import board
+        #import busio
         import digitalio
         import adafruit_bmp3xx
 
@@ -125,6 +128,7 @@ class TempSensorBmp3xx_SPI(TempSensorBmp3xx):
 
         logger.warning('Initializing [%s] BMP3xx SPI temperature device', self.name)
         spi = board.SPI()
+        #spi = busio.SPI(board.SCLK, board.MOSI, board.MISO)
         self.bmp3xx = adafruit_bmp3xx.BMP3xx_SPI(spi, cs)
 
 

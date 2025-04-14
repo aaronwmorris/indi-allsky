@@ -76,11 +76,13 @@ class TempSensorBmp180_I2C(TempSensorBmp180):
         i2c_address_str = kwargs['i2c_address']
 
         import board
+        #import busio
         import bmp180
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] BMP180 I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
+        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         self.bmp180 = bmp180.BMP180(i2c, address=i2c_address)
 

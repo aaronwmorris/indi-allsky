@@ -100,7 +100,7 @@ class TempSensorScd30_I2C(TempSensorScd30):
         i2c_address_str = kwargs['i2c_address']
 
         import board
-        import busio
+        #import busio
         import adafruit_scd30
 
         i2c_address = int(i2c_address_str, 16)  # string in config
@@ -108,7 +108,8 @@ class TempSensorScd30_I2C(TempSensorScd30):
         logger.warning('Initializing [%s] SCD-30 I2C temperature device @ %s', self.name, hex(i2c_address))
         # SCD-30 has tempremental I2C with clock stretching, datasheet recommends
         # starting at 50KHz
-        i2c = busio.I2C(board.SCL, board.SDA, frequency=50000)
+        i2c = board.I2C()
+        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         self.scd30 = adafruit_scd30.SCD30(i2c, address=i2c_address)
 
         time.sleep(1)  # allow things to settle
