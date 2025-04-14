@@ -95,13 +95,14 @@ class LightSensorTsl2561_I2C(LightSensorTsl2561):
         i2c_address_str = kwargs['i2c_address']
 
         import board
-        import busio
+        #import busio
         import adafruit_tsl2561
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] TSL2561 I2C light sensor device @ %s', self.name, hex(i2c_address))
-        i2c = busio.I2C(board.SCL, board.SDA)
+        i2c = board.I2C()
+        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         self.tsl2561 = adafruit_tsl2561.TSL2561(i2c, address=i2c_address)
 
         self.gain_night = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_NIGHT', 1))

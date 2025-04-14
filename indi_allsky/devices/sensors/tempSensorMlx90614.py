@@ -66,11 +66,13 @@ class TempSensorMlx90614_I2C(TempSensorMlx90614):
         i2c_address_str = kwargs['i2c_address']
 
         import board
+        #import busio
         import adafruit_mlx90614
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] MLX90614 I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
+        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         self.mlx = adafruit_mlx90614.MLX90614(i2c, address=i2c_address)
 

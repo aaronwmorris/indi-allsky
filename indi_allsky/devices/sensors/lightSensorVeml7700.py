@@ -95,13 +95,14 @@ class LightSensorVeml7700_I2C(LightSensorVeml7700):
         i2c_address_str = kwargs['i2c_address']
 
         import board
-        import busio
+        #import busio
         import adafruit_veml7700
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] VEML7700 I2C light sensor device @ %s', self.name, hex(i2c_address))
-        i2c = busio.I2C(board.SCL, board.SDA)
+        i2c = board.I2C()
+        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         self.veml7700 = adafruit_veml7700.VEML7700(i2c, address=i2c_address)
 
         self.gain_night = getattr(adafruit_veml7700.VEML7700, self.config.get('TEMP_SENSOR', {}).get('VEML7700_GAIN_NIGHT', 'ALS_GAIN_2'))
