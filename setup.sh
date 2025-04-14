@@ -296,6 +296,18 @@ if [[ "$(id -u)" == "0" ]]; then
 fi
 
 
+if systemctl --quiet is-enabled "nginx" 2>/dev/null; then
+    if [ -e "/etc/nginx/sites-enabled/indi-allsky.conf" ]; then
+        echo
+        echo "Detected nginx web server is active"
+        echo
+
+        #sleep 3
+
+        WEBSERVER="nginx"
+    fi
+fi
+
 
 if [ -n "${WHIPTAIL_BIN:-}" ]; then
     "$WHIPTAIL_BIN" \
@@ -2265,76 +2277,94 @@ elif [[ "$WEBSERVER" == "nginx" ]]; then
     fi
 
 
-    echo "**** Setup nginx ****"
-    TMP_HTTP=$(mktemp)
-    sed \
-     -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
-     -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
-     -e "s|%DOCROOT_FOLDER%|$DOCROOT_FOLDER|g" \
-     -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
-     -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
-     -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
-     -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
-     "${ALLSKY_DIRECTORY}/service/nginx_indi-allsky.conf" > "$TMP_HTTP"
+    if [ -e "/etc/nginx/sites-enabled/indi-allsky.conf" ]; then
+        while [ -z "${WEBSERVER_CONFIG:-}" ]; do
+            if whiptail --title "Web Server Configuration" --yesno "Do you want to update the web server configuration?\n\nIf you have performed customizations to the nginx config, you should choose \"no\"\n\n(Hint: Most people should pick \"yes\")" 0 0; then
+                WEBSERVER_CONFIG="true"
+            else
+                WEBSERVER_CONFIG="false"
+            fi
+        done
+    else
+        WEBSERVER_CONFIG="true"
+    fi
 
 
-    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
-        sudo cp -f "$TMP_HTTP" /etc/nginx/sites-available/indi-allsky.conf
-        sudo chown root:root /etc/nginx/sites-available/indi-allsky.conf
-        sudo chmod 644 /etc/nginx/sites-available/indi-allsky.conf
-        sudo ln -s -f /etc/nginx/sites-available/indi-allsky.conf /etc/nginx/sites-enabled/indi-allsky.conf
+    if [ "$WEBSERVER_CONFIG" == "true" ]; then
+        echo "**** Setup nginx ****"
+        TMP_HTTP=$(mktemp)
+        sed \
+         -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+         -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+         -e "s|%DOCROOT_FOLDER%|$DOCROOT_FOLDER|g" \
+         -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+         -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
+         -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
+         -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
+         "${ALLSKY_DIRECTORY}/service/nginx_indi-allsky.conf" > "$TMP_HTTP"
 
 
-        if [[ ! -d "/etc/nginx/ssl" ]]; then
-            sudo mkdir /etc/nginx/ssl
+        if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+            sudo cp -f "$TMP_HTTP" /etc/nginx/sites-available/indi-allsky.conf
+            sudo chown root:root /etc/nginx/sites-available/indi-allsky.conf
+            sudo chmod 644 /etc/nginx/sites-available/indi-allsky.conf
+            sudo ln -s -f /etc/nginx/sites-available/indi-allsky.conf /etc/nginx/sites-enabled/indi-allsky.conf
+
+            [[ -e "/etc/nginx/sites-enabled/default" ]] && sudo rm -f /etc/nginx/sites-enabled/default
+
+
+            if [[ ! -d "/etc/nginx/ssl" ]]; then
+                sudo mkdir /etc/nginx/ssl
+            fi
+
+            sudo chown root:root /etc/nginx/ssl
+            sudo chmod 755 /etc/nginx/ssl
+
+
+            if [[ ! -f "/etc/nginx/ssl/indi-allsky_nginx.key" || ! -f "/etc/nginx/ssl/indi-allsky_nginx.pem" ]]; then
+                sudo rm -f /etc/nginx/ssl/indi-allsky_nginx.key
+                sudo rm -f /etc/nginx/ssl/indi-allsky_nginx.pem
+
+                SHORT_HOSTNAME=$(hostname -s)
+                HTTP_KEY_TMP=$(mktemp --suffix=.key)
+                HTTP_CRT_TMP=$(mktemp --suffix=.pem)
+
+                # sudo has problems with process substitution <()
+                openssl req \
+                    -new \
+                    -newkey rsa:4096 \
+                    -sha512 \
+                    -days 3650 \
+                    -nodes \
+                    -x509 \
+                    -subj "/CN=${SHORT_HOSTNAME}.local" \
+                    -keyout "$HTTP_KEY_TMP" \
+                    -out "$HTTP_CRT_TMP" \
+                    -extensions san \
+                    -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
+
+                sudo cp -f "$HTTP_KEY_TMP" /etc/nginx/ssl/indi-allsky_nginx.key
+                sudo cp -f "$HTTP_CRT_TMP" /etc/nginx/ssl/indi-allsky_nginx.pem
+
+                rm -f "$HTTP_KEY_TMP"
+                rm -f "$HTTP_CRT_TMP"
+            fi
+
+
+            sudo chown root:root /etc/nginx/ssl/indi-allsky_nginx.key
+            sudo chmod 600 /etc/nginx/ssl/indi-allsky_nginx.key
+            sudo chown root:root /etc/nginx/ssl/indi-allsky_nginx.pem
+            sudo chmod 644 /etc/nginx/ssl/indi-allsky_nginx.pem
+
+            # system certificate store
+            sudo cp -f /etc/nginx/ssl/indi-allsky_nginx.pem /usr/local/share/ca-certificates/indi-allsky_nginx.crt
+            sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_nginx.crt
+            sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_nginx.crt
+            sudo update-ca-certificates
         fi
 
-        sudo chown root:root /etc/nginx/ssl
-        sudo chmod 755 /etc/nginx/ssl
 
-
-        if [[ ! -f "/etc/nginx/ssl/indi-allsky_nginx.key" || ! -f "/etc/nginx/ssl/indi-allsky_nginx.pem" ]]; then
-            sudo rm -f /etc/nginx/ssl/indi-allsky_nginx.key
-            sudo rm -f /etc/nginx/ssl/indi-allsky_nginx.pem
-
-            SHORT_HOSTNAME=$(hostname -s)
-            HTTP_KEY_TMP=$(mktemp --suffix=.key)
-            HTTP_CRT_TMP=$(mktemp --suffix=.pem)
-
-            # sudo has problems with process substitution <()
-            openssl req \
-                -new \
-                -newkey rsa:4096 \
-                -sha512 \
-                -days 3650 \
-                -nodes \
-                -x509 \
-                -subj "/CN=${SHORT_HOSTNAME}.local" \
-                -keyout "$HTTP_KEY_TMP" \
-                -out "$HTTP_CRT_TMP" \
-                -extensions san \
-                -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
-
-            sudo cp -f "$HTTP_KEY_TMP" /etc/nginx/ssl/indi-allsky_nginx.key
-            sudo cp -f "$HTTP_CRT_TMP" /etc/nginx/ssl/indi-allsky_nginx.pem
-
-            rm -f "$HTTP_KEY_TMP"
-            rm -f "$HTTP_CRT_TMP"
-        fi
-
-
-        sudo chown root:root /etc/nginx/ssl/indi-allsky_nginx.key
-        sudo chmod 600 /etc/nginx/ssl/indi-allsky_nginx.key
-        sudo chown root:root /etc/nginx/ssl/indi-allsky_nginx.pem
-        sudo chmod 644 /etc/nginx/ssl/indi-allsky_nginx.pem
-
-        # system certificate store
-        sudo cp -f /etc/nginx/ssl/indi-allsky_nginx.pem /usr/local/share/ca-certificates/indi-allsky_nginx.crt
-        sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_nginx.crt
-        sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_nginx.crt
-        sudo update-ca-certificates
-
-
+        # Always do this
         sudo systemctl enable nginx
         sudo systemctl restart nginx
     fi
@@ -2350,103 +2380,123 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
         sleep 3
     fi
 
-    echo "**** Start apache2 service ****"
-    TMP_HTTP=$(mktemp)
-    sed \
-     -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
-     -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
-     -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
-     -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
-     -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
-     -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock\|http://localhost/indi-allsky|g" \
-     "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP_HTTP"
+
+    if [ -e "/etc/apache2/sites-enabled/indi-allsky.conf" ]; then
+        while [ -z "${WEBSERVER_CONFIG:-}" ]; do
+            if whiptail --title "Web Server Configuration" --yesno "Do you want to update the web server configuration?\n\nIf you have performed customizations to the apache config, you should choose \"no\"\n\n(Hint: Most people should pick \"yes\")" 0 0; then
+                WEBSERVER_CONFIG="true"
+                #sudo cp -f /etc/apache2/sites-enabled/indi-allsky.conf /etc/apache2/sites-enabled/indi-allsky.conf_old
+            else
+                WEBSERVER_CONFIG="false"
+            fi
+        done
+    else
+        WEBSERVER_CONFIG="true"
+    fi
 
 
-    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
-        sudo cp -f "$TMP_HTTP" /etc/apache2/sites-available/indi-allsky.conf
-        sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
-        sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
+
+    if [ "$WEBSERVER_CONFIG" == "true" ]; then
+        echo "**** Start apache2 service ****"
+        TMP_HTTP=$(mktemp)
+        sed \
+         -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+         -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+         -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+         -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
+         -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
+         -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock\|http://localhost/indi-allsky|g" \
+         "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP_HTTP"
 
 
-        if [[ ! -d "/etc/apache2/ssl" ]]; then
-            sudo mkdir /etc/apache2/ssl
+        if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+            sudo cp -f "$TMP_HTTP" /etc/apache2/sites-available/indi-allsky.conf
+            sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
+            sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
+
+
+            if [[ ! -d "/etc/apache2/ssl" ]]; then
+                sudo mkdir /etc/apache2/ssl
+            fi
+
+            sudo chown root:root /etc/apache2/ssl
+            sudo chmod 755 /etc/apache2/ssl
+
+
+            if [[ ! -f "/etc/apache2/ssl/indi-allsky_apache.key" || ! -f "/etc/apache2/ssl/indi-allsky_apache.pem" ]]; then
+                sudo rm -f /etc/apache2/ssl/indi-allsky_apache.key
+                sudo rm -f /etc/apache2/ssl/indi-allsky_apache.pem
+
+                SHORT_HOSTNAME=$(hostname -s)
+                HTTP_KEY_TMP=$(mktemp --suffix=.key)
+                HTTP_CRT_TMP=$(mktemp --suffix=.pem)
+
+                # sudo has problems with process substitution <()
+                openssl req \
+                    -new \
+                    -newkey rsa:4096 \
+                    -sha512 \
+                    -days 3650 \
+                    -nodes \
+                    -x509 \
+                    -subj "/CN=${SHORT_HOSTNAME}.local" \
+                    -keyout "$HTTP_KEY_TMP" \
+                    -out "$HTTP_CRT_TMP" \
+                    -extensions san \
+                    -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
+
+                sudo cp -f "$HTTP_KEY_TMP" /etc/apache2/ssl/indi-allsky_apache.key
+                sudo cp -f "$HTTP_CRT_TMP" /etc/apache2/ssl/indi-allsky_apache.pem
+
+                rm -f "$HTTP_KEY_TMP"
+                rm -f "$HTTP_CRT_TMP"
+            fi
+
+
+            sudo chown root:root /etc/apache2/ssl/indi-allsky_apache.key
+            sudo chmod 600 /etc/apache2/ssl/indi-allsky_apache.key
+            sudo chown root:root /etc/apache2/ssl/indi-allsky_apache.pem
+            sudo chmod 644 /etc/apache2/ssl/indi-allsky_apache.pem
+
+            # system certificate store
+            sudo cp -f /etc/apache2/ssl/indi-allsky_apache.pem /usr/local/share/ca-certificates/indi-allsky_apache.crt
+            sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_apache.crt
+            sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_apache.crt
+            sudo update-ca-certificates
+
+
+            sudo a2enmod rewrite
+            sudo a2enmod headers
+            sudo a2enmod ssl
+            sudo a2enmod http2
+            sudo a2enmod proxy
+            sudo a2enmod proxy_http
+            sudo a2enmod proxy_http2
+            sudo a2enmod expires
+
+            sudo a2dissite 000-default
+            sudo a2dissite default-ssl
+
+            sudo a2ensite indi-allsky
+
+            if [[ ! -f "/etc/apache2/ports.conf_pre_indiallsky" ]]; then
+                sudo cp /etc/apache2/ports.conf /etc/apache2/ports.conf_pre_indiallsky
+
+                # Comment out the Listen directives
+                TMP9=$(mktemp)
+                sed \
+                 -e 's|^\(.*\)[^#]\?\(listen.*\)|\1#\2|i' \
+                 /etc/apache2/ports.conf_pre_indiallsky > "$TMP9"
+
+                sudo cp -f "$TMP9" /etc/apache2/ports.conf
+                sudo chown root:root /etc/apache2/ports.conf
+                sudo chmod 644 /etc/apache2/ports.conf
+                [[ -f "$TMP9" ]] && rm -f "$TMP9"
+            fi
         fi
 
-        sudo chown root:root /etc/apache2/ssl
-        sudo chmod 755 /etc/apache2/ssl
 
-
-        if [[ ! -f "/etc/apache2/ssl/indi-allsky_apache.key" || ! -f "/etc/apache2/ssl/indi-allsky_apache.pem" ]]; then
-            sudo rm -f /etc/apache2/ssl/indi-allsky_apache.key
-            sudo rm -f /etc/apache2/ssl/indi-allsky_apache.pem
-
-            SHORT_HOSTNAME=$(hostname -s)
-            HTTP_KEY_TMP=$(mktemp --suffix=.key)
-            HTTP_CRT_TMP=$(mktemp --suffix=.pem)
-
-            # sudo has problems with process substitution <()
-            openssl req \
-                -new \
-                -newkey rsa:4096 \
-                -sha512 \
-                -days 3650 \
-                -nodes \
-                -x509 \
-                -subj "/CN=${SHORT_HOSTNAME}.local" \
-                -keyout "$HTTP_KEY_TMP" \
-                -out "$HTTP_CRT_TMP" \
-                -extensions san \
-                -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
-
-            sudo cp -f "$HTTP_KEY_TMP" /etc/apache2/ssl/indi-allsky_apache.key
-            sudo cp -f "$HTTP_CRT_TMP" /etc/apache2/ssl/indi-allsky_apache.pem
-
-            rm -f "$HTTP_KEY_TMP"
-            rm -f "$HTTP_CRT_TMP"
-        fi
-
-
-        sudo chown root:root /etc/apache2/ssl/indi-allsky_apache.key
-        sudo chmod 600 /etc/apache2/ssl/indi-allsky_apache.key
-        sudo chown root:root /etc/apache2/ssl/indi-allsky_apache.pem
-        sudo chmod 644 /etc/apache2/ssl/indi-allsky_apache.pem
-
-        # system certificate store
-        sudo cp -f /etc/apache2/ssl/indi-allsky_apache.pem /usr/local/share/ca-certificates/indi-allsky_apache.crt
-        sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_apache.crt
-        sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_apache.crt
-        sudo update-ca-certificates
-
-
-        sudo a2enmod rewrite
-        sudo a2enmod headers
-        sudo a2enmod ssl
-        sudo a2enmod http2
-        sudo a2enmod proxy
-        sudo a2enmod proxy_http
-        sudo a2enmod proxy_http2
-        sudo a2enmod expires
-
-        sudo a2dissite 000-default
-        sudo a2dissite default-ssl
-
-        sudo a2ensite indi-allsky
-
-        if [[ ! -f "/etc/apache2/ports.conf_pre_indiallsky" ]]; then
-            sudo cp /etc/apache2/ports.conf /etc/apache2/ports.conf_pre_indiallsky
-
-            # Comment out the Listen directives
-            TMP9=$(mktemp)
-            sed \
-             -e 's|^\(.*\)[^#]\?\(listen.*\)|\1#\2|i' \
-             /etc/apache2/ports.conf_pre_indiallsky > "$TMP9"
-
-            sudo cp -f "$TMP9" /etc/apache2/ports.conf
-            sudo chown root:root /etc/apache2/ports.conf
-            sudo chmod 644 /etc/apache2/ports.conf
-            [[ -f "$TMP9" ]] && rm -f "$TMP9"
-        fi
-
+        # Always do this
         sudo systemctl enable apache2
         sudo systemctl restart apache2
     fi
