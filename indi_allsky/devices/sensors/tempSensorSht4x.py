@@ -18,8 +18,9 @@ class TempSensorSht4x(SensorBase):
 
 
         try:
-            temp_c = float(self.sht4x.temperature)
-            rel_h = float(self.sht4x.relative_humidity)
+            temp_c, rel_h = self.sht4x.measurements
+            temp_c = float(temp_c)
+            rel_h = float(rel_h)
         except RuntimeError as e:
             raise SensorReadException(str(e)) from e
 
