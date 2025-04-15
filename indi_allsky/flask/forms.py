@@ -3191,6 +3191,7 @@ class IndiAllskyConfigForm(FlaskForm):
     GENERIC_GPIO__CLASSNAME_choices = (
         ('', 'None'),
         ('blinka_gpio_standard', 'GPIO - Standard'),
+        ('gpio_dockerpi_4channel_relay', 'GPIO - DockerPi 4 Channel Relay (BETA)'),
     )
 
     TEMP_SENSOR__CLASSNAME_choices = {
@@ -4394,7 +4395,6 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
 
-
         if self.FAN__THOLD_DIFF_HIGH.data <= self.FAN__THOLD_DIFF_MED.data:
             self.FAN__THOLD_DIFF_HIGH.errors.append('HIGH must be greater than MEDIUM')
             self.FAN__THOLD_DIFF_MED.errors.append('MEDIUM must be less than HIGH')
@@ -4432,6 +4432,38 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:
                     self.GENERIC_GPIO__A_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+            elif self.GENERIC_GPIO__A_CLASSNAME.data == 'gpio_dockerpi_4channel_relay':
+
+                try:
+                    import board
+                except ImportError:
+                    self.GENERIC_GPIO__A_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+                except PermissionError:
+                    self.GENERIC_GPIO__A_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+
+                try:
+                    board.I2C()
+
+                    from ..devices.controllers.dockerpi import DockerPi4ChannelRelay
+
+                    if self.GENERIC_GPIO__A_PIN_1.data:
+                        try:
+                            board.I2C()
+                            getattr(DockerPi4ChannelRelay, self.GENERIC_GPIO__A_PIN_1.data)
+                        except AttributeError:
+                            self.GENERIC_GPIO__A_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.GENERIC_GPIO__A_PIN_1.data))
+                            result = False
+                    else:
+                        self.GENERIC_GPIO__A_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except AttributeError:
+                    self.GENERIC_GPIO__A_CLASSNAME.errors.append('I2C not available for your system')
                     result = False
 
 
