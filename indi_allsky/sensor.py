@@ -334,12 +334,17 @@ class SensorWorker(Process):
             fan_pin_1 = self.config.get('FAN', {}).get('PIN_1', 'notdefined')
             fan_invert_output = self.config.get('FAN', {}).get('INVERT_OUTPUT', False)
 
-            self.fan = fan_class(
-                self.config,
-                i2c_address=fan_i2c_address,
-                pin_1_name=fan_pin_1,
-                invert_output=fan_invert_output,
-            )
+            try:
+                self.fan = fan_class(
+                    self.config,
+                    i2c_address=fan_i2c_address,
+                    pin_1_name=fan_pin_1,
+                    invert_output=fan_invert_output,
+                )
+            except (OSError, ValueError) as e:
+                logger.error('Error initializing fan controller: %s', str(e))
+                self.fan = fans.fan_simulator(self.config)
+
 
             ### Do not set initial state on start
 
