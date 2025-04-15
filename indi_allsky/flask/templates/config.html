@@ -6432,6 +6432,19 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.GENERIC_GPIO__A_I2C_ADDRESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.GENERIC_GPIO__A_I2C_ADDRESS(class='form-control bg-secondary') }}
+            <div id="GENERIC_GPIO__A_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Hexadecimal address - Example: 0x12</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.GENERIC_GPIO__A_PIN_1.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -6469,6 +6482,19 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-6">
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Dew-Heater-Support" class="text-decoration-none link-info" target="_blank">Dew Heater Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__I2C_ADDRESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__I2C_ADDRESS(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Hexadecimal address - Example: 0x10</div>
         </div>
     </div>
 
@@ -6673,6 +6699,19 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-6">
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Fan-Control" class="text-decoration-none link-info" target="_blank">Fan Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FAN__I2C_ADDRESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FAN__I2C_ADDRESS(class='form-control bg-secondary') }}
+            <div id="FAN__I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Hexadecimal address - Example: 0x11</div>
         </div>
     </div>
 
@@ -7528,6 +7567,7 @@ const field_names = [
     'FOCUSER__GPIO_PIN_3',
     'FOCUSER__GPIO_PIN_4',
     'DEW_HEATER__CLASSNAME',
+    'DEW_HEATER__I2C_ADDRESS',
     'DEW_HEATER__PIN_1',
     'DEW_HEATER__LEVEL_DEF',
     'DEW_HEATER__MANUAL_TARGET',
@@ -7540,6 +7580,7 @@ const field_names = [
     'DEW_HEATER__THOLD_DIFF_MED',
     'DEW_HEATER__THOLD_DIFF_HIGH',
     'FAN__CLASSNAME',
+    'FAN__I2C_ADDRESS',
     'FAN__PIN_1',
     'FAN__LEVEL_DEF',
     'FAN__TARGET',
@@ -7551,6 +7592,7 @@ const field_names = [
     'FAN__THOLD_DIFF_MED',
     'FAN__THOLD_DIFF_HIGH',
     'GENERIC_GPIO__A_CLASSNAME',
+    'GENERIC_GPIO__A_I2C_ADDRESS',
     'GENERIC_GPIO__A_PIN_1',
     'TEMP_SENSOR__A_CLASSNAME',
     'TEMP_SENSOR__A_LABEL',

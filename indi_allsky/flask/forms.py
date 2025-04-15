@@ -2514,11 +2514,17 @@ def TEMP_SENSOR__LABEL_validator(form, field):
     pass
 
 
-def TEMP_SENSOR__I2C_ADDRESS_validator(form, field):
+def I2C_ADDRESS_validator(form, field):
     try:
-        int(field.data, 16)
+        address = int(field.data, 16)
     except ValueError as e:
-        raise ValidationError('Invalid HEX address: {0:s}'.format(str(e)))
+        raise ValidationError('Invalid I2C address: {0:s}'.format(str(e)))
+
+
+    if address < 0:
+        raise ValidationError('I2C address must be greater than 0x00')
+    elif address > 127:
+        raise ValidationError('I2C address must be 0x7f or less')
 
 
 def TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator(form, field):
@@ -3162,7 +3168,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_focuser_28byj_16', '28BYJ-48 Stepper (1/16) ULN2003 - GPIO (4 pins)'),
         ('blinka_focuser_a4988_nema17_full', 'A4988 NEMA17 Stepper - Full Step - GPIO (2 pins)'),
         ('blinka_focuser_a4988_nema17_half', 'A4988 NEMA17 Stepper - Half Step - GPIO (3 pins)'),
-        ('serial_focuser_28byj_64', '28BYJ-48 Stepper (1/64) ULN2003 - Serial Port'),
+        ('serial_focuser_28byj_64', '28BYJ-48 Stepper (1/64) ULN2003 [Serial Port] (BETA)'),
         ('focuser_simulator', 'Focuser Simulator'),
     )
 
@@ -3170,19 +3176,22 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'None'),
         ('blinka_dew_heater_standard', 'Dew Heater - Standard'),
         ('blinka_dew_heater_pwm', 'Dew Heater - PWM'),
-        ('serial_dew_heater_pwm', 'Dew Heater - PWM (Serial Port)'),
+        ('dew_heater_dockerpi_4channel_relay', 'Dew Heater - DockerPi 4 Channel Relay (BETA)'),
+        ('serial_dew_heater_pwm', 'Dew Heater - PWM [Serial Port] (BETA)'),
     )
 
     FAN__CLASSNAME_choices = (
         ('', 'None'),
         ('blinka_fan_standard', 'Fan - Standard'),
         ('blinka_fan_pwm', 'Fan - PWM'),
-        ('serial_fan_pwm', 'Fan - PWM (Serial Port)'),
+        ('fan_dockerpi_4channel_relay', 'Fan - DockerPi 4 Channel Relay (BETA)'),
+        ('serial_fan_pwm', 'Fan - PWM [Serial Port] (BETA)'),
     )
 
     GENERIC_GPIO__CLASSNAME_choices = (
         ('', 'None'),
         ('blinka_gpio_standard', 'GPIO - Standard'),
+        ('gpio_dockerpi_4channel_relay', 'GPIO - DockerPi 4 Channel Relay (BETA)'),
     )
 
     TEMP_SENSOR__CLASSNAME_choices = {
@@ -3870,6 +3879,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FOCUSER__GPIO_PIN_4              = StringField('GPIO Pin 4', validators=[DEVICE_PIN_NAME_validator])
     DEW_HEATER__CLASSNAME            = SelectField('Dew Heater', choices=DEW_HEATER__CLASSNAME_choices, validators=[DEW_HEATER__CLASSNAME_validator])
     DEW_HEATER__ENABLE_DAY           = BooleanField('Enable Daytime')
+    DEW_HEATER__I2C_ADDRESS          = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     DEW_HEATER__PIN_1                = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
     DEW_HEATER__INVERT_OUTPUT        = BooleanField('Invert Output')
     DEW_HEATER__LEVEL_DEF            = IntegerField('Default Level', validators=[DEW_HEATER__LEVEL_validator])
@@ -3885,6 +3895,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__THOLD_DIFF_HIGH      = IntegerField('High Threshold Delta', validators=[DEW_HEATER__THOLD_DIFF_validator])
     FAN__CLASSNAME                   = SelectField('Fan', choices=FAN__CLASSNAME_choices, validators=[FAN__CLASSNAME_validator])
     FAN__ENABLE_NIGHT                = BooleanField('Enable Night')
+    FAN__I2C_ADDRESS                 = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     FAN__PIN_1                       = StringField('Pin', validators=[DEVICE_PIN_NAME_validator])
     FAN__INVERT_OUTPUT               = BooleanField('Invert Output')
     FAN__LEVEL_DEF                   = IntegerField('Default Level', validators=[FAN__LEVEL_validator])
@@ -3898,28 +3909,29 @@ class IndiAllskyConfigForm(FlaskForm):
     FAN__THOLD_DIFF_MED              = IntegerField('Medium Threshold Delta', validators=[FAN__THOLD_DIFF_validator])
     FAN__THOLD_DIFF_HIGH             = IntegerField('High Threshold Delta', validators=[FAN__THOLD_DIFF_validator])
     GENERIC_GPIO__A_CLASSNAME        = SelectField('GPIO', choices=GENERIC_GPIO__CLASSNAME_choices, validators=[GENERIC_GPIO__CLASSNAME_validator])
+    GENERIC_GPIO__A_I2C_ADDRESS      = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     GENERIC_GPIO__A_PIN_1            = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     GENERIC_GPIO__A_INVERT_OUTPUT    = BooleanField('Invert Output')
     TEMP_SENSOR__A_CLASSNAME         = SelectField('Sensor A', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__A_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__A_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__A_USER_VAR_SLOT     = SelectField('Sensor A Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
-    TEMP_SENSOR__A_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
+    TEMP_SENSOR__A_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     TEMP_SENSOR__B_CLASSNAME         = SelectField('Sensor B', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__B_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__B_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__B_USER_VAR_SLOT     = SelectField('Sensor B Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
-    TEMP_SENSOR__B_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
+    TEMP_SENSOR__B_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     TEMP_SENSOR__C_CLASSNAME         = SelectField('Sensor C', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__C_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__C_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__C_USER_VAR_SLOT     = SelectField('Sensor C Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
-    TEMP_SENSOR__C_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
+    TEMP_SENSOR__C_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     TEMP_SENSOR__D_CLASSNAME         = SelectField('Sensor D', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__D_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__D_PIN_1             = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__D_USER_VAR_SLOT     = SelectField('Sensor D Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
-    TEMP_SENSOR__D_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), TEMP_SENSOR__I2C_ADDRESS_validator])
+    TEMP_SENSOR__D_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__WUNDERGROUND_APIKEY = PasswordField('Weather Underground API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__WUNDERGROUND_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__ASTROSPHERIC_APIKEY = PasswordField('Astrospheric API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ASTROSPHERIC_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
@@ -4278,6 +4290,39 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
 
+            elif self.DEW_HEATER__CLASSNAME.data == 'dew_heater_dockerpi_4channel_relay':
+
+                try:
+                    import board
+                except ImportError:
+                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+                except PermissionError:
+                    self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+
+                try:
+                    board.I2C()
+
+                    from ..devices.controllers.dockerpi import DockerPi4ChannelRelay
+
+                    if self.DEW_HEATER__PIN_1.data:
+                        try:
+                            board.I2C()
+                            getattr(DockerPi4ChannelRelay, self.DEW_HEATER__PIN_1.data)
+                        except AttributeError:
+                            self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                            result = False
+                    else:
+                        self.DEW_HEATER__PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except AttributeError:
+                    self.DEW_HEATER__CLASSNAME.errors.append('I2C not available for your system')
+                    result = False
+
+
         if self.DEW_HEATER__THOLD_DIFF_HIGH.data >= self.DEW_HEATER__THOLD_DIFF_MED.data:
             self.DEW_HEATER__THOLD_DIFF_HIGH.errors.append('HIGH must be less than MEDIUM')
             self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM must be greater than HIGH')
@@ -4315,6 +4360,38 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+            elif self.FAN__CLASSNAME.data == 'fan_dockerpi_4channel_relay':
+
+                try:
+                    import board
+                except ImportError:
+                    self.FAN__CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+                except PermissionError:
+                    self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+
+                try:
+                    board.I2C()
+
+                    from ..devices.controllers.dockerpi import DockerPi4ChannelRelay
+
+                    if self.FAN__PIN_1.data:
+                        try:
+                            board.I2C()
+                            getattr(DockerPi4ChannelRelay, self.FAN__PIN_1.data)
+                        except AttributeError:
+                            self.FAN__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.FAN__PIN_1.data))
+                            result = False
+                    else:
+                        self.FAN__PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except AttributeError:
+                    self.FAN__CLASSNAME.errors.append('I2C not available for your system')
                     result = False
 
 
@@ -4355,6 +4432,38 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:
                     self.GENERIC_GPIO__A_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+            elif self.GENERIC_GPIO__A_CLASSNAME.data == 'gpio_dockerpi_4channel_relay':
+
+                try:
+                    import board
+                except ImportError:
+                    self.GENERIC_GPIO__A_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+                except PermissionError:
+                    self.GENERIC_GPIO__A_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+
+                try:
+                    board.I2C()
+
+                    from ..devices.controllers.dockerpi import DockerPi4ChannelRelay
+
+                    if self.GENERIC_GPIO__A_PIN_1.data:
+                        try:
+                            board.I2C()
+                            getattr(DockerPi4ChannelRelay, self.GENERIC_GPIO__A_PIN_1.data)
+                        except AttributeError:
+                            self.GENERIC_GPIO__A_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.GENERIC_GPIO__A_PIN_1.data))
+                            result = False
+                    else:
+                        self.GENERIC_GPIO__A_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except AttributeError:
+                    self.GENERIC_GPIO__A_CLASSNAME.errors.append('I2C not available for your system')
                     result = False
 
 

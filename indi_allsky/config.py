@@ -510,6 +510,7 @@ class IndiAllSkyConfigBase(object):
         "DEW_HEATER" : {
             "CLASSNAME"              : "",
             "ENABLE_DAY"             : False,
+            "I2C_ADDRESS"            : "0x10",
             "PIN_1"                  : "D12",
             "INVERT_OUTPUT"          : False,
             "LEVEL_DEF"              : 100,
@@ -527,6 +528,7 @@ class IndiAllSkyConfigBase(object):
         "FAN" : {
             "CLASSNAME"              : "",
             "ENABLE_NIGHT"           : False,
+            "I2C_ADDRESS"            : "0x11",
             "PIN_1"                  : "D13",
             "INVERT_OUTPUT"          : False,
             "LEVEL_DEF"              : 100,
@@ -542,6 +544,7 @@ class IndiAllSkyConfigBase(object):
         },
         "GENERIC_GPIO" : {
             "A_CLASSNAME"            : "",
+            "A_I2C_ADDRESS"          : "0x12",
             "A_PIN_1"                : "D21",
             "A_INVERT_OUTPUT"        : False,
         },

@@ -250,10 +250,20 @@ class SensorWorker(Process):
         if a_gpio__classname:
             a_gpio_class = getattr(indi_allsky_gpios, a_gpio__classname)
 
+            a_gpio_i2c_address = self.config.get('GENERIC_GPIO', {}).get('A_I2C_ADDRESS', '0x12')
             a_gpio_pin_1 = self.config.get('GENERIC_GPIO', {}).get('A_PIN_1', 'notdefined')
             a_gpio_invert_output = self.config.get('GENERIC_GPIO', {}).get('A_INVERT_OUTPUT', False)
 
-            self.gpio = a_gpio_class(self.config, pin_1_name=a_gpio_pin_1, invert_output=a_gpio_invert_output)
+            try:
+                self.gpio = a_gpio_class(
+                    self.config,
+                    i2c_address=a_gpio_i2c_address,
+                    pin_1_name=a_gpio_pin_1,
+                    invert_output=a_gpio_invert_output,
+                )
+            except (OSError, ValueError) as e:
+                logger.error('Error initializing gpio controller: %s', str(e))
+                self.gpio = indi_allsky_gpios.gpio_simulator(self.config)
 
             ### Do not set initial state on start
 
@@ -282,10 +292,20 @@ class SensorWorker(Process):
         if dew_heater_classname:
             dh_class = getattr(dew_heaters, dew_heater_classname)
 
+            dh_i2c_address = self.config.get('DEW_HEATER', {}).get('I2C_ADDRESS', '0x10')
             dh_pin_1 = self.config.get('DEW_HEATER', {}).get('PIN_1', 'notdefined')
             dh_invert_output = self.config.get('DEW_HEATER', {}).get('INVERT_OUTPUT', False)
 
-            self.dew_heater = dh_class(self.config, pin_1_name=dh_pin_1, invert_output=dh_invert_output)
+            try:
+                self.dew_heater = dh_class(
+                    self.config,
+                    i2c_address=dh_i2c_address,
+                    pin_1_name=dh_pin_1,
+                    invert_output=dh_invert_output,
+                )
+            except (OSError, ValueError) as e:
+                logger.error('Error initializing dew heater controller: %s', str(e))
+                self.dew_heater = dew_heaters.dew_heater_simulator(self.config)
 
             ### Do not set initial state on start
 
@@ -318,10 +338,21 @@ class SensorWorker(Process):
         if fan_classname:
             fan_class = getattr(fans, fan_classname)
 
+            fan_i2c_address = self.config.get('FAN', {}).get('I2C_ADDRESS', '0x11')
             fan_pin_1 = self.config.get('FAN', {}).get('PIN_1', 'notdefined')
             fan_invert_output = self.config.get('FAN', {}).get('INVERT_OUTPUT', False)
 
-            self.fan = fan_class(self.config, pin_1_name=fan_pin_1, invert_output=fan_invert_output)
+            try:
+                self.fan = fan_class(
+                    self.config,
+                    i2c_address=fan_i2c_address,
+                    pin_1_name=fan_pin_1,
+                    invert_output=fan_invert_output,
+                )
+            except (OSError, ValueError) as e:
+                logger.error('Error initializing fan controller: %s', str(e))
+                self.fan = fans.fan_simulator(self.config)
+
 
             ### Do not set initial state on start
 
