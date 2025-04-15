@@ -2560,7 +2560,7 @@ fi
 
 
 echo "**** Ensure user is a member of the dialout, video, gpio, i2c, spi groups ****"
-for GRP in dialout video gpio i2c spi; do
+for GRP in dialout video plugdev gpio i2c spi; do
     if getent group "$GRP" >/dev/null 2>&1; then
         sudo usermod -a -G "$GRP" "$USER"
     fi
