@@ -6,6 +6,7 @@ from .fanDockerPi4ChannelRelay import FanDockerPi4ChannelRelay_I2C as fan_docker
 
 from .fanSerialPwm import FanSerialPwm as serial_fan_pwm
 
+
 __all__ = (
     'fan_simulator',
     'blinka_fan_pwm',

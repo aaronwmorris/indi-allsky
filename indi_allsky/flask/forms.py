@@ -3168,7 +3168,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_focuser_28byj_16', '28BYJ-48 Stepper (1/16) ULN2003 - GPIO (4 pins)'),
         ('blinka_focuser_a4988_nema17_full', 'A4988 NEMA17 Stepper - Full Step - GPIO (2 pins)'),
         ('blinka_focuser_a4988_nema17_half', 'A4988 NEMA17 Stepper - Half Step - GPIO (3 pins)'),
-        ('serial_focuser_28byj_64', '28BYJ-48 Stepper (1/64) ULN2003 - Serial Port'),
+        ('serial_focuser_28byj_64', '28BYJ-48 Stepper (1/64) ULN2003 [Serial Port] (BETA)'),
         ('focuser_simulator', 'Focuser Simulator'),
     )
 
@@ -3176,15 +3176,16 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'None'),
         ('blinka_dew_heater_standard', 'Dew Heater - Standard'),
         ('blinka_dew_heater_pwm', 'Dew Heater - PWM'),
-        ('serial_dew_heater_pwm', 'Dew Heater - PWM (Serial Port)'),
+        ('dew_heater_dockerpi_4channel_relay', 'Dew Heater - DockerPi 4 Channel Relay (BETA)'),
+        ('serial_dew_heater_pwm', 'Dew Heater - PWM [Serial Port] (BETA)'),
     )
 
     FAN__CLASSNAME_choices = (
         ('', 'None'),
         ('blinka_fan_standard', 'Fan - Standard'),
         ('blinka_fan_pwm', 'Fan - PWM'),
-        ('fan_dockerpi_4channel_relay', 'Fan - Docker Pi 4 Channel Relay'),
-        ('serial_fan_pwm', 'Fan - PWM (Serial Port)'),
+        ('fan_dockerpi_4channel_relay', 'Fan - DockerPi 4 Channel Relay (BETA)'),
+        ('serial_fan_pwm', 'Fan - PWM [Serial Port] (BETA)'),
     )
 
     GENERIC_GPIO__CLASSNAME_choices = (
@@ -4285,6 +4286,39 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:
                     self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+
+            elif self.DEW_HEATER__CLASSNAME.data == 'dew_heater_dockerpi_4channel_relay':
+
+                try:
+                    import board
+                except ImportError:
+                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+                except PermissionError:
+                    self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+
+                try:
+                    board.I2C()
+
+                    from ..devices.controllers.dockerpi import DockerPi4ChannelRelay
+
+                    if self.DEW_HEATER__PIN_1.data:
+                        try:
+                            board.I2C()
+                            getattr(DockerPi4ChannelRelay, self.DEW_HEATER__PIN_1.data)
+                        except AttributeError:
+                            self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                            result = False
+                    else:
+                        self.DEW_HEATER__PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except AttributeError:
+                    self.DEW_HEATER__CLASSNAME.errors.append('I2C not available for your system')
                     result = False
 
 
