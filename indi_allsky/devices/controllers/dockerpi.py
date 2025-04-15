@@ -10,15 +10,15 @@ except ImportError:
 
 class DockerPi4ChannelRelay(object):
 
-    R1 = const(0x01)
-    R2 = const(0x02)
-    R3 = const(0x02)
-    R4 = const(0x02)
+    RELAY1 = const(0x01)
+    RELAY2 = const(0x02)
+    RELAY3 = const(0x02)
+    RELAY4 = const(0x02)
 
     RELAY_OFF = const(0x00)
     RELAY_ON = const(0xFF)
 
-    _relay_list = (R1, R2, R3, R4)
+    _relay_list = (RELAY1, RELAY2, RELAY3, RELAY4)
     _state_list = (RELAY_OFF, RELAY_ON)
 
 
@@ -29,10 +29,10 @@ class DockerPi4ChannelRelay(object):
 
 
         self._relay_states = {
-            self.R1 : 0,
-            self.R2 : 0,
-            self.R3 : 0,
-            self.R4 : 0,
+            self.RELAY1 : 0,
+            self.RELAY2 : 0,
+            self.RELAY3 : 0,
+            self.RELAY4 : 0,
         }
 
         # set all relays off

@@ -3183,6 +3183,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'None'),
         ('blinka_fan_standard', 'Fan - Standard'),
         ('blinka_fan_pwm', 'Fan - PWM'),
+        ('fan_dockerpi_4channel_relay', 'Fan - Docker Pi 4 Channel Relay'),
         ('serial_fan_pwm', 'Fan - PWM (Serial Port)'),
     )
 
@@ -4325,6 +4326,39 @@ class IndiAllskyConfigForm(FlaskForm):
                 except PermissionError:
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
+
+            elif self.FAN__CLASSNAME.data == 'fan_dockerpi_4channel_relay':
+
+                try:
+                    import board
+                except ImportError:
+                    self.FAN__CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+                except PermissionError:
+                    self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+
+                try:
+                    board.I2C()
+
+                    from ..devices.controllers.dockerpi import DockerPi4ChannelRelay
+
+                    if self.FAN__PIN_1.data:
+                        try:
+                            board.I2C()
+                            getattr(DockerPi4ChannelRelay, self.FAN__PIN_1.data)
+                        except AttributeError:
+                            self.FAN__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.FAN__PIN_1.data))
+                            result = False
+                    else:
+                        self.FAN__PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except AttributeError:
+                    self.FAN__CLASSNAME.errors.append('I2C not available for your system')
+                    result = False
+
 
 
         if self.FAN__THOLD_DIFF_HIGH.data <= self.FAN__THOLD_DIFF_MED.data:
