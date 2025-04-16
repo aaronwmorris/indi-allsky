@@ -3,11 +3,12 @@
 import os
 import sys
 import site
+import argparse
 import math
 from datetime import datetime
 from datetime import timezone
 import logging
-#import time
+import time
 from pathlib import Path
 #from pprint import pformat
 
@@ -71,6 +72,27 @@ class TestSensors(object):
 
         self.sensors = [None, None, None, None]
 
+        self._count = 1
+        self._interval = 5
+
+
+    @property
+    def count(self):
+        return self._count
+
+    @count.setter
+    def count(self, new_count):
+        self._count = int(new_count)
+
+
+    @property
+    def interval(self):
+        return self._interval
+
+    @interval.setter
+    def interval(self, new_interval):
+        self._interval = int(new_interval)
+
 
     def main(self):
         obs = ephem.Observer()
@@ -95,21 +117,27 @@ class TestSensors(object):
 
 
         # update sensor readings
-        for i, sensor in enumerate(self.sensors):
+        for _ in range(self.count):
 
-            if isinstance(sensor, type(None)):
-                continue
+            if self.count > 1:
+                time.sleep(self.interval)
 
-            try:
-                sensor_data = sensor.update()
 
-                logger.info('Sensor %d: %s', i, str(sensor_data))
-            except SensorReadException as e:
-                logger.error('SensorReadException: {0:s}'.format(str(e)))
-            except OSError as e:
-                logger.error('Sensor OSError: {0:s}'.format(str(e)))
-            except IOError as e:
-                logger.error('Sensor IOError: {0:s}'.format(str(e)))
+            for i, sensor in enumerate(self.sensors):
+
+                if isinstance(sensor, type(None)):
+                    continue
+
+                try:
+                    sensor_data = sensor.update()
+
+                    logger.info('Sensor %d: %s', i, str(sensor_data))
+                except SensorReadException as e:
+                    logger.error('SensorReadException: {0:s}'.format(str(e)))
+                except OSError as e:
+                    logger.error('Sensor OSError: {0:s}'.format(str(e)))
+                except IOError as e:
+                    logger.error('Sensor IOError: {0:s}'.format(str(e)))
 
 
     def init_sensors(self):
@@ -258,6 +286,29 @@ class TestSensors(object):
 
 
 if __name__ == "__main__":
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        '--count',
+        '-c',
+        help='number of sensor reads to perform (default: 1)',
+        type=int,
+        default=1
+    )
+    argparser.add_argument(
+        '--interval',
+        '-i',
+        help='interval between sensor reads (default: 5)',
+        type=int,
+        default=5
+    )
+
+
+    args = argparser.parse_args()
+
+
     ts = TestSensors()
+    ts.count = args.count
+    ts.interval = args.interval
+
     ts.main()
 
