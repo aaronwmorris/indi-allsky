@@ -30,7 +30,7 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
     def stretch(self, data, image_bit_depth):
         #logger.info('MTF: Shadows - Shadows %0.2f, Midtones %0.2f, Highlights %0.2f', self.shadows, self.midtones, self.highlights)
 
-        mtf_start = time.time()
+        stretch_start = time.time()
 
 
         if isinstance(self._mtf_lut, type(None)):
@@ -71,8 +71,8 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
             stretched_image = self._mtf_lut.take(stretched_image, mode='raise')
 
 
-        levels_elapsed_s = time.time() - mtf_start
-        logger.info('Stretch in %0.4f s', levels_elapsed_s)
+        stretch_elapsed_s = time.time() - stretch_start
+        logger.info('Stretch in %0.4f s', stretch_elapsed_s)
 
         return stretched_image
 
