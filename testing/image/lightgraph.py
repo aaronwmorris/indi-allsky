@@ -11,7 +11,7 @@ import cv2
 import logging
 
 
-LATITUDE  = 73
+LATITUDE  = 33
 LONGITUDE = -84
 
 
@@ -31,6 +31,7 @@ class LightGraphGenerator(object):
     day_color = (150, 150, 150)
     dusk_color = (200, 100, 60)
     night_color = (30, 30, 30)
+    moonmode_color = (50, 50, 50)
     hour_color = (100, 15, 15)
     border_color = (1, 1, 1)
     now_color = (120, 120, 200)
@@ -156,6 +157,7 @@ class LightGraphGenerator(object):
         obs.pressure = 0
 
         sun = ephem.Sun()
+        moon = ephem.Moon()
 
         day_color_bgr = list(self.day_color)
         day_color_bgr.reverse()
@@ -163,16 +165,33 @@ class LightGraphGenerator(object):
         dusk_color_bgr.reverse()
         night_color_bgr = list(self.night_color)
         night_color_bgr.reverse()
+        moonmode_color_bgr = list(self.moonmode_color)
+        moonmode_color_bgr.reverse()
 
         lightgraph_list = list()
         for x in range(1440):
             obs.date = noon_utc + timedelta(minutes=x)
             sun.compute(obs)
+            moon.compute(obs)
 
             sun_alt_deg = math.degrees(sun.alt)
+            moon_alt_deg = math.degrees(moon.alt)
+
+
+            if moon_alt_deg < -6:
+                dark_color_bgr = night_color_bgr
+            elif moon_alt_deg < 0:
+                norm = (6 + moon_alt_deg) / 6
+                color_1 = moonmode_color_bgr
+                color_2 = night_color_bgr
+
+                dark_color_bgr = self.mapColor(norm, color_1, color_2)
+            else:
+                dark_color_bgr = moonmode_color_bgr
+
 
             if sun_alt_deg < -18:
-                lightgraph_list.append(night_color_bgr)
+                lightgraph_list.append(dark_color_bgr)
             elif sun_alt_deg > 0:
                 lightgraph_list.append(day_color_bgr)
             else:
@@ -180,7 +199,7 @@ class LightGraphGenerator(object):
                 if sun_alt_deg <= -9:
                     norm = (18 + sun_alt_deg) / 9  # alt is negative
                     color_1 = dusk_color_bgr
-                    color_2 = night_color_bgr
+                    color_2 = dark_color_bgr
                 else:
                     norm = (9 + sun_alt_deg) / 9  # alt is negative
                     color_1 = day_color_bgr
