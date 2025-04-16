@@ -237,6 +237,7 @@ class IndiAllSkyConfigBase(object):
             "DAY_COLOR"     : [150, 150, 150],
             "DUSK_COLOR"    : [200, 100, 60],
             "NIGHT_COLOR"   : [30, 30, 30],
+            "MOONMODE_COLOR": [50, 50, 50],
             "HOUR_COLOR"    : [100, 15, 15],
             "BORDER_COLOR"  : [1, 1, 1],
             "NOW_COLOR"     : [120, 120, 200],

@@ -2469,6 +2469,9 @@ class ConfigView(FormView):
         lightgraph_overlay__night_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NIGHT_COLOR', [30, 30, 30])
         form_data['LIGHTGRAPH_OVERLAY__NIGHT_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__night_color])
 
+        lightgraph_overlay__moonmode_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('MOONMODE_COLOR', [50, 50, 50])
+        form_data['LIGHTGRAPH_OVERLAY__MOONMODE_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__moonmode_color])
+
         lightgraph_overlay__hour_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_COLOR', [100, 15, 15])
         form_data['LIGHTGRAPH_OVERLAY__HOUR_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__hour_color])
 
@@ -3267,6 +3270,9 @@ class AjaxConfigView(BaseView):
 
         lightgraph_overlay__night_color_str = str(request.json['LIGHTGRAPH_OVERLAY__NIGHT_COLOR'])
         self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['NIGHT_COLOR'] = [int(x) for x in lightgraph_overlay__night_color_str.split(',')]
+
+        lightgraph_overlay__moonmode_color_str = str(request.json['LIGHTGRAPH_OVERLAY__MOONMODE_COLOR'])
+        self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['MOONMODE_COLOR'] = [int(x) for x in lightgraph_overlay__moonmode_color_str.split(',')]
 
         lightgraph_overlay__hour_color_str = str(request.json['LIGHTGRAPH_OVERLAY__HOUR_COLOR'])
         self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['HOUR_COLOR'] = [int(x) for x in lightgraph_overlay__hour_color_str.split(',')]
@@ -6453,6 +6459,9 @@ class ImageProcessingView(TemplateView):
         lightgraph_overlay__night_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('NIGHT_COLOR', [30, 30, 30])
         form_data['LIGHTGRAPH_OVERLAY__NIGHT_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__night_color])
 
+        lightgraph_overlay__moonmode_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('MOONMODE_COLOR', [50, 50, 50])
+        form_data['LIGHTGRAPH_OVERLAY__MOONMODE_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__moonmode_color])
+
         lightgraph_overlay__hour_color = self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_COLOR', [100, 15, 15])
         form_data['LIGHTGRAPH_OVERLAY__HOUR_COLOR'] = ','.join([str(x) for x in lightgraph_overlay__hour_color])
 
@@ -6683,6 +6692,9 @@ class JsonImageProcessingView(JsonView):
 
         lightgraph_overlay__night_color_str = str(request.json['LIGHTGRAPH_OVERLAY__NIGHT_COLOR'])
         p_config['LIGHTGRAPH_OVERLAY']['NIGHT_COLOR'] = [int(x) for x in lightgraph_overlay__night_color_str.split(',')]
+
+        lightgraph_overlay__moonmode_color_str = str(request.json['LIGHTGRAPH_OVERLAY__MOONMODE_COLOR'])
+        p_config['LIGHTGRAPH_OVERLAY']['MOONMODE_COLOR'] = [int(x) for x in lightgraph_overlay__moonmode_color_str.split(',')]
 
         lightgraph_overlay__hour_color_str = str(request.json['LIGHTGRAPH_OVERLAY__HOUR_COLOR'])
         p_config['LIGHTGRAPH_OVERLAY']['HOUR_COLOR'] = [int(x) for x in lightgraph_overlay__hour_color_str.split(',')]
