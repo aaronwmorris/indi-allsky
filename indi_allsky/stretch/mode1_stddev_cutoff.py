@@ -30,9 +30,15 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
             self._generateNumpyMask(data)
 
 
-        data = self.mode1_apply_gamma(data, image_bit_depth)
+        stretch_start = time.time()
 
+
+        data = self.mode1_apply_gamma(data, image_bit_depth)
         data = self.mode1_adjustImageLevels(data, image_bit_depth)
+
+
+        stretch_elapsed_s = time.time() - stretch_start
+        logger.info('Stretch in %0.4f s', stretch_elapsed_s)
 
         return data
 
@@ -41,9 +47,7 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
         if not self.gamma:
             return data
 
-        logger.info('Applying gamma correction')
-
-        gamma_start = time.time()
+        #gamma_start = time.time()
 
 
         if image_bit_depth == 8:
@@ -62,18 +66,18 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
         # apply lookup table
         gamma_data = lut.take(data, mode='raise')
 
-        gamma_elapsed_s = time.time() - gamma_start
-        logger.info('Image gamma in %0.4f s', gamma_elapsed_s)
+        #gamma_elapsed_s = time.time() - gamma_start
+        #logger.info('Image gamma in %0.4f s', gamma_elapsed_s)
 
         return gamma_data
 
 
     def mode1_adjustImageLevels(self, data, image_bit_depth):
         mean, stddev = self._get_image_stddev(data)
-        logger.info('Mean: %0.2f, StdDev: %0.2f', mean, stddev)
+        #logger.info('Mean: %0.2f, StdDev: %0.2f', mean, stddev)
 
 
-        levels_start = time.time()
+        #levels_start = time.time()
 
 
         if image_bit_depth == 8:
@@ -105,15 +109,15 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
         # apply lookup table
         stretched_image = lut.take(data, mode='raise')
 
-        levels_elapsed_s = time.time() - levels_start
-        logger.info('Image levels in %0.4f s', levels_elapsed_s)
+        #levels_elapsed_s = time.time() - levels_start
+        #logger.info('Image levels in %0.4f s', levels_elapsed_s)
 
 
         return stretched_image
 
 
     def _get_image_stddev(self, data):
-        mean_std_start = time.time()
+        #mean_std_start = time.time()
 
 
         # mask arrays allow using the detection mask to perform calculations on
@@ -142,8 +146,8 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
             stddev = (b_stddev + g_stddev + r_stddev) / 3
 
 
-        mean_std_elapsed_s = time.time() - mean_std_start
-        logger.info('Mean and std dev in %0.4f s', mean_std_elapsed_s)
+        #mean_std_elapsed_s = time.time() - mean_std_start
+        #logger.info('Mean and std dev in %0.4f s', mean_std_elapsed_s)
 
         return mean, stddev
 

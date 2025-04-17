@@ -58,6 +58,7 @@ class YearKeogramTest(object):
     day_color = (130, 200, 220)
     dusk_color = (200, 100, 60)
     night_color = (30, 30, 30)
+    moonmode_color = (40, 40, 40)
 
 
     def __init__(self):
@@ -228,7 +229,7 @@ class YearKeogramTest(object):
         #logger.info(numpy_data[0:3])
 
         keogram_data = numpy.reshape(numpy_data, ((total_days * self.period_pixels), self.periods_per_day, 3))
-        #keogram_data = numpy.flip(keogram_data, axis=0)  # newer data at top
+        keogram_data = numpy.flip(keogram_data, axis=0)  # newer data at top
 
         logger.info(keogram_data.shape)
         #logger.info(keogram_data[0:3])
@@ -295,6 +296,7 @@ class YearKeogramTest(object):
         obs.pressure = 0
 
         sun = ephem.Sun()
+        moon = ephem.Moon()
 
 
         current_date_utc = start_date_utc
@@ -303,11 +305,26 @@ class YearKeogramTest(object):
         while current_date_utc <= end_date_utc:
             obs.date = current_date_utc
             sun.compute(obs)
+            moon.compute(obs)
 
             sun_alt_deg = math.degrees(sun.alt)
+            moon_alt_deg = math.degrees(moon.alt)
+
+
+            if moon_alt_deg < -6:
+                dark_color = self.night_color
+            elif moon_alt_deg < 0:
+                norm = (6 + moon_alt_deg) / 6
+                color_1 = self.moonmode_color
+                color_2 = self.night_color
+
+                dark_color = self.mapColor(norm, color_1, color_2)
+            else:
+                dark_color = self.moonmode_color
+
 
             if sun_alt_deg < -18:
-                r, g, b = self.night_color
+                r, g, b = dark_color
             elif sun_alt_deg > 0:
                 r, g, b = self.day_color
             else:
@@ -319,7 +336,7 @@ class YearKeogramTest(object):
                 if sun_alt_deg <= -9:
                     norm = (18 + sun_alt_deg) / 9  # alt is negative
                     color_1 = self.dusk_color
-                    color_2 = self.night_color
+                    color_2 = dark_color
                 else:
                     norm = (9 + sun_alt_deg) / 9  # alt is negative
                     color_1 = self.day_color

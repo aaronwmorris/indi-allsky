@@ -12,8 +12,8 @@ class DockerPi4ChannelRelay(object):
 
     RELAY1 = const(0x01)
     RELAY2 = const(0x02)
-    RELAY3 = const(0x02)
-    RELAY4 = const(0x02)
+    RELAY3 = const(0x03)
+    RELAY4 = const(0x04)
 
     RELAY_OFF = const(0x00)
     RELAY_ON = const(0xFF)
