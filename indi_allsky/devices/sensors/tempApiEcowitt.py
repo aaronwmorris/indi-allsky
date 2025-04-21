@@ -72,7 +72,7 @@ class TempApiEcowitt(SensorBase):
     ###       ...
     ###     },
 
-    URL_TEMPLATE = 'https://api.ecowitt.net/api/v3/device/real_time?mac={macaddress:s}?api_key={apikey:s}&application_key={applicationkey:s}&call_back=all'
+    URL_TEMPLATE = 'https://api.ecowitt.net/api/v3/device/real_time?mac={macaddress:s}&api_key={apikey:s}&application_key={applicationkey:s}&call_back=all'
 
 
     METADATA = {
