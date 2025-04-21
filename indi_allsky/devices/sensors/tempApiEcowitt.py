@@ -209,13 +209,13 @@ class TempApiEcowitt(SensorBase):
             pressure_in = 0.0
 
 
-        if r_data['data']['wind']['wind_speed'].get('value'):
+        if r_data['data'].get('wind', {}).get('wind_speed', {}).get('value'):
             wind_speed_mph = float(r_data['data']['wind']['wind_speed']['value'])
         else:
             wind_speed_mph = 0.0
 
 
-        if r_data['data']['wind']['wind_gust'].get('value'):
+        if r_data['data'].get('wind', {}).get('wind_gust', {}).get('value'):
             wind_gust_mph = float(r_data['data']['wind']['wind_gust']['value'])
         else:
             wind_gust_mph = 0.0
@@ -227,19 +227,21 @@ class TempApiEcowitt(SensorBase):
             wind_dir = 0.0
 
 
-        if r_data['data']['rainfall']['rain_rate'].get('value'):
+        if r_data['data'].get('rainfall', {}).get('rain_rate', {}).get('value'):
             rain_total = float(r_data['data']['rainfall']['rain_rate']['value'])
+        elif r_data['data'].get('rainfall_piezo', {}).get('rain_rate', {}).get('value'):
+            rain_total = float(r_data['data']['rainfall_piezo']['rain_rate']['value'])
         else:
             rain_total = 0.0
 
 
-        if r_data['data']['solar_and_uvi']['solar'].get('value'):
+        if r_data['data'].get('solar_and_uvi', {}).get('solar', {}).get('value'):
             solar_radiation = float(r_data['data']['solar_and_uvi']['solar']['value'])
         else:
             solar_radiation = 0.0
 
 
-        if r_data['data']['solar_and_uvi']['uvi'].get('value'):
+        if r_data['data'].get('solar_and_uvi', {}).get('uvi', {}).get('value'):
             uv = float(r_data['data']['solar_and_uvi']['uvi']['value'])
         else:
             uv = 0.0
