@@ -88,6 +88,7 @@ class SyncApiBaseView(BaseView):
             elif request.method == 'GET':
                 return self.get()
             else:
+                app.logger.error('Invalid method: %s', str(request.method))
                 return jsonify({}), 400
 
         except AuthenticationFailure as e:
@@ -116,7 +117,8 @@ class SyncApiBaseView(BaseView):
 
         try:
             file_entry = self.processPost(camera, metadata, tmp_media_file_p, overwrite=overwrite)
-        except EntryExists:
+        except EntryExists as e:
+            app.logger.error('Transfer skipped: %s', str(e))
             return jsonify({'error' : 'file_exists'}), 400
 
 
@@ -143,7 +145,8 @@ class SyncApiBaseView(BaseView):
 
         try:
             self.deleteFile(metadata['id'], camera.id)
-        except EntryMissing:
+        except EntryMissing as e:
+            app.logger.error('Transfer failed: %s', str(e))
             return jsonify({'error' : 'file_missing'}), 400
 
         return jsonify({})
@@ -162,7 +165,8 @@ class SyncApiBaseView(BaseView):
 
         try:
             file_entry = self.getEntry(metadata, camera)
-        except EntryMissing:
+        except EntryMissing as e:
+            app.logger.error('Transfer failed: %s', str(e))
             return jsonify({'error' : 'file_missing'}), 400
 
         return jsonify({
@@ -204,7 +208,7 @@ class SyncApiBaseView(BaseView):
 
 
             if not overwrite:
-                raise EntryExists()
+                raise EntryExists('Entry Exists: {0:s}'.format(old_entry.filename))
 
 
             old_entry.deleteAsset()
@@ -281,7 +285,7 @@ class SyncApiBaseView(BaseView):
             db.session.delete(entry)
             db.session.commit()
         except NoResultFound:
-            raise EntryMissing()
+            raise EntryMissing('Entry Missing: {0:d}'.format(entry_id))
 
 
     def getEntry(self, metadata, camera):
@@ -293,7 +297,7 @@ class SyncApiBaseView(BaseView):
                 .one()
 
         except NoResultFound:
-            raise EntryMissing()
+            raise EntryMissing('Entry Missing: {0:d}'.format(metadata['id']))
 
 
         return entry
@@ -417,7 +421,8 @@ class SyncApiCameraView(SyncApiBaseView):
 
         try:
             file_entry = self.getEntry(metadata)
-        except EntryMissing:
+        except EntryMissing as e:
+            app.logger.error('Transfer failed: %s', str(e))
             return jsonify({'error' : 'camera_missing'}), 400
 
         return jsonify({
@@ -466,6 +471,7 @@ class SyncApiCameraView(SyncApiBaseView):
 
 
     def delete(self):
+        app.logger.error('delete not implemented')
         return jsonify({'error' : 'not_implemented'}), 400
 
 
@@ -506,7 +512,7 @@ class SyncApiBaseImageView(SyncApiBaseView):
 
 
             if not overwrite:
-                raise EntryExists()
+                raise EntryExists('Entry Exists: {0:s}'.format(old_entry.filename))
 
 
             app.logger.warning('Removing orphaned image entry')
@@ -746,7 +752,7 @@ class SyncApiThumbnailView(SyncApiBaseView):
 
         else:
             if not overwrite:
-                raise EntryExists()
+                raise EntryExists('Entry Exists: {0:s}'.format(old_thumbnail_entry.filename))
 
             app.logger.warning('Replacing image')
             thumbnail_file_p.unlink()
