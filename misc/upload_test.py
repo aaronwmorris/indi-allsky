@@ -148,6 +148,7 @@ class TestUpload(object):
             'type'            : constants.IMAGE,
             'createDate'      : int(image_entry.createDate.timestamp()),  # data for syncapi
             'dayDate'         : image_entry.dayDate.strftime('%Y%m%d'),
+            'night'           : image_entry.night,
             'utc_offset'      : image_entry.createDate.astimezone().utcoffset().total_seconds(),
             'camera_uuid'     : image_entry.camera.uuid,
         }
