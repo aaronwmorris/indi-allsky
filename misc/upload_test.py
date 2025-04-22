@@ -146,6 +146,10 @@ class TestUpload(object):
 
         image_metadata = {
             'type'            : constants.IMAGE,
+            'createDate'      : int(image_entry.createDate.timestamp()),  # data for syncapi
+            'dayDate'         : image_entry.dayDate.strftime('%Y%m%d'),
+            'utc_offset'      : image_entry.createDate.astimezone().utcoffset().total_seconds(),
+            'camera_uuid'     : image_entry.camera.uuid,
         }
 
         self._miscUpload.s3_upload_image(image_entry, image_metadata)
