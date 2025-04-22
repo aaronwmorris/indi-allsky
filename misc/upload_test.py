@@ -27,6 +27,7 @@ from sqlalchemy.orm.exc import NoResultFound
 sys.path.append(str(Path(__file__).parent.absolute().parent))
 
 
+from indi_allsky import constants
 from indi_allsky.miscUpload import miscUpload
 from indi_allsky.flask import create_app
 from indi_allsky.config import IndiAllSkyConfig
@@ -115,7 +116,46 @@ class TestUpload(object):
 
 
     def s3(self):
-        pass
+        logger.warning('Testing S3 transfer')
+
+        self._startFileUploadWorkers()
+        #time.sleep(1.0)
+
+
+        self.config['S3UPLOAD']['ENABLE'] = True  # force enable image uploads
+        self._miscUpload = miscUpload(
+            self.config,
+            self.upload_q,
+            None,  # night_v
+        )
+
+
+        try:
+            image_entry = IndiAllSkyDbImageTable.query\
+                .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+                .limit(1)\
+                .one()
+        except NoResultFound:
+            logger.error('No image found to test Object Storage transfer')
+            sys.exit(1)
+
+
+        logger.info('Testing Image: %s', image_entry.filename)
+        time.sleep(1.9)
+
+
+        image_metadata = {
+            'type'            : constants.IMAGE,
+        }
+
+        self._miscUpload.s3_upload_image(image_entry, image_metadata)
+
+
+        time.sleep(5)
+
+
+        self._stopFileUploadWorkers()
+
 
 
     def _startFileUploadWorkers(self):
