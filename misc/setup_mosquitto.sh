@@ -197,7 +197,7 @@ sudo chown root:root /etc/mosquitto/certs
 sudo chmod 755 /etc/mosquitto/certs
 
 
-if [[ ! -f "/etc/mosquitto/certs/indi-allsky_mosquitto.key" || ! -f "/etc/mosquitto/certs/indi-allsky_mosquitto.crt" ]]; then
+if [[ ! -e "/etc/mosquitto/certs/indi-allsky_mosquitto.key" || ! -e "/etc/mosquitto/certs/indi-allsky_mosquitto.crt" ]]; then
     sudo rm -f /etc/mosquitto/certs/indi-allsky_mosquitto.key
     sudo rm -f /etc/mosquitto/certs/indi-allsky_mosquitto.crt
 
