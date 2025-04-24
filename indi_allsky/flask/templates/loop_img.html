@@ -21,11 +21,13 @@
 }
 
 .fit {
-    max-width:100%;
-    height:auto;
+    max-width: 100%;
+    max-height: 80vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
 }
 </style>
-<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_loop.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
@@ -79,15 +81,8 @@ function showImage(entry) {
     // Need separate Image for every image of the loop, otherwise browser will not load properly
     var img = new Image();
     img.onload = function() {
-        var hRatio = window.innerWidth / entry["width"];
-        var vRatio = window.innerHeight / entry["height"];
-        var ratio  = Math.min ( hRatio, vRatio );
-
-
         $('#loop-image').attr({
             'src': this.src,
-            'width': (entry["width"] * ratio) * 0.85,
-            'height': (entry["height"] * ratio) * 0.85
         });
     };
 

@@ -6,8 +6,11 @@
 <meta charset="UTF-8">
 <style>
 .fit {
-    max-width:100%;
-    height:auto;
+    max-width: 100%;
+    max-height: 80vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
 }
 </style>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/settings_latest.js') }}"></script>
@@ -41,15 +44,8 @@ async function loop() {
 
     img = new Image();
     img.onload = function() {
-        var hRatio = window.innerWidth / json_data['latest_image']["width"];
-        var vRatio = window.innerHeight / json_data['latest_image']["height"];
-        var ratio  = Math.min ( hRatio, vRatio );
-
-
         $('#latest-image').attr({
             'src': this.src,
-            'width': (json_data['latest_image']["width"] * ratio) * 0.95,
-            'height': (json_data['latest_image']["height"] * ratio) * 0.95
         });
     };
 
