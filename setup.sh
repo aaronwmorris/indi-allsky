@@ -2078,7 +2078,7 @@ if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
     sudo chmod 755 "$MYSQL_ETC/ssl"
 
 
-    if [[ ! -f "$MYSQL_ETC/ssl/indi-allsky_mysql.key" || ! -f "$MYSQL_ETC/ssl/indi-allsky_mysq.pem" ]]; then
+    if [[ ! -e "$MYSQL_ETC/ssl/indi-allsky_mysql.key" || ! -e "$MYSQL_ETC/ssl/indi-allsky_mysq.pem" ]]; then
         sudo rm -f "$MYSQL_ETC/ssl/indi-allsky_mysql.key"
         sudo rm -f "$MYSQL_ETC/ssl/indi-allsky_mysql.pem"
 
@@ -2321,7 +2321,7 @@ elif [[ "$WEBSERVER" == "nginx" ]]; then
             sudo chmod 755 /etc/nginx/ssl
 
 
-            if [[ ! -f "/etc/nginx/ssl/indi-allsky_nginx.key" || ! -f "/etc/nginx/ssl/indi-allsky_nginx.pem" ]]; then
+            if [[ ! -e "/etc/nginx/ssl/indi-allsky_nginx.key" || ! -e "/etc/nginx/ssl/indi-allsky_nginx.pem" ]]; then
                 sudo rm -f /etc/nginx/ssl/indi-allsky_nginx.key
                 sudo rm -f /etc/nginx/ssl/indi-allsky_nginx.pem
 
@@ -2423,7 +2423,7 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
             sudo chmod 755 /etc/apache2/ssl
 
 
-            if [[ ! -f "/etc/apache2/ssl/indi-allsky_apache.key" || ! -f "/etc/apache2/ssl/indi-allsky_apache.pem" ]]; then
+            if [[ ! -e "/etc/apache2/ssl/indi-allsky_apache.key" || ! -e "/etc/apache2/ssl/indi-allsky_apache.pem" ]]; then
                 sudo rm -f /etc/apache2/ssl/indi-allsky_apache.key
                 sudo rm -f /etc/apache2/ssl/indi-allsky_apache.pem
 
