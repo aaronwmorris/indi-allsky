@@ -149,13 +149,13 @@ class AjaxStatusUpdateView(BaseView):
         return jsonify(data)
 
 
-class IndexView(TemplateView):
+class IndexCanvasView(TemplateView):
     title = 'Latest'
     latest_image_view = 'indi_allsky.js_latest_image_view'
 
 
     def get_context(self):
-        context = super(IndexView, self).get_context()
+        context = super(IndexCanvasView, self).get_context()
 
         context['title'] = self.title
         context['camera_id'] = self.camera.id
@@ -657,7 +657,7 @@ class LatestPanoramaVideoWatchRedirect(LatestTimelapseVideoWatchRedirect):
     watch_view = 'indi_allsky.panorama_video_view'
 
 
-class LatestPanoramaView(IndexView):
+class LatestPanoramaCanvasView(IndexCanvasView):
     title = 'Panorama'
     latest_image_view = 'indi_allsky.js_latest_panorama_view'
 
@@ -672,7 +672,12 @@ class JsonLatestPanoramaView(JsonLatestImageView):
     latest_image_t = 'images/panorama.{0}'
 
 
-class LatestRawImageView(IndexView):
+class LatestRawImageCanvasView(IndexCanvasView):
+    title = 'RAW Image'
+    latest_image_view = 'indi_allsky.js_latest_rawimage_view'
+
+
+class LatestRawImageImgView(IndexImgView):
     title = 'RAW Image'
     latest_image_view = 'indi_allsky.js_latest_rawimage_view'
 
@@ -943,12 +948,12 @@ class SqmView(TemplateView):
         return context
 
 
-class ImageLoopView(TemplateView):
+class ImageLoopCanvasView(TemplateView):
     title = 'Loop'
     image_loop_view = 'indi_allsky.js_image_loop_view'
 
     def get_context(self):
-        context = super(ImageLoopView, self).get_context()
+        context = super(ImageLoopCanvasView, self).get_context()
 
         context['title'] = self.title
         context['camera_id'] = self.camera.id
@@ -1157,7 +1162,12 @@ class ImageLoopImgView(TemplateView):
         return context
 
 
-class PanoramaLoopView(ImageLoopView):
+class PanoramaLoopCanvasView(ImageLoopCanvasView):
+    title = 'Panorama Loop'
+    image_loop_view = 'indi_allsky.js_panorama_loop_view'
+
+
+class PanoramaLoopImgView(ImageLoopImgView):
     title = 'Panorama Loop'
     image_loop_view = 'indi_allsky.js_panorama_loop_view'
 
@@ -1186,7 +1196,12 @@ class JsonPanoramaLoopView(JsonImageLoopView):
         return stars_data
 
 
-class RawImageLoopView(ImageLoopView):
+class RawImageLoopCanvasView(ImageLoopCanvasView):
+    title = 'RAW Image Loop'
+    image_loop_view = 'indi_allsky.js_rawimage_loop_view'
+
+
+class RawImageLoopImgView(ImageLoopImgView):
     title = 'RAW Image Loop'
     image_loop_view = 'indi_allsky.js_rawimage_loop_view'
 
@@ -8488,22 +8503,31 @@ def images_folder(path):
 
 bp_allsky.add_url_rule('/ajax/status_update', view_func=AjaxStatusUpdateView.as_view('ajax_status_update_view'))
 
-bp_allsky.add_url_rule('/', view_func=IndexView.as_view('index_view', template_name='index_canvas.html'))
+bp_allsky.add_url_rule('/', view_func=IndexImgView.as_view('index_view', template_name='index_img.html'))
+bp_allsky.add_url_rule('/index_canvas', view_func=IndexCanvasView.as_view('index_canvas_view', template_name='index_canvas.html'))
 bp_allsky.add_url_rule('/index_img', view_func=IndexImgView.as_view('index_img_view', template_name='index_img.html'))
 bp_allsky.add_url_rule('/js/latest', view_func=JsonLatestImageView.as_view('js_latest_image_view'))
-bp_allsky.add_url_rule('/panorama', view_func=LatestPanoramaView.as_view('latest_panorama_view', template_name='index_canvas.html'))
+bp_allsky.add_url_rule('/panorama', view_func=LatestPanoramaImgView.as_view('latest_panorama_view', template_name='index_img.html'))
+bp_allsky.add_url_rule('/panorama_canvas', view_func=LatestPanoramaCanvasView.as_view('latest_panorama_canvas_view', template_name='index_canvas.html'))
 bp_allsky.add_url_rule('/panorama_img', view_func=LatestPanoramaImgView.as_view('latest_panorama_img_view', template_name='index_img.html'))
 bp_allsky.add_url_rule('/js/latest_panorama', view_func=JsonLatestPanoramaView.as_view('js_latest_panorama_view'))
-bp_allsky.add_url_rule('/raw', view_func=LatestRawImageView.as_view('latest_rawimage_view', template_name='index_canvas.html'))
+bp_allsky.add_url_rule('/raw', view_func=LatestRawImageImgView.as_view('latest_rawimage_view', template_name='index_img.html'))
+bp_allsky.add_url_rule('/raw_canvas', view_func=LatestRawImageCanvasView.as_view('latest_rawimage_canvas_view', template_name='index_canvas.html'))
+bp_allsky.add_url_rule('/raw_img', view_func=LatestRawImageImgView.as_view('latest_rawimage_img_view', template_name='index_img.html'))
 bp_allsky.add_url_rule('/js/latest_rawimage', view_func=JsonLatestRawImageView.as_view('js_latest_rawimage_view'))
 bp_allsky.add_url_rule('/realtime_keogram', view_func=RealtimeKeogramView.as_view('realtime_keogram_view', template_name='realtime_keogram.html'))
 
-bp_allsky.add_url_rule('/loop', view_func=ImageLoopView.as_view('image_loop_view', template_name='loop_canvas.html'))
+bp_allsky.add_url_rule('/loop', view_func=ImageLoopImgView.as_view('image_loop_view', template_name='loop_img.html'))
+bp_allsky.add_url_rule('/loop_canvas', view_func=ImageLoopCanvasView.as_view('image_loop_canvas_view', template_name='loop_canvas.html'))
 bp_allsky.add_url_rule('/loop_img', view_func=ImageLoopImgView.as_view('image_loop_img_view', template_name='loop_img.html'))
 bp_allsky.add_url_rule('/js/loop', view_func=JsonImageLoopView.as_view('js_image_loop_view'))
-bp_allsky.add_url_rule('/looppanorama', view_func=PanoramaLoopView.as_view('panorama_loop_view', template_name='loop_canvas.html'))
+bp_allsky.add_url_rule('/looppanorama', view_func=PanoramaLoopImgView.as_view('panorama_loop_view', template_name='loop_img.html'))
+bp_allsky.add_url_rule('/looppanorama_canvas', view_func=PanoramaLoopCanvasView.as_view('panorama_loop_canvas_view', template_name='loop_canvas.html'))
+bp_allsky.add_url_rule('/looppanorama_img', view_func=PanoramaLoopImgView.as_view('panorama_loop_img_view', template_name='loop_img.html'))
 bp_allsky.add_url_rule('/js/looppanorama', view_func=JsonPanoramaLoopView.as_view('js_panorama_loop_view'))
-bp_allsky.add_url_rule('/loopraw', view_func=RawImageLoopView.as_view('rawimage_loop_view', template_name='loop_canvas.html'))
+bp_allsky.add_url_rule('/loopraw', view_func=RawImageLoopImgView.as_view('rawimage_loop_view', template_name='loop_img.html'))
+bp_allsky.add_url_rule('/loopraw_canvas', view_func=RawImageLoopCanvasView.as_view('rawimage_loop_canvas_view', template_name='loop_canvas.html'))
+bp_allsky.add_url_rule('/loopraw_img', view_func=RawImageLoopImgView.as_view('rawimage_loop_img_view', template_name='loop_img.html'))
 bp_allsky.add_url_rule('/js/loopraw', view_func=JsonRawImageLoopView.as_view('js_rawimage_loop_view'))
 
 bp_allsky.add_url_rule('/sqm', view_func=SqmView.as_view('sqm_view', template_name='sqm.html'))
