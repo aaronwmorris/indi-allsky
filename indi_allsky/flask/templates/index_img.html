@@ -11,7 +11,6 @@
     width: auto;
     height: auto;
     object-fit: contain;
-    margin-bottom: 5%;
 }
 </style>
 <script type="text/javascript">
@@ -162,12 +161,14 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="text-muted text-center" id="message">Loading...</div>
-</div>
-<div class="row h-100 align-items-center">
-    <div class="col-12 text-center">
-        <img id="latest-image" class="fit">
+<div class="container h-100">
+    <div class="row">
+        <div class="text-muted text-center" id="message">Loading...</div>
+    </div>
+    <div class="row h-75 align-items-center">
+        <div class="col-12 text-center">
+            <img id="latest-image" class="fit">
+        </div>
     </div>
 </div>
 {% endblock %}

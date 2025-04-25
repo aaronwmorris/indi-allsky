@@ -26,7 +26,6 @@
     width: auto;
     height: auto;
     object-fit: contain;
-    margin-bottom: 5%;
 }
 </style>
 <script type="text/javascript">
@@ -204,6 +203,8 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
+<div class="container h-100">
+
 <form id="form_history" onSubmit="return false;">
     <div class="form-group row">
         <div class="col-sm-1">
@@ -234,15 +235,21 @@ $( document ).ready(function() {
     </div>
 </form>
 
-<hr>
+<div class="row">
+    <div class="col=12">
+        <hr>
+    </div>
+</div>
 
 <div class="row">
     <div class="text-muted text-center" id="message"></div>
 </div>
-<div class="row h-100 align-items-center">
+<div class="row h-75 align-items-center">
     <div class="col-12 text-center">
         <img id="loop-image" class="fit">
     </div>
+</div>
+
 </div>
 
 <script>
