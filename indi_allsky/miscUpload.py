@@ -15,6 +15,16 @@ logger = logging.getLogger('indi_allsky')
 
 class miscUpload(object):
 
+    latest_image_filename = 'latest_image.{ext:s}'
+    latest_panorama_image_filename = 'latest_panorama.{ext:s}'
+    latest_raw_image_filename = 'latest_raw_image.{ext:s}'
+    latest_video_filename = 'latest_timelapse.{ext:s}'
+    latest_keogram_filename = 'latest_keogram.{ext:s}'
+    latest_startrail_image_filename = 'latest_startrail.{ext:s}'
+    latest_startrail_video_filename = 'latest_startrail_timelapse.{ext:s}'
+    latest_panorama_video_filename = 'latest_panorama_timelapse.{ext:s}'
+
+
     def __init__(
         self,
         config,
@@ -31,7 +41,6 @@ class miscUpload(object):
 
 
     def upload_image(self, image_entry):
-        ### upload images
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
             #logger.warning('Image uploading disabled')
             return
@@ -100,8 +109,32 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
+        if self.config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_IMAGE'):
+            latest_remote_dir = self.config['FILETRANSFER']['REMOTE_LATEST_FOLDER'].format(**file_data_dict)
+            latest_remote_file = self.latest_image_filename.format(**file_data_dict)
+
+            latest_remote_file_p = Path(latest_remote_dir).joinpath(latest_remote_file)
+
+
+            latest_jobdata = {
+                'action'      : constants.TRANSFER_UPLOAD,
+                'model'       : image_entry.__class__.__name__,
+                'id'          : image_entry.id,
+                'remote_file' : str(latest_remote_file_p),
+            }
+
+            latest_upload_task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.UPLOAD,
+                state=TaskQueueState.QUEUED,
+                data=latest_jobdata,
+            )
+            db.session.add(latest_upload_task)
+            db.session.commit()
+
+            self.upload_q.put({'task_id' : latest_upload_task.id})
+
+
     def upload_video(self, video_entry):
-        ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_VIDEO'):
             #logger.warning('Video uploading disabled')
             return
@@ -154,8 +187,32 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
+        if self.config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_VIDEO'):
+            latest_remote_dir = self.config['FILETRANSFER']['REMOTE_LATEST_FOLDER'].format(**file_data_dict)
+            latest_remote_file = self.latest_video_filename.format(**file_data_dict)
+
+            latest_remote_file_p = Path(latest_remote_dir).joinpath(latest_remote_file)
+
+
+            latest_jobdata = {
+                'action'      : constants.TRANSFER_UPLOAD,
+                'model'       : video_entry.__class__.__name__,
+                'id'          : video_entry.id,
+                'remote_file' : str(latest_remote_file_p),
+            }
+
+            latest_upload_task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.UPLOAD,
+                state=TaskQueueState.QUEUED,
+                data=latest_jobdata,
+            )
+            db.session.add(latest_upload_task)
+            db.session.commit()
+
+            self.upload_q.put({'task_id' : latest_upload_task.id})
+
+
     def upload_mini_video(self, video_entry):
-        ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_MINI_VIDEO'):
             #logger.warning('Video uploading disabled')
             return
@@ -209,7 +266,6 @@ class miscUpload(object):
 
 
     def upload_panorama_video(self, video_entry):
-        ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA_VIDEO'):
             #logger.warning('Video uploading disabled')
             return
@@ -262,8 +318,32 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
+        if self.config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_VIDEO'):
+            latest_remote_dir = self.config['FILETRANSFER']['REMOTE_LATEST_FOLDER'].format(**file_data_dict)
+            latest_remote_file = self.latest_panorama_video_filename.format(**file_data_dict)
+
+            latest_remote_file_p = Path(latest_remote_dir).joinpath(latest_remote_file)
+
+
+            latest_jobdata = {
+                'action'      : constants.TRANSFER_UPLOAD,
+                'model'       : video_entry.__class__.__name__,
+                'id'          : video_entry.id,
+                'remote_file' : str(latest_remote_file_p),
+            }
+
+            latest_upload_task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.UPLOAD,
+                state=TaskQueueState.QUEUED,
+                data=latest_jobdata,
+            )
+            db.session.add(latest_upload_task)
+            db.session.commit()
+
+            self.upload_q.put({'task_id' : latest_upload_task.id})
+
+
     def upload_keogram(self, keogram_entry):
-        ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_KEOGRAM'):
             #logger.warning('Keogram uploading disabled')
             return
@@ -314,6 +394,31 @@ class miscUpload(object):
         db.session.commit()
 
         self.upload_q.put({'task_id' : upload_task.id})
+
+
+        if self.config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_VIDEO'):
+            latest_remote_dir = self.config['FILETRANSFER']['REMOTE_LATEST_FOLDER'].format(**file_data_dict)
+            latest_remote_file = self.latest_keogram_filename.format(**file_data_dict)
+
+            latest_remote_file_p = Path(latest_remote_dir).joinpath(latest_remote_file)
+
+
+            latest_jobdata = {
+                'action'      : constants.TRANSFER_UPLOAD,
+                'model'       : keogram_entry.__class__.__name__,
+                'id'          : keogram_entry.id,
+                'remote_file' : str(latest_remote_file_p),
+            }
+
+            latest_upload_task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.UPLOAD,
+                state=TaskQueueState.QUEUED,
+                data=latest_jobdata,
+            )
+            db.session.add(latest_upload_task)
+            db.session.commit()
+
+            self.upload_q.put({'task_id' : latest_upload_task.id})
 
 
     def upload_startrail(self, startrail_entry):
@@ -369,8 +474,32 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
+        if self.config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_VIDEO'):
+            latest_remote_dir = self.config['FILETRANSFER']['REMOTE_LATEST_FOLDER'].format(**file_data_dict)
+            latest_remote_file = self.latest_startrail_image_filename.format(**file_data_dict)
+
+            latest_remote_file_p = Path(latest_remote_dir).joinpath(latest_remote_file)
+
+
+            latest_jobdata = {
+                'action'      : constants.TRANSFER_UPLOAD,
+                'model'       : startrail_entry.__class__.__name__,
+                'id'          : startrail_entry.id,
+                'remote_file' : str(latest_remote_file_p),
+            }
+
+            latest_upload_task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.UPLOAD,
+                state=TaskQueueState.QUEUED,
+                data=latest_jobdata,
+            )
+            db.session.add(latest_upload_task)
+            db.session.commit()
+
+            self.upload_q.put({'task_id' : latest_upload_task.id})
+
+
     def upload_startrail_video(self, startrail_video_entry):
-        ### Upload video
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_STARTRAIL_VIDEO'):
             #logger.warning('Startrail video uploading disabled')
             return
@@ -421,6 +550,31 @@ class miscUpload(object):
         db.session.commit()
 
         self.upload_q.put({'task_id' : upload_task.id})
+
+
+        if self.config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_VIDEO'):
+            latest_remote_dir = self.config['FILETRANSFER']['REMOTE_LATEST_FOLDER'].format(**file_data_dict)
+            latest_remote_file = self.latest_startrail_video_filename.format(**file_data_dict)
+
+            latest_remote_file_p = Path(latest_remote_dir).joinpath(latest_remote_file)
+
+
+            latest_jobdata = {
+                'action'      : constants.TRANSFER_UPLOAD,
+                'model'       : startrail_video_entry.__class__.__name__,
+                'id'          : startrail_video_entry.id,
+                'remote_file' : str(latest_remote_file_p),
+            }
+
+            latest_upload_task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.UPLOAD,
+                state=TaskQueueState.QUEUED,
+                data=latest_jobdata,
+            )
+            db.session.add(latest_upload_task)
+            db.session.commit()
+
+            self.upload_q.put({'task_id' : latest_upload_task.id})
 
 
     def upload_panorama(self, panorama_entry):
@@ -485,6 +639,31 @@ class miscUpload(object):
         db.session.commit()
 
         self.upload_q.put({'task_id' : upload_task.id})
+
+
+        if self.config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_IMAGE'):
+            latest_remote_dir = self.config['FILETRANSFER']['REMOTE_LATEST_FOLDER'].format(**file_data_dict)
+            latest_remote_file = self.latest_panorama_image_filename.format(**file_data_dict)
+
+            latest_remote_file_p = Path(latest_remote_dir).joinpath(latest_remote_file)
+
+
+            latest_jobdata = {
+                'action'      : constants.TRANSFER_UPLOAD,
+                'model'       : panorama_entry.__class__.__name__,
+                'id'          : panorama_entry.id,
+                'remote_file' : str(latest_remote_file_p),
+            }
+
+            latest_upload_task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.UPLOAD,
+                state=TaskQueueState.QUEUED,
+                data=latest_jobdata,
+            )
+            db.session.add(latest_upload_task)
+            db.session.commit()
+
+            self.upload_q.put({'task_id' : latest_upload_task.id})
 
 
     def upload_realtime_keogram(self, keogram_file, camera):
@@ -552,7 +731,6 @@ class miscUpload(object):
 
 
     def upload_raw_image(self, raw_image_entry):
-        ### Upload RAW image
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_RAW'):
             #logger.warning('RAW image uploading disabled')
             return
@@ -605,8 +783,32 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
+        if self.config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_IMAGE'):
+            latest_remote_dir = self.config['FILETRANSFER']['REMOTE_LATEST_FOLDER'].format(**file_data_dict)
+            latest_remote_file = self.latest_raw_image_filename.format(**file_data_dict)
+
+            latest_remote_file_p = Path(latest_remote_dir).joinpath(latest_remote_file)
+
+
+            latest_jobdata = {
+                'action'      : constants.TRANSFER_UPLOAD,
+                'model'       : raw_image_entry.__class__.__name__,
+                'id'          : raw_image_entry.id,
+                'remote_file' : str(latest_remote_file_p),
+            }
+
+            latest_upload_task = IndiAllSkyDbTaskQueueTable(
+                queue=TaskQueueQueue.UPLOAD,
+                state=TaskQueueState.QUEUED,
+                data=latest_jobdata,
+            )
+            db.session.add(latest_upload_task)
+            db.session.commit()
+
+            self.upload_q.put({'task_id' : latest_upload_task.id})
+
+
     def upload_fits_image(self, fits_image_entry):
-        ### Upload RAW image
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_FITS'):
             #logger.warning('FITS image uploading disabled')
             return
