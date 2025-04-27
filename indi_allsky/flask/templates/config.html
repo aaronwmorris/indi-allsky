@@ -4580,6 +4580,19 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_LATEST_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__REMOTE_LATEST_FOLDER(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_LATEST_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Remote folder to store latest image and timelapse files</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.FILETRANSFER__UPLOAD_IMAGE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -4739,6 +4752,58 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">Enable Allsky EndOfNight uploads</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_LATEST_IMAGE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_LATEST_IMAGE(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_LATEST_IMAGE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable Allsky Latest Image uploads - Timelapse images</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_LATEST_PANORAMA.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_LATEST_PANORAMA(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_LATEST_PANORAMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable Allsky Latest Image uploads - Panoramas</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_LATEST_RAW.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_LATEST_RAW(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_LATEST_RAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable Allsky Latest Image uploads - RAW Images</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_LATEST_VIDEO.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_LATEST_VIDEO(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_LATEST_VIDEO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable Allsky Latest Timelapse uploads:  Timelapse Videos, Keograms, Startrails, Panorama Timelapses</div>
     </div>
 
 </div><!-- end filetransfer tab -->
@@ -7511,6 +7576,7 @@ const field_names = [
     'FILETRANSFER__REMOTE_REALTIME_KEOGRAM_NAME',
     'FILETRANSFER__REMOTE_REALTIME_KEOGRAM_FOLDER',
     'FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER',
+    'FILETRANSFER__REMOTE_LATEST_FOLDER',
     'FILETRANSFER__UPLOAD_IMAGE',
     'FILETRANSFER__UPLOAD_PANORAMA',
     'FILETRANSFER__UPLOAD_REALTIME_KEOGRAM',
@@ -7755,6 +7821,10 @@ const checkbox_field_names = [
     'FILETRANSFER__UPLOAD_STARTRAIL_VIDEO',
     'FILETRANSFER__UPLOAD_PANORAMA_VIDEO',
     'FILETRANSFER__UPLOAD_ENDOFNIGHT',
+    'FILETRANSFER__UPLOAD_LATEST_IMAGE',
+    'FILETRANSFER__UPLOAD_LATEST_PANORAMA',
+    'FILETRANSFER__UPLOAD_LATEST_RAW',
+    'FILETRANSFER__UPLOAD_LATEST_VIDEO',
     'FILETRANSFER__FORCE_IPV4',
     'FILETRANSFER__FORCE_IPV6',
     'S3UPLOAD__ENABLE',
