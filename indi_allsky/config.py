@@ -393,7 +393,7 @@ class IndiAllSkyConfigBase(object):
             "REMOTE_PANORAMA_VIDEO_NAME"     : "allsky-panorama_timelapse_ccd{camera_id:d}_{day_date:%Y%m%d}_{timeofday:s}.{ext}",
             "REMOTE_PANORAMA_VIDEO_FOLDER"   : "/home/allsky/upload/allsky/videos/{day_date:%Y%m%d}",
             "REMOTE_REALTIME_KEOGRAM_NAME"   : "allsky-realtime-keogram_ccd{camera_id:d}.{ext}",
-            "REMOTE_REALTIME_KEOGRAM_FOLDER" : "/home/allsky/upload/allsky/keograms/{day_date:%Y%m%d}",
+            "REMOTE_REALTIME_KEOGRAM_FOLDER" : "/home/allsky/upload/allsky",
             "REMOTE_ENDOFNIGHT_FOLDER"       : "/home/allsky/upload/allsky",
             "REMOTE_LATEST_FOLDER"           : "/home/allsky/upload/allsky",
             "UPLOAD_IMAGE"           : 0,
