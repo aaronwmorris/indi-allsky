@@ -641,7 +641,7 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-        if self.config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_IMAGE'):
+        if self.config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_PANORAMA'):
             latest_remote_dir = self.config['FILETRANSFER']['REMOTE_LATEST_FOLDER'].format(**file_data_dict)
             latest_remote_file = self.latest_panorama_image_filename.format(**file_data_dict)
 
@@ -783,7 +783,7 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
-        if self.config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_IMAGE'):
+        if self.config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_RAW'):
             latest_remote_dir = self.config['FILETRANSFER']['REMOTE_LATEST_FOLDER'].format(**file_data_dict)
             latest_remote_file = self.latest_raw_image_filename.format(**file_data_dict)
 

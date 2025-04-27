@@ -4764,7 +4764,33 @@ var camera_id = {{ camera_id }};
                 <div id="FILETRANSFER__UPLOAD_LATEST_IMAGE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8">Enable Allsky Latest Image uploads - Timelapse images and Panoramas</div>
+        <div class="col-sm-8">Enable Allsky Latest Image uploads - Timelapse images</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_LATEST_PANORAMA.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_LATEST_PANORAMA(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_LATEST_PANORAMA-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable Allsky Latest Image uploads - Panoramas</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_LATEST_RAW.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_LATEST_RAW(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_LATEST_RAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable Allsky Latest Image uploads - RAW Images</div>
     </div>
 
     <div class="form-group row">
@@ -7796,6 +7822,8 @@ const checkbox_field_names = [
     'FILETRANSFER__UPLOAD_PANORAMA_VIDEO',
     'FILETRANSFER__UPLOAD_ENDOFNIGHT',
     'FILETRANSFER__UPLOAD_LATEST_IMAGE',
+    'FILETRANSFER__UPLOAD_LATEST_PANORAMA',
+    'FILETRANSFER__UPLOAD_LATEST_RAW',
     'FILETRANSFER__UPLOAD_LATEST_VIDEO',
     'FILETRANSFER__FORCE_IPV4',
     'FILETRANSFER__FORCE_IPV6',

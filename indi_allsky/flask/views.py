@@ -2168,6 +2168,8 @@ class ConfigView(FormView):
             'FILETRANSFER__UPLOAD_REALTIME_KEOGRAM': self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_REALTIME_KEOGRAM', 0),
             'FILETRANSFER__UPLOAD_ENDOFNIGHT'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_ENDOFNIGHT', False),
             'FILETRANSFER__UPLOAD_LATEST_IMAGE'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_IMAGE', False),
+            'FILETRANSFER__UPLOAD_LATEST_PANORAMA' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_PANORAMA', False),
+            'FILETRANSFER__UPLOAD_LATEST_RAW'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_RAW', False),
             'FILETRANSFER__UPLOAD_LATEST_VIDEO'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_VIDEO', False),
             'S3UPLOAD__CLASSNAME'            : self.indi_allsky_config.get('S3UPLOAD', {}).get('CLASSNAME', 'boto3_s3'),
             'S3UPLOAD__ENABLE'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('ENABLE', False),
@@ -2997,12 +2999,14 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_FITS']          = bool(request.json['FILETRANSFER__UPLOAD_FITS'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_KEOGRAM']       = bool(request.json['FILETRANSFER__UPLOAD_KEOGRAM'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL']     = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL'])
-        self.indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL_VIDEO'] = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL_VIDEO'])
-        self.indi_allsky_config['FILETRANSFER']['UPLOAD_PANORAMA_VIDEO']  = bool(request.json['FILETRANSFER__UPLOAD_PANORAMA_VIDEO'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_STARTRAIL_VIDEO']  = bool(request.json['FILETRANSFER__UPLOAD_STARTRAIL_VIDEO'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_PANORAMA_VIDEO']   = bool(request.json['FILETRANSFER__UPLOAD_PANORAMA_VIDEO'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_REALTIME_KEOGRAM'] = int(request.json['FILETRANSFER__UPLOAD_REALTIME_KEOGRAM'])
-        self.indi_allsky_config['FILETRANSFER']['UPLOAD_ENDOFNIGHT']    = bool(request.json['FILETRANSFER__UPLOAD_ENDOFNIGHT'])
-        self.indi_allsky_config['FILETRANSFER']['UPLOAD_LATEST_IMAGE']  = bool(request.json['FILETRANSFER__UPLOAD_LATEST_IMAGE'])
-        self.indi_allsky_config['FILETRANSFER']['UPLOAD_LATEST_VIDEO']  = bool(request.json['FILETRANSFER__UPLOAD_LATEST_VIDEO'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_ENDOFNIGHT']       = bool(request.json['FILETRANSFER__UPLOAD_ENDOFNIGHT'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_LATEST_IMAGE']     = bool(request.json['FILETRANSFER__UPLOAD_LATEST_IMAGE'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_LATEST_PANORAMA']  = bool(request.json['FILETRANSFER__UPLOAD_LATEST_PANORAMA'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_LATEST_RAW']       = bool(request.json['FILETRANSFER__UPLOAD_LATEST_RAW'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_LATEST_VIDEO']     = bool(request.json['FILETRANSFER__UPLOAD_LATEST_VIDEO'])
         self.indi_allsky_config['S3UPLOAD']['CLASSNAME']                = str(request.json['S3UPLOAD__CLASSNAME'])
         self.indi_allsky_config['S3UPLOAD']['ENABLE']                   = bool(request.json['S3UPLOAD__ENABLE'])
         self.indi_allsky_config['S3UPLOAD']['ACCESS_KEY']               = str(request.json['S3UPLOAD__ACCESS_KEY'])

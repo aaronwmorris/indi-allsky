@@ -410,6 +410,8 @@ class IndiAllSkyConfigBase(object):
             "UPLOAD_ENDOFNIGHT"      : False,
             "UPLOAD_REALTIME_KEOGRAM": 0,
             "UPLOAD_LATEST_IMAGE"    : False,
+            "UPLOAD_LATEST_PANORAMA" : False,
+            "UPLOAD_LATEST_RAW"      : False,
             "UPLOAD_LATEST_VIDEO"    : False,
             "FORCE_IPV4"             : False,
             "FORCE_IPV6"             : False,
