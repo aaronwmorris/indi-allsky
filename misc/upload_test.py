@@ -80,6 +80,12 @@ class TestUpload(object):
     def filetransfer(self):
         logger.warning('Testing file transfer')
 
+
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE'):
+            logger.error('Image uploads are disabled')
+            sys.exit(1)
+
+
         self._startFileUploadWorkers()
         #time.sleep(1.0)
 
@@ -117,6 +123,12 @@ class TestUpload(object):
 
     def s3(self):
         logger.warning('Testing S3 transfer')
+
+
+        if not self.config.get('S3UPLOAD', {}).get('ENABLE'):
+            logger.error('S3 uploading disabled')
+            sys.exit(1)
+
 
         self._startFileUploadWorkers()
         #time.sleep(1.0)
