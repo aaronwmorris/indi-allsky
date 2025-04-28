@@ -2,11 +2,12 @@
 
 import dbus
 import logging
-import pprint
+import pprint  # noqa: F401
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging
+
 
 class ListConns(object):
     def main(self):
@@ -26,7 +27,7 @@ class ListConns(object):
 
 
             conn_id = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
-                                    "Id", dbus_interface=dbus.PROPERTIES_IFACE)
+                               "Id", dbus_interface=dbus.PROPERTIES_IFACE)
 
 
             devices_list = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
@@ -50,7 +51,7 @@ class ListConns(object):
                     "org.freedesktop.NetworkManager", device)
 
                 device_int = device_config.Get("org.freedesktop.NetworkManager.Device",
-                                         "Interface", dbus_interface=dbus.PROPERTIES_IFACE)
+                                               "Interface", dbus_interface=dbus.PROPERTIES_IFACE)
                 device_list.append(device_int)
 
             logger.info("Devices: %s", ', '.join(device_list))

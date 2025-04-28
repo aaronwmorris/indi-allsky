@@ -1768,7 +1768,7 @@ def FILETRANSFER__HOST_validator(form, field):
     if not field.data:
         return
 
-    host_regex = r'^[a-zA-Z0-9_\.\-]+$'  # include _ for docker
+    host_regex = r'^[a-zA-Z0-9_\.\-\:\[\]]+$'  # include _ for docker
 
     if not re.search(host_regex, field.data):
         raise ValidationError('Invalid host name')
@@ -1788,7 +1788,7 @@ def MQTTPUBLISH__HOST_validator(form, field):
     if not field.data:
         return
 
-    host_regex = r'^[a-zA-Z0-9_\.\-]+$'  # include _ for docker
+    host_regex = r'^[a-zA-Z0-9_\.\-\:\[\]]+$'  # include _ for docker
 
     if not re.search(host_regex, field.data):
         raise ValidationError('Invalid host name')
@@ -2033,7 +2033,7 @@ def FILETRANSFER__REMOTE_METADATA_NAME_validator(form, field):
 
 
 def FILETRANSFER__REMOTE_FOLDER_validator(form, field):
-    folder_regex = r'^[a-zA-Z0-9_\.\-\/\{\}\:\%\~]+$'
+    folder_regex = r'^[a-zA-Z0-9_\ \.\-\/\{\}\:\%\~]+$'
 
     if not re.search(folder_regex, field.data):
         raise ValidationError('Invalid filename syntax')
@@ -2287,7 +2287,7 @@ def MQTTPUBLISH__QOS_validator(form, field):
 
 
 def SYNCAPI__BASEURL_validator(form, field):
-    url_regex = r'^[a-zA-Z0-9\-\/\.\:\\]+$'
+    url_regex = r'^[a-zA-Z0-9\-\/\.\:\\\[\]]+$'
 
     if not re.search(url_regex, field.data):
         raise ValidationError('Invalid characters in URL')
