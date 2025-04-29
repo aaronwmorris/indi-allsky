@@ -157,6 +157,8 @@ class pycurl_ftps(GenericFileTransfer):
                 raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_URL_MALFORMAT]:
                 raise ConnectionFailure(msg) from e
+            elif rc in [pycurl.E_USE_SSL_FAILED]:
+                raise ConnectionFailure(msg) from e
             elif rc in [pycurl.E_PEER_FAILED_VERIFICATION]:
                 raise CertificateValidationFailure(msg) from e
             elif rc in [pycurl.E_REMOTE_ACCESS_DENIED]:
