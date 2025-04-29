@@ -85,6 +85,7 @@ class pycurl_ftp(GenericFileTransfer):
     def put(self, *args, **kwargs):
         super(pycurl_ftp, self).put(*args, **kwargs)
 
+        import urllib
         import pycurl
 
 
@@ -116,7 +117,8 @@ class pycurl_ftp(GenericFileTransfer):
             post_commands.insert(2, 'RNTO {0:s}'.format(str(final_file_p)))
 
 
-        url = '{0:s}/{1:s}'.format(self.url, str(remote_file_p))
+        remote_file_uri = urllib.parse.quote(str(remote_file_p), safe='/')
+        url = '{0:s}/{1:s}'.format(self.url, remote_file_uri)
         logger.info('pycurl URL: %s', url)
 
 

@@ -109,6 +109,7 @@ class pycurl_sftp(GenericFileTransfer):
     def put(self, *args, **kwargs):
         super(pycurl_sftp, self).put(*args, **kwargs)
 
+        import urllib
         import pycurl
 
 
@@ -123,8 +124,8 @@ class pycurl_sftp(GenericFileTransfer):
         #]
 
         post_commands = [
-            'chmod 644 {0:s}'.format(str(remote_file_p)),
-            'chmod 755 {0:s}'.format(str(remote_file_p.parent)),
+            'chmod 644 "{0:s}"'.format(str(remote_file_p)),
+            'chmod 755 "{0:s}"'.format(str(remote_file_p.parent)),
         ]
 
 
@@ -140,7 +141,8 @@ class pycurl_sftp(GenericFileTransfer):
             post_commands.insert(1, 'rename "{0:s}" "{1:s}"'.format(str(remote_file_p), str(final_file_p)))
 
 
-        url = '{0:s}/{1:s}'.format(self.url, str(remote_file_p))
+        remote_file_uri = urllib.parse.quote(str(remote_file_p), safe='/')
+        url = '{0:s}/{1:s}'.format(self.url, remote_file_uri)
         logger.info('pycurl URL: %s', url)
 
 

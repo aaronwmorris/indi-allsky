@@ -96,6 +96,7 @@ class pycurl_webdav_https(GenericFileTransfer):
     def put(self, *args, **kwargs):
         super(pycurl_webdav_https, self).put(*args, **kwargs)
 
+        import urllib
         import pycurl
 
 
@@ -116,7 +117,8 @@ class pycurl_webdav_https(GenericFileTransfer):
             if d_str in ['.', '~', '/']:
                 continue
 
-            d_url = '{0:s}/{1:s}'.format(self.url, d_str)
+            d_uri = urllib.parse.quote(d_str, safe='/')
+            d_url = '{0:s}/{1:s}'.format(self.url, d_uri)
 
             self.client.setopt(pycurl.URL, d_url)
             self.client.setopt(pycurl.CUSTOMREQUEST, 'MKCOL')  # mkdir
@@ -149,7 +151,8 @@ class pycurl_webdav_https(GenericFileTransfer):
         self.client.unsetopt(pycurl.CUSTOMREQUEST)
 
 
-        url = '{0:s}/{1:s}'.format(self.url, str(remote_file_p))
+        remote_file_uri = urllib.parse.quote(str(remote_file_p), safe='/')
+        url = '{0:s}/{1:s}'.format(self.url, remote_file_uri)
         logger.info('pycurl URL: %s', url)
 
 

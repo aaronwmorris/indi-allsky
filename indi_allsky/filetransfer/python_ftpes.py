@@ -31,7 +31,9 @@ class python_ftpes(GenericFileTransfer):
         #cert_bypass = kwargs.get('cert_bypass')
 
 
-        self.client = ftplib.FTP_TLS()
+        #self.client = ftplib.FTP_TLS()
+        self.client = FTP_TLS_reuse()
+
 
         try:
             self.client.connect(host=hostname, port=self._port, timeout=self.timeout)
@@ -113,3 +115,16 @@ class python_ftpes(GenericFileTransfer):
         except ftplib.error_perm as e:
             logger.warning('FTP unable to chmod dir: %s', str(e))
 
+
+class FTP_TLS_reuse(ftplib.FTP_TLS):
+    """Explicit FTPS, with shared TLS session"""
+    def ntransfercmd(self, cmd, rest=None):
+        conn, size = ftplib.FTP.ntransfercmd(self, cmd, rest)
+
+        if self._prot_p:
+            conn = self.context.wrap_socket(
+                conn,
+                server_hostname=self.host,
+                session=self.sock.session,  # this is the fix
+            )
+        return conn, size
