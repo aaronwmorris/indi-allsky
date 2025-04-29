@@ -1378,6 +1378,10 @@ if [ "$IMAGE_FOLDER" != "${ALLSKY_DIRECTORY}/html/images" ]; then
 fi
 
 
+echo "**** Enable linger for user ****"
+sudo loginctl enable-linger "$USER"
+
+
 echo "**** Starting ${GUNICORN_SERVICE_NAME}.socket"
 # this needs to happen after creating the $DB_FOLDER
 systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
