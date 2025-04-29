@@ -2567,6 +2567,10 @@ for GRP in dialout video plugdev gpio i2c spi; do
 done
 
 
+echo "**** Enable linger for user ****"
+sudo loginctl enable-linger "$USER"
+
+
 # Not trying to push out the competition, these just cannot run at the same time :-)
 if systemctl list-unit-files "allsky.service" >/dev/null 2>&1; then
     echo "**** Disabling Thomas Jacquin's allsky (ignore errors) ****"

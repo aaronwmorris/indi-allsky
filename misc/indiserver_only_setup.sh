@@ -752,6 +752,10 @@ for GRP in dialout video; do
 done
 
 
+echo "**** Enable linger for user ****"
+sudo loginctl enable-linger "$USER"
+
+
 # ensure indiserver is running
 systemctl --user start ${INDISERVER_SERVICE_NAME}.service
 
