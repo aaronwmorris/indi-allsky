@@ -5,7 +5,7 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
-#mask_img {
+.fit {
     max-width: 100%;
     max-height: 80vh;
     width: auto;
@@ -20,27 +20,23 @@ var url = '{{ mask_image_uri }}';
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12 text-center" style="font-size:10px">
-        This image is the original camera output.  It is not rotated, flipped, or cropped.
-    </div>
-</div>
+<div class="container h-100">
+    <div class="row h-100">
+        <div class="col-12 text-center">
+            <div style="font-size:10px">
+                This image is the original camera output.  It is not rotated, flipped, or cropped.
+            </div>
 
-<div class="row">
-    <div class="text-center">
-        <img id="mask_img">
-    </div>
-</div>
+            <img id="mask_img" class="fit">
 
-<div class="row">
-    <div class="text-center" style="font-size:10px">
-        <span>Generated: {{ mask_date }}</span>
-    </div>
-</div>
+            <div style="font-size:10px">
+                <span>Generated: {{ mask_date }}</span>
+            </div>
 
-<div class="row">
-    <div class="text-center">
-        <span id="mask_download"></span>
+            <div>
+                <span id="mask_download"></span>
+            </div>
+        </div>
     </div>
 </div>
 <script>
