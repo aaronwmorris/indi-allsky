@@ -20,10 +20,13 @@
   100% { transform: rotate(360deg); }
 }
 
-canvas {
-    width: 100%;
+.fit {
+    max-width: 100%;
+    max-height: 80vh;
+    width: auto;
     height: auto;
-};
+    object-fit: contain;
+}
 </style>
 <script type="text/javascript">
 var img;
@@ -78,23 +81,11 @@ async function loop() {
 function showImage(entry) {
     console.log('Showing image ' + entry["url"]);
 
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
-
     img = new Image();
     img.onload = function() {
-        canvas.setAttribute("width", window.innerWidth);
-        canvas.setAttribute("height", window.innerHeight);
-
-        var hRatio = canvas.width  / this.width;
-        var vRatio = canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
-        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
-
-        //context.imageSmoothingEnabled = false;
-        context.drawImage(this, 0, 0, this.width, this.height,
-            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+        $('#loop-image').attr({
+            'src': this.src,
+        });
     };
 
 
@@ -181,7 +172,7 @@ $( document ).ready(function() {
     history_seconds = pre_seconds + post_seconds;
     framerate = $('#FRAMERATE_SELECT').val();
 
-    $('#canvas').on("click", function() {
+    $('#loop-image').on("click", function() {
         goFullscreen(this);
     });
 
@@ -192,6 +183,8 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
+<div class="container h-100">
+
 <form id="form_mini_timelapse" onSubmit="return false; "autocomplete="off">
     <div class="form-group row">
         {{ form_mini_timelapse.CAMERA_ID() }}
@@ -244,10 +237,13 @@ $( document ).ready(function() {
     <div class="text-muted text-center" id="message"></div>
     <div class="text-muted text-center" id="video_length"></div>
 </div>
-<div class="row">
-    <div class="text-center">
-        <canvas id="canvas"></canvas>
+
+<div class="row align-items-center">
+    <div class="col-12 text-center">
+        <img id="loop-image" class="fit">
     </div>
+</div>
+
 </div>
 
 <script>
