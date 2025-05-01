@@ -7603,6 +7603,8 @@ class TimelapseImageView(TemplateView):
     def get_context(self):
         context = super(TimelapseImageView, self).get_context()
 
+        context['camera_id'] = self.camera.id
+
         context['title'] = self.title
         context['file_view'] = self.file_view
 
@@ -7704,6 +7706,8 @@ class TimelapseVideoView(TemplateView):
 
     def get_context(self):
         context = super(TimelapseVideoView, self).get_context()
+
+        context['camera_id'] = self.camera.id
 
         context['title'] = self.title
         context['file_view'] = self.file_view
