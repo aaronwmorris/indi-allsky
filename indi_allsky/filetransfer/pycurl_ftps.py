@@ -164,7 +164,7 @@ class pycurl_ftps(GenericFileTransfer):
             elif rc in [pycurl.E_REMOTE_ACCESS_DENIED]:
                 raise TransferFailure(msg) from e
             elif rc in [pycurl.E_REMOTE_FILE_NOT_FOUND]:
-                logger.error('Upload failed.  PycURL does not support relative path names')
+                logger.error('Upload failed - Remote file or folder not found')
                 raise TransferFailure(msg) from e
             elif rc in [pycurl.E_QUOTE_ERROR]:
                 logger.warning('PycURL quoted commands encountered an error (safe to ignore)')
