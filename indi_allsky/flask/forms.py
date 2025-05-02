@@ -1850,7 +1850,7 @@ def PYCURL_CAMERA__USERNAME_validator(form, field):
     if not field.data:
         return
 
-    username_regex = r'^[a-zA-Z0-9_\@\.\-]+$'
+    username_regex = r'^[a-zA-Z0-9_\ \@\.\-\\]+$'
 
     if not re.search(username_regex, field.data):
         raise ValidationError('Invalid username')
@@ -1860,7 +1860,7 @@ def ADSB__USERNAME_validator(form, field):
     if not field.data:
         return
 
-    username_regex = r'^[a-zA-Z0-9_\@\.\-]+$'
+    username_regex = r'^[a-zA-Z0-9_\ \@\.\-\\]+$'
 
     if not re.search(username_regex, field.data):
         raise ValidationError('Invalid username')
@@ -2039,6 +2039,14 @@ def FILETRANSFER__REMOTE_FOLDER_validator(form, field):
         raise ValidationError('Invalid filename syntax')
 
 
+    if re.search(r'//', field.data):
+        raise ValidationError('Remove double // in folder name')
+
+
+    if re.search(r'\/$', field.data):
+        raise ValidationError('Folder cannot end with a slash')
+
+
     now = datetime.now()
 
     test_data = {
@@ -2199,9 +2207,7 @@ def S3UPLOAD__URL_TEMPLATE_validator(form, field):
         raise ValidationError('Invalid URL template')
 
 
-    slash_regex = r'\/$'
-
-    if re.search(slash_regex, field.data):
+    if re.search(r'\/$', field.data):
         raise ValidationError('URL Template cannot end with a slash')
 
 
