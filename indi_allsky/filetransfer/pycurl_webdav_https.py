@@ -152,7 +152,12 @@ class pycurl_webdav_https(GenericFileTransfer):
 
 
         remote_file_uri = urllib.parse.quote(str(remote_file_p), safe='/')
-        url = '{0:s}/{1:s}'.format(self.url, remote_file_uri)
+
+        if remote_file_uri.startswith('/'):
+            url = '{0:s}{1:s}'.format(self.url, remote_file_uri)
+        else:
+            url = '{0:s}/{1:s}'.format(self.url, remote_file_uri)
+
         logger.info('pycurl URL: %s', url)
 
 

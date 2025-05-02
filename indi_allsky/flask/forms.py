@@ -2039,6 +2039,10 @@ def FILETRANSFER__REMOTE_FOLDER_validator(form, field):
         raise ValidationError('Invalid filename syntax')
 
 
+    if re.search(r'//', field.data):
+        raise ValidationError('Remove // in folder name')
+
+
     now = datetime.now()
 
     test_data = {
