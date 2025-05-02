@@ -27,10 +27,13 @@
   100% { transform: rotate(360deg); }
 }
 
-#image-canvas {
-    width: 90%;
-    height: auto;
-};
+.fit {
+    max-width: 100%;
+    max-height: 80vh;
+    width: auto;
+    height: 80vh;
+    object-fit: contain;
+}
 </style>
 <script type="text/javascript">
 var img;
@@ -43,20 +46,22 @@ var fullscreen = false;  //initial state
 {% endblock %}
 
 {% block content %}
-    <div class="row">
-        <div class="text-center">
-            <canvas id="image-canvas"></canvas>
+<div class="container">
+
+    <div class="row align-items-center">
+        <div class="col-12 text-center">
+            <img id="fits-image" class="fit">
         </div>
     </div>
 
     <div class="row">
-        <div class="text-center">
+        <div class="col-12 text-center">
             <span id="processing_time"></span>
             <span id="img_download"></span>
         </div>
     </div>
     <div class="row">
-        <div class="text-center">
+        <div class="col-12 text-center">
             <div id="processing_message"></div>
         </div>
     </div>
@@ -1678,6 +1683,8 @@ var fullscreen = false;  //initial state
 
     </form>
 
+</div>
+
 <script>
 function showImage(image_b64) {
     console.log('Showing image');
@@ -1687,24 +1694,11 @@ function showImage(image_b64) {
     }
 
 
-    var image_canvas = document.getElementById("image-canvas");
-    var context = image_canvas.getContext("2d");
-
     img = new Image();
     img.onload = function() {
-        image_canvas.setAttribute("width", window.innerWidth);
-        image_canvas.setAttribute("height", window.innerHeight);
-
-        var hRatio = image_canvas.width  / this.width;
-        var vRatio = image_canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
-        var centerShift_x = ( image_canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( image_canvas.height - this.height * ratio ) / 2;
-
-        context.imageSmoothingEnabled = false;
-        context.drawImage(this, 0, 0, this.width, this.height,
-            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
+        $('#fits-image').attr({
+            'src': this.src,
+        });
     };
 
 
@@ -2013,7 +2007,7 @@ function init() {
 
 
 $( document ).ready(function() {
-    $('#image-canvas').on("click", function() {
+    $('#fits-image').on("click", function() {
         goFullscreen(this);
     });
 

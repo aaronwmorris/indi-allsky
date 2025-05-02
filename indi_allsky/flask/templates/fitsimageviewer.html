@@ -20,10 +20,13 @@
   100% { transform: rotate(360deg); }
 }
 
-canvas {
-    width: 95%;
+.fit {
+    max-width: 100%;
+    max-height: 80vh;
+    width: auto;
     height: auto;
-};
+    object-fit: contain;
+}
 </style>
 <script type="text/javascript">
 var img;
@@ -92,6 +95,8 @@ function closeFullscreen() {
 {% endblock %}
 
 {% block content %}
+<div class="container h-100">
+
 <form id="form_fits_viewer" onSubmit="return false;">
     {{ form_fits_viewer.csrf_token }}
     <div class="text-danger my-2" id="csrf_token-error"></div>
@@ -153,21 +158,29 @@ function closeFullscreen() {
 <hr>
 
 <div class="row">
-    <div class="text-center" style="font-size:10px">
-        Use arrow keys, WASD, or VIM keys to cycle images - Hour: Up/Down - Image: Left/Right
+    <div class="col-12 text-center">
+        <div class="text-center" style="font-size:10px">
+            Use arrow keys, WASD, or VIM keys to cycle images - Hour: Up/Down - Image: Left/Right
+        </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="text-center">
-        <canvas id="canvas"></canvas>
+
+<div class="row align-items-center">
+    <div class="col-12 text-center">
+        <img id="fits-image" class="fit">
     </div>
 </div>
-<div class="row">
-    <div class="text-center">
-        <span id="fits_download"></span>
-        <span id="fits_processing"></span>
+
+<div class="row align-items-center">
+    <div class="col-12 text-center">
+        <div style="margin-top: 20px;">
+            <span id="fits_download"></span>
+            <span id="fits_processing"></span>
+        </div>
     </div>
+</div>
+
 </div>
 
 <script>
@@ -477,24 +490,11 @@ function init() {
     year_change(json_data);
 
 
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
-
     img = new Image();
     img.onload = function() {
-        canvas.setAttribute("width", window.innerWidth);
-        canvas.setAttribute("height", window.innerHeight);
-
-        var hRatio = canvas.width  / this.width;
-        var vRatio =  canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
-        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
-
-        //context.imageSmoothingEnabled = false;
-        context.drawImage(this, 0, 0, this.width, this.height,
-                                centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
-
+        $('#fits-image').attr({
+            'src': this.src,
+        });
 
         $('#IMG_SELECT option').each(function(index, element) {
             if (element.value == $("#IMG_SELECT").val()) {
@@ -637,7 +637,7 @@ function lastImage() {
 
 
 $( document ).ready(function() {
-    $('#canvas').on("click", function() {
+    $('#fits-image').on("click", function() {
         goFullscreen(this);
     });
 

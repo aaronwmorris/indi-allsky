@@ -5,10 +5,13 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
-canvas {
-    width: 100%;
+.fit {
+    max-width: 100%;
+    max-height: 80vh;
+    width: auto;
     height: auto;
-};
+    object-fit: contain;
+}
 </style>
 <script type="text/javascript">
 var img;
@@ -27,23 +30,11 @@ function showImage(image_b64) {
     }
 
 
-    var canvas = document.getElementById("canvas");
-    var context = canvas.getContext("2d");
-
     img = new Image();
     img.onload = function() {
-        canvas.setAttribute("width", window.innerWidth);
-        canvas.setAttribute("height", window.innerHeight);
-
-        var hRatio = canvas.width  / this.width;
-        var vRatio = canvas.height / this.height;
-        var ratio  = Math.min ( hRatio, vRatio );
-        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
-        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
-
-        //context.imageSmoothingEnabled = false;
-        context.drawImage(this, 0, 0, this.width, this.height,
-            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+        $('#keogram-image').attr({
+            'src': this.src,
+        });
     };
 
 
@@ -87,6 +78,8 @@ function closeFullscreen() {
 {% endblock %}
 
 {% block content %}
+<div class="container h-100">
+
 <form id="form_longterm_keogram" onSubmit="return false; "autocomplete="off">
     <div class="form-group row">
         {{ form_longterm_keogram.CAMERA_ID() }}
@@ -144,17 +137,18 @@ function closeFullscreen() {
     <div class="text-danger text-center" id="failure_message" style="display: none;"></div>
     <div class="text-muted text-center" id="message"></div>
 </div>
-<div class="row">
-    <div class="text-center">
-        <canvas id="canvas"></canvas>
+
+<div class="row h-75 align-items-center">
+    <div class="col-12 text-center">
+        <img id="keogram-image" class="fit">
+
+        <div style="margin-top: 20px;">
+            <span id="processing_time"></span>
+            <span id="img_download"></span>
+        </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="text-center">
-        <span id="processing_time"></span>
-        <span id="img_download"></span>
-    </div>
 </div>
 
 
@@ -202,7 +196,7 @@ $( document ).ready(function() {
     }
 
 
-    $('#canvas').on("click", function() {
+    $('#keogram-image').on("click", function() {
         goFullscreen(this);
     });
 
