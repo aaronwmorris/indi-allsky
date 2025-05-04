@@ -677,6 +677,7 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
                 "svbony" "SVBony" "OFF" \
                 "qhy" "QHY" "OFF" \
                 "sx" "Starlight Xpress" "OFF" \
+                "dsi" "Meade DSI" "OFF" \
                 "libcamera" "indi-libcamera [BETA] (this is not the standard libcamera support)" "OFF" \
                 "gphoto" "DSLR - Canon / Nikon / Sony / Pentax / Fuji / etc" "OFF" \
                 "webcam" "Web Camera - indi_webcam_ccd" "OFF" \
@@ -725,6 +726,13 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
         INDI_3RDPARTY_DRIVERS="indi-sx indi-gpsd indi-gpsnmea"
         echo
         echo "Building Starlight Xpress drivers"
+        echo
+        sleep 3
+    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "dsi" ]]; then
+        INDI_3RDPARTY_LIBRARIES=""
+        INDI_3RDPARTY_DRIVERS="indi-dsi indi-gpsd indi-gpsnmea"
+        echo
+        echo "Building Meade DSI drivers"
         echo
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "libcamera" ]]; then
