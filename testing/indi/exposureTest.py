@@ -379,6 +379,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_rpicam',
             'indi_playerone_ccd',
             'indi_sx_ccd',
+            'indi_dsi_ccd',
         ]:
             binning_config = {
                 "PROPERTIES" : {
