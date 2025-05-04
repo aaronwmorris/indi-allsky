@@ -7214,7 +7214,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
             desc = '{0:s} [{1:s}] - {2:s} ({3:s})'.format(conn_id, ','.join(conn_device_list), ','.join(conn_address_list), conn_state)
 
 
-            if conn_type == 'wifi':
+            if conn_type == '802-11-wireless':
                 conn_select_wifi_list.append((
                     conn_uuid,
                     desc
