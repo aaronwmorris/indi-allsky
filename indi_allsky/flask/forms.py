@@ -7054,9 +7054,9 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
         conn_select_list = [(
             '', ''
         )]
-        for devpath in devpath_list:
+        for dev_path in devpath_list:
             dev = bus.get_object("org.freedesktop.NetworkManager",
-                                 devpath)
+                                 dev_path)
 
 
             device_int = dev.Get("org.freedesktop.NetworkManager.Device",
@@ -7070,12 +7070,12 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
             #    continue
 
 
-            connpath = dev.Get("org.freedesktop.NetworkManager.Device",
-                               "ActiveConnection",
-                               dbus_interface=dbus.PROPERTIES_IFACE)
+            conn_path = dev.Get("org.freedesktop.NetworkManager.Device",
+                                "ActiveConnection",
+                                dbus_interface=dbus.PROPERTIES_IFACE)
 
 
-            if connpath == '/':
+            if conn_path == '/':
                 conn_select_list.append((
                     device_int, device_int
                 ))
@@ -7083,7 +7083,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
 
             conn = bus.get_object("org.freedesktop.NetworkManager",
-                                  connpath)
+                                  conn_path)
 
 
             conn_id = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
@@ -7095,13 +7095,13 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                                  dbus_interface=dbus.PROPERTIES_IFACE)
 
 
-            ipv4configpath = dev.Get("org.freedesktop.NetworkManager.Device",
-                                     "Ip4Config",
-                                     dbus_interface=dbus.PROPERTIES_IFACE)
+            ipv4config_path = dev.Get("org.freedesktop.NetworkManager.Device",
+                                      "Ip4Config",
+                                      dbus_interface=dbus.PROPERTIES_IFACE)
 
             ipv4config = bus.get_object(
                 "org.freedesktop.NetworkManager",
-                ipv4configpath)
+                ipv4config_path)
 
 
             address_data = ipv4config.Get("org.freedesktop.NetworkManager.IP4Config",
@@ -7110,7 +7110,8 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
             dev_address_list = list()
             for address in address_data:
-                address_str = '{0:s}/{1:d}'.format(address['address'], address['prefix'])
+                #address_str = '{0:s}/{1:d}'.format(address['address'], address['prefix'])
+                address_str = '{0:s}'.format(address['address'])
                 dev_address_list.append(address_str)
 
 
@@ -7139,6 +7140,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
         conn_select_wifi_list = list()
         conn_select_ethernet_list = list()
+        conn_select_unknown_list = list()
         for conn_path in connpath_list:
             conn = bus.get_object("org.freedesktop.NetworkManager",
                                   conn_path)
@@ -7149,8 +7151,8 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                                  dbus_interface=dbus.PROPERTIES_IFACE)
 
 
-            if conn_type not in self.include_conn_types:
-                continue
+            #if conn_type not in self.include_conn_types:
+            #    continue
 
 
             conn_id = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
@@ -7186,7 +7188,8 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
             conn_address_list = list()
             for address in address_data:
-                address_str = '{0:s}/{1:d}'.format(address['address'], address['prefix'])
+                #address_str = '{0:s}/{1:d}'.format(address['address'], address['prefix'])
+                address_str = '{0:s}'.format(address['address'])
                 conn_address_list.append(address_str)
 
 
@@ -7221,12 +7224,15 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                     desc
                 ))
             else:
-                raise Exception('Unknown connection type')
+                conn_select_unknown_list.append((
+                    conn_uuid,
+                    desc
+                ))
 
 
         conn_select_choices = {
-            'Ethernet' : [('noethernet', 'No connections')],
-            'Wi-Fi' : [('nowifi', 'No connections')],
+            'Ethernet' : [('noethernet', 'No managed connections')],
+            'Wi-Fi' : [('nowifi', 'No managed connections')],
         }
 
 
@@ -7236,6 +7242,11 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
         if conn_select_ethernet_list:
             conn_select_choices['Ethernet'] = conn_select_ethernet_list
+
+
+        if conn_select_unknown_list:
+            conn_select_choices['Uncategorized'] = conn_select_unknown_list
+
 
         #app.logger.info('%s', conn_select_choices)
 
