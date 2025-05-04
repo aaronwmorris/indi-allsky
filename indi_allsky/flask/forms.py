@@ -9,6 +9,7 @@ import tempfile
 import psutil
 import subprocess
 import itertools
+import dbus
 
 from passlib.hash import argon2
 
@@ -7013,6 +7014,193 @@ class IndiAllskyLongTermKeogramForm(FlaskForm):
     PIXELS_SELECT           = SelectField('Pixels per Day', choices=PIXELS_SELECT_choices, default=PIXELS_SELECT_choices[4][0], validators=[DataRequired()])
     ALIGNMENT_SELECT        = SelectField('Alignment', choices=ALIGNMENT_SELECT_choices, default=ALIGNMENT_SELECT_choices[4][0], validators=[DataRequired()])
     OFFSET_SELECT           = SelectField('Hour Offset', choices=OFFSET_SELECT_choices, default=OFFSET_SELECT_choices[12][0], validators=[DataRequired()])
+
+
+class IndiAllskyConnectionsManagerForm(FlaskForm):
+    CONNECTIONS_SELECT         = SelectField('Connection', choices=[], validators=[])
+
+
+    # we do not want to manage these types
+    exclude_conn_types = (
+        'bridge',
+        'loopback',
+    )
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyConnectionsManagerForm, self).__init__(*args, **kwargs)
+
+        self.CONNECTIONS_SELECT.choices = self.getConnections()
+
+
+    def getConnections(self):
+        bus = dbus.SystemBus()
+        nm = bus.get_object("org.freedesktop.NetworkManager",
+                            "/org/freedesktop/NetworkManager")
+
+        # get active connections
+        devpath_list = nm.Get("org.freedesktop.NetworkManager",
+                              "AllDevices",
+                              dbus_interface=dbus.PROPERTIES_IFACE)
+
+        conn_select_list = [(
+            '', ''
+        )]
+        for devpath in devpath_list:
+            dev = bus.get_object("org.freedesktop.NetworkManager",
+                                 devpath)
+
+
+            device_int = dev.Get("org.freedesktop.NetworkManager.Device",
+                                 "Interface",
+                                 dbus_interface=dbus.PROPERTIES_IFACE)
+            #dev_type = dev.Get("org.freedesktop.NetworkManager.Connection.Active",
+            #                   "Type",
+            #                   dbus_interface=dbus.PROPERTIES_IFACE)
+
+            #if conn_type in self.exclude_conn_types:
+            #    continue
+
+
+            connpath = dev.Get("org.freedesktop.NetworkManager.Device",
+                               "ActiveConnection",
+                               dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+            if connpath == '/':
+                conn_select_list.append((
+                    device_int, device_int
+                ))
+                continue
+
+
+            conn = bus.get_object("org.freedesktop.NetworkManager",
+                                  connpath)
+
+
+            conn_id = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+                               "Id",
+                               dbus_interface=dbus.PROPERTIES_IFACE)
+
+            conn_uuid = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+                                 "Uuid",
+                                 dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+            ipv4configpath = dev.Get("org.freedesktop.NetworkManager.Device",
+                                     "Ip4Config",
+                                     dbus_interface=dbus.PROPERTIES_IFACE)
+
+            ipv4config = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                ipv4configpath)
+
+
+            address_data = ipv4config.Get("org.freedesktop.NetworkManager.IP4Config",
+                                          "AddressData",
+                                          dbus_interface=dbus.PROPERTIES_IFACE)
+
+            dev_address_list = list()
+            for address in address_data:
+                address_str = '{0:s}/{1:d}'.format(address['address'], address['prefix'])
+                dev_address_list.append(address_str)
+
+
+            desc = '{0:s} [{1:s}] - {2:s}'.format(device_int, conn_id, ','.join(dev_address_list))
+
+
+            conn_select_list.append((
+                conn_uuid,
+                desc
+            ))
+
+
+        app.logger.info('%s', conn_select_list)
+        return conn_select_list
+
+
+    def _getConnections(self):
+        bus = dbus.SystemBus()
+        nm = bus.get_object("org.freedesktop.NetworkManager",
+                            "/org/freedesktop/NetworkManager")
+
+        # get active connections
+        connpath_list = nm.Get("org.freedesktop.NetworkManager",
+                               "ActiveConnections",
+                               dbus_interface=dbus.PROPERTIES_IFACE)
+
+        conn_select_list = [(
+            '', ''
+        )]
+        for connpath in connpath_list:
+            conn = bus.get_object("org.freedesktop.NetworkManager",
+                                  connpath)
+
+
+            conn_type = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+                                 "Type",
+                                 dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+            if conn_type in self.exclude_conn_types:
+                continue
+
+
+            conn_id = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+                               "Id",
+                               dbus_interface=dbus.PROPERTIES_IFACE)
+
+            conn_uuid = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+                                 "Uuid",
+                                 dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+            ipv4configpath = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+                                      "Ip4Config",
+                                      dbus_interface=dbus.PROPERTIES_IFACE)
+
+            ipv4config = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                ipv4configpath)
+
+
+            address_data = ipv4config.Get("org.freedesktop.NetworkManager.IP4Config",
+                                          "AddressData",
+                                          dbus_interface=dbus.PROPERTIES_IFACE)
+
+            conn_address_list = list()
+            for address in address_data:
+                address_str = '{0:s}/{1:d}'.format(address['address'], address['prefix'])
+                conn_address_list.append(address_str)
+
+
+            devices_list = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+                                    "Devices",
+                                    dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+            conn_device_list = list()
+            for device in devices_list:
+                device_config = bus.get_object("org.freedesktop.NetworkManager",
+                                               device)
+
+                device_int = device_config.Get("org.freedesktop.NetworkManager.Device",
+                                               "Interface",
+                                               dbus_interface=dbus.PROPERTIES_IFACE)
+
+                conn_device_list.append(device_int)
+
+
+            desc = '{0:s} [{1:s}] - {2:s}'.format(conn_id, ','.join(conn_device_list), ','.join(conn_address_list))
+
+
+            conn_select_list.append((
+                conn_uuid,
+                desc
+            ))
+
+
+        return conn_select_list
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):

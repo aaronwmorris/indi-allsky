@@ -102,6 +102,7 @@ from .forms import IndiAllskyCameraSimulatorForm
 from .forms import IndiAllskyFocusControllerForm
 from .forms import IndiAllskyMiniTimelapseForm
 from .forms import IndiAllskyLongTermKeogramForm
+from .forms import IndiAllskyConnectionsManagerForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -8125,6 +8126,37 @@ class JsonLongTermKeogramView(JsonView):
         return jsonify(json_data)
 
 
+class ConnectionsManagerView(TemplateView):
+    decorators = [login_required]
+    title = 'Connections Manager'
+
+    def get_context(self):
+        context = super(ConnectionsManagerView, self).get_context()
+        context['camera_id'] = self.camera.id
+        context['title'] = self.title
+
+        context['form_connections'] = IndiAllskyConnectionsManagerForm()
+
+        return context
+
+
+class AjaxConnectionsManagerView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+
+    def __init__(self, **kwargs):
+        super(AjaxConnectionsManagerView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        if not current_user.is_admin:
+            json_data = {
+                'failure-message' : 'User does not have permission to generate content',
+            }
+            return jsonify(json_data), 400
+
+
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
@@ -8620,6 +8652,8 @@ bp_allsky.add_url_rule('/mask', view_func=MaskView.as_view('mask_view', template
 bp_allsky.add_url_rule('/camerasimulator', view_func=CameraSimulatorView.as_view('camera_simulator_view', template_name='camera_simulator.html'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
+
+bp_allsky.add_url_rule('/connections', view_func=ConnectionsManagerView.as_view('connections_manager_view', template_name='connections.html'))
 
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))
