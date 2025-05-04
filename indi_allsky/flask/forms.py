@@ -7124,7 +7124,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
             ))
 
 
-        app.logger.info('%s', conn_select_list)
+        #app.logger.info('%s', conn_select_list)
         return conn_select_list
 
 
@@ -7151,6 +7151,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                                  dbus_interface=dbus.PROPERTIES_IFACE)
 
 
+            #app.logger.info('Connection type: %s', conn_type)
             #if conn_type not in self.include_conn_types:
             #    continue
 
