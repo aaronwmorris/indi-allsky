@@ -765,7 +765,7 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
         sleep 3
     elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "supported" ]]; then
         INDI_3RDPARTY_LIBRARIES="libasi libplayerone libsvbony libqhy libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam libsvbonycam"
-        INDI_3RDPARTY_DRIVERS="indi-asi indi-playerone indi-svbony indi-qhy indi-sx indi-toupbase indi-gphoto indi-webcam indi-gpsd indi-gpsnmea"
+        INDI_3RDPARTY_DRIVERS="indi-asi indi-playerone indi-svbony indi-qhy indi-sx indi-dsi indi-toupbase indi-gphoto indi-webcam indi-gpsd indi-gpsnmea"
         echo
         echo "Building supported camera drivers"
         echo
