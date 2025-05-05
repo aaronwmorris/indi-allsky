@@ -166,9 +166,11 @@ class IndiClientPassive(IndiClient):
 
 
     def setCcdBinning(self, bin_value):
-        bin_value = [bin_value, bin_value]
+        if not bin_value:
+            # Assume default
+            return
 
         # Update shared gain value
         with self.bin_v.get_lock():
-            self.bin_v.value = bin_value[0]
+            self.bin_v.value = int(bin_value)
 
