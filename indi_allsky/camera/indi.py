@@ -1257,42 +1257,18 @@ class IndiClient(PyIndi.BaseClient):
 
     def setCcdBinning(self, bin_value):
         if type(bin_value) is int:
-            bin_value = [bin_value, bin_value]
+            new_bin_value = [bin_value, bin_value]
         elif type(bin_value) is str:
-            bin_value = [int(bin_value), int(bin_value)]
+            new_bin_value = [int(bin_value), int(bin_value)]
         elif not bin_value:
             # Assume default
             return
 
-        logger.warning('Setting CCD binning to (%d, %d)', bin_value[0], bin_value[1])
+        logger.warning('Setting CCD binning to (%d, %d)', new_bin_value[0], new_bin_value[1])
 
         indi_exec = self.ccd_device.getDriverExec()
 
         if indi_exec in [
-            'indi_asi_ccd',
-            'indi_asi_single_ccd',
-            'indi_svbony_ccd',
-            'indi_sv305_ccd',  # legacy name
-            'indi_qhy_ccd',
-            'indi_toupcam_ccd',
-            'indi_altair_ccd',
-            'indi_simulator_ccd',
-            'indi_rpicam',
-            'indi_libcamera_ccd',
-            'indi_playerone_ccd',
-            'indi_sx_ccd',
-            'indi_dsi_ccd',
-            'indi_v4l2_ccd',
-        ]:
-            binning_config = {
-                "PROPERTIES" : {
-                    "CCD_BINNING" : {
-                        "HOR_BIN" : bin_value[0],
-                        "VER_BIN" : bin_value[1],
-                    },
-                },
-            }
-        elif indi_exec in [
             'indi_gphoto_ccd',
             'indi_canon_ccd',
             'indi_nikon_ccd',
@@ -1304,26 +1280,27 @@ class IndiClient(PyIndi.BaseClient):
         elif indi_exec in ['indi_webcam_ccd']:
             logger.warning('indi_webcam_ccd does not support bin settings')
             return
-        elif indi_exec in ['rpicam-still', 'libcamera-still', 'indi_fake_ccd']:
-            return self.ccd_device.setCcdBinMode(bin_value)
-        elif 'indi_pylibcamera' in indi_exec:  # SPECIAL CASE
-            # the exec name can have many variations
+
+
+        try:
+            self.get_control(self.ccd_device, 'CCD_BINNING', 'number', timeout=2.0)
+
             binning_config = {
                 "PROPERTIES" : {
                     "CCD_BINNING" : {
-                        "HOR_BIN" : bin_value[0],
-                        "VER_BIN" : bin_value[1],
+                        "HOR_BIN" : new_bin_value[0],
+                        "VER_BIN" : new_bin_value[1],
                     },
                 },
             }
-        else:
-            raise Exception('Binning config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
-        self.configureDevice(self.ccd_device, binning_config)
+            self.configureDevice(self.ccd_device, binning_config)
 
-        # Update shared gain value
-        with self.bin_v.get_lock():
-            self.bin_v.value = bin_value[0]
+            # Update shared gain value
+            with self.bin_v.get_lock():
+                self.bin_v.value = new_bin_value[0]
+        except TimeOutException:
+            logger.error('Failed to find CCD binning control, bypassing binning config')
 
 
     # Most of below was borrowed from https://github.com/GuLinux/indi-lite-tools/blob/master/pyindi_sequence/device.py

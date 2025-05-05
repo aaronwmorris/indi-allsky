@@ -100,19 +100,15 @@ class IndiClientLibCameraGeneric(IndiClient):
             self.gain_v.value = int(new_gain_value)
 
 
-    def setCcdBinning(self, new_bin_value):
-        if type(new_bin_value) is int:
-            new_bin_value = [new_bin_value, new_bin_value]
-        elif type(new_bin_value) is str:
-            new_bin_value = [int(new_bin_value), int(new_bin_value)]
-        elif not new_bin_value:
+    def setCcdBinning(self, bin_value):
+        if not bin_value:
             # Assume default
             return
 
 
         # Update shared gain value
         with self.bin_v.get_lock():
-            self.bin_v.value = int(new_bin_value[0])
+            self.bin_v.value = int(bin_value)
 
 
     def _getBinModeOptions(self, bin_value):
