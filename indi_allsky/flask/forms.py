@@ -7026,12 +7026,17 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
         'wifi',
     )
 
-    nm_states = {
+    nm_conn_states = {
         0 : 'Unknown',
         1 : 'Activating',
         2 : 'Active',
         3 : 'Deactivating',
         4 : 'Not Active',
+    }
+
+    nm_device_types = {
+        1 : 'ethernet',
+        2 : '802-11-wireless',
     }
 
 
@@ -7041,7 +7046,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
         self.CONNECTIONS_SELECT.choices = self.getConnections()
 
 
-    def _getConnections(self):
+    def getConnections(self):
         bus = dbus.SystemBus()
         nm = bus.get_object("org.freedesktop.NetworkManager",
                             "/org/freedesktop/NetworkManager")
@@ -7051,9 +7056,9 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                               "AllDevices",
                               dbus_interface=dbus.PROPERTIES_IFACE)
 
-        conn_select_list = [(
-            '', ''
-        )]
+        conn_select_wifi_list = list()
+        conn_select_ethernet_list = list()
+        conn_select_unknown_list = list()
         for dev_path in devpath_list:
             dev = bus.get_object("org.freedesktop.NetworkManager",
                                  dev_path)
@@ -7062,12 +7067,12 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
             device_int = dev.Get("org.freedesktop.NetworkManager.Device",
                                  "Interface",
                                  dbus_interface=dbus.PROPERTIES_IFACE)
-            #dev_type = dev.Get("org.freedesktop.NetworkManager.Connection.Active",
-            #                   "Type",
-            #                   dbus_interface=dbus.PROPERTIES_IFACE)
 
-            #if conn_type in self.exclude_conn_types:
-            #    continue
+
+            device_type = dev.Get("org.freedesktop.NetworkManager.Device",
+                                  "DeviceType",
+                                  dbus_interface=dbus.PROPERTIES_IFACE)
+            #app.logger.info('Device Type: %s', device_type)
 
 
             conn_path = dev.Get("org.freedesktop.NetworkManager.Device",
@@ -7076,9 +7081,25 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
 
             if conn_path == '/':
-                conn_select_list.append((
-                    device_int, device_int
-                ))
+                # this usually means a connection is inactive or not defined
+                try:
+                    if self.nm_device_types[device_type] == 'ethernet':
+                        conn_select_ethernet_list.append((
+                            device_int,
+                            '{0:s} - (Inactive)'.format(device_int)
+                        ))
+                    elif self.nm_device_types[device_type] == '802-11-wireless':
+                        conn_select_wifi_list.append((
+                            device_int,
+                            '{0:s} - (Inactive)'.format(device_int)
+                        ))
+                except KeyError:
+                    conn_select_unknown_list.append((
+                        device_int,
+                        '{0:s} - (Inactive)'.format(device_int)
+                    ))
+
+
                 continue
 
 
@@ -7093,6 +7114,16 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
             conn_uuid = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
                                  "Uuid",
                                  dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+            conn_state_enum = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+                                       "State",
+                                       dbus_interface=dbus.PROPERTIES_IFACE)
+
+            try:
+                conn_state = self.nm_conn_states[conn_state_enum]
+            except KeyError:
+                conn_state = 'UNDEFINED'
 
 
             ipv4config_path = dev.Get("org.freedesktop.NetworkManager.Device",
@@ -7115,20 +7146,50 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                 dev_address_list.append(address_str)
 
 
-            desc = '{0:s} [{1:s}] - {2:s}'.format(device_int, conn_id, ','.join(dev_address_list))
+            desc = '{0:s} [{1:s}] - {2:s} ({3:s})'.format(conn_id, device_int, ','.join(dev_address_list), conn_state)
 
 
-            conn_select_list.append((
-                conn_uuid,
-                desc
-            ))
+            try:
+                if self.nm_device_types[device_type] == 'ethernet':
+                    conn_select_ethernet_list.append((
+                        conn_uuid,
+                        desc
+                    ))
+                elif self.nm_device_types[device_type] == '802-11-wireless':
+                    conn_select_wifi_list.append((
+                        conn_uuid,
+                        desc
+                    ))
+            except KeyError:
+                conn_select_unknown_list.append((
+                    device_int,
+                    desc,
+                ))
+
+
+        conn_select_choices = {
+            'Ethernet' : [('noethernet', 'No managed connections')],
+            'Wi-Fi' : [('nowifi', 'No managed connections')],
+        }
+
+
+        if conn_select_wifi_list:
+            conn_select_choices['Wi-Fi'] = conn_select_wifi_list
+
+
+        if conn_select_ethernet_list:
+            conn_select_choices['Ethernet'] = conn_select_ethernet_list
+
+
+        if conn_select_unknown_list:
+            conn_select_choices['Uncategorized'] = conn_select_unknown_list
 
 
         #app.logger.info('%s', conn_select_list)
-        return conn_select_list
+        return conn_select_choices
 
 
-    def getConnections(self):
+    def _getConnections(self):
         bus = dbus.SystemBus()
         nm = bus.get_object("org.freedesktop.NetworkManager",
                             "/org/freedesktop/NetworkManager")
@@ -7168,8 +7229,9 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
             conn_state_enum = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
                                        "State",
                                        dbus_interface=dbus.PROPERTIES_IFACE)
+
             try:
-                conn_state = self.nm_states[conn_state_enum]
+                conn_state = self.nm_conn_states[conn_state_enum]
             except KeyError:
                 conn_state = 'UNDEFINED'
 
@@ -7250,7 +7312,6 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
 
         #app.logger.info('%s', conn_select_choices)
-
         return conn_select_choices
 
 
