@@ -8183,7 +8183,6 @@ class AjaxConnectionsManagerView(BaseView):
             return jsonify(json_data), 400
 
 
-
     def scanAPs(self, interface_name):
         bus = dbus.SystemBus()
 
@@ -8238,12 +8237,20 @@ class AjaxConnectionsManagerView(BaseView):
                 "org.freedesktop.NetworkManager.AccessPoint",
                 "Ssid")
 
+            ap_strength = ap_props.Get(
+                "org.freedesktop.NetworkManager.AccessPoint",
+                "Strength")
+
+            ap_frequency = ap_props.Get(
+                "org.freedesktop.NetworkManager.AccessPoint",
+                "Frequency")
+
             str_ap_ssid = "".join(chr(i) for i in ap_ssid)
             app.logger.info("Found SSID = %s", ap_path, str_ap_ssid)
 
             ap_list.append({
                 'path' : str(ap_path),
-                'ssid' : str_ap_ssid,
+                'ssid' : '{0:s} [{1:d}] [{2:0.2f}Ghz]'.format(str_ap_ssid, int.from_bytes(str(ap_strength).encode()), float(ap_frequency) / 1000)
             })
 
 
