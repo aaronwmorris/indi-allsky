@@ -7045,8 +7045,17 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
     def getConnections(self):
         bus = dbus.SystemBus()
-        nm_settings = bus.get_object("org.freedesktop.NetworkManager",
-                                     "/org/freedesktop/NetworkManager/Settings")
+
+
+        try:
+            nm_settings = bus.get_object("org.freedesktop.NetworkManager",
+                                         "/org/freedesktop/NetworkManager/Settings")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return [(
+                'error', 'D-Bus Exception: {0:s}'.format(str(e))
+            )]
+
 
         settingspath_list = nm_settings.Get("org.freedesktop.NetworkManager.Settings",
                                             "Connections",
@@ -7226,8 +7235,17 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
     def getWifiDevices(self):
         bus = dbus.SystemBus()
-        nm = bus.get_object("org.freedesktop.NetworkManager",
-                            "/org/freedesktop/NetworkManager")
+
+
+        try:
+            nm = bus.get_object("org.freedesktop.NetworkManager",
+                                "/org/freedesktop/NetworkManager")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return [(
+                'error', 'D-Bus Exception: {0:s}'.format(str(e))
+            )]
+
 
         # get active connections
         devpath_list = nm.Get("org.freedesktop.NetworkManager",
