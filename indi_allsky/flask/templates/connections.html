@@ -27,6 +27,8 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_connections.WIFI_DEVICES_SELECT.label(class='col-form-label') }}
@@ -39,30 +41,82 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_connections.SSID_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_connections.SSID_SELECT(class='form-select bg-secondary') }}
+            <div id="SSID_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="col-sm-1">
+        <button id="scan-button" class="btn btn-success">Scan</button>
+    </div>
+
     </form>
 
 </div>
 
 <script type="text/javascript">
-function init() {
-}
 
-function loadJS(url, data, onDone, onError) {
-    if(!onDone)onDone=function(){};
-    if(!onError)onError=function(){};
+$('#scan-button').on('click', function() {
+    if ( $('#WIFI_DEVICES_SELECT').val() == "" ){
+        return false;
+    }
+
+    $("#scan-button").attr("class", "btn btn-primary");
+    $("#scan-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Loading</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'scanap',
+        'INTERFACE' : $('#WIFI_DEVICES_SELECT').val(),
+    };
+
 
     $.ajax({
-        type: "GET",
-        url: url,
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_connections_manager_view') }}",
         contentType: "application/json",
-        data: data,
+        data: JSON.stringify(json_data),
         success: function(rdata){
-            json_data = rdata
+            $("#scan-button").attr("class", "btn btn-success");
+            $("#scan-button").html(
+              'Scan'
+            );
+
+
+            $('#SSID_SELECT').removeAttr('readonly');
+            $('#SSID_SELECT').removeAttr('disabled');
+            $('#SSID_SELECT').removeClass('bg-dark');
+            $('#SSID_SELECT').removeClass('text-secondary');
+            $("#SSID_SELECT").empty();
+
+            rdata.forEach(item => {
+                $("#SSID_SELECT").append($('<option />', {'value' : item['path']}).text(item['ssid']));
+            });
         },
         error: function(rdata){
+            $("#scan-button").attr("class", "btn btn-danger");
+            $("#scan-button").html(
+              'Scan'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
         },
     });
+});
 
+
+function init() {
+    $('#SSID_SELECT').addClass('bg-dark');
+    $('#SSID_SELECT').addClass('text-secondary');
 }
 
 $( document ).ready(function() {

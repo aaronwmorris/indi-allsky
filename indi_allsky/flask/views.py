@@ -8167,7 +8167,24 @@ class AjaxConnectionsManagerView(BaseView):
             return jsonify(json_data), 400
 
 
-    def getAPs(self, interface_name):
+        command = str(json_data['COMMAND'])
+
+
+        if command == 'scanap':
+            interface = str(json_data['INTERFACE'])
+
+            ap_data = self.scanAPs(interface)
+
+            return jsonify(ap_data)
+        else:
+            json_data = {
+                'failure-message' : 'Unknown command',
+            }
+            return jsonify(json_data), 400
+
+
+
+    def scanAPs(self, interface_name):
         bus = dbus.SystemBus()
 
         manager_bus_object = bus.get_object(
@@ -8224,13 +8241,13 @@ class AjaxConnectionsManagerView(BaseView):
             str_ap_ssid = "".join(chr(i) for i in ap_ssid)
             app.logger.info("Found SSID = %s", ap_path, str_ap_ssid)
 
-            ap_list.append([
-                str(ap_path), str_ap_ssid
-            ])
+            ap_list.append({
+                'path' : str(ap_path),
+                'ssid' : str_ap_ssid,
+            })
 
 
         return ap_list
-
 
 
     def connectAP(self, interface_name, ap_path, psk):
@@ -8811,6 +8828,7 @@ bp_allsky.add_url_rule('/camerasimulator', view_func=CameraSimulatorView.as_view
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 
 bp_allsky.add_url_rule('/connections', view_func=ConnectionsManagerView.as_view('connections_manager_view', template_name='connections.html'))
+bp_allsky.add_url_rule('/ajax/connections', view_func=AjaxConnectionsManagerView.as_view('ajax_connections_manager_view'))
 
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))

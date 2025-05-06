@@ -7019,6 +7019,7 @@ class IndiAllskyLongTermKeogramForm(FlaskForm):
 class IndiAllskyConnectionsManagerForm(FlaskForm):
     CONNECTIONS_SELECT         = SelectField('Connection', choices=[], validators=[])
     WIFI_DEVICES_SELECT        = SelectField('Wi-Fi Devices', choices=[], validators=[])
+    SSID_SELECT                = SelectField('SSID', choices=[], validators=[], render_kw={'readonly' : True, 'disabled' : 'disabled'})
 
 
     nm_conn_states_str = {
@@ -7211,6 +7212,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
             ))
 
 
+        # setting some defaults
         conn_select_choices = {
             'Wi-Fi' : [('nowifi', '--- No managed wifi connections ---')],
             'Ethernet' : [('noethernet', '--- No managed ethernet connections ---')],
