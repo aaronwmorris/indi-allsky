@@ -7280,6 +7280,11 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
             ))
 
 
+        if not wifi_dev_select_list:
+            return [(
+                '', 'No wifi devices available'
+            )]
+
         #app.logger.info('%s', wifi_dev_select_list)
         return wifi_dev_select_list
 
