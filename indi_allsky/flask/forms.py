@@ -7067,22 +7067,27 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
             settings_dict = settings_connection.GetSettings()
 
-            #app.logger.info('Settings: %s', settings_dict)
-            #app.logger.info('Keys: %s', settings_dict.keys())
-
-
             settings_uuid = str(settings_dict['connection']['uuid'])
+            #app.logger.info('Uuid: %s', settings_uuid)
+
+            #app.logger.info('Settings: %s', settings_dict)
+            #app.logger.info('Keys: %s', settings_dict['connection'].keys())
+
+
             conn_dict[settings_uuid] = {
                 'id' : str(settings_dict['connection']['id']),
-                'interface' : str(settings_dict['connection']['interface-name']),
+                'interface' : str(settings_dict['connection'].get('interface-name', '')),
+                'devices' : [str(settings_dict['connection'].get('interface-name', ''))],  # override later
+                'addresses' : ['No address'],
                 'active' : False,  # override later
                 'state' : 'Inactive',  # override later
+                'autoconnect-priority' : int(settings_dict['connection'].get('autoconnect-priority', 0)),
             }
 
 
             settings_type = str(settings_dict['connection']['type'])
-            if settings_type == 'ethernet':
-                conn_dict[settings_uuid]['type'] = 'ethernet'
+            if settings_type == '802-3-ethernet':
+                conn_dict[settings_uuid]['type'] = '802-3-ethernet'
             elif settings_type == '802-11-wireless':
                 conn_dict[settings_uuid]['type'] = '802-11-wireless'
             else:
@@ -7183,16 +7188,16 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
         conn_select_other_list = list()
 
 
-        for c in filter(lambda item: item[1]['type'] == 'ethernet', conn_dict.items()):
+        for c in filter(lambda item: item[1]['type'] == '802-11-wireless', conn_dict.items()):
             desc = '{0:s} [{1:s}] - {2:s} ({3:s})'.format(c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
             conn_select_wifi_list.append((
                 c[0],
                 desc,
             ))
 
-        for c in filter(lambda item: item[1]['type'] == '802-11-wireless', conn_dict.items()):
+        for c in filter(lambda item: item[1]['type'] == '802-3-ethernet', conn_dict.items()):
             desc = '{0:s} [{1:s}] - {2:s} ({3:s})'.format(c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
-            conn_select_wifi_list.append((
+            conn_select_ethernet_list.append((
                 c[0],
                 desc,
             ))
