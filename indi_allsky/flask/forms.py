@@ -7212,8 +7212,8 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
 
         conn_select_choices = {
-            'Wi-Fi' : [('nowifi', 'No managed wifi connections')],
-            'Ethernet' : [('noethernet', 'No managed ethernet connections')],
+            'Wi-Fi' : [('nowifi', '--- No managed wifi connections ---')],
+            'Ethernet' : [('noethernet', '--- No managed ethernet connections ---')],
         }
 
 
