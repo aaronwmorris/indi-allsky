@@ -7030,6 +7030,12 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
     }
 
 
+    nm_device_types = {
+        '802-3-ethernet' : 1,
+        '802-11-wireless': 2,
+    }
+
+
     def __init__(self, *args, **kwargs):
         super(IndiAllskyConnectionsManagerForm, self).__init__(*args, **kwargs)
 
@@ -7239,7 +7245,8 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                                   dbus_interface=dbus.PROPERTIES_IFACE)
             #app.logger.info('Device Type: %s', device_type)
 
-            if str(device_type) != '802-11-wireless':
+
+            if int(device_type) != self.nm_device_types['802-11-wireless']:
                 continue
 
 
