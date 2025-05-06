@@ -8167,11 +8167,11 @@ class AjaxConnectionsManagerView(BaseView):
             return jsonify(json_data), 400
 
 
-        command = str(json_data['COMMAND'])
+        command = str(request.json['COMMAND'])
 
 
         if command == 'scanap':
-            interface = str(json_data['INTERFACE'])
+            interface = str(request.json['INTERFACE'])
 
             ap_data = self.scanAPs(interface)
 
