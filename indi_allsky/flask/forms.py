@@ -7048,6 +7048,187 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
     def getConnections(self):
         bus = dbus.SystemBus()
+        nm_settings = bus.get_object("org.freedesktop.NetworkManager",
+                                     "/org/freedesktop/NetworkManager/Settings")
+
+        settingspath_list = nm_settings.Get("org.freedesktop.NetworkManager.Settings",
+                                            "Connections",
+                                            dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+        conn_dict = dict()
+        for settings_path in settingspath_list:
+            settings = bus.get_object("org.freedesktop.NetworkManager",
+                                      settings_path)
+
+
+            settings_connection = dbus.Interface(settings,
+                                                 "org.freedesktop.NetworkManager.Settings.Connection")
+
+            settings_dict = settings_connection.GetSettings()
+
+            #app.logger.info('Settings: %s', settings_dict)
+            #app.logger.info('Keys: %s', settings_dict.keys())
+
+
+            settings_uuid = str(settings_dict['connection']['uuid'])
+            conn_dict[settings_uuid] = {
+                'id' : str(settings_dict['connection']['id']),
+                'interface' : str(settings_dict['connection']['interface-name']),
+                'active' : False,  # override later
+                'state' : 'Inactive',  # override later
+            }
+
+
+            settings_type = str(settings_dict['connection']['type'])
+            if settings_type == 'ethernet':
+                conn_dict[settings_uuid]['type'] = 'ethernet'
+            elif settings_type == '802-11-wireless':
+                conn_dict[settings_uuid]['type'] = '802-11-wireless'
+            else:
+                conn_dict[settings_uuid]['type'] = 'other'
+
+            #app.logger.info('ID: %s, Uuid: %s, Type: %s, Interface: %s', settings_id, settings_uuid, settings_type, settings_int)
+
+
+        nm = bus.get_object("org.freedesktop.NetworkManager",
+                            "/org/freedesktop/NetworkManager")
+
+        # get active connections
+        connpath_list = nm.Get("org.freedesktop.NetworkManager",
+                               "ActiveConnections",
+                               dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+        for conn_path in connpath_list:
+            conn = bus.get_object("org.freedesktop.NetworkManager",
+                                  conn_path)
+
+
+            #conn_type = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+            #                     "Type",
+            #                     dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+            #app.logger.info('Connection type: %s', conn_type)
+            #if conn_type not in self.include_conn_types:
+            #    continue
+
+
+            #conn_id = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+            #                   "Id",
+            #                   dbus_interface=dbus.PROPERTIES_IFACE)
+
+            conn_uuid = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+                                 "Uuid",
+                                 dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+            conn_state_enum = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+                                       "State",
+                                       dbus_interface=dbus.PROPERTIES_IFACE)
+
+            try:
+                conn_state = self.nm_conn_states[int(conn_state_enum)]
+            except KeyError:
+                conn_state = 'UNDEFINED'
+
+
+            ipv4config_path = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+                                       "Ip4Config",
+                                       dbus_interface=dbus.PROPERTIES_IFACE)
+
+            ipv4config = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                ipv4config_path)
+
+
+            address_data = ipv4config.Get("org.freedesktop.NetworkManager.IP4Config",
+                                          "AddressData",
+                                          dbus_interface=dbus.PROPERTIES_IFACE)
+
+            conn_address_list = list()
+            for address in address_data:
+                #address_str = '{0:s}/{1:d}'.format(address['address'], address['prefix'])
+                address_str = '{0:s}'.format(str(address['address']))
+                conn_address_list.append(address_str)
+
+
+            devicespath_list = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+                                        "Devices",
+                                        dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+            conn_device_list = list()
+            for device_path in devicespath_list:
+                device_config = bus.get_object("org.freedesktop.NetworkManager",
+                                               device_path)
+
+                device_int = device_config.Get("org.freedesktop.NetworkManager.Device",
+                                               "Interface",
+                                               dbus_interface=dbus.PROPERTIES_IFACE)
+
+                conn_device_list.append(str(device_int))
+
+
+            conn_dict[conn_uuid]['active'] = True
+            conn_dict[conn_uuid]['devices'] = conn_device_list
+            conn_dict[conn_uuid]['addresses'] = conn_address_list
+            conn_dict[conn_uuid]['state'] = conn_state
+
+
+
+        conn_select_wifi_list = list()
+        conn_select_ethernet_list = list()
+        conn_select_other_list = list()
+
+
+        for c in filter(lambda item: item[1]['type'] == 'ethernet', conn_dict.items()):
+            desc = '{0:s} [{1:s}] - {2:s} ({3:s})'.format(c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
+            conn_select_wifi_list.append((
+                c[0],
+                desc,
+            ))
+
+        for c in filter(lambda item: item[1]['type'] == '802-11-wireless', conn_dict.items()):
+            desc = '{0:s} [{1:s}] - {2:s} ({3:s})'.format(c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
+            conn_select_wifi_list.append((
+                c[0],
+                desc,
+            ))
+
+        for c in filter(lambda item: item[1]['type'] == 'other', conn_dict.items()):
+            desc = '{0:s} [{1:s}] - {2:s} ({3:s})'.format(c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
+            conn_select_other_list.append((
+                c[0],
+                desc,
+            ))
+
+
+        conn_select_choices = {
+            'Wi-Fi' : [('nowifi', 'No managed wifi connections')],
+            'Ethernet' : [('noethernet', 'No managed ethernet connections')],
+        }
+
+
+        if conn_select_wifi_list:
+            conn_select_choices['Wi-Fi'] = conn_select_wifi_list
+
+
+        if conn_select_ethernet_list:
+            conn_select_choices['Ethernet'] = conn_select_ethernet_list
+
+
+        if conn_select_other_list:
+            conn_select_choices['Other'] = conn_select_other_list
+
+
+        #app.logger.info('%s', conn_select_choices)
+        return conn_select_choices
+
+
+    def __getConnections(self):
+        bus = dbus.SystemBus()
         nm = bus.get_object("org.freedesktop.NetworkManager",
                             "/org/freedesktop/NetworkManager")
 
@@ -7058,7 +7239,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
         conn_select_wifi_list = list()
         conn_select_ethernet_list = list()
-        conn_select_unknown_list = list()
+        conn_select_other_list = list()
         for dev_path in devpath_list:
             dev = bus.get_object("org.freedesktop.NetworkManager",
                                  dev_path)
@@ -7094,7 +7275,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                             '{0:s} - (Inactive)'.format(device_int)
                         ))
                 except KeyError:
-                    conn_select_unknown_list.append((
+                    conn_select_other_list.append((
                         device_int,
                         '{0:s} - (Inactive)'.format(device_int)
                     ))
@@ -7161,15 +7342,15 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                         desc
                     ))
             except KeyError:
-                conn_select_unknown_list.append((
+                conn_select_other_list.append((
                     device_int,
                     desc,
                 ))
 
 
         conn_select_choices = {
-            'Ethernet' : [('noethernet', 'No managed connections')],
-            'Wi-Fi' : [('nowifi', 'No managed connections')],
+            'Wi-Fi' : [('nowifi', 'No managed wifi connections')],
+            'Ethernet' : [('noethernet', 'No managed ethernet connections')],
         }
 
 
@@ -7181,8 +7362,8 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
             conn_select_choices['Ethernet'] = conn_select_ethernet_list
 
 
-        if conn_select_unknown_list:
-            conn_select_choices['Uncategorized'] = conn_select_unknown_list
+        if conn_select_other_list:
+            conn_select_choices['Other'] = conn_select_other_list
 
 
         #app.logger.info('%s', conn_select_list)
@@ -7201,7 +7382,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
         conn_select_wifi_list = list()
         conn_select_ethernet_list = list()
-        conn_select_unknown_list = list()
+        conn_select_other_list = list()
         for conn_path in connpath_list:
             conn = bus.get_object("org.freedesktop.NetworkManager",
                                   conn_path)
@@ -7256,13 +7437,13 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                 conn_address_list.append(address_str)
 
 
-            devices_list = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
-                                    "Devices",
-                                    dbus_interface=dbus.PROPERTIES_IFACE)
+            devicespath_list = conn.Get("org.freedesktop.NetworkManager.Connection.Active",
+                                        "Devices",
+                                        dbus_interface=dbus.PROPERTIES_IFACE)
 
 
             conn_device_list = list()
-            for device_path in devices_list:
+            for device_path in devicespath_list:
                 device_config = bus.get_object("org.freedesktop.NetworkManager",
                                                device_path)
 
@@ -7287,15 +7468,15 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                     desc
                 ))
             else:
-                conn_select_unknown_list.append((
+                conn_select_other_list.append((
                     conn_uuid,
                     desc
                 ))
 
 
         conn_select_choices = {
-            'Ethernet' : [('noethernet', 'No managed connections')],
-            'Wi-Fi' : [('nowifi', 'No managed connections')],
+            'Wi-Fi' : [('nowifi', 'No managed wifi connections')],
+            'Ethernet' : [('noethernet', 'No managed ethernet connections')],
         }
 
 
@@ -7307,8 +7488,8 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
             conn_select_choices['Ethernet'] = conn_select_ethernet_list
 
 
-        if conn_select_unknown_list:
-            conn_select_choices['Uncategorized'] = conn_select_unknown_list
+        if conn_select_other_list:
+            conn_select_choices['Other'] = conn_select_other_list
 
 
         #app.logger.info('%s', conn_select_choices)
