@@ -114,6 +114,7 @@ from .youtube_views import YoutubeCallbackView
 from .youtube_views import YoutubeRevokeAuthView
 
 from ..exceptions import ConfigSaveException
+from ..exceptions import ConnectionFailure
 
 
 bp_allsky = Blueprint(
@@ -8145,6 +8146,15 @@ class AjaxConnectionsManagerView(BaseView):
     decorators = [login_required]
 
 
+    nm_conn_states = {
+        'Unknown'      : 0,
+        'Activating'   : 1,
+        'Active'       : 2,
+        'Deactivating' : 3,
+        'Not Active'   : 4,
+    }
+
+
     def __init__(self, **kwargs):
         super(AjaxConnectionsManagerView, self).__init__(**kwargs)
 
@@ -8152,9 +8162,156 @@ class AjaxConnectionsManagerView(BaseView):
     def dispatch_request(self):
         if not current_user.is_admin:
             json_data = {
-                'failure-message' : 'User does not have permission to generate content',
+                'failure-message' : 'User does not have permission to access this resource',
             }
             return jsonify(json_data), 400
+
+
+    def getAPs(self, interface_name):
+        bus = dbus.SystemBus()
+
+        manager_bus_object = bus.get_object(
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager")
+
+        manager = dbus.Interface(
+            manager_bus_object,
+            "org.freedesktop.NetworkManager")
+
+        manager_props = dbus.Interface(
+            manager_bus_object,
+            "org.freedesktop.DBus.Properties")
+
+
+        # Enable Wireless. If Wireless is already enabled, this does nothing.
+        wifi_enabled = manager_props.Get(
+            "org.freedesktop.NetworkManager",
+            "WirelessEnabled")
+
+        if not wifi_enabled:
+            app.logger.warning('Enabling WiFi')
+            manager_props.Set(
+                "org.freedesktop.NetworkManager",
+                "WirelessEnabled",
+                True)
+
+            # Give the WiFi adapter some time to scan for APs. This is absolutely
+            # the wrong way to do it, and the program should listen for
+            # AccessPointAdded() signals, but it will do.
+            time.sleep(10)
+
+
+        device_path = manager.GetDeviceByIpIface(interface_name)
+        device = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", device_path),
+            "org.freedesktop.NetworkManager.Device.Wireless"
+        )
+
+
+        accesspoints_paths_list = device.GetAccessPoints()
+
+        ap_list = list()
+        for ap_path in accesspoints_paths_list:
+            ap_props = dbus.Interface(
+                bus.get_object("org.freedesktop.NetworkManager", ap_path),
+                "org.freedesktop.DBus.Properties"
+            )
+
+            ap_ssid = ap_props.Get(
+                "org.freedesktop.NetworkManager.AccessPoint",
+                "Ssid")
+
+            str_ap_ssid = "".join(chr(i) for i in ap_ssid)
+            app.logger.info("Found SSID = %s", ap_path, str_ap_ssid)
+
+            ap_list.append([
+                str(ap_path), str_ap_ssid
+            ])
+
+
+        return ap_list
+
+
+
+    def connectAP(self, interface_name, ap_path, psk):
+        bus = dbus.SystemBus()
+
+        manager_bus_object = bus.get_object(
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager")
+
+        manager = dbus.Interface(
+            manager_bus_object,
+            "org.freedesktop.NetworkManager")
+
+
+        device_path = manager.GetDeviceByIpIface(interface_name)
+        #device = dbus.Interface(
+        #    bus.get_object("org.freedesktop.NetworkManager", device_path),
+        #    "org.freedesktop.NetworkManager.Device.Wireless"
+        #)
+
+
+        #ap = dbus.Interface(
+        #    bus.get_object("org.freedesktop.NetworkManager", ap_path),
+        #    "org.freedesktop.NetworkManager.AccessPoint",
+        #)
+
+
+        connection_params = {
+            "802-11-wireless": {
+                "security": "802-11-wireless-security",
+                "powersave": 2,  # disable power saving
+            },
+            "802-11-wireless-security": {
+                "key-mgmt": "wpa-psk",
+                "psk": psk,
+            },
+        }
+
+        # Establish the connection.
+        settings_path, connection_path = manager.AddAndActivateConnection(connection_params, device_path, ap_path)
+        #app.logger.info("settings_path = %s", settings_path)
+        #app.logger.info("connection_path = %s", connection_path)
+
+        connection_props = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", connection_path),
+            "org.freedesktop.DBus.Properties"
+        )
+
+
+        # Wait until connection is established. This may take a few seconds.
+        app.logger.info("Waiting for wireless connection")
+
+
+        state = None
+        for _ in range(10):
+            time.sleep(1.0)
+            # Loop until desired state is detected.
+            #
+            # A timeout should be implemented here, otherwise the program will
+            # get stuck if connection fails.
+            #
+            # IF PASSWORD IS BAD, NETWORK MANAGER WILL DISPLAY A QUERY DIALOG!
+            #
+            # Also, if connection is disconnected at this point, the Get()
+            # method will raise an org.freedesktop.DBus.Error.UnknownMethod
+            # exception. This should also be anticipated.
+            try:
+                state = connection_props.Get(
+                    "org.freedesktop.NetworkManager.Connection.Active",
+                    "State")
+            except dbus.exceptions.DBusException:
+                app.logger.error('The wireless password may not have been correct')
+                raise ConnectionFailure('The wireless password may not have been correct')
+
+            if int(state) == self.nm_conn_states['Active']:
+                app.logger.warning("Wireless onnection established!")
+                break
+        else:
+            app.logger.error('Wireless connection failed')
+            raise ConnectionFailure('Wireless connection failed')
+
 
 
 class AstroPanelView(TemplateView):

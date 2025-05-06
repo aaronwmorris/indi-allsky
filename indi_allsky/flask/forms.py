@@ -7021,7 +7021,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
     WIFI_DEVICES_SELECT        = SelectField('Wi-Fi Devices', choices=[], validators=[])
 
 
-    nm_conn_states = {
+    nm_conn_states_str = {
         0 : 'Unknown',
         1 : 'Activating',
         2 : 'Active',
@@ -7135,7 +7135,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                                        dbus_interface=dbus.PROPERTIES_IFACE)
 
             try:
-                conn_state = self.nm_conn_states[int(conn_state_enum)]
+                conn_state = self.nm_conn_states_str[int(conn_state_enum)]
             except KeyError:
                 conn_state = 'UNDEFINED'
 

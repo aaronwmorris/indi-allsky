@@ -33,3 +33,7 @@ class BadImage(Exception):
 
 class KeogramMismatchException(Exception):
     pass
+
+
+class ConnectionFailure(Exception):
+    pass
