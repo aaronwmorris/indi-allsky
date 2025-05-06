@@ -7280,7 +7280,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
             if conn_path == '/':
                 # this usually means a connection is inactive or not defined
-                desc = '{0:s}'.format(str(device_int))
+                desc = '{0:s} [Not Active]'.format(str(device_int))
             else:
                 conn = bus.get_object("org.freedesktop.NetworkManager",
                                       conn_path)
