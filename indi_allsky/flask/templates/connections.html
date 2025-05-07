@@ -56,6 +56,44 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_connections.SSID_PSK.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_connections.SSID_PSK(class='form-control bg-secondary') }}
+            <div id="SSID_PSK-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_connections.HOTSPOT_SSID.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_connections.HOTSPOT_SSID(class='form-control bg-secondary') }}
+            <div id="HOTSPOT_SSID-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_connections.HOTSPOT_PSK.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_connections.HOTSPOT_PSK(class='form-control bg-secondary') }}
+            <div id="HOTSPOT_PSK-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
     </form>
 
 </div>
@@ -95,6 +133,13 @@ $('#scan-button').on('click', function() {
             $('#SSID_SELECT').removeAttr('disabled');
             $('#SSID_SELECT').removeClass('bg-dark');
             $('#SSID_SELECT').removeClass('text-secondary');
+
+            $('#SSID_PSK').removeAttr('readonly');
+            $('#SSID_PSK').removeAttr('disabled');
+            $('#SSID_PSK').removeClass('bg-dark');
+            $('#SSID_PSK').removeClass('text-secondary');
+
+
             $("#SSID_SELECT").empty();
 
             rdata.forEach(item => {
@@ -114,8 +159,15 @@ $('#scan-button').on('click', function() {
 
 
 function init() {
+    $('#SSID_SELECT').attr('readonly', true);
+    $('#SSID_SELECT').attr('disabled', true);
     $('#SSID_SELECT').addClass('bg-dark');
     $('#SSID_SELECT').addClass('text-secondary');
+
+    $('#SSID_PSK').attr('readonly', true);
+    $('#SSID_PSK').attr('disabled', true);
+    $('#SSID_PSK').addClass('bg-dark');
+    $('#SSID_PSK').addClass('text-secondary');
 }
 
 $( document ).ready(function() {

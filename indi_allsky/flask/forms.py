@@ -7019,7 +7019,10 @@ class IndiAllskyLongTermKeogramForm(FlaskForm):
 class IndiAllskyConnectionsManagerForm(FlaskForm):
     CONNECTIONS_SELECT         = SelectField('Connection', choices=[], validators=[])
     WIFI_DEVICES_SELECT        = SelectField('Wi-Fi Devices', choices=[], validators=[])
-    SSID_SELECT                = SelectField('SSID', choices=[], validators=[], render_kw={'readonly' : True, 'disabled' : 'disabled'})
+    SSID_SELECT                = SelectField('SSID', choices=[], validators=[])
+    SSID_PSK                   = PasswordField('PSK', widget=PasswordInput(hide_value=False), validators=[], render_kw={'autocomplete' : 'new-password'})
+    HOTSPOT_SSID               = StringField('Hotspot SSID', default='indi-allsky Hotspot', validators=[])
+    HOTSPOT_PSK                = PasswordField('Hotspot PSK', widget=PasswordInput(hide_value=False), validators=[], render_kw={'autocomplete' : 'new-password'})
 
 
     nm_conn_states_str = {
