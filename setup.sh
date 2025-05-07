@@ -1868,6 +1868,8 @@ fi
 
 [[ -f "$TMP_POLKIT" ]] && rm -f "$TMP_POLKIT"
 
+sudo systemctl restart polkit
+
 
 echo "**** Ensure user is a member of the systemd-journal group ****"
 sudo usermod -a -G systemd-journal "$USER"
