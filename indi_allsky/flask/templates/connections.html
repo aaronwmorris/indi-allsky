@@ -241,9 +241,9 @@ $('#delete-button').on('click', function() {
     }
 
 
-    $("#deactivate-button").attr("class", "btn btn-warning");
-    $("#deactivate-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Dectivate</span>'
+    $("#delete-button").attr("class", "btn btn-warning");
+    $("#delete-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Delete</span>'
     );
 
 
@@ -251,6 +251,30 @@ $('#delete-button').on('click', function() {
         'COMMAND' : 'delete',
         'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
     };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_connections_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#delete-button").html(
+              'Delete'
+            );
+        },
+        error: function(rdata){
+            $("#delete-button").attr("class", "btn btn-danger");
+            $("#delete-button").html(
+              'Deactivate'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
+        },
+    });
 });
 
 

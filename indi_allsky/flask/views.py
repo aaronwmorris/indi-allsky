@@ -8174,6 +8174,9 @@ class AjaxConnectionsManagerView(BaseView):
         if command == 'deactivate':
             connection_uuid = str(request.json['CONNECTION'])
             return self.deactivateConnection(connection_uuid)
+        elif command == 'delete':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.deleteConnection(connection_uuid)
 
         elif command == 'activate':
             connection_uuid = str(request.json['CONNECTION'])
@@ -8349,6 +8352,43 @@ class AjaxConnectionsManagerView(BaseView):
 
         return jsonify({
             'success-message' : 'Connection deactivated',
+        })
+
+
+    def deleteConnection(self, connection_uuid):
+        bus = dbus.SystemBus()
+
+
+        try:
+            nm_settings = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager/Settings")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        try:
+            settings_path = self.getSettingsPath(bus, nm_settings, connection_uuid)
+        except NotFound:
+            app.logger.error('Connection settings not found')
+            return jsonify({
+                'failure-message' : 'Connection settings not found',
+            }), 400
+
+
+        settings = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", settings_path),
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings.Delete()
+
+
+        return jsonify({
+            'success-message' : 'Connection deleted',
         })
 
 
