@@ -8593,26 +8593,21 @@ class AjaxConnectionsManagerView(BaseView):
 
 
         device_path = manager.GetDeviceByIpIface(interface_name)
-        #device = dbus.Interface(
-        #    bus.get_object("org.freedesktop.NetworkManager", device_path),
-        #    "org.freedesktop.NetworkManager.Device.Wireless"
-        #)
-
-
-        #ap = dbus.Interface(
-        #    bus.get_object("org.freedesktop.NetworkManager", ap_path),
-        #    "org.freedesktop.NetworkManager.AccessPoint",
-        #)
 
 
         connection_params = {
-            "802-11-wireless": {
+            'connection' : {
+                'autoconnect' : True,
+                'autoconnect-priority' : 0,
+                'autoconnect-retries' : 3,
+            },
+            '802-11-wireless': {
                 "security": "802-11-wireless-security",
                 "powersave": 2,  # disable power saving
             },
-            "802-11-wireless-security": {
-                "key-mgmt": "wpa-psk",
-                "psk": psk,
+            '802-11-wireless-security': {
+                'key-mgmt': 'wpa-psk',
+                'psk': psk,
             },
         }
 
