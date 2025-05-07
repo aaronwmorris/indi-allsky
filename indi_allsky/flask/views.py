@@ -8264,7 +8264,7 @@ class AjaxConnectionsManagerView(BaseView):
                 "Frequency")
 
             str_ap_ssid = "".join(chr(i) for i in ap_ssid)
-            app.logger.info("Found SSID = %s", ap_path, str_ap_ssid)
+            app.logger.info("Found SSID: %s", str_ap_ssid)
 
 
             if float(ap_frequency) > 5999:
