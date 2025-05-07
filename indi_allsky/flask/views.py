@@ -8352,7 +8352,7 @@ class AjaxConnectionsManagerView(BaseView):
 
 
         state = None
-        for _ in range(10):
+        for _ in range(30):
             time.sleep(1.0)
             # Loop until desired state is detected.
             #
@@ -8368,9 +8368,10 @@ class AjaxConnectionsManagerView(BaseView):
                 state = connection_props.Get(
                     "org.freedesktop.NetworkManager.Connection.Active",
                     "State")
-            except dbus.exceptions.DBusException:
-                app.logger.error('The wireless password may not have been correct')
-                raise ConnectionFailure('The wireless password may not have been correct')
+                #app.logger.info('Connection state: %d', int(state))
+            except dbus.exceptions.DBusException as e:
+                app.logger.error('D-Bus Exception: %s (psk may be incorrect)', str(e))
+                raise ConnectionFailure('The wireless PSK may be incorrect')
 
             if int(state) == self.nm_conn_states['Active']:
                 app.logger.warning("Wireless onnection established!")
