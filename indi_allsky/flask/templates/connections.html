@@ -52,7 +52,10 @@ var camera_id = {{ camera_id }};
             {{ form_connections.SSID_SELECT(class='form-select bg-secondary') }}
             <div id="SSID_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-1">
+            <button id="connect-button" class="btn btn-success">Connect</button>
+        </div>
+        <div class="col-sm-5">
         </div>
     </div>
 
@@ -107,7 +110,7 @@ $('#scan-button').on('click', function() {
 
     $("#scan-button").attr("class", "btn btn-primary");
     $("#scan-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Loading</span>'
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Scanning</span>'
     );
 
 
@@ -139,10 +142,13 @@ $('#scan-button').on('click', function() {
             $('#SSID_PSK').removeClass('bg-dark');
             $('#SSID_PSK').removeClass('text-secondary');
 
+            $('#connect-button').removeAttr('disabled');
+            $("#connect-button").attr("class", "btn btn-success");
+
 
             $("#SSID_SELECT").empty();
 
-            rdata.forEach(item => {
+            rdata['data'].forEach(item => {
                 $("#SSID_SELECT").append($('<option />', {'value' : item['path']}).text(item['ssid']));
             });
         },
@@ -150,6 +156,43 @@ $('#scan-button').on('click', function() {
             $("#scan-button").attr("class", "btn btn-danger");
             $("#scan-button").html(
               'Scan'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+        },
+    });
+});
+
+
+$('#connect-button').on('click', function() {
+    $("#connect-button").attr("class", "btn btn-primary");
+    $("#connect-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Connecting</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'connectap',
+        'AP_PATH' : $('#SSID_SELECT').val(),
+        'PSK' : $('#SSID_PSK').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_connections_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#connect-button").attr("class", "btn btn-success");
+            $("#connect-button").html(
+              'Connect'
+            );
+        },
+        error: function(rdata){
+            $("#connect-button").attr("class", "btn btn-danger");
+            $("#connect-button").html(
+              'Connect'
             );
 
             var errors = JSON.parse(rdata.responseText);
@@ -168,6 +211,9 @@ function init() {
     $('#SSID_PSK').attr('disabled', true);
     $('#SSID_PSK').addClass('bg-dark');
     $('#SSID_PSK').addClass('text-secondary');
+
+    $('#connect-button').attr('disabled', true);
+    $("#connect-button").attr("class", "btn btn-secondary");
 }
 
 $( document ).ready(function() {

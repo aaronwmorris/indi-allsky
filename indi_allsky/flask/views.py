@@ -8175,7 +8175,25 @@ class AjaxConnectionsManagerView(BaseView):
 
             ap_data = self.scanAPs(interface)
 
-            return jsonify(ap_data)
+            return jsonify({
+                'success-message' : 'Scan Successful',
+                'data' : ap_data,
+            })
+        elif command == 'connectap':
+            interface = str(request.json['INTERFACE'])
+            ap_path = str(request.json['AP_PATH'])
+            psk = str(request.json['PSK'])
+
+            try:
+                self.connectAP(self, interface, ap_path, psk)
+            except ConnectionFailure as e:
+                return jsonify({
+                    'error-message' : 'Connection Failure: {0:s}'.format(str(e)),
+                }), 400
+
+            return jsonify({
+                'success-message' : 'Connection Successful',
+            })
         else:
             json_data = {
                 'failure-message' : 'Unknown command',
