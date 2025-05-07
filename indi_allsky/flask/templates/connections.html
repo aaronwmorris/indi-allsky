@@ -87,6 +87,21 @@ var camera_id = {{ camera_id }};
             {{ form_connections.HOTSPOT_SSID(class='form-control bg-secondary') }}
             <div id="HOTSPOT_SSID-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
+        <div class="col-sm-1">
+            <button id="create-hotspot-button" class="btn btn-success">Create</button>
+        </div>
+        <div class="col-sm-5">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_connections.HOTSPOT_BAND.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_connections.HOTSPOT_BAND(class='form-control bg-secondary') }}
+            <div id="HOTSPOT_BAND-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
         <div class="col-sm-6">
         </div>
     </div>
@@ -380,6 +395,51 @@ $('#connect-button').on('click', function() {
             $("#connect-button").attr("class", "btn btn-danger");
             $("#connect-button").html(
               'Connect'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
+        },
+    });
+});
+
+
+$('#create-hotspot-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+    $("#create-hotspot-button").attr("class", "btn btn-success");
+    $("#create-hotspot-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Create</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'createhotspot',
+        'INTERFACE' : $('#WIFI_DEVICES_SELECT').val(),
+        'SSID' : $('#HOTSPOT_SSID').val(),
+        'BAND' : $('#HOTSPOT_BAND').val(),
+        'PSK' : $('#HOTSPOT_PSK').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_connections_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#create-hotspot-button").attr("class", "btn btn-success");
+            $("#create-hotspot-button").html(
+              'Create'
+            );
+        },
+        error: function(rdata){
+            $("#create-hotspot-button").attr("class", "btn btn-danger");
+            $("#create-hotspot-button").html(
+              'Create'
             );
 
             var errors = JSON.parse(rdata.responseText);

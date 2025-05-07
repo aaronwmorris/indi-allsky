@@ -8213,6 +8213,14 @@ class AjaxConnectionsManagerView(BaseView):
             return jsonify({
                 'success-message' : 'Connection Successful',
             })
+
+        elif command == 'createhotspot':
+            interface = str(request.json['INTERFACE'])
+            ssid = str(request.json['SSID'])
+            band = str(request.json['BAND'])
+            psk = str(request.json['PSK'])
+
+            return self.createHotspot(interface, ssid, band, psk)
         else:
             json_data = {
                 'failure-message' : 'Unknown command',
@@ -8597,13 +8605,14 @@ class AjaxConnectionsManagerView(BaseView):
 
         connection_params = {
             'connection' : {
+                'type' : '802-11-wireless',
                 'autoconnect' : True,
                 'autoconnect-priority' : 0,
                 'autoconnect-retries' : 3,
             },
             '802-11-wireless': {
-                "security": "802-11-wireless-security",
-                "powersave": 2,  # disable power saving
+                'security': '802-11-wireless-security',
+                'powersave': 2,  # disable power saving
             },
             '802-11-wireless-security': {
                 'key-mgmt': 'wpa-psk',
@@ -8672,6 +8681,75 @@ class AjaxConnectionsManagerView(BaseView):
             app.logger.error('Wireless connection failed')
             raise ConnectionFailure('Wireless connection failed')
 
+
+    def createHotspot(self, interface_name, ssid, band, psk):
+        bus = dbus.SystemBus()
+
+        nm_settings = bus.get_object(
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager/Settings")
+
+        settings_manager = dbus.Interface(
+            nm_settings,
+            "org.freedesktop.NetworkManager.Settings")
+
+
+        #device_path = manager.GetDeviceByIpIface(interface_name)
+
+
+        connection_params = {
+            'connection' : {
+                'type' : '802-11-wireless',
+                'autoconnect' : True,
+                'autoconnect-priority' : -99,
+                'id' : ssid,
+            },
+            '802-11-wireless': {
+                'mode' : 'ap',
+                'ssid' : dbus.ByteArray(ssid.encode('utf-8')),
+                'security': '802-11-wireless-security',
+                'powersave': 2,  # disable power saving
+                'band' : band,
+            },
+            '802-11-wireless-security': {
+                'key-mgmt': 'wpa-psk',
+                'psk': psk,
+                'proto' : ['rsn'],
+                'group' : ['ccmp'],
+                'pairwise' : ['ccmp'],
+            },
+            'ipv4' : {
+                'method' : 'link-local',
+                #'addresses' : [{
+                #    'address' : '10.42.0.1',
+                #    'prefix' : 24,
+                #}],
+                #'address-data' : dbus.Array([
+                #    {
+                #        'address' : '10.42.0.1',
+                #        'prefix' : 24,
+                #    }
+                #], signature=dbus.Signature('a{sv}')),
+            },
+            'ipv6' : {
+                'method' : 'link-local',
+            },
+        }
+
+
+        try:
+            # Create the connection.
+            settings_manager.AddConnection(connection_params)
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        return jsonify({
+            'success-message' : 'Hotspot Created',
+        })
 
 
 class AstroPanelView(TemplateView):
