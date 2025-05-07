@@ -8341,6 +8341,7 @@ class AjaxConnectionsManagerView(BaseView):
             app.logger.error('D-Bus Exception: %s', str(e))
             raise ConnectionFailure(str(e)) from e
 
+
         connection_props = dbus.Interface(
             bus.get_object("org.freedesktop.NetworkManager", connection_path),
             "org.freedesktop.DBus.Properties"
@@ -8371,6 +8372,17 @@ class AjaxConnectionsManagerView(BaseView):
                 #app.logger.info('Connection state: %d', int(state))
             except dbus.exceptions.DBusException as e:
                 app.logger.error('D-Bus Exception: %s (psk may be incorrect)', str(e))
+
+
+                ### remove the connection
+                #manager.DeactivateConnection(connection_path)
+                settings = dbus.Interface(
+                    bus.get_object("org.freedesktop.NetworkManager", settings_path),
+                    "org.freedesktop.NetworkManager.Settings.Connection")
+
+                settings.Delete()
+
+
                 raise ConnectionFailure('The wireless PSK may be incorrect')
 
             if int(state) == self.nm_conn_states['Active']:
