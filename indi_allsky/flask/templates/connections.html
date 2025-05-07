@@ -37,7 +37,10 @@ var camera_id = {{ camera_id }};
             {{ form_connections.WIFI_DEVICES_SELECT(class='form-select bg-secondary') }}
             <div id="WIFI_DEVICES_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-1">
+            <button id="scan-button" class="btn btn-success">Scan</button>
+        </div>
+        <div class="col-sm-5">
         </div>
     </div>
 
@@ -51,10 +54,6 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-6">
         </div>
-    </div>
-
-    <div class="col-sm-1">
-        <button id="scan-button" class="btn btn-success">Scan</button>
     </div>
 
     </form>
