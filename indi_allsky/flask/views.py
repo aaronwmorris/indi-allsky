@@ -115,6 +115,7 @@ from .youtube_views import YoutubeRevokeAuthView
 
 from ..exceptions import ConfigSaveException
 from ..exceptions import ConnectionFailure
+from ..exceptions import NotFound
 
 
 bp_allsky = Blueprint(
@@ -8170,7 +8171,11 @@ class AjaxConnectionsManagerView(BaseView):
         command = str(request.json['COMMAND'])
 
 
-        if command == 'scanap':
+        if command == 'deactivate':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.deactivateConnection(connection_uuid)
+
+        elif command == 'scanap':
             interface = str(request.json['INTERFACE'])
 
             try:
@@ -8205,6 +8210,124 @@ class AjaxConnectionsManagerView(BaseView):
                 'failure-message' : 'Unknown command',
             }
             return jsonify(json_data), 400
+
+
+    def deactivateConnection(self, connection_uuid):
+        bus = dbus.SystemBus()
+
+
+        try:
+            nm_settings = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager/Settings")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        try:
+            self.getSettingsPath(bus, nm_settings, connection_uuid)
+        except NotFound:
+            app.logger.error('Connection settings not found')
+            return jsonify({
+                'failure-message' : 'Connection settings not found',
+            }), 400
+
+
+        nm = bus.get_object(
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager")
+
+
+        try:
+            conn_path = self.getActiveConnection(bus, nm, connection_uuid)
+        except NotFound:
+            app.logger.error('Active connection not found')
+            return jsonify({
+                'failure-message' : 'Active connection not found',
+            }), 400
+
+
+        #conn = bus.get_object(
+        #    "org.freedesktop.NetworkManager",
+        #    conn_path)
+
+
+        manager = dbus.Interface(
+            nm,
+            "org.freedesktop.NetworkManager")
+
+
+        try:
+            manager.DeactivateConnection(conn_path)
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'Failed to deactivate connection: {0:s}'.format(str(e)),
+            }), 400
+
+
+        return jsonify({
+            'success-message' : 'Connection deactivated',
+        })
+
+
+    def getSettingsPath(self, bus, nm_settings, connection_uuid):
+        settingspath_list = nm_settings.Get(
+            "org.freedesktop.NetworkManager.Settings",
+            "Connections",
+            dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+        for settings_path in settingspath_list:
+            settings = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                settings_path)
+
+
+            settings_connection = dbus.Interface(
+                settings,
+                "org.freedesktop.NetworkManager.Settings.Connection")
+
+            settings_dict = settings_connection.GetSettings()
+            #app.logger.info('Settings: %s', settings_dict)
+
+            settings_uuid = str(settings_dict['connection']['uuid'])
+
+
+            if settings_uuid == connection_uuid:
+                return settings_path
+        else:
+            raise NotFound('Connection settings not found')
+
+
+    def getActiveConnection(self, bus, nm, connection_uuid):
+        # get active connections
+        connpath_list = nm.Get(
+            "org.freedesktop.NetworkManager",
+            "ActiveConnections",
+            dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+        for conn_path in connpath_list:
+            conn = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                conn_path)
+
+
+            conn_uuid = conn.Get(
+                "org.freedesktop.NetworkManager.Connection.Active",
+                "Uuid",
+                dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+            if str(conn_uuid) == connection_uuid:
+                return conn_path
+
+        else:
+            raise NotFound('Connection settings not found')
 
 
     def scanAPs(self, interface_name):

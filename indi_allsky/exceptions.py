@@ -37,3 +37,7 @@ class KeogramMismatchException(Exception):
 
 class ConnectionFailure(Exception):
     pass
+
+
+class NotFound(Exception):
+    pass

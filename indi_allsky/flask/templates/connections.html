@@ -23,7 +23,13 @@ var camera_id = {{ camera_id }};
             {{ form_connections.CONNECTIONS_SELECT(class='form-select bg-secondary') }}
             <div id="CONNECTIONS_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-3">
+            <button id="activate-button" class="btn btn-success">Activate</button>
+            <button id="deactivate-button" class="btn btn-warning">Deactivate</button>
+            <button id="delete-button" class="btn btn-warning">Delete</button>
+        </div>
+        <div class="col-sm-3">
+            <input class="form-check-input" id="CONN_CONFIRM1" name="CONN_CONFIRM1" type="checkbox" value="y"> Confirm
         </div>
     </div>
 
@@ -38,7 +44,7 @@ var camera_id = {{ camera_id }};
             <div id="WIFI_DEVICES_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-1">
-            <button id="scan-button" class="btn btn-success">Scan</button>
+            <button id="scan-button" class="btn btn-primary">Scan</button>
         </div>
         <div class="col-sm-5">
         </div>
@@ -110,17 +116,133 @@ var camera_id = {{ camera_id }};
 
 <script type="text/javascript">
 
+$('#activate-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+
+    if (! $("#CONN_CONFIRM1").prop('checked')) {
+        console.log('Confirm checkbox not checked');
+        return;
+    }
+    $("#CONN_CONFIRM1").prop('checked', false);
+
+
+    if ( $('#CONNECTIONS_SELECT').val() == "" ){
+        return;
+    }
+
+    $("#activate-button").attr("class", "btn btn-success");
+    $("#activate-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Activate</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'activate',
+        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
+    };
+});
+
+
+$('#deactivate-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+
+    if (! $("#CONN_CONFIRM1").prop('checked')) {
+        console.log('Confirm checkbox not checked');
+        return;
+    }
+    $("#CONN_CONFIRM1").prop('checked', false);
+
+
+    if ( $('#CONNECTIONS_SELECT').val() == "" ){
+        return;
+    }
+
+
+    $("#deactivate-button").attr("class", "btn btn-warning");
+    $("#deactivate-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Dectivate</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'deactivate',
+        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_connections_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#deactivate-button").html(
+              'Deactivate'
+            );
+        },
+        error: function(rdata){
+            $("#deactivate-button").attr("class", "btn btn-danger");
+            $("#deactivate-button").html(
+              'Deactivate'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
+        },
+    });
+
+});
+
+
+$('#delete-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+
+    if (! $("#CONN_CONFIRM1").prop('checked')) {
+        console.log('Confirm checkbox not checked');
+        return;
+    }
+    $("#CONN_CONFIRM1").prop('checked', false);
+
+
+    if ( $('#CONNECTIONS_SELECT').val() == "" ){
+        return;
+    }
+
+
+    $("#deactivate-button").attr("class", "btn btn-warning");
+    $("#deactivate-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Dectivate</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'delete',
+        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
+    };
+});
+
+
 $('#scan-button').on('click', function() {
     $('#success-message').css({'display' : 'none'});
     $('#failure-message').css({'display' : 'none'});
+
 
     if ( $('#WIFI_DEVICES_SELECT').val() == "" ){
         return false;
     }
 
+
     $("#scan-button").attr("class", "btn btn-primary");
     $("#scan-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Scanning</span>'
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Scan</span>'
     );
 
 
@@ -136,7 +258,7 @@ $('#scan-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#scan-button").attr("class", "btn btn-success");
+            $("#scan-button").attr("class", "btn btn-primary");
             $("#scan-button").html(
               'Scan'
             );
@@ -181,9 +303,9 @@ $('#connect-button').on('click', function() {
     $('#success-message').css({'display' : 'none'});
     $('#failure-message').css({'display' : 'none'});
 
-    $("#connect-button").attr("class", "btn btn-primary");
+    $("#connect-button").attr("class", "btn btn-success");
     $("#connect-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Connecting</span>'
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Connect</span>'
     );
 
 
@@ -234,6 +356,8 @@ function init() {
 
     $('#connect-button').attr('disabled', true);
     $("#connect-button").attr("class", "btn btn-secondary");
+
+    $("#CONN_CONFIRM1").prop('checked', false);
 }
 
 $( document ).ready(function() {
