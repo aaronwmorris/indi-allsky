@@ -7153,15 +7153,18 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                 ipv4config_path)
 
 
-            address_data = ipv4config.Get("org.freedesktop.NetworkManager.IP4Config",
-                                          "AddressData",
-                                          dbus_interface=dbus.PROPERTIES_IFACE)
-
             conn_address_list = list()
-            for address in address_data:
-                #address_str = '{0:s}/{1:d}'.format(address['address'], address['prefix'])
-                address_str = '{0:s}'.format(str(address['address']))
-                conn_address_list.append(address_str)
+            try:
+                address_data = ipv4config.Get("org.freedesktop.NetworkManager.IP4Config",
+                                              "AddressData",
+                                              dbus_interface=dbus.PROPERTIES_IFACE)
+
+                for address in address_data:
+                    #address_str = '{0:s}/{1:d}'.format(address['address'], address['prefix'])
+                    address_str = '{0:s}'.format(str(address['address']))
+                    conn_address_list.append(address_str)
+            except dbus.exceptions.DBusException as e:
+                app.logger.error('D-Bus Exception: %s', str(e))
 
 
             devicespath_list = conn.Get("org.freedesktop.NetworkManager.Connection.Active",

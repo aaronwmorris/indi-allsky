@@ -150,14 +150,14 @@ $('#activate-button').on('click', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#deactivate-button").html(
+            $("#activate-button").html(
               'Activate'
             );
         },
         error: function(rdata){
             $("#activate-button").attr("class", "btn btn-danger");
             $("#activate-button").html(
-              'Deactivate'
+              'Activate'
             );
 
             var errors = JSON.parse(rdata.responseText);

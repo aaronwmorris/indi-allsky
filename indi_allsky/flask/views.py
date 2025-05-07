@@ -8174,6 +8174,7 @@ class AjaxConnectionsManagerView(BaseView):
         if command == 'deactivate':
             connection_uuid = str(request.json['CONNECTION'])
             return self.deactivateConnection(connection_uuid)
+
         elif command == 'delete':
             connection_uuid = str(request.json['CONNECTION'])
             return self.deleteConnection(connection_uuid)
@@ -8222,10 +8223,11 @@ class AjaxConnectionsManagerView(BaseView):
     def activateConnection(self, connection_uuid):
         bus = dbus.SystemBus()
 
+
         try:
-            nm = bus.get_object(
+            nm_settings = bus.get_object(
                 "org.freedesktop.NetworkManager",
-                "/org/freedesktop/NetworkManager")
+                "/org/freedesktop/NetworkManager/Settings")
         except dbus.exceptions.DBusException as e:
             app.logger.error('D-Bus Exception: %s', str(e))
             return jsonify({
@@ -8234,26 +8236,68 @@ class AjaxConnectionsManagerView(BaseView):
 
 
         try:
-            conn_path = self.getConnection(bus, nm, connection_uuid)
+            settings_path = self.getSettingsPath(bus, nm_settings, connection_uuid)
         except NotFound:
-            app.logger.error('Connection not found')
+            app.logger.error('Connection settings not found')
             return jsonify({
-                'failure-message' : 'Connection not found',
+                'failure-message' : 'Connection settings not found',
             }), 400
 
 
-        nm_interface = dbus.Interface(
+        nm = bus.get_object(
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager")
+
+        manager = dbus.Interface(
             nm,
             "org.freedesktop.NetworkManager")
 
 
+        #settings = dbus.Interface(
+        #    bus.get_object("org.freedesktop.NetworkManager", settings_path),
+        #    "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+
         try:
-            device_path = nm_interface.GetDeviceByIpIface("xxx")
-            nm_interface.ActivateConnection(conn_path, device_path, "/")
+            #device_path = nm_interface.GetDeviceByIpIface("xxx")
+            connection_path = manager.ActivateConnection(settings_path, '/', '/')
         except dbus.exceptions.DBusException as e:
             app.logger.error('D-Bus Exception: %s', str(e))
             return jsonify({
                 'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        connection_props = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", connection_path),
+            "org.freedesktop.DBus.Properties"
+        )
+
+
+        # Wait until connection is established. This may take a few seconds.
+        app.logger.info("Waiting for connection")
+
+
+        state = None
+        for _ in range(30):
+            time.sleep(1.0)
+            # Loop until desired state is detected.
+            try:
+                state = connection_props.Get(
+                    "org.freedesktop.NetworkManager.Connection.Active",
+                    "State")
+                #app.logger.info('Connection state: %d', int(state))
+            except dbus.exceptions.DBusException as e:
+                app.logger.error('D-Bus Exception: %s', str(e))
+
+            if int(state) == self.nm_conn_states['Active']:
+                app.logger.warning("Connection established!")
+                break
+        else:
+            app.logger.error('Connection failed to activate')
+            return jsonify({
+                'failure-message' : 'Connection failed to activate',
             }), 400
 
 
@@ -8627,7 +8671,7 @@ class AjaxConnectionsManagerView(BaseView):
                 raise ConnectionFailure('The wireless PSK may be incorrect')
 
             if int(state) == self.nm_conn_states['Active']:
-                app.logger.warning("Wireless onnection established!")
+                app.logger.warning("Wireless connection established!")
                 break
         else:
             app.logger.error('Wireless connection failed')
