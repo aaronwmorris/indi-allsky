@@ -142,6 +142,30 @@ $('#activate-button').on('click', function() {
         'COMMAND' : 'activate',
         'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
     };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_connections_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#deactivate-button").html(
+              'Activate'
+            );
+        },
+        error: function(rdata){
+            $("#activate-button").attr("class", "btn btn-danger");
+            $("#activate-button").html(
+              'Deactivate'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
+        },
+    });
 });
 
 

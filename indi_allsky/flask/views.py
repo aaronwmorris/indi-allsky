@@ -8175,6 +8175,10 @@ class AjaxConnectionsManagerView(BaseView):
             connection_uuid = str(request.json['CONNECTION'])
             return self.deactivateConnection(connection_uuid)
 
+        elif command == 'activate':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.activateConnection(connection_uuid)
+
         elif command == 'scanap':
             interface = str(request.json['INTERFACE'])
 
@@ -8210,6 +8214,80 @@ class AjaxConnectionsManagerView(BaseView):
                 'failure-message' : 'Unknown command',
             }
             return jsonify(json_data), 400
+
+
+    def activateConnection(self, connection_uuid):
+        bus = dbus.SystemBus()
+
+        try:
+            nm = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        try:
+            conn_path = self.getConnection(bus, nm, connection_uuid)
+        except NotFound:
+            app.logger.error('Connection not found')
+            return jsonify({
+                'failure-message' : 'Connection not found',
+            }), 400
+
+
+        nm_interface = dbus.Interface(
+            nm,
+            "org.freedesktop.NetworkManager")
+
+
+        try:
+            device_path = nm_interface.GetDeviceByIpIface("xxx")
+            nm_interface.ActivateConnection(conn_path, device_path, "/")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        return jsonify({
+            'success-message' : 'Connection Activated',
+        })
+
+
+    def getConnection(self, bus, nm, connection_uuid):
+        nm_settings = bus.get_object(
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager/Settings")
+
+        settings_interface = dbus.Interface(
+            nm_settings,
+            "org.freedesktop.NetworkManager.Settings")
+
+
+        connpath_list = settings_interface.ListConnections()
+
+        for conn_path in connpath_list:
+            conn = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                conn_path)
+
+            properties_interface = dbus.Interface(
+                conn,
+                "org.freedesktop.DBus.Properties")
+
+            conn_properties = properties_interface.GetAll("org.freedesktop.NetworkManager.Settings.Connection")
+            app.logger.info('Properties: %s', conn_properties)
+
+            #if conn_properties["Uuid"] == connection_uuid:
+            #    return conn_path
+
+        else:
+            raise NotFound('Connection not found')
 
 
     def deactivateConnection(self, connection_uuid):
