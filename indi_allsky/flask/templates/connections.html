@@ -173,6 +173,7 @@ $('#connect-button').on('click', function() {
 
     var json_data = {
         'COMMAND' : 'connectap',
+        'INTERFACE' : $('#WIFI_DEVICES_SELECT').val(),
         'AP_PATH' : $('#SSID_SELECT').val(),
         'PSK' : $('#SSID_PSK').val(),
     };

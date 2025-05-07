@@ -8185,7 +8185,7 @@ class AjaxConnectionsManagerView(BaseView):
             psk = str(request.json['PSK'])
 
             try:
-                self.connectAP(self, interface, ap_path, psk)
+                self.connectAP(interface, ap_path, psk)
             except ConnectionFailure as e:
                 return jsonify({
                     'error-message' : 'Connection Failure: {0:s}'.format(str(e)),
@@ -8320,10 +8320,15 @@ class AjaxConnectionsManagerView(BaseView):
             },
         }
 
-        # Establish the connection.
-        settings_path, connection_path = manager.AddAndActivateConnection(connection_params, device_path, ap_path)
-        #app.logger.info("settings_path = %s", settings_path)
-        #app.logger.info("connection_path = %s", connection_path)
+
+        try:
+            # Establish the connection.
+            settings_path, connection_path = manager.AddAndActivateConnection(connection_params, device_path, ap_path)
+            #app.logger.info("settings_path = %s", settings_path)
+            #app.logger.info("connection_path = %s", connection_path)
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            raise ConnectionFailure(str(e)) from e
 
         connection_props = dbus.Interface(
             bus.get_object("org.freedesktop.NetworkManager", connection_path),
