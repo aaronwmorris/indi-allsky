@@ -97,6 +97,13 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row" style="height:100px;">
+        <div class="col-sm-5">
+            <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
+            <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
+        </div>
+    </div>
+
     </form>
 
 </div>
@@ -104,6 +111,9 @@ var camera_id = {{ camera_id }};
 <script type="text/javascript">
 
 $('#scan-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
     if ( $('#WIFI_DEVICES_SELECT').val() == "" ){
         return false;
     }
@@ -159,12 +169,18 @@ $('#scan-button').on('click', function() {
             );
 
             var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
         },
     });
 });
 
 
 $('#connect-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
     $("#connect-button").attr("class", "btn btn-primary");
     $("#connect-button").html(
       '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Connecting</span>'
@@ -197,6 +213,9 @@ $('#connect-button').on('click', function() {
             );
 
             var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
         },
     });
 });

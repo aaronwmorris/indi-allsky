@@ -6088,7 +6088,7 @@ class AjaxTimelapseGeneratorView(BaseView):
         else:
             # this should never happen
             message = {
-                'error-message' : 'Invalid'
+                'failure-message' : 'Invalid'
             }
             return jsonify(message), 400
 
@@ -8173,7 +8173,13 @@ class AjaxConnectionsManagerView(BaseView):
         if command == 'scanap':
             interface = str(request.json['INTERFACE'])
 
-            ap_data = self.scanAPs(interface)
+            try:
+                ap_data = self.scanAPs(interface)
+            except ConnectionFailure as e:
+                return jsonify({
+                    'failure-message' : 'Scan APs Failed: {0:s}'.format(str(e)),
+                }), 400
+
 
             return jsonify({
                 'success-message' : 'Scan Successful',
@@ -8188,7 +8194,7 @@ class AjaxConnectionsManagerView(BaseView):
                 self.connectAP(interface, ap_path, psk)
             except ConnectionFailure as e:
                 return jsonify({
-                    'error-message' : 'Connection Failure: {0:s}'.format(str(e)),
+                    'failure-message' : 'Connect AP Failed: {0:s}'.format(str(e)),
                 }), 400
 
             return jsonify({
@@ -8242,7 +8248,12 @@ class AjaxConnectionsManagerView(BaseView):
         )
 
 
-        accesspoints_paths_list = device.GetAccessPoints()
+        try:
+            accesspoints_paths_list = device.GetAccessPoints()
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            raise ConnectionFailure(str(e)) from e
+
 
         ap_list = list()
         for ap_path in accesspoints_paths_list:
