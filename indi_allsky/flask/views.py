@@ -8248,9 +8248,16 @@ class AjaxConnectionsManagerView(BaseView):
             str_ap_ssid = "".join(chr(i) for i in ap_ssid)
             app.logger.info("Found SSID = %s", ap_path, str_ap_ssid)
 
+
+            if float(ap_frequency) > 3000:
+                ap_frequency_str = '5 GHz'
+            else:
+                ap_frequency_str = '2.4 GHz'
+
+
             ap_list.append({
                 'path' : str(ap_path),
-                'ssid' : '{0:s} [{1:d}] [{2:0.2f}Ghz]'.format(str_ap_ssid, int.from_bytes(str(ap_strength).encode()), float(ap_frequency) / 1000)
+                'ssid' : '{0:s} [{1:d}] [{2:s}]'.format(str_ap_ssid, int.from_bytes(str(ap_strength).encode()), ap_frequency_str)
             })
 
 
