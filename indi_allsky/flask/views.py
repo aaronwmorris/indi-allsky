@@ -8186,6 +8186,11 @@ class AjaxConnectionsManagerView(BaseView):
         elif command == 'scanap':
             interface = str(request.json['INTERFACE'])
 
+            if not interface:
+                return jsonify({
+                    'failure-message' : 'No interface selected',
+                }), 400
+
             try:
                 ap_data = self.scanAPs(interface)
             except ConnectionFailure as e:
@@ -8202,6 +8207,11 @@ class AjaxConnectionsManagerView(BaseView):
             interface = str(request.json['INTERFACE'])
             ap_path = str(request.json['AP_PATH'])
             psk = str(request.json['PSK'])
+
+            if not ap_path:
+                return jsonify({
+                    'failure-message' : 'No AP selected',
+                }), 400
 
             try:
                 self.connectAP(interface, ap_path, psk)
@@ -8220,7 +8230,26 @@ class AjaxConnectionsManagerView(BaseView):
             band = str(request.json['BAND'])
             psk = str(request.json['PSK'])
 
-            assert band in ('bg', 'a')
+            if not interface:
+                return jsonify({
+                    'failure-message' : 'No interface selected',
+                }), 400
+
+            if not ssid:
+                return jsonify({
+                    'failure-message' : 'No SSID data',
+                }), 400
+
+            if band not in ('bg', 'a'):
+                return jsonify({
+                    'failure-message' : 'Invalid band selection',
+                }), 400
+
+            if len(psk) < 8:
+                return jsonify({
+                    'failure-message' : 'PSK must be 8+ characters',
+                }), 400
+
 
             return self.createHotspot(interface, ssid, band, psk)
         else:
