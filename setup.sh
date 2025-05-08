@@ -662,6 +662,7 @@ if [[ "$DISTRO" == "debian_12" ]]; then
         sqlite3 \
         libgpiod2 \
         i2c-tools \
+        network-manager \
         polkitd \
         dbus-user-session
 
@@ -1099,6 +1100,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         sqlite3 \
         libgpiod2 \
         i2c-tools \
+        network-manager \
         polkitd \
         dbus-user-session
 
