@@ -168,6 +168,13 @@ $('#activate-button').on('click', function() {
             $("#activate-button").html(
               'Activate'
             );
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
+
         },
         error: function(rdata){
             $("#activate-button").attr("class", "btn btn-danger");
@@ -222,6 +229,12 @@ $('#deactivate-button').on('click', function() {
             $("#deactivate-button").html(
               'Deactivate'
             );
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
         },
         error: function(rdata){
             $("#deactivate-button").attr("class", "btn btn-danger");
@@ -277,6 +290,12 @@ $('#delete-button').on('click', function() {
             $("#delete-button").html(
               'Delete'
             );
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
         },
         error: function(rdata){
             $("#delete-button").attr("class", "btn btn-danger");
@@ -390,6 +409,12 @@ $('#connect-button').on('click', function() {
             $("#connect-button").html(
               'Connect'
             );
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
         },
         error: function(rdata){
             $("#connect-button").attr("class", "btn btn-danger");
@@ -435,6 +460,12 @@ $('#create-hotspot-button').on('click', function() {
             $("#create-hotspot-button").html(
               'Create'
             );
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
         },
         error: function(rdata){
             $("#create-hotspot-button").attr("class", "btn btn-danger");
