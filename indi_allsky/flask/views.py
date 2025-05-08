@@ -102,7 +102,7 @@ from .forms import IndiAllskyCameraSimulatorForm
 from .forms import IndiAllskyFocusControllerForm
 from .forms import IndiAllskyMiniTimelapseForm
 from .forms import IndiAllskyLongTermKeogramForm
-from .forms import IndiAllskyConnectionsManagerForm
+from .forms import IndiAllskyNetworkManagerForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -8127,21 +8127,21 @@ class JsonLongTermKeogramView(JsonView):
         return jsonify(json_data)
 
 
-class ConnectionsManagerView(TemplateView):
+class NetworkManagerView(TemplateView):
     decorators = [login_required]
-    title = 'Connections Manager'
+    title = 'Network'
 
     def get_context(self):
-        context = super(ConnectionsManagerView, self).get_context()
+        context = super(NetworkManagerView, self).get_context()
         context['camera_id'] = self.camera.id
         context['title'] = self.title
 
-        context['form_connections'] = IndiAllskyConnectionsManagerForm()
+        context['form_connections'] = IndiAllskyNetworkManagerForm()
 
         return context
 
 
-class AjaxConnectionsManagerView(BaseView):
+class AjaxNetworkManagerView(BaseView):
     methods = ['POST']
     decorators = [login_required]
 
@@ -8156,7 +8156,7 @@ class AjaxConnectionsManagerView(BaseView):
 
 
     def __init__(self, **kwargs):
-        super(AjaxConnectionsManagerView, self).__init__(**kwargs)
+        super(AjaxNetworkManagerView, self).__init__(**kwargs)
 
 
     def dispatch_request(self):
@@ -9385,8 +9385,8 @@ bp_allsky.add_url_rule('/camerasimulator', view_func=CameraSimulatorView.as_view
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 
-bp_allsky.add_url_rule('/connections', view_func=ConnectionsManagerView.as_view('connections_manager_view', template_name='connections.html'))
-bp_allsky.add_url_rule('/ajax/connections', view_func=AjaxConnectionsManagerView.as_view('ajax_connections_manager_view'))
+bp_allsky.add_url_rule('/network', view_func=NetworkManagerView.as_view('network_manager_view', template_name='network.html'))
+bp_allsky.add_url_rule('/ajax/network', view_func=AjaxNetworkManagerView.as_view('ajax_network_manager_view'))
 
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))

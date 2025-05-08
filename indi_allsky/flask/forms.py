@@ -7016,7 +7016,7 @@ class IndiAllskyLongTermKeogramForm(FlaskForm):
     OFFSET_SELECT           = SelectField('Hour Offset', choices=OFFSET_SELECT_choices, default=OFFSET_SELECT_choices[12][0], validators=[DataRequired()])
 
 
-class IndiAllskyConnectionsManagerForm(FlaskForm):
+class IndiAllskyNetworkManagerForm(FlaskForm):
     HOTSPOT_BAND_choices = (
         ('bg', '802.11b/g [2.4Ghz]'),
         ('a', '802.11a [5Ghz]'),
@@ -7049,7 +7049,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
 
     def __init__(self, *args, **kwargs):
-        super(IndiAllskyConnectionsManagerForm, self).__init__(*args, **kwargs)
+        super(IndiAllskyNetworkManagerForm, self).__init__(*args, **kwargs)
 
         self.CONNECTIONS_SELECT.choices = self.getConnections()
 
