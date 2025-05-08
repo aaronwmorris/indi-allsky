@@ -46,7 +46,7 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-3">
             <button id="activate-button" class="btn btn-success">Activate</button>
             <button id="deactivate-button" class="btn btn-warning">Deactivate</button>
-            <button id="delete-button" class="btn btn-warning">Delete</button>
+            <button id="delete-button" class="btn btn-dark text-danger">Delete</button>
             <hr>
             <button id="autostart-button" class="btn btn-info">Enable auto-start</button>
             <button id="no-autostart-button" class="btn btn-secondary">Disable auto-start</button>
@@ -55,6 +55,15 @@ var camera_id = {{ camera_id }};
             <input class="form-check-input" id="CONN_CONFIRM1" name="CONN_CONFIRM1" type="checkbox" value="y"> Confirm
         </div>
     </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-sm-6">
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Use care when deactivating connections.  If you deactivate the connection which is used for normal connectivity, you will lose access to the web interface.  If you lose access, you should be able to power cycle and the connection should reactivate.</div>
+        </div>
+    </div>
+
 
 </div><!-- end connections tab -->
 <div class="tab-pane fade" id="nav-wificonnect" role="tabpanel" aria-labelledby="nav-wificonnect-tab">
@@ -168,6 +177,8 @@ var camera_id = {{ camera_id }};
             <div>It should not be necessary to configure your wifi connection with a static address, the IPv6 connectivity should be sufficient to access by the mDNS name:</div>
             <br>
             <b><pre>https://{{ hostname }}.local</pre></b>
+            <br>
+            <div>The Hotspot connection is created with a lower priority (-99) than the standard wireless connections, so if the primary wireless connection fails, it should fallback to activating the Hotspot connection.</div>
         </div>
     </div>
 
@@ -326,7 +337,7 @@ $('#delete-button').on('click', function() {
     }
 
 
-    $("#delete-button").attr("class", "btn btn-warning");
+    $("#delete-button").attr("class", "btn btn-dark text-danger");
     $("#delete-button").html(
       '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Delete</span>'
     );
@@ -355,7 +366,7 @@ $('#delete-button').on('click', function() {
             }, 15000);
         },
         error: function(rdata){
-            $("#delete-button").attr("class", "btn btn-danger");
+            $("#delete-button").attr("class", "btn btn-danger text-light");
             $("#delete-button").html(
               'Delete'
             );
