@@ -694,7 +694,17 @@ function init() {
     $('#SSID_PSK').addClass('text-secondary');
 
     $('#connect-button').attr('disabled', true);
-    $("#connect-button").attr("class", "btn btn-secondary");
+    $('#connect-button').attr('class", 'btn btn-secondary');
+
+    if ($('#WIFI_DEVICES_SELECT').val() == '') {
+        $('#scan-button').attr('disabled', true);
+        $('#scan-button').attr('class', 'btn btn-secondary');
+    }
+
+    if ($('#HOTSPOT_DEVICES_SELECT').val() == '') {
+        $('#create-hotspot-button').attr('disabled', true);
+        $('#create-hotspot-button").attr('class', 'btn btn-secondary');
+    }
 
     $("#CONN_CONFIRM1").prop('checked', false);
 }
