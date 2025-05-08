@@ -5,6 +5,12 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
+#nav-connections-tab, #nav-wificonnect-tab, #nav-hotspot-tab {
+	width: 150px;
+	margin-top: 10px;
+	margin-right: 5px;
+	height: 50px;
+}
 </style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
@@ -13,8 +19,21 @@ var camera_id = {{ camera_id }};
 
 {% block content %}
 <div class="container h-100">
-    <form id="form_connections" onSubmit="return false;" autocomplete="off">
+<form id="form_connections" onSubmit="return false;" autocomplete="off">
 
+<nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <button class="nav-link link-danger bg-dark active" id="nav-connections-tab" data-bs-toggle="tab" data-bs-target="#nav-connections" type="button" role="tab" aria-controls="nav-connections" aria-selected="true">Connections</button>
+    <button class="nav-link link-light bg-dark" id="nav-wificonnect-tab" data-bs-toggle="tab" data-bs-target="#nav-wificonnect" type="button" role="tab" aria-controls="nav-wificonnect" aria-selected="false">Wi-Fi</button>
+    <button class="nav-link link-success bg-dark" id="nav-hotspot-tab" data-bs-toggle="tab" data-bs-target="#nav-hotspot" type="button" role="tab" aria-controls="nav-hotspot" aria-selected="false">Hotspot</button>
+  </div>
+</nav>
+
+<hr>
+
+<div class="tab-content" id="nav-tabContent">
+
+  <div class="tab-pane fade show active" id="nav-connections" role="tabpanel" aria-labelledby="nav-connections-tab">
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_connections.CONNECTIONS_SELECT.label(class='col-form-label') }}
@@ -37,7 +56,8 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
-    <hr>
+</div><!-- end connections tab -->
+<div class="tab-pane fade" id="nav-wificonnect" role="tabpanel" aria-labelledby="nav-wificonnect-tab">
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -81,7 +101,8 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
-    <hr>
+</div><!-- end wificonnect tab -->
+<div class="tab-pane fade" id="nav-hotspot" role="tabpanel" aria-labelledby="nav-hotspot-tab">
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -133,6 +154,10 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-6">
         </div>
     </div>
+
+</div><!-- end hotspot tab -->
+
+    <hr> <hr> <hr>
 
     <div class="form-group row" style="height:100px;">
         <div class="col-sm-5">
