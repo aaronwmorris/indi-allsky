@@ -521,15 +521,17 @@ $('#connect-button').on('click', function() {
     $('#success-message').css({'display' : 'none'});
     $('#failure-message').css({'display' : 'none'});
 
+
+    if ( $('#WIFI_DEVICES_SELECT').val() == "" ){
+        return false;
+    }
+
+
     $("#connect-button").attr("class", "btn btn-success");
     $("#connect-button").html(
       '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Connect</span>'
     );
 
-
-    if ( $('#WIFI_DEVICES_SELECT').val() == "" ){
-        return false;
-    }
 
     var json_data = {
         'COMMAND' : 'connectap',
@@ -575,15 +577,17 @@ $('#create-hotspot-button').on('click', function() {
     $('#success-message').css({'display' : 'none'});
     $('#failure-message').css({'display' : 'none'});
 
+
+    if ( $('#HOTSPOT_DEVICES_SELECT').val() == "" ){
+        return false;
+    }
+
+
     $("#create-hotspot-button").attr("class", "btn btn-success");
     $("#create-hotspot-button").html(
       '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Create</span>'
     );
 
-
-    if ( $('#HOTSPOT_DEVICES_SELECT').val() == "" ){
-        return false;
-    }
 
     var json_data = {
         'COMMAND' : 'createhotspot',
