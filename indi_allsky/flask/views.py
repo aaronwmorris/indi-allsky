@@ -8675,13 +8675,18 @@ class AjaxConnectionsManagerView(BaseView):
 
             ap_list.append({
                 'path' : str(ap_path),
-                'ssid' : '{0:s} [{1:s}] - {2:d}%'.format(str_ap_ssid, ap_frequency_str, int.from_bytes(str(ap_strength).encode()))
+                'ssid' : '{0:s} [{1:s}] - {2:d}%'.format(str_ap_ssid, ap_frequency_str, int.from_bytes(str(ap_strength).encode())),
+                'strength' : int.from_bytes(str(ap_strength).encode()),  # need to sort on this key
             })
+
+
+        sorted(ap_list, key=lambda x: x['strength'], reverse=True)
 
 
         return jsonify({
             'success-message' : 'Scan Successful',
             'data' : ap_list,
+            #'data' : [{'path' : x['path'], 'ssid' : x['ssid']} for x in ap_list],  # remove strength key
         })
 
 
