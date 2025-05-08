@@ -22,6 +22,7 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-4">
             {{ form_connections.CONNECTIONS_SELECT(class='form-select bg-secondary') }}
             <div id="CONNECTIONS_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            <div style="font-size:10px">* Indicates Auto-start</div>
         </div>
         <div class="col-sm-3">
             <button id="activate-button" class="btn btn-success">Activate</button>
@@ -102,7 +103,7 @@ var camera_id = {{ camera_id }};
             {{ form_connections.HOTSPOT_BAND.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_connections.HOTSPOT_BAND(class='form-control bg-secondary') }}
+            {{ form_connections.HOTSPOT_BAND(class='form-select bg-secondary') }}
             <div id="HOTSPOT_BAND-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
