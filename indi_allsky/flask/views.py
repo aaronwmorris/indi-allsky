@@ -8133,8 +8133,16 @@ class NetworkManagerView(TemplateView):
 
     def get_context(self):
         context = super(NetworkManagerView, self).get_context()
+
         context['camera_id'] = self.camera.id
         context['title'] = self.title
+
+
+        try:
+            context['hostname'] = socket.gethostname().split('.')[0]
+        except IndexError:
+            context['hostname'] = 'UNKNOWN'
+
 
         context['form_connections'] = IndiAllskyNetworkManagerForm()
 
