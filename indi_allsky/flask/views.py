@@ -8280,12 +8280,6 @@ class AjaxConnectionsManagerView(BaseView):
             "org.freedesktop.NetworkManager")
 
 
-        #settings = dbus.Interface(
-        #    bus.get_object("org.freedesktop.NetworkManager", settings_path),
-        #    "org.freedesktop.NetworkManager.Settings.Connection")
-
-
-
         try:
             #device_path = nm_interface.GetDeviceByIpIface("xxx")
             connection_path = manager.ActivateConnection(settings_path, '/', '/')
@@ -8371,11 +8365,6 @@ class AjaxConnectionsManagerView(BaseView):
             }), 400
 
 
-        #conn = bus.get_object(
-        #    "org.freedesktop.NetworkManager",
-        #    conn_path)
-
-
         manager = dbus.Interface(
             nm,
             "org.freedesktop.NetworkManager")
@@ -8454,15 +8443,6 @@ class AjaxConnectionsManagerView(BaseView):
             return jsonify({
                 'failure-message' : 'Connection settings not found',
             }), 400
-
-
-        #nm = bus.get_object(
-        #    "org.freedesktop.NetworkManager",
-        #    "/org/freedesktop/NetworkManager")
-
-        #manager = dbus.Interface(
-        #    nm,
-        #    "org.freedesktop.NetworkManager")
 
 
         settings = dbus.Interface(
@@ -8621,7 +8601,7 @@ class AjaxConnectionsManagerView(BaseView):
                 "Frequency")
 
             str_ap_ssid = "".join(chr(i) for i in ap_ssid)
-            app.logger.info("Found SSID: %s", str_ap_ssid)
+            #app.logger.info("Found SSID: %s", str_ap_ssid)
 
 
             if float(ap_frequency) > 5999:
