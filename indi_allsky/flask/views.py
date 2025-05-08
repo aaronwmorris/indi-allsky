@@ -8721,17 +8721,14 @@ class AjaxConnectionsManagerView(BaseView):
                 'pairwise' : ['ccmp'],
             },
             'ipv4' : {
-                'method' : 'link-local',
-                #'addresses' : [{
-                #    'address' : '10.42.0.1',
-                #    'prefix' : 24,
-                #}],
-                #'address-data' : dbus.Array([
-                #    {
-                #        'address' : '10.42.0.1',
-                #        'prefix' : 24,
-                #    }
-                #], signature=dbus.Signature('a{sv}')),
+                'method' : 'manual',
+                'addresses' : [
+                    [
+                        dbus.UInt32(self.ip2int('10.42.0.1')),
+                        dbus.UInt32(24),
+                        dbus.UInt32(self.ip2int('0.0.0.0')),
+                    ],
+                ],
             },
             'ipv6' : {
                 'method' : 'link-local',
@@ -8752,6 +8749,11 @@ class AjaxConnectionsManagerView(BaseView):
         return jsonify({
             'success-message' : 'Hotspot Created',
         })
+
+
+    def ip2int(self, ip_str):
+        import struct
+        return struct.unpack('=I', socket.inet_aton(ip_str))[0]
 
 
 class AstroPanelView(TemplateView):

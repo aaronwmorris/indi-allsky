@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+
+### Alternative
+# nmcli -f all c show
+# busctl -j call org.freedesktop.NetworkManager /org/freedesktop/NetworkManager/Settings/13 org.freedesktop.NetworkManager.Settings.Connection GetSettings
+
+
 import dbus
 import logging
 
