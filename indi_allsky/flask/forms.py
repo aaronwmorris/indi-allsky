@@ -7101,7 +7101,7 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
                 'devices' : [str(settings_dict['connection'].get('interface-name', ''))],  # override later
                 'addresses' : ['No address'],
                 'active' : False,  # override later
-                'state' : 'Inactive',  # override later
+                'state' : 'Down',  # override later
                 'autoconnect' : bool(settings_dict['connection'].get('autoconnect', True)),
                 'autoconnect-priority' : int(settings_dict['connection'].get('autoconnect-priority', 0)),
             }
