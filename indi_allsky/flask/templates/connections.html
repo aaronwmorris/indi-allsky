@@ -100,6 +100,18 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_connections.HOTSPOT_DEVICES_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_connections.HOTSPOT_DEVICES_SELECT(class='form-select bg-secondary') }}
+            <div id="HOTSPOT_DEVICES_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_connections.HOTSPOT_BAND.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -515,6 +527,10 @@ $('#connect-button').on('click', function() {
     );
 
 
+    if ( $('#WIFI_DEVICES_SELECT').val() == "" ){
+        return false;
+    }
+
     var json_data = {
         'COMMAND' : 'connectap',
         'INTERFACE' : $('#WIFI_DEVICES_SELECT').val(),
@@ -565,9 +581,13 @@ $('#create-hotspot-button').on('click', function() {
     );
 
 
+    if ( $('#HOTSPOT_DEVICES_SELECT').val() == "" ){
+        return false;
+    }
+
     var json_data = {
         'COMMAND' : 'createhotspot',
-        'INTERFACE' : $('#WIFI_DEVICES_SELECT').val(),
+        'INTERFACE' : $('#HOTSPOT_DEVICES_SELECT').val(),
         'SSID' : $('#HOTSPOT_SSID').val(),
         'BAND' : $('#HOTSPOT_BAND').val(),
         'PSK' : $('#HOTSPOT_PSK').val(),

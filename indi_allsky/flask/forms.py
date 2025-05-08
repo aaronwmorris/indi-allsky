@@ -7027,6 +7027,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
     WIFI_DEVICES_SELECT        = SelectField('Wi-Fi Devices', choices=[], validators=[])
     SSID_SELECT                = SelectField('SSID', choices=[], validators=[])
     SSID_PSK                   = PasswordField('PSK', widget=PasswordInput(hide_value=False), validators=[], render_kw={'autocomplete' : 'new-password'})
+    HOTSPOT_DEVICES_SELECT     = SelectField('Wi-Fi Devices', choices=[], validators=[])
     HOTSPOT_SSID               = StringField('Hotspot SSID', default='indi-allsky Hotspot', validators=[])
     HOTSPOT_BAND               = SelectField('Hotspot Band', choices=HOTSPOT_BAND_choices, validators=[])
     HOTSPOT_PSK                = PasswordField('Hotspot PSK', widget=PasswordInput(hide_value=False), validators=[], render_kw={'autocomplete' : 'new-password'})
@@ -7051,7 +7052,10 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
         super(IndiAllskyConnectionsManagerForm, self).__init__(*args, **kwargs)
 
         self.CONNECTIONS_SELECT.choices = self.getConnections()
-        self.WIFI_DEVICES_SELECT.choices = self.getWifiDevices()
+
+        wifi_devices = self.getWifiDevices()
+        self.WIFI_DEVICES_SELECT.choices = wifi_devices
+        self.HOTSPOT_DEVICES_SELECT.choices = wifi_devices
 
 
     def getConnections(self):
