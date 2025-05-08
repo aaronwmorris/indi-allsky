@@ -8220,6 +8220,8 @@ class AjaxConnectionsManagerView(BaseView):
             band = str(request.json['BAND'])
             psk = str(request.json['PSK'])
 
+            assert band in ('bg', 'a')
+
             return self.createHotspot(interface, ssid, band, psk)
         else:
             json_data = {
