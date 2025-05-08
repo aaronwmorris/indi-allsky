@@ -114,7 +114,6 @@ from .youtube_views import YoutubeCallbackView
 from .youtube_views import YoutubeRevokeAuthView
 
 from ..exceptions import ConfigSaveException
-from ..exceptions import ConnectionFailure
 from ..exceptions import NotFound
 
 
@@ -8191,18 +8190,8 @@ class AjaxConnectionsManagerView(BaseView):
                     'failure-message' : 'No interface selected',
                 }), 400
 
-            try:
-                ap_data = self.scanAPs(interface)
-            except ConnectionFailure as e:
-                return jsonify({
-                    'failure-message' : 'Scan APs Failed: {0:s}'.format(str(e)),
-                }), 400
+            return self.scanAPs(interface)
 
-
-            return jsonify({
-                'success-message' : 'Scan Successful',
-                'data' : ap_data,
-            })
         elif command == 'connectap':
             interface = str(request.json['INTERFACE'])
             ap_path = str(request.json['AP_PATH'])
@@ -8213,16 +8202,7 @@ class AjaxConnectionsManagerView(BaseView):
                     'failure-message' : 'No AP selected',
                 }), 400
 
-            try:
-                self.connectAP(interface, ap_path, psk)
-            except ConnectionFailure as e:
-                return jsonify({
-                    'failure-message' : 'Connect AP Failed: {0:s}'.format(str(e)),
-                }), 400
-
-            return jsonify({
-                'success-message' : 'Connection Successful',
-            })
+            return self.connectAP(interface, ap_path, psk)
 
         elif command == 'createhotspot':
             interface = str(request.json['INTERFACE'])
@@ -8343,37 +8323,6 @@ class AjaxConnectionsManagerView(BaseView):
         return jsonify({
             'success-message' : 'Connection Activated',
         })
-
-
-    def getConnection(self, bus, nm, connection_uuid):
-        nm_settings = bus.get_object(
-            "org.freedesktop.NetworkManager",
-            "/org/freedesktop/NetworkManager/Settings")
-
-        settings_interface = dbus.Interface(
-            nm_settings,
-            "org.freedesktop.NetworkManager.Settings")
-
-
-        connpath_list = settings_interface.ListConnections()
-
-        for conn_path in connpath_list:
-            conn = bus.get_object(
-                "org.freedesktop.NetworkManager",
-                conn_path)
-
-            properties_interface = dbus.Interface(
-                conn,
-                "org.freedesktop.DBus.Properties")
-
-            conn_properties = properties_interface.GetAll("org.freedesktop.NetworkManager.Settings.Connection")
-            app.logger.info('Properties: %s', conn_properties)
-
-            #if conn_properties["Uuid"] == connection_uuid:
-            #    return conn_path
-
-        else:
-            raise NotFound('Connection not found')
 
 
     def deactivateConnection(self, connection_uuid):
@@ -8576,7 +8525,9 @@ class AjaxConnectionsManagerView(BaseView):
             accesspoints_paths_list = device.GetAccessPoints()
         except dbus.exceptions.DBusException as e:
             app.logger.error('D-Bus Exception: %s', str(e))
-            raise ConnectionFailure(str(e)) from e
+            return jsonify({
+                'failure-message' : 'Scan APs Failed: {0:s}'.format(str(e)),
+            }), 400
 
 
         ap_list = list()
@@ -8616,7 +8567,10 @@ class AjaxConnectionsManagerView(BaseView):
             })
 
 
-        return ap_list
+        return jsonify({
+            'success-message' : 'Scan Successful',
+            'data' : ap_list,
+        })
 
 
     def connectAP(self, interface_name, ap_path, psk):
@@ -8659,7 +8613,9 @@ class AjaxConnectionsManagerView(BaseView):
             #app.logger.info("connection_path = %s", connection_path)
         except dbus.exceptions.DBusException as e:
             app.logger.error('D-Bus Exception: %s', str(e))
-            raise ConnectionFailure(str(e)) from e
+            return jsonify({
+                'failure-message' : 'Connect AP Failed: {0:s}'.format(str(e)),
+            }), 400
 
 
         connection_props = dbus.Interface(
@@ -8703,14 +8659,24 @@ class AjaxConnectionsManagerView(BaseView):
                 settings.Delete()
 
 
-                raise ConnectionFailure('The wireless PSK may be incorrect')
+                return jsonify({
+                    'failure-message' : 'Connect AP Failed: {0:s} (PSK may be incorrect)'.format(str(e)),
+                }), 400
+
 
             if int(state) == self.nm_conn_states['Active']:
                 app.logger.warning("Wireless connection established!")
                 break
         else:
             app.logger.error('Wireless connection failed')
-            raise ConnectionFailure('Wireless connection failed')
+            return jsonify({
+                'failure-message' : 'Connect AP Failed: Wireless connection failed',
+            }), 400
+
+
+        return jsonify({
+            'success-message' : 'Connection Successful',
+        })
 
 
     def createHotspot(self, interface_name, ssid, band, psk):
