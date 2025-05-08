@@ -8271,6 +8271,23 @@ class AjaxConnectionsManagerView(BaseView):
             }), 400
 
 
+        settings = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", settings_path),
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_connection = dbus.Interface(
+            settings,
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_dict = settings_connection.GetSettings()
+        if settings_dict['connection']['type'] not in ('802-11-wireless', '802-3-ethernet'):
+            return jsonify({
+                'failure-message' : 'Only Ethernet and Wireless connections can be managed',
+            }), 400
+
+
         nm = bus.get_object(
             "org.freedesktop.NetworkManager",
             "/org/freedesktop/NetworkManager")
@@ -8343,7 +8360,7 @@ class AjaxConnectionsManagerView(BaseView):
 
 
         try:
-            self.getSettingsPath(bus, nm_settings, connection_uuid)
+            settings_path = self.getSettingsPath(bus, nm_settings, connection_uuid)
         except NotFound:
             app.logger.error('Connection settings not found')
             return jsonify({
@@ -8363,6 +8380,24 @@ class AjaxConnectionsManagerView(BaseView):
             return jsonify({
                 'failure-message' : 'Active connection not found',
             }), 400
+
+
+        settings = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", settings_path),
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_connection = dbus.Interface(
+            settings,
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_dict = settings_connection.GetSettings()
+        if settings_dict['connection']['type'] not in ('802-11-wireless', '802-3-ethernet'):
+            return jsonify({
+                'failure-message' : 'Only Ethernet and Wireless connections can be managed',
+            }), 400
+
 
 
         manager = dbus.Interface(
@@ -8411,6 +8446,32 @@ class AjaxConnectionsManagerView(BaseView):
         settings = dbus.Interface(
             bus.get_object("org.freedesktop.NetworkManager", settings_path),
             "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        nm = bus.get_object(
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager")
+
+
+        try:
+            self.getActiveConnection(bus, nm, connection_uuid)
+            return jsonify({
+                'failure-message' : 'Cannot delete active connections',
+            }), 400
+        except NotFound:
+            pass
+
+
+        settings_connection = dbus.Interface(
+            settings,
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_dict = settings_connection.GetSettings()
+        if settings_dict['connection']['type'] not in ('802-11-wireless', '802-3-ethernet'):
+            return jsonify({
+                'failure-message' : 'Only Ethernet and Wireless connections can be managed',
+            }), 400
 
 
         settings.Delete()
