@@ -7098,6 +7098,7 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
                 'addresses' : ['No address'],
                 'active' : False,  # override later
                 'state' : 'Inactive',  # override later
+                'autoconnect' : bool(settings_dict['connection'].get('autoconnect', True)),
                 'autoconnect-priority' : int(settings_dict['connection'].get('autoconnect-priority', 0)),
             }
 
@@ -7204,24 +7205,24 @@ class IndiAllskyConnectionsManagerForm(FlaskForm):
 
 
         for c in filter(lambda item: item[1]['type'] == '802-11-wireless', conn_dict.items()):
-            desc = '{0:s} [{1:s}] - {2:s} ({3:s})'.format(c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
+            autostart_str = '*'if c[1]['autoconnect'] else ''
             conn_select_wifi_list.append((
                 c[0],
-                desc,
+                '{0:s}{1:s} [{2:s}] - {3:s} ({4:s})'.format(autostart_str, c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
             ))
 
         for c in filter(lambda item: item[1]['type'] == '802-3-ethernet', conn_dict.items()):
-            desc = '{0:s} [{1:s}] - {2:s} ({3:s})'.format(c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
+            autostart_str = '*'if c[1]['autoconnect'] else ''
             conn_select_ethernet_list.append((
                 c[0],
-                desc,
+                '{0:s}{1:s} [{2:s}] - {3:s} ({4:s})'.format(autostart_str, c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
             ))
 
         for c in filter(lambda item: item[1]['type'] == 'other', conn_dict.items()):
-            desc = '{0:s} [{1:s}] - {2:s} ({3:s})'.format(c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
+            autostart_str = '*'if c[1]['autoconnect'] else ''
             conn_select_other_list.append((
                 c[0],
-                desc,
+                '{0:s}{1:s} [{2:s}] - {3:s} ({4:s})'.format(autostart_str, c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
             ))
 
 
