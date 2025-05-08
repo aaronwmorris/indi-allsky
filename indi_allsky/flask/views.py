@@ -8182,6 +8182,14 @@ class AjaxConnectionsManagerView(BaseView):
             connection_uuid = str(request.json['CONNECTION'])
             return self.activateConnection(connection_uuid)
 
+        elif command == 'autostart':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.setAutostartConnection(connection_uuid, auto_connect=True)
+
+        elif command == 'noautostart':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.setAutostartConnection(connection_uuid, auto_connect=False)
+
         elif command == 'scanap':
             interface = str(request.json['INTERFACE'])
 
@@ -8421,6 +8429,69 @@ class AjaxConnectionsManagerView(BaseView):
 
         return jsonify({
             'success-message' : 'Connection deleted',
+        })
+
+
+    def setAutostartConnection(self, connection_uuid, auto_connect=True):
+        bus = dbus.SystemBus()
+
+
+        try:
+            nm_settings = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager/Settings")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        try:
+            settings_path = self.getSettingsPath(bus, nm_settings, connection_uuid)
+        except NotFound:
+            app.logger.error('Connection settings not found')
+            return jsonify({
+                'failure-message' : 'Connection settings not found',
+            }), 400
+
+
+        #nm = bus.get_object(
+        #    "org.freedesktop.NetworkManager",
+        #    "/org/freedesktop/NetworkManager")
+
+        #manager = dbus.Interface(
+        #    nm,
+        #    "org.freedesktop.NetworkManager")
+
+
+        settings = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", settings_path),
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_connection = dbus.Interface(
+            settings,
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_dict = settings_connection.GetSettings()
+
+        ### Here is the magic
+        settings_dict['connection']['autoconnect'] = auto_connect
+
+
+        try:
+            settings_connection.Update(settings_dict)
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'Configure Failed: {0:s}'.format(str(e)),
+            }), 400
+
+
+        return jsonify({
+            'success-message' : 'Configure Successful',
         })
 
 

@@ -27,6 +27,9 @@ var camera_id = {{ camera_id }};
             <button id="activate-button" class="btn btn-success">Activate</button>
             <button id="deactivate-button" class="btn btn-warning">Deactivate</button>
             <button id="delete-button" class="btn btn-warning">Delete</button>
+            <hr>
+            <button id="autostart-button" class="btn btn-warning">Enable auto-start</button>
+            <button id="no-autostart-button" class="btn btn-warning">Disable auto-start</button>
         </div>
         <div class="col-sm-3">
             <input class="form-check-input" id="CONN_CONFIRM1" name="CONN_CONFIRM1" type="checkbox" value="y"> Confirm
@@ -301,6 +304,126 @@ $('#delete-button').on('click', function() {
             $("#delete-button").attr("class", "btn btn-danger");
             $("#delete-button").html(
               'Deactivate'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
+        },
+    });
+});
+
+
+$('#autostart-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+
+    if (! $("#CONN_CONFIRM1").prop('checked')) {
+        console.log('Confirm checkbox not checked');
+        return;
+    }
+    $("#CONN_CONFIRM1").prop('checked', false);
+
+
+    if ( $('#CONNECTIONS_SELECT').val() == "" ){
+        return;
+    }
+
+
+    $("#autostart-button").attr("class", "btn btn-warning");
+    $("#autostart-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Enable auto-start</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'autostart',
+        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_connections_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#autostart-button").html(
+              'Enable auto-start'
+            );
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
+        },
+        error: function(rdata){
+            $("#autostart-button").attr("class", "btn btn-danger");
+            $("#autostart-button").html(
+              'Enable auto-start'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
+        },
+    });
+});
+
+
+$('#no-autostart-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+
+    if (! $("#CONN_CONFIRM1").prop('checked')) {
+        console.log('Confirm checkbox not checked');
+        return;
+    }
+    $("#CONN_CONFIRM1").prop('checked', false);
+
+
+    if ( $('#CONNECTIONS_SELECT').val() == "" ){
+        return;
+    }
+
+
+    $("#no-autostart-button").attr("class", "btn btn-warning");
+    $("#no-autostart-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Disable auto-start</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'noautostart',
+        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_connections_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#no-autostart-button").html(
+              'Disable auto-start'
+            );
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
+        },
+        error: function(rdata){
+            $("#no-autostart-button").attr("class", "btn btn-danger");
+            $("#no-autostart-button").html(
+              'Disable auto-start'
             );
 
             var errors = JSON.parse(rdata.responseText);
