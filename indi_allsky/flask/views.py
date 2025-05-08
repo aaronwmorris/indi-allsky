@@ -8687,6 +8687,15 @@ class AjaxConnectionsManagerView(BaseView):
     def createHotspot(self, interface_name, ssid, band, psk):
         bus = dbus.SystemBus()
 
+        nm = bus.get_object(
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager")
+
+        manager = dbus.Interface(
+            nm,
+            "org.freedesktop.NetworkManager")
+
+
         nm_settings = bus.get_object(
             "org.freedesktop.NetworkManager",
             "/org/freedesktop/NetworkManager/Settings")
@@ -8696,7 +8705,8 @@ class AjaxConnectionsManagerView(BaseView):
             "org.freedesktop.NetworkManager.Settings")
 
 
-        #device_path = manager.GetDeviceByIpIface(interface_name)
+        # ensure device exists
+        manager.GetDeviceByIpIface(interface_name)
 
 
         connection_params = {
@@ -8705,6 +8715,7 @@ class AjaxConnectionsManagerView(BaseView):
                 'autoconnect' : True,
                 'autoconnect-priority' : -99,
                 'id' : ssid,
+                'interface-name' : interface_name,
             },
             '802-11-wireless': {
                 'mode' : 'ap',
