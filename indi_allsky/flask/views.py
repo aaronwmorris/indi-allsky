@@ -8675,13 +8675,16 @@ class AjaxNetworkManagerView(BaseView):
                 "org.freedesktop.NetworkManager.AccessPoint",
                 "Frequency")
 
+
             str_ap_ssid = "".join(chr(i) for i in ap_ssid)
             #app.logger.info("Found SSID: %s", str_ap_ssid)
 
 
-            if float(ap_frequency) > 5999:
+            ap_frequency_int = int(ap_frequency)
+
+            if ap_frequency_int > 5999:
                 ap_frequency_str = '6 GHz'
-            elif float(ap_frequency) > 3000:
+            elif ap_frequency_int > 3000:
                 ap_frequency_str = '5 GHz'
             else:
                 ap_frequency_str = '2.4 GHz'
@@ -8691,18 +8694,18 @@ class AjaxNetworkManagerView(BaseView):
                 'path' : str(ap_path),
                 'ssid' : '{0:s} [{1:s}] - {2:d}%'.format(str_ap_ssid, ap_frequency_str, int.from_bytes(str(ap_strength).encode())),
                 'strength' : int.from_bytes(str(ap_strength).encode()),  # need to sort on this key
+                'frequency' : ap_frequency_int,
             })
 
 
-        sorted(ap_list, key=lambda x: x['strength'], reverse=True)
+        ap_list_sorted = sorted(ap_list, key=lambda x: x['strength'], reverse=True)
 
 
         time.sleep(2.0)  # give some time for system to register
 
         return jsonify({
             'success-message' : 'Scan Successful',
-            'data' : ap_list,
-            #'data' : [{'path' : x['path'], 'ssid' : x['ssid']} for x in ap_list],  # remove strength key
+            'data' : ap_list_sorted,
         })
 
 
