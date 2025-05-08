@@ -28,8 +28,8 @@ var camera_id = {{ camera_id }};
             <button id="deactivate-button" class="btn btn-warning">Deactivate</button>
             <button id="delete-button" class="btn btn-warning">Delete</button>
             <hr>
-            <button id="autostart-button" class="btn btn-warning">Enable auto-start</button>
-            <button id="no-autostart-button" class="btn btn-warning">Disable auto-start</button>
+            <button id="autostart-button" class="btn btn-info">Enable auto-start</button>
+            <button id="no-autostart-button" class="btn btn-secondary">Disable auto-start</button>
         </div>
         <div class="col-sm-3">
             <input class="form-check-input" id="CONN_CONFIRM1" name="CONN_CONFIRM1" type="checkbox" value="y"> Confirm
@@ -332,7 +332,7 @@ $('#autostart-button').on('click', function() {
     }
 
 
-    $("#autostart-button").attr("class", "btn btn-warning");
+    $("#autostart-button").attr("class", "btn btn-info");
     $("#autostart-button").html(
       '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Enable auto-start</span>'
     );
@@ -392,7 +392,7 @@ $('#no-autostart-button').on('click', function() {
     }
 
 
-    $("#no-autostart-button").attr("class", "btn btn-warning");
+    $("#no-autostart-button").attr("class", "btn btn-secondary");
     $("#no-autostart-button").html(
       '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Disable auto-start</span>'
     );
