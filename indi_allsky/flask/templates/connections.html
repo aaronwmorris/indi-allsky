@@ -341,7 +341,7 @@ $('#delete-button').on('click', function() {
         error: function(rdata){
             $("#delete-button").attr("class", "btn btn-danger");
             $("#delete-button").html(
-              'Deactivate'
+              'Delete'
             );
 
             var errors = JSON.parse(rdata.responseText);

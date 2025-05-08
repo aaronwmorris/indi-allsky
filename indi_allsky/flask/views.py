@@ -8414,6 +8414,8 @@ class AjaxConnectionsManagerView(BaseView):
             }), 400
 
 
+        time.sleep(2.0)  # give some time for system to register
+
         return jsonify({
             'success-message' : 'Connection deactivated',
         })
@@ -8477,6 +8479,8 @@ class AjaxConnectionsManagerView(BaseView):
         settings.Delete()
 
 
+        time.sleep(2.0)  # give some time for system to register
+
         return jsonify({
             'success-message' : 'Connection deleted',
         })
@@ -8530,6 +8534,8 @@ class AjaxConnectionsManagerView(BaseView):
                 'failure-message' : 'Configure Failed: {0:s}'.format(str(e)),
             }), 400
 
+
+        time.sleep(2.0)  # give some time for system to register
 
         return jsonify({
             'success-message' : 'Configure Successful',
@@ -8682,6 +8688,8 @@ class AjaxConnectionsManagerView(BaseView):
 
         sorted(ap_list, key=lambda x: x['strength'], reverse=True)
 
+
+        time.sleep(2.0)  # give some time for system to register
 
         return jsonify({
             'success-message' : 'Scan Successful',
@@ -8868,6 +8876,8 @@ class AjaxConnectionsManagerView(BaseView):
                 'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
             }), 400
 
+
+        time.sleep(2.0)  # give some time for system to register
 
         return jsonify({
             'success-message' : 'Hotspot Created',
