@@ -7108,11 +7108,11 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
 
 
             # look for static addresses
-            pre_conn_address_list = settings_dict['ipv4'].get('addresses', [])
+            pre_conn_address_list = settings_dict['ipv4'].get('address-data', [])
 
             pre_address_list = list()
             for address in pre_conn_address_list:
-                address_str = '{0:s}'.format(str(address[0]))
+                address_str = '{0:s}'.format(str(address['address']))
                 pre_address_list.append(address_str)
 
 
