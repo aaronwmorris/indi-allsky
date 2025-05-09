@@ -102,6 +102,7 @@ from .forms import IndiAllskyCameraSimulatorForm
 from .forms import IndiAllskyFocusControllerForm
 from .forms import IndiAllskyMiniTimelapseForm
 from .forms import IndiAllskyLongTermKeogramForm
+from .forms import IndiAllskyNetworkManagerForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -113,6 +114,7 @@ from .youtube_views import YoutubeCallbackView
 from .youtube_views import YoutubeRevokeAuthView
 
 from ..exceptions import ConfigSaveException
+from ..exceptions import NotFound
 
 
 bp_allsky = Blueprint(
@@ -6086,7 +6088,7 @@ class AjaxTimelapseGeneratorView(BaseView):
         else:
             # this should never happen
             message = {
-                'error-message' : 'Invalid'
+                'failure-message' : 'Invalid'
             }
             return jsonify(message), 400
 
@@ -8125,6 +8127,807 @@ class JsonLongTermKeogramView(JsonView):
         return jsonify(json_data)
 
 
+class NetworkManagerView(TemplateView):
+    decorators = [login_required]
+    title = 'Network'
+
+    def get_context(self):
+        context = super(NetworkManagerView, self).get_context()
+
+        context['camera_id'] = self.camera.id
+        context['title'] = self.title
+
+
+        try:
+            context['hostname'] = socket.gethostname().split('.')[0]
+        except IndexError:
+            context['hostname'] = 'UNKNOWN'
+
+
+        try:
+            # detect if network manager is available
+            bus = dbus.SystemBus()
+            bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager")
+            nm_installed = True
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            nm_installed = False
+
+
+        context['nm_installed'] = nm_installed
+
+        context['form_connections'] = IndiAllskyNetworkManagerForm()
+
+        return context
+
+
+class AjaxNetworkManagerView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+
+    nm_conn_states = {
+        'Unknown'      : 0,
+        'Activating'   : 1,
+        'Active'       : 2,
+        'Deactivating' : 3,
+        'Not Active'   : 4,
+    }
+
+
+    def __init__(self, **kwargs):
+        super(AjaxNetworkManagerView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        if not current_user.is_admin:
+            json_data = {
+                'failure-message' : 'User does not have permission to access this resource',
+            }
+            return jsonify(json_data), 400
+
+
+        command = str(request.json['COMMAND'])
+
+
+        if command == 'deactivate':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.deactivateConnection(connection_uuid)
+
+        elif command == 'delete':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.deleteConnection(connection_uuid)
+
+        elif command == 'activate':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.activateConnection(connection_uuid)
+
+        elif command == 'autostart':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.setAutostartConnection(connection_uuid, auto_connect=True)
+
+        elif command == 'noautostart':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.setAutostartConnection(connection_uuid, auto_connect=False)
+
+        elif command == 'scanap':
+            interface = str(request.json['INTERFACE'])
+
+            if not interface:
+                return jsonify({
+                    'failure-message' : 'No interface selected',
+                }), 400
+
+            return self.scanAPs(interface)
+
+        elif command == 'connectap':
+            interface = str(request.json['INTERFACE'])
+            ap_path = str(request.json['AP_PATH'])
+            psk = str(request.json['PSK'])
+
+            if not ap_path:
+                return jsonify({
+                    'failure-message' : 'No AP selected',
+                }), 400
+
+            return self.connectAP(interface, ap_path, psk)
+
+        elif command == 'createhotspot':
+            interface = str(request.json['INTERFACE'])
+            ssid = str(request.json['SSID'])
+            band = str(request.json['BAND'])
+            psk = str(request.json['PSK'])
+
+            if not interface:
+                return jsonify({
+                    'failure-message' : 'No interface selected',
+                }), 400
+
+            if not ssid:
+                return jsonify({
+                    'failure-message' : 'No SSID data',
+                }), 400
+
+            if band not in ('bg', 'a'):
+                return jsonify({
+                    'failure-message' : 'Invalid band selection',
+                }), 400
+
+            if len(psk) < 8:
+                return jsonify({
+                    'failure-message' : 'PSK must be 8+ characters',
+                }), 400
+
+
+            return self.createHotspot(interface, ssid, band, psk)
+        else:
+            json_data = {
+                'failure-message' : 'Unknown command',
+            }
+            return jsonify(json_data), 400
+
+
+    def activateConnection(self, connection_uuid):
+        bus = dbus.SystemBus()
+
+
+        try:
+            nm_settings = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager/Settings")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        try:
+            settings_path = self.getSettingsPath(bus, nm_settings, connection_uuid)
+        except NotFound:
+            app.logger.error('Connection settings not found')
+            return jsonify({
+                'failure-message' : 'Connection settings not found',
+            }), 400
+
+
+        settings = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", settings_path),
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_connection = dbus.Interface(
+            settings,
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_dict = settings_connection.GetSettings()
+        if settings_dict['connection']['type'] not in ('802-11-wireless', '802-3-ethernet'):
+            return jsonify({
+                'failure-message' : 'Only Ethernet and Wireless connections can be managed',
+            }), 400
+
+
+        nm = bus.get_object(
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager")
+
+        manager = dbus.Interface(
+            nm,
+            "org.freedesktop.NetworkManager")
+
+
+        try:
+            #device_path = nm_interface.GetDeviceByIpIface("xxx")
+            connection_path = manager.ActivateConnection(settings_path, '/', '/')
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        connection_props = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", connection_path),
+            "org.freedesktop.DBus.Properties"
+        )
+
+
+        # Wait until connection is established. This may take a few seconds.
+        app.logger.info("Waiting for connection")
+
+
+        state = None
+        for _ in range(30):
+            time.sleep(1.0)
+            # Loop until desired state is detected.
+            try:
+                state = connection_props.Get(
+                    "org.freedesktop.NetworkManager.Connection.Active",
+                    "State")
+                #app.logger.info('Connection state: %d', int(state))
+            except dbus.exceptions.DBusException as e:
+                app.logger.error('D-Bus Exception: %s', str(e))
+
+            if int(state) == self.nm_conn_states['Active']:
+                app.logger.warning("Connection established!")
+                break
+        else:
+            app.logger.error('Connection failed to activate')
+            return jsonify({
+                'failure-message' : 'Connection failed to activate',
+            }), 400
+
+
+        return jsonify({
+            'success-message' : 'Connection Activated',
+        })
+
+
+    def deactivateConnection(self, connection_uuid):
+        bus = dbus.SystemBus()
+
+
+        try:
+            nm_settings = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager/Settings")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        try:
+            settings_path = self.getSettingsPath(bus, nm_settings, connection_uuid)
+        except NotFound:
+            app.logger.error('Connection settings not found')
+            return jsonify({
+                'failure-message' : 'Connection settings not found',
+            }), 400
+
+
+        nm = bus.get_object(
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager")
+
+
+        try:
+            conn_path = self.getActiveConnection(bus, nm, connection_uuid)
+        except NotFound:
+            app.logger.error('Active connection not found')
+            return jsonify({
+                'failure-message' : 'Active connection not found',
+            }), 400
+
+
+        settings = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", settings_path),
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_connection = dbus.Interface(
+            settings,
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_dict = settings_connection.GetSettings()
+        if settings_dict['connection']['type'] not in ('802-11-wireless', '802-3-ethernet'):
+            return jsonify({
+                'failure-message' : 'Only Ethernet and Wireless connections can be managed',
+            }), 400
+
+
+
+        manager = dbus.Interface(
+            nm,
+            "org.freedesktop.NetworkManager")
+
+
+        try:
+            manager.DeactivateConnection(conn_path)
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'Failed to deactivate connection: {0:s}'.format(str(e)),
+            }), 400
+
+
+        time.sleep(2.0)  # give some time for system to register
+
+        return jsonify({
+            'success-message' : 'Connection deactivated',
+        })
+
+
+    def deleteConnection(self, connection_uuid):
+        bus = dbus.SystemBus()
+
+
+        try:
+            nm_settings = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager/Settings")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        try:
+            settings_path = self.getSettingsPath(bus, nm_settings, connection_uuid)
+        except NotFound:
+            app.logger.error('Connection settings not found')
+            return jsonify({
+                'failure-message' : 'Connection settings not found',
+            }), 400
+
+
+        settings = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", settings_path),
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        nm = bus.get_object(
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager")
+
+
+        try:
+            self.getActiveConnection(bus, nm, connection_uuid)
+            return jsonify({
+                'failure-message' : 'Cannot delete active connections',
+            }), 400
+        except NotFound:
+            pass
+
+
+        settings_connection = dbus.Interface(
+            settings,
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_dict = settings_connection.GetSettings()
+        if settings_dict['connection']['type'] not in ('802-11-wireless', '802-3-ethernet'):
+            return jsonify({
+                'failure-message' : 'Only Ethernet and Wireless connections can be managed',
+            }), 400
+
+
+        settings.Delete()
+
+
+        time.sleep(2.0)  # give some time for system to register
+
+        return jsonify({
+            'success-message' : 'Connection deleted',
+        })
+
+
+    def setAutostartConnection(self, connection_uuid, auto_connect=True):
+        bus = dbus.SystemBus()
+
+
+        try:
+            nm_settings = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager/Settings")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        try:
+            settings_path = self.getSettingsPath(bus, nm_settings, connection_uuid)
+        except NotFound:
+            app.logger.error('Connection settings not found')
+            return jsonify({
+                'failure-message' : 'Connection settings not found',
+            }), 400
+
+
+        settings = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", settings_path),
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_connection = dbus.Interface(
+            settings,
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_dict = settings_connection.GetSettings()
+
+        ### Here is the magic
+        settings_dict['connection']['autoconnect'] = auto_connect
+
+
+        try:
+            settings_connection.Update(settings_dict)
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'Configure Failed: {0:s}'.format(str(e)),
+            }), 400
+
+
+        time.sleep(2.0)  # give some time for system to register
+
+        return jsonify({
+            'success-message' : 'Configure Successful',
+        })
+
+
+    def getSettingsPath(self, bus, nm_settings, connection_uuid):
+        settingspath_list = nm_settings.Get(
+            "org.freedesktop.NetworkManager.Settings",
+            "Connections",
+            dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+        for settings_path in settingspath_list:
+            settings = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                settings_path)
+
+
+            settings_connection = dbus.Interface(
+                settings,
+                "org.freedesktop.NetworkManager.Settings.Connection")
+
+            settings_dict = settings_connection.GetSettings()
+            #app.logger.info('Settings: %s', settings_dict)
+
+            settings_uuid = str(settings_dict['connection']['uuid'])
+
+
+            if settings_uuid == connection_uuid:
+                return settings_path
+        else:
+            raise NotFound('Connection settings not found')
+
+
+    def getActiveConnection(self, bus, nm, connection_uuid):
+        # get active connections
+        connpath_list = nm.Get(
+            "org.freedesktop.NetworkManager",
+            "ActiveConnections",
+            dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+        for conn_path in connpath_list:
+            conn = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                conn_path)
+
+
+            conn_uuid = conn.Get(
+                "org.freedesktop.NetworkManager.Connection.Active",
+                "Uuid",
+                dbus_interface=dbus.PROPERTIES_IFACE)
+
+
+            if str(conn_uuid) == connection_uuid:
+                return conn_path
+
+        else:
+            raise NotFound('Connection settings not found')
+
+
+    def scanAPs(self, interface_name):
+        bus = dbus.SystemBus()
+
+        try:
+            manager_bus_object = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        manager = dbus.Interface(
+            manager_bus_object,
+            "org.freedesktop.NetworkManager")
+
+        manager_props = dbus.Interface(
+            manager_bus_object,
+            "org.freedesktop.DBus.Properties")
+
+
+        # Enable Wireless. If Wireless is already enabled, this does nothing.
+        wifi_enabled = manager_props.Get(
+            "org.freedesktop.NetworkManager",
+            "WirelessEnabled")
+
+        if not wifi_enabled:
+            app.logger.warning('Enabling WiFi')
+            manager_props.Set(
+                "org.freedesktop.NetworkManager",
+                "WirelessEnabled",
+                True)
+
+            # Give the WiFi adapter some time to scan for APs. This is absolutely
+            # the wrong way to do it, and the program should listen for
+            # AccessPointAdded() signals, but it will do.
+            time.sleep(10)
+
+
+        device_path = manager.GetDeviceByIpIface(interface_name)
+        device = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", device_path),
+            "org.freedesktop.NetworkManager.Device.Wireless"
+        )
+
+
+        try:
+            accesspoints_paths_list = device.GetAccessPoints()
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'Scan APs Failed: {0:s}'.format(str(e)),
+            }), 400
+
+
+        ap_list = list()
+        for ap_path in accesspoints_paths_list:
+            ap_props = dbus.Interface(
+                bus.get_object("org.freedesktop.NetworkManager", ap_path),
+                "org.freedesktop.DBus.Properties"
+            )
+
+            ap_ssid = ap_props.Get(
+                "org.freedesktop.NetworkManager.AccessPoint",
+                "Ssid")
+
+            ap_strength = ap_props.Get(
+                "org.freedesktop.NetworkManager.AccessPoint",
+                "Strength")
+
+            ap_frequency = ap_props.Get(
+                "org.freedesktop.NetworkManager.AccessPoint",
+                "Frequency")
+
+
+            str_ap_ssid = "".join(chr(i) for i in ap_ssid)
+            #app.logger.info("Found SSID: %s", str_ap_ssid)
+
+
+            ap_frequency_int = int(ap_frequency)
+
+            if ap_frequency_int > 5999:
+                ap_frequency_str = '6 GHz'
+            elif ap_frequency_int > 3000:
+                ap_frequency_str = '5 GHz'
+            else:
+                ap_frequency_str = '2.4 GHz'
+
+
+            ap_list.append({
+                'path' : str(ap_path),
+                'ssid' : '{0:s} [{1:s}] - {2:d}%'.format(str_ap_ssid, ap_frequency_str, int.from_bytes(str(ap_strength).encode())),
+                'strength' : int.from_bytes(str(ap_strength).encode()),  # need to sort on this key
+                'frequency' : ap_frequency_int,
+            })
+
+
+        ap_list_sorted = sorted(ap_list, key=lambda x: x['strength'], reverse=True)
+
+
+        time.sleep(2.0)  # give some time for system to register
+
+        return jsonify({
+            'success-message' : 'Scan Successful',
+            'data' : ap_list_sorted,
+        })
+
+
+    def connectAP(self, interface_name, ap_path, psk):
+        bus = dbus.SystemBus()
+
+        manager_bus_object = bus.get_object(
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager")
+
+        manager = dbus.Interface(
+            manager_bus_object,
+            "org.freedesktop.NetworkManager")
+
+
+        device_path = manager.GetDeviceByIpIface(interface_name)
+
+
+        connection_params = {
+            'connection' : {
+                'type' : '802-11-wireless',
+                'autoconnect' : True,
+                'autoconnect-priority' : 0,
+                'autoconnect-retries' : 3,
+            },
+            '802-11-wireless': {
+                'security': '802-11-wireless-security',
+                'powersave': 2,  # disable power saving
+            },
+            '802-11-wireless-security': {
+                'key-mgmt': 'wpa-psk',
+                'psk': psk,
+            },
+        }
+
+
+        try:
+            # Establish the connection.
+            settings_path, connection_path = manager.AddAndActivateConnection(connection_params, device_path, ap_path)
+            #app.logger.info("settings_path = %s", settings_path)
+            #app.logger.info("connection_path = %s", connection_path)
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'Connect AP Failed: {0:s}'.format(str(e)),
+            }), 400
+
+
+        connection_props = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", connection_path),
+            "org.freedesktop.DBus.Properties"
+        )
+
+
+        # Wait until connection is established. This may take a few seconds.
+        app.logger.info("Waiting for wireless connection")
+
+
+        state = None
+        for _ in range(30):
+            time.sleep(1.0)
+            # Loop until desired state is detected.
+            #
+            # A timeout should be implemented here, otherwise the program will
+            # get stuck if connection fails.
+            #
+            # IF PASSWORD IS BAD, NETWORK MANAGER WILL DISPLAY A QUERY DIALOG!
+            #
+            # Also, if connection is disconnected at this point, the Get()
+            # method will raise an org.freedesktop.DBus.Error.UnknownMethod
+            # exception. This should also be anticipated.
+            try:
+                state = connection_props.Get(
+                    "org.freedesktop.NetworkManager.Connection.Active",
+                    "State")
+                #app.logger.info('Connection state: %d', int(state))
+            except dbus.exceptions.DBusException as e:
+                app.logger.error('D-Bus Exception: %s (psk may be incorrect)', str(e))
+
+
+                ### remove the connection
+                #manager.DeactivateConnection(connection_path)
+                settings = dbus.Interface(
+                    bus.get_object("org.freedesktop.NetworkManager", settings_path),
+                    "org.freedesktop.NetworkManager.Settings.Connection")
+
+                settings.Delete()
+
+
+                return jsonify({
+                    'failure-message' : 'Connect AP Failed: {0:s} (PSK may be incorrect)'.format(str(e)),
+                }), 400
+
+
+            if int(state) == self.nm_conn_states['Active']:
+                app.logger.warning("Wireless connection established!")
+                break
+        else:
+            app.logger.error('Wireless connection failed')
+            return jsonify({
+                'failure-message' : 'Connect AP Failed: Wireless connection failed',
+            }), 400
+
+
+        return jsonify({
+            'success-message' : 'Connection Successful',
+        })
+
+
+    def createHotspot(self, interface_name, ssid, band, psk):
+        bus = dbus.SystemBus()
+
+        try:
+            nm = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'Connect AP Failed: {0:s}'.format(str(e)),
+            }), 400
+
+
+        manager = dbus.Interface(
+            nm,
+            "org.freedesktop.NetworkManager")
+
+
+        nm_settings = bus.get_object(
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager/Settings")
+
+        settings_manager = dbus.Interface(
+            nm_settings,
+            "org.freedesktop.NetworkManager.Settings")
+
+
+        # ensure device exists
+        manager.GetDeviceByIpIface(interface_name)
+
+
+        connection_params = {
+            'connection' : {
+                'type' : '802-11-wireless',
+                'autoconnect' : True,
+                'autoconnect-priority' : -99,
+                'id' : ssid,
+                'interface-name' : interface_name,
+            },
+            '802-11-wireless': {
+                'mode' : 'ap',
+                'ssid' : dbus.ByteArray(ssid.encode('utf-8')),
+                'security': '802-11-wireless-security',
+                'powersave': 2,  # disable power saving
+                'band' : band,
+            },
+            '802-11-wireless-security': {
+                'key-mgmt': 'wpa-psk',
+                'psk': psk,
+                'proto' : ['rsn'],
+                'group' : ['ccmp'],
+                'pairwise' : ['ccmp'],
+            },
+            'ipv4' : {
+                'method' : 'manual',
+                'addresses' : [
+                    [
+                        dbus.UInt32(self.ip2int('10.42.0.1')),
+                        dbus.UInt32(24),
+                        dbus.UInt32(self.ip2int('0.0.0.0')),
+                    ],
+                ],
+            },
+            'ipv6' : {
+                'method' : 'link-local',
+            },
+        }
+
+
+        try:
+            # Create the connection.
+            settings_manager.AddConnection(connection_params)
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        time.sleep(2.0)  # give some time for system to register
+
+        return jsonify({
+            'success-message' : 'Hotspot Created',
+        })
+
+
+    def ip2int(self, ip_str):
+        import struct
+        return struct.unpack('=I', socket.inet_aton(ip_str))[0]
+
+
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
@@ -8620,6 +9423,9 @@ bp_allsky.add_url_rule('/mask', view_func=MaskView.as_view('mask_view', template
 bp_allsky.add_url_rule('/camerasimulator', view_func=CameraSimulatorView.as_view('camera_simulator_view', template_name='camera_simulator.html'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
+
+bp_allsky.add_url_rule('/network', view_func=NetworkManagerView.as_view('network_manager_view', template_name='network.html'))
+bp_allsky.add_url_rule('/ajax/network', view_func=AjaxNetworkManagerView.as_view('ajax_network_manager_view'))
 
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))

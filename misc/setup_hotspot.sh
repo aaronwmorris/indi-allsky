@@ -267,6 +267,8 @@ fi
 
 [[ -f "$TMP_POLKIT" ]] && rm -f "$TMP_POLKIT"
 
+sudo systemctl restart polkit
+
 
 if [[ -f "/etc/dhcpcd.conf" ]]; then
     if ! grep -q -e "^denyinterfaces $HOTSPOT_DEV" /etc/dhcpcd.conf; then

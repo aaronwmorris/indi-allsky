@@ -65,14 +65,14 @@ var camera_id = {{ camera_id }};
 <div>{{ longitude_validation_message | safe }}</div>
 
 {% if fits_enabled %}
+<hr>
 <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Saving FITS files is enabled</div>
 {% endif %}
 
+<hr>
 
 <div class="tab-content" id="nav-tabContent">
   <div class="tab-pane fade show active" id="nav-camera" role="tabpanel" aria-labelledby="nav-camera-tab">
-
-    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -699,8 +699,6 @@ var camera_id = {{ camera_id }};
 
 </div><!-- end camera tab -->
 <div class="tab-pane fade" id="nav-image" role="tabpanel" aria-labelledby="nav-image-tab">
-
-    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -1705,8 +1703,6 @@ var camera_id = {{ camera_id }};
 </div><!-- end image tab -->
 <div class="tab-pane fade" id="nav-overlays" role="tabpanel" aria-labelledby="nav-overlays-tab">
 
-    <hr>
-
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.IMAGE_LABEL_SYSTEM.label(class='col-form-label') }}
@@ -2500,8 +2496,6 @@ var camera_id = {{ camera_id }};
 </div><!-- end overlays tab -->
 <div class="tab-pane fade" id="nav-timelapse" role="tabpanel" aria-labelledby="nav-timelapse-tab">
 
-    <hr>
-
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.TIMELAPSE_ENABLE.label }}
@@ -2683,8 +2677,6 @@ var camera_id = {{ camera_id }};
 
 </div><!-- end timelapse tab -->
 <div class="tab-pane fade" id="nav-processing" role="tabpanel" aria-labelledby="nav-processing-tab">
-
-    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3509,8 +3501,6 @@ var camera_id = {{ camera_id }};
 </div><!-- end processing tab -->
 <div class="tab-pane fade" id="nav-location" role="tabpanel" aria-labelledby="nav-location-tab">
 
-    <hr>
-
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.GPS_ENABLE.label }}
@@ -3754,8 +3744,6 @@ var camera_id = {{ camera_id }};
 
 </div><!-- end location tab -->
 <div class="tab-pane fade" id="nav-admin" role="tabpanel" aria-labelledby="nav-admin-tab">
-
-    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -4061,8 +4049,6 @@ var camera_id = {{ camera_id }};
 
 </div><!-- end admin tab -->
 <div class="tab-pane fade" id="nav-filetransfer" role="tabpanel" aria-labelledby="nav-filetransfer-tab">
-
-    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -4809,8 +4795,6 @@ var camera_id = {{ camera_id }};
 </div><!-- end filetransfer tab -->
 <div class="tab-pane fade" id="nav-mqtt" role="tabpanel" aria-labelledby="nav-mqtt-tab">
 
-    <hr>
-
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.MQTTPUBLISH__ENABLE.label }}
@@ -4946,8 +4930,6 @@ var camera_id = {{ camera_id }};
 
 </div><!-- end filetransfer tab -->
 <div class="tab-pane fade" id="nav-youtube" role="tabpanel" aria-labelledby="nav-youtube-tab">
-
-    <hr>
 
     <div><span class="badge rounded-pill bg-info text-dark">Note</span> Youtube support requires installing the "optional" python modules during setup</div>
 
@@ -5149,8 +5131,6 @@ var camera_id = {{ camera_id }};
 
 </div><!-- end youtubetab -->
 <div class="tab-pane fade" id="nav-s3" role="tabpanel" aria-labelledby="nav-s3-tab">
-
-    <hr>
 
     <div><span class="badge rounded-pill bg-info text-dark">Note</span> Object Storage support requires installing the "optional" python modules during setup</div>
 
@@ -5454,7 +5434,6 @@ var camera_id = {{ camera_id }};
 
 </div><!-- end s3 tab -->
 <div class="tab-pane fade" id="nav-syncapi" role="tabpanel" aria-labelledby="nav-syncapi-tab">
-    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -5607,7 +5586,6 @@ var camera_id = {{ camera_id }};
 </div><!-- end syncapi tab -->
 
 <div class="tab-pane fade" id="nav-sensors" role="tabpanel" aria-labelledby="nav-sensors-tab">
-    <hr>
 
     <div><span class="badge rounded-pill bg-info text-dark">Note</span> Hardware Device support requires the python GPIO modules</div>
 
@@ -6483,7 +6461,6 @@ var camera_id = {{ camera_id }};
 </div><!-- end sensors tab -->
 
 <div class="tab-pane fade" id="nav-devices" role="tabpanel" aria-labelledby="nav-devices-tab">
-    <hr>
 
     <div><span class="badge rounded-pill bg-info text-dark">Note</span> Hardware Device support requires the python GPIO modules</div>
 
@@ -7040,7 +7017,6 @@ var camera_id = {{ camera_id }};
 </div><!-- end devices tab -->
 
 <div class="tab-pane fade" id="nav-adsb" role="tabpanel" aria-labelledby="nav-adsb-tab">
-    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -7171,8 +7147,6 @@ var camera_id = {{ camera_id }};
 </div><!-- end adsb tab -->
 
 <div class="tab-pane fade" id="nav-sat_track" role="tabpanel" aria-labelledby="nav-sat_track-tab">
-
-    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
