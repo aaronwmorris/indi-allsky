@@ -760,6 +760,14 @@ sudo loginctl enable-linger "$USER"
 systemctl --user start ${INDISERVER_SERVICE_NAME}.service
 
 
+# disable ModemManager
+echo "*** Disable ModemManger ***"
+if systemctl --quiet is-enabled "ModemManager.service" 2>/dev/null; then
+    sudo systemctl stop ModemManager
+    sudo systemctl disable ModemManager
+fi
+
+
 END_TIME=$(date +%s)
 
 echo

@@ -207,6 +207,13 @@ echo "**** Ensure user is a member of the dialout group ****"
 sudo usermod -a -G dialout "$USER"
 
 
+# disable ModemManager
+echo "*** Disable ModemManger ***"
+if systemctl --quiet is-enabled "ModemManager.service" 2>/dev/null; then
+    sudo systemctl stop ModemManager
+    sudo systemctl disable ModemManager
+fi
+
 
 echo
 echo
