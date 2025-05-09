@@ -8623,9 +8623,16 @@ class AjaxNetworkManagerView(BaseView):
     def scanAPs(self, interface_name):
         bus = dbus.SystemBus()
 
-        manager_bus_object = bus.get_object(
-            "org.freedesktop.NetworkManager",
-            "/org/freedesktop/NetworkManager")
+        try:
+            manager_bus_object = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
 
         manager = dbus.Interface(
             manager_bus_object,
@@ -8832,9 +8839,16 @@ class AjaxNetworkManagerView(BaseView):
     def createHotspot(self, interface_name, ssid, band, psk):
         bus = dbus.SystemBus()
 
-        nm = bus.get_object(
-            "org.freedesktop.NetworkManager",
-            "/org/freedesktop/NetworkManager")
+        try:
+            nm = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'Connect AP Failed: {0:s}'.format(str(e)),
+            }), 400
+
 
         manager = dbus.Interface(
             nm,
