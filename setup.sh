@@ -810,6 +810,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         sqlite3 \
         libgpiod2 \
         i2c-tools \
+        network-manager \
         policykit-1 \
         dbus-user-session
 
@@ -1264,6 +1265,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         sqlite3 \
         libgpiod2 \
         i2c-tools \
+        network-manager \
         policykit-1 \
         dbus-user-session
 
