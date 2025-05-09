@@ -662,6 +662,7 @@ if [[ "$DISTRO" == "debian_12" ]]; then
         sqlite3 \
         libgpiod2 \
         i2c-tools \
+        network-manager \
         polkitd \
         dbus-user-session
 
@@ -1099,6 +1100,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         sqlite3 \
         libgpiod2 \
         i2c-tools \
+        network-manager \
         polkitd \
         dbus-user-session
 
@@ -1867,6 +1869,22 @@ else
 fi
 
 [[ -f "$TMP_POLKIT" ]] && rm -f "$TMP_POLKIT"
+
+
+### alter network manager policy file
+if sudo test -f "/var/lib/polkit-1/localauthority/10-vendor.d/org.freedesktop.NetworkManager.pkla"; then
+    TMP_NM_PKLA=$(mktemp)
+    sudo cat "/var/lib/polkit-1/localauthority/10-vendor.d/org.freedesktop.NetworkManager.pkla" | sed \
+     -e 's|^ResultAny\=no$|ResultAny\=yes|i' > "$TMP_NM_PKLA"
+
+    sudo cp -f "$TMP_NM_PKLA" /var/lib/polkit-1/localauthority/10-vendor.d/org.freedesktop.NetworkManager.pkla
+    sudo chown root:root /var/lib/polkit-1/localauthority/10-vendor.d/org.freedesktop.NetworkManager.pkla
+    sudo chmod 644 /var/lib/polkit-1/localauthority/10-vendor.d/org.freedesktop.NetworkManager.pkla
+    [[ -f "$TMP_NM_PKLA" ]] && rm -f "$TMP_NM_PKLA"
+fi
+
+
+sudo systemctl restart polkit
 
 
 echo "**** Ensure user is a member of the systemd-journal group ****"

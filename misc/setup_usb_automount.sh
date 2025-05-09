@@ -209,6 +209,8 @@ fi
 
 [[ -f "$TMP_POLKIT" ]] && rm -f "$TMP_POLKIT"
 
+sudo systemctl restart polkit
+
 
 # create users systemd folder
 [[ ! -d "${HOME}/.config/systemd/user" ]] && mkdir -p "${HOME}/.config/systemd/user"
