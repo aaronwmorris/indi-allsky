@@ -7099,7 +7099,6 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
                 'id' : str(settings_dict['connection']['id']),
                 'interface' : str(settings_dict['connection'].get('interface-name', '')),
                 'devices' : [str(settings_dict['connection'].get('interface-name', ''))],  # override later
-                'addresses' : ['No address'],  # override later
                 'active' : False,  # override later
                 'state' : 'Down',  # override later
                 'autoconnect' : bool(settings_dict['connection'].get('autoconnect', True)),
@@ -7116,8 +7115,11 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
                 pre_address_list.append(address_str)
 
 
+            # These will be will be overwritten if the interface is active
             if pre_address_list:
                 conn_dict[settings_uuid]['addresses'] = pre_address_list
+            else:
+                conn_dict[settings_uuid]['addresses'] = ['No address']
 
 
 
