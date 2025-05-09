@@ -7099,12 +7099,26 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
                 'id' : str(settings_dict['connection']['id']),
                 'interface' : str(settings_dict['connection'].get('interface-name', '')),
                 'devices' : [str(settings_dict['connection'].get('interface-name', ''))],  # override later
-                'addresses' : ['No address'],
+                'addresses' : ['No address'],  # override later
                 'active' : False,  # override later
                 'state' : 'Down',  # override later
                 'autoconnect' : bool(settings_dict['connection'].get('autoconnect', True)),
                 'autoconnect-priority' : int(settings_dict['connection'].get('autoconnect-priority', 0)),
             }
+
+
+            # look for static addresses
+            pre_conn_address_list = settings_dict['ipv4'].get('addresses', [])
+
+            pre_address_list = list()
+            for address in pre_conn_address_list:
+                address_str = '{0:s}'.format(str(address[0]))
+                pre_address_list.append(address_str)
+
+
+            if pre_address_list:
+                conn_dict[settings_uuid]['addresses'] = pre_address_list
+
 
 
             settings_type = str(settings_dict['connection']['type'])
