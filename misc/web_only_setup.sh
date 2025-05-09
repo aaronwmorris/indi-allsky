@@ -143,7 +143,7 @@ if [[ "$(id -u)" == "0" ]]; then
 fi
 
 
-if systemctl --quiet is-enabled "nginx" 2>/dev/null; then
+if systemctl --quiet is-enabled "nginx.service" 2>/dev/null; then
     if [ -e "/etc/nginx/sites-enabled/indi-allsky.conf" ]; then
         echo
         echo "Detected nginx web server is active"
