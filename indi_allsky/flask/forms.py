@@ -7212,21 +7212,41 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
             autostart_str = '*'if c[1]['autoconnect'] else ''
             conn_select_wifi_list.append((
                 c[0],
-                '{0:s}{1:s} [{2:s}] - {3:s} ({4:s})'.format(autostart_str, c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
+                '{0:s}{1:s} [{2:s}] - {3:s} ({4:s}) [prio: {5:d}]'.format(
+                    autostart_str,
+                    c[1]['id'],
+                    ','.join(c[1]['devices']),
+                    ','.join(c[1]['addresses']),
+                    c[1]['state'],
+                    c[1]['autoconnect-priority'],
+                )
             ))
 
         for c in filter(lambda item: item[1]['type'] == '802-3-ethernet', conn_dict.items()):
             autostart_str = '*'if c[1]['autoconnect'] else ''
             conn_select_ethernet_list.append((
                 c[0],
-                '{0:s}{1:s} [{2:s}] - {3:s} ({4:s})'.format(autostart_str, c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
+                '{0:s}{1:s} [{2:s}] - {3:s} ({4:s} [prio: {5:d}])'.format(
+                    autostart_str,
+                    c[1]['id'],
+                    ','.join(c[1]['devices']),
+                    ','.join(c[1]['addresses']),
+                    c[1]['state'],
+                    c[1]['autoconnect-priority'],
+                )
             ))
 
         for c in filter(lambda item: item[1]['type'] == 'other', conn_dict.items()):
             autostart_str = '*'if c[1]['autoconnect'] else ''
             conn_select_other_list.append((
                 c[0],
-                '{0:s}{1:s} [{2:s}] - {3:s} ({4:s})'.format(autostart_str, c[1]['id'], ','.join(c[1]['devices']), ','.join(c[1]['addresses']), c[1]['state'])
+                '{0:s}{1:s} [{2:s}] - {3:s} ({4:s})'.format(
+                    autostart_str,
+                    c[1]['id'],
+                    ','.join(c[1]['devices']),
+                    ','.join(c[1]['addresses']),
+                    c[1]['state'],
+                )
             ))
 
 
