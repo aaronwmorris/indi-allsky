@@ -8144,6 +8144,20 @@ class NetworkManagerView(TemplateView):
             context['hostname'] = 'UNKNOWN'
 
 
+        try:
+            # detect if network manager is available
+            bus = dbus.SystemBus()
+            bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager")
+            nm_installed = True
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            nm_installed = False
+
+
+        context['nm_installed'] = nm_installed
+
         context['form_connections'] = IndiAllskyNetworkManagerForm()
 
         return context
