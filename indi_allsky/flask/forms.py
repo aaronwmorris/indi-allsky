@@ -3899,7 +3899,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__THOLD_ENABLE         = BooleanField('Enable Dew Heater Thresholds')
     DEW_HEATER__MANUAL_TARGET        = FloatField('Manual Target', validators=[DEW_HEATER__MANUAL_TARGET_validator])
     DEW_HEATER__TEMP_USER_VAR_SLOT   = SelectField('Temperature Sensor Slot', choices=[], validators=[SENSOR_SLOT_validator])
-    DEW_HEATER__DEWPOINT_USER_VAR_SLOT = SelectField('Dew Point Sensor Slot', choices=[], validators=[SENSOR_SLOT_validator])
+    DEW_HEATER__DEWPOINT_USER_VAR_SLOT = SelectField('Target Sensor Slot', choices=[], validators=[SENSOR_SLOT_validator])
     DEW_HEATER__LEVEL_LOW            = IntegerField('Low Setting', validators=[DEW_HEATER__LEVEL_validator])
     DEW_HEATER__LEVEL_MED            = IntegerField('Medium Setting', validators=[DEW_HEATER__LEVEL_validator])
     DEW_HEATER__LEVEL_HIGH           = IntegerField('High Setting', validators=[DEW_HEATER__LEVEL_validator])
