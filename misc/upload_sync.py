@@ -108,7 +108,11 @@ class UploadSync(object):
             })
 
 
-        self._miscUpload = miscUpload(self.config, self.upload_q)
+        self._miscUpload = miscUpload(
+            self.config,
+            self.upload_q,
+            None,  # night_v not needed
+        )
 
 
         self._shutdown = False

@@ -94,7 +94,7 @@ class TestUpload(object):
         self._miscUpload = miscUpload(
             self.config,
             self.upload_q,
-            None,  # night_v
+            None,  # night_v not needed
         )
 
 
@@ -109,7 +109,7 @@ class TestUpload(object):
 
 
         logger.info('Testing Image: %s', image_entry.filename)
-        time.sleep(1.9)
+        time.sleep(1.0)
 
 
         self._miscUpload.upload_image(image_entry)
@@ -138,7 +138,7 @@ class TestUpload(object):
         self._miscUpload = miscUpload(
             self.config,
             self.upload_q,
-            None,  # night_v
+            None,  # night_v not needed
         )
 
 
@@ -153,16 +153,38 @@ class TestUpload(object):
 
 
         logger.info('Testing Image: %s', image_entry.filename)
-        time.sleep(1.9)
+        time.sleep(1.0)
 
 
         image_metadata = {
             'type'            : constants.IMAGE,
             'createDate'      : int(image_entry.createDate.timestamp()),  # data for syncapi
             'dayDate'         : image_entry.dayDate.strftime('%Y%m%d'),
+            'exposure'        : image_entry.exposure,
+            'exp_elapsed'     : image_entry.exp_elapsed,
+            'gain'            : image_entry.gain,
+            'binmode'         : image_entry.binmode,
+            'temp'            : image_entry.temp,
+            'calibrated'      : image_entry.calibrated,
+            'adu'             : image_entry.adu,
+            'stable'          : image_entry.stable,
+            'sqm'             : image_entry.sqm,
+            'stars'           : image_entry.stars,
+            'detections'      : image_entry.detections,
+            'process_elapsed' : image_entry.process_elapsed,
+            'height'          : image_entry.height,
+            'width'           : image_entry.width,
+            'kpindex'         : image_entry.kpindex,
+            'ovation_max'     : image_entry.ovation_max,
+            'smoke_rating'    : image_entry.smoke_rating,
+            'exclude'         : image_entry.exclude,
             'night'           : image_entry.night,
+            'moonmode'        : image_entry.moonmode,
+            'moonphase'       : image_entry.moonphase,
+            'adu_roi'         : image_entry.adu_roi,
             'utc_offset'      : image_entry.createDate.astimezone().utcoffset().total_seconds(),
             'camera_uuid'     : image_entry.camera.uuid,
+            'data'            : dict(image_entry.data),  # data for syncapi
         }
 
         self._miscUpload.s3_upload_image(image_entry, image_metadata)
@@ -173,6 +195,81 @@ class TestUpload(object):
 
         self._stopFileUploadWorkers()
 
+
+    def syncapi(self):
+        logger.warning('Testing SyncAPI transfer')
+
+
+        if not self.config.get('SYNCAPI', {}).get('ENABLE'):
+            logger.error('SyncAPI disabled')
+            sys.exit(1)
+
+
+        self._startFileUploadWorkers()
+        #time.sleep(1.0)
+
+
+        self.config['SYNCAPI']['ENABLE'] = True  # force enable syncapi
+        self.config['SYNCAPI']['UPLOAD_IMAGE'] = 1  # upload every image
+        self._miscUpload = miscUpload(
+            self.config,
+            self.upload_q,
+            None,  # night_v not needed
+        )
+
+
+        try:
+            image_entry = IndiAllSkyDbImageTable.query\
+                .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+                .limit(1)\
+                .one()
+        except NoResultFound:
+            logger.error('No image found to test SyncAPI transfer')
+            sys.exit(1)
+
+
+        logger.info('Testing Image: %s', image_entry.filename)
+        time.sleep(1.0)
+
+
+        image_metadata = {
+            'type'            : constants.IMAGE,
+            'createDate'      : int(image_entry.createDate.timestamp()),  # data for syncapi
+            'dayDate'         : image_entry.dayDate.strftime('%Y%m%d'),
+            'exposure'        : image_entry.exposure,
+            'exp_elapsed'     : image_entry.exp_elapsed,
+            'gain'            : image_entry.gain,
+            'binmode'         : image_entry.binmode,
+            'temp'            : image_entry.temp,
+            'calibrated'      : image_entry.calibrated,
+            'adu'             : image_entry.adu,
+            'stable'          : image_entry.stable,
+            'sqm'             : image_entry.sqm,
+            'stars'           : image_entry.stars,
+            'detections'      : image_entry.detections,
+            'process_elapsed' : image_entry.process_elapsed,
+            'height'          : image_entry.height,
+            'width'           : image_entry.width,
+            'kpindex'         : image_entry.kpindex,
+            'ovation_max'     : image_entry.ovation_max,
+            'smoke_rating'    : image_entry.smoke_rating,
+            'exclude'         : image_entry.exclude,
+            'night'           : image_entry.night,
+            'moonmode'        : image_entry.moonmode,
+            'moonphase'       : image_entry.moonphase,
+            'adu_roi'         : image_entry.adu_roi,
+            'utc_offset'      : image_entry.createDate.astimezone().utcoffset().total_seconds(),
+            'camera_uuid'     : image_entry.camera.uuid,
+            'data'            : dict(image_entry.data),  # data for syncapi
+        }
+
+        self._miscUpload.syncapi_image(image_entry, image_metadata)
+
+
+        time.sleep(5)
+
+
+        self._stopFileUploadWorkers()
 
 
     def _startFileUploadWorkers(self):
@@ -244,7 +341,7 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         'type',
-        choices=('filetransfer', 's3'),
+        choices=('filetransfer', 's3', 'syncapi'),
         help='file transfer type',
         type=str,
     )
