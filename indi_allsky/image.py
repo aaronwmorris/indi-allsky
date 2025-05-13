@@ -576,6 +576,10 @@ class ImageWorker(Process):
         self.image_processor.colorize()
 
 
+        #self.image_processor.make_holes()
+        #self.image_processor.fix_holes()
+
+
         longterm_keogram_pixels = self.save_longterm_keogram_data(exp_date, camera_id)
 
 

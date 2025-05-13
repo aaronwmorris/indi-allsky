@@ -1690,6 +1690,78 @@ class ImageProcessor(object):
         self.image = cv2.cvtColor(self.image, cv2.COLOR_GRAY2BGR)
 
 
+    def make_holes(self):
+        image_height, image_width = self.image.shape[:2]
+        mid_height = int(image_height / 2)
+        mid_width = int(image_width / 2)
+
+        # 1x1
+        self.image[mid_height - 100][mid_width]     = (0, 0, 0)
+
+        # 2x2
+        self.image[mid_height][mid_width]           = (0, 0, 0)
+        self.image[mid_height][mid_width + 1]       = (0, 0, 0)
+        self.image[mid_height + 1][mid_width]       = (0, 0, 0)
+        self.image[mid_height + 1][mid_width + 1]   = (0, 0, 0)
+
+        # 3x3
+        self.image[mid_height + 99][mid_width - 1]  = (0, 0, 0)
+        self.image[mid_height + 99][mid_width]      = (0, 0, 0)
+        self.image[mid_height + 99][mid_width + 1]  = (0, 0, 0)
+        self.image[mid_height + 100][mid_width - 1] = (0, 0, 0)
+        self.image[mid_height + 100][mid_width]     = (0, 0, 0)
+        self.image[mid_height + 100][mid_width + 1] = (0, 0, 0)
+        self.image[mid_height + 101][mid_width - 1] = (0, 0, 0)
+        self.image[mid_height + 101][mid_width]     = (0, 0, 0)
+        self.image[mid_height + 101][mid_width + 1] = (0, 0, 0)
+
+
+        cv2.circle(
+            img=self.image,
+            center=(mid_width, mid_height - 100),
+            radius=10,
+            color=(0, 0, 64),
+            thickness=1,
+        )
+
+        cv2.circle(
+            img=self.image,
+            center=(mid_width, mid_height),
+            radius=10,
+            color=(0, 0, 64),
+            thickness=1,
+        )
+
+        cv2.circle(
+            img=self.image,
+            center=(mid_width, mid_height + 100),
+            radius=10,
+            color=(0, 0, 64),
+            thickness=1,
+        )
+
+
+    def fix_holes(self):
+        holes_start = time.time()
+
+        # Convert to uint16 datatype to prevent overflows
+        image = self.image.astype(numpy.uint16)
+
+        # Split up the channels
+        B, G, R = image.transpose(2, 0, 1)
+
+        # Use numpy.abs and 2D sliced data to get 2D mask
+        #mask = numpy.abs(B + G + R) == 0
+        mask = (B + G + R) == 0
+
+        idx = numpy.where(~mask, numpy.arange(mask.shape[1]), 0)
+        numpy.maximum.accumulate(idx, axis=1, out=idx)
+        self.image = self.image[numpy.arange(idx.shape[0])[:, None], idx]
+
+        holes_elapsed_s = time.time() - holes_start
+        logger.info('Fixed holes in %0.4f s', holes_elapsed_s)
+
+
     def apply_image_circle_mask(self):
         if not self.config.get('IMAGE_CIRCLE_MASK', {}).get('ENABLE'):
             return
