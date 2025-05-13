@@ -1742,6 +1742,9 @@ class ImageProcessor(object):
 
 
     def fix_holes(self):
+        ### the purpose of this is to fill in gaps left by subtracting hot pixels with neighboring data
+        ### not quite working yet
+
         holes_start = time.time()
 
         # Convert to uint16 datatype to prevent overflows
