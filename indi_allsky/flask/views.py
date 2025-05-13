@@ -6900,6 +6900,9 @@ class JsonImageProcessingView(JsonView):
             image_processor.colorize()
 
 
+            #image_processor.fix_holes()
+
+
             image_processor.apply_image_circle_mask()
 
 
