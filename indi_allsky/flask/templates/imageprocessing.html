@@ -1702,7 +1702,7 @@ function showImage(image_b64) {
     };
 
 
-    img.src = "data:image/jpg;base64," + image_b64;
+    img.src = "data:image/png;base64," + image_b64;
 }
 
 
@@ -1959,8 +1959,8 @@ function submitProcessingData() {
 
             $("#img_download").html(
                 $('<a />', {
-                    'href'     : "data:image/jpg;base64," + json_data['image_b64'],
-                    'download' : "image_processor_" + Math.floor(Date.now() / 1000) + ".jpg",
+                    'href'     : "data:image/png;base64," + json_data['image_b64'],
+                    'download' : "image_processor_" + Math.floor(Date.now() / 1000) + ".png",
                 }).html(
                     $('<span />', {
                         'text'  : 'Download',
