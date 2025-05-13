@@ -161,6 +161,7 @@ class TestUpload(object):
             'createDate'      : int(image_entry.createDate.timestamp()),  # data for syncapi
             'dayDate'         : image_entry.dayDate.strftime('%Y%m%d'),
             'night'           : image_entry.night,
+            'moonmode'        : image_entry.moonmode,
             'utc_offset'      : image_entry.createDate.astimezone().utcoffset().total_seconds(),
             'camera_uuid'     : image_entry.camera.uuid,
             'data'            : dict(image_entry.data),  # data for syncapi
@@ -216,6 +217,7 @@ class TestUpload(object):
             'createDate'      : int(image_entry.createDate.timestamp()),  # data for syncapi
             'dayDate'         : image_entry.dayDate.strftime('%Y%m%d'),
             'night'           : image_entry.night,
+            'moonmode'        : image_entry.moonmode,
             'utc_offset'      : image_entry.createDate.astimezone().utcoffset().total_seconds(),
             'camera_uuid'     : image_entry.camera.uuid,
             'data'            : dict(image_entry.data),  # data for syncapi
