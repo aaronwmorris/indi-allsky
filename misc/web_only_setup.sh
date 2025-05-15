@@ -1075,8 +1075,7 @@ fi
 
 # dump config for processing
 TMP_CONFIG_DUMP=$(mktemp --suffix=.json)
-"${ALLSKY_DIRECTORY}/config.py" dump > "$TMP_CONFIG_DUMP"
-
+"${ALLSKY_DIRECTORY}/config.py" dumpfile --outfile "$TMP_CONFIG_DUMP"
 
 
 # Detect IMAGE_FOLDER
