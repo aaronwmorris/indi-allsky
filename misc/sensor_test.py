@@ -3,16 +3,7 @@
 import os
 import sys
 import site
-import argparse
-import math
-from datetime import datetime
-from datetime import timezone
-import logging
-import time
 from pathlib import Path
-#from pprint import pformat
-
-from multiprocessing import Value
 
 
 if 'VIRTUAL_ENV' not in os.environ:
@@ -20,15 +11,26 @@ if 'VIRTUAL_ENV' not in os.environ:
     venv_p = Path(__file__).parent.parent.joinpath('virtualenv', 'indi-allsky').absolute()
 
     if venv_p.is_dir():
+        sys.path.insert(0, str(venv_p.joinpath('lib', 'python{0:d}.{1:d}'.format(*sys.version_info), 'site-packages')))
         site.addsitedir(str(venv_p.joinpath('lib', 'python{0:d}.{1:d}'.format(*sys.version_info), 'site-packages')))
         site.PREFIXES = [str(venv_p)]
 
 
+import argparse
+import math
 import ephem
+import time
+from datetime import datetime
+from datetime import timezone
+#from pprint import pformat
+import logging
+
+from multiprocessing import Value
 from sqlalchemy.orm.exc import NoResultFound
 
 
-sys.path.append(str(Path(__file__).parent.absolute().parent))
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent))
+
 
 from indi_allsky import constants
 from indi_allsky.flask import create_app
