@@ -324,8 +324,8 @@ class IndiClientLibCameraGeneric(IndiClient):
         # read metadata to get sensor temperature
         if self.current_metadata_file_p:
             try:
-                with io.open(self.current_metadata_file_p, 'r') as f_metadata:
-                    metadata_dict = json.loads(f_metadata.read(), object_pairs_hook=OrderedDict)
+                with io.open(self.current_metadata_file_p, 'r', encoding='utf-8') as f_metadata:
+                    metadata_dict = json.load(f_metadata, object_pairs_hook=OrderedDict)
             except FileNotFoundError as e:
                 logger.error('Metadata file not found: %s', str(e))
                 metadata_dict = dict()
