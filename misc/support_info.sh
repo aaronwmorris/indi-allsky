@@ -107,11 +107,9 @@ if [[ -d "/etc/stellarmate" ]]; then
     if [[ -f "/etc/stellarmate/version" ]]; then
         head -n 1 /etc/stellarmate/version || true
     fi
-    echo
 elif [[ -f "/etc/astroberry.version" ]]; then
     echo
     echo "Detected Astroberry server"
-    echo
 fi
 
 
@@ -162,13 +160,11 @@ echo "system python: $(python3 -V)"
 
 echo
 echo "indiserver: $INDISERVER"
+
 echo
+echo "Locale info"
+locale || true
 
-
-if [ -f "/etc/astroberry.version" ]; then
-    echo "Detected Astroberry server"
-    echo
-fi
 
 echo
 echo "IP Info"
@@ -177,18 +173,16 @@ ip address
 echo
 echo "User info"
 id
-echo
 
 echo
 echo "gpsd user info"
 id gpsd || true
-echo
 
 echo "Process info"
 # shellcheck disable=SC2009
 ps auxwww | grep indi | grep -v grep || true
-echo
 
+echo
 echo "Check for virtual sessions"
 # shellcheck disable=SC2009
 ps auxwww | grep -i "screen\|tmux\|byobu" | grep -v grep || true
@@ -198,100 +192,101 @@ echo "USB info"
 lsusb || true
 echo
 lsusb -t || true
-echo
 
+echo
 echo "USB Permissions"
 find /dev/bus/usb -ls || true
-echo
 
+echo
 echo "video device Permissions"
 ls -l /dev/video* || true
-echo
 
+echo
 echo "v4l info"
 v4l2-ctl --list-devices || true
-echo
 
+echo
 echo "Module info"
 lsmod || true
+
+
 echo
-
-
 echo "I2C info"
 i2cdetect -y 1 || true
+
+
 echo
-
-
 echo "git status"
 git status | head -n 100
+
+
 echo
-
-
 echo "git log"
 git log -n 1 | head -n 100
-echo
 
 
 if pkg-config --exists libindi; then
     DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
+    echo
     echo "indi version: $DETECTED_INDIVERSION"
-    echo
 else
-    echo "indi version: not detected"
     echo
+    echo "indi version: not detected"
 fi
 
 
+echo
 echo "indi packages"
 dpkg -l | grep libindi || true
+
+
 echo
-
-
 echo "indi connections"
 ss -ant | grep 7624 || true
+
+
 echo
-
-
 echo "Detected indi properties"
 indi_getprop -v 2>&1 || true
-echo
 
 
 if pkg-config --exists libcamera; then
     DETECTED_LIBCAMERA=$(pkg-config --modversion libcamera)
+    echo
     echo "libcamera version: $DETECTED_LIBCAMERA"
-    echo
 else
-    echo "libcamera: not detected"
     echo
+    echo "libcamera: not detected"
 fi
 
 
+echo
 echo "libcamera packages"
 dpkg -l | grep -E "libcamera|rpicam" || true
-echo
 
+echo
 echo "libcamera cameras"
 if which rpicam-hello >/dev/null 2>&1; then
+    echo
     echo "rpicam-hello: $(which rpicam-hello)"
     rpicam-hello --list-cameras || true
-    echo
 elif which libcamera-hello >/dev/null 2>&1; then
+    echo
     echo "libcamera-hello: $(which libcamera-hello)"
     libcamera-hello --list-cameras || true
-    echo
 else
-    echo "libcamera-hello not available"
     echo
+    echo "libcamera-hello not available"
 fi
 
 
+echo
 echo "python packages"
 dpkg -l | grep python || true
-echo
 
 
 if [ -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
+    echo
     echo "Detected indi-allsky virtualenv"
 
     # shellcheck source=/dev/null
@@ -333,15 +328,15 @@ if [ -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
     INDI_ALLSKY_CONFIG=$(echo "$INDI_ALLSKY_CONFIG" | jq --argjson lat "$(printf '%0.0f' "$LOCATION_LATITUDE")" --argjson long "$(printf '%0.0f' "$LOCATION_LONGITUDE")" '.LOCATION_LATITUDE = $lat | .LOCATION_LONGITUDE = $long')
 
 
+    echo
     echo "\`\`\`json"  # markdown
     # Remove all secrets from config
     echo "$INDI_ALLSKY_CONFIG" | jq --arg redacted "REDACTED" '.OWNER = $redacted | .FILETRANSFER.PASSWORD = $redacted | .FILETRANSFER.PASSWORD_E = $redacted | .S3UPLOAD.SECRET_KEY = $redacted | .S3UPLOAD.SECRET_KEY_E = $redacted | .MQTTPUBLISH.PASSWORD = $redacted | .MQTTPUBLISH.PASSWORD_E = $redacted | .SYNCAPI.APIKEY = $redacted | .SYNCAPI.APIKEY_E = $redacted | .PYCURL_CAMERA.PASSWORD = $redacted | .PYCURL_CAMERA.PASSWORD_E = $redacted | .TEMP_SENSOR.OPENWEATHERMAP_APIKEY = $redacted | .TEMP_SENSOR.OPENWEATHERMAP_APIKEY_E = $redacted | .TEMP_SENSOR.WUNDERGROUND_APIKEY = $redacted | .TEMP_SENSOR.WUNDERGROUND_APIKEY_E = $redacted | .TEMP_SENSOR.ASTROSPHERIC_APIKEY = $redacted | .TEMP_SENSOR.ASTROSPHERIC_APIKEY_E = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_APIKEY = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_APIKEY_E = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_APPLICATIONKEY = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_APPLICATIONKEY_E = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_MACADDRESS = $redacted | .TEMP_SENSOR.AMBIENTWEATHER_MACADDRESS_E = $redacted | .TEMP_SENSOR.ECOWITT_APIKEY = $redacted | .TEMP_SENSOR.ECOWITT_APIKEY_E = $redacted | .TEMP_SENSOR.ECOWITT_APPLICATIONKEY = $redacted | .TEMP_SENSOR.ECOWITT_APPLICATIONKEY_E = $redacted | .TEMP_SENSOR.ECOWITT_MACADDRESS = $redacted | .TEMP_SENSOR.ECOWITT_MACADDRESS_E = $redacted |.TEMP_SENSOR.MQTT_PASSWORD = $redacted | .TEMP_SENSOR.MQTT_PASSWORD_E = $redacted | .ADSB.PASSWORD = $redacted | .ADSB.PASSWORD_E = $redacted'
 
     deactivate
-    echo
 else
-    echo "indi-allsky virtualenv is not created"
     echo
+    echo "indi-allsky virtualenv is not created"
 fi
 echo "\`\`\`"  # markdown
 
