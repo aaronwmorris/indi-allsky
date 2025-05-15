@@ -1271,7 +1271,7 @@ class CaptureWorker(Process):
 
 
         try:
-            with io.open(str(tempjson_name_p), 'r') as tempjson_name_f:
+            with io.open(str(tempjson_name_p), 'r', encoding='utf-8') as tempjson_name_f:
                 temp_data = json.load(tempjson_name_f)
 
             tempjson_name_p.unlink()  # remove temp file

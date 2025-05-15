@@ -3549,6 +3549,8 @@ class ImageData(object):
         self.config = config
 
         self._hdulist = hdulist
+        self._hole_mask = None
+
         self._exposure = exposure
         self._exp_date = exp_date
         self._exp_elapsed = exp_elapsed
@@ -3590,6 +3592,14 @@ class ImageData(object):
     @property
     def hdulist(self):
         return self._hdulist
+
+    @property
+    def hole_mask(self):
+        return self._hole_mask
+
+    @hole_mask.setter
+    def hole_mask(self, new_hole_mask):
+        self._hole_mask = new_hole_mask
 
     @property
     def exposure(self):

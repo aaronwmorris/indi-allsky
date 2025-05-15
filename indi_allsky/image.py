@@ -1521,8 +1521,13 @@ class ImageWorker(Process):
 
         indi_allsky_status_p = Path('/var/lib/indi-allsky/indi_allsky_status.json')
 
-        with io.open(str(indi_allsky_status_p), 'w') as f_indi_status:
-            json.dump(status, f_indi_status, indent=4)
+        with io.open(str(indi_allsky_status_p), 'w', encoding='utf-8') as f_indi_status:
+            json.dump(
+                status,
+                f_indi_status,
+                indent=4,
+                ensure_ascii=False,
+            )
             f_indi_status.flush()
             f_indi_status.close()
 

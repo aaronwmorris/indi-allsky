@@ -39,7 +39,7 @@ if __name__ == "__main__":
         '--config',
         '-c',
         help='config file',
-        type=argparse.FileType('r'),
+        type=argparse.FileType('r', encoding='utf-8'),
     )
     argparser.add_argument(
         '--id',

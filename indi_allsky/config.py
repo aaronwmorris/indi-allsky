@@ -1166,16 +1166,15 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
         self._config = self._decrypt_passwords()
 
-        config_temp_f = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json')
-        json.dump(
-            self.config,
-            config_temp_f,
-            indent=4,
-            ensure_ascii=False,
-        )
-        config_temp_f.close()
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json', encoding='utf-8') as config_temp_f:
+            json.dump(
+                self.config,
+                config_temp_f,
+                indent=4,
+                ensure_ascii=False,
+            )
 
-        config_temp_p = Path(config_temp_f.name)
+            config_temp_p = Path(config_temp_f.name)
 
         initial_mtime = config_temp_p.stat().st_mtime
 
@@ -1185,8 +1184,8 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
             os.system('editor {0:s}'.format(str(config_temp_p)))
 
             try:
-                with io.open(str(config_temp_p), 'r') as f_config:
-                    new_config = json.loads(f_config.read(), object_pairs_hook=OrderedDict)
+                with io.open(str(config_temp_p), 'r', encoding='utf-8') as f_config:
+                    new_config = json.load(f_config, object_pairs_hook=OrderedDict)
 
                 break
             except json.JSONDecodeError:
