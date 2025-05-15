@@ -1635,13 +1635,15 @@ class VideoWorker(Process):
         }
 
 
-        data_tempfile_f = tempfile.NamedTemporaryFile(mode='w', delete=False)
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, encoding='utf-8') as data_tempfile_f:
+            json.dump(
+                data,
+                data_tempfile_f,
+                indent=4,
+                ensure_ascii=False,
+            )
 
-        json.dump(data, data_tempfile_f, indent=4)
-        data_tempfile_f.close()
-
-        data_json_p = Path(data_tempfile_f.name)
-
+            data_json_p = Path(data_tempfile_f.name)
 
 
         now = datetime.now()
