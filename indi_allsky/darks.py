@@ -929,7 +929,7 @@ class IndiAllSkyDarks(object):
             image_bitpix = hdulist[0].header['BITPIX']
 
 
-            with tempfile.NamedTemporaryFile(mode='wb', dir=tmp_fit_dir_p, suffix='.fit', delete=False) as f_tmp_fit:
+            with tempfile.NamedTemporaryFile(mode='w+b', dir=tmp_fit_dir_p, suffix='.fit', delete=False) as f_tmp_fit:
                 hdulist.writeto(f_tmp_fit)
 
 
