@@ -1836,11 +1836,11 @@ sudo loginctl enable-linger "$USER"
 systemctl --user daemon-reload
 
 # indi-allsky service is started by the timer (2 minutes after boot)
-systemctl --user disable ${ALLSKY_SERVICE_NAME}.service
+systemctl --user disable "${ALLSKY_SERVICE_NAME}.service"
 
 # gunicorn service is started by the socket
-systemctl --user disable ${GUNICORN_SERVICE_NAME}.service
-systemctl --user enable ${GUNICORN_SERVICE_NAME}.socket
+systemctl --user disable "${GUNICORN_SERVICE_NAME}.service"
+systemctl --user enable "${GUNICORN_SERVICE_NAME}.socket"
 
 
 echo "**** Setup policy kit permissions ****"
@@ -2601,7 +2601,7 @@ fi
 
 echo "**** Starting ${GUNICORN_SERVICE_NAME}.socket"
 # this needs to happen after creating the $DB_FOLDER
-systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
+systemctl --user start "${GUNICORN_SERVICE_NAME}.socket"
 
 
 echo "**** Update config camera interface ****"
@@ -2680,9 +2680,9 @@ fi
 
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
-    systemctl --user enable ${INDISERVER_SERVICE_NAME}.timer
+    systemctl --user enable "${INDISERVER_SERVICE_NAME}.timer"
     # indiserver service is started by the timer (30 seconds after boot)
-    systemctl --user disable ${INDISERVER_SERVICE_NAME}.service
+    systemctl --user disable "${INDISERVER_SERVICE_NAME}.service"
 
 
     while [ -z "${RESTART_INDISERVER:-}" ]; do
@@ -2697,17 +2697,17 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     if [ "$RESTART_INDISERVER" == "true" ]; then
         echo "Restarting indiserver..."
         sleep 3
-        systemctl --user restart ${INDISERVER_SERVICE_NAME}.service
+        systemctl --user restart "${INDISERVER_SERVICE_NAME}.service"
     fi
 fi
 
 
 # ensure indiserver is running
-systemctl --user start ${INDISERVER_SERVICE_NAME}.service
+systemctl --user start "${INDISERVER_SERVICE_NAME}.service"
 
 
 # ensure latest code is active
-systemctl --user restart ${GUNICORN_SERVICE_NAME}.service
+systemctl --user restart "${GUNICORN_SERVICE_NAME}.service"
 
 
 # disable ModemManager
@@ -2728,9 +2728,9 @@ done
 
 
 if [ "$INDIALLSKY_AUTOSTART" == "true" ]; then
-    systemctl --user enable ${ALLSKY_SERVICE_NAME}.timer
+    systemctl --user enable "${ALLSKY_SERVICE_NAME}.timer"
 else
-    systemctl --user disable ${ALLSKY_SERVICE_NAME}.timer
+    systemctl --user disable "${ALLSKY_SERVICE_NAME}.timer"
 fi
 
 
@@ -2753,7 +2753,7 @@ done
 if [ "$INDIALLSKY_START" == "true" ]; then
     echo "Starting indi-allsky..."
     sleep 3
-    systemctl --user start ${ALLSKY_SERVICE_NAME}.service
+    systemctl --user start "${ALLSKY_SERVICE_NAME}.service"
 fi
 
 

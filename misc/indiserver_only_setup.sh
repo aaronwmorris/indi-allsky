@@ -713,8 +713,8 @@ systemctl --user daemon-reload
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
     # service started by timer
-    systemctl --user disable ${INDISERVER_SERVICE_NAME}.service
-    systemctl --user enable ${INDISERVER_SERVICE_NAME}.timer
+    systemctl --user disable "${INDISERVER_SERVICE_NAME}.service"
+    systemctl --user enable "${INDISERVER_SERVICE_NAME}.timer"
 
 
     while [ -z "${RESTART_INDISERVER:-}" ]; do
@@ -729,7 +729,7 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     if [ "$RESTART_INDISERVER" == "true" ]; then
         echo "Restarting indiserver..."
         sleep 3
-        systemctl --user restart ${INDISERVER_SERVICE_NAME}.service
+        systemctl --user restart "${INDISERVER_SERVICE_NAME}.service"
     else
         echo
         echo
@@ -757,7 +757,7 @@ sudo loginctl enable-linger "$USER"
 
 
 # ensure indiserver is running
-systemctl --user start ${INDISERVER_SERVICE_NAME}.service
+systemctl --user start "${INDISERVER_SERVICE_NAME}.service"
 
 
 # disable ModemManager
