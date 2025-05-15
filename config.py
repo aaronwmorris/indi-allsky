@@ -27,6 +27,7 @@ if __name__ == "__main__":
             'list',             # list configs
             'load',             # load exported config
             'dump',             # export config to STDOUT
+            'dumpfile',         # export config to file
             'update_level',     # update config functional level
             'edit',             # edit config in cli
             'revert',           # revert to an older config --id
@@ -39,7 +40,14 @@ if __name__ == "__main__":
         '--config',
         '-c',
         help='config file',
-        type=argparse.FileType('r'),
+        type=argparse.FileType('r', encoding='utf-8'),
+    )
+    argparser.add_argument(
+        '--outfile',
+        '-o',
+        help='output file',
+        type=str,
+        default='',
     )
     argparser.add_argument(
         '--id',
@@ -62,6 +70,7 @@ if __name__ == "__main__":
     action_func = getattr(iacu, args.action)
     action_func(
         config=args.config,
+        outfile=args.outfile,
         config_id=args.id,
         force=args.force,
     )

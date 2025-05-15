@@ -781,7 +781,7 @@ class BaseView(View):
 
 
         try:
-            with io.open(str(web_extra_text_p), 'r') as web_extra_text_f:
+            with io.open(str(web_extra_text_p), 'r', encoding='utf-8') as web_extra_text_f:
                 extra_lines_raw = [x.rstrip() for x in web_extra_text_f.readlines()]
                 web_extra_text_f.close()
         except PermissionError as e:

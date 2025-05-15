@@ -2758,9 +2758,8 @@ class ImageProcessor(object):
 
 
         try:
-            with io.open(str(image_extra_text_p), 'r') as image_extra_text_f:
+            with io.open(str(image_extra_text_p), 'r', encoding='utf-8') as image_extra_text_f:
                 extra_lines = [x.rstrip() for x in image_extra_text_f.readlines()]
-                image_extra_text_f.close()
         except PermissionError as e:
             logger.error('Permission Error: %s', str(e))
             return list()
@@ -3549,6 +3548,8 @@ class ImageData(object):
         self.config = config
 
         self._hdulist = hdulist
+        self._hole_mask = None
+
         self._exposure = exposure
         self._exp_date = exp_date
         self._exp_elapsed = exp_elapsed
@@ -3590,6 +3591,14 @@ class ImageData(object):
     @property
     def hdulist(self):
         return self._hdulist
+
+    @property
+    def hole_mask(self):
+        return self._hole_mask
+
+    @hole_mask.setter
+    def hole_mask(self, new_hole_mask):
+        self._hole_mask = new_hole_mask
 
     @property
     def exposure(self):

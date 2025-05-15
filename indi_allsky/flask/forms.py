@@ -428,7 +428,7 @@ def CCD_TEMP_SCRIPT_validator(form, field):
 
 
     try:
-        with io.open(str(tempjson_name_p), 'r') as tempjson_name_f:
+        with io.open(str(tempjson_name_p), 'r', encoding='utf-8') as tempjson_name_f:
             temp_data = json.load(tempjson_name_f)
 
         tempjson_name_p.unlink()  # remove temp file
@@ -810,7 +810,7 @@ def WEB_EXTRA_TEXT_validator(form, field):
         if web_extra_text_p.stat().st_size > 10000:
             raise ValidationError('File is too large')
 
-        with io.open(str(web_extra_text_p), 'r'):
+        with io.open(str(web_extra_text_p), 'r', encoding='utf-8'):
             pass
     except PermissionError as e:
         raise ValidationError(str(e))
@@ -1172,7 +1172,7 @@ def IMAGE_EXTRA_TEXT_validator(form, field):
         if image_extra_text_p.stat().st_size > 10000:
             raise ValidationError('File is too large')
 
-        with io.open(str(image_extra_text_p), 'r'):
+        with io.open(str(image_extra_text_p), 'r', encoding='utf-8'):
             pass
     except PermissionError as e:
         raise ValidationError(str(e))
@@ -1202,7 +1202,7 @@ def DETECT_MASK_validator(form, field):
         if not detect_mask_p.is_file():
             raise ValidationError('Not a file')
 
-        with io.open(str(detect_mask_p), 'r'):
+        with io.open(str(detect_mask_p), 'rb'):
             pass
     except PermissionError as e:
         raise ValidationError(str(e))
@@ -1239,7 +1239,7 @@ def LOGO_OVERLAY_validator(form, field):
         if not overlay_p.is_file():
             raise ValidationError('Not a file')
 
-        with io.open(str(overlay_p), 'r'):
+        with io.open(str(overlay_p), 'rb'):
             pass
     except PermissionError as e:
         raise ValidationError(str(e))
@@ -1946,7 +1946,7 @@ def FILETRANSFER__PRIVATE_KEY_validator(form, field):
         if not file_name_p.is_file():
             raise ValidationError('Not a file')
 
-        with io.open(str(file_name_p), 'r'):
+        with io.open(str(file_name_p), 'rb'):
             pass
     except PermissionError as e:
         raise ValidationError(str(e))
@@ -1971,7 +1971,7 @@ def FILETRANSFER__PUBLIC_KEY_validator(form, field):
         if not file_name_p.is_file():
             raise ValidationError('Not a file')
 
-        with io.open(str(file_name_p), 'r'):
+        with io.open(str(file_name_p), 'rb'):
             pass
     except PermissionError as e:
         raise ValidationError(str(e))

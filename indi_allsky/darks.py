@@ -929,10 +929,9 @@ class IndiAllSkyDarks(object):
             image_bitpix = hdulist[0].header['BITPIX']
 
 
-            f_tmp_fit = tempfile.NamedTemporaryFile(dir=tmp_fit_dir_p, suffix='.fit', delete=False)
-            hdulist.writeto(f_tmp_fit)
-            f_tmp_fit.flush()
-            f_tmp_fit.close()
+            with tempfile.NamedTemporaryFile(mode='w+b', dir=tmp_fit_dir_p, suffix='.fit', delete=False) as f_tmp_fit:
+                hdulist.writeto(f_tmp_fit)
+
 
             #logger.info('FIT: %s', f_tmp_fit.name)
 
@@ -1146,7 +1145,7 @@ class IndiAllSkyDarks(object):
 
 
         try:
-            with io.open(str(tempjson_name_p), 'r') as tempjson_name_f:
+            with io.open(str(tempjson_name_p), 'r', encoding='utf-8') as tempjson_name_f:
                 temp_data = json.load(tempjson_name_f)
 
             tempjson_name_p.unlink()  # remove temp file

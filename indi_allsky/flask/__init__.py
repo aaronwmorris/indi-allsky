@@ -75,6 +75,7 @@ def _sqlite_pragma_on_connect(dbapi_con, con_record):
     dbapi_con.execute('PRAGMA journal_mode=WAL')
     dbapi_con.execute('PRAGMA synchronous=NORMAL')
     dbapi_con.execute('PRAGMA busy_timeout=20000')
+    #dbapi_con.execute('PRAGMA encoding="UTF-8"')  # utf-8 is the default
     #dbapi_con.execute('PRAGMA read_uncommitted=ON')
     #dbapi_con.execute('PRAGMA foreign_keys=ON')
 

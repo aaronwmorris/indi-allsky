@@ -305,13 +305,9 @@ class IndiClient(PyIndi.BaseClient):
         hdulist = fits.open(blobfile)
 
         try:
-            f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
-            f_tmpfile_p = Path(f_tmpfile.name)
-
-            hdulist.writeto(f_tmpfile)
-
-            f_tmpfile.flush()
-            f_tmpfile.close()
+            with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit') as f_tmpfile:
+                hdulist.writeto(f_tmpfile)
+                f_tmpfile_p = Path(f_tmpfile.name)
         except OSError as e:
             logger.error('OSError: %s', str(e))
             return

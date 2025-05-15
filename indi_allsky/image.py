@@ -986,14 +986,17 @@ class ImageWorker(Process):
             metadata[sensor_topic] = v
 
 
-        f_tmp_metadata = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json')
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json', encoding='utf-8') as f_tmp_metadata:
+            json.dump(
+                metadata,
+                f_tmp_metadata,
+                indent=4,
+                ensure_ascii=False,
+            )
 
-        json.dump(metadata, f_tmp_metadata, indent=4)
+            tmp_metadata_name_p = Path(f_tmp_metadata.name)
 
-        f_tmp_metadata.flush()
-        f_tmp_metadata.close()
 
-        tmp_metadata_name_p = Path(f_tmp_metadata.name)
         tmp_metadata_name_p.chmod(0o644)
 
 
@@ -1521,10 +1524,13 @@ class ImageWorker(Process):
 
         indi_allsky_status_p = Path('/var/lib/indi-allsky/indi_allsky_status.json')
 
-        with io.open(str(indi_allsky_status_p), 'w') as f_indi_status:
-            json.dump(status, f_indi_status, indent=4)
-            f_indi_status.flush()
-            f_indi_status.close()
+        with io.open(str(indi_allsky_status_p), 'w', encoding='utf-8') as f_indi_status:
+            json.dump(
+                status,
+                f_indi_status,
+                indent=4,
+                ensure_ascii=False,
+            )
 
         indi_allsky_status_p.chmod(0o644)
 
