@@ -126,10 +126,6 @@ echo "Memory: $MEM_TOTAL kB"
 echo
 
 
-# Run sudo to make sure a password is not required
-sudo --non-interactive true
-
-
 if systemctl --quiet is-enabled "${ALLSKY_SERVICE_NAME}.timer" 2>/dev/null; then
     ### make sure the timer is not started
     ### this can be left in a stopped state
@@ -222,9 +218,9 @@ if [[ "$DISTRO" == "debian_12" ]]; then
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
-    sudo apt-get update
+    sudo --non-interactive apt-get update
 
-    sudo apt-get -y install \
+    sudo --non-interactive apt-get -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -300,9 +296,9 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo --non-interactive apt-get update
 
-    sudo apt-get -y install \
+    sudo --non-interactive apt-get -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -379,9 +375,9 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo --non-interactive apt-get update
 
-    sudo apt-get -y install \
+    sudo --non-interactive apt-get -y install \
         build-essential \
         python3 \
         python3-dev \
@@ -458,9 +454,9 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     fi
 
 
-    sudo apt-get update
+    sudo --non-interactive apt-get update
 
-    sudo apt-get -y install \
+    sudo --non-interactive apt-get -y install \
         build-essential \
         python3.11 \
         python3.11-dev \

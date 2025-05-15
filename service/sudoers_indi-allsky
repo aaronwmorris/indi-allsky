@@ -1,0 +1,2 @@
+# commands necessary for unattended upgrade
+aaron ALL=(root) NOPASSWD: /usr/bin/apt-get update,/usr/bin/apt-get -y install *
