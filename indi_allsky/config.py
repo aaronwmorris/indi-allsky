@@ -1257,6 +1257,46 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
         print(json.dumps(self._config, indent=4, ensure_ascii=False))
 
 
+    def dumpfile(self, **kwargs):
+        with app.app_context():
+            self._dumpfile(**kwargs)
+
+
+    def _dumpfile(self, **kwargs):
+        outfile = kwargs['outfile']
+        dump_id = kwargs['config_id']
+
+        if not outfile:
+            logger.error('Invalid output file')
+            sys.exit(1)
+
+
+        try:
+            dump_entry = self._getConfigEntry(config_id=dump_id)
+        except NoResultFound:
+            logger.error('Configuration ID %d not found', int(dump_id))
+            sys.exit(1)
+
+        self._config.update(dump_entry.data)
+
+        self._config = self._decrypt_passwords()
+
+        logger.info('Dumping config')
+
+
+        try:
+            with io.open(str(outfile), 'w', encoding='utf-8') as f_config:
+                json.dump(
+                    self._config,
+                    f_config,
+                    indent=4,
+                    ensure_ascii=False,
+                )
+        except PermissionError as e:
+            logger.error('PermissionError: %s', str(e))
+            sys.exit(1)
+
+
     def delete(self, **kwargs):
         with app.app_context():
             self._delete(**kwargs)
