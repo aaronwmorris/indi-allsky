@@ -929,10 +929,9 @@ class IndiAllSkyDarks(object):
             image_bitpix = hdulist[0].header['BITPIX']
 
 
-            f_tmp_fit = tempfile.NamedTemporaryFile(dir=tmp_fit_dir_p, suffix='.fit', delete=False)
-            hdulist.writeto(f_tmp_fit)
-            f_tmp_fit.flush()
-            f_tmp_fit.close()
+            with tempfile.NamedTemporaryFile(mode='wb', dir=tmp_fit_dir_p, suffix='.fit', delete=False) as f_tmp_fit:
+                hdulist.writeto(f_tmp_fit)
+
 
             #logger.info('FIT: %s', f_tmp_fit.name)
 

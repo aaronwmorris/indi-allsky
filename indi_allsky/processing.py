@@ -2758,9 +2758,8 @@ class ImageProcessor(object):
 
 
         try:
-            with io.open(str(image_extra_text_p), 'r') as image_extra_text_f:
+            with io.open(str(image_extra_text_p), 'r', encoding='utf-8') as image_extra_text_f:
                 extra_lines = [x.rstrip() for x in image_extra_text_f.readlines()]
-                image_extra_text_f.close()
         except PermissionError as e:
             logger.error('Permission Error: %s', str(e))
             return list()
