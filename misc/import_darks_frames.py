@@ -3,10 +3,7 @@
 import os
 import sys
 import site
-#import time
-from datetime import datetime
 from pathlib import Path
-import logging
 
 
 if 'VIRTUAL_ENV' not in os.environ:
@@ -14,19 +11,24 @@ if 'VIRTUAL_ENV' not in os.environ:
     venv_p = Path(__file__).parent.parent.joinpath('virtualenv', 'indi-allsky').absolute()
 
     if venv_p.is_dir():
+        sys.path.insert(0, str(venv_p.joinpath('lib', 'python{0:d}.{1:d}'.format(*sys.version_info), 'site-packages')))
         site.addsitedir(str(venv_p.joinpath('lib', 'python{0:d}.{1:d}'.format(*sys.version_info), 'site-packages')))
         site.PREFIXES = [str(venv_p)]
 
 
+#import time
+from datetime import datetime
 import numpy
 from astropy.io import fits
+import logging
 
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
 #from sqlalchemy.exc import IntegrityError
 
 
-sys.path.append(str(Path(__file__).parent.absolute().parent))
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent))
+
 
 from indi_allsky.flask import create_app
 from indi_allsky import constants

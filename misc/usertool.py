@@ -3,15 +3,7 @@
 import os
 import sys
 import site
-import argparse
-import re
 from pathlib import Path
-import getpass
-import secrets
-#import time
-from datetime import datetime
-#from datetime import timedelta
-import logging
 
 
 if 'VIRTUAL_ENV' not in os.environ:
@@ -19,15 +11,27 @@ if 'VIRTUAL_ENV' not in os.environ:
     venv_p = Path(__file__).parent.parent.joinpath('virtualenv', 'indi-allsky').absolute()
 
     if venv_p.is_dir():
+        sys.path.insert(0, str(venv_p.joinpath('lib', 'python{0:d}.{1:d}'.format(*sys.version_info), 'site-packages')))
         site.addsitedir(str(venv_p.joinpath('lib', 'python{0:d}.{1:d}'.format(*sys.version_info), 'site-packages')))
         site.PREFIXES = [str(venv_p)]
 
 
+import argparse
+import re
+import getpass
+import secrets
 from passlib.hash import argon2
 from prettytable import PrettyTable
+#import time
+from datetime import datetime
+#from datetime import timedelta
+import logging
+
 from sqlalchemy.exc import IntegrityError
 
-sys.path.append(str(Path(__file__).parent.absolute().parent))
+
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent))
+
 
 from indi_allsky.flask import create_app
 

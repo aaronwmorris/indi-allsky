@@ -3,13 +3,7 @@
 import os
 import sys
 import site
-import argparse
-import time
-from datetime import datetime
-from datetime import timedelta
 from pathlib import Path
-import signal
-import logging
 
 
 if 'VIRTUAL_ENV' not in os.environ:
@@ -17,14 +11,22 @@ if 'VIRTUAL_ENV' not in os.environ:
     venv_p = Path(__file__).parent.parent.joinpath('virtualenv', 'indi-allsky').absolute()
 
     if venv_p.is_dir():
+        sys.path.insert(0, str(venv_p.joinpath('lib', 'python{0:d}.{1:d}'.format(*sys.version_info), 'site-packages')))
         site.addsitedir(str(venv_p.joinpath('lib', 'python{0:d}.{1:d}'.format(*sys.version_info), 'site-packages')))
         site.PREFIXES = [str(venv_p)]
 
 
+import argparse
+import time
+from datetime import datetime
+from datetime import timedelta
+import signal
+import logging
+
 from sqlalchemy.orm.exc import NoResultFound
 
 
-sys.path.append(str(Path(__file__).parent.absolute().parent))
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent))
 
 
 from indi_allsky.flask.models import IndiAllSkyDbImageTable

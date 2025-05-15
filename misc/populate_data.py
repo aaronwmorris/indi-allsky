@@ -14,7 +14,9 @@ import logging
 
 from sqlalchemy.sql.expression import null as sa_null
 
-sys.path.append(str(Path(__file__).parent.absolute().parent))
+
+sys.path.insert(0, str(Path(__file__).parent.absolute().parent))
+
 
 from indi_allsky.flask.models import IndiAllSkyDbImageTable
 from indi_allsky.flask.models import IndiAllSkyDbPanoramaImageTable
