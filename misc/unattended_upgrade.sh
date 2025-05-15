@@ -126,8 +126,13 @@ echo "Memory: $MEM_TOTAL kB"
 echo
 
 
+# Run sudo to make sure a password is not required
+sudo --non-interactive true
+
+
 if systemctl --quiet is-enabled "${ALLSKY_SERVICE_NAME}.timer" 2>/dev/null; then
     ### make sure the timer is not started
+    ### this can be left in a stopped state
     systemctl --user stop "${ALLSKY_SERVICE_NAME}.timer"
 fi
 
@@ -142,8 +147,6 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
         DISTRO="debian_12"
     elif [[ "$DISTRO_VERSION_ID" == "11" ]]; then
         DISTRO="debian_11"
-    elif [[ "$DISTRO_VERSION_ID" == "10" ]]; then
-        DISTRO="debian_10"
     else
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
         exit 1
@@ -154,8 +157,6 @@ elif [[ "$DISTRO_ID" == "ubuntu" ]]; then
         DISTRO="ubuntu_24.04"
     elif [[ "$DISTRO_VERSION_ID" == "22.04" ]]; then
         DISTRO="ubuntu_22.04"
-    elif [[ "$DISTRO_VERSION_ID" == "20.04" ]]; then
-        DISTRO="ubuntu_20.04"
     else
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
         exit 1
@@ -212,7 +213,6 @@ VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
 VIRTUALENV_REQ_GPIO=requirements/requirements_gpio.txt
 
 
-
 if [[ "$DISTRO" == "debian_12" ]]; then
     if [ "$CPU_ARCH" == "armv6l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
@@ -222,6 +222,75 @@ if [[ "$DISTRO" == "debian_12" ]]; then
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
+    sudo apt-get update
+
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-dev \
+        python3-venv \
+        python3-pip \
+        virtualenv \
+        cmake \
+        gfortran \
+        whiptail \
+        bc \
+        procps \
+        rsyslog \
+        cron \
+        git \
+        cpio \
+        tzdata \
+        ca-certificates \
+        avahi-daemon \
+        swig \
+        libatlas-base-dev \
+        libimath-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libssl-dev \
+        libxml2-dev \
+        libxslt1-dev \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        libffi-dev \
+        libopencv-dev \
+        libopenblas-dev \
+        libraw-dev \
+        libgeos-dev \
+        libtiff-dev \
+        libjpeg62-turbo-dev \
+        libopenjp2-7-dev \
+        libpng-dev \
+        zlib1g-dev \
+        libfreetype-dev \
+        liblcms2-dev \
+        libwebp-dev \
+        libcap-dev \
+        tcl8.6-dev \
+        tk8.6-dev \
+        python3-tk \
+        libharfbuzz-dev \
+        libfribidi-dev \
+        libxcb1-dev \
+        default-libmysqlclient-dev \
+        pkgconf \
+        rustc \
+        cargo \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        libgpiod2 \
+        i2c-tools \
+        network-manager \
+        polkitd \
+        dbus-user-session
+
 elif [[ "$DISTRO" == "debian_11" ]]; then
     if [ "$CPU_ARCH" == "armv6l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
@@ -230,9 +299,75 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         VIRTUALENV_REQ=requirements/requirements_debian11.txt
     fi
 
-elif [[ "$DISTRO" == "debian_10" ]]; then
-    VIRTUALENV_REQ=requirements/requirements_debian10.txt
-    VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
+
+    sudo apt-get update
+
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-dev \
+        python3-venv \
+        python3-pip \
+        virtualenv \
+        cmake \
+        gfortran \
+        whiptail \
+        bc \
+        procps \
+        rsyslog \
+        cron \
+        git \
+        cpio \
+        tzdata \
+        ca-certificates \
+        avahi-daemon \
+        swig \
+        libatlas-base-dev \
+        libilmbase-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libssl-dev \
+        libxml2-dev \
+        libxslt-dev \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        libffi-dev \
+        libopencv-dev \
+        libopenblas-dev \
+        libraw-dev \
+        libgeos-dev \
+        libtiff5-dev \
+        libjpeg62-turbo-dev \
+        libopenjp2-7-dev \
+        libpng-dev \
+        zlib1g-dev \
+        libfreetype6-dev \
+        liblcms2-dev \
+        libwebp-dev \
+        libcap-dev \
+        tcl8.6-dev \
+        tk8.6-dev \
+        python3-tk \
+        libharfbuzz-dev \
+        libfribidi-dev \
+        libxcb1-dev \
+        default-libmysqlclient-dev \
+        pkg-config \
+        rustc \
+        cargo \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        libgpiod2 \
+        i2c-tools \
+        network-manager \
+        policykit-1 \
+        dbus-user-session
 
 elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     if [ "$CPU_ARCH" == "armv6l" ]; then
@@ -243,6 +378,76 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
+
+    sudo apt-get update
+
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-dev \
+        python3-venv \
+        python3-pip \
+        virtualenv \
+        cmake \
+        gfortran \
+        whiptail \
+        bc \
+        procps \
+        rsyslog \
+        cron \
+        git \
+        cpio \
+        tzdata \
+        ca-certificates \
+        avahi-daemon \
+        swig \
+        libatlas-base-dev \
+        libimath-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libssl-dev \
+        libxml2-dev \
+        libxslt1-dev \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        libffi-dev \
+        libopencv-dev \
+        libopenblas-dev \
+        libraw-dev \
+        libgeos-dev \
+        libtiff-dev \
+        libjpeg8-dev \
+        libopenjp2-7-dev \
+        libpng-dev \
+        zlib1g-dev \
+        libfreetype-dev \
+        liblcms2-dev \
+        libwebp-dev \
+        libcap-dev \
+        tcl8.6-dev \
+        tk8.6-dev \
+        python3-tk \
+        libharfbuzz-dev \
+        libfribidi-dev \
+        libxcb1-dev \
+        default-libmysqlclient-dev \
+        pkgconf \
+        rustc \
+        cargo \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        libgpiod2 \
+        i2c-tools \
+        network-manager \
+        polkitd \
+        dbus-user-session
+
 elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     if [ "$CPU_ARCH" == "armv6l" ]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
@@ -252,13 +457,78 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
-elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
-    if [ "$CPU_ARCH" == "armv6l" ]; then
-        VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
-        VIRTUALENV_REQ_POST=requirements/requirements_empty.txt
-    else
-        VIRTUALENV_REQ=requirements/requirements_debian11.txt
-    fi
+
+    sudo apt-get update
+
+    sudo apt-get -y install \
+        build-essential \
+        python3.11 \
+        python3.11-dev \
+        python3.11-venv \
+        python3 \
+        python3-dev \
+        python3-venv \
+        python3-pip \
+        virtualenv \
+        cmake \
+        gfortran \
+        whiptail \
+        bc \
+        procps \
+        rsyslog \
+        cron \
+        git \
+        cpio \
+        tzdata \
+        ca-certificates \
+        avahi-daemon \
+        swig \
+        libatlas-base-dev \
+        libilmbase-dev \
+        libopenexr-dev \
+        libgtk-3-0 \
+        libssl-dev \
+        libxml2-dev \
+        libxslt-dev \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        libffi-dev \
+        libopencv-dev \
+        libopenblas-dev \
+        libraw-dev \
+        libgeos-dev \
+        libtiff5-dev \
+        libjpeg8-dev \
+        libopenjp2-7-dev \
+        libpng-dev \
+        zlib1g-dev \
+        libfreetype6-dev \
+        liblcms2-dev \
+        libwebp-dev \
+        libcap-dev \
+        tcl8.6-dev \
+        tk8.6-dev \
+        python3-tk \
+        libharfbuzz-dev \
+        libfribidi-dev \
+        libxcb1-dev \
+        default-libmysqlclient-dev \
+        pkg-config \
+        rustc \
+        cargo \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        libgpiod2 \
+        i2c-tools \
+        network-manager \
+        policykit-1 \
+        dbus-user-session
 
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
