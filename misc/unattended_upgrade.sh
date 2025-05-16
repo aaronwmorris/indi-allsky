@@ -586,6 +586,30 @@ else
 fi
 
 
+echo "**** Flask config ****"
+
+TMP_FLASK=$(mktemp --suffix=.json)
+TMP_FLASK_MERGE=$(mktemp --suffix=.json)
+
+
+cat "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
+
+
+# make a backup
+cp -f "${ALLSKY_ETC}/flask.json" "${ALLSKY_ETC}/flask.json_old"
+chmod 640 "${ALLSKY_ETC}/flask.json_old"
+
+
+# attempt to merge configs giving preference to the original config (listed 2nd)
+jq -s '.[0] * .[1]' "$TMP_FLASK" "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_MERGE"
+cp -f "$TMP_FLASK_MERGE" "${ALLSKY_ETC}/flask.json"
+
+chmod 660 "${ALLSKY_ETC}/flask.json"
+
+[[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
+[[ -f "$TMP_FLASK_MERGE" ]] && rm -f "$TMP_FLASK_MERGE"
+
+
 if [[ -f "${DB_FILE}" ]]; then
     echo "**** Backup DB prior to migration ****"
     DB_BACKUP="${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql.gz"
