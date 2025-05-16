@@ -1,0 +1,13 @@
+[Unit]
+Description=Indi AllSky Unattended Upgrade
+ 
+[Service]
+EnvironmentFile=%ALLSKY_ETC%/indi-allsky.env
+WorkingDirectory=%ALLSKY_DIRECTORY%
+ExecStart=%ALLSKY_DIRECTORY%/misc/unattended_upgrade.sh
+RemainAfterExit=true
+Type=oneshot
+UMask=0022
+
+[Install]
+WantedBy=default.target
