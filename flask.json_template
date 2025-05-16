@@ -54,6 +54,7 @@
     "INDISERVER_TIMER_NAME" : "indiserver.timer",
     "ALLSKY_SERVICE_NAME" : "indi-allsky.service",
     "ALLSKY_TIMER_NAME" : "indi-allsky.timer",
+    "UPGRADE_ALLSKY_SERVICE_NAME" : "upgrade-indi-allsky.service",
     "GUNICORN_SERVICE_NAME" : "gunicorn-indi-allsky.service",
     "GUNICORN_SOCKET_NAME" : "gunicorn-indi-allsky.socket"
 }

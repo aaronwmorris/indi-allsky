@@ -837,8 +837,8 @@ systemctl --user daemon-reload
 
 
 # gunicorn service is started by the socket
-systemctl --user disable ${GUNICORN_SERVICE_NAME}.service
-systemctl --user enable ${GUNICORN_SERVICE_NAME}.socket
+systemctl --user disable "${GUNICORN_SERVICE_NAME}.service"
+systemctl --user enable "${GUNICORN_SERVICE_NAME}.socket"
 
 
 echo "**** Setup rsyslog logging ****"
@@ -1383,7 +1383,7 @@ sudo loginctl enable-linger "$USER"
 
 echo "**** Starting ${GUNICORN_SERVICE_NAME}.socket"
 # this needs to happen after creating the $DB_FOLDER
-systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
+systemctl --user start "${GUNICORN_SERVICE_NAME}.socket"
 
 
 # final config syntax check
@@ -1440,7 +1440,7 @@ fi
 
 
 # ensure latest code is active
-systemctl --user restart ${GUNICORN_SERVICE_NAME}.service
+systemctl --user restart "${GUNICORN_SERVICE_NAME}.service"
 
 
 echo

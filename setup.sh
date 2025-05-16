@@ -35,6 +35,7 @@ INDI_DRIVER_PATH="/usr/bin"
 INDISERVER_SERVICE_NAME="indiserver"
 ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
+UPGRADE_ALLSKY_SERVICE_NAME="upgrade-indi-allsky"
 
 ALLSKY_ETC="/etc/indi-allsky"
 DOCROOT_FOLDER="/var/www/html"
@@ -330,6 +331,7 @@ echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
 echo "INDISERVER_SERVICE_NAME: $INDISERVER_SERVICE_NAME"
 echo "ALLSKY_SERVICE_NAME: $ALLSKY_SERVICE_NAME"
 echo "GUNICORN_SERVICE_NAME: $GUNICORN_SERVICE_NAME"
+echo "UPGRADE_ALLSKY_SERVICE_NAME: $UPGRADE_ALLSKY_SERVICE_NAME"
 echo "ALLSKY_ETC: $ALLSKY_ETC"
 echo "HTDOCS_FOLDER: $HTDOCS_FOLDER"
 echo "DB_FOLDER: $DB_FOLDER"
@@ -1796,7 +1798,6 @@ chmod 644 "${HOME}/.config/systemd/user/${ALLSKY_SERVICE_NAME}.timer"
 
 TMP2=$(mktemp)
 sed \
- -e "s|%ALLSKY_USER%|$USER|g" \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
  "${ALLSKY_DIRECTORY}/service/indi-allsky.service" > "$TMP2"
@@ -1820,7 +1821,6 @@ chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.socket"
 
 TMP6=$(mktemp)
 sed \
- -e "s|%ALLSKY_USER%|$USER|g" \
  -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
  -e "s|%GUNICORN_SERVICE_NAME%|$GUNICORN_SERVICE_NAME|g" \
  -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
@@ -1831,16 +1831,43 @@ chmod 644 "${HOME}/.config/systemd/user/${GUNICORN_SERVICE_NAME}.service"
 [[ -f "$TMP6" ]] && rm -f "$TMP6"
 
 
+echo "**** Setting up upgrade-indi-allsky service ****"
+TMP_UPGRADE=$(mktemp)
+sed \
+ -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ "${ALLSKY_DIRECTORY}/service/upgrade-indi-allsky.service" > "$TMP_UPGRADE"
+
+cp -f "$TMP_UPGRADE" "${HOME}/.config/systemd/user/${UPGRADE_ALLSKY_SERVICE_NAME}.service"
+chmod 644 "${HOME}/.config/systemd/user/${UPGRADE_ALLSKY_SERVICE_NAME}.service"
+[[ -f "$TMP_UPGRADE" ]] && rm -f "$TMP_UPGRADE"
+
+
 echo "**** Enabling services ****"
 sudo loginctl enable-linger "$USER"
 systemctl --user daemon-reload
 
 # indi-allsky service is started by the timer (2 minutes after boot)
-systemctl --user disable ${ALLSKY_SERVICE_NAME}.service
+systemctl --user disable "${ALLSKY_SERVICE_NAME}.service"
 
 # gunicorn service is started by the socket
-systemctl --user disable ${GUNICORN_SERVICE_NAME}.service
-systemctl --user enable ${GUNICORN_SERVICE_NAME}.socket
+systemctl --user disable "${GUNICORN_SERVICE_NAME}.service"
+systemctl --user enable "${GUNICORN_SERVICE_NAME}.socket"
+
+# upgrade service is disabled by default
+systemctl --user disable "${UPGRADE_ALLSKY_SERVICE_NAME}.service"
+
+
+echo "**** Setup sudoers ****"
+TMP_SUDOERS=$(mktemp)
+sed \
+ -e "s|%ALLSKY_USER%|$USER|g" \
+ "${ALLSKY_DIRECTORY}/service/sudoers_indi-allsky" > "$TMP_SUDOERS"
+
+sudo cp -f "$TMP_SUDOERS" "/etc/sudoers.d/indi-allsky"
+sudo chown root:root "/etc/sudoers.d/indi-allsky"
+sudo chmod 440 "/etc/sudoers.d/indi-allsky"
+[[ -f "$TMP_SUDOERS" ]] && rm -f "$TMP_SUDOERS"
 
 
 echo "**** Setup policy kit permissions ****"
@@ -2601,7 +2628,7 @@ fi
 
 echo "**** Starting ${GUNICORN_SERVICE_NAME}.socket"
 # this needs to happen after creating the $DB_FOLDER
-systemctl --user start ${GUNICORN_SERVICE_NAME}.socket
+systemctl --user start "${GUNICORN_SERVICE_NAME}.socket"
 
 
 echo "**** Update config camera interface ****"
@@ -2680,9 +2707,9 @@ fi
 
 
 if [ "$INSTALL_INDISERVER" == "true" ]; then
-    systemctl --user enable ${INDISERVER_SERVICE_NAME}.timer
+    systemctl --user enable "${INDISERVER_SERVICE_NAME}.timer"
     # indiserver service is started by the timer (30 seconds after boot)
-    systemctl --user disable ${INDISERVER_SERVICE_NAME}.service
+    systemctl --user disable "${INDISERVER_SERVICE_NAME}.service"
 
 
     while [ -z "${RESTART_INDISERVER:-}" ]; do
@@ -2697,17 +2724,17 @@ if [ "$INSTALL_INDISERVER" == "true" ]; then
     if [ "$RESTART_INDISERVER" == "true" ]; then
         echo "Restarting indiserver..."
         sleep 3
-        systemctl --user restart ${INDISERVER_SERVICE_NAME}.service
+        systemctl --user restart "${INDISERVER_SERVICE_NAME}.service"
     fi
 fi
 
 
 # ensure indiserver is running
-systemctl --user start ${INDISERVER_SERVICE_NAME}.service
+systemctl --user start "${INDISERVER_SERVICE_NAME}.service"
 
 
 # ensure latest code is active
-systemctl --user restart ${GUNICORN_SERVICE_NAME}.service
+systemctl --user restart "${GUNICORN_SERVICE_NAME}.service"
 
 
 # disable ModemManager
@@ -2728,9 +2755,9 @@ done
 
 
 if [ "$INDIALLSKY_AUTOSTART" == "true" ]; then
-    systemctl --user enable ${ALLSKY_SERVICE_NAME}.timer
+    systemctl --user enable "${ALLSKY_SERVICE_NAME}.timer"
 else
-    systemctl --user disable ${ALLSKY_SERVICE_NAME}.timer
+    systemctl --user disable "${ALLSKY_SERVICE_NAME}.timer"
 fi
 
 
@@ -2753,7 +2780,7 @@ done
 if [ "$INDIALLSKY_START" == "true" ]; then
     echo "Starting indi-allsky..."
     sleep 3
-    systemctl --user start ${ALLSKY_SERVICE_NAME}.service
+    systemctl --user start "${ALLSKY_SERVICE_NAME}.service"
 fi
 
 
