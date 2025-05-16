@@ -1437,6 +1437,23 @@ class IndiAllSky(object):
         self.video_q.put({'task_id' : task.id})
 
 
+    def _backupDatabase(self, task_state=TaskQueueState.QUEUED):
+        jobdata = {
+            'action' : 'backupDatabase',
+            'kwargs' : {},
+        }
+
+        task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.VIDEO,
+            state=task_state,
+            data=jobdata,
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        self.video_q.put({'task_id' : task.id})
+
+
     def updateConfigLocation(self, latitude, longitude, elevation, camera_id):
         logger.warning('Updating indi-allsky config with new geographic location')
 
