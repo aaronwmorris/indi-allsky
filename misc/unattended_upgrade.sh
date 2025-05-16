@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2317  #DEVELOPMENT
 
 #set -x  # command tracing
 #set -o errexit  # replace by trapping ERR
@@ -64,13 +63,6 @@ if [ ! -f "/etc/os-release" ]; then
 fi
 
 source /etc/os-release
-
-
-### this will be removed after development
-echo
-echo "This script is a work in progress... exiting"
-exit 1
-
 
 
 DISTRO_ID="${ID:-unknown}"
