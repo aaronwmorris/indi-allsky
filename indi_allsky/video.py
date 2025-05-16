@@ -1792,13 +1792,13 @@ class VideoWorker(Process):
         task.setRunning()
 
         now = datetime.now()
-        backup_file = '/var/lib/indi-allsky/backup/backup_indi-allsky_{0:%Y%m%d_%H%M%S}.sqlite'.format(now)
-        logger.warning('Backing up database to %s.gz', backup_file)
+        backup_file_p = Path('/var/lib/indi-allsky/backup/backup_indi-allsky_{0:%Y%m%d_%H%M%S}.sqlite'.format(now))
+        logger.warning('Backing up database to %s.gz', backup_file_p)
 
 
         backup_start = time.time()
 
-        backup_conn = sqlite3.connect(backup_file)
+        backup_conn = sqlite3.connect(str(backup_file_p))
 
         raw_connection = db.engine.raw_connection()
         raw_connection.backup(backup_conn)
@@ -1807,9 +1807,12 @@ class VideoWorker(Process):
         backup_conn.close()
 
 
+        backup_file_p.chmod(0o640)
+
+
         try:
             subprocess.run(
-                ('/usr/bin/gzip', backup_file),
+                ('/usr/bin/gzip', str(backup_file_p)),
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
