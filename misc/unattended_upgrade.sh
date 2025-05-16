@@ -12,6 +12,7 @@ export PATH
 #### config ####
 ALLSKY_SERVICE_NAME="indi-allsky"
 GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
+UPGRADE_ALLSKY_SERVICE_NAME="upgrade-indi-allsky"
 
 ALLSKY_ETC="/etc/indi-allsky"
 DB_FOLDER="/var/lib/indi-allsky"
@@ -72,6 +73,11 @@ echo "############################################################"
 echo "### Welcome to the indi-allsky unattended upgrade script ###"
 echo "############################################################"
 
+echo
+echo
+echo "This script will pull the latest code from the indi-allsky git"
+echo "repository and update the code state with no manual intervention"
+
 
 if [[ -n "${VIRTUAL_ENV:-}" ]]; then
     echo
@@ -113,10 +119,16 @@ echo "Memory: $MEM_TOTAL kB"
 echo
 
 
-if systemctl --quiet is-enabled "${ALLSKY_SERVICE_NAME}.timer" 2>/dev/null; then
+if systemctl --user --quiet is-enabled "${ALLSKY_SERVICE_NAME}.timer" 2>/dev/null; then
     ### make sure the timer is not started
     ### this can be left in a stopped state
     systemctl --user stop "${ALLSKY_SERVICE_NAME}.timer"
+fi
+
+
+if systemctl --user --quiet is-enabled "${UPGRADE_ALLSKY_SERVICE_NAME}.service" 2>/dev/null; then
+    ### This service should always be disabled
+    systemctl --user disable "${UPGRADE_ALLSKY_SERVICE_NAME}.service"
 fi
 
 
