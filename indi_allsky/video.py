@@ -9,6 +9,7 @@ from datetime import timedelta
 from datetime import timezone
 from pathlib import Path
 import psutil
+import subprocess
 import tempfile
 import signal
 import traceback
@@ -1777,6 +1778,54 @@ class VideoWorker(Process):
         satellite.update()
 
         task.setSuccess('Satellite data updated')
+
+
+    def backupDatabase(self, task, **kwargs):
+        if not app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite'):
+            logger.error('Only sqlite backups are supported')
+            task.setFailed('Only sqlite backups are supported')
+            return
+
+
+        import sqlite3
+
+        task.setRunning()
+
+        now = datetime.now()
+        backup_file_p = Path('/var/lib/indi-allsky/backup/backup_indi-allsky_{0:%Y%m%d_%H%M%S}.sqlite'.format(now))
+        logger.warning('Backing up database to %s.gz', backup_file_p)
+
+
+        backup_start = time.time()
+
+        backup_conn = sqlite3.connect(str(backup_file_p))
+
+        raw_connection = db.engine.raw_connection()
+        raw_connection.backup(backup_conn)
+
+        raw_connection.close()
+        backup_conn.close()
+
+
+        backup_file_p.chmod(0o640)
+
+
+        try:
+            subprocess.run(
+                ('/usr/bin/gzip', str(backup_file_p)),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except OSError as e:
+            logger.error('Backup compress failed: %s', str(e))
+            task.setFailed('Backup compress failed')
+            return
+
+
+        backup_elapsed_s = time.time() - backup_start
+        logger.info('Backup completed in %0.2fs', backup_elapsed_s)
+
+        task.setSuccess('Backup complete')
 
 
     def expireData(self, task, **kwargs):
