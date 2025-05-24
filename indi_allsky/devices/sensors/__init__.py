@@ -50,6 +50,8 @@ from .tempSensorTmp36_Ads1x15 import TempSensorTmp36_Ads1115_I2C as cpads_temp_s
 from .tempSensorLm35_Ads1x15 import TempSensorLm35_Ads1015_I2C as cpads_temp_sensor_lm35_ads1015_i2c
 from .tempSensorLm35_Ads1x15 import TempSensorLm35_Ads1115_I2C as cpads_temp_sensor_lm35_ads1115_i2c
 
+from .magSensorMmc5983ma import MagSensorMmc5983maSF_I2C as qwiic_mag_sensor_mmc5983ma_i2c
+
 from .tempApiOpenWeatherMap import TempApiOpenWeatherMap as temp_api_openweathermap
 from .tempApiWeatherUnderground import TempApiWeatherUnderground as temp_api_weatherunderground
 from .tempApiAstrospheric import TempApiAstrospheric as temp_api_astrospheric
@@ -95,6 +97,7 @@ __all__ = (
     'cpads_temp_sensor_tmp36_ads1115_i2c',
     'cpads_temp_sensor_lm35_ads1015_i2c',
     'cpads_temp_sensor_lm35_ads1115_i2c',
+    'qwiic_mag_sensor_mmc5983ma_i2c',
     'kernel_temp_sensor_ds18x20_w1',
     'mqtt_broker_sensor',
     'temp_api_openweathermap',
