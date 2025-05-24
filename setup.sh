@@ -665,6 +665,7 @@ if [[ "$DISTRO" == "debian_12" ]]; then
         libgpiod2 \
         i2c-tools \
         network-manager \
+        dnsmasq-base \
         polkitd \
         dbus-user-session
 
@@ -813,6 +814,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         libgpiod2 \
         i2c-tools \
         network-manager \
+        dnsmasq-base \
         policykit-1 \
         dbus-user-session
 
@@ -1104,6 +1106,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         libgpiod2 \
         i2c-tools \
         network-manager \
+        dnsmasq-base \
         polkitd \
         dbus-user-session
 
@@ -1268,6 +1271,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         libgpiod2 \
         i2c-tools \
         network-manager \
+        dnsmasq-base \
         policykit-1 \
         dbus-user-session
 
