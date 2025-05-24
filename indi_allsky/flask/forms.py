@@ -3248,6 +3248,9 @@ class IndiAllskyConfigForm(FlaskForm):
             ('blinka_light_sensor_si1145_i2c', 'SI1145 i2c - Vis/IR/UV (3)'),
             ('blinka_light_sensor_ltr390_i2c', 'LTR390 i2c - UV/Vis/UVI/Lux/SQM (5)'),
         ),
+        'Magnetometer/Gauss Sensors' : (
+            ('qwiic_mag_sensor_mmc5983ma_i2c', 'MMC5983MA i2c - X/Y/Z/Temp (4)'),
+        ),
         'Remote' : (
             ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5)'),
         ),
