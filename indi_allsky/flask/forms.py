@@ -4529,6 +4529,13 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.TEMP_SENSOR__A_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
 
+            elif self.TEMP_SENSOR__A_CLASSNAME.data.startswith('qwicc_'):
+                try:
+                    import qwiic_i2c  # noqa: F401
+                except ImportError:
+                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('SparkFun QWICC modules not installed')
+                    result = False
+
 
         # sensor B
         if self.TEMP_SENSOR__B_CLASSNAME.data:
@@ -4574,6 +4581,13 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except ImportError:
                     self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+            elif self.TEMP_SENSOR__B_CLASSNAME.data.startswith('qwicc_'):
+                try:
+                    import qwiic_i2c  # noqa: F401,F811
+                except ImportError:
+                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('SparkFun QWICC modules not installed')
                     result = False
 
 
@@ -4623,6 +4637,13 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
 
+            elif self.TEMP_SENSOR__C_CLASSNAME.data.startswith('qwicc_'):
+                try:
+                    import qwiic_i2c  # noqa: F401,F811
+                except ImportError:
+                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('SparkFun QWICC modules not installed')
+                    result = False
+
 
         # sensor D
         if self.TEMP_SENSOR__D_CLASSNAME.data:
@@ -4668,6 +4689,13 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except ImportError:
                     self.TEMP_SENSOR__D_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+
+            elif self.TEMP_SENSOR__D_CLASSNAME.data.startswith('qwicc_'):
+                try:
+                    import qwiic_i2c  # noqa: F401,F811
+                except ImportError:
+                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('SparkFun QWICC modules not installed')
                     result = False
 
 
