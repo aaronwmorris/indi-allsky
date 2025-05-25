@@ -76,7 +76,7 @@ class BackupDatabase(object):
         try:
             backup.db_backup()
         except BackupFailure as e:
-            logger.error('Backup compress failed: %s', str(e))
+            logger.error('Backup failed: %s', str(e))
             sys.exit(1)
 
 

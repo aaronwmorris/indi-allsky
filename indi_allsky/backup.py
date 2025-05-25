@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 import subprocess
+import psutil
 import sqlite3
 import logging
 
@@ -30,6 +31,9 @@ class IndiAllskyDatabaseBackup(object):
 
 
     def db_backup(self):
+        self.checkAvailableSpace()
+
+
         now_time = time.time()
 
         # immediately set timestamp so if it fails, it will not run immediately again
@@ -84,6 +88,26 @@ class IndiAllskyDatabaseBackup(object):
         for b in remove_backups:
             logger.warning('Remove backup: %s', b)
             b.unlink()
+
+
+    def checkAvailableSpace(self):
+        fs_list = psutil.disk_partitions(all=True)
+
+        for fs in fs_list:
+            if fs.mountpoint not in ('/', '/var'):
+                continue
+
+            try:
+                disk_usage = psutil.disk_usage(fs.mountpoint)
+            except PermissionError as e:
+                logger.error('PermissionError: %s', str(e))
+                continue
+
+
+            fs_free_mb = disk_usage.total / 1024.0 / 1024.0
+
+            if fs_free_mb < 1000:
+                raise BackupFailure('Not enough available filesystem space on {0:s} filesystem'.format(fs.mountpoint))
 
 
     def _getFolderFilesByExt(self, folder, file_list, extension_list=['gz']):
