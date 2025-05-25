@@ -17,6 +17,9 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllskyDatabaseBackup(object):
 
+    keep_backups = 10
+
+
     def __init__(self, config, skip_frames=0):
         self.config = config
 
@@ -58,4 +61,34 @@ class IndiAllskyDatabaseBackup(object):
         except OSError as e:
             logger.error('Backup compress failed: %s', str(e))
             raise BackupFailure('Backup compress failed')
+
+
+        self.expireBackups()
+
+
+    def expireBackups(self):
+        backup_list = list()
+
+        self._getFolderFilesByExt(self.backup_folder, backup_list, extension_list=['gz', 'sqlite'])
+
+        backup_list_ordered = sorted(backup_list, key=lambda p: p.stat().st_mtime, reverse=True)
+
+
+        remove_backups = backup_list_ordered[self.keep_backups:]
+
+        for b in remove_backups:
+            logger.warning('Remove backup: %s', b)
+            b.unlink()
+
+
+    def _getFolderFilesByExt(self, folder, file_list, extension_list=['gz']):
+        #logger.info('Searching for image files in %s', folder)
+
+        dot_extension_list = ['.{0:s}'.format(e) for e in extension_list]
+
+        for item in Path(folder).iterdir():
+            if item.is_file() and item.suffix in dot_extension_list:
+                file_list.append(item)
+            elif item.is_dir():
+                self._getFolderFilesByExt(item, file_list, extension_list=extension_list)  # recursion
 
