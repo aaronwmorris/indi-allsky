@@ -918,7 +918,7 @@ class ImageWorker(Process):
 
 
     def upload_metadata(self, i_ref, adu, adu_average):
-        ### upload images
+        ### upload metadata
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_METADATA'):
             #logger.warning('Metadata uploading disabled')
             return

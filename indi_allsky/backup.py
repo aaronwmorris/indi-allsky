@@ -67,6 +67,9 @@ class IndiAllskyDatabaseBackup(object):
         self.expireBackups()
 
 
+        return '{0:s}.gz'.format(str(backup_file_p))
+
+
     def expireBackups(self):
         backup_list = list()
 

@@ -1797,7 +1797,7 @@ class VideoWorker(Process):
 
 
         try:
-            backup.db_backup()
+            backup_file = backup.db_backup()
         except BackupFailure as e:
             logger.error('Backup compress failed: %s', str(e))
             task.setFailed('Backup failed failed: {0:s}'.format(str(e)))
@@ -1809,6 +1809,10 @@ class VideoWorker(Process):
 
 
         task.setSuccess('Backup complete')
+
+
+        ### Upload ###
+        self._miscUpload.upload_db_backup(backup_file)
 
 
     def expireData(self, task, **kwargs):
