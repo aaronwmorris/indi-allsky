@@ -291,7 +291,7 @@ class IndiAllSky(object):
                 NotificationCategory.STATE,
                 'indi-allsky',
                 'indi-allsky was abnormally shutdown',
-                expire=timedelta(hours=1),
+                expire=timedelta(hours=24),
             )
 
 
