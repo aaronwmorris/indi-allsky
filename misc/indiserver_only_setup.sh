@@ -82,6 +82,24 @@ echo "### Welcome to the indi-allsky indiserver setup script ###"
 echo "##########################################################"
 
 
+ROOT_FREE=$(df -Pk / | tail -n 1 | awk "{ print \$3 }")
+if [ "$ROOT_FREE" -lt 1000000 ]; then
+    echo
+    echo "Not enough free space available in / (root) filesystem"
+    echo "At least 1GB of space needs to be available to continue"
+    exit 1
+fi
+
+
+VAR_FREE=$(df -Pk /var | tail -n 1 | awk "{ print \$3 }")
+if [ "$VAR_FREE" -lt 1000000 ]; then
+    echo
+    echo "Not enough free space available in /var filesystem"
+    echo "At least 1GB of space needs to be available to continue"
+    exit 1
+fi
+
+
 if ! [[ "$INDI_PORT" =~ ^[^0][0-9]{1,5}$ ]]; then
     echo "Invalid INDI port: $INDI_PORT"
     echo

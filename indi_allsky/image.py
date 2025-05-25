@@ -918,7 +918,7 @@ class ImageWorker(Process):
 
 
     def upload_metadata(self, i_ref, adu, adu_average):
-        ### upload images
+        ### upload metadata
         if not self.config.get('FILETRANSFER', {}).get('UPLOAD_METADATA'):
             #logger.warning('Metadata uploading disabled')
             return
@@ -1003,6 +1003,8 @@ class ImageWorker(Process):
         file_data_dict = {
             'timestamp'    : i_ref.exp_date,
             'ts'           : i_ref.exp_date,  # shortcut
+            'day_date'     : i_ref.day_date,
+            'ext'          : 'json',
             'camera_uuid'  : i_ref.camera_uuid,
             'camera_id'    : i_ref.camera_id,
         }

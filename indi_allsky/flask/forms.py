@@ -1420,6 +1420,14 @@ def IMAGE_ALIGN_SOURCEMINAREA_validator(form, field):
         raise ValidationError('Source min area must be 25 or less')
 
 
+def BACKUP_DB_PERIOD_DAYS_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 1:
+        raise ValidationError('Backups must be every 1 day or greater')
+
+
 def IMAGE_EXPIRE_DAYS_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -3697,6 +3705,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_ALIGN_SOURCEMINAREA        = IntegerField('Minimum point area', validators=[DataRequired(), IMAGE_ALIGN_SOURCEMINAREA_validator])
     IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     THUMBNAILS__IMAGES_AUTO          = BooleanField('Auto Generate Image Thumbnails')
+    BACKUP_DB_PERIOD_DAYS            = IntegerField('DB Backup Frequency (days)', validators=[BACKUP_DB_PERIOD_DAYS_validator])
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     IMAGE_RAW_EXPIRE_DAYS            = IntegerField('RAW Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     IMAGE_FITS_EXPIRE_DAYS           = IntegerField('FITS Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
@@ -3790,6 +3799,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__REMOTE_REALTIME_KEOGRAM_FOLDER = StringField('Remote Realtime Keogram Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER      = StringField('Remote EndOfNight Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
     FILETRANSFER__REMOTE_LATEST_FOLDER          = StringField('Remote Latest Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
+    FILETRANSFER__REMOTE_DB_BACKUP_FOLDER       = StringField('Remote DB Backup Folder', validators=[DataRequired(), FILETRANSFER__REMOTE_FOLDER_validator])
     FILETRANSFER__UPLOAD_IMAGE       = IntegerField('Transfer images', validators=[FILETRANSFER__UPLOAD_IMAGE_validator])
     FILETRANSFER__UPLOAD_PANORAMA    = IntegerField('Transfer panoramas', validators=[FILETRANSFER__UPLOAD_IMAGE_validator])
     FILETRANSFER__UPLOAD_METADATA    = BooleanField('Transfer metadata')
@@ -3807,6 +3817,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FILETRANSFER__UPLOAD_LATEST_PANORAMA    = BooleanField('Transfer Latest Panorama Image')
     FILETRANSFER__UPLOAD_LATEST_RAW         = BooleanField('Transfer Latest RAW Image')
     FILETRANSFER__UPLOAD_LATEST_VIDEO       = BooleanField('Transfer Latest Timelapse Assets')
+    FILETRANSFER__UPLOAD_DB_BACKUP          = BooleanField('Transfer DB Backups')
     S3UPLOAD__CLASSNAME              = SelectField('S3 Utility', choices=S3UPLOAD__CLASSNAME_choices, validators=[DataRequired(), S3UPLOAD__CLASSNAME_validator])
     S3UPLOAD__ENABLE                 = BooleanField('Enable S3 Uploading')
     S3UPLOAD__ACCESS_KEY             = StringField('Access Key', validators=[S3UPLOAD__ACCESS_KEY_validator])

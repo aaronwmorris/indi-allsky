@@ -861,6 +861,58 @@ class miscUpload(object):
         self.upload_q.put({'task_id' : upload_task.id})
 
 
+    def upload_db_backup(self, backup_file):
+        ### upload backups
+        if not self.config.get('FILETRANSFER', {}).get('UPLOAD_DB_BACKUP'):
+            return
+
+
+        backup_file_p = Path(backup_file)
+
+        now = datetime.now()
+
+        file_data_dict = {
+            'timestamp'    : now,
+            'ts'           : now,  # shortcut
+            'day_date'     : now.date,
+            'ext'          : backup_file_p.suffix.replace('.', ''),
+            'camera_uuid'  : 'nouuid',
+            'camera_id'    : 0,
+        }
+
+
+        if self.night_v.value:
+            file_data_dict['timeofday'] = 'night'
+            file_data_dict['tod'] = 'night'
+        else:
+            file_data_dict['timeofday'] = 'day'
+            file_data_dict['tod'] = 'day'
+
+
+        # Replace parameters in names
+        remote_dir = self.config['FILETRANSFER']['REMOTE_DB_BACKUP_FOLDER'].format(**file_data_dict)
+        remote_file = backup_file_p.name
+
+        remote_file_p = Path(remote_dir).joinpath(remote_file)
+
+        # tell worker to upload file
+        jobdata = {
+            'action'       : constants.TRANSFER_UPLOAD,
+            'local_file'   : str(backup_file_p),
+            'remote_file'  : str(remote_file_p),
+        }
+
+        upload_task = IndiAllSkyDbTaskQueueTable(
+            queue=TaskQueueQueue.UPLOAD,
+            state=TaskQueueState.QUEUED,
+            data=jobdata,
+        )
+        db.session.add(upload_task)
+        db.session.commit()
+
+        self.upload_q.put({'task_id' : upload_task.id})
+
+
     def mqtt_publish_image(self, upload_filename, image_topic, mq_data):
         if not self.config.get('MQTTPUBLISH', {}).get('ENABLE'):
             #logger.warning('MQ publishing disabled')

@@ -41,3 +41,7 @@ class ConnectionFailure(Exception):
 
 class NotFound(Exception):
     pass
+
+
+class BackupFailure(Exception):
+    pass
