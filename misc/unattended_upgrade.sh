@@ -596,10 +596,11 @@ chmod 660 "${ALLSKY_ETC}/flask.json"
 
 if [[ -f "${DB_FILE}" ]]; then
     echo "**** Backup DB prior to migration ****"
-    DB_BACKUP="${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql.gz"
-    sqlite3 "${DB_FILE}" .dump | gzip -c > "$DB_BACKUP"
+    DB_BACKUP="${DB_FOLDER}/backup/backup_indi-allsky_$(date +%Y%m%d_%H%M%S).sqlite"
+    sqlite3 "${DB_FILE}" ".backup ${DB_BACKUP}"
+    gzip "$DB_BACKUP"
 
-    chmod 640 "$DB_BACKUP"
+    chmod 640 "${DB_BACKUP}.gz"
 
     echo "**** Vacuum DB ****"
     sqlite3 "${DB_FILE}" "VACUUM;"

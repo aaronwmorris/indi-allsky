@@ -971,10 +971,11 @@ if [[ -f "${DB_FILE}" ]]; then
     sudo chown "$USER":"$PGRP" "${DB_FILE}"
 
     echo "**** Backup DB prior to migration ****"
-    DB_BACKUP="${DB_FOLDER}/backup/backup_$(date +%Y%m%d_%H%M%S).sql.gz"
-    sqlite3 "${DB_FILE}" .dump | gzip -c > "$DB_BACKUP"
+    DB_BACKUP="${DB_FOLDER}/backup/backup_indi-allsky_$(date +%Y%m%d_%H%M%S).sqlite"
+    sqlite3 "${DB_FILE}" ".backup ${DB_BACKUP}"
+    gzip "$DB_BACKUP"
 
-    chmod 640 "$DB_BACKUP"
+    chmod 640 "${DB_BACKUP}.gz"
 fi
 
 
