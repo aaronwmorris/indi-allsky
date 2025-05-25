@@ -633,6 +633,26 @@ $('#form_settime').on('submit', function() {
 <hr>
 
 <div class="row">
+    <div class="col-sm-2"><h4>Upgrade</h4></div>
+</div>
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">(BETA) Unattended Upgrade</div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="UPGRADE_CONFIRM1" name="UPGRADE_CONFIRM1" type="checkbox" value="y"> Confirm 1
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-success" id="button_system_upgrade">Upgrade indi-allsky</button>
+    </div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="UPGRADE_CONFIRM2" name="UPGRADE_CONFIRM2" type="checkbox" value="y"> Confirm 2
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
     <div class="col-sm-2"><h4>Validation</h4></div>
 </div>
 
@@ -715,10 +735,10 @@ $('#form_settime').on('submit', function() {
 
 <div class="row">
     <div class="col-sm-4">
-        <div id="success-message" class="text-success" style="display: none;"></div>
-        <div id="failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
-        <div id="SERVICE_HIDDEN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        <div id="COMMAND_HIDDEN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
+        <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
+        <div id="SERVICE_HIDDEN-error" class="alert alert-danger" role="alert" style="display: none;"></div>
+        <div id="COMMAND_HIDDEN-error" class="alert alert-danger" role="alert" style="display: none;"></div>
     </div>
 </div>
 
@@ -883,6 +903,26 @@ $("#button_system_shutdown").on("click", function() {
 
     button_click('system', 'poweroff');
 });
+
+
+$("#button_system_upgrade").on("click", function() {
+    if (! $("#UPGRADE_CONFIRM1").prop('checked')) {
+        console.log('Upgrade checkbox not checked');
+        return;
+    }
+    if (! $("#UPGRADE_CONFIRM2").prop('checked')) {
+        console.log('Upgrade checkbox not checked');
+        return;
+    }
+
+    $("#loader_shutdown").css({'display' : 'block'});
+
+    $("#UPGRADE_CONFIRM1").prop('checked', false);
+    $("#UPGRADE_CONFIRM2").prop('checked', false);
+
+    button_click('upgrade-indi-allsky.service', 'start');
+});
+
 
 $("#button_validate_db").on("click", function() {
     if (! $("#VALIDATE_DB_CONFIRM").prop('checked')) {
