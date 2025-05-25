@@ -277,6 +277,24 @@ class IndiAllSky(object):
     def _startup(self):
         now = time.time()
 
+
+        try:
+            last_state = int(self._miscDb.getState('STATUS'))
+        except NoResultFound:
+            last_state = constants.STATUS_STOPPED
+        except ValueError:
+            last_state = constants.STATUS_STOPPED
+
+
+        if last_state not in (constants.STATUS_STOPPED, constants.STATUS_NOCAMERA, constants.STATUS_NOINDISERVER):
+            self._miscDb.addNotification(
+                NotificationCategory.STATE,
+                'indi-allsky',
+                'indi-allsky was abnormally shutdown',
+                expire=timedelta(hours=1),
+            )
+
+
         self._miscDb.setState('WATCHDOG', int(now))
         self._miscDb.setState('STATUS', constants.STATUS_STARTING)
 
@@ -657,13 +675,6 @@ class IndiAllSky(object):
 
 
                 with app.app_context():
-                    self._miscDb.addNotification(
-                        NotificationCategory.STATE,
-                        'indi-allsky',
-                        'indi-allsky was shutdown',
-                        expire=timedelta(hours=1),
-                    )
-
                     self._miscDb.setState('STATUS', constants.STATUS_STOPPED)
 
 
