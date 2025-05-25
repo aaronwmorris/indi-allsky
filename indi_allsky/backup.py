@@ -17,7 +17,8 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllskyDatabaseBackup(object):
 
-    keep_backups = 10
+    # maintain at least this many backups
+    keep_backups = 7
 
 
     def __init__(self, config, skip_frames=0):
@@ -75,6 +76,7 @@ class IndiAllskyDatabaseBackup(object):
 
 
         remove_backups = backup_list_ordered[self.keep_backups:]
+
 
         for b in remove_backups:
             logger.warning('Remove backup: %s', b)
