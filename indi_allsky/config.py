@@ -397,6 +397,7 @@ class IndiAllSkyConfigBase(object):
             "REMOTE_REALTIME_KEOGRAM_FOLDER" : "/home/allsky/upload/allsky",
             "REMOTE_ENDOFNIGHT_FOLDER"       : "/home/allsky/upload/allsky",
             "REMOTE_LATEST_FOLDER"           : "/home/allsky/upload/allsky",
+            "REMOTE_DB_BACKUP_FOLDER"        : "/home/allsky/upload/backup",
             "UPLOAD_IMAGE"           : 0,
             "UPLOAD_PANORAMA"        : 0,
             "UPLOAD_RAW"             : False,
@@ -414,6 +415,7 @@ class IndiAllSkyConfigBase(object):
             "UPLOAD_LATEST_PANORAMA" : False,
             "UPLOAD_LATEST_RAW"      : False,
             "UPLOAD_LATEST_VIDEO"    : False,
+            "UPLOAD_DB_BACKUP"       : False,
             "FORCE_IPV4"             : False,
             "FORCE_IPV6"             : False,
             "LIBCURL_OPTIONS"        : {

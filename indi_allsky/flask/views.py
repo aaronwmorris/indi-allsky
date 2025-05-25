@@ -2157,6 +2157,7 @@ class ConfigView(FormView):
             'FILETRANSFER__REMOTE_REALTIME_KEOGRAM_FOLDER': self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_REALTIME_KEOGRAM_FOLDER', '/home/allsky/upload/allsky'),
             'FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_ENDOFNIGHT_FOLDER', '/home/allsky/upload/allsky'),
             'FILETRANSFER__REMOTE_LATEST_FOLDER'          : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_LATEST_FOLDER', '/home/allsky/upload/allsky'),
+            'FILETRANSFER__REMOTE_DB_BACKUP_FOLDER'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('REMOTE_DB_BACKUP_FOLDER', '/home/allsky/upload/backup'),
             'FILETRANSFER__UPLOAD_IMAGE'     : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_IMAGE', 0),
             'FILETRANSFER__UPLOAD_PANORAMA'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_PANORAMA', 0),
             'FILETRANSFER__UPLOAD_METADATA'  : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_METADATA', False),
@@ -2174,6 +2175,7 @@ class ConfigView(FormView):
             'FILETRANSFER__UPLOAD_LATEST_PANORAMA' : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_PANORAMA', False),
             'FILETRANSFER__UPLOAD_LATEST_RAW'      : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_RAW', False),
             'FILETRANSFER__UPLOAD_LATEST_VIDEO'    : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_LATEST_VIDEO', False),
+            'FILETRANSFER__UPLOAD_DB_BACKUP'       : self.indi_allsky_config.get('FILETRANSFER', {}).get('UPLOAD_DB_BACKUP', False),
             'S3UPLOAD__CLASSNAME'            : self.indi_allsky_config.get('S3UPLOAD', {}).get('CLASSNAME', 'boto3_s3'),
             'S3UPLOAD__ENABLE'               : self.indi_allsky_config.get('S3UPLOAD', {}).get('ENABLE', False),
             'S3UPLOAD__ACCESS_KEY'           : self.indi_allsky_config.get('S3UPLOAD', {}).get('ACCESS_KEY', ''),
@@ -2994,6 +2996,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['REMOTE_REALTIME_KEOGRAM_FOLDER'] = str(request.json['FILETRANSFER__REMOTE_REALTIME_KEOGRAM_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_ENDOFNIGHT_FOLDER']      = str(request.json['FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['REMOTE_LATEST_FOLDER']          = str(request.json['FILETRANSFER__REMOTE_LATEST_FOLDER'])
+        self.indi_allsky_config['FILETRANSFER']['REMOTE_DB_BACKUP_FOLDER']       = str(request.json['FILETRANSFER__REMOTE_DB_BACKUP_FOLDER'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_IMAGE']         = int(request.json['FILETRANSFER__UPLOAD_IMAGE'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_PANORAMA']      = int(request.json['FILETRANSFER__UPLOAD_PANORAMA'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_METADATA']      = bool(request.json['FILETRANSFER__UPLOAD_METADATA'])
@@ -3011,6 +3014,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_LATEST_PANORAMA']  = bool(request.json['FILETRANSFER__UPLOAD_LATEST_PANORAMA'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_LATEST_RAW']       = bool(request.json['FILETRANSFER__UPLOAD_LATEST_RAW'])
         self.indi_allsky_config['FILETRANSFER']['UPLOAD_LATEST_VIDEO']     = bool(request.json['FILETRANSFER__UPLOAD_LATEST_VIDEO'])
+        self.indi_allsky_config['FILETRANSFER']['UPLOAD_DB_BACKUP']        = bool(request.json['FILETRANSFER__UPLOAD_DB_BACKUP'])
         self.indi_allsky_config['S3UPLOAD']['CLASSNAME']                = str(request.json['S3UPLOAD__CLASSNAME'])
         self.indi_allsky_config['S3UPLOAD']['ENABLE']                   = bool(request.json['S3UPLOAD__ENABLE'])
         self.indi_allsky_config['S3UPLOAD']['ACCESS_KEY']               = str(request.json['S3UPLOAD__ACCESS_KEY'])

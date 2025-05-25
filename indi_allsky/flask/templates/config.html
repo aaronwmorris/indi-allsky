@@ -4808,6 +4808,32 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">Enable Allsky Latest Timelapse uploads:  Timelapse Videos, Keograms, Startrails, Panorama Timelapses</div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__REMOTE_DB_BACKUP_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FILETRANSFER__REMOTE_DB_BACKUP_FOLDER(class='form-control bg-secondary') }}
+            <div id="FILETRANSFER__REMOTE_DB_BACKUP_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Remote folder to store database backups</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FILETRANSFER__UPLOAD_DB_BACKUP.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.FILETRANSFER__UPLOAD_DB_BACKUP(class='form-check-input') }}
+                <div id="FILETRANSFER__UPLOAD_DB_BACKUP-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable Allsky database backups</div>
+    </div>
+
 </div><!-- end filetransfer tab -->
 <div class="tab-pane fade" id="nav-mqtt" role="tabpanel" aria-labelledby="nav-mqtt-tab">
 
@@ -7568,6 +7594,7 @@ const field_names = [
     'FILETRANSFER__REMOTE_REALTIME_KEOGRAM_FOLDER',
     'FILETRANSFER__REMOTE_ENDOFNIGHT_FOLDER',
     'FILETRANSFER__REMOTE_LATEST_FOLDER',
+    'FILETRANSFER__REMOTE_DB_BACKUP_FOLDER',
     'FILETRANSFER__UPLOAD_IMAGE',
     'FILETRANSFER__UPLOAD_PANORAMA',
     'FILETRANSFER__UPLOAD_REALTIME_KEOGRAM',
@@ -7816,6 +7843,7 @@ const checkbox_field_names = [
     'FILETRANSFER__UPLOAD_LATEST_PANORAMA',
     'FILETRANSFER__UPLOAD_LATEST_RAW',
     'FILETRANSFER__UPLOAD_LATEST_VIDEO',
+    'FILETRANSFER__UPLOAD_DB_BACKUP',
     'FILETRANSFER__FORCE_IPV4',
     'FILETRANSFER__FORCE_IPV6',
     'S3UPLOAD__ENABLE',
