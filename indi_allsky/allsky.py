@@ -1377,18 +1377,18 @@ class IndiAllSky(object):
             self.backup_tasks_time = now_time + self.backup_tasks_offset
 
 
-            try:
-                backup_db_ts = int(self._miscDb.getState('BACKUP_DB_TS'))
-            except NoResultFound:
-                backup_db_ts = 0  # run immediately
-
-
             backup_db_period_s = self.config.get('BACKUP_DB_PERIOD_DAYS', 3) * 86400
 
+            if backup_db_period_s > 0:
+                try:
+                    backup_db_ts = int(self._miscDb.getState('BACKUP_DB_TS'))
+                except NoResultFound:
+                    backup_db_ts = 0  # run immediately
 
-            if backup_db_ts + backup_db_period_s < now_time:
-                logger.warning('Creating database backup task')
-                self._backupDatabase()
+
+                if backup_db_ts + backup_db_period_s < now_time:
+                    logger.warning('Creating database backup task')
+                    self._backupDatabase()
 
 
     def _updateAuroraData(self, task_state=TaskQueueState.QUEUED):
