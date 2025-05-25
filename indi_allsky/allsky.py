@@ -65,6 +65,7 @@ class IndiAllSky(object):
     aurora_tasks_offset = 1800          # 30 minutes
     smoke_tasks_offset = 10800          # 3 hours
     sat_data_tasks_offset = 259200      # 3 days
+    backup_tasks_offset = 3600          # 1 hour
 
 
     def __init__(self):
@@ -106,12 +107,15 @@ class IndiAllSky(object):
         self._pid_file = Path('/var/lib/indi-allsky/indi-allsky.pid')
 
 
-        self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
-        #self.periodic_tasks_time = time.time()  # testing
-        self.cleanup_tasks_time = time.time()   # run asap
-        self.aurora_tasks_time = time.time()    # run asap
-        self.smoke_tasks_time = time.time()     # run asap
-        self.sat_data_tasks_time = time.time()  # run asap
+        now_time = time.time()
+
+        self.periodic_tasks_time = now_time + self.periodic_tasks_offset
+        #self.periodic_tasks_time = now_time  # testing
+        self.cleanup_tasks_time = now_time   # run asap
+        self.aurora_tasks_time = now_time    # run asap
+        self.smoke_tasks_time = now_time     # run asap
+        self.sat_data_tasks_time = now_time  # run asap
+        self.backup_tasks_time = now_time    # run asap
 
 
         self.position_av = Array('f', [
@@ -1325,47 +1329,66 @@ class IndiAllSky(object):
     def _periodic_tasks(self):
 
         # Tasks that need to be run periodically
-        now = time.time()
+        now_time = time.time()
 
-        if self.periodic_tasks_time > now:
+        if self.periodic_tasks_time > now_time:
             return
 
         # set next reconfigure time
-        self.periodic_tasks_time = now + self.periodic_tasks_offset
+        self.periodic_tasks_time = now_time + self.periodic_tasks_offset
 
         logger.warning('Periodic tasks triggered')
 
 
         # cleanup data
-        if self.cleanup_tasks_time < now:
-            self.cleanup_tasks_time = now + self.cleanup_tasks_offset
+        if self.cleanup_tasks_time < now_time:
+            self.cleanup_tasks_time = now_time + self.cleanup_tasks_offset
 
             self._flushOldTasks()
             self._systemHealthCheck()
 
 
         # aurora data update
-        if self.aurora_tasks_time < now:
-            self.aurora_tasks_time = now + self.aurora_tasks_offset
+        if self.aurora_tasks_time < now_time:
+            self.aurora_tasks_time = now_time + self.aurora_tasks_offset
 
             logger.info('Creating aurora update task')
             self._updateAuroraData()
 
 
         # smoke data update
-        if self.smoke_tasks_time < now:
-            self.smoke_tasks_time = now + self.smoke_tasks_offset
+        if self.smoke_tasks_time < now_time:
+            self.smoke_tasks_time = now_time + self.smoke_tasks_offset
 
             logger.info('Creating smoke update task')
             self._updateSmokeData()
 
 
         # satellite tle data update
-        if self.sat_data_tasks_time < now:
-            self.sat_data_tasks_time = now + self.smoke_tasks_offset
+        if self.sat_data_tasks_time < now_time:
+            self.sat_data_tasks_time = now_time + self.smoke_tasks_offset
 
             logger.info('Creating satellite tle data update task')
             self._updateSatelliteTleData()
+
+
+        # check if we need to backup database
+        if self.backup_tasks_time < now_time:
+            self.backup_tasks_time = now_time + self.backup_tasks_offset
+
+
+            try:
+                backup_db_ts = int(self._miscDb.getState('BACKUP_DB_TS'))
+            except NoResultFound:
+                backup_db_ts = 0  # run immediately
+
+
+            backup_db_period_s = self.config.get('BACKUP_DB_PERIOD_DAYS', 3) * 86400
+
+
+            if backup_db_ts + backup_db_period_s < now_time:
+                logger.warning('Creating database backup task')
+                self._backupDatabase()
 
 
     def _updateAuroraData(self, task_state=TaskQueueState.QUEUED):
