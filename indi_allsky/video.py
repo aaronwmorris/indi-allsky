@@ -1800,6 +1800,14 @@ class VideoWorker(Process):
             backup_file = backup.db_backup()
         except BackupFailure as e:
             logger.error('Backup compress failed: %s', str(e))
+
+            self._miscDb.addNotification(
+                NotificationCategory.GENERAL,
+                'db_backup_failure',
+                'Database backup failed: {0:s}'.format(str(e)),
+                expire=timedelta(minutes=1400),
+            )
+
             task.setFailed('Backup failed failed: {0:s}'.format(str(e)))
             return
 
