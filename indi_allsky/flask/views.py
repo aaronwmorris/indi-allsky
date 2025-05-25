@@ -8896,7 +8896,7 @@ class AjaxNetworkManagerView(BaseView):
                 'pairwise' : ['ccmp'],
             },
             'ipv4' : {
-                'method' : 'manual',
+                'method' : 'shared',
                 'addresses' : [
                     [
                         dbus.UInt32(self.ip2int('10.42.0.1')),
