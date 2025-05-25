@@ -3747,6 +3747,22 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.BACKUP_DB_PERIOD_DAYS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.BACKUP_DB_PERIOD_DAYS(class='form-control bg-secondary') }}
+            <div id="BACKUP_DB_PERIOD_DAYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>The database will be automatically backed based on this setting</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Only valid for SQLite</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.IMAGE_EXPIRE_DAYS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -7463,6 +7479,7 @@ const field_names = [
     'IMAGE_ALIGN_DETECTSIGMA',
     'IMAGE_ALIGN_POINTS',
     'IMAGE_ALIGN_SOURCEMINAREA',
+    'BACKUP_DB_PERIOD_DAYS',
     'IMAGE_EXPIRE_DAYS',
     'IMAGE_RAW_EXPIRE_DAYS',
     'IMAGE_FITS_EXPIRE_DAYS',

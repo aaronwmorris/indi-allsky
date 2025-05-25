@@ -1420,6 +1420,14 @@ def IMAGE_ALIGN_SOURCEMINAREA_validator(form, field):
         raise ValidationError('Source min area must be 25 or less')
 
 
+def BACKUP_DB_PERIOD_DAYS_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 1:
+        raise ValidationError('Backups must be every 1 day or greater')
+
+
 def IMAGE_EXPIRE_DAYS_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -3697,6 +3705,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_ALIGN_SOURCEMINAREA        = IntegerField('Minimum point area', validators=[DataRequired(), IMAGE_ALIGN_SOURCEMINAREA_validator])
     IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
     THUMBNAILS__IMAGES_AUTO          = BooleanField('Auto Generate Image Thumbnails')
+    BACKUP_DB_PERIOD_DAYS            = IntegerField('DB Backup Frequency (days)', validators=[BACKUP_DB_PERIOD_DAYS_validator])
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     IMAGE_RAW_EXPIRE_DAYS            = IntegerField('RAW Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     IMAGE_FITS_EXPIRE_DAYS           = IntegerField('FITS Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
