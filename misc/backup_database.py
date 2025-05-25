@@ -17,25 +17,27 @@ if 'VIRTUAL_ENV' not in os.environ:
 
 
 import time
-from datetime import datetime
-import subprocess
-import sqlite3
 import logging
+
+from sqlalchemy.orm.exc import NoResultFound
 
 
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent))
 
 
-from indi_allsky.flask import db
 from indi_allsky.flask import create_app
-
-logger = logging.getLogger('indi_allsky')
-logger.setLevel(logging.INFO)
-
+from indi_allsky.config import IndiAllSkyConfig
+from indi_allsky.backup import IndiAllskyDatabaseBackup
+from indi_allsky.exceptions import BackupFailure
 
 # setup flask context for db access
 app = create_app()
 app.app_context().push()
+
+
+logger = logging.getLogger('indi_allsky')
+logger.setLevel(logging.INFO)
+
 
 
 LOG_FORMATTER_STREAM = logging.Formatter('[%(levelname)s]: %(message)s')
@@ -49,38 +51,31 @@ logger.addHandler(LOG_HANDLER_STREAM)
 
 class BackupDatabase(object):
 
+    def __init__(self):
+        try:
+            self._config_obj = IndiAllSkyConfig()
+            #logger.info('Loaded config id: %d', self._config_obj.config_id)
+        except NoResultFound:
+            logger.error('No config file found, please import a config')
+            sys.exit(1)
+
+        self.config = self._config_obj.config
+
+
     def main(self):
         if not app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite'):
             logger.error('Only sqlite backups are supported')
             sys.exit(1)
 
 
-        now = datetime.now()
-        backup_file_p = Path('/var/lib/indi-allsky/backup/backup_indi-allsky_{0:%Y%m%d_%H%M%S}.sqlite'.format(now))
-        logger.warning('Backing up database to %s.gz', backup_file_p)
-
-
         backup_start = time.time()
 
-        backup_conn = sqlite3.connect(str(backup_file_p))
-
-        raw_connection = db.engine.raw_connection()
-        raw_connection.backup(backup_conn)
-
-        raw_connection.close()
-        backup_conn.close()
-
-
-        backup_file_p.chmod(0o640)
+        backup = IndiAllskyDatabaseBackup(self.config)
 
 
         try:
-            subprocess.run(
-                ('/usr/bin/gzip', str(backup_file_p)),
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        except OSError as e:
+            backup.db_backup()
+        except BackupFailure as e:
             logger.error('Backup compress failed: %s', str(e))
             sys.exit(1)
 
