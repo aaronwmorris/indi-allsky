@@ -8957,6 +8957,10 @@ class AjaxNetworkManagerView(BaseView):
                         dbus.UInt32(self.ip2int('0.0.0.0')),
                     ],
                 ],
+                'dns' : [
+                    dbus.UInt32(self.ip2int('8.8.8.8')),
+                    dbus.UInt32(self.ip2int('1.1.1.1')),
+                ],
             },
             'ipv6' : {
                 'method' : 'link-local',
