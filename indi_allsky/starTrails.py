@@ -30,8 +30,8 @@ class StarTrailGenerator(object):
         self.process_count = 0
 
         self._max_adu = 50
-        self._mask_threshold = 190
-        self._pixel_cutoff_threshold = 0.1
+        self._mask_threshold = 200
+        self._pixel_cutoff_threshold = 1.0
 
         self._min_stars = 0
         self._stars_detect = None  # instantiated later
