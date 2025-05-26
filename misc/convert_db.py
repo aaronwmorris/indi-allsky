@@ -78,6 +78,7 @@ class ConvertDb(object):
         self.migrate_table(src_IndiAllSkyDbRawImageTable, dst_IndiAllSkyDbRawImageTable)
         self.migrate_table(src_IndiAllSkyDbPanoramaImageTable, dst_IndiAllSkyDbPanoramaImageTable)
         self.migrate_table(src_IndiAllSkyDbPanoramaVideoTable, dst_IndiAllSkyDbPanoramaVideoTable)
+        self.migrate_table(src_IndiAllSkyDbLongTermKeogramTable, dst_IndiAllSkyDbLongTermKeogramTable)
 
 
     def migrate_table(self, src_class, dst_class):
@@ -187,6 +188,10 @@ class src_IndiAllSkyDbPanoramaVideoTable(SrcBase):
     __table__ = Table('panoramavideo', SRC_METADATA, autoload_with=SRC_ENGINE)
 
 
+class src_IndiAllSkyDbLongTermKeogramTable(SrcBase):
+    __table__ = Table('longtermkeogram', SRC_METADATA, autoload_with=SRC_ENGINE)
+
+
 class src_IndiAllSkyDbConfigTable(SrcBase):
     __table__ = Table('config', SRC_METADATA, autoload_with=SRC_ENGINE)
 
@@ -256,6 +261,10 @@ class dst_IndiAllSkyDbPanoramaImageTable(DstBase):
 
 class dst_IndiAllSkyDbPanoramaVideoTable(DstBase):
     __table__ = Table('panoramavideo', DST_METADATA, autoload_with=DST_ENGINE)
+
+
+class dst_IndiAllSkyDbLongTermKeogramTable(DstBase):
+    __table__ = Table('longtermkeogram', DST_METADATA, autoload_with=DST_ENGINE)
 
 
 class dst_IndiAllSkyDbConfigTable(DstBase):
