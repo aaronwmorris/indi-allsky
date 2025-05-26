@@ -633,6 +633,22 @@ $('#form_settime').on('submit', function() {
 <hr>
 
 <div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">Database Backup</div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="BACKUP_DB_CONFIRM1" name="BACKUP_DB_CONFIRM1" type="checkbox" value="y"> Confirm 1
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-info" id="button_backup_db">Backup DB</button>
+    </div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="BACKUP_DB_CONFIRM2" name="BACKUP_DB_CONFIRM2" type="checkbox" value="y"> Confirm 2
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
     <div class="col-sm-2"><h4>Upgrade</h4></div>
 </div>
 
@@ -903,6 +919,26 @@ $("#button_system_shutdown").on("click", function() {
 
     button_click('system', 'poweroff');
 });
+
+
+$("#button_backup_db").on("click", function() {
+    if (! $("#BACKUP_DB_CONFIRM1").prop('checked')) {
+        console.log('Backup DB checkbox not checked');
+        return;
+    }
+    if (! $("#BACKUP_DB_CONFIRM2").prop('checked')) {
+        console.log('Backup DB checkbox not checked');
+        return;
+    }
+
+    $("#loader_shutdown").css({'display' : 'block'});
+
+    $("#BACKUP_DB_CONFIRM1").prop('checked', false);
+    $("#BACKUP_DB_CONFIRM2").prop('checked', false);
+
+    button_click('system', 'backup_db');
+});
+
 
 
 $("#button_system_upgrade").on("click", function() {

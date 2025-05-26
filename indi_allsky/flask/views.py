@@ -4858,6 +4858,27 @@ class AjaxSystemInfoView(BaseView):
                     'success-message' : ''.join(message_list),
                 }
                 return jsonify(json_data)
+            elif command == 'backup_db':
+                task_backup_db = IndiAllSkyDbTaskQueueTable(
+                    queue=TaskQueueQueue.VIDEO,
+                    state=TaskQueueState.MANUAL,
+                    priority=100,
+                    data={
+                        'action' : 'backupDatabase',
+                        'kwargs' : {},
+                    },
+                )
+
+                db.session.add(task_backup_db)
+                db.session.commit()
+
+
+                message_list = ['Submitted backup task']
+
+                json_data = {
+                    'success-message' : ''.join(message_list),
+                }
+                return jsonify(json_data)
             elif command == 'flush_images':
                 if not self.verify_admin_network():
                     json_data = {
