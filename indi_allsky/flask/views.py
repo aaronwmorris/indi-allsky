@@ -8949,6 +8949,7 @@ class AjaxNetworkManagerView(BaseView):
                 'pairwise' : ['ccmp'],
             },
             'ipv4' : {
+                # DNS not allowed for shared
                 'method' : 'shared',
                 'addresses' : [
                     [
@@ -8956,10 +8957,6 @@ class AjaxNetworkManagerView(BaseView):
                         dbus.UInt32(24),
                         dbus.UInt32(self.ip2int('0.0.0.0')),
                     ],
-                ],
-                'dns' : [
-                    dbus.UInt32(self.ip2int('8.8.8.8')),
-                    dbus.UInt32(self.ip2int('1.1.1.1')),
                 ],
             },
             'ipv6' : {
