@@ -177,7 +177,7 @@ class IndiAllSkyConfigBase(object):
         },
         "STARTRAILS_MAX_ADU"    : 65,
         "STARTRAILS_MASK_THOLD" : 190,
-        "STARTRAILS_PIXEL_THOLD": 1.0,
+        "STARTRAILS_PIXEL_THOLD": 0.1,
         "STARTRAILS_MIN_STARS"  : 0,
         "STARTRAILS_TIMELAPSE"  : True,
         "STARTRAILS_TIMELAPSE_MINFRAMES" : 250,
