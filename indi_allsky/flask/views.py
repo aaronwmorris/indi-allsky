@@ -4800,7 +4800,33 @@ class AjaxSystemInfoView(BaseView):
                 }
                 return jsonify(errors_data), 400
 
+        elif service == app.config['UPGRADE_ALLSKY_SERVICE_NAME']:
+            if command == 'start':
+                fs_list = psutil.disk_partitions(all=True)
+                for fs in fs_list:
+                    if fs.mountpoint not in ('/', '/var'):
+                        continue
 
+                    try:
+                        disk_usage = psutil.disk_usage(fs.mountpoint)
+                    except PermissionError as e:
+                        app.logger.error('PermissionError: %s', str(e))
+                        continue
+
+
+                    fs_free_mb = disk_usage.total / 1024.0 / 1024.0
+                    if fs_free_mb < 1000:
+                        errors_data = {
+                            'COMMAND_HIDDEN' : ['Not enough available space on {0:s} filesystem'.format(fs.mountpoint)],
+                        }
+                        return jsonify(errors_data), 400
+
+                r = self.startSystemdUnit(app.config['UPGRADE_ALLSKY_SERVICE_NAME'])
+            else:
+                errors_data = {
+                    'COMMAND_HIDDEN' : ['Unhandled command'],
+                }
+                return jsonify(errors_data), 400
         elif service == 'system':
             if command == 'reboot':
                 # allowing rebooting from non-admin networks for now
@@ -4827,6 +4853,27 @@ class AjaxSystemInfoView(BaseView):
                     return jsonify(json_data), 400
             elif command == 'validate_db':
                 message_list = self.validateDbEntries()
+
+                json_data = {
+                    'success-message' : ''.join(message_list),
+                }
+                return jsonify(json_data)
+            elif command == 'backup_db':
+                task_backup_db = IndiAllSkyDbTaskQueueTable(
+                    queue=TaskQueueQueue.VIDEO,
+                    state=TaskQueueState.MANUAL,
+                    priority=100,
+                    data={
+                        'action' : 'backupDatabase',
+                        'kwargs' : {},
+                    },
+                )
+
+                db.session.add(task_backup_db)
+                db.session.commit()
+
+
+                message_list = ['Submitted backup task']
 
                 json_data = {
                     'success-message' : ''.join(message_list),

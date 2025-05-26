@@ -105,9 +105,8 @@ class IndiAllskyDatabaseBackup(object):
 
 
             fs_free_mb = disk_usage.total / 1024.0 / 1024.0
-
             if fs_free_mb < 1000:
-                raise BackupFailure('Not enough available filesystem space on {0:s} filesystem'.format(fs.mountpoint))
+                raise BackupFailure('Not enough available space on {0:s} filesystem'.format(fs.mountpoint))
 
 
     def _getFolderFilesByExt(self, folder, file_list, extension_list=['gz']):
