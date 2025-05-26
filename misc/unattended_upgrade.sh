@@ -24,6 +24,8 @@ GPIO_PYTHON_MODULES="${INDIALLSKY_GPIO_PYTHON_MODULES:-true}"
 
 
 function catch_error() {
+    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed' 1440 || true
+
     echo
     echo
     echo "###############"
@@ -666,7 +668,11 @@ if [ "$ALLSKY_RUNNING" == "true" ]; then
 fi
 
 
+"$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade complete' 1440 || true
+
+
 END_TIME=$(date +%s)
+
 
 echo
 echo
