@@ -177,7 +177,7 @@ class IndiAllSkyConfigBase(object):
         },
         "STARTRAILS_MAX_ADU"    : 65,
         "STARTRAILS_MASK_THOLD" : 190,
-        "STARTRAILS_PIXEL_THOLD": 1.0,
+        "STARTRAILS_PIXEL_THOLD": 0.1,
         "STARTRAILS_MIN_STARS"  : 0,
         "STARTRAILS_TIMELAPSE"  : True,
         "STARTRAILS_TIMELAPSE_MINFRAMES" : 250,
@@ -285,7 +285,7 @@ class IndiAllSkyConfigBase(object):
         "THUMBNAILS" : {
             "IMAGES_AUTO" : True,
         },
-        "BACKUP_DB_PERIOD_DAYS" : 3,
+        "BACKUP_DB_PERIOD_DAYS" : 7,
         "IMAGE_EXPIRE_DAYS"     : 10,
         "IMAGE_RAW_EXPIRE_DAYS" : 10,
         "IMAGE_FITS_EXPIRE_DAYS": 10,

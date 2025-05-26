@@ -8949,6 +8949,7 @@ class AjaxNetworkManagerView(BaseView):
                 'pairwise' : ['ccmp'],
             },
             'ipv4' : {
+                # DNS not allowed for shared
                 'method' : 'shared',
                 'addresses' : [
                     [

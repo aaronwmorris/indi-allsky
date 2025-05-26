@@ -1388,7 +1388,7 @@ class IndiAllSky(object):
             self.backup_tasks_time = now_time + self.backup_tasks_offset
 
 
-            backup_db_period_s = self.config.get('BACKUP_DB_PERIOD_DAYS', 3) * 86400
+            backup_db_period_s = self.config.get('BACKUP_DB_PERIOD_DAYS', 7) * 86400
 
             if backup_db_period_s > 0:
                 try:
