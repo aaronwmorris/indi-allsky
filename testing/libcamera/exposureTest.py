@@ -6,6 +6,7 @@ import time
 import shutil
 import subprocess
 import tempfile
+import signal
 import logging
 
 
@@ -72,6 +73,18 @@ class LibCameraExposureTest(object):
             self.rpicam_still = 'libcamera-still'
 
 
+        self._shutdown = False
+
+        signal.signal(signal.SIGINT, self.sigint_handler_main)
+
+
+    def sigint_handler_main(self, signum, frame):
+        logger.warning('Caught INT signal, shutting down')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
+
     def run(self):
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
@@ -121,6 +134,10 @@ class LibCameraExposureTest(object):
 
                     if self.current_exposure_file_p.exists():
                         self.current_exposure_file_p.unlink()  # delete last exposure
+
+
+                    if self._shutdown:
+                        sys.exit(0)
 
 
                 if camera_ready and now >= next_frame_time:
