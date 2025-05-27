@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import signal
 import logging
 import time
 from collections import OrderedDict
@@ -314,10 +315,11 @@ class IndiClient(PyIndi.BaseClient):
                 },
             }
         elif indi_exec in [
-            'indi_sv305_ccd',
             'indi_qhy_ccd',
             'indi_simulator_ccd',
             'indi_rpicam',
+            'indi_libcamera_ccd',
+            'indi_dsi_ccd',
         ]:
             gain_config = {
                 "PROPERTIES" : {
@@ -326,14 +328,45 @@ class IndiClient(PyIndi.BaseClient):
                     },
                 },
             }
-        elif indi_exec in ['indi_gphoto_ccd', 'indi_canon_ccd', 'indi_nikon_ccd', 'indi_pentax_ccd', 'indi_sony_ccd']:
+        elif indi_exec in [
+            'indi_svbony_ccd',
+            'indi_sv305_ccd',  # legacy name
+        ]:
+            # the GAIN property changed in INDI 2.0.4
+            try:
+                self.get_control(ccdDevice, 'CCD_CONTROLS', 'number', timeout=2.0)
+
+                gain_config = {
+                    "PROPERTIES" : {
+                        "CCD_CONTROLS" : {
+                            "Gain" : gain_value,
+                        },
+                    },
+                }
+            except TimeOutException:
+                # use the old property
+                gain_config = {
+                    "PROPERTIES" : {
+                        "CCD_GAIN" : {
+                            "GAIN" : gain_value,
+                        },
+                    },
+                }
+        elif indi_exec in [
+            'indi_gphoto_ccd',
+            'indi_canon_ccd',
+            'indi_nikon_ccd',
+            'indi_pentax_ccd',
+            'indi_sony_ccd',
+        ]:
             logger.info('Mapping gain to ISO for libgphoto device')
 
             try:
-                gain_switch = self.__canon_iso_switch[gain_value]
+                gain_switch = self.__canon_gain_to_iso[gain_value]
+                logger.info('Setting ISO switch: %s', gain_switch)
             except KeyError:
-                logger.error('Canon ISO not found for %s, using auto', str(gain_value))
-                gain_switch = 'ISO0'
+                logger.error('Canon ISO not found for %s, using ISO 100', str(gain_value))
+                gain_switch = 'ISO1'
 
             gain_config = {
                 'SWITCHES' : {
@@ -342,12 +375,24 @@ class IndiClient(PyIndi.BaseClient):
                     },
                 },
             }
+        elif indi_exec in ['indi_sx_ccd']:
+            logger.warning('indi_sx_ccd does not support gain settings')
+            gain_config = {}
         elif indi_exec in ['indi_webcam_ccd']:
             logger.warning('indi_webcam_ccd does not support gain settings')
             gain_config = {}
         elif indi_exec in ['indi_v4l2_ccd']:
             logger.warning('indi_v4l2_ccd does not support gain settings')
             gain_config = {}
+        elif 'indi_pylibcamera' in indi_exec:  # SPECIAL CASE
+            # the exec name can have many variations
+            gain_config = {
+                "PROPERTIES" : {
+                    "CCD_GAIN" : {
+                        "GAIN" : gain_value,
+                    },
+                },
+            }
         else:
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
@@ -357,51 +402,47 @@ class IndiClient(PyIndi.BaseClient):
 
     def setCcdBinning(self, ccdDevice, bin_value):
         if type(bin_value) is int:
-            bin_value = [bin_value, bin_value]
+            new_bin_value = [bin_value, bin_value]
         elif type(bin_value) is str:
-            bin_value = [int(bin_value), int(bin_value)]
+            new_bin_value = [int(bin_value), int(bin_value)]
         elif not bin_value:
             # Assume default
             return
 
-        logger.warning('Setting CCD binning to (%d, %d)', bin_value[0], bin_value[1])
+        logger.warning('Setting CCD binning to (%d, %d)', new_bin_value[0], new_bin_value[1])
 
         indi_exec = ccdDevice.getDriverExec()
 
         if indi_exec in [
-            'indi_asi_ccd',
-            'indi_asi_single_ccd',
-            'indi_sv305_ccd',
-            'indi_qhy_ccd',
-            'indi_toupcam_ccd',
-            'indi_altair_ccd',
-            'indi_simulator_ccd',
-            'indi_rpicam',
-            'indi_playerone_ccd',
-            'indi_sx_ccd',
-            'indi_dsi_ccd',
+            'indi_gphoto_ccd',
+            'indi_canon_ccd',
+            'indi_nikon_ccd',
+            'indi_pentax_ccd',
+            'indi_sony_ccd',
         ]:
-            binning_config = {
-                "PROPERTIES" : {
-                    "CCD_BINNING" : {
-                        "HOR_BIN" : bin_value[0],
-                        "VER_BIN" : bin_value[1],
-                    },
-                },
-            }
-        elif indi_exec in ['indi_gphoto_ccd', 'indi_canon_ccd', 'indi_nikon_ccd', 'indi_pentax_ccd', 'indi_sony_ccd']:
             logger.warning('indi_gphoto_ccd does not support bin settings')
             return
         elif indi_exec in ['indi_webcam_ccd']:
             logger.warning('indi_webcam_ccd does not support bin settings')
             return
-        elif indi_exec in ['indi_v4l2_ccd']:
-            logger.warning('indi_v4l2_ccd does not support bin settings')
-            return
-        else:
-            raise Exception('Binning config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
-        self.configureDevice(ccdDevice, binning_config)
+
+        try:
+            self.get_control(ccdDevice, 'CCD_BINNING', 'number', timeout=2.0)
+
+            binning_config = {
+                "PROPERTIES" : {
+                    "CCD_BINNING" : {
+                        "HOR_BIN" : new_bin_value[0],
+                        "VER_BIN" : new_bin_value[1],
+                    },
+                },
+            }
+
+            self.configureDevice(ccdDevice, binning_config)
+
+        except TimeOutException:
+            logger.error('Failed to find CCD binning control, bypassing binning config')
 
 
     def saveConfig(self, ccd_device):
@@ -565,6 +606,17 @@ class IndiExposureTest(object):
         self.current_gain = None
         self._gain_index = 0
 
+        self._shutdown = False
+
+        signal.signal(signal.SIGINT, self.sigint_handler_main)
+
+
+    def sigint_handler_main(self, signum, frame):
+        logger.warning('Caught INT signal, shutting down')
+
+        # set flag for program to stop processes
+        self._shutdown = True
+
 
     def shoot(self, ccdDevice, exposure, sync=True, timeout=None):
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.current_gain)
@@ -613,7 +665,7 @@ class IndiExposureTest(object):
 
         logger.info('Found %d CCDs', len(ccd_list))
         ccdDevice = ccd_list[0]
-        self.ccdDevice = ccdDevice
+        self.ccd_device = ccdDevice
 
         logger.warning('Connecting to device %s', ccdDevice.getDeviceName())
         self.indiclient.connectDevice(ccdDevice.getDeviceName())
@@ -709,6 +761,10 @@ class IndiExposureTest(object):
                     waiting_for_frame = False
 
                     logger.warning('Exposure received in ######## %0.4f s (%0.4f) ########', frame_elapsed, frame_elapsed - last_exposure)
+
+
+                    if self._shutdown:
+                        sys.exit(0)
 
 
                 if camera_ready and now >= next_frame_time:
