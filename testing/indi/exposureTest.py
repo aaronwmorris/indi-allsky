@@ -8,7 +8,7 @@ import ctypes
 import PyIndi
 
 
-CCD_EXPOSURES = [15 for x in range(1000)]
+CCD_EXPOSURES = [15 for x in range(6000)]
 #CCD_EXPOSURES = [
 #    15.0,
 #    14.0,
@@ -766,5 +766,4 @@ class TimeOutException(Exception):
 
 
 if __name__ == "__main__":
-    ia = IndiExposureTest()
-    ia.run()
+    IndiExposureTest().run()
