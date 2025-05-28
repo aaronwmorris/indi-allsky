@@ -75,6 +75,7 @@ class TempSensorTmp36_Ads1015_I2C(TempSensorTmp36_Ads1x15):
 
         i2c = board.I2C()
         #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
         ads = ADS.ADS1015(i2c, address=i2c_address)
         self.sensor = AnalogIn(ads, pin1)
 
@@ -113,6 +114,7 @@ class TempSensorTmp36_Ads1115_I2C(TempSensorTmp36_Ads1x15):
 
         i2c = board.I2C()
         #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
         ads = ADS.ADS1115(i2c, address=i2c_address)
         self.sensor = AnalogIn(ads, pin1)
 

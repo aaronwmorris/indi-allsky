@@ -103,6 +103,7 @@ class LightSensorVeml7700_I2C(LightSensorVeml7700):
         logger.warning('Initializing [%s] VEML7700 I2C light sensor device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
         #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
         self.veml7700 = adafruit_veml7700.VEML7700(i2c, address=i2c_address)
 
         self.gain_night = getattr(adafruit_veml7700.VEML7700, self.config.get('TEMP_SENSOR', {}).get('VEML7700_GAIN_NIGHT', 'ALS_GAIN_2'))

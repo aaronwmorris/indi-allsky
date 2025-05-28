@@ -136,6 +136,7 @@ class TempSensorSht3x_I2C(TempSensorSht3x):
         logger.warning('Initializing [%s] SHT3x I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
         #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
         self.sht3x = adafruit_sht31d.SHT31D(i2c, address=i2c_address)
 
         self.heater_night = self.config.get('TEMP_SENSOR', {}).get('SHT3X_HEATER_NIGHT', False)
