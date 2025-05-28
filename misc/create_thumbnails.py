@@ -111,6 +111,7 @@ class CreateThumbnails(object):
                 'type'       : constants.THUMBNAIL,
                 'origin'     : constants.KEOGRAM,
                 'createDate' : keogram_entry.createDate.timestamp(),
+                'dayDate'    : keogram_entry.dayDate.strftime('%Y%m%d'),
                 'night'      : keogram_entry.night,
                 'camera_uuid': keogram_entry.camera.uuid,
             }
@@ -134,6 +135,7 @@ class CreateThumbnails(object):
                 'type'       : constants.THUMBNAIL,
                 'origin'     : constants.STARTRAIL,
                 'createDate' : startrail_entry.createDate.timestamp(),
+                'dayDate'    : startrail_entry.dayDate.strftime('%Y%m%d'),
                 'night'      : startrail_entry.night,
                 'camera_uuid': startrail_entry.camera.uuid,
             }
@@ -157,6 +159,7 @@ class CreateThumbnails(object):
                 'type'       : constants.THUMBNAIL,
                 'origin'     : constants.IMAGE,
                 'createDate' : image_entry.createDate.timestamp(),
+                'dayDate'    : image_entry.dayDate.strftime('%Y%m%d'),
                 'night'      : image_entry.night,
                 'camera_uuid': image_entry.camera.uuid,
             }
