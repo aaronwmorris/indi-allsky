@@ -3260,6 +3260,9 @@ class IndiAllskyConfigForm(FlaskForm):
         'Magnetometer/Gauss Sensors' : (
             ('qwiic_mag_sensor_mmc5983ma_i2c', 'MMC5983MA i2c - X/Y/Z/Temp (4)'),
         ),
+        'Current Sensors' : (
+            ('blinka_current_sensor_ina3221_i2c', 'INA3221 i2c - 3 Channel V/A/W (9)'),
+        ),
         'Remote' : (
             ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5)'),
         ),
@@ -4005,6 +4008,9 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__SI1145_IR_GAIN_DAY    = SelectField('SI1145 IR Gain (Day)', choices=TEMP_SENSOR__SI1145_GAIN_choices, validators=[TEMP_SENSOR__SI1145_GAIN_validator])
     TEMP_SENSOR__LTR390_GAIN_NIGHT     = SelectField('LTR390 Gain (Night)', choices=TEMP_SENSOR__LTR390_GAIN_choices, validators=[TEMP_SENSOR__LTR390_GAIN_validator])
     TEMP_SENSOR__LTR390_GAIN_DAY       = SelectField('LTR390 Gain (Day)', choices=TEMP_SENSOR__LTR390_GAIN_choices, validators=[TEMP_SENSOR__LTR390_GAIN_validator])
+    TEMP_SENSOR__INA3221_CH1_ENABLE    = BooleanField('INA3221 Channel 1')
+    TEMP_SENSOR__INA3221_CH2_ENABLE    = BooleanField('INA3221 Channel 2')
+    TEMP_SENSOR__INA3221_CH3_ENABLE    = BooleanField('INA3221 Channel 3')
     CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[CUSTOM_CHART_validator])
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[CUSTOM_CHART_validator])
     CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[CUSTOM_CHART_validator])
@@ -4523,6 +4529,10 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.TEMP_SENSOR__A_PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
 
+                except AttributeError as e:
+                    self.TEMP_SENSOR__A_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
+                    result = False
+
             elif self.TEMP_SENSOR__A_CLASSNAME.data.startswith('cpads_'):
                 try:
                     import adafruit_ads1x15.ads1115 as ADS
@@ -4575,6 +4585,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:
                     self.TEMP_SENSOR__B_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except AttributeError as e:
+                    self.TEMP_SENSOR__B_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.TEMP_SENSOR__B_CLASSNAME.data.startswith('cpads_'):
@@ -4631,6 +4645,10 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.TEMP_SENSOR__C_PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
 
+                except AttributeError as e:
+                    self.TEMP_SENSOR__C_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
+                    result = False
+
             elif self.TEMP_SENSOR__C_CLASSNAME.data.startswith('cpads_'):
                 try:
                     import adafruit_ads1x15.ads1115 as ADS
@@ -4683,6 +4701,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:
                     self.TEMP_SENSOR__D_PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except AttributeError as e:
+                    self.TEMP_SENSOR__D_PIN_1.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.TEMP_SENSOR__D_CLASSNAME.data.startswith('cpads_'):

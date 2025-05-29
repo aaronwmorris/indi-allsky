@@ -52,6 +52,8 @@ from .tempSensorLm35_Ads1x15 import TempSensorLm35_Ads1115_I2C as cpads_temp_sen
 
 from .magSensorMmc5983ma import MagSensorMmc5983maSF_I2C as qwiic_mag_sensor_mmc5983ma_i2c
 
+from .currentSensorIna3221 import CurrentSensorIna3221_I2C as blinka_current_sensor_ina3221_i2c
+
 from .tempApiOpenWeatherMap import TempApiOpenWeatherMap as temp_api_openweathermap
 from .tempApiWeatherUnderground import TempApiWeatherUnderground as temp_api_weatherunderground
 from .tempApiAstrospheric import TempApiAstrospheric as temp_api_astrospheric
@@ -93,6 +95,7 @@ __all__ = (
     'blinka_light_sensor_bh1750_i2c',
     'blinka_light_sensor_si1145_i2c',
     'blinka_light_sensor_ltr390_i2c',
+    'blinka_current_sensor_ina3221_i2c',
     'cpads_temp_sensor_tmp36_ads1015_i2c',
     'cpads_temp_sensor_tmp36_ads1115_i2c',
     'cpads_temp_sensor_lm35_ads1015_i2c',

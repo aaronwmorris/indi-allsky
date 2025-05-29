@@ -632,6 +632,9 @@ class IndiAllSkyConfigBase(object):
             "SI1145_IR_GAIN_DAY"     : "GAIN_ADC_CLOCK_DIV_1",
             "LTR390_GAIN_NIGHT"      : "GAIN_9X",
             "LTR390_GAIN_DAY"        : "GAIN_1X",
+            "INA3221_CH1_ENABLE"     : True,
+            "INA3221_CH2_ENABLE"     : True,
+            "INA3221_CH3_ENABLE"     : True,
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : "sensor_user_10",
