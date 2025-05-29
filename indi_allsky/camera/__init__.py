@@ -10,6 +10,7 @@ from .libcamera import IndiClientLibCamera64mpHawkeye as libcamera_64mp_hawkeye
 from .libcamera import IndiClientLibCameraOv64a40OwlSight as libcamera_64mp_owlsight
 from .libcamera import IndiClientLibCameraImx708 as libcamera_imx708
 from .libcamera import IndiClientLibCameraImx296 as libcamera_imx296_gs
+from .libcamera import IndiClientLibCameraImx296Color as libcamera_imx296_gs_color
 from .libcamera import IndiClientLibCameraImx290 as libcamera_imx290
 from .libcamera import IndiClientLibCameraImx462 as libcamera_imx462
 from .libcamera import IndiClientLibCameraImx327 as libcamera_imx327
@@ -32,6 +33,7 @@ __all__ = (
     'libcamera_64mp_owlsight',
     'libcamera_imx708',
     'libcamera_imx296_gs',
+    'libcamera_imx296_gs_color',
     'libcamera_imx290',
     'libcamera_imx462',
     'libcamera_imx327',

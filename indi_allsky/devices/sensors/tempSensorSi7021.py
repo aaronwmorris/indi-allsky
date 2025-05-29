@@ -125,6 +125,7 @@ class TempSensorSi7021_I2C(TempSensorSi7021):
         logger.warning('Initializing [%s] Si7021 I2C temperature device @ %s', self.name, hex(i2c_address))
         i2c = board.I2C()
         #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
         self.si7021 = adafruit_si7021.SI7021(i2c, address=i2c_address)
 
 

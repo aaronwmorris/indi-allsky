@@ -881,6 +881,32 @@ class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
         }
 
 
+class IndiClientLibCameraImx296Color(IndiClientLibCameraGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx296Color, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'libcamera_imx296_gs_color'
+
+        self.camera_info = {
+            'width'         : 1456,
+            'height'        : 1088,
+            'pixel'         : 3.45,
+            'min_gain'      : 1,
+            'max_gain'      : 16,  # verified
+            'min_exposure'  : 0.0001,
+            'max_exposure'  : 15.5,
+            'cfa'           : 'RGGB',  # unverified
+            'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            #1 : '--mode 1456:1088:10',
+            1 : '',
+            # no bin2
+        }
+
+
 class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
 
     def __init__(self, *args, **kwargs):
