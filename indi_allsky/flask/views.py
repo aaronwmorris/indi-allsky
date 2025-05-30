@@ -6250,6 +6250,7 @@ class JsonFocusView(JsonView):
         json_image_buffer = io.BytesIO()
         img = Image.fromarray(cv2.cvtColor(image_roi, cv2.COLOR_BGR2RGB))
         img.save(json_image_buffer, format='JPEG', quality=90)
+        #img.save(json_image_buffer, format='PNG', compress_level=5)
 
         json_image_b64 = base64.b64encode(json_image_buffer.getvalue())
 
