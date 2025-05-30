@@ -1940,10 +1940,12 @@ class ConfigView(FormView):
             'TIMELAPSE_ENABLE'               : self.indi_allsky_config.get('TIMELAPSE_ENABLE', True),
             'TIMELAPSE_SKIP_FRAMES'          : self.indi_allsky_config.get('TIMELAPSE_SKIP_FRAMES', 4),
             'TIMELAPSE__PRE_PROCESSOR'       : self.indi_allsky_config.get('TIMELAPSE', {}).get('PRE_PROCESSOR', 'standard'),
+            'TIMELAPSE__PRE_PROCESSOR_DAY'   : self.indi_allsky_config.get('TIMELAPSE', {}).get('PRE_PROCESSOR_DAY', 'standard'),
             'TIMELAPSE__IMAGE_CIRCLE'        : self.indi_allsky_config.get('TIMELAPSE', {}).get('IMAGE_CIRCLE', 2000),
             'TIMELAPSE__KEOGRAM_RATIO'       : self.indi_allsky_config.get('TIMELAPSE', {}).get('KEOGRAM_RATIO', 0.15),
             'TIMELAPSE__PRE_SCALE'           : self.indi_allsky_config.get('TIMELAPSE', {}).get('PRE_SCALE', 50),
             'TIMELAPSE__FFMPEG_REPORT'       : self.indi_allsky_config.get('TIMELAPSE', {}).get('FFMPEG_REPORT', False),
+            'TIMELAPSE__USE_NIGHT_CONFIG'    : self.indi_allsky_config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True),
             'CAPTURE_PAUSE'                  : self.indi_allsky_config.get('CAPTURE_PAUSE', False),
             'DAYTIME_CAPTURE'                : self.indi_allsky_config.get('DAYTIME_CAPTURE', True),
             'DAYTIME_CAPTURE_SAVE'           : self.indi_allsky_config.get('DAYTIME_CAPTURE_SAVE', True),
@@ -2077,10 +2079,14 @@ class ConfigView(FormView):
             'TIMELAPSE_EXPIRE_DAYS'          : self.indi_allsky_config.get('TIMELAPSE_EXPIRE_DAYS', 365),
             'TIMELAPSE_OVERWRITE'            : self.indi_allsky_config.get('TIMELAPSE_OVERWRITE', False),
             'FFMPEG_FRAMERATE'               : self.indi_allsky_config.get('FFMPEG_FRAMERATE', 25),
+            'FFMPEG_FRAMERATE_DAY'           : self.indi_allsky_config.get('FFMPEG_FRAMERATE_DAY', 25),
             'FFMPEG_BITRATE'                 : self.indi_allsky_config.get('FFMPEG_BITRATE', '5000k'),
+            'FFMPEG_BITRATE_DAY'             : self.indi_allsky_config.get('FFMPEG_BITRATE_DAY', '5000k'),
             'FFMPEG_VFSCALE'                 : self.indi_allsky_config.get('FFMPEG_VFSCALE', ''),
+            'FFMPEG_VFSCALE_DAY'             : self.indi_allsky_config.get('FFMPEG_VFSCALE_DAY', ''),
             'FFMPEG_CODEC'                   : self.indi_allsky_config.get('FFMPEG_CODEC', 'libx264'),
             'FFMPEG_EXTRA_OPTIONS'           : self.indi_allsky_config.get('FFMPEG_EXTRA_OPTIONS', '-level 3.1'),
+            'FFMPEG_EXTRA_OPTIONS_DAY'       : self.indi_allsky_config.get('FFMPEG_EXTRA_OPTIONS_DAY', '-level 3.1'),
             'IMAGE_LABEL_SYSTEM'             : self.indi_allsky_config.get('IMAGE_LABEL_SYSTEM', 'pillow'),
             'TEXT_PROPERTIES__FONT_FACE'     : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_FACE', 'FONT_HERSHEY_SIMPLEX'),
             'TEXT_PROPERTIES__FONT_SCALE'    : self.indi_allsky_config.get('TEXT_PROPERTIES', {}).get('FONT_SCALE', 0.8),
@@ -2780,10 +2786,12 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TIMELAPSE_ENABLE']                     = bool(request.json['TIMELAPSE_ENABLE'])
         self.indi_allsky_config['TIMELAPSE_SKIP_FRAMES']                = int(request.json['TIMELAPSE_SKIP_FRAMES'])
         self.indi_allsky_config['TIMELAPSE']['PRE_PROCESSOR']           = str(request.json['TIMELAPSE__PRE_PROCESSOR'])
+        self.indi_allsky_config['TIMELAPSE']['PRE_PROCESSOR_DAY']       = str(request.json['TIMELAPSE__PRE_PROCESSOR_DAY'])
         self.indi_allsky_config['TIMELAPSE']['IMAGE_CIRCLE']            = int(request.json['TIMELAPSE__IMAGE_CIRCLE'])
         self.indi_allsky_config['TIMELAPSE']['KEOGRAM_RATIO']           = float(request.json['TIMELAPSE__KEOGRAM_RATIO'])
         self.indi_allsky_config['TIMELAPSE']['PRE_SCALE']               = int(request.json['TIMELAPSE__PRE_SCALE'])
         self.indi_allsky_config['TIMELAPSE']['FFMPEG_REPORT']           = bool(request.json['TIMELAPSE__FFMPEG_REPORT'])
+        self.indi_allsky_config['TIMELAPSE']['USE_NIGHT_CONFIG']        = bool(request.json['TIMELAPSE__USE_NIGHT_CONFIG'])
         self.indi_allsky_config['CAPTURE_PAUSE']                        = bool(request.json['CAPTURE_PAUSE'])
         self.indi_allsky_config['DAYTIME_CAPTURE']                      = bool(request.json['DAYTIME_CAPTURE'])
         self.indi_allsky_config['DAYTIME_CAPTURE_SAVE']                 = bool(request.json['DAYTIME_CAPTURE_SAVE'])
@@ -2919,10 +2927,14 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TIMELAPSE_EXPIRE_DAYS']                = int(request.json['TIMELAPSE_EXPIRE_DAYS'])
         self.indi_allsky_config['TIMELAPSE_OVERWRITE']                  = bool(request.json['TIMELAPSE_OVERWRITE'])
         self.indi_allsky_config['FFMPEG_FRAMERATE']                     = int(request.json['FFMPEG_FRAMERATE'])
+        self.indi_allsky_config['FFMPEG_FRAMERATE_DAY']                 = int(request.json['FFMPEG_FRAMERATE_DAY'])
         self.indi_allsky_config['FFMPEG_BITRATE']                       = str(request.json['FFMPEG_BITRATE'])
+        self.indi_allsky_config['FFMPEG_BITRATE_DAY']                   = str(request.json['FFMPEG_BITRATE_DAY'])
         self.indi_allsky_config['FFMPEG_VFSCALE']                       = str(request.json['FFMPEG_VFSCALE'])
+        self.indi_allsky_config['FFMPEG_VFSCALE_DAY']                   = str(request.json['FFMPEG_VFSCALE_DAY'])
         self.indi_allsky_config['FFMPEG_CODEC']                         = str(request.json['FFMPEG_CODEC'])
         self.indi_allsky_config['FFMPEG_EXTRA_OPTIONS']                 = str(request.json['FFMPEG_EXTRA_OPTIONS'])
+        self.indi_allsky_config['FFMPEG_EXTRA_OPTIONS_DAY']             = str(request.json['FFMPEG_EXTRA_OPTIONS_DAY'])
         self.indi_allsky_config['IMAGE_LABEL_SYSTEM']                   = str(request.json['IMAGE_LABEL_SYSTEM'])
         self.indi_allsky_config['TEXT_PROPERTIES']['FONT_FACE']         = str(request.json['TEXT_PROPERTIES__FONT_FACE'])
         self.indi_allsky_config['TEXT_PROPERTIES']['FONT_SCALE']        = float(request.json['TEXT_PROPERTIES__FONT_SCALE'])
