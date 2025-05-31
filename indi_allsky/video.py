@@ -436,18 +436,39 @@ class VideoWorker(Process):
             keogram_filename = None
 
 
+        if self.config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True):
+            pre_processor_class = self.config.get('TIMELAPSE', {}).get('PRE_PROCESSOR', 'standard')
+            framerate = self.config.get('FFMPEG_FRAMERATE', 25)
+            bitrate = self.config.get('FFMPEG_BITRATE', '5000k')
+            vf_scale = self.config.get('FFMPEG_VFSCALE', '')
+            ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+        else:
+            if night:
+                pre_processor_class = self.config.get('TIMELAPSE', {}).get('PRE_PROCESSOR', 'standard')
+                framerate = self.config.get('FFMPEG_FRAMERATE', 25)
+                bitrate = self.config.get('FFMPEG_BITRATE', '5000k')
+                vf_scale = self.config.get('FFMPEG_VFSCALE', '')
+                ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+            else:
+                pre_processor_class = self.config.get('TIMELAPSE', {}).get('PRE_PROCESSOR_DAY', 'standard')
+                framerate = self.config.get('FFMPEG_FRAMERATE_DAY', '25')
+                bitrate = self.config.get('FFMPEG_BITRATE_DAY', '5000k')
+                vf_scale = self.config.get('FFMPEG_VFSCALE_DAY', '')
+                ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS_DAY', '')
+
+
         try:
             tg = TimelapseGenerator(
                 self.config,
                 skip_frames=timelapse_skip_frames,
-                pre_processor_class=self.config.get('TIMELAPSE', {}).get('PRE_PROCESSOR', 'standard'),
+                pre_processor_class=pre_processor_class,
             )
 
             tg.codec = self.config['FFMPEG_CODEC']
-            tg.framerate = self.config['FFMPEG_FRAMERATE']
-            tg.bitrate = self.config['FFMPEG_BITRATE']
-            tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
-            tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+            tg.framerate = framerate
+            tg.bitrate = bitrate
+            tg.vf_scale = vf_scale
+            tg.ffmpeg_extra_options = ffmpeg_extra_options
 
             tg.pre_processor.keogram = keogram_filename
             tg.pre_processor.pre_scale = self.config.get('TIMELAPSE', {}).get('PRE_SCALE', 50)
@@ -706,6 +727,21 @@ class VideoWorker(Process):
         )
 
 
+        if self.config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True):
+            bitrate = self.config.get('FFMPEG_BITRATE', '5000k')
+            vf_scale = self.config.get('FFMPEG_VFSCALE', '')
+            ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+        else:
+            if night:
+                bitrate = self.config.get('FFMPEG_BITRATE', '5000k')
+                vf_scale = self.config.get('FFMPEG_VFSCALE', '')
+                ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+            else:
+                bitrate = self.config.get('FFMPEG_BITRATE_DAY', '5000k')
+                vf_scale = self.config.get('FFMPEG_VFSCALE_DAY', '')
+                ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS_DAY', '')
+
+
         try:
             tg = TimelapseGenerator(
                 self.config,
@@ -714,9 +750,9 @@ class VideoWorker(Process):
 
             tg.codec = self.config['FFMPEG_CODEC']
             tg.framerate = framerate
-            tg.bitrate = self.config['FFMPEG_BITRATE']
-            tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
-            tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+            tg.bitrate = bitrate
+            tg.vf_scale = vf_scale
+            tg.ffmpeg_extra_options = ffmpeg_extra_options
 
             tg.generate(video_file, timelapse_files)
 
@@ -946,6 +982,21 @@ class VideoWorker(Process):
         )
 
 
+        if self.config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True):
+            framerate = self.config.get('FFMPEG_FRAMERATE', 25)
+            bitrate = self.config.get('FFMPEG_BITRATE', '5000k')
+            ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+        else:
+            if night:
+                framerate = self.config.get('FFMPEG_FRAMERATE', 25)
+                bitrate = self.config.get('FFMPEG_BITRATE', '5000k')
+                ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+            else:
+                framerate = self.config.get('FFMPEG_FRAMERATE_DAY', '25')
+                bitrate = self.config.get('FFMPEG_BITRATE_DAY', '5000k')
+                ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS_DAY', '')
+
+
         try:
             tg = TimelapseGenerator(
                 self.config,
@@ -953,10 +1004,10 @@ class VideoWorker(Process):
             )
 
             tg.codec = codec
-            tg.framerate = self.config['FFMPEG_FRAMERATE']
-            tg.bitrate = self.config['FFMPEG_BITRATE']
-            #tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')  # no vfscale for panorama timelapse
-            tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+            tg.framerate = framerate
+            tg.bitrate = bitrate
+            #tg.vf_scale = vf_scale  # no vfscale for panorama timelapse
+            tg.ffmpeg_extra_options = ffmpeg_extra_options
 
             tg.generate(video_file, timelapse_files)
 
@@ -1482,6 +1533,25 @@ class VideoWorker(Process):
                     startrail_video_metadata,
                 )
 
+
+                if self.config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True):
+                    framerate = self.config.get('FFMPEG_FRAMERATE', 25)
+                    bitrate = self.config.get('FFMPEG_BITRATE', '5000k')
+                    vf_scale = self.config.get('FFMPEG_VFSCALE', '')
+                    ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+                else:
+                    if night:
+                        framerate = self.config.get('FFMPEG_FRAMERATE', 25)
+                        bitrate = self.config.get('FFMPEG_BITRATE', '5000k')
+                        vf_scale = self.config.get('FFMPEG_VFSCALE', '')
+                        ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+                    else:
+                        framerate = self.config.get('FFMPEG_FRAMERATE_DAY', '25')
+                        bitrate = self.config.get('FFMPEG_BITRATE_DAY', '5000k')
+                        vf_scale = self.config.get('FFMPEG_VFSCALE_DAY', '')
+                        ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS_DAY', '')
+
+
                 try:
                     st_tg = TimelapseGenerator(
                         self.config,
@@ -1489,10 +1559,10 @@ class VideoWorker(Process):
                     )
 
                     st_tg.codec = self.config['FFMPEG_CODEC']
-                    st_tg.framerate = self.config['FFMPEG_FRAMERATE']
-                    st_tg.bitrate = self.config['FFMPEG_BITRATE']
-                    st_tg.vf_scale = self.config.get('FFMPEG_VFSCALE', '')
-                    st_tg.ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
+                    st_tg.framerate = framerate
+                    st_tg.bitrate = bitrate
+                    st_tg.vf_scale = vf_scale
+                    st_tg.ffmpeg_extra_options = ffmpeg_extra_options
 
                     st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
 

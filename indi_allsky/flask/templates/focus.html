@@ -68,6 +68,7 @@ function showImage(image_b64) {
         var centerShift_y = ( image_canvas.height - this.height * ratio ) / 2;
 
         context.imageSmoothingEnabled = false;
+
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
@@ -107,6 +108,7 @@ function showImage(image_b64) {
 
 
     img.src = "data:image/jpg;base64," + image_b64;
+    //img.src = "data:image/png;base64," + image_b64;
 }
 
 
@@ -267,6 +269,8 @@ function closeFullscreen() {
 {% endblock %}
 
 {% block content %}
+<div class="container h-100">
+
 <form id="form_focus" onSubmit="return false;">
     <div class="form-group row">
         <div class="col-sm-1">
@@ -315,6 +319,8 @@ function closeFullscreen() {
 </div>
 <div class="row justify-content-center">
     <div id="focus_controller_error" class="text-danger"></div>
+</div>
+
 </div>
 
 

@@ -5,20 +5,6 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
-.loader {
-  display: none;
-  border: 3px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
 </style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
@@ -77,22 +63,21 @@ var camera_id = {{ camera_id }};
     </div>
 
     <div class="form-group row">
-      <div class="col-sm-12">
-        <div id="form_timelapsegen_success-message" class="text-success" style="display: none;"></div>
-        <div id="form_timelapsegen_failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
-      </div>
-    </div>
-
-    <div class="form-group row">
       <div class="col-sm-1">
-        <button class="btn btn-primary">Execute</button>
+        <button id="generate-button" class="btn btn-success">Generate</button>
       </div>
       <div class="col-sm-1">
         <input class="form-check-input" id="CONFIRM1" name="CONFIRM1" type="checkbox" value="y">
         <label>Confirm</label>
       </div>
       <div class="col-sm-1">
-        <div class="loader" id="loader_generate"></div>
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <div class="col-sm-3">
+        <div id="form_timelapsegen_success-message" class="alert alert-success" role="alert" style="display: none;"></div>
+        <div id="form_timelapsegen_failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
       </div>
     </div>
 </form>
@@ -173,14 +158,17 @@ $('#form_timelapsegen').on('submit', function() {
     };
 
 
+    $("#generate-button").attr("class", "btn btn-primary");
+    $("#generate-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Generate</span>'
+    );
+
+
     // hide all errors
     form_timelapsegen_successMessage.css({'display' : 'none'});
     Object.keys(form_timelapsegen_fields).forEach((key) => {
         form_timelapsegen_fields[key].error.css({'display' : 'none'});
     });
-
-
-    $("#loader_generate").css({'display' : 'block'});
 
 
     // Populate fields object
@@ -202,7 +190,10 @@ $('#form_timelapsegen').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#loader_generate").css({'display' : 'none'});
+            $("#generate-button").attr("class", "btn btn-success");
+            $("#generate-button").html(
+              'Generate'
+            );
 
             $("#ACTION_SELECT").val('none');
             form_timelapsegen_successMessage.html(rdata['success-message']);
@@ -210,10 +201,12 @@ $('#form_timelapsegen').on('submit', function() {
             setTimeout(function() {
                 form_timelapsegen_successMessage.css({'display' : 'none'});
             }, 15000);
-
         },
         error: function(rdata){
-            $("#loader_generate").css({'display' : 'none'});
+            $("#generate-button").attr("class", "btn btn-danger");
+            $("#generate-button").html(
+              'Generate'
+            );
 
             var errors = JSON.parse(rdata.responseText);
             Object.keys(errors).forEach((key) => {

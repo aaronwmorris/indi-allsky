@@ -11,21 +11,6 @@
 	height: 50px;
 }
 
-.loader {
-  display: none;
-  border: 3px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 .strikethrough{
   text-decoration: line-through;
 }
@@ -2613,6 +2598,88 @@ var camera_id = {{ camera_id }};
             <div id="TIMELAPSE_SKIP_FRAMES-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Exclude frames at beginning of timelapse.  Gain changes between night and day cause bad exposures.</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE__USE_NIGHT_CONFIG.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TIMELAPSE__USE_NIGHT_CONFIG(class='form-check-input') }}
+                <div id="TIMELAPSE__USE_NIGHT_CONFIG-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TIMELAPSE__PRE_PROCESSOR_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TIMELAPSE__PRE_PROCESSOR_DAY(class='form-select bg-secondary') }}
+            <div id="TIMELAPSE__PRE_PROCESSOR_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_FRAMERATE_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_FRAMERATE_DAY(class='form-control bg-secondary') }}
+            <div id="FFMPEG_FRAMERATE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">ffmpeg framerate for timelapse videos</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_BITRATE_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_BITRATE_DAY(class='form-control bg-secondary') }}
+            <div id="FFMPEG_BITRATE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default: 5000k</div>
+            <div>High quality timelapses with dynamic content (eg auroras) should have a much higher rate</div>
+            <div>15000k-20000k for a 1920x1080 resolution.</div>
+            <div>30000k-40000k for 4K video</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_VFSCALE_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FFMPEG_VFSCALE_DAY(class='form-select bg-secondary') }}
+            <div id="FFMPEG_VFSCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><span class="badge rounded-pill bg-danger text-dark">Warning</span> Higher resolution videos may cause timelapses to fail on systems with less than 4GB RAM.  Scale your resolution to reduce the memory requirements.</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FFMPEG_EXTRA_OPTIONS_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.FFMPEG_EXTRA_OPTIONS_DAY(class='form-control bg-secondary') }}
+            <div id="FFMPEG_EXTRA_OPTIONS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>ffmpeg extra options (not validated).</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> "-level 3.1" can reduce artifacts and increase IOS compatibility</div>
+        </div>
     </div>
 
     <hr>
@@ -7352,7 +7419,7 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-1">
-            <button class="btn btn-primary">Save</button>
+            <button id="save-button" class="btn btn-primary">Save</button>
         </div>
         <div class="col-sm-1 text-end">
             {{ form_config.CONFIG_NOTE.label }}
@@ -7365,7 +7432,6 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row" style="height:100px;">
         <div class="col-sm-2">
-            <div class="loader" id="loader_config"></div>
             <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
             <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
             <div id="failure-fields" class="invalid-feedback text-warning" style="display: none;"></div>
@@ -7555,12 +7621,17 @@ const field_names = [
     'IMAGE_QUEUE_BACKOFF',
     'TIMELAPSE_EXPIRE_DAYS',
     'FFMPEG_FRAMERATE',
+    'FFMPEG_FRAMERATE_DAY',
     'FFMPEG_BITRATE',
+    'FFMPEG_BITRATE_DAY',
     'FFMPEG_VFSCALE',
+    'FFMPEG_VFSCALE_DAY',
     'FFMPEG_CODEC',
     'FFMPEG_EXTRA_OPTIONS',
+    'FFMPEG_EXTRA_OPTIONS_DAY',
     'TIMELAPSE_SKIP_FRAMES',
     'TIMELAPSE__PRE_PROCESSOR',
+    'TIMELAPSE__PRE_PROCESSOR_DAY',
     'TIMELAPSE__IMAGE_CIRCLE',
     'TIMELAPSE__KEOGRAM_RATIO',
     'TIMELAPSE__PRE_SCALE',
@@ -7819,6 +7890,7 @@ const checkbox_field_names = [
     'CAPTURE_PAUSE',
     'TIMELAPSE_ENABLE',
     'TIMELAPSE__FFMPEG_REPORT',
+    'TIMELAPSE__USE_NIGHT_CONFIG',
     'DAYTIME_CAPTURE',
     'DAYTIME_CAPTURE_SAVE',
     'DAYTIME_TIMELAPSE',
@@ -7976,7 +8048,10 @@ $('#form_config').on('submit', function() {
         json_data[item] = fields[item].input.val();
     });
 
-    $("#loader_config").css({'display' : 'block'});
+    $("#save-button").attr("class", "btn btn-secondary");
+    $("#save-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Save</span>'
+    );
 
     // checkboxes
     checkbox_field_names.forEach(item => {
@@ -7993,7 +8068,10 @@ $('#form_config').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#loader_config").css({'display' : 'none'});
+            $("#save-button").attr("class", "btn btn-success");
+            $("#save-button").html(
+                'Save'
+            );
 
             successMessage.html(rdata['success-message']);
             successMessage.css({'display' : 'block'});
@@ -8004,7 +8082,10 @@ $('#form_config').on('submit', function() {
             $('#CONFIG_NOTE').val('');
         },
         error: function(rdata){
-            $("#loader_config").css({'display' : 'none'});
+            $("#save-button").attr("class", "btn btn-danger");
+            $("#save-button").html(
+                'Save'
+            );
 
             var errors = JSON.parse(rdata.responseText);
 
@@ -8219,6 +8300,54 @@ $('#USE_NIGHT_COLOR').on('change', function() {
         $('#GAMMA_CORRECTION_DAY').removeAttr('disabled');
         $('#GAMMA_CORRECTION_DAY').removeClass('bg-dark');
         $('#GAMMA_CORRECTION_DAY').removeClass('text-secondary');
+    }
+});
+
+
+// Night timelapse settings
+$('#TIMELAPSE__USE_NIGHT_CONFIG').on('change', function() {
+    if ($('#TIMELAPSE__USE_NIGHT_CONFIG').prop('checked')) {
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').attr('readonly', true);
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').attr('disabled', true);
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').addClass('bg-dark');
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').addClass('text-secondary');
+        $('#FFMPEG_FRAMERATE_DAY').attr('readonly', true);
+        $('#FFMPEG_FRAMERATE_DAY').attr('disabled', true);
+        $('#FFMPEG_FRAMERATE_DAY').addClass('bg-dark');
+        $('#FFMPEG_FRAMERATE_DAY').addClass('text-secondary');
+        $('#FFMPEG_BITRATE_DAY').attr('readonly', true);
+        $('#FFMPEG_BITRATE_DAY').attr('disabled', true);
+        $('#FFMPEG_BITRATE_DAY').addClass('bg-dark');
+        $('#FFMPEG_BITRATE_DAY').addClass('text-secondary');
+        $('#FFMPEG_VFSCALE_DAY').attr('readonly', true);
+        $('#FFMPEG_VFSCALE_DAY').attr('disabled', true);
+        $('#FFMPEG_VFSCALE_DAY').addClass('bg-dark');
+        $('#FFMPEG_VFSCALE_DAY').addClass('text-secondary');
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').attr('readonly', true);
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').attr('disabled', true);
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').addClass('bg-dark');
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').addClass('text-secondary');
+    } else {
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').removeAttr('readonly');
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').removeAttr('disabled');
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').removeClass('bg-dark');
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').removeClass('text-secondary');
+        $('#FFMPEG_FRAMERATE_DAY').removeAttr('readonly');
+        $('#FFMPEG_FRAMERATE_DAY').removeAttr('disabled');
+        $('#FFMPEG_FRAMERATE_DAY').removeClass('bg-dark');
+        $('#FFMPEG_FRAMERATE_DAY').removeClass('text-secondary');
+        $('#FFMPEG_BITRATE_DAY').removeAttr('readonly');
+        $('#FFMPEG_BITRATE_DAY').removeAttr('disabled');
+        $('#FFMPEG_BITRATE_DAY').removeClass('bg-dark');
+        $('#FFMPEG_BITRATE_DAY').removeClass('text-secondary');
+        $('#FFMPEG_VFSCALE_DAY').removeAttr('readonly');
+        $('#FFMPEG_VFSCALE_DAY').removeAttr('disabled');
+        $('#FFMPEG_VFSCALE_DAY').removeClass('bg-dark');
+        $('#FFMPEG_VFSCALE_DAY').removeClass('text-secondary');
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').removeAttr('readonly');
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').removeAttr('disabled');
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').removeClass('bg-dark');
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').removeClass('text-secondary');
     }
 });
 
@@ -8476,6 +8605,30 @@ $( document ).ready(function() {
         $('#GAMMA_CORRECTION_DAY').attr('disabled', true);
         $('#GAMMA_CORRECTION_DAY').addClass('bg-dark');
         $('#GAMMA_CORRECTION_DAY').addClass('text-secondary');
+    }
+
+    // Night timelapse settings
+    if ($('#TIMELAPSE__USE_NIGHT_CONFIG').prop('checked')) {
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').attr('readonly', true);
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').attr('disabled', true);
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').addClass('bg-dark');
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').addClass('text-secondary');
+        $('#FFMPEG_FRAMERATE_DAY').attr('readonly', true);
+        $('#FFMPEG_FRAMERATE_DAY').attr('disabled', true);
+        $('#FFMPEG_FRAMERATE_DAY').addClass('bg-dark');
+        $('#FFMPEG_FRAMERATE_DAY').addClass('text-secondary');
+        $('#FFMPEG_BITRATE_DAY').attr('readonly', true);
+        $('#FFMPEG_BITRATE_DAY').attr('disabled', true);
+        $('#FFMPEG_BITRATE_DAY').addClass('bg-dark');
+        $('#FFMPEG_BITRATE_DAY').addClass('text-secondary');
+        $('#FFMPEG_VFSCALE_DAY').attr('readonly', true);
+        $('#FFMPEG_VFSCALE_DAY').attr('disabled', true);
+        $('#FFMPEG_VFSCALE_DAY').addClass('bg-dark');
+        $('#FFMPEG_VFSCALE_DAY').addClass('text-secondary');
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').attr('readonly', true);
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').attr('disabled', true);
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').addClass('bg-dark');
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').addClass('text-secondary');
     }
 
     // Dew Heater thresholds
