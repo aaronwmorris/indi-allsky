@@ -835,10 +835,11 @@ class BaseView(View):
             return
 
 
-        app.logger.info('Loaded detection mask: %s', detect_mask_p)
+        ### any intermediate values will be set to 0
+        mask_data[mask_data < 255] = 0
 
-        ### any compression artifacts will be set to black
-        #mask_data[mask_data < 255] = 0  # did not quite work
+
+        app.logger.info('Loaded detection mask: %s', detect_mask_p)
 
 
         bin_v = Value('i', 1)  # always assume bin 1

@@ -2118,8 +2118,9 @@ class VideoWorker(Process):
             logger.error('%s is not a valid image', detect_mask_p)
             return
 
-        ### any compression artifacts will be set to black
-        #mask_data[mask_data < 255] = 0  # did not quite work
+
+        ### any intermediate values will be set to 0
+        mask_data[mask_data < 255] = 0
 
 
         mask_processor = MaskProcessor(
