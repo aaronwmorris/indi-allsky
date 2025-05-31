@@ -3380,11 +3380,11 @@ class ImageProcessor(object):
             return
 
 
+        ### any intermediate values will be set to 0
+        mask_data[mask_data < 255] = 0
+
+
         logger.info('Loaded detection mask: %s', detect_mask_p)
-
-        ### any compression artifacts will be set to black
-        #mask_data[mask_data < 255] = 0  # did not quite work
-
 
         return mask_data
 
