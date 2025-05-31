@@ -190,30 +190,30 @@ $('#form_timelapsegen').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
+            $("#generate-button").attr("class", "btn btn-success");
+            $("#generate-button").html(
+              'Generate'
+            );
+
             $("#ACTION_SELECT").val('none');
             form_timelapsegen_successMessage.html(rdata['success-message']);
             form_timelapsegen_successMessage.css({'display' : 'block'});
             setTimeout(function() {
                 form_timelapsegen_successMessage.css({'display' : 'none'});
             }, 15000);
-
-            $("#generate-button").attr("class", "btn btn-success");
+        },
+        error: function(rdata){
+            $("#generate-button").attr("class", "btn btn-danger");
             $("#generate-button").html(
               'Generate'
             );
-        },
-        error: function(rdata){
+
             var errors = JSON.parse(rdata.responseText);
             Object.keys(errors).forEach((key) => {
                 form_timelapsegen_fields[key].input.addClass('is-invalid');
                 form_timelapsegen_fields[key].error.html(errors[key][0]);
                 form_timelapsegen_fields[key].error.css({'display' : 'block'});
             });
-
-            $("#generate-button").attr("class", "btn btn-danger");
-            $("#generate-button").html(
-              'Generate'
-            );
         },
     });
 

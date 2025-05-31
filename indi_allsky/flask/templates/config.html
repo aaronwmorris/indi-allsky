@@ -11,21 +11,6 @@
 	height: 50px;
 }
 
-.loader {
-  display: none;
-  border: 3px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 .strikethrough{
   text-decoration: line-through;
 }
@@ -7434,7 +7419,7 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-1">
-            <button class="btn btn-primary">Save</button>
+            <button id="save-button" class="btn btn-primary">Save</button>
         </div>
         <div class="col-sm-1 text-end">
             {{ form_config.CONFIG_NOTE.label }}
@@ -7447,7 +7432,6 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row" style="height:100px;">
         <div class="col-sm-2">
-            <div class="loader" id="loader_config"></div>
             <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
             <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
             <div id="failure-fields" class="invalid-feedback text-warning" style="display: none;"></div>
@@ -8064,7 +8048,10 @@ $('#form_config').on('submit', function() {
         json_data[item] = fields[item].input.val();
     });
 
-    $("#loader_config").css({'display' : 'block'});
+    $("#save-button").attr("class", "btn btn-secondary");
+    $("#save-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Save</span>'
+    );
 
     // checkboxes
     checkbox_field_names.forEach(item => {
@@ -8081,7 +8068,10 @@ $('#form_config').on('submit', function() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
-            $("#loader_config").css({'display' : 'none'});
+            $("#save-button").attr("class", "btn btn-success");
+            $("#save-button").html(
+                'Save'
+            );
 
             successMessage.html(rdata['success-message']);
             successMessage.css({'display' : 'block'});
@@ -8092,7 +8082,10 @@ $('#form_config').on('submit', function() {
             $('#CONFIG_NOTE').val('');
         },
         error: function(rdata){
-            $("#loader_config").css({'display' : 'none'});
+            $("#save-button").attr("class", "btn btn-danger");
+            $("#save-button").html(
+                'Save'
+            );
 
             var errors = JSON.parse(rdata.responseText);
 
