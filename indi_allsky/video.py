@@ -2119,8 +2119,8 @@ class VideoWorker(Process):
             return
 
 
-        ### any intermediate values will be set to 0
-        mask_data[mask_data < 255] = 0
+        ### any intermediate values will be set to 255
+        mask_data[mask_data > 0] = 255
 
 
         mask_processor = MaskProcessor(
