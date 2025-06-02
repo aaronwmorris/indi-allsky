@@ -671,7 +671,7 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
             --nocancel \
             --notags \
             --radiolist "Select which camera vendor to build\n\nPress space to select" 0 0 0 \
-                "supported" "Supported Cameras" "OFF" \
+                "supported" "Supported Cameras" "ON" \
                 "asi" "ZWO ASI Camera" "OFF" \
                 "playerone" "PlayerOne Astronomy" "OFF" \
                 "touptek" "ToupTek / Altair / Omegon / Meade / etc" "OFF" \
