@@ -879,13 +879,13 @@ class ImageWorker(Process):
             # system temp sensors
             for i, v in enumerate(self.sensors_temp_av):
                 sensor_topic = 'sensor_temp_{0:d}'.format(i)
-                mqtt_data[sensor_topic] = round(v, 1)
+                mqtt_data[sensor_topic] = round(v, 3)
 
 
             # user sensors
             for i, v in enumerate(self.sensors_user_av):
                 sensor_topic = 'sensor_user_{0:d}'.format(i)
-                mqtt_data[sensor_topic] = round(v, 1)
+                mqtt_data[sensor_topic] = round(v, 3)
 
 
             if new_filename:
