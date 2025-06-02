@@ -18,6 +18,10 @@ export PATH
 OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 
 
+### config ###
+INDISERVER_SERVICE_NAME="indiserver"
+### end config ###
+
 function handler_SIGINT() {
     #stty echo
     echo "Caught SIGINT, quitting"
@@ -68,6 +72,19 @@ if [ -z "${MAKE_CONCURRENT:-}" ]; then
     else
         MAKE_CONCURRENT=$(nproc)
     fi
+fi
+
+
+if systemctl --quiet is-enabled "${INDISERVER_SERVICE_NAME}.service" 2>/dev/null; then
+    # system
+    INDISERVER_ACTIVE="false"
+    INDISERVER_ACTIVE_SYSTEM="true"
+elif systemctl --user --quiet is-active "${INDISERVER_SERVICE_NAME}.service" 2>/dev/null; then
+    INDISERVER_ACTIVE="true"
+    INDISERVER_ACTIVE_SYSTEM="false"
+else
+    INDISERVER_ACTIVE="false"
+    INDISERVER_ACTIVE_SYSTEM="false"
 fi
 
 
@@ -976,3 +993,37 @@ echo
 echo
 echo "Completed in $((END_TIME - START_TIME))s"
 echo
+
+
+if [ "$INDISERVER_ACTIVE_SYSTEM" == "true" ]; then
+    echo
+    echo
+    echo "It is recommended to restart your active indiserver after rebuilding indilib."
+    echo
+    echo "    sudo systemctl restart ${INDISERVER_SERVICE_NAME}.service"
+    echo
+    echo "Please restart your indiserver as soon as possible"
+    echo
+elif [ "$INDISERVER_ACTIVE" == "true" ]; then
+    while [ -z "${INDISERVER_RESTART:-}" ]; do
+        if whiptail --title "Restart indiserver" --yesno "It is recommended to restart your active indiserver after rebuilding indilib.\n\nDo you want to restart the active indiserver service now?" 0 0 --defaultno; then
+            INDISERVER_RESTART="true"
+        else
+            INDISERVER_RESTART="false"
+        fi
+    done
+
+    if [ "$INDISERVER_RESTART" == "true" ]; then
+        echo
+        echo "Restarting indiserver..."
+        systemctl --user restart "${INDISERVER_SERVICE_NAME}.service"
+    else
+        echo
+        echo "It is recommended to restart your active indiserver after rebuilding indilib."
+        echo
+        echo "    systemctl --user restart ${INDISERVER_SERVICE_NAME}.service"
+        echo
+        echo "Please restart your indiserver as soon as possible"
+        echo
+    fi
+fi
