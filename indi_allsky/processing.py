@@ -3812,7 +3812,8 @@ class ImageData(object):
         else:
             detected_bit_depth = 8
 
-        #logger.info('Detected bit depth: %d', detected_bit_depth)
+
+        logger.info('Detected bit depth: %d', detected_bit_depth)
 
 
         self.detected_bit_depth = detected_bit_depth
