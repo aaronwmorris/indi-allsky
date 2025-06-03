@@ -18,6 +18,10 @@ export PATH
 OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 
 
+### config ###
+INDISERVER_SERVICE_NAME="indiserver"
+### end config ###
+
 function handler_SIGINT() {
     #stty echo
     echo "Caught SIGINT, quitting"
@@ -602,7 +606,8 @@ while [ -z "${INDI_CORE_TAG:-}" ]; do
         --nocancel \
         --notags \
         --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-            "v2.1.3" "v2.1.3 - Recommend" "ON" \
+            "v2.1.4" "v2.1.4 - Recommend" "ON" \
+            "v2.1.3" "v2.1.3" "OFF" \
             "v2.1.2.1" "v2.1.2.1" "OFF" \
             "v2.1.2" "v2.1.2" "OFF" \
             "v2.1.1" "v2.1.1" "OFF" \
@@ -670,7 +675,7 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
             --nocancel \
             --notags \
             --radiolist "Select which camera vendor to build\n\nPress space to select" 0 0 0 \
-                "supported" "Supported Cameras" "OFF" \
+                "supported" "Supported Cameras" "ON" \
                 "asi" "ZWO ASI Camera" "OFF" \
                 "playerone" "PlayerOne Astronomy" "OFF" \
                 "touptek" "ToupTek / Altair / Omegon / Meade / etc" "OFF" \
@@ -975,3 +980,50 @@ echo
 echo
 echo "Completed in $((END_TIME - START_TIME))s"
 echo
+
+
+if systemctl --quiet is-enabled "${INDISERVER_SERVICE_NAME}.service" 2>/dev/null; then
+    # system
+    INDISERVER_ACTIVE="false"
+    INDISERVER_ACTIVE_SYSTEM="true"
+elif systemctl --user --quiet is-active "${INDISERVER_SERVICE_NAME}.service" 2>/dev/null; then
+    INDISERVER_ACTIVE="true"
+    INDISERVER_ACTIVE_SYSTEM="false"
+else
+    INDISERVER_ACTIVE="false"
+    INDISERVER_ACTIVE_SYSTEM="false"
+fi
+
+
+if [ "$INDISERVER_ACTIVE_SYSTEM" == "true" ]; then
+    echo
+    echo
+    echo "It is recommended to restart your active indiserver after rebuilding indilib."
+    echo
+    echo "    sudo systemctl restart ${INDISERVER_SERVICE_NAME}.service"
+    echo
+    echo "Please restart your indiserver as soon as possible"
+    echo
+elif [ "$INDISERVER_ACTIVE" == "true" ]; then
+    while [ -z "${RESTART_INDISERVER:-}" ]; do
+        if whiptail --title "Restart indiserver" --yesno "It is recommended to restart your active indiserver after rebuilding indilib.\n\nDo you want to restart the active indiserver service now?" 0 0 --defaultno; then
+            RESTART_INDISERVER="true"
+        else
+            RESTART_INDISERVER="false"
+        fi
+    done
+
+    if [ "$RESTART_INDISERVER" == "true" ]; then
+        echo
+        echo "Restarting indiserver..."
+        systemctl --user restart "${INDISERVER_SERVICE_NAME}.service"
+    else
+        echo
+        echo "It is recommended to restart your active indiserver after rebuilding indilib."
+        echo
+        echo "    systemctl --user restart ${INDISERVER_SERVICE_NAME}.service"
+        echo
+        echo "Please restart your indiserver as soon as possible"
+        echo
+    fi
+fi
