@@ -75,19 +75,6 @@ if [ -z "${MAKE_CONCURRENT:-}" ]; then
 fi
 
 
-if systemctl --quiet is-enabled "${INDISERVER_SERVICE_NAME}.service" 2>/dev/null; then
-    # system
-    INDISERVER_ACTIVE="false"
-    INDISERVER_ACTIVE_SYSTEM="true"
-elif systemctl --user --quiet is-active "${INDISERVER_SERVICE_NAME}.service" 2>/dev/null; then
-    INDISERVER_ACTIVE="true"
-    INDISERVER_ACTIVE_SYSTEM="false"
-else
-    INDISERVER_ACTIVE="false"
-    INDISERVER_ACTIVE_SYSTEM="false"
-fi
-
-
 if pkg-config --modversion libindi >/dev/null 2>&1; then
     DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
 fi
@@ -995,6 +982,19 @@ echo "Completed in $((END_TIME - START_TIME))s"
 echo
 
 
+if systemctl --quiet is-enabled "${INDISERVER_SERVICE_NAME}.service" 2>/dev/null; then
+    # system
+    INDISERVER_ACTIVE="false"
+    INDISERVER_ACTIVE_SYSTEM="true"
+elif systemctl --user --quiet is-active "${INDISERVER_SERVICE_NAME}.service" 2>/dev/null; then
+    INDISERVER_ACTIVE="true"
+    INDISERVER_ACTIVE_SYSTEM="false"
+else
+    INDISERVER_ACTIVE="false"
+    INDISERVER_ACTIVE_SYSTEM="false"
+fi
+
+
 if [ "$INDISERVER_ACTIVE_SYSTEM" == "true" ]; then
     echo
     echo
@@ -1005,15 +1005,15 @@ if [ "$INDISERVER_ACTIVE_SYSTEM" == "true" ]; then
     echo "Please restart your indiserver as soon as possible"
     echo
 elif [ "$INDISERVER_ACTIVE" == "true" ]; then
-    while [ -z "${INDISERVER_RESTART:-}" ]; do
+    while [ -z "${RESTART_INDISERVER:-}" ]; do
         if whiptail --title "Restart indiserver" --yesno "It is recommended to restart your active indiserver after rebuilding indilib.\n\nDo you want to restart the active indiserver service now?" 0 0 --defaultno; then
-            INDISERVER_RESTART="true"
+            RESTART_INDISERVER="true"
         else
-            INDISERVER_RESTART="false"
+            RESTART_INDISERVER="false"
         fi
     done
 
-    if [ "$INDISERVER_RESTART" == "true" ]; then
+    if [ "$RESTART_INDISERVER" == "true" ]; then
         echo
         echo "Restarting indiserver..."
         systemctl --user restart "${INDISERVER_SERVICE_NAME}.service"
