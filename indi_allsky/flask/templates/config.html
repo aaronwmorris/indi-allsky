@@ -1565,6 +1565,18 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_SAVE_HOOK_TIMEOUT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_SAVE_HOOK_TIMEOUT(class='form-control bg-secondary') }}
+            <div id="IMAGE_SAVE_HOOK_TIMEOUT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -7654,6 +7666,7 @@ const field_names = [
     'IMAGE_QUEUE_BACKOFF',
     'IMAGE_SAVE_HOOK_PRE',
     'IMAGE_SAVE_HOOK_POST',
+    'IMAGE_SAVE_HOOK_TIMEOUT',
     'TIMELAPSE_EXPIRE_DAYS',
     'FFMPEG_FRAMERATE',
     'FFMPEG_FRAMERATE_DAY',

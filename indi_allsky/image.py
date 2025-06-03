@@ -2022,9 +2022,11 @@ class ImageWorker(Process):
             return
 
 
+        save_hook_timeout = self.config.get('IMAGE_SAVE_HOOK_TIMEOUT', 5)
+
         while self._hookPidRunning():
             now_time = time.time()
-            if now_time - self.image_save_hook_process_start > 5:
+            if now_time - self.image_save_hook_process_start > save_hook_timeout:
                 logger.error('Image pre-save script exceeded runtime')
                 break
 
@@ -2052,9 +2054,11 @@ class ImageWorker(Process):
             return
 
 
+        save_hook_timeout = self.config.get('IMAGE_SAVE_HOOK_TIMEOUT', 5)
+
         while self._hookPidRunning():
             now_time = time.time()
-            if now_time - self.image_save_hook_process_start > 5:
+            if now_time - self.image_save_hook_process_start > save_hook_timeout:
                 logger.error('Image post-save script exceeded runtime')
                 break
 
