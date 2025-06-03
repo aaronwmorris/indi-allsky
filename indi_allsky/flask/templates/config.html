@@ -1536,6 +1536,39 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.IMAGE_SAVE_HOOK_PRE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.IMAGE_SAVE_HOOK_PRE(class='form-control bg-secondary') }}
+            <div id="IMAGE_SAVE_HOOK_PRE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>
+                <div>External script to run before saving image</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_SAVE_HOOK_POST.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.IMAGE_SAVE_HOOK_POST(class='form-control bg-secondary') }}
+            <div id="IMAGE_SAVE_HOOK_POST-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>
+                <div>External script to run after saving image</div>
+                <div>The image path is passed as the first parameter when executed</div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.IMAGE_EXPORT_RAW.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -7619,6 +7652,8 @@ const field_names = [
     'IMAGE_QUEUE_MAX',
     'IMAGE_QUEUE_MIN',
     'IMAGE_QUEUE_BACKOFF',
+    'IMAGE_SAVE_HOOK_PRE',
+    'IMAGE_SAVE_HOOK_POST',
     'TIMELAPSE_EXPIRE_DAYS',
     'FFMPEG_FRAMERATE',
     'FFMPEG_FRAMERATE_DAY',
