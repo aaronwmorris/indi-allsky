@@ -1,3 +1,4 @@
+import os
 import io
 import json
 import re
@@ -10,6 +11,7 @@ import functools
 import tempfile
 import shutil
 import psutil
+import subprocess
 import copy
 import signal
 import logging
@@ -100,7 +102,6 @@ class ImageWorker(Process):
         self.night_v = night_v
         self.moonmode_v = moonmode_v
 
-
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
         self.adsb_worker = None
@@ -137,6 +138,8 @@ class ImageWorker(Process):
             self.night_v,
         )
 
+        self.image_save_hook_process = None
+        self.image_save_hook_process_start = 0
 
         self._libcamera_raw = False
 
@@ -344,6 +347,9 @@ class ImageWorker(Process):
 
 
         self.image_count += 1
+
+
+        self.start_image_save_pre_hook()
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
@@ -632,6 +638,10 @@ class ImageWorker(Process):
             self.adsb_worker = None
 
 
+        # wait on the pre-hook to finish
+        self.wait_image_save_pre_hook()
+
+
         self.image_processor.label_image(adsb_aircraft_list=self.adsb_aircraft_list)
 
 
@@ -656,6 +666,8 @@ class ImageWorker(Process):
         latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, jpeg_exif=jpeg_exif)
 
         if new_filename:
+            self.start_image_save_post_hook(new_filename)
+
             image_metadata = {
                 'type'            : constants.IMAGE,
                 'createDate'      : int(exp_date.timestamp()),
@@ -740,6 +752,10 @@ class ImageWorker(Process):
                 image_thumbnail_metadata,
                 numpy_data=self.image_processor.image,
             )
+
+
+            # wait on the post-hook to finish
+            self.wait_image_save_post_hook()
         else:
             # images not being saved
             image_entry = None
@@ -1916,4 +1932,159 @@ class ImageWorker(Process):
 
 
         return rgb_pixel_list
+
+
+    def start_image_save_pre_hook(self):
+        if self.image_processor.focus_mode:
+            return
+
+        if not self.config.get('IMAGE_SAVE_HOOK_PRE'):
+            return
+
+
+        pre_save_hook_p = Path(self.config.get('IMAGE_SAVE_HOOK_PRE'))
+
+        if not pre_save_hook_p.is_file():
+            logger.error('Image pre-save script is not a file')
+            return
+
+        if pre_save_hook_p.stat().st_size == 0:
+            logger.error('Image pre-save script is empty')
+            return
+
+        if not os.access(str(pre_save_hook_p), os.R_OK | os.X_OK):
+            logger.error('Image pre-save script is not readable or executable')
+            return
+
+
+        cmd = [
+            str(pre_save_hook_p),
+        ]
+
+
+        try:
+            self.image_save_hook_process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+            )
+
+            self.image_save_hook_process_start = time.time()
+        except OSError:
+            self.image_save_hook_process = None
+            logger.error('Image pre-save script failed to execute')
+
+
+    def start_image_save_post_hook(self, image_p):
+        if self.image_processor.focus_mode:
+            return
+
+        if not self.config.get('IMAGE_SAVE_HOOK_POST'):
+            return
+
+
+        post_save_hook_p = Path(self.config.get('IMAGE_SAVE_HOOK_POST'))
+
+        if not post_save_hook_p.is_file():
+            logger.error('Image post-save script is not a file')
+            return
+
+        if post_save_hook_p.stat().st_size == 0:
+            logger.error('Image post-save script is empty')
+            return
+
+        if not os.access(str(post_save_hook_p), os.R_OK | os.X_OK):
+            logger.error('Image post-save script is not readable or executable')
+            return
+
+
+        cmd = [
+            str(post_save_hook_p),
+            str(image_p),
+        ]
+
+
+        try:
+            self.image_save_hook_process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.STDOUT,
+            )
+
+            self.image_save_hook_process_start = time.time()
+        except OSError:
+            self.image_save_hook_process = None
+            logger.error('Image post-save script failed to execute')
+
+
+    def wait_image_save_pre_hook(self):
+        if not self.image_save_hook_process:
+            return
+
+
+        while self._hookPidRunning():
+            now_time = time.time()
+            if now_time - self.image_save_hook_process_start > 5:
+                logger.error('Image pre-save script exceeded runtime')
+                break
+
+            time.sleep(0.1)
+
+
+        for _ in range(5):
+            if self._hookPidRunning():
+                self.image_save_hook_process.terminate()
+                time.sleep(0.5)
+                continue
+            else:
+                break
+
+        else:
+            logger.error('Killing image pre-save script')
+            self.image_save_hook_process.kill()
+
+
+        self.image_save_hook_process = None
+
+
+    def wait_image_save_post_hook(self):
+        if not self.image_save_hook_process:
+            return
+
+
+        while self._hookPidRunning():
+            now_time = time.time()
+            if now_time - self.image_save_hook_process_start > 5:
+                logger.error('Image post-save script exceeded runtime')
+                break
+
+            time.sleep(0.1)
+
+
+        for _ in range(5):
+            if self._hookPidRunning():
+                self.image_save_hook_process.terminate()
+                time.sleep(0.5)
+                continue
+            else:
+                break
+
+        else:
+            logger.error('Killing image post-save script')
+            self.image_save_hook_process.kill()
+
+
+        self.image_save_hook_process = None
+
+
+    def _hookPidRunning(self):
+        if not self.image_save_hook_process:
+            return False
+
+        # poll returns None when process is active, rc (normally 0) when finished
+        poll = self.image_save_hook_process.poll()
+        if isinstance(poll, type(None)):
+            return True
+
+        return False
 
