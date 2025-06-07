@@ -138,7 +138,7 @@ class ImageWorker(Process):
             self.night_v,
         )
 
-        self.image_save_hook_process = None
+        self.image_save_hook_process = None  # used for both pre- and post-hooks
         self.image_save_hook_process_start = 0
 
         self._libcamera_raw = False
@@ -2020,7 +2020,7 @@ class ImageWorker(Process):
 
 
     def wait_image_save_pre_hook(self):
-        if not self.image_save_hook_process:
+        if isinstance(self.image_save_hook_process, type(None)):
             return
 
 
@@ -2052,7 +2052,7 @@ class ImageWorker(Process):
 
 
     def wait_image_save_post_hook(self):
-        if not self.image_save_hook_process:
+        if isinstance(self.image_save_hook_process, type(None)):
             return
 
 
