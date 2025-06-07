@@ -1943,6 +1943,7 @@ class ImageWorker(Process):
 
 
         pre_save_hook_p = Path(self.config.get('IMAGE_SAVE_HOOK_PRE'))
+        logger.info('Running image pre-save hook: %s', pre_save_hook_p)
 
         if not pre_save_hook_p.is_file():
             logger.error('Image pre-save script is not a file')
@@ -1984,6 +1985,7 @@ class ImageWorker(Process):
 
 
         post_save_hook_p = Path(self.config.get('IMAGE_SAVE_HOOK_POST'))
+        logger.info('Running image post-save hook: %s', post_save_hook_p)
 
         if not post_save_hook_p.is_file():
             logger.error('Image post-save script is not a file')
