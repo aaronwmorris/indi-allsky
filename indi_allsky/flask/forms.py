@@ -373,17 +373,23 @@ def CCD_TEMP_SCRIPT_validator(form, field):
 
     temp_script_p = Path(field.data)
 
-    if not temp_script_p.exists():
-        raise ValidationError('Temperature script does not exist')
+    try:
+        if not temp_script_p.exists():
+            raise ValidationError('Temperature script does not exist')
 
-    if not temp_script_p.is_file():
-        raise ValidationError('Temperature script is not a file')
+        if not temp_script_p.is_file():
+            raise ValidationError('Temperature script is not a file')
 
-    if temp_script_p.stat().st_size == 0:
-        raise ValidationError('Temperature script is empty')
+        if temp_script_p.stat().st_size == 0:
+            raise ValidationError('Temperature script is empty')
 
-    if not os.access(str(temp_script_p), os.X_OK):
-        raise ValidationError('Temperature script is not executable')
+        if not os.access(str(temp_script_p), os.R_OK):
+            raise ValidationError('Temperature script is not readable')
+
+        if not os.access(str(temp_script_p), os.X_OK):
+            raise ValidationError('Temperature script is not executable')
+    except PermissionError as e:
+        raise ValidationError(str(e))
 
 
     # generate a tempfile for the data
@@ -449,6 +455,42 @@ def CCD_TEMP_SCRIPT_validator(form, field):
     except KeyError:
         raise ValidationError('Temperature script returned incorrect data')
 
+
+def SCRIPT_validator(form, field):
+    if not field.data:
+        return
+
+
+    script_p = Path(field.data)
+
+    try:
+        if not script_p.exists():
+            raise ValidationError('Script does not exist')
+
+        if not script_p.is_file():
+            raise ValidationError('Script is not a file')
+
+        if script_p.stat().st_size == 0:
+            raise ValidationError('Script is empty')
+
+        if not os.access(str(script_p), os.R_OK):
+            raise ValidationError('Script is not readable')
+
+        if not os.access(str(script_p), os.X_OK):
+            raise ValidationError('Script is not executable')
+    except PermissionError as e:
+        raise ValidationError(str(e))
+
+
+def IMAGE_SAVE_HOOK_TIMEOUT_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Timeout must be greater than 0')
+
+    if field.data > 20:
+        raise ValidationError('Timeout must be less than 20')
 
 
 def TARGET_ADU_validator(form, field):
@@ -1533,6 +1575,9 @@ def TEXT_PROPERTIES__PIL_FONT_CUSTOM_validator(form, field):
 
         if not font_file_p.is_file():
             raise ValidationError('Path is not a file')
+
+        if not os.access(str(font_file_p), os.R_OK):
+            raise ValidationError('Font is not readable')
     except PermissionError as e:
         raise ValidationError(str(e))
 
@@ -3657,6 +3702,9 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_QUEUE_MAX                  = IntegerField('Image Queue Maximum', validators=[IMAGE_QUEUE_MAX_validator])
     IMAGE_QUEUE_MIN                  = IntegerField('Image Queue Minimum', validators=[IMAGE_QUEUE_MIN_validator])
     IMAGE_QUEUE_BACKOFF              = FloatField('Image Queue Backoff Multiplier', validators=[IMAGE_QUEUE_BACKOFF_validator])
+    IMAGE_SAVE_HOOK_PRE              = StringField('Image Pre-Save Hook', validators=[SCRIPT_validator])
+    IMAGE_SAVE_HOOK_POST             = StringField('Image Post-Save Hook', validators=[SCRIPT_validator])
+    IMAGE_SAVE_HOOK_TIMEOUT          = IntegerField('Image Save Hook Timeout', validators=[DataRequired(), IMAGE_SAVE_HOOK_TIMEOUT_validator])
     FISH2PANO__ENABLE                = BooleanField('Enable Fisheye to Panoramic')
     FISH2PANO__DIAMETER              = IntegerField('Diameter', validators=[DataRequired(), FISH2PANO__DIAMETER_validator])
     FISH2PANO__OFFSET_X              = IntegerField('X Offset', validators=[FISH2PANO__OFFSET_X_validator], render_kw={'readonly' : True, 'disabled' : 'disabled'})

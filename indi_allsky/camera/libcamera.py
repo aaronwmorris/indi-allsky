@@ -442,7 +442,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         self.active_exposure = False
 
-        for x in range(5):
+        for _ in range(5):
             if self._libCameraPidRunning():
                 self.libcamera_process.terminate()
                 time.sleep(0.5)

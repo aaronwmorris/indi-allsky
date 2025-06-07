@@ -1215,17 +1215,14 @@ class CaptureWorker(Process):
         logger.info('Running external script for temperature: %s', temp_script_p)
 
         # need to be extra careful running in the main thread
-        if not temp_script_p.exists():
-            raise TemperatureException('Temperature script does not exist')
-
         if not temp_script_p.is_file():
             raise TemperatureException('Temperature script is not a file')
 
         if temp_script_p.stat().st_size == 0:
             raise TemperatureException('Temperature script is empty')
 
-        if not os.access(str(temp_script_p), os.X_OK):
-            raise TemperatureException('Temperature script is not executable')
+        if not os.access(str(temp_script_p), os.R_OK | os.X_OK):
+            raise TemperatureException('Temperature script is not readable or executable')
 
 
         # generate a tempfile for the data

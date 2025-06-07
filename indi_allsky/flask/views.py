@@ -2071,6 +2071,9 @@ class ConfigView(FormView):
             'IMAGE_QUEUE_MAX'                : self.indi_allsky_config.get('IMAGE_QUEUE_MAX', 3),
             'IMAGE_QUEUE_MIN'                : self.indi_allsky_config.get('IMAGE_QUEUE_MIN', 1),
             'IMAGE_QUEUE_BACKOFF'            : self.indi_allsky_config.get('IMAGE_QUEUE_BACKOFF', 0.5),
+            'IMAGE_SAVE_HOOK_PRE'            : self.indi_allsky_config.get('IMAGE_SAVE_HOOK_PRE', ''),
+            'IMAGE_SAVE_HOOK_POST'           : self.indi_allsky_config.get('IMAGE_SAVE_HOOK_POST', ''),
+            'IMAGE_SAVE_HOOK_TIMEOUT'        : self.indi_allsky_config.get('IMAGE_SAVE_HOOK_TIMEOUT', 5),
             'THUMBNAILS__IMAGES_AUTO'        : self.indi_allsky_config.get('THUMBNAILS', {}).get('IMAGES_AUTO', True),
             'BACKUP_DB_PERIOD_DAYS'          : self.indi_allsky_config.get('BACKUP_DB_PERIOD_DAYS', 7),
             'IMAGE_EXPIRE_DAYS'              : self.indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 10),
@@ -2919,6 +2922,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_QUEUE_MAX']                      = int(request.json['IMAGE_QUEUE_MAX'])
         self.indi_allsky_config['IMAGE_QUEUE_MIN']                      = int(request.json['IMAGE_QUEUE_MIN'])
         self.indi_allsky_config['IMAGE_QUEUE_BACKOFF']                  = float(request.json['IMAGE_QUEUE_BACKOFF'])
+        self.indi_allsky_config['IMAGE_SAVE_HOOK_PRE']                  = str(request.json['IMAGE_SAVE_HOOK_PRE'])
+        self.indi_allsky_config['IMAGE_SAVE_HOOK_POST']                 = str(request.json['IMAGE_SAVE_HOOK_POST'])
+        self.indi_allsky_config['IMAGE_SAVE_HOOK_TIMEOUT']              = int(request.json['IMAGE_SAVE_HOOK_TIMEOUT'])
         self.indi_allsky_config['THUMBNAILS']['IMAGES_AUTO']            = bool(request.json['THUMBNAILS__IMAGES_AUTO'])
         self.indi_allsky_config['BACKUP_DB_PERIOD_DAYS']                = int(request.json['BACKUP_DB_PERIOD_DAYS'])
         self.indi_allsky_config['IMAGE_EXPIRE_DAYS']                    = int(request.json['IMAGE_EXPIRE_DAYS'])
