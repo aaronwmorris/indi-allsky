@@ -465,6 +465,41 @@ function show_simulation() {
     ctx.fill();
 
 
+    ctx.font = '20px serif';
+    ctx.textAlign = 'center';
+    //ctx.strokeText(90 * 2 + "°", (r.w * ratio / 2) - (c.r * ((10 / 9) * (90 / 100)) * ratio) + 25, (r.h * ratio / 2));
+    //ctx.strokeText(90 * 2 + "°", (r.w * ratio / 2), (r.h * ratio / 2) - (c.r * ((10 / 9) * (90 / 100)) * ratio) + 35);
+
+
+    var circle_list = [
+        [80, 87],
+        [70, 80],
+        [60, 69],
+        [50, 57],
+        [40, 45],
+        [30, 33],
+        [20, 21],
+        [10, 10],
+    ]
+
+    circle_list.forEach(function (item, index) {
+        ctx.beginPath();
+        ctx.fillStyle="#333333";
+        ctx.arc(
+            (r.w * ratio / 2) + (offset_x * ratio),
+            (r.h * ratio / 2) - (offset_y * ratio),
+            (c.r * ((10 / 9) * (item[1] / 100))) * ratio,
+            0,
+            2 * Math.PI,
+            false
+        );
+        ctx.stroke();
+
+        ctx.strokeText(item[0] * 2 + "°", (r.w * ratio / 2) - (c.r * ((10 / 9) * (item[1] / 100)) * ratio) + 20, (r.h * ratio / 2));
+        ctx.strokeText(item[0] * 2 + "°", (r.w * ratio / 2), (r.h * ratio / 2) - (c.r * ((10 / 9) * (item[1] / 100)) * ratio) + 20);
+    });
+
+
     ctx.lineWidth = 10;
 
     ctx.font = '20px serif';
