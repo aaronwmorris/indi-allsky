@@ -252,7 +252,9 @@ done
 
 
 if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
-    if [[ "$DISTRO_VERSION_ID" == "12" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "13" ]]; then
+        DISTRO="debian_13"
+    elif [[ "$DISTRO_VERSION_ID" == "12" ]]; then
         DISTRO="debian_12"
     elif [[ "$DISTRO_VERSION_ID" == "11" ]]; then
         DISTRO="debian_11"
@@ -292,7 +294,95 @@ fi
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO" == "debian_12" ]]; then
+if [[ "$DISTRO" == "debian_13" ]]; then
+    RSYSLOG_USER=root
+    RSYSLOG_GROUP=adm
+
+    MYSQL_ETC="/etc/mysql"
+
+    PYTHON_BIN=python3.13
+
+    VIRTUALENV_REQ=requirements/requirements_latest_web.txt
+
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    sudo apt-get -y install \
+        build-essential \
+        python3 \
+        python3-dev \
+        python3-venv \
+        python3-pip \
+        virtualenv \
+        cmake \
+        gfortran \
+        whiptail \
+        procps \
+        rsyslog \
+        cron \
+        git \
+        cpio \
+        tzdata \
+        ca-certificates \
+        avahi-daemon \
+        swig \
+        libatlas-ecmwf-dev \
+        libimath-dev \
+        libopenexr-dev \
+        libgtk-3-0t64 \
+        libssl-dev \
+        libxml2-dev \
+        libxslt1-dev \
+        libgnutls28-dev \
+        libcurl4-gnutls-dev \
+        libcfitsio-dev \
+        libnova-dev \
+        libdbus-1-dev \
+        libglib2.0-dev \
+        libffi-dev \
+        libopencv-dev \
+        libopenblas-dev \
+        libraw-dev \
+        libgeos-dev \
+        libtiff-dev \
+        libjpeg62-turbo-dev \
+        libopenjp2-7-dev \
+        libpng-dev \
+        zlib1g-dev \
+        libfreetype-dev \
+        liblcms2-dev \
+        libwebp-dev \
+        libcap-dev \
+        tcl8.6-dev \
+        tk8.6-dev \
+        python3-tk \
+        libharfbuzz-dev \
+        libfribidi-dev \
+        libxcb1-dev \
+        default-libmysqlclient-dev \
+        pkgconf \
+        rustc \
+        cargo \
+        ffmpeg \
+        gifsicle \
+        jq \
+        sqlite3 \
+        polkitd \
+        dbus-user-session
+
+
+    if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
+        sudo apt-get -y install \
+            mariadb-server
+    fi
+
+elif [[ "$DISTRO" == "debian_12" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
