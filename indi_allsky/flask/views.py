@@ -8295,6 +8295,14 @@ class AjaxNetworkManagerView(BaseView):
             connection_uuid = str(request.json['CONNECTION'])
             return self.setAutostartConnection(connection_uuid, auto_connect=False)
 
+        elif command == 'incpriority':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.incrementConnectionPriority(connection_uuid)
+
+        elif command == 'decpriority':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.decrementConnectionPriority(connection_uuid)
+
         elif command == 'scanap':
             interface = str(request.json['INTERFACE'])
 
@@ -8646,6 +8654,78 @@ class AjaxNetworkManagerView(BaseView):
         return jsonify({
             'success-message' : 'Configure Successful',
         })
+
+
+    def incrementConnectionPriority(self, connection_uuid, increment=10):
+        bus = dbus.SystemBus()
+
+
+        try:
+            nm_settings = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager/Settings")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        try:
+            settings_path = self.getSettingsPath(bus, nm_settings, connection_uuid)
+        except NotFound:
+            app.logger.error('Connection settings not found')
+            return jsonify({
+                'failure-message' : 'Connection settings not found',
+            }), 400
+
+
+        settings = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", settings_path),
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_connection = dbus.Interface(
+            settings,
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_dict = settings_connection.GetSettings()
+
+
+        ### Here is the magic
+        try:
+            current_priority = int(settings_dict['connection']['autoconnect-priority'])
+        except TypeError:
+            current_priority = 0
+        except ValueError:
+            current_priority = 0
+        except KeyError:
+            current_priority = 0
+
+
+        new_priority = current_priority + increment
+        settings_dict['connection']['autoconnect-priority'] = new_priority
+
+
+        try:
+            settings_connection.Update(settings_dict)
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'Configure Failed: {0:s}'.format(str(e)),
+            }), 400
+
+
+        time.sleep(2.0)  # give some time for system to register
+
+        return jsonify({
+            'success-message' : 'Configure Successful',
+        })
+
+
+    def decrementConnectionPriority(self, connection_uuid, increment=-10):
+        self.incrementConnectionPriority(connection_uuid, increment=increment)
 
 
     def getSettingsPath(self, bus, nm_settings, connection_uuid):
