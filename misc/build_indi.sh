@@ -199,7 +199,9 @@ START_TIME=$(date +%s)
 
 
 if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
-    if [[ "$DISTRO_VERSION_ID" == "12" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "13" ]]; then
+        DISTRO="debian_13"
+    elif [[ "$DISTRO_VERSION_ID" == "12" ]]; then
         DISTRO="debian_12"
     elif [[ "$DISTRO_VERSION_ID" == "11" ]]; then
         DISTRO="debian_11"
@@ -241,7 +243,65 @@ fi
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO" == "debian_12" ]]; then
+if [[ "$DISTRO" == "debian_13" ]]; then
+    BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
+    for p in $BLOCKING_PACKAGES; do
+        if dpkg -s "$p" >/dev/null 2>&1; then
+            echo
+            echo
+            echo "Package $p needs to be uninstalled"
+            echo
+            exit 1
+        fi
+    done
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    sudo apt-get -y install \
+        build-essential \
+        git \
+        ca-certificates \
+        cmake \
+        whiptail \
+        fxload \
+        pkgconf \
+        libavcodec-dev \
+        libavdevice-dev \
+        libboost-dev \
+        libboost-regex-dev \
+        libcfitsio-dev \
+        libcurl4-gnutls-dev \
+        libdc1394-dev \
+        libev-dev \
+        libfftw3-dev \
+        libftdi1-dev \
+        libftdi-dev \
+        libgmock-dev \
+        libgphoto2-dev \
+        libgps-dev \
+        libgsl-dev \
+        libjpeg-dev \
+        liblimesuite-dev \
+        libnova-dev \
+        libraw-dev \
+        librtlsdr-dev \
+        libtheora-dev \
+        libtiff-dev \
+        libusb-1.0-0-dev \
+        libnutclient-dev \
+        libzmq3-dev \
+        libahp-gt-dev \
+        libcamera-dev \
+        libboost-program-options-dev \
+        zlib1g-dev
+
+elif [[ "$DISTRO" == "debian_12" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
         if dpkg -s "$p" >/dev/null 2>&1; then

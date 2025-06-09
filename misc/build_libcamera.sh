@@ -116,7 +116,9 @@ START_TIME=$(date +%s)
 
 
 if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
-    if [[ "$DISTRO_VERSION_ID" == "12" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "13" ]]; then
+        DISTRO="debian_13"
+    elif [[ "$DISTRO_VERSION_ID" == "12" ]]; then
         DISTRO="debian_12"
     elif [[ "$DISTRO_VERSION_ID" == "11" ]]; then
         DISTRO="debian_11"
@@ -156,7 +158,39 @@ fi
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO" == "debian_12" ]]; then
+if [[ "$DISTRO" == "debian_13" ]]; then
+    BLOCKING_PACKAGES="libcamera libcamera-apps libcamera-apps-lite rpicam-apps rpicam-apps-lite"
+    for p in $BLOCKING_PACKAGES; do
+        if dpkg -s "$p" >/dev/null 2>&1; then
+            echo
+            echo
+            echo "Package $p needs to be uninstalled"
+            echo
+            exit 1
+        fi
+    done
+
+    sudo apt-get update
+    sudo apt-get -y install \
+        build-essential \
+        git \
+        python3-dev \
+        libtiff5-dev \
+        libjpeg62-turbo-dev \
+        libpng-dev \
+        libepoxy-dev \
+        python3-pip python3-jinja2 \
+        libboost-dev \
+        libgnutls28-dev openssl libtiff5-dev pybind11-dev \
+        qtbase5-dev libqt5core5t64 libqt5gui5t64 libqt5widgets5t64 \
+        meson cmake \
+        python3-yaml python3-ply \
+        libglib2.0-dev libgstreamer-plugins-base1.0-dev \
+        libboost-program-options-dev libdrm-dev libexif-dev \
+        ninja-build
+
+
+elif [[ "$DISTRO" == "debian_12" ]]; then
     BLOCKING_PACKAGES="libcamera libcamera-apps libcamera-apps-lite rpicam-apps rpicam-apps-lite"
     for p in $BLOCKING_PACKAGES; do
         if dpkg -s "$p" >/dev/null 2>&1; then

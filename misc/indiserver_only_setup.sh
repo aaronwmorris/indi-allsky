@@ -304,7 +304,9 @@ done
 
 
 if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
-    if [[ "$DISTRO_VERSION_ID" == "12" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "13" ]]; then
+        DISTRO="debian_13"
+    elif [[ "$DISTRO_VERSION_ID" == "12" ]]; then
         DISTRO="debian_12"
     elif [[ "$DISTRO_VERSION_ID" == "11" ]]; then
         DISTRO="debian_11"
@@ -344,7 +346,34 @@ fi
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO" == "debian_12" ]]; then
+if [[ "$DISTRO" == "debian_13" ]]; then
+    INSTALL_INDI="false"
+
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
+    fi
+
+
+    sudo apt-get update
+
+
+    if [ "$OS_PACKAGE_UPGRADE" == "true" ]; then
+        sudo apt-get -y dist-upgrade
+    fi
+
+
+    if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
+        sudo apt-get -y install \
+            rpicam-apps
+    fi
+
+elif [[ "$DISTRO" == "debian_12" ]]; then
     INSTALL_INDI="false"
 
     if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
