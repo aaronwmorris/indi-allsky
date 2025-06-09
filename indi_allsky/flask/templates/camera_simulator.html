@@ -467,8 +467,6 @@ function show_simulation() {
 
     ctx.font = '20px serif';
     ctx.textAlign = 'center';
-    //ctx.strokeText(90 * 2 + "°", (r.w * ratio / 2) - (c.r * ((10 / 9) * (90 / 100)) * ratio) + 25, (r.h * ratio / 2));
-    //ctx.strokeText(90 * 2 + "°", (r.w * ratio / 2), (r.h * ratio / 2) - (c.r * ((10 / 9) * (90 / 100)) * ratio) + 35);
 
 
     var circle_list = [
@@ -495,8 +493,8 @@ function show_simulation() {
         );
         ctx.stroke();
 
-        ctx.strokeText(item[0] * 2 + "°", (r.w * ratio / 2) - (c.r * ((10 / 9) * (item[1] / 100)) * ratio) + 20, (r.h * ratio / 2));
-        ctx.strokeText(item[0] * 2 + "°", (r.w * ratio / 2), (r.h * ratio / 2) - (c.r * ((10 / 9) * (item[1] / 100)) * ratio) + 20);
+        ctx.strokeText(item[0] * 2 + "°", ((r.w * ratio / 2) - (c.r * ((10 / 9) * (item[1] / 100)) * ratio) + 20) + (offset_x * ratio), (r.h * ratio / 2) - (offset_y * ratio));
+        ctx.strokeText(item[0] * 2 + "°", (r.w * ratio / 2) + (offset_x * ratio), ((r.h * ratio / 2) - (c.r * ((10 / 9) * (item[1] / 100)) * ratio) + 20) - (offset_y * ratio));
     });
 
 
