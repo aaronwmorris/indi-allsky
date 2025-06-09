@@ -77,7 +77,9 @@ sudo true
 
 
 if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "raspbian" ]]; then
-    if [[ "$DISTRO_VERSION_ID" == "12" ]]; then
+    if [[ "$DISTRO_VERSION_ID" == "13" ]]; then
+        DISTRO="debian_13"
+    elif [[ "$DISTRO_VERSION_ID" == "12" ]]; then
         DISTRO="debian_12"
     elif [[ "$DISTRO_VERSION_ID" == "11" ]]; then
         DISTRO="debian_11"
@@ -119,7 +121,15 @@ fi
 
 
 echo "**** Installing packages... ****"
-if [[ "$DISTRO" == "debian_12" ]]; then
+if [[ "$DISTRO" == "debian_13" ]]; then
+    sudo apt-get update
+    sudo apt-get -y install \
+        telnet \
+        gpsd \
+        gpsd-tools \
+        gpsd-clients
+
+elif [[ "$DISTRO" == "debian_12" ]]; then
     sudo apt-get update
     sudo apt-get -y install \
         telnet \
