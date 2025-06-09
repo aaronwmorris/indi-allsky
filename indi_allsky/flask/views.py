@@ -8860,6 +8860,10 @@ class AjaxNetworkManagerView(BaseView):
                 "org.freedesktop.NetworkManager.AccessPoint",
                 "Frequency")
 
+            ap_hwaddress = ap_props.Get(
+                "org.freedesktop.NetworkManager.AccessPoint",
+                "HwAddress")
+
 
             str_ap_ssid = "".join(chr(i) for i in ap_ssid)
             #app.logger.info("Found SSID: %s", str_ap_ssid)
@@ -8877,7 +8881,7 @@ class AjaxNetworkManagerView(BaseView):
 
             ap_list.append({
                 'path' : str(ap_path),
-                'ssid' : '{0:s} [{1:s}] - {2:d}%'.format(str_ap_ssid, ap_frequency_str, int.from_bytes(str(ap_strength).encode())),
+                'ssid' : '{0:s} [{1:s}] - {2:s} - {3:d}%'.format(str_ap_ssid, ap_hwaddress, ap_frequency_str, int.from_bytes(str(ap_strength).encode())),
                 'strength' : int.from_bytes(str(ap_strength).encode()),  # need to sort on this key
                 'frequency' : ap_frequency_int,
             })
