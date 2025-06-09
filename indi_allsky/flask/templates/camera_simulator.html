@@ -493,8 +493,8 @@ function show_simulation() {
         );
         ctx.stroke();
 
-        ctx.strokeText(item[0] * 2 + "°", ((r.w * ratio / 2) - (c.r * ((10 / 9) * (item[1] / 100)) * ratio) + 20) + (offset_x * ratio), ((r.h / 2) - offset_y) * ratio);
-        ctx.strokeText(item[0] * 2 + "°", ((r.w / 2) + offset_x) * ratio, ((r.h * ratio / 2) - (c.r * ((10 / 9) * (item[1] / 100)) * ratio) + 20) - (offset_y * ratio));
+        ctx.strokeText(item[0] * 2 + "°", ((r.w / 2) - (c.r * ((10 / 9) * (item[1] / 100))) + offset_x) * ratio + 20, ((r.h / 2) - offset_y) * ratio);
+        ctx.strokeText(item[0] * 2 + "°", ((r.w / 2) + offset_x) * ratio, ((r.h / 2) - (c.r * ((10 / 9) * (item[1] / 100))) - offset_y) * ratio + 20);
     });
 
 
