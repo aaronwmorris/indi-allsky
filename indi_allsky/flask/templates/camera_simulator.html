@@ -454,8 +454,8 @@ function show_simulation() {
     ctx.globalCompositeOperation="source-atop";
     //ctx.globalCompositeOperation="source-bottom";
     ctx.arc(
-        (r.w * ratio / 2) + (offset_x * ratio),
-        (r.h * ratio / 2) - (offset_y * ratio),
+        ((r.w / 2) + offset_x) * ratio,
+        ((r.h / 2) - offset_y) * ratio,
         c.r * ratio,
         0,
         2 * Math.PI,
@@ -484,8 +484,8 @@ function show_simulation() {
         ctx.beginPath();
         ctx.fillStyle="#333333";
         ctx.arc(
-            (r.w * ratio / 2) + (offset_x * ratio),
-            (r.h * ratio / 2) - (offset_y * ratio),
+            ((r.w / 2) + offset_x) * ratio,
+            ((r.h / 2) - offset_y) * ratio,
             (c.r * ((10 / 9) * (item[1] / 100))) * ratio,
             0,
             2 * Math.PI,
@@ -493,8 +493,8 @@ function show_simulation() {
         );
         ctx.stroke();
 
-        ctx.strokeText(item[0] * 2 + "°", ((r.w * ratio / 2) - (c.r * ((10 / 9) * (item[1] / 100)) * ratio) + 20) + (offset_x * ratio), (r.h * ratio / 2) - (offset_y * ratio));
-        ctx.strokeText(item[0] * 2 + "°", (r.w * ratio / 2) + (offset_x * ratio), ((r.h * ratio / 2) - (c.r * ((10 / 9) * (item[1] / 100)) * ratio) + 20) - (offset_y * ratio));
+        ctx.strokeText(item[0] * 2 + "°", ((r.w * ratio / 2) - (c.r * ((10 / 9) * (item[1] / 100)) * ratio) + 20) + (offset_x * ratio), ((r.h / 2) - offset_y) * ratio);
+        ctx.strokeText(item[0] * 2 + "°", ((r.w / 2) + offset_x) * ratio, ((r.h * ratio / 2) - (c.r * ((10 / 9) * (item[1] / 100)) * ratio) + 20) - (offset_y * ratio));
     });
 
 
