@@ -8956,7 +8956,7 @@ class AjaxNetworkManagerView(BaseView):
             'connection' : {
                 'type' : '802-11-wireless',
                 'autoconnect' : True,
-                'autoconnect-priority' : -99,
+                'autoconnect-priority' : -90,
                 'id' : ssid,
                 'interface-name' : interface_name,
             },
