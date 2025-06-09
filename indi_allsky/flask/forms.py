@@ -7146,6 +7146,7 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
     WIFI_DEVICES_SELECT        = SelectField('Wi-Fi Devices', choices=[], validators=[])
     SSID_SELECT                = SelectField('SSID', choices=[], validators=[])
     SSID_PSK                   = PasswordField('PSK', widget=PasswordInput(hide_value=False), validators=[], render_kw={'autocomplete' : 'new-password'})
+    SSID_PRIORITY              = IntegerField('Priority', default=0, validators=[])
     HOTSPOT_DEVICES_SELECT     = SelectField('Wi-Fi Devices', choices=[], validators=[])
     HOTSPOT_SSID               = StringField('Hotspot SSID', default='indi-allsky Hotspot', validators=[])
     HOTSPOT_BAND               = SelectField('Hotspot Band', choices=HOTSPOT_BAND_choices, validators=[])
