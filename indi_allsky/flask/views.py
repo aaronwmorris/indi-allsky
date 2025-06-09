@@ -8295,6 +8295,14 @@ class AjaxNetworkManagerView(BaseView):
             connection_uuid = str(request.json['CONNECTION'])
             return self.setAutostartConnection(connection_uuid, auto_connect=False)
 
+        elif command == 'incpriority':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.incrementConnectionPriority(connection_uuid)
+
+        elif command == 'decpriority':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.decrementConnectionPriority(connection_uuid)
+
         elif command == 'scanap':
             interface = str(request.json['INTERFACE'])
 
@@ -8309,13 +8317,14 @@ class AjaxNetworkManagerView(BaseView):
             interface = str(request.json['INTERFACE'])
             ap_path = str(request.json['AP_PATH'])
             psk = str(request.json['PSK'])
+            priority = int(request.json['PRIORITY'])
 
             if not ap_path:
                 return jsonify({
                     'failure-message' : 'No AP selected',
                 }), 400
 
-            return self.connectAP(interface, ap_path, psk)
+            return self.connectAP(interface, ap_path, psk, priority)
 
         elif command == 'createhotspot':
             interface = str(request.json['INTERFACE'])
@@ -8647,6 +8656,78 @@ class AjaxNetworkManagerView(BaseView):
         })
 
 
+    def incrementConnectionPriority(self, connection_uuid, increment=10):
+        bus = dbus.SystemBus()
+
+
+        try:
+            nm_settings = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager/Settings")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        try:
+            settings_path = self.getSettingsPath(bus, nm_settings, connection_uuid)
+        except NotFound:
+            app.logger.error('Connection settings not found')
+            return jsonify({
+                'failure-message' : 'Connection settings not found',
+            }), 400
+
+
+        settings = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", settings_path),
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_connection = dbus.Interface(
+            settings,
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_dict = settings_connection.GetSettings()
+
+
+        ### Here is the magic
+        try:
+            current_priority = int(settings_dict['connection']['autoconnect-priority'])
+        except TypeError:
+            current_priority = 0
+        except ValueError:
+            current_priority = 0
+        except KeyError:
+            current_priority = 0
+
+
+        new_priority = current_priority + increment
+        settings_dict['connection']['autoconnect-priority'] = new_priority
+
+
+        try:
+            settings_connection.Update(settings_dict)
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'Configure Failed: {0:s}'.format(str(e)),
+            }), 400
+
+
+        time.sleep(2.0)  # give some time for system to register
+
+        return jsonify({
+            'success-message' : 'Priority Updated',
+        })
+
+
+    def decrementConnectionPriority(self, connection_uuid, increment=-10):
+        return self.incrementConnectionPriority(connection_uuid, increment=increment)
+
+
     def getSettingsPath(self, bus, nm_settings, connection_uuid):
         settingspath_list = nm_settings.Get(
             "org.freedesktop.NetworkManager.Settings",
@@ -8779,6 +8860,10 @@ class AjaxNetworkManagerView(BaseView):
                 "org.freedesktop.NetworkManager.AccessPoint",
                 "Frequency")
 
+            ap_hwaddress = ap_props.Get(
+                "org.freedesktop.NetworkManager.AccessPoint",
+                "HwAddress")
+
 
             str_ap_ssid = "".join(chr(i) for i in ap_ssid)
             #app.logger.info("Found SSID: %s", str_ap_ssid)
@@ -8796,7 +8881,7 @@ class AjaxNetworkManagerView(BaseView):
 
             ap_list.append({
                 'path' : str(ap_path),
-                'ssid' : '{0:s} [{1:s}] - {2:d}%'.format(str_ap_ssid, ap_frequency_str, int.from_bytes(str(ap_strength).encode())),
+                'ssid' : '{0:s} [{1:s}] - {2:s} - {3:d}%'.format(str_ap_ssid, ap_hwaddress, ap_frequency_str, int.from_bytes(str(ap_strength).encode())),
                 'strength' : int.from_bytes(str(ap_strength).encode()),  # need to sort on this key
                 'frequency' : ap_frequency_int,
             })
@@ -8813,7 +8898,7 @@ class AjaxNetworkManagerView(BaseView):
         })
 
 
-    def connectAP(self, interface_name, ap_path, psk):
+    def connectAP(self, interface_name, ap_path, psk, priority):
         bus = dbus.SystemBus()
 
         manager_bus_object = bus.get_object(
@@ -8832,7 +8917,7 @@ class AjaxNetworkManagerView(BaseView):
             'connection' : {
                 'type' : '802-11-wireless',
                 'autoconnect' : True,
-                'autoconnect-priority' : 0,
+                'autoconnect-priority' : priority,
                 'autoconnect-retries' : 3,
             },
             '802-11-wireless': {
@@ -8955,7 +9040,7 @@ class AjaxNetworkManagerView(BaseView):
             'connection' : {
                 'type' : '802-11-wireless',
                 'autoconnect' : True,
-                'autoconnect-priority' : -99,
+                'autoconnect-priority' : -90,
                 'id' : ssid,
                 'interface-name' : interface_name,
             },
