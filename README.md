@@ -162,6 +162,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Raspberry Pi OS 12             | armhf (32-bit) | (NOT RECOMMENDED) Some python modules do not have armhf wheels and must be compiled from source.  This will take a few hours. |
 | Raspberry Pi OS 11 (bullseye)  | aarch64/armhf  | Compile INDI with build_indi.sh |
 | Raspberry Pi OS 10 (buster)    | armhf          | (DO NOT USE) |
+| Debian 13 (trixie)             | x86_64         | Compile INDI with build_indi.sh |
 | **Debian 12 (bookworm)**       | **x86_64**     | **RECOMMENDED**<br>Compile INDI with build_indi.sh |
 | Debian 11 (bullseye)           | x86_64         | Compile INDI with build_indi.sh |
 | Debian 10 (buster)             | x86_64         | (DO NOT USE) |
