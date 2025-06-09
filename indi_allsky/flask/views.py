@@ -8725,7 +8725,7 @@ class AjaxNetworkManagerView(BaseView):
 
 
     def decrementConnectionPriority(self, connection_uuid, increment=-10):
-        self.incrementConnectionPriority(connection_uuid, increment=increment)
+        return self.incrementConnectionPriority(connection_uuid, increment=increment)
 
 
     def getSettingsPath(self, bus, nm_settings, connection_uuid):
