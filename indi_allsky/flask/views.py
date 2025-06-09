@@ -8720,7 +8720,7 @@ class AjaxNetworkManagerView(BaseView):
         time.sleep(2.0)  # give some time for system to register
 
         return jsonify({
-            'success-message' : 'Configure Successful',
+            'success-message' : 'Priority Updated',
         })
 
 
