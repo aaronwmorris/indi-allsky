@@ -380,9 +380,10 @@ var sd = {
 
 <div class="row">
     <div class="text-center" style="font-size:10px">
-        Only simulates the image circle.  Field of View is dependant on lens.
+        Only simulates the image circle. Field of View is dependant on lens. Field of View circles are approximate.
     </div>
 </div>
+
 <div class="row">
     <div class="text-center">
       <div class="col-sm-12">
@@ -454,8 +455,8 @@ function show_simulation() {
     ctx.globalCompositeOperation="source-atop";
     //ctx.globalCompositeOperation="source-bottom";
     ctx.arc(
-        (r.w * ratio / 2) + (offset_x * ratio),
-        (r.h * ratio / 2) - (offset_y * ratio),
+        ((r.w / 2) + offset_x) * ratio,
+        ((r.h / 2) - offset_y) * ratio,
         c.r * ratio,
         0,
         2 * Math.PI,
@@ -463,6 +464,39 @@ function show_simulation() {
     );
     ctx.stroke();
     ctx.fill();
+
+
+    ctx.font = '20px serif';
+    ctx.textAlign = 'center';
+
+
+    var circle_list = [
+        [80, 87],
+        [70, 80],
+        [60, 69],
+        [50, 57],
+        [40, 45],
+        [30, 33],
+        [20, 21],
+        [10, 10],
+    ]
+
+    circle_list.forEach(function (item, index) {
+        ctx.beginPath();
+        ctx.fillStyle="#333333";
+        ctx.arc(
+            ((r.w / 2) + offset_x) * ratio,
+            ((r.h / 2) - offset_y) * ratio,
+            (c.r * ((10 / 9) * (item[1] / 100))) * ratio,
+            0,
+            2 * Math.PI,
+            false
+        );
+        ctx.stroke();
+
+        ctx.strokeText(item[0] * 2 + "°", ((r.w / 2) - (c.r * ((10 / 9) * (item[1] / 100))) + offset_x) * ratio + 20, ((r.h / 2) - offset_y) * ratio);
+        ctx.strokeText(item[0] * 2 + "°", ((r.w / 2) + offset_x) * ratio, ((r.h / 2) - (c.r * ((10 / 9) * (item[1] / 100))) - offset_y) * ratio + 20);
+    });
 
 
     ctx.lineWidth = 10;
