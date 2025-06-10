@@ -7486,7 +7486,7 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
 class IndiAllskyDriveManagerForm(FlaskForm):
 
     DRIVES_SELECT         = SelectField('Drive', choices=[], validators=[])
-    DEVICES_SELECT        = SelectField('Devices', choices=[], validators=[])
+    DEVICES_SELECT        = SelectField('Mount', choices=[], validators=[])
 
 
     def __init__(self, *args, **kwargs):
