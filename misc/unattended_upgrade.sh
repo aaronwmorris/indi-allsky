@@ -307,6 +307,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         libgpiod3 \
         i2c-tools \
         network-manager \
+        udisks2 \
         dnsmasq-base \
         polkitd \
         dbus-user-session
@@ -386,6 +387,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         libgpiod2 \
         i2c-tools \
         network-manager \
+        udisks2 \
         dnsmasq-base \
         polkitd \
         dbus-user-session
@@ -465,6 +467,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         libgpiod2 \
         i2c-tools \
         network-manager \
+        udisks2 \
         dnsmasq-base \
         policykit-1 \
         dbus-user-session
@@ -545,6 +548,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         libgpiod2 \
         i2c-tools \
         network-manager \
+        udisks2 \
         dnsmasq-base \
         polkitd \
         dbus-user-session
@@ -628,6 +632,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         libgpiod2 \
         i2c-tools \
         network-manager \
+        udisks2 \
         dnsmasq-base \
         policykit-1 \
         dbus-user-session
@@ -710,6 +715,8 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         sqlite3 \
         libgpiod2 \
         i2c-tools \
+        network-manager \
+        udisks2 \
         policykit-1 \
         dbus-user-session
 
