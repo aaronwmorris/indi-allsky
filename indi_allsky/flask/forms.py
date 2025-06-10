@@ -7531,8 +7531,8 @@ class IndiAllskyDriveManagerForm(FlaskForm):
             settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Drive')
 
 
-            drive_Removable = bool(settings_dict['Removable'])
-            drive_CanPowerOff = bool(settings_dict['CanPowerOff'])
+            drive_Removable = int(settings_dict['Removable'])
+            drive_CanPowerOff = int(settings_dict['CanPowerOff'])
             if removable:
                 if not drive_CanPowerOff:
                     continue
@@ -7545,7 +7545,7 @@ class IndiAllskyDriveManagerForm(FlaskForm):
                 'Size' : int(settings_dict['Size']),
                 'ConnectionBus' : str(settings_dict['ConnectionBus']),
                 'Removable' : drive_Removable,
-                'CanPowerOff' : drive_Removable,
+                'CanPowerOff' : drive_CanPowerOff,
             }
 
 
