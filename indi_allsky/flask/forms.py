@@ -7669,8 +7669,10 @@ class IndiAllskyDriveManagerForm(FlaskForm):
             device_list.append(device_dict)
 
 
+        device_list_sorted = sorted(device_list, key=lambda x: x['Drive'], reverse=True)
+
         device_entries = list()
-        for device in device_list:
+        for device in device_list_sorted:
             desc = '{0:s} - [{1:s}] - {2:s}'.format(device['MountPoints0'], device['Device'], device['Drive_Id'])
 
             device_entries.append((device['Id'], desc))
