@@ -7532,8 +7532,9 @@ class IndiAllskyDriveManagerForm(FlaskForm):
 
 
             drive_Removable = bool(settings_dict['Removable'])
+            drive_CanPowerOff = bool(settings_dict['CanPowerOff'])
             if removable:
-                if not drive_Removable:
+                if not drive_CanPowerOff:
                     continue
 
 
@@ -7544,13 +7545,14 @@ class IndiAllskyDriveManagerForm(FlaskForm):
                 'Size' : int(settings_dict['Size']),
                 'ConnectionBus' : str(settings_dict['ConnectionBus']),
                 'Removable' : drive_Removable,
+                'CanPowerOff' : drive_Removable,
             }
 
 
             drive_list.append(drive_dict)
 
 
-        drive_list_sorted = sorted(drive_list, key=lambda x: x['Removable'], reverse=True)
+        drive_list_sorted = sorted(drive_list, key=lambda x: x['CanPowerOff'], reverse=True)
 
 
         drive_entries = list()
