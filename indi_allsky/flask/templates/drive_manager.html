@@ -165,6 +165,67 @@ $('#DRIVES_SELECT').on('change', function() {
 });
 
 
+$('#poweroff-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+
+    if (! $("#DRIVE_CONFIRM1").prop('checked')) {
+        console.log('Confirm checkbox not checked');
+        return;
+    }
+    $("#DRIVE_CONFIRM1").prop('checked', false);
+
+
+    if ( $('#DRIVES_SELECT').val() == "" ){
+        return;
+    }
+
+    $("#poweroff-button").attr("class", "btn btn-dark text-danger");
+    $("#poweroff-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Power Off</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'poweroff',
+        'DRIVE_ID' : $('#DRIVES_SELECT').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_drive_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#poweroff-button").html(
+              'Power Off'
+            );
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
+
+        },
+        error: function(rdata){
+            $("#poweroff-button").attr("class", "btn btn-danger");
+            $("#poweroff-button").html(
+              'Power Off'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
+        },
+    });
+});
+
+
+
 function init() {
     $("#DRIVE_CONFIRM1").prop('checked', false);
 

@@ -9151,12 +9151,13 @@ class AjaxDriveManagerView(BaseView):
 
         if command == 'getmetadata':
             return self.getMetadata(query_drive_id)
+        if command == 'poweroff':
+            return self.powerOffDrive(query_drive_id)
         else:
             json_data = {
                 'failure-message' : 'Unknown command',
             }
             return jsonify(json_data), 400
-
 
 
     def getMetadata(self, query_drive_id):
@@ -9225,6 +9226,72 @@ class AjaxDriveManagerView(BaseView):
                 'drive_data' : drive_dict,
             }
 
+            return jsonify(return_data)
+
+
+        # fail if drive not found
+        return jsonify({'failure-message' : 'Drive not found'}), 400
+
+
+    def powerOffDrive(self, query_drive_id):
+        bus = dbus.SystemBus()
+
+
+        nm_udisks2 = bus.get_object(
+            "org.freedesktop.UDisks2",
+            "/org/freedesktop/UDisks2")
+
+        iface = dbus.Interface(
+            nm_udisks2,
+            'org.freedesktop.DBus.ObjectManager')
+
+
+        object_paths = iface.GetManagedObjects()
+
+        for object_path in object_paths:
+            if not object_path.startswith('/org/freedesktop/UDisks2/drives/'):
+                continue
+
+
+            settings = bus.get_object(
+                "org.freedesktop.UDisks2",
+                object_path)
+
+            settings_connection = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.DBus.Properties')
+
+
+
+            settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Drive')
+
+
+            drive_id = str(settings_dict['Id'])
+            if query_drive_id != drive_id:
+                continue
+
+
+            CanPowerOff = bool(settings_dict['CanPowerOff'])
+            if not CanPowerOff:
+                return jsonify({'failure-message' : 'Drive cannot be powered off'}), 400
+
+
+
+            drive_interface = dbus.Interface(
+                bus.get_object('org.freedesktop.UDisks2', object_path),
+                'org.freedesktop.UDisks2.Drive')
+
+
+            try:
+                drive_interface.PowerOff({})
+            except dbus.exceptions.DBusException as e:
+                app.logger.error('D-Bus Exception: %s', str(e))
+                return jsonify({'failure-message' : str(e)}), 400
+
+
+            return_data = {
+                'success-message' : 'Power Off Successful'
+            }
             return jsonify(return_data)
 
 
