@@ -9184,7 +9184,7 @@ class AjaxDriveManagerView(BaseView):
             drive_dict = {
                 'Vendor' : str(settings_dict['Vendor']),
                 'Model' : str(settings_dict['Model']),
-                'Size' : int(settings_dict['Size']),
+                'Size' : '{0:0.1f} GB'.format(float(settings_dict['Size']) / 1024 / 1024 / 1024),
                 'ConnectionBus' : str(settings_dict['ConnectionBus']),
                 'Serial' : str(settings_dict['Serial']),
                 'CanPowerOff' : bool(settings_dict['CanPowerOff']),

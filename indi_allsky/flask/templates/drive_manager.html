@@ -11,6 +11,11 @@
 	margin-right: 5px;
 	height: 50px;
 }
+
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
 </style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
@@ -51,7 +56,13 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <hr>
 
+    <div class="row">
+        <div class="col-sm-5">
+            <div id="drive-info"></div>
+        </div>
+    </div>
 </div><!-- end drives tab -->
 
     <hr> <hr> <hr>
@@ -68,6 +79,26 @@ var camera_id = {{ camera_id }};
 </div>
 
 <script type="text/javascript">
+
+function updateDriveInfo(rdata) {
+    //$('#drive-info').html(rdata['Model']);
+
+    var drive_table = $('<table />', {
+    });
+
+    fields_list = ['Vendor', 'Model', 'Serial', 'Size', 'ConnectionBus', 'CanPowerOff', 'Ejectable', 'Removable'];
+    fields_list.forEach(item => {
+        var tr = $('<tr />', {});
+
+        tr.append($('<td />', {}).html(item));
+        tr.append($('<td />', {}).html(rdata[item].toString()));
+
+        drive_table.append(tr);
+    });
+
+    $('#drive-info').html(drive_table);
+}
+
 
 function showDrive() {
     $('#success-message').css({'display' : 'none'});
@@ -90,12 +121,12 @@ function showDrive() {
         contentType: "application/json",
         data: JSON.stringify(json_data),
         success: function(rdata){
+            updateDriveInfo(rdata);
             //$('#success-message').html(rdata['success-message']);
             //$('#success-message').css({'display' : 'block'});
             //setTimeout(function() {
             //    $('#success-message').css({'display' : 'none'});
             //}, 15000);
-
         },
         error: function(rdata){
             //$("#activate-button").attr("class", "btn btn-danger");

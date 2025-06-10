@@ -7549,7 +7549,7 @@ class IndiAllskyDriveManagerForm(FlaskForm):
 
         drive_entries = list()
         for drive in drive_list_sorted:
-            desc = '{0:s} - {1:s} - {2:d}GB - {3:s}'.format(drive['Vendor'], drive['Model'], int(drive['Size'] / 1024 / 1024 / 1024), drive['ConnectionBus'])
+            desc = '{0:s} - {1:s} - {2:0.1f} GB - {3:s}'.format(drive['Vendor'], drive['Model'], float(drive['Size']) / 1024 / 1024 / 1024, drive['ConnectionBus'])
 
             drive_entries.append((drive['Id'], desc))
 
