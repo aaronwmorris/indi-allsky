@@ -7636,7 +7636,7 @@ class IndiAllskyDriveManagerForm(FlaskForm):
             if len(object_info['org.freedesktop.UDisks2.Filesystem']['MountPoints']) > 0:
                 device_dict['MountPoints0'] = "".join(chr(i) for i in object_info['org.freedesktop.UDisks2.Filesystem']['MountPoints'][0])
             else:
-                device_dict['MountPoints0'] = "Not Mounted"
+                device_dict['MountPoints0'] = 'UNMOUNTED'
 
 
             if device_dict['Drive'] != '/':
