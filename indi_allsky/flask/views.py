@@ -103,6 +103,7 @@ from .forms import IndiAllskyFocusControllerForm
 from .forms import IndiAllskyMiniTimelapseForm
 from .forms import IndiAllskyLongTermKeogramForm
 from .forms import IndiAllskyNetworkManagerForm
+from .forms import IndiAllskyDriveManagerForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -9097,6 +9098,107 @@ class AjaxNetworkManagerView(BaseView):
         return struct.unpack('=I', socket.inet_aton(ip_str))[0]
 
 
+class DriveManagerView(TemplateView):
+    decorators = [login_required]
+    title = 'Drives'
+
+    def get_context(self):
+        context = super(DriveManagerView, self).get_context()
+
+        context['camera_id'] = self.camera.id
+        context['title'] = self.title
+
+
+        try:
+            # detect if udisks2 is available
+            bus = dbus.SystemBus()
+            bus.get_object(
+                "org.freedesktop.UDisks2",
+                "/org/freedesktop/UDisks2")
+            udisks2_installed = True
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            udisks2_installed = False
+
+
+        context['udisks2_installed'] = udisks2_installed
+
+        context['form_drives'] = IndiAllskyDriveManagerForm()
+
+        return context
+
+
+class AjaxDriveManagerView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+
+    def __init__(self, **kwargs):
+        super(AjaxDriveManagerView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        if not current_user.is_admin:
+            json_data = {
+                'failure-message' : 'User does not have permission to access this resource',
+            }
+            return jsonify(json_data), 400
+
+
+        query_drive_id = str(request.json['DRIVE_ID'])
+
+        bus = dbus.SystemBus()
+
+
+        nm_udisks2 = bus.get_object(
+            "org.freedesktop.UDisks2",
+            "/org/freedesktop/UDisks2")
+
+        iface = dbus.Interface(
+            nm_udisks2,
+            'org.freedesktop.DBus.ObjectManager')
+
+
+        object_paths = iface.GetManagedObjects()
+
+        for object_path in object_paths:
+            if not object_path.startswith('/org/freedesktop/UDisks2/drives/'):
+                continue
+
+
+            settings = bus.get_object(
+                "org.freedesktop.UDisks2",
+                object_path)
+
+            settings_connection = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.DBus.Properties')
+
+            settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Drive')
+
+            drive_id = settings_dict['Id']
+            if query_drive_id != str(drive_id):
+                continue
+
+
+            drive_dict = {
+                'Vendor' : str(settings_dict['Vendor']),
+                'Model' : str(settings_dict['Model']),
+                'Size' : int(settings_dict['Size']),
+                'ConnectionBus' : str(settings_dict['ConnectionBus']),
+                'Serial' : str(settings_dict['Serial']),
+                'CanPowerOff' : bool(settings_dict['CanPowerOff']),
+                'Removable' : bool(settings_dict['Removable']),
+                'Ejectable' : bool(settings_dict['Ejectable']),
+            }
+
+            return jsonify(drive_dict)
+
+
+        # fail if drive not found
+        return jsonify({}), 400
+
+
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
@@ -9595,6 +9697,9 @@ bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_inde
 
 bp_allsky.add_url_rule('/network', view_func=NetworkManagerView.as_view('network_manager_view', template_name='network.html'))
 bp_allsky.add_url_rule('/ajax/network', view_func=AjaxNetworkManagerView.as_view('ajax_network_manager_view'))
+
+bp_allsky.add_url_rule('/drives', view_func=DriveManagerView.as_view('drive_manager_view', template_name='drive_manager.html'))
+bp_allsky.add_url_rule('/ajax/drives', view_func=AjaxDriveManagerView.as_view('ajax_drive_manager_view'))
 
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))

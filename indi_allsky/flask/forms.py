@@ -7483,6 +7483,70 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
         return wifi_dev_select_list
 
 
+class IndiAllskyDriveManagerForm(FlaskForm):
+
+    DRIVES_SELECT         = SelectField('Drive', choices=[], validators=[])
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyDriveManagerForm, self).__init__(*args, **kwargs)
+
+        self.DRIVES_SELECT.choices = self.getRemovableDrives()
+
+
+    def getRemovableDrives(self):
+        bus = dbus.SystemBus()
+
+
+        nm_udisks2 = bus.get_object(
+            "org.freedesktop.UDisks2",
+            "/org/freedesktop/UDisks2")
+
+        iface = dbus.Interface(
+            nm_udisks2,
+            'org.freedesktop.DBus.ObjectManager')
+
+
+        object_paths = iface.GetManagedObjects()
+
+        drive_list = list()
+        for object_path in object_paths:
+            if not object_path.startswith('/org/freedesktop/UDisks2/drives/'):
+                continue
+
+            settings = bus.get_object(
+                "org.freedesktop.UDisks2",
+                object_path)
+
+            settings_connection = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.DBus.Properties')
+
+            settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Drive')
+
+            removable = settings_dict['Removable']
+            if not removable:
+                continue
+
+
+            drive_Id = str(settings_dict['Id'])
+
+            Vendor = str(settings_dict['Vendor'])
+            Model = str(settings_dict['Model'])
+            Size = int(settings_dict['Size'])
+            ConnectionBus = str(settings_dict['ConnectionBus'])
+
+            drive_desc = '{0:s} {1:s} - {2:d}GB - {3:s}'.format(Vendor, Model, int(Size / 1024 / 1024 / 1024), ConnectionBus)
+
+            drive_list.append((str(drive_Id), drive_desc))
+
+
+        if not drive_list:
+            drive_list.append(('', 'No Removable Drives'))
+
+        return drive_list
+
+
 class IndiAllskyCameraSimulatorForm(FlaskForm):
     SENSOR_SELECT_choices = {
         'Small' : (

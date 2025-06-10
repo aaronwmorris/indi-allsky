@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: {{ title }}{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+#nav-drives-tab {
+	width: 150px;
+	margin-top: 10px;
+	margin-right: 5px;
+	height: 50px;
+}
+</style>
+<script type="text/javascript">
+var camera_id = {{ camera_id }};
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container h-100">
+<form id="form_drives" onSubmit="return false;" autocomplete="off">
+
+<nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <button class="nav-link link-danger bg-dark active" id="nav-drives-tab" data-bs-toggle="tab" data-bs-target="#nav-drives" type="button" role="tab" aria-controls="nav-drives" aria-selected="true">Drives</button>
+  </div>
+</nav>
+
+
+<!-- should be above tab contents -->
+{% if not udisks2_installed %}
+<hr>
+<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Udisks2 is not available</div>
+{% endif %}
+
+<hr>
+
+<div class="tab-content" id="nav-tabContent">
+
+  <div class="tab-pane fade show active" id="nav-drives" role="tabpanel" aria-labelledby="nav-drives-tab">
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_drives.DRIVES_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_drives.DRIVES_SELECT(class='form-select bg-secondary') }}
+            <div id="DRIVES_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-3">
+        </div>
+    </div>
+
+
+</div><!-- end drives tab -->
+
+    <hr> <hr> <hr>
+
+    <div class="form-group row" style="height:100px;">
+        <div class="col-sm-5">
+            <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
+            <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
+        </div>
+    </div>
+
+    </form>
+
+</div>
+
+<script type="text/javascript">
+
+function showDrive() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+
+    if ( $('#DRIVES_SELECT').val() == "" ){
+        return;
+    }
+
+
+    var json_data = {
+        'DRIVE_ID' : $('#DRIVES_SELECT').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_drive_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            //$('#success-message').html(rdata['success-message']);
+            //$('#success-message').css({'display' : 'block'});
+            //setTimeout(function() {
+            //    $('#success-message').css({'display' : 'none'});
+            //}, 15000);
+
+        },
+        error: function(rdata){
+            //$("#activate-button").attr("class", "btn btn-danger");
+            //$("#activate-button").html(
+            //  'Activate'
+            //);
+
+            //var errors = JSON.parse(rdata.responseText);
+
+            //$('#failure-message').html(errors['failure-message']);
+            //$('#failure-message').css({'display' : 'block'});
+        },
+    });
+}
+
+$('#DRIVES_SELECT').on('change', function() {
+    showDrive();
+});
+
+
+function init() {
+    showDrive();
+}
+
+$( document ).ready(function() {
+    init();
+});
+</script>
+
+{% endblock %}
