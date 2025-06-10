@@ -7498,9 +7498,15 @@ class IndiAllskyDriveManagerForm(FlaskForm):
         bus = dbus.SystemBus()
 
 
-        nm_udisks2 = bus.get_object(
-            "org.freedesktop.UDisks2",
-            "/org/freedesktop/UDisks2")
+        try:
+            nm_udisks2 = bus.get_object(
+                "org.freedesktop.UDisks2",
+                "/org/freedesktop/UDisks2")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return [(
+                '', 'D-Bus Exception: {0:s}'.format(str(e))
+            )]
 
         iface = dbus.Interface(
             nm_udisks2,
