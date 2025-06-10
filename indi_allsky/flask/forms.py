@@ -7491,10 +7491,10 @@ class IndiAllskyDriveManagerForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(IndiAllskyDriveManagerForm, self).__init__(*args, **kwargs)
 
-        self.DRIVES_SELECT.choices = self.getRemovableDrives()
+        self.DRIVES_SELECT.choices = self.getDrives()
 
 
-    def getRemovableDrives(self):
+    def getDrives(self, removable=False):
         bus = dbus.SystemBus()
 
 
@@ -7524,27 +7524,40 @@ class IndiAllskyDriveManagerForm(FlaskForm):
 
             settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Drive')
 
-            removable = settings_dict['Removable']
-            if not removable:
-                continue
+
+            drive_Removable = bool(settings_dict['Removable'])
+            if removable:
+                if not drive_Removable:
+                    continue
 
 
-            drive_Id = str(settings_dict['Id'])
-
-            Vendor = str(settings_dict['Vendor'])
-            Model = str(settings_dict['Model'])
-            Size = int(settings_dict['Size'])
-            ConnectionBus = str(settings_dict['ConnectionBus'])
-
-            drive_desc = '{0:s} {1:s} - {2:d}GB - {3:s}'.format(Vendor, Model, int(Size / 1024 / 1024 / 1024), ConnectionBus)
-
-            drive_list.append((str(drive_Id), drive_desc))
+            drive_dict = {
+                'Id' : str(settings_dict['Id']),
+                'Vendor' : str(settings_dict['Vendor']),
+                'Model' : str(settings_dict['Model']),
+                'Size' : int(settings_dict['Size']),
+                'ConnectionBus' : str(settings_dict['ConnectionBus']),
+                'Removable' : drive_Removable,
+            }
 
 
-        if not drive_list:
-            drive_list.append(('', 'No Removable Drives'))
+            drive_list.append(drive_dict)
 
-        return drive_list
+
+        drive_list_sorted = sorted(drive_list, key=lambda x: x['Removable'], reverse=True)
+
+
+        drive_entries = list()
+        for drive in drive_list_sorted:
+            desc = '{0:s} - {1:s} - {2:d}GB - {3:s}'.format(drive['Vendor'], drive['Model'], int(drive['Size'] / 1024 / 1024 / 1024), drive['ConnectionBus'])
+
+            drive_entries.append((drive['Id'], desc))
+
+
+        if not drive_entries:
+            drive_entries.append(('', 'No Removable Drives'))
+
+        return drive_entries
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):
