@@ -36,6 +36,10 @@ polkit.addRule(function(action, subject) {
         "org.freedesktop.udisks2.filesystem-mount-system",
         "org.freedesktop.udisks2.filesystem-mount",
         "org.freedesktop.udisks2.filesystem-mount-other-seat",
+        "org.freedesktop.udisks2.power-off-drive",
+        "org.freedesktop.udisks2.power-off-drive-other-seat",
+        "org.freedesktop.udisks2.eject-media",
+        "org.freedesktop.udisks2.eject-media-other-seat",
     ];
 
     if (mount_usb_actions.indexOf(action.id) > -1) {
