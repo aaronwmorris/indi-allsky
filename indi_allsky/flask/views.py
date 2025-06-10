@@ -9145,8 +9145,21 @@ class AjaxDriveManagerView(BaseView):
             return jsonify(json_data), 400
 
 
+        command = str(request.json['COMMAND'])
         query_drive_id = str(request.json['DRIVE_ID'])
 
+
+        if command == 'getmetadata':
+            return self.getMetadata(query_drive_id)
+        else:
+            json_data = {
+                'failure-message' : 'Unknown command',
+            }
+            return jsonify(json_data), 400
+
+
+
+    def getMetadata(self, query_drive_id):
         bus = dbus.SystemBus()
 
 
@@ -9206,11 +9219,17 @@ class AjaxDriveManagerView(BaseView):
                 'TimeMediaDetected' : drive_TimeMediaDetected,
             }
 
-            return jsonify(drive_dict)
+
+            return_data = {
+                'success-message' : '',
+                'drive_data' : drive_dict,
+            }
+
+            return jsonify(return_data)
 
 
         # fail if drive not found
-        return jsonify({}), 400
+        return jsonify({'failure-message' : 'Drive not found'}), 400
 
 
 class AstroPanelView(TemplateView):

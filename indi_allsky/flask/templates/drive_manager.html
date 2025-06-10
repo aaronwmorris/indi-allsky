@@ -56,7 +56,13 @@ var camera_id = {{ camera_id }};
             {{ form_drives.DRIVES_SELECT(class='form-select bg-secondary') }}
             <div id="DRIVES_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-1">
+            <button id="poweroff-button" class="btn btn-dark text-danger">Power Off</button>
+        </div>
+        <div class="col-sm-1">
+            <input class="form-check-input" id="DRIVE_CONFIRM1" name="DRIVE_CONFIRM1" type="checkbox" value="y"> Confirm
+        </div>
+        <div class="col-sm-1">
             <span id="drive-loader" class="spinner-border" aria-hidden="true"></span>
         </div>
     </div>
@@ -86,8 +92,6 @@ var camera_id = {{ camera_id }};
 <script type="text/javascript">
 
 function updateDriveInfo(rdata) {
-    //$('#drive-info').html(rdata['Model']);
-
     var drive_table = $('<table />', {
     });
 
@@ -96,7 +100,7 @@ function updateDriveInfo(rdata) {
         var tr = $('<tr />', {});
 
         tr.append($('<td />', {}).html(item));
-        tr.append($('<td />', {}).html(rdata[item].toString()));
+        tr.append($('<td />', {}).html(rdata['drive_data'][item].toString()));
 
         drive_table.append(tr);
     });
@@ -109,6 +113,7 @@ function showDrive() {
     $('#success-message').css({'display' : 'none'});
     $('#failure-message').css({'display' : 'none'});
 
+    $("#DRIVE_CONFIRM1").prop('checked', false);
 
     if ( $('#DRIVES_SELECT').val() == "" ){
         return;
@@ -119,6 +124,7 @@ function showDrive() {
 
 
     var json_data = {
+        'COMMAND'  : 'getmetadata',
         'DRIVE_ID' : $('#DRIVES_SELECT').val(),
     };
 
@@ -160,6 +166,8 @@ $('#DRIVES_SELECT').on('change', function() {
 
 
 function init() {
+    $("#DRIVE_CONFIRM1").prop('checked', false);
+
     showDrive();
 }
 
