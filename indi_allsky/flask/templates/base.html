@@ -169,6 +169,10 @@
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/wifi.svg') }}" width="16" height="16" alt="Log"><span class="ms-1 d-none d-sm-inline">Network</span> </a>
                             </li>
                             <li>
+                                <a href="{{ url_for('indi_allsky.drive_manager_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/hdd-fill.svg') }}" width="16" height="16" alt="Log"><span class="ms-1 d-none d-sm-inline">Drives</span> </a>
+                            </li>
+                            <li>
                                 <a href="{{ url_for('indi_allsky.support_info_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/info-circle.svg') }}" width="16" height="16" alt="Log"><span class="ms-1 d-none d-sm-inline">Support Info</span> </a>
                             </li>
