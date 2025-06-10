@@ -9176,12 +9176,14 @@ class AjaxDriveManagerView(BaseView):
 
             settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Drive')
 
-            drive_id = settings_dict['Id']
-            if query_drive_id != str(drive_id):
+
+            drive_id = str(settings_dict['Id'])
+            if query_drive_id != drive_id:
                 continue
 
 
             drive_dict = {
+                'Id' : drive_id,
                 'Vendor' : str(settings_dict['Vendor']),
                 'Model' : str(settings_dict['Model']),
                 'Size' : '{0:0.1f} GB'.format(float(settings_dict['Size']) / 1024 / 1024 / 1024),

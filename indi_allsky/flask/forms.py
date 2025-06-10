@@ -7538,12 +7538,22 @@ class IndiAllskyDriveManagerForm(FlaskForm):
                     continue
 
 
+            drive_Vendor = str(settings_dict['Vendor'])
+            if not drive_Vendor:
+                drive_Vendor = '[No Vendor]'
+
+
+            drive_ConnectionBus = str(settings_dict['ConnectionBus'])
+            if not drive_ConnectionBus:
+                drive_ConnectionBus = '[Internal]'
+
+
             drive_dict = {
                 'Id' : str(settings_dict['Id']),
-                'Vendor' : str(settings_dict['Vendor']),
+                'Vendor' : drive_Vendor,
                 'Model' : str(settings_dict['Model']),
                 'Size' : int(settings_dict['Size']),
-                'ConnectionBus' : str(settings_dict['ConnectionBus']),
+                'ConnectionBus' : drive_ConnectionBus,
                 'Removable' : drive_Removable,
                 'CanPowerOff' : drive_CanPowerOff,
             }
