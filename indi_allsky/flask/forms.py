@@ -7628,10 +7628,15 @@ class IndiAllskyDriveManagerForm(FlaskForm):
             device_dict = {
                 'Id' : str(settings_dict['Id']),
                 'Device' : "".join(chr(i) for i in settings_dict['Device']),
-                'MountPoints0' : "".join(chr(i) for i in object_info['org.freedesktop.UDisks2.Filesystem']['MountPoints'][0]),
                 'Drive' : str(object_info['org.freedesktop.UDisks2.Block']['Drive']),
                 # if the drive is abstracted or not defined "Drive" will be '/'
             }
+
+
+            if len(object_info['org.freedesktop.UDisks2.Filesystem']['MountPoints']) > 0:
+                device_dict['MountPoints0'] = "".join(chr(i) for i in object_info['org.freedesktop.UDisks2.Filesystem']['MountPoints'][0])
+            else:
+                device_dict['MountPoints0'] = "Not Mounted"
 
 
             if device_dict['Drive'] != '/':
