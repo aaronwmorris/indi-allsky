@@ -9182,6 +9182,16 @@ class AjaxDriveManagerView(BaseView):
                 continue
 
 
+            TimeDetected = int(settings_dict['TimeDetected'])
+            drive_TimeDetected = datetime.fromtimestamp(TimeDetected / 1000 / 1000)
+
+            TimeMediaDetected = int(settings_dict['TimeMediaDetected'])
+            if TimeMediaDetected:
+                drive_TimeMediaDetected = datetime.fromtimestamp(TimeMediaDetected / 1000 / 1000)
+            else:
+                drive_TimeMediaDetected = ''
+
+
             drive_dict = {
                 'Id' : drive_id,
                 'Vendor' : str(settings_dict['Vendor']),
@@ -9192,6 +9202,8 @@ class AjaxDriveManagerView(BaseView):
                 'CanPowerOff' : bool(settings_dict['CanPowerOff']),
                 'Removable' : bool(settings_dict['Removable']),
                 'Ejectable' : bool(settings_dict['Ejectable']),
+                'TimeDetected' : drive_TimeDetected,
+                'TimeMediaDetected' : drive_TimeMediaDetected,
             }
 
             return jsonify(drive_dict)

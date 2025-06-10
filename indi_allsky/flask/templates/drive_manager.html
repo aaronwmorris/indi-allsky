@@ -86,7 +86,7 @@ function updateDriveInfo(rdata) {
     var drive_table = $('<table />', {
     });
 
-    fields_list = ['Vendor', 'Model', 'Serial', 'Size', 'ConnectionBus', 'CanPowerOff', 'Ejectable', 'Removable'];
+    fields_list = ['Vendor', 'Model', 'Serial', 'Size', 'ConnectionBus', 'CanPowerOff', 'Ejectable', 'Removable', 'TimeDetected', 'TimeMediaDetected'];
     fields_list.forEach(item => {
         var tr = $('<tr />', {});
 
