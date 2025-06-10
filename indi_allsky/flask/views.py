@@ -7661,7 +7661,7 @@ class CameraSimulatorView(TemplateView):
 
         context['camera_id'] = self.camera.id
 
-        lens = str(request.args.get('lens', 'zwo_f1.2_2.5mm'))
+        lens = str(request.args.get('lens', 'zwo_f1.2_2.5mm_1-2'))
         sensor = str(request.args.get('sensor', 'imx477'))
         offset_x = int(request.args.get('offset_x', 0))
         offset_y = int(request.args.get('offset_y', 0))
