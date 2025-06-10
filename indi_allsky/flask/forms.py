@@ -7486,12 +7486,14 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
 class IndiAllskyDriveManagerForm(FlaskForm):
 
     DRIVES_SELECT         = SelectField('Drive', choices=[], validators=[])
+    DEVICES_SELECT        = SelectField('Devices', choices=[], validators=[])
 
 
     def __init__(self, *args, **kwargs):
         super(IndiAllskyDriveManagerForm, self).__init__(*args, **kwargs)
 
         self.DRIVES_SELECT.choices = self.getDrives()
+        self.DEVICES_SELECT.choices = self.getDevices()
 
 
     def getDrives(self, removable=False):
@@ -7576,6 +7578,108 @@ class IndiAllskyDriveManagerForm(FlaskForm):
             drive_entries.append(('', 'No Removable Drives'))
 
         return drive_entries
+
+
+    def getDevices(self, mounted=True):
+        bus = dbus.SystemBus()
+
+
+        try:
+            nm_udisks2 = bus.get_object(
+                "org.freedesktop.UDisks2",
+                "/org/freedesktop/UDisks2")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return [(
+                '', 'D-Bus Exception: {0:s}'.format(str(e))
+            )]
+
+        iface = dbus.Interface(
+            nm_udisks2,
+            'org.freedesktop.DBus.ObjectManager')
+
+
+        objects = iface.GetManagedObjects()
+
+        device_list = list()
+        for object_path, object_info in objects.items():
+            if not object_path.startswith('/org/freedesktop/UDisks2/block_devices/'):
+                continue
+
+
+            if 'org.freedesktop.UDisks2.Filesystem' not in object_info:
+                continue
+
+
+            settings = bus.get_object(
+                "org.freedesktop.UDisks2",
+                object_path)
+
+            settings_connection = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.DBus.Properties')
+
+            settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Block')
+
+            #for k in object_info.keys():
+            #    app.logger.info('Key: %s', k)
+
+            #app.logger.info('Info: %s', object_info)
+            device_dict = {
+                'Id' : str(settings_dict['Id']),
+                'Device' : "".join(chr(i) for i in settings_dict['Device']),
+                'MountPoints0' : "".join(chr(i) for i in object_info['org.freedesktop.UDisks2.Filesystem']['MountPoints'][0]),
+                'Drive' : str(object_info['org.freedesktop.UDisks2.Block']['Drive']),
+                # if the drive is abstracted or not defined "Drive" will be '/'
+            }
+
+
+            if device_dict['Drive'] != '/':
+                # lookup the drive
+                drive_objects = iface.GetManagedObjects()
+
+                for drive_object_path in drive_objects:
+                    if not drive_object_path.startswith('/org/freedesktop/UDisks2/drives/'):
+                        continue
+
+                    if drive_object_path != device_dict['Drive']:
+                        continue
+
+                    drive_settings = bus.get_object(
+                        "org.freedesktop.UDisks2",
+                        drive_object_path)
+
+                    drive_settings_connection = dbus.Interface(
+                        drive_settings,
+                        dbus_interface='org.freedesktop.DBus.Properties')
+
+
+                    drive_settings_dict = drive_settings_connection.GetAll('org.freedesktop.UDisks2.Drive')
+
+                    device_dict['Drive_Id'] = str(drive_settings_dict['Id'])
+
+                    break
+                else:
+                    # this should not happen
+                    device_dict['Drive_Id'] = 'Drive not found'
+            else:
+                device_dict['Drive_Id'] = ''
+
+
+            device_list.append(device_dict)
+
+
+        device_entries = list()
+        for device in device_list:
+            desc = '{0:s} - [{1:s}] - {2:s}'.format(device['MountPoints0'], device['Device'], device['Drive_Id'])
+
+            device_entries.append((device['Id'], desc))
+
+
+        if not device_entries:
+            device_entries.append(('', 'No Devices'))
+
+        return device_entries
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):
