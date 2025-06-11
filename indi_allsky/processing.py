@@ -786,6 +786,8 @@ class ImageProcessor(object):
         except CalibrationNotFound:
             # only subtract dark level if dark frame is not found
 
+            manual_offset = self.config.get('IMAGE_CALIBRATE_MANUAL_OFFSET', 0)
+
             if self.libcamera_raw:
                 if libcamera_black_level:
                     logger.info('Black level: %d', int(libcamera_black_level))
@@ -795,6 +797,9 @@ class ImageProcessor(object):
                     i_ref.hdulist[0].data = cv2.subtract(i_ref.hdulist[0].data, black_level_scaled)
 
                     i_ref.calibrated = True
+            elif manual_offset:
+                logger.info('Applying manual offset: %d', manual_offset)
+                i_ref.hdulist[0].data = cv2.subtract(i_ref.hdulist[0].data, manual_offset)
 
 
     def _apply_calibration(self, data, exposure, camera_id, image_bitpix):

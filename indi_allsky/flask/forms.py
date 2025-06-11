@@ -1350,6 +1350,14 @@ def IMAGE_CIRCLE_MASK__OPACITY_validator(form, field):
         raise ValidationError('Opacity must be 100 or less')
 
 
+def IMAGE_CALIBRATE_MANUAL_OFFSET_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Offset must be 0 or more')
+
+
 def FISH2PANO__DIAMETER_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -3672,6 +3680,7 @@ class IndiAllskyConfigForm(FlaskForm):
     STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY   = IntegerField('Mask Opacity %', validators=[IMAGE_CIRCLE_MASK__OPACITY_validator])
     IMAGE_CALIBRATE_DARK             = BooleanField('Apply Dark Calibration Frames')
     IMAGE_CALIBRATE_BPM              = BooleanField('Apply Bad Pixel Map Frames')
+    IMAGE_CALIBRATE_MANUAL_OFFSET    = IntegerField('Manual Offset', validators=[IMAGE_CALIBRATE_MANUAL_OFFSET_validator])
     IMAGE_SAVE_FITS_PRE_DARK         = BooleanField('Save FITS Pre-Calibration')
     IMAGE_EXIF_PRIVACY               = BooleanField('Enable EXIF Privacy')
     IMAGE_FILE_TYPE                  = SelectField('Image file type', choices=IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_FILE_TYPE_validator])
@@ -6896,6 +6905,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     LENS_AZIMUTH                     = FloatField('Azimuth', validators=[LENS_AZIMUTH_validator])
     IMAGE_CALIBRATE_DARK             = BooleanField('Dark Frame Calibration')
     IMAGE_CALIBRATE_BPM              = BooleanField('Bad Pixel Map Calibration')
+    IMAGE_CALIBRATE_MANUAL_OFFSET    = IntegerField('Manual Offset', validators=[IMAGE_CALIBRATE_MANUAL_OFFSET_validator])
     CCD_BIT_DEPTH                    = SelectField('Camera Bit Depth', choices=IndiAllskyConfigForm.CCD_BIT_DEPTH_choices, validators=[CCD_BIT_DEPTH_validator])
     NIGHT_CONTRAST_ENHANCE           = BooleanField('Contrast Enhance')
     CONTRAST_ENHANCE_16BIT           = BooleanField('16-bit Contrast Enhance')
