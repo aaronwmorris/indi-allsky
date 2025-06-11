@@ -8867,7 +8867,7 @@ class AjaxNetworkManagerView(BaseView):
 
 
             str_ap_ssid = "".join(chr(i) for i in ap_ssid)
-            #app.logger.info("Found SSID: %s", str_ap_ssid)
+            app.logger.info("Found SSID: %s", str_ap_ssid)
 
 
             ap_frequency_int = int(ap_frequency)
@@ -8882,13 +8882,15 @@ class AjaxNetworkManagerView(BaseView):
 
             ap_list.append({
                 'path' : str(ap_path),
-                'ssid' : '{0:s} [{1:s}] - {2:s} - {3:d}%'.format(str_ap_ssid, ap_hwaddress, ap_frequency_str, int.from_bytes(str(ap_strength).encode())),
+                'ssid' : str_ap_ssid,
+                'ap_hwaddress' : ap_hwaddress,
+                'desc' : '{0:s} [{1:s}] - {2:s} - {3:d}%'.format(str_ap_ssid, ap_hwaddress, ap_frequency_str, int.from_bytes(str(ap_strength).encode())),
                 'strength' : int.from_bytes(str(ap_strength).encode()),  # need to sort on this key
                 'frequency' : ap_frequency_int,
             })
 
 
-        ap_list_sorted = sorted(ap_list, key=lambda x: x['strength'], reverse=True)
+        ap_list_sorted = sorted(ap_list, key=lambda x: (x['strength'], x['ap_hwaddress']), reverse=True)
 
 
         time.sleep(2.0)  # give some time for system to register
