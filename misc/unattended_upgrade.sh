@@ -93,6 +93,8 @@ fi
 
 ROOT_FREE=$(df -Pk / | tail -n 1 | awk "{ print \$3 }")
 if [ "$ROOT_FREE" -lt 1000000 ]; then
+    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Not enough free space in / (root).' 1440 || true
+
     echo
     echo "Not enough free space available in / (root) filesystem"
     echo "At least 1GB of space needs to be available to continue"
@@ -102,6 +104,8 @@ fi
 
 VAR_FREE=$(df -Pk /var | tail -n 1 | awk "{ print \$3 }")
 if [ "$VAR_FREE" -lt 1000000 ]; then
+    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Not enough free space in /var.' 1440 || true
+
     echo
     echo "Not enough free space available in /var filesystem"
     echo "At least 1GB of space needs to be available to continue"
@@ -199,16 +203,6 @@ else
 fi
 
 
-# stop indi-allsky
-if systemctl --user --quiet is-active "${ALLSKY_SERVICE_NAME}.service" >/dev/null 2>&1; then
-    echo "*** Stopping indi-allsky ***"
-    ALLSKY_RUNNING="true"
-    systemctl --user stop "${ALLSKY_SERVICE_NAME}.service"
-else
-    ALLSKY_RUNNING="false"
-fi
-
-
 START_TIME=$(date +%s)
 
 
@@ -219,9 +213,49 @@ ALLSKY_DIRECTORY=$PWD
 cd "$OLDPWD" || catch_error
 
 
+if [ ! -f "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate" ]; then
+    echo
+    echo "indi-allsky virtualenv does not exist"
+    exit 1
+fi
+
+
+cd "$ALLSKY_DIRECTORY" || catch_error
+
+
+if ! git diff --quiet --exit-code >/dev/null 2>&1; then
+    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Code modifications are active.' 1440 || true
+
+    echo
+    echo "Code modifications are active.  Exiting..."
+    echo
+    echo "You can reset the code using \"git reset --hard\" (WARNING: This will destroy any changes you have made)"
+    exit 1
+fi
+
+
+ALLSKY_GIT_BRANCH=$(git branch --show-current)
+if [ "$ALLSKY_GIT_BRANCH" != "main" ]; then
+    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Not on main branch.' 1440 || true
+
+    echo
+    echo "Not currently on main branch.  Exiting..."
+    exit 1
+fi
+
+
+# stop indi-allsky
+if systemctl --user --quiet is-active "${ALLSKY_SERVICE_NAME}.service" >/dev/null 2>&1; then
+    echo "*** Stopping indi-allsky ***"
+    ALLSKY_RUNNING="true"
+    systemctl --user stop "${ALLSKY_SERVICE_NAME}.service"
+else
+    ALLSKY_RUNNING="false"
+fi
+
+
 echo
 echo "*** Updating code from git repo ***"
-cd "$ALLSKY_DIRECTORY" || catch_error
 git pull origin main
 
 
@@ -722,13 +756,6 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
 
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
-    exit 1
-fi
-
-
-if [ ! -f "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate" ]; then
-    echo
-    echo "indi-allsky virtualenv does not exist"
     exit 1
 fi
 
