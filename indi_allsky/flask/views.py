@@ -9133,6 +9133,21 @@ class AjaxDriveManagerView(BaseView):
     decorators = [login_required]
 
 
+    protected_filesystems = (
+        '/',
+        '/boot',
+        '/boot/firmware',
+        '/boot/efi',
+        '/var',
+        '/home',
+        '/tmp',
+        '/var/tmp',
+        '/run',
+        '/dev',
+        '/dev/shm',
+    )
+
+
     def __init__(self, **kwargs):
         super(AjaxDriveManagerView, self).__init__(**kwargs)
 
@@ -9316,9 +9331,9 @@ class AjaxDriveManagerView(BaseView):
             'org.freedesktop.DBus.ObjectManager')
 
 
-        object_paths = iface.GetManagedObjects()
+        objects = iface.GetManagedObjects()
 
-        for object_path in object_paths:
+        for object_path, object_info in objects.items():
             if not object_path.startswith('/org/freedesktop/UDisks2/block_devices/'):
                 continue
 
@@ -9339,6 +9354,18 @@ class AjaxDriveManagerView(BaseView):
             device_id = str(settings_dict['Id'])
             if query_device_id != device_id:
                 continue
+
+
+            if len(object_info['org.freedesktop.UDisks2.Filesystem']['MountPoints']) == 0:
+                return jsonify({'failure-message' : 'Filesystem not mounted'}), 400
+
+
+            MountPoints0 = "".join(chr(i) for i in object_info['org.freedesktop.UDisks2.Filesystem']['MountPoints'][0][:-1])  # trim null char
+
+
+            app.logger.info('Unmount %s', MountPoints0)
+            if MountPoints0 in self.protected_filesystems:
+                return jsonify({'failure-message' : 'Not allowed to unmount protected filesystem: {0:s}'.format(MountPoints0)}), 400
 
 
             fs_interface = dbus.Interface(
