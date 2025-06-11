@@ -699,7 +699,7 @@ $('#scan-button').on('click', function() {
             $("#SSID_SELECT").empty();
 
             rdata['data'].forEach(item => {
-                $("#SSID_SELECT").append($('<option />', {'value' : item['path']}).text(item['ssid']));
+                $("#SSID_SELECT").append($('<option />', {'value' : item['path']}).text(item['desc']));
             });
         },
         error: function(rdata){

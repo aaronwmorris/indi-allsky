@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: {{ title }}{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+#nav-drives-tab, #nav-mounts-tab {
+	width: 150px;
+	margin-top: 10px;
+	margin-right: 5px;
+	height: 50px;
+}
+
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+#drive-loader {
+  display: block;
+}
+</style>
+<script type="text/javascript">
+var camera_id = {{ camera_id }};
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container h-100">
+<form id="form_drives" onSubmit="return false;" autocomplete="off">
+
+<nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <button class="nav-link link-danger bg-dark active" id="nav-drives-tab" data-bs-toggle="tab" data-bs-target="#nav-drives" type="button" role="tab" aria-controls="nav-drives" aria-selected="true">Drives</button>
+    <button class="nav-link link-light bg-dark" id="nav-mounts-tab" data-bs-toggle="tab" data-bs-target="#nav-mounts" type="button" role="tab" aria-controls="nav-mounts" aria-selected="false">Mounts</button>
+  </div>
+</nav>
+
+
+<!-- should be above tab contents -->
+{% if not udisks2_installed %}
+<hr>
+<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> UDisks2 is not available</div>
+{% endif %}
+
+<hr>
+
+<div class="tab-content" id="nav-tabContent">
+
+  <div class="tab-pane fade show active" id="nav-drives" role="tabpanel" aria-labelledby="nav-drives-tab">
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_drives.DRIVES_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_drives.DRIVES_SELECT(class='form-select bg-secondary') }}
+            <div id="DRIVES_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-1">
+            <button id="poweroff-button" class="btn btn-dark text-danger">Power Off</button>
+        </div>
+        <div class="col-sm-1">
+            <input class="form-check-input" id="DRIVE_CONFIRM1" name="DRIVE_CONFIRM1" type="checkbox" value="y"> Confirm
+        </div>
+        <div class="col-sm-1">
+            <span id="drive-loader" class="spinner-border" aria-hidden="true"></span>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-sm-5">
+            <div id="drive-info"></div>
+        </div>
+    </div>
+
+  </div><!-- end drives tab -->
+  <div class="tab-pane fade" id="nav-mounts" role="tabpanel" aria-labelledby="nav-mounts-tab">
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_drives.DEVICES_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_drives.DEVICES_SELECT(class='form-select bg-secondary') }}
+            <div id="DEVICES_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-1">
+            <button id="unmount-button" class="btn btn-warning">Unmount</button>
+        </div>
+        <div class="col-sm-1">
+            <input class="form-check-input" id="DEVICE_CONFIRM1" name="DEVICE_CONFIRM1" type="checkbox" value="y"> Confirm
+        </div>
+    </div>
+  </div>
+
+</div><!-- end mounts tab -->
+
+    <hr> <hr> <hr>
+
+    <div class="form-group row" style="height:100px;">
+        <div class="col-sm-5">
+            <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
+            <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
+        </div>
+    </div>
+
+    </form>
+
+</div>
+
+<script type="text/javascript">
+
+function updateDriveInfo(rdata) {
+    var drive_table = $('<table />', {
+    });
+
+    fields_list = ['Vendor', 'Model', 'Serial', 'Size', 'ConnectionBus', 'CanPowerOff', 'Ejectable', 'Removable', 'TimeDetected', 'TimeMediaDetected'];
+    fields_list.forEach(item => {
+        var tr = $('<tr />', {});
+
+        tr.append($('<td />', {}).html(item));
+        tr.append($('<td />', {}).html(rdata['drive_data'][item].toString()));
+
+        drive_table.append(tr);
+    });
+
+    $('#drive-info').html(drive_table);
+}
+
+
+function showDrive() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+    $("#DRIVE_CONFIRM1").prop('checked', false);
+
+    if ( $('#DRIVES_SELECT').val() == "" ){
+        return;
+    }
+
+
+    $('#drive-loader').css({'display' : 'block'});
+
+
+    var json_data = {
+        'COMMAND'  : 'getmetadata',
+        'DRIVE_ID' : $('#DRIVES_SELECT').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_drive_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $('#drive-loader').css({'display' : 'none'});
+
+            updateDriveInfo(rdata);
+            //$('#success-message').html(rdata['success-message']);
+            //$('#success-message').css({'display' : 'block'});
+            //setTimeout(function() {
+            //    $('#success-message').css({'display' : 'none'});
+            //}, 15000);
+        },
+        error: function(rdata){
+            $('#drive-loader').css({'display' : 'none'});
+
+            //$("#activate-button").attr("class", "btn btn-danger");
+            //$("#activate-button").html(
+            //  'Activate'
+            //);
+
+            //var errors = JSON.parse(rdata.responseText);
+
+            //$('#failure-message').html(errors['failure-message']);
+            //$('#failure-message').css({'display' : 'block'});
+        },
+    });
+}
+
+$('#DRIVES_SELECT').on('change', function() {
+    showDrive();
+});
+
+
+$('#poweroff-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+
+    if (! $("#DRIVE_CONFIRM1").prop('checked')) {
+        console.log('Confirm checkbox not checked');
+        return;
+    }
+    $("#DRIVE_CONFIRM1").prop('checked', false);
+
+
+    if ( $('#DRIVES_SELECT').val() == "" ){
+        return;
+    }
+
+    $("#poweroff-button").attr("class", "btn btn-dark text-danger");
+    $("#poweroff-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Power Off</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'poweroff',
+        'DRIVE_ID' : $('#DRIVES_SELECT').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_drive_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#poweroff-button").html(
+              'Power Off'
+            );
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
+
+        },
+        error: function(rdata){
+            $("#poweroff-button").attr("class", "btn btn-danger");
+            $("#poweroff-button").html(
+              'Power Off'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
+        },
+    });
+});
+
+
+$('#unmount-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+
+    if (! $("#DEVICE_CONFIRM1").prop('checked')) {
+        console.log('Confirm checkbox not checked');
+        return;
+    }
+    $("#DEVICE_CONFIRM1").prop('checked', false);
+
+
+    if ( $('#DEVICES_SELECT').val() == "" ){
+        return;
+    }
+
+    $("#unmount-button").attr("class", "btn btn-dark text-danger");
+    $("#unmount-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Unmount</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'unmount',
+        'DEVICE_ID' : $('#DEVICES_SELECT').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_drive_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#unmount-button").html(
+              'Unmount'
+            );
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
+
+        },
+        error: function(rdata){
+            $("#unmount-button").attr("class", "btn btn-danger");
+            $("#unmount-button").html(
+              'Unmount'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
+        },
+    });
+});
+
+
+function init() {
+    $("#DRIVE_CONFIRM1").prop('checked', false);
+    $("#DEVICE_CONFIRM1").prop('checked', false);
+
+    showDrive();
+}
+
+$( document ).ready(function() {
+    init();
+});
+</script>
+
+{% endblock %}

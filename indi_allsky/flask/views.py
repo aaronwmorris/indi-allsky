@@ -103,6 +103,7 @@ from .forms import IndiAllskyFocusControllerForm
 from .forms import IndiAllskyMiniTimelapseForm
 from .forms import IndiAllskyLongTermKeogramForm
 from .forms import IndiAllskyNetworkManagerForm
+from .forms import IndiAllskyDriveManagerForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -7661,7 +7662,7 @@ class CameraSimulatorView(TemplateView):
 
         context['camera_id'] = self.camera.id
 
-        lens = str(request.args.get('lens', 'zwo_f1.2_2.5mm'))
+        lens = str(request.args.get('lens', 'zwo_f1.2_2.5mm_1-2'))
         sensor = str(request.args.get('sensor', 'imx477'))
         offset_x = int(request.args.get('offset_x', 0))
         offset_y = int(request.args.get('offset_y', 0))
@@ -8866,7 +8867,7 @@ class AjaxNetworkManagerView(BaseView):
 
 
             str_ap_ssid = "".join(chr(i) for i in ap_ssid)
-            #app.logger.info("Found SSID: %s", str_ap_ssid)
+            app.logger.info("Found SSID: %s", str_ap_ssid)
 
 
             ap_frequency_int = int(ap_frequency)
@@ -8881,13 +8882,15 @@ class AjaxNetworkManagerView(BaseView):
 
             ap_list.append({
                 'path' : str(ap_path),
-                'ssid' : '{0:s} [{1:s}] - {2:s} - {3:d}%'.format(str_ap_ssid, ap_hwaddress, ap_frequency_str, int.from_bytes(str(ap_strength).encode())),
+                'ssid' : str_ap_ssid,
+                'ap_hwaddress' : ap_hwaddress,
+                'desc' : '{0:s} [{1:s}] - {2:s} - {3:d}%'.format(str_ap_ssid, ap_hwaddress, ap_frequency_str, int.from_bytes(str(ap_strength).encode())),
                 'strength' : int.from_bytes(str(ap_strength).encode()),  # need to sort on this key
                 'frequency' : ap_frequency_int,
             })
 
 
-        ap_list_sorted = sorted(ap_list, key=lambda x: x['strength'], reverse=True)
+        ap_list_sorted = sorted(ap_list, key=lambda x: (x['strength'], x['ap_hwaddress']), reverse=True)
 
 
         time.sleep(2.0)  # give some time for system to register
@@ -9095,6 +9098,298 @@ class AjaxNetworkManagerView(BaseView):
     def ip2int(self, ip_str):
         import struct
         return struct.unpack('=I', socket.inet_aton(ip_str))[0]
+
+
+class DriveManagerView(TemplateView):
+    decorators = [login_required]
+    title = 'Drives'
+
+    def get_context(self):
+        context = super(DriveManagerView, self).get_context()
+
+        context['camera_id'] = self.camera.id
+        context['title'] = self.title
+
+
+        try:
+            # detect if udisks2 is available
+            bus = dbus.SystemBus()
+            bus.get_object(
+                "org.freedesktop.UDisks2",
+                "/org/freedesktop/UDisks2")
+            udisks2_installed = True
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            udisks2_installed = False
+
+
+        context['udisks2_installed'] = udisks2_installed
+
+        context['form_drives'] = IndiAllskyDriveManagerForm()
+
+        return context
+
+
+class AjaxDriveManagerView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+
+    protected_filesystems = (
+        '/',
+        '/boot',
+        '/boot/firmware',
+        '/boot/efi',
+        '/var',
+        '/home',
+        '/tmp',
+        '/var/tmp',
+        '/run',
+        '/dev',
+        '/dev/shm',
+    )
+
+
+    def __init__(self, **kwargs):
+        super(AjaxDriveManagerView, self).__init__(**kwargs)
+
+
+    def dispatch_request(self):
+        if not current_user.is_admin:
+            json_data = {
+                'failure-message' : 'User does not have permission to access this resource',
+            }
+            return jsonify(json_data), 400
+
+
+        command = str(request.json['COMMAND'])
+
+
+        if command == 'getmetadata':
+            query_drive_id = str(request.json['DRIVE_ID'])
+            return self.getMetadata(query_drive_id)
+        if command == 'poweroff':
+            query_drive_id = str(request.json['DRIVE_ID'])
+            return self.powerOffDrive(query_drive_id)
+        if command == 'unmount':
+            query_device_id = str(request.json['DEVICE_ID'])
+            return self.unmountDevice(query_device_id)
+        else:
+            json_data = {
+                'failure-message' : 'Unknown command',
+            }
+            return jsonify(json_data), 400
+
+
+    def getMetadata(self, query_drive_id):
+        bus = dbus.SystemBus()
+
+
+        nm_udisks2 = bus.get_object(
+            "org.freedesktop.UDisks2",
+            "/org/freedesktop/UDisks2")
+
+        iface = dbus.Interface(
+            nm_udisks2,
+            'org.freedesktop.DBus.ObjectManager')
+
+
+        object_paths = iface.GetManagedObjects()
+
+        for object_path in object_paths:
+            if not object_path.startswith('/org/freedesktop/UDisks2/drives/'):
+                continue
+
+
+            settings = bus.get_object(
+                "org.freedesktop.UDisks2",
+                object_path)
+
+            settings_connection = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.DBus.Properties')
+
+            settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Drive')
+
+
+            drive_id = str(settings_dict['Id'])
+            if query_drive_id != drive_id:
+                continue
+
+
+            TimeDetected = int(settings_dict['TimeDetected'])
+            drive_TimeDetected = datetime.fromtimestamp(TimeDetected / 1000 / 1000)
+
+            TimeMediaDetected = int(settings_dict['TimeMediaDetected'])
+            if TimeMediaDetected:
+                drive_TimeMediaDetected = datetime.fromtimestamp(TimeMediaDetected / 1000 / 1000)
+            else:
+                drive_TimeMediaDetected = ''
+
+
+            drive_dict = {
+                'Id' : drive_id,
+                'Vendor' : str(settings_dict['Vendor']),
+                'Model' : str(settings_dict['Model']),
+                'Size' : '{0:0.1f} GB'.format(float(settings_dict['Size']) / 1024 / 1024 / 1024),
+                'ConnectionBus' : str(settings_dict['ConnectionBus']),
+                'Serial' : str(settings_dict['Serial']),
+                'CanPowerOff' : bool(settings_dict['CanPowerOff']),
+                'Removable' : bool(settings_dict['Removable']),
+                'Ejectable' : bool(settings_dict['Ejectable']),
+                'TimeDetected' : drive_TimeDetected,
+                'TimeMediaDetected' : drive_TimeMediaDetected,
+            }
+
+
+            return_data = {
+                'success-message' : '',
+                'drive_data' : drive_dict,
+            }
+
+            return jsonify(return_data)
+
+
+        # fail if drive not found
+        return jsonify({'failure-message' : 'Drive not found'}), 400
+
+
+    def powerOffDrive(self, query_drive_id):
+        bus = dbus.SystemBus()
+
+
+        nm_udisks2 = bus.get_object(
+            "org.freedesktop.UDisks2",
+            "/org/freedesktop/UDisks2")
+
+        iface = dbus.Interface(
+            nm_udisks2,
+            'org.freedesktop.DBus.ObjectManager')
+
+
+        object_paths = iface.GetManagedObjects()
+
+        for object_path in object_paths:
+            if not object_path.startswith('/org/freedesktop/UDisks2/drives/'):
+                continue
+
+
+            settings = bus.get_object(
+                "org.freedesktop.UDisks2",
+                object_path)
+
+            settings_connection = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.DBus.Properties')
+
+
+
+            settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Drive')
+
+
+            drive_id = str(settings_dict['Id'])
+            if query_drive_id != drive_id:
+                continue
+
+
+            CanPowerOff = bool(settings_dict['CanPowerOff'])
+            if not CanPowerOff:
+                return jsonify({'failure-message' : 'Drive cannot be powered off'}), 400
+
+
+
+            drive_interface = dbus.Interface(
+                bus.get_object('org.freedesktop.UDisks2', object_path),
+                'org.freedesktop.UDisks2.Drive')
+
+
+            try:
+                drive_interface.PowerOff({})
+            except dbus.exceptions.DBusException as e:
+                app.logger.error('D-Bus Exception: %s', str(e))
+                return jsonify({'failure-message' : str(e)}), 400
+
+
+            return_data = {
+                'success-message' : 'Power Off Successful'
+            }
+            return jsonify(return_data)
+
+
+        # fail if drive not found
+        return jsonify({'failure-message' : 'Drive not found'}), 400
+
+
+    def unmountDevice(self, query_device_id):
+        bus = dbus.SystemBus()
+
+
+        nm_udisks2 = bus.get_object(
+            "org.freedesktop.UDisks2",
+            "/org/freedesktop/UDisks2")
+
+        iface = dbus.Interface(
+            nm_udisks2,
+            'org.freedesktop.DBus.ObjectManager')
+
+
+        objects = iface.GetManagedObjects()
+
+        for object_path, object_info in objects.items():
+            if not object_path.startswith('/org/freedesktop/UDisks2/block_devices/'):
+                continue
+
+
+            settings = bus.get_object(
+                "org.freedesktop.UDisks2",
+                object_path)
+
+            settings_connection = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.DBus.Properties')
+
+
+
+            settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Block')
+
+
+            device_id = str(settings_dict['Id'])
+            if query_device_id != device_id:
+                continue
+
+
+            if len(object_info['org.freedesktop.UDisks2.Filesystem']['MountPoints']) == 0:
+                return jsonify({'failure-message' : 'Filesystem not mounted'}), 400
+
+
+            MountPoints0 = "".join(chr(i) for i in object_info['org.freedesktop.UDisks2.Filesystem']['MountPoints'][0][:-1])  # trim null char
+
+
+            app.logger.info('Unmount %s', MountPoints0)
+            if MountPoints0 in self.protected_filesystems:
+                return jsonify({'failure-message' : 'Not allowed to unmount protected filesystem: {0:s}'.format(MountPoints0)}), 400
+
+
+            fs_interface = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.UDisks2.Filesystem')
+
+
+            try:
+                fs_interface.Unmount({})
+            except dbus.exceptions.DBusException as e:
+                app.logger.error('D-Bus Exception: %s', str(e))
+                return jsonify({'failure-message' : str(e)}), 400
+
+
+            return_data = {
+                'success-message' : 'Unmount Successful'
+            }
+            return jsonify(return_data)
+
+
+        # fail if drive not found
+        return jsonify({'failure-message' : 'Device not found'}), 400
 
 
 class AstroPanelView(TemplateView):
@@ -9595,6 +9890,9 @@ bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_inde
 
 bp_allsky.add_url_rule('/network', view_func=NetworkManagerView.as_view('network_manager_view', template_name='network.html'))
 bp_allsky.add_url_rule('/ajax/network', view_func=AjaxNetworkManagerView.as_view('ajax_network_manager_view'))
+
+bp_allsky.add_url_rule('/drives', view_func=DriveManagerView.as_view('drive_manager_view', template_name='drive_manager.html'))
+bp_allsky.add_url_rule('/ajax/drives', view_func=AjaxDriveManagerView.as_view('ajax_drive_manager_view'))
 
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))

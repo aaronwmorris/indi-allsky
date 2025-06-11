@@ -7146,7 +7146,7 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
     WIFI_DEVICES_SELECT        = SelectField('Wi-Fi Devices', choices=[], validators=[])
     SSID_SELECT                = SelectField('SSID', choices=[], validators=[])
     SSID_PSK                   = PasswordField('PSK', widget=PasswordInput(hide_value=False), validators=[], render_kw={'autocomplete' : 'new-password'})
-    SSID_PRIORITY              = IntegerField('Priority', default=0, validators=[])
+    SSID_PRIORITY              = IntegerField('Priority', default=0, validators=[], render_kw={'step' : '10'})
     HOTSPOT_DEVICES_SELECT     = SelectField('Wi-Fi Devices', choices=[], validators=[])
     HOTSPOT_SSID               = StringField('Hotspot SSID', default='indi-allsky Hotspot', validators=[])
     HOTSPOT_BAND               = SelectField('Hotspot Band', choices=HOTSPOT_BAND_choices, validators=[])
@@ -7481,6 +7481,212 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
 
         #app.logger.info('%s', wifi_dev_select_list)
         return wifi_dev_select_list
+
+
+class IndiAllskyDriveManagerForm(FlaskForm):
+
+    DRIVES_SELECT         = SelectField('Drive', choices=[], validators=[])
+    DEVICES_SELECT        = SelectField('Mount', choices=[], validators=[])
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyDriveManagerForm, self).__init__(*args, **kwargs)
+
+        self.DRIVES_SELECT.choices = self.getDrives()
+        self.DEVICES_SELECT.choices = self.getDevices()
+
+
+    def getDrives(self, removable=False):
+        bus = dbus.SystemBus()
+
+
+        try:
+            nm_udisks2 = bus.get_object(
+                "org.freedesktop.UDisks2",
+                "/org/freedesktop/UDisks2")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return [(
+                '', 'D-Bus Exception: {0:s}'.format(str(e))
+            )]
+
+        iface = dbus.Interface(
+            nm_udisks2,
+            'org.freedesktop.DBus.ObjectManager')
+
+
+        object_paths = iface.GetManagedObjects()
+
+        drive_list = list()
+        for object_path in object_paths:
+            if not object_path.startswith('/org/freedesktop/UDisks2/drives/'):
+                continue
+
+            settings = bus.get_object(
+                "org.freedesktop.UDisks2",
+                object_path)
+
+            settings_connection = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.DBus.Properties')
+
+            settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Drive')
+
+
+            drive_Removable = int(settings_dict['Removable'])
+            drive_CanPowerOff = int(settings_dict['CanPowerOff'])
+            if removable:
+                if not drive_CanPowerOff:
+                    continue
+
+
+            drive_Vendor = str(settings_dict['Vendor'])
+            if not drive_Vendor:
+                drive_Vendor = '[No Vendor]'
+
+
+            drive_ConnectionBus = str(settings_dict['ConnectionBus'])
+            if not drive_ConnectionBus:
+                drive_ConnectionBus = '[Internal]'
+
+
+            drive_dict = {
+                'Id' : str(settings_dict['Id']),
+                'Vendor' : drive_Vendor,
+                'Model' : str(settings_dict['Model']),
+                'Size' : int(settings_dict['Size']),
+                'ConnectionBus' : drive_ConnectionBus,
+                'Removable' : drive_Removable,
+                'CanPowerOff' : drive_CanPowerOff,
+            }
+
+
+            drive_list.append(drive_dict)
+
+
+        drive_list_sorted = sorted(drive_list, key=lambda x: x['CanPowerOff'], reverse=True)
+
+
+        drive_entries = list()
+        for drive in drive_list_sorted:
+            desc = '{0:s} - {1:s} - {2:0.1f} GB - {3:s}'.format(drive['Vendor'], drive['Model'], float(drive['Size']) / 1024 / 1024 / 1024, drive['ConnectionBus'])
+
+            drive_entries.append((drive['Id'], desc))
+
+
+        if not drive_entries:
+            drive_entries.append(('', 'No Removable Drives'))
+
+        return drive_entries
+
+
+    def getDevices(self, mounted=True):
+        bus = dbus.SystemBus()
+
+
+        try:
+            nm_udisks2 = bus.get_object(
+                "org.freedesktop.UDisks2",
+                "/org/freedesktop/UDisks2")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return [(
+                '', 'D-Bus Exception: {0:s}'.format(str(e))
+            )]
+
+        iface = dbus.Interface(
+            nm_udisks2,
+            'org.freedesktop.DBus.ObjectManager')
+
+
+        objects = iface.GetManagedObjects()
+
+        device_list = list()
+        for object_path, object_info in objects.items():
+            if not object_path.startswith('/org/freedesktop/UDisks2/block_devices/'):
+                continue
+
+
+            if 'org.freedesktop.UDisks2.Filesystem' not in object_info:
+                continue
+
+
+            settings = bus.get_object(
+                "org.freedesktop.UDisks2",
+                object_path)
+
+            settings_connection = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.DBus.Properties')
+
+            settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Block')
+
+            #for k in object_info.keys():
+            #    app.logger.info('Key: %s', k)
+
+            #app.logger.info('Info: %s', object_info)
+            device_dict = {
+                'Id' : str(settings_dict['Id']),
+                'Device' : "".join(chr(i) for i in settings_dict['Device'][:-1]),  # trim null char
+                'Drive' : str(object_info['org.freedesktop.UDisks2.Block']['Drive']),
+                # if the drive is abstracted or not defined "Drive" will be '/'
+            }
+
+
+            if len(object_info['org.freedesktop.UDisks2.Filesystem']['MountPoints']) > 0:
+                device_dict['MountPoints0'] = "".join(chr(i) for i in object_info['org.freedesktop.UDisks2.Filesystem']['MountPoints'][0][:-1])  # trim null char
+            else:
+                device_dict['MountPoints0'] = 'UNMOUNTED'
+
+
+            if device_dict['Drive'] != '/':
+                # lookup the drive
+                drive_objects = iface.GetManagedObjects()
+
+                for drive_object_path in drive_objects:
+                    if not drive_object_path.startswith('/org/freedesktop/UDisks2/drives/'):
+                        continue
+
+                    if drive_object_path != device_dict['Drive']:
+                        continue
+
+                    drive_settings = bus.get_object(
+                        "org.freedesktop.UDisks2",
+                        drive_object_path)
+
+                    drive_settings_connection = dbus.Interface(
+                        drive_settings,
+                        dbus_interface='org.freedesktop.DBus.Properties')
+
+
+                    drive_settings_dict = drive_settings_connection.GetAll('org.freedesktop.UDisks2.Drive')
+
+                    device_dict['Drive_Id'] = str(drive_settings_dict['Id'])
+
+                    break
+                else:
+                    # this should not happen
+                    device_dict['Drive_Id'] = 'Drive not found'
+            else:
+                device_dict['Drive_Id'] = ''
+
+
+            device_list.append(device_dict)
+
+
+        device_list_sorted = sorted(device_list, key=lambda x: x['Drive'], reverse=True)
+
+        device_entries = list()
+        for device in device_list_sorted:
+            desc = '{0:s} - [{1:s}] - {2:s}'.format(device['MountPoints0'], device['Device'], device['Drive_Id'])
+
+            device_entries.append((device['Id'], desc))
+
+
+        if not device_entries:
+            device_entries.append(('', 'No Devices'))
+
+        return device_entries
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):
