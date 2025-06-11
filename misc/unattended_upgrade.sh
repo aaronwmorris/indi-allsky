@@ -199,16 +199,6 @@ else
 fi
 
 
-# stop indi-allsky
-if systemctl --user --quiet is-active "${ALLSKY_SERVICE_NAME}.service" >/dev/null 2>&1; then
-    echo "*** Stopping indi-allsky ***"
-    ALLSKY_RUNNING="true"
-    systemctl --user stop "${ALLSKY_SERVICE_NAME}.service"
-else
-    ALLSKY_RUNNING="false"
-fi
-
-
 START_TIME=$(date +%s)
 
 
@@ -219,9 +209,36 @@ ALLSKY_DIRECTORY=$PWD
 cd "$OLDPWD" || catch_error
 
 
+if [ ! -f "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate" ]; then
+    echo
+    echo "indi-allsky virtualenv does not exist"
+    exit 1
+fi
+
+
+cd "$ALLSKY_DIRECTORY" || catch_error
+
+
+ALLSKY_GIT_BRANCH=$(git branch --show-current)
+if [ "$ALLSKY_GIT_BRANCH" != "main" ]; then
+    echo
+    echo "Not currently on main branch.  Exiting..."
+    exit 1
+fi
+
+
+# stop indi-allsky
+if systemctl --user --quiet is-active "${ALLSKY_SERVICE_NAME}.service" >/dev/null 2>&1; then
+    echo "*** Stopping indi-allsky ***"
+    ALLSKY_RUNNING="true"
+    systemctl --user stop "${ALLSKY_SERVICE_NAME}.service"
+else
+    ALLSKY_RUNNING="false"
+fi
+
+
 echo
 echo "*** Updating code from git repo ***"
-cd "$ALLSKY_DIRECTORY" || catch_error
 git pull origin main
 
 
@@ -722,13 +739,6 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
 
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
-    exit 1
-fi
-
-
-if [ ! -f "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate" ]; then
-    echo
-    echo "indi-allsky virtualenv does not exist"
     exit 1
 fi
 
