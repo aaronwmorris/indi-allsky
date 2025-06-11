@@ -219,6 +219,15 @@ fi
 cd "$ALLSKY_DIRECTORY" || catch_error
 
 
+if ! git diff --quiet --exit-code >/dev/null 2>&1; then
+    echo
+    echo "Code modifications are active.  Exiting..."
+    echo
+    echo "You can reset the code using \"git reset --hard\" (WARNING: This will destroy any changes you have made)"
+    exit 1
+fi
+
+
 ALLSKY_GIT_BRANCH=$(git branch --show-current)
 if [ "$ALLSKY_GIT_BRANCH" != "main" ]; then
     echo
