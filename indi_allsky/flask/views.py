@@ -9146,13 +9146,17 @@ class AjaxDriveManagerView(BaseView):
 
 
         command = str(request.json['COMMAND'])
-        query_drive_id = str(request.json['DRIVE_ID'])
 
 
         if command == 'getmetadata':
+            query_drive_id = str(request.json['DRIVE_ID'])
             return self.getMetadata(query_drive_id)
         if command == 'poweroff':
+            query_drive_id = str(request.json['DRIVE_ID'])
             return self.powerOffDrive(query_drive_id)
+        if command == 'unmount':
+            query_device_id = str(request.json['DEVICE_ID'])
+            return self.unmountDevice(query_device_id)
         else:
             json_data = {
                 'failure-message' : 'Unknown command',
@@ -9297,6 +9301,66 @@ class AjaxDriveManagerView(BaseView):
 
         # fail if drive not found
         return jsonify({'failure-message' : 'Drive not found'}), 400
+
+
+    def unmountDevice(self, query_device_id):
+        bus = dbus.SystemBus()
+
+
+        nm_udisks2 = bus.get_object(
+            "org.freedesktop.UDisks2",
+            "/org/freedesktop/UDisks2")
+
+        iface = dbus.Interface(
+            nm_udisks2,
+            'org.freedesktop.DBus.ObjectManager')
+
+
+        object_paths = iface.GetManagedObjects()
+
+        for object_path in object_paths:
+            if not object_path.startswith('/org/freedesktop/UDisks2/block_devices/'):
+                continue
+
+
+            settings = bus.get_object(
+                "org.freedesktop.UDisks2",
+                object_path)
+
+            settings_connection = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.DBus.Properties')
+
+
+
+            settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Block')
+
+
+            device_id = str(settings_dict['Id'])
+            if query_device_id != device_id:
+                continue
+
+
+            fs_interface = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.UDisks2.Filesystem')
+
+
+            try:
+                fs_interface.Unmount({})
+            except dbus.exceptions.DBusException as e:
+                app.logger.error('D-Bus Exception: %s', str(e))
+                return jsonify({'failure-message' : str(e)}), 400
+
+
+            return_data = {
+                'success-message' : 'Unmount Successful'
+            }
+            return jsonify(return_data)
+
+
+        # fail if drive not found
+        return jsonify({'failure-message' : 'Device not found'}), 400
 
 
 class AstroPanelView(TemplateView):
