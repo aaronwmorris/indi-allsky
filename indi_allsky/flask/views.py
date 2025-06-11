@@ -9234,6 +9234,8 @@ class AjaxDriveManagerView(BaseView):
                 'Size' : '{0:0.1f} GB'.format(float(settings_dict['Size']) / 1024 / 1024 / 1024),
                 'ConnectionBus' : str(settings_dict['ConnectionBus']),
                 'Serial' : str(settings_dict['Serial']),
+                'Media' : str(settings_dict['Media']),
+                'MediaCompatibility' : ', '.join(str(x) for x in settings_dict['MediaCompatibility']),
                 'CanPowerOff' : bool(settings_dict['CanPowerOff']),
                 'Removable' : bool(settings_dict['Removable']),
                 'Ejectable' : bool(settings_dict['Ejectable']),
