@@ -6454,7 +6454,7 @@ class ImageProcessingView(TemplateView):
             'PROCESSING_SPLIT_SCREEN'        : False,
             'IMAGE_CALIBRATE_DARK'           : False,  # darks are almost always already applied
             'IMAGE_CALIBRATE_BPM'            : False,
-            'IMAGE_CALIBRATE_MANUAL_OFFSET'  : 0,
+            'IMAGE_CALIBRATE_MANUAL_OFFSET'  : self.indi_allsky_config.get('IMAGE_CALIBRATE_MANUAL_OFFSET', 0),
             'IMAGE_LABEL_TEMPLATE'           : self.indi_allsky_config.get('IMAGE_LABEL_TEMPLATE', ''),
             'IMAGE_EXTRA_TEXT'               : self.indi_allsky_config.get('IMAGE_EXTRA_TEXT'),
             'IMAGE_LABEL_SYSTEM'             : '',

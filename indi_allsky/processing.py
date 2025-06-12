@@ -798,8 +798,10 @@ class ImageProcessor(object):
 
                     i_ref.calibrated = True
             elif manual_offset:
-                logger.info('Applying manual offset: %d', manual_offset)
-                i_ref.hdulist[0].data = cv2.subtract(i_ref.hdulist[0].data, manual_offset)
+                manual_offset_scaled = int(manual_offset) >> (16 - self.max_bit_depth)
+                logger.info('Applying manual offset: %d', manual_offset_scaled)
+
+                i_ref.hdulist[0].data = cv2.subtract(i_ref.hdulist[0].data, manual_offset_scaled)
 
 
     def _apply_calibration(self, data, exposure, camera_id, image_bitpix):
