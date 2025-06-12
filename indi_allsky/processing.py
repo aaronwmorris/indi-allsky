@@ -790,8 +790,8 @@ class ImageProcessor(object):
 
             if self.libcamera_raw:
                 if libcamera_black_level:
-                    logger.info('Black level: %d', int(libcamera_black_level))
                     black_level_scaled = int(libcamera_black_level) >> (16 - self.max_bit_depth)
+                    logger.info('Black level (scaled): %d', black_level_scaled)
 
                     # use opencv to prevent underruns
                     i_ref.hdulist[0].data = cv2.subtract(i_ref.hdulist[0].data, black_level_scaled)
@@ -799,7 +799,7 @@ class ImageProcessor(object):
                     i_ref.calibrated = True
             elif manual_offset:
                 manual_offset_scaled = int(manual_offset) >> (16 - self.max_bit_depth)
-                logger.info('Applying manual offset: %d', manual_offset_scaled)
+                logger.info('Applying manual offset (scaled): %d', manual_offset_scaled)
 
                 i_ref.hdulist[0].data = cv2.subtract(i_ref.hdulist[0].data, manual_offset_scaled)
 
