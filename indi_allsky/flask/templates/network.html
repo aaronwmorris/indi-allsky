@@ -45,7 +45,7 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_connections.CONNECTIONS_SELECT.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-5">
             {{ form_connections.CONNECTIONS_SELECT(class='form-select bg-secondary') }}
             <div id="CONNECTIONS_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
             <div style="font-size:10px">* Indicates Auto-start</div>
@@ -61,7 +61,7 @@ var camera_id = {{ camera_id }};
             <button id="incpriority-button" class="btn btn-primary">+10 priority</button>
             <button id="decpriority-button" class="btn btn-secondary">-10 priority</button>
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-1">
             <input class="form-check-input" id="CONN_CONFIRM1" name="CONN_CONFIRM1" type="checkbox" value="y"> Confirm
         </div>
     </div>
@@ -82,14 +82,12 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_connections.WIFI_DEVICES_SELECT.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-5">
             {{ form_connections.WIFI_DEVICES_SELECT(class='form-select bg-secondary') }}
             <div id="WIFI_DEVICES_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-1">
             <button id="scan-button" class="btn btn-primary">Scan</button>
-        </div>
-        <div class="col-sm-5">
         </div>
     </div>
 
@@ -99,14 +97,12 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_connections.SSID_SELECT.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-5">
             {{ form_connections.SSID_SELECT(class='form-select bg-secondary') }}
             <div id="SSID_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-1">
             <button id="connect-button" class="btn btn-success">Connect</button>
-        </div>
-        <div class="col-sm-5">
         </div>
     </div>
 
@@ -114,11 +110,9 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_connections.SSID_PSK.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-5">
             {{ form_connections.SSID_PSK(class='form-control bg-secondary') }}
             <div id="SSID_PSK-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
         </div>
     </div>
 
@@ -126,11 +120,11 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_connections.SSID_PRIORITY.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-5">
             {{ form_connections.SSID_PRIORITY(class='form-control bg-secondary') }}
             <div id="SSID_PRIORITY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-2">
             Connection Priority
         </div>
     </div>
@@ -142,11 +136,9 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_connections.HOTSPOT_DEVICES_SELECT.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-5">
             {{ form_connections.HOTSPOT_DEVICES_SELECT(class='form-select bg-secondary') }}
             <div id="HOTSPOT_DEVICES_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
         </div>
     </div>
 
@@ -156,14 +148,12 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_connections.HOTSPOT_SSID.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-5">
             {{ form_connections.HOTSPOT_SSID(class='form-control bg-secondary') }}
             <div id="HOTSPOT_SSID-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-1">
             <button id="create-hotspot-button" class="btn btn-success">Create</button>
-        </div>
-        <div class="col-sm-5">
         </div>
     </div>
 
@@ -171,11 +161,9 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_connections.HOTSPOT_BAND.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-5">
             {{ form_connections.HOTSPOT_BAND(class='form-select bg-secondary') }}
             <div id="HOTSPOT_BAND-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
         </div>
     </div>
 
@@ -183,11 +171,9 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_connections.HOTSPOT_PSK.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-5">
             {{ form_connections.HOTSPOT_PSK(class='form-control bg-secondary') }}
             <div id="HOTSPOT_PSK-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">
         </div>
     </div>
 

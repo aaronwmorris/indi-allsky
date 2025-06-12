@@ -8,6 +8,10 @@ table, th, td {
   border: 1px solid black;
   border-collapse: collapse;
 }
+
+th, td {
+  padding: 3px;
+}
 </style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
@@ -29,7 +33,7 @@ var camera_id = {{ camera_id }};
     <th>Bin mode</th>
     <th>Temp</th>
     <th>ADU</th>
-    <th>Veiw</th>
+    <th>View</th>
     <th>File</th>
 </tr>
 {% for dark in darkframe_list %}

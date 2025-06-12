@@ -776,6 +776,20 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CALIBRATE_MANUAL_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CALIBRATE_MANUAL_OFFSET(class='form-control bg-secondary') }}
+            <div id="IMAGE_CALIBRATE_MANUAL_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Some cameras need a manual offset (libcamera). Only applied if dark calibration is not active.</div>
+            <div>Example: imx477 the offset is 4096 (full 16-bit range)</div>
+        </div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -7516,6 +7530,7 @@ const field_names = [
     'CCD_EXPOSURE_MIN',
     'CCD_EXPOSURE_MIN_DAY',
     'CCD_BIT_DEPTH',
+    'IMAGE_CALIBRATE_MANUAL_OFFSET',
     'EXPOSURE_PERIOD',
     'EXPOSURE_PERIOD_DAY',
     'FOCUS_DELAY',
