@@ -100,6 +100,7 @@ function closeFullscreen() {
             {{ form_longterm_keogram.OFFSET_SELECT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-1">
+            {{ form_longterm_keogram.REVERSE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Long-Term-Keogram" class="text-decoration-none link-info" target="_blank">Long Term Keogram Wiki</a></div>
@@ -122,9 +123,10 @@ function closeFullscreen() {
             {{ form_longterm_keogram.OFFSET_SELECT(class='form-select bg-secondary') }}
         </div>
         <div class="col-sm-1">
-            <button id="generate-button" class="btn btn-success">Generate</button>
+            {{ form_longterm_keogram.REVERSE(class='form-check-input') }}
         </div>
         <div class="col-sm-1">
+            <button id="generate-button" class="btn btn-success">Generate</button>
         </div>
     </div>
 </form>
@@ -169,6 +171,7 @@ $( document ).ready(function() {
             page_settings["pixels_per_day"] = $("#PIXELS_SELECT").val();
             page_settings["alignment_seconds"] = $("#ALIGNMENT_SELECT").val();
             page_settings["offset_seconds"] = $("#OFFSET_SELECT").val();
+            page_settings["reverse"] = $("#REVERSE").prop('checked');
 
             localStorage.setItem("longterm_keogram_settings", JSON.stringify(page_settings));
         }
@@ -192,6 +195,12 @@ $( document ).ready(function() {
 
     if(typeof page_settings["offset_seconds"] !== "undefined") {
         $("#OFFSET_SELECT").val(page_settings["offset_seconds"]);
+    }
+
+    if(typeof page_settings["reverse"] !== "undefined") {
+        if (page_settings["reverse"]) {
+            $("#REVERSE").prop('checked', true);
+        }
     }
 
 
@@ -233,6 +242,7 @@ $('#form_longterm_keogram').on('submit', function() {
         'PIXELS_SELECT' : $('#PIXELS_SELECT').val(),
         'ALIGNMENT_SELECT' : $('#ALIGNMENT_SELECT').val(),
         'OFFSET_SELECT' : $('#OFFSET_SELECT').val(),
+        'REVERSE' : $('#REVERSE').prop('checked'),
     }
 
 
@@ -242,6 +252,7 @@ $('#form_longterm_keogram').on('submit', function() {
         page_settings["pixels_per_day"] = form_data['PIXELS_SELECT'];
         page_settings["alignment_seconds"] = form_data['ALIGNMENT_SELECT'];
         page_settings["offset_seconds"] = form_data['OFFSET_SELECT'];
+        page_settings["reverse"] = form_data['REVERSE'];
         localStorage.setItem("longterm_keogram_settings", JSON.stringify(page_settings));
     }
 
