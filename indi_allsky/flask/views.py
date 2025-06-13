@@ -8146,7 +8146,7 @@ class JsonLongTermKeogramView(JsonView):
 
 
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
-            query_limit = 50000  # limit memory impact on database
+            query_limit = 300000  # limit memory impact on database
         else:
             # assume sqlite
             query_limit = 300000
