@@ -235,6 +235,10 @@ class YearKeogramTest(object):
         #logger.info(keogram_data[0:3])
 
 
+        # sanity check
+        keogram_data = numpy.clip(keogram_data, 0, 255)
+
+
         keogram_height, keogram_width = keogram_data.shape[:2]
         #keogram_data = cv2.resize(keogram_data, (keogram_width, keogram_height * 3), interpolation=cv2.INTER_AREA)
         cv2.imwrite(Path(__file__).parent.joinpath('year.jpg'), keogram_data, [cv2.IMWRITE_JPEG_QUALITY, 90])
