@@ -8037,6 +8037,7 @@ class JsonLongTermKeogramView(JsonView):
         period_pixels = int(request.json['PIXELS_SELECT'])
         alignment_seconds = int(request.json['ALIGNMENT_SELECT'])
         offset_seconds = int(request.json['OFFSET_SELECT'])
+        reverse = bool(request.json['REVERSE'])
 
 
         if query_days > 2000:
@@ -8144,7 +8145,12 @@ class JsonLongTermKeogramView(JsonView):
         #app.logger.info('Rows: %d', q.count())
 
 
-        query_limit = 300000  # limit memory impact on database
+        if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+            query_limit = 300000  # limit memory impact on database
+        else:
+            # assume sqlite
+            query_limit = 300000
+
 
         i = 0
         while i % query_limit == 0:
@@ -8181,13 +8187,17 @@ class JsonLongTermKeogramView(JsonView):
 
 
         keogram_data = numpy.reshape(numpy_data, ((total_days * period_pixels), periods_per_day, 3))
-        keogram_data = numpy.flip(keogram_data, axis=0)  # newer data at top
         #app.logger.info(keogram_data.shape)
 
 
+        if not reverse:
+            keogram_data = numpy.flip(keogram_data, axis=0)  # newer data at top
+
+
         # sanity check
-        keogram_data[keogram_data < 0] = 0
-        keogram_data[keogram_data > 255] = 255
+        keogram_data = numpy.clip(keogram_data, 0, 255)
+        #keogram_data[keogram_data < 0] = 0
+        #keogram_data[keogram_data > 255] = 255
 
 
         png_compression = self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 5)

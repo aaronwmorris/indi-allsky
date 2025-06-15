@@ -7143,6 +7143,7 @@ class IndiAllskyLongTermKeogramForm(FlaskForm):
     PIXELS_SELECT           = SelectField('Pixels per Day', choices=PIXELS_SELECT_choices, default=PIXELS_SELECT_choices[4][0], validators=[DataRequired()])
     ALIGNMENT_SELECT        = SelectField('Alignment', choices=ALIGNMENT_SELECT_choices, default=ALIGNMENT_SELECT_choices[4][0], validators=[DataRequired()])
     OFFSET_SELECT           = SelectField('Hour Offset', choices=OFFSET_SELECT_choices, default=OFFSET_SELECT_choices[12][0], validators=[DataRequired()])
+    REVERSE                 = BooleanField('Reverse')
 
 
 class IndiAllskyNetworkManagerForm(FlaskForm):
