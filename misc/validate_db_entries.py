@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+#############################################################
+# This script validates all images and video entries in the #
+# database.  Any entries with missing files will be pruned  #
+#############################################################
+
 
 import os
 import sys

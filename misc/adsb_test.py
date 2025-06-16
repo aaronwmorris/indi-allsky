@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+########################################################
+# This script validates the ADSB functionality         #
+########################################################
 
 import sys
 from pathlib import Path

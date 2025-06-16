@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+#######################################################################################
+# The purpose of this script is to expire images on remote systems where the capture  #
+# process is not running such as systems receiving images via the SyncAPI.  The       #
+# capture process on the local system will automatically expire images according to   #
+# the configuration settings.                                                         #
+#######################################################################################
 
 import os
 import sys

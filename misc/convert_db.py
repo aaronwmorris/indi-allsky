@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#####################################################################
+# This script may be used to assist in converting a SQLite database #
+# to MySQL/MariaDB (or the reverse)                                 #
+#####################################################################
 
 
 import sys

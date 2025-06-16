@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+##################################################################
+# This script applies the camera configuration and takes several #
+# test exposures to validate the camera is working               #
+##################################################################
 
 import os
 import sys
