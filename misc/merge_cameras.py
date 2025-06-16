@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#########################################################
+# This script changes the camera foreign key associated #
+# with all images and videos to a different camera      #
+#########################################################
 
 import os
 import sys

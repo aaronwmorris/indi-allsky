@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#########################################################
+# This script validates the file transfer configuration #
+# is valid and working                                  #
+#########################################################
 
 
 import os

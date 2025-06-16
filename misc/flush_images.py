@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+###########################################################
+# This script will flush all images and videos recorded   #
+# in the # database.  THERE IS NO WAY TO RECOVER          #
+###########################################################
 
 import os
 import sys

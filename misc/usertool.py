@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#############################################################
+# This is the user management script for indi-allsky        #
+# New users may be provisioned and passwords reset          #
+#############################################################
 
 import os
 import sys

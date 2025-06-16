@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#######################################################
+# This script shows the owner and permissions of the  #
+# image folder and all parent folders                 #
+#######################################################
 
 import os
 import sys

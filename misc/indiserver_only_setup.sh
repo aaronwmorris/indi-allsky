@@ -1,4 +1,8 @@
 #!/bin/bash
+#################################################################
+# This script performs the setup necessary to support a remote  #
+# indiserver with no capture process running                    #
+#################################################################
 
 #set -x  # command tracing
 set -o errexit  # replace by trapping ERR

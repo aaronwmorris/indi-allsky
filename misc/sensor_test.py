@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+######################################################
+# This script initializes and validates external     #
+# temperature/light/etc sensors are functional       #
+######################################################
 
 import os
 import sys

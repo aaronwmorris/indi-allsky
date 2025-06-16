@@ -3,12 +3,12 @@
 # This script updates the aurora and                    #
 # smoke data for all active cameras in                  #
 # the database.  This can be used in remote             #
-# indi-allsky installations                             #
+# indi-allsky installations using the SyncAPI           #
 #########################################################
 
 
-# Example:  7 minutes past every hour
-# 7 * * * * /home/pi/indi-allsky/virtualenv/indi-allsky/bin/python3 /home/pi/indi-allsky/misc/aurora_cron.py >/dev/null 2>&1
+# Example:  7 and 37 minutes past every hour
+# 7,37 * * * * /home/pi/indi-allsky/virtualenv/indi-allsky/bin/python3 /home/pi/indi-allsky/misc/aurora_cron.py >/dev/null 2>&1
 
 
 import os
