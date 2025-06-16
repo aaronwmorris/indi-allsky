@@ -43,7 +43,7 @@ from indi_allsky.exceptions import CameraException
 
 # setup flask context for db access
 app = create_app()
-app.app_context().push()
+#app.app_context().push()
 
 
 logger = logging.getLogger('indi_allsky')
@@ -58,12 +58,13 @@ logger.addHandler(LOG_HANDLER_STREAM)
 class CameraTest(object):
 
     def __init__(self):
-        try:
-            self._config_obj = IndiAllSkyConfig()
-            #logger.info('Loaded config id: %d', self._config_obj.config_id)
-        except NoResultFound:
-            logger.error('No config file found, please import a config')
-            sys.exit(1)
+        with app.app_context():
+            try:
+                self._config_obj = IndiAllSkyConfig()
+                #logger.info('Loaded config id: %d', self._config_obj.config_id)
+            except NoResultFound:
+                logger.error('No config file found, please import a config')
+                sys.exit(1)
 
         self.config = self._config_obj.config
 
@@ -136,7 +137,7 @@ class CameraTest(object):
 
 
         try:
-            i_dict = self.image_q.get(timeout=10)  # prime number
+            i_dict = self.image_q.get(timeout=10)
         except queue.Empty:
             logger.error('Frame not received in 10 seconds')
             sys.exit(1)
@@ -210,20 +211,21 @@ class CameraTest(object):
 
         camera_name = self.indiclient.ccd_device.getDeviceName()
 
-        try:
-            # not catching MultipleResultsFound
-            camera = IndiAllSkyDbCameraTable.query\
-                .filter(
-                    or_(
-                        IndiAllSkyDbCameraTable.name == camera_name,
-                        IndiAllSkyDbCameraTable.name_alt1 == camera_name,
-                        IndiAllSkyDbCameraTable.name_alt2 == camera_name,
-                    )
-                )\
-                .one()
-        except NoResultFound:
-            logger.error('Camera not found in database: %s', camera_name)
-            sys.exit(1)
+        with app.app_context():
+            try:
+                # not catching MultipleResultsFound
+                camera = IndiAllSkyDbCameraTable.query\
+                    .filter(
+                        or_(
+                            IndiAllSkyDbCameraTable.name == camera_name,
+                            IndiAllSkyDbCameraTable.name_alt1 == camera_name,
+                            IndiAllSkyDbCameraTable.name_alt2 == camera_name,
+                        )
+                    )\
+                    .one()
+            except NoResultFound:
+                logger.error('Camera not found in database: %s', camera_name)
+                sys.exit(1)
 
 
         # configuration needs to be performed before getting CCD_INFO
