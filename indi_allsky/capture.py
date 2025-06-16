@@ -275,7 +275,7 @@ class CaptureWorker(Process):
         exposure_aborted = False
         last_camera_ready = False
         exposure_state = 'unset'
-        check_exposure_state = time.time() + 300  # check in 5 minutes
+        next_check_exposure_state = time.time() + 300  # check in 5 minutes
 
         self.reconfigure_camera = True  # reconfigure on first run
 
@@ -482,8 +482,8 @@ class CaptureWorker(Process):
 
 
                 # check exposure state every 5 minutes
-                if check_exposure_state < loop_start_time:
-                    check_exposure_state = time.time() + 300  # next check in 5 minutes
+                if next_check_exposure_state < loop_start_time:
+                    next_check_exposure_state = time.time() + 300  # next check in 5 minutes
 
                     camera_last_ready_s = int(loop_start_time - camera_ready_time)
                     if camera_last_ready_s > 300:
