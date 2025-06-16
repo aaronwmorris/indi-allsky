@@ -1,4 +1,7 @@
 #!/bin/bash
+############################################################
+# This script builds INDIlib from source code from GitHub  #
+############################################################
 
 #set -x  # command tracing
 set -o errexit

@@ -1,4 +1,8 @@
 #!/bin/bash
+############################################################
+# This script builds libcamera and rpicam-apps from source #
+# code from GitHub                                         #
+############################################################
 
 #set -x  # command tracing
 set -o errexit

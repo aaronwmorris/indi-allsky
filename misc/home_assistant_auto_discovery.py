@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+#############################################################
+# This script adds the MQTT auto-discovery configuration    #
+# and topcs to your broker for Home Assistant to read       #
+# published data                                            #
+#############################################################
 
 import os
 import sys

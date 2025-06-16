@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+############################################################
+# This script inserts notifications into the indi-allsky   #
+# database                                                 #
+############################################################
 
 import os
 import sys

@@ -1,4 +1,8 @@
 #!/bin/bash
+###############################################################
+# This script sets up a web-only instance of indi-allsky for  #
+# the the remote server of the SyncAPI                        #
+###############################################################
 
 #set -x  # command tracing
 #set -o errexit  # replace by trapping ERR
