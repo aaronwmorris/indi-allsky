@@ -109,7 +109,7 @@ class CameraTest(object):
         self._initialize()
 
 
-        logger.warning('Taking 0.1s exposure with day settings')
+        logger.warning('TESTING 0.1s EXPOSURE WITH DAY SETTINGS')
         self.night = False
         self.moonmode = False
         self.reconfigureCcd()
@@ -117,7 +117,7 @@ class CameraTest(object):
         self.takeExposure(0.1)
 
 
-        logger.warning('Taking 1s exposure with night settings')
+        logger.warning('TESTING 1.0s EXPOSURE WITH NIGHT SETTINGS')
         self.night = True
         self.moonmode = False
         self.reconfigureCcd()
@@ -125,7 +125,7 @@ class CameraTest(object):
         self.takeExposure(1.0)
 
 
-        logger.warning('Taking 1s exposure with moon mode settings')
+        logger.warning('TESTING 1.0s EXPOSURE WITH MOON MODE SETTINGS')
         self.night = True
         self.moonmode = True
         self.reconfigureCcd()
