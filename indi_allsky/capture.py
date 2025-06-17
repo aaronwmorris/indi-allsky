@@ -275,7 +275,7 @@ class CaptureWorker(Process):
         exposure_aborted = False
         last_camera_ready = False
         exposure_state = 'unset'
-        check_exposure_state = time.time() + 300  # check in 5 minutes
+        next_check_exposure_state = time.time() + 300  # check in 5 minutes
 
         self.reconfigure_camera = True  # reconfigure on first run
 
@@ -359,6 +359,9 @@ class CaptureWorker(Process):
                         self._generateNightTimelapse(timespec, self.camera_id)
                         self._uploadAllskyEndOfNight(self.camera_id)
 
+                        # prevent duplicate generation until reconfigureCcd() is called
+                        self.generate_timelapse_flag = False
+
                     elif self.night and self.generate_timelapse_flag:
                         self._expireData(self.camera_id)  # cleanup old images and folders
 
@@ -367,6 +370,9 @@ class CaptureWorker(Process):
                         timespec = today_ref.strftime('%Y%m%d')
                         self._generateDayKeogram(timespec, self.camera_id)  # keogram/st first
                         self._generateDayTimelapse(timespec, self.camera_id)
+
+                        # prevent duplicate generation until reconfigureCcd() is called
+                        self.generate_timelapse_flag = False
 
                 elif self.night and bool(self.moonmode_v.value) != self.moonmode:
                     # Switch between night non-moonmode and moonmode
@@ -405,6 +411,9 @@ class CaptureWorker(Process):
                         self._generateDayTimelapse(timespec, self.camera_id)
                         self._expireData(self.camera_id)  # cleanup old images and folders
 
+                        # prevent duplicate generation until reconfigureCcd() is called
+                        self.generate_timelapse_flag = False
+
                     elif self.night and self.generate_timelapse_flag:
                         self._expireData(self.camera_id)  # cleanup old images and folders
 
@@ -415,16 +424,8 @@ class CaptureWorker(Process):
                         self._generateNightTimelapse(timespec, self.camera_id)
                         self._uploadAllskyEndOfNight(self.camera_id)
 
-
-                if self.night:
-                    # always indicate timelapse generation at night
-                    self.generate_timelapse_flag = True
-                else:
-                    # day
-                    if not self.config.get('DAYTIME_CAPTURE') or not self.config.get('DAYTIME_CAPTURE_SAVE', True):
+                        # prevent duplicate generation until reconfigureCcd() is called
                         self.generate_timelapse_flag = False
-                    else:
-                        self.generate_timelapse_flag = True
 
 
                 #logger.warning(
@@ -482,8 +483,8 @@ class CaptureWorker(Process):
 
 
                 # check exposure state every 5 minutes
-                if check_exposure_state < loop_start_time:
-                    check_exposure_state = time.time() + 300  # next check in 5 minutes
+                if next_check_exposure_state < loop_start_time:
+                    next_check_exposure_state = time.time() + 300  # next check in 5 minutes
 
                     camera_last_ready_s = int(loop_start_time - camera_ready_time)
                     if camera_last_ready_s > 300:
@@ -1401,6 +1402,10 @@ class CaptureWorker(Process):
 
 
         if self.night:
+            # always indicate timelapse generation at night
+            self.generate_timelapse_flag = True
+
+
             self.indi_config = self.config['INDI_CONFIG_DEFAULTS']
 
             # cooling
@@ -1429,10 +1434,19 @@ class CaptureWorker(Process):
         else:
             logger.warning('Change to day')
 
+
+            if not self.config.get('DAYTIME_CAPTURE') or not self.config.get('DAYTIME_CAPTURE_SAVE', True):
+                self.generate_timelapse_flag = False
+            else:
+                self.generate_timelapse_flag = True
+
+
+
             if self.config.get('INDI_CONFIG_DAY', {}):
                 self.indi_config = self.config['INDI_CONFIG_DAY']
             else:
                 self.indi_config = self.config['INDI_CONFIG_DEFAULTS']
+
 
             self.indiclient.disableCcdCooler()
             self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
