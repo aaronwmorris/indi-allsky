@@ -202,6 +202,7 @@ var camera_id = {{ camera_id }};
             <div>Maximum Exposure permitted: <b>{{ "%0.1f" | format(camera_maxExposure | float) }}s</b></div>
         </div>
     </div>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.CCD_EXPOSURE_DEF.label(class='col-form-label') }}
@@ -227,6 +228,7 @@ var camera_id = {{ camera_id }};
             <div>Minimum Exposure permitted: <b>{{ "%0.6f" | format(camera_minExposure | float) }}s</b></div>
         </div>
     </div>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.CCD_EXPOSURE_MIN_DAY.label(class='col-form-label') }}
@@ -264,6 +266,19 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">
             <div>Seconds between start of each frame (Day)</div>
             <div>It is not recommended to set this below 5.0</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_TIMEOUT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_EXPOSURE_TIMEOUT(class='form-control bg-secondary') }}
+            <div id="CCD_EXPOSURE_TIMEOUT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Maximum seconds to wait for an exposure to finish before aborting</div>
         </div>
     </div>
 
@@ -7529,6 +7544,7 @@ const field_names = [
     'CCD_EXPOSURE_DEF',
     'CCD_EXPOSURE_MIN',
     'CCD_EXPOSURE_MIN_DAY',
+    'CCD_EXPOSURE_TIMEOUT',
     'CCD_BIT_DEPTH',
     'IMAGE_CALIBRATE_MANUAL_OFFSET',
     'EXPOSURE_PERIOD',

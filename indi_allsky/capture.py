@@ -201,6 +201,8 @@ class CaptureWorker(Process):
         self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
         #self.periodic_tasks_time = time.time()  # testing
 
+        self.exposure_timeout = self.config.get('CCD_EXPOSURE_TIMEOUT', 300)
+
 
         if self.config['IMAGE_FOLDER']:
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
@@ -275,7 +277,7 @@ class CaptureWorker(Process):
         exposure_aborted = False
         last_camera_ready = False
         exposure_state = 'unset'
-        next_check_exposure_state = time.time() + 300  # check in 5 minutes
+        next_check_exposure_state = time.time() + self.exposure_timeout
 
         self.reconfigure_camera = True  # reconfigure on first run
 
@@ -484,10 +486,10 @@ class CaptureWorker(Process):
 
                 # check exposure state every 5 minutes
                 if next_check_exposure_state < loop_start_time:
-                    next_check_exposure_state = time.time() + 300  # next check in 5 minutes
+                    next_check_exposure_state = time.time() + self.exposure_timeout
 
                     camera_last_ready_s = int(loop_start_time - camera_ready_time)
-                    if camera_last_ready_s > 300:
+                    if camera_last_ready_s > self.exposure_timeout:
                         self._miscDb.addNotification(
                             NotificationCategory.CAMERA,
                             'last_ready',

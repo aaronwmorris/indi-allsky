@@ -73,6 +73,7 @@ class IndiAllSkyConfigBase(object):
         "CCD_EXPOSURE_DEF"     : 0.0,
         "CCD_EXPOSURE_MIN"     : 0.0,
         "CCD_EXPOSURE_MIN_DAY" : 0.0,
+        "CCD_EXPOSURE_TIMEOUT" : 300,
         "CCD_BIT_DEPTH"        : 0,  # 0 is auto
         "EXPOSURE_PERIOD"      : 15.00000,
         "EXPOSURE_PERIOD_DAY"  : 15.00000,
