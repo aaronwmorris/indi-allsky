@@ -224,6 +224,14 @@ def CCD_EXPOSURE_MIN_validator(form, field):
         raise ValidationError('Minimum Exposure cannot be more than 120')
 
 
+def CCD_EXPOSURE_TIMEOUT_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 120:
+        raise ValidationError('Timeout must be 120 or more')
+
+
 def EXPOSURE_PERIOD_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -3563,6 +3571,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_DEF_validator])
     CCD_EXPOSURE_MIN                 = FloatField('Min Exposure (Night)', validators=[CCD_EXPOSURE_MIN_validator])
     CCD_EXPOSURE_MIN_DAY             = FloatField('Min Exposure (Day)', validators=[CCD_EXPOSURE_MIN_validator])
+    CCD_EXPOSURE_TIMEOUT             = IntegerField('Exposure Timeout', validators=[CCD_EXPOSURE_TIMEOUT_validator])
     CCD_BIT_DEPTH                    = SelectField('Camera Bit Depth', choices=CCD_BIT_DEPTH_choices, validators=[CCD_BIT_DEPTH_validator])
     EXPOSURE_PERIOD                  = FloatField('Exposure Period (Night)', validators=[DataRequired(), EXPOSURE_PERIOD_validator])
     EXPOSURE_PERIOD_DAY              = FloatField('Exposure Period (Day)', validators=[DataRequired(), EXPOSURE_PERIOD_DAY_validator])
