@@ -275,7 +275,7 @@ class IndiAllSky(object):
 
 
     def _startup(self):
-        now = time.time()
+        now_time = time.time()
 
 
         try:
@@ -295,7 +295,7 @@ class IndiAllSky(object):
             )
 
 
-        self._miscDb.setState('WATCHDOG', int(now))
+        self._miscDb.setState('WATCHDOG', int(now_time))
         self._miscDb.setState('STATUS', constants.STATUS_STARTING)
 
         logger.info('indi-allsky release: %s', str(__version__))

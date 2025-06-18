@@ -21,7 +21,10 @@ if 'VIRTUAL_ENV' not in os.environ:
 
 
 import argparse
+import platform
+import io
 import time
+import psutil
 import logging
 
 import queue
@@ -38,6 +41,8 @@ sys.path.append(str(Path(__file__).parent.absolute().parent))
 from indi_allsky.flask import create_app
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky import camera as camera_module
+from indi_allsky.version import __version__
+from indi_allsky.version import __config_level__
 
 from indi_allsky.flask.models import IndiAllSkyDbCameraTable
 
@@ -106,6 +111,8 @@ class CameraTest(object):
 
 
     def main(self):
+        self._startup()
+
         self._initialize()
 
 
@@ -179,6 +186,50 @@ class CameraTest(object):
         logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
 
         self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
+
+
+    def _startup(self):
+        logger.info('indi-allsky release: %s', str(__version__))
+        logger.info('indi-allsky config level: %s', str(__config_level__))
+
+        logger.info('Python version: %s', platform.python_version())
+        logger.info('Platform: %s', platform.machine())
+        logger.info('System Type: %s', self._getSystemType())
+
+        logger.info('System CPUs: %d', psutil.cpu_count())
+
+        memory_info = psutil.virtual_memory()
+        memory_total_mb = int(memory_info[0] / 1024.0 / 1024.0)
+
+        logger.info('System memory: %d MB', memory_total_mb)
+
+        uptime_s = time.time() - psutil.boot_time()
+        logger.info('System uptime: %ds', uptime_s)
+
+
+    def _getSystemType(self):
+        # This is available for SBCs and systems using device trees
+        model_p = Path('/proc/device-tree/model')
+
+        try:
+            if model_p.exists():
+                with io.open(str(model_p), 'r') as f:
+                    system_type = f.readline()  # only first line
+            else:
+                return 'Generic PC'
+        except PermissionError as e:
+            app.logger.error('Permission error: %s', str(e))
+            return 'Unknown'
+
+
+        system_type = system_type.strip()
+
+
+        if not system_type:
+            return 'Unknown'
+
+
+        return str(system_type)
 
 
     def _initialize(self):
