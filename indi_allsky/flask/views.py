@@ -54,7 +54,6 @@ from .models import IndiAllSkyDbFitsImageTable
 from .models import IndiAllSkyDbPanoramaImageTable
 from .models import IndiAllSkyDbPanoramaVideoTable
 from .models import IndiAllSkyDbThumbnailTable
-from .models import IndiAllSkyDbLongTermKeogramTable
 from .models import IndiAllSkyDbTaskQueueTable
 from .models import IndiAllSkyDbNotificationTable
 from .models import IndiAllSkyDbUserTable
@@ -8020,7 +8019,6 @@ class JsonLongTermKeogramView(JsonView):
 
 
     def dispatch_request(self):
-        import numpy
         import cv2
         from PIL import Image
 
@@ -8065,8 +8063,6 @@ class JsonLongTermKeogramView(JsonView):
 
         keogram_start = time.time()
 
-        periods_per_day = int(86400 / alignment_seconds)
-
         if end == 'today':
             tomorrow = datetime.now() + timedelta(hours=24)  # need to start noon tomorrow
             query_end_date = datetime.strptime(tomorrow.strftime('%Y%m%d_120000'), '%Y%m%d_%H%M%S')
@@ -8086,118 +8082,16 @@ class JsonLongTermKeogramView(JsonView):
             return jsonify(json_data), 400
 
 
-        if query_days == 42:
-            # special condition to show all available data
-            first_entry = db.session.query(
-                IndiAllSkyDbLongTermKeogramTable.ts,
-            )\
-                .join(IndiAllSkyDbCameraTable)\
-                .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-                .order_by(IndiAllSkyDbLongTermKeogramTable.ts.asc())\
-                .first()
+        from ..longTermKeogram import LongTermKeogramGenerator
+        ltg_gen = LongTermKeogramGenerator()
+        ltg_gen.camera_id = camera_id
+        ltg_gen.days = query_days
+        ltg_gen.alignment_seconds = alignment_seconds
+        ltg_gen.offset_seconds = offset_seconds
+        ltg_gen.period_pixels = period_pixels
+        ltg_gen.reverse = reverse
 
-
-            first_date = datetime.fromtimestamp(first_entry.ts)
-            query_start_date = datetime.strptime(first_date.strftime('%Y%m%d_120000'), '%Y%m%d_%H%M%S')
-
-
-        query_start_ts = query_start_date.timestamp() - offset_seconds  # subtract offset
-        query_end_ts = query_end_date.timestamp() - offset_seconds
-
-
-        total_days = math.ceil((query_end_ts - query_start_ts) / 86400)
-
-        query_start_offset = int(query_start_ts / alignment_seconds)
-
-
-
-        ltk_interval = func.floor(IndiAllSkyDbLongTermKeogramTable.ts / alignment_seconds).label('interval')
-
-        q = db.session.query(
-            ltk_interval,
-            func.avg(IndiAllSkyDbLongTermKeogramTable.r1).label('r1_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.b1).label('b1_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.g1).label('g1_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.r2).label('r2_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.b2).label('b2_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.g2).label('g2_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.r3).label('r3_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.b3).label('b3_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.g3).label('g3_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.r4).label('r4_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.b4).label('b4_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.g4).label('g4_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.r5).label('r5_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.b5).label('b5_avg'),
-            func.avg(IndiAllSkyDbLongTermKeogramTable.g5).label('g5_avg'),
-        )\
-            .join(IndiAllSkyDbCameraTable)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .filter(IndiAllSkyDbLongTermKeogramTable.ts >= query_start_ts)\
-            .filter(IndiAllSkyDbLongTermKeogramTable.ts < query_end_ts)\
-            .group_by(ltk_interval)
-
-        ### order is unnecessary
-        #    .order_by(ltk_interval.asc())
-
-
-        numpy_data = numpy.zeros(((periods_per_day * total_days) * period_pixels, 1, 3), dtype=numpy.uint8)
-        #app.logger.info('Rows: %d', q.count())
-
-
-        if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
-            query_limit = 300000  # limit memory impact on database
-        else:
-            # assume sqlite
-            query_limit = 300000
-
-
-        i = 0
-        while i % query_limit == 0:
-            q_offset = q.offset(i).limit(query_limit)
-
-            for row in q_offset:
-                second_offset = row.interval - query_start_offset
-                day = int(second_offset / periods_per_day)
-                index = second_offset + (day * (periods_per_day * (period_pixels - 1)))
-
-                if period_pixels == 5:
-                    numpy_data[index + (periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
-                    numpy_data[index + (periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
-                    numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                    numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
-
-                elif period_pixels == 4:
-                    numpy_data[index + (periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
-                    numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                    numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
-
-                elif period_pixels == 3:
-                    numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                    numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
-
-                elif period_pixels == 2:
-                    numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
-
-
-                # always add 1 row
-                numpy_data[index] = row.b1_avg, row.g1_avg, row.r1_avg
-
-                i += 1
-
-
-        keogram_data = numpy.reshape(numpy_data, ((total_days * period_pixels), periods_per_day, 3))
-        #app.logger.info(keogram_data.shape)
-
-
-        if not reverse:
-            keogram_data = numpy.flip(keogram_data, axis=0)  # newer data at top
-
-
-        # sanity check
-        keogram_data = numpy.clip(keogram_data, 0, 255)
-        #keogram_data[keogram_data < 0] = 0
-        #keogram_data[keogram_data > 255] = 255
+        keogram_data = ltg_gen.generate(query_start_date, query_end_date)
 
 
         png_compression = self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 5)
