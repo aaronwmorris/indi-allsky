@@ -4914,7 +4914,9 @@ class AjaxSystemInfoView(BaseView):
                     priority=100,
                     data={
                         'action' : 'expireData',
-                        'kwargs' : {},
+                        'kwargs' : {
+                            'camera_id' : camera_id,
+                        },
                     },
                 )
 
