@@ -633,22 +633,6 @@ $('#form_settime').on('submit', function() {
 <hr>
 
 <div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-2">Database Backup</div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="BACKUP_DB_CONFIRM1" name="BACKUP_DB_CONFIRM1" type="checkbox" value="y"> Confirm 1
-    </div>
-    <div class="col-sm-2">
-        <button class="btn btn-info" id="button_backup_db">Backup DB</button>
-    </div>
-    <div class="col-sm-2">
-        <input class="form-check-input" id="BACKUP_DB_CONFIRM2" name="BACKUP_DB_CONFIRM2" type="checkbox" value="y"> Confirm 2
-    </div>
-</div>
-
-<hr>
-
-<div class="row">
     <div class="col-sm-2"><h4>Upgrade</h4></div>
 </div>
 
@@ -669,6 +653,23 @@ $('#form_settime').on('submit', function() {
 <hr>
 
 <div class="row">
+    <div class="col-sm-2"><h4>Backup</h4></div>
+</div>
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">Database Backup</div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="BACKUP_DB_CONFIRM1" name="BACKUP_DB_CONFIRM1" type="checkbox" value="y"> Confirm 1
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-info" id="button_backup_db">Backup DB</button>
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
     <div class="col-sm-2"><h4>Validation</h4></div>
 </div>
 
@@ -676,10 +677,30 @@ $('#form_settime').on('submit', function() {
     <div class="col-sm-2"></div>
     <div class="col-sm-2">Validate DB Entries<br><div style="font-size:10px">CLI: ./misc/validate_db_entries.py</div></div>
     <div class="col-sm-2">
-        <input class="form-check-input" id="VALIDATE_DB_CONFIRM" name="VALIDATE_DB_CONFIRM" type="checkbox" value="y"> Confirm
+        <input class="form-check-input" id="VALIDATE_DB_CONFIRM1" name="VALIDATE_DB_CONFIRM1" type="checkbox" value="y"> Confirm
     </div>
     <div class="col-sm-2">
         <button class="btn btn-primary" id="button_validate_db">Validate DB</button>
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
+    <div class="col-sm-2"><h4>Expire</h4></div>
+</div>
+
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">Expire Data<br><div style="font-size:10px">CLI: ./misc/expire_images.py</div></div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="EXPIRE_DATA_CONFIRM1" name="EXPIRE_DATA_CONFIRM1" type="checkbox" value="y"> Confirm
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-warning" id="button_expire_data">Expire Data</button>
+    </div>
+    <div class="col-sm-2">
+        <div>This task is automatically run twice a day, but you may submit a manual task here</div>
     </div>
 </div>
 
@@ -815,11 +836,17 @@ function button_click(service, command) {
                 successMessage.css({'display' : 'none'});
             }, 30000);
 
-            $("#button_system_reboot").prop('disabled', false);
-            $("#button_system_shutdown").prop('disabled', false);
+            // Leave the button disabled
+            //$("#button_system_reboot").prop('disabled', false);
+            //$("#button_system_shutdown").prop('disabled', false);
+            //$("#button_system_upgrade").prop('disabled', false);
+            //$("#button_backup_db").prop('disabled', false);
+            //$("#button_expire_data").prop('disabled', false);
+
             $("#button_validate_db").prop('disabled', false);
             $("#button_flush_images").prop('disabled', false);
             $("#button_flush_timelapses").prop('disabled', false);
+            $("#button_flush_daytime").prop('disabled', false);
 
             $("#loader_shutdown").css({'display' : 'none'});
         },
@@ -926,19 +953,14 @@ $("#button_backup_db").on("click", function() {
         console.log('Backup DB checkbox not checked');
         return;
     }
-    if (! $("#BACKUP_DB_CONFIRM2").prop('checked')) {
-        console.log('Backup DB checkbox not checked');
-        return;
-    }
 
     $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_backup_db").prop('disabled', true);
 
     $("#BACKUP_DB_CONFIRM1").prop('checked', false);
-    $("#BACKUP_DB_CONFIRM2").prop('checked', false);
 
     button_click('system', 'backup_db');
 });
-
 
 
 $("#button_system_upgrade").on("click", function() {
@@ -952,6 +974,7 @@ $("#button_system_upgrade").on("click", function() {
     }
 
     $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_system_upgrade").prop('disabled', true);
 
     $("#UPGRADE_CONFIRM1").prop('checked', false);
     $("#UPGRADE_CONFIRM2").prop('checked', false);
@@ -961,7 +984,7 @@ $("#button_system_upgrade").on("click", function() {
 
 
 $("#button_validate_db").on("click", function() {
-    if (! $("#VALIDATE_DB_CONFIRM").prop('checked')) {
+    if (! $("#VALIDATE_DB_CONFIRM1").prop('checked')) {
         console.log('Flush checkbox not checked');
         return;
     }
@@ -969,10 +992,26 @@ $("#button_validate_db").on("click", function() {
     $("#loader_shutdown").css({'display' : 'block'});
     $("#button_validate_db").prop('disabled', true);
 
-    $("#VALIDATE_DB_CONFIRM").prop('checked', false);
+    $("#VALIDATE_DB_CONFIRM1").prop('checked', false);
 
     button_click('system', 'validate_db');
 });
+
+
+$("#button_expire_data").on("click", function() {
+    if (! $("#EXPIRE_DATA_CONFIRM1").prop('checked')) {
+        console.log('Expire checkbox not checked');
+        return;
+    }
+
+    $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_expire_data").prop('disabled', true);
+
+    $("#EXPIRE_DATA_CONFIRM1").prop('checked', false);
+
+    button_click('system', 'expire_data');
+});
+
 
 $("#button_flush_images").on("click", function() {
     if (! $("#FLUSH_IMAGES_CONFIRM1").prop('checked')) {
@@ -1043,14 +1082,21 @@ function reloadPage() {
 
 $( document ).ready(function() {
     // Uncheck checkboxes
-    $("#REBOOT_CONFIRM").prop('checked', false);
+    $("#REBOOT_CONFIRM1").prop('checked', false);
+    $("#REBOOT_CONFIRM2").prop('checked', false);
     $("#SHUTDOWN_CONFIRM1").prop('checked', false);
     $("#SHUTDOWN_CONFIRM2").prop('checked', false);
-    $("#VALIDATE_DB_CONFIRM").prop('checked', false);
+    $("#UPGRADE_CONFIRM1").prop('checked', false);
+    $("#UPGRADE_CONFIRM2").prop('checked', false);
+    $("#VALIDATE_DB_CONFIRM1").prop('checked', false);
+    $("#BACKUP_DB_CONFIRM1").prop('checked', false);
+    $("#EXPIRE_DATA_CONFIRM1").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM1").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM2").prop('checked', false);
     $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked', false);
     $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked', false);
+    $("#FLUSH_DAYTIME_CONFIRM1").prop('checked', false);
+    $("#FLUSH_DAYTIME_CONFIRM2").prop('checked', false);
 
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
