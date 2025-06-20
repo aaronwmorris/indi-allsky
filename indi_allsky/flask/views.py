@@ -4907,6 +4907,28 @@ class AjaxSystemInfoView(BaseView):
                     'success-message' : ''.join(message_list),
                 }
                 return jsonify(json_data)
+            elif command == 'expire_data':
+                task_expire = IndiAllSkyDbTaskQueueTable(
+                    queue=TaskQueueQueue.VIDEO,
+                    state=TaskQueueState.MANUAL,
+                    priority=100,
+                    data={
+                        'action' : 'expireData',
+                        'kwargs' : {
+                            'camera_id' : camera_id,
+                        },
+                    },
+                )
+
+                db.session.add(task_expire)
+                db.session.commit()
+
+                message_list = ['Submitted expire task']
+
+                json_data = {
+                    'success-message' : ''.join(message_list),
+                }
+                return jsonify(json_data)
             elif command == 'flush_images':
                 if not self.verify_admin_network():
                     json_data = {

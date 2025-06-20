@@ -7364,7 +7364,11 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
         conn_select_other_list = list()
 
 
-        for c in filter(lambda item: item[1]['type'] == '802-11-wireless', conn_dict.items()):
+        # sort based on priority
+        conn_items_list_sorted = sorted(conn_dict.items(), key=lambda x: x[1]['autoconnect-priority'], reverse=True)
+
+
+        for c in filter(lambda item: item[1]['type'] == '802-11-wireless', conn_items_list_sorted):
             autostart_str = '*'if c[1]['autoconnect'] else ''
             conn_select_wifi_list.append((
                 c[0],
@@ -7378,7 +7382,7 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
                 )
             ))
 
-        for c in filter(lambda item: item[1]['type'] == '802-3-ethernet', conn_dict.items()):
+        for c in filter(lambda item: item[1]['type'] == '802-3-ethernet', conn_items_list_sorted):
             autostart_str = '*'if c[1]['autoconnect'] else ''
             conn_select_ethernet_list.append((
                 c[0],
@@ -7392,7 +7396,7 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
                 )
             ))
 
-        for c in filter(lambda item: item[1]['type'] == 'other', conn_dict.items()):
+        for c in filter(lambda item: item[1]['type'] == 'other', conn_items_list_sorted):
             autostart_str = '*'if c[1]['autoconnect'] else ''
             conn_select_other_list.append((
                 c[0],
