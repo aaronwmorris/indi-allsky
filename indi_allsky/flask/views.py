@@ -1989,7 +1989,7 @@ class ConfigView(FormView):
             'STARTRAILS_MOON_ALT_THOLD'      : self.indi_allsky_config.get('STARTRAILS_MOON_ALT_THOLD', 91.0),
             'STARTRAILS_MOON_PHASE_THOLD'    : self.indi_allsky_config.get('STARTRAILS_MOON_PHASE_THOLD', 101.0),
             'STARTRAILS_MAX_ADU'             : self.indi_allsky_config.get('STARTRAILS_MAX_ADU', 65),
-            'STARTRAILS_MASK_THOLD'          : self.indi_allsky_config.get('STARTRAILS_MASK_THOLD', 200),
+            'STARTRAILS_MASK_THOLD'          : self.indi_allsky_config.get('STARTRAILS_MASK_THOLD', 255),
             'STARTRAILS_PIXEL_THOLD'         : self.indi_allsky_config.get('STARTRAILS_PIXEL_THOLD', 1.0),
             'STARTRAILS_MIN_STARS'           : self.indi_allsky_config.get('STARTRAILS_MIN_STARS', 0),
             'STARTRAILS_TIMELAPSE'           : self.indi_allsky_config.get('STARTRAILS_TIMELAPSE', True),
