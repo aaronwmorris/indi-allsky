@@ -3701,7 +3701,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_CALIBRATE_DARK             = BooleanField('Apply Dark Calibration Frames')
     IMAGE_CALIBRATE_BPM              = BooleanField('Apply Bad Pixel Map Frames')
     IMAGE_CALIBRATE_FIX_HOLES        = BooleanField('Fix Calibration Holes')
-    IMAGE_CALIBRATE_HOLE_THOLD       = IntegerField('Hole ADU Threshold', validators=[IMAGE_CALIBRATE_HOLE_THOLD_validator])
+    IMAGE_CALIBRATE_HOLE_THOLD       = IntegerField('Hole ADU Threshold %', validators=[IMAGE_CALIBRATE_HOLE_THOLD_validator])
     IMAGE_CALIBRATE_MANUAL_OFFSET    = IntegerField('Manual Offset', validators=[IMAGE_CALIBRATE_MANUAL_OFFSET_validator])
     IMAGE_SAVE_FITS_PRE_DARK         = BooleanField('Save FITS Pre-Calibration')
     IMAGE_EXIF_PRIVACY               = BooleanField('Enable EXIF Privacy')
