@@ -374,6 +374,17 @@ def WINDSPEED_DISPLAY_validator(form, field):
         raise ValidationError('Please select the wind speed system for display')
 
 
+def IMAGE_CALIBRATE_HOLE_THOLD_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data <= 0:
+        raise ValidationError('Threshold must be greater than 0')
+
+    if field.data > 100:
+        raise ValidationError('Threshold must be less than 100')
+
+
 def CCD_TEMP_SCRIPT_validator(form, field):
     if not field.data:
         return
@@ -3690,6 +3701,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_CALIBRATE_DARK             = BooleanField('Apply Dark Calibration Frames')
     IMAGE_CALIBRATE_BPM              = BooleanField('Apply Bad Pixel Map Frames')
     IMAGE_CALIBRATE_FIX_HOLES        = BooleanField('Fix Calibration Holes')
+    IMAGE_CALIBRATE_HOLE_THOLD       = IntegerField('Hole ADU Threshold', validators=[IMAGE_CALIBRATE_HOLE_THOLD_validator])
     IMAGE_CALIBRATE_MANUAL_OFFSET    = IntegerField('Manual Offset', validators=[IMAGE_CALIBRATE_MANUAL_OFFSET_validator])
     IMAGE_SAVE_FITS_PRE_DARK         = BooleanField('Save FITS Pre-Calibration')
     IMAGE_EXIF_PRIVACY               = BooleanField('Enable EXIF Privacy')

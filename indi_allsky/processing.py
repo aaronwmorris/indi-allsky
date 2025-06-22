@@ -972,10 +972,12 @@ class ImageProcessor(object):
             data_calibrated = data_calibrated.astype(numpy.uint32)
         elif data.dtype.type == numpy.uint16:
             if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
+                hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 25)
+
                 if len(data.shape) == 2:
                     max_value = (2 ** self.max_bit_depth) - 1
 
-                    i_ref.hole_mask = master_dark > int(max_value * (25 / 100))
+                    i_ref.hole_mask = master_dark > int(max_value * (hole_thold / 100))
                 else:
                     # there should never be a case where 16-bit RGB data is used
                     # no hole mask
@@ -984,6 +986,8 @@ class ImageProcessor(object):
             data_calibrated = cv2.subtract(data, master_dark)
         elif data.dtype.type == numpy.uint8:
             if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
+                hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 25)
+
                 if len(master_dark.shape) != 2:
                     # Convert to uint16 datatype to prevent overflows
                     master_dark_16 = master_dark.astype(numpy.uint16)
@@ -992,11 +996,11 @@ class ImageProcessor(object):
                     B, G, R = master_dark_16.transpose(2, 0, 1)
 
                     # Use numpy.abs and 2D sliced data to get 2D mask
-                    i_ref.hole_mask = (B + G + R) > int(255 * (25 / 100))
+                    i_ref.hole_mask = (B + G + R) > int(255 * (hole_thold / 100))
 
                 else:
                     # mono
-                    i_ref.hole_mask = master_dark > int(255 * (25 / 100))
+                    i_ref.hole_mask = master_dark > int(255 * (hole_thold / 100))
 
             data_calibrated = cv2.subtract(data, master_dark)
         else:
