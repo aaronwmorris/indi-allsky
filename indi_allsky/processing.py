@@ -971,29 +971,32 @@ class ImageProcessor(object):
 
             data_calibrated = data_calibrated.astype(numpy.uint32)
         elif data.dtype.type == numpy.uint16:
-            if len(data.shape) == 2:
-                max_value = (2 ** self.max_bit_depth) - 1
+            if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
+                if len(data.shape) == 2:
+                    max_value = (2 ** self.max_bit_depth) - 1
 
-                i_ref.hole_mask = master_dark > int(max_value * (25 / 100))
-            else:
-                # no hole mask
-                pass
+                    i_ref.hole_mask = master_dark > int(max_value * (25 / 100))
+                else:
+                    # there should never be a case where 16-bit RGB data is used
+                    # no hole mask
+                    pass
 
             data_calibrated = cv2.subtract(data, master_dark)
         elif data.dtype.type == numpy.uint8:
-            if len(master_dark.shape) != 2:
-                # Convert to uint16 datatype to prevent overflows
-                master_dark_16 = master_dark.astype(numpy.uint16)
+            if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
+                if len(master_dark.shape) != 2:
+                    # Convert to uint16 datatype to prevent overflows
+                    master_dark_16 = master_dark.astype(numpy.uint16)
 
-                # Split up the channels
-                B, G, R = master_dark_16.transpose(2, 0, 1)
+                    # Split up the channels
+                    B, G, R = master_dark_16.transpose(2, 0, 1)
 
-                # Use numpy.abs and 2D sliced data to get 2D mask
-                i_ref.hole_mask = (B + G + R) > int(255 * (25 / 100))
+                    # Use numpy.abs and 2D sliced data to get 2D mask
+                    i_ref.hole_mask = (B + G + R) > int(255 * (25 / 100))
 
-            else:
-                # mono
-                i_ref.hole_mask = master_dark > 64
+                else:
+                    # mono
+                    i_ref.hole_mask = master_dark > int(255 * (25 / 100))
 
             data_calibrated = cv2.subtract(data, master_dark)
         else:
@@ -1786,7 +1789,7 @@ class ImageProcessor(object):
         i_ref = self.getLatestImage()
 
         if isinstance(i_ref.hole_mask, type(None)):
-            logger.info('No hole mask')
+            #logger.info('No hole mask')
             return
 
         self._fix_holes2(i_ref)
