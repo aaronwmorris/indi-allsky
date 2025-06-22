@@ -197,6 +197,7 @@ class IndiAllSkyConfigBase(object):
         },
         "IMAGE_CALIBRATE_DARK"          : True,
         "IMAGE_CALIBRATE_BPM"           : False,
+        "IMAGE_CALIBRATE_FIX_HOLES"     : False,
         "IMAGE_CALIBRATE_MANUAL_OFFSET" : 0,
         "IMAGE_EXIF_PRIVACY"    : False,
         "IMAGE_FILE_TYPE" : "jpg",  # jpg, png, or tif
