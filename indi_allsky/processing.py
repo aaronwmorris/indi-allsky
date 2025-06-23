@@ -948,10 +948,12 @@ class ImageProcessor(object):
             master_dark = dark
 
 
+        master_dark_height, master_dark_width = master_dark.shape[:2]
+
+
         if master_dark.shape != data.shape:
             image_height, image_width = data.shape[:2]  # there might be a 3rd dimension for RGB data
-            dark_height, dark_width = master_dark.shape[:2]
-            logger.error('Dark frame calibration dimensions mismatch - %dx%d vs %dx%d', image_width, image_height, dark_width, dark_height)
+            logger.error('Dark frame calibration dimensions mismatch - %dx%d vs %dx%d', image_width, image_height, master_dark_width, master_dark_height)
             raise CalibrationNotFound('Dark frame calibration dimension mismatch')
 
 
@@ -978,6 +980,7 @@ class ImageProcessor(object):
                     max_value = (2 ** self.max_bit_depth) - 1
 
                     i_ref.hole_mask = master_dark > int(max_value * (hole_thold / 100))
+                    #logger.info('Counted holes: %d', i_ref.hole_mask.sum())
                 else:
                     # there should never be a case where 16-bit RGB data is used
                     # no hole mask
@@ -997,10 +1000,12 @@ class ImageProcessor(object):
 
                     # Use numpy.abs and 2D sliced data to get 2D mask
                     i_ref.hole_mask = (B + G + R) > int(255 * (hole_thold / 100))
+                    #logger.info('Counted holes: %d', i_ref.hole_mask.sum())
 
                 else:
                     # mono
                     i_ref.hole_mask = master_dark > int(255 * (hole_thold / 100))
+                    #logger.info('Counted holes: %d', i_ref.hole_mask.sum())
 
             data_calibrated = cv2.subtract(data, master_dark)
         else:
