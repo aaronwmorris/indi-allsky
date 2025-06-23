@@ -1796,10 +1796,23 @@ class ImageProcessor(object):
             #logger.info('No hole mask')
             return
 
-        self._fix_holes2(i_ref)
+        self._fix_holes(i_ref)
 
 
     def _fix_holes(self, i_ref):
+        ### the purpose of this is to fill in gaps left by subtracting hot pixels with neighboring data
+
+        holes_start = time.time()
+
+        idx = numpy.where(~i_ref.hole_mask, numpy.arange(i_ref.hole_mask.shape[1]), 0)
+        numpy.maximum.accumulate(idx, axis=1, out=idx)
+        self.image = self.image[numpy.arange(idx.shape[0])[:, None], idx]
+
+        holes_elapsed_s = time.time() - holes_start
+        logger.info('Fixed holes in %0.4f s', holes_elapsed_s)
+
+
+    def _fix_holes_orig(self, i_ref):
         ### the purpose of this is to fill in gaps left by subtracting hot pixels with neighboring data
         ### not quite working yet
 
@@ -1816,19 +1829,6 @@ class ImageProcessor(object):
         mask = (B + G + R) == 0
 
         idx = numpy.where(~mask, numpy.arange(mask.shape[1]), 0)
-        numpy.maximum.accumulate(idx, axis=1, out=idx)
-        self.image = self.image[numpy.arange(idx.shape[0])[:, None], idx]
-
-        holes_elapsed_s = time.time() - holes_start
-        logger.info('Fixed holes in %0.4f s', holes_elapsed_s)
-
-
-    def _fix_holes2(self, i_ref):
-        ### the purpose of this is to fill in gaps left by subtracting hot pixels with neighboring data
-
-        holes_start = time.time()
-
-        idx = numpy.where(~i_ref.hole_mask, numpy.arange(i_ref.hole_mask.shape[1]), 0)
         numpy.maximum.accumulate(idx, axis=1, out=idx)
         self.image = self.image[numpy.arange(idx.shape[0])[:, None], idx]
 
