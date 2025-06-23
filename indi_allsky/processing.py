@@ -1817,6 +1817,25 @@ class ImageProcessor(object):
         holes_elapsed_s = time.time() - holes_start
         logger.info('Fixed holes in %0.4f s', holes_elapsed_s)
 
+        #self.circleHoles(i_ref)
+
+
+    def circleHoles(self, i_ref):
+        if len(self.image.shape) == 2:
+            # mono
+            color_bgr = 255
+        else:
+            color_bgr = (0, 0, 64)
+
+        for y, x in numpy.argwhere(i_ref.hole_mask):
+            cv2.circle(
+                img=self.image,
+                center=(x, y),
+                radius=10,
+                color=color_bgr,
+                thickness=1,
+            )
+
 
     def _fix_holes_orig(self, i_ref):
         ### the purpose of this is to fill in gaps left by subtracting hot pixels with neighboring data
