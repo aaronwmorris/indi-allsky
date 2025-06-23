@@ -983,7 +983,6 @@ class ImageProcessor(object):
                     max_value = (2 ** self.max_bit_depth) - 1
 
                     i_ref.hole_mask = master_dark > int(max_value * (hole_thold / 100))
-                    #logger.info('Counted holes: %d', i_ref.hole_mask.sum())
                 else:
                     # there should never be a case where 16-bit RGB data is used
                     # no hole mask
@@ -998,17 +997,12 @@ class ImageProcessor(object):
                     # Convert to uint16 datatype to prevent overflows
                     master_dark_16 = master_dark.astype(numpy.uint16)
 
-                    # Split up the channels
                     B, G, R = master_dark_16.transpose(2, 0, 1)
-
-                    # Use numpy.abs and 2D sliced data to get 2D mask
                     i_ref.hole_mask = (B + G + R) > int(255 * (hole_thold / 100))
-                    #logger.info('Counted holes: %d', i_ref.hole_mask.sum())
 
                 else:
                     # mono
                     i_ref.hole_mask = master_dark > int(255 * (hole_thold / 100))
-                    #logger.info('Counted holes: %d', i_ref.hole_mask.sum())
 
             data_calibrated = cv2.subtract(data, master_dark)
         else:
@@ -1809,6 +1803,7 @@ class ImageProcessor(object):
 
     def _fix_holes(self, i_ref):
         ### the purpose of this is to fill in gaps left by subtracting hot pixels with neighboring data
+        #logger.info('Counted holes: %d', i_ref.hole_mask.sum())
 
         holes_start = time.time()
 
