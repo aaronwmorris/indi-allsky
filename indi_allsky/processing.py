@@ -974,7 +974,10 @@ class ImageProcessor(object):
             data_calibrated = data_calibrated.astype(numpy.uint32)
         elif data.dtype.type == numpy.uint16:
             if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
-                hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 25)
+                ### fake hot pixel in center
+                #master_dark[int(master_dark_height / 2)][int(master_dark_width / 2)] = (2 ** self.max_bit_depth) - 1
+
+                hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 50)
 
                 if len(data.shape) == 2:
                     max_value = (2 ** self.max_bit_depth) - 1
@@ -989,7 +992,7 @@ class ImageProcessor(object):
             data_calibrated = cv2.subtract(data, master_dark)
         elif data.dtype.type == numpy.uint8:
             if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
-                hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 25)
+                hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 50)
 
                 if len(master_dark.shape) != 2:
                     # Convert to uint16 datatype to prevent overflows
