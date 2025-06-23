@@ -995,10 +995,13 @@ class ImageProcessor(object):
 
                 if len(master_dark.shape) != 2:
                     # Convert to uint16 datatype to prevent overflows
-                    master_dark_16 = master_dark.astype(numpy.uint16)
+                    #master_dark_16 = master_dark.astype(numpy.uint16)
 
-                    B, G, R = master_dark_16.transpose(2, 0, 1)
-                    i_ref.hole_mask = (B + G + R) > int(255 * (hole_thold / 100))
+                    #B, G, R = master_dark_16.transpose(2, 0, 1)
+                    #i_ref.hole_mask = (B + G + R) > int(255 * (hole_thold / 100))
+
+                    B, G, R = master_dark.transpose(2, 0, 1)
+                    i_ref.hole_mask = numpy.maximum.reduce([B, G, R]) > int(255 * (hole_thold / 100))
 
                 else:
                     # mono
