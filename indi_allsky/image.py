@@ -366,7 +366,7 @@ class ImageWorker(Process):
         self.image_processor.calibrate(libcamera_black_level=libcamera_black_level)
 
 
-        self.fix_holes_early()
+        self.image_processor.fix_holes_early()
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
