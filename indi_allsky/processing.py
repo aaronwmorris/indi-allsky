@@ -980,21 +980,19 @@ class ImageProcessor(object):
                 if len(data.shape) == 2:
                     ### mono/bayered
                     ### fake hot pixels
-                    #max_val = (2 ** self.max_bit_depth) - 1
+                    max_value = (2 ** self.max_bit_depth) - 1
 
 
                     ### single hot pixel
-                    #master_dark[int(master_dark_height / 2)][int(master_dark_width / 2)] = max_val
+                    #master_dark[int(master_dark_height / 2)][int(master_dark_width / 2)] = max_value
 
 
                     ### multiple hot pixels
                     #for _ in range(10000):
                     #    r_x = random.randrange(master_dark_width)
                     #    r_y = random.randrange(master_dark_height)
-                    #    master_dark[r_y][r_x] = max_val
+                    #    master_dark[r_y][r_x] = max_value
 
-
-                    max_value = (2 ** self.max_bit_depth) - 1
 
                     i_ref.hole_mask = master_dark > int(max_value * (hole_thold / 100))
 
@@ -1049,38 +1047,38 @@ class ImageProcessor(object):
 
     def _fix_holes_early(self, i_ref):
         ### attempt to fix holes left by subtraction
-        if not isinstance(i_ref.hole_mask, type(None)):
-            hole_count = i_ref.hole_mask.sum()
-            #logger.info('Counted holes: %d', hole_count)
+
+        hole_count = i_ref.hole_mask.sum()
+        #logger.info('Counted holes: %d', hole_count)
 
 
-            if hole_count > 30000:
-                logger.warning('Too many holes detected, dark frame may be invalid')
-                return
+        if hole_count > 50000:
+            logger.warning('Too many holes detected, dark frame may be invalid')
+            return
 
-            data = i_ref.hdulist[0].data
-
-
-            holes_start = time.time()
-
-            ### using an offset of 2 because want the same color pixel for bayered data
-            for y, x in numpy.argwhere(i_ref.hole_mask):
-                try:
-                    alt_value_1 = data[y + 2][x]
-                except IndexError:
-                    alt_value_1 = data[y - 2][x]
-
-                try:
-                    alt_value_2 = data[y][x + 2]
-                except IndexError:
-                    alt_value_2 = data[y][x - 2]
-
-                # data might be an array if RGB
-                data[y][x] = numpy.maximum(alt_value_1, alt_value_2)
+        data = i_ref.hdulist[0].data
 
 
-            holes_elapsed_s = time.time() - holes_start
-            logger.info('Fixed holes in %0.4f s', holes_elapsed_s)
+        holes_start = time.time()
+
+        ### using an offset of 2 because want the same color pixel for bayered data
+        for y, x in numpy.argwhere(i_ref.hole_mask):
+            try:
+                alt_value_1 = data[y + 2][x]
+            except IndexError:
+                alt_value_1 = data[y - 2][x]
+
+            try:
+                alt_value_2 = data[y][x + 2]
+            except IndexError:
+                alt_value_2 = data[y][x - 2]
+
+            # data might be an array if RGB
+            data[y][x] = numpy.maximum(alt_value_1, alt_value_2)
+
+
+        holes_elapsed_s = time.time() - holes_start
+        logger.info('Fixed holes in %0.4f s', holes_elapsed_s)
 
 
     def calculate_8bit_adu(self):
