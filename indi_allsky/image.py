@@ -366,6 +366,9 @@ class ImageWorker(Process):
         self.image_processor.calibrate(libcamera_black_level=libcamera_black_level)
 
 
+        self.fix_holes_early()
+
+
         if self.config.get('IMAGE_SAVE_FITS'):
             if not self.config.get('IMAGE_SAVE_FITS_PRE_DARK'):
                 self.write_fit(i_ref, camera)
@@ -537,7 +540,7 @@ class ImageWorker(Process):
 
 
         #self.image_processor.make_holes()
-        self.image_processor.fix_holes()
+        #self.image_processor.fix_holes()
 
 
         # rotation

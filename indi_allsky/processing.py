@@ -5,6 +5,7 @@ from datetime import datetime
 #from datetime import timedelta
 from datetime import timezone
 import math
+import random  # noqa: F401
 import time
 import signal
 import numpy
@@ -974,16 +975,31 @@ class ImageProcessor(object):
             data_calibrated = data_calibrated.astype(numpy.uint32)
         elif data.dtype.type == numpy.uint16:
             if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
-                ### fake hot pixel in center
-                #master_dark[int(master_dark_height / 2)][int(master_dark_width / 2)] = (2 ** self.max_bit_depth) - 1
-
                 hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 50)
 
                 if len(data.shape) == 2:
+                    ### mono/bayered
+                    ### fake hot pixels
+                    #max_val = (2 ** self.max_bit_depth) - 1
+
+
+                    ### single hot pixel
+                    #master_dark[int(master_dark_height / 2)][int(master_dark_width / 2)] = max_val
+
+
+                    ### multiple hot pixels
+                    #for _ in range(10000):
+                    #    r_x = random.randrange(master_dark_width)
+                    #    r_y = random.randrange(master_dark_height)
+                    #    master_dark[r_y][r_x] = max_val
+
+
                     max_value = (2 ** self.max_bit_depth) - 1
 
                     i_ref.hole_mask = master_dark > int(max_value * (hole_thold / 100))
+
                 else:
+                    ### rgb
                     # there should never be a case where 16-bit RGB data is used
                     # no hole mask
                     pass
@@ -993,7 +1009,11 @@ class ImageProcessor(object):
             if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
                 hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 50)
 
-                if len(master_dark.shape) != 2:
+                if len(master_dark.shape) == 2:
+                    ### mono/bayered
+                    i_ref.hole_mask = master_dark > int(255 * (hole_thold / 100))
+                else:
+                    ### rgb
                     # Convert to uint16 datatype to prevent overflows
                     #master_dark_16 = master_dark.astype(numpy.uint16)
 
@@ -1003,16 +1023,64 @@ class ImageProcessor(object):
                     B, G, R = master_dark.transpose(2, 0, 1)
                     i_ref.hole_mask = numpy.maximum.reduce([B, G, R]) > int(255 * (hole_thold / 100))
 
-                else:
-                    # mono
-                    i_ref.hole_mask = master_dark > int(255 * (hole_thold / 100))
 
             data_calibrated = cv2.subtract(data, master_dark)
         else:
             # this should never happen
             raise CalibrationNotFound('Unknown image data type: {0:s}'.format(str(data.dtype.type)))
 
+
         return data_calibrated
+
+
+    def fix_holes_early(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
+        i_ref = self.getLatestImage()
+
+        if isinstance(i_ref.hole_mask, type(None)):
+            #logger.info('No hole mask')
+            return
+
+        self._fix_holes_early(i_ref)
+
+
+    def _fix_holes_early(self, i_ref):
+        ### attempt to fix holes left by subtraction
+        if not isinstance(i_ref.hole_mask, type(None)):
+            hole_count = i_ref.hole_mask.sum()
+            #logger.info('Counted holes: %d', hole_count)
+
+
+            if hole_count > 30000:
+                logger.warning('Too many holes detected, dark frame may be invalid')
+                return
+
+            data = i_ref.hdulist[0].data
+
+
+            holes_start = time.time()
+
+            ### using an offset of 2 because want the same color pixel for bayered data
+            for y, x in numpy.argwhere(i_ref.hole_mask):
+                try:
+                    alt_value_1 = data[y + 2][x]
+                except IndexError:
+                    alt_value_1 = data[y - 2][x]
+
+                try:
+                    alt_value_2 = data[y][x + 2]
+                except IndexError:
+                    alt_value_2 = data[y][x - 2]
+
+                # data might be an array if RGB
+                data[y][x] = numpy.maximum(alt_value_1, alt_value_2)
+
+
+            holes_elapsed_s = time.time() - holes_start
+            logger.info('Fixed holes in %0.4f s', holes_elapsed_s)
 
 
     def calculate_8bit_adu(self):
