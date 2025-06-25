@@ -1387,17 +1387,22 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
 
         start = time.time()
 
-        combined_dark = ccdproc.combine(
-            cal_darks,
-            method='average',
-            sigma_clip=True,
-            sigma_clip_low_thresh=5,
-            sigma_clip_high_thresh=5,
-            sigma_clip_func=numpy.ma.median,
-            signma_clip_dev_func=mad_std,
-            dtype=numpy_type,
-            mem_limit=350000000,
-        )
+        try:
+            combined_dark = ccdproc.combine(
+                cal_darks,
+                method='average',
+                sigma_clip=True,
+                sigma_clip_low_thresh=5,
+                sigma_clip_high_thresh=5,
+                sigma_clip_func=numpy.ma.median,
+                signma_clip_dev_func=mad_std,
+                dtype=numpy_type,
+                mem_limit=350000000,
+            )
+        except ValueError as e:
+            logger.error('ValueError: %s', str(e))
+            logger.error('Performing sigma clipping stacking on RGB data is the most common cause of this error, use "average" instead"')
+            sys.exit(1)
 
         elapsed_s = time.time() - start
         logger.info('Exposure sigma clip stacked in %0.4f s', elapsed_s)
