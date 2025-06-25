@@ -1239,19 +1239,41 @@ class IndiAllSkyDarksProcessor(object):
         max_val = numpy.amax(bpm)
         logger.info('Image max value: %0.1f', float(max_val))
 
+
         if self.bitmax:
-            bitmax_percent = ((2 ** self.bitmax) - 1) * (self.hotpixel_adu_percent / 100.0)
+            max_value = (2 ** self.bitmax) - 1
         else:
             if numpy_type in (numpy.float32, numpy.uint32):
                 # assume 16bit max
-                bitmax_percent = ((2 ** 16) - 1) * (self.hotpixel_adu_percent / 100.0)
+                max_value = (2 ** 16) - 1
             else:
-                bitmax_percent = ((2 ** image_bitpix) - 1) * (self.hotpixel_adu_percent / 100.0)
+                max_value = (2 ** image_bitpix) - 1
 
-        bpm[bpm < bitmax_percent] = 0  # filter all values less than max value
+
+        hot_pixel_thold = max_value * (self.hotpixel_adu_percent / 100.0)
+        bpm[bpm < hot_pixel_thold] = 0  # filter all values less than max value
 
         bpm_adu_avg = numpy.mean(bpm)
         logger.info('Master BPM average adu: %0.2f', bpm_adu_avg)
+
+
+        if len(bpm.shape) == 3:
+            # RGB fits data
+            hot_pixels = numpy.maximum.reduce([bpm[0], bpm[1], bpm[2]]) > 0
+        else:
+            # Mono data
+            hot_pixels = bpm > 0
+
+
+        hot_pixel_count = hot_pixels.sum()
+
+        if hot_pixel_count > 50000:
+            logger.warning('DETECTED MORE THAN 50000 HOT PIXELS - MAKE SURE YOUR SENSOR IS COVERED')
+        elif hot_pixel_count == 0:
+            logger.warning('DETECTED 0 HOT PIXELS - BITMAX MAY NEED TO BE REDUCED')
+        else:
+            logger.info('Detected %d hot pixels', hot_pixel_count)
+
 
         hdulist[0].data = bpm
 
@@ -1324,11 +1346,13 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
             hot_pixels = avg_data > hot_pixel_thold
 
         hot_pixel_count = hot_pixels.sum()
-        logger.info('Detected %d hot pixels', hot_pixel_count)
 
         if hot_pixel_count > 50000:
             logger.warning('DETECTED MORE THAN 50000 HOT PIXELS - MAKE SURE YOUR SENSOR IS COVERED')
-
+        elif hot_pixel_count == 0:
+            logger.warning('DETECTED 0 HOT PIXELS')
+        else:
+            logger.info('Detected %d hot pixels', hot_pixel_count)
 
         hdulist[0].data = avg_data
 
@@ -1400,12 +1424,14 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
 
         # Mono data
         hot_pixels = combined_dark[0].data > hot_pixel_thold
-
         hot_pixel_count = hot_pixels.sum()
-        logger.info('Detected %d hot pixels', hot_pixel_count)
 
         if hot_pixel_count > 50000:
             logger.warning('DETECTED MORE THAN 50000 HOT PIXELS - MAKE SURE YOUR SENSOR IS COVERED')
+        elif hot_pixel_count == 0:
+            logger.warning('DETECTED 0 HOT PIXELS')
+        else:
+            logger.info('Detected %d hot pixels', hot_pixel_count)
 
 
         combined_dark.write(filename_p)
