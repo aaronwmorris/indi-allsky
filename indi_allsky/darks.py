@@ -918,6 +918,7 @@ class IndiAllSkyDarks(object):
 
             hdulist[0].header['BUNIT'] = 'ADU'  # hack for ccdproc
 
+
             #logger.info('Shape: %s', str(hdulist[0].data.shape))
             if len(hdulist[0].data.shape) == 3:
                 # RGB fits data
@@ -1302,6 +1303,33 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
         dark_adu_avg = numpy.mean(avg_data)
         logger.info('Master Dark average adu: %0.2f', dark_adu_avg)
 
+
+        if self.bitmax:
+            max_value = (2 ** self.bitmax) - 1
+        else:
+            if numpy_type in (numpy.float32, numpy.uint32):
+                # assume 16bit max
+                max_value = (2 ** self.bitmax) - 1
+            else:
+                max_value = (2 ** image_bitpix) - 1
+
+
+        hot_pixel_thold = int(max_value * (30 / 100))
+
+        if len(avg_data.shape) == 3:
+            # RGB fits data
+            hot_pixels = numpy.maximum.reduce([avg_data[0], avg_data[1], avg_data[2]]) > hot_pixel_thold
+        else:
+            # Mono data
+            hot_pixels = avg_data > hot_pixel_thold
+
+        hot_pixel_count = hot_pixels.sum()
+        logger.info('Detected %d hot pixels', hot_pixel_count)
+
+        if hot_pixel_count > 50000:
+            logger.warning('DETECTED MORE THAN 50000 HOT PIXELS - MAKE SURE YOUR SENSOR IS COVERED')
+
+
         hdulist[0].data = avg_data
 
         # reuse the last fits file for the stacked data
@@ -1353,8 +1381,32 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
 
         combined_dark.meta['combined'] = True
 
+
         dark_adu_avg = numpy.mean(combined_dark[0].data, axis=0)
         logger.info('Master Dark average adu: %0.2f', dark_adu_avg)
+
+
+        if self.bitmax:
+            max_value = (2 ** self.bitmax) - 1
+        else:
+            if numpy_type in (numpy.float32, numpy.uint32):
+                # assume 16bit max
+                max_value = (2 ** 16) - 1
+            else:
+                max_value = (2 ** image_bitpix) - 1
+
+
+        hot_pixel_thold = int(max_value * (30 / 100))
+
+        # Mono data
+        hot_pixels = combined_dark[0].data > hot_pixel_thold
+
+        hot_pixel_count = hot_pixels.sum()
+        logger.info('Detected %d hot pixels', hot_pixel_count)
+
+        if hot_pixel_count > 50000:
+            logger.warning('DETECTED MORE THAN 50000 HOT PIXELS - MAKE SURE YOUR SENSOR IS COVERED')
+
 
         combined_dark.write(filename_p)
 
