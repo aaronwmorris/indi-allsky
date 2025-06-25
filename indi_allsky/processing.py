@@ -979,10 +979,10 @@ class ImageProcessor(object):
 
                 if len(data.shape) == 2:
                     ### mono/bayered
-                    ### fake hot pixels
                     max_value = (2 ** self.max_bit_depth) - 1
 
 
+                    ### fake hot pixels
                     ### single hot pixel
                     #master_dark[int(master_dark_height / 2)][int(master_dark_width / 2)] = max_value
 
@@ -1856,36 +1856,6 @@ class ImageProcessor(object):
 
 
 
-    def fix_holes(self):
-        if self.focus_mode:
-            # disable processing in focus mode
-            return
-
-        i_ref = self.getLatestImage()
-
-        if isinstance(i_ref.hole_mask, type(None)):
-            #logger.info('No hole mask')
-            return
-
-        self._fix_holes(i_ref)
-
-
-    def _fix_holes(self, i_ref):
-        ### the purpose of this is to fill in gaps left by subtracting hot pixels with neighboring data
-        #logger.info('Counted holes: %d', i_ref.hole_mask.sum())
-
-        holes_start = time.time()
-
-        idx = numpy.where(~i_ref.hole_mask, numpy.arange(i_ref.hole_mask.shape[1]), 0)
-        numpy.maximum.accumulate(idx, axis=1, out=idx)
-        self.image = self.image[numpy.arange(idx.shape[0])[:, None], idx]
-
-        holes_elapsed_s = time.time() - holes_start
-        logger.info('Fixed holes in %0.4f s', holes_elapsed_s)
-
-        #self.circleHoles(i_ref)
-
-
     def circleHoles(self, i_ref):
         if len(self.image.shape) == 2:
             # mono
@@ -1901,30 +1871,6 @@ class ImageProcessor(object):
                 color=color_bgr,
                 thickness=1,
             )
-
-
-    def _fix_holes_orig(self, i_ref):
-        ### the purpose of this is to fill in gaps left by subtracting hot pixels with neighboring data
-        ### not quite working yet
-
-        holes_start = time.time()
-
-        # Convert to uint16 datatype to prevent overflows
-        image = self.image.astype(numpy.uint16)
-
-        # Split up the channels
-        B, G, R = image.transpose(2, 0, 1)
-
-        # Use numpy.abs and 2D sliced data to get 2D mask
-        #mask = numpy.abs(B + G + R) == 0
-        mask = (B + G + R) == 0
-
-        idx = numpy.where(~mask, numpy.arange(mask.shape[1]), 0)
-        numpy.maximum.accumulate(idx, axis=1, out=idx)
-        self.image = self.image[numpy.arange(idx.shape[0])[:, None], idx]
-
-        holes_elapsed_s = time.time() - holes_start
-        logger.info('Fixed holes in %0.4f s', holes_elapsed_s)
 
 
     def apply_image_circle_mask(self):

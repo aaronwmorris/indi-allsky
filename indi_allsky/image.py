@@ -539,10 +539,6 @@ class ImageWorker(Process):
             self.image_processor.drawDetections()
 
 
-        #self.image_processor.make_holes()
-        #self.image_processor.fix_holes()
-
-
         # rotation
         self.image_processor.rotate_90()
         self.image_processor.rotate_angle()
