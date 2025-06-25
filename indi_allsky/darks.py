@@ -1401,7 +1401,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
             )
         except ValueError as e:
             logger.error('ValueError: %s', str(e))
-            logger.error('Performing sigma clipping stacking on RGB data is the most common cause of this error, use "average" instead"')
+            logger.error('Performing sigma clipping stacking on RGB data is the most common cause of this error, use "average" instead')
             sys.exit(1)
 
         elapsed_s = time.time() - start
