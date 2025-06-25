@@ -977,6 +977,7 @@ class ImageProcessor(object):
             if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
                 hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 30)
 
+
                 if len(data.shape) == 2:
                     ### mono/bayered
                     max_value = (2 ** self.max_bit_depth) - 1
@@ -1002,10 +1003,12 @@ class ImageProcessor(object):
                     # no hole mask
                     pass
 
+
             data_calibrated = cv2.subtract(data, master_dark)
         elif data.dtype.type == numpy.uint8:
             if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
                 hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 30)
+
 
                 if len(master_dark.shape) == 2:
                     ### mono/bayered
@@ -1015,11 +1018,11 @@ class ImageProcessor(object):
                     # Convert to uint16 datatype to prevent overflows
                     #master_dark_16 = master_dark.astype(numpy.uint16)
 
-                    #B, G, R = master_dark_16.transpose(2, 0, 1)
-                    #i_ref.hole_mask = (B + G + R) > int(255 * (hole_thold / 100))
+                    #R, G, B = numpy.split(master_dark, 3, axis=0)
+                    #i_ref.hole_mask = (R + G + B) > int(255 * (hole_thold / 100))
 
-                    B, G, R = master_dark.transpose(2, 0, 1)
-                    i_ref.hole_mask = numpy.maximum.reduce([B, G, R]) > int(255 * (hole_thold / 100))
+                    # each index is R, G, B
+                    i_ref.hole_mask = numpy.maximum.reduce([master_dark[0], master_dark[1], master_dark[2]]) > int(255 * (hole_thold / 100))
 
 
             data_calibrated = cv2.subtract(data, master_dark)
