@@ -1109,7 +1109,7 @@ class ImageProcessor(object):
 
 
         holes_elapsed_s = time.time() - holes_start
-        logger.info('Fixed holes in %0.4f s', holes_elapsed_s)
+        logger.info('Fixed %d holes in %0.4f s', hole_count, holes_elapsed_s)
 
 
     def calculate_8bit_adu(self):
