@@ -1835,58 +1835,6 @@ class ImageProcessor(object):
         self.image = cv2.cvtColor(self.image, cv2.COLOR_GRAY2BGR)
 
 
-    def make_holes(self):
-        image_height, image_width = self.image.shape[:2]
-        mid_height = int(image_height / 2)
-        mid_width = int(image_width / 2)
-
-        # 1x1
-        self.image[mid_height - 100][mid_width]     = (0, 0, 0)
-
-        # 2x2
-        self.image[mid_height][mid_width]           = (0, 0, 0)
-        self.image[mid_height][mid_width + 1]       = (0, 0, 0)
-        self.image[mid_height + 1][mid_width]       = (0, 0, 0)
-        self.image[mid_height + 1][mid_width + 1]   = (0, 0, 0)
-
-        # 3x3
-        self.image[mid_height + 99][mid_width - 1]  = (0, 0, 0)
-        self.image[mid_height + 99][mid_width]      = (0, 0, 0)
-        self.image[mid_height + 99][mid_width + 1]  = (0, 0, 0)
-        self.image[mid_height + 100][mid_width - 1] = (0, 0, 0)
-        self.image[mid_height + 100][mid_width]     = (0, 0, 0)
-        self.image[mid_height + 100][mid_width + 1] = (0, 0, 0)
-        self.image[mid_height + 101][mid_width - 1] = (0, 0, 0)
-        self.image[mid_height + 101][mid_width]     = (0, 0, 0)
-        self.image[mid_height + 101][mid_width + 1] = (0, 0, 0)
-
-
-        cv2.circle(
-            img=self.image,
-            center=(mid_width, mid_height - 100),
-            radius=10,
-            color=(0, 0, 64),
-            thickness=1,
-        )
-
-        cv2.circle(
-            img=self.image,
-            center=(mid_width, mid_height),
-            radius=10,
-            color=(0, 0, 64),
-            thickness=1,
-        )
-
-        cv2.circle(
-            img=self.image,
-            center=(mid_width, mid_height + 100),
-            radius=10,
-            color=(0, 0, 64),
-            thickness=1,
-        )
-
-
-
     def circleHoles(self, i_ref):
         if len(self.image.shape) == 2:
             # mono
