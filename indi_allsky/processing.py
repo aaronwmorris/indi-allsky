@@ -975,7 +975,7 @@ class ImageProcessor(object):
             data_calibrated = data_calibrated.astype(numpy.uint32)
         elif data.dtype.type == numpy.uint16:
             if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
-                hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 50)
+                hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 30)
 
                 if len(data.shape) == 2:
                     ### mono/bayered
@@ -1005,7 +1005,7 @@ class ImageProcessor(object):
             data_calibrated = cv2.subtract(data, master_dark)
         elif data.dtype.type == numpy.uint8:
             if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
-                hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 50)
+                hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 30)
 
                 if len(master_dark.shape) == 2:
                     ### mono/bayered
