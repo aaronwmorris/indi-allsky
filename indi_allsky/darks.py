@@ -401,10 +401,6 @@ class IndiAllSkyDarks(object):
                 raise BadImage('Bad jpeg image')
 
 
-            # force 8-bit
-            self.bitmax = 8
-
-
             # swap axes for FITS
             data = numpy.swapaxes(data, 1, 0)
             data = numpy.swapaxes(data, 2, 0)
@@ -430,10 +426,6 @@ class IndiAllSkyDarks(object):
                     data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
             except PIL.UnidentifiedImageError:
                 raise BadImage('Bad png image')
-
-
-            # force 8-bit
-            self.bitmax = 8
 
 
             # swap axes for FITS
