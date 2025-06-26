@@ -5,6 +5,7 @@ import time
 import math
 import tempfile
 import json
+import psutil
 import subprocess
 from datetime import datetime
 from collections import OrderedDict
@@ -499,6 +500,9 @@ class IndiAllSkyDarks(object):
 
 
     def average(self):
+        self.checkAvailableSpace()
+
+
         with app.app_context():
             self._average()
 
@@ -516,6 +520,9 @@ class IndiAllSkyDarks(object):
 
 
     def tempaverage(self):
+        self.checkAvailableSpace()
+
+
         with app.app_context():
             self._tempaverage()
 
@@ -556,6 +563,9 @@ class IndiAllSkyDarks(object):
 
 
     def sigmaclip(self):
+        self.checkAvailableSpace()
+
+
         with app.app_context():
             self._sigmaclip()
 
@@ -573,6 +583,9 @@ class IndiAllSkyDarks(object):
 
 
     def tempsigmaclip(self):
+        self.checkAvailableSpace()
+
+
         with app.app_context():
             self._tempsigmaclip()
 
@@ -1170,6 +1183,25 @@ class IndiAllSkyDarks(object):
 
         return temp_float
 
+
+    def checkAvailableSpace(self):
+        fs_list = psutil.disk_partitions(all=True)
+
+        for fs in fs_list:
+            if fs.mountpoint not in ('/tmp'):
+                continue
+
+            try:
+                disk_usage = psutil.disk_usage(fs.mountpoint)
+            except PermissionError as e:
+                logger.error('PermissionError: %s', str(e))
+                continue
+
+
+            fs_free_mb = disk_usage.total / 1024.0 / 1024.0
+            if fs_free_mb < 500:
+                logger.warning('%s filesystem has less than 500MB of available space', fs.mountpoint)
+                time.sleep(10)
 
 
 class IndiAllSkyDarksProcessor(object):
