@@ -1268,11 +1268,11 @@ class IndiAllSkyDarksProcessor(object):
         hot_pixel_count = hot_pixels.sum()
 
         if hot_pixel_count > 50000:
-            logger.warning('DETECTED MORE THAN 50000 HOT PIXELS (%d%% ADU) - MAKE SURE YOUR SENSOR IS COVERED', self.hotpixel_adu_percent)
+            logger.warning('DETECTED MORE THAN 50000 BAD PIXELS (%d%% ADU) - MAKE SURE YOUR SENSOR IS COVERED', self.hotpixel_adu_percent)
         elif hot_pixel_count == 0:
-            logger.warning('DETECTED 0 HOT PIXELS (%d%%) - BITMAX MAY NEED TO BE REDUCED', self.hotpixel_adu_percent)
+            logger.warning('DETECTED 0 BAD PIXELS (%d%%) - BITMAX MAY NEED TO BE REDUCED', self.hotpixel_adu_percent)
         else:
-            logger.info('Detected %d hot pixels (%d%%)', hot_pixel_count, self.hotpixel_adu_percent)
+            logger.info('Detected %d bad pixels (%d%%)', hot_pixel_count, self.hotpixel_adu_percent)
 
 
         hdulist[0].data = bpm
