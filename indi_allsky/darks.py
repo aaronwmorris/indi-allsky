@@ -1327,12 +1327,16 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
+            cast_type = numpy.uint32
         elif image_bitpix == 8:
             numpy_type = numpy.uint8
+            cast_type = numpy.uint16
         elif image_bitpix == -32:
             numpy_type = numpy.float32
+            cast_type = numpy.float32
         elif image_bitpix == 32:
             numpy_type = numpy.uint32
+            cast_type = numpy.float32
         else:
             raise Exception('Unknown bits per pixel')
 
@@ -1343,12 +1347,12 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
             if item.is_file() and item.suffix in ('.fit',):
                 #logger.info('Found fit: %s', item)
                 hdulist = fits.open(item)
-                image_data.append(hdulist[0].data)
+                image_data.append(hdulist[0].data.astype(cast_type))
 
 
         start = time.time()
 
-        avg_data = numpy.mean(image_data, axis=0, dtype=numpy.float32).astype(numpy_type)
+        avg_data = (numpy.sum(image_data, axis=0) / len(image_data)).astype(numpy_type)
         #logger.info('Avg dims: %s', str(avg_data.shape))
 
         elapsed_s = time.time() - start
