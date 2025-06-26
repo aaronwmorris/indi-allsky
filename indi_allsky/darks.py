@@ -988,8 +988,11 @@ class IndiAllSkyDarks(object):
         s.bitmax = self.bitmax
         s.hotpixel_adu_percent = self.hotpixel_adu_percent
 
-        bpm_adu_avg = s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
+
+        # build dark before BPM
         dark_adu_avg = s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure_f, image_bitpix)
+        bpm_adu_avg = s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
+
 
         bpm_metadata = {
             'type'       : constants.BPM_FRAME,
