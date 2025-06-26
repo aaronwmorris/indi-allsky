@@ -1348,7 +1348,7 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
 
         start = time.time()
 
-        avg_data = (numpy.sum(image_data, axis=0) / len(image_data)).astype(numpy_type)
+        avg_data = numpy.mean(image_data, axis=0, dtype=numpy.float32).astype(numpy_type)
         #logger.info('Avg dims: %s', str(avg_data.shape))
 
         elapsed_s = time.time() - start
