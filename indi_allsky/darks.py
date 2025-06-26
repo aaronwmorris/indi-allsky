@@ -1447,7 +1447,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
         combined_dark.meta['combined'] = True
 
 
-        dark_adu_avg = numpy.mean(combined_dark[0].data, axis=0)
+        dark_adu_avg = numpy.mean(combined_dark[0].data)
         logger.info('Master Dark average adu: %0.2f', dark_adu_avg)
 
 
@@ -1465,7 +1465,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
 
         # Mono data
         hot_pixels = combined_dark[0].data > hot_pixel_thold
-        hot_pixel_count = hot_pixels.sum()
+        hot_pixel_count = hot_pixels.sum()  # this is not working correctly for some reason
 
         if hot_pixel_count > 50000:
             logger.warning('DETECTED MORE THAN 50000 HOT PIXELS (>%d/%d%% ADU) - MAKE SURE YOUR SENSOR IS COVERED', hot_pixel_thold, 30)
