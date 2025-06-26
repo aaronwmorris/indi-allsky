@@ -1400,6 +1400,7 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
 
 class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
     def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
+        from astropy.io import fits
         from astropy.stats import mad_std
         import ccdproc
 
@@ -1451,6 +1452,14 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
         logger.info('Master Dark average adu: %0.2f', dark_adu_avg)
 
 
+        combined_dark.write(filename_p)
+
+
+        # counting hot pixels does not work on the data before being written to the file, I have no idea why
+        # re-reading file to count hot pixels
+        dark_from_file = fits.open(filename_p)
+
+
         if self.bitmax:
             max_value = (2 ** self.bitmax) - 1
         else:
@@ -1464,7 +1473,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
         hot_pixel_thold = int(max_value * (30 / 100))
 
         # Mono data
-        hot_pixels = combined_dark[0].data > hot_pixel_thold
+        hot_pixels = dark_from_file[0].data > hot_pixel_thold
         hot_pixel_count = hot_pixels.sum()  # this is not working correctly for some reason
 
         if hot_pixel_count > 50000:
@@ -1474,8 +1483,6 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
         else:
             logger.info('Detected %d hot pixels (>%d/%d%% ADU)', hot_pixel_count, hot_pixel_thold, 30)
 
-
-        combined_dark.write(filename_p)
 
         return dark_adu_avg
 
