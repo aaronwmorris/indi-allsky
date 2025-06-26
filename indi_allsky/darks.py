@@ -1348,7 +1348,7 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
         hot_pixel_count = hot_pixels.sum()
 
         if hot_pixel_count > 50000:
-            logger.warning('DETECTED MORE THAN 50000 HOT PIXELS (%d%%) - MAKE SURE YOUR SENSOR IS COVERED', hot_pixel_thold)
+            logger.warning('DETECTED MORE THAN 50000 HOT PIXELS (%d%%) - MAKE SURE YOUR SENSOR IS COVERED', 30)
         elif hot_pixel_count == 0:
             logger.warning('DETECTED 0 HOT PIXELS (%d%%)', 30)
         else:
@@ -1432,7 +1432,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
         hot_pixel_count = hot_pixels.sum()
 
         if hot_pixel_count > 50000:
-            logger.warning('DETECTED MORE THAN 50000 HOT PIXELS (%d%%) - MAKE SURE YOUR SENSOR IS COVERED', hot_pixel_thold)
+            logger.warning('DETECTED MORE THAN 50000 HOT PIXELS (%d%%) - MAKE SURE YOUR SENSOR IS COVERED', 30)
         elif hot_pixel_count == 0:
             logger.warning('DETECTED 0 HOT PIXELS (%d%%)', 30)
         else:
