@@ -1350,9 +1350,9 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
         if hot_pixel_count > 50000:
             logger.warning('DETECTED MORE THAN 50000 HOT PIXELS (%d%%) - MAKE SURE YOUR SENSOR IS COVERED', hot_pixel_thold)
         elif hot_pixel_count == 0:
-            logger.warning('DETECTED 0 HOT PIXELS (%d%%)', hot_pixel_thold)
+            logger.warning('DETECTED 0 HOT PIXELS (%d%%)', 30)
         else:
-            logger.info('Detected %d hot pixels (%d%%)', hot_pixel_count, hot_pixel_thold)
+            logger.info('Detected %d hot pixels (%d%%)', hot_pixel_count, 30)
 
         hdulist[0].data = avg_data
 
@@ -1434,9 +1434,9 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
         if hot_pixel_count > 50000:
             logger.warning('DETECTED MORE THAN 50000 HOT PIXELS (%d%%) - MAKE SURE YOUR SENSOR IS COVERED', hot_pixel_thold)
         elif hot_pixel_count == 0:
-            logger.warning('DETECTED 0 HOT PIXELS (%d%%)', hot_pixel_thold)
+            logger.warning('DETECTED 0 HOT PIXELS (%d%%)', 30)
         else:
-            logger.info('Detected %d hot pixels (%d%%)', hot_pixel_count, hot_pixel_thold)
+            logger.info('Detected %d hot pixels (%d%%)', hot_pixel_count, 30)
 
 
         combined_dark.write(filename_p)
