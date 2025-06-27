@@ -24,7 +24,7 @@ class DewHeaterPwm(DewHeaterBase):
 
         self.pwm = pwmio.PWMOut(pwm_pin)
 
-        self._state = None
+        self._state = 0
 
         time.sleep(1.0)
 

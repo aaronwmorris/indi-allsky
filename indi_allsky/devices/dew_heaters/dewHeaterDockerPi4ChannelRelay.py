@@ -38,7 +38,7 @@ class DewHeaterDockerPi4ChannelRelay_I2C(DewHeaterBase):
             self.OFF = 1
 
 
-        self._state = None
+        self._state = 0
 
         time.sleep(1.0)
 
