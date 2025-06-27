@@ -27,7 +27,7 @@ class DewHeaterSerialPwm(DewHeaterBase):
             raise DeviceControlException('Serial port does not exist: {0:s}'.format(str(self.serial_port)))
 
 
-        self._state = None
+        self._state = 0
 
         time.sleep(1.0)
 
