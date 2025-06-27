@@ -1,6 +1,7 @@
 ---
 services:
   indi.base:
+    image: indi.base
     build:
       context: ..
       dockerfile: docker/Dockerfile.indi_base_debian12
@@ -14,6 +15,7 @@ services:
 
 
   mariadb.indi.allsky:
+    image: mariadb.indi.allsky
     build:
       context: ..
       dockerfile: docker/Dockerfile.mariadb
@@ -25,6 +27,7 @@ services:
 
 
   indiserver.indi.allsky:
+    image: indiserver.indi.allsky
     build:
       context: ..
       dockerfile: docker/Dockerfile.indiserver_debian12
@@ -41,6 +44,7 @@ services:
 
 
   gunicorn.indi.allsky:
+    image: gunicorn.indi.allsky
     build:
       context: ..
       dockerfile: docker/Dockerfile.gunicorn
@@ -55,6 +59,7 @@ services:
 
 
   capture.indi.allsky:
+    image: capture.indi.allsky
     build:
       context: ..
       dockerfile: docker/Dockerfile.capture
@@ -70,6 +75,7 @@ services:
 
 
   webserver.indi.allsky:
+    image: webserver.indi.allsky
     build:
       context: ..
       dockerfile: docker/Dockerfile.webserver_apache
@@ -87,6 +93,7 @@ services:
 
 
   mosquitto.indi.allsky:
+    image: mosquitto.indi.allsky
     build:
       context: ..
       dockerfile: docker/Dockerfile.mosquitto
