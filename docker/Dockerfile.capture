@@ -1,4 +1,4 @@
-FROM docker-indi.base
+FROM indi.base
 
 ARG DEBIAN_FRONTEND=noninteractive
 

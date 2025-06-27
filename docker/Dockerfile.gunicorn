@@ -1,5 +1,3 @@
-
-# docker- prefix due to files in docker/ folder
 FROM python:3.11-slim
 
 ARG DEBIAN_FRONTEND=noninteractive

@@ -1,6 +1,4 @@
-
-# docker- prefix due to files in docker/ folder
-FROM docker-indi.base
+FROM indi.base
 
 ARG INDI_VERSION
 ARG INDI_CAMERA_VENDOR

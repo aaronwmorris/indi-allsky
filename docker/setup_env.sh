@@ -18,9 +18,11 @@ cd "$OLDPWD"
 
 if [ ! -f "${DOCKER_DIRECTORY}/.env" ]; then
     sudo true
+
     sudo apt-get update
-    sudo apt-get -f install \
-        python3-cryptography
+    sudo apt-get -y install \
+        python3-cryptography \
+        whiptail
 
 
     INDIALLSKY_FLASK_SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex())')
