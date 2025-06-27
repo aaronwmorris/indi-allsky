@@ -768,6 +768,8 @@ class DarkFramesView(TemplateView):
                 'gain'         : d.gain,
                 'exposure'     : d.exposure,
                 'binmode'      : d.binmode,
+                'width'        : d.width,
+                'height'       : d.height,
                 'temp'         : d.temp,
                 'adu'          : d.adu,
                 'filename'     : d.filename,
@@ -788,6 +790,8 @@ class DarkFramesView(TemplateView):
                 'gain'         : b.gain,
                 'exposure'     : b.exposure,
                 'binmode'      : b.binmode,
+                'width'        : d.width,
+                'height'       : d.height,
                 'temp'         : b.temp,
                 'adu'          : b.adu,
                 'filename'     : b.filename,
@@ -1989,7 +1993,7 @@ class ConfigView(FormView):
             'STARTRAILS_MOON_ALT_THOLD'      : self.indi_allsky_config.get('STARTRAILS_MOON_ALT_THOLD', 91.0),
             'STARTRAILS_MOON_PHASE_THOLD'    : self.indi_allsky_config.get('STARTRAILS_MOON_PHASE_THOLD', 101.0),
             'STARTRAILS_MAX_ADU'             : self.indi_allsky_config.get('STARTRAILS_MAX_ADU', 65),
-            'STARTRAILS_MASK_THOLD'          : self.indi_allsky_config.get('STARTRAILS_MASK_THOLD', 200),
+            'STARTRAILS_MASK_THOLD'          : self.indi_allsky_config.get('STARTRAILS_MASK_THOLD', 255),
             'STARTRAILS_PIXEL_THOLD'         : self.indi_allsky_config.get('STARTRAILS_PIXEL_THOLD', 1.0),
             'STARTRAILS_MIN_STARS'           : self.indi_allsky_config.get('STARTRAILS_MIN_STARS', 0),
             'STARTRAILS_TIMELAPSE'           : self.indi_allsky_config.get('STARTRAILS_TIMELAPSE', True),
@@ -2001,6 +2005,8 @@ class ConfigView(FormView):
             'STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY' : self.indi_allsky_config.get('STARTRAILS', {}).get('IMAGE_CIRCLE_MASK_OPACITY', 100),
             'IMAGE_CALIBRATE_DARK'           : self.indi_allsky_config.get('IMAGE_CALIBRATE_DARK', True),
             'IMAGE_CALIBRATE_BPM'            : self.indi_allsky_config.get('IMAGE_CALIBRATE_BPM', False),
+            'IMAGE_CALIBRATE_FIX_HOLES'      : self.indi_allsky_config.get('IMAGE_CALIBRATE_FIX_HOLES', False),
+            'IMAGE_CALIBRATE_HOLE_THOLD'     : self.indi_allsky_config.get('IMAGE_CALIBRATE_HOLE_THOLD', 30),
             'IMAGE_CALIBRATE_MANUAL_OFFSET'  : self.indi_allsky_config.get('IMAGE_CALIBRATE_MANUAL_OFFSET', 0),
             'IMAGE_SAVE_FITS_PRE_DARK'       : self.indi_allsky_config.get('IMAGE_SAVE_FITS_PRE_DARK', False),
             'IMAGE_EXIF_PRIVACY'             : self.indi_allsky_config.get('IMAGE_EXIF_PRIVACY', False),
@@ -2852,6 +2858,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['STARTRAILS']['IMAGE_CIRCLE_MASK_OPACITY']  = int(request.json['STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY'])
         self.indi_allsky_config['IMAGE_CALIBRATE_DARK']                 = bool(request.json['IMAGE_CALIBRATE_DARK'])
         self.indi_allsky_config['IMAGE_CALIBRATE_BPM']                  = bool(request.json['IMAGE_CALIBRATE_BPM'])
+        self.indi_allsky_config['IMAGE_CALIBRATE_FIX_HOLES']            = bool(request.json['IMAGE_CALIBRATE_FIX_HOLES'])
+        self.indi_allsky_config['IMAGE_CALIBRATE_HOLE_THOLD']           = int(request.json['IMAGE_CALIBRATE_HOLE_THOLD'])
         self.indi_allsky_config['IMAGE_CALIBRATE_MANUAL_OFFSET']        = int(request.json['IMAGE_CALIBRATE_MANUAL_OFFSET'])
         self.indi_allsky_config['IMAGE_SAVE_FITS_PRE_DARK']             = bool(request.json['IMAGE_SAVE_FITS_PRE_DARK'])
         self.indi_allsky_config['IMAGE_EXIF_PRIVACY']                   = bool(request.json['IMAGE_EXIF_PRIVACY'])
@@ -6477,6 +6485,8 @@ class ImageProcessingView(TemplateView):
             'PROCESSING_SPLIT_SCREEN'        : False,
             'IMAGE_CALIBRATE_DARK'           : False,  # darks are almost always already applied
             'IMAGE_CALIBRATE_BPM'            : False,
+            'IMAGE_CALIBRATE_FIX_HOLES'      : self.indi_allsky_config.get('IMAGE_CALIBRATE_FIX_HOLES', False),
+            'IMAGE_CALIBRATE_HOLE_THOLD'     : self.indi_allsky_config.get('IMAGE_CALIBRATE_HOLE_THOLD', 30),
             'IMAGE_CALIBRATE_MANUAL_OFFSET'  : self.indi_allsky_config.get('IMAGE_CALIBRATE_MANUAL_OFFSET', 0),
             'IMAGE_LABEL_TEMPLATE'           : self.indi_allsky_config.get('IMAGE_LABEL_TEMPLATE', ''),
             'IMAGE_EXTRA_TEXT'               : self.indi_allsky_config.get('IMAGE_EXTRA_TEXT'),
@@ -6683,6 +6693,8 @@ class JsonImageProcessingView(JsonView):
         p_config['CCD_BIT_DEPTH']                        = int(request.json['CCD_BIT_DEPTH'])
         p_config['IMAGE_CALIBRATE_DARK']                 = bool(request.json['IMAGE_CALIBRATE_DARK'])
         p_config['IMAGE_CALIBRATE_BPM']                  = bool(request.json['IMAGE_CALIBRATE_BPM'])
+        p_config['IMAGE_CALIBRATE_FIX_HOLES']            = bool(request.json['IMAGE_CALIBRATE_FIX_HOLES'])
+        p_config['IMAGE_CALIBRATE_HOLE_THOLD']           = int(request.json['IMAGE_CALIBRATE_HOLE_THOLD'])
         p_config['IMAGE_CALIBRATE_MANUAL_OFFSET']        = int(request.json['IMAGE_CALIBRATE_MANUAL_OFFSET'])
         p_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
         p_config['CONTRAST_ENHANCE_16BIT']               = bool(request.json['CONTRAST_ENHANCE_16BIT'])

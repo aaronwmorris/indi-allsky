@@ -5,6 +5,7 @@ from datetime import datetime
 #from datetime import timedelta
 from datetime import timezone
 import math
+import random  # noqa: F401
 import time
 import signal
 import numpy
@@ -779,7 +780,7 @@ class ImageProcessor(object):
 
 
         try:
-            calibrated_data = self._apply_calibration(i_ref.hdulist[0].data, i_ref.exposure, i_ref.camera_id, i_ref.image_bitpix)
+            calibrated_data = self._apply_calibration(i_ref)
             i_ref.hdulist[0].data = calibrated_data
 
             i_ref.calibrated = True
@@ -804,19 +805,21 @@ class ImageProcessor(object):
                 i_ref.hdulist[0].data = cv2.subtract(i_ref.hdulist[0].data, manual_offset_scaled)
 
 
-    def _apply_calibration(self, data, exposure, camera_id, image_bitpix):
+    def _apply_calibration(self, i_ref):
         from astropy.io import fits
+
+        data = i_ref.hdulist[0].data
 
         if self.config.get('IMAGE_CALIBRATE_BPM'):
             # pick a bad pixel map that is closest to the exposure and temperature
-            logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensors_temp_av[0])
+            logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, i_ref.exposure, self.sensors_temp_av[0])
             bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
-                .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
+                .filter(IndiAllSkyDbBadPixelMapTable.camera_id == i_ref.camera_id)\
                 .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
-                .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
+                .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == i_ref.image_bitpix)\
                 .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
                 .filter(IndiAllSkyDbBadPixelMapTable.gain >= self.gain_v.value)\
-                .filter(IndiAllSkyDbBadPixelMapTable.exposure >= exposure)\
+                .filter(IndiAllSkyDbBadPixelMapTable.exposure >= i_ref.exposure)\
                 .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensors_temp_av[0])\
                 .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
                 .order_by(
@@ -832,12 +835,12 @@ class ImageProcessor(object):
 
                 # pick a bad pixel map that matches the exposure at the hightest temperature found
                 bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
-                    .filter(IndiAllSkyDbBadPixelMapTable.camera_id == camera_id)\
+                    .filter(IndiAllSkyDbBadPixelMapTable.camera_id == i_ref.camera_id)\
                     .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
-                    .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == image_bitpix)\
+                    .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == i_ref.image_bitpix)\
                     .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
                     .filter(IndiAllSkyDbBadPixelMapTable.gain >= self.gain_v.value)\
-                    .filter(IndiAllSkyDbBadPixelMapTable.exposure >= exposure)\
+                    .filter(IndiAllSkyDbBadPixelMapTable.exposure >= i_ref.exposure)\
                     .order_by(
                         IndiAllSkyDbBadPixelMapTable.gain.asc(),
                         IndiAllSkyDbBadPixelMapTable.exposure.asc(),
@@ -850,9 +853,9 @@ class ImageProcessor(object):
                 if not bpm_entry:
                     logger.warning(
                         'Bad Pixel Map not found: ccd%d %dbit %0.7fs gain %d bin %d %0.2fc',
-                        camera_id,
-                        image_bitpix,
-                        float(exposure),
+                        i_ref.camera_id,
+                        i_ref.image_bitpix,
+                        float(i_ref.exposure),
                         self.gain_v.value,
                         self.bin_v.value,
                         self.sensors_temp_av[0],
@@ -862,14 +865,14 @@ class ImageProcessor(object):
 
 
         # pick a dark frame that is closest to the exposure and temperature
-        logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, exposure, self.sensors_temp_av[0])
+        logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, i_ref.exposure, self.sensors_temp_av[0])
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
-            .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
+            .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
-            .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
+            .filter(IndiAllSkyDbDarkFrameTable.bitdepth == i_ref.image_bitpix)\
             .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
             .filter(IndiAllSkyDbDarkFrameTable.gain >= self.gain_v.value)\
-            .filter(IndiAllSkyDbDarkFrameTable.exposure >= exposure)\
+            .filter(IndiAllSkyDbDarkFrameTable.exposure >= i_ref.exposure)\
             .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensors_temp_av[0])\
             .filter(IndiAllSkyDbDarkFrameTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
             .order_by(
@@ -885,12 +888,12 @@ class ImageProcessor(object):
 
             # pick a dark frame that matches the exposure at the hightest temperature found
             dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
-                .filter(IndiAllSkyDbDarkFrameTable.camera_id == camera_id)\
+                .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
                 .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
-                .filter(IndiAllSkyDbDarkFrameTable.bitdepth == image_bitpix)\
+                .filter(IndiAllSkyDbDarkFrameTable.bitdepth == i_ref.image_bitpix)\
                 .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
                 .filter(IndiAllSkyDbDarkFrameTable.gain >= self.gain_v.value)\
-                .filter(IndiAllSkyDbDarkFrameTable.exposure >= exposure)\
+                .filter(IndiAllSkyDbDarkFrameTable.exposure >= i_ref.exposure)\
                 .order_by(
                     IndiAllSkyDbDarkFrameTable.gain.asc(),
                     IndiAllSkyDbDarkFrameTable.exposure.asc(),
@@ -903,9 +906,9 @@ class ImageProcessor(object):
             if not dark_frame_entry:
                 logger.warning(
                     'Dark not found: ccd%d %dbit %0.7fs gain %d bin %d %0.2fc',
-                    camera_id,
-                    image_bitpix,
-                    float(exposure),
+                    i_ref.camera_id,
+                    i_ref.image_bitpix,
+                    float(i_ref.exposure),
                     self.gain_v.value,
                     self.bin_v.value,
                     self.sensors_temp_av[0],
@@ -946,10 +949,12 @@ class ImageProcessor(object):
             master_dark = dark
 
 
+        master_dark_height, master_dark_width = master_dark.shape[:2]
+
+
         if master_dark.shape != data.shape:
             image_height, image_width = data.shape[:2]  # there might be a 3rd dimension for RGB data
-            dark_height, dark_width = master_dark.shape[:2]
-            logger.error('Dark frame calibration dimensions mismatch - %dx%d vs %dx%d', image_width, image_height, dark_width, dark_height)
+            logger.error('Dark frame calibration dimensions mismatch - %dx%d vs %dx%d', image_width, image_height, master_dark_width, master_dark_height)
             raise CalibrationNotFound('Dark frame calibration dimension mismatch')
 
 
@@ -968,10 +973,143 @@ class ImageProcessor(object):
             data_calibrated[data_calibrated < 0] = 0
 
             data_calibrated = data_calibrated.astype(numpy.uint32)
-        else:
+        elif data.dtype.type == numpy.uint16:
+            if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
+                hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 30)
+
+
+                if len(data.shape) == 2:
+                    ### mono/bayered
+                    max_value = (2 ** self.max_bit_depth) - 1
+
+
+                    ### fake hot pixels
+                    ### single hot pixel
+                    #master_dark[int(master_dark_height / 2)][int(master_dark_width / 2)] = max_value
+
+
+                    ### multiple hot pixels
+                    #for _ in range(10000):
+                    #    r_x = random.randrange(master_dark_width)
+                    #    r_y = random.randrange(master_dark_height)
+                    #    master_dark[r_y][r_x] = max_value
+
+
+                    i_ref.hole_mask = master_dark > int(max_value * (hole_thold / 100))
+
+                else:
+                    ### RGB (fits)
+                    # there should never be a case where 16-bit RGB data is used
+                    # no hole mask
+                    pass
+
+
             data_calibrated = cv2.subtract(data, master_dark)
+        elif data.dtype.type == numpy.uint8:
+            if self.config.get('IMAGE_CALIBRATE_FIX_HOLES'):
+                hole_thold = self.config.get('IMAGE_CALIBRATE_HOLE_THOLD', 30)
+
+
+                if len(master_dark.shape) == 2:
+                    ### mono/bayered
+                    i_ref.hole_mask = master_dark > int(255 * (hole_thold / 100))
+                else:
+                    ### RGB (fits)
+                    # Convert to uint16 datatype to prevent overflows
+                    #master_dark_16 = master_dark.astype(numpy.uint16)
+
+                    #R, G, B = numpy.split(master_dark, 3, axis=0)
+                    #i_ref.hole_mask = (R + G + B) > int(255 * (hole_thold / 100))
+
+                    # each index is R, G, B
+                    i_ref.hole_mask = numpy.maximum.reduce([master_dark[0], master_dark[1], master_dark[2]]) > int(255 * (hole_thold / 100))
+
+
+            data_calibrated = cv2.subtract(data, master_dark)
+        else:
+            # this should never happen
+            raise CalibrationNotFound('Unknown image data type: {0:s}'.format(str(data.dtype.type)))
+
 
         return data_calibrated
+
+
+    def fix_holes_early(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
+        i_ref = self.getLatestImage()
+
+        if isinstance(i_ref.hole_mask, type(None)):
+            #logger.info('No hole mask')
+            return
+
+        self._fix_holes_early(i_ref)
+
+
+    def _fix_holes_early(self, i_ref):
+        ### attempt to fix holes left by subtraction
+
+        hole_count = i_ref.hole_mask.sum()
+        #logger.info('Counted holes: %d', hole_count)
+
+
+        if hole_count > 50000:
+            logger.warning('Too many holes detected, dark frame may be invalid')
+            return
+
+        data = i_ref.hdulist[0].data
+
+
+        holes_start = time.time()
+
+
+        if len(data.shape) == 2:
+            # mono/bayered
+            ### using an offset of 2 because want the same color pixel for bayered data
+            for y, x in numpy.argwhere(i_ref.hole_mask):
+                try:
+                    alt_value_1 = data[y + 2][x]
+                except IndexError:
+                    alt_value_1 = data[y - 2][x]
+
+                try:
+                    alt_value_2 = data[y][x + 2]
+                except IndexError:
+                    alt_value_2 = data[y][x - 2]
+
+
+                data[y][x] = numpy.maximum(alt_value_1, alt_value_2)
+        else:
+            # RGB (fits)
+            for y, x in numpy.argwhere(i_ref.hole_mask):
+                try:
+                    r_alt_value_1 = data[0][y + 2][x]
+                    g_alt_value_1 = data[1][y + 2][x]
+                    b_alt_value_1 = data[2][y + 2][x]
+                except IndexError:
+                    r_alt_value_1 = data[0][y - 2][x]
+                    g_alt_value_1 = data[1][y - 2][x]
+                    b_alt_value_1 = data[2][y - 2][x]
+
+                try:
+                    r_alt_value_2 = data[0][y][x + 2]
+                    g_alt_value_2 = data[1][y][x + 2]
+                    b_alt_value_2 = data[2][y][x + 2]
+                except IndexError:
+                    r_alt_value_2 = data[0][y][x - 2]
+                    g_alt_value_2 = data[1][y][x - 2]
+                    b_alt_value_2 = data[2][y][x - 2]
+
+
+                data[0][y][x] = max(r_alt_value_1, r_alt_value_2)
+                data[1][y][x] = max(g_alt_value_1, g_alt_value_2)
+                data[2][y][x] = max(b_alt_value_1, b_alt_value_2)
+
+
+        holes_elapsed_s = time.time() - holes_start
+        logger.info('Fixed %d holes in %0.4f s', hole_count, holes_elapsed_s)
 
 
     def calculate_8bit_adu(self):
@@ -1697,79 +1835,21 @@ class ImageProcessor(object):
         self.image = cv2.cvtColor(self.image, cv2.COLOR_GRAY2BGR)
 
 
-    def make_holes(self):
-        image_height, image_width = self.image.shape[:2]
-        mid_height = int(image_height / 2)
-        mid_width = int(image_width / 2)
+    def circleHoles(self, i_ref):
+        if len(self.image.shape) == 2:
+            # mono
+            color_bgr = 255
+        else:
+            color_bgr = (0, 0, 64)
 
-        # 1x1
-        self.image[mid_height - 100][mid_width]     = (0, 0, 0)
-
-        # 2x2
-        self.image[mid_height][mid_width]           = (0, 0, 0)
-        self.image[mid_height][mid_width + 1]       = (0, 0, 0)
-        self.image[mid_height + 1][mid_width]       = (0, 0, 0)
-        self.image[mid_height + 1][mid_width + 1]   = (0, 0, 0)
-
-        # 3x3
-        self.image[mid_height + 99][mid_width - 1]  = (0, 0, 0)
-        self.image[mid_height + 99][mid_width]      = (0, 0, 0)
-        self.image[mid_height + 99][mid_width + 1]  = (0, 0, 0)
-        self.image[mid_height + 100][mid_width - 1] = (0, 0, 0)
-        self.image[mid_height + 100][mid_width]     = (0, 0, 0)
-        self.image[mid_height + 100][mid_width + 1] = (0, 0, 0)
-        self.image[mid_height + 101][mid_width - 1] = (0, 0, 0)
-        self.image[mid_height + 101][mid_width]     = (0, 0, 0)
-        self.image[mid_height + 101][mid_width + 1] = (0, 0, 0)
-
-
-        cv2.circle(
-            img=self.image,
-            center=(mid_width, mid_height - 100),
-            radius=10,
-            color=(0, 0, 64),
-            thickness=1,
-        )
-
-        cv2.circle(
-            img=self.image,
-            center=(mid_width, mid_height),
-            radius=10,
-            color=(0, 0, 64),
-            thickness=1,
-        )
-
-        cv2.circle(
-            img=self.image,
-            center=(mid_width, mid_height + 100),
-            radius=10,
-            color=(0, 0, 64),
-            thickness=1,
-        )
-
-
-    def fix_holes(self):
-        ### the purpose of this is to fill in gaps left by subtracting hot pixels with neighboring data
-        ### not quite working yet
-
-        holes_start = time.time()
-
-        # Convert to uint16 datatype to prevent overflows
-        image = self.image.astype(numpy.uint16)
-
-        # Split up the channels
-        B, G, R = image.transpose(2, 0, 1)
-
-        # Use numpy.abs and 2D sliced data to get 2D mask
-        #mask = numpy.abs(B + G + R) == 0
-        mask = (B + G + R) == 0
-
-        idx = numpy.where(~mask, numpy.arange(mask.shape[1]), 0)
-        numpy.maximum.accumulate(idx, axis=1, out=idx)
-        self.image = self.image[numpy.arange(idx.shape[0])[:, None], idx]
-
-        holes_elapsed_s = time.time() - holes_start
-        logger.info('Fixed holes in %0.4f s', holes_elapsed_s)
+        for y, x in numpy.argwhere(i_ref.hole_mask):
+            cv2.circle(
+                img=self.image,
+                center=(x, y),
+                radius=10,
+                color=color_bgr,
+                thickness=1,
+            )
 
 
     def apply_image_circle_mask(self):

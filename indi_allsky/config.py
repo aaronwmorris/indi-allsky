@@ -179,7 +179,7 @@ class IndiAllSkyConfigBase(object):
             "LABEL"         : False,
         },
         "STARTRAILS_MAX_ADU"    : 65,
-        "STARTRAILS_MASK_THOLD" : 200,
+        "STARTRAILS_MASK_THOLD" : 255,
         "STARTRAILS_PIXEL_THOLD": 1.0,
         "STARTRAILS_MIN_STARS"  : 0,
         "STARTRAILS_TIMELAPSE"  : True,
@@ -197,6 +197,8 @@ class IndiAllSkyConfigBase(object):
         },
         "IMAGE_CALIBRATE_DARK"          : True,
         "IMAGE_CALIBRATE_BPM"           : False,
+        "IMAGE_CALIBRATE_FIX_HOLES"     : False,
+        "IMAGE_CALIBRATE_HOLE_THOLD"    : 30,
         "IMAGE_CALIBRATE_MANUAL_OFFSET" : 0,
         "IMAGE_EXIF_PRIVACY"    : False,
         "IMAGE_FILE_TYPE" : "jpg",  # jpg, png, or tif

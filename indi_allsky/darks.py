@@ -5,6 +5,7 @@ import time
 import math
 import tempfile
 import json
+import psutil
 import subprocess
 from datetime import datetime
 from collections import OrderedDict
@@ -499,6 +500,9 @@ class IndiAllSkyDarks(object):
 
 
     def average(self):
+        self.checkAvailableSpace()
+
+
         with app.app_context():
             self._average()
 
@@ -516,6 +520,9 @@ class IndiAllSkyDarks(object):
 
 
     def tempaverage(self):
+        self.checkAvailableSpace()
+
+
         with app.app_context():
             self._tempaverage()
 
@@ -556,6 +563,9 @@ class IndiAllSkyDarks(object):
 
 
     def sigmaclip(self):
+        self.checkAvailableSpace()
+
+
         with app.app_context():
             self._sigmaclip()
 
@@ -573,6 +583,9 @@ class IndiAllSkyDarks(object):
 
 
     def tempsigmaclip(self):
+        self.checkAvailableSpace()
+
+
         with app.app_context():
             self._tempsigmaclip()
 
@@ -918,6 +931,7 @@ class IndiAllSkyDarks(object):
 
             hdulist[0].header['BUNIT'] = 'ADU'  # hack for ccdproc
 
+
             #logger.info('Shape: %s', str(hdulist[0].data.shape))
             if len(hdulist[0].data.shape) == 3:
                 # RGB fits data
@@ -974,8 +988,11 @@ class IndiAllSkyDarks(object):
         s.bitmax = self.bitmax
         s.hotpixel_adu_percent = self.hotpixel_adu_percent
 
-        bpm_adu_avg = s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
+
+        # build dark before BPM
         dark_adu_avg = s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure_f, image_bitpix)
+        bpm_adu_avg = s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
+
 
         bpm_metadata = {
             'type'       : constants.BPM_FRAME,
@@ -1170,6 +1187,25 @@ class IndiAllSkyDarks(object):
         return temp_float
 
 
+    def checkAvailableSpace(self):
+        fs_list = psutil.disk_partitions(all=True)
+
+        for fs in fs_list:
+            if fs.mountpoint not in ('/tmp'):
+                continue
+
+            try:
+                disk_usage = psutil.disk_usage(fs.mountpoint)
+            except PermissionError as e:
+                logger.error('PermissionError: %s', str(e))
+                continue
+
+
+            fs_free_mb = disk_usage.total / 1024.0 / 1024.0
+            if fs_free_mb < 500:
+                logger.warning('%s filesystem has less than 500MB of available space', fs.mountpoint)
+                time.sleep(10)
+
 
 class IndiAllSkyDarksProcessor(object):
     def __init__(self, gain_v, bin_v):
@@ -1238,19 +1274,41 @@ class IndiAllSkyDarksProcessor(object):
         max_val = numpy.amax(bpm)
         logger.info('Image max value: %0.1f', float(max_val))
 
+
         if self.bitmax:
-            bitmax_percent = ((2 ** self.bitmax) - 1) * (self.hotpixel_adu_percent / 100.0)
+            max_value = (2 ** self.bitmax) - 1
         else:
             if numpy_type in (numpy.float32, numpy.uint32):
                 # assume 16bit max
-                bitmax_percent = ((2 ** 16) - 1) * (self.hotpixel_adu_percent / 100.0)
+                max_value = (2 ** 16) - 1
             else:
-                bitmax_percent = ((2 ** image_bitpix) - 1) * (self.hotpixel_adu_percent / 100.0)
+                max_value = (2 ** image_bitpix) - 1
 
-        bpm[bpm < bitmax_percent] = 0  # filter all values less than max value
+
+        hot_pixel_thold = int(max_value * (self.hotpixel_adu_percent / 100.0))
+        bpm[bpm < hot_pixel_thold] = 0  # filter all values less than max value
 
         bpm_adu_avg = numpy.mean(bpm)
         logger.info('Master BPM average adu: %0.2f', bpm_adu_avg)
+
+
+        if len(bpm.shape) == 3:
+            # RGB fits data
+            hot_pixels = numpy.maximum.reduce([bpm[0], bpm[1], bpm[2]]) > 0
+        else:
+            # Mono data
+            hot_pixels = bpm > 0
+
+
+        hot_pixel_count = hot_pixels.sum()
+
+        if hot_pixel_count > 50000:
+            logger.warning('DETECTED MORE THAN 50000 BAD PIXELS (>%d/%d%% ADU) - MAKE SURE YOUR SENSOR IS COVERED', hot_pixel_thold, self.hotpixel_adu_percent)
+        elif hot_pixel_count == 0:
+            logger.warning('DETECTED 0 BAD PIXELS (>%d/%d%% ADU) - BITMAX MAY NEED TO BE REDUCED', hot_pixel_thold, self.hotpixel_adu_percent)
+        else:
+            logger.info('Detected %d bad pixels (>%d/%d%% ADU)', hot_pixel_count, hot_pixel_thold, self.hotpixel_adu_percent)
+
 
         hdulist[0].data = bpm
 
@@ -1272,12 +1330,16 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
+            cast_type = numpy.uint32
         elif image_bitpix == 8:
             numpy_type = numpy.uint8
+            cast_type = numpy.uint16
         elif image_bitpix == -32:
             numpy_type = numpy.float32
+            cast_type = numpy.float32
         elif image_bitpix == 32:
             numpy_type = numpy.uint32
+            cast_type = numpy.float32
         else:
             raise Exception('Unknown bits per pixel')
 
@@ -1288,7 +1350,7 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
             if item.is_file() and item.suffix in ('.fit',):
                 #logger.info('Found fit: %s', item)
                 hdulist = fits.open(item)
-                image_data.append(hdulist[0].data)
+                image_data.append(hdulist[0].data.astype(cast_type))
 
 
         start = time.time()
@@ -1302,6 +1364,35 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
         dark_adu_avg = numpy.mean(avg_data)
         logger.info('Master Dark average adu: %0.2f', dark_adu_avg)
 
+
+        if self.bitmax:
+            max_value = (2 ** self.bitmax) - 1
+        else:
+            if numpy_type in (numpy.float32, numpy.uint32):
+                # assume 16bit max
+                max_value = (2 ** self.bitmax) - 1
+            else:
+                max_value = (2 ** image_bitpix) - 1
+
+
+        hot_pixel_thold = int(max_value * (30 / 100))
+
+        if len(avg_data.shape) == 3:
+            # RGB fits data
+            hot_pixels = numpy.maximum.reduce([avg_data[0], avg_data[1], avg_data[2]]) > hot_pixel_thold
+        else:
+            # Mono data
+            hot_pixels = avg_data > hot_pixel_thold
+
+        hot_pixel_count = hot_pixels.sum()
+
+        if hot_pixel_count > 50000:
+            logger.warning('DETECTED MORE THAN 50000 HOT PIXELS (>%d/%d%% ADU) - MAKE SURE YOUR SENSOR IS COVERED', hot_pixel_thold, 30)
+        elif hot_pixel_count == 0:
+            logger.warning('DETECTED 0 HOT PIXELS (>%d/%d%% ADU)', hot_pixel_thold, 30)
+        else:
+            logger.info('Detected %d hot pixels (>%d/%d%% ADU)', hot_pixel_count, hot_pixel_thold, 30)
+
         hdulist[0].data = avg_data
 
         # reuse the last fits file for the stacked data
@@ -1312,6 +1403,7 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
 
 class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
     def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
+        from astropy.io import fits
         from astropy.stats import mad_std
         import ccdproc
 
@@ -1335,17 +1427,22 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
 
         start = time.time()
 
-        combined_dark = ccdproc.combine(
-            cal_darks,
-            method='average',
-            sigma_clip=True,
-            sigma_clip_low_thresh=5,
-            sigma_clip_high_thresh=5,
-            sigma_clip_func=numpy.ma.median,
-            signma_clip_dev_func=mad_std,
-            dtype=numpy_type,
-            mem_limit=350000000,
-        )
+        try:
+            combined_dark = ccdproc.combine(
+                cal_darks,
+                method='average',
+                sigma_clip=True,
+                sigma_clip_low_thresh=5,
+                sigma_clip_high_thresh=5,
+                sigma_clip_func=numpy.ma.median,
+                signma_clip_dev_func=mad_std,
+                dtype=numpy_type,
+                mem_limit=350000000,
+            )
+        except ValueError as e:
+            logger.error('ValueError: %s', str(e))
+            logger.error('Performing sigma clipping stacking on RGB data is the most common cause of this error, use "average" instead')
+            sys.exit(1)
 
         elapsed_s = time.time() - start
         logger.info('Exposure sigma clip stacked in %0.4f s', elapsed_s)
@@ -1353,10 +1450,42 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
 
         combined_dark.meta['combined'] = True
 
-        dark_adu_avg = numpy.mean(combined_dark[0].data, axis=0)
+
+        dark_adu_avg = numpy.mean(combined_dark[0].data)
         logger.info('Master Dark average adu: %0.2f', dark_adu_avg)
 
+
         combined_dark.write(filename_p)
+
+
+        # counting hot pixels does not work on the data before being written to the file, I have no idea why
+        # re-reading file to count hot pixels
+        dark_from_file = fits.open(filename_p)
+
+
+        if self.bitmax:
+            max_value = (2 ** self.bitmax) - 1
+        else:
+            if numpy_type in (numpy.float32, numpy.uint32):
+                # assume 16bit max
+                max_value = (2 ** 16) - 1
+            else:
+                max_value = (2 ** image_bitpix) - 1
+
+
+        hot_pixel_thold = int(max_value * (30 / 100))
+
+        # Mono data
+        hot_pixels = dark_from_file[0].data > hot_pixel_thold
+        hot_pixel_count = hot_pixels.sum()  # this is not working correctly for some reason
+
+        if hot_pixel_count > 50000:
+            logger.warning('DETECTED MORE THAN 50000 HOT PIXELS (>%d/%d%% ADU) - MAKE SURE YOUR SENSOR IS COVERED', hot_pixel_thold, 30)
+        elif hot_pixel_count == 0:
+            logger.warning('DETECTED 0 HOT PIXELS (>%d/%d%% ADU)', hot_pixel_thold, 30)
+        else:
+            logger.info('Detected %d hot pixels (>%d/%d%% ADU)', hot_pixel_count, hot_pixel_thold, 30)
+
 
         return dark_adu_avg
 

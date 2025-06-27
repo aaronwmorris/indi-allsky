@@ -27,6 +27,7 @@ var camera_id = {{ camera_id }};
     <th>Camera</th>
     <th>Date</th>
     <th>Active</th>
+    <th>Size</th>
     <th>Bit Depth</th>
     <th>Gain</th>
     <th>Exposure</th>
@@ -42,6 +43,7 @@ var camera_id = {{ camera_id }};
     <td>{{ dark.camera_name }}</td>
     <td>{{ dark.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
     <td>{{ dark.active }}</td>
+    <td>{{ dark.width }}x{{ dark.height }}</td>
     <td>{{ dark.bitdepth }}</td>
     <td>{{ dark.gain }}</td>
     <td>{{ dark.exposure }}</td>
@@ -63,6 +65,7 @@ var camera_id = {{ camera_id }};
     <th>Camera</th>
     <th>Date</th>
     <th>Active</th>
+    <th>Size</th>
     <th>Bit Depth</th>
     <th>Gain</th>
     <th>Exposure</th>
@@ -78,6 +81,7 @@ var camera_id = {{ camera_id }};
     <td>{{ bpm.camera_name }}</td>
     <td>{{ bpm.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
     <td>{{ bpm.active }}</td>
+    <td>{{ bpm.width }}x{{ bpm.height }}</td>
     <td>{{ bpm.bitdepth }}</td>
     <td>{{ bpm.gain }}</td>
     <td>{{ bpm.exposure }}</td>

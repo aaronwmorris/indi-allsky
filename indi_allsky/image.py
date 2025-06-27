@@ -366,6 +366,9 @@ class ImageWorker(Process):
         self.image_processor.calibrate(libcamera_black_level=libcamera_black_level)
 
 
+        self.image_processor.fix_holes_early()
+
+
         if self.config.get('IMAGE_SAVE_FITS'):
             if not self.config.get('IMAGE_SAVE_FITS_PRE_DARK'):
                 self.write_fit(i_ref, camera)
@@ -580,10 +583,6 @@ class ImageWorker(Process):
 
 
         self.image_processor.colorize()
-
-
-        #self.image_processor.make_holes()
-        #self.image_processor.fix_holes()
 
 
         longterm_keogram_pixels = self.save_longterm_keogram_data(exp_date, camera_id)

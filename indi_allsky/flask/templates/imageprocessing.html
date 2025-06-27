@@ -187,6 +187,34 @@ var fullscreen = false;  //initial state
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CALIBRATE_FIX_HOLES.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.IMAGE_CALIBRATE_FIX_HOLES(class='form-check-input') }}
+                <div id="IMAGE_CALIBRATE_FIX_HOLES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Fix holes left by dark frame calibration (BETA)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CALIBRATE_HOLE_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CALIBRATE_HOLE_THOLD(class='form-control bg-secondary') }}
+            <div id="IMAGE_CALIBRATE_HOLE_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Percentage of max ADU for fixing holes left by dark frames [default: 30%]</div>
+        </div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -1788,6 +1816,7 @@ const field_names = [
     'LENS_AZIMUTH',
     'CCD_BIT_DEPTH',
     'IMAGE_CALIBRATE_MANUAL_OFFSET',
+    'IMAGE_CALIBRATE_HOLE_THOLD',
     'CLAHE_CLIPLIMIT',
     'CLAHE_GRIDSIZE',
     'IMAGE_STRETCH__CLASSNAME',
@@ -1886,6 +1915,7 @@ const checkbox_field_names = [
     'DISABLE_PROCESSING',
     'IMAGE_CALIBRATE_DARK',
     'IMAGE_CALIBRATE_BPM',
+    'IMAGE_CALIBRATE_FIX_HOLES',
     'NIGHT_CONTRAST_ENHANCE',
     'CONTRAST_ENHANCE_16BIT',
     'AUTO_WB',
