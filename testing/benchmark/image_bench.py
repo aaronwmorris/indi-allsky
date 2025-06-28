@@ -17,7 +17,7 @@ logger = logging
 
 
 class ImageBench(object):
-    rounds = 25
+    rounds = 50
 
     ### 1k
     width  = 1920
@@ -81,10 +81,13 @@ img = Image.open("/dev/shm/image_bench.jpg")
 img_n = numpy.array(img)
 img_bgr = cv2.cvtColor(img_n, cv2.COLOR_RGB2BGR)
 
+# writing to /dev/null is faster
 out = io.open("/dev/null", "wb")
+#out = io.BytesIO()
 '''
 
         s_pillow_write = '''
+#out.seek(0)  # for buffer
 img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 i = Image.fromarray(img_bgr)
 
@@ -118,6 +121,32 @@ cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 90])
 '''
 
 
+        setup_simplejpeg_read = '''
+import io
+import simplejpeg
+
+with io.open("/dev/shm/image_bench.jpg", 'rb') as f_image:
+    img = f_image.read()
+'''
+
+        s_simplejpeg_read = '''
+simplejpeg.decode_jpeg(img, colorspace='BGR')
+'''
+
+        setup_simplejpeg_write = '''
+import io
+import simplejpeg
+
+with io.open("/dev/shm/image_bench.jpg", 'rb') as f_image:
+    img = simplejpeg.decode_jpeg(f_image.read(), colorspace='BGR')
+'''
+
+        s_simplejpeg_write = '''
+simplejpeg.encode_jpeg(img, colorspace='BGR', quality=90)
+'''
+
+
+
         t_pillow_read = timeit.timeit(stmt=s_pillow_read, setup=setup_pillow_read, number=self.rounds)
         logger.info('Pillow read: %0.3fms', t_pillow_read * 1000 / self.rounds)
 
@@ -130,6 +159,11 @@ cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 90])
         t_opencv2_write = timeit.timeit(stmt=s_opencv_write, setup=setup_opencv_write, number=self.rounds)
         logger.info('OpenCV write: %0.3fms', t_opencv2_write * 1000 / self.rounds)
 
+        t_simplejpeg_read = timeit.timeit(stmt=s_simplejpeg_read, setup=setup_simplejpeg_read, number=self.rounds)
+        logger.info('simplejpeg read: %0.3fms', t_simplejpeg_read * 1000 / self.rounds)
+
+        t_simplejpeg_write = timeit.timeit(stmt=s_simplejpeg_write, setup=setup_simplejpeg_write, number=self.rounds)
+        logger.info('simplejpeg write: %0.3fms', t_simplejpeg_write * 1000 / self.rounds)
 
 
 if __name__ == "__main__":

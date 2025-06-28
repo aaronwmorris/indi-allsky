@@ -36,6 +36,7 @@ from .flask.miscDb import miscDb
 
 #from .flask.models import TaskQueueState
 #from .flask.models import TaskQueueQueue
+from .flask.models import IndiAllSkyDbCameraTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
 from .flask.models import IndiAllSkyDbBadPixelMapTable
 #from .flask.models import IndiAllSkyDbTaskQueueTable
@@ -79,6 +80,7 @@ class IndiAllSkyDarks(object):
         # this is used to set a max value of data returned by the camera
         self._bitmax = 0
 
+        self._flush_camera_id = 1
 
         self.image_q = Queue()
         self.indiclient = None
@@ -155,6 +157,18 @@ class IndiAllSkyDarks(object):
     def bitmax(self, new_bitmax):
         self._bitmax = int(new_bitmax)
         assert self._bitmax in (0, 8, 10, 12, 14, 16)
+
+        if self.bitmax > 0:
+            logger.warning('New bitmax: %d', self.bitmax)
+
+
+    @property
+    def flush_camera_id(self):
+        return self._flush_camera_id
+
+    @flush_camera_id.setter
+    def flush_camera_id(self, new_camera_id):
+        self._flush_camera_id = int(new_camera_id)
 
 
     @property
@@ -1048,34 +1062,58 @@ class IndiAllSkyDarks(object):
 
 
     def _flush(self):
-        badpixelmaps_all = IndiAllSkyDbBadPixelMapTable.query
-        dark_frames_all = IndiAllSkyDbDarkFrameTable.query
+        try:
+            flush_camera = IndiAllSkyDbCameraTable.query\
+                .filter(IndiAllSkyDbCameraTable.id == self.flush_camera_id)\
+                .one()
+        except NoResultFound:
+            logger.error('Camera ID %d not found', self.flush_camera_id)
+            sys.exit(1)
 
-        logger.warning('Found %d bad pixel maps to flush', badpixelmaps_all.count())
-        logger.warning('Found %d dark frames to flush', dark_frames_all.count())
-        logger.warning('Flushing in 10 seconds...')
 
+        badpixelmaps = IndiAllSkyDbBadPixelMapTable.query\
+            .join(IndiAllSkyDbBadPixelMapTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == flush_camera.id)
+
+        dark_frames = IndiAllSkyDbDarkFrameTable.query\
+            .join(IndiAllSkyDbDarkFrameTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == flush_camera.id)
+
+
+        logger.warning('Found %d bad pixel maps to flush', badpixelmaps.count())
+        logger.warning('Found %d dark frames to flush', dark_frames.count())
+
+
+        if badpixelmaps.count() == 0 and dark_frames.count() == 0:
+            logger.error('No dark frames found for camera "%s"', flush_camera.name)
+            sys.exit(1)
+
+
+        logger.warning('Flushing camera "%s" darks in 10 seconds...', flush_camera.name)
         time.sleep(10.0)
 
-        for bpm_entry in badpixelmaps_all:
+
+        for bpm_entry in badpixelmaps:
             filename = Path(bpm_entry.getFilesystemPath())
 
             if filename.exists():
                 logger.warning('Removing bad pixel map: %s', filename)
                 filename.unlink()
 
-        for dark_frame_entry in dark_frames_all:
+            db.session.delete(bpm_entry)
+
+
+        for dark_frame_entry in dark_frames:
             filename = Path(dark_frame_entry.getFilesystemPath())
 
             if filename.exists():
                 logger.warning('Removing dark frame: %s', filename)
                 filename.unlink()
 
+            db.session.delete(dark_frame_entry)
 
-        badpixelmaps_all.delete()
-        dark_frames_all.delete()
+
         db.session.commit()
-
 
 
     def getCcdTemperature(self):

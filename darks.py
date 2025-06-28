@@ -33,21 +33,21 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--Count',
         '-C',
-        help='image count',
+        help='image count [default: 10]',
         type=int,
         default=10,
     )
     argparser.add_argument(
         '--temp_delta',
         '-t',
-        help='temperature delta between dark frame sets',
+        help='temperature delta between dark frame sets [default: 5.0]',
         type=float,
         default=5.0,
     )
     argparser.add_argument(
         '--Time_delta',
         '-T',
-        help='time delta between dark frame exposures',
+        help='time delta (seconds) between dark frame exposures [default: 5]',
         type=int,
         default=5,
     )
@@ -57,6 +57,13 @@ if __name__ == "__main__":
         help='max bits returned by camera if different than container',
         type=int,
         default=0,
+    )
+    argparser.add_argument(
+        '--flush_id',
+        '-f',
+        help='flush camera id [default: 1]',
+        type=int,
+        default=1,
     )
 
 
@@ -102,6 +109,7 @@ if __name__ == "__main__":
     iad.bitmax = args.bitmax
     iad.daytime = args.daytime
     iad.reverse = args.reverse
+    iad.flush_camera_id = args.flush_id
 
     action_func = getattr(iad, args.action)
     action_func()
