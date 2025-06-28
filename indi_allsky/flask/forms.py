@@ -5682,6 +5682,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
             image_dict['width'] = img.width
             image_dict['height'] = img.height
             image_dict['exclude'] = img.exclude
+            image_dict['ts'] = int(img.createDate.timestamp())
             image_dict['thumbnail_url'] = str(thumbnail_url)
             image_dict['thumbnail_width'] = thumb.width
             image_dict['thumbnail_height'] = thumb.height
