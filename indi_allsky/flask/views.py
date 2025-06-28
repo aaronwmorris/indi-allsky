@@ -811,6 +811,8 @@ class ImageLagView(TemplateView):
     def get_context(self):
         context = super(ImageLagView, self).get_context()
 
+        from prettytable import PrettyTable
+
         context['camera_id'] = self.camera.id
 
 
@@ -855,7 +857,30 @@ class ImageLagView(TemplateView):
         # filter is just to make it faster
 
 
-        context['image_lag_list'] = image_lag_list
+        table = PrettyTable()
+        table.field_names = [
+            'ID',
+            'Date',
+            'Exposure',
+            'Elapsed',
+            'Delta',
+            'Period',
+            'Processing',
+        ]
+
+        for entry in image_lag_list:
+            table.add_row([
+                entry.id,
+                entry.createDate.strftime('%Y-%m-%d %H:%M:%S'),
+                '{0:0.7f}'.format(entry.exposure),
+                '{0:0.2f}'.format(entry.exp_elapsed),
+                '{0:0.3f}'.format(entry.delta),
+                entry.lag_diff,
+                '{0:0.2f}'.format(entry.process_elapsed),
+            ])
+
+
+        context['image_lag_str'] = str(table)
 
         return context
 
