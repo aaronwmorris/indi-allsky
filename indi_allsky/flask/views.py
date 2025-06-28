@@ -838,6 +838,7 @@ class ImageLagView(TemplateView):
                 IndiAllSkyDbImageTable.createDate,
                 IndiAllSkyDbImageTable.exposure,
                 IndiAllSkyDbImageTable.exp_elapsed,
+                (IndiAllSkyDbImageTable.exp_elapsed - IndiAllSkyDbImageTable.exposure).label('delta'),
                 IndiAllSkyDbImageTable.process_elapsed,
                 (cast(createDate_s, Integer) - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
             )\
