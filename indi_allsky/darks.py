@@ -1253,22 +1253,22 @@ class IndiAllSkyDarksProcessor(object):
             raise Exception('Unknown bits per pixel')
 
 
-        image_data = list()
+        dark_data_list = list()
         hdulist = None
         for item in Path(tmp_fit_dir_p).iterdir():
             #logger.info('Found item: %s', item)
             if item.is_file() and item.suffix in ['.fit']:
                 #logger.info('Found fit: %s', item)
                 hdulist = fits.open(item)
-                image_data.append(hdulist[0].data)
+                dark_data_list.append(hdulist[0].data)
 
 
-        bpm = numpy.zeros(image_data[0].shape, dtype=numpy_type)
+        bpm = numpy.zeros(dark_data_list[0].shape, dtype=numpy_type)
 
 
         # take the max values of each pixel from each image
-        for image in image_data:
-            bpm = numpy.maximum(bpm, image)
+        for dark in dark_data_list:
+            bpm = numpy.maximum(bpm, dark)
 
 
         max_val = numpy.amax(bpm)
@@ -1343,20 +1343,20 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
         else:
             raise Exception('Unknown bits per pixel')
 
-        dark_data = list()
+        dark_data_list = list()
         hdulist = None
         for item in Path(tmp_fit_dir_p).iterdir():
             #logger.info('Found item: %s', item)
             if item.is_file() and item.suffix in ('.fit',):
                 #logger.info('Found fit: %s', item)
                 hdulist = fits.open(item)
-                dark_data.append(hdulist[0].data.astype(cast_type))
+                dark_data_list.append(hdulist[0].data.astype(cast_type))
 
-        #logger.info('Dark images found: %d', len(dark_data))
+        #logger.info('Dark images found: %d', len(dark_data_list))
 
         start = time.time()
 
-        avg_data = (numpy.sum(dark_data, axis=0) / len(dark_data)).astype(numpy_type)
+        avg_data = (numpy.sum(dark_data_list, axis=0) / len(dark_data_list)).astype(numpy_type)
         #logger.info('Avg dims: %s', str(avg_data.shape))
 
         elapsed_s = time.time() - start
@@ -1422,7 +1422,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
             raise Exception('Unknown bits per pixel')
 
         dark_images = ccdproc.ImageFileCollection(tmp_fit_dir_p)
-        #logger.info('Full dark count: %d', len(dark_images))
+        #logger.info('Full dark count: %d', len(dark_images.files))
 
         dark_images_filtered = dark_images.files_filtered(exptime=exposure, include_path=True)
         #logger.info('Filtered dark count: %d', len(dark_images_filtered))
