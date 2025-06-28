@@ -1424,15 +1424,18 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
         dark_images = ccdproc.ImageFileCollection(tmp_fit_dir_p)
         #logger.info('Full dark count: %d', len(dark_images.files))
 
-        dark_images_filtered = dark_images.files_filtered(exptime=exposure, include_path=True)
+        # indi_pylibcamera reports slightly lower than the expected exposure values which cause the filter to exclude them
+        #dark_images_filtered = dark_images.files_filtered(exptime=exposure, include_path=True)
         #logger.info('Filtered dark count: %d', len(dark_images_filtered))
+
+        dark_images_files = [str(tmp_fit_dir_p.joinpath(x)) for x in dark_images.files]
 
 
         start = time.time()
 
         try:
             combined_dark = ccdproc.combine(
-                dark_images_filtered,
+                dark_images_files,
                 method='average',
                 sigma_clip=True,
                 sigma_clip_low_thresh=5,
