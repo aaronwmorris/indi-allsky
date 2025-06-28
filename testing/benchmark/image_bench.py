@@ -17,7 +17,7 @@ logger = logging
 
 
 class ImageBench(object):
-    rounds = 25
+    rounds = 50
 
     ### 1k
     width  = 1920
@@ -81,10 +81,13 @@ img = Image.open("/dev/shm/image_bench.jpg")
 img_n = numpy.array(img)
 img_bgr = cv2.cvtColor(img_n, cv2.COLOR_RGB2BGR)
 
+# writing to /dev/null is faster
 out = io.open("/dev/null", "wb")
+#out = io.BytesIO()
 '''
 
         s_pillow_write = '''
+#out.seek(0)  # for buffer
 img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 i = Image.fromarray(img_bgr)
 
