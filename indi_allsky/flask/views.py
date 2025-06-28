@@ -889,6 +889,9 @@ class RollingAduView(TemplateView):
     def get_context(self):
         context = super(RollingAduView, self).get_context()
 
+        from prettytable import PrettyTable
+
+
         context['camera_id'] = self.camera.id
 
 
@@ -963,7 +966,28 @@ class RollingAduView(TemplateView):
                 .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 
-        context['rolling_adu_list'] = rolling_adu_list
+        table = PrettyTable()
+        table.field_names = [
+            'Date',
+            'Count',
+            'Exposure Avg',
+            'ADU Avg',
+            'SQM Avg',
+            'Stars Avg',
+        ]
+
+        for entry in rolling_adu_list:
+            table.add_row([
+                entry.dt.strftime('%Y-%m-%d %H:%M'),
+                entry.i_count,
+                '{0:0.4f}'.format(entry.exposure_avg),
+                '{0:0.2f}'.format(entry.adu_avg),
+                '{0:0.2f}'.format(entry.sqm_avg),
+                '{0:0.1f}'.format(entry.stars_avg),
+            ])
+
+
+        context['rolling_adu_str'] = str(table)
 
         return context
 
