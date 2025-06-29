@@ -874,7 +874,7 @@ class ImageLagView(TemplateView):
                 entry.createDate.strftime('%Y-%m-%d %H:%M:%S'),
                 '{0:0.7f}'.format(entry.exposure),
                 '{0:0.2f}'.format(entry.exp_elapsed),
-                '{0:0.3f}'.format(entry.delta),
+                '{0:+0.3f}'.format(entry.delta),
                 entry.lag_diff,
                 '{0:0.2f}'.format(entry.process_elapsed),
             ])
