@@ -930,7 +930,7 @@ class IndiAllSkyDarks(object):
             frame_elapsed = time.time() - start
             frame_delta = frame_elapsed - exposure_f
 
-            logger.info('Exposure received in %0.4fs (%0.4f)', frame_elapsed, frame_delta)
+            logger.info('Exposure received in %0.4fs (%+0.4f)', frame_elapsed, frame_delta)
 
             if frame_delta < 0:
                 logger.error('%0.1fs EXPOSURE RECEIVED IN %0.1fs.  POSSIBLE CAMERA PROBLEM.', exposure_f, frame_elapsed)
