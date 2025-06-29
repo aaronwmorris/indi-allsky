@@ -699,7 +699,7 @@ class IndiAllSkyDarks(object):
         """Take an integer number of seconds and return a string in the format HH:MM:SS."""
         hours, remainder = divmod(seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
-        return "{:02}:{:02}:{:02}".format(int(hours), int(minutes), int(seconds))
+        return "{:02}h:{:02}m:{:02}s".format(int(hours), int(minutes), int(seconds))
 
 
     def _estimate_runtime(self, remaining_exposures, remaining_configs, overhead_per_exposure):
