@@ -9168,6 +9168,9 @@ class AjaxDriveManagerView(BaseView):
         if command == 'unmount':
             query_device_id = str(request.json['DEVICE_ID'])
             return self.unmountDevice(query_device_id)
+        if command == 'mount':
+            query_device_id = str(request.json['DEVICE_ID'])
+            return self.mountDevice(query_device_id)
         else:
             json_data = {
                 'failure-message' : 'Unknown command',
@@ -9380,6 +9383,70 @@ class AjaxDriveManagerView(BaseView):
 
             return_data = {
                 'success-message' : 'Unmount Successful'
+            }
+            return jsonify(return_data)
+
+
+        # fail if drive not found
+        return jsonify({'failure-message' : 'Device not found'}), 400
+
+
+    def mountDevice(self, query_device_id):
+        bus = dbus.SystemBus()
+
+
+        nm_udisks2 = bus.get_object(
+            "org.freedesktop.UDisks2",
+            "/org/freedesktop/UDisks2")
+
+        iface = dbus.Interface(
+            nm_udisks2,
+            'org.freedesktop.DBus.ObjectManager')
+
+
+        objects = iface.GetManagedObjects()
+
+        for object_path, object_info in objects.items():
+            if not object_path.startswith('/org/freedesktop/UDisks2/block_devices/'):
+                continue
+
+
+            settings = bus.get_object(
+                "org.freedesktop.UDisks2",
+                object_path)
+
+            settings_connection = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.DBus.Properties')
+
+
+
+            settings_dict = settings_connection.GetAll('org.freedesktop.UDisks2.Block')
+
+
+            device_id = str(settings_dict['Id'])
+            if query_device_id != device_id:
+                continue
+
+
+            if len(object_info['org.freedesktop.UDisks2.Filesystem']['MountPoints']) > 1:
+                return jsonify({'failure-message' : 'Filesystem already mounted'}), 400
+
+
+            fs_interface = dbus.Interface(
+                settings,
+                dbus_interface='org.freedesktop.UDisks2.Filesystem')
+
+
+            try:
+                fs_interface.Mount({})
+            except dbus.exceptions.DBusException as e:
+                app.logger.error('D-Bus Exception: %s', str(e))
+                return jsonify({'failure-message' : str(e)}), 400
+
+
+            return_data = {
+                'success-message' : 'Mount Successful'
             }
             return jsonify(return_data)
 
