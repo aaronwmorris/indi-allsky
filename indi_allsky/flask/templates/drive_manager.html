@@ -91,6 +91,7 @@ var camera_id = {{ camera_id }};
             <div id="DEVICES_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-1">
+            <button id="mount-button" class="btn btn-success">Mount</button>
             <button id="unmount-button" class="btn btn-warning">Unmount</button>
         </div>
         <div class="col-sm-1">
@@ -266,7 +267,7 @@ $('#unmount-button').on('click', function() {
         return;
     }
 
-    $("#unmount-button").attr("class", "btn btn-dark text-danger");
+    $("#unmount-button").attr("class", "btn btn-warning");
     $("#unmount-button").html(
       '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Unmount</span>'
     );
@@ -299,6 +300,66 @@ $('#unmount-button').on('click', function() {
             $("#unmount-button").attr("class", "btn btn-danger");
             $("#unmount-button").html(
               'Unmount'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
+        },
+    });
+});
+
+
+$('#mount-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+
+    if (! $("#DEVICE_CONFIRM1").prop('checked')) {
+        console.log('Confirm checkbox not checked');
+        return;
+    }
+    $("#DEVICE_CONFIRM1").prop('checked', false);
+
+
+    if ( $('#DEVICES_SELECT').val() == "" ){
+        return;
+    }
+
+    $("#mount-button").attr("class", "btn btn-success");
+    $("#mount-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Mount</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'mount',
+        'DEVICE_ID' : $('#DEVICES_SELECT').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_drive_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#mount-button").html(
+              'Mount'
+            );
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
+
+        },
+        error: function(rdata){
+            $("#mount-button").attr("class", "btn btn-danger");
+            $("#mount-button").html(
+              'Mount'
             );
 
             var errors = JSON.parse(rdata.responseText);
