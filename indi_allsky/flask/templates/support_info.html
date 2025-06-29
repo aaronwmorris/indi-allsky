@@ -22,14 +22,17 @@ var camera_id = {{ camera_id }};
         <span class="badge pill bg-primary copy-clipboard" style="cursor: pointer;" data-clipboard-target="#support_info">Copy Support Info to Clipboard</span>
     </div>
     <div class="col-sm-2">
+        <span id="dl_support" class="badge pill bg-info text-dark" style="cursor: pointer;">Download</span>
+    </div>
+    <div class="col-sm-2">
         <a href="https://github.com/aaronwmorris/indi-allsky/issues" class="text-decoration-none link-info" target="_blank">
             <span class="badge pill bg-danger">indi-allsky GitHub Issues</span>
         </a>
     </div>
     <div class="col-sm-1">
-    <div id="loader_support" class="spinner-border text-info" role="status">
+      <div id="loader_support" class="spinner-border text-info" role="status">
         <span class="visually-hidden">Loading...</span>
-    </div>
+      </div>
     </div>
 </div>
 
@@ -40,7 +43,7 @@ Support info can be pasted directly into an issue
 <div class="row">
     <div class="col-sm-12">
       <pre>
-        <textarea id="support_info" rows="30" style="width:95%;background-color:#cccccc;">Loading...</textarea>
+        <textarea id="support_info" rows="30" style="width:95%;background-color:#888888;">Loading...</textarea>
       </pre>
     </div>
 </div>
@@ -72,10 +75,50 @@ function loadJS(url, onDone, onError) {
     });
 }
 
+
+function saveTextAsFile() {
+    var textToWrite = $('#support_info').val();
+    var textFileAsBlob = new Blob([ textToWrite ], { type: 'text/plain' });
+
+    var d = new Date(Date.now());
+    var year = d.getFullYear();
+    var month = '' + (d.getMonth() + 1);
+    var day = '' + d.getDate();
+    var hour = '' + d.getHours();
+    var minute = '' + d.getMinutes();
+    var second = '' + d.getSeconds();
+
+    var fileNameToSaveAs = "indi-allsky_support_info_" + year + month + day + "_" + hour + minute + second + ".txt";
+
+    var downloadLink = document.createElement("a");
+    downloadLink.download = fileNameToSaveAs;
+    downloadLink.innerHTML = "Download File";
+    if (window.webkitURL != null) {
+      // Chrome allows the link to be clicked without actually adding it to the DOM.
+      downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+    } else {
+      // Firefox requires the link to be added to the DOM before it can be clicked.
+      downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+      downloadLink.onclick = destroyClickedElement;
+      downloadLink.style.display = "none";
+      document.body.appendChild(downloadLink);
+    }
+
+    downloadLink.click();
+}
+
+function destroyClickedElement(event) {
+    // remove the link from the DOM
+    document.body.removeChild(event.target);
+}
+
+
 function init() {
     new ClipboardJS('.copy-clipboard');
 
     loadSupportInfo();
+
+    $('#dl_support').on('click', saveTextAsFile);
 }
 
 

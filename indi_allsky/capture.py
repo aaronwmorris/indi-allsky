@@ -540,7 +540,7 @@ class CaptureWorker(Process):
 
                         waiting_for_frame = False
 
-                        logger.info('Exposure received in %0.4f s (%0.4f)', frame_elapsed, frame_delta)
+                        logger.info('Exposure received in %0.4fs (%+0.4fs)', frame_elapsed, frame_delta)
 
 
                         if frame_delta < -1:

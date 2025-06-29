@@ -811,6 +811,8 @@ class ImageLagView(TemplateView):
     def get_context(self):
         context = super(ImageLagView, self).get_context()
 
+        from prettytable import PrettyTable
+
         context['camera_id'] = self.camera.id
 
 
@@ -838,6 +840,7 @@ class ImageLagView(TemplateView):
                 IndiAllSkyDbImageTable.createDate,
                 IndiAllSkyDbImageTable.exposure,
                 IndiAllSkyDbImageTable.exp_elapsed,
+                (IndiAllSkyDbImageTable.exp_elapsed - IndiAllSkyDbImageTable.exposure).label('delta'),
                 IndiAllSkyDbImageTable.process_elapsed,
                 (cast(createDate_s, Integer) - func.lag(createDate_s).over(order_by=IndiAllSkyDbImageTable.createDate)).label('lag_diff'),
             )\
@@ -854,7 +857,30 @@ class ImageLagView(TemplateView):
         # filter is just to make it faster
 
 
-        context['image_lag_list'] = image_lag_list
+        table = PrettyTable()
+        table.field_names = [
+            'ID',
+            'Date',
+            'Exposure',
+            'Elapsed',
+            'Delta',
+            'Period',
+            'Processing',
+        ]
+
+        for entry in image_lag_list:
+            table.add_row([
+                entry.id,
+                entry.createDate.strftime('%Y-%m-%d %H:%M:%S'),
+                '{0:0.7f}'.format(entry.exposure),
+                '{0:0.2f}'.format(entry.exp_elapsed),
+                '{0:0.3f}'.format(entry.delta),
+                entry.lag_diff,
+                '{0:0.2f}'.format(entry.process_elapsed),
+            ])
+
+
+        context['image_lag_str'] = str(table)
 
         return context
 
@@ -862,6 +888,9 @@ class ImageLagView(TemplateView):
 class RollingAduView(TemplateView):
     def get_context(self):
         context = super(RollingAduView, self).get_context()
+
+        from prettytable import PrettyTable
+
 
         context['camera_id'] = self.camera.id
 
@@ -937,7 +966,28 @@ class RollingAduView(TemplateView):
                 .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 
-        context['rolling_adu_list'] = rolling_adu_list
+        table = PrettyTable()
+        table.field_names = [
+            'Date',
+            'Count',
+            'Exposure Avg',
+            'ADU Avg',
+            'SQM Avg',
+            'Stars Avg',
+        ]
+
+        for entry in rolling_adu_list:
+            table.add_row([
+                entry.dt.strftime('%Y-%m-%d %H:%M'),
+                entry.i_count,
+                '{0:0.4f}'.format(entry.exposure_avg),
+                '{0:0.2f}'.format(entry.adu_avg),
+                '{0:0.2f}'.format(entry.sqm_avg),
+                '{0:0.1f}'.format(entry.stars_avg),
+            ])
+
+
+        context['rolling_adu_str'] = str(table)
 
         return context
 
