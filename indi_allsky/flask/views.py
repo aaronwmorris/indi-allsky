@@ -759,6 +759,13 @@ class DarkFramesView(TemplateView):
 
         d_info_list = list()
         for d in darkframe_list:
+            file_path = d.getFilesystemPath()
+
+            try:
+                file_size = file_path.stat().st_size
+            except FileNotFoundError:
+                file_size = 0
+
             d_info = {
                 'id' : d.id,
                 'camera_name'  : d.camera.name,
@@ -776,6 +783,7 @@ class DarkFramesView(TemplateView):
                 'url'          : d.getUrl(),
                 'hot_pixels'   : d.data.get('hot_pixels', -1),
                 'method'       : d.data.get('method', ''),
+                'size_mb'      : file_size / 1024 / 1024,
             }
 
             d_info_list.append(d_info)
@@ -783,6 +791,13 @@ class DarkFramesView(TemplateView):
 
         b_info_list = list()
         for b in bpm_list:
+            file_path = d.getFilesystemPath()
+
+            try:
+                file_size = file_path.stat().st_size
+            except FileNotFoundError:
+                file_size = 0
+
             b_info = {
                 'id' : b.id,
                 'camera_name'  : b.camera.name,
@@ -799,6 +814,7 @@ class DarkFramesView(TemplateView):
                 'filename'     : b.filename,
                 'url'          : b.getUrl(),
                 'hot_pixels'   : d.data.get('hot_pixels', -1),
+                'size_mb'      : file_size / 1024 / 1024,
             }
 
             b_info_list.append(b_info)

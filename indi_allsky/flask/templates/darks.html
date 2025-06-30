@@ -24,10 +24,9 @@ var camera_id = {{ camera_id }};
 <table>
 <tr>
     <th>ID</th>
-    <th>Camera</th>
     <th>Date</th>
     <th>Active</th>
-    <th>Size</th>
+    <th>Resolution</th>
     <th>Bits</th>
     <th>Gain</th>
     <th>Exposure</th>
@@ -37,12 +36,12 @@ var camera_id = {{ camera_id }};
     <th>Hot Pixels</th>
     <th>View</th>
     <th>File</th>
+    <th>Size (MB)</th>
     <th>Method</th>
 </tr>
 {% for dark in darkframe_list %}
 <tr>
     <td>{{ dark.id }}</td>
-    <td>{{ dark.camera_name }}</td>
     <td>{{ dark.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
     <td>{{ dark.active }}</td>
     <td>{{ dark.width }}x{{ dark.height }}</td>
@@ -55,6 +54,7 @@ var camera_id = {{ camera_id }};
     <td>{{ dark.hot_pixels }}</td>
     <td><a href="{{ url_for('indi_allsky.image_processing_view') }}?type=dark&id={{ dark.id }}" class="text-decoration-none link-info">View</a></td>
     <td><a href="{{ dark.url }}" class="text-decoration-none link-info">{{ dark.filename|basename }}</a></td>
+    <td>{{ "%0.1f"|format(dark.size_mb | float) }}</td>
     <td>{{ dark.method }}</td>
 </tr>
 {% endfor %}
@@ -66,10 +66,9 @@ var camera_id = {{ camera_id }};
 <table>
 <tr>
     <th>ID</th>
-    <th>Camera</th>
     <th>Date</th>
     <th>Active</th>
-    <th>Size</th>
+    <th>Resolution</th>
     <th>Bits</th>
     <th>Gain</th>
     <th>Exposure</th>
@@ -79,11 +78,11 @@ var camera_id = {{ camera_id }};
     <th>Hot Pixels</th>
     <th>View</th>
     <th>File</th>
+    <th>Size (MB)</th>
 </tr>
 {% for bpm in bpm_list %}
 <tr>
     <td>{{ bpm.id }}</td>
-    <td>{{ bpm.camera_name }}</td>
     <td>{{ bpm.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
     <td>{{ bpm.active }}</td>
     <td>{{ bpm.width }}x{{ bpm.height }}</td>
@@ -96,6 +95,7 @@ var camera_id = {{ camera_id }};
     <td>{{ bpm.hot_pixels }}</td>
     <td><a href="{{ url_for('indi_allsky.image_processing_view') }}?type=bpm&id={{ bpm.id }}" class="text-decoration-none link-info">View</a></td>
     <td><a href="{{ bpm.url }}" class="text-decoration-none link-info">{{ bpm.filename|basename }}</a></td>
+    <td>{{ "%0.1f"|format(bpm.size_mb | float) }}</td>
 </tr>
 {% endfor %}
 </table>
