@@ -10,7 +10,7 @@ table, th, td {
 }
 
 th, td {
-  padding: 3px;
+  padding: 5px;
 }
 </style>
 <script type="text/javascript">
@@ -28,14 +28,16 @@ var camera_id = {{ camera_id }};
     <th>Date</th>
     <th>Active</th>
     <th>Size</th>
-    <th>Bit Depth</th>
+    <th>Bits</th>
     <th>Gain</th>
     <th>Exposure</th>
-    <th>Bin mode</th>
+    <th>Bin</th>
     <th>Temp</th>
     <th>ADU</th>
+    <th>Hot Pixels</th>
     <th>View</th>
     <th>File</th>
+    <th>Method</th>
 </tr>
 {% for dark in darkframe_list %}
 <tr>
@@ -50,8 +52,10 @@ var camera_id = {{ camera_id }};
     <td>{{ dark.binmode }}</td>
     <td>{{ "%0.2f"|format(dark.temp | float) }}</td>
     <td>{{ "%0.1f"|format(dark.adu | float) }}</td>
-    <td><a href="{{ url_for('indi_allsky.image_processing_view') }}?type=dark&id={{ dark.id }}">View</a></td>
-    <td><a href="{{ dark.url }}">{{ dark.filename|basename }}</a></td>
+    <td>{{ dark.hot_pixels }}</td>
+    <td><a href="{{ url_for('indi_allsky.image_processing_view') }}?type=dark&id={{ dark.id }}" class="text-decoration-none link-info">View</a></td>
+    <td><a href="{{ dark.url }}" class="text-decoration-none link-info">{{ dark.filename|basename }}</a></td>
+    <td>{{ dark.method }}</td>
 </tr>
 {% endfor %}
 </table>
@@ -66,12 +70,13 @@ var camera_id = {{ camera_id }};
     <th>Date</th>
     <th>Active</th>
     <th>Size</th>
-    <th>Bit Depth</th>
+    <th>Bits</th>
     <th>Gain</th>
     <th>Exposure</th>
-    <th>Bin mode</th>
+    <th>Bin</th>
     <th>Temp</th>
     <th>ADU</th>
+    <th>Hot Pixels</th>
     <th>View</th>
     <th>File</th>
 </tr>
@@ -88,8 +93,9 @@ var camera_id = {{ camera_id }};
     <td>{{ bpm.binmode }}</td>
     <td>{{ "%0.2f"|format(bpm.temp | float) }}</td>
     <td>{{ "%0.1f"|format(bpm.adu | float) }}</td>
-    <td><a href="{{ url_for('indi_allsky.image_processing_view') }}?type=bpm&id={{ bpm.id }}">View</a></td>
-    <td><a href="{{ bpm.url }}">{{ bpm.filename|basename }}</a></td>
+    <td>{{ bpm.hot_pixels }}</td>
+    <td><a href="{{ url_for('indi_allsky.image_processing_view') }}?type=bpm&id={{ bpm.id }}" class="text-decoration-none link-info">View</a></td>
+    <td><a href="{{ bpm.url }}" class="text-decoration-none link-info">{{ bpm.filename|basename }}</a></td>
 </tr>
 {% endfor %}
 </table>
