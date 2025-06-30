@@ -761,6 +761,15 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'dew_heater_status' : '',
         'fan_status' : '',
         'wind_dir' : '',
+        'custom_1' : '',
+        'custom_2' : '',
+        'custom_3' : '',
+        'custom_4' : '',
+        'custom_5' : '',
+        'custom_6' : '',
+        'custom_7' : '',
+        'custom_8' : '',
+        'custom_9' : '',
     }
 
 

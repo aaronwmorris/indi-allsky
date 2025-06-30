@@ -2425,6 +2425,15 @@ class ImageProcessor(object):
             'sidereal_time'        : self.astrometric_data['sidereal_time'],
             'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
             'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),
+            'custom_1'     : '',  # custom slots
+            'custom_2'     : '',
+            'custom_3'     : '',
+            'custom_4'     : '',
+            'custom_5'     : '',
+            'custom_6'     : '',
+            'custom_7'     : '',
+            'custom_8'     : '',
+            'custom_9'     : '',
         }
 
 
@@ -2504,6 +2513,18 @@ class ImageProcessor(object):
         except IndexError:
             logger.error('Unable to calculate wind direction')
             label_data['wind_dir'] = 'Error'
+
+
+        ### add code here to populate the custom_# data slots
+        #label_data['custom_1'] = 'Foo Bar'
+        #label_data['custom_2'] = ''
+        #label_data['custom_3'] = ''
+        #label_data['custom_4'] = ''
+        #label_data['custom_5'] = ''
+        #label_data['custom_6'] = ''
+        #label_data['custom_7'] = ''
+        #label_data['custom_8'] = ''
+        #label_data['custom_9'] = ''
 
 
         image_label = image_label_tmpl.format(**label_data)  # fill in the data
