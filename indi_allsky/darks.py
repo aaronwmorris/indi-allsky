@@ -1248,8 +1248,8 @@ class IndiAllSkyDarks(object):
 
 
             fs_free_mb = disk_usage.total / 1024.0 / 1024.0
-            if fs_free_mb < 500:
-                logger.warning('%s filesystem has less than 500MB of available space', fs.mountpoint)
+            if fs_free_mb < 600:
+                logger.warning('%s filesystem has less than 600MB of available space', fs.mountpoint)
                 time.sleep(10)
 
 
