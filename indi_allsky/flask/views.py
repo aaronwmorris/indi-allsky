@@ -774,6 +774,8 @@ class DarkFramesView(TemplateView):
                 'adu'          : d.adu,
                 'filename'     : d.filename,
                 'url'          : d.getUrl(),
+                'hot_pixels'   : d.data.get('hot_pixels', -1),
+                'method'       : d.data.get('method', ''),
             }
 
             d_info_list.append(d_info)
@@ -796,6 +798,7 @@ class DarkFramesView(TemplateView):
                 'adu'          : b.adu,
                 'filename'     : b.filename,
                 'url'          : b.getUrl(),
+                'hot_pixels'   : d.data.get('hot_pixels', -1),
             }
 
             b_info_list.append(b_info)
@@ -874,7 +877,7 @@ class ImageLagView(TemplateView):
                 entry.createDate.strftime('%Y-%m-%d %H:%M:%S'),
                 '{0:0.7f}'.format(entry.exposure),
                 '{0:0.2f}'.format(entry.exp_elapsed),
-                '{0:0.3f}'.format(entry.delta),
+                '{0:+0.3f}'.format(entry.delta),
                 entry.lag_diff,
                 '{0:0.2f}'.format(entry.process_elapsed),
             ])

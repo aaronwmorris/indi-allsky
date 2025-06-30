@@ -699,7 +699,7 @@ class IndiAllSkyDarks(object):
         """Take an integer number of seconds and return a string in the format HH:MM:SS."""
         hours, remainder = divmod(seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
-        return "{:02}:{:02}:{:02}".format(int(hours), int(minutes), int(seconds))
+        return "{:02}h:{:02}m:{:02}s".format(int(hours), int(minutes), int(seconds))
 
 
     def _estimate_runtime(self, remaining_exposures, remaining_configs, overhead_per_exposure):
@@ -930,7 +930,7 @@ class IndiAllSkyDarks(object):
             frame_elapsed = time.time() - start
             frame_delta = frame_elapsed - exposure_f
 
-            logger.info('Exposure received in %0.4fs (%0.4f)', frame_elapsed, frame_delta)
+            logger.info('Exposure received in %0.4fs (%+0.4f)', frame_elapsed, frame_delta)
 
             if frame_delta < 0:
                 logger.error('%0.1fs EXPOSURE RECEIVED IN %0.1fs.  POSSIBLE CAMERA PROBLEM.', exposure_f, frame_elapsed)
@@ -1004,8 +1004,8 @@ class IndiAllSkyDarks(object):
 
 
         # build dark before BPM
-        dark_adu_avg = s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure_f, image_bitpix)
-        bpm_adu_avg = s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
+        dark_adu_avg, dark_hot_pixel_count = s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure_f, image_bitpix)
+        bpm_adu_avg, bpm_hot_pixel_count = s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
 
 
         bpm_metadata = {
@@ -1021,7 +1021,10 @@ class IndiAllSkyDarks(object):
             'width'      : image_width,
         }
 
-        bpm_metadata['data'] = {}
+        bpm_metadata['data'] = {
+            'hot_pixels' : int(bpm_hot_pixel_count),
+            'count'      : self.count,
+        }
 
 
         dark_metadata = {
@@ -1037,7 +1040,12 @@ class IndiAllSkyDarks(object):
             'width'      : image_width,
         }
 
-        dark_metadata['data'] = {}
+        dark_metadata['data'] = {
+            'count'      : self.count,
+            'hot_pixels' : int(dark_hot_pixel_count),
+            #'method'     : stacking_class.__name__,
+            'method'     : str(s),
+        }
 
 
         self._miscDb.addBadPixelMap(
@@ -1255,6 +1263,13 @@ class IndiAllSkyDarksProcessor(object):
         self._bitmax = 0
 
 
+    def __repr__(self):
+        return NotImplementedError
+
+    def __str__(self):
+        return NotImplementedError
+
+
     @property
     def bitmax(self):
         return self._bitmax
@@ -1353,7 +1368,7 @@ class IndiAllSkyDarksProcessor(object):
         # reuse the last fits file for the stacked data
         hdulist.writeto(filename_p)
 
-        return bpm_adu_avg
+        return bpm_adu_avg, hot_pixel_count
 
 
     def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
@@ -1361,6 +1376,13 @@ class IndiAllSkyDarksProcessor(object):
 
 
 class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
+    def __repr__(self):
+        return 'Average Stacking'
+
+    def __str__(self):
+        return 'Average Stacking'
+
+
     def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         from astropy.io import fits
 
@@ -1437,10 +1459,17 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
         # reuse the last fits file for the stacked data
         hdulist.writeto(filename_p)
 
-        return dark_adu_avg
+        return dark_adu_avg, hot_pixel_count
 
 
 class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
+    def __repr__(self):
+        return 'Sigma Clipping'
+
+    def __str__(self):
+        return 'Sigma Clipping'
+
+
     def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         from astropy.io import fits
         from astropy.stats import mad_std
@@ -1531,5 +1560,5 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
             logger.info('Detected %d hot pixels (>%d/%d%% ADU)', hot_pixel_count, hot_pixel_thold, 30)
 
 
-        return dark_adu_avg
+        return dark_adu_avg, hot_pixel_count
 
