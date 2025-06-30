@@ -6715,7 +6715,7 @@ class JsonImageProcessingView(JsonView):
 
 
         disable_processing                  = bool(request.json['DISABLE_PROCESSING'])
-        final_image_type                    = str(request.json['FINAL_IMAGE_TYPE'])
+        output_image_type                   = str(request.json['OUTPUT_IMAGE_TYPE'])
         camera_id                           = int(request.json['CAMERA_ID'])
         frame_type                          = str(request.json['FRAME_TYPE'])
         fits_id                             = int(request.json['FITS_ID'])
@@ -7133,7 +7133,7 @@ class JsonImageProcessingView(JsonView):
         img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
 
-        if final_image_type == 'png':
+        if output_image_type == 'png':
             png_compress_level = p_config['IMAGE_FILE_COMPRESSION']['png']
             img.save(json_image_buffer, format='PNG', compress_level=png_compress_level)
         else:

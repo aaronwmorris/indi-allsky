@@ -101,10 +101,10 @@ var fullscreen = false;  //initial state
         </div>
         <div class="col-sm-2">
             <div>
-                {{ form_image_processing.FINAL_IMAGE_TYPE.label }}
+                {{ form_image_processing.OUTPUT_IMAGE_TYPE.label }}
             </div>
             <div>
-                {{ form_image_processing.FINAL_IMAGE_TYPE(class='form-control bg-secondary') }}
+                {{ form_image_processing.OUTPUT_IMAGE_TYPE(class='form-control bg-secondary') }}
             </div>
         </div>
     </div>
@@ -1751,7 +1751,7 @@ function showImage(image_b64) {
     };
 
 
-    if ($('#FINAL_IMAGE_TYPE').val() == 'png') {
+    if ($('#OUTPUT_IMAGE_TYPE').val() == 'png') {
         console.log('PNG');
         var mime_type = "image/png";
     } else {
@@ -1824,7 +1824,7 @@ const field_names = [
     'csrf_token',
     'CAMERA_ID',
     'FRAME_TYPE',
-    'FINAL_IMAGE_TYPE',
+    'OUTPUT_IMAGE_TYPE',
     'FITS_ID',
     'LENS_IMAGE_CIRCLE',
     'LENS_OFFSET_X',
@@ -2018,16 +2018,18 @@ function submitProcessingData() {
 
             showImage(json_data['image_b64']);
 
-            if ($('#FINAL_IMAGE_TYPE').val() == 'png') {
+            if ($('#OUTPUT_IMAGE_TYPE').val() == 'png') {
                 var mime_type = "image/png";
+                var ext = ".png"
             } else {
                 var mime_type = "image/jpeg";
+                var ext = ".jpg"
             }
 
             $("#img_download").html(
                 $('<a />', {
                     'href'     : "data:" + mime_type + ";base64," + json_data['image_b64'],
-                    'download' : "image_processor_" + Math.floor(Date.now() / 1000) + ".png",
+                    'download' : "image_processor_" + Math.floor(Date.now() / 1000) + ext,
                 }).html(
                     $('<span />', {
                         'text'  : 'Download',
