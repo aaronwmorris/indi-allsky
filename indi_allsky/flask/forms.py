@@ -6927,7 +6927,14 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     TEXT_PROPERTIES__PIL_FONT_FILE_choices = IndiAllskyConfigForm.TEXT_PROPERTIES__PIL_FONT_FILE_choices
 
 
+    FINAL_IMAGE_TYPE_choices = (
+        ('jpg', 'JPEG'),
+        ('png', 'PNG'),
+    )
+
+
     DISABLE_PROCESSING               = BooleanField('Disable processing')
+    FINAL_IMAGE_TYPE                 = SelectField('Image Type', choices=FINAL_IMAGE_TYPE_choices, validators=[DataRequired()])
     CAMERA_ID                        = HiddenField('Camera ID', validators=[DataRequired()])
     FRAME_TYPE                       = HiddenField('FRAME_TYPE', validators=[DataRequired()])
     FITS_ID                          = HiddenField('FITS ID', validators=[DataRequired()])
