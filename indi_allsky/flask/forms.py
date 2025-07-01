@@ -3043,7 +3043,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('COLORMAP_TURBO', 'Turbo'),
         ('COLORMAP_BONE', 'Bone'),
         ('COLORMAP_RAINBOW', 'Rainbow'),
-        ('COLORMAP_SPRINT', 'Spring'),
+        ('COLORMAP_SPRING', 'Spring'),
         ('COLORMAP_AUTUMN', 'Autumn'),
         ('COLORMAP_HOT', 'Hot'),
         ('COLORMAP_MAGMA', 'Magma'),
