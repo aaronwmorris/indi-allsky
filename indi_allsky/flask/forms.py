@@ -1148,8 +1148,13 @@ def IMAGE_QUEUE_BACKOFF_validator(form, field):
 
 
 def IMAGE_FILE_TYPE_validator(form, field):
-    if field.data not in ('jpg', 'png', 'tif', 'webp'):
+    if field.data not in list(zip(*form.IMAGE_FILE_TYPE_choices))[0]:
         raise ValidationError('Please select a valid file type')
+
+
+def IMAGE_SAVE_FITS_PERIOD_validator(form, field):
+    if field.data not in list(zip(*form.IMAGE_SAVE_FITS_PERIOD_choices))[0]:
+        raise ValidationError('Invalid codec option')
 
 
 def IMAGE_FILE_COMPRESSION__JPG_validator(form, field):
@@ -2492,7 +2497,7 @@ def FITSHEADER_KEY_validator(form, field):
 
 
 def LIBCAMERA__IMAGE_FILE_TYPE_validator(form, field):
-    if field.data not in ('dng', 'jpg', 'png'):
+    if field.data not in list(zip(*form.LIBCAMERA__IMAGE_FILE_TYPE_choices))[0]:
         raise ValidationError('Please select a valid file type')
 
 
@@ -2529,7 +2534,7 @@ def PYCURL_CAMERA__URL_validator(form, field):
 
 
 def PYCURL_CAMERA__IMAGE_FILE_TYPE_validator(form, field):
-    if field.data not in ('jpg', 'png'):
+    if field.data not in list(zip(*form.PYCURL_CAMERA__IMAGE_FILE_TYPE_choices))[0]:
         raise ValidationError('Please select a valid file type')
 
 
@@ -3027,6 +3032,22 @@ class IndiAllskyConfigForm(FlaskForm):
         ('png', 'PNG'),
         #('webp', 'WebP'),  # ffmpeg support broken
         ('tif', 'TIFF'),
+    )
+
+    IMAGE_SAVE_FITS_PERIOD_choices = (
+        ('0', 'Every Image'),
+        ('30', '30 seconds'),
+        ('60', '1 minute'),
+        ('120', '2 minutes'),
+        ('180', '3 minutes'),
+        ('300', '5 minutes'),
+        ('600', '10 minutes'),
+        ('1800', '30 minutes'),
+        ('3600', '1 hour'),
+        ('7200', '2 hours'),
+        ('14400', '4 hours'),
+        ('21600', '6 hours'),
+        ('43200', '12 hours'),
     )
 
     CFA_PATTERN_choices = (
@@ -3778,6 +3799,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FISH2PANO__OPENCV_FONT_SCALE     = FloatField('Font Scale (opencv)', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
     FISH2PANO__PIL_FONT_SIZE         = IntegerField('Font Size (pillow)', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
     IMAGE_SAVE_FITS                  = BooleanField('Save FITS data')
+    IMAGE_SAVE_FITS_PERIOD           = SelectField('Periodically save FITS', choices=IMAGE_SAVE_FITS_PERIOD_choices, validators=[IMAGE_SAVE_FITS_PERIOD_validator])
     NIGHT_GRAYSCALE                  = BooleanField('Save in Grayscale at Night')
     DAYTIME_GRAYSCALE                = BooleanField('Save in Grayscale during Day')
     MOON_OVERLAY__ENABLE             = BooleanField('Enable Moon Overlay')
