@@ -1758,7 +1758,12 @@ class ConfigView(FormView):
             context['camera_maxExposure'] = self.camera.maxExposure
 
 
-        context['fits_enabled'] = self.indi_allsky_config.get('IMAGE_SAVE_FITS')
+        fits_enabled = self.indi_allsky_config.get('IMAGE_SAVE_FITS')
+        fits_save_period = self.indi_allsky_config.get('IMAGE_SAVE_FITS_PERIOD', 7200)
+
+        if fits_enabled and fits_save_period < 600:
+            # Only warn if saving more often than every 10 minutes
+            context['fits_enabled'] = fits_enabled
 
 
         if not self.validate_longitude_timezone():
