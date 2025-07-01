@@ -7031,6 +7031,8 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.calibrate()
 
+            image_processor.fix_holes_early()
+
             image_processor.debayer()
 
             image_processor.stack()  # this populates self.image
