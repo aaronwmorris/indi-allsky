@@ -588,6 +588,9 @@ class ImageWorker(Process):
         longterm_keogram_pixels = self.save_longterm_keogram_data(exp_date, camera_id)
 
 
+        self.image_processor.colormap()
+
+
         self.image_processor.apply_image_circle_mask()
 
 

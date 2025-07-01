@@ -1529,6 +1529,19 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.IMAGE_COLORMAP.label }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.IMAGE_COLORMAP(class='form-control bg-secondary') }}
+            <div id="IMAGE_COLORMAP-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Apply colormap to show image flatness</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.IMAGE_BORDER__TOP.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -7674,6 +7687,7 @@ const field_names = [
     'IMAGE_ROTATE',
     'IMAGE_ROTATE_ANGLE',
     'IMAGE_SCALE',
+    'IMAGE_COLORMAP',
     'IMAGE_CIRCLE_MASK__DIAMETER',
     'IMAGE_CIRCLE_MASK__OFFSET_X',
     'IMAGE_CIRCLE_MASK__OFFSET_Y',

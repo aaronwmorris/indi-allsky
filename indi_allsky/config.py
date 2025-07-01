@@ -219,6 +219,7 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_FLIP_V"     : True,
         "IMAGE_FLIP_H"     : True,
         "IMAGE_SCALE"      : 100,
+        "IMAGE_COLORMAP"   : "",
         "NIGHT_GRAYSCALE"  : False,
         "DAYTIME_GRAYSCALE": False,
         "MOON_OVERLAY" : {

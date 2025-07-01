@@ -313,12 +313,13 @@ def FOCUS_DELAY_validator(form, field):
 
 
 def CFA_PATTERN_validator(form, field):
-    if not field.data:
-        return
-
-    cfa_list = ('GRBG', 'RGGB', 'BGGR', 'GBRG')
-    if field.data not in cfa_list:
+    if field.data not in list(zip(*form.CFA_PATTERN_choices))[0]:
         raise ValidationError('Please select a valid pattern')
+
+
+def IMAGE_COLORMAP_validator(form, field):
+    if field.data not in list(zip(*form.IMAGE_COLORMAP_choices))[0]:
+        raise ValidationError('Please select a valid colormap')
 
 
 def WB_FACTOR_validator(form, field):
@@ -3036,6 +3037,20 @@ class IndiAllskyConfigForm(FlaskForm):
         ('GBRG', 'GBRG'),
     )
 
+    IMAGE_COLORMAP_choices = (
+        ('', 'None'),
+        ('COLORMAP_JET', 'Jet'),
+        ('COLORMAP_TURBO', 'Turbo'),
+        ('COLORMAP_BONE', 'Bone'),
+        ('COLORMAP_HOT', 'Hot'),
+        ('COLORMAP_MAGMA', 'Magma'),
+        ('COLORMAP_INFERNO', 'Inferno'),
+        ('COLORMAP_PARULA', 'Parula'),
+        ('COLORMAP_OCEAN', 'Ocean'),
+        ('COLORMAP_PINK', 'Pink'),
+        ('COLORMAP_DEEPGREEN', 'Deep Green'),
+    )
+
     SCNR_ALGORITHM_choices = (
         ('', 'Disabled'),
         ('average_neutral', 'Average Neutral'),
@@ -3739,6 +3754,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_CROP_ROI_Y1                = IntegerField('Image Crop ROI y1', validators=[IMAGE_CROP_ROI_validator])
     IMAGE_CROP_ROI_X2                = IntegerField('Image Crop ROI x2', validators=[IMAGE_CROP_ROI_validator])
     IMAGE_CROP_ROI_Y2                = IntegerField('Image Crop ROI y2', validators=[IMAGE_CROP_ROI_validator])
+    IMAGE_COLORMAP                   = SelectField('Apply Colormap', choices=IMAGE_COLORMAP_choices, validators=[IMAGE_COLORMAP_validator])
     IMAGE_QUEUE_MAX                  = IntegerField('Image Queue Maximum', validators=[IMAGE_QUEUE_MAX_validator])
     IMAGE_QUEUE_MIN                  = IntegerField('Image Queue Minimum', validators=[IMAGE_QUEUE_MIN_validator])
     IMAGE_QUEUE_BACKOFF              = FloatField('Image Queue Backoff Multiplier', validators=[IMAGE_QUEUE_BACKOFF_validator])
@@ -6931,7 +6947,6 @@ class IndiAllskyImageProcessingForm(FlaskForm):
         ('jpg', 'JPEG'),
         ('png', 'PNG'),
     )
-
 
     DISABLE_PROCESSING               = BooleanField('Disable processing')
     OUTPUT_IMAGE_TYPE                = SelectField('Output Type', choices=OUTPUT_IMAGE_TYPE_choices, validators=[DataRequired()])
