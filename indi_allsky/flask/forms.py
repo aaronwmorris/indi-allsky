@@ -313,12 +313,13 @@ def FOCUS_DELAY_validator(form, field):
 
 
 def CFA_PATTERN_validator(form, field):
-    if not field.data:
-        return
-
-    cfa_list = ('GRBG', 'RGGB', 'BGGR', 'GBRG')
-    if field.data not in cfa_list:
+    if field.data not in list(zip(*form.CFA_PATTERN_choices))[0]:
         raise ValidationError('Please select a valid pattern')
+
+
+def IMAGE_COLORMAP_validator(form, field):
+    if field.data not in list(zip(*form.IMAGE_COLORMAP_choices))[0]:
+        raise ValidationError('Please select a valid colormap')
 
 
 def WB_FACTOR_validator(form, field):
@@ -3036,6 +3037,24 @@ class IndiAllskyConfigForm(FlaskForm):
         ('GBRG', 'GBRG'),
     )
 
+    IMAGE_COLORMAP_choices = (
+        ('', 'None'),
+        ('COLORMAP_JET', 'Jet'),
+        ('COLORMAP_TURBO', 'Turbo'),
+        ('COLORMAP_BONE', 'Bone'),
+        ('COLORMAP_RAINBOW', 'Rainbow'),
+        ('COLORMAP_SPRING', 'Spring'),
+        ('COLORMAP_AUTUMN', 'Autumn'),
+        ('COLORMAP_HOT', 'Hot'),
+        ('COLORMAP_MAGMA', 'Magma'),
+        ('COLORMAP_INFERNO', 'Inferno'),
+        ('COLORMAP_CIVIDIS', 'Cividis'),
+        ('COLORMAP_PARULA', 'Parula'),
+        ('COLORMAP_OCEAN', 'Ocean'),
+        ('COLORMAP_PINK', 'Pink'),
+        ('COLORMAP_DEEPGREEN', 'Deep Green'),
+    )
+
     SCNR_ALGORITHM_choices = (
         ('', 'Disabled'),
         ('average_neutral', 'Average Neutral'),
@@ -3739,6 +3758,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_CROP_ROI_Y1                = IntegerField('Image Crop ROI y1', validators=[IMAGE_CROP_ROI_validator])
     IMAGE_CROP_ROI_X2                = IntegerField('Image Crop ROI x2', validators=[IMAGE_CROP_ROI_validator])
     IMAGE_CROP_ROI_Y2                = IntegerField('Image Crop ROI y2', validators=[IMAGE_CROP_ROI_validator])
+    IMAGE_COLORMAP                   = SelectField('Apply Colormap', choices=IMAGE_COLORMAP_choices, validators=[IMAGE_COLORMAP_validator])
     IMAGE_QUEUE_MAX                  = IntegerField('Image Queue Maximum', validators=[IMAGE_QUEUE_MAX_validator])
     IMAGE_QUEUE_MIN                  = IntegerField('Image Queue Minimum', validators=[IMAGE_QUEUE_MIN_validator])
     IMAGE_QUEUE_BACKOFF              = FloatField('Image Queue Backoff Multiplier', validators=[IMAGE_QUEUE_BACKOFF_validator])
@@ -6923,6 +6943,8 @@ class IndiAllskyFocusControllerForm(FlaskForm):
 
 class IndiAllskyImageProcessingForm(FlaskForm):
 
+    CFA_PATTERN_choices = IndiAllskyConfigForm.CFA_PATTERN_choices
+    IMAGE_COLORMAP_choices = IndiAllskyConfigForm.IMAGE_COLORMAP_choices
     SCNR_ALGORITHM_choices = IndiAllskyConfigForm.SCNR_ALGORITHM_choices
     TEXT_PROPERTIES__PIL_FONT_FILE_choices = IndiAllskyConfigForm.TEXT_PROPERTIES__PIL_FONT_FILE_choices
 
@@ -6931,7 +6953,6 @@ class IndiAllskyImageProcessingForm(FlaskForm):
         ('jpg', 'JPEG'),
         ('png', 'PNG'),
     )
-
 
     DISABLE_PROCESSING               = BooleanField('Disable processing')
     OUTPUT_IMAGE_TYPE                = SelectField('Output Type', choices=OUTPUT_IMAGE_TYPE_choices, validators=[DataRequired()])
@@ -6959,7 +6980,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     IMAGE_STRETCH__MODE2_MIDTONES    = FloatField('MTF - Midtones Target', validators=[IMAGE_STRETCH__MODE2_MIDTONES_validator])
     IMAGE_STRETCH__MODE2_HIGHLIGHTS  = FloatField('MTF - Highlights Cutoff', validators=[IMAGE_STRETCH__MODE2_HIGHLIGHTS_validator])
     #IMAGE_STRETCH__SPLIT            = BooleanField('Stretching split screen')
-    CFA_PATTERN                      = SelectField('Bayer Pattern', choices=IndiAllskyConfigForm.CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
+    CFA_PATTERN                      = SelectField('Bayer Pattern', choices=CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
     SCNR_ALGORITHM                   = SelectField('SCNR (green reduction)', choices=IndiAllskyConfigForm.SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
     WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[WB_FACTOR_validator])
     WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[WB_FACTOR_validator])
@@ -6971,6 +6992,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     IMAGE_ROTATE_ANGLE               = IntegerField('Rotation Angle', validators=[IMAGE_ROTATE_ANGLE_validator])
     IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')
     IMAGE_FLIP_H                     = BooleanField('Flip Image Horizontally')
+    IMAGE_COLORMAP                   = SelectField('Apply Colormap', choices=IMAGE_COLORMAP_choices, validators=[IMAGE_COLORMAP_validator])
     DETECT_MASK                      = StringField('Detection Mask', validators=[DETECT_MASK_validator])
     SQM_ROI_X1                       = IntegerField('SQM ROI x1', validators=[SQM_ROI_validator])
     SQM_ROI_Y1                       = IntegerField('SQM ROI y1', validators=[SQM_ROI_validator])

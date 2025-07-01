@@ -3354,6 +3354,43 @@ class ImageProcessor(object):
         self.image = new_image
 
 
+    def colormap(self):
+        if self.focus_mode:
+            return
+
+
+        colormap_str = self.config.get('IMAGE_COLORMAP')
+        if not colormap_str:
+            return
+
+
+        if len(self.image.shape) == 2:
+            # mono
+            data_mono = self.image
+        else:
+            data_mono = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+
+
+        data_min = data_mono.min()
+        data_max = data_mono.max()
+
+
+        image_remapped = (((data_mono - data_min) / (data_max - data_min)) * 255).astype(numpy.uint8)
+
+
+        try:
+            colormap = getattr(cv2, colormap_str)
+
+            logger.warning('Applying %s colormap to image', colormap_str)
+            image_colormapped = cv2.applyColorMap(image_remapped, colormap)
+        except AttributeError:
+            logger.error('Unknown OpenCV colormap: %s', colormap_str)
+            return
+
+
+        self.image = image_colormapped
+
+
     def realtimeKeogramUpdate(self):
         if self.focus_mode:
             return

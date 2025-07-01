@@ -2093,6 +2093,7 @@ class ConfigView(FormView):
             'IMAGE_FLIP_V'                   : self.indi_allsky_config.get('IMAGE_FLIP_V', True),
             'IMAGE_FLIP_H'                   : self.indi_allsky_config.get('IMAGE_FLIP_H', True),
             'IMAGE_SCALE'                    : self.indi_allsky_config.get('IMAGE_SCALE', 100),
+            'IMAGE_COLORMAP'                 : self.indi_allsky_config.get('IMAGE_COLORMAP', ''),
             'IMAGE_CIRCLE_MASK__ENABLE'      : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('ENABLE', False),
             'IMAGE_CIRCLE_MASK__DIAMETER'    : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('DIAMETER', 3000),
             'IMAGE_CIRCLE_MASK__OFFSET_X'    : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('OFFSET_X', 0),
@@ -2948,6 +2949,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_FLIP_V']                         = bool(request.json['IMAGE_FLIP_V'])
         self.indi_allsky_config['IMAGE_FLIP_H']                         = bool(request.json['IMAGE_FLIP_H'])
         self.indi_allsky_config['IMAGE_SCALE']                          = int(request.json['IMAGE_SCALE'])
+        self.indi_allsky_config['IMAGE_COLORMAP']                       = str(request.json['IMAGE_COLORMAP'])
         self.indi_allsky_config['IMAGE_CIRCLE_MASK']['ENABLE']          = bool(request.json['IMAGE_CIRCLE_MASK__ENABLE'])
         self.indi_allsky_config['IMAGE_CIRCLE_MASK']['DIAMETER']        = int(request.json['IMAGE_CIRCLE_MASK__DIAMETER'])
         self.indi_allsky_config['IMAGE_CIRCLE_MASK']['OFFSET_X']        = int(request.json['IMAGE_CIRCLE_MASK__OFFSET_X'])
@@ -6534,6 +6536,7 @@ class ImageProcessingView(TemplateView):
             'IMAGE_ROTATE_ANGLE'             : self.indi_allsky_config.get('IMAGE_ROTATE_ANGLE', 0),
             'IMAGE_FLIP_V'                   : self.indi_allsky_config.get('IMAGE_FLIP_V', True),
             'IMAGE_FLIP_H'                   : self.indi_allsky_config.get('IMAGE_FLIP_H', True),
+            'IMAGE_COLORMAP'                 : '',
             'DETECT_MASK'                    : self.indi_allsky_config.get('DETECT_MASK', ''),
             'SQM_FOV_DIV'                    : str(self.indi_allsky_config.get('SQM_FOV_DIV', 4)),  # string in form, int in config
             'IMAGE_STACK_METHOD'             : self.indi_allsky_config.get('IMAGE_STACK_METHOD', 'maximum'),
@@ -6767,6 +6770,7 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_CALIBRATE_HOLE_THOLD']           = int(request.json['IMAGE_CALIBRATE_HOLE_THOLD'])
         p_config['IMAGE_CALIBRATE_MANUAL_OFFSET']        = int(request.json['IMAGE_CALIBRATE_MANUAL_OFFSET'])
         p_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
+        p_config['IMAGE_COLORMAP']                       = str(request.json['IMAGE_COLORMAP'])
         p_config['CONTRAST_ENHANCE_16BIT']               = bool(request.json['CONTRAST_ENHANCE_16BIT'])
         p_config['CLAHE_CLIPLIMIT']                      = float(request.json['CLAHE_CLIPLIMIT'])
         p_config['CLAHE_GRIDSIZE']                       = int(request.json['CLAHE_GRIDSIZE'])
@@ -7027,6 +7031,8 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.calibrate()
 
+            image_processor.fix_holes_early()
+
             image_processor.debayer()
 
             image_processor.stack()  # this populates self.image
@@ -7088,7 +7094,7 @@ class JsonImageProcessingView(JsonView):
             image_processor.colorize()
 
 
-            #image_processor.fix_holes()
+            image_processor.colormap()
 
 
             image_processor.apply_image_circle_mask()
