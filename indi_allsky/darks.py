@@ -930,7 +930,7 @@ class IndiAllSkyDarks(object):
             frame_elapsed = time.time() - start
             frame_delta = frame_elapsed - exposure_f
 
-            logger.info('Exposure received in %0.4fs (%+0.4f)', frame_elapsed, frame_delta)
+            logger.info('Exposure received in %0.4fs (%+0.4fs)', frame_elapsed, frame_delta)
 
             if frame_delta < 0:
                 logger.error('%0.1fs EXPOSURE RECEIVED IN %0.1fs.  POSSIBLE CAMERA PROBLEM.', exposure_f, frame_elapsed)
@@ -1248,8 +1248,8 @@ class IndiAllSkyDarks(object):
 
 
             fs_free_mb = disk_usage.total / 1024.0 / 1024.0
-            if fs_free_mb < 500:
-                logger.warning('%s filesystem has less than 500MB of available space', fs.mountpoint)
+            if fs_free_mb < 600:
+                logger.warning('%s filesystem has less than 600MB of available space', fs.mountpoint)
                 time.sleep(10)
 
 

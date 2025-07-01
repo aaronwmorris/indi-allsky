@@ -144,8 +144,9 @@ class TimelapseGenerator(object):
 
         ffmpeg_env = dict()
         if self.config.get('TIMELAPSE', {}).get('FFMPEG_REPORT'):
-            logger.warning('*** FFMPEG debug report will be generated in /tmp ***')
-            ffmpeg_env['FFREPORT'] = 'file=/tmp/ffmpeg-report-%t.log'
+            home_dir = Path(os.environ['HOME'])
+            logger.warning('*** FFMPEG debug report will be generated in %s ***', home_dir)
+            ffmpeg_env['FFREPORT'] = 'file={0:s}/ffmpeg-report-%t.log'.format(str(home_dir))
 
 
         try:

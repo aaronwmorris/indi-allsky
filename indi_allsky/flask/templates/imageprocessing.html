@@ -91,14 +91,21 @@ var fullscreen = false;  //initial state
             <div class="loader" id="loader_processing"></div>
         </div>
 
-        <div class="col-sm-1">
+        <div class="col-sm-2">
+            <div>
+                {{ form_image_processing.DISABLE_PROCESSING.label }}
+            </div>
             <div class="form-switch">
                 {{ form_image_processing.DISABLE_PROCESSING(class='form-check-input') }}
-                <div id="NIGHT_CONTRAST_ENHANCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-2">
-            {{ form_image_processing.DISABLE_PROCESSING.label }}
+            <div>
+                {{ form_image_processing.OUTPUT_IMAGE_TYPE.label }}
+            </div>
+            <div>
+                {{ form_image_processing.OUTPUT_IMAGE_TYPE(class='form-control bg-secondary') }}
+            </div>
         </div>
     </div>
 
@@ -1744,7 +1751,15 @@ function showImage(image_b64) {
     };
 
 
-    img.src = "data:image/png;base64," + image_b64;
+    if ($('#OUTPUT_IMAGE_TYPE').val() == 'png') {
+        console.log('PNG');
+        var mime_type = "image/png";
+    } else {
+        console.log('JPEG');
+        var mime_type = "image/jpeg";
+    }
+
+    img.src = "data:" + mime_type + ";base64," + image_b64;
 }
 
 
@@ -1809,6 +1824,7 @@ const field_names = [
     'csrf_token',
     'CAMERA_ID',
     'FRAME_TYPE',
+    'OUTPUT_IMAGE_TYPE',
     'FITS_ID',
     'LENS_IMAGE_CIRCLE',
     'LENS_OFFSET_X',
@@ -2002,10 +2018,18 @@ function submitProcessingData() {
 
             showImage(json_data['image_b64']);
 
+            if ($('#OUTPUT_IMAGE_TYPE').val() == 'png') {
+                var mime_type = "image/png";
+                var ext = ".png"
+            } else {
+                var mime_type = "image/jpeg";
+                var ext = ".jpg"
+            }
+
             $("#img_download").html(
                 $('<a />', {
-                    'href'     : "data:image/png;base64," + json_data['image_b64'],
-                    'download' : "image_processor_" + Math.floor(Date.now() / 1000) + ".png",
+                    'href'     : "data:" + mime_type + ";base64," + json_data['image_b64'],
+                    'download' : "image_processor_" + Math.floor(Date.now() / 1000) + ext,
                 }).html(
                     $('<span />', {
                         'text'  : 'Download',
