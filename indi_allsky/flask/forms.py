@@ -6939,6 +6939,8 @@ class IndiAllskyFocusControllerForm(FlaskForm):
 
 class IndiAllskyImageProcessingForm(FlaskForm):
 
+    CFA_PATTERN_choices = IndiAllskyConfigForm.CFA_PATTERN_choices
+    IMAGE_COLORMAP_choices = IndiAllskyConfigForm.IMAGE_COLORMAP_choices
     SCNR_ALGORITHM_choices = IndiAllskyConfigForm.SCNR_ALGORITHM_choices
     TEXT_PROPERTIES__PIL_FONT_FILE_choices = IndiAllskyConfigForm.TEXT_PROPERTIES__PIL_FONT_FILE_choices
 
@@ -6974,7 +6976,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     IMAGE_STRETCH__MODE2_MIDTONES    = FloatField('MTF - Midtones Target', validators=[IMAGE_STRETCH__MODE2_MIDTONES_validator])
     IMAGE_STRETCH__MODE2_HIGHLIGHTS  = FloatField('MTF - Highlights Cutoff', validators=[IMAGE_STRETCH__MODE2_HIGHLIGHTS_validator])
     #IMAGE_STRETCH__SPLIT            = BooleanField('Stretching split screen')
-    CFA_PATTERN                      = SelectField('Bayer Pattern', choices=IndiAllskyConfigForm.CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
+    CFA_PATTERN                      = SelectField('Bayer Pattern', choices=CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
     SCNR_ALGORITHM                   = SelectField('SCNR (green reduction)', choices=IndiAllskyConfigForm.SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
     WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[WB_FACTOR_validator])
     WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[WB_FACTOR_validator])
@@ -6986,6 +6988,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     IMAGE_ROTATE_ANGLE               = IntegerField('Rotation Angle', validators=[IMAGE_ROTATE_ANGLE_validator])
     IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')
     IMAGE_FLIP_H                     = BooleanField('Flip Image Horizontally')
+    IMAGE_COLORMAP                   = SelectField('Apply Colormap', choices=IMAGE_COLORMAP_choices, validators=[IMAGE_COLORMAP_validator])
     DETECT_MASK                      = StringField('Detection Mask', validators=[DETECT_MASK_validator])
     SQM_ROI_X1                       = IntegerField('SQM ROI x1', validators=[SQM_ROI_validator])
     SQM_ROI_Y1                       = IntegerField('SQM ROI y1', validators=[SQM_ROI_validator])

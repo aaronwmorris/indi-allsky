@@ -537,6 +537,19 @@ var fullscreen = false;  //initial state
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_COLORMAP.label }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_image_processing.IMAGE_COLORMAP(class='form-control bg-secondary') }}
+            <div id="IMAGE_COLORMAP-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">Apply colormap to show image flatness</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_image_processing.IMAGE_BORDER__TOP.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -1848,6 +1861,7 @@ const field_names = [
     'WBB_FACTOR',
     'SATURATION_FACTOR',
     'GAMMA_CORRECTION',
+    'IMAGE_COLORMAP',
     'IMAGE_ROTATE',
     'IMAGE_ROTATE_ANGLE',
     'DETECT_MASK',

@@ -6536,6 +6536,7 @@ class ImageProcessingView(TemplateView):
             'IMAGE_ROTATE_ANGLE'             : self.indi_allsky_config.get('IMAGE_ROTATE_ANGLE', 0),
             'IMAGE_FLIP_V'                   : self.indi_allsky_config.get('IMAGE_FLIP_V', True),
             'IMAGE_FLIP_H'                   : self.indi_allsky_config.get('IMAGE_FLIP_H', True),
+            'IMAGE_COLORMAP'                 : '',
             'DETECT_MASK'                    : self.indi_allsky_config.get('DETECT_MASK', ''),
             'SQM_FOV_DIV'                    : str(self.indi_allsky_config.get('SQM_FOV_DIV', 4)),  # string in form, int in config
             'IMAGE_STACK_METHOD'             : self.indi_allsky_config.get('IMAGE_STACK_METHOD', 'maximum'),
@@ -6769,6 +6770,7 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_CALIBRATE_HOLE_THOLD']           = int(request.json['IMAGE_CALIBRATE_HOLE_THOLD'])
         p_config['IMAGE_CALIBRATE_MANUAL_OFFSET']        = int(request.json['IMAGE_CALIBRATE_MANUAL_OFFSET'])
         p_config['NIGHT_CONTRAST_ENHANCE']               = bool(request.json['NIGHT_CONTRAST_ENHANCE'])
+        p_config['IMAGE_COLORMAP']                       = str(request.json['IMAGE_COLORMAP'])
         p_config['CONTRAST_ENHANCE_16BIT']               = bool(request.json['CONTRAST_ENHANCE_16BIT'])
         p_config['CLAHE_CLIPLIMIT']                      = float(request.json['CLAHE_CLIPLIMIT'])
         p_config['CLAHE_GRIDSIZE']                       = int(request.json['CLAHE_GRIDSIZE'])
@@ -7090,7 +7092,7 @@ class JsonImageProcessingView(JsonView):
             image_processor.colorize()
 
 
-            #image_processor.fix_holes()
+            image_processor.colormap()
 
 
             image_processor.apply_image_circle_mask()
