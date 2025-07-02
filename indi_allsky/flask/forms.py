@@ -3382,6 +3382,7 @@ class IndiAllskyConfigForm(FlaskForm):
             ('qwiic_mag_sensor_mmc5983ma_i2c', 'MMC5983MA i2c - X/Y/Z/Temp (4)'),
         ),
         'Current Sensors' : (
+            ('blinka_current_sensor_ina219_i2c', 'INA219 i2c - V/A/W (3)'),
             ('blinka_current_sensor_ina3221_i2c', 'INA3221 i2c - 3 Channel V/A/W (9)'),
         ),
         'Remote' : (
