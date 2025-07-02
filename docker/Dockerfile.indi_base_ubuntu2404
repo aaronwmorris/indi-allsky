@@ -20,7 +20,7 @@ RUN apt-get -y install \
     locales \
     tzdata \
     procps \
-    netcat \
+    netcat-traditional \
     sudo \
     git \
     jq \
