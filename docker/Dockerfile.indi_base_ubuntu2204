@@ -1,5 +1,5 @@
 
-FROM ubuntu:jammy AS indi.base
+FROM ubuntu:noble AS indi.base
 
 ARG TZ
 ARG INDI_VERSION
@@ -18,13 +18,12 @@ RUN apt-get -y install \
     bind9-host \
     apt-utils \
     locales \
-    vim-tiny \
-    nano \
     tzdata \
     procps \
     netcat \
     sudo \
     git \
+    jq \
     software-properties-common
 
 

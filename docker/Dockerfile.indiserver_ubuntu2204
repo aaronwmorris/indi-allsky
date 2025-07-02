@@ -27,6 +27,7 @@ RUN apt-get -y install \
     libtoupcam \
     indi-gphoto \
     indi-sx \
+    indi-dsi \
     indi-gpsd \
     indi-gpsnmea
 
