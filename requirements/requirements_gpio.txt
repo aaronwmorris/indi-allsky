@@ -26,6 +26,7 @@ adafruit-circuitpython-hdc302x
 adafruit-circuitpython-bmp3xx
 adafruit-circuitpython-ina3221
 adafruit-circuitpython-ina219
+adafruit-circuitpython-ina23x
 sparkfun-qwiic-mmc5983ma
 
 ### does not work on raspi
