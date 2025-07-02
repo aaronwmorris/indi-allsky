@@ -85,7 +85,7 @@ class CurrentSensorIna219_I2C(CurrentSensorIna219):
         i2c = board.I2C()
         #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        self.ina219 = INA219(i2c, address=i2c_address)
+        self.ina219 = INA219(i2c, addr=i2c_address)
 
 
         # change configuration to use 32 samples averaging for both bus voltage and shunt voltage
