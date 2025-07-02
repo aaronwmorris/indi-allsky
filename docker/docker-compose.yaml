@@ -30,6 +30,8 @@ services:
     image: indiserver.indi.allsky
     build:
       context: ..
+      additional_contexts:
+        indi.base: "service:indi.base"
       dockerfile: docker/Dockerfile.indiserver_debian12
       #dockerfile: docker/Dockerfile.indiserver_ubuntu2204
       args:
@@ -62,6 +64,8 @@ services:
     image: capture.indi.allsky
     build:
       context: ..
+      additional_contexts:
+        indi.base: "service:indi.base"
       dockerfile: docker/Dockerfile.capture
     env_file: .env
     depends_on:
