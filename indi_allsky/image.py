@@ -141,6 +141,9 @@ class ImageWorker(Process):
         self.image_save_hook_process = None  # used for both pre- and post-hooks
         self.image_save_hook_process_start = 0
 
+        self.next_save_fits_offset = self.config.get('IMAGE_SAVE_FITS_PERIOD', 7200)
+        self.next_save_fits_time = time.time() + self.next_save_fits_offset
+
         self._libcamera_raw = False
 
         if self.config.get('IMAGE_FOLDER'):
@@ -1110,6 +1113,13 @@ class ImageWorker(Process):
 
 
     def write_fit(self, i_ref, camera):
+        now_time = time.time()
+        if now_time < self.next_save_fits_time:
+            return
+
+        self.next_save_fits_time = time.time() + self.next_save_fits_offset
+
+
         data = i_ref.hdulist[0].data
         image_height, image_width = data.shape[:2]
 
