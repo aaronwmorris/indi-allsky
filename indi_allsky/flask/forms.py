@@ -3383,6 +3383,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ),
         'Current Sensors' : (
             ('blinka_current_sensor_ina219_i2c', 'INA219 i2c - V/A/W (3)'),
+            ('blinka_current_sensor_ina228_i2c', 'INA228 i2c - V/A/W/Temp (4)'),
             ('blinka_current_sensor_ina23x_i2c', 'INA23x i2c - V/A/W/Temp (4)'),
             ('blinka_current_sensor_ina3221_i2c', 'INA3221 i2c - 3 Channel V/A/W (9)'),
         ),
