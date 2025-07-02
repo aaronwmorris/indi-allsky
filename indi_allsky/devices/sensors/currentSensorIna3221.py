@@ -48,6 +48,8 @@ class CurrentSensorIna3221(SensorBase):
             return -1.0, -1.0, -1.0
 
 
+        ### note: not sure if the shunt voltage needs to be added to the bus voltage
+
         bus_voltage = float(self.ina3221[channel_idx].bus_voltage)
         current_mA = float(self.ina3221[channel_idx].current)
 
@@ -55,7 +57,7 @@ class CurrentSensorIna3221(SensorBase):
         power_w = bus_voltage * current_a
 
         logger.info(
-            'INA3221 Channel %d: %0.2fV, %0.2fA, %0.2fW - Shunt %0.2fmV',
+            'INA3221 Channel %d: %0.2fV, %0.3fA, %0.3fW - Shunt %0.2fmV',
             channel_idx + 1,
             bus_voltage,
             current_a,
