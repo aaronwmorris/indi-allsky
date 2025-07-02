@@ -12,14 +12,11 @@ RUN export DEBIAN_FRONTEND=noninteractive \
       --no-install-recommends \
       --no-install-suggests \
         build-essential \
-        iputils-ping \
         iproute2 \
-        bind9-host \
         apt-utils \
         locales \
         tzdata \
         procps \
-        netcat-traditional \
         sudo \
         git \
         jq \

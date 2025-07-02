@@ -13,14 +13,11 @@ RUN apt-get -y upgrade
 
 RUN apt-get -y install \
     build-essential \
-    iputils-ping \
-    iproute2 \
-    bind9-host \
     apt-utils \
+    iproute2 \
     locales \
     tzdata \
     procps \
-    netcat-traditional \
     sudo \
     git \
     jq \
