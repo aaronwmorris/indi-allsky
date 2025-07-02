@@ -5,7 +5,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.indi_base_debian12
-      #dockerfile: docker/Dockerfile.indi_base_ubuntu2204
+      #dockerfile: docker/Dockerfile.indi_base_ubuntu2404
       args:
         - TZ=${TZ}
         - INDI_VERSION=${INDIALLSKY_INDI_VERSION}
@@ -33,7 +33,7 @@ services:
       additional_contexts:
         indi.base: "service:indi.base"
       dockerfile: docker/Dockerfile.indiserver_debian12
-      #dockerfile: docker/Dockerfile.indiserver_ubuntu2204
+      #dockerfile: docker/Dockerfile.indiserver_ubuntu2404
       args:
         - INDI_VERSION=${INDIALLSKY_INDI_VERSION}
         - INDI_CAMERA_VENDOR=${INDIALLSKY_CAMERA_VENDOR}
