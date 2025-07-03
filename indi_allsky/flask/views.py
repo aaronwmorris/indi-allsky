@@ -8382,7 +8382,10 @@ class AjaxNetworkManagerView(BaseView):
                     'failure-message' : 'Invalid band selection',
                 }), 400
 
-            if len(psk) < 8:
+            if len(psk) == 0:
+                # no encryption
+                pass
+            elif len(psk) < 8:
                 return jsonify({
                     'failure-message' : 'PSK must be 8+ characters',
                 }), 400
@@ -9084,16 +9087,8 @@ class AjaxNetworkManagerView(BaseView):
             '802-11-wireless': {
                 'mode' : 'ap',
                 'ssid' : dbus.ByteArray(ssid.encode('utf-8')),
-                'security': '802-11-wireless-security',
                 'powersave': 2,  # disable power saving
                 'band' : band,
-            },
-            '802-11-wireless-security': {
-                'key-mgmt': 'wpa-psk',
-                'psk': psk,
-                'proto' : ['rsn'],
-                'group' : ['ccmp'],
-                'pairwise' : ['ccmp'],
             },
             'ipv4' : {
                 # DNS not allowed for shared
@@ -9110,6 +9105,18 @@ class AjaxNetworkManagerView(BaseView):
                 'method' : 'link-local',
             },
         }
+
+
+        if psk:
+            # if psk is defined, setup security
+            connection_params['802-11-wireless']['security'] = '802-11-wireless-security'
+            connection_params['802-11-wireless-security'] = {
+                'key-mgmt': 'wpa-psk',
+                'psk': psk,
+                'proto' : ['rsn'],
+                'group' : ['ccmp'],
+                'pairwise' : ['ccmp'],
+            }
 
 
         try:
