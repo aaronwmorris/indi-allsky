@@ -8366,6 +8366,7 @@ class AjaxNetworkManagerView(BaseView):
             ssid = str(request.json['SSID'])
             band = str(request.json['BAND'])
             psk = str(request.json['PSK'])
+            nosecurity = bool(request.json['NOSECURITY'])
 
             if not interface:
                 return jsonify({
@@ -8382,7 +8383,7 @@ class AjaxNetworkManagerView(BaseView):
                     'failure-message' : 'Invalid band selection',
                 }), 400
 
-            if len(psk) == 0:
+            if nosecurity:
                 # no encryption
                 pass
             elif len(psk) < 8:
@@ -8391,7 +8392,7 @@ class AjaxNetworkManagerView(BaseView):
                 }), 400
 
 
-            return self.createHotspot(interface, ssid, band, psk)
+            return self.createHotspot(interface, ssid, band, psk, nosecurity=nosecurity)
         else:
             json_data = {
                 'failure-message' : 'Unknown command',
@@ -9044,7 +9045,7 @@ class AjaxNetworkManagerView(BaseView):
         })
 
 
-    def createHotspot(self, interface_name, ssid, band, psk):
+    def createHotspot(self, interface_name, ssid, band, psk, nosecurity=False):
         bus = dbus.SystemBus()
 
         try:
@@ -9107,8 +9108,7 @@ class AjaxNetworkManagerView(BaseView):
         }
 
 
-        if psk:
-            # if psk is defined, setup security
+        if not nosecurity:
             connection_params['802-11-wireless']['security'] = '802-11-wireless-security'
             connection_params['802-11-wireless-security'] = {
                 'key-mgmt': 'wpa-psk',
