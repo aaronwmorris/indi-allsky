@@ -9,13 +9,10 @@ RUN apt-get update \
     && apt-get -y install \
       --no-install-recommends \
       --no-install-suggests \
-      iputils-ping \
       iproute2 \
-      bind9-host \
       locales \
       tzdata \
       procps \
-      netcat-traditional \
       sudo \
       git \
       jq \

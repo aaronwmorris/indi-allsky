@@ -7,7 +7,6 @@ RUN apt-get update
 RUN apt-get -y upgrade
 
 RUN apt-get -y install \
-    gsc \
     indi-full \
     libindi-dev \
     indi-webcam \
@@ -27,8 +26,13 @@ RUN apt-get -y install \
     libtoupcam \
     indi-gphoto \
     indi-sx \
+    indi-dsi \
     indi-gpsd \
     indi-gpsnmea
+
+
+    # Unnecessary
+    #gsc \
 
 
 # cleanup
