@@ -7250,6 +7250,7 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
     HOTSPOT_SSID               = StringField('Hotspot SSID', default='indi-allsky Hotspot', validators=[])
     HOTSPOT_BAND               = SelectField('Hotspot Band', choices=HOTSPOT_BAND_choices, validators=[])
     HOTSPOT_PSK                = PasswordField('Hotspot PSK', widget=PasswordInput(hide_value=False), validators=[], render_kw={'autocomplete' : 'new-password'})
+    HOTSPOT_NOSECURITY         = BooleanField('No Security')
 
 
     nm_conn_states_str = {

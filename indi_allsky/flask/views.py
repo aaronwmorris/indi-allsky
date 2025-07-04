@@ -8366,6 +8366,7 @@ class AjaxNetworkManagerView(BaseView):
             ssid = str(request.json['SSID'])
             band = str(request.json['BAND'])
             psk = str(request.json['PSK'])
+            nosecurity = bool(request.json['NOSECURITY'])
 
             if not interface:
                 return jsonify({
@@ -8382,13 +8383,16 @@ class AjaxNetworkManagerView(BaseView):
                     'failure-message' : 'Invalid band selection',
                 }), 400
 
-            if len(psk) < 8:
+            if nosecurity:
+                # no encryption
+                pass
+            elif len(psk) < 8:
                 return jsonify({
                     'failure-message' : 'PSK must be 8+ characters',
                 }), 400
 
 
-            return self.createHotspot(interface, ssid, band, psk)
+            return self.createHotspot(interface, ssid, band, psk, nosecurity=nosecurity)
         else:
             json_data = {
                 'failure-message' : 'Unknown command',
@@ -9041,7 +9045,7 @@ class AjaxNetworkManagerView(BaseView):
         })
 
 
-    def createHotspot(self, interface_name, ssid, band, psk):
+    def createHotspot(self, interface_name, ssid, band, psk, nosecurity=False):
         bus = dbus.SystemBus()
 
         try:
@@ -9084,16 +9088,8 @@ class AjaxNetworkManagerView(BaseView):
             '802-11-wireless': {
                 'mode' : 'ap',
                 'ssid' : dbus.ByteArray(ssid.encode('utf-8')),
-                'security': '802-11-wireless-security',
                 'powersave': 2,  # disable power saving
                 'band' : band,
-            },
-            '802-11-wireless-security': {
-                'key-mgmt': 'wpa-psk',
-                'psk': psk,
-                'proto' : ['rsn'],
-                'group' : ['ccmp'],
-                'pairwise' : ['ccmp'],
             },
             'ipv4' : {
                 # DNS not allowed for shared
@@ -9110,6 +9106,17 @@ class AjaxNetworkManagerView(BaseView):
                 'method' : 'link-local',
             },
         }
+
+
+        if not nosecurity:
+            connection_params['802-11-wireless']['security'] = '802-11-wireless-security'
+            connection_params['802-11-wireless-security'] = {
+                'key-mgmt': 'wpa-psk',
+                'psk': psk,
+                'proto' : ['rsn'],
+                'group' : ['ccmp'],
+                'pairwise' : ['ccmp'],
+            }
 
 
         try:

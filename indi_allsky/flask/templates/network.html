@@ -175,6 +175,14 @@ var camera_id = {{ camera_id }};
             {{ form_connections.HOTSPOT_PSK(class='form-control bg-secondary') }}
             <div id="HOTSPOT_PSK-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
+        <div class="col-sm-5">
+            <span class="form-switch">
+                {{ form_connections.HOTSPOT_NOSECURITY(class='form-check-input') }}
+            </span>
+            <span>
+                {{ form_connections.HOTSPOT_NOSECURITY.label(class='col-form-label') }}
+            </span>
+        </div>
     </div>
 
     <hr>
@@ -782,6 +790,7 @@ $('#create-hotspot-button').on('click', function() {
         'SSID' : $('#HOTSPOT_SSID').val(),
         'BAND' : $('#HOTSPOT_BAND').val(),
         'PSK' : $('#HOTSPOT_PSK').val(),
+        'NOSECURITY' : $('#HOTSPOT_NOSECURITY').prop('checked'),
     };
 
 
@@ -817,6 +826,22 @@ $('#create-hotspot-button').on('click', function() {
 });
 
 
+$('#HOTSPOT_NOSECURITY').on('change', function() {
+    if ($('#HOTSPOT_NOSECURITY').prop('checked')) {
+        $('#HOTSPOT_PSK').val('');
+        $('#HOTSPOT_PSK').attr('readonly', true);
+        $('#HOTSPOT_PSK').attr('disabled', true);
+        $('#HOTSPOT_PSK').addClass('bg-dark');
+        $('#HOTSPOT_PSK').addClass('text-secondary');
+    } else {
+        $('#HOTSPOT_PSK').removeAttr('readonly');
+        $('#HOTSPOT_PSK').removeAttr('disabled');
+        $('#HOTSPOT_PSK').removeClass('bg-dark');
+        $('#HOTSPOT_PSK').removeClass('text-secondary');
+    }
+});
+
+
 function init() {
     $('#SSID_SELECT').attr('readonly', true);
     $('#SSID_SELECT').attr('disabled', true);
@@ -847,6 +872,8 @@ function init() {
     }
 
     $("#CONN_CONFIRM1").prop('checked', false);
+    $("#HOTSPOT_NOSECURITY").prop('checked', false);
+    $('#HOTSPOT_PSK').val('');
 }
 
 $( document ).ready(function() {
