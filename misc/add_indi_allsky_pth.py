@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+#####################################################################
+# This script adds the indi-allsky virtualenv to the sys.path for   #
+# the current user                                                  #
+#####################################################################
+
 
 import sys
 import site
@@ -29,7 +34,7 @@ class SetupUserSitePth(object):
         venv_site_packages_p = venv_p.joinpath('lib', 'python{0:d}.{1:d}'.format(*sys.version_info), 'site-packages')
         if not venv_site_packages_p.is_dir():
             logger.error('Cannot find virtualenv site-package folder')
-            sys.exit(1)
+            sys.exit()  # normal exit
 
 
         user_site_p = Path(site.getusersitepackages())
