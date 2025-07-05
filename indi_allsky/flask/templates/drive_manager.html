@@ -21,6 +21,10 @@ th, td {
   padding: 3px;
 }
 
+.inline {
+   display: inline;
+}
+
 #drive-loader {
   display: block;
 }
@@ -46,7 +50,7 @@ var camera_id = {{ camera_id }};
 
 <hr>
 
-<div><span class="badge rounded-pill bg-info text-dark">Note</span> Run <span class="bg-secondary">./misc/setup_usb_automount.sh</span> to automount USB drives at boot</div>
+<div><span class="badge rounded-pill bg-info text-dark">Note</span> Run <pre class="inline bg-secondary">./misc/setup_usb_automount.sh</pre> to automount USB drives at boot</div>
 
 
 {% if not udisks2_installed %}
