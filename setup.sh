@@ -1799,6 +1799,7 @@ if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
     fi
 fi
 
+
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
     "2.1.4"
@@ -1879,7 +1880,6 @@ else
     # default to latest release
     pip3 install "$PYINDI_2_0_4"
 fi
-
 
 
 # get list of ccd drivers
@@ -3027,6 +3027,11 @@ fi
 
 
 echo
+echo "Setup indi-allsky virtualenv pth"
+"${ALLSKY_DIRECTORY}/misc/add_indi_allsky_pth.py"
+
+
+echo
 echo
 echo
 echo
@@ -3049,6 +3054,7 @@ else
     echo "    https://$(hostname -s).local:$HTTPS_PORT/indi-allsky/"
 
 fi
+
 
 END_TIME=$(date +%s)
 
