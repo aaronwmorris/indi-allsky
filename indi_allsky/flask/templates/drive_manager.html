@@ -21,6 +21,10 @@ th, td {
   padding: 3px;
 }
 
+.inline {
+   display: inline;
+}
+
 #drive-loader {
   display: block;
 }
@@ -43,6 +47,12 @@ var camera_id = {{ camera_id }};
 
 
 <!-- should be above tab contents -->
+
+<hr>
+
+<div><span class="badge rounded-pill bg-info text-dark">Note</span> Run <pre class="inline bg-secondary">./misc/setup_usb_automount.sh</pre> to automount USB drives at boot</div>
+
+
 {% if not udisks2_installed %}
 <hr>
 <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> UDisks2 is not available</div>

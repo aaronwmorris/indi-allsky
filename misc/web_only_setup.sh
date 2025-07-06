@@ -1557,6 +1557,11 @@ systemctl --user restart "${GUNICORN_SERVICE_NAME}.service"
 
 
 echo
+echo "Setup indi-allsky virtualenv pth"
+"${ALLSKY_DIRECTORY}/misc/add_indi_allsky_pth.py"
+
+
+echo
 echo
 echo "The web interface may be accessed with the following URL"
 echo " (You may have to manually access by IP)"
