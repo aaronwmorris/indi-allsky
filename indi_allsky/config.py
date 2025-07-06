@@ -291,7 +291,7 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_ALIGN_SOURCEMINAREA" : 10,
         "IMAGE_STACK_SPLIT"   : False,
         "THUMBNAILS" : {
-            "IMAGES_AUTO" : True,
+            #"IMAGES_AUTO" : True,  # not used
         },
         "BACKUP_DB_PERIOD_DAYS" : 7,
         "IMAGE_EXPIRE_DAYS"     : 10,
