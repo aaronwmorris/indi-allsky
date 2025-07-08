@@ -748,21 +748,6 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.THUMBNAILS__IMAGES_AUTO.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.THUMBNAILS__IMAGES_AUTO(class='form-check-input') }}
-                <div id="THUMBNAILS__IMAGES_AUTO-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Automatically generate thumbnails for individual sub images.  Thumbnails are always generated for keograms and startrails.</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
             {{ form_config.IMAGE_CALIBRATE_DARK.label }}
         </div>
         <div class="col-sm-2">
@@ -8063,7 +8048,6 @@ const checkbox_field_names = [
     'IMAGE_CALIBRATE_BPM',
     'IMAGE_CALIBRATE_FIX_HOLES',
     'IMAGE_SAVE_FITS_PRE_DARK',
-    'THUMBNAILS__IMAGES_AUTO',
     'NIGHT_GRAYSCALE',
     'DAYTIME_GRAYSCALE',
     'MOON_OVERLAY__ENABLE',
