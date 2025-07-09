@@ -352,7 +352,7 @@ class ImageWorker(Process):
         self.image_count += 1
 
 
-        self.start_image_save_pre_hook()
+        self.start_image_save_pre_hook(exposure)
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
@@ -671,7 +671,7 @@ class ImageWorker(Process):
         latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, jpeg_exif=jpeg_exif)
 
         if new_filename:
-            self.start_image_save_post_hook(new_filename)
+            self.start_image_save_post_hook(new_filename, exposure)
 
             image_metadata = {
                 'type'            : constants.IMAGE,
@@ -803,7 +803,6 @@ class ImageWorker(Process):
                 'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
                 'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
                 'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
-
             }
 
 
@@ -1946,7 +1945,7 @@ class ImageWorker(Process):
         return rgb_pixel_list
 
 
-    def start_image_save_pre_hook(self):
+    def start_image_save_pre_hook(self, exposure):
         if self.image_processor.focus_mode:
             return
 
@@ -1970,6 +1969,34 @@ class ImageWorker(Process):
             return
 
 
+        # Communicate sensor values as environment variables
+        hook_env = {
+            'EXPOSURE' : '{0:0.6f}'.format(exposure),
+            'GAIN'     : self.gain_v.value,
+            'BIN'      : self.bin_v.value,
+            'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
+            'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),
+            'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),
+            'MOONMODE' : int(bool(self.moonmode_v.value)),
+            'NIGHT'    : int(self.night_v.value),
+            'LATITUDE' : '{0:0.3f}'.format(self.position_av[0]),
+            'LONGITUDE': '{0:0.3f}'.format(self.position_av[1]),
+            'ELEVATION': int(self.position_av[2]),
+        }
+
+
+        # system temp sensors
+        for i, v in enumerate(self.sensors_temp_av):
+            sensor_env_var = 'SENSOR_TEMP_{0:d}'.format(i)
+            hook_env[sensor_env_var] = '{0:0.3f}'.format(v)
+
+
+        # user sensors
+        for i, v in enumerate(self.sensors_user_av):
+            sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
+            hook_env[sensor_env_var] = '{0:0.3f}'.format(v)
+
+
         cmd = [
             str(pre_save_hook_p),
         ]
@@ -1978,6 +2005,7 @@ class ImageWorker(Process):
         try:
             self.image_save_hook_process = subprocess.Popen(
                 cmd,
+                env=hook_env,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.STDOUT,
             )
@@ -1988,7 +2016,7 @@ class ImageWorker(Process):
             logger.error('Image pre-save script failed to execute')
 
 
-    def start_image_save_post_hook(self, image_p):
+    def start_image_save_post_hook(self, image_p, exposure):
         if self.image_processor.focus_mode:
             return
 
@@ -2012,6 +2040,34 @@ class ImageWorker(Process):
             return
 
 
+        # Communicate sensor values as environment variables
+        hook_env = {
+            'EXPOSURE' : '{0:0.6f}'.format(exposure),
+            'GAIN'     : self.gain_v.value,
+            'BIN'      : self.bin_v.value,
+            'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
+            'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),
+            'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),
+            'MOONMODE' : int(bool(self.moonmode_v.value)),
+            'NIGHT'    : int(self.night_v.value),
+            'LATITUDE' : '{0:0.3f}'.format(self.position_av[0]),
+            'LONGITUDE': '{0:0.3f}'.format(self.position_av[1]),
+            'ELEVATION': int(self.position_av[2]),
+        }
+
+
+        # system temp sensors
+        for i, v in enumerate(self.sensors_temp_av):
+            sensor_env_var = 'SENSOR_TEMP_{0:d}'.format(i)
+            hook_env[sensor_env_var] = '{0:0.3f}'.format(v)
+
+
+        # user sensors
+        for i, v in enumerate(self.sensors_user_av):
+            sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
+            hook_env[sensor_env_var] = '{0:0.3f}'.format(v)
+
+
         cmd = [
             str(post_save_hook_p),
             str(image_p),
@@ -2021,6 +2077,7 @@ class ImageWorker(Process):
         try:
             self.image_save_hook_process = subprocess.Popen(
                 cmd,
+                env=hook_env,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.STDOUT,
             )
