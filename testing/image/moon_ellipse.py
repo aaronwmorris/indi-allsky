@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from datetime import datetime
+#from datetime import timedelta
 from datetime import timezone
 import math
 import numpy
@@ -29,13 +30,15 @@ class MoonEllipse(object):
 
 
     def __init__(self):
-        moon_file = Path(__file__).parent.absolute().parent.joinpath('indi_allsky', 'flask', 'static', 'astropanel', 'img', 'moon_rot.png')
+        moon_file = Path(__file__).parent.parent.absolute().parent.joinpath('indi_allsky', 'flask', 'static', 'astropanel', 'img', 'moon_rot.png')
 
         self.moon = cv2.imread(str(moon_file), cv2.IMREAD_UNCHANGED)
 
 
     def main(self):
         utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
+        #utcnow = datetime.now(tz=timezone.utc) + timedelta(days=3)  # testing
+        #utcnow = datetime.strptime('2025-07-15 12:00:00', '%Y-%m-%d %H:%M:%S')  # testing
 
         obs = ephem.Observer()
         obs.lon = math.radians(LONGITUDE)
