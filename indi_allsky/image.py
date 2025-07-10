@@ -1982,16 +1982,16 @@ class ImageWorker(Process):
         cmd_env = {
             'TEMP_JSON': str(self.pre_hook_tempjson_name_p),  # the file used for the json data is communicated via environment variable
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
-            'GAIN'     : self.gain_v.value,
-            'BIN'      : self.bin_v.value,
+            'GAIN'     : '{0:d}'.format(self.gain_v.value),
+            'BIN'      : '{0:d}'.format(self.bin_v.value),
             'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
             'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),
             'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),
-            'MOONMODE' : int(bool(self.moonmode_v.value)),
-            'NIGHT'    : int(self.night_v.value),
+            'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
+            'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
             'LATITUDE' : '{0:0.3f}'.format(self.position_av[0]),
             'LONGITUDE': '{0:0.3f}'.format(self.position_av[1]),
-            'ELEVATION': int(self.position_av[2]),
+            'ELEVATION': '{0:d}'.format(int(self.position_av[2])),
         }
 
 
@@ -2053,16 +2053,16 @@ class ImageWorker(Process):
         # Communicate sensor values as environment variables
         hook_env = {
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
-            'GAIN'     : self.gain_v.value,
-            'BIN'      : self.bin_v.value,
+            'GAIN'     : '{0:d}'.format(self.gain_v.value),
+            'BIN'      : '{0:d}'.format(self.bin_v.value),
             'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
             'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),
             'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),
-            'MOONMODE' : int(bool(self.moonmode_v.value)),
-            'NIGHT'    : int(self.night_v.value),
+            'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
+            'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
             'LATITUDE' : '{0:0.3f}'.format(self.position_av[0]),
             'LONGITUDE': '{0:0.3f}'.format(self.position_av[1]),
-            'ELEVATION': int(self.position_av[2]),
+            'ELEVATION': '{0:d}'.format(int(self.position_av[2])),
         }
 
 
