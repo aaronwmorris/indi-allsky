@@ -1274,12 +1274,14 @@ class CaptureWorker(Process):
             with io.open(str(tempjson_name_p), 'r', encoding='utf-8') as tempjson_name_f:
                 temp_data = json.load(tempjson_name_f)
 
-            tempjson_name_p.unlink()  # remove temp file
-        except PermissionError as e:
-            logger.error(str(e))
-            raise TemperatureException(str(e))
+            tempjson_name_p.unlink()
         except json.JSONDecodeError as e:
             logger.error('Error decoding json: %s', str(e))
+            tempjson_name_p.unlink()
+            raise TemperatureException(str(e))
+        except PermissionError as e:
+            # cannot delete file
+            logger.error(str(e))
             raise TemperatureException(str(e))
         except FileNotFoundError as e:
             raise TemperatureException(str(e))

@@ -140,6 +140,8 @@ class ImageWorker(Process):
 
         self.image_save_hook_process = None  # used for both pre- and post-hooks
         self.image_save_hook_process_start = 0
+        self.pre_hook_tempjson_name_p = None
+
 
         self.next_save_fits_offset = self.config.get('IMAGE_SAVE_FITS_PERIOD', 7200)
         self.next_save_fits_time = time.time() + self.next_save_fits_offset
@@ -644,10 +646,10 @@ class ImageWorker(Process):
 
 
         # wait on the pre-hook to finish
-        self.wait_image_save_pre_hook()
+        custom_hook_data = self.wait_image_save_pre_hook()
 
 
-        self.image_processor.label_image(adsb_aircraft_list=self.adsb_aircraft_list)
+        self.image_processor.label_image(adsb_aircraft_list=self.adsb_aircraft_list, custom_hook_data=custom_hook_data)
 
 
         processing_elapsed_s = time.time() - processing_start
@@ -1969,8 +1971,16 @@ class ImageWorker(Process):
             return
 
 
+        # generate a tempfile for the data
+        f_tmp_tempjson = tempfile.NamedTemporaryFile(mode='w', delete=True, suffix='.json')
+        f_tmp_tempjson.close()
+
+        self.pre_hook_tempjson_name_p = Path(f_tmp_tempjson.name)
+
+
         # Communicate sensor values as environment variables
-        hook_env = {
+        cmd_env = {
+            'TEMP_JSON': str(self.pre_hook_tempjson_name_p),  # the file used for the json data is communicated via environment variable
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
             'GAIN'     : self.gain_v.value,
             'BIN'      : self.bin_v.value,
@@ -1988,13 +1998,13 @@ class ImageWorker(Process):
         # system temp sensors
         for i, v in enumerate(self.sensors_temp_av):
             sensor_env_var = 'SENSOR_TEMP_{0:d}'.format(i)
-            hook_env[sensor_env_var] = '{0:0.3f}'.format(v)
+            cmd_env[sensor_env_var] = '{0:0.3f}'.format(v)
 
 
         # user sensors
         for i, v in enumerate(self.sensors_user_av):
             sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
-            hook_env[sensor_env_var] = '{0:0.3f}'.format(v)
+            cmd_env[sensor_env_var] = '{0:0.3f}'.format(v)
 
 
         cmd = [
@@ -2005,7 +2015,7 @@ class ImageWorker(Process):
         try:
             self.image_save_hook_process = subprocess.Popen(
                 cmd,
-                env=hook_env,
+                env=cmd_env,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.STDOUT,
             )
@@ -2090,7 +2100,7 @@ class ImageWorker(Process):
 
     def wait_image_save_pre_hook(self):
         if isinstance(self.image_save_hook_process, type(None)):
-            return
+            return {}
 
 
         save_hook_timeout = self.config.get('IMAGE_SAVE_HOOK_TIMEOUT', 5)
@@ -2117,7 +2127,46 @@ class ImageWorker(Process):
             self.image_save_hook_process.kill()
 
 
+        if self.image_save_hook_process.returncode == 0:
+            try:
+                with io.open(str(self.pre_hook_tempjson_name_p), 'r', encoding='utf-8') as tempjson_name_f:
+                    hook_data = json.load(tempjson_name_f)
+
+                self.pre_hook_tempjson_name_p.unlink()
+            except json.JSONDecodeError as e:
+                logger.error('Error decoding json: %s', str(e))
+                self.pre_hook_tempjson_name_p.unlink()
+                hook_data = dict()
+            except PermissionError as e:
+                # cannot delete file
+                logger.error(str(e))
+                hook_data = dict()
+            except FileNotFoundError as e:
+                logger.error(str(e))
+                hook_data = dict()
+        else:
+            hook_data = dict()
+
+
         self.image_save_hook_process = None
+
+
+        # fetch these custom vars for image labels
+        # all values should be str
+        custom_hook_data = {
+            'custom_1'  : hook_data.get('custom_1', ''),
+            'custom_2'  : hook_data.get('custom_2', ''),
+            'custom_3'  : hook_data.get('custom_3', ''),
+            'custom_4'  : hook_data.get('custom_4', ''),
+            'custom_5'  : hook_data.get('custom_5', ''),
+            'custom_6'  : hook_data.get('custom_6', ''),
+            'custom_7'  : hook_data.get('custom_7', ''),
+            'custom_8'  : hook_data.get('custom_8', ''),
+            'custom_9'  : hook_data.get('custom_9', ''),
+        }
+
+
+        return custom_hook_data
 
 
     def wait_image_save_post_hook(self):
