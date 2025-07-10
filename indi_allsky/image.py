@@ -2016,7 +2016,7 @@ class ImageWorker(Process):
             self.image_save_hook_process = subprocess.Popen(
                 cmd,
                 env=cmd_env,
-                stdout=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
             )
 
@@ -2088,7 +2088,7 @@ class ImageWorker(Process):
             self.image_save_hook_process = subprocess.Popen(
                 cmd,
                 env=hook_env,
-                stdout=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
             )
 
@@ -2127,7 +2127,10 @@ class ImageWorker(Process):
             self.image_save_hook_process.kill()
 
 
-        if self.image_save_hook_process.returncode == 0:
+        stdout, stderr = self.image_save_hook_process.communicate()
+        hook_rc = self.image_save_hook_process.returncode
+
+        if hook_rc == 0:
             try:
                 with io.open(str(self.pre_hook_tempjson_name_p), 'r', encoding='utf-8') as tempjson_name_f:
                     hook_data = json.load(tempjson_name_f)
@@ -2145,6 +2148,11 @@ class ImageWorker(Process):
                 logger.error(str(e))
                 hook_data = dict()
         else:
+            logger.error('Image pre-save hook failed rc: %d', hook_rc)
+
+            for line in stdout.decode().split('\n'):
+                logger.error('Hook: %s', line)
+
             hook_data = dict()
 
 
@@ -2196,6 +2204,16 @@ class ImageWorker(Process):
         else:
             logger.error('Killing image post-save script')
             self.image_save_hook_process.kill()
+
+
+        stdout, stderr = self.image_save_hook_process.communicate()
+        hook_rc = self.image_save_hook_process.returncode
+
+        if hook_rc != 0:
+            logger.error('Image post-save hook failed rc: %d', hook_rc)
+
+            for line in stdout.decode().split('\n'):
+                logger.error('Hook: %s', line)
 
 
         self.image_save_hook_process = None
