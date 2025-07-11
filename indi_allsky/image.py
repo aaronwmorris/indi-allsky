@@ -140,6 +140,8 @@ class ImageWorker(Process):
 
         self.image_save_hook_process = None  # used for both pre- and post-hooks
         self.image_save_hook_process_start = 0
+        self.pre_hook_datajson_name_p = None
+
 
         self.next_save_fits_offset = self.config.get('IMAGE_SAVE_FITS_PERIOD', 7200)
         self.next_save_fits_time = time.time() + self.next_save_fits_offset
@@ -352,7 +354,7 @@ class ImageWorker(Process):
         self.image_count += 1
 
 
-        self.start_image_save_pre_hook()
+        self.start_image_save_pre_hook(exposure)
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
@@ -644,10 +646,10 @@ class ImageWorker(Process):
 
 
         # wait on the pre-hook to finish
-        self.wait_image_save_pre_hook()
+        custom_hook_data = self.wait_image_save_pre_hook()
 
 
-        self.image_processor.label_image(adsb_aircraft_list=self.adsb_aircraft_list)
+        self.image_processor.label_image(adsb_aircraft_list=self.adsb_aircraft_list, custom_hook_data=custom_hook_data)
 
 
         processing_elapsed_s = time.time() - processing_start
@@ -671,7 +673,7 @@ class ImageWorker(Process):
         latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, jpeg_exif=jpeg_exif)
 
         if new_filename:
-            self.start_image_save_post_hook(new_filename)
+            self.start_image_save_post_hook(new_filename, exposure)
 
             image_metadata = {
                 'type'            : constants.IMAGE,
@@ -803,7 +805,6 @@ class ImageWorker(Process):
                 'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
                 'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
                 'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
-
             }
 
 
@@ -1946,7 +1947,7 @@ class ImageWorker(Process):
         return rgb_pixel_list
 
 
-    def start_image_save_pre_hook(self):
+    def start_image_save_pre_hook(self, exposure):
         if self.image_processor.focus_mode:
             return
 
@@ -1970,6 +1971,42 @@ class ImageWorker(Process):
             return
 
 
+        # generate a tempfile for the data
+        f_tmp_datajson = tempfile.NamedTemporaryFile(mode='w', delete=True, suffix='.json')
+        f_tmp_datajson.close()
+
+        self.pre_hook_datajson_name_p = Path(f_tmp_datajson.name)
+
+
+        # Communicate sensor values as environment variables
+        cmd_env = {
+            'DATA_JSON': str(self.pre_hook_datajson_name_p),  # the file used for the json data is communicated via environment variable
+            'EXPOSURE' : '{0:0.6f}'.format(exposure),
+            'GAIN'     : '{0:d}'.format(self.gain_v.value),
+            'BIN'      : '{0:d}'.format(self.bin_v.value),
+            'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
+            'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),
+            'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),
+            'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
+            'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
+            'LATITUDE' : '{0:0.3f}'.format(self.position_av[0]),
+            'LONGITUDE': '{0:0.3f}'.format(self.position_av[1]),
+            'ELEVATION': '{0:d}'.format(int(self.position_av[2])),
+        }
+
+
+        # system temp sensors
+        for i, v in enumerate(self.sensors_temp_av):
+            sensor_env_var = 'SENSOR_TEMP_{0:d}'.format(i)
+            cmd_env[sensor_env_var] = '{0:0.3f}'.format(v)
+
+
+        # user sensors
+        for i, v in enumerate(self.sensors_user_av):
+            sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
+            cmd_env[sensor_env_var] = '{0:0.3f}'.format(v)
+
+
         cmd = [
             str(pre_save_hook_p),
         ]
@@ -1978,7 +2015,8 @@ class ImageWorker(Process):
         try:
             self.image_save_hook_process = subprocess.Popen(
                 cmd,
-                stdout=subprocess.DEVNULL,
+                env=cmd_env,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
             )
 
@@ -1988,7 +2026,7 @@ class ImageWorker(Process):
             logger.error('Image pre-save script failed to execute')
 
 
-    def start_image_save_post_hook(self, image_p):
+    def start_image_save_post_hook(self, image_p, exposure):
         if self.image_processor.focus_mode:
             return
 
@@ -2012,6 +2050,34 @@ class ImageWorker(Process):
             return
 
 
+        # Communicate sensor values as environment variables
+        hook_env = {
+            'EXPOSURE' : '{0:0.6f}'.format(exposure),
+            'GAIN'     : '{0:d}'.format(self.gain_v.value),
+            'BIN'      : '{0:d}'.format(self.bin_v.value),
+            'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
+            'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),
+            'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),
+            'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
+            'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
+            'LATITUDE' : '{0:0.3f}'.format(self.position_av[0]),
+            'LONGITUDE': '{0:0.3f}'.format(self.position_av[1]),
+            'ELEVATION': '{0:d}'.format(int(self.position_av[2])),
+        }
+
+
+        # system temp sensors
+        for i, v in enumerate(self.sensors_temp_av):
+            sensor_env_var = 'SENSOR_TEMP_{0:d}'.format(i)
+            hook_env[sensor_env_var] = '{0:0.3f}'.format(v)
+
+
+        # user sensors
+        for i, v in enumerate(self.sensors_user_av):
+            sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
+            hook_env[sensor_env_var] = '{0:0.3f}'.format(v)
+
+
         cmd = [
             str(post_save_hook_p),
             str(image_p),
@@ -2021,7 +2087,8 @@ class ImageWorker(Process):
         try:
             self.image_save_hook_process = subprocess.Popen(
                 cmd,
-                stdout=subprocess.DEVNULL,
+                env=hook_env,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
             )
 
@@ -2033,7 +2100,7 @@ class ImageWorker(Process):
 
     def wait_image_save_pre_hook(self):
         if isinstance(self.image_save_hook_process, type(None)):
-            return
+            return {}
 
 
         save_hook_timeout = self.config.get('IMAGE_SAVE_HOOK_TIMEOUT', 5)
@@ -2060,7 +2127,54 @@ class ImageWorker(Process):
             self.image_save_hook_process.kill()
 
 
+        stdout, stderr = self.image_save_hook_process.communicate()
+        hook_rc = self.image_save_hook_process.returncode
+
+        if hook_rc == 0:
+            try:
+                with io.open(str(self.pre_hook_datajson_name_p), 'r', encoding='utf-8') as datajson_name_f:
+                    hook_data = json.load(datajson_name_f)
+
+                self.pre_hook_datajson_name_p.unlink()
+            except json.JSONDecodeError as e:
+                logger.error('Error decoding json: %s', str(e))
+                self.pre_hook_datajson_name_p.unlink()
+                hook_data = dict()
+            except PermissionError as e:
+                # cannot delete file
+                logger.error(str(e))
+                hook_data = dict()
+            except FileNotFoundError as e:
+                logger.error(str(e))
+                hook_data = dict()
+        else:
+            logger.error('Image pre-save hook failed rc: %d', hook_rc)
+
+            for line in stdout.decode().split('\n'):
+                logger.error('Hook: %s', line)
+
+            hook_data = dict()
+
+
         self.image_save_hook_process = None
+
+
+        # fetch these custom vars for image labels
+        # all values should be str
+        custom_hook_data = {
+            'custom_1'  : hook_data.get('custom_1', ''),
+            'custom_2'  : hook_data.get('custom_2', ''),
+            'custom_3'  : hook_data.get('custom_3', ''),
+            'custom_4'  : hook_data.get('custom_4', ''),
+            'custom_5'  : hook_data.get('custom_5', ''),
+            'custom_6'  : hook_data.get('custom_6', ''),
+            'custom_7'  : hook_data.get('custom_7', ''),
+            'custom_8'  : hook_data.get('custom_8', ''),
+            'custom_9'  : hook_data.get('custom_9', ''),
+        }
+
+
+        return custom_hook_data
 
 
     def wait_image_save_post_hook(self):
@@ -2090,6 +2204,16 @@ class ImageWorker(Process):
         else:
             logger.error('Killing image post-save script')
             self.image_save_hook_process.kill()
+
+
+        stdout, stderr = self.image_save_hook_process.communicate()
+        hook_rc = self.image_save_hook_process.returncode
+
+        if hook_rc != 0:
+            logger.error('Image post-save hook failed rc: %d', hook_rc)
+
+            for line in stdout.decode().split('\n'):
+                logger.error('Hook: %s', line)
 
 
         self.image_save_hook_process = None

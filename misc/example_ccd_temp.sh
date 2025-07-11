@@ -9,6 +9,19 @@ set -o errexit  # exit on any error
 set -o nounset  # exit on any unset variable
 
 
+# shellcheck disable=SC2317
+function sigint_handler() {
+    # this prevents a keyboard interrupt from stopping the script
+    true
+}
+trap sigint_handler SIGINT
+
+
+#############
+### START ###
+#############
+
+
 TEMP_C=-5.111
 
 

@@ -2327,7 +2327,7 @@ class ImageProcessor(object):
         return satellite_data
 
 
-    def get_image_label(self, i_ref, adsb_aircraft_list):
+    def get_image_label(self, i_ref, adsb_aircraft_list, custom_hook_data):
         image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain:d}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
 
 
@@ -2425,15 +2425,6 @@ class ImageProcessor(object):
             'sidereal_time'        : self.astrometric_data['sidereal_time'],
             'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
             'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),
-            'custom_1'     : '',  # custom slots
-            'custom_2'     : '',
-            'custom_3'     : '',
-            'custom_4'     : '',
-            'custom_5'     : '',
-            'custom_6'     : '',
-            'custom_7'     : '',
-            'custom_8'     : '',
-            'custom_9'     : '',
         }
 
 
@@ -2515,6 +2506,17 @@ class ImageProcessor(object):
             label_data['wind_dir'] = 'Error'
 
 
+        label_data['custom_1'] = str(custom_hook_data.get('custom_1', ''))
+        label_data['custom_2'] = str(custom_hook_data.get('custom_2', ''))
+        label_data['custom_3'] = str(custom_hook_data.get('custom_3', ''))
+        label_data['custom_4'] = str(custom_hook_data.get('custom_4', ''))
+        label_data['custom_5'] = str(custom_hook_data.get('custom_5', ''))
+        label_data['custom_6'] = str(custom_hook_data.get('custom_6', ''))
+        label_data['custom_7'] = str(custom_hook_data.get('custom_7', ''))
+        label_data['custom_8'] = str(custom_hook_data.get('custom_8', ''))
+        label_data['custom_9'] = str(custom_hook_data.get('custom_9', ''))
+
+
         ### add code here to populate the custom_# data slots
         #label_data['custom_1'] = 'Foo Bar'
         #label_data['custom_2'] = ''
@@ -2575,7 +2577,7 @@ class ImageProcessor(object):
         return image_label
 
 
-    def label_image(self, adsb_aircraft_list=[]):
+    def label_image(self, adsb_aircraft_list=[], custom_hook_data={}):
         # this needs to be enabled during focus mode
 
 
@@ -2593,9 +2595,9 @@ class ImageProcessor(object):
         image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
 
         if image_label_system == 'opencv':
-            self._label_image_opencv(i_ref, adsb_aircraft_list)
+            self._label_image_opencv(i_ref, adsb_aircraft_list, custom_hook_data)
         elif image_label_system == 'pillow':
-            self._label_image_pillow(i_ref, adsb_aircraft_list)
+            self._label_image_pillow(i_ref, adsb_aircraft_list, custom_hook_data)
         else:
             logger.warning('Image labels disabled')
             return
@@ -2672,7 +2674,7 @@ class ImageProcessor(object):
             logger.error('Unknown orb display mode: %s', orb_mode)
 
 
-    def _label_image_opencv(self, i_ref, adsb_aircraft_list):
+    def _label_image_opencv(self, i_ref, adsb_aircraft_list, custom_hook_data):
         image_height, image_width = self.image.shape[:2]
 
 
@@ -2699,7 +2701,7 @@ class ImageProcessor(object):
             return
 
 
-        image_label = self.get_image_label(i_ref, adsb_aircraft_list)
+        image_label = self.get_image_label(i_ref, adsb_aircraft_list, custom_hook_data)
 
 
         for line in image_label.split('\n'):
@@ -2745,7 +2747,7 @@ class ImageProcessor(object):
         )
 
 
-    def _label_image_pillow(self, i_ref, adsb_aircraft_list):
+    def _label_image_pillow(self, i_ref, adsb_aircraft_list, custom_hook_data):
         img_rgb = Image.fromarray(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
         image_width, image_height  = img_rgb.size  # backwards from opencv
 
@@ -2791,7 +2793,7 @@ class ImageProcessor(object):
             return
 
 
-        image_label = self.get_image_label(i_ref, adsb_aircraft_list)
+        image_label = self.get_image_label(i_ref, adsb_aircraft_list, custom_hook_data)
 
 
         for line in image_label.split('\n'):

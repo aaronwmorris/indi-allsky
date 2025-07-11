@@ -10,11 +10,25 @@ import os
 import sys
 import io
 import json
+import signal
 import logging
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging
+
+
+def sigint_handler(signum, frame):
+    # this prevents a keyboard interrupt from stopping the script
+    pass
+
+
+signal.signal(signal.SIGINT, sigint_handler)
+
+
+#############
+### START ###
+#############
 
 
 temp_c = -5.111
