@@ -42,6 +42,11 @@ def sigint_handler(signum, frame):
 signal.signal(signal.SIGINT, sigint_handler)
 
 
+#############
+### START ###
+#############
+
+
 try:
     # data file is communicated via environment variable
     data_file = os.environ['DATA_JSON']

@@ -39,6 +39,11 @@ def sigint_handler(signum, frame):
 signal.signal(signal.SIGINT, sigint_handler)
 
 
+#############
+### START ###
+#############
+
+
 argparser = argparse.ArgumentParser()
 argparser.add_argument(
     'image_file',
