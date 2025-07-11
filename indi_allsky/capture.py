@@ -1260,10 +1260,14 @@ class CaptureWorker(Process):
         try:
             temp_process.wait(timeout=3.0)
         except subprocess.TimeoutExpired:
+            #temp_process.terminate()
             temp_process.kill()
             time.sleep(1.0)
             temp_process.poll()  # close out process
             raise TemperatureException('Temperature script timed out')
+
+
+        #stdout, stderr = temp_process.communicate()
 
 
         if temp_process.returncode != 0:
