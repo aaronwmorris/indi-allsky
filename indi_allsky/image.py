@@ -140,7 +140,7 @@ class ImageWorker(Process):
 
         self.image_save_hook_process = None  # used for both pre- and post-hooks
         self.image_save_hook_process_start = 0
-        self.pre_hook_tempjson_name_p = None
+        self.pre_hook_datajson_name_p = None
 
 
         self.next_save_fits_offset = self.config.get('IMAGE_SAVE_FITS_PERIOD', 7200)
@@ -1972,15 +1972,15 @@ class ImageWorker(Process):
 
 
         # generate a tempfile for the data
-        f_tmp_tempjson = tempfile.NamedTemporaryFile(mode='w', delete=True, suffix='.json')
-        f_tmp_tempjson.close()
+        f_tmp_datajson = tempfile.NamedTemporaryFile(mode='w', delete=True, suffix='.json')
+        f_tmp_datajson.close()
 
-        self.pre_hook_tempjson_name_p = Path(f_tmp_tempjson.name)
+        self.pre_hook_datajson_name_p = Path(f_tmp_datajson.name)
 
 
         # Communicate sensor values as environment variables
         cmd_env = {
-            'TEMP_JSON': str(self.pre_hook_tempjson_name_p),  # the file used for the json data is communicated via environment variable
+            'DATA_JSON': str(self.pre_hook_datajson_name_p),  # the file used for the json data is communicated via environment variable
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
             'GAIN'     : '{0:d}'.format(self.gain_v.value),
             'BIN'      : '{0:d}'.format(self.bin_v.value),
@@ -2132,13 +2132,13 @@ class ImageWorker(Process):
 
         if hook_rc == 0:
             try:
-                with io.open(str(self.pre_hook_tempjson_name_p), 'r', encoding='utf-8') as tempjson_name_f:
-                    hook_data = json.load(tempjson_name_f)
+                with io.open(str(self.pre_hook_datajson_name_p), 'r', encoding='utf-8') as datajson_name_f:
+                    hook_data = json.load(datajson_name_f)
 
-                self.pre_hook_tempjson_name_p.unlink()
+                self.pre_hook_datajson_name_p.unlink()
             except json.JSONDecodeError as e:
                 logger.error('Error decoding json: %s', str(e))
-                self.pre_hook_tempjson_name_p.unlink()
+                self.pre_hook_datajson_name_p.unlink()
                 hook_data = dict()
             except PermissionError as e:
                 # cannot delete file
