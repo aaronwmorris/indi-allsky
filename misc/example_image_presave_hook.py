@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # Example of a pre-save image hook
+# The pre-save script is executed concurrently while the image is being processed but before it is saved.
+#
 # STDOUT and STDERR are ignored
 #
 # The json output file is set in the environment variable DATA_JSON

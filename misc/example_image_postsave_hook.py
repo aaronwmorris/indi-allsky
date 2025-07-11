@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # Example of a post-save image hook
+# The post-save script is executed after the image is processed and saved.
+#
 # STDOUT and STDERR are ignored
 
 
