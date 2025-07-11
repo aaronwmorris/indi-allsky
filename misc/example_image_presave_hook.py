@@ -21,19 +21,19 @@ logger = logging
 
 # Available environment variables with data.  Environment variables are strings, therefore
 # it requires using int() or float() to convert to numbers
-#EXPOSURE   : float
-#GAIN       : int
-#BIN        : int
-#SUNALT     : float
-#MOONALT    : float
-#MOONPHASE  : float
-#NIGHT      : int
-#MOONMODE   : float
-#LATITUDE   : float
-#LONGITUDE  : float
-#ELEVATION  : int
-#SENSOR_TEMP_0 - SENSOR_TEMP_29 : float
-#SENSOR_USER_0 - SENSOR_USER_29 : float
+#EXPOSURE   : float(os.environ['EXPOSURE'])
+#GAIN       : int(os.environ['GAIN'])
+#BIN        : int(os.environ['BIN'])
+#SUNALT     : float(os.environ['SUNALT'])
+#MOONALT    : float(os.environ['MOONALT'])
+#MOONPHASE  : float(os.environ['MOONPHASE'])
+#NIGHT      : int(os.environ['NIGHT'])
+#MOONMODE   : int(os.environ['MOONMODE'])
+#LATITUDE   : float(os.environ['LATITUDE'])
+#LONGITUDE  : float(os.environ['LONGITUDE'])
+#ELEVATION  : int(os.environ['ELEVATION'])
+#SENSOR_TEMP_0 - SENSOR_TEMP_29 : float(os.environ['SENSOR_TEMP_##'])
+#SENSOR_USER_0 - SENSOR_USER_29 : float(os.environ['SENSOR_USER_##'])
 
 
 def sigint_handler(signum, frame):
