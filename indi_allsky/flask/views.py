@@ -2158,6 +2158,8 @@ class ConfigView(FormView):
             'IMAGE_SAVE_HOOK_PRE'            : self.indi_allsky_config.get('IMAGE_SAVE_HOOK_PRE', ''),
             'IMAGE_SAVE_HOOK_POST'           : self.indi_allsky_config.get('IMAGE_SAVE_HOOK_POST', ''),
             'IMAGE_SAVE_HOOK_TIMEOUT'        : self.indi_allsky_config.get('IMAGE_SAVE_HOOK_TIMEOUT', 5),
+            'CAPTURE_HOOK_POST'              : self.indi_allsky_config.get('CAPTURE_HOOK_POST', ''),
+            'CAPTURE_HOOK_TIMEOUT'           : self.indi_allsky_config.get('CAPTURE_HOOK_TIMEOUT', 5),
             'BACKUP_DB_PERIOD_DAYS'          : self.indi_allsky_config.get('BACKUP_DB_PERIOD_DAYS', 7),
             'IMAGE_EXPIRE_DAYS'              : self.indi_allsky_config.get('IMAGE_EXPIRE_DAYS', 10),
             'IMAGE_RAW_EXPIRE_DAYS'          : self.indi_allsky_config.get('IMAGE_RAW_EXPIRE_DAYS', 10),
@@ -3014,6 +3016,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_SAVE_HOOK_PRE']                  = str(request.json['IMAGE_SAVE_HOOK_PRE'])
         self.indi_allsky_config['IMAGE_SAVE_HOOK_POST']                 = str(request.json['IMAGE_SAVE_HOOK_POST'])
         self.indi_allsky_config['IMAGE_SAVE_HOOK_TIMEOUT']              = int(request.json['IMAGE_SAVE_HOOK_TIMEOUT'])
+        self.indi_allsky_config['CAPTURE_HOOK_POST']                    = str(request.json['CAPTURE_HOOK_POST'])
+        self.indi_allsky_config['CAPTURE_HOOK_TIMEOUT']                 = int(request.json['CAPTURE_HOOK_TIMEOUT'])
         self.indi_allsky_config['BACKUP_DB_PERIOD_DAYS']                = int(request.json['BACKUP_DB_PERIOD_DAYS'])
         self.indi_allsky_config['IMAGE_EXPIRE_DAYS']                    = int(request.json['IMAGE_EXPIRE_DAYS'])
         self.indi_allsky_config['IMAGE_RAW_EXPIRE_DAYS']                = int(request.json['IMAGE_RAW_EXPIRE_DAYS'])

@@ -502,7 +502,7 @@ def SCRIPT_validator(form, field):
         raise ValidationError(str(e))
 
 
-def IMAGE_SAVE_HOOK_TIMEOUT_validator(form, field):
+def HOOK_TIMEOUT_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
 
@@ -3788,7 +3788,9 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_QUEUE_BACKOFF              = FloatField('Image Queue Backoff Multiplier', validators=[IMAGE_QUEUE_BACKOFF_validator])
     IMAGE_SAVE_HOOK_PRE              = StringField('Image Pre-Save Hook', validators=[SCRIPT_validator])
     IMAGE_SAVE_HOOK_POST             = StringField('Image Post-Save Hook', validators=[SCRIPT_validator])
-    IMAGE_SAVE_HOOK_TIMEOUT          = IntegerField('Image Save Hook Timeout', validators=[DataRequired(), IMAGE_SAVE_HOOK_TIMEOUT_validator])
+    IMAGE_SAVE_HOOK_TIMEOUT          = IntegerField('Image Save Hook Timeout', validators=[DataRequired(), HOOK_TIMEOUT_validator])
+    CAPTURE_HOOK_POST                = StringField('Post-Capture Hook', validators=[SCRIPT_validator])
+    CAPTURE_HOOK_TIMEOUT             = IntegerField('Capture Hook Timeout', validators=[DataRequired(), HOOK_TIMEOUT_validator])
     FISH2PANO__ENABLE                = BooleanField('Enable Fisheye to Panoramic')
     FISH2PANO__DIAMETER              = IntegerField('Diameter', validators=[DataRequired(), FISH2PANO__DIAMETER_validator])
     FISH2PANO__OFFSET_X              = IntegerField('X Offset', validators=[FISH2PANO__OFFSET_X_validator], render_kw={'readonly' : True, 'disabled' : 'disabled'})

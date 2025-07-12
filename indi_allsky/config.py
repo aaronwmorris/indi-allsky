@@ -304,6 +304,8 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_SAVE_HOOK_PRE"   : "",
         "IMAGE_SAVE_HOOK_POST"  : "",
         "IMAGE_SAVE_HOOK_TIMEOUT" : 5,
+        "CAPTURE_HOOK_POST"     : "",
+        "CAPTURE_HOOK_TIMEOUT"  : 5,
         "IMAGE_QUEUE_BACKOFF"   : 0.5,
         "FFMPEG_FRAMERATE"      : 25,
         "FFMPEG_FRAMERATE_DAY"  : 25,
