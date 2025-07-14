@@ -294,7 +294,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
     def getCcdExposureStatus(self):
         # returns camera_ready, exposure_state
-        if self._libCameraPidRunning():
+        if self._libCameraProcessRunning():
             return False, 'BUSY'
 
 
@@ -443,15 +443,17 @@ class IndiClientLibCameraGeneric(IndiClient):
         self.active_exposure = False
 
         for _ in range(5):
-            if self._libCameraPidRunning():
-                self.libcamera_process.terminate()
-                time.sleep(0.5)
-                continue
-            else:
+            if not self._libCameraProcessRunning():
                 break
 
-        else:
+            self.libcamera_process.terminate()
+            time.sleep(0.5)
+            continue
+
+
+        if self._libCameraProcessRunning():
             self.libcamera_process.kill()
+            self.libcamera_process.poll()  # close out the process
 
 
         try:
@@ -487,7 +489,7 @@ class IndiClientLibCameraGeneric(IndiClient):
         self.image_q.put(jobdata)
 
 
-    def _libCameraPidRunning(self):
+    def _libCameraProcessRunning(self):
         if not self.libcamera_process:
             return False
 

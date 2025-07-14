@@ -2115,25 +2115,28 @@ class ImageWorker(Process):
             logger.error('Image pre-save script exceeded runtime')
 
             for _ in range(5):
-                if self._processRunning(self.image_save_hook_process):
-                    self.image_save_hook_process.terminate()
-                    time.sleep(0.25)
+                if not self._processRunning(self.image_save_hook_process):
+                    break
+
+                self.image_save_hook_process.terminate()
+                time.sleep(0.25)
+                continue
 
 
-                if self._processRunning(self.image_save_hook_process):
-                    logger.error('Killing image pre-save script')
-                    self.image_save_hook_process.kill()
-                    self.image_save_hook_process.poll()  # close out process
+            if self._processRunning(self.image_save_hook_process):
+                logger.error('Killing image pre-save script')
+                self.image_save_hook_process.kill()
+                self.image_save_hook_process.poll()  # close out process
 
 
-                if self.pre_hook_datajson_name_p.is_file():
-                    try:
-                        self.pre_hook_datajson_name_p.unlink()
-                    except PermissionError as e:
-                        logger.error('Unable to delete temp file: %s', str(e))
+            if self.pre_hook_datajson_name_p.is_file():
+                try:
+                    self.pre_hook_datajson_name_p.unlink()
+                except PermissionError as e:
+                    logger.error('Unable to delete temp file: %s', str(e))
 
 
-                return {}
+            return {}
 
 
         stdout, stderr = self.image_save_hook_process.communicate()
@@ -2203,17 +2206,20 @@ class ImageWorker(Process):
             logger.error('Image post-save script exceeded runtime')
 
             for _ in range(5):
-                if self._processRunning(self.image_save_hook_process):
-                    self.image_save_hook_process.terminate()
-                    time.sleep(0.25)
+                if not self._processRunning(self.image_save_hook_process):
+                    break
+
+                self.image_save_hook_process.terminate()
+                time.sleep(0.25)
+                continue
 
 
-                if self._processRunning(self.image_save_hook_process):
-                    logger.error('Killing image post-save script')
-                    self.image_save_hook_process.kill()
-                    self.image_save_hook_process.poll()  # close out process
+            if self._processRunning(self.image_save_hook_process):
+                logger.error('Killing image post-save script')
+                self.image_save_hook_process.kill()
+                self.image_save_hook_process.poll()  # close out process
 
-                return
+            return
 
 
         stdout, stderr = self.image_save_hook_process.communicate()

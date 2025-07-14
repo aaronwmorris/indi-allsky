@@ -1263,12 +1263,12 @@ class CaptureWorker(Process):
             temp_process.wait(timeout=3.0)
         except subprocess.TimeoutExpired:
             for _ in range(5):
-                if self._processRunning(temp_process):
-                    temp_process.terminate()
-                    time.sleep(0.25)
-                    continue
-                else:
+                if not self._processRunning(temp_process):
                     break
+
+                temp_process.terminate()
+                time.sleep(0.25)
+                continue
 
 
             if self._processRunning(temp_process):
@@ -1393,12 +1393,12 @@ class CaptureWorker(Process):
             logger.error('Pre-capture script timed out')
 
             for _ in range(5):
-                if self._processRunning(pre_capture_hook_process):
-                    pre_capture_hook_process.terminate()
-                    time.sleep(0.25)
-                    continue
-                else:
+                if not self._processRunning(pre_capture_hook_process):
                     break
+
+                pre_capture_hook_process.terminate()
+                time.sleep(0.25)
+                continue
 
 
             if self._processRunning(pre_capture_hook_process):
