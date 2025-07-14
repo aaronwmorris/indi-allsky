@@ -2105,7 +2105,7 @@ class ImageWorker(Process):
 
         save_hook_timeout = self.config.get('IMAGE_SAVE_HOOK_TIMEOUT', 5)
 
-        while self._hookPidRunning():
+        while self._processRunning(self.image_save_hook_process):
             now_time = time.time()
             if now_time - self.image_save_hook_process_start > save_hook_timeout:
                 logger.error('Image pre-save script exceeded runtime')
@@ -2115,7 +2115,7 @@ class ImageWorker(Process):
 
 
         for _ in range(5):
-            if self._hookPidRunning():
+            if self._processRunning(self.image_save_hook_process):
                 self.image_save_hook_process.terminate()
                 time.sleep(0.5)
                 continue
@@ -2125,6 +2125,8 @@ class ImageWorker(Process):
         else:
             logger.error('Killing image pre-save script')
             self.image_save_hook_process.kill()
+            self.image_save_hook_process.poll()  # close out process
+            return {}
 
 
         stdout, stderr = self.image_save_hook_process.communicate()
@@ -2184,7 +2186,7 @@ class ImageWorker(Process):
 
         save_hook_timeout = self.config.get('IMAGE_SAVE_HOOK_TIMEOUT', 5)
 
-        while self._hookPidRunning():
+        while self._processRunning(self.image_save_hook_process):
             now_time = time.time()
             if now_time - self.image_save_hook_process_start > save_hook_timeout:
                 logger.error('Image post-save script exceeded runtime')
@@ -2194,7 +2196,7 @@ class ImageWorker(Process):
 
 
         for _ in range(5):
-            if self._hookPidRunning():
+            if self._processRunning(self.image_save_hook_process):
                 self.image_save_hook_process.terminate()
                 time.sleep(0.5)
                 continue
@@ -2204,6 +2206,7 @@ class ImageWorker(Process):
         else:
             logger.error('Killing image post-save script')
             self.image_save_hook_process.kill()
+            self.image_save_hook_process.poll()  # close out process
 
 
         stdout, stderr = self.image_save_hook_process.communicate()
@@ -2219,12 +2222,12 @@ class ImageWorker(Process):
         self.image_save_hook_process = None
 
 
-    def _hookPidRunning(self):
-        if not self.image_save_hook_process:
+    def _processRunning(self, process):
+        if not process:
             return False
 
         # poll returns None when process is active, rc (normally 0) when finished
-        poll = self.image_save_hook_process.poll()
+        poll = process.poll()
         if isinstance(poll, type(None)):
             return True
 

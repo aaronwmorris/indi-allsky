@@ -617,6 +617,10 @@ class CaptureWorker(Process):
 
                         total_elapsed = now - frame_start_time
 
+
+                        self.capture_pre_hook()
+
+
                         frame_start_time = now
 
                         self.shoot(self.exposure_av[0], sync=False)
@@ -664,8 +668,6 @@ class CaptureWorker(Process):
 
                 loop_elapsed = now - loop_start_time
                 logger.debug('Loop completed in %0.4f s', loop_elapsed)
-
-
 
 
     def _initialize(self):
@@ -1260,10 +1262,20 @@ class CaptureWorker(Process):
         try:
             temp_process.wait(timeout=3.0)
         except subprocess.TimeoutExpired:
-            #temp_process.terminate()
-            temp_process.kill()
-            time.sleep(1.0)
-            temp_process.poll()  # close out process
+            for _ in range(5):
+                if self._processRunning(temp_process):
+                    temp_process.terminate()
+                    time.sleep(0.25)
+                    continue
+                else:
+                    break
+
+
+            if self._processRunning(temp_process):
+                logger.error('Killing temperature script')
+                temp_process.kill()
+                temp_process.poll()  # close out process
+
             raise TemperatureException('Temperature script timed out')
 
 
@@ -1300,6 +1312,115 @@ class CaptureWorker(Process):
 
 
         return temp_float
+
+
+    def capture_pre_hook(self):
+        if not self.config.get('CAPTURE_HOOK_PRE'):
+            return
+
+        pre_capture_hook_p = Path(self.config.get('CAPTURE_HOOK_PRE'))
+
+        logger.info('Running pre-capture hook: %s', pre_capture_hook_p)
+
+        # need to be extra careful running in the main thread
+        if not pre_capture_hook_p.is_file():
+            logger.error('Pre-capture script is not a file')
+            return
+
+        if pre_capture_hook_p.stat().st_size == 0:
+            logger.error('Pre-capture script is empty')
+            return
+
+        if not os.access(str(pre_capture_hook_p), os.R_OK | os.X_OK):
+            logger.error('Pre-capture script is not readable or executable')
+            return
+
+
+        # Communicate sensor values as environment variables
+        cmd_env = {
+            'GAIN'     : '{0:d}'.format(self.gain_v.value),
+            'BIN'      : '{0:d}'.format(self.bin_v.value),
+            'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
+            'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
+            'LATITUDE' : '{0:0.3f}'.format(self.position_av[0]),
+            'LONGITUDE': '{0:0.3f}'.format(self.position_av[1]),
+            'ELEVATION': '{0:d}'.format(int(self.position_av[2])),
+        }
+
+
+        # system temp sensors
+        for i, v in enumerate(self.sensors_temp_av):
+            sensor_env_var = 'SENSOR_TEMP_{0:d}'.format(i)
+            cmd_env[sensor_env_var] = '{0:0.3f}'.format(v)
+
+
+        # user sensors
+        for i, v in enumerate(self.sensors_user_av):
+            sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
+            cmd_env[sensor_env_var] = '{0:0.3f}'.format(v)
+
+
+        cmd = [
+            str(pre_capture_hook_p),
+        ]
+
+
+        try:
+            pre_capture_hook_process = subprocess.Popen(
+                cmd,
+                env=cmd_env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+        except OSError:
+            logger.error('Pre-capture script failed to execute')
+            return
+
+
+        capture_hook_timeout = self.config.get('CAPTURE_HOOK_TIMEOUT', 5)
+
+        try:
+            pre_capture_hook_process.wait(timeout=capture_hook_timeout)
+        except subprocess.TimeoutExpired:
+            logger.error('Pre-capture script timed out')
+            for _ in range(5):
+                if self._processRunning(pre_capture_hook_process):
+                    pre_capture_hook_process.terminate()
+                    time.sleep(0.25)
+                    continue
+                else:
+                    break
+
+
+            if self._processRunning(pre_capture_hook_process):
+                logger.error('Killing image pre-save script')
+                pre_capture_hook_process.kill()
+                pre_capture_hook_process.poll()  # close out process
+
+            return
+
+
+        stdout, stderr = pre_capture_hook_process.communicate()
+
+
+        hook_rc = pre_capture_hook_process.returncode
+        if hook_rc != 0:
+            logger.error('Pre-capture hook failed rc: %d', hook_rc)
+
+            for line in stdout.decode().split('\n'):
+                logger.error('Hook: %s', line)
+
+
+    def _processRunning(self, process):
+        if not process:
+            return False
+
+        # poll returns None when process is active, rc (normally 0) when finished
+        poll = process.poll()
+        if isinstance(poll, type(None)):
+            return True
+
+        return False
 
 
     def getGpsPosition(self):
