@@ -2129,11 +2129,12 @@ class ImageWorker(Process):
                 self.image_save_hook_process.poll()  # close out process
 
 
-            if self.pre_hook_datajson_name_p.is_file():
-                try:
-                    self.pre_hook_datajson_name_p.unlink()
-                except PermissionError as e:
-                    logger.error('Unable to delete temp file: %s', str(e))
+            try:
+                self.pre_hook_datajson_name_p.unlink()
+            except FileNotFoundError:
+                pass
+            except PermissionError as e:
+                logger.error('Unable to delete temp file: %s', str(e))
 
 
             return {}
