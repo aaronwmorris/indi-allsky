@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-# Example of a post-save image hook
-# The post-save script is executed after the image is processed and saved.
+# Example of a pre-capture hook
+# The pre-capture script is executed before an image is captured
 #
 # STDOUT and STDERR are ignored
 
 
 import sys
-from pathlib import Path
-import argparse
 import signal
 import logging
 
@@ -18,12 +16,8 @@ logger = logging
 
 # Available environment variables with data.  Environment variables are strings, therefore
 # it requires using int() or float() to convert to numbers
-#EXPOSURE   : float(os.environ['EXPOSURE'])
 #GAIN       : int(os.environ['GAIN'])
 #BIN        : int(os.environ['BIN'])
-#SUNALT     : float(os.environ['SUNALT'])
-#MOONALT    : float(os.environ['MOONALT'])
-#MOONPHASE  : float(os.environ['MOONPHASE'])
 #NIGHT      : int(os.environ['NIGHT'])
 #MOONMODE   : int(os.environ['MOONMODE'])
 #LATITUDE   : float(os.environ['LATITUDE'])
@@ -46,26 +40,7 @@ signal.signal(signal.SIGINT, sigint_handler)
 #############
 
 
-argparser = argparse.ArgumentParser()
-argparser.add_argument(
-    'image_file',
-    help='Image File',
-    type=str,
-)
-
-args = argparser.parse_args()
-
-
-image_path = Path(args.image_file)
-
-
-if not image_path.is_file():
-    logger.error('Image does not exist')
-    sys.exit(1)
-
-
-# At this stage of the script, you may read the image, transfer the image, fire ze missiles, etc
-# It is recommended not to alter the image
+# Do something interesting here
 
 
 # script must exist with exit code 0 for success
