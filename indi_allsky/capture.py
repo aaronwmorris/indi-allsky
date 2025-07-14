@@ -1276,6 +1276,14 @@ class CaptureWorker(Process):
                 temp_process.kill()
                 temp_process.poll()  # close out process
 
+
+            if tempjson_name_p.is_file():
+                try:
+                    tempjson_name_p.unlink()
+                except PermissionError as e:
+                    logger.error('Unable to delete temp file: %s', str(e))
+
+
             raise TemperatureException('Temperature script timed out')
 
 
