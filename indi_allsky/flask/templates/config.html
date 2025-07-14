@@ -3635,14 +3635,14 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.CAPTURE_HOOK_POST.label(class='col-form-label') }}
+            {{ form_config.CAPTURE_HOOK_PRE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-5">
-            {{ form_config.CAPTURE_HOOK_POST(class='form-control bg-secondary') }}
-            <div id="CAPTURE_HOOK_POST-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.CAPTURE_HOOK_PRE(class='form-control bg-secondary') }}
+            <div id="CAPTURE_HOOK_PRE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-5">
-            <div>External script to run after capturing image</div>
+            <div>External script to run before capturing image</div>
             <div><span class="badge rounded-pill bg-info text-dark">Note</span> Runs in CAPTURE worker process</div>
         </div>
     </div>
@@ -7766,7 +7766,7 @@ const field_names = [
     'IMAGE_SAVE_HOOK_PRE',
     'IMAGE_SAVE_HOOK_POST',
     'IMAGE_SAVE_HOOK_TIMEOUT',
-    'CAPTURE_HOOK_POST',
+    'CAPTURE_HOOK_PRE',
     'CAPTURE_HOOK_TIMEOUT',
     'IMAGE_SAVE_FITS_PERIOD',
     'TIMELAPSE_EXPIRE_DAYS',

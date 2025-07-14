@@ -3789,7 +3789,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_SAVE_HOOK_PRE              = StringField('Image Pre-Save Hook', validators=[SCRIPT_validator])
     IMAGE_SAVE_HOOK_POST             = StringField('Image Post-Save Hook', validators=[SCRIPT_validator])
     IMAGE_SAVE_HOOK_TIMEOUT          = IntegerField('Image Save Hook Timeout', validators=[DataRequired(), HOOK_TIMEOUT_validator])
-    CAPTURE_HOOK_POST                = StringField('Post-Capture Hook', validators=[SCRIPT_validator])
+    CAPTURE_HOOK_PRE                 = StringField('Pre-Capture Hook', validators=[SCRIPT_validator])
     CAPTURE_HOOK_TIMEOUT             = IntegerField('Capture Hook Timeout', validators=[DataRequired(), HOOK_TIMEOUT_validator])
     FISH2PANO__ENABLE                = BooleanField('Enable Fisheye to Panoramic')
     FISH2PANO__DIAMETER              = IntegerField('Diameter', validators=[DataRequired(), FISH2PANO__DIAMETER_validator])
