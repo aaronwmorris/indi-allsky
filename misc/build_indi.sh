@@ -12,6 +12,8 @@ export PATH
 
 
 # can be overridden by environment variables
+#BUILD_INDI_SETTINGS="manual"
+#BUILD_INDI_OS_PACKAGE_UPGRADE="false"
 #BUILD_INDI_CORE="true"
 #BUILD_INDI_3RDPARTY="true"
 #BUILD_INDI_CAMERA_VENDOR="zwo"
@@ -23,7 +25,10 @@ OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 
 ### config ###
 INDISERVER_SERVICE_NAME="indiserver"
+INDI_AUTO_TAG="v2.1.4"
+INDI_AUTO_DRIVERS="supported"
 ### end config ###
+
 
 function handler_SIGINT() {
     #stty echo
@@ -129,6 +134,15 @@ if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
 fi
 
 
+if [ -z "${BUILD_INDI_SETTINGS:-}" ]; then
+    if [ -n "${WHIPTAIL_BIN:-}" ]; then
+        "$WHIPTAIL_BIN" \
+            --title "indi-allsky - INDI Build" \
+            --msgbox "*** Welcome to the indi-allsky INDI build script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nBuild INDI version: ${INDI_CORE_TAG:-ask}\n\nExisting INDI: ${DETECTED_INDIVERSION}\n\nBUILD_INDI_CORE: ${BUILD_INDI_CORE:-ask}\nBUILD_INDI_3RDPARTY: ${BUILD_INDI_3RDPARTY:-ask}\nBUILD_INDI_CAMERA_VENDOR: ${BUILD_INDI_CAMERA_VENDOR:-ask}\n\nRunning make with $MAKE_CONCURRENT processes" 0 0
+    fi
+fi
+
+
 echo
 echo
 echo "Distribution: $DISTRO_ID"
@@ -139,7 +153,7 @@ echo
 echo "CPUs: $CPU_TOTAL"
 echo "Memory: $MEM_TOTAL kB"
 echo
-echo "Build indi version: ${INDI_CORE_TAG:-ask}"
+echo "Build INDI version: ${INDI_CORE_TAG:-ask}"
 echo
 echo "Existing INDI: ${DETECTED_INDIVERSION:-none}"
 echo
@@ -167,6 +181,71 @@ fi
 echo "Setup proceeding in 10 seconds... (control-c to cancel)"
 echo
 sleep 10
+
+
+if [ -n "${WHIPTAIL_BIN:-}" ]; then
+    while [ -z "${BUILD_INDI_SETTINGS:-}" ]; do
+        BUILD_INDI_SETTINGS=$($WHIPTAIL_BIN \
+            --title "Build Type" \
+            --nocancel \
+            --notags \
+            --radiolist "Automatic or Manual build\n\nAuto build settings:\n  OS Package Upgrade: YES\n  INDI Version: $INDI_AUTO_TAG\n  Drivers: $INDI_AUTO_DRIVERS\n\nPress space to select" 0 0 0 \
+                "auto" "Automatic" "ON" \
+                "manual" "Manual" "OFF" \
+            3>&1 1>&2 2>&3)
+    done
+else
+    while [ -z "${BUILD_INDI_SETTINGS:-}" ]; do
+        echo
+        echo
+        echo "######################################"
+        echo "###  Please select the Build Type  ###"
+        echo "######################################"
+        echo
+        echo "Auto build settings:"
+        echo "  OS Package Upgrade: YES"
+        echo "  INDI Version: $INDI_AUTO_TAG"
+        echo "  Drivers: $INDI_AUTO_DRIVERS"
+        echo
+
+        PS3="Select build type: "
+        select build_type in auto manual; do
+            if [ -n "$build_type" ]; then
+                BUILD_INDI_SETTINGS="$build_type"
+                break
+            fi
+        done
+    done
+fi
+
+
+if [ "$BUILD_INDI_SETTINGS" == "auto" ]; then
+    OS_PACKAGE_UPGRADE="true"
+    BUILD_INDI_CORE="true"
+    BUILD_INDI_3RDPARTY="true"
+    INDI_CORE_TAG="$INDI_AUTO_TAG"
+    BUILD_INDI_CAMERA_VENDOR="$INDI_AUTO_DRIVERS"
+
+    echo
+    echo
+    echo "Selected AUTOMATIC build:"
+    echo
+    echo "OS_PACKAGE_UPGRADE=$OS_PACKAGE_UPGRADE"
+    echo "BUILD_INDI_CORE=$BUILD_INDI_CORE"
+    echo "BUILD_INDI_3RDPARTY=$BUILD_INDI_CORE"
+    echo "INDI_CORE_TAG=$INDI_CORE_TAG"
+    echo "BUILD_INDI_CAMERA_VENDOR=$BUILD_INDI_CAMERA_VENDOR"
+    echo
+
+    sleep 5
+else
+    echo
+    echo
+    echo "Selected MANUAL build"
+    echo
+
+    sleep 5
+fi
 
 
 # Run sudo to ask for initial password
