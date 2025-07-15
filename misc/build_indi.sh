@@ -195,19 +195,19 @@ if [ -n "${WHIPTAIL_BIN:-}" ]; then
             3>&1 1>&2 2>&3)
     done
 else
-    echo
-    echo
-    echo "######################################"
-    echo "###  Please select the Build Type  ###"
-    echo "######################################"
-    echo
-    echo "Auto build settings:"
-    echo "  OS Package Upgrade: YES"
-    echo "  INDI Version: $INDI_AUTO_TAG"
-    echo "  Drivers: $INDI_AUTO_DRIVERS"
-    echo
-
     while [ -z "${BUILD_INDI_SETTINGS:-}" ]; do
+        echo
+        echo
+        echo "######################################"
+        echo "###  Please select the Build Type  ###"
+        echo "######################################"
+        echo
+        echo "Auto build settings:"
+        echo "  OS Package Upgrade: YES"
+        echo "  INDI Version: $INDI_AUTO_TAG"
+        echo "  Drivers: $INDI_AUTO_DRIVERS"
+        echo
+
         PS3="Select build type: "
         select build_type in auto manual; do
             if [ -n "$build_type" ]; then

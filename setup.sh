@@ -438,20 +438,20 @@ if [ -n "${WHIPTAIL_BIN:-}" ]; then
         fi
     done
 else
-    echo
-    echo
-    echo "indi-allsky supports the following camera interfaces."
-    echo
-    echo "Wiki:  https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces"
-    echo
-    echo "             indi: For astro/planetary cameras normally connected via USB (ZWO, QHY, PlayerOne, SVBony, Altair, Touptek, etc)"
-    echo "        libcamera: Supports cameras connected via CSI interface on Raspberry Pi SBCs (Raspi HQ Camera, Camera Module 3, etc)"
-    echo "    pycurl_camera: Download images from a remote web camera"
-    echo " indi_accumulator: Create synthetic exposures using multiple sub-exposures"
-    echo "     indi_passive: Connect a second instance of indi-allsky to an existing indi-allsky indiserver"
-    echo
-
     while [ -z "${CAMERA_INTERFACE:-}" ]; do
+        echo
+        echo
+        echo "indi-allsky supports the following camera interfaces."
+        echo
+        echo "Wiki:  https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces"
+        echo
+        echo "             indi: For astro/planetary cameras normally connected via USB (ZWO, QHY, PlayerOne, SVBony, Altair, Touptek, etc)"
+        echo "        libcamera: Supports cameras connected via CSI interface on Raspberry Pi SBCs (Raspi HQ Camera, Camera Module 3, etc)"
+        echo "    pycurl_camera: Download images from a remote web camera"
+        echo " indi_accumulator: Create synthetic exposures using multiple sub-exposures"
+        echo "     indi_passive: Connect a second instance of indi-allsky to an existing indi-allsky indiserver"
+        echo
+
         PS3="Select a camera interface: "
         select camera_interface in indi libcamera pycurl_camera indi_accumulator indi_passive ; do
             if [ -n "$camera_interface" ]; then
@@ -468,6 +468,7 @@ else
             echo
             PS3="Select a libcamera interface: "
             select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_imx708 libcamera_imx519 libcamera_imx500_ai libcamera_imx283 libcamera_imx462 libcamera_imx327 libcamera_imx678 libcamera_ov5647 libcamera_imx219 libcamera_imx296_gs libcamera_imx296_gs_color libcamera_imx290 libcamera_imx298 libcamera_64mp_hawkeye libcamera_64mp_owlsight; do
+
                 if [ -n "$libcamera_interface" ]; then
                     # overwrite variable
                     CAMERA_INTERFACE="$libcamera_interface"
