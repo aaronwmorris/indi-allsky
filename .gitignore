@@ -3,6 +3,7 @@
 *.bin
 *.lock
 *.pid
+core.*
 images/**/*.jpg
 images/**/*.jpeg
 images/**/*.png
