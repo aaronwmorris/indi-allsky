@@ -4406,7 +4406,9 @@ class SystemInfoView(TemplateView):
         context['mem_total'] = mem_total
         context['mem_usage'] = mem_usage
 
-        context['swap_usage'] = self.getSwapUsage()
+        swap_total, swap_usage = self.getSwapUsage()
+        context['swap_total'] = swap_total
+        context['swap_usage'] = swap_usage
 
         context['fs_data'] = self.getAllFsUsage()
 
@@ -4558,7 +4560,10 @@ class SystemInfoView(TemplateView):
     def getSwapUsage(self):
         swap_info = psutil.swap_memory()
 
-        return swap_info[3]
+        swap_total = int(swap_info[0] / 1024 / 1024)
+        swap_usage = swap_info[3]
+
+        return swap_total, swap_usage
 
 
     def getAllFsUsage(self):

@@ -124,11 +124,10 @@ var camera_id = {{ camera_id }};
 
 <div class="row">
     <div class="col-sm-2"><h4>Memory</h4></div>
-    <div class="col-sm-1">{{mem_total}} MB</div>
 </div>
 <div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">System</div>
+    <div class="col-sm-2">System</div>
+    <div class="col-sm-1">{{mem_total}} MB</div>
     <div class="col-sm-9">
         <div class="progress">
             <div class="progress-bar progress-bar-striped bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{mem_usage.user_percent|int}}%">{{"%.0f"|format(mem_usage.user_percent)}}%</div>
@@ -138,8 +137,8 @@ var camera_id = {{ camera_id }};
 </div>
 
 <div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">Swap</div>
+    <div class="col-sm-2">Swap</div>
+    <div class="col-sm-1">{{ swap_total }} MB</div>
     <div class="col-sm-9">
         <div class="progress">
             <div class="progress-bar progress-bar-striped bg-danger" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{swap_usage|int}}%">{{"%.0f"|format(swap_usage)}}%</div>
@@ -161,13 +160,12 @@ var camera_id = {{ camera_id }};
 
 <div class="row">
     <div class="col-sm-2"><h4>Filesystems</h4></div>
-    <div class="col-sm-1">MB</div>
 </div>
 
 {% for fs in fs_data %}
     <div class="row">
         <div class="col-sm-2">{{fs.mountpoint}}</div>
-        <div class="col-sm-1">{{"%.0f"|format(fs.total_mb)}}</div>
+        <div class="col-sm-1">{{"%.0f"|format(fs.total_mb)}} MB</div>
         <div class="col-sm-9">
             <div class="progress">
                 <div class="progress-bar progress-bar-striped bg-warning text-dark" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: {{fs.percent|int}}%">{{"%.0f"|format(fs.percent)}}%</div>
