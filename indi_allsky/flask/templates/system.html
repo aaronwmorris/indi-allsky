@@ -58,15 +58,10 @@ var camera_id = {{ camera_id }};
 <hr>
 
 <div class="row">
-    <div class="col-sm-2"><h4>Uptime</h4></div>
-    <div class="col-sm-6">{{uptime_str}}</div>
-</div>
-
-<hr>
-
-<div class="row">
     <div class="col-sm-2"><h4>System</h4></div>
-    <div class="col-sm-6">{{system_type}}</div>
+    <div class="col-sm-3">{{system_type}}</div>
+    <div class="col-sm-3">Uptime: {{ uptime_str }}</div>
+    <div class="col-sm-3">Target: {{ systemd_target }}</div>
 </div>
 
 <hr>
@@ -154,6 +149,12 @@ var camera_id = {{ camera_id }};
         <span class="badge bg-secondary">Cache</span>
         <span class="badge bg-danger">Swap</span>
     </div>
+</div>
+
+<hr>
+
+<div class="row">
+    <div class="col-sm-2"><h4>SystemD Target</h4></div>
 </div>
 
 <hr>

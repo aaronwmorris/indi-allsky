@@ -4416,6 +4416,8 @@ class SystemInfoView(TemplateView):
 
         context['net_list'] = self.getNetworkIps()
 
+        context['systemd_target'] = self.getSystemdTarget()
+
         context['indiserver_service_activestate'], context['indiserver_service_unitstate'] = self.getSystemdUnitStatus(app.config['INDISERVER_SERVICE_NAME'])
         context['indiserver_timer_activestate'], context['indiserver_timer_unitstate'] = self.getSystemdUnitStatus(app.config['INDISERVER_TIMER_NAME'])
         context['indi_allsky_service_activestate'], context['indi_allsky_service_unitstate'] = self.getSystemdUnitStatus(app.config['ALLSKY_SERVICE_NAME'])
@@ -4483,9 +4485,9 @@ class SystemInfoView(TemplateView):
         minutes = int(uptime_s / 60)
         uptime_s -= (minutes * 60)
 
-        seconds = int(uptime_s)
+        #seconds = int(uptime_s)
 
-        uptime_str = '{0:d} days, {1:d} hours, {2:d} minutes, {3:d} seconds'.format(days, hours, minutes, seconds)
+        uptime_str = '{0:d} days, {1:d}:{2:d}'.format(days, hours, minutes)
 
         return uptime_str
 
@@ -4669,6 +4671,23 @@ class SystemInfoView(TemplateView):
 
 
         return net_list
+
+
+    def getSystemdTarget(self):
+        try:
+            session_bus = dbus.SystemBus()
+        except dbus.exceptions.DBusException:
+            return 'D-Bus Unavailable'
+
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+
+        try:
+            default_target = manager.GetDefaultTarget()
+        except dbus.exceptions.DBusException:
+            return 'D-Bus Exception'
+
+        return str(default_target)
 
 
     def getSystemdUnitStatus(self, unit_name):
