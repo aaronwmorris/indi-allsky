@@ -30,9 +30,11 @@ from sqlalchemy.sql.expression import false as sa_false
 
 from .misc import login_optional
 
-from .models import NotificationCategory
+from . import db
 
+from .models import NotificationCategory
 from .models import IndiAllSkyDbCameraTable
+from .models import IndiAllSkyDbImageTable
 
 from .forms import IndiAllskyCameraSelectForm
 
@@ -900,6 +902,18 @@ class TemplateView(BaseView):
 
         # night set in get_astrometric_info()
         self.night = True
+
+
+        # query the latest image entry
+        camera_now_minus_15m = self.camera_now - timedelta(minutes=15)
+        self.latest_image_entry = db.session.query(
+            IndiAllSkyDbImageTable,
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
+            .filter(IndiAllSkyDbImageTable.createDate > camera_now_minus_15m)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
 
 
     def render_template(self, context):

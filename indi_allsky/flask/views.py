@@ -1772,19 +1772,7 @@ class ConfigView(FormView):
             context['longitude_validation_message'] = ''
 
 
-        # query the latest image for dew point
-        camera_now_minus_15m = self.camera_now - timedelta(minutes=15)
-        latest_image_entry = db.session.query(
-            IndiAllSkyDbImageTable,
-        )\
-            .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
-            .filter(IndiAllSkyDbImageTable.createDate > camera_now_minus_15m)\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
-            .first()
-
-
-        if latest_image_entry:
+        if self.latest_image_entry:
             dh_level_default = self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_DEF', 0)
             dh_level_low = self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_LOW', 33)
             dh_level_med = self.indi_allsky_config.get('DEW_HEATER', {}).get('LEVEL_MED', 66)
@@ -1811,15 +1799,15 @@ class ConfigView(FormView):
             fan_temp_slot_var = self.indi_allsky_config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 'sensor_user_10')
 
 
-            if latest_image_entry.data.get(dh_temp_slot_var):
-                dh_temp = latest_image_entry.data[dh_temp_slot_var]
+            if self.latest_image_entry.data.get(dh_temp_slot_var):
+                dh_temp = self.latest_image_entry.data[dh_temp_slot_var]
                 context['dh_temp_str'] = '{0:0.1f}°'.format(dh_temp)
             else:
                 dh_temp = None
                 context['dh_temp_str'] = 'Not available'
 
-            if latest_image_entry.data.get(dh_dewpoint_slot_var):
-                dh_dewpoint = latest_image_entry.data[dh_dewpoint_slot_var]
+            if self.latest_image_entry.data.get(dh_dewpoint_slot_var):
+                dh_dewpoint = self.latest_image_entry.data[dh_dewpoint_slot_var]
                 context['dh_dewpoint_str'] = '{0:0.1f}°'.format(dh_dewpoint)
             else:
                 dh_dewpoint = None
@@ -1889,8 +1877,8 @@ class ConfigView(FormView):
                     context['dh_status_str'] = 'n/a'
 
 
-            if latest_image_entry.data.get(fan_temp_slot_var):
-                fan_temp = latest_image_entry.data[fan_temp_slot_var]
+            if self.latest_image_entry.data.get(fan_temp_slot_var):
+                fan_temp = self.latest_image_entry.data[fan_temp_slot_var]
                 context['fan_temp_str'] = '{0:0.1f}°'.format(fan_temp)
             else:
                 fan_temp = None
