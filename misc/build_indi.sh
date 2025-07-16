@@ -138,7 +138,7 @@ if [ -z "${BUILD_INDI_SETTINGS:-}" ]; then
     if [ -n "${WHIPTAIL_BIN:-}" ]; then
         "$WHIPTAIL_BIN" \
             --title "indi-allsky - INDI Build" \
-            --msgbox "*** Welcome to the indi-allsky INDI build script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nBuild INDI version: ${INDI_CORE_TAG:-ask}\n\nExisting INDI: ${DETECTED_INDIVERSION}\n\nBUILD_INDI_CORE: ${BUILD_INDI_CORE:-ask}\nBUILD_INDI_3RDPARTY: ${BUILD_INDI_3RDPARTY:-ask}\nBUILD_INDI_CAMERA_VENDOR: ${BUILD_INDI_CAMERA_VENDOR:-ask}\n\nRunning make with $MAKE_CONCURRENT processes" 0 0
+            --msgbox "*** Welcome to the indi-allsky INDI build script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nBuild INDI version: ${INDI_CORE_TAG:-ask}\n\nExisting INDI: ${DETECTED_INDIVERSION:-none}\n\nBUILD_INDI_CORE: ${BUILD_INDI_CORE:-ask}\nBUILD_INDI_3RDPARTY: ${BUILD_INDI_3RDPARTY:-ask}\nBUILD_INDI_CAMERA_VENDOR: ${BUILD_INDI_CAMERA_VENDOR:-ask}\n\nRunning make with $MAKE_CONCURRENT processes" 0 0
     fi
 fi
 

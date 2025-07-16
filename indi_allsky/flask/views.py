@@ -4406,13 +4406,17 @@ class SystemInfoView(TemplateView):
         context['mem_total'] = mem_total
         context['mem_usage'] = mem_usage
 
-        context['swap_usage'] = self.getSwapUsage()
+        swap_total, swap_usage = self.getSwapUsage()
+        context['swap_total'] = swap_total
+        context['swap_usage'] = swap_usage
 
         context['fs_data'] = self.getAllFsUsage()
 
         context['temp_list'] = self.getTemps()
 
         context['net_list'] = self.getNetworkIps()
+
+        context['systemd_target'] = self.getSystemdTarget()
 
         context['indiserver_service_activestate'], context['indiserver_service_unitstate'] = self.getSystemdUnitStatus(app.config['INDISERVER_SERVICE_NAME'])
         context['indiserver_timer_activestate'], context['indiserver_timer_unitstate'] = self.getSystemdUnitStatus(app.config['INDISERVER_TIMER_NAME'])
@@ -4481,9 +4485,9 @@ class SystemInfoView(TemplateView):
         minutes = int(uptime_s / 60)
         uptime_s -= (minutes * 60)
 
-        seconds = int(uptime_s)
+        #seconds = int(uptime_s)
 
-        uptime_str = '{0:d} days, {1:d} hours, {2:d} minutes, {3:d} seconds'.format(days, hours, minutes, seconds)
+        uptime_str = '{0:d} days, {1:d}:{2:d}'.format(days, hours, minutes)
 
         return uptime_str
 
@@ -4558,7 +4562,10 @@ class SystemInfoView(TemplateView):
     def getSwapUsage(self):
         swap_info = psutil.swap_memory()
 
-        return swap_info[3]
+        swap_total = int(swap_info[0] / 1024 / 1024)
+        swap_usage = swap_info[3]
+
+        return swap_total, swap_usage
 
 
     def getAllFsUsage(self):
@@ -4664,6 +4671,23 @@ class SystemInfoView(TemplateView):
 
 
         return net_list
+
+
+    def getSystemdTarget(self):
+        try:
+            session_bus = dbus.SystemBus()
+        except dbus.exceptions.DBusException:
+            return 'D-Bus Unavailable'
+
+        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+
+        try:
+            default_target = manager.GetDefaultTarget()
+        except dbus.exceptions.DBusException:
+            return 'D-Bus Exception'
+
+        return str(default_target)
 
 
     def getSystemdUnitStatus(self, unit_name):
