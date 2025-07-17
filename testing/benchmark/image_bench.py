@@ -3,6 +3,7 @@
 
 import timeit
 #import time
+import random
 import cv2
 import numpy
 from pathlib import Path
@@ -34,18 +35,38 @@ class ImageBench(object):
         #self.f_tmp_name = Path('/dev/shm/image_bench.webp')
 
         # random
-        random_rgb = numpy.random.randint(255, size=(self.height, self.width, 3), dtype=numpy.uint8)
+        #image_bgr = numpy.random.randint(255, size=(self.height, self.width, 3), dtype=numpy.uint8)
 
         # grey
-        #random_rgb = numpy.full([self.height, self.width, 3], 127, dtype=numpy.uint8)
+        #image_bgr = numpy.full([self.height, self.width, 3], 127, dtype=numpy.uint8)
 
         # black
-        #random_rgb = numpy.zeros([self.height, self.width, 3], dtype=numpy.uint8)
+        #image_bgr = numpy.zeros([self.height, self.width, 3], dtype=numpy.uint8)
 
-        cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_JPEG_QUALITY, 95])
-        #cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_PNG_COMPRESSION, 7])
-        #cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_WEBP_QUALITY, 90])
-        #cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_WEBP_QUALITY, 101])  # lossless
+
+        # draw a bunch of random circles
+        image_bgr = numpy.zeros([self.height, self.width, 3], dtype=numpy.uint8)
+        for x in range(500):
+            r = random.randrange(255)
+            g = random.randrange(255)
+            b = random.randrange(255)
+            radius = random.randrange(5, 100)
+            x = random.randrange(self.width)
+            y = random.randrange(self.height)
+
+            cv2.circle(
+                image_bgr,
+                center=(x, y),
+                radius=radius,
+                color=(r, g, b),
+                thickness=cv2.FILLED,
+                lineType=cv2.LINE_AA,
+            )
+
+        cv2.imwrite(str(self.f_tmp_name), image_bgr, [cv2.IMWRITE_JPEG_QUALITY, 95])
+        #cv2.imwrite(str(self.f_tmp_name), image_bgr, [cv2.IMWRITE_PNG_COMPRESSION, 7])
+        #cv2.imwrite(str(self.f_tmp_name), image_bgr, [cv2.IMWRITE_WEBP_QUALITY, 90])
+        #cv2.imwrite(str(self.f_tmp_name), image_bgr, [cv2.IMWRITE_WEBP_QUALITY, 101])  # lossless
 
 
     def __del__(self):
