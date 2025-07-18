@@ -1432,6 +1432,7 @@ class VideoWorker(Process):
 
 
                 ### pillow
+                #import numpy
                 #import PIL
                 #from PIL import Image
 
