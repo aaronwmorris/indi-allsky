@@ -75,13 +75,18 @@ class ImageBench(object):
 
     def main(self):
         setup_pillow_read = '''
+import io
 from PIL import Image
 import cv2
 import numpy
+
+with io.open("/dev/shm/image_bench.jpg", 'rb') as f_image:
+    buf = io.BytesIO(f_image.read())
 '''
 
         s_pillow_read = '''
-img = Image.open("/dev/shm/image_bench.jpg")
+img = Image.open(buf)
+#img = Image.open("/dev/shm/image_bench.jpg")
 #img = Image.open("/dev/shm/image_bench.png")
 #img = Image.open("/dev/shm/image_bench.webp")
 
@@ -118,11 +123,17 @@ i.save(out, format="JPEG", quality=90)
 '''
 
         setup_opencv_read = '''
+import io
+import numpy
 import cv2
+
+with io.open("/dev/shm/image_bench.jpg", 'rb') as f_image:
+    img = numpy.asarray(bytearray(f_image.read()))
 '''
 
         s_opencv_read = '''
-cv2.imread("/dev/shm/image_bench.jpg", cv2.IMREAD_UNCHANGED)
+cv2.imdecode(img, cv2.IMREAD_UNCHANGED)
+#cv2.imread("/dev/shm/image_bench.jpg", cv2.IMREAD_UNCHANGED)
 #cv2.imread("/dev/shm/image_bench.png", cv2.IMREAD_UNCHANGED)
 #cv2.imread("/dev/shm/image_bench.webp", cv2.IMREAD_UNCHANGED)
 '''
