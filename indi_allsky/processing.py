@@ -10,7 +10,6 @@ import time
 import signal
 import numpy
 import cv2
-import PIL
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -408,10 +407,35 @@ class ImageProcessor(object):
                 logger.warning('FITS gain is not populated')
                 hdulist[0].header['GAIN'] = float(self.gain_v.value)
         elif filename_p.suffix in ['.jpg', '.jpeg']:
+            ### OpenCV
+            #data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)  # opencv returns BGR
+
+            #if isinstance(data, type(None)):
+            #    raise BadImage('Bad png image')
+
+
+            #if len(data.shape) == 3:
+            #    # swap axes for FITS
+            #    data = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)  # opencv returns BGR
+
+
+            ### pillow
+            #import PIL
+
+            #try:
+            #    with Image.open(str(filename_p)) as img:
+            #        data = numpy.array(img)  # pillow returns RGB
+            #except PIL.UnidentifiedImageError:
+            #    raise BadImage('Bad jpeg image')
+
+
+            ### simplejpeg
+            import simplejpeg
+
             try:
-                with Image.open(str(filename_p)) as img:
-                    data = numpy.array(img)  # pillow returns RGB
-            except PIL.UnidentifiedImageError:
+                with io.open(str(filename_p), 'rb') as img:
+                    data = simplejpeg.decode_jpeg(img.read(), colorspace='RGB')  # returns RGB
+            except ValueError:
                 raise BadImage('Bad jpeg image')
 
 
