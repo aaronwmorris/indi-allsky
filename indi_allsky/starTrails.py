@@ -227,39 +227,6 @@ class StarTrailGenerator(object):
         pass  # read only
 
 
-
-    ### To be removed
-    #def generate(self, outfile, file_list):
-    #    # Exclude empty files
-    #    file_list_nonzero = filter(lambda p: p.stat().st_size != 0, file_list)
-
-    #    # Sort by timestamp
-    #    file_list_ordered = sorted(file_list_nonzero, key=lambda p: p.stat().st_mtime)
-
-
-    #    processing_start = time.time()
-
-    #    for file_p in file_list_ordered:
-    #        logger.info('Reading file: %s', file_p)
-
-    #        try:
-    #            with Image.open(str(file_p)) as img:
-    #                image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-    #        except PIL.UnidentifiedImageError:
-    #            logger.error('Unable to read %s', file_p)
-    #            continue
-
-
-    #        self.processImage(file_p, image)
-
-
-    #    self.finalize(outfile)
-
-
-    #    processing_elapsed_s = time.time() - processing_start
-    #    logger.warning('Total star trail processing in %0.1f s', processing_elapsed_s)
-
-
     def processImage(self, file_p, image, adu=None, star_count=None):
         self.process_count += 1
 
