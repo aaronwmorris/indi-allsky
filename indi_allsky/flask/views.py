@@ -1387,9 +1387,10 @@ class JsonChartView(JsonView):
 
     def getChartData(self, camera_id, ts_dt, history_seconds):
         import numpy
-        import cv2
-        import PIL
-        from PIL import Image
+        #import cv2
+        import simplejpeg
+        #import PIL
+        #from PIL import Image
 
         ts_minus_seconds = ts_dt - timedelta(seconds=history_seconds)
 
@@ -1658,10 +1659,29 @@ class JsonChartView(JsonView):
 
         image_start = time.time()
 
+
+        ### OpenCV
+        #image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_UNCHANGED)
+
+        #if isinstance(image_data, type(None)):
+        #    app.logger.error('Unable to read %s', latest_image_p)
+        #    return chart_data
+
+
+        ### pillow
+        #try:
+        #    with Image.open(str(latest_image_p)) as img:
+        #        image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+        #except PIL.UnidentifiedImageError:
+        #    app.logger.error('Unable to read %s', latest_image_p)
+        #    return chart_data
+
+
+        ### simplejpeg
         try:
-            with Image.open(str(latest_image_p)) as img:
-                image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-        except PIL.UnidentifiedImageError:
+            with io.open(str(latest_image_p), 'rb') as img:
+                image_data = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
+        except ValueError:
             app.logger.error('Unable to read %s', latest_image_p)
             return chart_data
 
@@ -3886,7 +3906,7 @@ class Fits2JpegView(BaseView):
     def dispatch_request(self):
         import cv2
         from astropy.io import fits
-        from PIL import Image
+        #from PIL import Image
         from multiprocessing import Value
         from multiprocessing import Array
 
@@ -3974,11 +3994,18 @@ class Fits2JpegView(BaseView):
         image = image_processor.image
 
 
-        image_f = io.BytesIO()
-        img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        img.save(image_f, format='JPEG', quality=90)
+        ### OpenCV
+        _, image_a = cv2.imencode('.jpg', image, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        image_buffer = io.BytesIO(image_a.tobytes())
 
-        return Response(image_f.getvalue(), mimetype='image/jpeg')
+
+        ### pillow
+        #image_buffer = io.BytesIO()
+        #img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        #img.save(image_buffer, format='JPEG', quality=90)
+
+
+        return Response(image_buffer.getvalue(), mimetype='image/jpeg')
 
 
 class GalleryViewerView(FormView):
@@ -6348,11 +6375,12 @@ class JsonFocusView(JsonView):
 
 
     def dispatch_request(self):
-        import numpy
+        #import numpy
         import cv2
         from multiprocessing import Value
-        import PIL
-        from PIL import Image
+        import simplejpeg
+        #import PIL
+        #from PIL import Image
         from ..stars import IndiAllSkyStars
 
         zoom = int(request.args.get('zoom', 2))
@@ -6370,10 +6398,29 @@ class JsonFocusView(JsonView):
         image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
         latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
 
+
+        ### OpenCV
+        #image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_UNCHANGED)
+
+        #if isinstance(image_data, type(None)):
+        #    app.logger.error('Unable to read %s', latest_image_p)
+        #    return jsonify({}), 400
+
+
+        ### pillow
+        #try:
+        #    with Image.open(str(latest_image_p)) as img:
+        #        image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+        #except PIL.UnidentifiedImageError:
+        #    app.logger.error('Unable to read %s', latest_image_p)
+        #    return jsonify({}), 400
+
+
+        ### simplejpeg
         try:
-            with Image.open(str(latest_image_p)) as img:
-                image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-        except PIL.UnidentifiedImageError:
+            with io.open(str(latest_image_p), 'rb') as img:
+                image_data = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
+        except ValueError:
             app.logger.error('Unable to read %s', latest_image_p)
             return jsonify({}), 400
 
@@ -6395,11 +6442,17 @@ class JsonFocusView(JsonView):
         ]
 
 
-        # returns tuple: rc, data
-        json_image_buffer = io.BytesIO()
-        img = Image.fromarray(cv2.cvtColor(image_roi, cv2.COLOR_BGR2RGB))
-        img.save(json_image_buffer, format='JPEG', quality=90)
+        ### OpenCV
+        _, json_image = cv2.imencode('.jpg', image_roi, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        json_image_buffer = io.BytesIO(json_image.tobytes())
+
+
+        ### pillow
+        #json_image_buffer = io.BytesIO()
+        #img = Image.fromarray(cv2.cvtColor(image_roi, cv2.COLOR_BGR2RGB))
+        #img.save(json_image_buffer, format='JPEG', quality=90)
         #img.save(json_image_buffer, format='PNG', compress_level=5)
+
 
         json_image_b64 = base64.b64encode(json_image_buffer.getvalue())
 
@@ -6731,7 +6784,7 @@ class JsonImageProcessingView(JsonView):
     def dispatch_request(self):
         import cv2
         from astropy.io import fits
-        from PIL import Image
+        #from PIL import Image
         from multiprocessing import Value
         from multiprocessing import Array
 
@@ -7161,17 +7214,29 @@ class JsonImageProcessingView(JsonView):
         image = image_processor.image
 
 
-        json_image_buffer = io.BytesIO()
-        img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-
-
         if output_image_type == 'png':
             png_compress_level = p_config['IMAGE_FILE_COMPRESSION']['png']
-            img.save(json_image_buffer, format='PNG', compress_level=png_compress_level)
+
+            ### OpenCV
+            _, json_image = cv2.imencode('.jpg', image, [cv2.IMWRITE_PNG_COMPRESSION, png_compress_level])
+            json_image_buffer = io.BytesIO(json_image.tobytes())
+
+            ### pillow
+            #json_image_buffer = io.BytesIO()
+            #img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+            #img.save(json_image_buffer, format='PNG', compress_level=png_compress_level)
         else:
             # jpeg default
             jpg_compress_level = p_config['IMAGE_FILE_COMPRESSION']['jpg']
-            img.save(json_image_buffer, format='JPEG', compress_level=jpg_compress_level)
+
+            ### OpenCV
+            _, json_image = cv2.imencode('.jpg', image, [cv2.IMWRITE_JPEG_QUALITY, jpg_compress_level])
+            json_image_buffer = io.BytesIO(json_image.tobytes())
+
+            ### pillow
+            #json_image_buffer = io.BytesIO()
+            #img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+            #img.save(json_image_buffer, format='JPEG', compress_level=jpg_compress_level)
 
 
         json_image_b64 = base64.b64encode(json_image_buffer.getvalue())
@@ -8165,7 +8230,7 @@ class JsonLongTermKeogramView(JsonView):
 
     def dispatch_request(self):
         import cv2
-        from PIL import Image
+        #from PIL import Image
 
         form_longterm_keogram = IndiAllskyLongTermKeogramForm(data=request.json)
 
@@ -8239,12 +8304,18 @@ class JsonLongTermKeogramView(JsonView):
         keogram_data = ltg_gen.generate(query_start_date, query_end_date)
 
 
-        png_compression = self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 5)
+        png_compress_level = self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 5)
 
 
-        image_buffer = io.BytesIO()
-        img = Image.fromarray(cv2.cvtColor(keogram_data, cv2.COLOR_BGR2RGB))
-        img.save(image_buffer, format='PNG', compress_level=png_compression)
+        ### OpenCV
+        _, image_a = cv2.imencode('.png', keogram_data, [cv2.IMWRITE_PNG_COMPRESSION, png_compress_level])
+        image_buffer = io.BytesIO(image_a.tobytes())
+
+
+        ### pillow
+        #image_buffer = io.BytesIO()
+        #img = Image.fromarray(cv2.cvtColor(keogram_data, cv2.COLOR_BGR2RGB))
+        #img.save(image_buffer, format='PNG', compress_level=png_compression_level)
 
 
         json_image_b64 = base64.b64encode(image_buffer.getvalue())
