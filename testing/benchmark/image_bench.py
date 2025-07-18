@@ -21,12 +21,12 @@ class ImageBench(object):
     rounds = 50
 
     ### 1k
-    width  = 1920
-    height = 1080
+    #width  = 1920
+    #height = 1080
 
     ### 4k
-    #width  = 3840
-    #height = 2160
+    width  = 3840
+    height = 2160
 
 
     def __init__(self):
@@ -34,17 +34,17 @@ class ImageBench(object):
         #self.f_tmp_name = Path('/dev/shm/image_bench.png')
         #self.f_tmp_name = Path('/dev/shm/image_bench.webp')
 
-        # random
+        ### random
         #image_bgr = numpy.random.randint(255, size=(self.height, self.width, 3), dtype=numpy.uint8)
 
-        # grey
+        ### grey
         #image_bgr = numpy.full([self.height, self.width, 3], 127, dtype=numpy.uint8)
 
-        # black
+        ### black
         #image_bgr = numpy.zeros([self.height, self.width, 3], dtype=numpy.uint8)
 
 
-        # draw a bunch of random circles
+        ### draw a bunch of random circles
         image_bgr = numpy.zeros([self.height, self.width, 3], dtype=numpy.uint8)
         for x in range(500):
             r = random.randrange(255)
