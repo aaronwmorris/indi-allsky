@@ -1387,7 +1387,7 @@ class JsonChartView(JsonView):
 
     def getChartData(self, camera_id, ts_dt, history_seconds):
         import numpy
-        #import cv2
+        import cv2
         import simplejpeg
         #import PIL
         #from PIL import Image
@@ -1657,37 +1657,47 @@ class JsonChartView(JsonView):
             return chart_data
 
 
-        image_start = time.time()
+        #image_start = time.time()
 
 
-        ### OpenCV
-        #image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_UNCHANGED)
+        if latest_image_p.suffix in ('.png', ):
+            image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_UNCHANGED)
 
-        #if isinstance(image_data, type(None)):
-        #    app.logger.error('Unable to read %s', latest_image_p)
-        #    return chart_data
+            if isinstance(image_data, type(None)):
+                app.logger.error('Unable to read %s', latest_image_p)
+                return chart_data
+        elif latest_image_p.suffix in ('.jpg', '.jpeg'):
+            ### OpenCV
+            #image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_UNCHANGED)
 
-
-        ### pillow
-        #try:
-        #    with Image.open(str(latest_image_p)) as img:
-        #        image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-        #except PIL.UnidentifiedImageError:
-        #    app.logger.error('Unable to read %s', latest_image_p)
-        #    return chart_data
+            #if isinstance(image_data, type(None)):
+            #    app.logger.error('Unable to read %s', latest_image_p)
+            #    return chart_data
 
 
-        ### simplejpeg
-        try:
-            with io.open(str(latest_image_p), 'rb') as img:
-                image_data = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
-        except ValueError:
-            app.logger.error('Unable to read %s', latest_image_p)
+            ### pillow
+            #try:
+            #    with Image.open(str(latest_image_p)) as img:
+            #        image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            #except PIL.UnidentifiedImageError:
+            #    app.logger.error('Unable to read %s', latest_image_p)
+            #    return chart_data
+
+
+            ### simplejpeg
+            try:
+                with io.open(str(latest_image_p), 'rb') as img:
+                    image_data = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
+            except ValueError:
+                app.logger.error('Unable to read %s', latest_image_p)
+                return chart_data
+        else:
+            app.logger.warning('Unsupported image format')
             return chart_data
 
 
-        image_elapsed_s = time.time() - image_start
-        app.logger.info('Image read in %0.4f s', image_elapsed_s)
+        #image_elapsed_s = time.time() - image_start
+        #app.logger.info('Image read in %0.4f s', image_elapsed_s)
 
 
         image_height, image_width = image_data.shape[:2]
