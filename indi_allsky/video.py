@@ -1,9 +1,10 @@
 import os
 import time
 import math
+import io
 import json
 import cv2
-import numpy
+#import numpy
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -13,9 +14,6 @@ import tempfile
 import signal
 import traceback
 import logging
-
-import PIL
-from PIL import Image
 
 import ephem
 
@@ -1425,10 +1423,34 @@ class VideoWorker(Process):
                     logger.error('Unable to read %s', image_file_p)
                     continue
             else:
+                ### OpenCV
+                #data = cv2.imread(str(image_file_p), cv2.IMREAD_UNCHANGED)
+
+                #if isinstance(data, type(None)):
+                #    logger.error('Unable to read %s', image_file_p)
+                #    continue
+
+
+                ### pillow
+                #import numpy
+                #import PIL
+                #from PIL import Image
+
+                #try:
+                #    with Image.open(str(image_file_p)) as img:
+                #        image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+                #except PIL.UnidentifiedImageError:
+                #    logger.error('Unable to read %s', image_file_p)
+                #    continue
+
+
+                ### simplejpeg
+                import simplejpeg
+
                 try:
-                    with Image.open(str(image_file_p)) as img:
-                        image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-                except PIL.UnidentifiedImageError:
+                    with io.open(str(image_file_p), 'rb') as img:
+                        image_data = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
+                except ValueError:
                     logger.error('Unable to read %s', image_file_p)
                     continue
 

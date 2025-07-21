@@ -65,7 +65,7 @@ if [ ! -f "${DOCKER_DIRECTORY}/.env" ]; then
 
     while [ -z "${WEB_EMAIL:-}" ]; do
         # shellcheck disable=SC2068
-        WEB_EMAIL=$(whiptail --title "Full Name" --nocancel --inputbox "Please enter the users email" 0 0 3>&1 1>&2 2>&3)
+        WEB_EMAIL=$(whiptail --title "Email" --nocancel --inputbox "Please enter the users email\n\nThe email address is only stored on your local system and is not transmitted" 0 0 3>&1 1>&2 2>&3)
     done
 
 

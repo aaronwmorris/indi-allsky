@@ -113,6 +113,24 @@ if [[ "$(id -u)" == "0" ]]; then
 fi
 
 
+USR_LOCAL_FREE=$(df -Pk /usr/local | tail -n 1 | awk "{ print \$3 }")
+if [ "$USR_LOCAL_FREE" -lt 5000000 ]; then
+    echo
+    echo "Not enough free space available in /usr/local filesystem"
+    echo "At least 5GB of space needs to be available to continue"
+    exit 1
+fi
+
+
+HOME_FREE=$(df -Pk /home | tail -n 1 | awk "{ print \$3 }")
+if [ "$HOME_FREE" -lt 5000000 ]; then
+    echo
+    echo "Not enough free space available in /home filesystem"
+    echo "At least 5GB of space needs to be available to continue"
+    exit 1
+fi
+
+
 if [ -f "/usr/bin/indiserver" ]; then
     echo
     echo

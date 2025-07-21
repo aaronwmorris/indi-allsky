@@ -1,9 +1,11 @@
 import time
+import io
 from pathlib import Path
 import tempfile
 import numpy
 import cv2
-import PIL
+import simplejpeg
+#import PIL
 from PIL import Image
 import logging
 
@@ -55,8 +57,18 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         scaled_y_offset = int(self.y_offset * (self.pre_scale / 100))
 
 
-        with Image.open(str(self.keogram)) as k_img:
-            self._keogram_image = cv2.cvtColor(numpy.array(k_img), cv2.COLOR_RGB2BGR)
+        ### OpenCV
+        #self._keogram_image = cv2.imread(str(self.keogram), cv2.IMREAD_UNCHANGED)
+
+
+        ### pillow
+        #with Image.open(str(self.keogram)) as k_img:
+        #    self._keogram_image = cv2.cvtColor(numpy.array(k_img), cv2.COLOR_RGB2BGR)
+
+
+        ### simplejpeg
+        with io.open(str(self.keogram), 'rb') as img:
+            self._keogram_image = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
 
 
         keogram_height, keogram_width = self._keogram_image.shape[:2]
@@ -117,12 +129,32 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
         #start_open = time.time()
 
+
+        ### OpenCV
+        #data = cv2.imread(str(f), cv2.IMREAD_UNCHANGED)
+
+        #if isinstance(data, type(None)):
+        #    logger.error('Unable to read %s', f)
+        #    return
+
+
+        ### Pillow
+        #try:
+        #    with Image.open(str(f)) as img:
+        #        image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+        #except PIL.UnidentifiedImageError:
+        #    logger.error('Unable to read %s', f)
+        #    return
+
+
+        ### simplejpeg
         try:
-            with Image.open(str(f)) as img:
-                image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-        except PIL.UnidentifiedImageError:
+            with io.open(str(f), 'rb') as img:
+                image = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
+        except ValueError:
             logger.error('Unable to read %s', f)
             return
+
 
         #elapsed_open_s = time.time() - start_open
         #logger.info('Image opened in %0.4f s', elapsed_open_s)
@@ -254,8 +286,11 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
         outfile_p = seqfolder_p.joinpath('{0:05d}.{1:s}'.format(self.image_count, self.config['IMAGE_FILE_TYPE']))
         if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
-            img_rgb = Image.fromarray(cv2.cvtColor(image_with_keogram, cv2.COLOR_BGR2RGB))
-            img_rgb.save(str(outfile_p), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'])
+            #img_rgb = Image.fromarray(cv2.cvtColor(image_with_keogram, cv2.COLOR_BGR2RGB))
+            #img_rgb.save(str(outfile_p), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'])
+
+            ### opencv is faster
+            cv2.imwrite(str(outfile_p), image_with_keogram, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
         elif self.config['IMAGE_FILE_TYPE'] in ('png',):
             #img_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
             #img_rgb.save(str(f_tmp_frame_p), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])

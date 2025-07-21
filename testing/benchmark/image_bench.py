@@ -3,6 +3,7 @@
 
 import timeit
 #import time
+import random
 import cv2
 import numpy
 from pathlib import Path
@@ -20,12 +21,12 @@ class ImageBench(object):
     rounds = 50
 
     ### 1k
-    width  = 1920
-    height = 1080
+    #width  = 1920
+    #height = 1080
 
     ### 4k
-    #width  = 3840
-    #height = 2160
+    width  = 3840
+    height = 2160
 
 
     def __init__(self):
@@ -33,19 +34,39 @@ class ImageBench(object):
         #self.f_tmp_name = Path('/dev/shm/image_bench.png')
         #self.f_tmp_name = Path('/dev/shm/image_bench.webp')
 
-        # random
-        random_rgb = numpy.random.randint(255, size=(self.height, self.width, 3), dtype=numpy.uint8)
+        ### random
+        #image_bgr = numpy.random.randint(255, size=(self.height, self.width, 3), dtype=numpy.uint8)
 
-        # grey
-        #random_rgb = numpy.full([self.height, self.width, 3], 127, dtype=numpy.uint8)
+        ### grey
+        #image_bgr = numpy.full([self.height, self.width, 3], 127, dtype=numpy.uint8)
 
-        # black
-        #random_rgb = numpy.zeros([self.height, self.width, 3], dtype=numpy.uint8)
+        ### black
+        #image_bgr = numpy.zeros([self.height, self.width, 3], dtype=numpy.uint8)
 
-        cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_JPEG_QUALITY, 95])
-        #cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_PNG_COMPRESSION, 7])
-        #cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_WEBP_QUALITY, 90])
-        #cv2.imwrite(str(self.f_tmp_name), random_rgb, [cv2.IMWRITE_WEBP_QUALITY, 101])  # lossless
+
+        ### draw a bunch of random circles
+        image_bgr = numpy.zeros([self.height, self.width, 3], dtype=numpy.uint8)
+        for x in range(500):
+            r = random.randrange(255)
+            g = random.randrange(255)
+            b = random.randrange(255)
+            radius = random.randrange(5, 100)
+            x = random.randrange(self.width)
+            y = random.randrange(self.height)
+
+            cv2.circle(
+                image_bgr,
+                center=(x, y),
+                radius=radius,
+                color=(r, g, b),
+                thickness=cv2.FILLED,
+                lineType=cv2.LINE_AA,
+            )
+
+        cv2.imwrite(str(self.f_tmp_name), image_bgr, [cv2.IMWRITE_JPEG_QUALITY, 95])
+        #cv2.imwrite(str(self.f_tmp_name), image_bgr, [cv2.IMWRITE_PNG_COMPRESSION, 7])
+        #cv2.imwrite(str(self.f_tmp_name), image_bgr, [cv2.IMWRITE_WEBP_QUALITY, 90])
+        #cv2.imwrite(str(self.f_tmp_name), image_bgr, [cv2.IMWRITE_WEBP_QUALITY, 101])  # lossless
 
 
     def __del__(self):
@@ -54,18 +75,26 @@ class ImageBench(object):
 
     def main(self):
         setup_pillow_read = '''
+import io
 from PIL import Image
 import cv2
 import numpy
+
+with io.open("/dev/shm/image_bench.jpg", 'rb') as f_image:
+    buf = io.BytesIO(f_image.read())
 '''
 
         s_pillow_read = '''
-img = Image.open("/dev/shm/image_bench.jpg")
+img = Image.open(buf)
+#img = Image.open("/dev/shm/image_bench.jpg")
 #img = Image.open("/dev/shm/image_bench.png")
 #img = Image.open("/dev/shm/image_bench.webp")
 
-img_n = numpy.array(img)
+#img_n = numpy.array(img)
+img_n = numpy.asarray(img)  # asarray faster
 img_bgr = cv2.cvtColor(img_n, cv2.COLOR_RGB2BGR)
+
+### transpose might be faster
 '''
 
         setup_pillow_write = '''
@@ -78,7 +107,8 @@ img = Image.open("/dev/shm/image_bench.jpg")
 #img = Image.open("/dev/shm/image_bench.png")
 #img = Image.open("/dev/shm/image_bench.webp")
 
-img_n = numpy.array(img)
+#img_n = numpy.array(img)
+img_n = numpy.asarray(img)
 img_bgr = cv2.cvtColor(img_n, cv2.COLOR_RGB2BGR)
 
 # writing to /dev/null is faster
@@ -97,11 +127,17 @@ i.save(out, format="JPEG", quality=90)
 '''
 
         setup_opencv_read = '''
+import io
+import numpy
 import cv2
+
+with io.open("/dev/shm/image_bench.jpg", 'rb') as f_image:
+    img = numpy.asarray(bytearray(f_image.read()))
 '''
 
         s_opencv_read = '''
-cv2.imread("/dev/shm/image_bench.jpg", cv2.IMREAD_UNCHANGED)
+cv2.imdecode(img, cv2.IMREAD_UNCHANGED)
+#cv2.imread("/dev/shm/image_bench.jpg", cv2.IMREAD_UNCHANGED)
 #cv2.imread("/dev/shm/image_bench.png", cv2.IMREAD_UNCHANGED)
 #cv2.imread("/dev/shm/image_bench.webp", cv2.IMREAD_UNCHANGED)
 '''
@@ -148,22 +184,22 @@ simplejpeg.encode_jpeg(img, colorspace='BGR', quality=90)
 
 
         t_pillow_read = timeit.timeit(stmt=s_pillow_read, setup=setup_pillow_read, number=self.rounds)
-        logger.info('Pillow read: %0.3fms', t_pillow_read * 1000 / self.rounds)
+        logger.info('Pillow decode: %0.3fms', t_pillow_read * 1000 / self.rounds)
 
         t_pillow_write = timeit.timeit(stmt=s_pillow_write, setup=setup_pillow_write, number=self.rounds)
-        logger.info('Pillow write: %0.3fms', t_pillow_write * 1000 / self.rounds)
+        logger.info('Pillow encode: %0.3fms', t_pillow_write * 1000 / self.rounds)
 
         t_opencv2_read = timeit.timeit(stmt=s_opencv_read, setup=setup_opencv_read, number=self.rounds)
-        logger.info('OpenCV read: %0.3fms', t_opencv2_read * 1000 / self.rounds)
+        logger.info('OpenCV decode: %0.3fms', t_opencv2_read * 1000 / self.rounds)
 
         t_opencv2_write = timeit.timeit(stmt=s_opencv_write, setup=setup_opencv_write, number=self.rounds)
-        logger.info('OpenCV write: %0.3fms', t_opencv2_write * 1000 / self.rounds)
+        logger.info('OpenCV encode: %0.3fms', t_opencv2_write * 1000 / self.rounds)
 
         t_simplejpeg_read = timeit.timeit(stmt=s_simplejpeg_read, setup=setup_simplejpeg_read, number=self.rounds)
-        logger.info('simplejpeg read: %0.3fms', t_simplejpeg_read * 1000 / self.rounds)
+        logger.info('simplejpeg decode: %0.3fms', t_simplejpeg_read * 1000 / self.rounds)
 
         t_simplejpeg_write = timeit.timeit(stmt=s_simplejpeg_write, setup=setup_simplejpeg_write, number=self.rounds)
-        logger.info('simplejpeg write: %0.3fms', t_simplejpeg_write * 1000 / self.rounds)
+        logger.info('simplejpeg encode: %0.3fms', t_simplejpeg_write * 1000 / self.rounds)
 
 
 if __name__ == "__main__":
