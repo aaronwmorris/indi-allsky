@@ -180,22 +180,22 @@ simplejpeg.encode_jpeg(img, colorspace='BGR', quality=90)
 
 
         t_pillow_read = timeit.timeit(stmt=s_pillow_read, setup=setup_pillow_read, number=self.rounds)
-        logger.info('Pillow read: %0.3fms', t_pillow_read * 1000 / self.rounds)
+        logger.info('Pillow decode: %0.3fms', t_pillow_read * 1000 / self.rounds)
 
         t_pillow_write = timeit.timeit(stmt=s_pillow_write, setup=setup_pillow_write, number=self.rounds)
-        logger.info('Pillow write: %0.3fms', t_pillow_write * 1000 / self.rounds)
+        logger.info('Pillow encode: %0.3fms', t_pillow_write * 1000 / self.rounds)
 
         t_opencv2_read = timeit.timeit(stmt=s_opencv_read, setup=setup_opencv_read, number=self.rounds)
-        logger.info('OpenCV read: %0.3fms', t_opencv2_read * 1000 / self.rounds)
+        logger.info('OpenCV decode: %0.3fms', t_opencv2_read * 1000 / self.rounds)
 
         t_opencv2_write = timeit.timeit(stmt=s_opencv_write, setup=setup_opencv_write, number=self.rounds)
-        logger.info('OpenCV write: %0.3fms', t_opencv2_write * 1000 / self.rounds)
+        logger.info('OpenCV encode: %0.3fms', t_opencv2_write * 1000 / self.rounds)
 
         t_simplejpeg_read = timeit.timeit(stmt=s_simplejpeg_read, setup=setup_simplejpeg_read, number=self.rounds)
-        logger.info('simplejpeg read: %0.3fms', t_simplejpeg_read * 1000 / self.rounds)
+        logger.info('simplejpeg decode: %0.3fms', t_simplejpeg_read * 1000 / self.rounds)
 
         t_simplejpeg_write = timeit.timeit(stmt=s_simplejpeg_write, setup=setup_simplejpeg_write, number=self.rounds)
-        logger.info('simplejpeg write: %0.3fms', t_simplejpeg_write * 1000 / self.rounds)
+        logger.info('simplejpeg encode: %0.3fms', t_simplejpeg_write * 1000 / self.rounds)
 
 
 if __name__ == "__main__":
