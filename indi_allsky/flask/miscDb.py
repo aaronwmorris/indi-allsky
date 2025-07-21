@@ -7,8 +7,6 @@ import logging
 #from pprint import pformat
 
 import cv2
-import PIL
-from PIL import Image
 
 from cryptography.fernet import Fernet
 
@@ -1176,7 +1174,7 @@ class miscDb(object):
 
         if not isinstance(numpy_data, type(None)):
             # process numpy data
-            img = Image.fromarray(cv2.cvtColor(numpy_data, cv2.COLOR_BGR2RGB))
+            img = numpy_data
 
         elif image_entry:
             # use alternate image entry
@@ -1197,6 +1195,8 @@ class miscDb(object):
 
             ### pillow
             #import numpy
+            #import PIL
+            #from PIL import Image
 
             #try:
             #    img = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
@@ -1223,9 +1223,32 @@ class miscDb(object):
                 logger.error('Cannot create thumbnail: File not found: %s', filename_p)
                 return
 
+
+            ### OpenCV
+            #img = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+
+            #if isinstance(img, type(None)):
+            #    logger.error('Cannot create thumbnail:  Bad Image')
+            #    return
+
+
+            # pillow
+            #import PIL
+            #from PIL import Image
+            #try:
+            #    img = Image.open(str(filename_p))
+            #except PIL.UnidentifiedImageError:
+            #    logger.error('Cannot create thumbnail:  Bad Image')
+            #    return
+
+
+            ### simplejpeg
+            import simplejpeg
+
             try:
-                img = Image.open(str(filename_p))
-            except PIL.UnidentifiedImageError:
+                with io.open(str(filename_p)) as f_img:
+                    img = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+            except ValueError:
                 logger.error('Cannot create thumbnail:  Bad Image')
                 return
 
