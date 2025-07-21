@@ -7900,6 +7900,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
             ('meike_f2.8_3.5mm_4-3', 'Meike 3.5mm ƒ/2.8 Fisheye - 220° - 4/3" ∅12.5mm'),
             ('7artisans_f2.8_4.0mm_4-3', '7Artisans 4mm ƒ/2.8 Fisheye - 225° - 4/3" ∅12.37mm'),
             ('laowa_f2.8_4.0mm_4-3', 'Laowa 4mm ƒ/2.8 Fisheye - 210° - 4/3 ∅13.4mm'),
+            ('cil505_f2.2_4.9mm', 'CIL505 4.9mm ƒ/2.2 Fisheye - 180° - ∅14.2mm'),
             ('custom_f7_5.8mm_m42', 'Custom 5.8mm ƒ/7 - 174° - ∅17.3mm'),
         ),
     }
