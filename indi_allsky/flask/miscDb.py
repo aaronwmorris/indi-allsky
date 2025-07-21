@@ -2,6 +2,7 @@ from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 import uuid
+import io
 import logging
 #from pprint import pformat
 
@@ -1185,9 +1186,32 @@ class miscDb(object):
                 logger.error('Cannot create thumbnail: File not found: %s', filename_p)
                 return
 
+
+            ### OpenCV
+            #img = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+
+            #if isinstance(img, type(None)):
+            #    logger.error('Cannot create thumbnail:  Bad Image')
+            #    return
+
+
+            ### pillow
+            #import numpy
+
+            #try:
+            #    img = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            #except PIL.UnidentifiedImageError:
+            #    logger.error('Cannot create thumbnail:  Bad Image')
+            #    return
+
+
+            ### simplejpeg
+            import simplejpeg
+
             try:
-                img = Image.open(str(filename_p))
-            except PIL.UnidentifiedImageError:
+                with io.open(str(filename_p)) as f_img:
+                    img = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+            except ValueError:
                 logger.error('Cannot create thumbnail:  Bad Image')
                 return
 
@@ -1206,18 +1230,18 @@ class miscDb(object):
                 return
 
 
-        width, height = img.size
+        img_height, img_width = img.shape[:2]
 
-        if new_width < width:
-            scale = new_width / width
-            new_height = int(height * scale)
+        if new_width < img_width:
+            scale = new_width / img_width
+            new_height = int(img_height * scale)
 
-            thumbnail_data = img.resize((new_width, new_height))
+            thumbnail_data = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_AREA)
         else:
             # keep the same dimensions
             thumbnail_data = img
-            new_width = width
-            new_height = height
+            new_width = img_width
+            new_height = img_height
 
 
         # insert new metadata
@@ -1228,7 +1252,7 @@ class miscDb(object):
         thumbnail_metadata['height'] = new_height
 
 
-        thumbnail_data.save(str(thumbnail_filename_p), quality=75)
+        cv2.imwrite(str(thumbnail_filename_p), thumbnail_data, [cv2.IMWRITE_JPEG_QUALITY, 75])
 
 
         thumbnail_entry = IndiAllSkyDbThumbnailTable(
