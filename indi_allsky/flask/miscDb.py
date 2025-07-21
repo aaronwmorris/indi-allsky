@@ -1275,7 +1275,7 @@ class miscDb(object):
         thumbnail_metadata['height'] = new_height
 
 
-        cv2.imwrite(str(thumbnail_filename_p), thumbnail_data, [cv2.IMWRITE_JPEG_QUALITY, 75])
+        cv2.imwrite(str(thumbnail_filename_p), thumbnail_data, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
 
 
         thumbnail_entry = IndiAllSkyDbThumbnailTable(

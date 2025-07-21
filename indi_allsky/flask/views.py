@@ -4005,14 +4005,14 @@ class Fits2JpegView(BaseView):
 
 
         ### OpenCV
-        _, image_a = cv2.imencode('.jpg', image, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        _, image_a = cv2.imencode('.jpg', image, [cv2.IMWRITE_JPEG_QUALITY, p_config['IMAGE_FILE_COMPRESSION']['jpg']])
         image_buffer = io.BytesIO(image_a.tobytes())
 
 
         ### pillow
         #image_buffer = io.BytesIO()
         #img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        #img.save(image_buffer, format='JPEG', quality=90)
+        #img.save(image_buffer, format='JPEG', quality=p_config['IMAGE_FILE_COMPRESSION']['jpg'])
 
 
         return Response(image_buffer.getvalue(), mimetype='image/jpeg')
