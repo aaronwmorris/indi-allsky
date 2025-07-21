@@ -92,6 +92,9 @@ img = Image.open(buf)
 
 img_n = numpy.array(img)
 img_bgr = cv2.cvtColor(img_n, cv2.COLOR_RGB2BGR)
+
+### asarray faster
+### transpose might be faster
 '''
 
         setup_pillow_write = '''
