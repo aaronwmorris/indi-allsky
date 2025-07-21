@@ -90,10 +90,10 @@ img = Image.open(buf)
 #img = Image.open("/dev/shm/image_bench.png")
 #img = Image.open("/dev/shm/image_bench.webp")
 
-img_n = numpy.array(img)
+#img_n = numpy.array(img)
+img_n = numpy.asarray(img)  # asarray faster
 img_bgr = cv2.cvtColor(img_n, cv2.COLOR_RGB2BGR)
 
-### asarray faster
 ### transpose might be faster
 '''
 
@@ -107,7 +107,8 @@ img = Image.open("/dev/shm/image_bench.jpg")
 #img = Image.open("/dev/shm/image_bench.png")
 #img = Image.open("/dev/shm/image_bench.webp")
 
-img_n = numpy.array(img)
+#img_n = numpy.array(img)
+img_n = numpy.asarray(img)
 img_bgr = cv2.cvtColor(img_n, cv2.COLOR_RGB2BGR)
 
 # writing to /dev/null is faster
