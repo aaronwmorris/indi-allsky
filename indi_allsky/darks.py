@@ -406,19 +406,41 @@ class IndiAllSkyDarks(object):
                 filename_p.unlink()
                 raise BadImage(str(e)) from e
         elif filename_p.suffix in ['.jpg', '.jpeg']:
-            import PIL
-            from PIL import Image
+            ### OpenCV
+            #data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+
+            #if isinstance(data, type(None)):
+            #    raise BadImage('Bad jpeg image')
+
+            #if len(data.shape) == 3:
+            #    data = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)  # opencv returns BGR
+
+
+            ### pillow
+            #import PIL
+            #from PIL import Image
+
+            #try:
+            #    with Image.open(str(filename_p)) as img:
+            #        data = numpy.array(img)  # pillow returns RGB
+            #except PIL.UnidentifiedImageError:
+            #    raise BadImage('Bad jpeg image')
+
+
+            ### simplejpeg
+            import simplejpeg
 
             try:
-                with Image.open(str(filename_p)) as img:
-                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-            except PIL.UnidentifiedImageError:
+                with io.open(str(filename_p), 'rb') as img:
+                    data = simplejpeg.decode_jpeg(img.read(), colorspace='RGB')
+            except ValueError:
                 raise BadImage('Bad jpeg image')
 
 
-            # swap axes for FITS
-            data = numpy.swapaxes(data, 1, 0)
-            data = numpy.swapaxes(data, 2, 0)
+            if len(data.shape) == 3:
+                # swap axes for FITS
+                data = numpy.swapaxes(data, 1, 0)
+                data = numpy.swapaxes(data, 2, 0)
 
 
             # create a new fits container
@@ -436,16 +458,23 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
             #hdulist[0].header['BITPIX'] = 8
         elif filename_p.suffix in ['.png']:
-            try:
-                with Image.open(str(filename_p)) as img:
-                    data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-            except PIL.UnidentifiedImageError:
+            # PNGs may be 16-bit, use OpenCV
+            data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+
+            if isinstance(data, type(None)):
                 raise BadImage('Bad png image')
 
 
-            # swap axes for FITS
-            data = numpy.swapaxes(data, 1, 0)
-            data = numpy.swapaxes(data, 2, 0)
+            if len(data.shape) == 3:
+                if data.shape[2] == 4:
+                    # remove alpha channel
+                    data = data[:, :, :3]
+
+                data = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)
+
+                # swap axes for FITS
+                data = numpy.swapaxes(data, 1, 0)
+                data = numpy.swapaxes(data, 2, 0)
 
 
             # create a new fits container

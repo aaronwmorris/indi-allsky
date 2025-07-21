@@ -408,14 +408,12 @@ class ImageProcessor(object):
                 hdulist[0].header['GAIN'] = float(self.gain_v.value)
         elif filename_p.suffix in ['.jpg', '.jpeg']:
             ### OpenCV
-            #data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)  # opencv returns BGR
+            #data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
             #if isinstance(data, type(None)):
-            #    raise BadImage('Bad png image')
-
+            #    raise BadImage('Bad jpeg image')
 
             #if len(data.shape) == 3:
-            #    # swap axes for FITS
             #    data = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)  # opencv returns BGR
 
 
@@ -434,14 +432,15 @@ class ImageProcessor(object):
 
             try:
                 with io.open(str(filename_p), 'rb') as img:
-                    data = simplejpeg.decode_jpeg(img.read(), colorspace='RGB')  # returns RGB
+                    data = simplejpeg.decode_jpeg(img.read(), colorspace='RGB')
             except ValueError:
                 raise BadImage('Bad jpeg image')
 
 
-            # swap axes for FITS
-            data = numpy.swapaxes(data, 1, 0)
-            data = numpy.swapaxes(data, 2, 0)
+            if len(data.shape) == 3:
+                # swap axes for FITS
+                data = numpy.swapaxes(data, 1, 0)
+                data = numpy.swapaxes(data, 2, 0)
 
 
             image_bitpix = 8
@@ -481,7 +480,7 @@ class ImageProcessor(object):
 
         elif filename_p.suffix in ['.png']:
             # PNGs may be 16-bit, use OpenCV
-            data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)  # opencv returns BGR
+            data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
             if isinstance(data, type(None)):
                 raise BadImage('Bad png image')
@@ -492,8 +491,9 @@ class ImageProcessor(object):
                     # remove alpha channel
                     data = data[:, :, :3]
 
-                # swap axes for FITS
                 data = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)  # opencv returns BGR
+
+                # swap axes for FITS
                 data = numpy.swapaxes(data, 1, 0)
                 data = numpy.swapaxes(data, 2, 0)
 
