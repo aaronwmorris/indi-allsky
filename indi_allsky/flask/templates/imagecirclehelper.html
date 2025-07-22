@@ -75,8 +75,8 @@ function showImage(url) {
         //context.globalCompositeOperation="source-bottom";
 
         context.arc(
-            ((this.width + offset_x) / 2) * ratio + centerShift_x,
-            ((this.height - offset_y) / 2) * ratio + centerShift_y,
+            (((this.width / 2) + offset_x) * ratio) + centerShift_x,
+            (((this.height / 2) - offset_y) * ratio) + centerShift_y,
             (circle_radius * ratio),
             0,
             2 * Math.PI,
