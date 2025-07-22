@@ -25,6 +25,12 @@ function init() {
 function showImage(url) {
     console.log('Showing image ' + url);
 
+
+    var circle_radius = $("#IMAGE_CIRCLE_DIAMETER").val() / 2;
+    var offset_x = $("#OFFSET_X").val();
+    var offset_y = $("#OFFSET_Y").val();
+
+
     var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
 
@@ -46,6 +52,24 @@ function showImage(url) {
         //context.imageSmoothingEnabled = false;
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+        context.beginPath();
+        context.strokeStyle="#ffffff";
+        context.fillStyle="#ffffff";
+        context.globalCompositeOperation="source-atop";
+        //context.globalCompositeOperation="source-bottom";
+
+        context.arc(
+            (this.width + offset_x) * ratio / 2,
+            (this.height - offset_y) * ratio / 2,
+            circle_radius * ratio,
+            0,
+            2 * Math.PI,
+            false
+        );
+
+        context.stroke();
+        context.fill();
 
     };
 
@@ -108,14 +132,6 @@ function closeFullscreen() {
 
 
 
-$( document ).ready(function() {
-    $('#canvas').on("click", function() {
-        goFullscreen(this);
-    });
-
-    init();
-});
-
 </script>
 {% endblock %}
 
@@ -127,7 +143,7 @@ $( document ).ready(function() {
         <div class="col-sm-1">
             {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-2">
             {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER(class='form-select bg-secondary') }}
         </div>
 
@@ -160,4 +176,31 @@ $( document ).ready(function() {
 </div>
 
 </div>
+
+<script>
+$( document ).ready(function() {
+    $('#canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
+    init();
+});
+
+
+$("#IMAGE_CIRCLE_DIAMETER").on("change", function() {
+    showImage(latest_image_url);
+});
+
+
+
+$("#OFFSET_X").on("change", function() {
+    showImage(latest_image_url);
+});
+
+
+$("#OFFSET_Y").on("change", function() {
+    showImage(latest_image_url);
+});
+
+</script>
 {% endblock %}
