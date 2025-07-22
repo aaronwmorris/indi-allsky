@@ -103,7 +103,7 @@ from .forms import IndiAllskyMiniTimelapseForm
 from .forms import IndiAllskyLongTermKeogramForm
 from .forms import IndiAllskyNetworkManagerForm
 from .forms import IndiAllskyDriveManagerForm
-from .forms import IndiAllskyImageCircleFinderForm
+from .forms import IndiAllskyImageCircleHelperForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -9603,13 +9603,13 @@ class AjaxDriveManagerView(BaseView):
         return jsonify({'failure-message' : 'Device not found'}), 400
 
 
-class ImageCircleFinderView(TemplateView):
+class ImageCircleHelperView(TemplateView):
     title = 'Image Circle'
     model = IndiAllSkyDbImageTable
 
 
     def get_context(self):
-        context = super(ImageCircleFinderView, self).get_context()
+        context = super(ImageCircleHelperView, self).get_context()
 
         context['title'] = self.title
         context['camera_id'] = self.camera.id
@@ -9621,7 +9621,7 @@ class ImageCircleFinderView(TemplateView):
             'OFFSET_y' : self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
         }
 
-        context['form_imagecircle'] = IndiAllskyImageCircleFinderForm(data=form_data)
+        context['form_imagecircle'] = IndiAllskyImageCircleHelperForm(data=form_data)
 
 
         latest_image_q = self.model.query\
@@ -10155,7 +10155,7 @@ bp_allsky.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_vie
 bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
 bp_allsky.add_url_rule('/mask', view_func=MaskView.as_view('mask_view', template_name='mask.html'))
 bp_allsky.add_url_rule('/camerasimulator', view_func=CameraSimulatorView.as_view('camera_simulator_view', template_name='camera_simulator.html'))
-bp_allsky.add_url_rule('/imagecircle', view_func=ImageCircleFinderView.as_view('image_circle_finder_view', template_name='imagecircle.html'))
+bp_allsky.add_url_rule('/imagecircle', view_func=ImageCircleHelperView.as_view('image_circle_helper_view', template_name='imagecircle.html'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 
