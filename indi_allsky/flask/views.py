@@ -2011,7 +2011,9 @@ class ConfigView(FormView):
             'GAMMA_CORRECTION'               : self.indi_allsky_config.get('GAMMA_CORRECTION', 1.0),
             'GAMMA_CORRECTION_DAY'           : self.indi_allsky_config.get('GAMMA_CORRECTION_DAY', 1.0),
             'CCD_COOLING'                    : self.indi_allsky_config.get('CCD_COOLING', False),
+            'CCD_COOLING_DAY'                : self.indi_allsky_config.get('CCD_COOLING_DAY', False),
             'CCD_TEMP'                       : self.indi_allsky_config.get('CCD_TEMP', 15.0),
+            'CCD_TEMP_DAY'                   : self.indi_allsky_config.get('CCD_TEMP_DAY', 35.0),
             'TEMP_DISPLAY'                   : self.indi_allsky_config.get('TEMP_DISPLAY', 'c'),
             'PRESSURE_DISPLAY'               : self.indi_allsky_config.get('PRESSURE_DISPLAY', 'hpa'),
             'WINDSPEED_DISPLAY'              : self.indi_allsky_config.get('WINDSPEED_DISPLAY', 'ms'),
@@ -2865,7 +2867,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['GAMMA_CORRECTION']                     = float(request.json['GAMMA_CORRECTION'])
         self.indi_allsky_config['GAMMA_CORRECTION_DAY']                 = float(request.json['GAMMA_CORRECTION_DAY'])
         self.indi_allsky_config['CCD_COOLING']                          = bool(request.json['CCD_COOLING'])
+        self.indi_allsky_config['CCD_COOLING_DAY']                      = bool(request.json['CCD_COOLING_DAY'])
         self.indi_allsky_config['CCD_TEMP']                             = float(request.json['CCD_TEMP'])
+        self.indi_allsky_config['CCD_TEMP_DAY']                         = float(request.json['CCD_TEMP_DAY'])
         self.indi_allsky_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
         self.indi_allsky_config['AUTO_WB_DAY']                          = bool(request.json['AUTO_WB_DAY'])
         self.indi_allsky_config['TEMP_DISPLAY']                         = str(request.json['TEMP_DISPLAY'])

@@ -427,7 +427,7 @@ var camera_id = {{ camera_id }};
                 <div id="CCD_COOLING-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8">Activate CCD Cooling (requires hardware support)</div>
+        <div class="col-sm-8">Activate CCD Cooling at night (requires hardware support)</div>
     </div>
 
     <div class="form-group row">
@@ -438,8 +438,36 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_TEMP(class='form-control bg-secondary') }}
             <div id="CCD_TEMP-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Temperature target</div>
+        <div class="col-sm-8">Night Temperature target</div>
     </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_COOLING_DAY.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CCD_COOLING_DAY(class='form-check-input') }}
+                <div id="CCD_COOLING_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Activate CCD Cooling during the day (requires hardware support)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_TEMP_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_TEMP_DAY(class='form-control bg-secondary') }}
+            <div id="CCD_TEMP_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Day Temperature target</div>
+    </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -7635,6 +7663,7 @@ const field_names = [
     'SCNR_ALGORITHM',
     'SCNR_ALGORITHM_DAY',
     'CCD_TEMP',
+    'CCD_TEMP_DAY',
     'TEMP_DISPLAY',
     'PRESSURE_DISPLAY',
     'WINDSPEED_DISPLAY',
@@ -8038,6 +8067,7 @@ const checkbox_field_names = [
     'AUTO_WB',
     'AUTO_WB_DAY',
     'CCD_COOLING',
+    'CCD_COOLING_DAY',
     'GPS_ENABLE',
     'DETECT_STARS',
     'DETECT_METEORS',
@@ -8336,6 +8366,20 @@ $('#CCD_COOLING').on('change', function() {
         $('#CCD_TEMP').attr('disabled', true);
         $('#CCD_TEMP').addClass('bg-dark');
         $('#CCD_TEMP').addClass('text-secondary');
+    }
+});
+
+$('#CCD_COOLING_DAY').on('change', function() {
+    if ($('#CCD_COOLING_DAY').prop('checked')) {
+        $('#CCD_TEMP_DAY').removeAttr('readonly');
+        $('#CCD_TEMP_DAY').removeAttr('disabled');
+        $('#CCD_TEMP_DAY').removeClass('bg-dark');
+        $('#CCD_TEMP_DAY').removeClass('text-secondary');
+    } else {
+        $('#CCD_TEMP_DAY').attr('readonly', true);
+        $('#CCD_TEMP_DAY').attr('disabled', true);
+        $('#CCD_TEMP_DAY').addClass('bg-dark');
+        $('#CCD_TEMP_DAY').addClass('text-secondary');
     }
 });
 
@@ -8699,6 +8743,13 @@ $( document ).ready(function() {
         $('#CCD_TEMP').attr('disabled', true);
         $('#CCD_TEMP').addClass('bg-dark');
         $('#CCD_TEMP').addClass('text-secondary');
+    }
+
+    if (!$('#CCD_COOLING_DAY').prop('checked')) {
+        $('#CCD_TEMP_DAY').attr('readonly', true);
+        $('#CCD_TEMP_DAY').attr('disabled', true);
+        $('#CCD_TEMP_DAY').addClass('bg-dark');
+        $('#CCD_TEMP_DAY').addClass('text-secondary');
     }
 
     // libcamera AWB
