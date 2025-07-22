@@ -6851,7 +6851,7 @@ class JsonImageProcessingView(JsonView):
 
         p_config['LENS_IMAGE_CIRCLE']                    = int(request.json['LENS_IMAGE_CIRCLE'])
         p_config['LENS_OFFSET_X']                        = int(request.json['LENS_OFFSET_X'])
-        p_config['LENS_OFFSET_X']                        = int(request.json['LENS_OFFSET_Y'])
+        p_config['LENS_OFFSET_Y']                        = int(request.json['LENS_OFFSET_Y'])
         p_config['LENS_AZIMUTH']                         = float(request.json['LENS_AZIMUTH'])
         p_config['CCD_BIT_DEPTH']                        = int(request.json['CCD_BIT_DEPTH'])
         p_config['IMAGE_CALIBRATE_DARK']                 = bool(request.json['IMAGE_CALIBRATE_DARK'])
