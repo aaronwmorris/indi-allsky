@@ -9620,7 +9620,7 @@ class ImageCircleHelperView(TemplateView):
         form_data = {
             'IMAGE_CIRCLE_DIAMETER' : self.camera.lensImageCircle,
             'OFFSET_X' : self.indi_allsky_config.get('LENS_OFFSET_X', 0),
-            'OFFSET_y' : self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
+            'OFFSET_Y' : self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
         }
 
         context['form_imagecircle'] = IndiAllskyImageCircleHelperForm(data=form_data)
