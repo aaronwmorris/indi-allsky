@@ -216,6 +216,15 @@ i2cdetect -y 1 || true
 
 
 echo
+echo "Power info"
+if which vcgencmd >/dev/null 2>&1; then
+    vcgencmd pmic_read_adc || true
+else
+    echo "Unavailable"
+fi
+
+
+echo
 echo "git status"
 git status | head -n 100
 
