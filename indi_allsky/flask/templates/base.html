@@ -157,6 +157,10 @@
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/magic.svg') }}" width="16" height="16" alt="FITS Processing"><span class="ms-1 d-none d-sm-inline">Process FITS</span> </a>
                             </li>
                             <li>
+                                <a href="{{ url_for('indi_allsky.image_circle_helper_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/circle.svg') }}" width="16" height="16" alt="Image Circle Helper"><span class="ms-1 d-none d-sm-inline">Image Circle Helper</span> </a>
+                            </li>
+                            <li>
                                 <a href="{{ url_for('indi_allsky.mask_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/layers.svg') }}" width="16" height="16" alt="Mask"><span class="ms-1 d-none d-sm-inline">Mask Base</span> </a>
                             </li>
