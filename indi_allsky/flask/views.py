@@ -9628,11 +9628,7 @@ class ImageCircleHelperView(TemplateView):
 
         latest_image_q = self.model.query\
             .join(self.model.camera)\
-            .filter(
-                and_(
-                    IndiAllSkyDbCameraTable.id == self.camera.id,
-                )
-            )
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
 
 
         local = True  # default to local assets
@@ -9654,6 +9650,7 @@ class ImageCircleHelperView(TemplateView):
 
         latest_image = latest_image_q\
             .order_by(self.model.createDate.desc())\
+            .limit(1)\
             .first()
 
 
