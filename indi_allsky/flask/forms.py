@@ -7798,6 +7798,7 @@ class IndiAllskyImageCircleHelperForm(FlaskForm):
     IMAGE_CIRCLE_DIAMETER   = IntegerField('Diameter')
     OFFSET_X                = IntegerField('X Offset', default=0, render_kw={'step' : '25'})
     OFFSET_Y                = IntegerField('Y Offset', default=0, render_kw={'step' : '25'})
+    LINE_WIDTH              = IntegerField('Line', default=10)
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):

@@ -29,6 +29,7 @@ function showImage(url) {
     var circle_radius = parseInt($("#IMAGE_CIRCLE_DIAMETER").val()) / 2;
     var offset_x = parseInt($("#OFFSET_X").val());
     var offset_y = parseInt($("#OFFSET_Y").val());
+    var line_width = parseInt($("#LINE_WIDTH").val());
 
 
     var canvas = document.getElementById("canvas");
@@ -64,7 +65,7 @@ function showImage(url) {
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
 
-        context.lineWidth = 10;
+        context.lineWidth = line_width;
 
         context.beginPath();
         context.strokeStyle="#00ff00";
@@ -173,8 +174,17 @@ function closeFullscreen() {
         <div class="col-sm-1">
             {{ form_imagecircle.OFFSET_Y(class='form-control bg-secondary') }}
         </div>
+
+        <div class="col-sm-1">
+            {{ form_imagecircle.LINE_WIDTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_imagecircle.LINE_WIDTH(class='form-control bg-secondary') }}
+        </div>
+
         <div class="col-sm-1">
         </div>
+
         <div class="col-sm-1">
             <button class="btn btn-primary">Update</button>
         </div>
@@ -217,6 +227,11 @@ $("#OFFSET_X").on("change", function() {
 
 
 $("#OFFSET_Y").on("change", function() {
+    showImage(latest_image_url);
+});
+
+
+$("#LINE_WIDTH").on("change", function() {
     showImage(latest_image_url);
 });
 
