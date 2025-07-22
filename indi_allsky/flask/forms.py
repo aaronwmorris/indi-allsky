@@ -7794,6 +7794,12 @@ class IndiAllskyDriveManagerForm(FlaskForm):
         return device_entries
 
 
+class IndiAllskyImageCircleFinderForm(FlaskForm):
+    IMAGE_CIRCLE_DIAMETER   = IntegerField('Diameter')
+    OFFSET_X                = IntegerField('X Offset', default=0, render_kw={'step' : '25'})
+    OFFSET_Y                = IntegerField('Y Offset', default=0, render_kw={'step' : '25'})
+
+
 class IndiAllskyCameraSimulatorForm(FlaskForm):
     SENSOR_SELECT_choices = {
         'Small' : (
