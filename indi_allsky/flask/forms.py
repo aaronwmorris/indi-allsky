@@ -7810,8 +7810,8 @@ class IndiAllskyImageCircleHelperForm(FlaskForm):
 
 
     IMAGE_CIRCLE_DIAMETER   = IntegerField('Diameter', render_kw={'step' : '5'})
-    OFFSET_X                = IntegerField('X Offset', default=0, render_kw={'step' : '5'})
-    OFFSET_Y                = IntegerField('Y Offset', default=0, render_kw={'step' : '5'})
+    OFFSET_X                = IntegerField('X Offset', default=0, render_kw={'step' : '25'})
+    OFFSET_Y                = IntegerField('Y Offset', default=0, render_kw={'step' : '25'})
     LINE_WIDTH              = IntegerField('Line', default=5)
     LINE_COLOR              = SelectField('Line', choices=LINE_COLOR_choices)
 
