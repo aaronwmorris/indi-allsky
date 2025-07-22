@@ -26,9 +26,9 @@ function showImage(url) {
     console.log('Showing image ' + url);
 
 
-    var circle_radius = $("#IMAGE_CIRCLE_DIAMETER").val() / 2;
-    var offset_x = $("#OFFSET_X").val();
-    var offset_y = $("#OFFSET_Y").val();
+    var circle_radius = parseInt($("#IMAGE_CIRCLE_DIAMETER").val()) / 2;
+    var offset_x = parseInt($("#OFFSET_X").val());
+    var offset_y = parseInt($("#OFFSET_Y").val());
 
 
     var canvas = document.getElementById("canvas");
@@ -46,6 +46,16 @@ function showImage(url) {
         //canvas.width = this.width * ratio;
         //canvas.height = this.height * ratio;
 
+
+        // auto scale circle to fit in image
+        var image_diag = Math.hypot(this.width, this.height);
+
+        if ((image_diag * ratio) < ((circle_radius * 2) * ratio)) {
+            $("#IMAGE_CIRCLE_DIAMETER").val(image_diag.toFixed(0) - 50);  // offset slightly
+            showImage(latest_image_url);
+        }
+
+
         var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
         var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
 
@@ -53,23 +63,26 @@ function showImage(url) {
         context.drawImage(this, 0, 0, this.width, this.height,
             centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
 
+
+        context.lineWidth = 10;
+
         context.beginPath();
-        context.strokeStyle="#ffffff";
-        context.fillStyle="#ffffff";
+        context.strokeStyle="#00ff00";
+        //context.fillStyle="#ffffff";
         context.globalCompositeOperation="source-atop";
         //context.globalCompositeOperation="source-bottom";
 
         context.arc(
-            (this.width + offset_x) * ratio / 2,
-            (this.height - offset_y) * ratio / 2,
-            circle_radius * ratio,
+            ((this.width + offset_x) / 2) * ratio + centerShift_x,
+            ((this.height - offset_y) / 2) * ratio + centerShift_y,
+            (circle_radius * ratio),
             0,
             2 * Math.PI,
             false
         );
 
         context.stroke();
-        context.fill();
+        //context.fill();
 
     };
 
