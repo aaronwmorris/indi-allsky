@@ -218,6 +218,15 @@ i2cdetect -y 1 || true
 echo
 echo "Power info"
 if which vcgencmd >/dev/null 2>&1; then
+    vcgencmd get_throttled || true
+
+    echo
+    for X in core sdram_c sdram_i sdram_p; do
+        echo -n "$X "
+        vcgencmd measure_volts "$X" || true
+    done
+
+    echo
     vcgencmd pmic_read_adc || true
 else
     echo "Unavailable"
