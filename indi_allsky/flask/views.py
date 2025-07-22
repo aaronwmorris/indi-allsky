@@ -9604,7 +9604,7 @@ class AjaxDriveManagerView(BaseView):
 
 
 class ImageCircleHelperView(TemplateView):
-    title = 'Image Circle'
+    title = 'Image Circle Helper'
     model = IndiAllSkyDbImageTable
 
 
