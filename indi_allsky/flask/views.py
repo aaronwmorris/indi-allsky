@@ -9626,13 +9626,13 @@ class ImageCircleHelperView(TemplateView):
         context['form_imagecircle'] = IndiAllskyImageCircleHelperForm(data=form_data)
 
 
+        # limit time period for performance
+        camera_now_minus_10days = self.camera_now - timedelta(days=10)
+
         latest_image_q = self.model.query\
             .join(self.model.camera)\
-            .filter(
-                and_(
-                    IndiAllSkyDbCameraTable.id == self.camera.id,
-                )
-            )
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
+            .filter(self.model.createDate > camera_now_minus_10days)\
 
 
         local = True  # default to local assets
