@@ -7802,6 +7802,8 @@ class IndiAllskyImageCircleHelperForm(FlaskForm):
         ('#ff00ff', 'Magenta'),
         ('#ffff00', 'Yellow'),
         ('#00ffff', 'Cyan'),
+        ('#303030', 'Dark Gray'),
+        ('#d3d3d3', 'Light Gray'),
         ('#ffffff', 'White'),
     )
 
