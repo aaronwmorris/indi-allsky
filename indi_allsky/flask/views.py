@@ -103,6 +103,7 @@ from .forms import IndiAllskyMiniTimelapseForm
 from .forms import IndiAllskyLongTermKeogramForm
 from .forms import IndiAllskyNetworkManagerForm
 from .forms import IndiAllskyDriveManagerForm
+from .forms import IndiAllskyImageCircleHelperForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -9602,6 +9603,67 @@ class AjaxDriveManagerView(BaseView):
         return jsonify({'failure-message' : 'Device not found'}), 400
 
 
+class ImageCircleHelperView(TemplateView):
+    decorators = [login_required]
+
+    title = 'Image Circle Helper'
+    model = IndiAllSkyDbImageTable
+
+
+    def get_context(self):
+        context = super(ImageCircleHelperView, self).get_context()
+
+        context['title'] = self.title
+        context['camera_id'] = self.camera.id
+
+
+        form_data = {
+            'IMAGE_CIRCLE_DIAMETER' : self.camera.lensImageCircle,
+            'OFFSET_X' : self.indi_allsky_config.get('LENS_OFFSET_X', 0),
+            'OFFSET_y' : self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
+        }
+
+        context['form_imagecircle'] = IndiAllskyImageCircleHelperForm(data=form_data)
+
+
+        latest_image_q = self.model.query\
+            .join(self.model.camera)\
+            .filter(
+                and_(
+                    IndiAllSkyDbCameraTable.id == self.camera.id,
+                )
+            )
+
+
+        local = True  # default to local assets
+        if self.web_nonlocal_images:
+            if self.web_local_images_admin and self.verify_admin_network():
+                pass
+            else:
+                local = False
+
+                # Do not serve local assets
+                latest_image_q = latest_image_q\
+                    .filter(
+                        or_(
+                            self.model.remote_url != sa_null(),
+                            self.model.s3_key != sa_null(),
+                        )
+                    )
+
+
+        latest_image = latest_image_q\
+            .order_by(self.model.createDate.desc())\
+            .first()
+
+
+        if latest_image:
+            context['latest_image_url'] = latest_image.getUrl(s3_prefix=self.s3_prefix, local=local)
+
+
+        return context
+
+
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
@@ -10095,6 +10157,7 @@ bp_allsky.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_vie
 bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
 bp_allsky.add_url_rule('/mask', view_func=MaskView.as_view('mask_view', template_name='mask.html'))
 bp_allsky.add_url_rule('/camerasimulator', view_func=CameraSimulatorView.as_view('camera_simulator_view', template_name='camera_simulator.html'))
+bp_allsky.add_url_rule('/imagecirclehelper', view_func=ImageCircleHelperView.as_view('image_circle_helper_view', template_name='imagecirclehelper.html'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 

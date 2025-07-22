@@ -7794,6 +7794,28 @@ class IndiAllskyDriveManagerForm(FlaskForm):
         return device_entries
 
 
+class IndiAllskyImageCircleHelperForm(FlaskForm):
+    LINE_COLOR_choices = (
+        ('#00ff00', 'Green'),
+        ('#ff0000', 'Red'),
+        ('#0000ff', 'Blue'),
+        ('#ff00ff', 'Magenta'),
+        ('#ffff00', 'Yellow'),
+        ('#00ffff', 'Cyan'),
+        ('#202020', 'Darker Gray'),
+        ('#303030', 'Dark Gray'),
+        ('#808080', 'Gray'),
+        ('#ffffff', 'White'),
+    )
+
+
+    IMAGE_CIRCLE_DIAMETER   = IntegerField('Diameter', render_kw={'step' : '5'})
+    OFFSET_X                = IntegerField('X Offset', default=0, render_kw={'step' : '25'})
+    OFFSET_Y                = IntegerField('Y Offset', default=0, render_kw={'step' : '25'})
+    LINE_WIDTH              = IntegerField('Line', default=5)
+    LINE_COLOR              = SelectField('Line', choices=LINE_COLOR_choices)
+
+
 class IndiAllskyCameraSimulatorForm(FlaskForm):
     SENSOR_SELECT_choices = {
         'Small' : (

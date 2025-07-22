@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: {{ title }}{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+canvas {
+    width: 100%;
+    height: auto;
+}
+</style>
+<script type="text/javascript">
+var camera_id = {{ camera_id }};
+var fullscreen = false;  //initial state
+var latest_image_url = "{{ latest_image_url }}";
+
+
+function init() {
+    $('#message').empty();
+    showImage(latest_image_url);
+}
+
+
+function showImage(url) {
+    console.log('Showing image ' + url);
+
+
+    var circle_radius = parseInt($("#IMAGE_CIRCLE_DIAMETER").val()) / 2;
+    var offset_x = parseInt($("#OFFSET_X").val());
+    var offset_y = parseInt($("#OFFSET_Y").val());
+    var line_width = parseInt($("#LINE_WIDTH").val());
+    var line_color = $("#LINE_COLOR").val();
+
+
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    var img = new Image();
+    img.onload = function() {
+        canvas.setAttribute("width", window.innerWidth);
+        canvas.setAttribute("height", window.innerHeight);
+
+        var hRatio = canvas.width  / this.width;
+        var vRatio = canvas.height / this.height;
+        var ratio  = Math.min ( hRatio, vRatio );
+
+        //canvas.width = this.width * ratio;
+        //canvas.height = this.height * ratio;
+
+
+        // auto scale circle to fit in image
+        var image_diag = Math.hypot(this.width, this.height).toFixed(0);
+
+        if ((image_diag * ratio) < ((circle_radius * 2) * ratio)) {
+            $("#IMAGE_CIRCLE_DIAMETER").val(image_diag - 50 - (image_diag % 5));  // offset slightly, to nearest 5
+            showImage(latest_image_url);
+        }
+
+
+        var centerShift_x = ( canvas.width - this.width * ratio ) / 2;
+        var centerShift_y = ( canvas.height - this.height * ratio ) / 2;
+
+        //context.imageSmoothingEnabled = false;
+        context.drawImage(this, 0, 0, this.width, this.height,
+            centerShift_x, centerShift_y, this.width * ratio, this.height * ratio);
+
+
+        context.lineWidth = line_width;
+
+        context.beginPath();
+        context.strokeStyle=line_color;
+        //context.fillStyle="#ffffff";
+        context.globalCompositeOperation="source-atop";
+        //context.globalCompositeOperation="source-bottom";
+
+        context.arc(
+            ((this.width + offset_x) / 2) * ratio + centerShift_x,
+            ((this.height - offset_y) / 2) * ratio + centerShift_y,
+            (circle_radius * ratio),
+            0,
+            2 * Math.PI,
+            false
+        );
+
+        context.stroke();
+        //context.fill();
+
+    };
+
+
+    img.src = url;
+}
+
+
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    $(window).on("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    showImage(latest_image_url);
+}
+setResizeHandler(resize_callback, 200);
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
+
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container h-100">
+
+<form id="form_imagecircle" onSubmit="return false;">
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER(class='form-select bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_imagecircle.OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_imagecircle.OFFSET_X(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_imagecircle.OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_imagecircle.OFFSET_Y(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_imagecircle.LINE_WIDTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_imagecircle.LINE_WIDTH(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-2">
+            {{ form_imagecircle.LINE_COLOR(class='form-select bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            <button class="btn btn-primary">Refresh</button>
+        </div>
+    </div>
+</form>
+
+<hr>
+
+
+<div class="row">
+    <div class="text-center" style="font-size:10px">
+        This page is used help size your image circle settings - Line up the green circle to match the image circle on the screen
+    </div>
+
+    <div class="text-muted text-center" id="message">Loading...</div>
+</div>
+<div class="row">
+    <div class="text-center">
+        <canvas id="canvas"></canvas>
+    </div>
+</div>
+
+</div>
+
+<script>
+$( document ).ready(function() {
+    $('#canvas').on("click", function() {
+        goFullscreen(this);
+    });
+
+
+    if(localStorage) {
+        image_circle_helper = localStorage.getItem("image_circle_helper");
+        if(image_circle_helper) {
+            page_settings = JSON.parse(image_circle_helper);
+        } else {
+            page_settings = new Object();
+            page_settings["line_width"] = $('#LINE_WIDTH').val();
+            page_settings["line_color"] = $('#LINE_COLOR').val();
+
+            localStorage.setItem("image_circle_helper", JSON.stringify(page_settings));
+        }
+    }
+
+    if(typeof page_settings["line_width"] !== "undefined") {
+        $("#LINE_WIDTH").val(page_settings["line_width"]);
+    }
+
+    if(typeof page_settings["line_color"] !== "undefined") {
+        $("#LINE_COLOR").val(page_settings["line_color"]);
+    }
+
+
+    init();
+});
+
+
+$("#IMAGE_CIRCLE_DIAMETER").on("change", function() {
+    showImage(latest_image_url);
+});
+
+
+
+$("#OFFSET_X").on("change", function() {
+    showImage(latest_image_url);
+});
+
+
+$("#OFFSET_Y").on("change", function() {
+    showImage(latest_image_url);
+});
+
+
+$("#LINE_WIDTH").on("change", function() {
+    showImage(latest_image_url);
+
+    line_width = $('#LINE_WIDTH').val();
+    console.log('Changing line width: ' + line_width);
+
+    if(localStorage) {
+        page_settings["line_width"] = line_width;
+        localStorage.setItem("image_circle_helper", JSON.stringify(page_settings));
+    }
+});
+
+
+$("#LINE_COLOR").on("change", function() {
+    showImage(latest_image_url);
+
+    line_color= $('#LINE_COLOR').val();
+    console.log('Changing line color: ' + line_color);
+
+    if(localStorage) {
+        page_settings["line_color"] = line_color;
+        localStorage.setItem("image_circle_helper", JSON.stringify(page_settings));
+    }
+});
+
+</script>
+{% endblock %}
