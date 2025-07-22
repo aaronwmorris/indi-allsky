@@ -216,6 +216,28 @@ i2cdetect -y 1 || true
 
 
 echo
+echo "Power info"
+if which vcgencmd >/dev/null 2>&1; then
+    # https://www.raspberrypi.com/documentation/computers/os.html#get_throttled
+    vcgencmd get_throttled || true
+
+    echo
+    for X in core sdram_c sdram_i sdram_p; do
+        echo -n "$X "
+        vcgencmd measure_volts "$X" || true
+    done
+
+    echo
+    vcgencmd pmic_read_adc || true
+
+    echo
+    vcgencmd get_config usb_max_current_enable || true
+else
+    echo "Unavailable"
+fi
+
+
+echo
 echo "git status"
 git status | head -n 100
 
