@@ -211,6 +211,24 @@ $( document ).ready(function() {
         goFullscreen(this);
     });
 
+
+    if(localStorage) {
+        image_circle_helper = localStorage.getItem("image_circle_helper");
+        if(image_circle_helper) {
+            page_settings = JSON.parse(image_circle_helper);
+        } else {
+            page_settings = new Object();
+            page_settings["line_width"] = $('#LINE_WIDTH').val();
+
+            localStorage.setItem("image_circle_helper", JSON.stringify(page_settings));
+        }
+    }
+
+    if(typeof page_settings["line_width"] !== "undefined") {
+        $("#LINE_WIDTH").val(page_settings["line_width"]);
+    }
+
+
     init();
 });
 
@@ -233,6 +251,14 @@ $("#OFFSET_Y").on("change", function() {
 
 $("#LINE_WIDTH").on("change", function() {
     showImage(latest_image_url);
+
+   line_width = $('#LINE_WIDTH').val();
+    console.log('Changing line width: ' + line_width);
+
+    if(localStorage) {
+        page_settings["line_width"] = line_width;
+        localStorage.setItem("image_circle_helper", JSON.stringify(page_settings));
+    }
 });
 
 </script>
