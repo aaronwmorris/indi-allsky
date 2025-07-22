@@ -10155,7 +10155,7 @@ bp_allsky.add_url_rule('/adu', view_func=RollingAduView.as_view('rolling_adu_vie
 bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', template_name='darks.html'))
 bp_allsky.add_url_rule('/mask', view_func=MaskView.as_view('mask_view', template_name='mask.html'))
 bp_allsky.add_url_rule('/camerasimulator', view_func=CameraSimulatorView.as_view('camera_simulator_view', template_name='camera_simulator.html'))
-bp_allsky.add_url_rule('/imagecircle', view_func=ImageCircleHelperView.as_view('image_circle_helper_view', template_name='imagecircle.html'))
+bp_allsky.add_url_rule('/imagecircle', view_func=ImageCircleHelperView.as_view('image_circle_helper_view', template_name='imagecirclehelper.html'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 
