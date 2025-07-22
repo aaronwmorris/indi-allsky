@@ -30,6 +30,7 @@ function showImage(url) {
     var offset_x = parseInt($("#OFFSET_X").val());
     var offset_y = parseInt($("#OFFSET_Y").val());
     var line_width = parseInt($("#LINE_WIDTH").val());
+    var line_color = $("#LINE_COLOR").val();
 
 
     var canvas = document.getElementById("canvas");
@@ -68,7 +69,7 @@ function showImage(url) {
         context.lineWidth = line_width;
 
         context.beginPath();
-        context.strokeStyle="#00ff00";
+        context.strokeStyle=line_color;
         //context.fillStyle="#ffffff";
         context.globalCompositeOperation="source-atop";
         //context.globalCompositeOperation="source-bottom";
@@ -182,7 +183,8 @@ function closeFullscreen() {
             {{ form_imagecircle.LINE_WIDTH(class='form-control bg-secondary') }}
         </div>
 
-        <div class="col-sm-1">
+        <div class="col-sm-2">
+            {{ form_imagecircle.LINE_COLOR(class='form-select bg-secondary') }}
         </div>
 
         <div class="col-sm-1">
@@ -223,6 +225,7 @@ $( document ).ready(function() {
         } else {
             page_settings = new Object();
             page_settings["line_width"] = $('#LINE_WIDTH').val();
+            page_settings["line_color"] = $('#LINE_COLOR').val();
 
             localStorage.setItem("image_circle_helper", JSON.stringify(page_settings));
         }
@@ -230,6 +233,10 @@ $( document ).ready(function() {
 
     if(typeof page_settings["line_width"] !== "undefined") {
         $("#LINE_WIDTH").val(page_settings["line_width"]);
+    }
+
+    if(typeof page_settings["line_color"] !== "undefined") {
+        $("#LINE_COLOR").val(page_settings["line_color"]);
     }
 
 
@@ -256,11 +263,24 @@ $("#OFFSET_Y").on("change", function() {
 $("#LINE_WIDTH").on("change", function() {
     showImage(latest_image_url);
 
-   line_width = $('#LINE_WIDTH').val();
+    line_width = $('#LINE_WIDTH').val();
     console.log('Changing line width: ' + line_width);
 
     if(localStorage) {
         page_settings["line_width"] = line_width;
+        localStorage.setItem("image_circle_helper", JSON.stringify(page_settings));
+    }
+});
+
+
+$("#LINE_COLOR").on("change", function() {
+    showImage(latest_image_url);
+
+    line_color= $('#LINE_COLOR').val();
+    console.log('Changing line color: ' + line_color);
+
+    if(localStorage) {
+        page_settings["line_color"] = line_color;
         localStorage.setItem("image_circle_helper", JSON.stringify(page_settings));
     }
 });
