@@ -50,10 +50,10 @@ function showImage(url) {
 
 
         // auto scale circle to fit in image
-        var image_diag = Math.hypot(this.width, this.height);
+        var image_diag = Math.hypot(this.width, this.height).toFixed(0);
 
         if ((image_diag * ratio) < ((circle_radius * 2) * ratio)) {
-            $("#IMAGE_CIRCLE_DIAMETER").val(image_diag.toFixed(0) - 50);  // offset slightly
+            $("#IMAGE_CIRCLE_DIAMETER").val(image_diag - 50 - (image_diag % 5));  // offset slightly, to nearest 5
             showImage(latest_image_url);
         }
 
