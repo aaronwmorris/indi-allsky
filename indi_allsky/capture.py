@@ -1552,6 +1552,8 @@ class CaptureWorker(Process):
                 ccd_temp = self.config.get('CCD_TEMP', 15.0)
                 self.indiclient.enableCcdCooler()
                 self.indiclient.setCcdTemperature(ccd_temp)
+            else:
+                self.indiclient.disableCcdCooler()
 
 
             if self.moonmode:
@@ -1587,7 +1589,15 @@ class CaptureWorker(Process):
                 self.indi_config = self.config['INDI_CONFIG_DEFAULTS']
 
 
-            self.indiclient.disableCcdCooler()
+            # cooling
+            if self.config.get('CCD_COOLING_DAY'):
+                ccd_temp = self.config.get('CCD_TEMP_DAY', 35.0)
+                self.indiclient.enableCcdCooler()
+                self.indiclient.setCcdTemperature(ccd_temp)
+            else:
+                self.indiclient.disableCcdCooler()
+
+
             self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
             self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
