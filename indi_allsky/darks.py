@@ -810,9 +810,17 @@ class IndiAllSkyDarks(object):
             with self.night_v.get_lock():
                 self.night_v.value = 0
 
-            self.indiclient.disableCcdCooler()
-            logger.warning('****** IF THE CCD COOLER WAS ENABLED, YOU MAY CONSIDER STOPPING THIS UNTIL THE SENSOR HAS WARMED ******')
-            time.sleep(8.0)
+
+            # take day darks with cooling enabled
+            if self.config.get('CCD_COOLING_DAY'):
+                ccd_temp = self.config.get('CCD_TEMP', 35.0)
+                self.indiclient.enableCcdCooler()
+                logger.warning('****** WAITING UP TO 20 MINUTES FOR TARGET TEMPERATURE ******')
+                self.indiclient.setCcdTemperature(ccd_temp, sync=True, timeout=1200.0)
+            else:
+                self.indiclient.disableCcdCooler()
+                logger.warning('****** IF THE CCD COOLER WAS ENABLED, YOU MAY CONSIDER STOPPING THIS UNTIL THE SENSOR HAS WARMED ******')
+                time.sleep(8.0)
 
 
             if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
@@ -909,7 +917,10 @@ class IndiAllSkyDarks(object):
             self.indiclient.enableCcdCooler()
             logger.warning('****** WAITING UP TO 20 MINUTES FOR TARGET TEMPERATURE ******')
             self.indiclient.setCcdTemperature(ccd_temp, sync=True, timeout=1200.0)
-
+        else:
+            self.indiclient.disableCcdCooler()
+            logger.warning('****** IF THE CCD COOLER WAS ENABLED, YOU MAY CONSIDER STOPPING THIS UNTIL THE SENSOR HAS WARMED ******')
+            time.sleep(8.0)
 
 
         ### NIGHT DARKS ###
