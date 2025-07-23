@@ -4031,6 +4031,8 @@ class IndiAllskyConfigForm(FlaskForm):
     FITSHEADERS__4__VAL              = StringField('FITS Header 5 Value', validators=[])
     LIBCAMERA__IMAGE_FILE_TYPE       = SelectField('Night libcamera image type', choices=LIBCAMERA__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), LIBCAMERA__IMAGE_FILE_TYPE_validator])
     LIBCAMERA__IMAGE_FILE_TYPE_DAY   = SelectField('Day libcamera image type', choices=LIBCAMERA__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), LIBCAMERA__IMAGE_FILE_TYPE_validator])
+    LIBCAMERA__IMMEDIATE             = BooleanField('Night Immediate Flag')
+    LIBCAMERA__IMMEDIATE_DAY         = BooleanField('Day Immediate Flag')
     LIBCAMERA__AWB                   = SelectField('Night AWB', choices=LIBCAMERA__AWB_choices, validators=[DataRequired(), LIBCAMERA__AWB_validator])
     LIBCAMERA__AWB_DAY               = SelectField('Day AWB', choices=LIBCAMERA__AWB_choices, validators=[DataRequired(), LIBCAMERA__AWB_validator])
     LIBCAMERA__AWB_ENABLE            = BooleanField('Night Enable AWB')
