@@ -171,7 +171,6 @@ class IndiClientLibCameraGeneric(IndiClient):
         if image_type in ['dng']:
             cmd = [
                 self.ccd_device.driver_exec,
-                '--immediate',
                 '--nopreview',
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
@@ -185,7 +184,6 @@ class IndiClientLibCameraGeneric(IndiClient):
             #logger.warning('RAW frame mode disabled due to low memory resources')
             cmd = [
                 self.ccd_device.driver_exec,
-                '--immediate',
                 '--nopreview',
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
@@ -203,6 +201,9 @@ class IndiClientLibCameraGeneric(IndiClient):
         if self.night_v.value:
             #  night
 
+            if self.config.get('LIBCAMERA', {}).get('IMMEDIATE', True):
+                cmd.insert(1, '--immediate')
+
             # Auto white balance, AWB causes long exposure times at night
             if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'):
                 awb = self.config.get('LIBCAMERA', {}).get('AWB', 'auto')
@@ -214,6 +215,9 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         else:
             # daytime
+
+            if self.config.get('LIBCAMERA', {}).get('IMMEDIATE_DAY', True):
+                cmd.insert(1, '--immediate')
 
             # Auto white balance, AWB causes long exposure times at night
             if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'):

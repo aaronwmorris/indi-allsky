@@ -508,6 +508,8 @@ class IndiAllSkyConfigBase(object):
         "LIBCAMERA" : {
             "IMAGE_FILE_TYPE"        : "jpg",
             "IMAGE_FILE_TYPE_DAY"    : "jpg",
+            "IMMEDIATE"              : True,
+            "IMMEDIATE_DAY"          : True,
             "AWB"                    : "auto",
             "AWB_DAY"                : "auto",
             "AWB_ENABLE"             : True,

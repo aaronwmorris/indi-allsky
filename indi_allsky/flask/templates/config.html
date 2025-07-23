@@ -577,6 +577,22 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__IMMEDIATE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.LIBCAMERA__IMMEDIATE(class='form-check-input') }}
+                <div id="LIBCAMERA__IMMEDIATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Enable --immediate flag</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> The --immediate flag may interfere with auto-focus functions</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LIBCAMERA__EXTRA_OPTIONS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-5">
@@ -627,6 +643,22 @@ var camera_id = {{ camera_id }};
             <div id="LIBCAMERA__AWB_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__IMMEDIATE_DAY.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.LIBCAMERA__IMMEDIATE_DAY(class='form-check-input') }}
+                <div id="LIBCAMERA__IMMEDIATE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Enable --immediate flag</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> The --immediate flag may interfere with auto-focus functions</div>
         </div>
     </div>
 
@@ -8166,6 +8198,8 @@ const checkbox_field_names = [
     'YOUTUBE__UPLOAD_PANORAMA_VIDEO',
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
+    'LIBCAMERA__IMMEDIATE',
+    'LIBCAMERA__IMMEDIATE_DAY',
     'ACCUM_CAMERA__EVEN_EXPOSURES',
     'ACCUM_CAMERA__CLAMP_16BIT',
     'TEMP_SENSOR__SHT3X_HEATER_NIGHT',

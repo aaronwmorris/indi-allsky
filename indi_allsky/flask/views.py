@@ -2345,6 +2345,8 @@ class ConfigView(FormView):
             'YOUTUBE__UPLOAD_PANORAMA_VIDEO' : self.indi_allsky_config.get('YOUTUBE', {}).get('UPLOAD_PANORAMA_VIDEO', False),
             'LIBCAMERA__IMAGE_FILE_TYPE'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'jpg'),
             'LIBCAMERA__IMAGE_FILE_TYPE_DAY' : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'jpg'),
+            'LIBCAMERA__IMMEDIATE'           : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMMEDIATE', True),
+            'LIBCAMERA__IMMEDIATE_DAY'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('IMMEDIATE_DAY', True),
             'LIBCAMERA__AWB'                 : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB', 'auto'),
             'LIBCAMERA__AWB_DAY'             : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_DAY', 'auto'),
             'LIBCAMERA__AWB_ENABLE'          : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_ENABLE', True),
@@ -3215,6 +3217,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FITSHEADERS'][4][1]                    = str(request.json['FITSHEADERS__4__VAL'])
         self.indi_allsky_config['LIBCAMERA']['IMAGE_FILE_TYPE']         = str(request.json['LIBCAMERA__IMAGE_FILE_TYPE'])
         self.indi_allsky_config['LIBCAMERA']['IMAGE_FILE_TYPE_DAY']     = str(request.json['LIBCAMERA__IMAGE_FILE_TYPE_DAY'])
+        self.indi_allsky_config['LIBCAMERA']['IMMEDIATE']               = bool(request.json['LIBCAMERA__IMMEDIATE'])
+        self.indi_allsky_config['LIBCAMERA']['IMMEDIATE_DAY']           = bool(request.json['LIBCAMERA__IMMEDIATE_DAY'])
         self.indi_allsky_config['LIBCAMERA']['AWB']                     = str(request.json['LIBCAMERA__AWB'])
         self.indi_allsky_config['LIBCAMERA']['AWB_DAY']                 = str(request.json['LIBCAMERA__AWB_DAY'])
         self.indi_allsky_config['LIBCAMERA']['AWB_ENABLE']              = bool(request.json['LIBCAMERA__AWB_ENABLE'])
