@@ -586,7 +586,7 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">
-            <div>Enable --immediate flag</div>
+            <div>Enable --immediate flag [Default: Enabled]</div>
             <div><span class="badge rounded-pill bg-info text-dark">Note</span> The --immediate flag may interfere with auto-focus functions</div>
         </div>
     </div>
@@ -657,7 +657,7 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">
-            <div>Enable --immediate flag</div>
+            <div>Enable --immediate flag [Default: Enabled]</div>
             <div><span class="badge rounded-pill bg-info text-dark">Note</span> The --immediate flag may interfere with auto-focus functions</div>
         </div>
     </div>
@@ -8421,8 +8421,12 @@ $('#CCD_COOLING_DAY').on('change', function() {
 $('#LIBCAMERA__AWB_ENABLE').on('change', function() {
     if ($('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
         $('#LIBCAMERA__AWB').removeAttr('disabled');
+        $('#LIBCAMERA__AWB').removeClass('bg-dark');
+        $('#LIBCAMERA__AWB').removeClass('text-secondary');
     } else {
         $('#LIBCAMERA__AWB').attr('disabled', true);
+        $('#LIBCAMERA__AWB').addClass('bg-dark');
+        $('#LIBCAMERA__AWB').addClass('text-secondary');
     }
 });
 
@@ -8430,8 +8434,12 @@ $('#LIBCAMERA__AWB_ENABLE').on('change', function() {
 $('#LIBCAMERA__AWB_ENABLE_DAY').on('change', function() {
     if ($('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
         $('#LIBCAMERA__AWB_DAY').removeAttr('disabled');
+        $('#LIBCAMERA__AWB_DAY').removeClass('bg-dark');
+        $('#LIBCAMERA__AWB_DAY').removeClass('text-secondary');
     } else {
         $('#LIBCAMERA__AWB_DAY').attr('disabled', true);
+        $('#LIBCAMERA__AWB_DAY').addClass('bg-dark');
+        $('#LIBCAMERA__AWB_DAY').addClass('text-secondary');
     }
 });
 
@@ -8789,11 +8797,15 @@ $( document ).ready(function() {
     // libcamera AWB
     if (!$('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
         $('#LIBCAMERA__AWB').attr('disabled', true);
+        $('#LIBCAMERA__AWB').addClass('bg-dark');
+        $('#LIBCAMERA__AWB').addClass('text-secondary');
     }
 
     // libcamera AWB DAY
     if (!$('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
         $('#LIBCAMERA__AWB_DAY').attr('disabled', true);
+        $('#LIBCAMERA__AWB_DAY').addClass('bg-dark');
+        $('#LIBCAMERA__AWB_DAY').addClass('text-secondary');
     }
 
     // startrails moonmode
