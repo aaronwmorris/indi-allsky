@@ -813,7 +813,7 @@ class IndiAllSkyDarks(object):
 
             # take day darks with cooling enabled
             if self.config.get('CCD_COOLING_DAY'):
-                ccd_temp = self.config.get('CCD_TEMP', 35.0)
+                ccd_temp = self.config.get('CCD_TEMP_DAY', 35.0)
                 self.indiclient.enableCcdCooler()
                 logger.warning('****** WAITING UP TO 20 MINUTES FOR TARGET TEMPERATURE ******')
                 self.indiclient.setCcdTemperature(ccd_temp, sync=True, timeout=1200.0)
