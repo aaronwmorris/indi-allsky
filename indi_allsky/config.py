@@ -96,7 +96,9 @@ class IndiAllSkyConfigBase(object):
         "GAMMA_CORRECTION"      : 1.0,
         "GAMMA_CORRECTION_DAY"  : 1.0,
         "CCD_COOLING"      : False,
+        "CCD_COOLING_DAY"  : False,
         "CCD_TEMP"         : 15.0,
+        "CCD_TEMP_DAY"     : 35.0,
         "TEMP_DISPLAY"     : "c",  # c = celsius, f = fahrenheit, k = kelvin",
         "PRESSURE_DISPLAY" : "hPa",  # hPa = hectoPascals/millibars, psi = psi, inHg = inches of mercury, mmHg = mm of mercury
         "WINDSPEED_DISPLAY": "ms",  # ms = meters/s, mph = miles/hour, knots = knots, kph = km/hour
