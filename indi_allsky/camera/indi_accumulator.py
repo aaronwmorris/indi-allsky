@@ -208,7 +208,6 @@ class IndiClientIndiAccumulator(IndiClient):
 
         try:
             hdulist.writeto(f_tmpfile)
-            f_tmpfile.flush()
             f_tmpfile.close()
         except OSError as e:
             logger.error('OSError: %s', str(e))
