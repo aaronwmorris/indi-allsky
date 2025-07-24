@@ -315,7 +315,7 @@ class IndiClientTestCameraBase(IndiClient):
 
 
         hdulist[0].header['IMAGETYP'] = 'Light Frame'
-        hdulist[0].header['INSTRUME'] = 'Bubbles'
+        hdulist[0].header['INSTRUME'] = 'Test Camera'
         hdulist[0].header['EXPTIME'] = float(self._exposure)
         hdulist[0].header['XBINNING'] = 1
         hdulist[0].header['YBINNING'] = 1
@@ -335,6 +335,7 @@ class IndiClientTestCameraBase(IndiClient):
 
 class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
+    bubble_count = 300
     bubble_speed = 100
     bubble_radius_min = 5
     bubble_radius_max = 100
@@ -371,7 +372,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
         if not self._bubbles_list:
             # create new set of random bubbles
-            for _ in range(300):
+            for _ in range(self.bubble_count):
                 r = random.randrange(255)
                 g = random.randrange(255)
                 b = random.randrange(255)
@@ -479,7 +480,7 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
             self.x_array = numpy.zeros([self.star_count], dtype=numpy.float32)
             self.y_array = numpy.zeros([self.star_count], dtype=numpy.float32)
 
-            # create new set of random bubbles
+            # create new set of random stars
             for i in range(self.star_count):
                 r = random.randrange(255)
                 g = random.randrange(255)
