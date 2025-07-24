@@ -43,6 +43,9 @@ services:
     privileged: true
     ports:
       - "17624:7624"
+  ### Uncomment to connect to gpsd running on the host (listening to all interfaces)
+  #  extra_hosts:
+  #    - "localhost:host-gateway"
 
 
   gunicorn.indi.allsky:

@@ -159,7 +159,7 @@ function closeFullscreen() {
             {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER(class='form-select bg-secondary') }}
+            {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
         </div>
 
         <div class="col-sm-1">
@@ -188,6 +188,7 @@ function closeFullscreen() {
         </div>
 
         <div class="col-sm-1">
+            <!-- This button does not do anything, it just gives the user something to click instead of the image (which will go fullscreen) -->
             <button class="btn btn-primary">Refresh</button>
         </div>
     </div>
