@@ -2996,6 +2996,9 @@ class IndiAllskyConfigForm(FlaskForm):
             ('indi_accumulator', 'INDI Accumulator'),
             ('indi_passive', 'INDI (Passive)'),
         ),
+        'Test Cameras' : (
+            ('test_camera_bubbles', 'Test Camera - Bubbles'),
+        ),
     }
 
     CCD_BIT_DEPTH_choices = (
