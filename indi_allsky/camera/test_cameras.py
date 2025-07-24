@@ -2,6 +2,7 @@ import io
 from datetime import datetime
 import time
 from pathlib import Path
+import math
 import random
 import tempfile
 import logging
@@ -426,8 +427,9 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
 class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
+    star_count = 1500
     rotation_degrees = 1
-    star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
+    star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
 
 
     def __init__(self, *args, **kwargs):
@@ -456,6 +458,9 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
         self.base_image_width = self.camera_info['width'] * 2
         self.base_image_height = self.camera_info['height'] * 2
 
+        self.x_array = None
+        self.y_array = None
+
 
         self._stars_list = []
 
@@ -463,11 +468,19 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
     def updateImage(self):
         import numpy
         import cv2
-        from scipy.ndimage import rotate
+        #from scipy.indimage import rotate
+
+
+        center_x = int(self.base_image_width / 2)
+        center_y = int(self.base_image_height / 2)
+
 
         if not self._stars_list:
+            self.x_array = numpy.zeros([self.star_count], dtype=numpy.float32)
+            self.y_array = numpy.zeros([self.star_count], dtype=numpy.float32)
+
             # create new set of random bubbles
-            for _ in range(1500):
+            for i in range(self.star_count):
                 r = random.randrange(255)
                 g = random.randrange(255)
                 b = random.randrange(255)
@@ -476,56 +489,64 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
                 x = random.randrange(self.base_image_width)
                 y = random.randrange(self.base_image_height)
+                self.x_array[i] = x
+                self.y_array[i] = y
+                #logger.info('XY: %d x %d', x, y)
 
 
                 self._stars_list.append({
-                    'x' : x,
-                    'y' : y,
                     'radius' : radius,
                     'color' : (r, g, b),
                 })
 
 
-            # create blank image
-            self._base_image = numpy.zeros(
-                [
-                    self.base_image_height,
-                    self.base_image_width,
-                    3
-                ],
-                dtype=numpy.uint8,
+        # create blank image
+        self._base_image = numpy.zeros(
+            [
+                self.base_image_height,
+                self.base_image_width,
+                3
+            ],
+            dtype=numpy.uint8,
+        )
+
+
+        # test circle
+        #cv2.circle(
+        #    self._base_image,
+        #    center=(int(self.base_image_width / 2), int(self.base_image_height / 2)),
+        #    radius=int(self.base_image_height / 4),
+        #    color=(64, 64, 64),
+        #    thickness=3,
+        #    lineType=cv2.LINE_AA,
+        #)
+
+
+        # calculate new coordinates based on rotation (vectorized)
+        Ax = self.x_array - center_x
+        Ay = self.y_array - center_y
+
+        rot_radians = math.radians(self.rotation_degrees)
+        self.x_array = (center_x + (math.cos(rot_radians) * Ax + math.sin(rot_radians) * Ay)).astype(numpy.float32)
+        self.y_array = (center_y + ((math.sin(rot_radians) * -1) * Ax + math.cos(rot_radians) * Ay)).astype(numpy.float32)
+
+
+        # redraw the stars
+        for i, star in enumerate(self._stars_list):
+            center = (int(self.x_array[i]), int(self.y_array[i]))
+            #logger.info('Center: %s', center)
+
+            cv2.circle(
+                self._base_image,
+                center=center,
+                radius=star['radius'],
+                color=star['color'],
+                thickness=cv2.FILLED,
+                lineType=cv2.LINE_AA,
             )
 
 
-            # test circle
-            #cv2.circle(
-            #    self._base_image,
-            #    center=(int(self.base_image_width / 2), int(self.base_image_height / 2)),
-            #    radius=int(self.base_image_height / 4),
-            #    color=(64, 64, 64),
-            #    thickness=3,
-            #    lineType=cv2.LINE_AA,
-            #)
-
-
-            for star in self._stars_list:
-                cv2.circle(
-                    self._base_image,
-                    center=(star['x'], star['y']),
-                    radius=star['radius'],
-                    color=star['color'],
-                    thickness=cv2.FILLED,
-                    lineType=cv2.LINE_AA,
-                )
-
-
-
-
-        center_x = int(self.base_image_width / 2)
-        center_y = int(self.base_image_height / 2)
-
-
-        self._base_image = rotate(self._base_image, angle=self.rotation_degrees, reshape=False)
+        #self._base_image = rotate(self._base_image, angle=self.rotation_degrees, reshape=False)
 
 
         # slice the image
