@@ -17,6 +17,11 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiClientBubblesCamera(IndiClient):
 
+    bubble_speed = 100
+    bubble_radius_min = 5
+    bubble_radius_max = 100
+
+
     def __init__(self, *args, **kwargs):
         super(IndiClientBubblesCamera, self).__init__(*args, **kwargs)
 
@@ -298,14 +303,13 @@ class IndiClientBubblesCamera(IndiClient):
 
         if not self._bubbles_list:
             # create new set of random bubbles
-            for _ in range(10):
+            for _ in range(300):
                 r = random.randrange(255)
                 g = random.randrange(255)
                 b = random.randrange(255)
-                radius = random.randrange(5, 100)
+                radius = random.randrange(self.bubble_radius_min, self.bubble_radius_max)
                 x = random.randrange(self.camera_info['width'])
-                #y = random.randrange(self.camera_info['height'] * 2)
-                y = random.randrange(self.camera_info['height'])
+                y = random.randrange(self.camera_info['height'] * 2)
 
 
                 self._bubbles_list.append({
@@ -316,7 +320,7 @@ class IndiClientBubblesCamera(IndiClient):
                 })
 
 
-        logger.info('Bubbles: %s', self._bubbles_list)
+        #logger.info('Bubbles: %s', self._bubbles_list)
 
 
         # create blank image
@@ -332,14 +336,13 @@ class IndiClientBubblesCamera(IndiClient):
 
         for bubble in self._bubbles_list:
             # move bubbles up
+            # indi-allsky normally flips the image by default, so the operations are backwards
 
-            #if bubble['y'] < self.camera_info['height'] - 100:
-            if bubble['y'] < -100:
-                # move to bottom
-                #bubble['y'] = (self.camera_info['height'] * 2) + (bubble['y'] % 101)
-                bubble['y'] = (self.camera_info['height']) + (bubble['y'] % 101)
+            bubble['y'] += self.bubble_speed
 
-            bubble['y'] += 101
+            if bubble['y'] > (self.camera_info['height'] * 2):
+                # move to top
+                bubble['y'] = (self.bubble_radius_max * -1) + ((self.camera_info['height'] * 2) % self.bubble_speed)
 
 
             cv2.circle(
