@@ -463,6 +463,7 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
     def updateImage(self):
         import numpy
         import cv2
+        from scipy.ndimage import rotate
 
         if not self._stars_list:
             # create new set of random bubbles
@@ -497,14 +498,14 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
 
             # test circle
-            cv2.circle(
-                self._base_image,
-                center=(int(self.base_image_width / 2), int(self.base_image_height / 2)),
-                radius=int(self.base_image_height / 4),
-                color=(64, 64, 64),
-                thickness=3,
-                lineType=cv2.LINE_AA,
-            )
+            #cv2.circle(
+            #    self._base_image,
+            #    center=(int(self.base_image_width / 2), int(self.base_image_height / 2)),
+            #    radius=int(self.base_image_height / 4),
+            #    color=(64, 64, 64),
+            #    thickness=3,
+            #    lineType=cv2.LINE_AA,
+            #)
 
 
             for star in self._stars_list:
@@ -524,27 +525,14 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
         center_y = int(self.base_image_height / 2)
 
 
-        # consider rotating at center offset
-        rot = cv2.getRotationMatrix2D((center_x, center_y), self.rotation_degrees, 1.0)
-
-
-        # maintain size
-        bound_w = self.base_image_width
-        bound_h = self.base_image_height
-
-
-        rot[0, 2] += (bound_w / 2) - center_x
-        rot[1, 2] += (bound_h / 2) - center_y
-
-
-        self._base_image = cv2.warpAffine(self._base_image, rot, (bound_w, bound_h))
+        self._base_image = rotate(self._base_image, angle=self.rotation_degrees, reshape=False)
 
 
         # slice the image
         start_width = int(center_x - (self.camera_info['width'] / 2))  # center width
         start_height = int(center_y - (self.camera_info['height'] / 3))  # offset height
 
-        logger.info('Center: %d x %d - Start: %d x %d', center_x, center_y, start_width, start_height)
+        #logger.info('Center: %d x %d - Start: %d x %d', center_x, center_y, start_width, start_height)
 
         self._image = self._base_image[
             start_height:start_height + self.camera_info['height'],
