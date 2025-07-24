@@ -2998,6 +2998,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ),
         'Test Cameras' : (
             ('test_camera_bubbles', 'Test Camera - Bubbles'),
+            ('test_camera_stars', 'Test Camera - Stars'),
         ),
     }
 

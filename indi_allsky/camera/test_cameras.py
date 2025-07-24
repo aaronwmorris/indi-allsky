@@ -348,17 +348,17 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
 
         # bogus info for now
-        self.camera_info = {
-            'width'         : 1920,
-            'height'        : 1080,
-            'pixel'         : 2.0,
-            'min_gain'      : 0,
-            'max_gain'      : 0,
-            'min_exposure'  : 0.000032,
-            'max_exposure'  : 60.0,
-            'cfa'           : None,
-            'bit_depth'     : 8,
-        }
+        #self.camera_info = {
+        #    'width'         : 1920,
+        #    'height'        : 1080,
+        #    'pixel'         : 2.0,
+        #    'min_gain'      : 0,
+        #    'max_gain'      : 0,
+        #    'min_exposure'  : 0.000032,
+        #    'max_exposure'  : 60.0,
+        #    'cfa'           : None,
+        #    'bit_depth'     : 8,
+        #}
 
 
         self._bubbles_list = []
@@ -374,7 +374,9 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
                 r = random.randrange(255)
                 g = random.randrange(255)
                 b = random.randrange(255)
+
                 radius = random.randrange(self.bubble_radius_min, self.bubble_radius_max)
+
                 x = random.randrange(self.camera_info['width'])
                 y = random.randrange(self.camera_info['height'] * 2)
 
@@ -422,4 +424,120 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
             )
 
 
+class IndiClientTestCameraStars(IndiClientTestCameraBase):
+
+    rotation_degrees = 1
+    star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientTestCameraStars, self).__init__(*args, **kwargs)
+
+        self.ccd_device = None
+        self.ccd_device_name = 'Stars Test Camera'
+        self.ccd_driver_exec = 'stars_test_camera'
+
+
+        # bogus info for now
+        #self.camera_info = {
+        #    'width'         : 1920,
+        #    'height'        : 1080,
+        #    'pixel'         : 2.0,
+        #    'min_gain'      : 0,
+        #    'max_gain'      : 0,
+        #    'min_exposure'  : 0.000032,
+        #    'max_exposure'  : 60.0,
+        #    'cfa'           : None,
+        #    'bit_depth'     : 8,
+        #}
+
+
+        self._base_image = None
+        self.base_image_width = self.camera_info['width'] * 2
+        self.base_image_height = self.camera_info['height'] * 2
+
+
+        self._stars_list = []
+
+
+    def updateImage(self):
+        import numpy
+        import cv2
+
+        if not self._stars_list:
+            # create new set of random bubbles
+            for _ in range(1500):
+                r = random.randrange(255)
+                g = random.randrange(255)
+                b = random.randrange(255)
+
+                radius = random.choice(self.star_sizes)
+
+                x = random.randrange(self.base_image_width)
+                y = random.randrange(self.base_image_height)
+
+
+                self._stars_list.append({
+                    'x' : x,
+                    'y' : y,
+                    'radius' : radius,
+                    'color' : (r, g, b),
+                })
+
+
+            # create blank image
+            self._base_image = numpy.zeros(
+                [
+                    self.base_image_height,
+                    self.base_image_width,
+                    3
+                ],
+                dtype=numpy.uint8,
+            )
+
+
+            for star in self._stars_list:
+                cv2.circle(
+                    self._base_image,
+                    center=(star['x'], star['y']),
+                    radius=star['radius'],
+                    color=star['color'],
+                    thickness=cv2.FILLED,
+                    lineType=cv2.LINE_AA,
+                )
+
+
+
+        center_x = int(self.base_image_width / 2)
+        center_y = int(self.base_image_height / 2)
+
+
+        # consider rotating at center offset
+        rot = cv2.getRotationMatrix2D((center_x, center_y), self.rotation_degrees, 1.0)
+
+
+        # rotating will change the size of the resulting image
+        abs_cos = abs(rot[0, 0])
+        abs_sin = abs(rot[0, 1])
+
+
+        bound_w = int(self.base_image_height * abs_sin + self.base_image_width * abs_cos)
+        bound_h = int(self.base_image_height * abs_cos + self.base_image_width * abs_sin)
+
+
+        rot[0, 2] += (bound_w / 2) - center_x
+        rot[1, 2] += (bound_h / 2) - center_y
+
+
+        self._base_image = cv2.warpAffine(self._base_image, rot, (bound_w, bound_h))
+
+
+        start_width = self.camera_info['width']
+        start_height = self.camera_info['height']
+
+        # slice the image
+        self._image = self._base_image[
+            start_height:start_height + self.camera_info['height'],
+            start_width:start_width + self.camera_info['width'],
+        ]
 
