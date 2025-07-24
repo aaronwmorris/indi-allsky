@@ -24,7 +24,10 @@ class IndiClientTestCameraBase(IndiClient):
 
         self._exposure = None
         self.exposureStartTime = None
+        self.current_exposure_file_p = None
 
+
+        self._image = None
 
         self.active_exposure = False
 
@@ -339,12 +342,6 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
     def __init__(self, *args, **kwargs):
         super(IndiClientTestCameraBubbles, self).__init__(*args, **kwargs)
 
-        self.current_exposure_file_p = None
-
-        self._bubbles_list = []
-        self._image = None
-
-
         self.ccd_device = None
         self.ccd_device_name = 'Bubbles Test Camera'
         self.ccd_driver_exec = 'bubbles_test_camera'
@@ -362,6 +359,9 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
             'cfa'           : None,
             'bit_depth'     : 8,
         }
+
+
+        self._bubbles_list = []
 
 
     def updateImage(self):
