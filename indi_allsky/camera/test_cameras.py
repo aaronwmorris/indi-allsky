@@ -15,33 +15,25 @@ from .fake_indi import FakeIndiCcd
 logger = logging.getLogger('indi_allsky')
 
 
-class IndiClientBubblesCamera(IndiClient):
-
-    bubble_speed = 100
-    bubble_radius_min = 5
-    bubble_radius_max = 100
-
-
+class IndiClientTestCameraBase(IndiClient):
     def __init__(self, *args, **kwargs):
-        super(IndiClientBubblesCamera, self).__init__(*args, **kwargs)
-
-        self._exposure = None
-
-        self.active_exposure = False
-        self.exposureStartTime = None
-        self.current_exposure_file_p = None
+        super(IndiClientTestCameraBase, self).__init__(*args, **kwargs)
 
         self._camera_id = None
 
+
+        self._exposure = None
+        self.exposureStartTime = None
+
+
+        self.active_exposure = False
+
+
         self._temp_val = -273.15  # absolute zero  :-)
 
-        self._bubbles_list = []
-        self._image = None
-
-
         self.ccd_device = None
-        self.ccd_device_name = 'Bubbles Test Camera'
-        self.ccd_driver_exec = 'bubbles_test_camera'
+        self.ccd_device_name = 'OVERRIDE'
+        self.ccd_driver_exec = 'OVERRIDE'
 
 
         # bogus info for now
@@ -80,84 +72,15 @@ class IndiClientBubblesCamera(IndiClient):
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
-        if self.active_exposure:
-            return
-
-
-        self._exposure = exposure
-
-        self.active_exposure = True
-
-        self.exposureStartTime = time.time()
-
-
-        try:
-            image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.fit', delete=False)
-            image_tmp_f.close()
-            image_tmp_p = Path(image_tmp_f.name)
-
-        except OSError as e:
-            logger.error('OSError: %s', str(e))
-            return
-
-        self.current_exposure_file_p = image_tmp_p
-
-
-        # update the synthetic image
-        self.updateBubbles()
-
-
-        if sync:
-            self.active_exposure = False
-
-            self._queueImage()
+        pass
 
 
     def getCcdExposureStatus(self):
-        if self.active_exposure:
-            if time.time() - self.exposureStartTime < self._exposure:
-                # wait until expected exposure finishes
-                return False, 'BUSY'
-
-            self.active_exposure = False
-
-            self._queueImage()
-
-            return True, 'READY'
-
-        return True, 'READY'
+        pass
 
 
     def abortCcdExposure(self):
-        logger.warning('Aborting exposure')
-
-        self.active_exposure = False
-
-
-        try:
-            self.current_exposure_file_p.unlink()
-        except FileNotFoundError:
-            pass
-
-
-    def _queueImage(self):
-        exposure_elapsed_s = time.time() - self.exposureStartTime
-
-        exp_date = datetime.now()
-
-        self.write_fit(exp_date)
-
-        ### process data in worker
-        jobdata = {
-            'filename'    : str(self.current_exposure_file_p),
-            'exposure'    : self._exposure,
-            'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
-            'exp_elapsed' : exposure_elapsed_s,
-            'camera_id'   : self.camera_id,
-            'filename_t'  : self._filename_t,
-        }
-
-        self.image_q.put(jobdata)
+        pass
 
 
     def findCcd(self, *args, **kwargs):
@@ -295,6 +218,122 @@ class IndiClientBubblesCamera(IndiClient):
     def setCcdScopeInfo(self, *args):
         # not supported
         pass
+
+
+class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
+
+    bubble_speed = 100
+    bubble_radius_min = 5
+    bubble_radius_max = 100
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientTestCameraBubbles, self).__init__(*args, **kwargs)
+
+        self.current_exposure_file_p = None
+
+        self._bubbles_list = []
+        self._image = None
+
+
+        self.ccd_device = None
+        self.ccd_device_name = 'Bubbles Test Camera'
+        self.ccd_driver_exec = 'bubbles_test_camera'
+
+
+        # bogus info for now
+        self.camera_info = {
+            'width'         : 1920,
+            'height'        : 1080,
+            'pixel'         : 2.0,
+            'min_gain'      : 0,
+            'max_gain'      : 0,
+            'min_exposure'  : 0.000032,
+            'max_exposure'  : 60.0,
+            'cfa'           : None,
+            'bit_depth'     : 8,
+        }
+
+
+    def setCcdExposure(self, exposure, sync=False, timeout=None):
+        if self.active_exposure:
+            return
+
+
+        self._exposure = exposure
+
+        self.active_exposure = True
+
+        self.exposureStartTime = time.time()
+
+
+        try:
+            image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.fit', delete=False)
+            image_tmp_f.close()
+            image_tmp_p = Path(image_tmp_f.name)
+
+        except OSError as e:
+            logger.error('OSError: %s', str(e))
+            return
+
+        self.current_exposure_file_p = image_tmp_p
+
+
+        # update the synthetic image
+        self.updateBubbles()
+
+
+        if sync:
+            self.active_exposure = False
+
+            self._queueImage()
+
+
+    def getCcdExposureStatus(self):
+        if self.active_exposure:
+            if time.time() - self.exposureStartTime < self._exposure:
+                # wait until expected exposure finishes
+                return False, 'BUSY'
+
+            self.active_exposure = False
+
+            self._queueImage()
+
+            return True, 'READY'
+
+        return True, 'READY'
+
+
+    def abortCcdExposure(self):
+        logger.warning('Aborting exposure')
+
+        self.active_exposure = False
+
+
+        try:
+            self.current_exposure_file_p.unlink()
+        except FileNotFoundError:
+            pass
+
+
+    def _queueImage(self):
+        exposure_elapsed_s = time.time() - self.exposureStartTime
+
+        exp_date = datetime.now()
+
+        self.write_fit(exp_date)
+
+        ### process data in worker
+        jobdata = {
+            'filename'    : str(self.current_exposure_file_p),
+            'exposure'    : self._exposure,
+            'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
+            'exp_elapsed' : exposure_elapsed_s,
+            'camera_id'   : self.camera_id,
+            'filename_t'  : self._filename_t,
+        }
+
+        self.image_q.put(jobdata)
 
 
     def updateBubbles(self):
