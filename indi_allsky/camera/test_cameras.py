@@ -496,6 +496,17 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
             )
 
 
+            # test circle
+            cv2.circle(
+                self._base_image,
+                center=(int(self.base_image_width / 2), int(self.base_image_height / 2)),
+                radius=int(self.base_image_height / 4),
+                color=(64, 64, 64),
+                thickness=3,
+                lineType=cv2.LINE_AA,
+            )
+
+
             for star in self._stars_list:
                 cv2.circle(
                     self._base_image,
@@ -508,6 +519,7 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
 
 
+
         center_x = int(self.base_image_width / 2)
         center_y = int(self.base_image_height / 2)
 
@@ -516,13 +528,9 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
         rot = cv2.getRotationMatrix2D((center_x, center_y), self.rotation_degrees, 1.0)
 
 
-        # rotating will change the size of the resulting image
-        abs_cos = abs(rot[0, 0])
-        abs_sin = abs(rot[0, 1])
-
-
-        bound_w = int(self.base_image_height * abs_sin + self.base_image_width * abs_cos)
-        bound_h = int(self.base_image_height * abs_cos + self.base_image_width * abs_sin)
+        # maintain size
+        bound_w = self.base_image_width
+        bound_h = self.base_image_height
 
 
         rot[0, 2] += (bound_w / 2) - center_x
@@ -532,10 +540,12 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
         self._base_image = cv2.warpAffine(self._base_image, rot, (bound_w, bound_h))
 
 
-        start_width = self.camera_info['width']
-        start_height = self.camera_info['height']
-
         # slice the image
+        start_width = int(center_x - (self.camera_info['width'] / 2))  # center width
+        start_height = int(center_y - (self.camera_info['height'] / 3))  # offset height
+
+        logger.info('Center: %d x %d - Start: %d x %d', center_x, center_y, start_width, start_height)
+
         self._image = self._base_image[
             start_height:start_height + self.camera_info['height'],
             start_width:start_width + self.camera_info['width'],
