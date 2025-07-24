@@ -72,15 +72,84 @@ class IndiClientTestCameraBase(IndiClient):
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
-        pass
+        if self.active_exposure:
+            return
+
+
+        self._exposure = exposure
+
+        self.active_exposure = True
+
+        self.exposureStartTime = time.time()
+
+
+        try:
+            image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.fit', delete=False)
+            image_tmp_f.close()
+            image_tmp_p = Path(image_tmp_f.name)
+
+        except OSError as e:
+            logger.error('OSError: %s', str(e))
+            return
+
+        self.current_exposure_file_p = image_tmp_p
+
+
+        # update the synthetic image
+        self.updateImage()
+
+
+        if sync:
+            self.active_exposure = False
+
+            self._queueImage()
 
 
     def getCcdExposureStatus(self):
-        pass
+        if self.active_exposure:
+            if time.time() - self.exposureStartTime < self._exposure:
+                # wait until expected exposure finishes
+                return False, 'BUSY'
+
+            self.active_exposure = False
+
+            self._queueImage()
+
+            return True, 'READY'
+
+        return True, 'READY'
 
 
     def abortCcdExposure(self):
-        pass
+        logger.warning('Aborting exposure')
+
+        self.active_exposure = False
+
+
+        try:
+            self.current_exposure_file_p.unlink()
+        except FileNotFoundError:
+            pass
+
+
+    def _queueImage(self):
+        exposure_elapsed_s = time.time() - self.exposureStartTime
+
+        exp_date = datetime.now()
+
+        self.write_fit(exp_date)
+
+        ### process data in worker
+        jobdata = {
+            'filename'    : str(self.current_exposure_file_p),
+            'exposure'    : self._exposure,
+            'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
+            'exp_elapsed' : exposure_elapsed_s,
+            'camera_id'   : self.camera_id,
+            'filename_t'  : self._filename_t,
+        }
+
+        self.image_q.put(jobdata)
 
 
     def findCcd(self, *args, **kwargs):
@@ -220,6 +289,46 @@ class IndiClientTestCameraBase(IndiClient):
         pass
 
 
+    def write_fit(self, exp_date):
+        import numpy
+        from astropy.io import fits
+
+
+        data = self._image
+
+
+        if len(data.shape) == 3:
+            # swap axes for FITS
+            data = numpy.swapaxes(data, 1, 0)
+            data = numpy.swapaxes(data, 2, 0)
+
+
+        # create a new fits container
+        hdu = fits.PrimaryHDU(data)
+        hdulist = fits.HDUList([hdu])
+
+        hdu.update_header()  # populates BITPIX, NAXIS, etc
+
+
+        hdulist[0].header['IMAGETYP'] = 'Light Frame'
+        hdulist[0].header['INSTRUME'] = 'Bubbles'
+        hdulist[0].header['EXPTIME'] = float(self._exposure)
+        hdulist[0].header['XBINNING'] = 1
+        hdulist[0].header['YBINNING'] = 1
+        hdulist[0].header['GAIN'] = float(self.gain_v.value)
+        hdulist[0].header['CCD-TEMP'] = self._temp_val
+        #hdulist[0].header['SITELAT'] =
+        #hdulist[0].header['SITELONG'] =
+        #hdulist[0].header['RA'] =
+        #hdulist[0].header['DEC'] =
+        hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
+        #hdulist[0].header['BITPIX'] = 8
+
+
+        with io.open(str(self.current_exposure_file_p), 'wb') as f_image:
+            hdulist.writeto(f_image)
+
+
 class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
     bubble_speed = 100
@@ -255,88 +364,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
         }
 
 
-    def setCcdExposure(self, exposure, sync=False, timeout=None):
-        if self.active_exposure:
-            return
-
-
-        self._exposure = exposure
-
-        self.active_exposure = True
-
-        self.exposureStartTime = time.time()
-
-
-        try:
-            image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.fit', delete=False)
-            image_tmp_f.close()
-            image_tmp_p = Path(image_tmp_f.name)
-
-        except OSError as e:
-            logger.error('OSError: %s', str(e))
-            return
-
-        self.current_exposure_file_p = image_tmp_p
-
-
-        # update the synthetic image
-        self.updateBubbles()
-
-
-        if sync:
-            self.active_exposure = False
-
-            self._queueImage()
-
-
-    def getCcdExposureStatus(self):
-        if self.active_exposure:
-            if time.time() - self.exposureStartTime < self._exposure:
-                # wait until expected exposure finishes
-                return False, 'BUSY'
-
-            self.active_exposure = False
-
-            self._queueImage()
-
-            return True, 'READY'
-
-        return True, 'READY'
-
-
-    def abortCcdExposure(self):
-        logger.warning('Aborting exposure')
-
-        self.active_exposure = False
-
-
-        try:
-            self.current_exposure_file_p.unlink()
-        except FileNotFoundError:
-            pass
-
-
-    def _queueImage(self):
-        exposure_elapsed_s = time.time() - self.exposureStartTime
-
-        exp_date = datetime.now()
-
-        self.write_fit(exp_date)
-
-        ### process data in worker
-        jobdata = {
-            'filename'    : str(self.current_exposure_file_p),
-            'exposure'    : self._exposure,
-            'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
-            'exp_elapsed' : exposure_elapsed_s,
-            'camera_id'   : self.camera_id,
-            'filename_t'  : self._filename_t,
-        }
-
-        self.image_q.put(jobdata)
-
-
-    def updateBubbles(self):
+    def updateImage(self):
         import numpy
         import cv2
 
@@ -394,45 +422,4 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
             )
 
 
-    def write_fit(self, exp_date):
-        import numpy
-        from astropy.io import fits
-
-
-        data = self._image[
-            0:self.camera_info['height'],
-            0:self.camera_info['width'],
-        ]
-
-
-        if len(data.shape) == 3:
-            # swap axes for FITS
-            data = numpy.swapaxes(data, 1, 0)
-            data = numpy.swapaxes(data, 2, 0)
-
-
-        # create a new fits container
-        hdu = fits.PrimaryHDU(data)
-        hdulist = fits.HDUList([hdu])
-
-        hdu.update_header()  # populates BITPIX, NAXIS, etc
-
-
-        hdulist[0].header['IMAGETYP'] = 'Light Frame'
-        hdulist[0].header['INSTRUME'] = 'Bubbles'
-        hdulist[0].header['EXPTIME'] = float(self._exposure)
-        hdulist[0].header['XBINNING'] = 1
-        hdulist[0].header['YBINNING'] = 1
-        hdulist[0].header['GAIN'] = float(self.gain_v.value)
-        hdulist[0].header['CCD-TEMP'] = self._temp_val
-        #hdulist[0].header['SITELAT'] =
-        #hdulist[0].header['SITELONG'] =
-        #hdulist[0].header['RA'] =
-        #hdulist[0].header['DEC'] =
-        hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
-        #hdulist[0].header['BITPIX'] = 8
-
-
-        with io.open(str(self.current_exposure_file_p), 'wb') as f_image:
-            hdulist.writeto(f_image)
 
