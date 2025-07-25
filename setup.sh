@@ -2224,7 +2224,7 @@ chmod 400 "${ALLSKY_ETC}/password_key_backup.json"
 
 
 echo "**** Setup DB ****"
-[[ ! -d "$DB_FOLDER" ]] && sudo mkdir "$DB_FOLDER"
+[[ ! -d "$DB_FOLDER" ]] && sudo mkdir -p "$DB_FOLDER"
 sudo chmod 775 "$DB_FOLDER"
 sudo chown -R "$USER":"$PGRP" "$DB_FOLDER"
 [[ ! -d "${DB_FOLDER}/backup" ]] && sudo mkdir "${DB_FOLDER}/backup"
@@ -2449,9 +2449,18 @@ fi
 IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "$TMP_CONFIG_DUMP")
 
 
+# Detect VARLIB_FOLDER
+# This will not change the location of the database
+VARLIB_FOLDER=$(jq -r '.VARLIB_FOLDER' "$TMP_CONFIG_DUMP")
+if [ "${VARLIB_FOLDER:-null}" == "null" ]; then
+    VARLIB_FOLDER="/var/lib/indi-allsky"
+fi
+
+
 echo
 echo
 echo "Detected IMAGE_FOLDER: $IMAGE_FOLDER"
+echo "Detected VARLIB_FOLDER: $VARLIB_FOLDER"
 sleep 3
 
 
@@ -2778,6 +2787,13 @@ if [ "$IMAGE_FOLDER" != "${ALLSKY_DIRECTORY}/html/images" ]; then
         chmod 664 "${IMAGE_FOLDER}/${F}"
     done
 fi
+
+
+echo "**** Setup varlib folder ****"
+# This is not the database folder (even though it may be the same)
+[[ ! -d "$VARLIB_FOLDER" ]] && sudo mkdir -p "$VARLIB_FOLDER"
+sudo chmod 775 "$VARLIB_FOLDER"
+sudo chown -R "$USER":"$PGRP" "$VARLIB_FOLDER"
 
 
 # Disable raw frames with libcamera when running less than 1GB of memory

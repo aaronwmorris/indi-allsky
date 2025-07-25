@@ -30,7 +30,9 @@ class IndiAllskyDatabaseBackup(object):
         varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
         self.varlib_folder_p = Path(varlib_folder)
 
-        self.backup_folder_p = self.varlib_folder.joinpath('backup')
+        # DB folder is managed separately from varlib
+        db_folder = '/var/lib/indi-allsky'
+        self.backup_folder_p = db_folder.joinpath('backup')
 
 
     def db_backup(self):
