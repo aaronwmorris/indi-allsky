@@ -104,9 +104,6 @@ class IndiAllSky(object):
         with app.app_context():
             self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
 
-        self._pid_file = self.varlib_folder_p.joinpath('indi-allsky.pid')
-
-
         now_time = time.time()
 
         self.periodic_tasks_time = now_time + self.periodic_tasks_offset
@@ -200,6 +197,9 @@ class IndiAllSky(object):
 
         varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
         self.varlib_folder_p = Path(varlib_folder)
+
+
+        self._pid_file = self.varlib_folder_p.joinpath('indi-allsky.pid')
 
 
         self.generate_timelapse_flag = False   # This is updated once images have been generated

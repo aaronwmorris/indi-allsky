@@ -205,7 +205,7 @@ class ImageProcessor(object):
 
         self._keogram_store_tmpl = 'realtime_keogram_store_ccd{0:d}.npy'
         self._keogram_store_p = None
-        self._keogram_store_metadata_tmpl = 'realtime_keogram_store_ccd{1:s}_metadata.npy'
+        self._keogram_store_metadata_tmpl = 'realtime_keogram_store_ccd{0:d}_metadata.npy'
         self._keogram_store_metadata_p = None
 
 
