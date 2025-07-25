@@ -42,8 +42,8 @@ class IndiClientTestCameraBase(IndiClient):
 
         # bogus info for now
         self.camera_info = {
-            'width'         : 1920,
-            'height'        : 1080,
+            'width'         : 4056,
+            'height'        : 3040,
             'pixel'         : 2.0,
             'min_gain'      : 0,
             'max_gain'      : 0,
@@ -335,7 +335,7 @@ class IndiClientTestCameraBase(IndiClient):
 
 class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
-    bubble_count = 300
+    bubble_count = 1000
     bubble_speed = 100
     bubble_radius_min = 5
     bubble_radius_max = 100
@@ -428,7 +428,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
 class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
-    star_count = 1500
+    star_count = 150000
     rotation_degrees = 1
     star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
 
@@ -456,8 +456,8 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
 
         self._base_image = None
-        self.base_image_width = self.camera_info['width'] * 2
-        self.base_image_height = self.camera_info['height'] * 2
+        self.base_image_width = self.camera_info['width'] * 3
+        self.base_image_height = self.camera_info['height'] * 3
 
         self.x_array = None
         self.y_array = None
@@ -523,6 +523,8 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
         #)
 
 
+        #rot_start = time.time()
+
         # calculate new coordinates based on rotation (vectorized)
         Ax = self.x_array - center_x
         Ay = self.y_array - center_y
@@ -530,6 +532,10 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
         rot_radians = math.radians(self.rotation_degrees)
         self.x_array = (center_x + (math.cos(rot_radians) * Ax + math.sin(rot_radians) * Ay)).astype(numpy.float32)
         self.y_array = (center_y + ((math.sin(rot_radians) * -1) * Ax + math.cos(rot_radians) * Ay)).astype(numpy.float32)
+
+
+        #rot_elapsed_s = time.time() - rot_start
+        #logger.info('Star rotation in %0.4f s', rot_elapsed_s)
 
 
         # redraw the stars
@@ -545,6 +551,7 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
                 thickness=cv2.FILLED,
                 lineType=cv2.LINE_AA,
             )
+
 
 
         #self._base_image = rotate(self._base_image, angle=self.rotation_degrees, reshape=False)
