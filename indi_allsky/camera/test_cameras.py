@@ -434,6 +434,7 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
     # This is basically a flat-earth sky simulator :-)
 
     star_count = 150000
+    star_color = (127, 127, 127)
     rotation_degrees = 1
     star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
 
@@ -464,8 +465,7 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
         self.base_image_width = self.camera_info['width'] * 3
         self.base_image_height = self.camera_info['height'] * 3
 
-        self.x_array = None
-        self.y_array = None
+        self.xy_array = None
 
 
         self._stars_list = []
@@ -482,27 +482,26 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
 
         if not self._stars_list:
-            self.x_array = numpy.zeros([self.star_count], dtype=numpy.float32)
-            self.y_array = numpy.zeros([self.star_count], dtype=numpy.float32)
+            self.xy_array = numpy.zeros([2, self.star_count], dtype=numpy.float32)
 
             # create new set of random stars
             for i in range(self.star_count):
-                r = random.randrange(255)
-                g = random.randrange(255)
-                b = random.randrange(255)
+                #r = random.randrange(255)
+                #g = random.randrange(255)
+                #b = random.randrange(255)
 
                 radius = random.choice(self.star_sizes)
 
                 x = random.randrange(self.base_image_width)
                 y = random.randrange(self.base_image_height)
-                self.x_array[i] = x
-                self.y_array[i] = y
+                self.xy_array[0][i] = x
+                self.xy_array[1][i] = y
                 #logger.info('XY: %d x %d', x, y)
 
 
                 self._stars_list.append({
                     'radius' : radius,
-                    'color' : (r, g, b),
+                    #'color' : (r, g, b),
                 })
 
 
@@ -531,12 +530,12 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
         #rot_start = time.time()
 
         # calculate new coordinates based on rotation (vectorized)
-        Ax = self.x_array - center_x
-        Ay = self.y_array - center_y
+        Ax = self.xy_array[0] - center_x
+        Ay = self.xy_array[1] - center_y
 
         rot_radians = math.radians(self.rotation_degrees)
-        self.x_array = (center_x + (math.cos(rot_radians) * Ax + math.sin(rot_radians) * Ay)).astype(numpy.float32)
-        self.y_array = (center_y + ((math.sin(rot_radians) * -1) * Ax + math.cos(rot_radians) * Ay)).astype(numpy.float32)
+        self.xy_array[0] = (center_x + (math.cos(rot_radians) * Ax + math.sin(rot_radians) * Ay)).astype(numpy.float32)
+        self.xy_array[1] = (center_y + ((math.sin(rot_radians) * -1) * Ax + math.cos(rot_radians) * Ay)).astype(numpy.float32)
 
 
         #rot_elapsed_s = time.time() - rot_start
@@ -545,14 +544,15 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
         # redraw the stars
         for i, star in enumerate(self._stars_list):
-            center = (int(self.x_array[i]), int(self.y_array[i]))
+            center = (int(self.xy_array[0][i]), int(self.xy_array[1][i]))
             #logger.info('Center: %s', center)
 
             cv2.circle(
                 self._base_image,
                 center=center,
                 radius=star['radius'],
-                color=star['color'],
+                color=self.star_color,
+                #color=star['color'],
                 thickness=cv2.FILLED,
                 lineType=cv2.LINE_AA,
             )
