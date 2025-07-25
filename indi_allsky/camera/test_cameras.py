@@ -367,16 +367,18 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
         #}
 
 
-        self._bubbles_list = []
+        self.bubbles_array = None
 
 
     def updateImage(self):
         import numpy
         import cv2
 
-        if not self._bubbles_list:
+        if isinstance(self.bubbles_array, type(None)):
+            self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
+
             # create new set of random bubbles
-            for _ in range(self.bubble_count):
+            for i in range(self.bubbles_array.shape[1]):
                 r = random.randrange(255)
                 g = random.randrange(255)
                 b = random.randrange(255)
@@ -387,15 +389,12 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
                 y = random.randrange(self.camera_info['height'] * 2)
 
 
-                self._bubbles_list.append({
-                    'x' : x,
-                    'y' : y,
-                    'radius' : radius,
-                    'color' : (r, g, b),
-                })
-
-
-        #logger.info('Bubbles: %s', self._bubbles_list)
+                self.bubbles_array[0][i] = x
+                self.bubbles_array[1][i] = y
+                self.bubbles_array[2][i] = radius
+                self.bubbles_array[3][i] = r
+                self.bubbles_array[4][i] = g
+                self.bubbles_array[5][i] = b
 
 
         # create blank image
@@ -409,22 +408,26 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
         )
 
 
-        for bubble in self._bubbles_list:
+        for i in range(self.bubbles_array.shape[1]):
             # move bubbles up
             # indi-allsky normally flips the image by default, so the operations are backwards
 
-            bubble['y'] += self.bubble_speed
+            self.bubbles_array[1][i] += self.bubble_speed
 
-            if bubble['y'] > (self.camera_info['height'] * 2):
+            if self.bubbles_array[1][i] > (self.camera_info['height'] * 2):
                 # move to top
-                bubble['y'] = (self.bubble_radius_max * -1) + ((self.camera_info['height'] * 2) % self.bubble_speed)
+                self.bubbles_array[1][i] = (self.bubble_radius_max * -1) + ((self.camera_info['height'] * 2) % self.bubble_speed)
 
+
+            center = (int(self.bubbles_array[0][i]), int(self.bubbles_array[1][i]))
+            radius = int(self.bubbles_array[2][i])
+            color = (int(self.bubbles_array[3][i]), int(self.bubbles_array[4][i]), int(self.bubbles_array[5][i]))
 
             cv2.circle(
                 self._image,
-                center=(bubble['x'], bubble['y']),
-                radius=bubble['radius'],
-                color=bubble['color'],
+                center=center,
+                radius=radius,
+                color=color,
                 thickness=cv2.FILLED,
                 lineType=cv2.LINE_AA,
             )
@@ -434,7 +437,6 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
     # This is basically a flat-earth sky simulator :-)
 
     star_count = 150000
-    star_color = (127, 127, 127)
     rotation_degrees = 1
     star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
 
@@ -491,6 +493,8 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
                 x = random.randrange(self.base_image_width)
                 y = random.randrange(self.base_image_height)
+
+
                 self.stars_array[0][i] = x
                 self.stars_array[1][i] = y
                 self.stars_array[2][i] = radius
@@ -541,13 +545,14 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
         # redraw the stars
         for i in range(self.stars_array.shape[1]):
             center = (int(self.stars_array[0][i]), int(self.stars_array[1][i]))
+            radius = int(self.stars_array[2][i])
             color = (int(self.stars_array[3][i]), int(self.stars_array[4][i]), int(self.stars_array[5][i]))
             #logger.info('Center: %s', center)
 
             cv2.circle(
                 self._base_image,
                 center=center,
-                radius=int(self.stars_array[2][i]),
+                radius=radius,
                 color=color,
                 thickness=cv2.FILLED,
                 lineType=cv2.LINE_AA,
