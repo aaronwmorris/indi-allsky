@@ -1187,12 +1187,11 @@ def VARLIB_FOLDER_validator(form, field):
 
     try:
         if not varlib_folder_p.is_dir():
+            if varlib_folder_p.exists():
+                # folder path exists, but is not a directory
+                raise ValidationError('Path is not a directory')
+
             raise ValidationError('Folder does not exist')
-
-
-        if varlib_folder_p.exists():
-            # folder exists, but is not a directory
-            raise ValidationError('Path is not a directory')
 
 
         if not os.access(str(varlib_folder_p), os.R_OK):
