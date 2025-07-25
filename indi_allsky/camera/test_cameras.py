@@ -54,6 +54,10 @@ class IndiClientTestCameraBase(IndiClient):
         }
 
 
+        self._indi_allsky_var_p = '/var/lib/indi-allsky'
+
+
+
     def getCcdGain(self):
         return self.gain_v.value
 

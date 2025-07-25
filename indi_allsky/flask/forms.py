@@ -1173,6 +1173,43 @@ def IMAGE_FILE_COMPRESSION__PNG_validator(form, field):
         raise ValidationError('PNG compression must be 9 or less')
 
 
+def VARLIB_FOLDER_validator(form, field):
+    folder_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
+
+    if not re.search(folder_regex, field.data):
+        raise ValidationError('Invalid folder name')
+
+    if re.search(r'\/$', field.data):
+        raise ValidationError('Directory cannot end with slash')
+
+
+    varlib_folder_p = Path(field.data)
+
+    try:
+        if not varlib_folder_p.is_dir():
+            raise ValidationError('Folder does not exist')
+
+
+        if varlib_folder_p.exists():
+            # folder exists, but is not a directory
+            raise ValidationError('Path is not a directory')
+
+
+        if not os.access(str(varlib_folder_p), os.R_OK):
+            raise ValidationError('Folder not readable')
+
+        if not os.access(str(varlib_folder_p), os.W_OK):
+            raise ValidationError('Folder not writable')
+
+        if not os.access(str(varlib_folder_p), os.X_OK):
+            raise ValidationError('Folder not accessible')
+
+    except PermissionError as e:
+        raise ValidationError(str(e))
+    except OSError as e:
+        raise ValidationError(str(e))
+
+
 def IMAGE_FOLDER_validator(form, field):
     folder_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
 
@@ -1192,6 +1229,8 @@ def IMAGE_FOLDER_validator(form, field):
         if not image_folder_p.is_dir():
             raise ValidationError('Path is not a directory')
     except PermissionError as e:
+        raise ValidationError(str(e))
+    except OSError as e:
         raise ValidationError(str(e))
 
 
@@ -1214,6 +1253,8 @@ def IMAGE_EXPORT_FOLDER_validator(form, field):
         if not image_folder_p.is_dir():
             raise ValidationError('Path is not a directory')
     except PermissionError as e:
+        raise ValidationError(str(e))
+    except OSError as e:
         raise ValidationError(str(e))
 
 
@@ -3767,6 +3808,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_COMPRESSION__JPG      = IntegerField('JPEG Quality', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__JPG_validator])
     IMAGE_FILE_COMPRESSION__PNG      = IntegerField('PNG Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__PNG_validator])
     IMAGE_FILE_COMPRESSION__TIF      = StringField('TIFF Compression', render_kw={'readonly' : True, 'disabled' : 'disabled'})
+    VARLIB_FOLDER                    = StringField('VARLIB folder', validators=[DataRequired(), VARLIB_FOLDER_validator])
     IMAGE_FOLDER                     = StringField('Image folder', validators=[DataRequired(), IMAGE_FOLDER_validator])
     IMAGE_LABEL_TEMPLATE             = TextAreaField('Label Template', validators=[DataRequired(), IMAGE_LABEL_TEMPLATE_validator])
     IMAGE_EXTRA_TEXT                 = StringField('Extra Image Text File', validators=[IMAGE_EXTRA_TEXT_validator])
