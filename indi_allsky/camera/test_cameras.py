@@ -351,8 +351,8 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
         # bogus info for now
         #self.camera_info = {
-        #    'width'         : 1920,
-        #    'height'        : 1080,
+        #    'width'         : 4056,
+        #    'height'        : 3040,
         #    'pixel'         : 2.0,
         #    'min_gain'      : 0,
         #    'max_gain'      : 0,
@@ -427,6 +427,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
 
 class IndiClientTestCameraStars(IndiClientTestCameraBase):
+    # This is basically a flat-earth sky simulator :-)
 
     star_count = 150000
     rotation_degrees = 1
@@ -443,8 +444,8 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
         # bogus info for now
         #self.camera_info = {
-        #    'width'         : 1920,
-        #    'height'        : 1080,
+        #    'width'         : 4056,
+        #    'height'        : 3040,
         #    'pixel'         : 2.0,
         #    'min_gain'      : 0,
         #    'max_gain'      : 0,
