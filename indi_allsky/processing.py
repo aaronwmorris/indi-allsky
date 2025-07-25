@@ -368,8 +368,8 @@ class ImageProcessor(object):
 
         # update keogram store path
         if isinstance(self._keogram_store_p, type(None)):
-            self._keogram_store_p = self.varlib_p.joinpath(self._keogram_store_tmpl.format(camera.id))
-            self._keogram_store_metadata_p = self.varlib_p.joinpath(self._keogram_store_metadata_tmpl.format(camera.id))
+            self._keogram_store_p = self.varlib_folder_p.joinpath(self._keogram_store_tmpl.format(camera.id))
+            self._keogram_store_metadata_p = self.varlib_folder_p.joinpath(self._keogram_store_metadata_tmpl.format(camera.id))
 
 
         if self.night_v.value and not self.moonmode_v.value:

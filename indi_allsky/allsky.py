@@ -104,7 +104,7 @@ class IndiAllSky(object):
         with app.app_context():
             self._miscDb.setState('CONFIG_ID', self._config_obj.config_id)
 
-        self._pid_file = self.varlib_p.joinpath('indi-allsky.pid')
+        self._pid_file = self.varlib_folder_p.joinpath('indi-allsky.pid')
 
 
         now_time = time.time()
