@@ -54,6 +54,9 @@ class IndiClientTestCameraBase(IndiClient):
         }
 
 
+        self._image_circle_alpha_mask = None
+
+
         varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
         self.varlib_folder_p = Path(varlib_folder)
 
@@ -337,12 +340,58 @@ class IndiClientTestCameraBase(IndiClient):
             hdulist.writeto(f_image)
 
 
+    def _generate_image_circle_mask(self, image):
+        import numpy
+        import cv2
+
+        image_height, image_width = image.shape[:2]
+
+
+        opacity = 100
+        background = int(255 * (100 - opacity) / 100)
+
+        channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint8)
+
+        center_x = int(image_width / 2)
+        center_y = int(image_height / 2)
+        radius = int(self.image_circle_diameter / 2)
+        blur = 75
+
+
+        # draw a white circle
+        cv2.circle(
+            img=channel_mask,
+            center=(center_x, center_y),
+            radius=radius,
+            color=(255),
+            thickness=cv2.FILLED,
+        )
+
+
+        if blur:
+            # blur circle
+            channel_mask = cv2.blur(
+                src=channel_mask,
+                ksize=(blur, blur),
+                borderType=cv2.BORDER_DEFAULT,
+            )
+
+
+        channel_alpha = (channel_mask / 255).astype(numpy.float32)
+
+        alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
+
+        return alpha_mask
+
+
 class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
     bubble_count = 1000
     bubble_speed = 100
     bubble_radius_min = 5
     bubble_radius_max = 100
+    background_color = (24, 24, 24)
+    image_circle_diameter = 3500
 
 
     def __init__(self, *args, **kwargs):
@@ -439,12 +488,13 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
 
         # create blank image
-        self._image = numpy.zeros(
+        self._image = numpy.full(
             [
                 self.camera_info['height'],
                 self.camera_info['width'],
                 3
             ],
+            self.background_color,
             dtype=numpy.uint8,
         )
 
@@ -472,6 +522,14 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
                 thickness=cv2.FILLED,
                 lineType=cv2.LINE_AA,
             )
+
+
+        if isinstance(self._image_circle_alpha_mask, type(None)):
+            self._image_circle_alpha_mask = self._generate_image_circle_mask(self._image)
+
+
+        # simulate an image circle
+        self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
 
 
 class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
@@ -514,8 +572,6 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
 
         self._stars_store_tmpl = 'test_rotating_stars_store_ccd{0:d}.npy'
         self._stars_store_p = None
-
-        self._image_circle_alpha_mask = None
 
 
     def disconnectServer(self, *args, **kwargs):
@@ -674,47 +730,4 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         # simulate an image circle
         self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
 
-
-    def _generate_image_circle_mask(self, image):
-        import numpy
-        import cv2
-
-        image_height, image_width = image.shape[:2]
-
-
-        opacity = 100
-        background = int(255 * (100 - opacity) / 100)
-
-        channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint8)
-
-        center_x = int(image_width / 2)
-        center_y = int(image_height / 2)
-        radius = int(self.image_circle_diameter / 2)
-        blur = 75
-
-
-        # draw a white circle
-        cv2.circle(
-            img=channel_mask,
-            center=(center_x, center_y),
-            radius=radius,
-            color=(255),
-            thickness=cv2.FILLED,
-        )
-
-
-        if blur:
-            # blur circle
-            channel_mask = cv2.blur(
-                src=channel_mask,
-                ksize=(blur, blur),
-                borderType=cv2.BORDER_DEFAULT,
-            )
-
-
-        channel_alpha = (channel_mask / 255).astype(numpy.float32)
-
-        alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
-
-        return alpha_mask
 
