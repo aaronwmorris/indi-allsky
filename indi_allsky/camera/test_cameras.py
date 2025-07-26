@@ -398,7 +398,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
                 with io.open(str(self._bubbles_store_p), 'r+b') as f_numpy:
                     self.bubbles_array = numpy.load(f_numpy)
 
-                if self.bubbles_array.shape[1] != self.bubbles_count:
+                if self.bubbles_array.shape[1] != self.bubble_count:
                     # if bubble count changes, create new array
                     self._bubbles_store_p.unlink()
                     self.bubbles_array = None
