@@ -349,7 +349,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
         super(IndiClientTestCameraBubbles, self).__init__(*args, **kwargs)
 
         self.ccd_device = None
-        self.ccd_device_name = 'Bubbles Test'
+        self.ccd_device_name = 'Bubbles Test Camera'
         self.ccd_driver_exec = 'test_bubbles'
 
 
@@ -488,7 +488,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         super(IndiClientTestCameraRotatingStars, self).__init__(*args, **kwargs)
 
         self.ccd_device = None
-        self.ccd_device_name = 'Rotating Stars Test'
+        self.ccd_device_name = 'Rotating Stars Test Camera'
         self.ccd_driver_exec = 'test_rotating_stars'
 
 

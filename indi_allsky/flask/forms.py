@@ -3037,8 +3037,8 @@ class IndiAllskyConfigForm(FlaskForm):
             ('indi_passive', 'INDI (Passive)'),
         ),
         'Test Cameras' : (
-            ('test_camera_bubbles', 'Test Camera - Bubbles'),
-            ('test_camera_rotating_stars', 'Test Camera - Rotating Stars'),
+            ('test_rotating_stars', 'Test Camera - Rotating Stars'),
+            ('test_bubbles', 'Test Camera - Bubbles'),
         ),
     }
 

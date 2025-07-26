@@ -395,6 +395,8 @@ if [ -n "${WHIPTAIL_BIN:-}" ]; then
                 "pycurl_camera" "Download images from a remote web camera" "OFF" \
                 "indi_accumulator" "Create synthetic exposures using multiple sub-exposures" "OFF" \
                 "indi_passive" "Connect a second instance of indi-allsky to an existing indi-allsky indiserver" "OFF" \
+                "test_rotating_stars" "Rotating Stars Test Camera" "OFF" \
+                "test_bubbles" "Bubbles Test Camera" "OFF" \
             3>&1 1>&2 2>&3)
 
 
@@ -445,15 +447,17 @@ else
         echo
         echo "Wiki:  https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces"
         echo
-        echo "             indi: For astro/planetary cameras normally connected via USB (ZWO, QHY, PlayerOne, SVBony, Altair, Touptek, etc)"
-        echo "        libcamera: Supports cameras connected via CSI interface on Raspberry Pi SBCs (Raspi HQ Camera, Camera Module 3, etc)"
-        echo "    pycurl_camera: Download images from a remote web camera"
-        echo " indi_accumulator: Create synthetic exposures using multiple sub-exposures"
-        echo "     indi_passive: Connect a second instance of indi-allsky to an existing indi-allsky indiserver"
+        echo "                indi: For astro/planetary cameras normally connected via USB (ZWO, QHY, PlayerOne, SVBony, Altair, Touptek, etc)"
+        echo "           libcamera: Supports cameras connected via CSI interface on Raspberry Pi SBCs (Raspi HQ Camera, Camera Module 3, etc)"
+        echo "       pycurl_camera: Download images from a remote web camera"
+        echo "    indi_accumulator: Create synthetic exposures using multiple sub-exposures"
+        echo "        indi_passive: Connect a second instance of indi-allsky to an existing indi-allsky indiserver"
+        echo " test_rotating_stars: Rotating Stars Test Camera"
+        echo "        test_bubbles: Bubbles Test Camera"
         echo
 
         PS3="Select a camera interface: "
-        select camera_interface in indi libcamera pycurl_camera indi_accumulator indi_passive ; do
+        select camera_interface in indi libcamera pycurl_camera indi_accumulator indi_passive test_rotating_stars test_bubbles; do
             if [ -n "$camera_interface" ]; then
                 CAMERA_INTERFACE="$camera_interface"
                 break
