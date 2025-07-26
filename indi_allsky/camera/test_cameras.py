@@ -598,7 +598,16 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         )
 
 
-        # test circle
+        ### test circles
+        #cv2.circle(
+        #    self._base_image,
+        #    center=(int(self.base_image_width / 2), int(self.base_image_height / 2)),
+        #    radius=15,
+        #    color=(128, 128, 128),
+        #    thickness=cv2.FILLED,
+        #    lineType=cv2.LINE_AA,
+        #)
+
         #cv2.circle(
         #    self._base_image,
         #    center=(int(self.base_image_width / 2), int(self.base_image_height / 2)),
@@ -607,6 +616,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         #    thickness=3,
         #    lineType=cv2.LINE_AA,
         #)
+
 
 
         center_x = int(self.base_image_width / 2)
@@ -647,7 +657,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
 
         # slice the image
         start_width = int(center_x - (self.camera_info['width'] / 2))  # center width
-        start_height = int(center_y - (self.camera_info['height'] / 3))  # offset height
+        start_height = int(self.camera_info['height'] * .7)  # offset height
 
         #logger.info('Center: %d x %d - Start: %d x %d', center_x, center_y, start_width, start_height)
 
