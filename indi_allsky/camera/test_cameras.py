@@ -54,8 +54,8 @@ class IndiClientTestCameraBase(IndiClient):
         }
 
 
-        self._indi_allsky_var_p = '/var/lib/indi-allsky'
-
+        varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
+        self.varlib_folder_p = Path(varlib_folder)
 
 
     def getCcdGain(self):
@@ -369,13 +369,43 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
         self.bubbles_array = None
 
+        self._bubbles_store_tmpl = 'test_bubbles_store_ccd{0:d}.npy'
+        self._bubbles_store_p = None
+
+
+    def disconnectServer(self, *args, **kwargs):
+        import numpy
+
+        if not isinstance(self._bubbles_store_p, type(None)):
+            logger.info('Storing bubbles data')
+            with io.open(str(self._bubbles_store_p), 'w+b') as f_numpy:
+                numpy.save(f_numpy, self.bubbles_array)
+
+        super(IndiClientTestCameraBubbles, self).disconnectServer(*args, **kwargs)
+
 
     def updateImage(self):
         import numpy
         import cv2
 
         if isinstance(self.bubbles_array, type(None)):
-            self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
+            self._bubbles_store_p = self.varlib_folder_p.joinpath(self._bubbles_store_tmpl.format(self.camera_id))
+
+            try:
+                logger.info('Loading stored bubbles data')
+                with io.open(str(self._bubbles_store_p), 'r+b') as f_numpy:
+                    self.bubbles_array = numpy.load(f_numpy)
+            except ValueError:
+                logger.error('Invalid numpy data for bubbles')
+                self._bubbles_store_p.unlink()
+                self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
+            except EOFError:
+                logger.error('Invalid numpy data for bubbles')
+                self._bubbles_store_p.unlink()
+                self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
+            except FileNotFoundError:
+                self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
+
 
             # create new set of random bubbles
             for i in range(self.bubbles_array.shape[1]):
@@ -469,11 +499,24 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
         self.stars_array = None
 
+        self._stars_store_tmpl = 'test_stars_store_ccd{0:d}.npy'
+        self._stars_store_p = None
+
+
+    def disconnectServer(self, *args, **kwargs):
+        import numpy
+
+        if not isinstance(self._stars_store_p, type(None)):
+            logger.info('Storing stars test data')
+            with io.open(str(self._stars_store_p), 'w+b') as f_numpy:
+                numpy.save(f_numpy, self.stars_array)
+
+        super(IndiClientTestCameraStars, self).disconnectServer(*args, **kwargs)
+
 
     def updateImage(self):
         import numpy
         import cv2
-        #from scipy.indimage import rotate
 
 
         center_x = int(self.base_image_width / 2)
@@ -481,7 +524,23 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
 
         if isinstance(self.stars_array, type(None)):
-            self.stars_array = numpy.zeros([6, self.star_count], dtype=numpy.float32)  # x, y, radius, r, g, b
+            self._stars_store_p = self.varlib_folder_p.joinpath(self._stars_store_tmpl.format(self.camera_id))
+
+            try:
+                logger.info('Loading stored stars data')
+                with io.open(str(self._bubbles_store_p), 'r+b') as f_numpy:
+                    self.stars_array = numpy.load(f_numpy)
+            except ValueError:
+                logger.error('Invalid numpy data for stars')
+                self._stars_store_p.unlink()
+                self.stars_array = numpy.zeros([6, self.star_count], dtype=numpy.float32)  # x, y, radius, r, g, b
+            except EOFError:
+                logger.error('Invalid numpy data for stars')
+                self._stars_store_p.unlink()
+                self.stars_array = numpy.zeros([6, self.star_count], dtype=numpy.float32)  # x, y, radius, r, g, b
+            except FileNotFoundError:
+                self.stars_array = numpy.zeros([6, self.star_count], dtype=numpy.float32)  # x, y, radius, r, g, b
+
 
             # create new set of random stars
             for i in range(self.stars_array.shape[1]):
@@ -557,10 +616,6 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
                 thickness=cv2.FILLED,
                 lineType=cv2.LINE_AA,
             )
-
-
-
-        #self._base_image = rotate(self._base_image, angle=self.rotation_degrees, reshape=False)
 
 
         # slice the image
