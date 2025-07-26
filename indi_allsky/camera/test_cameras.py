@@ -349,8 +349,8 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
         super(IndiClientTestCameraBubbles, self).__init__(*args, **kwargs)
 
         self.ccd_device = None
-        self.ccd_device_name = 'Bubbles Test Camera'
-        self.ccd_driver_exec = 'bubbles_test_camera'
+        self.ccd_device_name = 'Bubbles Test'
+        self.ccd_driver_exec = 'test_bubbles'
 
 
         # bogus info for now
@@ -474,7 +474,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
             )
 
 
-class IndiClientTestCameraStars(IndiClientTestCameraBase):
+class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
     # This is basically a flat-earth sky simulator :-)
 
     star_count = 150000
@@ -485,11 +485,11 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
 
     def __init__(self, *args, **kwargs):
-        super(IndiClientTestCameraStars, self).__init__(*args, **kwargs)
+        super(IndiClientTestCameraRotatingStars, self).__init__(*args, **kwargs)
 
         self.ccd_device = None
-        self.ccd_device_name = 'Stars Test Camera'
-        self.ccd_driver_exec = 'stars_test_camera'
+        self.ccd_device_name = 'Rotating Stars Test'
+        self.ccd_driver_exec = 'test_rotating_stars'
 
 
         # bogus info for now
@@ -512,7 +512,7 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
         self.stars_array = None
 
-        self._stars_store_tmpl = 'test_stars_store_ccd{0:d}.npy'
+        self._stars_store_tmpl = 'test_rotating_stars_store_ccd{0:d}.npy'
         self._stars_store_p = None
 
         self._image_circle_alpha_mask = None
@@ -526,7 +526,7 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
             with io.open(str(self._stars_store_p), 'w+b') as f_numpy:
                 numpy.save(f_numpy, self.stars_array)
 
-        super(IndiClientTestCameraStars, self).disconnectServer(*args, **kwargs)
+        super(IndiClientTestCameraRotatingStars, self).disconnectServer(*args, **kwargs)
 
 
     def updateImage(self):

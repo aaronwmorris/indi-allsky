@@ -20,7 +20,7 @@ from .libcamera import IndiClientLibCameraImx283 as libcamera_imx283
 from .libcamera import IndiClientLibCameraImx678 as libcamera_imx678
 from .pycurl_camera import IndiClientPycurl as pycurl_camera
 from .test_cameras import IndiClientTestCameraBubbles as test_camera_bubbles
-from .test_cameras import IndiClientTestCameraStars as test_camera_stars
+from .test_cameras import IndiClientTestCameraRotatingStars as test_camera_rotating_stars
 
 __all__ = (
     'indi',
@@ -45,6 +45,6 @@ __all__ = (
     'libcamera_imx678',
     'pycurl_camera',
     'test_camera_bubbles',
-    'test_camera_stars',
+    'test_camera_rotating_stars',
 )
 
