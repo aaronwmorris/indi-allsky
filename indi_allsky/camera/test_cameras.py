@@ -395,6 +395,11 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
                 logger.info('Loading stored bubbles data')
                 with io.open(str(self._bubbles_store_p), 'r+b') as f_numpy:
                     self.bubbles_array = numpy.load(f_numpy)
+
+                if self.bubbles_array.shape[1] != self.bubbles_count:
+                    # if bubble count changes, create new array
+                    self._bubbles_store_p.unlink()
+                    self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
             except ValueError:
                 logger.error('Invalid numpy data for bubbles')
                 self._bubbles_store_p.unlink()
@@ -528,8 +533,13 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
 
             try:
                 logger.info('Loading stored stars data')
-                with io.open(str(self._bubbles_store_p), 'r+b') as f_numpy:
+                with io.open(str(self._stars_store_p), 'r+b') as f_numpy:
                     self.stars_array = numpy.load(f_numpy)
+
+                if self.stars_array.shape[1] != self.star_count:
+                    # if star count changes, create new array
+                    self._stars_store_p.unlink()
+                    self.stars_array = numpy.zeros([6, self.star_count], dtype=numpy.float32)  # x, y, radius, r, g, b
             except ValueError:
                 logger.error('Invalid numpy data for stars')
                 self._stars_store_p.unlink()
