@@ -388,7 +388,9 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
         import numpy
         import cv2
 
+
         if isinstance(self.bubbles_array, type(None)):
+            # try to load data
             self._bubbles_store_p = self.varlib_folder_p.joinpath(self._bubbles_store_tmpl.format(self.camera_id))
 
             try:
@@ -399,20 +401,24 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
                 if self.bubbles_array.shape[1] != self.bubbles_count:
                     # if bubble count changes, create new array
                     self._bubbles_store_p.unlink()
-                    self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
+                    self.bubbles_array = None
             except ValueError:
                 logger.error('Invalid numpy data for bubbles')
                 self._bubbles_store_p.unlink()
-                self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
+                self.bubbles_array = None
             except EOFError:
                 logger.error('Invalid numpy data for bubbles')
                 self._bubbles_store_p.unlink()
-                self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
+                self.bubbles_array = None
             except FileNotFoundError:
-                self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
+                pass
 
 
+        if isinstance(self.bubbles_array, type(None)):
             # create new set of random bubbles
+            self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
+
+
             for i in range(self.bubbles_array.shape[1]):
                 r = random.randrange(255)
                 g = random.randrange(255)
@@ -524,12 +530,10 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
         import cv2
 
 
-        center_x = int(self.base_image_width / 2)
-        center_y = int(self.base_image_height / 2)
-
-
         if isinstance(self.stars_array, type(None)):
+            # try to load data
             self._stars_store_p = self.varlib_folder_p.joinpath(self._stars_store_tmpl.format(self.camera_id))
+
 
             try:
                 logger.info('Loading stored stars data')
@@ -539,20 +543,24 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
                 if self.stars_array.shape[1] != self.star_count:
                     # if star count changes, create new array
                     self._stars_store_p.unlink()
-                    self.stars_array = numpy.zeros([6, self.star_count], dtype=numpy.float32)  # x, y, radius, r, g, b
+                    self.stars_array = None
             except ValueError:
                 logger.error('Invalid numpy data for stars')
                 self._stars_store_p.unlink()
-                self.stars_array = numpy.zeros([6, self.star_count], dtype=numpy.float32)  # x, y, radius, r, g, b
+                self.stars_array = None
             except EOFError:
                 logger.error('Invalid numpy data for stars')
                 self._stars_store_p.unlink()
-                self.stars_array = numpy.zeros([6, self.star_count], dtype=numpy.float32)  # x, y, radius, r, g, b
+                self.stars_array = None
             except FileNotFoundError:
-                self.stars_array = numpy.zeros([6, self.star_count], dtype=numpy.float32)  # x, y, radius, r, g, b
+                pass
 
 
+        if isinstance(self.stars_array, type(None)):
             # create new set of random stars
+            self.stars_array = numpy.zeros([6, self.star_count], dtype=numpy.float32)  # x, y, radius, r, g, b
+
+
             for i in range(self.stars_array.shape[1]):
                 r = random.randrange(255)
                 g = random.randrange(255)
@@ -594,6 +602,10 @@ class IndiClientTestCameraStars(IndiClientTestCameraBase):
         #    thickness=3,
         #    lineType=cv2.LINE_AA,
         #)
+
+
+        center_x = int(self.base_image_width / 2)
+        center_y = int(self.base_image_height / 2)
 
 
         #rot_start = time.time()
