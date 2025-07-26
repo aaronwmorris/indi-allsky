@@ -6,6 +6,7 @@ import json
 import time
 from datetime import datetime
 import tempfile
+from urllib.parse import urlparse
 import psutil
 import subprocess
 import itertools
@@ -2571,6 +2572,14 @@ def LIBCAMERA__EXTRA_OPTIONS_validator(form, field):
 def PYCURL_CAMERA__URL_validator(form, field):
     if not field.data:
         return
+
+    try:
+        r = urlparse(field.data)
+    except AttributeError:
+        raise ValidationError('Invalid URL')
+
+    if not r.scheme:
+        raise ValidationError('Invalid URL')
 
 
 def PYCURL_CAMERA__IMAGE_FILE_TYPE_validator(form, field):
