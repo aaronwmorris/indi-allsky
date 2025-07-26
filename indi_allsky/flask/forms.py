@@ -2007,6 +2007,14 @@ def ADSB__DUMP1090_URL_validator(form, field):
     if not field.data:
         return
 
+    try:
+        r = urlparse(field.data)
+    except AttributeError:
+        raise ValidationError('Invalid URL')
+
+    if not r.scheme:
+        raise ValidationError('Invalid URL')
+
 
 def FILETRANSFER__PASSWORD_validator(form, field):
     pass
@@ -2430,24 +2438,21 @@ def MQTTPUBLISH__QOS_validator(form, field):
 
 
 def SYNCAPI__BASEURL_validator(form, field):
-    url_regex = r'^[a-zA-Z0-9\-\/\.\:\\\[\]]+$'
+    try:
+        r = urlparse(field.data)
+    except AttributeError:
+        raise ValidationError('Invalid URL')
 
-    if not re.search(url_regex, field.data):
-        raise ValidationError('Invalid characters in URL')
+    if not r.scheme:
+        raise ValidationError('Invalid URL')
 
-    if not re.search(r'^https?\:\/\/', field.data):
+    if r.scheme not in ('https',):
         raise ValidationError('URL should begin with https://')
 
     if re.search(r'\/$', field.data):
         raise ValidationError('URL cannot end with slash')
 
-    if re.search(r'localhost', field.data):
-        raise ValidationError('Do not sync to localhost, bad things happen')
-
-    if re.search(r'127\.0\.0\.1', field.data):
-        raise ValidationError('Do not sync to localhost, bad things happen')
-
-    if re.search(r'\:\:1', field.data):
+    if str(r.netloc) in ('localhost', '127.0.0.1', '[::1]', '::1'):
         raise ValidationError('Do not sync to localhost, bad things happen')
 
 
