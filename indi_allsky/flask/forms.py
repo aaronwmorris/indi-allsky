@@ -4391,6 +4391,12 @@ class IndiAllskyConfigForm(FlaskForm):
             result = False
 
 
+        if self.CAMERA_INTERFACE.data == 'pycurl_camera':
+            if not self.PYCURL_CAMERA__URL.data:
+                self.PYCURL_CAMERA__URL.errors.append('URL cannot blank')
+                result = False
+
+
         # require custom font to be defined
         if self.TEXT_PROPERTIES__PIL_FONT_FILE.data == 'custom':
             if not self.TEXT_PROPERTIES__PIL_FONT_CUSTOM.data:
