@@ -592,7 +592,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         if not isinstance(self._stars_store_p, type(None)):
             logger.info('Storing stars test data')
             with io.open(str(self._stars_store_p), 'w+b') as f_numpy:
-                numpy.save(f_numpy, self.stars_array)
+                numpy.save(f_numpy, self.stars_array.astype(numpy.float16))  # reduce precision to reduce space
 
         super(IndiClientTestCameraRotatingStars, self).disconnectServer(*args, **kwargs)
 
@@ -610,7 +610,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
             try:
                 logger.info('Loading stored stars data')
                 with io.open(str(self._stars_store_p), 'r+b') as f_numpy:
-                    self.stars_array = numpy.load(f_numpy)
+                    self.stars_array = numpy.load(f_numpy).astype(numpy.float32)
 
                 if self.stars_array.shape[1] != self.star_count:
                     # if star count changes, create new array
