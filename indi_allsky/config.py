@@ -533,6 +533,7 @@ class IndiAllSkyConfigBase(object):
         },
         "TEST_CAMERA" : {
             "ROTATING_STAR_COUNT"    : 30000,
+            "ROTATING_STAR_FACTOR"   : 1.0,
             "BUBBLE_COUNT"           : 1000,
         },
         "FOCUSER" : {

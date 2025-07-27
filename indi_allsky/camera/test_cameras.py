@@ -578,6 +578,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         self.base_image_height = self.camera_info['height'] * 3
 
         self.star_count = self.config.get('TEST_CAMERA', {}).get('ROTATING_STAR_COUNT', 30000)
+        self.rotation_factor = self.config.get('TEST_CAMERA', {}).get('ROTATING_STAR_FACTOR', 1.0)
 
         self.stars_array = None
 
@@ -698,7 +699,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         Ay = self.stars_array[1] - center_y
 
         rotation_degrees = (360.0 / 86400) * (time.time() - self._last_exposure_time)  # sidereal day
-        rot_radians = math.radians(rotation_degrees)
+        rot_radians = math.radians(rotation_degrees * self.rotation_factor)
 
         self.stars_array[0] = (center_x + (math.cos(rot_radians) * Ax + math.sin(rot_radians) * Ay)).astype(numpy.float32)
         self.stars_array[1] = (center_y + ((math.sin(rot_radians) * -1) * Ax + math.cos(rot_radians) * Ay)).astype(numpy.float32)
