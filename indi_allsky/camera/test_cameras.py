@@ -386,7 +386,6 @@ class IndiClientTestCameraBase(IndiClient):
 
 class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
-    bubble_count = 1000
     bubble_speed = 100
     bubble_radius_min = 5
     bubble_radius_max = 100
@@ -415,6 +414,8 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
         #    'bit_depth'     : 8,
         #}
 
+
+        self.bubble_count = self.config.get('TEST_CAMERA', {}).get('BUBBLE_COUNT', 1000)
 
         self.bubbles_array = None
 
@@ -535,7 +536,6 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
     # This is basically a flat-earth sky simulator :-)
 
-    star_count = 150000
     rotation_degrees = 1
     star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
     background_color = (24, 24, 24)
@@ -567,6 +567,8 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         self._base_image = None
         self.base_image_width = self.camera_info['width'] * 3
         self.base_image_height = self.camera_info['height'] * 3
+
+        self.star_count = self.config.get('TEST_CAMERA', {}).get('ROTATING_STAR_COUNT', 30000)
 
         self.stars_array = None
 

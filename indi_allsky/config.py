@@ -531,6 +531,10 @@ class IndiAllSkyConfigBase(object):
             "EVEN_EXPOSURES"         : True,
             "CLAMP_16BIT"            : False,
         },
+        "TEST_CAMERA" : {
+            "ROTATING_STAR_COUNT"    : 30000,
+            "BUBBLE_COUNT"           : 1000,
+        },
         "FOCUSER" : {
             "CLASSNAME"              : "",
             "GPIO_PIN_1"             : "D17",
