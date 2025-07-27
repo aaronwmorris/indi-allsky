@@ -153,6 +153,11 @@ class ImageWorker(Process):
         else:
             self.image_dir = Path(__file__).parent.parent.joinpath('html', 'images').absolute()
 
+
+        varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
+        self.varlib_folder_p = Path(varlib_folder)
+
+
         self._shutdown = False
 
 
@@ -1554,7 +1559,8 @@ class ImageWorker(Process):
             status[sensor_topic] = v
 
 
-        indi_allsky_status_p = Path('/var/lib/indi-allsky/indi_allsky_status.json')
+
+        indi_allsky_status_p = self.varlib_folder_p.joinpath('indi_allsky_status.json')
 
         with io.open(str(indi_allsky_status_p), 'w', encoding='utf-8') as f_indi_status:
             json.dump(

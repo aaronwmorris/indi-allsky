@@ -6,6 +6,7 @@ import json
 import time
 from datetime import datetime
 import tempfile
+from urllib.parse import urlparse
 import psutil
 import subprocess
 import itertools
@@ -1173,6 +1174,42 @@ def IMAGE_FILE_COMPRESSION__PNG_validator(form, field):
         raise ValidationError('PNG compression must be 9 or less')
 
 
+def VARLIB_FOLDER_validator(form, field):
+    folder_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
+
+    if not re.search(folder_regex, field.data):
+        raise ValidationError('Invalid folder name')
+
+    if re.search(r'\/$', field.data):
+        raise ValidationError('Directory cannot end with slash')
+
+
+    varlib_folder_p = Path(field.data)
+
+    try:
+        if not varlib_folder_p.is_dir():
+            if varlib_folder_p.exists():
+                # folder path exists, but is not a directory
+                raise ValidationError('Path is not a directory')
+
+            raise ValidationError('Folder does not exist')
+
+
+        if not os.access(str(varlib_folder_p), os.R_OK):
+            raise ValidationError('Folder not readable')
+
+        if not os.access(str(varlib_folder_p), os.W_OK):
+            raise ValidationError('Folder not writable')
+
+        if not os.access(str(varlib_folder_p), os.X_OK):
+            raise ValidationError('Folder not accessible')
+
+    except PermissionError as e:
+        raise ValidationError(str(e))
+    except OSError as e:
+        raise ValidationError(str(e))
+
+
 def IMAGE_FOLDER_validator(form, field):
     folder_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
 
@@ -1192,6 +1229,8 @@ def IMAGE_FOLDER_validator(form, field):
         if not image_folder_p.is_dir():
             raise ValidationError('Path is not a directory')
     except PermissionError as e:
+        raise ValidationError(str(e))
+    except OSError as e:
         raise ValidationError(str(e))
 
 
@@ -1214,6 +1253,8 @@ def IMAGE_EXPORT_FOLDER_validator(form, field):
         if not image_folder_p.is_dir():
             raise ValidationError('Path is not a directory')
     except PermissionError as e:
+        raise ValidationError(str(e))
+    except OSError as e:
         raise ValidationError(str(e))
 
 
@@ -1966,6 +2007,14 @@ def ADSB__DUMP1090_URL_validator(form, field):
     if not field.data:
         return
 
+    try:
+        r = urlparse(field.data)
+    except AttributeError:
+        raise ValidationError('Invalid URL')
+
+    if not r.scheme:
+        raise ValidationError('Invalid URL')
+
 
 def FILETRANSFER__PASSWORD_validator(form, field):
     pass
@@ -2389,24 +2438,21 @@ def MQTTPUBLISH__QOS_validator(form, field):
 
 
 def SYNCAPI__BASEURL_validator(form, field):
-    url_regex = r'^[a-zA-Z0-9\-\/\.\:\\\[\]]+$'
+    try:
+        r = urlparse(field.data)
+    except AttributeError:
+        raise ValidationError('Invalid URL')
 
-    if not re.search(url_regex, field.data):
-        raise ValidationError('Invalid characters in URL')
+    if not r.scheme:
+        raise ValidationError('Invalid URL')
 
-    if not re.search(r'^https?\:\/\/', field.data):
+    if r.scheme not in ('https',):
         raise ValidationError('URL should begin with https://')
 
     if re.search(r'\/$', field.data):
         raise ValidationError('URL cannot end with slash')
 
-    if re.search(r'localhost', field.data):
-        raise ValidationError('Do not sync to localhost, bad things happen')
-
-    if re.search(r'127\.0\.0\.1', field.data):
-        raise ValidationError('Do not sync to localhost, bad things happen')
-
-    if re.search(r'\:\:1', field.data):
+    if str(r.netloc) in ('localhost', '127.0.0.1', '[::1]', '::1'):
         raise ValidationError('Do not sync to localhost, bad things happen')
 
 
@@ -2531,6 +2577,14 @@ def LIBCAMERA__EXTRA_OPTIONS_validator(form, field):
 def PYCURL_CAMERA__URL_validator(form, field):
     if not field.data:
         return
+
+    try:
+        r = urlparse(field.data)
+    except AttributeError:
+        raise ValidationError('Invalid URL')
+
+    if not r.scheme:
+        raise ValidationError('Invalid URL')
 
 
 def PYCURL_CAMERA__IMAGE_FILE_TYPE_validator(form, field):
@@ -2995,6 +3049,10 @@ class IndiAllskyConfigForm(FlaskForm):
         'Special Function' : (
             ('indi_accumulator', 'INDI Accumulator'),
             ('indi_passive', 'INDI (Passive)'),
+        ),
+        'Test Cameras' : (
+            ('test_rotating_stars', 'Test Camera - Rotating Stars'),
+            ('test_bubbles', 'Test Camera - Bubbles'),
         ),
     }
 
@@ -3763,6 +3821,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_FILE_COMPRESSION__JPG      = IntegerField('JPEG Quality', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__JPG_validator])
     IMAGE_FILE_COMPRESSION__PNG      = IntegerField('PNG Compression', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__PNG_validator])
     IMAGE_FILE_COMPRESSION__TIF      = StringField('TIFF Compression', render_kw={'readonly' : True, 'disabled' : 'disabled'})
+    VARLIB_FOLDER                    = StringField('VARLIB folder', validators=[DataRequired(), VARLIB_FOLDER_validator])
     IMAGE_FOLDER                     = StringField('Image folder', validators=[DataRequired(), IMAGE_FOLDER_validator])
     IMAGE_LABEL_TEMPLATE             = TextAreaField('Label Template', validators=[DataRequired(), IMAGE_LABEL_TEMPLATE_validator])
     IMAGE_EXTRA_TEXT                 = StringField('Extra Image Text File', validators=[IMAGE_EXTRA_TEXT_validator])
@@ -4344,6 +4403,12 @@ class IndiAllskyConfigForm(FlaskForm):
             self.CCD_EXPOSURE_DEF.errors.append('Minimum exposure cannot be greater than max exposure')
             self.CCD_EXPOSURE_MAX.errors.append('Max exposure is less than minimum exposure')
             result = False
+
+
+        if self.CAMERA_INTERFACE.data == 'pycurl_camera':
+            if not self.PYCURL_CAMERA__URL.data:
+                self.PYCURL_CAMERA__URL.errors.append('URL cannot blank')
+                result = False
 
 
         # require custom font to be defined

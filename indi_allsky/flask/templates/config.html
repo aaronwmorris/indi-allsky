@@ -1417,21 +1417,6 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8"></div>
     </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_FOLDER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_config.IMAGE_FOLDER(class='form-control bg-secondary') }}
-            <div id="IMAGE_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <div>Directory to store timelapse images</div>
-            <div>Default: /var/www/html/allsky/images</div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> If you change this setting, please re-run setup.sh to update the web server config</div>
-        </div>
-    </div>
-
     <hr>
 
     <div class="form-group row">
@@ -4095,6 +4080,40 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>If a timelapse already exists for a given time, this setting will overwrite the existing entry instead of stopping</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.IMAGE_FOLDER(class='form-control bg-secondary') }}
+            <div id="IMAGE_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>Directory to store timelapse images</div>
+            <div>Default: /var/www/html/allsky/images</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> If you change this setting, please re-run setup.sh to update the web server config</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VARLIB_FOLDER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.VARLIB_FOLDER(class='form-control bg-secondary') }}
+            <div id="VARLIB_FOLDER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>Directory to store persistent data</div>
+            <div>Default: /var/lib/indi-allsky</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> If you change this setting, please re-run setup.sh to update permissions</div>
         </div>
     </div>
 
@@ -7770,6 +7789,7 @@ const field_names = [
     'IMAGE_FILE_COMPRESSION__PNG',
     'IMAGE_FILE_COMPRESSION__TIF',
     'IMAGE_FOLDER',
+    'VARLIB_FOLDER',
     'IMAGE_LABEL_TEMPLATE',
     'IMAGE_EXTRA_TEXT',
     'IMAGE_ROTATE',

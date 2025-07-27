@@ -46,7 +46,7 @@ class ImageBench(object):
 
         ### draw a bunch of random circles
         image_bgr = numpy.zeros([self.height, self.width, 3], dtype=numpy.uint8)
-        for x in range(500):
+        for _ in range(500):
             r = random.randrange(255)
             g = random.randrange(255)
             b = random.randrange(255)

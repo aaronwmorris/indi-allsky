@@ -395,6 +395,8 @@ if [ -n "${WHIPTAIL_BIN:-}" ]; then
                 "pycurl_camera" "Download images from a remote web camera" "OFF" \
                 "indi_accumulator" "Create synthetic exposures using multiple sub-exposures" "OFF" \
                 "indi_passive" "Connect a second instance of indi-allsky to an existing indi-allsky indiserver" "OFF" \
+                "test_rotating_stars" "Rotating Stars Test Camera" "OFF" \
+                "test_bubbles" "Bubbles Test Camera" "OFF" \
             3>&1 1>&2 2>&3)
 
 
@@ -445,15 +447,17 @@ else
         echo
         echo "Wiki:  https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces"
         echo
-        echo "             indi: For astro/planetary cameras normally connected via USB (ZWO, QHY, PlayerOne, SVBony, Altair, Touptek, etc)"
-        echo "        libcamera: Supports cameras connected via CSI interface on Raspberry Pi SBCs (Raspi HQ Camera, Camera Module 3, etc)"
-        echo "    pycurl_camera: Download images from a remote web camera"
-        echo " indi_accumulator: Create synthetic exposures using multiple sub-exposures"
-        echo "     indi_passive: Connect a second instance of indi-allsky to an existing indi-allsky indiserver"
+        echo "                indi: For astro/planetary cameras normally connected via USB (ZWO, QHY, PlayerOne, SVBony, Altair, Touptek, etc)"
+        echo "           libcamera: Supports cameras connected via CSI interface on Raspberry Pi SBCs (Raspi HQ Camera, Camera Module 3, etc)"
+        echo "       pycurl_camera: Download images from a remote web camera"
+        echo "    indi_accumulator: Create synthetic exposures using multiple sub-exposures"
+        echo "        indi_passive: Connect a second instance of indi-allsky to an existing indi-allsky indiserver"
+        echo " test_rotating_stars: Rotating Stars Test Camera"
+        echo "        test_bubbles: Bubbles Test Camera"
         echo
 
         PS3="Select a camera interface: "
-        select camera_interface in indi libcamera pycurl_camera indi_accumulator indi_passive ; do
+        select camera_interface in indi libcamera pycurl_camera indi_accumulator indi_passive test_rotating_stars test_bubbles; do
             if [ -n "$camera_interface" ]; then
                 CAMERA_INTERFACE="$camera_interface"
                 break
@@ -2224,7 +2228,7 @@ chmod 400 "${ALLSKY_ETC}/password_key_backup.json"
 
 
 echo "**** Setup DB ****"
-[[ ! -d "$DB_FOLDER" ]] && sudo mkdir "$DB_FOLDER"
+[[ ! -d "$DB_FOLDER" ]] && sudo mkdir -p "$DB_FOLDER"
 sudo chmod 775 "$DB_FOLDER"
 sudo chown -R "$USER":"$PGRP" "$DB_FOLDER"
 [[ ! -d "${DB_FOLDER}/backup" ]] && sudo mkdir "${DB_FOLDER}/backup"
@@ -2449,9 +2453,18 @@ fi
 IMAGE_FOLDER=$(jq -r '.IMAGE_FOLDER' "$TMP_CONFIG_DUMP")
 
 
+# Detect VARLIB_FOLDER
+# This will not change the location of the database
+VARLIB_FOLDER=$(jq -r '.VARLIB_FOLDER' "$TMP_CONFIG_DUMP")
+if [ "${VARLIB_FOLDER:-null}" == "null" ]; then
+    VARLIB_FOLDER="/var/lib/indi-allsky"
+fi
+
+
 echo
 echo
 echo "Detected IMAGE_FOLDER: $IMAGE_FOLDER"
+echo "Detected VARLIB_FOLDER: $VARLIB_FOLDER"
 sleep 3
 
 
@@ -2778,6 +2791,13 @@ if [ "$IMAGE_FOLDER" != "${ALLSKY_DIRECTORY}/html/images" ]; then
         chmod 664 "${IMAGE_FOLDER}/${F}"
     done
 fi
+
+
+echo "**** Setup varlib folder ****"
+# This is not the database folder (even though it may be the same)
+[[ ! -d "$VARLIB_FOLDER" ]] && sudo mkdir -p "$VARLIB_FOLDER"
+sudo chmod 775 "$VARLIB_FOLDER"
+sudo chown -R "$USER":"$PGRP" "$VARLIB_FOLDER"
 
 
 # Disable raw frames with libcamera when running less than 1GB of memory

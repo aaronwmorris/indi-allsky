@@ -145,7 +145,9 @@ class IndiClientPycurl(IndiClient):
         self._temp_val = -273.15  # absolute zero  :-)
 
 
+        self.ccd_device = None
         self.active_exposure = False
+        self.exposureStartTime = None
         self.current_exposure_file_p = None
         self.current_metadata_file_p = None
 

@@ -27,7 +27,12 @@ class IndiAllskyDatabaseBackup(object):
 
         self._miscDb = miscDb(self.config)
 
-        self.backup_folder = Path('/var/lib/indi-allsky/backup')
+        varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
+        self.varlib_folder_p = Path(varlib_folder)
+
+        # DB folder is managed separately from varlib
+        db_folder = '/var/lib/indi-allsky'
+        self.backup_folder_p = db_folder.joinpath('backup')
 
 
     def db_backup(self):
@@ -41,7 +46,7 @@ class IndiAllskyDatabaseBackup(object):
 
 
         now = datetime.now()
-        backup_file_p = self.backup_folder.joinpath('backup_indi-allsky_{0:%Y%m%d_%H%M%S}.sqlite'.format(now))
+        backup_file_p = self.backup_folder_p.joinpath('backup_indi-allsky_{0:%Y%m%d_%H%M%S}.sqlite'.format(now))
         logger.warning('Backing up database to %s.gz', backup_file_p)
 
 
@@ -77,7 +82,7 @@ class IndiAllskyDatabaseBackup(object):
     def expireBackups(self):
         backup_list = list()
 
-        self._getFolderFilesByExt(self.backup_folder, backup_list, extension_list=['gz', 'sqlite'])
+        self._getFolderFilesByExt(self.backup_folder_p, backup_list, extension_list=['gz', 'sqlite'])
 
         backup_list_ordered = sorted(backup_list, key=lambda p: p.stat().st_mtime, reverse=True)
 
