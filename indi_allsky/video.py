@@ -1427,7 +1427,7 @@ class VideoWorker(Process):
                 #data = cv2.imread(str(image_file_p), cv2.IMREAD_UNCHANGED)
 
                 #if isinstance(data, type(None)):
-                #    logger.error('Unable to read %s', image_file_p)
+                #    logger.error('Unable to read image: %s', image_file_p)
                 #    continue
 
 
@@ -1440,7 +1440,7 @@ class VideoWorker(Process):
                 #    with Image.open(str(image_file_p)) as img:
                 #        image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
                 #except PIL.UnidentifiedImageError:
-                #    logger.error('Unable to read %s', image_file_p)
+                #    logger.error('Unable to read image: %s', image_file_p)
                 #    continue
 
 
@@ -1451,7 +1451,7 @@ class VideoWorker(Process):
                     with io.open(str(image_file_p), 'rb') as img:
                         image_data = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
                 except ValueError:
-                    logger.error('Unable to read %s', image_file_p)
+                    logger.error('Unable to read image: %s', image_file_p)
                     continue
 
 

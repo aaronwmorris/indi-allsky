@@ -1181,7 +1181,7 @@ class miscDb(object):
             filename_p = Path(image_entry.getFilesystemPath())
 
             if not filename_p.exists():
-                logger.error('Cannot create thumbnail: File not found: %s', filename_p)
+                logger.error('Cannot create thumbnail - File not found: %s', filename_p)
                 return
 
 
@@ -1189,7 +1189,7 @@ class miscDb(object):
             #img = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
             #if isinstance(img, type(None)):
-            #    logger.error('Cannot create thumbnail:  Bad Image')
+            #    logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
             #    return
 
 
@@ -1199,9 +1199,10 @@ class miscDb(object):
             #from PIL import Image
 
             #try:
-            #    img = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            #    with Image.open(str(image_file_p)) as image:
+            #        img = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
             #except PIL.UnidentifiedImageError:
-            #    logger.error('Cannot create thumbnail:  Bad Image')
+            #    logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
             #    return
 
 
@@ -1212,7 +1213,7 @@ class miscDb(object):
                 with io.open(str(filename_p)) as f_img:
                     img = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
             except ValueError:
-                logger.error('Cannot create thumbnail:  Bad Image')
+                logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
                 return
 
         else:
@@ -1220,7 +1221,7 @@ class miscDb(object):
             filename_p = Path(entry.getFilesystemPath())
 
             if not filename_p.exists():
-                logger.error('Cannot create thumbnail: File not found: %s', filename_p)
+                logger.error('Cannot create thumbnail - File not found: %s', filename_p)
                 return
 
 
@@ -1228,7 +1229,7 @@ class miscDb(object):
             #img = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
             #if isinstance(img, type(None)):
-            #    logger.error('Cannot create thumbnail:  Bad Image')
+            #    logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
             #    return
 
 
@@ -1238,7 +1239,7 @@ class miscDb(object):
             #try:
             #    img = Image.open(str(filename_p))
             #except PIL.UnidentifiedImageError:
-            #    logger.error('Cannot create thumbnail:  Bad Image')
+            #    logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
             #    return
 
 
@@ -1249,7 +1250,7 @@ class miscDb(object):
                 with io.open(str(filename_p)) as f_img:
                     img = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
             except ValueError:
-                logger.error('Cannot create thumbnail:  Bad Image')
+                logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
                 return
 
 
