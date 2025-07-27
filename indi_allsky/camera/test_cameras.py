@@ -536,7 +536,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
     # This is basically a flat-earth sky simulator :-)
 
-    rotation_degrees = 1
+    rotation_degrees = 0.1
     star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
     background_color = (24, 24, 24)
     image_circle_diameter = 3500
