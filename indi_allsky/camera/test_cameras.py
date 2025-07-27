@@ -54,6 +54,8 @@ class IndiClientTestCameraBase(IndiClient):
         }
 
 
+        self._last_exposure_time = time.time()
+
         self._image_circle_alpha_mask = None
 
 
@@ -111,7 +113,12 @@ class IndiClientTestCameraBase(IndiClient):
 
 
         if sync:
+            time.sleep(self._exposure)
+
             self.active_exposure = False
+
+            # update reference
+            self._last_exposure_time = time.time()
 
             self._queueImage()
 
@@ -123,6 +130,9 @@ class IndiClientTestCameraBase(IndiClient):
                 return False, 'BUSY'
 
             self.active_exposure = False
+
+            # update reference
+            self._last_exposure_time = time.time()
 
             self._queueImage()
 
@@ -536,7 +546,6 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
     # This is basically a flat-earth sky simulator :-)
 
-    rotation_degrees = 0.1
     star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
     background_color = (24, 24, 24)
     image_circle_diameter = 3500
@@ -683,11 +692,14 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
 
         #rot_start = time.time()
 
+
         # calculate new coordinates based on rotation (vectorized)
         Ax = self.stars_array[0] - center_x
         Ay = self.stars_array[1] - center_y
 
-        rot_radians = math.radians(self.rotation_degrees)
+        rotation_degrees = (360.0 / 86400) * (time.time() - self._last_exposure_time)  # sidereal day
+        rot_radians = math.radians(rotation_degrees)
+
         self.stars_array[0] = (center_x + (math.cos(rot_radians) * Ax + math.sin(rot_radians) * Ay)).astype(numpy.float32)
         self.stars_array[1] = (center_y + ((math.sin(rot_radians) * -1) * Ax + math.cos(rot_radians) * Ay)).astype(numpy.float32)
 
