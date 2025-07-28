@@ -91,7 +91,7 @@ if [[ -n "${VIRTUAL_ENV:-}" ]]; then
 fi
 
 
-ROOT_FREE=$(df -Pk / | tail -n 1 | awk "{ print \$3 }")
+ROOT_FREE=$(df -Pk / | tail -n 1 | awk "{ print \$4 }")
 if [ "$ROOT_FREE" -lt 1000000 ]; then
     "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Not enough free space in / (root).' 1440 || true
 
@@ -102,7 +102,7 @@ if [ "$ROOT_FREE" -lt 1000000 ]; then
 fi
 
 
-VAR_FREE=$(df -Pk /var | tail -n 1 | awk "{ print \$3 }")
+VAR_FREE=$(df -Pk /var | tail -n 1 | awk "{ print \$4 }")
 if [ "$VAR_FREE" -lt 1000000 ]; then
     "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Not enough free space in /var.' 1440 || true
 

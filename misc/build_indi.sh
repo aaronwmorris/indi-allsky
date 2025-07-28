@@ -113,7 +113,7 @@ if [[ "$(id -u)" == "0" ]]; then
 fi
 
 
-USR_LOCAL_FREE=$(df -Pk /usr/local | tail -n 1 | awk "{ print \$3 }")
+USR_LOCAL_FREE=$(df -Pk /usr/local | tail -n 1 | awk "{ print \$4 }")
 if [ "$USR_LOCAL_FREE" -lt 5000000 ]; then
     echo
     echo "Not enough free space available in /usr/local filesystem"
@@ -122,7 +122,7 @@ if [ "$USR_LOCAL_FREE" -lt 5000000 ]; then
 fi
 
 
-HOME_FREE=$(df -Pk /home | tail -n 1 | awk "{ print \$3 }")
+HOME_FREE=$(df -Pk /home | tail -n 1 | awk "{ print \$4 }")
 if [ "$HOME_FREE" -lt 5000000 ]; then
     echo
     echo "Not enough free space available in /home filesystem"
