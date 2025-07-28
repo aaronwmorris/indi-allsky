@@ -201,7 +201,7 @@ class CaptureWorker(Process):
         self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
         #self.periodic_tasks_time = time.time()  # testing
 
-        self.exposure_timeout = self.config.get('CCD_EXPOSURE_TIMEOUT', 300)
+        self.exposure_timeout = self.config.get('CCD_EXPOSURE_TIMEOUT', 330)
 
 
         if self.config['IMAGE_FOLDER']:
