@@ -54,6 +54,8 @@ class IndiClientTestCameraBase(IndiClient):
         }
 
 
+        self._last_exposure_time = time.time()
+
         self._image_circle_alpha_mask = None
 
 
@@ -110,7 +112,13 @@ class IndiClientTestCameraBase(IndiClient):
         self.updateImage()
 
 
+        # update reference
+        self._last_exposure_time = time.time()
+
+
         if sync:
+            time.sleep(self._exposure)
+
             self.active_exposure = False
 
             self._queueImage()
@@ -386,7 +394,6 @@ class IndiClientTestCameraBase(IndiClient):
 
 class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
-    bubble_count = 1000
     bubble_speed = 100
     bubble_radius_min = 5
     bubble_radius_max = 100
@@ -415,6 +422,8 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
         #    'bit_depth'     : 8,
         #}
 
+
+        self.bubble_count = self.config.get('TEST_CAMERA', {}).get('BUBBLE_COUNT', 1000)
 
         self.bubbles_array = None
 
@@ -535,8 +544,6 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
     # This is basically a flat-earth sky simulator :-)
 
-    star_count = 150000
-    rotation_degrees = 1
     star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
     background_color = (24, 24, 24)
     image_circle_diameter = 3500
@@ -568,6 +575,9 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         self.base_image_width = self.camera_info['width'] * 3
         self.base_image_height = self.camera_info['height'] * 3
 
+        self.star_count = self.config.get('TEST_CAMERA', {}).get('ROTATING_STAR_COUNT', 30000)
+        self.rotation_factor = self.config.get('TEST_CAMERA', {}).get('ROTATING_STAR_FACTOR', 1.0)
+
         self.stars_array = None
 
         self._stars_store_tmpl = 'test_rotating_stars_store_ccd{0:d}.npy'
@@ -580,7 +590,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         if not isinstance(self._stars_store_p, type(None)):
             logger.info('Storing stars test data')
             with io.open(str(self._stars_store_p), 'w+b') as f_numpy:
-                numpy.save(f_numpy, self.stars_array)
+                numpy.save(f_numpy, self.stars_array.astype(numpy.float16))  # reduce precision to reduce space
 
         super(IndiClientTestCameraRotatingStars, self).disconnectServer(*args, **kwargs)
 
@@ -598,7 +608,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
             try:
                 logger.info('Loading stored stars data')
                 with io.open(str(self._stars_store_p), 'r+b') as f_numpy:
-                    self.stars_array = numpy.load(f_numpy)
+                    self.stars_array = numpy.load(f_numpy).astype(numpy.float32)
 
                 if self.stars_array.shape[1] != self.star_count:
                     # if star count changes, create new array
@@ -681,11 +691,17 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
 
         #rot_start = time.time()
 
+
         # calculate new coordinates based on rotation (vectorized)
         Ax = self.stars_array[0] - center_x
         Ay = self.stars_array[1] - center_y
 
-        rot_radians = math.radians(self.rotation_degrees)
+        rotation_degrees = (360.0 / 86400) * (time.time() - self._last_exposure_time)  # sidereal day
+        #logger.info('Rotation: %0.3f - Factor: %0.1f', rotation_degrees, self.rotation_factor)
+
+        rot_radians = math.radians(rotation_degrees * self.rotation_factor)
+
+
         self.stars_array[0] = (center_x + (math.cos(rot_radians) * Ax + math.sin(rot_radians) * Ay)).astype(numpy.float32)
         self.stars_array[1] = (center_y + ((math.sin(rot_radians) * -1) * Ax + math.cos(rot_radians) * Ay)).astype(numpy.float32)
 

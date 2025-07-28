@@ -729,6 +729,47 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEST_CAMERA__ROTATING_STAR_COUNT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEST_CAMERA__ROTATING_STAR_COUNT(class='form-control bg-secondary') }}
+            <div id="TEST_CAMERA__ROTATING_STAR_COUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            Rotating Star Test Camera
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEST_CAMERA__ROTATING_STAR_FACTOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEST_CAMERA__ROTATING_STAR_FACTOR(class='form-control bg-secondary') }}
+            <div id="TEST_CAMERA__ROTATING_STAR_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEST_CAMERA__BUBBLE_COUNT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEST_CAMERA__BUBBLE_COUNT(class='form-control bg-secondary') }}
+            <div id="TEST_CAMERA__BUBBLE_COUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            Bubble Test Camera
+        </div>
+    </div>
+
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.INDI_CONFIG_DEFAULTS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-6">
@@ -2408,7 +2449,9 @@ var camera_id = {{ camera_id }};
             {{ form_config.CARDINAL_DIRS__DIAMETER(class='form-control bg-secondary') }}
             <div id="CARDINAL_DIRS__DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8"></div>
+        <div class="col-sm-8">
+            <div><a href="{{ url_for('indi_allsky.image_circle_helper_view') }}" class="text-decoration-none link-info" target="_blank">Image Circle Helper</a></div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -3543,6 +3586,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>Diameter in pixels</div>
+            <div><a href="{{ url_for('indi_allsky.image_circle_helper_view') }}" class="text-decoration-none link-info" target="_blank">Image Circle Helper</a></div>
         </div>
     </div>
 
@@ -8005,6 +8049,9 @@ const field_names = [
     'PYCURL_CAMERA__USERNAME',
     'PYCURL_CAMERA__PASSWORD',
     'ACCUM_CAMERA__SUB_EXPOSURE_MAX',
+    'TEST_CAMERA__ROTATING_STAR_COUNT',
+    'TEST_CAMERA__ROTATING_STAR_FACTOR',
+    'TEST_CAMERA__BUBBLE_COUNT',
     'FOCUSER__CLASSNAME',
     'FOCUSER__GPIO_PIN_1',
     'FOCUSER__GPIO_PIN_2',
