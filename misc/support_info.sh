@@ -369,6 +369,16 @@ echo "\`\`\`"  # markdown
 grep -i "error" /var/log/indi-allsky/indi-allsky.log | tail -n 30 || true
 echo "\`\`\`"  # markdown
 
+echo "starTrail errors"
+echo "\`\`\`"  # markdown
+grep "starTrails" /var/log/indi-allsky/indi-allsky.log | tail -n 50 || true
+echo "\`\`\`"  # markdown
+
+echo "keogram errors"
+echo "\`\`\`"  # markdown
+grep "keogram" /var/log/indi-allsky/indi-allsky.log | grep -v longterm | tail -n 50 || true
+echo "\`\`\`"  # markdown
+
 
 echo
 echo "#################################"

@@ -400,7 +400,7 @@ class StarTrailGenerator(object):
 
         logger.info('Star trails images processed in %0.1f s', self.image_processing_elapsed_s)
         logger.info(
-            'Excluded %d images - adu: %d, sun alt: %d, moon mode: %d, moon alt: %d, stars: %d, pixels: %d',
+            'Excluded %d images - adu: %d, sun alt: %d, moon mode: %d, moon alt: %d, stars: %d, pixels: %d (final %d)',
             sum(self.excluded_images.values()),
             self.excluded_images['adu'],
             self.excluded_images['sun_alt'],
@@ -408,6 +408,7 @@ class StarTrailGenerator(object):
             self.excluded_images['moon_alt'],
             self.excluded_images['stars'],
             self.excluded_images['pixels'],
+            self.trail_count,
         )
 
 
