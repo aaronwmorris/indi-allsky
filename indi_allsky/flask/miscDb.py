@@ -1210,10 +1210,10 @@ class miscDb(object):
             import simplejpeg
 
             try:
-                with io.open(str(filename_p)) as f_img:
+                with io.open(str(filename_p), 'rb') as f_img:
                     img = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
-            except ValueError:
-                logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
+            except ValueError as e:
+                logger.error('Cannot create thumbnail - Bad Image - %s: %s', str(e), filename_p)
                 return
 
         else:
@@ -1247,10 +1247,10 @@ class miscDb(object):
             import simplejpeg
 
             try:
-                with io.open(str(filename_p)) as f_img:
+                with io.open(str(filename_p), 'rb') as f_img:
                     img = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
-            except ValueError:
-                logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
+            except ValueError as e:
+                logger.error('Cannot create thumbnail - Bad Image - %s: %s', str(e), filename_p)
                 return
 
 
