@@ -1988,7 +1988,7 @@ class ConfigView(FormView):
             'CCD_EXPOSURE_DEF'               : '{0:.6f}'.format(self.indi_allsky_config.get('CCD_EXPOSURE_DEF', 0.0)),  # force 6 digits of precision
             'CCD_EXPOSURE_MIN'               : '{0:.6f}'.format(self.indi_allsky_config.get('CCD_EXPOSURE_MIN', 0.0)),
             'CCD_EXPOSURE_MIN_DAY'           : '{0:.6f}'.format(self.indi_allsky_config.get('CCD_EXPOSURE_MIN_DAY', 0.0)),
-            'CCD_EXPOSURE_TIMEOUT'           : self.indi_allsky_config.get('CCD_EXPOSURE_TIMEOUT', 300),
+            'CCD_EXPOSURE_TIMEOUT'           : self.indi_allsky_config.get('CCD_EXPOSURE_TIMEOUT', 330),
             'CCD_BIT_DEPTH'                  : str(self.indi_allsky_config.get('CCD_BIT_DEPTH', 0)),  # string in form, int in config
             'EXPOSURE_PERIOD'                : self.indi_allsky_config.get('EXPOSURE_PERIOD', 15.0),
             'EXPOSURE_PERIOD_DAY'            : self.indi_allsky_config.get('EXPOSURE_PERIOD_DAY', 15.0),
