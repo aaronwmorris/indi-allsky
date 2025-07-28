@@ -171,7 +171,7 @@ if [[ -n "${VIRTUAL_ENV:-}" ]]; then
 fi
 
 
-ROOT_FREE=$(df -Pk / | tail -n 1 | awk "{ print \$3 }")
+ROOT_FREE=$(df -Pk / | tail -n 1 | awk "{ print \$4 }")
 if [ "$ROOT_FREE" -lt 1000000 ]; then
     echo
     echo "Not enough free space available in / (root) filesystem"
@@ -180,7 +180,7 @@ if [ "$ROOT_FREE" -lt 1000000 ]; then
 fi
 
 
-VAR_FREE=$(df -Pk /var | tail -n 1 | awk "{ print \$3 }")
+VAR_FREE=$(df -Pk /var | tail -n 1 | awk "{ print \$4 }")
 if [ "$VAR_FREE" -lt 1000000 ]; then
     echo
     echo "Not enough free space available in /var filesystem"
