@@ -6428,10 +6428,8 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
     def getVideos(self, year, month):
         videos_query = db.session.query(
             IndiAllSkyDbMiniVideoTable,
-            IndiAllSkyDbThumbnailTable,
         )\
             .join(IndiAllSkyDbMiniVideoTable.camera)\
-            .join(IndiAllSkyDbThumbnailTable, IndiAllSkyDbMiniVideoTable.thumbnail_uuid == IndiAllSkyDbThumbnailTable.uuid)\
             .filter(
                 and_(
                     IndiAllSkyDbCameraTable.id == self.camera_id,
@@ -6460,7 +6458,7 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
 
 
         videos_data = []
-        for v, t in videos_query:
+        for v in videos_query:
             try:
                 url = v.getUrl(s3_prefix=self.s3_prefix, local=self.local)
             except ValueError as e:
@@ -6468,11 +6466,21 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
                 continue
 
 
-            try:
-                thumbnail_url = t.getUrl(s3_prefix=self.s3_prefix, local=self.local)
-            except ValueError as e:
-                app.logger.error('Error determining relative file name: %s', str(e))
-                continue
+            thumbnail = db.session.query(
+                IndiAllSkyDbThumbnailTable,
+            )\
+                .filter(IndiAllSkyDbThumbnailTable.uuid == v.thumbnail_uuid)\
+                .first()
+
+
+            if thumbnail:
+                try:
+                    thumbnail_url = thumbnail.getUrl(s3_prefix=self.s3_prefix, local=self.local)
+                except ValueError as e:
+                    app.logger.error('Error determining relative file name: %s', str(e))
+                    continue
+            else:
+                thumbnail_url = ''
 
 
             if v.data:
