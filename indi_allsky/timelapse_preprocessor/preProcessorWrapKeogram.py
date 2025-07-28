@@ -57,6 +57,8 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         scaled_y_offset = int(self.y_offset * (self.pre_scale / 100))
 
 
+        ### if reading the image fails, just let the exception ride
+
         ### OpenCV
         #self._keogram_image = cv2.imread(str(self.keogram), cv2.IMREAD_UNCHANGED)
 
@@ -151,8 +153,8 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         try:
             with io.open(str(f), 'rb') as img:
                 image = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
-        except ValueError:
-            logger.error('Unable to read %s', f)
+        except ValueError as e:
+            logger.error('Unable to read - %s: %s', str(e), f)
             return
 
 

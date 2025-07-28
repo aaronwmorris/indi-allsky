@@ -437,8 +437,8 @@ class ImageProcessor(object):
             try:
                 with io.open(str(filename_p), 'rb') as img:
                     data = simplejpeg.decode_jpeg(img.read(), colorspace='RGB')
-            except ValueError:
-                raise BadImage('Bad jpeg image')
+            except ValueError as e:
+                raise BadImage('Bad jpeg image - {0:s}'.format(str(e)))
 
 
             if len(data.shape) == 3:
