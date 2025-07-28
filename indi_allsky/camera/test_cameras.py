@@ -112,13 +112,14 @@ class IndiClientTestCameraBase(IndiClient):
         self.updateImage()
 
 
+        # update reference
+        self._last_exposure_time = time.time()
+
+
         if sync:
             time.sleep(self._exposure)
 
             self.active_exposure = False
-
-            # update reference
-            self._last_exposure_time = time.time()
 
             self._queueImage()
 
@@ -130,9 +131,6 @@ class IndiClientTestCameraBase(IndiClient):
                 return False, 'BUSY'
 
             self.active_exposure = False
-
-            # update reference
-            self._last_exposure_time = time.time()
 
             self._queueImage()
 
