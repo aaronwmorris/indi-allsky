@@ -15,6 +15,7 @@ RUN apt-get -y install \
     build-essential \
     apt-utils \
     iproute2 \
+    i2c-tools \
     locales \
     tzdata \
     procps \
