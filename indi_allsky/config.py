@@ -532,6 +532,8 @@ class IndiAllSkyConfigBase(object):
             "CLAMP_16BIT"            : False,
         },
         "TEST_CAMERA" : {
+            "WIDTH"                  : 4056,
+            "HEIGHT"                 : 3040,
             "ROTATING_STAR_COUNT"    : 30000,
             "ROTATING_STAR_FACTOR"   : 1.0,
             "BUBBLE_COUNT"           : 1000,

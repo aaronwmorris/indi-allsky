@@ -42,8 +42,8 @@ class IndiClientTestCameraBase(IndiClient):
 
         # bogus info for now
         self.camera_info = {
-            'width'         : 4056,
-            'height'        : 3040,
+            'width'         : self.config.get('TEST_CAMERA', {}).get('WIDTH', 4056),
+            'height'        : self.config.get('TEST_CAMERA', {}).get('HEIGHT', 3040),
             'pixel'         : 2.0,
             'min_gain'      : 0,
             'max_gain'      : 0,

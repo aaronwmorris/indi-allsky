@@ -2592,6 +2592,22 @@ def PYCURL_CAMERA__IMAGE_FILE_TYPE_validator(form, field):
         raise ValidationError('Please select a valid file type')
 
 
+def TEST_CAMERA__WIDTH_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data < 100:
+        raise ValidationError('Width must be 100 or greater')
+
+
+def TEST_CAMERA__HEIGHT_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data < 100:
+        raise ValidationError('Height must be 100 or greater')
+
+
 def TEST_CAMERA__ROTATING_STAR_COUNT_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter a valid number')
@@ -4130,6 +4146,8 @@ class IndiAllskyConfigForm(FlaskForm):
     ACCUM_CAMERA__SUB_EXPOSURE_MAX   = FloatField('Accumulator Max Sub-exposure', validators=[DataRequired(), ACCUM_CAMERA__SUB_EXPOSURE_MAX_validator])
     ACCUM_CAMERA__EVEN_EXPOSURES     = BooleanField('Accumulator Even Exposures')
     ACCUM_CAMERA__CLAMP_16BIT        = BooleanField('Accumulator Clamp 16-bit')
+    TEST_CAMERA__WIDTH               = IntegerField('Test Camera - Width', validators=[DataRequired(), TEST_CAMERA__WIDTH_validator])
+    TEST_CAMERA__HEIGHT              = IntegerField('Test Camera - Height', validators=[DataRequired(), TEST_CAMERA__HEIGHT_validator])
     TEST_CAMERA__ROTATING_STAR_COUNT = IntegerField('Test Camera - Rotating Star Count', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_COUNT_validator])
     TEST_CAMERA__ROTATING_STAR_FACTOR = FloatField('Test Camera - Rotating Star Rotation Factor', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_FACTOR_validator])
     TEST_CAMERA__BUBBLE_COUNT        = IntegerField('Test Camera - Bubble Count', validators=[DataRequired(), TEST_CAMERA__BUBBLE_COUNT_validator])
