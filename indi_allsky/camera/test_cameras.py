@@ -40,9 +40,9 @@ class IndiClientTestCameraBase(IndiClient):
         self.ccd_driver_exec = 'OVERRIDE'
 
 
-        self._width = self.config.get('TEST_CAMERA', {}).get('WIDTH', 4056),
-        self._height = self.config.get('TEST_CAMERA', {}).get('HEIGHT', 3040),
-        self._image_circle_diameter = self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_DIAMETER', 3500),
+        self._width = self.config.get('TEST_CAMERA', {}).get('WIDTH', 4056)
+        self._height = self.config.get('TEST_CAMERA', {}).get('HEIGHT', 3040)
+        self._image_circle_diameter = self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_DIAMETER', 3500)
 
 
         # bogus info for now
