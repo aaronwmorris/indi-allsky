@@ -534,6 +534,7 @@ class IndiAllSkyConfigBase(object):
         "TEST_CAMERA" : {
             "WIDTH"                  : 4056,
             "HEIGHT"                 : 3040,
+            "IMAGE_CIRCLE_DIAMETER"  : 3500,
             "ROTATING_STAR_COUNT"    : 30000,
             "ROTATING_STAR_FACTOR"   : 1.0,
             "BUBBLE_COUNT"           : 1000,

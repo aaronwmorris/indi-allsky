@@ -2608,6 +2608,14 @@ def TEST_CAMERA__HEIGHT_validator(form, field):
         raise ValidationError('Height must be 100 or greater')
 
 
+def TEST_CAMERA__IMAGE_CIRCLE_DIAMETER_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data < 0:
+        raise ValidationError('Image Circle must be 0 or greater')
+
+
 def TEST_CAMERA__ROTATING_STAR_COUNT_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter a valid number')
@@ -4146,11 +4154,12 @@ class IndiAllskyConfigForm(FlaskForm):
     ACCUM_CAMERA__SUB_EXPOSURE_MAX   = FloatField('Accumulator Max Sub-exposure', validators=[DataRequired(), ACCUM_CAMERA__SUB_EXPOSURE_MAX_validator])
     ACCUM_CAMERA__EVEN_EXPOSURES     = BooleanField('Accumulator Even Exposures')
     ACCUM_CAMERA__CLAMP_16BIT        = BooleanField('Accumulator Clamp 16-bit')
-    TEST_CAMERA__WIDTH               = IntegerField('Test Camera - Width', validators=[DataRequired(), TEST_CAMERA__WIDTH_validator])
-    TEST_CAMERA__HEIGHT              = IntegerField('Test Camera - Height', validators=[DataRequired(), TEST_CAMERA__HEIGHT_validator])
-    TEST_CAMERA__ROTATING_STAR_COUNT = IntegerField('Test Camera - Rotating Star Count', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_COUNT_validator])
-    TEST_CAMERA__ROTATING_STAR_FACTOR = FloatField('Test Camera - Rotating Star Rotation Factor', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_FACTOR_validator])
-    TEST_CAMERA__BUBBLE_COUNT        = IntegerField('Test Camera - Bubble Count', validators=[DataRequired(), TEST_CAMERA__BUBBLE_COUNT_validator])
+    TEST_CAMERA__WIDTH                  = IntegerField('Test Camera - Width', validators=[DataRequired(), TEST_CAMERA__WIDTH_validator])
+    TEST_CAMERA__HEIGHT                 = IntegerField('Test Camera - Height', validators=[DataRequired(), TEST_CAMERA__HEIGHT_validator])
+    TEST_CAMERA__IMAGE_CIRCLE_DIAMETER  = IntegerField('Test Camera - Image Circle', validators=[TEST_CAMERA__IMAGE_CIRCLE_DIAMETER_validator])
+    TEST_CAMERA__ROTATING_STAR_COUNT    = IntegerField('Test Camera - Rotating Star Count', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_COUNT_validator])
+    TEST_CAMERA__ROTATING_STAR_FACTOR   = FloatField('Test Camera - Rotating Star Rotation Factor', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_FACTOR_validator])
+    TEST_CAMERA__BUBBLE_COUNT           = IntegerField('Test Camera - Bubble Count', validators=[DataRequired(), TEST_CAMERA__BUBBLE_COUNT_validator])
     FOCUSER__CLASSNAME               = SelectField('Focuser', choices=FOCUSER__CLASSNAME_choices, validators=[FOCUSER__CLASSNAME_validator])
     FOCUSER__GPIO_PIN_1              = StringField('GPIO Pin 1', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_2              = StringField('GPIO Pin 2', validators=[DEVICE_PIN_NAME_validator])
