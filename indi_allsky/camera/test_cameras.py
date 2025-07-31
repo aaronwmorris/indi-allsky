@@ -74,7 +74,7 @@ class IndiClientTestCameraBase(IndiClient):
 
     @property
     def width(self):
-        return self._height
+        return self._width
 
     @property
     def image_circle_diameter(self):
