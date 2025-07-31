@@ -550,12 +550,13 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
             )
 
 
-        if isinstance(self._image_circle_alpha_mask, type(None)):
-            self._image_circle_alpha_mask = self._generate_image_circle_mask(self._image)
+        if self.image_circle_diameter:
+            if isinstance(self._image_circle_alpha_mask, type(None)):
+                self._image_circle_alpha_mask = self._generate_image_circle_mask(self._image)
 
 
-        # simulate an image circle
-        self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
+            # simulate an image circle
+            self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
 
 
 class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
@@ -755,11 +756,12 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         ]
 
 
-        if isinstance(self._image_circle_alpha_mask, type(None)):
-            self._image_circle_alpha_mask = self._generate_image_circle_mask(self._image)
+        if self.image_circle_diameter:
+            if isinstance(self._image_circle_alpha_mask, type(None)):
+                self._image_circle_alpha_mask = self._generate_image_circle_mask(self._image)
 
 
-        # simulate an image circle
-        self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
+            # simulate an image circle
+            self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
 
 
