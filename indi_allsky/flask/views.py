@@ -2362,6 +2362,9 @@ class ConfigView(FormView):
             'ACCUM_CAMERA__SUB_EXPOSURE_MAX' : self.indi_allsky_config.get('ACCUM_CAMERA', {}).get('SUB_EXPOSURE_MAX', 1.0),
             'ACCUM_CAMERA__EVEN_EXPOSURES'   : self.indi_allsky_config.get('ACCUM_CAMERA', {}).get('EVEN_EXPOSURES', True),
             'ACCUM_CAMERA__CLAMP_16BIT'      : self.indi_allsky_config.get('ACCUM_CAMERA', {}).get('CLAMP_16BIT', False),
+            'TEST_CAMERA__WIDTH'             : self.indi_allsky_config.get('TEST_CAMERA', {}).get('WIDTH', 4056),
+            'TEST_CAMERA__HEIGHT'            : self.indi_allsky_config.get('TEST_CAMERA', {}).get('HEIGHT', 3040),
+            'TEST_CAMERA__IMAGE_CIRCLE_DIAMETER': self.indi_allsky_config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_DIAMETER', 3500),
             'TEST_CAMERA__ROTATING_STAR_COUNT'  : self.indi_allsky_config.get('TEST_CAMERA', {}).get('ROTATING_STAR_COUNT', 30000),
             'TEST_CAMERA__ROTATING_STAR_FACTOR' : self.indi_allsky_config.get('TEST_CAMERA', {}).get('ROTATING_STAR_FACTOR', 1.0),
             'TEST_CAMERA__BUBBLE_COUNT'      : self.indi_allsky_config.get('TEST_CAMERA', {}).get('BUBBLE_COUNT', 1000),
@@ -3239,6 +3242,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['ACCUM_CAMERA']['SUB_EXPOSURE_MAX']     = float(request.json['ACCUM_CAMERA__SUB_EXPOSURE_MAX'])
         self.indi_allsky_config['ACCUM_CAMERA']['EVEN_EXPOSURES']       = bool(request.json['ACCUM_CAMERA__EVEN_EXPOSURES'])
         self.indi_allsky_config['ACCUM_CAMERA']['CLAMP_16BIT']          = bool(request.json['ACCUM_CAMERA__CLAMP_16BIT'])
+        self.indi_allsky_config['TEST_CAMERA']['WIDTH']                 = int(request.json['TEST_CAMERA__WIDTH'])
+        self.indi_allsky_config['TEST_CAMERA']['HEIGHT']                = int(request.json['TEST_CAMERA__HEIGHT'])
+        self.indi_allsky_config['TEST_CAMERA']['IMAGE_CIRCLE_DIAMETER'] = int(request.json['TEST_CAMERA__IMAGE_CIRCLE_DIAMETER'])
         self.indi_allsky_config['TEST_CAMERA']['ROTATING_STAR_COUNT']   = int(request.json['TEST_CAMERA__ROTATING_STAR_COUNT'])
         self.indi_allsky_config['TEST_CAMERA']['ROTATING_STAR_FACTOR']  = float(request.json['TEST_CAMERA__ROTATING_STAR_FACTOR'])
         self.indi_allsky_config['TEST_CAMERA']['BUBBLE_COUNT']          = int(request.json['TEST_CAMERA__BUBBLE_COUNT'])

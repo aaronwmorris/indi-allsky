@@ -40,10 +40,15 @@ class IndiClientTestCameraBase(IndiClient):
         self.ccd_driver_exec = 'OVERRIDE'
 
 
+        self._width = self.config.get('TEST_CAMERA', {}).get('WIDTH', 4056)
+        self._height = self.config.get('TEST_CAMERA', {}).get('HEIGHT', 3040)
+        self._image_circle_diameter = self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_DIAMETER', 3500)
+
+
         # bogus info for now
         self.camera_info = {
-            'width'         : 4056,
-            'height'        : 3040,
+            'width'         : self.width,
+            'height'        : self.height,
             'pixel'         : 2.0,
             'min_gain'      : 0,
             'max_gain'      : 0,
@@ -61,6 +66,19 @@ class IndiClientTestCameraBase(IndiClient):
 
         varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
         self.varlib_folder_p = Path(varlib_folder)
+
+
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def width(self):
+        return self._width
+
+    @property
+    def image_circle_diameter(self):
+        return self._image_circle_diameter
 
 
     def getCcdGain(self):
@@ -398,7 +416,6 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
     bubble_radius_min = 5
     bubble_radius_max = 100
     background_color = (24, 24, 24)
-    image_circle_diameter = 3500
 
 
     def __init__(self, *args, **kwargs):
@@ -411,8 +428,8 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
         # bogus info for now
         #self.camera_info = {
-        #    'width'         : 4056,
-        #    'height'        : 3040,
+        #    'width'         : self.width,
+        #    'height'        : self.height,
         #    'pixel'         : 2.0,
         #    'min_gain'      : 0,
         #    'max_gain'      : 0,
@@ -533,12 +550,13 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
             )
 
 
-        if isinstance(self._image_circle_alpha_mask, type(None)):
-            self._image_circle_alpha_mask = self._generate_image_circle_mask(self._image)
+        if self.image_circle_diameter:
+            if isinstance(self._image_circle_alpha_mask, type(None)):
+                self._image_circle_alpha_mask = self._generate_image_circle_mask(self._image)
 
 
-        # simulate an image circle
-        self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
+            # simulate an image circle
+            self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
 
 
 class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
@@ -546,7 +564,6 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
 
     star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
     background_color = (24, 24, 24)
-    image_circle_diameter = 3500
 
 
     def __init__(self, *args, **kwargs):
@@ -559,8 +576,8 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
 
         # bogus info for now
         #self.camera_info = {
-        #    'width'         : 4056,
-        #    'height'        : 3040,
+        #    'width'         : self.width,
+        #    'height'        : self.height,
         #    'pixel'         : 2.0,
         #    'min_gain'      : 0,
         #    'max_gain'      : 0,
@@ -739,11 +756,12 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         ]
 
 
-        if isinstance(self._image_circle_alpha_mask, type(None)):
-            self._image_circle_alpha_mask = self._generate_image_circle_mask(self._image)
+        if self.image_circle_diameter:
+            if isinstance(self._image_circle_alpha_mask, type(None)):
+                self._image_circle_alpha_mask = self._generate_image_circle_mask(self._image)
 
 
-        # simulate an image circle
-        self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
+            # simulate an image circle
+            self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
 
 

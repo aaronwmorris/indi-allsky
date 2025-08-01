@@ -729,13 +729,49 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEST_CAMERA__WIDTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEST_CAMERA__WIDTH(class='form-control bg-secondary') }}
+            <div id="TEST_CAMERA__WIDTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEST_CAMERA__HEIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEST_CAMERA__HEIGHT(class='form-control bg-secondary') }}
+            <div id="TEST_CAMERA__HEIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
+            <div id="TEST_CAMERA__IMAGE_CIRCLE_DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEST_CAMERA__ROTATING_STAR_COUNT.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-2">
             {{ form_config.TEST_CAMERA__ROTATING_STAR_COUNT(class='form-control bg-secondary') }}
             <div id="TEST_CAMERA__ROTATING_STAR_COUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-8">
             Rotating Star Test Camera
         </div>
     </div>
@@ -744,11 +780,12 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_config.TEST_CAMERA__ROTATING_STAR_FACTOR.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-2">
             {{ form_config.TEST_CAMERA__ROTATING_STAR_FACTOR(class='form-control bg-secondary') }}
             <div id="TEST_CAMERA__ROTATING_STAR_FACTOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-8">
+            1.0 = 0.25 degrees/minute [sidereal rate]
         </div>
     </div>
 
@@ -756,15 +793,14 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_config.TEST_CAMERA__BUBBLE_COUNT.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-2">
             {{ form_config.TEST_CAMERA__BUBBLE_COUNT(class='form-control bg-secondary') }}
             <div id="TEST_CAMERA__BUBBLE_COUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-8">
             Bubble Test Camera
         </div>
     </div>
-
 
     <hr>
 
@@ -2894,6 +2930,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>The ratio of the size of the keogram as it relates to the image circle</div>
+            <div>0.05 - 0.15 is a good starting point</div>
         </div>
     </div>
 
@@ -8049,6 +8086,9 @@ const field_names = [
     'PYCURL_CAMERA__USERNAME',
     'PYCURL_CAMERA__PASSWORD',
     'ACCUM_CAMERA__SUB_EXPOSURE_MAX',
+    'TEST_CAMERA__WIDTH',
+    'TEST_CAMERA__HEIGHT',
+    'TEST_CAMERA__IMAGE_CIRCLE_DIAMETER',
     'TEST_CAMERA__ROTATING_STAR_COUNT',
     'TEST_CAMERA__ROTATING_STAR_FACTOR',
     'TEST_CAMERA__BUBBLE_COUNT',
