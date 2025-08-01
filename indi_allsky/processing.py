@@ -3287,8 +3287,15 @@ class ImageProcessor(object):
         scale = self.config.get('FISH2PANO', {}).get('SCALE', 0.3)
 
 
-        # FIXME: areas outside the image have a pattern
-        img_pano = cv2.warpPolar(rotated_image, (int(radius * scale), int((2 * math.pi * radius) * scale)), (center_x, center_y), radius, cv2.WARP_POLAR_LINEAR)
+        img_pano = cv2.warpPolar(
+            rotated_image,
+            (int(radius * scale), int((2 * math.pi * radius) * scale)),
+            (center_x, center_y),
+            radius,
+            cv2.WARP_POLAR_LINEAR | cv2.WARP_FILL_OUTLIERS,
+        )
+
+
         img_pano = cv2.rotate(img_pano, cv2.ROTATE_90_CLOCKWISE)
 
 
@@ -3319,8 +3326,8 @@ class ImageProcessor(object):
 
 
     def fish2pano(self):
-        return self.fish2pano_module()
-        #return self.fish2pano_warpPolar()
+        #return self.fish2pano_module()
+        return self.fish2pano_warpPolar()
 
 
     def fish2pano_cardinal_dirs_label(self, pano_data):
