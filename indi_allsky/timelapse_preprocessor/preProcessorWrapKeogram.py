@@ -232,7 +232,7 @@ class PreProcessorWrapKeogram(PreProcessorBase):
             (final_height, final_width),  # cv2 reversed (rotated below)
             (int(final_height / 2), int(final_width / 2)),  # reversed
             int((image_circle / 2) + keogram_height),
-            cv2.WARP_INVERSE_MAP,
+            cv2.WARP_INVERSE_MAP | cv2.WARP_FILL_OUTLIERS,
         )
 
         #elapsed_warppolar_s = time.time() - start_warppolar
