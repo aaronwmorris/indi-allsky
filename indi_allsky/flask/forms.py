@@ -3269,7 +3269,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
     TIMELAPSE__PRE_PROCESSOR_choices = (
         ('standard', 'Standard - No Processing'),
-        ('wrap_keogram', 'Wrap Keogram Around Image Circle'),
+        ('wrap_keogram', 'Wrap Keogram Around Image Circle [Keolapse]'),
     )
 
 
