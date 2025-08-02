@@ -261,7 +261,7 @@ class TimelapseGenerator(object):
             (final_height, final_width),  # cv2 reversed (rotated below)
             (int(final_height / 2), int(final_width / 2)),  # reversed
             int((IMAGE_CIRCLE / 2) + keogram_height),
-            cv2.WARP_INVERSE_MAP,
+            cv2.WARP_INVERSE_MAP | cv2.WARP_FILL_OUTLIERS,
         )
 
         #wrapped_keogram = cv2.rotate(wrapped_keogram, cv2.ROTATE_90_COUNTERCLOCKWISE)  # start keogram at top
