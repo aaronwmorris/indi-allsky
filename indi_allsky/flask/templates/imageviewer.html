@@ -302,6 +302,7 @@ function hour_change(json_data) {
                 $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
             }
 
+
             img.src = fields['IMG_SELECT'].input.val();
 
 
@@ -353,6 +354,14 @@ function day_change(json_data) {
             rdata['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
+
+
+            if (! newest_entry_default) {
+                // oldest entry is last index
+                hour_options_count = $('#HOUR_SELECT option').length
+                $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value).change();
+            }
+
 
             $("#IMG_SELECT").empty()
             rdata['IMAGE_DATA'].forEach(item => {
@@ -408,6 +417,14 @@ function month_change(json_data) {
             rdata['DAY_SELECT'].forEach(item => {
                 $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
+
+
+            if (! newest_entry_default) {
+                // oldest entry is last index
+                day_options_count = $('#DAY_SELECT option').length
+                $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value).change();
+            }
+
 
             $("#HOUR_SELECT").empty()
             rdata['HOUR_SELECT'].forEach(item => {
@@ -467,6 +484,14 @@ function year_change(json_data) {
             rdata['MONTH_SELECT'].forEach(item => {
                 $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
+
+
+            if (! newest_entry_default) {
+                // oldest entry is last index
+                month_options_count = $('#MONTH_SELECT option').length
+                $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[month_options_count - 1].value).change();
+            }
+
 
             $("#DAY_SELECT").empty()
             rdata['DAY_SELECT'].forEach(item => {
@@ -819,6 +844,156 @@ function exclude_keypress() {
 }
 
 
+function nextYear() {
+    var year_select_val = $("#YEAR_SELECT").val();
+
+    newest_entry_default = false;
+
+    $('#YEAR_SELECT option').each(function(index, element) {
+        if (index == 0 && element.value == year_select_val) {
+            console.log('At latest year');
+            return false;
+        } else if (element.value == year_select_val) {
+            console.log('Next year');
+            $("#YEAR_SELECT").val($("#YEAR_SELECT")[0].options[index - 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function previousYear() {
+    var year_select_val = $("#YEAR_SELECT").val();
+
+    newest_entry_default = true;
+
+    $('#YEAR_SELECT option').each(function(index, element) {
+        if (index == $("#YEAR_SELECT")[0].options.length - 1) {
+            console.log('At oldest year');
+            return false;
+        } else if (element.value == year_select_val) {
+            console.log('Previous year');
+            $("#YEAR_SELECT").val($("#YEAR_SELECT")[0].options[index + 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function nextMonth() {
+    var month_select_val = $("#MONTH_SELECT").val();
+
+    newest_entry_default = false;
+
+    $('#MONTH_SELECT option').each(function(index, element) {
+        if (index == 0 && element.value == month_select_val) {
+            console.log('At latest month');
+            nextYear();
+            return false;
+        } else if (element.value == month_select_val) {
+            console.log('Next month');
+            $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[index - 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function previousMonth() {
+    var month_select_val = $("#MONTH_SELECT").val();
+
+    newest_entry_default = true;
+
+    $('#MONTH_SELECT option').each(function(index, element) {
+        if (index == $("#MONTH_SELECT")[0].options.length - 1) {
+            console.log('At oldest month');
+            previousYear();
+            return false;
+        } else if (element.value == month_select_val) {
+            console.log('Previous month');
+            $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[index + 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function nextDay() {
+    var day_select_val = $("#DAY_SELECT").val();
+
+    newest_entry_default = false;
+
+    $('#DAY_SELECT option').each(function(index, element) {
+        if (index == 0 && element.value == day_select_val) {
+            console.log('At latest day');
+            nextMonth();
+            return false;
+        } else if (element.value == day_select_val) {
+            console.log('Next day');
+            $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[index - 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function previousDay() {
+    var day_select_val = $("#DAY_SELECT").val();
+
+    newest_entry_default = true;
+
+    $('#DAY_SELECT option').each(function(index, element) {
+        if (index == $("#DAY_SELECT")[0].options.length - 1) {
+            console.log('At oldest day');
+            previousMonth();
+            return false;
+        } else if (element.value == day_select_val) {
+            console.log('Previous day');
+            $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[index + 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function nextHour() {
+    var hour_select_val = $("#HOUR_SELECT").val();
+
+    newest_entry_default = false;
+
+    $('#HOUR_SELECT option').each(function(index, element) {
+        if (index == 0 && element.value == hour_select_val) {
+            console.log('At latest hour');
+            nextDay();
+            return false;
+        } else if (element.value == hour_select_val) {
+            console.log('Next hour');
+            $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index - 1].value).change();
+            return false;
+        };
+    });
+}
+
+
+function previousHour() {
+    var hour_select_val = $("#HOUR_SELECT").val();
+
+    newest_entry_default = true;
+
+    $('#HOUR_SELECT option').each(function(index, element) {
+        if (index == $("#HOUR_SELECT")[0].options.length - 1) {
+            console.log('At oldest hour');
+            previousDay();
+            return false;
+        } else if (element.value == hour_select_val) {
+            console.log('Previous hour');
+            $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index + 1].value).change();
+            return false;
+        };
+    });
+}
+
+
 function nextImage() {
     var img_select_val = $("#IMG_SELECT").val();
 
@@ -851,42 +1026,6 @@ function previousImage() {
         } else if (element.value == img_select_val) {
             console.log('Previous image');
             $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index + 1].value).change();
-            return false;
-        };
-    });
-}
-
-
-function nextHour() {
-    var hour_select_val = $("#HOUR_SELECT").val();
-
-    newest_entry_default = false;
-
-    $('#HOUR_SELECT option').each(function(index, element) {
-        if (index == 0 && element.value == hour_select_val) {
-            console.log('At latest hour');
-            return false;
-        } else if (element.value == hour_select_val) {
-            console.log('Next hour');
-            $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index - 1].value).change();
-            return false;
-        };
-    });
-}
-
-
-function previousHour() {
-    var hour_select_val = $("#HOUR_SELECT").val();
-
-    newest_entry_default = true;
-
-    $('#HOUR_SELECT option').each(function(index, element) {
-        if (index == $("#HOUR_SELECT")[0].options.length - 1) {
-            console.log('At oldest hour');
-            return false;
-        } else if (element.value == hour_select_val) {
-            console.log('Previous hour');
-            $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index + 1].value).change();
             return false;
         };
     });
