@@ -31,7 +31,7 @@
 <script type="text/javascript">
 var img;
 var fullscreen = false;  //initial state
-var newest_image_default = true;  // load last image by default
+var newest_entry_default = true;  // load last image by default
 var camera_id = {{ camera_id }};
 var panorama__enable = {{ panorama__enable }};
 var image_data = [];
@@ -295,7 +295,7 @@ function hour_change(json_data) {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
-            if (newest_image_default) {
+            if (newest_entry_default) {
                 // newest image is first index
                 $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[0].value).change();
             } else {
@@ -824,11 +824,13 @@ function exclude_keypress() {
 function nextImage() {
     var img_select_val = $("#IMG_SELECT").val();
 
-    newest_image_default = false;  // load oldest image when changing hours
+    newest_entry_default = false;
 
     $('#IMG_SELECT option').each(function(index, element) {
-        if (index == 0) {
+        if (index == 0 && element.value == img_select_val) {
             console.log('At newest image');
+            nextHour();
+            return false;
         } else if (element.value == img_select_val) {
             console.log('Next image');
             $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index - 1].value).change();
@@ -841,11 +843,13 @@ function nextImage() {
 function previousImage() {
     var img_select_val = $("#IMG_SELECT").val();
 
-    newest_image_default = true;  // load newest image when changing hours
+    newest_entry_default = true;
 
     $('#IMG_SELECT option').each(function(index, element) {
         if (index == $("#IMG_SELECT")[0].options.length - 1) {
             console.log('At oldest image');
+            previousHour();
+            return false;
         } else if (element.value == img_select_val) {
             console.log('Previous image');
             $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[index + 1].value).change();
@@ -858,11 +862,12 @@ function previousImage() {
 function nextHour() {
     var hour_select_val = $("#HOUR_SELECT").val();
 
-    newest_image_default = false;  // load oldest image when changing hours
+    newest_entry_default = false;
 
     $('#HOUR_SELECT option').each(function(index, element) {
-        if (index == 0) {
+        if (index == 0 && element.value == hour_select_val) {
             console.log('At latest hour');
+            return false;
         } else if (element.value == hour_select_val) {
             console.log('Next hour');
             $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index - 1].value).change();
@@ -875,11 +880,12 @@ function nextHour() {
 function previousHour() {
     var hour_select_val = $("#HOUR_SELECT").val();
 
-    newest_image_default = true;  // load newest image when changing hours
+    newest_entry_default = true;
 
     $('#HOUR_SELECT option').each(function(index, element) {
         if (index == $("#HOUR_SELECT")[0].options.length - 1) {
             console.log('At oldest hour');
+            return false;
         } else if (element.value == hour_select_val) {
             console.log('Previous hour');
             $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[index + 1].value).change();

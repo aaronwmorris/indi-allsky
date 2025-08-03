@@ -36,7 +36,7 @@ figure img {width: 100%;}
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 var lightbox = null;
-var oldest_entry_default = false;
+var newest_entry_default = true;
 </script>
 
 {% endblock %}
@@ -728,7 +728,7 @@ function init() {
 function nextYear() {
     var year_select_val = $("#YEAR_SELECT").val();
 
-    oldest_entry_default = true;
+    newest_entry_default = false;
 
     $('#YEAR_SELECT option').each(function(index, element) {
         if (index == 0 && element.value == year_select_val) {
@@ -746,7 +746,7 @@ function nextYear() {
 function previousYear() {
     var year_select_val = $("#YEAR_SELECT").val();
 
-    oldest_entry_default = false;
+    newest_entry_default = true;
 
     $('#YEAR_SELECT option').each(function(index, element) {
         if (index == $("#YEAR_SELECT")[0].options.length - 1) {
@@ -764,7 +764,7 @@ function previousYear() {
 function nextMonth() {
     var month_select_val = $("#MONTH_SELECT").val();
 
-    oldest_entry_default = true;
+    newest_entry_default = false;
 
     $('#MONTH_SELECT option').each(function(index, element) {
         if (index == 0 && element.value == month_select_val) {
@@ -783,7 +783,7 @@ function nextMonth() {
 function previousMonth() {
     var month_select_val = $("#MONTH_SELECT").val();
 
-    oldest_entry_default = false;
+    newest_entry_default = true;
 
     $('#MONTH_SELECT option').each(function(index, element) {
         if (index == $("#MONTH_SELECT")[0].options.length - 1) {
@@ -802,7 +802,7 @@ function previousMonth() {
 function nextDay() {
     var day_select_val = $("#DAY_SELECT").val();
 
-    oldest_entry_default = true;
+    newest_entry_default = false;
 
     $('#DAY_SELECT option').each(function(index, element) {
         if (index == 0 && element.value == day_select_val) {
@@ -821,7 +821,7 @@ function nextDay() {
 function previousDay() {
     var day_select_val = $("#DAY_SELECT").val();
 
-    oldest_entry_default = false;
+    newest_entry_default = true;
 
     $('#DAY_SELECT option').each(function(index, element) {
         if (index == $("#DAY_SELECT")[0].options.length - 1) {
@@ -840,7 +840,7 @@ function previousDay() {
 function nextHour() {
     var hour_select_val = $("#HOUR_SELECT").val();
 
-    oldest_entry_default = true;
+    newest_entry_default = false;
 
     $('#HOUR_SELECT option').each(function(index, element) {
         if (index == 0 && element.value == hour_select_val) {
@@ -859,7 +859,7 @@ function nextHour() {
 function previousHour() {
     var hour_select_val = $("#HOUR_SELECT").val();
 
-    oldest_entry_default = false;
+    newest_entry_default = true;
 
     $('#HOUR_SELECT option').each(function(index, element) {
         if (index == $("#HOUR_SELECT")[0].options.length - 1) {
