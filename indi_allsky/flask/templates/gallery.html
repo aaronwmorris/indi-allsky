@@ -495,6 +495,13 @@ function day_change(json_data) {
             });
 
 
+            if (! newest_entry_default) {
+                // oldst image is last index
+                hour_options_count = $('#HOUR_SELECT option').length
+                $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value).change();
+            }
+
+
             gallery_data = [];
             rdata['IMAGE_DATA'].forEach(item => {
                 gallery_data.push({
@@ -552,6 +559,14 @@ function month_change(json_data) {
             rdata['DAY_SELECT'].forEach(item => {
                 $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
+
+
+            if (! newest_entry_default) {
+                // oldst image is last index
+                day_options_count = $('#DAY_SELECT option').length
+                $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value).change();
+            }
+
 
             $("#HOUR_SELECT").empty()
             rdata['HOUR_SELECT'].forEach(item => {

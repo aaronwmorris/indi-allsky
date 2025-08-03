@@ -295,11 +295,9 @@ function hour_change(json_data) {
                 $("#IMG_SELECT").append($('<option />', {'value' : item['url']}).text(item['date']));
             });
 
-            if (newest_entry_default) {
-                // newest image is first index
-                $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[0].value).change();
-            } else {
-                // oldst image is last index
+
+            if (! newest_entry_default) {
+                // oldst entry is last index
                 img_options_count = $('#IMG_SELECT option').length
                 $("#IMG_SELECT").val($("#IMG_SELECT")[0].options[img_options_count - 1].value).change();
             }
