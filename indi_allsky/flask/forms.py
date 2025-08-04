@@ -3427,6 +3427,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'None'),
         ('blinka_fan_standard', 'Fan - Standard'),
         ('blinka_fan_pwm', 'Fan - PWM'),
+        ('rpigpio_fan_software_pwm', 'Fan - Software PWM (Raspi-only)'),
         ('fan_dockerpi_4channel_relay', 'Fan - DockerPi 4 Channel Relay (BETA)'),
         ('serial_fan_pwm', 'Fan - PWM [Serial Port] (BETA)'),
     )
