@@ -90,9 +90,9 @@ class KeogramGenerator(object):
 
 
             ### OpenCV
-            #data = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)
+            #image = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)
 
-            #if isinstance(data, type(None)):
+            #if isinstance(image, type(None)):
             #    logger.error('Unable to read %s', filename)
             #    continue
 
