@@ -3419,6 +3419,8 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'None'),
         ('blinka_dew_heater_standard', 'Dew Heater - Standard'),
         ('blinka_dew_heater_pwm', 'Dew Heater - PWM'),
+        ('rpigpio_dew_heater_software_pwm', 'Dew Heater - Software PWM [RPi.GPIO] (BETA)'),
+        ('gpiozero_dew_heater_software_pwm', 'Dew Heater - Software PWM [gpiozero] (BETA)'),
         ('dew_heater_dockerpi_4channel_relay', 'Dew Heater - DockerPi 4 Channel Relay (BETA)'),
         ('serial_dew_heater_pwm', 'Dew Heater - PWM [Serial Port] (BETA)'),
     )
