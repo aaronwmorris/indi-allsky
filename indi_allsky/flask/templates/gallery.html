@@ -497,7 +497,7 @@ function day_change(json_data) {
 
             if (! newest_entry_default) {
                 // oldest entry is last index
-                hour_options_count = $('#HOUR_SELECT option').length
+                hour_options_count = $('#HOUR_SELECT option').length;
                 $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value).change();
             }
 
@@ -560,18 +560,20 @@ function month_change(json_data) {
                 $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-
-            if (! newest_entry_default) {
-                // oldest entry is last index
-                day_options_count = $('#DAY_SELECT option').length
-                $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value).change();
-            }
-
-
             $("#HOUR_SELECT").empty()
             rdata['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
+
+
+            if (! newest_entry_default) {
+                // oldest entry is last index
+                day_options_count = $('#DAY_SELECT option').length;
+                hour_options_count = $('#HOUR_SELECT option').length;
+                $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
+                $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value).change();
+            }
+
 
             gallery_data = [];
             rdata['IMAGE_DATA'].forEach(item => {
@@ -630,14 +632,6 @@ function year_change(json_data) {
                 $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
 
-
-            if (! newest_entry_default) {
-                // oldest entry is last index
-                month_options_count = $('#MONTH_SELECT option').length
-                $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[month_options_count - 1].value).change();
-            }
-
-
             $("#DAY_SELECT").empty()
             rdata['DAY_SELECT'].forEach(item => {
                 $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
@@ -647,6 +641,18 @@ function year_change(json_data) {
             rdata['HOUR_SELECT'].forEach(item => {
                 $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
             });
+
+
+            if (! newest_entry_default) {
+                // oldest entry is last index
+                month_options_count = $('#MONTH_SELECT option').length
+                day_options_count = $('#DAY_SELECT option').length
+                hour_options_count = $('#HOUR_SELECT option').length
+                $("#MONTH_SELECT").val($("#MONTH_SELECT")[0].options[month_options_count - 1].value);
+                $("#DAY_SELECT").val($("#DAY_SELECT")[0].options[day_options_count - 1].value);
+                $("#HOUR_SELECT").val($("#HOUR_SELECT")[0].options[hour_options_count - 1].value).change();
+            }
+
 
             populate_gallery(rdata['IMAGE_DATA']);
 
