@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
-import cv2
+import io
 import numpy
-import PIL
-from PIL import Image
+import cv2
+import simplejpeg
+#import PIL
+#from PIL import Image
 import math
 import argparse
 import logging
@@ -86,10 +88,29 @@ class KeogramGenerator(object):
 
             image_ts = filename.stat().st_mtime
 
+
+            ### OpenCV
+            #data = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)
+
+            #if isinstance(data, type(None)):
+            #    logger.error('Unable to read %s', filename)
+            #    continue
+
+
+            ### Pillow
+            #try:
+            #    with Image.open(str(filename)) as img:
+            #        image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            #except PIL.UnidentifiedImageError:
+            #    logger.error('Unable to read %s', filename)
+            #    continue
+
+
+            ### simplejpeg
             try:
-                with Image.open(str(filename)) as img:
-                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-            except PIL.UnidentifiedImageError:
+                with io.open(str(filename), 'rb') as f_img:
+                    image = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+            except ValueError:
                 logger.error('Unable to read %s', filename)
                 continue
 
@@ -171,8 +192,12 @@ class KeogramGenerator(object):
 
         logger.warning('Creating labeled_trim_resize_%s', outfile)
 
-        keogram_final_rgb = Image.fromarray(cv2.cvtColor(self.keogram_final, cv2.COLOR_BGR2RGB))
-        keogram_final_rgb.save(str(outfile), quality=90)
+        ### OpenCV
+        cv2.imwrite(str(outfile), self.keogram_final, [cv2.IMWRITE_JPEG_QUALITY, 90])
+
+        ### Pillow
+        #keogram_final_rgb = Image.fromarray(cv2.cvtColor(self.keogram_final, cv2.COLOR_BGR2RGB))
+        #keogram_final_rgb.save(str(outfile), quality=90)
 
 
     def rotate(self, image):
