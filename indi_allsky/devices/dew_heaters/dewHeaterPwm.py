@@ -49,9 +49,9 @@ class DewHeaterPwm(DewHeaterBase):
 
 
         if not self.invert_output:
-            new_duty_cycle = ((2 ** 16) - 1) * new_state_i / 100
+            new_duty_cycle = int(((2 ** 16) - 1) * new_state_i / 100)
         else:
-            new_duty_cycle = ((2 ** 16) - 1) * (100 - new_state_i) / 100
+            new_duty_cycle = int(((2 ** 16) - 1) * (100 - new_state_i) / 100)
 
 
         logger.warning('Set dew heater state: %d%%', new_state_i)
