@@ -9,6 +9,9 @@ logger = logging.getLogger('indi_allsky')
 
 class FanSoftwarePwmRpiGpio(FanBase):
 
+    PWM_FREQUENCY = 100
+
+
     def __init__(self, *args, **kwargs):
         super(FanSoftwarePwmRpiGpio, self).__init__(*args, **kwargs)
 
@@ -20,13 +23,13 @@ class FanSoftwarePwmRpiGpio(FanBase):
 
         import RPi.GPIO as GPIO
 
-        logger.info('Initializing Software PWM FAN device')
+        logger.info('Initializing Software PWM FAN device (%d Hz)', self.PWM_FREQUENCY)
 
         #GPIO.setmode(GPIO.BOARD)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(pwm_pin, GPIO.OUT)
 
-        self.pwm = GPIO.PWM(pwm_pin, 100)
+        self.pwm = GPIO.PWM(pwm_pin, self.PWM_FREQUENCY)
         self.pwm.start(0)
 
         self._state = 0
@@ -75,6 +78,9 @@ class FanSoftwarePwmRpiGpio(FanBase):
 
 class FanSoftwarePwmGpiozero(FanBase):
 
+    PWM_FREQUENCY = 100
+
+
     def __init__(self, *args, **kwargs):
         super(FanSoftwarePwmGpiozero, self).__init__(*args, **kwargs)
 
@@ -86,9 +92,9 @@ class FanSoftwarePwmGpiozero(FanBase):
 
         from gpiozero import PWMOutputDevice
 
-        logger.info('Initializing Software PWM FAN device')
+        logger.info('Initializing Software PWM FAN device (%d Hz)', self.PWM_FREQUENCY)
 
-        self.pwm = PWMOutputDevice(pwm_pin, initial_value=0, frequency=100)
+        self.pwm = PWMOutputDevice(pwm_pin, initial_value=0, frequency=self.PWM_FREQUENCY)
 
         self._state = 0
 
