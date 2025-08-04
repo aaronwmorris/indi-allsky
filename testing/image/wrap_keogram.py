@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 #import math
+import io
 import numpy
 import cv2
+import simplejpeg
 import logging
 
 
@@ -26,9 +28,19 @@ class WrapKeogram(object):
         image_height, image_width = image.shape[:2]
         logger.info('Image: %d x %d', image_width, image_height)
 
-        keogram = cv2.imread('keogram.jpg', cv2.IMREAD_UNCHANGED)
 
-        if isinstance(keogram, type(None)):
+        ### OpenCV
+        #keogram = cv2.imread('keogram.jpg', cv2.IMREAD_UNCHANGED)
+
+        #if isinstance(keogram, type(None)):
+        #    raise Exception('Not a valid image: {0:s}'.format(self.keogram))
+
+
+        ### simplejpeg
+        try:
+            with io.open('keogram.jpg', 'rb') as f_img:
+                keogram = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+        except ValueError:
             raise Exception('Not a valid image: {0:s}'.format(self.keogram))
 
 

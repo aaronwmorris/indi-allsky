@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
-import cv2
+import io
 import numpy
-import PIL
-from PIL import Image
+import cv2
+import simplejpeg
+#import PIL
+#from PIL import Image
 import argparse
 import logging
 import time
@@ -198,10 +200,29 @@ class StarTrailGenerator(object):
         for filename_p in file_list_ordered:
             logger.info('Reading file: %s', filename_p)
 
+
+            ### OpenCV
+            #image = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+
+            #if isinstance(image, type(None)):
+            #    logger.error('Unable to read %s', filename_p)
+            #    continue
+
+
+            ### Pillow
+            #try:
+            #    with Image.open(str(filename_p)) as img:
+            #        image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            #except PIL.UnidentifiedImageError:
+            #    logger.error('Unable to read %s', filename_p)
+            #    continue
+
+
+            ### simplejpeg
             try:
-                with Image.open(str(filename_p)) as img:
-                    image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-            except PIL.UnidentifiedImageError:
+                with io.open(str(filename_p), 'rb') as f_img:
+                    image = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+            except ValueError:
                 logger.error('Unable to read %s', filename_p)
                 continue
 
@@ -331,8 +352,13 @@ class StarTrailGenerator(object):
 
 
         logger.warning('Creating %s', outfile)
-        trail_image_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
-        trail_image_rgb.save(str(outfile), quality=90)
+
+        ### OpenCV
+        cv2.imwrite(str(outfile), self.trail_image, [cv2.IMWRITE_JPEG_QUALITY, 90])
+
+        ### Pillow
+        #trail_image_rgb = Image.fromarray(cv2.cvtColor(self.trail_image, cv2.COLOR_BGR2RGB))
+        #trail_image_rgb.save(str(outfile), quality=90)
 
 
     def detectObjects(self, original_data):

@@ -2,6 +2,7 @@
 
 import sys
 import os
+import io
 import time
 import tempfile
 import argparse
@@ -9,8 +10,9 @@ from pathlib import Path
 import subprocess
 import numpy
 import cv2
-import PIL
-from PIL import Image
+import simplejpeg
+#import PIL
+#from PIL import Image
 import logging
 
 
@@ -182,8 +184,19 @@ class TimelapseGenerator(object):
 
 
         if isinstance(self._keogram_image, type(None)):
-            with Image.open(str(self.keogram)) as img:
-                self._keogram_image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+            ### OpenCV
+            #self._keogram_image = cv2.imread(str(self.keogram), cv2.IMREAD_UNCHANGED)
+
+
+            ### Pillow
+            #with Image.open(str(self.keogram)) as img:
+            #    self._keogram_image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+
+
+            ### simplejpeg
+            with io.open(str(self.keogram), 'rb') as f_img:
+                self._keogram_image = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+
 
             keogram_height, keogram_width = self._keogram_image.shape[:2]
 
@@ -214,10 +227,28 @@ class TimelapseGenerator(object):
         keogram[0:keogram_height, keogram_line:keogram_line + 1] = line
 
 
+        ### OpenCV
+        #image = cv2.imread(str(filename), cv2.IMREAD_UNCHANGED)
+
+        #if isinstance(image, type(None)):
+        #    logger.error('Unable to read %s', f)
+        #    return
+
+
+        ### Pillow
+        #try:
+        #    with Image.open(str(f)) as img:
+        #        image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+        #except PIL.UnidentifiedImageError:
+        #    logger.error('Unable to read %s', f)
+        #    return
+
+
+        ### simplejpeg
         try:
-            with Image.open(str(f)) as img:
-                image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-        except PIL.UnidentifiedImageError:
+            with io.open(str(f), 'rb') as f_img:
+                image = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+        except ValueError:
             logger.error('Unable to read %s', f)
             return
 
@@ -306,7 +337,12 @@ class TimelapseGenerator(object):
 
 
         outfile_p = seqfolder_p.joinpath('{0:05d}.{1:s}'.format(self.image_count, IMAGE_FILETYPE))
-        Image.fromarray(cv2.cvtColor(image_with_keogram, cv2.COLOR_BGR2RGB)).save(str(outfile_p), quality=90)
+
+        ### OpenCV
+        cv2.imwrite(str(outfile_p), image_with_keogram, [cv2.IMWRITE_JPEG_QUALITY, 90])
+
+        ### Pillow
+        #Image.fromarray(cv2.cvtColor(image_with_keogram, cv2.COLOR_BGR2RGB)).save(str(outfile_p), quality=90)
 
         self.image_count += 1
 
