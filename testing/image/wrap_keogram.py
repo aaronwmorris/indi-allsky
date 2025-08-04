@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 #import math
 import io
 import numpy
@@ -20,10 +21,25 @@ logger = logging
 class WrapKeogram(object):
 
     def main(self):
-        image = cv2.imread('image.jpg', cv2.IMREAD_UNCHANGED)
+        ### OpenCV
+        #image = cv2.imread('image.jpg', cv2.IMREAD_UNCHANGED)
 
-        if isinstance(image, type(None)):
-            raise Exception('Not a valid image: {0:s}'.format(self.keogram))
+        #if isinstance(image, type(None)):
+        #    logger.error('Not a valid image: %s', 'image.jpg')
+        #    sys.exit(1)
+
+
+        ### simplejpeg
+        try:
+            with io.open('image.jpg', 'rb') as f_img:
+                image = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+        except ValueError:
+            logger.error('Not a valid image: %s', 'image.jpg')
+            sys.exit(1)
+        except FileNotFoundError:
+            logger.error('File not found: %s', 'image.jpg')
+            sys.exit(1)
+
 
         image_height, image_width = image.shape[:2]
         logger.info('Image: %d x %d', image_width, image_height)
@@ -33,7 +49,8 @@ class WrapKeogram(object):
         #keogram = cv2.imread('keogram.jpg', cv2.IMREAD_UNCHANGED)
 
         #if isinstance(keogram, type(None)):
-        #    raise Exception('Not a valid image: {0:s}'.format(self.keogram))
+        #    logger.error('Not a valid image: %s', 'keogram.jpg')
+        #    sys.exit(1)
 
 
         ### simplejpeg
@@ -41,7 +58,11 @@ class WrapKeogram(object):
             with io.open('keogram.jpg', 'rb') as f_img:
                 keogram = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
         except ValueError:
-            raise Exception('Not a valid image: {0:s}'.format(self.keogram))
+            logger.error('Not a valid image: %s', 'keogram.jpg')
+            sys.exit(1)
+        except FileNotFoundError:
+            logger.error('File not found: %s', 'keogram.jpg')
+            sys.exit(1)
 
 
         keogram_height, keogram_width = keogram.shape[:2]
