@@ -22,7 +22,8 @@ class FanSoftwarePwmRpiGpio(FanBase):
 
         logger.info('Initializing Software PWM FAN device')
 
-        GPIO.setmode(GPIO.BOARD)
+        #GPIO.setmode(GPIO.BOARD)
+        GPIO.setmode(GPIO.BCM)
         GPIO.setup(pwm_pin, GPIO.OUT)
 
         self.pwm = GPIO.PWM(pwm_pin, 100)
