@@ -4597,15 +4597,15 @@ class IndiAllskyConfigForm(FlaskForm):
                     if self.DEW_HEATER__PIN_1.data:
                         try:
                             pin_int = int(self.DEW_HEATER__PIN_1.data)
+
+                            if pin_int < 1:
+                                self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                                result = False
+                            elif pin_int > 40:
+                                self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                                result = False
                         except ValueError:
                             self.DEW_HEATER__PIN_1.errors.append('PIN must be a number')
-                            result = False
-
-                        if pin_int < 1:
-                            self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
-                            result = False
-                        elif pin_int > 40:
-                            self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
                             result = False
 
                     else:
@@ -4628,15 +4628,15 @@ class IndiAllskyConfigForm(FlaskForm):
                     if self.DEW_HEATER__PIN_1.data:
                         try:
                             pin_int = int(self.DEW_HEATER__PIN_1.data)
+
+                            if pin_int < 1:
+                                self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                                result = False
+                            elif pin_int > 40:
+                                self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                                result = False
                         except ValueError:
                             self.DEW_HEATER__PIN_1.errors.append('PIN must be a number')
-                            result = False
-
-                        if pin_int < 1:
-                            self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
-                            result = False
-                        elif pin_int > 40:
-                            self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
                             result = False
 
                     else:
@@ -4759,16 +4759,17 @@ class IndiAllskyConfigForm(FlaskForm):
                     if self.FAN__PIN_1.data:
                         try:
                             pin_int = int(self.FAN__PIN_1.data)
+
+                            if pin_int < 1:
+                                self.FAN__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.FAN__PIN_1.data))
+                                result = False
+                            elif pin_int > 40:
+                                self.FAN__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.FAN__PIN_1.data))
+                                result = False
                         except ValueError:
                             self.FAN__PIN_1.errors.append('PIN must be a number')
                             result = False
 
-                        if pin_int < 1:
-                            self.FAN__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.FAN__PIN_1.data))
-                            result = False
-                        elif pin_int > 40:
-                            self.FAN__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.FAN__PIN_1.data))
-                            result = False
                     else:
                         self.FAN__PIN_1.errors.append('PIN must be defined')
                         result = False
