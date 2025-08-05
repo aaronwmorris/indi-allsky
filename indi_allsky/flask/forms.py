@@ -3419,6 +3419,8 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'None'),
         ('blinka_dew_heater_standard', 'Dew Heater - Standard'),
         ('blinka_dew_heater_pwm', 'Dew Heater - PWM'),
+        ('rpigpio_dew_heater_software_pwm', 'Dew Heater - Software PWM [RPi.GPIO] (BETA)'),
+        ('gpiozero_dew_heater_software_pwm', 'Dew Heater - Software PWM [gpiozero] (BETA)'),
         ('dew_heater_dockerpi_4channel_relay', 'Dew Heater - DockerPi 4 Channel Relay (BETA)'),
         ('serial_dew_heater_pwm', 'Dew Heater - PWM [Serial Port] (BETA)'),
     )
@@ -3427,6 +3429,8 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'None'),
         ('blinka_fan_standard', 'Fan - Standard'),
         ('blinka_fan_pwm', 'Fan - PWM'),
+        ('rpigpio_fan_software_pwm', 'Fan - Software PWM [RPi.GPIO] (BETA)'),
+        ('gpiozero_fan_software_pwm', 'Fan - Software PWM [gpiozero] (BETA)'),
         ('fan_dockerpi_4channel_relay', 'Fan - DockerPi 4 Channel Relay (BETA)'),
         ('serial_fan_pwm', 'Fan - PWM [Serial Port] (BETA)'),
     )
@@ -4586,6 +4590,64 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
 
+            elif self.DEW_HEATER__CLASSNAME.data.startswith('rpigpio_'):
+                try:
+                    import RPi.GPIO  # noqa: F401
+
+                    if self.DEW_HEATER__PIN_1.data:
+                        try:
+                            pin_int = int(self.DEW_HEATER__PIN_1.data)
+
+                            if pin_int < 1:
+                                self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                                result = False
+                            elif pin_int > 40:
+                                self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                                result = False
+                        except ValueError:
+                            self.DEW_HEATER__PIN_1.errors.append('PIN must be a number')
+                            result = False
+
+                    else:
+                        self.DEW_HEATER__PIN_1.errors.append('PIN must be defined')
+                        result = False
+                except ImportError:
+                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+                except PermissionError:
+                    self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+                except RuntimeError as e:
+                    self.DEW_HEATER__PIN_1.errors.append('RuntimeError: {0:s}'.format(str(e)))
+                    result = False
+
+            elif self.DEW_HEATER__CLASSNAME.data.startswith('gpiozero_'):
+                try:
+                    import gpiozero  # noqa: F401
+
+                    if self.DEW_HEATER__PIN_1.data:
+                        try:
+                            pin_int = int(self.DEW_HEATER__PIN_1.data)
+
+                            if pin_int < 1:
+                                self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                                result = False
+                            elif pin_int > 40:
+                                self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.DEW_HEATER__PIN_1.data))
+                                result = False
+                        except ValueError:
+                            self.DEW_HEATER__PIN_1.errors.append('PIN must be a number')
+                            result = False
+
+                    else:
+                        self.DEW_HEATER__PIN_1.errors.append('PIN must be defined')
+                        result = False
+                except ImportError:
+                    self.DEW_HEATER__CLASSNAME.errors.append('gpiozero python module not installed')
+                    result = False
+                except PermissionError:
+                    self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
 
             elif self.DEW_HEATER__CLASSNAME.data == 'dew_heater_dockerpi_4channel_relay':
 
@@ -4655,6 +4717,66 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.FAN__CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
 
+                except PermissionError:
+                    self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+            elif self.FAN__CLASSNAME.data.startswith('rpigpio_'):
+                try:
+                    import RPi.GPIO  # noqa: F401,F811
+
+                    if self.FAN__PIN_1.data:
+                        try:
+                            pin_int = int(self.FAN__PIN_1.data)
+                        except ValueError:
+                            self.FAN__PIN_1.errors.append('PIN must be a number')
+                            result = False
+
+                        if pin_int < 1:
+                            self.FAN__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.FAN__PIN_1.data))
+                            result = False
+                        elif pin_int > 40:
+                            self.FAN__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.FAN__PIN_1.data))
+                            result = False
+                    else:
+                        self.FAN__PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.FAN__CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+                except PermissionError:
+                    self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+                except RuntimeError as e:
+                    self.FAN__PIN_1.errors.append('RuntimeError: {0:s}'.format(str(e)))
+                    result = False
+
+            elif self.FAN__CLASSNAME.data.startswith('gpiozero_'):
+                try:
+                    import gpiozero  # noqa: F401,F811
+
+                    if self.FAN__PIN_1.data:
+                        try:
+                            pin_int = int(self.FAN__PIN_1.data)
+
+                            if pin_int < 1:
+                                self.FAN__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.FAN__PIN_1.data))
+                                result = False
+                            elif pin_int > 40:
+                                self.FAN__PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.FAN__PIN_1.data))
+                                result = False
+                        except ValueError:
+                            self.FAN__PIN_1.errors.append('PIN must be a number')
+                            result = False
+
+                    else:
+                        self.FAN__PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.FAN__CLASSNAME.errors.append('gpiozero python module not installed')
+                    result = False
                 except PermissionError:
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False

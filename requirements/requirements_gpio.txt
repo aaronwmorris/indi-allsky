@@ -1,5 +1,6 @@
 Adafruit-Blinka
 gpiod
+gpiozero
 pyserial
 adafruit-circuitpython-dht
 adafruit-circuitpython-bme280

@@ -26,9 +26,11 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Native Fan controller support
     * Standard
     * PWM Controlled
+    * Software PWM
 * Native Dew Heater support
     * Standard
     * PWM Controlled
+    * Software PWM
 * Native Temperature Sensor support
     * DS18B20 1-wire
     * DHT11/22

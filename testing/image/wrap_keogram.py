@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+import sys
+import argparse
+from pathlib import Path
 #import math
 import io
 import numpy
@@ -19,11 +22,59 @@ logger = logging
 
 class WrapKeogram(object):
 
-    def main(self):
-        image = cv2.imread('image.jpg', cv2.IMREAD_UNCHANGED)
+    def __init__(self):
+        self._input_image = None
+        self._keogram = None
+        self._outfile = None
 
-        if isinstance(image, type(None)):
-            raise Exception('Not a valid image: {0:s}'.format(self.keogram))
+
+    @property
+    def input_image(self):
+        return self._input_image
+
+    @input_image.setter
+    def input_image(self, new_input_image):
+        self._input_image = Path(str(new_input_image)).absolute()
+
+
+    @property
+    def keogram(self):
+        return self._keogram
+
+    @keogram.setter
+    def keogram(self, new_keogram):
+        self._keogram = Path(str(new_keogram)).absolute()
+
+
+    @property
+    def outfile(self):
+        return self._outfile
+
+    @outfile.setter
+    def outfile(self, new_outfile):
+        self._outfile = Path(str(new_outfile)).absolute()
+
+
+    def main(self):
+        ### OpenCV
+        #image = cv2.imread('image.jpg', cv2.IMREAD_UNCHANGED)
+
+        #if isinstance(image, type(None)):
+        #    logger.error('Not a valid image: %s', self.input_image)
+        #    sys.exit(1)
+
+
+        ### simplejpeg
+        try:
+            with io.open(str(self.input_image), 'rb') as f_img:
+                image = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+        except ValueError:
+            logger.error('Not a valid image: %s', self.input_image)
+            sys.exit(1)
+        except FileNotFoundError:
+            logger.error('File not found: %s', self.input_image)
+            sys.exit(1)
+
 
         image_height, image_width = image.shape[:2]
         logger.info('Image: %d x %d', image_width, image_height)
@@ -33,15 +84,20 @@ class WrapKeogram(object):
         #keogram = cv2.imread('keogram.jpg', cv2.IMREAD_UNCHANGED)
 
         #if isinstance(keogram, type(None)):
-        #    raise Exception('Not a valid image: {0:s}'.format(self.keogram))
+        #    logger.error('Not a valid image: %s', self.keogram)
+        #    sys.exit(1)
 
 
         ### simplejpeg
         try:
-            with io.open('keogram.jpg', 'rb') as f_img:
+            with io.open(str(self.keogram), 'rb') as f_img:
                 keogram = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
         except ValueError:
-            raise Exception('Not a valid image: {0:s}'.format(self.keogram))
+            logger.error('Not a valid image: %s', self.keogram)
+            sys.exit(1)
+        except FileNotFoundError:
+            logger.error('File not found: %s', self.keogram)
+            sys.exit(1)
 
 
         keogram_height, keogram_width = keogram.shape[:2]
@@ -133,9 +189,41 @@ class WrapKeogram(object):
         image_with_keogram = (f_image * (1 - alpha_mask) + wrapped_keogram_bgr * alpha_mask).astype(numpy.uint8)
 
 
-        cv2.imwrite('wrapped.jpg', image_with_keogram, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        logger.warning('Writing final image: %s', self.outfile)
+        cv2.imwrite(str(self.outfile), image_with_keogram, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
 if __name__ == "__main__":
-    WrapKeogram().main()
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        'input_image',
+        help='Input image',
+        type=str,
+    )
+    argparser.add_argument(
+        '--outfile',
+        '-o',
+        help='outfile',
+        type=str,
+        required=True,
+    )
+    argparser.add_argument(
+        '--keogram',
+        '-k',
+        help='keogram',
+        type=str,
+        required=True,
+    )
+
+
+    args = argparser.parse_args()
+
+
+    wk = WrapKeogram()
+    wk.input_image = args.input_image
+    wk.keogram = args.input_image
+    wk.outfile = args.outfile
+
+
+    wk.main()
 
