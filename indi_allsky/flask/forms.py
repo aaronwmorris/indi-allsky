@@ -4643,7 +4643,7 @@ class IndiAllskyConfigForm(FlaskForm):
                         self.DEW_HEATER__PIN_1.errors.append('PIN must be defined')
                         result = False
                 except ImportError:
-                    self.DEW_HEATER__CLASSNAME.errors.append('GPIO python modules not installed')
+                    self.DEW_HEATER__CLASSNAME.errors.append('gpiozero python module not installed')
                     result = False
                 except PermissionError:
                     self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
@@ -4774,9 +4774,8 @@ class IndiAllskyConfigForm(FlaskForm):
                         result = False
 
                 except ImportError:
-                    self.FAN__CLASSNAME.errors.append('GPIO python modules not installed')
+                    self.FAN__CLASSNAME.errors.append('gpiozero python module not installed')
                     result = False
-
                 except PermissionError:
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
                     result = False
