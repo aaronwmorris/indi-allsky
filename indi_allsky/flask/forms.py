@@ -3411,6 +3411,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_focuser_28byj_16', '28BYJ-48 Stepper (1/16) ULN2003 - GPIO (4 pins)'),
         ('blinka_focuser_a4988_nema17_full', 'A4988 NEMA17 Stepper - Full Step - GPIO (2 pins)'),
         ('blinka_focuser_a4988_nema17_half', 'A4988 NEMA17 Stepper - Half Step - GPIO (3 pins)'),
+        ('motorkit_focuser_single_step', 'Adafruit Motor Shield [i2c]'),
         ('serial_focuser_28byj_64', '28BYJ-48 Stepper (1/64) ULN2003 [Serial Port] (BETA)'),
         ('focuser_simulator', 'Focuser Simulator'),
     )

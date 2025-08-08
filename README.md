@@ -73,6 +73,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Mechanical focuser support
     * 28BYJ-48 Stepper
     * A4988 with NEMA17 Stepper
+    * Adafruit Motor Shield [MotorKit]
 * Use star metrics (in addition to ADU) for star trails generation
 * Generate thumbnails to reduce load time in Timelapse view
 * Panorama timelapse generation
