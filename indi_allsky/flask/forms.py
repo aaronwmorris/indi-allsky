@@ -3421,6 +3421,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_dew_heater_pwm', 'Dew Heater - PWM'),
         ('rpigpio_dew_heater_software_pwm', 'Dew Heater - Software PWM [RPi.GPIO] (BETA)'),
         ('gpiozero_dew_heater_software_pwm', 'Dew Heater - Software PWM [gpiozero] (BETA)'),
+        ('motorkit_dew_heater_pwm', 'Dew Heater - PWM MotorKit i2c'),
         ('dew_heater_dockerpi_4channel_relay', 'Dew Heater - DockerPi 4 Channel Relay (BETA)'),
         ('serial_dew_heater_pwm', 'Dew Heater - PWM [Serial Port] (BETA)'),
     )
@@ -3431,6 +3432,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_fan_pwm', 'Fan - PWM'),
         ('rpigpio_fan_software_pwm', 'Fan - Software PWM [RPi.GPIO] (BETA)'),
         ('gpiozero_fan_software_pwm', 'Fan - Software PWM [gpiozero] (BETA)'),
+        ('motorkit_fan_pwm', 'Fan - PWM MotorKit i2c'),
         ('fan_dockerpi_4channel_relay', 'Fan - DockerPi 4 Channel Relay (BETA)'),
         ('serial_fan_pwm', 'Fan - PWM [Serial Port] (BETA)'),
     )
