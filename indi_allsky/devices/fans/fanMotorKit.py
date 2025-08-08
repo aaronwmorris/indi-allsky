@@ -23,7 +23,10 @@ class FanMotorKitPwm(FanBase):
 
 
         i2c_address = int(i2c_address_str, 16)  # string in config
+
+        # pin 1 should be an number for the motor
         motor_name = 'motor{0:d}'.format(int(pin_1_name))
+
 
         logger.info('Initializing MotorKit FAN device %s @ %s', motor_name, i2c_address_str)
 
