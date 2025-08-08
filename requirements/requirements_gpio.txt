@@ -28,6 +28,7 @@ adafruit-circuitpython-bmp3xx
 adafruit-circuitpython-ina3221
 adafruit-circuitpython-ina219
 adafruit-circuitpython-ina23x
+adafruit-circuitpython-pca9685
 adafruit-circuitpython-motorkit
 sparkfun-qwiic-mmc5983ma
 

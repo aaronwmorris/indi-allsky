@@ -4565,6 +4565,14 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.FOCUSER__GPIO_PIN_4.errors.append('GPIO permissions need to be fixed')
                     result = False
 
+            elif self.FOCUSER__CLASSNAME.data.startswith('motorkit_'):
+                try:
+                    from adafruit_motorkit import MotorKit  # noqa: F401
+
+                except ImportError:
+                    self.FOCUSER__CLASSNAME.errors.append('motorkit python module not installed')
+                    result = False
+
 
         # dew heater
         if self.DEW_HEATER__CLASSNAME.data:
@@ -4651,6 +4659,13 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
                 except PermissionError:
                     self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+            elif self.DEW_HEATER__CLASSNAME.data.startswith('motorkit_'):
+                try:
+                    from adafruit_motorkit import MotorKit  # noqa: F401,F811
+                except ImportError:
+                    self.DEW_HEATER__CLASSNAME.errors.append('motorkit python module not installed')
                     result = False
 
             elif self.DEW_HEATER__CLASSNAME.data == 'dew_heater_dockerpi_4channel_relay':
@@ -4783,6 +4798,13 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
                 except PermissionError:
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+            elif self.FAN__CLASSNAME.data.startswith('motorkit_'):
+                try:
+                    from adafruit_motorkit import MotorKit  # noqa: F401,F811
+                except ImportError:
+                    self.FAN__CLASSNAME.errors.append('motorkit python module not installed')
                     result = False
 
             elif self.FAN__CLASSNAME.data == 'fan_dockerpi_4channel_relay':
