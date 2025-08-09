@@ -27,10 +27,14 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * Standard
     * PWM Controlled
     * Software PWM
+    * Adafruit Motor Shield [MotorKit]
+    * DockerPi 4 Channel Relay Hat
 * Native Dew Heater support
     * Standard
     * PWM Controlled
     * Software PWM
+    * Adafruit Motor Shield [MotorKit]
+    * DockerPi 4 Channel Relay Hat
 * Native Temperature Sensor support
     * DS18B20 1-wire
     * DHT11/22
@@ -71,6 +75,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Mechanical focuser support
     * 28BYJ-48 Stepper
     * A4988 with NEMA17 Stepper
+    * Adafruit Motor Shield [MotorKit]
 * Use star metrics (in addition to ADU) for star trails generation
 * Generate thumbnails to reduce load time in Timelapse view
 * Panorama timelapse generation

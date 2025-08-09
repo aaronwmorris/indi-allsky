@@ -3411,6 +3411,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_focuser_28byj_16', '28BYJ-48 Stepper (1/16) ULN2003 - GPIO (4 pins)'),
         ('blinka_focuser_a4988_nema17_full', 'A4988 NEMA17 Stepper - Full Step - GPIO (2 pins)'),
         ('blinka_focuser_a4988_nema17_half', 'A4988 NEMA17 Stepper - Half Step - GPIO (3 pins)'),
+        ('motorkit_focuser_single_step', 'Adafruit Motor Shield [i2c]'),
         ('serial_focuser_28byj_64', '28BYJ-48 Stepper (1/64) ULN2003 [Serial Port] (BETA)'),
         ('focuser_simulator', 'Focuser Simulator'),
     )
@@ -3421,7 +3422,8 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_dew_heater_pwm', 'Dew Heater - PWM'),
         ('rpigpio_dew_heater_software_pwm', 'Dew Heater - Software PWM [RPi.GPIO] (BETA)'),
         ('gpiozero_dew_heater_software_pwm', 'Dew Heater - Software PWM [gpiozero] (BETA)'),
-        ('dew_heater_dockerpi_4channel_relay', 'Dew Heater - DockerPi 4 Channel Relay (BETA)'),
+        ('motorkit_dew_heater_pwm', 'Dew Heater - PWM - Adafruit Motor Shield [i2c]'),
+        ('dew_heater_dockerpi_4channel_relay', 'Dew Heater - DockerPi 4 Channel Relay [i2c] (BETA)'),
         ('serial_dew_heater_pwm', 'Dew Heater - PWM [Serial Port] (BETA)'),
     )
 
@@ -3431,7 +3433,8 @@ class IndiAllskyConfigForm(FlaskForm):
         ('blinka_fan_pwm', 'Fan - PWM'),
         ('rpigpio_fan_software_pwm', 'Fan - Software PWM [RPi.GPIO] (BETA)'),
         ('gpiozero_fan_software_pwm', 'Fan - Software PWM [gpiozero] (BETA)'),
-        ('fan_dockerpi_4channel_relay', 'Fan - DockerPi 4 Channel Relay (BETA)'),
+        ('motorkit_fan_pwm', 'Fan - PWM - Adafruit Motor Shield [i2c]'),
+        ('fan_dockerpi_4channel_relay', 'Fan - DockerPi 4 Channel Relay [i2c] (BETA)'),
         ('serial_fan_pwm', 'Fan - PWM [Serial Port] (BETA)'),
     )
 
@@ -4169,6 +4172,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FOCUSER__GPIO_PIN_2              = StringField('GPIO Pin 2', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_3              = StringField('GPIO Pin 3', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_4              = StringField('GPIO Pin 4', validators=[DEVICE_PIN_NAME_validator])
+    FOCUSER__I2C_ADDRESS             = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     DEW_HEATER__CLASSNAME            = SelectField('Dew Heater', choices=DEW_HEATER__CLASSNAME_choices, validators=[DEW_HEATER__CLASSNAME_validator])
     DEW_HEATER__ENABLE_DAY           = BooleanField('Enable Daytime')
     DEW_HEATER__I2C_ADDRESS          = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
@@ -4561,6 +4565,28 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.FOCUSER__GPIO_PIN_4.errors.append('GPIO permissions need to be fixed')
                     result = False
 
+            elif self.FOCUSER__CLASSNAME.data.startswith('motorkit_'):
+                try:
+                    from adafruit_motorkit import MotorKit  # noqa: F401
+
+                    # only care about pin1
+                    if self.FOCUSER__GPIO_PIN_1.data:
+                        try:
+                            getattr(MotorKit, self.FOCUSER__GPIO_PIN_1.data)
+                        except AttributeError:
+                            self.FOCUSER__GPIO_PIN_1.errors.append('PIN {0:s} not valid for your system (try stepper1, stepper2, etc)'.format(self.FOCUSER__GPIO_PIN_1.data))
+                            result = False
+                    else:
+                        self.FOCUSER__GPIO_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+                except ImportError:
+                    self.FOCUSER__CLASSNAME.errors.append('motorkit python module not installed')
+                    result = False
+                except AttributeError as e:
+                    self.FOCUSER__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
+                    result = False
+
 
         # dew heater
         if self.DEW_HEATER__CLASSNAME.data:
@@ -4647,6 +4673,26 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
                 except PermissionError:
                     self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+            elif self.DEW_HEATER__CLASSNAME.data.startswith('motorkit_'):
+                try:
+                    from adafruit_motorkit import MotorKit  # noqa: F401,F811
+
+                    if self.DEW_HEATER__PIN_1.data:
+                        try:
+                            getattr(MotorKit, self.DEW_HEATER__PIN_1.data)
+                        except AttributeError:
+                            self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system (try motor1, motor2, etc)'.format(self.DEW_HEATER__PIN_1.data))
+                            result = False
+                    else:
+                        self.DEW_HEATER__PIN_1.errors.append('PIN must be defined')
+                        result = False
+                except ImportError:
+                    self.DEW_HEATER__CLASSNAME.errors.append('motorkit python module not installed')
+                    result = False
+                except AttributeError as e:
+                    self.DEW_HEATER__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.DEW_HEATER__CLASSNAME.data == 'dew_heater_dockerpi_4channel_relay':
@@ -4779,6 +4825,26 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
                 except PermissionError:
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+            elif self.FAN__CLASSNAME.data.startswith('motorkit_'):
+                try:
+                    from adafruit_motorkit import MotorKit  # noqa: F401,F811
+
+                    if self.FAN__PIN_1.data:
+                        try:
+                            getattr(MotorKit, self.FAN__PIN_1.data)
+                        except AttributeError:
+                            self.FAN__PIN_1.errors.append('PIN {0:s} not valid for your system (try motor1, motor2, etc)'.format(self.FAN__PIN_1.data))
+                            result = False
+                    else:
+                        self.FAN__PIN_1.errors.append('PIN must be defined')
+                        result = False
+                except ImportError:
+                    self.FAN__CLASSNAME.errors.append('motorkit python module not installed')
+                    result = False
+                except AttributeError as e:
+                    self.FAN__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.FAN__CLASSNAME.data == 'fan_dockerpi_4channel_relay':

@@ -23,7 +23,14 @@ class IndiAllSkyFocuserInterface(object):
         pin3 = self.config.get('FOCUSER', {}).get('GPIO_PIN_3', 'notdefined')
         pin4 = self.config.get('FOCUSER', {}).get('GPIO_PIN_4', 'notdefined')
 
-        self.__focuser = focuser_class(self.config, pin_names=[pin1, pin2, pin3, pin4])
+        i2c_address = self.config.get('FOCUSER', {}).get('I2C_ADDRESS', '0x60')
+
+
+        self.__focuser = focuser_class(
+            self.config,
+            pin_names=[pin1, pin2, pin3, pin4],
+            i2c_address=i2c_address,
+        )
 
 
     @property

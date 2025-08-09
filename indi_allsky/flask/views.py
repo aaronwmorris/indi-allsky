@@ -2373,6 +2373,7 @@ class ConfigView(FormView):
             'FOCUSER__GPIO_PIN_2'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_2', 'D18'),
             'FOCUSER__GPIO_PIN_3'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_3', 'D27'),
             'FOCUSER__GPIO_PIN_4'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_4', 'D22'),
+            'FOCUSER__I2C_ADDRESS'           : self.indi_allsky_config.get('FOCUSER', {}).get('I2C_ADDRESS', '0x60'),
             'DEW_HEATER__CLASSNAME'          : self.indi_allsky_config.get('DEW_HEATER', {}).get('CLASSNAME', ''),
             'DEW_HEATER__I2C_ADDRESS'        : self.indi_allsky_config.get('DEW_HEATER', {}).get('I2C_ADDRESS', '0x10'),
             'DEW_HEATER__PIN_1'              : self.indi_allsky_config.get('DEW_HEATER', {}).get('PIN_1', 'D12'),
@@ -3253,6 +3254,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_2']                = str(request.json['FOCUSER__GPIO_PIN_2'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_3']                = str(request.json['FOCUSER__GPIO_PIN_3'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_4']                = str(request.json['FOCUSER__GPIO_PIN_4'])
+        self.indi_allsky_config['FOCUSER']['I2C_ADDRESS']               = str(request.json['FOCUSER__I2C_ADDRESS'])
         self.indi_allsky_config['DEW_HEATER']['CLASSNAME']              = str(request.json['DEW_HEATER__CLASSNAME'])
         self.indi_allsky_config['DEW_HEATER']['I2C_ADDRESS']            = str(request.json['DEW_HEATER__I2C_ADDRESS'])
         self.indi_allsky_config['DEW_HEATER']['PIN_1']                  = str(request.json['DEW_HEATER__PIN_1'])
