@@ -25,18 +25,18 @@ class FocuserMotorKitBase(FocuserBase):
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
-        # pin 1 should be an number for the motor
-        motor_name = 'motor{0:d}'.format(int(pin_names[0]))
+        # pin 1 should be the name for the motor/stepper
+        stepper_name = str(pin_names[0])
 
 
-        logger.warning('Initializing MotorKit %s I2C focuser device @ %s', motor_name, hex(i2c_address))
+        logger.warning('Initializing MotorKit I2C focuser %s device @ %s', stepper_name, hex(i2c_address))
         i2c = board.I2C()
         #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
 
         kit = MotorKit(i2c=i2c, address=i2c_address)
 
-        self.stepper = getattr(kit, motor_name)
+        self.stepper = getattr(kit, stepper_name)
 
 
     def move(self, direction, degrees):

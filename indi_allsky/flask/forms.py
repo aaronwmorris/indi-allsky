@@ -4569,8 +4569,22 @@ class IndiAllskyConfigForm(FlaskForm):
                 try:
                     from adafruit_motorkit import MotorKit  # noqa: F401
 
+                    # only care about pin1
+                    if self.DEW_HEATER__PIN_1.data:
+                        try:
+                            getattr(MotorKit, self.FOCUSER__GPIO_PIN_1.data)
+                        except AttributeError:
+                            self.FOCUSER__GPIO_PIN_1.errors.append('PIN {0:s} not valid for your system (try stepper1, stepper2, etc)'.format(self.DEW_HEATER__PIN_1.data))
+                            result = False
+                    else:
+                        self.FOCUSER__GPIO_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
                 except ImportError:
                     self.FOCUSER__CLASSNAME.errors.append('motorkit python module not installed')
+                    result = False
+                except AttributeError as e:
+                    self.FOCUSER__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
 
@@ -4664,8 +4678,21 @@ class IndiAllskyConfigForm(FlaskForm):
             elif self.DEW_HEATER__CLASSNAME.data.startswith('motorkit_'):
                 try:
                     from adafruit_motorkit import MotorKit  # noqa: F401,F811
+
+                    if self.DEW_HEATER__PIN_1.data:
+                        try:
+                            getattr(MotorKit, self.DEW_HEATER__PIN_1.data)
+                        except AttributeError:
+                            self.DEW_HEATER__PIN_1.errors.append('PIN {0:s} not valid for your system (try motor1, motor2, etc)'.format(self.DEW_HEATER__PIN_1.data))
+                            result = False
+                    else:
+                        self.DEW_HEATER__PIN_1.errors.append('PIN must be defined')
+                        result = False
                 except ImportError:
                     self.DEW_HEATER__CLASSNAME.errors.append('motorkit python module not installed')
+                    result = False
+                except AttributeError as e:
+                    self.DEW_HEATER__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.DEW_HEATER__CLASSNAME.data == 'dew_heater_dockerpi_4channel_relay':
@@ -4803,8 +4830,21 @@ class IndiAllskyConfigForm(FlaskForm):
             elif self.FAN__CLASSNAME.data.startswith('motorkit_'):
                 try:
                     from adafruit_motorkit import MotorKit  # noqa: F401,F811
+
+                    if self.FAN__PIN_1.data:
+                        try:
+                            getattr(MotorKit, self.FAN__PIN_1.data)
+                        except AttributeError:
+                            self.FAN__PIN_1.errors.append('PIN {0:s} not valid for your system (try motor1, motor2, etc)'.format(self.FAN__PIN_1.data))
+                            result = False
+                    else:
+                        self.FAN__PIN_1.errors.append('PIN must be defined')
+                        result = False
                 except ImportError:
                     self.FAN__CLASSNAME.errors.append('motorkit python module not installed')
+                    result = False
+                except AttributeError as e:
+                    self.FAN__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.FAN__CLASSNAME.data == 'fan_dockerpi_4channel_relay':
