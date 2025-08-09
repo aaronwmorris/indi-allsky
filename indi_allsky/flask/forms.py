@@ -4570,11 +4570,11 @@ class IndiAllskyConfigForm(FlaskForm):
                     from adafruit_motorkit import MotorKit  # noqa: F401
 
                     # only care about pin1
-                    if self.DEW_HEATER__PIN_1.data:
+                    if self.FOCUSER__GPIO_PIN_1.data:
                         try:
                             getattr(MotorKit, self.FOCUSER__GPIO_PIN_1.data)
                         except AttributeError:
-                            self.FOCUSER__GPIO_PIN_1.errors.append('PIN {0:s} not valid for your system (try stepper1, stepper2, etc)'.format(self.DEW_HEATER__PIN_1.data))
+                            self.FOCUSER__GPIO_PIN_1.errors.append('PIN {0:s} not valid for your system (try stepper1, stepper2, etc)'.format(self.FOCUSER__GPIO_PIN_1.data))
                             result = False
                     else:
                         self.FOCUSER__GPIO_PIN_1.errors.append('PIN must be defined')
