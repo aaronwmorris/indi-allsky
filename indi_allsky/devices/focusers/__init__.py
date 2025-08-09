@@ -6,7 +6,7 @@ from .focuser_28byj import focuser_28byj_16 as blinka_focuser_28byj_16
 from .focuser_a4988 import focuser_a4988_nema17_full as blinka_focuser_a4988_nema17_full
 from .focuser_a4988 import focuser_a4988_nema17_half as blinka_focuser_a4988_nema17_half
 
-from .forcuserMotorKit import FocuserMotorKitSingleStep as motorkit_focuser_single_step
+from .focuserMotorKit import FocuserMotorKitSingleStep as motorkit_focuser_single_step
 
 from .focuserSerial28byj import FocuserSerial28byj_64 as serial_focuser_28byj_64
 
