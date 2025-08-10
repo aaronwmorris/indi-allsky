@@ -88,7 +88,7 @@ server {
     root %DOCROOT_FOLDER%;
 
     ### Comment this section to permit HTTP access to indi-allsky
-    ###  SESSION_COOKIE_SECURE will have to be set to "false" in flash config
+    ###  SESSION_COOKIE_SECURE will have to be set to "false" in flask config
     return 302 https://$host:%HTTPS_PORT%$request_uri;
     ###
 
