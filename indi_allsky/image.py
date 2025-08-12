@@ -867,9 +867,13 @@ class ImageWorker(Process):
             # publish temperature info
             temp_info = psutil.sensors_temperatures()
 
-            offset = 0  # need index for shared sensor values
+            system_temp_count = 0  # need index for shared sensor values
             for t_key in sorted(temp_info):  # always return the keys in the same order
                 for i, t in enumerate(temp_info[t_key]):
+                    if system_temp_count > 49:
+                        # limit to 50
+                        continue
+
                     temp_c = float(t.current)
 
                     if self.config.get('TEMP_DISPLAY') == 'f':
@@ -898,9 +902,9 @@ class ImageWorker(Process):
                     # temperatures always Celsius here
                     with self.sensors_temp_av.get_lock():
                         # index 0 is always ccd_temp
-                        self.sensors_temp_av[10 + offset] = temp_c
+                        self.sensors_temp_av[10 + system_temp_count] = temp_c
 
-                    offset += 1
+                    system_temp_count += 1
 
 
             # system temp sensors
