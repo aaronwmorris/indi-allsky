@@ -31,10 +31,10 @@ simplejpeg
 cython
 #rawpy  # installed later
 pygifsicle
-gunicorn[gthread] >= 22.0.0
+gunicorn[gthread] >= 23.0.0
 inotify
 psutil
-Flask >= 3.0.0
+Flask >= 3.1.1
 Flask-SQLAlchemy >= 3.1.1
 Flask-Migrate >= 4.0.5
 Flask-WTF >= 1.2.1
