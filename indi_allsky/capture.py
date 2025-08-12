@@ -1988,13 +1988,13 @@ class CaptureWorker(Process):
         temp_sensor__a_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 'sensor_user_10')
         temp_sensor__b_classname = self.config.get('TEMP_SENSOR', {}).get('B_CLASSNAME', '')
         temp_sensor__b_label = self.config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B')
-        temp_sensor__b_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_15')
+        temp_sensor__b_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_20')
         temp_sensor__c_classname = self.config.get('TEMP_SENSOR', {}).get('C_CLASSNAME', '')
         temp_sensor__c_label = self.config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C')
-        temp_sensor__c_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_20')
+        temp_sensor__c_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_30')
         temp_sensor__d_classname = self.config.get('TEMP_SENSOR', {}).get('D_CLASSNAME', '')
         temp_sensor__d_label = self.config.get('TEMP_SENSOR', {}).get('D_LABEL', 'Sensor D')
-        temp_sensor__d_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_25')
+        temp_sensor__d_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_40')
 
 
         if temp_sensor__a_classname:
