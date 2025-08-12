@@ -146,6 +146,37 @@ class HADiscovery(object):
         ('User Slot 27', None),
         ('User Slot 28', None),
         ('User Slot 29', None),
+        ('User Slot 30', None),
+        ('User Slot 31', None),
+        ('User Slot 32', None),
+        ('User Slot 33', None),
+        ('User Slot 34', None),
+        ('User Slot 35', None),
+        ('User Slot 36', None),
+        ('User Slot 37', None),
+        ('User Slot 38', None),
+        ('User Slot 39', None),
+        ('User Slot 40', None),
+        ('User Slot 41', None),
+        ('User Slot 42', None),
+        ('User Slot 43', None),
+        ('User Slot 44', None),
+        ('User Slot 45', None),
+        ('User Slot 46', None),
+        ('User Slot 47', None),
+        ('User Slot 48', None),
+        ('User Slot 49', None),
+        ('User Slot 50', None),
+        ('User Slot 51', None),
+        ('User Slot 52', None),
+        ('User Slot 53', None),
+        ('User Slot 54', None),
+        ('User Slot 55', None),
+        ('User Slot 56', None),
+        ('User Slot 57', None),
+        ('User Slot 58', None),
+        ('User Slot 59', None),
+
         ('Camera Temp', None),
         ('Future Use 1', None),
         ('Future Use 2', None),
@@ -176,6 +207,36 @@ class HADiscovery(object):
         ('System Temp 27', None),
         ('System Temp 28', None),
         ('System Temp 29', None),
+        ('System Temp 30', None),
+        ('System Temp 31', None),
+        ('System Temp 32', None),
+        ('System Temp 33', None),
+        ('System Temp 34', None),
+        ('System Temp 35', None),
+        ('System Temp 36', None),
+        ('System Temp 37', None),
+        ('System Temp 38', None),
+        ('System Temp 39', None),
+        ('System Temp 40', None),
+        ('System Temp 41', None),
+        ('System Temp 42', None),
+        ('System Temp 43', None),
+        ('System Temp 44', None),
+        ('System Temp 45', None),
+        ('System Temp 46', None),
+        ('System Temp 47', None),
+        ('System Temp 48', None),
+        ('System Temp 49', None),
+        ('System Temp 50', None),
+        ('System Temp 51', None),
+        ('System Temp 52', None),
+        ('System Temp 53', None),
+        ('System Temp 54', None),
+        ('System Temp 55', None),
+        ('System Temp 56', None),
+        ('System Temp 57', None),
+        ('System Temp 58', None),
+        ('System Temp 59', None),
     ]
 
 
@@ -849,12 +910,12 @@ class HADiscovery(object):
 
 
         # system temp sensors
-        for i in range(30):
+        for i in range(60):
             extended_sensor_list.append({
                 'component' : 'sensor',
                 'object_id' : 'indi_allsky_sensor_temp_{0}'.format(i),
                 'config' : {
-                    'name' : self.SENSOR_SLOT_choices[i + 30][0],
+                    'name' : self.SENSOR_SLOT_choices[i + 60][0],
                     'unit_of_measurement' : '°',
                     'unique_id' : 'indi_allsky_sensor_temp_{0}_{1}'.format(i, self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'sensor_temp_{0}'.format(str(i)))),
@@ -869,7 +930,7 @@ class HADiscovery(object):
 
 
         # user sensors
-        for i in range(30):
+        for i in range(60):
             extended_sensor_list.append({
                 'component' : 'sensor',
                 'object_id' : 'indi_allsky_sensor_user_{0}'.format(i),

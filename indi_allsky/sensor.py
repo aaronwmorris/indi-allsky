@@ -446,7 +446,7 @@ class SensorWorker(Process):
                 self.night_v,
             )
 
-        sensor_1_key = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_15')
+        sensor_1_key = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_20')
         self.sensors[1].slot = constants.SENSOR_INDEX_MAP[sensor_1_key]
 
 
@@ -481,7 +481,7 @@ class SensorWorker(Process):
                 self.night_v,
             )
 
-        sensor_2_key = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_20')
+        sensor_2_key = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_30')
         self.sensors[2].slot = constants.SENSOR_INDEX_MAP[sensor_2_key]
 
 
@@ -516,7 +516,7 @@ class SensorWorker(Process):
                 self.night_v,
             )
 
-        sensor_3_key = self.config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_25')
+        sensor_3_key = self.config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_40')
         self.sensors[3].slot = constants.SENSOR_INDEX_MAP[sensor_3_key]
 
 

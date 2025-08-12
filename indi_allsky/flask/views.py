@@ -2418,17 +2418,17 @@ class ConfigView(FormView):
             'TEMP_SENSOR__B_LABEL'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B'),
             'TEMP_SENSOR__B_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'D6'),
             'TEMP_SENSOR__B_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76'),
-            'TEMP_SENSOR__B_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_15'),
+            'TEMP_SENSOR__B_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_20'),
             'TEMP_SENSOR__C_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_CLASSNAME', ''),
             'TEMP_SENSOR__C_LABEL'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C'),
             'TEMP_SENSOR__C_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_PIN_1', 'D16'),
             'TEMP_SENSOR__C_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40'),
-            'TEMP_SENSOR__C_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_20'),
+            'TEMP_SENSOR__C_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_30'),
             'TEMP_SENSOR__D_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_CLASSNAME', ''),
             'TEMP_SENSOR__D_LABEL'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_LABEL', 'Sensor D'),
             'TEMP_SENSOR__D_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_PIN_1', 'D26'),
             'TEMP_SENSOR__D_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_I2C_ADDRESS', '0x50'),
-            'TEMP_SENSOR__D_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_25'),
+            'TEMP_SENSOR__D_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_40'),
             'TEMP_SENSOR__OPENWEATHERMAP_APIKEY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', ''),
             'TEMP_SENSOR__WUNDERGROUND_APIKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', ''),
             'TEMP_SENSOR__ASTROSPHERIC_APIKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', ''),
@@ -7051,8 +7051,8 @@ class JsonImageProcessingView(JsonView):
         bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
         #sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         #sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
-        sensors_temp_av = Array('f', [0.0 for x in range(30)])
-        sensors_user_av = Array('f', [0.0 for x in range(30)])
+        sensors_temp_av = Array('f', [0.0 for x in range(60)])
+        sensors_user_av = Array('f', [0.0 for x in range(60)])
         night_v = Value('i', 1)  # using night values for processing
 
         hdulist.close()

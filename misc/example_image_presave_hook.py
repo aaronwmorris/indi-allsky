@@ -32,8 +32,8 @@ logger = logging
 #LATITUDE   : float(os.environ['LATITUDE'])
 #LONGITUDE  : float(os.environ['LONGITUDE'])
 #ELEVATION  : int(os.environ['ELEVATION'])
-#SENSOR_TEMP_0 - SENSOR_TEMP_29 : float(os.environ['SENSOR_TEMP_##'])
-#SENSOR_USER_0 - SENSOR_USER_29 : float(os.environ['SENSOR_USER_##'])
+#SENSOR_TEMP_0 - SENSOR_TEMP_59 : float(os.environ['SENSOR_TEMP_##'])
+#SENSOR_USER_0 - SENSOR_USER_59 : float(os.environ['SENSOR_USER_##'])
 
 
 def sigint_handler(signum, frame):

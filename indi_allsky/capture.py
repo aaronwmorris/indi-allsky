@@ -86,6 +86,37 @@ class CaptureWorker(Process):
         ['sensor_user_27', 'User Slot 27'],
         ['sensor_user_28', 'User Slot 28'],
         ['sensor_user_29', 'User Slot 29'],
+        ['sensor_user_30', 'User Slot 30'],
+        ['sensor_user_31', 'User Slot 31'],
+        ['sensor_user_32', 'User Slot 32'],
+        ['sensor_user_33', 'User Slot 33'],
+        ['sensor_user_34', 'User Slot 34'],
+        ['sensor_user_35', 'User Slot 35'],
+        ['sensor_user_36', 'User Slot 36'],
+        ['sensor_user_37', 'User Slot 37'],
+        ['sensor_user_38', 'User Slot 38'],
+        ['sensor_user_39', 'User Slot 39'],
+        ['sensor_user_40', 'User Slot 40'],
+        ['sensor_user_41', 'User Slot 41'],
+        ['sensor_user_42', 'User Slot 42'],
+        ['sensor_user_43', 'User Slot 43'],
+        ['sensor_user_44', 'User Slot 44'],
+        ['sensor_user_45', 'User Slot 45'],
+        ['sensor_user_46', 'User Slot 46'],
+        ['sensor_user_47', 'User Slot 47'],
+        ['sensor_user_48', 'User Slot 48'],
+        ['sensor_user_49', 'User Slot 49'],
+        ['sensor_user_50', 'User Slot 50'],
+        ['sensor_user_51', 'User Slot 51'],
+        ['sensor_user_52', 'User Slot 52'],
+        ['sensor_user_53', 'User Slot 53'],
+        ['sensor_user_54', 'User Slot 54'],
+        ['sensor_user_55', 'User Slot 55'],
+        ['sensor_user_56', 'User Slot 56'],
+        ['sensor_user_57', 'User Slot 57'],
+        ['sensor_user_58', 'User Slot 58'],
+        ['sensor_user_59', 'User Slot 59'],
+
         ['sensor_temp_0', 'Camera Temp'],
         ['sensor_temp_1', 'Future Use 1'],
         ['sensor_temp_2', 'Future Use 2'],
@@ -116,6 +147,37 @@ class CaptureWorker(Process):
         ['sensor_temp_27', 'System Temp 27'],
         ['sensor_temp_28', 'System Temp 28'],
         ['sensor_temp_29', 'System Temp 29'],
+        ['sensor_temp_30', 'System Temp 30'],
+        ['sensor_temp_31', 'System Temp 31'],
+        ['sensor_temp_32', 'System Temp 32'],
+        ['sensor_temp_33', 'System Temp 33'],
+        ['sensor_temp_34', 'System Temp 34'],
+        ['sensor_temp_35', 'System Temp 35'],
+        ['sensor_temp_36', 'System Temp 36'],
+        ['sensor_temp_37', 'System Temp 37'],
+        ['sensor_temp_38', 'System Temp 38'],
+        ['sensor_temp_39', 'System Temp 39'],
+        ['sensor_temp_40', 'System Temp 40'],
+        ['sensor_temp_41', 'System Temp 41'],
+        ['sensor_temp_42', 'System Temp 42'],
+        ['sensor_temp_43', 'System Temp 43'],
+        ['sensor_temp_44', 'System Temp 44'],
+        ['sensor_temp_45', 'System Temp 45'],
+        ['sensor_temp_46', 'System Temp 46'],
+        ['sensor_temp_47', 'System Temp 47'],
+        ['sensor_temp_48', 'System Temp 48'],
+        ['sensor_temp_49', 'System Temp 49'],
+        ['sensor_temp_50', 'System Temp 50'],
+        ['sensor_temp_51', 'System Temp 51'],
+        ['sensor_temp_52', 'System Temp 52'],
+        ['sensor_temp_53', 'System Temp 53'],
+        ['sensor_temp_54', 'System Temp 54'],
+        ['sensor_temp_55', 'System Temp 55'],
+        ['sensor_temp_56', 'System Temp 56'],
+        ['sensor_temp_57', 'System Temp 57'],
+        ['sensor_temp_58', 'System Temp 58'],
+        ['sensor_temp_59', 'System Temp 59'],
+
         ['kpindex', 'Planetary K-Index (kpindex)'],
         ['ovation_max', 'Aurora Chance'],
         ['aurora_mag_bt', 'Solar Wind Bt [nT]'],
@@ -1926,13 +1988,13 @@ class CaptureWorker(Process):
         temp_sensor__a_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 'sensor_user_10')
         temp_sensor__b_classname = self.config.get('TEMP_SENSOR', {}).get('B_CLASSNAME', '')
         temp_sensor__b_label = self.config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B')
-        temp_sensor__b_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_15')
+        temp_sensor__b_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_20')
         temp_sensor__c_classname = self.config.get('TEMP_SENSOR', {}).get('C_CLASSNAME', '')
         temp_sensor__c_label = self.config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C')
-        temp_sensor__c_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_20')
+        temp_sensor__c_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_30')
         temp_sensor__d_classname = self.config.get('TEMP_SENSOR', {}).get('D_CLASSNAME', '')
         temp_sensor__d_label = self.config.get('TEMP_SENSOR', {}).get('D_LABEL', 'Sensor D')
-        temp_sensor__d_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_25')
+        temp_sensor__d_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_40')
 
 
         if temp_sensor__a_classname:
@@ -2028,6 +2090,6 @@ class CaptureWorker(Process):
                 temp_label_list.append(topic)
 
 
-        for x, label in enumerate(temp_label_list[:20]):  # limit to 20
-            self.SENSOR_SLOTS[x + 40][1] = '{0:s}'.format(label)
+        for x, label in enumerate(temp_label_list[:50]):  # limit to 50
+            self.SENSOR_SLOTS[x + 70][1] = '{0:s}'.format(label)
 
