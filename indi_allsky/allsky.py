@@ -127,8 +127,8 @@ class IndiAllSky(object):
         ### temperature values in this array should always be in Celsius
         # 0 ccd temp
         # 1-9 reserved for future use
-        # 10-29 system temperatures
-        self.sensors_temp_av = Array('f', [0.0 for x in range(30)])
+        # 10-89 system temperatures
+        self.sensors_temp_av = Array('f', [0.0 for x in range(60)])
 
         # sensors (temp, humidity, wind, sqm, etc)
         # 0 ccd temp
@@ -140,7 +140,7 @@ class IndiAllSky(object):
         # 6 wind direction in degrees
         # 7 sqm
         # 8-9 reserved for future use
-        self.sensors_user_av = Array('f', [0.0 for x in range(30)])
+        self.sensors_user_av = Array('f', [0.0 for x in range(60)])
 
         self.exposure_av = Array('f', [
             -1.0,  # current exposure - these must be -1.0 to indicate unset

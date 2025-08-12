@@ -7051,8 +7051,8 @@ class JsonImageProcessingView(JsonView):
         bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
         #sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         #sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
-        sensors_temp_av = Array('f', [0.0 for x in range(30)])
-        sensors_user_av = Array('f', [0.0 for x in range(30)])
+        sensors_temp_av = Array('f', [0.0 for x in range(60)])
+        sensors_user_av = Array('f', [0.0 for x in range(60)])
         night_v = Value('i', 1)  # using night values for processing
 
         hdulist.close()
