@@ -315,7 +315,19 @@ if [ -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
     source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
     echo "virtualenv python: $(python3 -V)"
     echo "virtualenv PATH: $PATH"
+elif [ -d "/home/allsky/venv" ]; then
+    # Docker
+    echo
+    echo "Detected docker indi-allsky virtualenv"
 
+    # shellcheck source=/dev/null
+    source "/home/allsky/venv/bin/activate"
+    echo "virtualenv python: $(python3 -V)"
+    echo "virtualenv PATH: $PATH"
+fi
+
+
+if [[ -n "${VIRTUAL_ENV:-}" ]]; then
     if which flask >/dev/null 2>&1; then
         echo "flask command: $(which flask)"
     else
