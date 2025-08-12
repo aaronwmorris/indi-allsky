@@ -1354,6 +1354,14 @@ class CaptureWorker(Process):
 
 
         if temp_process.returncode != 0:
+            try:
+                tempjson_name_p.unlink()
+            except FileNotFoundError:
+                pass
+            except PermissionError:
+                pass
+
+
             raise TemperatureException('Temperature script returned exited abnormally')
 
 
