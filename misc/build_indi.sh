@@ -773,8 +773,8 @@ while [ -z "${INDI_CORE_TAG:-}" ]; do
         --nocancel \
         --notags \
         --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-            "v2.1.5" "v2.1.5 - Recommended" "OFF" \
-            "v2.1.4" "v2.1.4" "ON" \
+            "v2.1.5" "v2.1.5 - Recommended" "ON" \
+            "v2.1.4" "v2.1.4" "OFF" \
             "v2.1.3" "v2.1.3" "OFF" \
             "v2.1.2.1" "v2.1.2.1" "OFF" \
             "v2.1.2" "v2.1.2" "OFF" \
