@@ -136,7 +136,7 @@ class IndiAllSkyDarks(object):
     @temp_delta.setter
     def temp_delta(self, new_temp_delta):
         self._temp_delta = float(abs(new_temp_delta))
-        logger.warning('New Temp delta: %0.2f', self.temp_delta)
+        logger.warning('New Temp delta: %0.1f', self.temp_delta)
 
 
     @property
@@ -585,6 +585,7 @@ class IndiAllSkyDarks(object):
 
         self._pre_temperature_action()
         self.getCcdTemperature()
+        logger.info('Camera temperature: %0.1f', self.sensors_temp_av[0])
 
 
         next_temp_thold = self.sensors_temp_av[0] - self.temp_delta
@@ -652,6 +653,7 @@ class IndiAllSkyDarks(object):
 
         self._pre_temperature_action()
         self.getCcdTemperature()
+        logger.info('Camera temperature: %0.1f', self.sensors_temp_av[0])
 
 
         next_temp_thold = self.sensors_temp_av[0] - self.temp_delta
@@ -1051,7 +1053,7 @@ class IndiAllSkyDarks(object):
             logger.info('Image average adu: %0.2f', m_avg)
 
             self.getCcdTemperature()
-            logger.info('Camera temperature: %0.2f', self.sensors_temp_av[0])
+            logger.info('Camera temperature: %0.1f', self.sensors_temp_av[0])
 
             i += 1  # increment
 
