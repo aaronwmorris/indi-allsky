@@ -597,7 +597,7 @@ class IndiAllSkyDarks(object):
             self._pre_temperature_action()
             self.getCcdTemperature()
 
-            logger.info('Next temperature threshold: %0.1f', next_temp_thold)
+            logger.info('Next temperature threshold: %0.1f (current: %0.1f)', next_temp_thold, self.sensors_temp_av[0])
 
             if self.sensors_temp_av[0] > next_temp_thold:
                 time.sleep(30.0)
@@ -664,7 +664,7 @@ class IndiAllSkyDarks(object):
             self._pre_temperature_action()
             self.getCcdTemperature()
 
-            logger.info('Next temperature threshold: %0.1f', next_temp_thold)
+            logger.info('Next temperature threshold: %0.1f (current: %0.1f)', next_temp_thold, self.sensors_temp_av[0])
 
             if self.sensors_temp_av[0] > next_temp_thold:
                 time.sleep(30.0)
