@@ -2183,6 +2183,14 @@ class ImageWorker(Process):
             hook_data = dict()
 
 
+            try:
+                self.pre_hook_datajson_name_p.unlink()
+            except FileNotFoundError:
+                pass
+            except PermissionError:
+                pass
+
+
         self.image_save_hook_process = None
 
 
