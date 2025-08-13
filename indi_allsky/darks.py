@@ -136,7 +136,7 @@ class IndiAllSkyDarks(object):
     @temp_delta.setter
     def temp_delta(self, new_temp_delta):
         self._temp_delta = float(abs(new_temp_delta))
-        logger.warning('New Temp delta: %0.2f', self.temp_delta)
+        logger.warning('New Temp delta: %0.1f', self.temp_delta)
 
 
     @property
@@ -583,7 +583,11 @@ class IndiAllSkyDarks(object):
 
         self._pre_run_tasks()
 
+        self._pre_temperature_action()
         self.getCcdTemperature()
+        logger.info('Camera temperature: %0.1f', self.sensors_temp_av[0])
+
+
         next_temp_thold = self.sensors_temp_av[0] - self.temp_delta
 
         # get first set of images
@@ -591,15 +595,16 @@ class IndiAllSkyDarks(object):
 
         while True:
             # This loop will run forever, it is up to the user to cancel
+            self._pre_temperature_action()
             self.getCcdTemperature()
 
-            logger.info('Next temperature threshold: %0.1f', next_temp_thold)
+            logger.info('Next temperature threshold: %0.1f (current: %0.1f)', next_temp_thold, self.sensors_temp_av[0])
 
             if self.sensors_temp_av[0] > next_temp_thold:
-                time.sleep(20.0)
+                time.sleep(30.0)
                 continue
 
-            logger.warning('Acheived next temperature threshold')
+            logger.warning('Achieved next temperature threshold: %0.1f | %0.1f', next_temp_thold, self.temp_delta)
             next_temp_thold -= self.temp_delta
 
             self._run(IndiAllSkyDarksAverage)
@@ -646,7 +651,11 @@ class IndiAllSkyDarks(object):
 
         self._pre_run_tasks()
 
+        self._pre_temperature_action()
         self.getCcdTemperature()
+        logger.info('Camera temperature: %0.1f', self.sensors_temp_av[0])
+
+
         next_temp_thold = self.sensors_temp_av[0] - self.temp_delta
 
         # get first set of images
@@ -654,15 +663,16 @@ class IndiAllSkyDarks(object):
 
         while True:
             # This loop will run forever, it is up to the user to cancel
+            self._pre_temperature_action()
             self.getCcdTemperature()
 
-            logger.info('Next temperature threshold: %0.1f', next_temp_thold)
+            logger.info('Next temperature threshold: %0.1f (current: %0.1f)', next_temp_thold, self.sensors_temp_av[0])
 
             if self.sensors_temp_av[0] > next_temp_thold:
-                time.sleep(20.0)
+                time.sleep(30.0)
                 continue
 
-            logger.warning('Acheived next temperature threshold')
+            logger.warning('Achieved next temperature threshold: %0.1f | %0.1f', next_temp_thold, self.temp_delta)
             next_temp_thold -= self.temp_delta
 
             self._run(IndiAllSkyDarksSigmaClip)
@@ -721,6 +731,42 @@ class IndiAllSkyDarks(object):
         elif self.camera_server in ['indi_asi_single_ccd']:
             if self.camera_name.startswith('ZWO ASI120'):
                 self.indiclient.configureCcdDevice(self.indi_config)
+
+
+    def _pre_temperature_action(self):
+        if self.camera_name.startswith('libcamera_'):
+            # libcamera only reports temperature changes when an exposure is taken
+            logger.warning('TAKING THROW AWAY EXPOSURE TO UPDATE TEMPERATURE')
+            self.shoot(0.1, sync=True, timeout=10.0)
+            i_dict = self.image_q.get(timeout=10)
+            filename = Path(i_dict['filename'])
+
+            try:
+                filename.unlink()
+            except FileNotFoundError:
+                pass
+        elif self.camera_server == 'indi_libcamera_ccd':
+            # libcamera only reports temperature changes when an exposure is taken
+            logger.warning('TAKING THROW AWAY EXPOSURE TO UPDATE TEMPERATURE')
+            self.shoot(0.1, sync=True, timeout=10.0)
+            i_dict = self.image_q.get(timeout=10)
+            filename = Path(i_dict['filename'])
+
+            try:
+                filename.unlink()
+            except FileNotFoundError:
+                pass
+        elif 'indi_pylibcamera' in self.camera_server:  # SPECIAL CASE
+            # libcamera only reports temperature changes when an exposure is taken
+            logger.warning('TAKING THROW AWAY EXPOSURE TO UPDATE TEMPERATURE')
+            self.shoot(0.1, sync=True, timeout=10.0)
+            i_dict = self.image_q.get(timeout=10)
+            filename = Path(i_dict['filename'])
+
+            try:
+                filename.unlink()
+            except FileNotFoundError:
+                pass
 
 
     @staticmethod
@@ -1007,7 +1053,7 @@ class IndiAllSkyDarks(object):
             logger.info('Image average adu: %0.2f', m_avg)
 
             self.getCcdTemperature()
-            logger.info('Camera temperature: %0.2f', self.sensors_temp_av[0])
+            logger.info('Camera temperature: %0.1f', self.sensors_temp_av[0])
 
             i += 1  # increment
 
