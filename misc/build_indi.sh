@@ -398,9 +398,16 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         libnutclient-dev \
         libzmq3-dev \
         libahp-gt-dev \
-        libcamera-dev \
         libboost-program-options-dev \
         zlib1g-dev
+
+
+    if [[ "$CPU_ARCH" == "aarch64" ]]; then
+        sudo apt-get -y install \
+            libcamera-dev \
+            librpicam-app-dev
+    fi
+
 
 elif [[ "$DISTRO" == "debian_12" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
@@ -457,10 +464,15 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         libnutclient-dev \
         libzmq3-dev \
         libahp-gt-dev \
-        libcamera-dev \
         libboost-program-options1.74-dev \
         zlib1g-dev
 
+
+    if [[ "$CPU_ARCH" == "aarch64" ]]; then
+        sudo apt-get -y install \
+            libcamera-dev \
+            librpicam-app-dev
+    fi
 
 elif [[ "$DISTRO" == "debian_11" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
