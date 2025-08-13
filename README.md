@@ -193,7 +193,8 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## INDI support
 | Version         | Note |
 | --------------- | ---- |
-| v2.1.4          | **Recommended for new builds** |
+| v2.1.5          | **Recommended for new builds** |
+| v2.1.4          |      |
 | v2.1.3          |      |
 | v2.1.2.1        |      |
 | v2.1.2          |      |
