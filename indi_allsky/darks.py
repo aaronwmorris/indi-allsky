@@ -600,7 +600,7 @@ class IndiAllSkyDarks(object):
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
             if self.sensors_temp_av[0] > next_temp_thold:
-                time.sleep(20.0)
+                time.sleep(30.0)
                 continue
 
             logger.warning('Achieved next temperature threshold: %0.1f | %0.1f', next_temp_thold, self.temp_delta)
@@ -667,7 +667,7 @@ class IndiAllSkyDarks(object):
             logger.info('Next temperature threshold: %0.1f', next_temp_thold)
 
             if self.sensors_temp_av[0] > next_temp_thold:
-                time.sleep(20.0)
+                time.sleep(30.0)
                 continue
 
             logger.warning('Achieved next temperature threshold: %0.1f | %0.1f', next_temp_thold, self.temp_delta)
@@ -734,6 +734,7 @@ class IndiAllSkyDarks(object):
     def _pre_temperature_action(self):
         if self.camera_name.startswith('libcamera_'):
             # libcamera only reports temperature changes when an exposure is taken
+            logger.warning('TAKING THROW AWAY EXPOSURE TO UPDATE TEMPERATURE')
             self.shoot(0.1, sync=True, timeout=10.0)
             i_dict = self.image_q.get(timeout=10)
             filename = Path(i_dict['filename'])
@@ -744,6 +745,7 @@ class IndiAllSkyDarks(object):
                 pass
         elif self.camera_server == 'indi_libcamera_ccd':
             # libcamera only reports temperature changes when an exposure is taken
+            logger.warning('TAKING THROW AWAY EXPOSURE TO UPDATE TEMPERATURE')
             self.shoot(0.1, sync=True, timeout=10.0)
             i_dict = self.image_q.get(timeout=10)
             filename = Path(i_dict['filename'])
@@ -754,6 +756,7 @@ class IndiAllSkyDarks(object):
                 pass
         elif 'indi_pylibcamera' in self.camera_server:  # SPECIAL CASE
             # libcamera only reports temperature changes when an exposure is taken
+            logger.warning('TAKING THROW AWAY EXPOSURE TO UPDATE TEMPERATURE')
             self.shoot(0.1, sync=True, timeout=10.0)
             i_dict = self.image_q.get(timeout=10)
             filename = Path(i_dict['filename'])
