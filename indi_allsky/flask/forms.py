@@ -451,7 +451,7 @@ def CCD_TEMP_SCRIPT_validator(form, field):
 
 
     if temp_process.returncode != 0:
-        raise ValidationError('Temperature script returned exited abnormally')
+        raise ValidationError('Temperature script exited abnormally')
 
 
     try:
