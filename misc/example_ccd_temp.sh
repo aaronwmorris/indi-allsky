@@ -40,5 +40,5 @@ jq --null-input --argjson temp_c "$TEMP_C" '.temp = $temp_c' '{}' > "$TEMP_JSON"
 #echo "{ \"temp\" : $TEMP_C }" | jq > $TEMP_JSON
 
 
-# script must exist with exit code 0 for success
+# script must return exit code 0 for success
 exit 0

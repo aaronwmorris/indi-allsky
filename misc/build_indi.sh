@@ -25,7 +25,7 @@ OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 
 ### config ###
 INDISERVER_SERVICE_NAME="indiserver"
-INDI_AUTO_TAG="v2.1.4"
+INDI_AUTO_TAG="v2.1.5"
 INDI_AUTO_DRIVERS="supported"
 ### end config ###
 
@@ -371,6 +371,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         whiptail \
         fxload \
         pkgconf \
+        libudev-dev \
         libavcodec-dev \
         libavdevice-dev \
         libboost-dev \
@@ -397,9 +398,16 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         libnutclient-dev \
         libzmq3-dev \
         libahp-gt-dev \
-        libcamera-dev \
         libboost-program-options-dev \
         zlib1g-dev
+
+
+    if [[ "$CPU_ARCH" == "aarch64" ]]; then
+        sudo apt-get -y install \
+            libcamera-dev \
+            librpicam-app-dev
+    fi
+
 
 elif [[ "$DISTRO" == "debian_12" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
@@ -429,6 +437,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         whiptail \
         fxload \
         pkgconf \
+        libudev-dev \
         libavcodec-dev \
         libavdevice-dev \
         libboost-dev \
@@ -455,10 +464,15 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         libnutclient-dev \
         libzmq3-dev \
         libahp-gt-dev \
-        libcamera-dev \
         libboost-program-options1.74-dev \
         zlib1g-dev
 
+
+    if [[ "$CPU_ARCH" == "aarch64" ]]; then
+        sudo apt-get -y install \
+            libcamera-dev \
+            librpicam-app-dev
+    fi
 
 elif [[ "$DISTRO" == "debian_11" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
@@ -489,6 +503,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         whiptail \
         fxload \
         pkg-config \
+        libudev-dev \
         libavcodec-dev \
         libavdevice-dev \
         libboost-dev \
@@ -546,6 +561,7 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
         whiptail \
         fxload \
         pkg-config \
+        libudev-dev \
         libavcodec-dev \
         libavdevice-dev \
         libboost-dev \
@@ -599,6 +615,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         whiptail \
         fxload \
         pkgconf \
+        libudev-dev \
         libavcodec-dev \
         libavdevice-dev \
         libboost-dev \
@@ -657,6 +674,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         whiptail \
         fxload \
         pkg-config \
+        libudev-dev \
         libavcodec-dev \
         libavdevice-dev \
         libboost-dev \
@@ -712,6 +730,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         whiptail \
         fxload \
         pkg-config \
+        libudev-dev \
         libavcodec-dev \
         libavdevice-dev \
         libboost-dev \
@@ -766,7 +785,8 @@ while [ -z "${INDI_CORE_TAG:-}" ]; do
         --nocancel \
         --notags \
         --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-            "v2.1.4" "v2.1.4 - Recommend" "ON" \
+            "v2.1.5" "v2.1.5 - Recommended" "ON" \
+            "v2.1.4" "v2.1.4" "OFF" \
             "v2.1.3" "v2.1.3" "OFF" \
             "v2.1.2.1" "v2.1.2.1" "OFF" \
             "v2.1.2" "v2.1.2" "OFF" \

@@ -52,6 +52,6 @@ with io.open(temp_json, 'w') as f_temp_json:
     json.dump(temp_data, f_temp_json, indent=4)
 
 
-# script must exist with exit code 0 for success
+# script must return exit code 0 for success
 sys.exit(0)
 

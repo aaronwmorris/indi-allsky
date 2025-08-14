@@ -78,5 +78,5 @@ with io.open(data_file, 'w') as data_f:
     json.dump(data, data_f, indent=4)
 
 
-# script must exist with exit code 0 for success
+# script must return exit code 0 for success
 sys.exit(0)

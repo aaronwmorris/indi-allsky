@@ -68,5 +68,5 @@ if not image_path.is_file():
 # It is recommended not to alter the image
 
 
-# script must exist with exit code 0 for success
+# script must return exit code 0 for success
 sys.exit(0)
