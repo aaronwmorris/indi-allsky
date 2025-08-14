@@ -451,6 +451,13 @@ def CCD_TEMP_SCRIPT_validator(form, field):
 
 
     if temp_process.returncode != 0:
+        try:
+            tempjson_name_p.unlink()  # remove temp file
+        except PermissionError:
+            pass
+        except FileNotFoundError:
+            pass
+
         raise ValidationError('Temperature script exited abnormally')
 
 
