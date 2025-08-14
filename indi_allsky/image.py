@@ -226,11 +226,8 @@ class ImageWorker(Process):
 
 
             if i_dict.get('stop'):
-                self.image_processor.realtimeKeogramDataSave()
+                self._shutdown = True
 
-                logger.warning('Goodbye')
-
-                return
 
             if self._shutdown:
                 self.image_processor.realtimeKeogramDataSave()

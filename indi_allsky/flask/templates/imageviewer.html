@@ -204,6 +204,7 @@ function closeFullscreen() {
             <span id="loop_here"></span>
             <span id="mini_generate_here"></span>
             <span id="chart_here"></span>
+            <span id="lag_here"></span>
             <span id="img_download"></span>
             <span id="fits_download"></span>
             <span id="fits_processing"></span>
@@ -704,6 +705,20 @@ function init() {
                     $('<span />', {
                         'text'  : 'Chart',
                         'class' : "badge pill bg-secondary",
+                    })
+                )
+            );
+
+
+            $('#lag_here').html(
+                $('<a />', {
+                    'href' : "{{ url_for('indi_allsky.image_lag_view') }}?timestamp=" + image_data[image_index]['ts'],
+                    'target' : '_blank',
+                    'rel'    : 'noopener noreferrer',
+                }).html(
+                    $('<span />', {
+                        'text'  : 'Lag',
+                        'class' : "badge pill bg-warning text-dark",
                     })
                 )
             );
