@@ -140,6 +140,10 @@ if [ "${INDIALLSKY_WEB_GENERATE_APIKEY:-false}" == "true" ]; then
 fi
 
 
+# Log to stderr
+export GUNICORN_ERROR_LOG_HANDLER=wsgi
+
+
 # start the program
 exec gunicorn \
     --bind 0.0.0.0:8000 \
