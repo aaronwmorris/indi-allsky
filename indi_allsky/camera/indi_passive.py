@@ -2,8 +2,6 @@ import time
 import logging
 #from pprint import pformat
 
-import PyIndi
-
 from .indi import IndiClient
 
 #from ..flask import db
@@ -21,67 +19,10 @@ app = create_app()
 
 class IndiClientPassive(IndiClient):
 
-    __state_to_str_p = {
-        PyIndi.IPS_IDLE  : 'IDLE',
-        PyIndi.IPS_OK    : 'OK',
-        PyIndi.IPS_BUSY  : 'BUSY',
-        PyIndi.IPS_ALERT : 'ALERT',
-    }
-
-
-    def __init__(
-        self,
-        config,
-        image_q,
-        latitude_v,
-        longitude_v,
-        elevation_v,
-        ra_v,
-        dec_v,
-        gain_v,
-        bin_v,
-        night_v,
-    ):
-        super(IndiClient, self).__init__()
-
-        self.config = config
-        self.image_q = image_q
-
-        self.latitude_v = latitude_v
-        self.longitude_v = longitude_v
-        self.elevation_v = elevation_v
-
-        self.ra_v = ra_v
-        self.dec_v = dec_v
-
-        self.gain_v = gain_v
-        self.bin_v = bin_v
-
-        self.night_v = night_v
-
-        self._camera_id = None
-
-        self._ccd_device = None
-        self._ctl_ccd_exposure = None
-
-        self._telescope_device = None
-        self._gps_device = None
-
-        self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
-
-        self._timeout = 10.0
-        self._exposure = 0.0
-
-        self.exposureStartTime = None
+    def __init__(self, *args, **kwargs):
+        super(IndiClientPassive, self).__init__(*args, **kwargs)
 
         logger.info('creating an instance of IndiClient')
-
-        pyindi_version = '.'.join((
-            str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
-            str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
-            str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
-        ))
-        logger.info('PyIndi version: %s', pyindi_version)
 
 
     def parkTelescope(self):

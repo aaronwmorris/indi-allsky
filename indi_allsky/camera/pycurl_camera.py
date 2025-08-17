@@ -138,14 +138,9 @@ class IndiClientPycurl(IndiClient):
         self.pycurl_worker = None
         self.pycurl_worker_idx = 0
 
-        self._exposure = None
-
-        self._camera_id = None
-
         self._temp_val = -273.15  # absolute zero  :-)
 
 
-        self.ccd_device = None
         self.active_exposure = False
         self.exposureStartTime = None
         self.current_exposure_file_p = None
