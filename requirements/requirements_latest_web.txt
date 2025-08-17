@@ -12,6 +12,7 @@ ccdproc >= 2.4.2
 scikit-image >= 0.25.0
 # https://www.wheelodex.org/projects/Pillow/
 Pillow
+simplejpeg
 bottleneck >= 1.4.0
 ephem
 skyfield

@@ -24,6 +24,7 @@ Pillow
 piexif
 imageio
 imageio-ffmpeg
+simplejpeg
 # https://www.wheelodex.org/projects/imagecodecs/
 #imagecodecs
 cython

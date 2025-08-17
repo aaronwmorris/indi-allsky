@@ -37,6 +37,7 @@ Pillow
 piexif
 imageio
 imageio-ffmpeg
+simplejpeg
 # https://www.piwheels.org/project/imagecodecs/
 #imagecodecs
 #rawpy  # not needed
