@@ -58,6 +58,10 @@ MARIADB_DATABASE=indi_allsky
 MARIADB_USER=indi_allsky_own
 MARIADB_PASSWORD=%MARIADB_PASSWORD%
 
+# gunicorn security setting.  Fixes some spurious https -> http redirects
+# May need to be locked down for a remote reverse proxy
+FORWARDED_ALLOW_IPS="*"
+
 # For testing
 #INDIALLSKY_CAPTURE_NO_WAIT=1
 #INDIALLSKY_GUNICORN_NO_WAIT=1
