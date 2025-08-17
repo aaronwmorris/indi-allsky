@@ -9,6 +9,7 @@ ccdproc
 scikit-image <= 0.19.3
 # https://www.wheelodex.org/projects/Pillow/
 Pillow
+simplejpeg
 bottleneck
 ephem
 skyfield
