@@ -20,11 +20,6 @@ class IndiClientTestCameraBase(IndiClient):
     def __init__(self, *args, **kwargs):
         super(IndiClientTestCameraBase, self).__init__(*args, **kwargs)
 
-        self._camera_id = None
-
-
-        self._exposure = None
-        self.exposureStartTime = None
         self.current_exposure_file_p = None
 
 
@@ -35,7 +30,6 @@ class IndiClientTestCameraBase(IndiClient):
 
         self._temp_val = -273.15  # absolute zero  :-)
 
-        self.ccd_device = None
         self.ccd_device_name = 'OVERRIDE'
         self.ccd_driver_exec = 'OVERRIDE'
 
@@ -421,7 +415,6 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
     def __init__(self, *args, **kwargs):
         super(IndiClientTestCameraBubbles, self).__init__(*args, **kwargs)
 
-        self.ccd_device = None
         self.ccd_device_name = 'Bubbles Test Camera'
         self.ccd_driver_exec = 'test_bubbles'
 
@@ -569,7 +562,6 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
     def __init__(self, *args, **kwargs):
         super(IndiClientTestCameraRotatingStars, self).__init__(*args, **kwargs)
 
-        self.ccd_device = None
         self.ccd_device_name = 'Rotating Stars Test Camera'
         self.ccd_driver_exec = 'test_rotating_stars'
 
