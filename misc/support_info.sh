@@ -313,8 +313,6 @@ if [ -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
 
     # shellcheck source=/dev/null
     source "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky/bin/activate"
-    echo "virtualenv python: $(python3 -V)"
-    echo "virtualenv PATH: $PATH"
 elif [ -d "/home/allsky/venv" ]; then
     # Docker
     echo
@@ -322,15 +320,25 @@ elif [ -d "/home/allsky/venv" ]; then
 
     # shellcheck source=/dev/null
     source "/home/allsky/venv/bin/activate"
-    echo "virtualenv python: $(python3 -V)"
-    echo "virtualenv PATH: $PATH"
 fi
 
 
 if [[ -n "${VIRTUAL_ENV:-}" ]]; then
+    echo
+    echo "virtualenv PATH: $PATH"
+
+    echo
+    echo "virtualenv python: $(python3 -V)"
+
+    echo
+    echo "python platform.machine()"
+    python3 -c 'import platform; print(platform.machine());'
+
     if which flask >/dev/null 2>&1; then
+        echo
         echo "flask command: $(which flask)"
     else
+        echo
         echo "flask: not found"
     fi
 

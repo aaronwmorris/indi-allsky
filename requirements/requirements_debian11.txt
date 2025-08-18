@@ -24,7 +24,8 @@ Pillow
 piexif
 imageio
 imageio-ffmpeg
-simplejpeg
+simplejpeg ; platform_machine == 'x86_64' or 'aarch64' in platform_machine
+simplejpeg <= 1.7.2 ; 'arm' in platform_machine
 # https://www.wheelodex.org/projects/imagecodecs/
 #imagecodecs
 cython
