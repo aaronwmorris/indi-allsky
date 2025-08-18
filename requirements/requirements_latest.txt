@@ -29,7 +29,8 @@ simplejpeg
 # https://www.wheelodex.org/projects/imagecodecs/
 #imagecodecs
 cython
-rawpy >= 0.23.0
+rawpy >= 0.23.0 ; platform_machine == 'x86_64' or 'aarch64' in platform_machine
+# rawpy installed later on arm 32-bit
 pygifsicle
 gunicorn[gthread] >= 23.0.0
 inotify
