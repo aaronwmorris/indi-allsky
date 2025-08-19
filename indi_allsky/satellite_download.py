@@ -62,6 +62,11 @@ class IndiAllskyUpdateSatelliteData(object):
                 continue
 
 
+            if isinstance(tle_data, type(None)):
+                # HTTP error condition
+                continue
+
+
             # flush group entries
             IndiAllSkyDbTleDataTable.query\
                 .filter(IndiAllSkyDbTleDataTable.group == group)\
