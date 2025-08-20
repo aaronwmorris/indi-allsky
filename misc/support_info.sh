@@ -396,7 +396,7 @@ echo "\`\`\`"  # markdown
 
 echo "keogram errors"
 echo "\`\`\`"  # markdown
-grep "keogram" /var/log/indi-allsky/indi-allsky.log | grep -v longterm | tail -n 50 || true
+grep "keogram" /var/log/indi-allsky/indi-allsky.log | grep -v longterm | grep -v Storing | tail -n 50 || true
 echo "\`\`\`"  # markdown
 
 
