@@ -13,6 +13,9 @@ function catch_error() {
     echo
     echo
     echo "\`\`\`"  # markdown
+    #echo
+    #echo "</details>"
+    #echo
     echo "###############"
     echo "###  ERROR  ###"
     echo "###############"
@@ -28,6 +31,9 @@ function catch_sigint() {
     echo
     echo
     echo "\`\`\`"  # markdown
+    #echo
+    #echo "</details>"
+    #echo
     echo "###############"
     echo "###  ERROR  ###"
     echo "###############"
@@ -82,6 +88,10 @@ cd "$OLDPWD"
 #sudo true
 
 
+#echo "<details>"
+#echo
+#echo "<summary>indi-allsky Support Info</summary>"
+#echo
 echo "#################################"
 echo "### indi-allsky support info  ###"
 echo "#################################"
@@ -404,3 +414,6 @@ echo
 echo "#################################"
 echo "###     end support info      ###"
 echo "#################################"
+
+#echo
+#echo "</details>"
