@@ -27,7 +27,7 @@ PRESSURE = 1010  # 0 disables refraction
 class svp(object):
 
     def __init__(self):
-        with io.open('/tmp/iss_27272897.txt', 'r') as f_tle:
+        with io.open('/tmp/iss_25544.txt', 'r') as f_tle:
             self.tle_data = f_tle.readlines()
 
 

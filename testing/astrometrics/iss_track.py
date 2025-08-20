@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#import sys
+import sys
 import io
 from datetime import datetime
 from datetime import timedelta
@@ -19,20 +19,21 @@ logging.basicConfig(level=logging.INFO)
 logger = logging
 
 
-CITY = 'Atlanta'
+LATITUDE = 33.0
+LONGITUDE = -84.0
 
 
-class IssTrack(object):
-    iss_tle_url = 'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE'
-    iss_temp_file = '/tmp/iss_27272897.txt'
+class SatelliteTrack(object):
+    sat_tle_url = 'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE'
+    tle_temp_file = '/tmp/iss_25544.txt'
 
 
     def __init__(self):
-        self.iss_tle_data = None
+        self.tle_data = None
 
 
     def main(self):
-        iss_temp_file_p = Path(self.iss_temp_file)
+        tle_temp_file_p = Path(self.tle_temp_file)
 
 
         now = datetime.now()
@@ -40,51 +41,56 @@ class IssTrack(object):
 
 
         # allow data to be reused
-        if not self.iss_tle_data:
+        if not self.tle_data:
             try:
-                if not iss_temp_file_p.exists():
-                    self.iss_tle_data = self.download_tle(self.iss_tle_url, iss_temp_file_p)
-                elif iss_temp_file_p.stat().st_mtime < now_minus_24h.timestamp():
+                if not tle_temp_file_p.exists():
+                    self.tle_data = self.download_tle(self.sat_tle_url, tle_temp_file_p)
+                elif tle_temp_file_p.stat().st_mtime < now_minus_24h.timestamp():
                     logger.warning('Data is older than 24 hours')
-                    self.iss_tle_data = self.download_tle(self.iss_tle_url, iss_temp_file_p)
+                    self.tle_data = self.download_tle(self.sat_tle_url, tle_temp_file_p)
                 else:
-                    self.iss_tle_data = self.load_tle(iss_temp_file_p)
+                    self.tle_data = self.load_tle(tle_temp_file_p)
             except socket.gaierror as e:
                 logger.error('Name resolution error: %s', str(e))
-                self.hms_kml_data = None
+                self.tle_data = None
             except socket.timeout as e:
                 logger.error('Timeout error: %s', str(e))
-                self.iss_tle_data = None
+                self.tle_data = None
             except requests.exceptions.ReadTimeout as e:
                 logger.error('Timeout error: %s', str(e))
-                self.iss_tle_data = None
+                self.tle_data = None
             except ssl.SSLCertVerificationError as e:
                 logger.error('Certificate error: %s', str(e))
-                self.iss_tle_data = None
+                self.tle_data = None
             except requests.exceptions.SSLError as e:
                 logger.error('Certificate error: %s', str(e))
-                self.iss_tle_data = None
+                self.tle_data = None
 
 
+        if isinstance(self.tle_data, type(None)):
+            logger.error('TLE data is empty')
+            sys.exit(1)
 
-        if self.iss_tle_data:
-            obs = ephem.city(CITY)
 
-            #obs = ephem.Observer()
-            #obs.lat = math.radians(89)
-            #obs.long = math.radians(0)
-            #obs.elevation = 300
+        if self.tle_data:
+            obs = ephem.Observer()
+            obs.lat = math.radians(LATITUDE)
+            obs.long = math.radians(LONGITUDE)
+            obs.elevation = 300
 
             # disable atmospheric refraction calcs
             obs.pressure = 0
 
             try:
-                iss = ephem.readtle(*self.iss_tle_data)
+                sat = ephem.readtle(*self.tle_data)
             except ValueError as e:
                 logger.error('Satellite TLE data error: %s', str(e))
-                raise
+                sys.exit(1)
+            except TypeError as e:
+                logger.error('Satellite TLE data error: %s', str(e))
+                sys.exit(1)
 
-            #logger.info('%s', dir(iss))
+            #logger.info('%s', dir(sat))
 
 
             while True:
@@ -93,22 +99,22 @@ class IssTrack(object):
                 obs.date = utcnow
                 #obs.date = utcnow + timedelta(hours=6)  # testing
 
-                iss.compute(obs)
+                sat.compute(obs)
 
                 try:
-                    iss_next_pass = obs.next_pass(iss)
+                    sat_next_pass = obs.next_pass(sat)
                 except ValueError as e:
                     logger.error('Next pass error: %s', str(e))
                     raise
 
-                logger.info('iss: altitude %4.1f, azimuth %5.1f', math.degrees(iss.alt), math.degrees(iss.az))
+                logger.info('satellite: altitude %4.1f, azimuth %5.1f', math.degrees(sat.alt), math.degrees(sat.az))
                 logger.info(' next rise: {0:%Y-%m-%d %H:%M:%S} ({1:0.1f}h), max: {2:%Y-%m-%d %H:%M:%S}, set: {3:%Y-%m-%d %H:%M:%S} - duration {4:d}s - elev {5:0.1f}km'.format(
-                    ephem.localtime(iss_next_pass[0]),
-                    (iss_next_pass[0].datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600,
-                    ephem.localtime(iss_next_pass[2]),
-                    ephem.localtime(iss_next_pass[4]),
-                    (ephem.localtime(iss_next_pass[4]) - ephem.localtime(iss_next_pass[0])).seconds,
-                    iss.elevation / 1000,
+                    ephem.localtime(sat_next_pass[0]),
+                    (sat_next_pass[0].datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600,
+                    ephem.localtime(sat_next_pass[2]),
+                    ephem.localtime(sat_next_pass[4]),
+                    (ephem.localtime(sat_next_pass[4]) - ephem.localtime(sat_next_pass[0])).seconds,
+                    sat.elevation / 1000,
                 ))
 
                 time.sleep(5.0)
@@ -140,7 +146,7 @@ class IssTrack(object):
 
 
 if __name__ == "__main__":
-    a = IssTrack()
+    a = SatelliteTrack()
     a.main()
 
 
