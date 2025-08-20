@@ -118,7 +118,7 @@ class IndiAllskySmokeUpdate(object):
                 self.hms_kml_data = None
 
 
-        if not self.hms_kml_data:
+        if isinstance(self.hms_kml_data, type(None)):
             raise NoSmokeData('No KML data')
 
 

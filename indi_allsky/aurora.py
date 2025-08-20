@@ -140,6 +140,11 @@ class IndiAllskyAuroraUpdate(object):
                 raise AuroraDataUpdateFailure from e
 
 
+        if isinstance(self.ovation_json_data, type(None)):
+            # HTTP error condition
+            raise AuroraDataUpdateFailure('HTTP error')
+
+
         max_ovation, avg_ovation = self.processOvationLocationData(self.ovation_json_data, latitude, longitude)
         logger.info('Max Ovation: %d', max_ovation)
         logger.info('Avg Ovation: %0.2f', avg_ovation)
@@ -493,6 +498,11 @@ class IndiAllskyAuroraUpdate(object):
             except requests.exceptions.SSLError as e:
                 logger.error('Certificate error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
+
+
+        if isinstance(self.hemi_power_data, type(None)):
+            # HTTP error condition
+            raise AuroraDataUpdateFailure('HTTP error')
 
 
         try:
