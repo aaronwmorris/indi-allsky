@@ -25,7 +25,7 @@ LONGITUDE = -84.0
 
 class SatelliteTrack(object):
     sat_tle_url = 'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE'
-    sat_temp_file = '/tmp/iss_27272897.txt'
+    tle_temp_file = '/tmp/iss_27272897.txt'
 
 
     def __init__(self):
@@ -33,7 +33,7 @@ class SatelliteTrack(object):
 
 
     def main(self):
-        sat_temp_file_p = Path(self.sat_temp_file)
+        tle_temp_file_p = Path(self.tle_temp_file)
 
 
         now = datetime.now()
@@ -43,13 +43,13 @@ class SatelliteTrack(object):
         # allow data to be reused
         if not self.tle_data:
             try:
-                if not sat_temp_file_p.exists():
-                    self.tle_data = self.download_tle(self.sat_tle_url, sat_temp_file_p)
-                elif sat_temp_file_p.stat().st_mtime < now_minus_24h.timestamp():
+                if not tle_temp_file_p.exists():
+                    self.tle_data = self.download_tle(self.sat_tle_url, tle_temp_file_p)
+                elif tle_temp_file_p.stat().st_mtime < now_minus_24h.timestamp():
                     logger.warning('Data is older than 24 hours')
-                    self.tle_data = self.download_tle(self.sat_tle_url, sat_temp_file_p)
+                    self.tle_data = self.download_tle(self.sat_tle_url, tle_temp_file_p)
                 else:
-                    self.tle_data = self.load_tle(sat_temp_file_p)
+                    self.tle_data = self.load_tle(tle_temp_file_p)
             except socket.gaierror as e:
                 logger.error('Name resolution error: %s', str(e))
                 self.tle_data = None
