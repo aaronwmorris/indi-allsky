@@ -9793,22 +9793,40 @@ class AjaxAstroPanelView(BaseView):
             sat.compute(obs)
 
             try:
+                # all next_pass() values can be None
                 next_pass = obs.next_pass(sat)
             except ValueError as e:
                 app.logger.error('Next pass error: %s', str(e))
                 continue
 
+
             sat_data = {
                 'name'      : str(sat_entry.title).upper(),
-                'rise'      : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[0])),
-                'transit'   : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[2])),
-                'set'       : '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[4])),
                 'az'        : round(math.degrees(sat.az), 2),
                 'alt'       : round(math.degrees(sat.alt), 2),
-                'duration'  : '{0:d}'.format((ephem.localtime(next_pass[4]) - ephem.localtime(next_pass[0])).seconds),
                 'elevation' : int(sat.elevation / 1000),
                 'eclipsed'  : sat.eclipsed,
             }
+
+
+            if not isinstance(next_pass[0], type(None)) and not isinstance(next_pass[4], type(None)):
+                sat_data['rise'] = '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[0])),
+                sat_data['duration'] = '{0:d}'.format((ephem.localtime(next_pass[4]) - ephem.localtime(next_pass[0])).seconds),
+            else:
+                sat_data['rise'] = 'None'
+                sat_data['duration'] = 'None'
+
+
+            if not isinstance(next_pass[2], type(None)):
+                sat_data['transit'] = '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[2])),
+            else:
+                sat_data['transit'] = 'None'
+
+            if not isinstance(next_pass[4], type(None)):
+                sat_data['set'] = '{0:%Y-%m-%d %H:%M:%S}'.format(ephem.localtime(next_pass[4])),
+            else:
+                sat_data['set'] = 'None'
+
 
             satellite_list.append(sat_data)
 
