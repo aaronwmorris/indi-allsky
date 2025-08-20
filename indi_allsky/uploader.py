@@ -439,6 +439,8 @@ class FileUploader(Thread):
                 expire=timedelta(hours=1),
             )
 
+            self.cleanup(local_file_p, remove_local=remove_local)
+
             return
         except filetransfer.exceptions.AuthenticationFailure as e:
             logger.error('Authentication failure: %s', e)
@@ -452,6 +454,8 @@ class FileUploader(Thread):
                 expire=timedelta(hours=1),
             )
 
+            self.cleanup(local_file_p, remove_local=remove_local)
+
             return
         except filetransfer.exceptions.CertificateValidationFailure as e:
             logger.error('Certificate validation failure: %s', e)
@@ -464,6 +468,8 @@ class FileUploader(Thread):
                 '{0:s} file transfer certificate validation failed: {1:s}'.format(client_class.__name__, str(e)),
                 expire=timedelta(hours=1),
             )
+
+            self.cleanup(local_file_p, remove_local=remove_local)
 
             return
 
@@ -482,6 +488,8 @@ class FileUploader(Thread):
                 expire=timedelta(hours=1),
             )
 
+            self.cleanup(local_file_p, remove_local=remove_local)
+
             return
         except filetransfer.exceptions.AuthenticationFailure as e:
             logger.error('Authentication failure: %s', e)
@@ -494,6 +502,8 @@ class FileUploader(Thread):
                 '{0:s} file transfer authentication failure: {1:s}'.format(client_class.__name__, str(e)),
                 expire=timedelta(hours=1),
             )
+
+            self.cleanup(local_file_p, remove_local=remove_local)
 
             return
         except filetransfer.exceptions.CertificateValidationFailure as e:
@@ -508,6 +518,8 @@ class FileUploader(Thread):
                 expire=timedelta(hours=1),
             )
 
+            self.cleanup(local_file_p, remove_local=remove_local)
+
             return
         except filetransfer.exceptions.TransferFailure as e:
             logger.error('Tranfer failure: %s', e)
@@ -520,6 +532,8 @@ class FileUploader(Thread):
                 '{0:s} file transfer failed: {1:s}'.format(client_class.__name__, str(e)),
                 expire=timedelta(hours=1),
             )
+
+            self.cleanup(local_file_p, remove_local=remove_local)
 
             return
         except filetransfer.exceptions.PermissionFailure as e:
@@ -534,11 +548,13 @@ class FileUploader(Thread):
                 expire=timedelta(hours=1),
             )
 
+            self.cleanup(local_file_p, remove_local=remove_local)
+
             return
+        finally:
+            # close file transfer client
+            client.close()
 
-
-        # close file transfer client
-        client.close()
 
         upload_elapsed_s = time.time() - start
         logger.info('Upload transaction completed in %0.4f s', upload_elapsed_s)
@@ -578,18 +594,21 @@ class FileUploader(Thread):
             db.session.commit()
 
 
+        logger.info('Remove local: %s', str(remove_local))
+        self.cleanup(local_file_p, remove_local=remove_local)
+
+
+        #raise Exception('Testing uncaught exception')
+
+
+    def cleanup(self, local_file_p, remove_local=False):
         if remove_local:
             try:
                 local_file_p.unlink()
             except PermissionError as e:
                 logger.error('Cannot remove local file: %s', str(e))
-                return
             except FileNotFoundError as e:
                 logger.error('Cannot remove local file: %s', str(e))
-                return
-
-
-        #raise Exception('Testing uncaught exception')
 
 
     def _syncapi(self, asset_entry, metadata):
