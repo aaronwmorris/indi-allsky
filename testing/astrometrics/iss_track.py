@@ -85,7 +85,10 @@ class SatelliteTrack(object):
                 sat = ephem.readtle(*self.tle_data)
             except ValueError as e:
                 logger.error('Satellite TLE data error: %s', str(e))
-                raise
+                sys.exit(1)
+            except TypeError as e:
+                logger.error('Satellite TLE data error: %s', str(e))
+                sys.exit(1)
 
             #logger.info('%s', dir(sat))
 
