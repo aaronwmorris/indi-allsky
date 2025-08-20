@@ -37,6 +37,10 @@ class miscUpload(object):
         self.night_v = night_v
 
 
+        self._image_count = 0
+        self._image_syncapi_count = 0
+        self._panorama_count = 0
+        self._panorama_syncapi_count = 0
         self._realtime_keogram_count = 0
 
 
@@ -51,7 +55,10 @@ class miscUpload(object):
             return
 
 
-        image_remain = image_entry.id % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])
+        self._image_count += 1
+
+
+        image_remain = self._image_count % int(self.config['FILETRANSFER']['UPLOAD_IMAGE'])
         if image_remain != 0:
             next_image = int(self.config['FILETRANSFER']['UPLOAD_IMAGE']) - image_remain
             logger.info('Next image upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
@@ -583,7 +590,10 @@ class miscUpload(object):
             return
 
 
-        panorama_remain = panorama_entry.id % int(self.config['FILETRANSFER']['UPLOAD_PANORAMA'])
+        self._panorama_count += 1
+
+
+        panorama_remain = self._panorama_count % int(self.config['FILETRANSFER']['UPLOAD_PANORAMA'])
         if panorama_remain != 0:
             next_image = int(self.config['FILETRANSFER']['UPLOAD_PANORAMA']) - panorama_remain
             logger.info('Next panorama upload in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
@@ -1047,7 +1057,10 @@ class miscUpload(object):
             return
 
 
-        image_remain = asset_entry.id % int(self.config['SYNCAPI']['UPLOAD_IMAGE'])
+        self._image_syncapi_count += 1
+
+
+        image_remain = self._image_syncapi_count % int(self.config['SYNCAPI']['UPLOAD_IMAGE'])
         if image_remain != 0:
             next_image = int(self.config['SYNCAPI']['UPLOAD_IMAGE']) - image_remain
             logger.info('Next image sync in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
@@ -1156,7 +1169,10 @@ class miscUpload(object):
             return
 
 
-        panorama_remain = asset_entry.id % int(self.config['SYNCAPI']['UPLOAD_PANORAMA'])
+        self._panorama_syncapi_count += 1
+
+
+        panorama_remain = self._panorama_syncapi_count % int(self.config['SYNCAPI']['UPLOAD_PANORAMA'])
         if panorama_remain != 0:
             next_image = int(self.config['SYNCAPI']['UPLOAD_PANORAMA']) - panorama_remain
             logger.info('Next panorama sync in %d images (%d s)', next_image, int(self.config['EXPOSURE_PERIOD'] * next_image))
