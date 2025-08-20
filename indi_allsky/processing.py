@@ -2252,17 +2252,28 @@ class ImageProcessor(object):
             iss_alt = math.degrees(iss.alt)
             self.astrometric_data['iss_alt'] = iss_alt
 
+
             if iss_alt >= 0:
                 self.astrometric_data['iss_up'] = '{0:0.0f}°'.format(iss_alt)
             else:
                 self.astrometric_data['iss_up'] = 'No'
 
+
             try:
+                # all next_pass() data may be None
                 iss_next_pass = obs.next_pass(iss)
-                self.astrometric_data['iss_next_h'] = (iss_next_pass[0].datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
-                self.astrometric_data['iss_next_alt'] = math.degrees(iss_next_pass[3])
+
+                if not isinstance(iss_next_pass[0], type(None)):
+                    self.astrometric_data['iss_next_h'] = (iss_next_pass[0].datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
+                else:
+                    self.astrometric_data['iss_next_h'] = 0.0
+
+                if not isinstance(iss_next_pass[3], type(None)):
+                    self.astrometric_data['iss_next_alt'] = math.degrees(iss_next_pass[3])
+                else:
+                    self.astrometric_data['iss_next_alt'] = 0.0
             except ValueError as e:
-                logger.error('ISS next pass error: %s', str(e))
+                logger.warning('ISS next pass error: %s', str(e))
                 self.astrometric_data['iss_next_h'] = 0.0
                 self.astrometric_data['iss_next_alt'] = 0.0
         else:
@@ -2279,17 +2290,28 @@ class ImageProcessor(object):
             hst_alt = math.degrees(hst.alt)
             self.astrometric_data['hst_alt'] = hst_alt
 
+
             if hst_alt >= 0:
                 self.astrometric_data['hst_up'] = '{0:0.0f}°'.format(hst_alt)
             else:
                 self.astrometric_data['hst_up'] = 'No'
 
+
             try:
+                # all next_pass() data may be None
                 hst_next_pass = obs.next_pass(hst)
-                self.astrometric_data['hst_next_h'] = (hst_next_pass[0].datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
-                self.astrometric_data['hst_next_alt'] = math.degrees(hst_next_pass[3])
+
+                if not isinstance(hst_next_pass[0], type(None)):
+                    self.astrometric_data['hst_next_h'] = (hst_next_pass[0].datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
+                else:
+                    self.astrometric_data['hst_next_h'] = 0.0
+
+                if not isinstance(hst_next_pass[3], type(None)):
+                    self.astrometric_data['hst_next_alt'] = math.degrees(hst_next_pass[3])
+                else:
+                    self.astrometric_data['hst_next_h'] = 0.0
             except ValueError as e:
-                logger.error('HST next pass error: %s', str(e))
+                logger.warning('HST next pass error: %s', str(e))
                 self.astrometric_data['hst_next_h'] = 0.0
                 self.astrometric_data['hst_next_alt'] = 0.0
         else:
@@ -2306,17 +2328,28 @@ class ImageProcessor(object):
             tiangong_alt = math.degrees(tiangong.alt)
             self.astrometric_data['tiangong_alt'] = tiangong_alt
 
+
             if tiangong_alt >= 0:
                 self.astrometric_data['tiangong_up'] = '{0:0.0f}°'.format(tiangong_alt)
             else:
                 self.astrometric_data['tiangong_up'] = 'No'
 
+
             try:
+                # all next_pass() data may be None
                 tiangong_next_pass = obs.next_pass(tiangong)
-                self.astrometric_data['tiangong_next_h'] = (tiangong_next_pass[0].datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
-                self.astrometric_data['tiangong_next_alt'] = math.degrees(tiangong_next_pass[3])
+
+                if not isinstance(tiangong_next_pass[0], type(None)):
+                    self.astrometric_data['tiangong_next_h'] = (tiangong_next_pass[0].datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
+                else:
+                    self.astrometric_data['tiangong_next_h'] = 0.0
+
+                if not isinstance(tiangong_next_pass[3], type(None)):
+                    self.astrometric_data['tiangong_next_alt'] = math.degrees(tiangong_next_pass[3])
+                else:
+                    self.astrometric_data['tiangong_next_alt'] = 0.0
             except ValueError as e:
-                logger.error('TIANGONG next pass error: %s', str(e))
+                logger.warning('TIANGONG next pass error: %s', str(e))
                 self.astrometric_data['tiangong_next_h'] = 0.0
                 self.astrometric_data['tiangong_next_alt'] = 0.0
         else:
