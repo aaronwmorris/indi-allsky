@@ -152,9 +152,13 @@ class boto3_minio(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except urllib3.exceptions.NewConnectionError as e:
             raise ConnectionFailure(str(e)) from e
+        except urllib3.exceptions.ProtocolError as e:
+            raise ConnectionFailure(str(e)) from e
         except botocore.exceptions.ReadTimeoutError as e:
             raise ConnectionFailure(str(e)) from e
         except botocore.exceptions.EndpointConnectionError as e:
+            raise ConnectionFailure(str(e)) from e
+        except botocore.exceptions.ConnectionClosedError as e:
             raise ConnectionFailure(str(e)) from e
         except boto3.exceptions.S3UploadFailedError as e:
             raise TransferFailure(str(e)) from e
@@ -191,9 +195,13 @@ class boto3_minio(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except urllib3.exceptions.NewConnectionError as e:
             raise ConnectionFailure(str(e)) from e
+        except urllib3.exceptions.ProtocolError as e:
+            raise ConnectionFailure(str(e)) from e
         except botocore.exceptions.ReadTimeoutError as e:
             raise ConnectionFailure(str(e)) from e
         except botocore.exceptions.EndpointConnectionError as e:
+            raise ConnectionFailure(str(e)) from e
+        except botocore.exceptions.ConnectionClosedError as e:
             raise ConnectionFailure(str(e)) from e
         except boto3.exceptions.S3UploadFailedError as e:
             raise TransferFailure(str(e)) from e
