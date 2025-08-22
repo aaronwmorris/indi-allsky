@@ -152,6 +152,8 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
         import board
         #import busio
         import sparkfun_qwiicas3935
+        #import signal
+        import RPi.GPIO as GPIO
 
         pin2 = getattr(board, pin_2_name)  # interrupt
 
@@ -181,10 +183,6 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
         self.as3935.watchdog_threshold = self.watchdog_threshold
         self.as3935.spike_rejection = self.spike_rejection
         self.as3935.lightning_threshold = self.lightning_threshold
-
-
-        #import signal
-        import RPi.GPIO as GPIO
 
 
         #GPIO.setmode(GPIO.BOARD)
@@ -244,6 +242,8 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
         #import busio
         import digitalio
         import sparkfun_qwiicas3935
+        #import signal
+        import RPi.GPIO as GPIO
 
         pin1 = getattr(board, pin_1_name)
         pin2 = getattr(board, pin_2_name)  # interrupt
@@ -273,10 +273,6 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
         self.as3935.watchdog_threshold = self.watchdog_threshold
         self.as3935.spike_rejection = self.spike_rejection
         self.as3935.lightning_threshold = self.lightning_threshold
-
-
-        #import signal
-        import RPi.GPIO as GPIO
 
 
         #GPIO.setmode(GPIO.BOARD)
