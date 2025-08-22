@@ -166,6 +166,9 @@ class SensorWorker(Process):
                 self.fan.deinit()
                 self.dew_heater.deinit()
 
+                for sensor in self.sensors:
+                    sensor.deinit()
+
                 return
 
 
