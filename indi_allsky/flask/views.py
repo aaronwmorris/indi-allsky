@@ -2412,21 +2412,25 @@ class ConfigView(FormView):
             'TEMP_SENSOR__A_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_CLASSNAME', ''),
             'TEMP_SENSOR__A_LABEL'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_LABEL', 'Sensor A'),
             'TEMP_SENSOR__A_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'D5'),
+            'TEMP_SENSOR__A_PIN_2'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_PIN_2', ''),
             'TEMP_SENSOR__A_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77'),
             'TEMP_SENSOR__A_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 'sensor_user_10'),
             'TEMP_SENSOR__B_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_CLASSNAME', ''),
             'TEMP_SENSOR__B_LABEL'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B'),
             'TEMP_SENSOR__B_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'D6'),
+            'TEMP_SENSOR__B_PIN_2'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_PIN_2', ''),
             'TEMP_SENSOR__B_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76'),
             'TEMP_SENSOR__B_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_20'),
             'TEMP_SENSOR__C_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_CLASSNAME', ''),
             'TEMP_SENSOR__C_LABEL'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C'),
             'TEMP_SENSOR__C_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_PIN_1', 'D16'),
+            'TEMP_SENSOR__C_PIN_2'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_PIN_2', ''),
             'TEMP_SENSOR__C_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40'),
             'TEMP_SENSOR__C_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_30'),
             'TEMP_SENSOR__D_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_CLASSNAME', ''),
             'TEMP_SENSOR__D_LABEL'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_LABEL', 'Sensor D'),
             'TEMP_SENSOR__D_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_PIN_1', 'D26'),
+            'TEMP_SENSOR__D_PIN_2'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_PIN_2', ''),
             'TEMP_SENSOR__D_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_I2C_ADDRESS', '0x50'),
             'TEMP_SENSOR__D_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_40'),
             'TEMP_SENSOR__OPENWEATHERMAP_APIKEY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', ''),
@@ -3293,21 +3297,25 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['A_CLASSNAME']           = str(request.json['TEMP_SENSOR__A_CLASSNAME'])
         self.indi_allsky_config['TEMP_SENSOR']['A_LABEL']               = str(request.json['TEMP_SENSOR__A_LABEL'])
         self.indi_allsky_config['TEMP_SENSOR']['A_PIN_1']               = str(request.json['TEMP_SENSOR__A_PIN_1'])
+        self.indi_allsky_config['TEMP_SENSOR']['A_PIN_2']               = str(request.json['TEMP_SENSOR__A_PIN_2'])
         self.indi_allsky_config['TEMP_SENSOR']['A_USER_VAR_SLOT']       = str(request.json['TEMP_SENSOR__A_USER_VAR_SLOT'])
         self.indi_allsky_config['TEMP_SENSOR']['A_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__A_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['B_CLASSNAME']           = str(request.json['TEMP_SENSOR__B_CLASSNAME'])
         self.indi_allsky_config['TEMP_SENSOR']['B_LABEL']               = str(request.json['TEMP_SENSOR__B_LABEL'])
         self.indi_allsky_config['TEMP_SENSOR']['B_PIN_1']               = str(request.json['TEMP_SENSOR__B_PIN_1'])
+        self.indi_allsky_config['TEMP_SENSOR']['B_PIN_2']               = str(request.json['TEMP_SENSOR__B_PIN_2'])
         self.indi_allsky_config['TEMP_SENSOR']['B_USER_VAR_SLOT']       = str(request.json['TEMP_SENSOR__B_USER_VAR_SLOT'])
         self.indi_allsky_config['TEMP_SENSOR']['B_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__B_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['C_CLASSNAME']           = str(request.json['TEMP_SENSOR__C_CLASSNAME'])
         self.indi_allsky_config['TEMP_SENSOR']['C_LABEL']               = str(request.json['TEMP_SENSOR__C_LABEL'])
         self.indi_allsky_config['TEMP_SENSOR']['C_PIN_1']               = str(request.json['TEMP_SENSOR__C_PIN_1'])
+        self.indi_allsky_config['TEMP_SENSOR']['C_PIN_2']               = str(request.json['TEMP_SENSOR__C_PIN_2'])
         self.indi_allsky_config['TEMP_SENSOR']['C_USER_VAR_SLOT']       = str(request.json['TEMP_SENSOR__C_USER_VAR_SLOT'])
         self.indi_allsky_config['TEMP_SENSOR']['C_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__C_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['D_CLASSNAME']           = str(request.json['TEMP_SENSOR__D_CLASSNAME'])
         self.indi_allsky_config['TEMP_SENSOR']['D_LABEL']               = str(request.json['TEMP_SENSOR__D_LABEL'])
         self.indi_allsky_config['TEMP_SENSOR']['D_PIN_1']               = str(request.json['TEMP_SENSOR__D_PIN_1'])
+        self.indi_allsky_config['TEMP_SENSOR']['D_PIN_2']               = str(request.json['TEMP_SENSOR__D_PIN_2'])
         self.indi_allsky_config['TEMP_SENSOR']['D_USER_VAR_SLOT']       = str(request.json['TEMP_SENSOR__D_USER_VAR_SLOT'])
         self.indi_allsky_config['TEMP_SENSOR']['D_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__D_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = str(request.json['TEMP_SENSOR__OPENWEATHERMAP_APIKEY'])
