@@ -62,6 +62,7 @@ class LightningSensorAs3935_SparkFun(SensorBase):
 
         data = {
             'data' : (
+                len(self.distance_list),
                 distance_min,
                 distance_max,
                 distance_avg,
@@ -77,7 +78,7 @@ class LightningSensorAs3935_SparkFun(SensorBase):
 
 
     def detection_callback(self, channel):
-        ### this is definitely not thread safe
+        ### does this need to be thread safe?
         interrupt_value = self.as3935.read_interrupt_register()
 
         if interrupt_value == self.as3935.NOISE:
@@ -90,6 +91,7 @@ class LightningSensorAs3935_SparkFun(SensorBase):
 
             logger.info('AS3935 [%s] - Lighting detected - %dkm @ energy %d', self.name, distance_km, energy)
 
+            # not sure if we need a mutex
             self.distance_list.append(distance_km)
 
 
