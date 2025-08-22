@@ -30,16 +30,33 @@ class LightningSensorAs3935_SparkFun(SensorBase):
 
 
         try:
-            distance_min = min(self.distance_list)
-            distance_max = max(self.distance_list)
+            distance_km_min = min(self.distance_list)
+            distance_km_max = max(self.distance_list)
         except ValueError:
-            distance_min = -1
-            distance_max = -1
+            distance_km_min = -1
+            distance_km_max = -1
 
 
         try:
-            distance_avg = statistics.mean(self.distance_list)
+            distance_km_avg = statistics.mean(self.distance_list)
         except statistics.StatisticsError:
+            distance_km_avg = -1.0
+
+
+        if distance_km_min > -1:
+            if self.config.get('TEMP_DISPLAY') == 'f':
+                # if using fahrenheit, return in miles
+                distance_min = self.km2mi(distance_km_min)
+                distance_max = self.km2mi(distance_km_max)
+                distance_avg = self.km2mi(distance_km_avg)
+            else:
+                distance_min = distance_km_min
+                distance_max = distance_km_max
+                distance_avg = distance_km_avg
+
+        else:
+            distance_min = -1
+            distance_max = -1
             distance_avg = -1.0
 
 
