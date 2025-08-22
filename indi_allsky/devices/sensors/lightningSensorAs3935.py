@@ -9,7 +9,7 @@ from ... import constants
 logger = logging.getLogger('indi_allsky')
 
 
-class LightningSensorAs3935(SensorBase):
+class LightningSensorAs3935_SparkFun(SensorBase):
     afemode_outdoor = True
     mask_disturbers = True
     noise_level = 2
@@ -19,7 +19,7 @@ class LightningSensorAs3935(SensorBase):
 
 
     def __init__(self, *args, **kwargs):
-        super(LightningSensorAs3935, self).__init__(*args, **kwargs)
+        super(LightningSensorAs3935_SparkFun, self).__init__(*args, **kwargs)
 
         self.strike_count = 0
         self.distance = -1
@@ -60,14 +60,14 @@ class LightningSensorAs3935(SensorBase):
 
 
     def deinit(self):
-        super(LightningSensorAs3935, self).deinit()
+        super(LightningSensorAs3935_SparkFun, self).deinit()
 
         import RPi.GPIO as GPIO
 
         GPIO.cleanup()
 
 
-class LightningSensorAs3935_I2C(LightningSensorAs3935):
+class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
 
     METADATA = {
         'name' : 'AS3935 (i2c)',
@@ -85,7 +85,7 @@ class LightningSensorAs3935_I2C(LightningSensorAs3935):
 
 
     def __init__(self, *args, **kwargs):
-        super(LightningSensorAs3935_I2C, self).__init__(*args, **kwargs)
+        super(LightningSensorAs3935_SparkFun_I2C, self).__init__(*args, **kwargs)
 
         i2c_address_str = kwargs['i2c_address']
 
@@ -121,7 +121,7 @@ class LightningSensorAs3935_I2C(LightningSensorAs3935):
         self.as3935.lightning_threshold = self.lightning_threshold
 
 
-class LightningSensorAs3935_SPI(LightningSensorAs3935):
+class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
 
     METADATA = {
         'name' : 'AS3935 (SPI)',
@@ -139,7 +139,7 @@ class LightningSensorAs3935_SPI(LightningSensorAs3935):
 
 
     def __init__(self, *args, **kwargs):
-        super(LightningSensorAs3935_SPI, self).__init__(*args, **kwargs)
+        super(LightningSensorAs3935_SparkFun_SPI, self).__init__(*args, **kwargs)
 
         pin_1_name = kwargs['pin_1_name']
 

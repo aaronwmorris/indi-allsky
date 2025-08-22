@@ -65,6 +65,9 @@ from .tempApiEcowitt import TempApiEcowitt as temp_api_ecowitt
 
 from .tempSensorDs18x20 import TempSensorDs18x20 as kernel_temp_sensor_ds18x20_w1
 
+from .lightningSensorAs3935 import LightningSensorAs3935_SparkFun_SPI as blinka_sparkfun_lightning_sensor_as3935_spi
+from .lightningSensorAs3935 import LightningSensorAs3935_SparkFun_I2C as blinka_sparkfun_lightning_sensor_as3935_i2c
+
 from .mqttBrokerSensor import MqttBrokerSensor as mqtt_broker_sensor
 
 
@@ -108,6 +111,8 @@ __all__ = (
     'cpads_temp_sensor_lm35_ads1115_i2c',
     'qwiic_mag_sensor_mmc5983ma_i2c',
     'kernel_temp_sensor_ds18x20_w1',
+    'blinka_sparkfun_lightning_sensor_as3935_spi',
+    'blinka_sparkfun_lightning_sensor_as3935_i2c',
     'mqtt_broker_sensor',
     'temp_api_openweathermap',
     'temp_api_weatherunderground',

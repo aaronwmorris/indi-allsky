@@ -3502,10 +3502,14 @@ class IndiAllskyConfigForm(FlaskForm):
             ('qwiic_mag_sensor_mmc5983ma_i2c', 'MMC5983MA i2c - X/Y/Z/Temp (4 slots)'),
         ),
         'Current Sensors' : (
-            ('blinka_current_sensor_ina219_i2c', 'INA219 i2c - V/A/W (3) slots'),
+            ('blinka_current_sensor_ina219_i2c', 'INA219 i2c - V/A/W (3 slots)'),
             ('blinka_current_sensor_ina228_i2c', 'INA228 i2c - V/A/W/Temp (4 slots)'),
             ('blinka_current_sensor_ina23x_i2c', 'INA23x i2c - V/A/W/Temp (4 slots)'),
             ('blinka_current_sensor_ina3221_i2c', 'INA3221 i2c - 3 Channel V/A/W (9 slots)'),
+        ),
+        'Lightning Sensors' : (
+            ('blinka_sparkfun_lightning_sensor_as3935_spi', 'AS3935 SPI - Strikes/Distance (2 slots)'),
+            ('blinka_sparkfun_lightning_sensor_as3935_i2c', 'AS3935 i2c - Strikes/Distance (2 slots)'),
         ),
         'Remote' : (
             ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5 slots)'),
