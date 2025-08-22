@@ -125,8 +125,8 @@ class LightningSensorAs3935_SparkFun(SensorBase):
             self.full_disturber_count += 1
             self.current_data_dict['disturber_count'] += 1
         elif interrupt_value == self.as3935.LIGHTNING:
-            distance_km = self.as3935.distance_to_storm
-            energy = self.as3935.lightning_energy  # energy is meaningless
+            distance_km = int(self.as3935.distance_to_storm)
+            energy = int(self.as3935.lightning_energy)  # energy is meaningless
 
             logger.info('AS3935 [%s] - Lighting detected - %dkm @ energy %d', self.name, distance_km, energy)
 
