@@ -36,7 +36,7 @@ class LightningSensorAs3935_SparkFun(SensorBase):
 
 
     def update(self):
-        logger.info('[%s] AS3935 - strikes: %d', self.name, len(self.full_data_list[-1]['distance_list']))
+        logger.info('[%s] AS3935 - strikes: %d, disturbers: %d, noise: %d', self.name, len(self.current_data_dict['distance_list']), self.current_data_dict['disturber_count'], self.current_data_dict['noise_count'])
 
 
         # present data from the last 5 minutes
@@ -117,11 +117,11 @@ class LightningSensorAs3935_SparkFun(SensorBase):
         interrupt_value = self.as3935.read_interrupt_register()
 
         if interrupt_value == self.as3935.NOISE:
-            logger.info('AS3935 [%s] - Noise detected', self.name)
+            #logger.info('AS3935 [%s] - Noise detected', self.name)
             self.full_noise_count += 1
             self.current_data_dict['noise_count'] += 1
         elif interrupt_value == self.as3935.DISTURBER:
-            logger.info('AS3935 [%s] - Disturber detected', self.name)
+            #logger.info('AS3935 [%s] - Disturber detected', self.name)
             self.full_disturber_count += 1
             self.current_data_dict['disturber_count'] += 1
         elif interrupt_value == self.as3935.LIGHTNING:
