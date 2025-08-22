@@ -5073,6 +5073,16 @@ class IndiAllskyConfigForm(FlaskForm):
                         self.TEMP_SENSOR__A_PIN_1.errors.append('PIN must be defined')
                         result = False
 
+                    if self.TEMP_SENSOR__A_PIN_2.data:
+                        try:
+                            getattr(board, self.TEMP_SENSOR__A_PIN_2.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__A_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__A_PIN_2.data))
+                            result = False
+                    else:
+                        # permit empty pin 2
+                        pass
+
                 except NotImplementedError:
                     self.TEMP_SENSOR__A_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
                     result = False
@@ -5103,6 +5113,16 @@ class IndiAllskyConfigForm(FlaskForm):
                         self.TEMP_SENSOR__A_PIN_1.errors.append('PIN must be defined')
                         result = False
 
+                    if self.TEMP_SENSOR__A_PIN_2.data:
+                        try:
+                            getattr(ADS, self.TEMP_SENSOR__A_PIN_2.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__A_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__A_PIN_2.data))
+                            result = False
+                    else:
+                        # permit empty pin 2
+                        pass
+
                 except ImportError:
                     self.TEMP_SENSOR__A_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
@@ -5130,6 +5150,16 @@ class IndiAllskyConfigForm(FlaskForm):
                     else:
                         self.TEMP_SENSOR__B_PIN_1.errors.append('PIN must be defined')
                         result = False
+
+                    if self.TEMP_SENSOR__B_PIN_2.data:
+                        try:
+                            getattr(board, self.TEMP_SENSOR__B_PIN_2.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__B_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__B_PIN_2.data))
+                            result = False
+                    else:
+                        # permit empty pin 2
+                        pass
 
                 except NotImplementedError:
                     self.TEMP_SENSOR__B_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
@@ -5161,6 +5191,16 @@ class IndiAllskyConfigForm(FlaskForm):
                         self.TEMP_SENSOR__B_PIN_1.errors.append('PIN must be defined')
                         result = False
 
+                    if self.TEMP_SENSOR__B_PIN_2.data:
+                        try:
+                            getattr(ADS, self.TEMP_SENSOR__B_PIN_2.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__B_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__B_PIN_2.data))
+                            result = False
+                    else:
+                        # permit empty pin 2
+                        pass
+
                 except ImportError:
                     self.TEMP_SENSOR__B_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
@@ -5188,6 +5228,16 @@ class IndiAllskyConfigForm(FlaskForm):
                     else:
                         self.TEMP_SENSOR__C_PIN_1.errors.append('PIN must be defined')
                         result = False
+
+                    if self.TEMP_SENSOR__C_PIN_2.data:
+                        try:
+                            getattr(board, self.TEMP_SENSOR__C_PIN_2.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__C_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__C_PIN_2.data))
+                            result = False
+                    else:
+                        # permit empty pin 2
+                        pass
 
                 except NotImplementedError:
                     self.TEMP_SENSOR__C_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
@@ -5219,6 +5269,16 @@ class IndiAllskyConfigForm(FlaskForm):
                         self.TEMP_SENSOR__C_PIN_1.errors.append('PIN must be defined')
                         result = False
 
+                    if self.TEMP_SENSOR__C_PIN_2.data:
+                        try:
+                            getattr(ADS, self.TEMP_SENSOR__C_PIN_2.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__C_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__C_PIN_2.data))
+                            result = False
+                    else:
+                        # permit empty pin 2
+                        pass
+
                 except ImportError:
                     self.TEMP_SENSOR__C_CLASSNAME.errors.append('GPIO python modules not installed')
                     result = False
@@ -5246,6 +5306,16 @@ class IndiAllskyConfigForm(FlaskForm):
                     else:
                         self.TEMP_SENSOR__D_PIN_1.errors.append('PIN must be defined')
                         result = False
+
+                    if self.TEMP_SENSOR__D_PIN_2.data:
+                        try:
+                            getattr(board, self.TEMP_SENSOR__D_PIN_2.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__D_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__D_PIN_2.data))
+                            result = False
+                    else:
+                        # permit empty pin 2
+                        pass
 
                 except NotImplementedError:
                     self.TEMP_SENSOR__D_CLASSNAME.errors.append('System not suppored by Adafruit Blinka module')
@@ -5276,6 +5346,16 @@ class IndiAllskyConfigForm(FlaskForm):
                     else:
                         self.TEMP_SENSOR__D_PIN_1.errors.append('PIN must be defined')
                         result = False
+
+                    if self.TEMP_SENSOR__D_PIN_2.data:
+                        try:
+                            getattr(ADS, self.TEMP_SENSOR__D_PIN_2.data)
+                        except AttributeError:
+                            self.TEMP_SENSOR__D_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.TEMP_SENSOR__D_PIN_2.data))
+                            result = False
+                    else:
+                        # permit empty pin 2
+                        pass
 
                 except ImportError:
                     self.TEMP_SENSOR__D_CLASSNAME.errors.append('GPIO python modules not installed')
