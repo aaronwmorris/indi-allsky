@@ -88,10 +88,14 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
         super(LightningSensorAs3935_SparkFun_I2C, self).__init__(*args, **kwargs)
 
         i2c_address_str = kwargs['i2c_address']
+        # pin1 not used for i2c
+        pin_2_name = kwargs['pin_2_name']
 
         import board
         #import busio
         import sparkfun_qwiicas3935
+
+        pin2 = getattr(board, pin_2_name)  # interrupt
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
@@ -129,10 +133,10 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
         GPIO.setmode(GPIO.BCM)
 
         # rpi.gpio does not use board pins, but we can get the pin number using id
-        GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(pin2.id, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
         GPIO.add_event_detect(
-            21,
+            pin2.id,
             GPIO.RISING,
             callback=self.detection_callback,
             bouncetime=50,
@@ -163,6 +167,7 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
         super(LightningSensorAs3935_SparkFun_SPI, self).__init__(*args, **kwargs)
 
         pin_1_name = kwargs['pin_1_name']
+        pin_2_name = kwargs['pin_2_name']
 
         import board
         #import busio
@@ -170,6 +175,7 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
         import sparkfun_qwiicas3935
 
         pin1 = getattr(board, pin_1_name)
+        pin2 = getattr(board, pin_2_name)  # interrupt
         cs = digitalio.DigitalInOut(pin1)
         cs.direction = digitalio.Direction.OUTPUT
 
@@ -206,10 +212,10 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
         GPIO.setmode(GPIO.BCM)
 
         # rpi.gpio does not use board pins, but we can get the pin number using id
-        GPIO.setup(board.D21.id, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(pin2.id, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
         GPIO.add_event_detect(
-            board.D21.id,
+            pin2.id,
             GPIO.RISING,
             callback=self.detection_callback,
             bouncetime=50,

@@ -146,6 +146,7 @@ class TestSensors(object):
             a_sensor_label = self.config.get('TEMP_SENSOR', {}).get('A_LABEL', 'Sensor A')
             a_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77')
             a_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'notdefined')
+            a_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_2', 'notdefined')
 
             try:
                 self.sensors[0] = a_sensor(
@@ -153,6 +154,7 @@ class TestSensors(object):
                     a_sensor_label,
                     self.night_v,
                     pin_1_name=a_sensor_pin_1_name,
+                    pin_2_name=a_sensor_pin_2_name,
                     i2c_address=a_sensor_i2c_address,
                 )
             except (OSError, ValueError) as e:
@@ -182,6 +184,7 @@ class TestSensors(object):
             b_sensor_label = self.config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B')
             b_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76')
             b_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'notdefined')
+            b_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_2', 'notdefined')
 
             try:
                 self.sensors[1] = b_sensor(
@@ -189,6 +192,7 @@ class TestSensors(object):
                     b_sensor_label,
                     self.night_v,
                     pin_1_name=b_sensor_pin_1_name,
+                    pin_2_name=b_sensor_pin_2_name,
                     i2c_address=b_sensor_i2c_address,
                 )
             except (OSError, ValueError) as e:
@@ -218,6 +222,7 @@ class TestSensors(object):
             c_sensor_label = self.config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C')
             c_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40')
             c_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('C_PIN_1', 'notdefined')
+            c_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('C_PIN_2', 'notdefined')
 
             try:
                 self.sensors[2] = c_sensor(
@@ -225,6 +230,7 @@ class TestSensors(object):
                     c_sensor_label,
                     self.night_v,
                     pin_1_name=c_sensor_pin_1_name,
+                    pin_2_name=c_sensor_pin_2_name,
                     i2c_address=c_sensor_i2c_address,
                 )
             except (OSError, ValueError) as e:
@@ -254,6 +260,7 @@ class TestSensors(object):
             d_sensor_label = self.config.get('TEMP_SENSOR', {}).get('D_LABEL', 'Sensor D')
             d_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('D_I2C_ADDRESS', '0x50')
             d_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('D_PIN_1', 'notdefined')
+            d_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('D_PIN_2', 'notdefined')
 
             try:
                 self.sensors[3] = d_sensor(
@@ -261,6 +268,7 @@ class TestSensors(object):
                     d_sensor_label,
                     self.night_v,
                     pin_1_name=d_sensor_pin_1_name,
+                    pin_2_name=d_sensor_pin_2_name,
                     i2c_address=d_sensor_i2c_address,
                 )
             except (OSError, ValueError) as e:
