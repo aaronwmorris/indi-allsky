@@ -132,6 +132,11 @@ class TestSensors(object):
                     logger.error('Sensor IOError: {0:s}'.format(str(e)))
 
 
+        # deinit sensors
+        for sensor in self.sensors:
+            sensor.deinit()
+
+
     def init_sensors(self):
         ### Sensor A
         a_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('A_CLASSNAME')
