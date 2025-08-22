@@ -150,6 +150,7 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
 
         pin1 = getattr(board, pin_1_name)
         cs = digitalio.DigitalInOut(pin1)
+        cs.direction = digitalio.Direction.OUTPUT
 
         logger.warning('Initializing [%s] AS3935 SPI lightning sensor', self.name)
         spi = board.SPI()
