@@ -23,25 +23,42 @@ class LightningSensorAs3935_SparkFun(SensorBase):
     def __init__(self, *args, **kwargs):
         super(LightningSensorAs3935_SparkFun, self).__init__(*args, **kwargs)
 
-        self.distance_list = []
-        self.disturber_count = 0
-        self.noise_count = 0
+        self.full_data_list = []
+        self.current_data_dict = {
+            'distance_list' : [],
+            'energy_list' : [],
+            'disturber_count' : 0,
+            'noise_count' : 0,
+        }
+
+        self.full_disturber_count = 0
+        self.full_noise_count = 0
 
 
     def update(self):
-        logger.info('[%s] AS3935 - strikes: %d', self.name, len(self.distance_list))
+        logger.info('[%s] AS3935 - strikes: %d', self.name, len(self.full_data_list[-1]['distance_list']))
+
+
+        # present data from the last 5 minutes
+        distance_list = []
+        disturber_count = 0
+        noise_count = 0
+        for data in self.full_data_list:
+            distance_list.append(data['distance_list'])
+            disturber_count += data['disturber_count']
+            noise_count += data['noise_count']
 
 
         try:
-            distance_km_min = min(self.distance_list)
-            distance_km_max = max(self.distance_list)
+            distance_km_min = min(distance_list)
+            distance_km_max = max(distance_list)
         except ValueError:
             distance_km_min = -1
             distance_km_max = -1
 
 
         try:
-            distance_km_avg = statistics.mean(self.distance_list)
+            distance_km_avg = statistics.mean(distance_list)
         except statistics.StatisticsError:
             distance_km_avg = -1.0
 
@@ -65,20 +82,31 @@ class LightningSensorAs3935_SparkFun(SensorBase):
 
         data = {
             'data' : (
-                len(self.distance_list),
+                len(distance_list),
                 distance_min,
                 distance_max,
                 distance_avg,
-                int(self.disturber_count),
-                int(self.noise_count),
+                disturber_count,
+                noise_count,
             ),
         }
 
 
-        # reset values
-        self.distance_list = []
-        self.disturber_count = 0
-        self.noise_count = 0
+        # store current values
+        self.full_data_list.append(self.current_data_dict)
+
+
+        # data is read every 15s, keep last 20 values (5 minutes) for history
+        self.full_data_list = self.full_data_list[-20:]
+
+
+        # new dict for data
+        self.current_data_dict = {
+            'distance_list' : [],
+            'energy_list' : [],
+            'disturber_count' : 0,
+            'noise_count' : 0,
+        }
 
 
         return data
@@ -90,10 +118,12 @@ class LightningSensorAs3935_SparkFun(SensorBase):
 
         if interrupt_value == self.as3935.NOISE:
             logger.info('AS3935 [%s] - Noise detected', self.name)
-            self.noise_count += 1
+            self.full_noise_count += 1
+            self.current_data_dict['noise_count'] += 1
         elif interrupt_value == self.as3935.DISTURBER:
             logger.info('AS3935 [%s] - Disturber detected', self.name)
-            self.disturber_count += 1
+            self.full_disturber_count += 1
+            self.current_data_dict['disturber_count'] += 1
         elif interrupt_value == self.as3935.LIGHTNING:
             distance_km = self.as3935.distance_to_storm
             energy = self.as3935.lightning_energy  # energy is meaningless
@@ -101,7 +131,8 @@ class LightningSensorAs3935_SparkFun(SensorBase):
             logger.info('AS3935 [%s] - Lighting detected - %dkm @ energy %d', self.name, distance_km, energy)
 
             # not sure if we need a mutex
-            self.distance_list.append(distance_km)
+            self.current_data_dict['distance_list'].append(distance_km)
+            self.current_data_dict['energy_list'].append(energy)
 
 
     def deinit(self):
