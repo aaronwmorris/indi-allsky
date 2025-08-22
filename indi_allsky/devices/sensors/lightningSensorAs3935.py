@@ -23,6 +23,8 @@ class LightningSensorAs3935_SparkFun(SensorBase):
         super(LightningSensorAs3935_SparkFun, self).__init__(*args, **kwargs)
 
         self.distance_list = []
+        self.disturber_count = 0
+        self.noise_count = 0
 
 
     def update(self):
@@ -66,12 +68,16 @@ class LightningSensorAs3935_SparkFun(SensorBase):
                 distance_min,
                 distance_max,
                 distance_avg,
+                int(self.disturber_count),
+                int(self.noise_count),
             ),
         }
 
 
         # reset values
         self.distance_list = []
+        self.disturber_count = 0
+        self.noise_count = 0
 
 
         return data
@@ -83,8 +89,10 @@ class LightningSensorAs3935_SparkFun(SensorBase):
 
         if interrupt_value == self.as3935.NOISE:
             logger.info('AS3935 [%s] - Noise detected', self.name)
+            self.noise_count += 1
         elif interrupt_value == self.as3935.DISTURBER:
             logger.info('AS3935 [%s] - Disturber detected', self.name)
+            self.disturber_count += 1
         elif interrupt_value == self.as3935.LIGHTNING:
             distance_km = self.as3935.distance_to_storm
             energy = self.as3935.lightning_energy  # energy is meaningless
@@ -108,14 +116,18 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
     METADATA = {
         'name' : 'AS3935 (i2c)',
         'description' : 'AS3935 i2c Lightning Sensor',
-        'count' : 4,
+        'count' : 6,
         'labels' : (
             'Stike Count',
             'Minimum Distance',
             'Maximum Distance',
             'Average Distance',
+            'Disturber Count',
+            'Noise Count',
         ),
         'types' : (
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
@@ -191,14 +203,18 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
     METADATA = {
         'name' : 'AS3935 (SPI)',
         'description' : 'AS3935 SPI Ligntning Sensor',
-        'count' : 4,
+        'count' : 6,
         'labels' : (
             'Strike Count',
             'Minimum Distance',
             'Maximum Distance',
             'Average Distance',
+            'Disturber Count',
+            'Noise Count',
         ),
         'types' : (
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
