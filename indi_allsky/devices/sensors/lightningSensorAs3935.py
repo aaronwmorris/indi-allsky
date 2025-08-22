@@ -18,20 +18,53 @@ class LightningSensorAs3935(SensorBase):
     lightning_threshold = 1
 
 
-    def update(self):
-        strike_count = 3
-        distance = 4
+    def __init__(self, *args, **kwargs):
+        super(LightningSensorAs3935, self).__init__(*args, **kwargs)
 
-        logger.info('[%s] AS3935 - strikes: %d, distance: %d', self.name, strike_count, distance)
+        self.strike_count = 0
+        self.distance = -1
+
+
+    def update(self):
+        logger.info('[%s] AS3935 - strikes: %d, distance: %d', self.name, self.strike_count, self.distance)
 
         data = {
             'data' : (
-                strike_count,
-                distance,
+                int(self.strike_count),
+                int(self.distance),
             ),
         }
 
+
+        # reset values
+        self.strike_count = 0
+        self.distance = -1
+
+
         return data
+
+
+    def detection_callback(self):
+        ### this is definitely not thread safe
+        interrupt_value = self.as3935.read_interrupt_register()
+
+        if interrupt_value == self.as3935.NOISE:
+            logger.info('AS3935 [%s] - Noise detected', self.name)
+        elif interrupt_value == self.as3935.DISTURBER:
+            logger.info('AS3935 [%s] - Disturber detected', self.name)
+        elif interrupt_value == self.as3935.LIGHTNING:
+            distance_km = self.as3935.distance_to_storm
+            energy = self.as3935.lightning_energy  # energy is meaningless
+
+            logger.info('AS3935 [%s] - Lighting detected - %dkm @ energy %d', self.name, distance_km, energy)
+
+
+    def deinit(self):
+        super(LightningSensorAs3935, self).deinit()
+
+        import RPi.GPIO as GPIO
+
+        GPIO.cleanup()
 
 
 class LightningSensorAs3935_I2C(LightningSensorAs3935):
@@ -141,3 +174,23 @@ class LightningSensorAs3935_SPI(LightningSensorAs3935):
         self.as3935.watchdog_threshold = self.watchdog_threshold
         self.as3935.spike_rejection = self.spike_rejection
         self.as3935.lightning_threshold = self.lightning_threshold
+
+
+        #import signal
+        import RPi.GPIO as GPIO
+
+
+        #GPIO.setmode(GPIO.BOARD)
+        GPIO.setmode(GPIO.BCM)
+
+        GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+        GPIO.add_event_detect(
+            21,
+            GPIO.BOTH,
+            callback=self.detection_callback,
+            bouncetime=50,
+        )
+
+        #signal.signal(signal.SIGINT, signal_handler)
+        #signal.pause()

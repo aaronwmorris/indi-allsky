@@ -61,6 +61,10 @@ class SensorBase(object):
         self._slot = int(new_slot)
 
 
+    def deinit(self):
+        pass
+
+
     def c2f(self, c):
         # celsius to fahrenheit
         return (c * 9.0 / 5.0) + 32
