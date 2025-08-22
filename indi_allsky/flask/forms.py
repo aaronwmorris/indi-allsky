@@ -3508,8 +3508,8 @@ class IndiAllskyConfigForm(FlaskForm):
             ('blinka_current_sensor_ina3221_i2c', 'INA3221 i2c - 3 Channel V/A/W (9 slots)'),
         ),
         'Lightning Sensors' : (
-            ('blinka_sparkfun_lightning_sensor_as3935_spi', 'AS3935 SPI - Strikes/Distance (2 slots)'),
-            ('blinka_sparkfun_lightning_sensor_as3935_i2c', 'AS3935 i2c - Strikes/Distance (2 slots)'),
+            ('blinka_sparkfun_lightning_sensor_as3935_spi', 'AS3935 SPI - Strikes/Distance/D/D (4 slots)'),
+            ('blinka_sparkfun_lightning_sensor_as3935_i2c', 'AS3935 i2c - Strikes/Distance/D/D (4 slots)'),
         ),
         'Remote' : (
             ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5 slots)'),

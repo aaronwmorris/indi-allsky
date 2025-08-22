@@ -1,4 +1,5 @@
 import time
+import statistics
 import logging
 
 from .sensorBase import SensorBase
@@ -21,24 +22,38 @@ class LightningSensorAs3935_SparkFun(SensorBase):
     def __init__(self, *args, **kwargs):
         super(LightningSensorAs3935_SparkFun, self).__init__(*args, **kwargs)
 
-        self.strike_count = 0
-        self.distance = -1
+        self.distance_list = []
 
 
     def update(self):
-        logger.info('[%s] AS3935 - strikes: %d, distance: %d', self.name, self.strike_count, self.distance)
+        logger.info('[%s] AS3935 - strikes: %d', self.name, len(self.distance_list))
+
+
+        try:
+            distance_min = min(self.distance_list)
+            distance_max = max(self.distance_list)
+        except ValueError:
+            distance_min = -1
+            distance_max = -1
+
+
+        try:
+            distance_avg = statistics.mean(self.distance_list)
+        except statistics.StatisticsError:
+            distance_avg = -1.0
+
 
         data = {
             'data' : (
-                int(self.strike_count),
-                int(self.distance),
+                distance_min,
+                distance_max,
+                distance_avg,
             ),
         }
 
 
         # reset values
-        self.strike_count = 0
-        self.distance = -1
+        self.distance_list = []
 
 
         return data
@@ -58,6 +73,8 @@ class LightningSensorAs3935_SparkFun(SensorBase):
 
             logger.info('AS3935 [%s] - Lighting detected - %dkm @ energy %d', self.name, distance_km, energy)
 
+            self.distance_list.append(distance_km)
+
 
     def deinit(self):
         super(LightningSensorAs3935_SparkFun, self).deinit()
@@ -72,12 +89,16 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
     METADATA = {
         'name' : 'AS3935 (i2c)',
         'description' : 'AS3935 i2c Lightning Sensor',
-        'count' : 2,
+        'count' : 4,
         'labels' : (
             'Stike Count',
-            'Distance',
+            'Minimum Distance',
+            'Maximum Distance',
+            'Average Distance',
         ),
         'types' : (
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
         ),
@@ -151,12 +172,16 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
     METADATA = {
         'name' : 'AS3935 (SPI)',
         'description' : 'AS3935 SPI Ligntning Sensor',
-        'count' : 2,
+        'count' : 4,
         'labels' : (
             'Strike Count',
-            'Distance',
+            'Minimum Distance',
+            'Maximum Distance',
+            'Average Distance',
         ),
         'types' : (
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
         ),
