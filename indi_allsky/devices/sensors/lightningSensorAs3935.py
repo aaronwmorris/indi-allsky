@@ -194,7 +194,7 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
         i2c = board.I2C()
         #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        self.as3935 = sparkfun_qwiicas3935.Sparkfun_QwiicAS3935_I2C(i2c)(i2c, address=i2c_address)
+        self.as3935 = sparkfun_qwiicas3935.Sparkfun_QwiicAS3935_I2C(i2c, address=i2c_address)
 
 
         time.sleep(1)  # allow things to settle
