@@ -121,6 +121,26 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
         self.as3935.lightning_threshold = self.lightning_threshold
 
 
+        #import signal
+        import RPi.GPIO as GPIO
+
+
+        #GPIO.setmode(GPIO.BOARD)
+        GPIO.setmode(GPIO.BCM)
+
+        GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+        GPIO.add_event_detect(
+            21,
+            GPIO.RISING,
+            callback=self.detection_callback,
+            bouncetime=50,
+        )
+
+        #signal.signal(signal.SIGINT, signal_handler)
+        #signal.pause()
+
+
 class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
 
     METADATA = {
@@ -188,7 +208,7 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
 
         GPIO.add_event_detect(
             21,
-            GPIO.BOTH,
+            GPIO.RISING,
             callback=self.detection_callback,
             bouncetime=50,
         )
