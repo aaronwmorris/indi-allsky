@@ -44,7 +44,7 @@ class LightningSensorAs3935_SparkFun(SensorBase):
         disturber_count = 0
         noise_count = 0
         for data in self.full_data_list:
-            distance_list.append(data['distance_list'])
+            distance_list += data['distance_list']  # combine lists
             disturber_count += data['disturber_count']
             noise_count += data['noise_count']
 
