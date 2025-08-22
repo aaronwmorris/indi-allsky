@@ -44,7 +44,7 @@ class LightningSensorAs3935_SparkFun(SensorBase):
         return data
 
 
-    def detection_callback(self):
+    def detection_callback(self, channel):
         ### this is definitely not thread safe
         interrupt_value = self.as3935.read_interrupt_register()
 
