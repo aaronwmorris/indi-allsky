@@ -117,11 +117,11 @@ class LightningSensorAs3935_SparkFun(SensorBase):
         interrupt_value = self.as3935.read_interrupt_register()
 
         if interrupt_value == self.as3935.NOISE:
-            #logger.info('AS3935 [%s] - Noise detected', self.name)
+            logger.info('AS3935 [%s] - Noise detected', self.name)
             self.full_noise_count += 1
             self.current_data_dict['noise_count'] += 1
         elif interrupt_value == self.as3935.DISTURBER:
-            #logger.info('AS3935 [%s] - Disturber detected', self.name)
+            logger.info('AS3935 [%s] - Disturber detected', self.name)
             self.full_disturber_count += 1
             self.current_data_dict['disturber_count'] += 1
         elif interrupt_value == self.as3935.LIGHTNING:
