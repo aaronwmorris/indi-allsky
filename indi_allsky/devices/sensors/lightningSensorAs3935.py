@@ -13,7 +13,7 @@ logger = logging.getLogger('indi_allsky')
 
 class LightningSensorAs3935_SparkFun(SensorBase):
     afemode_outdoor = True
-    mask_disturber = True
+    mask_disturber = False
     noise_level = 2
     watchdog_threshold = 2
     spike_rejection = 2
