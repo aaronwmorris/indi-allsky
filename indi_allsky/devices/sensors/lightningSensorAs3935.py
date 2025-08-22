@@ -4,6 +4,7 @@ import logging
 
 from .sensorBase import SensorBase
 from ... import constants
+from ..exceptions import SensorException
 #from ..exceptions import SensorReadException
 
 
@@ -143,6 +144,11 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
         # pin1 not used for i2c
         pin_2_name = kwargs['pin_2_name']
 
+
+        if not pin_2_name:
+            raise SensorException('Pin 2 (Interrupt) not defined')
+
+
         import board
         #import busio
         import sparkfun_qwiicas3935
@@ -162,7 +168,7 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
 
 
         if not self.as3935.connected:
-            raise Exception('AS3935 is not connected, check wiring')
+            raise SensorException('AS3935 is not connected, check wiring')
 
 
         if self.afemode_outdoor:
@@ -229,6 +235,11 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
         pin_1_name = kwargs['pin_1_name']
         pin_2_name = kwargs['pin_2_name']
 
+
+        if not pin_2_name:
+            raise SensorException('Pin 2 (Interrupt) not defined')
+
+
         import board
         #import busio
         import digitalio
@@ -249,7 +260,7 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
 
 
         if not self.as3935.connected:
-            raise Exception('AS3935 is not connected, check wiring')
+            raise SensorException('AS3935 is not connected, check wiring')
 
 
         if self.afemode_outdoor:

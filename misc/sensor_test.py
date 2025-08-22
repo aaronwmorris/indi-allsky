@@ -26,6 +26,7 @@ from indi_allsky import constants
 from indi_allsky.flask import create_app
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.devices import sensors as indi_allsky_sensors
+from indi_allsky.devices.exceptions import SensorException
 from indi_allsky.devices.exceptions import SensorReadException
 
 
@@ -157,7 +158,7 @@ class TestSensors(object):
                     pin_2_name=a_sensor_pin_2_name,
                     i2c_address=a_sensor_i2c_address,
                 )
-            except (OSError, ValueError) as e:
+            except (OSError, ValueError, SensorException) as e:
                 logger.error('Error initializing sensor: %s', str(e))
                 self.sensors[0] = indi_allsky_sensors.sensor_simulator(
                     self.config,

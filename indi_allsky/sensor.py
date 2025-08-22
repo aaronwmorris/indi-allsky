@@ -15,6 +15,7 @@ from .devices import generic as indi_allsky_gpios
 from .devices import dew_heaters
 from .devices import fans
 from .devices import sensors as indi_allsky_sensors
+from .devices.exceptions import SensorException
 from .devices.exceptions import SensorReadException
 from .devices.exceptions import DeviceControlException
 
@@ -402,7 +403,7 @@ class SensorWorker(Process):
                     pin_2_name=a_sensor_pin_2_name,
                     i2c_address=a_sensor_i2c_address,
                 )
-            except (OSError, ValueError) as e:
+            except (OSError, ValueError, SensorException) as e:
                 logger.error('Error initializing sensor: %s', str(e))
                 self.sensors[0] = indi_allsky_sensors.sensor_simulator(
                     self.config,
