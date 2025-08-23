@@ -72,6 +72,13 @@ CPU_TOTAL=$(grep -c "^proc" /proc/cpuinfo)
 MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 
 
+if pkg-config --modversion libindi >/dev/null 2>&1; then
+    DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
+else
+    DETECTED_INDIVERSION="Not Detected"
+fi
+
+
 if which whiptail >/dev/null 2>&1; then
     ### whiptail might not be installed on first run
     WHIPTAIL_BIN=$(which whiptail)
@@ -134,7 +141,7 @@ fi
 if [ -n "${WHIPTAIL_BIN:-}" ]; then
     "$WHIPTAIL_BIN" \
         --title "Welcome to indi-allsky" \
-        --msgbox "*** Welcome to the indi-allsky indiserver setup script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nINDI Port: $INDI_PORT" 0 0
+        --msgbox "*** Welcome to the indi-allsky indiserver setup script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nDetected INDI: $DETECTED_INDIVERSION\n\nINDI Port: $INDI_PORT" 0 0
 fi
 
 
@@ -147,6 +154,8 @@ echo "Bits: $CPU_BITS"
 echo
 echo "CPUs: $CPU_TOTAL"
 echo "Memory: $MEM_TOTAL kB"
+echo
+echo "Detected INDI: $DETECTED_INDIVERSION"
 echo
 echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
 echo "INDISERVER_SERVICE_NAME: $INDISERVER_SERVICE_NAME"

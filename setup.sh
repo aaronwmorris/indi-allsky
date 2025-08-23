@@ -1828,8 +1828,18 @@ SUPPORTED_INDI_VERSIONS=(
 
 
 # try to detect installed indiversion
-#DETECTED_INDIVERSION=$(${INDI_DRIVER_PATH}/indiserver --help 2>&1 | grep -i "INDI Library" | awk "{print \$3}")
-DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
+if pkg-config --modversion libindi >/dev/null 2>&1; then
+    #DETECTED_INDIVERSION=$(${INDI_DRIVER_PATH}/indiserver --help 2>&1 | grep -i "INDI Library" | awk "{print \$3}")
+    DETECTED_INDIVERSION=$(pkg-config --modversion libindi)
+else
+    echo
+    echo
+    echo "The libindi development packages cannot be found.  Please install libindi-dev"
+    echo
+    exit 1
+fi
+
+
 echo
 echo
 echo "Detected INDI version: $DETECTED_INDIVERSION"
