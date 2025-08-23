@@ -12,16 +12,19 @@ logger = logging.getLogger('indi_allsky')
 
 
 class LightningSensorAs3935_SparkFun(SensorBase):
-    afemode_outdoor = True
-    mask_disturber = False
-    noise_level = 2
+
     watchdog_threshold = 2
-    spike_rejection = 2
     lightning_threshold = 1
 
 
     def __init__(self, *args, **kwargs):
         super(LightningSensorAs3935_SparkFun, self).__init__(*args, **kwargs)
+
+        self.afemode_outdoor = self.config.get('TEMP_SENSOR', {}).get('AS3935_OUTDOOR_MODE', True)
+        self.mask_disturber = self.config.get('TEMP_SENSOR', {}).get('AS3935_MASK_DISTURBER', False)
+        self.noise_level = self.config.get('TEMP_SENSOR', {}).get('AS3935_NOISE_LEVEL', 2)
+        self.spike_rejection = self.config.get('TEMP_SENSOR', {}).get('AS3935_SPIKE_REJECTION', 2)
+
 
         self.full_data_list = []
         self.current_data_dict = {
