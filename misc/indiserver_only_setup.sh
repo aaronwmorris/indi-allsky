@@ -141,7 +141,7 @@ fi
 if [ -n "${WHIPTAIL_BIN:-}" ]; then
     "$WHIPTAIL_BIN" \
         --title "Welcome to indi-allsky" \
-        --msgbox "*** Welcome to the indi-allsky indiserver setup script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nDetected INDI: $DETECTED_INDIVERSION\n\nINDI Port: $INDI_PORT" 0 0
+        --msgbox "*** Welcome to the indi-allsky indiserver setup script ***\n\nDistribution: $DISTRO_ID\nRelease: $DISTRO_VERSION_ID\nArch: $CPU_ARCH\nBits: $CPU_BITS\n\nCPUs: $CPU_TOTAL\nMemory: $MEM_TOTAL kB\n\nExisting INDI: $DETECTED_INDIVERSION\n\nINDI Port: $INDI_PORT" 0 0
 fi
 
 
@@ -155,7 +155,7 @@ echo
 echo "CPUs: $CPU_TOTAL"
 echo "Memory: $MEM_TOTAL kB"
 echo
-echo "Detected INDI: $DETECTED_INDIVERSION"
+echo "Existing INDI: $DETECTED_INDIVERSION"
 echo
 echo "INDI_DRIVER_PATH: $INDI_DRIVER_PATH"
 echo "INDISERVER_SERVICE_NAME: $INDISERVER_SERVICE_NAME"
