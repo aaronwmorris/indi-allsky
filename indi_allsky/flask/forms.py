@@ -2891,6 +2891,28 @@ def TEMP_SENSOR__LTR390_GAIN_validator(form, field):
         raise ValidationError('Invalid gain selection')
 
 
+def TEMP_SENSOR__AS3935_NOISE_LEVEL_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data < 1:
+        raise ValidationError('Noise Level must be 1 to 7')
+
+    if field.data > 7:
+        raise ValidationError('Noise Level must be 1 to 7')
+
+
+def TEMP_SENSOR__AS3935_SPIKE_REJECTION_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data < 1:
+        raise ValidationError('Spike Rejection must be 1 to 11')
+
+    if field.data > 7:
+        raise ValidationError('Spike Rejection must be 1 to 11')
+
+
 def HEALTHCHECK__DISK_USAGE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter a valid number')
@@ -4381,6 +4403,10 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__INA3221_CH1_ENABLE    = BooleanField('INA3221 Channel 1')
     TEMP_SENSOR__INA3221_CH2_ENABLE    = BooleanField('INA3221 Channel 2')
     TEMP_SENSOR__INA3221_CH3_ENABLE    = BooleanField('INA3221 Channel 3')
+    TEMP_SENSOR__AS3935_OUTDOOR_MODE    = BooleanField('AS3935 Outdoor Mode')
+    TEMP_SENSOR__AS3935_MASK_DISTURBER  = BooleanField('AS3935 Mask Disturber')
+    TEMP_SENSOR__AS3935_NOISE_LEVEL     = IntegerField('AS3935 Noise Level Threshold', validators=[DataRequired(), TEMP_SENSOR__AS3935_NOISE_LEVEL_validator])
+    TEMP_SENSOR__AS3935_SPIKE_REJECTION = IntegerField('AS3935 Spike Rejection', validators=[DataRequired(), TEMP_SENSOR__AS3935_SPIKE_REJECTION_validator])
     CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[CUSTOM_CHART_validator])
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[CUSTOM_CHART_validator])
     CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[CUSTOM_CHART_validator])

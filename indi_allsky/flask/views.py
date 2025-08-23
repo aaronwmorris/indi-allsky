@@ -2480,6 +2480,10 @@ class ConfigView(FormView):
             'TEMP_SENSOR__INA3221_CH1_ENABLE'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('INA3221_CH1_ENABLE', True),
             'TEMP_SENSOR__INA3221_CH2_ENABLE'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('INA3221_CH2_ENABLE', True),
             'TEMP_SENSOR__INA3221_CH3_ENABLE'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('INA3221_CH3_ENABLE', True),
+            'TEMP_SENSOR__AS3935_OUTDOOR_MODE'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_OUTDOOR_MODE', True),
+            'TEMP_SENSOR__AS3935_MASK_DISTURBER' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_MASK_DISTURBER', False),
+            'TEMP_SENSOR__AS3935_NOISE_LEVEL'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_NOISE_LEVEL', 2),
+            'TEMP_SENSOR__AS3935_SPIKE_REJECTION': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_SPIKE_REJECTION', 2),
             'CHARTS__CUSTOM_SLOT_1'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 'sensor_user_10'),
             'CHARTS__CUSTOM_SLOT_2'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 'sensor_user_11'),
             'CHARTS__CUSTOM_SLOT_3'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 'sensor_user_12'),
@@ -3365,6 +3369,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['INA3221_CH1_ENABLE']    = bool(request.json['TEMP_SENSOR__INA3221_CH1_ENABLE'])
         self.indi_allsky_config['TEMP_SENSOR']['INA3221_CH2_ENABLE']    = bool(request.json['TEMP_SENSOR__INA3221_CH2_ENABLE'])
         self.indi_allsky_config['TEMP_SENSOR']['INA3221_CH3_ENABLE']    = bool(request.json['TEMP_SENSOR__INA3221_CH3_ENABLE'])
+        self.indi_allsky_config['TEMP_SENSOR']['AS3935_OUTDOOR_MODE']   = bool(request.json['TEMP_SENSOR__AS3935_OUTDOOR_MODE'])
+        self.indi_allsky_config['TEMP_SENSOR']['AS3935_MASK_DISTURBER'] = bool(request.json['TEMP_SENSOR__AS3935_MASK_DISTURBER'])
+        self.indi_allsky_config['TEMP_SENSOR']['AS3935_NOISE_LEVEL']    = int(request.json['TEMP_SENSOR__AS3935_NOISE_LEVEL'])
+        self.indi_allsky_config['TEMP_SENSOR']['AS3935_SPIKE_REJECTION'] = int(request.json['TEMP_SENSOR__AS3935_SPIKE_REJECTION'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1']              = str(request.json['CHARTS__CUSTOM_SLOT_1'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2']              = str(request.json['CHARTS__CUSTOM_SLOT_2'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_3']              = str(request.json['CHARTS__CUSTOM_SLOT_3'])

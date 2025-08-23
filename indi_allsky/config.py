@@ -670,6 +670,10 @@ class IndiAllSkyConfigBase(object):
             "INA3221_CH1_ENABLE"     : True,
             "INA3221_CH2_ENABLE"     : True,
             "INA3221_CH3_ENABLE"     : True,
+            "AS3935_OUTDOOR_MODE"    : True,
+            "AS3935_MASK_DISTURBER"  : False,
+            "AS3935_NOISE_LEVEL"     : 2,
+            "AS3935_SPIKE_REJECTION" : 2,
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : "sensor_user_10",
