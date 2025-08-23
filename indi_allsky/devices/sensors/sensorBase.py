@@ -61,6 +61,10 @@ class SensorBase(object):
         self._slot = int(new_slot)
 
 
+    def deinit(self):
+        pass
+
+
     def c2f(self, c):
         # celsius to fahrenheit
         return (c * 9.0 / 5.0) + 32
@@ -130,6 +134,11 @@ class SensorBase(object):
     def kmph2miph(self, kmph):
         # kilometers/hour to miles/hour
         return kmph * 0.6213711922
+
+
+    def km2mi(self, km):
+        # kilometers to miles
+        return self.kmph2miph(km)
 
 
     def mps2miph(self, mps):

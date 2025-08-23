@@ -15,6 +15,7 @@ from .devices import generic as indi_allsky_gpios
 from .devices import dew_heaters
 from .devices import fans
 from .devices import sensors as indi_allsky_sensors
+from .devices.exceptions import SensorException
 from .devices.exceptions import SensorReadException
 from .devices.exceptions import DeviceControlException
 
@@ -165,6 +166,9 @@ class SensorWorker(Process):
                 self.gpio.deinit()
                 self.fan.deinit()
                 self.dew_heater.deinit()
+
+                for sensor in self.sensors:
+                    sensor.deinit()
 
                 return
 
@@ -388,6 +392,7 @@ class SensorWorker(Process):
             a_sensor_label = self.config.get('TEMP_SENSOR', {}).get('A_LABEL', 'Sensor A')
             a_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('A_I2C_ADDRESS', '0x77')
             a_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'notdefined')
+            a_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('A_PIN_2', 'notdefined')
 
             try:
                 self.sensors[0] = a_sensor(
@@ -395,9 +400,10 @@ class SensorWorker(Process):
                     a_sensor_label,
                     self.night_v,
                     pin_1_name=a_sensor_pin_1_name,
+                    pin_2_name=a_sensor_pin_2_name,
                     i2c_address=a_sensor_i2c_address,
                 )
-            except (OSError, ValueError) as e:
+            except (OSError, ValueError, SensorException) as e:
                 logger.error('Error initializing sensor: %s', str(e))
                 self.sensors[0] = indi_allsky_sensors.sensor_simulator(
                     self.config,
@@ -423,6 +429,7 @@ class SensorWorker(Process):
             b_sensor_label = self.config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B')
             b_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('B_I2C_ADDRESS', '0x76')
             b_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_1', 'notdefined')
+            b_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('B_PIN_2', 'notdefined')
 
             try:
                 self.sensors[1] = b_sensor(
@@ -430,6 +437,7 @@ class SensorWorker(Process):
                     b_sensor_label,
                     self.night_v,
                     pin_1_name=b_sensor_pin_1_name,
+                    pin_2_name=b_sensor_pin_2_name,
                     i2c_address=b_sensor_i2c_address,
                 )
             except (OSError, ValueError) as e:
@@ -458,6 +466,7 @@ class SensorWorker(Process):
             c_sensor_label = self.config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C')
             c_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('C_I2C_ADDRESS', '0x40')
             c_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('C_PIN_1', 'notdefined')
+            c_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('C_PIN_2', 'notdefined')
 
             try:
                 self.sensors[2] = c_sensor(
@@ -465,6 +474,7 @@ class SensorWorker(Process):
                     c_sensor_label,
                     self.night_v,
                     pin_1_name=c_sensor_pin_1_name,
+                    pin_2_name=c_sensor_pin_2_name,
                     i2c_address=c_sensor_i2c_address,
                 )
             except (OSError, ValueError) as e:
@@ -493,6 +503,7 @@ class SensorWorker(Process):
             d_sensor_label = self.config.get('TEMP_SENSOR', {}).get('D_LABEL', 'Sensor D')
             d_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('D_I2C_ADDRESS', '0x50')
             d_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('D_PIN_1', 'notdefined')
+            d_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('D_PIN_2', 'notdefined')
 
             try:
                 self.sensors[3] = d_sensor(
@@ -500,6 +511,7 @@ class SensorWorker(Process):
                     d_sensor_label,
                     self.night_v,
                     pin_1_name=d_sensor_pin_1_name,
+                    pin_2_name=d_sensor_pin_2_name,
                     i2c_address=d_sensor_i2c_address,
                 )
             except (OSError, ValueError) as e:

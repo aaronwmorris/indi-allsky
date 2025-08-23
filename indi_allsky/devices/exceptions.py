@@ -1,4 +1,8 @@
 
+class SensorException(Exception):
+    pass
+
+
 class SensorReadException(Exception):
     pass
 

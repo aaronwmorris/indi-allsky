@@ -12,7 +12,7 @@ class DewHeaterSimulator(DewHeaterBase):
     def __init__(self, *args, **kwargs):
         super(DewHeaterSimulator, self).__init__(*args, **kwargs)
 
-        self._state = None
+        self._state = 0
 
 
     @property

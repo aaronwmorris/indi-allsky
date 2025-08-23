@@ -1021,7 +1021,7 @@ class miscDb(object):
         new_notice = IndiAllSkyDbNotificationTable(
             item=item,
             category=category,
-            notification=notification,
+            notification=str(notification)[:255],  # truncate to 255 characters
             expireDate=now + expire,
         )
 
