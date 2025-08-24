@@ -5417,24 +5417,61 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
 
+        from ..devices import sensors as indi_allsky_sensors
+
         check_sensor_slots = list()
+
         if self.TEMP_SENSOR__A_CLASSNAME.data:
-            check_sensor_slots.append(self.TEMP_SENSOR__A_USER_VAR_SLOT)
+            temp_sensor__a_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__A_CLASSNAME.data)
+            temp_sensor__a_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__A_USER_VAR_SLOT.data]
+            check_sensor_slots.append({
+                'name'   : 'Sensor A',
+                #'class'  : temp_sensor__a_class,
+                'slot'   : self.TEMP_SENSOR__A_USER_VAR_SLOT,
+                'set'    : set(range(temp_sensor__a_slot_int, temp_sensor__a_slot_int + temp_sensor__a_class.METADATA['count'])),
+            })
 
         if self.TEMP_SENSOR__B_CLASSNAME.data:
-            check_sensor_slots.append(self.TEMP_SENSOR__B_USER_VAR_SLOT)
+            temp_sensor__b_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__B_CLASSNAME.data)
+            temp_sensor__b_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__B_USER_VAR_SLOT.data]
+            check_sensor_slots.append({
+                'name' : 'Sensor B',
+                #'class' : temp_sensor__b_class,
+                'slot'  : self.TEMP_SENSOR__B_USER_VAR_SLOT,
+                'set'   : set(range(temp_sensor__b_slot_int, temp_sensor__b_slot_int + temp_sensor__b_class.METADATA['count'])),
+            })
 
         if self.TEMP_SENSOR__C_CLASSNAME.data:
-            check_sensor_slots.append(self.TEMP_SENSOR__C_USER_VAR_SLOT)
+            temp_sensor__c_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__C_CLASSNAME.data)
+            temp_sensor__c_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__C_USER_VAR_SLOT.data]
+            check_sensor_slots.append({
+                'name' : 'Sensor C',
+                #'class' : temp_sensor__c_class,
+                'slot'  : self.TEMP_SENSOR__C_USER_VAR_SLOT,
+                'set'   : set(range(temp_sensor__c_slot_int, temp_sensor__c_slot_int + temp_sensor__c_class.METADATA['count'])),
+            })
 
         if self.TEMP_SENSOR__D_CLASSNAME.data:
-            check_sensor_slots.append(self.TEMP_SENSOR__D_USER_VAR_SLOT)
+            temp_sensor__d_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__D_CLASSNAME.data)
+            temp_sensor__d_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__D_USER_VAR_SLOT.data]
+            check_sensor_slots.append({
+                'name' : 'Sensor D',
+                #'class' : temp_sensor__d_class,
+                'slot'  : self.TEMP_SENSOR__D_USER_VAR_SLOT,
+                'set'   : set(range(temp_sensor__d_slot_int, temp_sensor__d_slot_int + temp_sensor__d_class.METADATA['count'])),
+            })
 
 
         for slot1, slot2 in itertools.combinations(check_sensor_slots, 2):
-            if slot1.data == slot2.data:
-                slot1.errors.append('Duplicate slot defined')
-                slot2.errors.append('Duplicate slot defined')
+            if not slot1['set'].isdisjoint(slot2['set']):
+                slot1['slot'].errors.append('Overlapping slots with {0:s}'.format(slot2['name']))
+                slot2['slot'].errors.append('Overlapping slots with {0:s}'.format(slot1['name']))
+                result = False
+
+
+        for slot in check_sensor_slots:
+            if list(slot['set'])[-1] > 59:
+                slot['slot'].errors.append('Not enough sensor slots to fit all values')
                 result = False
 
 
@@ -5443,17 +5480,6 @@ class IndiAllskyConfigForm(FlaskForm):
                 self.DEW_HEATER__TEMP_USER_VAR_SLOT.errors.append('Sensor same as dew point')
                 self.DEW_HEATER__DEWPOINT_USER_VAR_SLOT.errors.append('Sensor same as temperature')
                 result = False
-
-
-        ### these never seem to be hit
-        #from ..devices import sensors as indi_allsky_sensors
-        #temp_sensor__a_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__A_CLASSNAME.data)
-        #sensor_a_count = temp_sensor__a_class.METADATA['count']
-        #slot_a_index = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__A_USER_VAR_SLOT.data]
-
-        #if sensor_a_count + slot_a_index > 30:
-        #    self.TEMP_SENSOR__A_USER_VAR_SLOT.errors.append('Not enough sensor slots')
-        #    result = False
 
 
         return result
