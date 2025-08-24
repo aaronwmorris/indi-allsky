@@ -5417,24 +5417,51 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
 
+        from ..devices import sensors as indi_allsky_sensors
+
         check_sensor_slots = list()
+
         if self.TEMP_SENSOR__A_CLASSNAME.data:
-            check_sensor_slots.append(self.TEMP_SENSOR__A_USER_VAR_SLOT)
+            temp_sensor__a_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__A_CLASSNAME.data)
+            temp_sensor__a_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__A_USER_VAR_SLOT.data]
+            check_sensor_slots.append({
+                'label' : 'Sensor A',
+                'slot' : self.TEMP_SENSOR__A_USER_VAR_SLOT,
+                'set'  : set(range(temp_sensor__a_slot_int, temp_sensor__a_slot_int + temp_sensor__a_class.METADATA['count'])),
+            })
 
         if self.TEMP_SENSOR__B_CLASSNAME.data:
-            check_sensor_slots.append(self.TEMP_SENSOR__B_USER_VAR_SLOT)
+            temp_sensor__b_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__B_CLASSNAME.data)
+            temp_sensor__b_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__B_USER_VAR_SLOT.data]
+            check_sensor_slots.append({
+                'label' : 'Sensor B',
+                'slot' : self.TEMP_SENSOR__B_USER_VAR_SLOT,
+                'set'  : set(range(temp_sensor__b_slot_int, temp_sensor__b_slot_int + temp_sensor__b_class.METADATA['count'])),
+            })
 
         if self.TEMP_SENSOR__C_CLASSNAME.data:
-            check_sensor_slots.append(self.TEMP_SENSOR__C_USER_VAR_SLOT)
+            temp_sensor__c_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__C_CLASSNAME.data)
+            temp_sensor__c_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__C_USER_VAR_SLOT.data]
+            check_sensor_slots.append({
+                'label' : 'Sensor C',
+                'slot' : self.TEMP_SENSOR__C_USER_VAR_SLOT,
+                'set'  : set(range(temp_sensor__c_slot_int, temp_sensor__c_slot_int + temp_sensor__c_class.METADATA['count'])),
+            })
 
         if self.TEMP_SENSOR__D_CLASSNAME.data:
-            check_sensor_slots.append(self.TEMP_SENSOR__D_USER_VAR_SLOT)
+            temp_sensor__d_class = getattr(indi_allsky_sensors, self.TEMP_SENSOR__D_CLASSNAME.data)
+            temp_sensor__d_slot_int = constants.SENSOR_INDEX_MAP[self.TEMP_SENSOR__D_USER_VAR_SLOT.data]
+            check_sensor_slots.append({
+                'label' : 'Sensor D',
+                'slot' : self.TEMP_SENSOR__D_USER_VAR_SLOT,
+                'set'  : set(range(temp_sensor__d_slot_int, temp_sensor__d_slot_int + temp_sensor__d_class.METADATA['count'])),
+            })
 
 
         for slot1, slot2 in itertools.combinations(check_sensor_slots, 2):
-            if slot1.data == slot2.data:
-                slot1.errors.append('Duplicate slot defined')
-                slot2.errors.append('Duplicate slot defined')
+            if not slot1['set'].isdisjoint(slot2['set']):
+                slot1['slot'].errors.append('Overlapping slots with {0:s}'.format(slot2['label']))
+                slot2['slot'].errors.append('Overlapping slots with {0:s}'.format(slot1['label']))
                 result = False
 
 
