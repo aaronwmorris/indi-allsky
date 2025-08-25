@@ -1419,8 +1419,8 @@ class VideoWorker(Process):
                 import simplejpeg
 
                 try:
-                    with io.open(str(image_file_p), 'rb') as img_f:
-                        image_data = simplejpeg.decode_jpeg(img_f.read(), colorspace='BGR')
+                    with io.open(str(image_file_p), 'rb') as f_img:
+                        image_data = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
                 except ValueError as e:
                     logger.error('Unable to read image - %s: %s', str(e), image_file_p)
                     continue

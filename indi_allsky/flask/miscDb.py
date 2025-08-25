@@ -1185,36 +1185,34 @@ class miscDb(object):
                 return
 
 
-            ### OpenCV
-            #img = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+            if filename_p.suffix in ('.jpg', '.jpeg'):
+                import simplejpeg
 
-            #if isinstance(img, type(None)):
-            #    logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
-            #    return
+                try:
+                    with io.open(str(filename_p), 'rb') as f_img:
+                        img = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+                except ValueError as e:
+                    logger.error('Cannot create thumbnail - Bad Image - %s: %s', str(e), filename_p)
+                    return
+            elif filename_p.suffix in ('.png',):
+                # opencv is faster than Pillow with PNG
+                img = cv2.imread(str(filename_p), cv2.IMREAD_COLOR)
 
+                if isinstance(img, type(None)):
+                    logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
+                    return
+            else:
+                # Pillow supports remaining image types
+                import numpy
+                import PIL
+                from PIL import Image
 
-            ### pillow
-            #import numpy
-            #import PIL
-            #from PIL import Image
-
-            #try:
-            #    with Image.open(str(image_file_p)) as image:
-            #        img = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-            #except PIL.UnidentifiedImageError:
-            #    logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
-            #    return
-
-
-            ### simplejpeg
-            import simplejpeg
-
-            try:
-                with io.open(str(filename_p), 'rb') as f_img:
-                    img = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
-            except ValueError as e:
-                logger.error('Cannot create thumbnail - Bad Image - %s: %s', str(e), filename_p)
-                return
+                try:
+                    with Image.open(str(filename_p)) as img_pil:
+                        img = cv2.cvtColor(numpy.array(img_pil), cv2.COLOR_RGB2BGR)
+                except PIL.UnidentifiedImageError:
+                    logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
+                    return
 
         else:
             # use entry file on filesystem
@@ -1225,33 +1223,36 @@ class miscDb(object):
                 return
 
 
-            ### OpenCV
-            #img = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
+            if filename_p.suffix in ('.jpg', '.jpeg'):
+                import simplejpeg
 
-            #if isinstance(img, type(None)):
-            #    logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
-            #    return
+                try:
+                    with io.open(str(filename_p), 'rb') as f_img:
+                        img = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+                except ValueError as e:
+                    logger.error('Cannot create thumbnail - Bad Image - %s: %s', str(e), filename_p)
+                    return
 
+            elif filename_p.suffix in ('.png',):
+                # opencv is faster than Pillow with PNG
+                img = cv2.imread(str(filename_p), cv2.IMREAD_COLOR)
 
-            # pillow
-            #import PIL
-            #from PIL import Image
-            #try:
-            #    img = Image.open(str(filename_p))
-            #except PIL.UnidentifiedImageError:
-            #    logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
-            #    return
+                if isinstance(img, type(None)):
+                    logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
+                    return
 
+            else:
+                # Pillow supports remaining image types
+                import numpy
+                import PIL
+                from PIL import Image
 
-            ### simplejpeg
-            import simplejpeg
-
-            try:
-                with io.open(str(filename_p), 'rb') as f_img:
-                    img = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
-            except ValueError as e:
-                logger.error('Cannot create thumbnail - Bad Image - %s: %s', str(e), filename_p)
-                return
+                try:
+                    with Image.open(str(filename_p)) as img_pil:
+                        img = cv2.cvtColor(numpy.array(img_pil), cv2.COLOR_RGB2BGR)
+                except PIL.UnidentifiedImageError:
+                    logger.error('Cannot create thumbnail - Bad Image: %s', filename_p)
+                    return
 
 
         img_height, img_width = img.shape[:2]
