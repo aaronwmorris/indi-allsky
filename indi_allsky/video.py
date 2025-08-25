@@ -1415,43 +1415,34 @@ class VideoWorker(Process):
 
 
             #logger.info('Reading file: %s', p_entry)
-            if image_file_p.suffix in ('.png',):
+            if image_file_p.suffix in ('.jpg', '.jpeg'):
+                import simplejpeg
+
+                try:
+                    with io.open(str(image_file_p), 'rb') as img_f:
+                        image_data = simplejpeg.decode_jpeg(img_f.read(), colorspace='BGR')
+                except ValueError as e:
+                    logger.error('Unable to read image - %s: %s', str(e), image_file_p)
+                    continue
+            elif image_file_p.suffix in ('.png',):
                 # opencv is faster than Pillow with PNG
                 image_data = cv2.imread(str(image_file_p), cv2.IMREAD_COLOR)
 
                 if isinstance(image_data, type(None)):
                     logger.error('Unable to read %s', image_file_p)
                     continue
+
             else:
-                ### OpenCV
-                #data = cv2.imread(str(image_file_p), cv2.IMREAD_UNCHANGED)
-
-                #if isinstance(data, type(None)):
-                #    logger.error('Unable to read image: %s', image_file_p)
-                #    continue
-
-
-                ### pillow
-                #import numpy
-                #import PIL
-                #from PIL import Image
-
-                #try:
-                #    with Image.open(str(image_file_p)) as img:
-                #        image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-                #except PIL.UnidentifiedImageError:
-                #    logger.error('Unable to read image: %s', image_file_p)
-                #    continue
-
-
-                ### simplejpeg
-                import simplejpeg
+                # Pillow supports remaining image types
+                import numpy
+                import PIL
+                from PIL import Image
 
                 try:
-                    with io.open(str(image_file_p), 'rb') as img:
-                        image_data = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
-                except ValueError as e:
-                    logger.error('Unable to read image - %s: %s', str(e), image_file_p)
+                    with Image.open(str(image_file_p)) as img_pil:
+                        image_data = cv2.cvtColor(numpy.array(img_pil), cv2.COLOR_RGB2BGR)
+                except PIL.UnidentifiedImageError:
+                    logger.error('Unable to read image: %s', image_file_p)
                     continue
 
 
