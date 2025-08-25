@@ -1387,12 +1387,6 @@ class JsonChartView(JsonView):
 
 
     def getChartData(self, camera_id, ts_dt, history_seconds):
-        import numpy
-        import cv2
-        import simplejpeg
-        #import PIL
-        #from PIL import Image
-
         ts_minus_seconds = ts_dt - timedelta(seconds=history_seconds)
 
         chart_query = IndiAllSkyDbImageTable.query\
@@ -1661,38 +1655,40 @@ class JsonChartView(JsonView):
         #image_start = time.time()
 
 
-        if latest_image_p.suffix in ('.png', ):
+        if latest_image_p.suffix in ('.jpg', '.jpeg'):
+            import simplejpeg
+
+            try:
+                with io.open(str(latest_image_p), 'rb') as f_img:
+                    image_data = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+            except ValueError:
+                app.logger.error('Unable to read %s', latest_image_p)
+                return chart_data
+
+        elif latest_image_p.suffix in ('.png', ):
+            import cv2
+
             image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_UNCHANGED)
 
             if isinstance(image_data, type(None)):
                 app.logger.error('Unable to read %s', latest_image_p)
                 return chart_data
-        elif latest_image_p.suffix in ('.jpg', '.jpeg'):
-            ### OpenCV
-            #image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_UNCHANGED)
 
-            #if isinstance(image_data, type(None)):
-            #    app.logger.error('Unable to read %s', latest_image_p)
-            #    return chart_data
+        else:
+            # pillow supports remaining types
+            import numpy
+            import cv2
+            import PIL
+            from PIL import Image
 
-
-            ### pillow
-            #try:
-            #    with Image.open(str(latest_image_p)) as img:
-            #        image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-            #except PIL.UnidentifiedImageError:
-            #    app.logger.error('Unable to read %s', latest_image_p)
-            #    return chart_data
-
-
-            ### simplejpeg
             try:
-                with io.open(str(latest_image_p), 'rb') as img:
-                    image_data = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
-            except ValueError:
+                with Image.open(str(latest_image_p)) as img_pil:
+                    image_data = cv2.cvtColor(numpy.array(img_pil), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
                 app.logger.error('Unable to read %s', latest_image_p)
                 return chart_data
-        else:
+
+
             app.logger.warning('Unsupported image format')
             return chart_data
 
@@ -6427,12 +6423,8 @@ class JsonFocusView(JsonView):
 
 
     def dispatch_request(self):
-        #import numpy
         import cv2
         from multiprocessing import Value
-        import simplejpeg
-        #import PIL
-        #from PIL import Image
         from ..stars import IndiAllSkyStars
 
         zoom = int(request.args.get('zoom', 2))
@@ -6451,30 +6443,37 @@ class JsonFocusView(JsonView):
         latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
 
 
-        ### OpenCV
-        #image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_UNCHANGED)
 
-        #if isinstance(image_data, type(None)):
-        #    app.logger.error('Unable to read %s', latest_image_p)
-        #    return jsonify({}), 400
+        if latest_image_p.suffix in ('.jpg', '.jpeg'):
+            import simplejpeg
 
+            try:
+                with io.open(str(latest_image_p), 'rb') as f_img:
+                    image_data = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+            except ValueError:
+                app.logger.error('Unable to read %s', latest_image_p)
+                return jsonify({}), 400
 
-        ### pillow
-        #try:
-        #    with Image.open(str(latest_image_p)) as img:
-        #        image_data = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-        #except PIL.UnidentifiedImageError:
-        #    app.logger.error('Unable to read %s', latest_image_p)
-        #    return jsonify({}), 400
+        elif latest_image_p.suffix in ('.png',):
+            # opencv is faster than Pillow with PNG
+            image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_COLOR)
 
+            if isinstance(image_data, type(None)):
+                app.logger.error('Unable to read %s', latest_image_p)
+                return jsonify({}), 400
 
-        ### simplejpeg
-        try:
-            with io.open(str(latest_image_p), 'rb') as img:
-                image_data = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
-        except ValueError:
-            app.logger.error('Unable to read %s', latest_image_p)
-            return jsonify({}), 400
+        else:
+            # Pillow supports remaining image types
+            import numpy
+            import PIL
+            from PIL import Image
+
+            try:
+                with Image.open(str(latest_image_p)) as img_pil:
+                    image_data = cv2.cvtColor(numpy.array(img_pil), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
+                app.logger.error('Unable to read %s', latest_image_p)
+                return jsonify({}), 400
 
 
         stars = stars_detect.detectObjects(image_data)

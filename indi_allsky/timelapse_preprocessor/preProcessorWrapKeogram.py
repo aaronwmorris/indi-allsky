@@ -5,7 +5,7 @@ import tempfile
 import numpy
 import cv2
 import simplejpeg
-#import PIL
+import PIL
 from PIL import Image
 import logging
 
@@ -58,19 +58,20 @@ class PreProcessorWrapKeogram(PreProcessorBase):
 
 
         ### if reading the image fails, just let the exception ride
+        if self.keogram.suffix in ('.jpg', '.jpeg'):
+            with io.open(str(self.keogram), 'rb') as f_img:
+                self._keogram_image = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
 
-        ### OpenCV
-        #self._keogram_image = cv2.imread(str(self.keogram), cv2.IMREAD_UNCHANGED)
+        elif self.keogram.suffix in ('.png',):
+            self._keogram_image = cv2.imread(str(self.keogram), cv2.IMREAD_COLOR)
 
+            if isinstance(self._keogram_image, type(None)):
+                raise Exception('Failed to decode keogram')
 
-        ### pillow
-        #with Image.open(str(self.keogram)) as k_img:
-        #    self._keogram_image = cv2.cvtColor(numpy.array(k_img), cv2.COLOR_RGB2BGR)
-
-
-        ### simplejpeg
-        with io.open(str(self.keogram), 'rb') as img:
-            self._keogram_image = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
+        else:
+            # Pillow supports remaining image types
+            with Image.open(str(self.keogram)) as k_img_pil:
+                self._keogram_image = cv2.cvtColor(numpy.array(k_img_pil), cv2.COLOR_RGB2BGR)
 
 
         keogram_height, keogram_width = self._keogram_image.shape[:2]
@@ -132,30 +133,28 @@ class PreProcessorWrapKeogram(PreProcessorBase):
         #start_open = time.time()
 
 
-        ### OpenCV
-        #data = cv2.imread(str(f), cv2.IMREAD_UNCHANGED)
+        if f.suffix in ('.jpg', '.jpeg'):
+            try:
+                with io.open(str(f), 'rb') as f_img:
+                    image = simplejpeg.decode_jpeg(f_img.read(), colorspace='BGR')
+            except ValueError as e:
+                logger.error('Unable to read - %s: %s', str(e), f)
+                return
 
-        #if isinstance(data, type(None)):
-        #    logger.error('Unable to read %s', f)
-        #    return
+        elif f.suffix in ('.png',):
+            image = cv2.imread(str(f), cv2.IMREAD_COLOR)
 
-
-        ### Pillow
-        #try:
-        #    with Image.open(str(f)) as img:
-        #        image = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
-        #except PIL.UnidentifiedImageError:
-        #    logger.error('Unable to read %s', f)
-        #    return
-
-
-        ### simplejpeg
-        try:
-            with io.open(str(f), 'rb') as img:
-                image = simplejpeg.decode_jpeg(img.read(), colorspace='BGR')
-        except ValueError as e:
-            logger.error('Unable to read - %s: %s', str(e), f)
-            return
+            if isinstance(image, type(None)):
+                logger.error('Unable to read %s', f)
+                return
+        else:
+            # Pillow supports remaining image types
+            try:
+                with Image.open(str(f)) as img_pil:
+                    image = cv2.cvtColor(numpy.array(img_pil), cv2.COLOR_RGB2BGR)
+            except PIL.UnidentifiedImageError:
+                logger.error('Unable to read %s', f)
+                return
 
 
         #elapsed_open_s = time.time() - start_open
