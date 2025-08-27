@@ -1387,6 +1387,8 @@ class JsonChartView(JsonView):
 
 
     def getChartData(self, camera_id, ts_dt, history_seconds):
+        import numpy
+
         ts_minus_seconds = ts_dt - timedelta(seconds=history_seconds)
 
         chart_query = IndiAllSkyDbImageTable.query\
@@ -1676,7 +1678,6 @@ class JsonChartView(JsonView):
 
         else:
             # pillow supports remaining types
-            import numpy
             import cv2
             import PIL
             from PIL import Image

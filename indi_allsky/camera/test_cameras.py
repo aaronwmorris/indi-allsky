@@ -721,7 +721,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
 
         # redraw the stars
         for i in range(self.stars_array.shape[1]):
-            center = (int(self.stars_array[0][i]), int(self.stars_array[1][i]))
+            center = (round(self.stars_array[0][i]), round(self.stars_array[1][i]))
             radius = int(self.stars_array[2][i])
             color = (int(self.stars_array[3][i]), int(self.stars_array[4][i]), int(self.stars_array[5][i]))
             #logger.info('Center: %s', center)
