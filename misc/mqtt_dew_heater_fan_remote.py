@@ -58,6 +58,34 @@ class MqttDewHeaterFan(object):
             sys.exit(1)
 
 
+        self.client = None
+
+
+    def sigint_handler(self, signum, frame):
+        logger.warning('Caught INT signal, shutting down')
+
+        self.client.disconnect()
+        self.client.loop_stop()
+
+        self.dew_heater.deinit()
+        self.fan.deinit()
+
+        sys.exit()
+
+
+    def sigterm_handler(self, signum, frame):
+        logger.warning('Caught TERM signal, shutting down')
+
+        self.client.disconnect()
+        self.client.loop_stop()
+
+        self.dew_heater.deinit()
+        self.fan.deinit()
+
+        sys.exit()
+
+
+    def main(self):
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
@@ -99,28 +127,6 @@ class MqttDewHeaterFan(object):
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
 
-    def sigint_handler(self, signum, frame):
-        logger.warning('Caught INT signal, shutting down')
-
-        self.client.disconnect()
-        self.client.loop_stop()
-
-        self.dew_heater.deinit()
-        self.fan.deinit()
-
-        sys.exit()
-
-
-    def sigterm_handler(self, signum, frame):
-        logger.warning('Caught TERM signal, shutting down')
-
-        self.client.disconnect()
-        self.client.loop_stop()
-
-        self.dew_heater.deinit()
-        self.fan.deinit()
-
-        sys.exit()
 
 
     def on_subscribe(self, client, userdata, mid, reason_code_list, properties):
