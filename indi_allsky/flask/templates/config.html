@@ -6461,6 +6461,21 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__DHT_USE_PULSEIO.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TEMP_SENSOR__DHT_USE_PULSEIO(class='form-check-input') }}
+                <div id="TEMP_SENSOR__DHT_USE_PULSEIO-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__SHT3X_HEATER_NIGHT.label }}
         </div>
         <div class="col-sm-2">
@@ -8439,6 +8454,7 @@ const checkbox_field_names = [
     'LIBCAMERA__IMMEDIATE_DAY',
     'ACCUM_CAMERA__EVEN_EXPOSURES',
     'ACCUM_CAMERA__CLAMP_16BIT',
+    'TEMP_SENSOR__DHT_USE_PULSEIO',
     'TEMP_SENSOR__SHT3X_HEATER_NIGHT',
     'TEMP_SENSOR__SHT3X_HEATER_DAY',
     'TEMP_SENSOR__HTU31D_HEATER_NIGHT',

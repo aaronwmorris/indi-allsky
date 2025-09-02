@@ -4372,6 +4372,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__MQTT_PASSWORD       = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[MQTTPUBLISH__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__MQTT_TLS            = BooleanField('Use TLS')
     TEMP_SENSOR__MQTT_CERT_BYPASS    = BooleanField('Disable Certificate Validation')
+    TEMP_SENSOR__DHT_USE_PULSEIO     = BooleanField('DHT11/21/22 - use_pulseio')
     TEMP_SENSOR__SHT3X_HEATER_NIGHT  = BooleanField('SHT3x Heater (Night)')
     TEMP_SENSOR__SHT3X_HEATER_DAY    = BooleanField('SHT3x Heater (Day)')
     TEMP_SENSOR__SHT4X_MODE_NIGHT    = SelectField('SHT4x Mode (Night)', choices=TEMP_SENSOR__SHT4X_MODE_choices, validators=[TEMP_SENSOR__SHT4X_MODE_validator])

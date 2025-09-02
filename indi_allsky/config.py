@@ -639,6 +639,7 @@ class IndiAllSkyConfigBase(object):
             "MQTT_PASSWORD_E"        : "",
             "MQTT_TLS"               : True,
             "MQTT_CERT_BYPASS"       : True,
+            "DHT_USE_PULSEIO"        : False,
             "SHT3X_HEATER_NIGHT"     : False,
             "SHT3X_HEATER_DAY"       : False,
             "HTU31D_HEATER_NIGHT"    : False,

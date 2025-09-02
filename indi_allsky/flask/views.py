@@ -2446,6 +2446,7 @@ class ConfigView(FormView):
             'TEMP_SENSOR__MQTT_PASSWORD'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD', ''),
             'TEMP_SENSOR__MQTT_TLS'          : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_TLS', True),
             'TEMP_SENSOR__MQTT_CERT_BYPASS'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_CERT_BYPASS', True),
+            'TEMP_SENSOR__DHT_USE_PULSEIO'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('DHT_USE_PULSEIO', False),
             'TEMP_SENSOR__SHT3X_HEATER_NIGHT': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SHT3X_HEATER_NIGHT', False),
             'TEMP_SENSOR__SHT3X_HEATER_DAY'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SHT3X_HEATER_DAY', False),
             'TEMP_SENSOR__SHT4X_MODE_NIGHT'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SHT4X_MODE_NIGHT', 'NOHEAT_HIGHPRECISION'),
@@ -3335,6 +3336,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_PASSWORD']         = str(request.json['TEMP_SENSOR__MQTT_PASSWORD'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_TLS']              = bool(request.json['TEMP_SENSOR__MQTT_TLS'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_CERT_BYPASS']      = bool(request.json['TEMP_SENSOR__MQTT_CERT_BYPASS'])
+        self.indi_allsky_config['TEMP_SENSOR']['DHT_USE_PULSEIO']       = bool(request.json['TEMP_SENSOR__DHT_USE_PULSEIO'])
         self.indi_allsky_config['TEMP_SENSOR']['SHT3X_HEATER_NIGHT']    = bool(request.json['TEMP_SENSOR__SHT3X_HEATER_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['SHT3X_HEATER_DAY']      = bool(request.json['TEMP_SENSOR__SHT3X_HEATER_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['SHT4X_MODE_NIGHT']      = str(request.json['TEMP_SENSOR__SHT4X_MODE_NIGHT'])
