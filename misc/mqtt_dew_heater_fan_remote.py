@@ -200,6 +200,9 @@ class DeviceStandard(object):
         self.pin = digitalio.DigitalInOut(pin)
         self.pin.direction = digitalio.Direction.OUTPUT
 
+        self.ON = 1
+        self.OFF = 0
+
         self._state = 0
 
 
@@ -215,12 +218,12 @@ class DeviceStandard(object):
 
         if new_state_b:
             logger.warning('Set %s state: 100%', self.name)
-            self.dew_heater_pin.value = 1
-            self._dew_heater_state = 100
+            self.pin.value = self.ON
+            self._state = 100
         else:
             logger.warning('Set %s state: 0%', self.name)
-            self.dew_heater_pin.value = 0
-            self._dew_heater_state = 0
+            self.pin.value = self.OFF
+            self._state = 0
 
 
     def deinit(self):
