@@ -3,6 +3,13 @@
 # This script manages a dew heater and fan device via MQTT       #
 ##################################################################
 
+### Requirements
+#paho-mqtt >= 2.0.0
+#Adafruit-Blinka
+#gpiod
+#gpiozero
+#rpi-lgpio  (remove RPi.GPIO)
+
 
 ### Set pins here
 DEW_HEATER_PIN = 'D12'
