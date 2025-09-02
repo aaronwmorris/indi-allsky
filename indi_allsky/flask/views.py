@@ -2406,6 +2406,13 @@ class ConfigView(FormView):
             'GENERIC_GPIO__A_I2C_ADDRESS'    : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_I2C_ADDRESS', '0x12'),
             'GENERIC_GPIO__A_PIN_1'          : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_PIN_1', 'D21'),
             'GENERIC_GPIO__A_INVERT_OUTPUT'  : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_INVERT_OUTPUT', False),
+            'DEVICE__MQTT_TRANSPORT'         : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_TRANSPORT', 'tcp'),
+            'DEVICE__MQTT_HOST'              : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_HOST', 'localhost'),
+            'DEVICE__MQTT_PORT'              : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_PORT', 8883),
+            'DEVICE__MQTT_USERNAME'          : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_USERNAME', 'indi-allsky'),
+            'DEVICE__MQTT_PASSWORD'          : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_PASSWORD', ''),
+            'DEVICE__MQTT_TLS'               : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_TLS', True),
+            'DEVICE__MQTT_CERT_BYPASS'       : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_CERT_BYPASS', True),
             'TEMP_SENSOR__A_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_CLASSNAME', ''),
             'TEMP_SENSOR__A_LABEL'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_LABEL', 'Sensor A'),
             'TEMP_SENSOR__A_PIN_1'           : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_PIN_1', 'D5'),
@@ -2806,6 +2813,7 @@ class AjaxConfigView(BaseView):
             'DEW_HEATER',
             'FAN',
             'GENERIC_GPIO',
+            'DEVICE',
             'TEMP_SENSOR',
             'THUMBNAILS',
             'HEALTHCHECK',
@@ -3296,6 +3304,13 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['GENERIC_GPIO']['A_I2C_ADDRESS']        = str(request.json['GENERIC_GPIO__A_I2C_ADDRESS'])
         self.indi_allsky_config['GENERIC_GPIO']['A_PIN_1']              = str(request.json['GENERIC_GPIO__A_PIN_1'])
         self.indi_allsky_config['GENERIC_GPIO']['A_INVERT_OUTPUT']      = bool(request.json['GENERIC_GPIO__A_INVERT_OUTPUT'])
+        self.indi_allsky_config['DEVICE']['MQTT_TRANSPORT']             = str(request.json['DEVICE__MQTT_TRANSPORT'])
+        self.indi_allsky_config['DEVICE']['MQTT_HOST']                  = str(request.json['DEVICE__MQTT_HOST'])
+        self.indi_allsky_config['DEVICE']['MQTT_PORT']                  = int(request.json['DEVICE__MQTT_PORT'])
+        self.indi_allsky_config['DEVICE']['MQTT_USERNAME']              = str(request.json['DEVICE__MQTT_USERNAME'])
+        self.indi_allsky_config['DEVICE']['MQTT_PASSWORD']              = str(request.json['DEVICE__MQTT_PASSWORD'])
+        self.indi_allsky_config['DEVICE']['MQTT_TLS']                   = bool(request.json['DEVICE__MQTT_TLS'])
+        self.indi_allsky_config['DEVICE']['MQTT_CERT_BYPASS']           = bool(request.json['DEVICE__MQTT_CERT_BYPASS'])
         self.indi_allsky_config['TEMP_SENSOR']['A_CLASSNAME']           = str(request.json['TEMP_SENSOR__A_CLASSNAME'])
         self.indi_allsky_config['TEMP_SENSOR']['A_LABEL']               = str(request.json['TEMP_SENSOR__A_LABEL'])
         self.indi_allsky_config['TEMP_SENSOR']['A_PIN_1']               = str(request.json['TEMP_SENSOR__A_PIN_1'])

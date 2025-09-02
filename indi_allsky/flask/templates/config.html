@@ -7607,6 +7607,89 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEVICE__MQTT_HOST.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.DEVICE__MQTT_HOST(class='form-control bg-secondary') }}
+            <div id="DEVICE__MQTT_HOST-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT hostname</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEVICE__MQTT_TRANSPORT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.DEVICE__MQTT_TRANSPORT(class='form-select bg-secondary') }}
+            <div id="DEVICE__MQTT_TRANSPORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Transport</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEVICE__MQTT_PORT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.DEVICE__MQTT_PORT(class='form-control bg-secondary') }}
+            <div id="DEVICE__MQTT_PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT port - 8883 = TLS, 1883 = standard</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEVICE__MQTT_USERNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.DEVICE__MQTT_USERNAME(class='form-control bg-secondary') }}
+            <div id="DEVICE__MQTT_USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Username</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEVICE__MQTT_PASSWORD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.DEVICE__MQTT_PASSWORD(class='form-control bg-secondary') }}
+            <div id="DEVICE__MQTT_PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Password</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEVICE__MQTT_TLS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DEVICE__MQTT_TLS(class='form-check-input') }}
+                <div id="DEVICE__MQTT_TLS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Use TLS/SSL for MQTT connections</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DEVICE__MQTT_CERT_BYPASS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.DEVICE__MQTT_CERT_BYPASS(class='form-check-input') }}
+                <div id="DEVICE__MQTT_CERT_BYPASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Bypass certificate validation</div>
+    </div>
+
 </div><!-- end devices tab -->
 
 <div class="tab-pane fade" id="nav-adsb" role="tabpanel" aria-labelledby="nav-adsb-tab">
@@ -8264,6 +8347,11 @@ const field_names = [
     'GENERIC_GPIO__A_CLASSNAME',
     'GENERIC_GPIO__A_I2C_ADDRESS',
     'GENERIC_GPIO__A_PIN_1',
+    'DEVICE__MQTT_TRANSPORT',
+    'DEVICE__MQTT_HOST',
+    'DEVICE__MQTT_PORT',
+    'DEVICE__MQTT_USERNAME',
+    'DEVICE__MQTT_PASSWORD',
     'TEMP_SENSOR__A_CLASSNAME',
     'TEMP_SENSOR__A_LABEL',
     'TEMP_SENSOR__A_PIN_1',
@@ -8473,6 +8561,8 @@ const checkbox_field_names = [
     'FAN__INVERT_OUTPUT',
     'FAN__THOLD_ENABLE',
     'GENERIC_GPIO__A_INVERT_OUTPUT',
+    'DEVICE__MQTT_TLS',
+    'DEVICE__MQTT_CERT_BYPASS',
     'ADSB__ENABLE',
     'ADSB__CERT_BYPASS',
     'ADSB__LABEL_ENABLE',
