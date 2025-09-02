@@ -81,7 +81,17 @@ class MqttDewHeaterFan(object):
             self.client.tls_set(**mq_tls)
 
 
-        self.client.connect(MQTT_HOSTNAME, port=MQTT_PORT)
+        try:
+            self.client.connect(MQTT_HOSTNAME, port=MQTT_PORT)
+        except ConnectionRefusedError as e:
+            logger.error('ConnectionRefusedError: %s', str(e))
+
+            self.dew_heater.deinit()
+            self.fan.deinit()
+
+            sys.exit(1)
+
+
         self.client.loop_start()
 
 
