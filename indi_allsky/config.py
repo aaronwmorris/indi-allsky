@@ -595,6 +595,7 @@ class IndiAllSkyConfigBase(object):
             "MQTT_USERNAME"          : "indi-allsky",
             "MQTT_PASSWORD"          : "",
             "MQTT_PASSWORD_E"        : "",
+            "MQTT_QOS"               : 0,  # 0, 1, or 2
             "MQTT_TLS"               : True,
             "MQTT_CERT_BYPASS"       : True,
         },

@@ -7666,6 +7666,17 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.DEVICE__MQTT_QOS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.DEVICE__MQTT_QOS(class='form-control bg-secondary') }}
+            <div id="DEVICE__MQTT_QOS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT QoS - 0 (default), 1, or 2</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.DEVICE__MQTT_TLS.label }}
         </div>
         <div class="col-sm-2">
@@ -8352,6 +8363,7 @@ const field_names = [
     'DEVICE__MQTT_PORT',
     'DEVICE__MQTT_USERNAME',
     'DEVICE__MQTT_PASSWORD',
+    'DEVICE__MQTT_QOS',
     'TEMP_SENSOR__A_CLASSNAME',
     'TEMP_SENSOR__A_LABEL',
     'TEMP_SENSOR__A_PIN_1',

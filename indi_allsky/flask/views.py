@@ -2411,6 +2411,7 @@ class ConfigView(FormView):
             'DEVICE__MQTT_PORT'              : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_PORT', 8883),
             'DEVICE__MQTT_USERNAME'          : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_USERNAME', 'indi-allsky'),
             'DEVICE__MQTT_PASSWORD'          : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_PASSWORD', ''),
+            'DEVICE__MQTT_QOS'               : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_QOS', 0),
             'DEVICE__MQTT_TLS'               : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_TLS', True),
             'DEVICE__MQTT_CERT_BYPASS'       : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_CERT_BYPASS', True),
             'TEMP_SENSOR__A_CLASSNAME'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('A_CLASSNAME', ''),
@@ -3309,6 +3310,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['DEVICE']['MQTT_PORT']                  = int(request.json['DEVICE__MQTT_PORT'])
         self.indi_allsky_config['DEVICE']['MQTT_USERNAME']              = str(request.json['DEVICE__MQTT_USERNAME'])
         self.indi_allsky_config['DEVICE']['MQTT_PASSWORD']              = str(request.json['DEVICE__MQTT_PASSWORD'])
+        self.indi_allsky_config['DEVICE']['MQTT_QOS']                   = int(request.json['DEVICE__MQTT_QOS'])
         self.indi_allsky_config['DEVICE']['MQTT_TLS']                   = bool(request.json['DEVICE__MQTT_TLS'])
         self.indi_allsky_config['DEVICE']['MQTT_CERT_BYPASS']           = bool(request.json['DEVICE__MQTT_CERT_BYPASS'])
         self.indi_allsky_config['TEMP_SENSOR']['A_CLASSNAME']           = str(request.json['TEMP_SENSOR__A_CLASSNAME'])

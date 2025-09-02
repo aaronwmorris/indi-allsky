@@ -30,6 +30,8 @@ class FanMqttStandard(FanBase):
         tls = self.config.get('DEVICE', {}).get('MQTT_TLS', True)
         cert_bypass = self.config.get('DEVICE', {}).get('MQTT_CERT_BYPASS', True)
 
+        self._qos = self.config.get('DEVICE', {}).get('MQTT_QOS', 0)
+
 
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
@@ -75,6 +77,11 @@ class FanMqttStandard(FanBase):
         return self._state
 
 
+    @property
+    def qos(self):
+        return self._qos
+
+
     @state.setter
     def state(self, new_state):
         # any positive value is ON
@@ -82,11 +89,11 @@ class FanMqttStandard(FanBase):
 
         if new_state_b:
             logger.warning('Set fan state: 100%')
-            self.client.publish(self.topic, payload=self.ON, qos=1, retain=True)
+            self.client.publish(self.topic, payload=self.ON, qos=self.qos, retain=True)
             self._state = 100
         else:
             logger.warning('Set fan state: 0%')
-            self.client.publish(self.topic, payload=self.OFF, qos=1, retain=True)
+            self.client.publish(self.topic, payload=self.OFF, qos=self.qos, retain=True)
             self._state = 0
 
 

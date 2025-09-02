@@ -4338,6 +4338,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DEVICE__MQTT_PORT                = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
     DEVICE__MQTT_USERNAME            = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
     DEVICE__MQTT_PASSWORD            = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[MQTTPUBLISH__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
+    DEVICE__MQTT_QOS                 = IntegerField('MQTT QoS', validators=[MQTTPUBLISH__QOS_validator])
     DEVICE__MQTT_TLS                 = BooleanField('Use TLS')
     DEVICE__MQTT_CERT_BYPASS         = BooleanField('Disable Certificate Validation')
     TEMP_SENSOR__A_CLASSNAME         = SelectField('Sensor A', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
