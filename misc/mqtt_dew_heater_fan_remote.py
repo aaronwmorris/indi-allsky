@@ -211,15 +211,15 @@ class DeviceStandard(object):
     @state.setter
     def state(self, new_state):
         # any positive value is ON
-        new_state_i = int(bool(new_state))
+        new_state_b = bool(new_state)
 
         if new_state_b:
             logger.warning('Set %s state: 100%', self.name)
-            self.dew_heater_pin.value = new_state_i
+            self.dew_heater_pin.value = 1
             self._dew_heater_state = 100
         else:
             logger.warning('Set %s state: 0%', self.name)
-            self.dew_heater_pin.value = new_state_i
+            self.dew_heater_pin.value = 0
             self._dew_heater_state = 0
 
 
