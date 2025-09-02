@@ -217,11 +217,11 @@ class DeviceStandard(object):
         new_state_b = bool(new_state)
 
         if new_state_b:
-            logger.warning('Set %s state: 100%', self.name)
+            logger.warning('Set %s state: 100%%', self.name)
             self.pin.value = self.ON
             self._state = 100
         else:
-            logger.warning('Set %s state: 0%', self.name)
+            logger.warning('Set %s state: 0%%', self.name)
             self.pin.value = self.OFF
             self._state = 0
 
