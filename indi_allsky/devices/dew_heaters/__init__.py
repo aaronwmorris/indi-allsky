@@ -10,6 +10,7 @@ from .dewHeaterMotorKit import DewHeaterMotorKitPwm as motorkit_dew_heater_pwm
 from .dewHeaterDockerPi4ChannelRelay import DewHeaterDockerPi4ChannelRelay_I2C as dew_heater_dockerpi_4channel_relay
 
 from .dewHeaterMqtt import DewHeaterMqttStandard as mqtt_dew_heater_standard
+from .dewHeaterMqtt import DewHeaterMqttPwm as mqtt_dew_heater_pwm
 
 from .dewHeaterSerialPwm import DewHeaterSerialPwm as serial_dew_heater_pwm
 
@@ -25,4 +26,5 @@ __all__ = (
     'gpiozero_dew_heater_software_pwm',
     'motorkit_dew_heater_pwm',
     'mqtt_dew_heater_standard',
+    'mqtt_dew_heater_pwm',
 )

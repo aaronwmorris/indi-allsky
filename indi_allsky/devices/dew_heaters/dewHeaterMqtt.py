@@ -7,17 +7,16 @@ from .dewHeaterBase import DewHeaterBase
 logger = logging.getLogger('indi_allsky')
 
 
-class DewHeaterMqttStandard(DewHeaterBase):
+class DewHeaterMqttBase(DewHeaterBase):
 
     def __init__(self, *args, **kwargs):
-        super(DewHeaterMqttStandard, self).__init__(*args, **kwargs)
+        super(DewHeaterMqttBase, self).__init__(*args, **kwargs)
 
         pin_1_name = kwargs['pin_1_name']
-        invert_output = kwargs['invert_output']
 
         self.topic = str(pin_1_name)
 
-        logger.info('Initializing MQTT standard DEW HEATER device')
+        logger.info('Initializing MQTT DEW HEATER device')
 
         import ssl
         import paho.mqtt.client as mqtt
@@ -59,6 +58,47 @@ class DewHeaterMqttStandard(DewHeaterBase):
         self.client.loop_start()
 
 
+        self._state = 0
+
+        time.sleep(1.0)
+
+
+    @property
+    def qos(self):
+        return self._qos
+
+
+    def disable(self):
+        self.state = 0
+
+
+    def deinit(self):
+        super(DewHeaterMqttBase, self).deinit()
+
+        self.client.disconnect()
+        self.client.loop_stop()
+
+
+    def on_connect(self, client, userdata, flags, reason_code, properties):
+        if reason_code.is_failure:
+            logger.error('Failed to connect: %s', reason_code)
+        else:
+            logger.info('MQTT dew heater connected')
+
+
+    def on_publish(self, client, userdata, mid, reason_code, properties):
+        #logger.info('MQTT message published')
+        pass
+
+
+
+class DewHeaterMqttStandard(DewHeaterMqttBase):
+
+    def __init__(self, *args, **kwargs):
+        super(DewHeaterMqttStandard, self).__init__(*args, **kwargs)
+
+        invert_output = kwargs['invert_output']
+
         if not invert_output:
             self.ON = 1
             self.OFF = 0
@@ -67,18 +107,9 @@ class DewHeaterMqttStandard(DewHeaterBase):
             self.OFF = 1
 
 
-        self._state = 0
-
-        time.sleep(1.0)
-
-
     @property
     def state(self):
         return self._state
-
-    @property
-    def qos(self):
-        return self._qos
 
 
     @state.setter
@@ -96,26 +127,41 @@ class DewHeaterMqttStandard(DewHeaterBase):
             self._state = 0
 
 
-    def disable(self):
-        self.state = 0
+class DewHeaterMqttPwm(DewHeaterMqttBase):
+
+    def __init__(self, *args, **kwargs):
+        super(DewHeaterMqttPwm, self).__init__(*args, **kwargs)
+
+        self.invert_output = kwargs['invert_output']
 
 
-    def deinit(self):
-        super(DewHeaterMqttStandard, self).deinit()
-
-        self.client.disconnect()
-        self.client.loop_stop()
+    @property
+    def state(self):
+        return self._state
 
 
-    def on_connect(self, client, userdata, flags, reason_code, properties):
-        if reason_code.is_failure:
-            logger.error('Failed to connect: %s', reason_code)
+    @state.setter
+    def state(self, new_state):
+        # duty cycle must be a percentage between 0 and 100
+        new_state_i = int(new_state)
+
+        if new_state_i < 0:
+            logger.error('Duty cycle must be 0 or greater')
+            return
+
+        if new_state_i > 100:
+            logger.error('Duty cycle must be 100 or less')
+            return
+
+
+        if not self.invert_output:
+            new_duty_cycle = new_state_i
         else:
-            logger.info('MQTT dew heater connected')
+            new_duty_cycle = 100 - new_state_i
 
 
-    def on_publish(self, client, userdata, mid, reason_code, properties):
-        #logger.info('MQTT message published')
-        pass
+        logger.warning('Set dew heater state: %d%%', new_state_i)
+        self.client.publish(self.topic, payload=new_duty_cycle, qos=self.qos, retain=True)
 
+        self._state = new_state_i
 

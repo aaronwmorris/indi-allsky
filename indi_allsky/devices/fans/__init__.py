@@ -9,6 +9,7 @@ from .fanMotorKit import FanMotorKitPwm as motorkit_fan_pwm
 from .fanDockerPi4ChannelRelay import FanDockerPi4ChannelRelay_I2C as fan_dockerpi_4channel_relay
 
 from .fanMqtt import FanMqttStandard as mqtt_fan_standard
+from .fanMqtt import FanMqttPwm as mqtt_fan_pwm
 
 from .fanSerialPwm import FanSerialPwm as serial_fan_pwm
 
@@ -23,4 +24,5 @@ __all__ = (
     'gpiozero_fan_software_pwm',
     'motorkit_fan_pwm',
     'mqtt_fan_standard',
+    'mqtt_fan_pwm',
 )
