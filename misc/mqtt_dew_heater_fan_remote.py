@@ -19,7 +19,7 @@ FAN_PIN = 'D13'
 
 ### MQTT settings
 MQTT_HOSTNAME = 'localhost'
-MQTT_PORT = 8333
+MQTT_PORT = 8883
 MQTT_USERNAME = 'username'
 MQTT_PASSWORD = 'password123'
 MQTT_TLS = True
@@ -84,7 +84,7 @@ class MqttDewHeaterFan(object):
         try:
             self.client.connect(MQTT_HOSTNAME, port=MQTT_PORT)
         except ConnectionRefusedError as e:
-            logger.error('ConnectionRefusedError: %s', str(e))
+            logger.error('MQTT ConnectionRefusedError: %s', str(e))
 
             self.dew_heater.deinit()
             self.fan.deinit()
