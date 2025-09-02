@@ -164,9 +164,9 @@ class MqttDewHeaterFan(object):
 
 
         if message.topic == MQTT_DEW_HEATER_TOPIC:
-            self.dew_heater.status = val
+            self.dew_heater.state = val
         elif message.topic == MQTT_FAN_TOPIC:
-            self.fan.status = val
+            self.fan.state = val
         else:
             logger.error('MQTT unknown topic: %s', message.topic)
             return
