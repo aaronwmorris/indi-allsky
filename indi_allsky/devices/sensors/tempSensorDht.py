@@ -94,8 +94,10 @@ class TempSensorDht22(TempSensorDht2x):
 
         pin1 = getattr(board, pin_1_name)
 
+        use_pulseio = self.config.get('TEMP_SENSOR', {}).get('DHT_USE_PULSEIO', False)
+
         logger.warning('Initializing [%s] DHT22 temperature device', self.name)
-        self.dht = adafruit_dht.DHT22(pin1, use_pulseio=False)
+        self.dht = adafruit_dht.DHT22(pin1, use_pulseio=use_pulseio)
 
 
 class TempSensorDht21(TempSensorDht2x):
@@ -127,8 +129,10 @@ class TempSensorDht21(TempSensorDht2x):
 
         pin1 = getattr(board, pin_1_name)
 
+        use_pulseio = self.config.get('TEMP_SENSOR', {}).get('DHT_USE_PULSEIO', False)
+
         logger.warning('Initializing [%s] DHT21 temperature device', self.name)
-        self.dht = adafruit_dht.DHT21(pin1, use_pulseio=False)
+        self.dht = adafruit_dht.DHT21(pin1, use_pulseio=use_pulseio)
 
 
 class TempSensorDht11(TempSensorDht2x):
@@ -160,6 +164,8 @@ class TempSensorDht11(TempSensorDht2x):
 
         pin1 = getattr(board, pin_1_name)
 
+        use_pulseio = self.config.get('TEMP_SENSOR', {}).get('DHT_USE_PULSEIO', False)
+
         logger.warning('Initializing [%s] DHT11 temperature device', self.name)
-        self.dht = adafruit_dht.DHT11(pin1, use_pulseio=False)
+        self.dht = adafruit_dht.DHT11(pin1, use_pulseio=use_pulseio)
 
