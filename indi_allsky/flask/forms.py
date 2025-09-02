@@ -3465,6 +3465,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('gpiozero_fan_software_pwm', 'Fan - Software PWM [gpiozero] (BETA)'),
         ('motorkit_fan_pwm', 'Fan - PWM - Adafruit Motor Shield [i2c]'),
         ('fan_dockerpi_4channel_relay', 'Fan - DockerPi 4 Channel Relay [i2c] (BETA)'),
+        ('mqtt_fan_standard', 'Fan - MQTT Standard'),
         ('serial_fan_pwm', 'Fan - PWM [Serial Port] (BETA)'),
     )
 
