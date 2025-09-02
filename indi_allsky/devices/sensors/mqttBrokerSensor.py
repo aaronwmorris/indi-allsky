@@ -61,7 +61,7 @@ class MqttBrokerSensor(SensorBase):
         client.on_connect = self.on_connect
         client.on_message = self.on_message
         client.on_subscribe = self.on_subscribe
-        #mqttc.on_unsubscribe = self.on_unsubscribe
+        #client.on_unsubscribe = self.on_unsubscribe
 
         client.user_data_set(self.data)
 
