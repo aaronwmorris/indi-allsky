@@ -35,6 +35,8 @@ import paho.mqtt.client as mqtt
 import signal
 import logging
 
+
+logging.basicConfig(level=logging.INFO)
 logger = logging
 
 
@@ -120,13 +122,10 @@ class MqttDewHeaterFan(object):
             sys.exit(1)
 
 
-        self.client.loop_start()
-
-
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
-
+        self.client.loop_forever()
 
 
     def on_subscribe(self, client, userdata, mid, reason_code_list, properties):
@@ -188,7 +187,7 @@ class DeviceStandard(object):
         import board
         import digitalio
 
-        logger.info('Initializing Standard %s device', self.name)
+        logger.info('Initializing Standard %s device on pin %s', self.name, pin_name)
 
         pin = getattr(board, pin_name)
 
@@ -230,7 +229,7 @@ class DevicePwm(object):
         import board
         import pwmio
 
-        logger.info('Initializing PWM %s device', self.name)
+        logger.info('Initializing PWM %s device on pin %s', self.name, pin_name)
 
         pin = getattr(board, pin_name)
 
@@ -280,7 +279,7 @@ class DeviceSoftwarePwm(object):
 
         pwm_pin = int(pin_name)
 
-        logger.info('Initializing Software PWM %s device (%d Hz)', self.name, self.PWM_FREQUENCY)
+        logger.info('Initializing Software PWM %s device on pin %d (%d Hz)', self.name, pwm_pin, self.PWM_FREQUENCY)
 
         import RPi.GPIO as GPIO
         #GPIO.setmode(GPIO.BOARD)
