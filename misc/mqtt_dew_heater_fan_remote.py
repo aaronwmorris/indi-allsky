@@ -160,7 +160,7 @@ class MqttDewHeaterFan(object):
             return
 
 
-        logger.info('Topic: %s, value: %d', message.topic, val)
+        #logger.info('Topic: %s, value: %d', message.topic, val)
 
 
         if message.topic == MQTT_DEW_HEATER_TOPIC:
