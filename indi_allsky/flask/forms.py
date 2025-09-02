@@ -3453,6 +3453,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('gpiozero_dew_heater_software_pwm', 'Dew Heater - Software PWM [gpiozero] (BETA)'),
         ('motorkit_dew_heater_pwm', 'Dew Heater - PWM - Adafruit Motor Shield [i2c]'),
         ('dew_heater_dockerpi_4channel_relay', 'Dew Heater - DockerPi 4 Channel Relay [i2c] (BETA)'),
+        ('mqtt_dew_heater_standard', 'Dew Heater - MQTT Standard'),
         ('serial_dew_heater_pwm', 'Dew Heater - PWM [Serial Port] (BETA)'),
     )
 
