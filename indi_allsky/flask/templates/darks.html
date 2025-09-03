@@ -52,7 +52,7 @@ var camera_id = {{ camera_id }};
     <td>{{ "%0.2f"|format(dark.temp | float) }}</td>
     <td>{{ "%0.1f"|format(dark.adu | float) }}</td>
     <td>{{ dark.hot_pixels }}</td>
-    <td><a href="{{ url_for('indi_allsky.image_processing_view') }}?type=dark&id={{ dark.id }}" class="text-decoration-none link-info">View</a></td>
+    <td><a href="{{ url_for('indi_allsky.image_processing_view', type='dark', id=dark.id) }}" class="text-decoration-none link-info">View</a></td>
     <td><a href="{{ dark.url }}" class="text-decoration-none link-info">Download</a></td>
     <td>{{ "%0.1f"|format(dark.size_mb | float) }}</td>
     <td>{{ dark.method }}</td>
