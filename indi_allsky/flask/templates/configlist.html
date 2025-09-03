@@ -38,7 +38,7 @@ var camera_id = {{ camera_id }};
   <td>{{ config.username }}</td>
   <td>{{ config.level }}</td>
   <td>{{ config.encrypted }}</td>
-  <td><a href="{{ url_for('indi_allsky.configdownload_view', id=config.id) }}" class="text-decoration-none link-info">Download</a></td>
+  <td><a href="{{ url_for('indi_allsky.config_download_view', id=config.id) }}" class="text-decoration-none link-info">Download</a></td>
   <td>{{ config.note }}</td>
 </tr>
 {% endfor %}

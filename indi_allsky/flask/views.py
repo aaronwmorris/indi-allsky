@@ -10310,6 +10310,6 @@ bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view',
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
-bp_allsky.add_url_rule('/configlist', view_func=ConfigListView.as_view('configlist_view', template_name='configlist.html'))
-bp_allsky.add_url_rule('/configdownload', view_func=ConfigDownloadView.as_view('configdownload_view'))
+bp_allsky.add_url_rule('/configlist', view_func=ConfigListView.as_view('config_list_view', template_name='configlist.html'))
+bp_allsky.add_url_rule('/configdownload', view_func=ConfigDownloadView.as_view('config_download_view'))
 
