@@ -49,6 +49,8 @@ logger.addHandler(LOG_HANDLER_STREAM)
 class MqttRemoteDewHeaterFan(object):
     def __init__(self):
         try:
+            ### These can be mixed and matched
+
             ### Standard device (on/off)
             self.dew_heater = DeviceStandard('Dew Heater', DEW_HEATER_PIN)
             self.fan = DeviceStandard('Fan', FAN_PIN)
