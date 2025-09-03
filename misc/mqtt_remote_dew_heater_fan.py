@@ -7,7 +7,7 @@
 #paho-mqtt >= 2.0.0
 #Adafruit-Blinka
 #gpiod
-#rpi-lgpio  (remove RPi.GPIO)
+#rpi-lgpio  (remove RPi.GPIO first)
 
 
 ### Set pins here
