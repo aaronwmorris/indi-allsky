@@ -7,14 +7,12 @@
 #paho-mqtt >= 2.0.0
 #Adafruit-Blinka
 #gpiod
-#gpiozero
 #rpi-lgpio  (remove RPi.GPIO)
 
 
 ### Set pins here
 DEW_HEATER_PIN = 'D12'
 FAN_PIN = 'D13'
-# software pwm pins will be integers
 
 
 ### MQTT settings
@@ -297,9 +295,18 @@ class DeviceSoftwarePwm(object):
     def __init__(self, name, pin_name):
         self.name = name
 
-        pwm_pin = int(pin_name)
+
+        if isinstance(pin_name, int):
+            pwm_pin = int(pin_name)
+        else:
+            # rpi.gpio does not use board pins, but we can get the pin number using id
+            import board
+            pin = getattr(board, str(pin_name))
+            pwm_pin = pin.id
+
 
         logger.info('Initializing Software PWM %s device on pin %d (%d Hz)', self.name, pwm_pin, self.PWM_FREQUENCY)
+
 
         import RPi.GPIO as GPIO
         #GPIO.setmode(GPIO.BOARD)
@@ -309,6 +316,7 @@ class DeviceSoftwarePwm(object):
         self.pwm.start(0)
 
 
+        ### gpiozero
         #from gpiozero import PWMOutputDevice
         #logger.info('Initializing Software PWM FAN device (%d Hz)', self.PWM_FREQUENCY)
         #self.pwm = PWMOutputDevice(pwm_pin, initial_value=0, frequency=self.PWM_FREQUENCY)
