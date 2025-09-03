@@ -1787,6 +1787,9 @@ class ConfigView(FormView):
             context['camera_maxExposure'] = self.camera.maxExposure
 
 
+        context['config_id'] = self.indi_allsky_config_id
+
+
         fits_enabled = self.indi_allsky_config.get('IMAGE_SAVE_FITS')
         fits_save_period = self.indi_allsky_config.get('IMAGE_SAVE_FITS_PERIOD', 7200)
 

@@ -4082,6 +4082,15 @@ var camera_id = {{ camera_id }};
 <div class="tab-pane fade" id="nav-admin" role="tabpanel" aria-labelledby="nav-admin-tab">
 
     <div class="form-group row">
+        <div class="col-sm-2"></div>
+        <div class="col-sm-2">
+            <div><a href="{{ url_for('indi_allsky.config_download_view', id=config_id) }}"><span class="badge rounded-pill bg-primary">Backup Config</span></a></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.BACKUP_DB_PERIOD_DAYS.label(class='col-form-label') }}
         </div>
