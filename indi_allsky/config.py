@@ -588,6 +588,17 @@ class IndiAllSkyConfigBase(object):
             "A_PIN_1"                : "D21",
             "A_INVERT_OUTPUT"        : False,
         },
+        "DEVICE" : {
+            "MQTT_TRANSPORT"         : "tcp",  # tcp or websockets
+            "MQTT_HOST"              : "localhost",
+            "MQTT_PORT"              : 8883,  # 1883 = mqtt, 8883 = TLS
+            "MQTT_USERNAME"          : "indi-allsky",
+            "MQTT_PASSWORD"          : "",
+            "MQTT_PASSWORD_E"        : "",
+            "MQTT_QOS"               : 0,  # 0, 1, or 2
+            "MQTT_TLS"               : True,
+            "MQTT_CERT_BYPASS"       : True,
+        },
         "TEMP_SENSOR" : {
             "A_CLASSNAME"            : "",
             "A_LABEL"                : "Sensor A",
@@ -880,6 +891,14 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__mqtt_password = config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD', '')
 
 
+            device__mqtt_password_e = config.get('DEVICE', {}).get('MQTT_PASSWORD_E', '')
+            if device__mqtt_password_e:
+                # not catching InvalidToken
+                device__mqtt_password = f_key.decrypt(device__mqtt_password_e.encode()).decode()
+            else:
+                device__mqtt_password = config.get('DEVICE', {}).get('MQTT_PASSWORD', '')
+
+
             adsb__password_e = config.get('ADSB', {}).get('PASSWORD_E', '')
             if adsb__password_e:
                 # not catching InvalidToken
@@ -898,6 +917,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             temp_sensor__wunderground_apikey = config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', '')
             temp_sensor__astrospheric_apikey = config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', '')
             temp_sensor__mqtt_password = config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD', '')
+            device__mqtt_password = config.get('DEVICE', {}).get('MQTT_PASSWORD', '')
             adsb__password = config.get('ADSB', {}).get('PASSWORD', '')
 
 
@@ -919,6 +939,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY_E'] = ''
         config['TEMP_SENSOR']['MQTT_PASSWORD'] = temp_sensor__mqtt_password
         config['TEMP_SENSOR']['MQTT_PASSWORD_E'] = ''
+        config['DEVICE']['MQTT_PASSWORD'] = device__mqtt_password
+        config['DEVICE']['MQTT_PASSWORD_E'] = ''
         config['ADSB']['PASSWORD'] = adsb__password
         config['ADSB']['PASSWORD_E'] = ''
 
@@ -1029,6 +1051,15 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__mqtt_password = ''
 
 
+            device__mqtt_password = str(config['DEVICE']['MQTT_PASSWORD'])
+            if device__mqtt_password:
+                device__mqtt_password_e = f_key.encrypt(device__mqtt_password.encode()).decode()
+                device__mqtt_password = ''
+            else:
+                device__mqtt_password_e = ''
+                device__mqtt_password = ''
+
+
             adsb__password = str(config['ADSB']['PASSWORD'])
             if adsb__password:
                 adsb__password_e = f_key.encrypt(adsb__password.encode()).decode()
@@ -1059,6 +1090,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             temp_sensor__astrospheric_apikey_e = ''
             temp_sensor__mqtt_password = str(config['TEMP_SENSOR']['MQTT_PASSWORD'])
             temp_sensor__mqtt_password_e = ''
+            device__mqtt_password = str(config['DEVICE']['MQTT_PASSWORD'])
+            device__mqtt_password_e = ''
             adsb__password = str(config['ADSB']['PASSWORD'])
             adsb__password_e = ''
 
@@ -1081,6 +1114,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY_E'] = temp_sensor__astrospheric_apikey_e
         config['TEMP_SENSOR']['MQTT_PASSWORD'] = temp_sensor__mqtt_password
         config['TEMP_SENSOR']['MQTT_PASSWORD_E'] = temp_sensor__mqtt_password_e
+        config['DEVICE']['MQTT_PASSWORD'] = device__mqtt_password
+        config['DEVICE']['MQTT_PASSWORD_E'] = device__mqtt_password_e
         config['ADSB']['PASSWORD'] = adsb__password
         config['ADSB']['PASSWORD_E'] = adsb__password_e
 

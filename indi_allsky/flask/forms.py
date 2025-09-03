@@ -3453,6 +3453,8 @@ class IndiAllskyConfigForm(FlaskForm):
         ('gpiozero_dew_heater_software_pwm', 'Dew Heater - Software PWM [gpiozero] (BETA)'),
         ('motorkit_dew_heater_pwm', 'Dew Heater - PWM - Adafruit Motor Shield [i2c]'),
         ('dew_heater_dockerpi_4channel_relay', 'Dew Heater - DockerPi 4 Channel Relay [i2c] (BETA)'),
+        ('mqtt_dew_heater_standard', 'Dew Heater - MQTT Standard'),
+        ('mqtt_dew_heater_pwm', 'Dew Heater - MQTT PWM'),
         ('serial_dew_heater_pwm', 'Dew Heater - PWM [Serial Port] (BETA)'),
     )
 
@@ -3464,6 +3466,8 @@ class IndiAllskyConfigForm(FlaskForm):
         ('gpiozero_fan_software_pwm', 'Fan - Software PWM [gpiozero] (BETA)'),
         ('motorkit_fan_pwm', 'Fan - PWM - Adafruit Motor Shield [i2c]'),
         ('fan_dockerpi_4channel_relay', 'Fan - DockerPi 4 Channel Relay [i2c] (BETA)'),
+        ('mqtt_fan_standard', 'Fan - MQTT Standard'),
+        ('mqtt_fan_pwm', 'Fan - MQTT PWM'),
         ('serial_fan_pwm', 'Fan - PWM [Serial Port] (BETA)'),
     )
 
@@ -4331,6 +4335,14 @@ class IndiAllskyConfigForm(FlaskForm):
     GENERIC_GPIO__A_I2C_ADDRESS      = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     GENERIC_GPIO__A_PIN_1            = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     GENERIC_GPIO__A_INVERT_OUTPUT    = BooleanField('Invert Output')
+    DEVICE__MQTT_TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
+    DEVICE__MQTT_HOST                = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
+    DEVICE__MQTT_PORT                = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
+    DEVICE__MQTT_USERNAME            = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
+    DEVICE__MQTT_PASSWORD            = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[MQTTPUBLISH__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
+    DEVICE__MQTT_QOS                 = IntegerField('MQTT QoS', validators=[MQTTPUBLISH__QOS_validator])
+    DEVICE__MQTT_TLS                 = BooleanField('Use TLS')
+    DEVICE__MQTT_CERT_BYPASS         = BooleanField('Disable Certificate Validation')
     TEMP_SENSOR__A_CLASSNAME         = SelectField('Sensor A', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__A_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__A_PIN_1             = StringField('Pin/Port 1', validators=[DEVICE_PIN_NAME_validator])
@@ -4364,7 +4376,6 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__ECOWITT_APIKEY         = PasswordField('Ecowitt API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ECOWITT_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__ECOWITT_APPLICATIONKEY = PasswordField('Ecowitt Application Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ECOWITT_APPLICATIONKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__ECOWITT_MACADDRESS     = StringField('Ecowitt Device MAC Address', validators=[TEMP_SENSOR__MACADDRESS_validator])
-    TEMP_SENSOR__MQTT_TRANSPORT      = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     TEMP_SENSOR__MQTT_TRANSPORT      = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     TEMP_SENSOR__MQTT_HOST           = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
     TEMP_SENSOR__MQTT_PORT           = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
