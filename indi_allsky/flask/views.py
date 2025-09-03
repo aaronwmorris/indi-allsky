@@ -31,6 +31,7 @@ from flask import redirect
 from flask import Response
 from flask import url_for
 from flask import send_from_directory
+from flask import send_file
 from flask import current_app as app
 
 from flask_login import login_required
@@ -7694,6 +7695,29 @@ class ConfigListView(TemplateView):
         return context
 
 
+class ConfigDownloadView(BaseView):
+    decorators = [login_required]
+    methods = ['GET']
+
+
+    def dispatch_request(self):
+        config_id = int(request.args.get('id', -1))
+
+        # not catching NoResultFound
+        config_entry = IndiAllSkyDbConfigTable.query\
+            .filter(IndiAllSkyDbConfigTable.id == config_id)\
+            .one()
+
+
+        config = dict(config_entry.data)
+
+        config_str = json.dumps(config, indent=4, ensure_ascii=False)
+        config_buffer = io.BytesIO(config_str.encode())
+
+        download_name = 'config_indi-allsky_id_{id:d}_{ts:%Y%m%d_%H%M%S}.json'.format(**{'id': config_entry.id, 'ts': datetime.now()})
+
+        return send_file(config_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
+
 
 class AjaxSelectCameraView(BaseView):
     methods = ['POST']
@@ -10280,4 +10304,5 @@ bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
 bp_allsky.add_url_rule('/configlist', view_func=ConfigListView.as_view('configlist_view', template_name='configlist.html'))
+bp_allsky.add_url_rule('/configdownload', view_func=ConfigDownloadView.as_view('configdownload_view'))
 
