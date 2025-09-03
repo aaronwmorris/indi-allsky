@@ -101,11 +101,11 @@ class DewHeaterMqttStandard(DewHeaterMqttBase):
         invert_output = kwargs['invert_output']
 
         if not invert_output:
-            self.ON = 1
+            self.ON = 100
             self.OFF = 0
         else:
             self.ON = 0
-            self.OFF = 1
+            self.OFF = 100
 
 
     @property

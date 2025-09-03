@@ -101,11 +101,11 @@ class FanMqttStandard(FanMqttBase):
 
 
         if not invert_output:
-            self.ON = 1
+            self.ON = 100
             self.OFF = 0
         else:
             self.ON = 0
-            self.OFF = 1
+            self.OFF = 100
 
 
     @property
