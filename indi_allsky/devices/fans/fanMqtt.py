@@ -17,7 +17,7 @@ class FanMqttBase(FanBase):
 
         self.topic = str(pin_1_name)
 
-        logger.info('Initializing MQTT standard FAN device')
+        logger.info('Initializing MQTT FAN device using topic: %s', self.topic)
 
         import ssl
         import paho.mqtt.client as mqtt

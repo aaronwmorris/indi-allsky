@@ -17,7 +17,7 @@ class DewHeaterMqttBase(DewHeaterBase):
 
         self.topic = str(pin_1_name)
 
-        logger.info('Initializing MQTT DEW HEATER device')
+        logger.info('Initializing MQTT DEW HEATER device using topic: %s', self.topic)
 
         import ssl
         import paho.mqtt.client as mqtt
