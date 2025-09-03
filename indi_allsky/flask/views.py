@@ -7714,7 +7714,14 @@ class ConfigDownloadView(BaseView):
         config_str = json.dumps(config, indent=4, ensure_ascii=False)
         config_buffer = io.BytesIO(config_str.encode())
 
-        download_name = 'config_indi-allsky_id_{id:d}_{ts:%Y%m%d_%H%M%S}.json'.format(**{'id': config_entry.id, 'ts': datetime.now()})
+
+        data = {
+            'id'    : config_entry.id,
+            'ts'    : datetime.now(),
+            'level' : config_entry.level.replace('.', '-'),
+        }
+
+        download_name = 'config_indi-allsky_id-{id:d}_level-{level:s}_{ts:%Y%m%d_%H%M%S}.json'.format(**data)
 
         return send_file(config_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
 
