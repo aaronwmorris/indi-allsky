@@ -1,4 +1,5 @@
 import time
+import json
 import logging
 
 from .dewHeaterBase import DewHeaterBase
@@ -117,13 +118,17 @@ class DewHeaterMqttStandard(DewHeaterMqttBase):
         # any positive value is ON
         new_state_b = bool(new_state)
 
+        payload = {}
+
         if new_state_b:
             logger.warning('Set dew heater state: 100%')
-            self.client.publish(self.topic, payload=self.ON, qos=self.qos, retain=True)
+            payload['state'] = self.ON
+            self.client.publish(self.topic, payload=json.dumps(payload), qos=self.qos, retain=True)
             self._state = 100
         else:
             logger.warning('Set dew heater state: 0%')
-            self.client.publish(self.topic, payload=self.OFF, qos=self.qos, retain=True)
+            payload['state'] = self.OFF
+            self.client.publish(self.topic, payload=json.dumps(payload), qos=self.qos, retain=True)
             self._state = 0
 
 
@@ -160,8 +165,13 @@ class DewHeaterMqttPwm(DewHeaterMqttBase):
             new_duty_cycle = 100 - new_state_i
 
 
+        payload = {
+            'state' : new_duty_cycle,
+        }
+
+
         logger.warning('Set dew heater state: %d%%', new_state_i)
-        self.client.publish(self.topic, payload=new_duty_cycle, qos=self.qos, retain=True)
+        self.client.publish(self.topic, payload=json.dumps(payload), qos=self.qos, retain=True)
 
         self._state = new_state_i
 

@@ -30,6 +30,7 @@ MQTT_FAN_TOPIC = 'fan_topic'
 
 
 import sys
+import json
 import ssl
 import paho.mqtt.client as mqtt
 import signal
@@ -45,7 +46,7 @@ LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 logger.addHandler(LOG_HANDLER_STREAM)
 
 
-class MqttDewHeaterFan(object):
+class MqttRemoteDewHeaterFan(object):
     def __init__(self):
         try:
             ### Standard device (on/off)
@@ -154,21 +155,29 @@ class MqttDewHeaterFan(object):
 
     def on_message(self, client, userdata, message):
         try:
-            val = int(message.payload.decode())
+            data = json.loads(message)
         except ValueError as e:
-            logger.error('MQTT data ValueError: %s', str(e))
+            logger.error('MQTT JSON data error: %s', str(e))
             return
 
 
-        #logger.info('Topic: %s, value: %d', message.topic, val)
+        state = int(data.get('state'))
+        #logger.info('Topic: %s, value: %d', message.topic, state)
 
 
-        if message.topic == MQTT_DEW_HEATER_TOPIC:
-            self.dew_heater.state = val
-        elif message.topic == MQTT_FAN_TOPIC:
-            self.fan.state = val
-        else:
-            logger.error('MQTT unknown topic: %s', message.topic)
+        try:
+            if message.topic == MQTT_DEW_HEATER_TOPIC:
+                self.dew_heater.state = state
+            elif message.topic == MQTT_FAN_TOPIC:
+                self.fan.state = state
+            else:
+                logger.error('MQTT unknown topic: %s', message.topic)
+                return
+        except OSError as e:
+            logger.error('OSError: %s', str(e))
+            return
+        except IOError as e:
+            logger.error('IOError: %s', str(e))
             return
 
 
@@ -338,5 +347,5 @@ class DeviceSoftwarePwm(object):
 
 
 if __name__ == "__main__":
-    dhf = MqttDewHeaterFan().main()
+    dhf = MqttRemoteDewHeaterFan().main()
 
