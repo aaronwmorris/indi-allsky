@@ -155,12 +155,13 @@ class MqttRemoteDewHeaterFan(object):
 
     def on_message(self, client, userdata, message):
         try:
-            data = json.loads(message)
+            data = json.loads(message.payload)
         except ValueError as e:
             logger.error('MQTT JSON data error: %s', str(e))
             return
 
 
+        #logger.info('Data: %s', data)
         state = int(data.get('state'))
         #logger.info('Topic: %s, value: %d', message.topic, state)
 
