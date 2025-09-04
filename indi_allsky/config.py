@@ -121,7 +121,7 @@ class IndiAllSkyConfigBase(object):
         "LOCATION_NAME"      : "",
         "LOCATION_LATITUDE"  : 33.0,
         "LOCATION_LONGITUDE" : -84.0,
-        "LOCATION_ELEVATION" : 300.0,
+        "LOCATION_ELEVATION" : 300,
         "CAPTURE_PAUSE"            : False,
         "TIMELAPSE_ENABLE"         : True,
         "TIMELAPSE_SKIP_FRAMES"    : 4,
@@ -143,8 +143,8 @@ class IndiAllSkyConfigBase(object):
         "CLAHE_CLIPLIMIT"          : 3.0,
         "CLAHE_GRIDSIZE"           : 8,
         "NIGHT_SUN_ALT_DEG"        : -6.0,
-        "NIGHT_MOONMODE_ALT_DEG"   : 0,
-        "NIGHT_MOONMODE_PHASE"     : 33,
+        "NIGHT_MOONMODE_ALT_DEG"   : 0.0,
+        "NIGHT_MOONMODE_PHASE"     : 33.0,
         "WEB_NONLOCAL_IMAGES"      : False,
         "WEB_LOCAL_IMAGES_ADMIN"   : False,
         "WEB_EXTRA_TEXT"           : "",
@@ -164,7 +164,7 @@ class IndiAllSkyConfigBase(object):
             "MOONMODE"          : False,
             "DAYTIME"           : False,
         },
-        "KEOGRAM_ANGLE"         : 0,
+        "KEOGRAM_ANGLE"         : 0.0,
         "KEOGRAM_H_SCALE"       : 100,
         "KEOGRAM_V_SCALE"       : 33,
         "KEOGRAM_CROP_TOP"      : 0,  # percent
@@ -218,7 +218,7 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_ROTATE"     : "",  # empty, ROTATE_90_CLOCKWISE, ROTATE_90_COUNTERCLOCKWISE, ROTATE_180
         "IMAGE_ROTATE_ANGLE" : 0,
         "IMAGE_ROTATE_KEEP_SIZE"   : False,
-        #"IMAGE_ROTATE_WITH_OFFSET" : False,
+        #"IMAGE_ROTATE_WITH_OFFSET" : False,  # not used yet
         "IMAGE_FLIP_V"     : True,
         "IMAGE_FLIP_H"     : True,
         "IMAGE_SCALE"      : 100,
@@ -814,7 +814,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
 
     def _decrypt_passwords(self):
-        config = self._config.copy()
+        config = self.config.copy()
 
         if config['ENCRYPT_PASSWORDS']:
             f_key = Fernet(app.config['PASSWORD_KEY'].encode())
@@ -953,7 +953,11 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             .one()
 
 
+        self._validateConfig()
+
+
         config, encrypted = self._encryptPasswords()
+
 
         config_entry = self._setConfigEntry(config, user_entry, note, encrypted)
 
@@ -962,8 +966,27 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         return config_entry
 
 
+    def _validateConfig(self):
+        for key in self.config.keys():
+            if isinstance(self.config[key], dict):
+                # check second level
+                for key_2 in self.config[key].keys():
+                    try:
+                        if not isinstance(self.config[key][key_2], type(self.base_config[key][key_2])):
+                            app.logger.error('Config key (level 2) has wrong type: [%s][%s]', str(key), str(key_2))
+                    except KeyError:
+                        app.logger.warning('Config key not found in base config: [%s][%s]', str(key), str(key_2))
+
+            else:
+                try:
+                    if not isinstance(self.config[key], type(self.base_config[key])):
+                        app.logger.error('Config key has wrong type: [%s]', str(key))
+                except KeyError:
+                    app.logger.warning('Config key not found in base config: [%s]', str(key))
+
+
     def _encryptPasswords(self):
-        config = self._config.copy()
+        config = self.config.copy()
 
         if config['ENCRYPT_PASSWORDS']:
             encrypted = True
