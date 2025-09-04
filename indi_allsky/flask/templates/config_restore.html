@@ -141,7 +141,9 @@ $('#form_config_restore').on('submit', function() {
     // checkboxes
     checkbox_field_names.forEach(item => {
         //json_data[item] = fields[item].input.prop('checked');
-        formData.append(item, fields[item].input.prop('checked'));
+        if (fields[item].input.prop('checked')) {
+            formData.append(item, fields[item].input.prop('checked'));
+        }
     });
 
 
