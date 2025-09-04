@@ -10346,6 +10346,7 @@ bp_allsky.add_url_rule('/ajax/minigenerate', view_func=AjaxMiniTimelapseGenerato
 
 bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp_allsky.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
+bp_allsky.add_url_rule('/config/list', view_func=ConfigListView.as_view('config_list_view', template_name='config_list.html'))
 bp_allsky.add_url_rule('/config/download', view_func=ConfigDownloadView.as_view('config_download_view'))
 bp_allsky.add_url_rule('/config/restore', view_func=ConfigRestoreView.as_view('config_restore_view', template_name='config_restore.html'))
 bp_allsky.add_url_rule('/ajax/config/restore', view_func=AjaxConfigRestoreView.as_view('ajax_config_restore_view'))
@@ -10426,5 +10427,4 @@ bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view',
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
-bp_allsky.add_url_rule('/configlist', view_func=ConfigListView.as_view('config_list_view', template_name='configlist.html'))
 
