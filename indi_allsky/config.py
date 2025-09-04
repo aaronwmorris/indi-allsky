@@ -24,6 +24,7 @@ from .flask import db
 from sqlalchemy.orm.exc import NoResultFound
 
 from .version import __config_level__
+from .exceptions import ConfigSaveException
 
 
 app = create_app()
@@ -727,10 +728,6 @@ class IndiAllSkyConfigBase(object):
     def base_config(self):
         return self._base_config
 
-    @base_config.setter
-    def base_config(self, new_base_config):
-        pass  # read only
-
 
 class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
@@ -752,6 +749,15 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
     @property
     def config(self):
         return self._config
+
+    @config.setter
+    def config(self, new_config):
+        # basic validation
+        if not isinstance(new_config.get('INDI_SERVER'), str) or not isinstance(new_config.get('CCD_CONFIG'), dict) or not isinstance(new_config.get('INDI_CONFIG_DEFAULTS'), dict):
+            raise ConfigSaveException('Not a valid indi-allsky config')
+
+        self._config = OrderedDict(new_config)
+
 
     @property
     def config_id(self):
@@ -953,7 +959,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             .one()
 
 
-        self._validateConfig()
+        #self._validateConfig()
 
 
         config, encrypted = self._encryptPasswords()

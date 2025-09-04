@@ -7812,10 +7812,6 @@ class AjaxConfigRestoreView(BaseView):
             return jsonify(error_data), 400
 
 
-        # replace config
-        self.indi_allsky_config = config_dict
-
-
         # save new config
         if not app.config['LOGIN_DISABLED']:
             username = current_user.username
@@ -7824,8 +7820,9 @@ class AjaxConfigRestoreView(BaseView):
 
 
         try:
+            # replace config
+            self._indi_allsky_config_obj.config = config_dict
             self._indi_allsky_config_obj.save(username, 'Manual config restore from upload')
-            app.logger.info('Restored config from upload')
         except ConfigSaveException as e:
             error_data = {
                 'form_global' : ['Please fix the errors above'],
@@ -7833,6 +7830,8 @@ class AjaxConfigRestoreView(BaseView):
             }
             return jsonify(error_data), 400
 
+
+        app.logger.info('Restored config from upload')
 
         message = {
             'success-message' : 'Restored Config',
