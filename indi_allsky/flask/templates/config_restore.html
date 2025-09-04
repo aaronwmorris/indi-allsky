@@ -34,6 +34,23 @@ var camera_id = {{ camera_id }};
     <hr>
 
     <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config_restore.RESET_KEYS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config_restore.RESET_KEYS(class='form-check-input') }}
+                <div id="RESET_KEYS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> This will delete and recreate new security keys for flask</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
         <div class="col-sm-1">
             <button id="restore-button" class="btn btn-primary">Restore</button>
         </div>
@@ -57,6 +74,7 @@ const field_names = [
 ];
 
 const checkbox_field_names = [
+    'RESET_KEYS',
 ];
 
 const file_field_names = [
@@ -106,12 +124,6 @@ $('#form_config_restore').on('submit', function() {
 
     var formData = new FormData();
 
-    // Populate fields object
-    var json_data = {};
-    field_names.forEach(item => {
-        //json_data[item] = fields[item].input.val();
-        formData.append(item, fields[item].input.val());
-    });
 
     $("#restore-button").attr("class", "btn btn-secondary");
     $("#restore-button").html(
@@ -119,10 +131,17 @@ $('#form_config_restore').on('submit', function() {
     );
 
 
+    // Populate fields object
+    var json_data = {};
+    field_names.forEach(item => {
+        //json_data[item] = fields[item].input.val();
+        formData.append(item, fields[item].input.val());
+    });
+
     // checkboxes
     checkbox_field_names.forEach(item => {
         //json_data[item] = fields[item].input.prop('checked');
-        //formData.append(item, fields[item].input.prop('checked'));
+        formData.append(item, fields[item].input.prop('checked'));
     });
 
 
