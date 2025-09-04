@@ -103,7 +103,7 @@ class IndiAllSkyDarks(object):
         self.position_av = Array('f', [
             float(self.config['LOCATION_LATITUDE']),
             float(self.config['LOCATION_LONGITUDE']),
-            float(self.config.get('LOCATION_ELEVATION', 300.0)),
+            float(self.config.get('LOCATION_ELEVATION', 300)),
             0.0,  # Ra
             0.0,  # Dec
         ])

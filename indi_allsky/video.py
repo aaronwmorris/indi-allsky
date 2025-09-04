@@ -1276,7 +1276,7 @@ class VideoWorker(Process):
             self.config,
             skip_frames=timelapse_skip_frames,
         )
-        kg.angle = self.config.get('KEOGRAM_ANGLE', 0)
+        kg.angle = self.config.get('KEOGRAM_ANGLE', 0.0)
         kg.h_scale_factor = self.config.get('KEOGRAM_H_SCALE', 100)
         kg.v_scale_factor = self.config.get('KEOGRAM_V_SCALE', 33)
         kg.crop_top = self.config.get('KEOGRAM_CROP_TOP', 0)

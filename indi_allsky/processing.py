@@ -186,7 +186,7 @@ class ImageProcessor(object):
         self._keogram_gen = KeogramGenerator(
             self.config,
         )
-        self._keogram_gen.angle = self.config.get('KEOGRAM_ANGLE', 0)
+        self._keogram_gen.angle = self.config.get('KEOGRAM_ANGLE', 0.0)
         self._keogram_gen.h_scale_factor = self.config.get('KEOGRAM_H_SCALE', 100)
         self._keogram_gen.v_scale_factor = self.config.get('KEOGRAM_V_SCALE', 33)
         self._keogram_gen.crop_top = self.config.get('KEOGRAM_CROP_TOP', 0)
