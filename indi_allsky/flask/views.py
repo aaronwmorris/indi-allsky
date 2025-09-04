@@ -7783,7 +7783,7 @@ class AjaxConfigRestoreView(BaseView):
 
         if file_size > 100000:
             error = {
-                'form_global' : ['Please fix the errors'],
+                'form_global' : ['Please fix the errors above'],
                 'CONFIG_UPLOAD' : ['File too large'],
             }
             tmp_config_p.unlink()  # cleanup
