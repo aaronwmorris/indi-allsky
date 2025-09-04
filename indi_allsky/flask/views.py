@@ -7775,7 +7775,7 @@ class AjaxConfigRestoreView(BaseView):
         file_size = tmp_config_p.stat().st_size
         if file_size == 0:
             error = {
-                'form_global' : ['Please fix the errors'],
+                'form_global' : ['Please fix the errors above'],
                 'CONFIG_UPLOAD' : ['File is empty'],
             }
             tmp_config_p.unlink()  # cleanup
@@ -7795,7 +7795,7 @@ class AjaxConfigRestoreView(BaseView):
                 config_dict = json.load(config_f, object_pairs_hook=OrderedDict)
         except ValueError:
             error = {
-                'form_global' : ['Please fix the errors'],
+                'form_global' : ['Please fix the errors above'],
                 'CONFIG_UPLOAD' : ['Invalid JSON'],
             }
             return jsonify(error), 400
@@ -7806,7 +7806,7 @@ class AjaxConfigRestoreView(BaseView):
         # basic config validation
         if not isinstance(config_dict.get('INDI_SERVER'), str) or not isinstance(config_dict.get('CCD_CONFIG'), dict) or not isinstance(config_dict.get('INDI_CONFIG_DEFAULTS'), dict):
             error = {
-                'form_global' : ['Please fix the errors'],
+                'form_global' : ['Please fix the errors above'],
                 'CONFIG_UPLOAD' : ['Not a valid indi-allsky config'],
             }
             return jsonify(error), 400
