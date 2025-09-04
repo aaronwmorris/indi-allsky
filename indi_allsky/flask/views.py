@@ -7761,7 +7761,6 @@ class AjaxConfigRestoreView(BaseView):
             return jsonify(form_errors), 400
 
 
-        #app.logger.info(dir(request.files['CONFIG_UPLOAD']))
         config_form_file = request.files['CONFIG_UPLOAD']
 
 
@@ -7775,25 +7774,37 @@ class AjaxConfigRestoreView(BaseView):
 
         file_size = tmp_config_p.stat().st_size
         if file_size == 0:
-            error = {'error' : 'Invalid JSON'}
+            error = {
+                'form_global' : ['Error'],
+                'CONFIG_UPLOAD' : ['File is empty'],
+            }
+            tmp_config_p.unlink()  # cleanup
             return jsonify(error), 400
 
         if file_size > 100000:
-            error = {'error' : 'Invalid JSON'}
+            error = {
+                'form_global' : ['Error'],
+                'CONFIG_UPLOAD' : ['File too large'],
+            }
+            tmp_config_p.unlink()  # cleanup
             return jsonify(error), 400
 
 
         try:
             with io.open(str(tmp_config_p), 'rb') as config_f:
-                config_dict = OrderedDict(json.load(config_f))
+                config_dict = json.load(config_f, object_pairs_hook=OrderedDict)
         except ValueError:
-            error = {'error' : 'Invalid JSON'}
+            error = {
+                'form_global' : ['Error'],
+                'CONFIG_UPLOAD' : ['Invalid JSON'],
+            }
             return jsonify(error), 400
         finally:
             tmp_config_p.unlink()  # cleanup
 
 
-        return jsonify(config_dict)
+        error = {'success-message' : 'Restored Config'}
+        return jsonify(error)
 
 
 class AjaxSelectCameraView(BaseView):
