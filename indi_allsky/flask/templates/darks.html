@@ -52,8 +52,8 @@ var camera_id = {{ camera_id }};
     <td>{{ "%0.2f"|format(dark.temp | float) }}</td>
     <td>{{ "%0.1f"|format(dark.adu | float) }}</td>
     <td>{{ dark.hot_pixels }}</td>
-    <td><a href="{{ url_for('indi_allsky.image_processing_view', type='dark', id=dark.id) }}" class="text-decoration-none link-info">View</a></td>
-    <td><a href="{{ dark.url }}" class="text-decoration-none link-info">Download</a></td>
+    <td><a href="{{ url_for('indi_allsky.image_processing_view', type='dark', id=dark.id) }}"><span class="badge bg-success">Process</span></a></td>
+    <td><a href="{{ dark.url }}" class="text-decoration-none link-info"><span class="badge bg-primary">Download</span></a></td>
     <td>{{ "%0.1f"|format(dark.size_mb | float) }}</td>
     <td>{{ dark.method }}</td>
 </tr>
@@ -93,8 +93,8 @@ var camera_id = {{ camera_id }};
     <td>{{ "%0.2f"|format(bpm.temp | float) }}</td>
     <td>{{ "%0.1f"|format(bpm.adu | float) }}</td>
     <td>{{ bpm.hot_pixels }}</td>
-    <td><a href="{{ url_for('indi_allsky.image_processing_view', type='bpm', id=bpm.id) }}" class="text-decoration-none link-info">View</a></td>
-    <td><a href="{{ bpm.url }}" class="text-decoration-none link-info">Download</a></td>
+    <td><a href="{{ url_for('indi_allsky.image_processing_view', type='bpm', id=bpm.id) }}"><span class="badge bg-success">Process</span></a></td>
+    <td><a href="{{ bpm.url }}" class="text-decoration-none link-info"><span class="badge bg-primary">Download</span></a></td>
     <td>{{ "%0.1f"|format(bpm.size_mb | float) }}</td>
 </tr>
 {% endfor %}
