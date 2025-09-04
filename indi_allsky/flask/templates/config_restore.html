@@ -166,14 +166,7 @@ $('#form_config_restore').on('submit', function() {
                 fields[key].input.addClass('is-invalid');
                 fields[key].error.html(errors[key].join('<br>'));
                 fields[key].error.css({'display' : 'block'});
-
-                if (key != 'form_global') {
-                    error_fields.push(key);
-                };
             });
-
-            $('#failure-fields').html(error_fields.join('<br>'));
-            $('#failure-fields').css({'display' : 'block'});
         },
     });
 
