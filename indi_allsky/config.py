@@ -967,22 +967,43 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
 
     def _validateConfig(self):
-        for key in self.config.keys():
-            if isinstance(self.config[key], dict):
-                # check second level
-                for key_2 in self.config[key].keys():
-                    try:
-                        if not isinstance(self.config[key][key_2], type(self.base_config[key][key_2])):
-                            app.logger.error('Config key (level 2) has wrong type: [%s][%s]', str(key), str(key_2))
-                    except KeyError:
-                        app.logger.warning('Config key not found in base config: [%s][%s]', str(key), str(key_2))
+        skip_keys = [
+            'INDI_CONFIG_DEFAULTS',
+            'INDI_CONFIG_DAY',
+        ]
 
-            else:
+        skip_keys_l2 = [
+            ['FILETRANSFER', 'LIBCURL_OPTIONS'],
+        ]
+
+
+        for key in self.config.keys():
+            if key in skip_keys:
+                #app.logger.info('Skipping key [%s]', str(key))
+                continue
+
+
+            if not isinstance(self.config[key], dict):
                 try:
                     if not isinstance(self.config[key], type(self.base_config[key])):
                         app.logger.error('Config key has wrong type: [%s]', str(key))
                 except KeyError:
                     app.logger.warning('Config key not found in base config: [%s]', str(key))
+
+            else:
+                # check second level
+                for key_l2 in self.config[key].keys():
+
+                    if key in [x[0] for x in skip_keys_l2] and key_l2 in [x[1] for x in skip_keys_l2]:
+                        #app.logger.info('Skipping key [%s][%s]', str(key), str(key_l2))
+                        continue
+
+                    try:
+                        if not isinstance(self.config[key][key_l2], type(self.base_config[key][key_l2])):
+                            app.logger.error('Config key (level 2) has wrong type: [%s][%s]', str(key), str(key_l2))
+                    except KeyError:
+                        app.logger.warning('Config key not found in base config: [%s][%s]', str(key), str(key_l2))
+
 
 
     def _encryptPasswords(self):
