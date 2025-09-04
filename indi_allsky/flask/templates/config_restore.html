@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Config Restore{% endblock %}
+
+{% block head %}
+<style>
+</style>
+<script type="text/javascript">
+var camera_id = {{ camera_id }};
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container h-100">
+
+<form id="form_config_restore" onSubmit="return false;" autocomplete="off">
+{{ form_config_restore.csrf_token }}
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config_restore.CONFIG_UPLOAD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-6">
+            {{ form_config_restore.CONFIG_UPLOAD(class='form-control bg-secondary') }}
+            <div id="CONFIG_UPLOAD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-4">
+            <div></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-1">
+            <button id="restore-button" class="btn btn-primary">Restore</button>
+        </div>
+    </div>
+
+    <div class="form-group row" style="height:100px;">
+        <div class="col-sm-2">
+            <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
+            <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
+            <div id="failure-fields" class="invalid-feedback text-warning" style="display: none;"></div>
+        </div>
+    </div>
+</form>
+</div>
+
+<script>
+const successMessage = $('#success-message');
+const failureMessage = $('#failure-message');
+const field_names = [
+    'csrf_token',
+];
+
+const checkbox_field_names = [
+];
+
+const file_field_names = [
+    'CONFIG_UPLOAD',
+];
+
+var fields = {};
+// Populate fields object
+field_names.forEach(item => {
+    fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+// Checkboxes
+checkbox_field_names.forEach(item => {
+    fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+// File fields
+file_field_names.forEach(item => {
+    fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+
+fields['form_global'] = {
+    'input' : failureMessage,
+    'error' : failureMessage,
+};
+
+
+$('#form_config_restore').on('submit', function() {
+    // hide all errors
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+    $('#failure-fields').css({'display' : 'none'});
+
+
+    var formData = new FormData();
+
+    // Populate fields object
+    var json_data = {};
+    field_names.forEach(item => {
+        //json_data[item] = fields[item].input.val();
+        formData.append(item, fields[item].input.val());
+    });
+
+    $("#restore-button").attr("class", "btn btn-secondary");
+    $("#restore-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Restore</span>'
+    );
+
+
+    // checkboxes
+    checkbox_field_names.forEach(item => {
+        //json_data[item] = fields[item].input.prop('checked');
+        //formData.append(item, fields[item].input.prop('checked'));
+    });
+
+
+    // files
+    file_field_names.forEach(item => {
+        var file_input = fields[item].input.prop('files');
+        formData.append(item, file_input[0]);
+    });
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_config_restore_view') }}",
+        //contentType: "application/json",
+        //data: JSON.stringify(json_data),
+        processData: false,  // tell jQuery not to process the data
+        contentType: false,  // tell jQuery not to set contentType
+        data: formData,
+        success: function(rdata){
+            $("#restore-button").attr("class", "btn btn-success");
+            $("#restore-button").html(
+                'Restore'
+            );
+
+            successMessage.html(rdata['success-message']);
+            successMessage.css({'display' : 'block'});
+            setTimeout(function() {
+                successMessage.css({'display' : 'none'});
+            }, 15000);
+        },
+        error: function(rdata){
+            $("#restore-button").attr("class", "btn btn-danger");
+            $("#restore-button").html(
+                'Restore'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+
+            var error_fields = new Array();
+            Object.keys(errors).forEach((key) => {
+                fields[key].input.addClass('is-invalid');
+                fields[key].error.html(errors[key].join('<br>'));
+                fields[key].error.css({'display' : 'block'});
+
+                if (key != 'form_global') {
+                    error_fields.push(key);
+                };
+            });
+
+            $('#failure-fields').html(error_fields.join('<br>'));
+            $('#failure-fields').css({'display' : 'block'});
+        },
+    });
+
+});
+
+
+$( document ).ready(function() {
+});
+
+</script>
+
+{% endblock %}

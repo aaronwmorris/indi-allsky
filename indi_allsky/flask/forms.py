@@ -26,8 +26,10 @@ from wtforms import PasswordField
 from wtforms import TextAreaField
 from wtforms import HiddenField
 from wtforms import DateTimeLocalField
+from wtforms import FileField
 from wtforms.widgets import PasswordInput
 from wtforms.validators import DataRequired
+#from wtforms.validators import regexp as validator_regexp
 from wtforms.validators import ValidationError
 
 #from sqlalchemy import extract
@@ -5495,6 +5497,11 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
         return result
+
+
+class IndiAllskyConfigRestoreForm(FlaskForm):
+    #CONFIG_UPLOAD        = FileField('Config File', validators=[validator_regexp(r'\.json$')])
+    CONFIG_UPLOAD        = FileField('Config File')
 
 
 class IndiAllskyImageViewer(FlaskForm):

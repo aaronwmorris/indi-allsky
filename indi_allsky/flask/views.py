@@ -2,7 +2,9 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 import io
+import tempfile
 import json
+from collections import OrderedDict
 import time
 import math
 import base64
@@ -105,6 +107,7 @@ from .forms import IndiAllskyLongTermKeogramForm
 from .forms import IndiAllskyNetworkManagerForm
 from .forms import IndiAllskyDriveManagerForm
 from .forms import IndiAllskyImageCircleHelperForm
+from .forms import IndiAllskyConfigRestoreForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -7729,6 +7732,70 @@ class ConfigDownloadView(BaseView):
         return send_file(config_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
 
 
+class ConfigRestoreView(TemplateView):
+    decorators = [login_required]
+
+    def get_context(self):
+        context = super(ConfigRestoreView, self).get_context()
+
+        context['camera_id'] = self.camera.id
+
+        context['form_config_restore'] = IndiAllskyConfigRestoreForm()
+
+        return context
+
+
+class AjaxConfigRestoreView(BaseView):
+    decorators = [login_required]
+    methods = ['POST']
+
+
+    def dispatch_request(self):
+        if not current_user.is_admin:
+            return jsonify({}), 400
+
+        form_config_restore = IndiAllskyConfigRestoreForm(data=request.form)
+
+        if not form_config_restore.validate():
+            form_errors = form_config_restore.errors  # this must be a property
+            return jsonify(form_errors), 400
+
+
+        #app.logger.info(dir(request.files['CONFIG_UPLOAD']))
+        config_form_file = request.files['CONFIG_UPLOAD']
+
+
+        f_tmp_config = tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.json')
+        f_tmp_config.close()
+
+        tmp_config_p = Path(f_tmp_config.name)
+
+        config_form_file.save(str(tmp_config_p))
+
+
+        file_size = tmp_config_p.stat().st_size
+        if file_size == 0:
+            error = {'error' : 'Invalid JSON'}
+            return jsonify(error), 400
+
+        if file_size > 100000:
+            error = {'error' : 'Invalid JSON'}
+            return jsonify(error), 400
+
+
+        try:
+            with io.open(str(tmp_config_p), 'rb') as config_f:
+                config_dict = OrderedDict(json.load(config_f))
+        except ValueError:
+            error = {'error' : 'Invalid JSON'}
+            return jsonify(error), 400
+        finally:
+            tmp_config_p.unlink()  # cleanup
+
+
+        return jsonify(config_dict)
+
+
 class AjaxSelectCameraView(BaseView):
     methods = ['POST']
 
@@ -10236,6 +10303,9 @@ bp_allsky.add_url_rule('/ajax/minigenerate', view_func=AjaxMiniTimelapseGenerato
 
 bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp_allsky.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
+bp_allsky.add_url_rule('/config/download', view_func=ConfigDownloadView.as_view('config_download_view'))
+bp_allsky.add_url_rule('/config/restore', view_func=ConfigRestoreView.as_view('config_restore_view', template_name='config_restore.html'))
+bp_allsky.add_url_rule('/ajax/config/restore', view_func=AjaxConfigRestoreView.as_view('ajax_config_restore_view'))
 
 bp_allsky.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp_allsky.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
@@ -10314,5 +10384,4 @@ bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
 bp_allsky.add_url_rule('/configlist', view_func=ConfigListView.as_view('config_list_view', template_name='configlist.html'))
-bp_allsky.add_url_rule('/configdownload', view_func=ConfigDownloadView.as_view('config_download_view'))
 
