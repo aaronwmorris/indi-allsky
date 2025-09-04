@@ -1243,7 +1243,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
         # check a few values to make sure this is a valid config
-        if not c.get('INDI_SERVER') or not c.get('CCD_CONFIG'):
+        if not isinstance(c.get('INDI_SERVER'), str) or not isinstance(c.get('CCD_CONFIG'), dict) or not isinstance(c.get('INDI_CONFIG_DEFAULTS'), dict):
             logger.error('Not a valid indi-allsky config')
             sys.exit(1)
 
