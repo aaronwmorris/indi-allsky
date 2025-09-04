@@ -7774,42 +7774,64 @@ class AjaxConfigRestoreView(BaseView):
 
         file_size = tmp_config_p.stat().st_size
         if file_size == 0:
-            error = {
+            error_data = {
                 'form_global' : ['Please fix the errors above'],
                 'CONFIG_UPLOAD' : ['File is empty'],
             }
             tmp_config_p.unlink()  # cleanup
-            return jsonify(error), 400
+            return jsonify(error_data), 400
 
         if file_size > 100000:
-            error = {
+            error_data = {
                 'form_global' : ['Please fix the errors above'],
                 'CONFIG_UPLOAD' : ['File too large'],
             }
             tmp_config_p.unlink()  # cleanup
-            return jsonify(error), 400
+            return jsonify(error_data), 400
 
 
         try:
             with io.open(str(tmp_config_p), 'rb') as config_f:
                 config_dict = json.load(config_f, object_pairs_hook=OrderedDict)
         except ValueError:
-            error = {
+            error_data = {
                 'form_global' : ['Please fix the errors above'],
                 'CONFIG_UPLOAD' : ['Invalid JSON'],
             }
-            return jsonify(error), 400
+            return jsonify(error_data), 400
         finally:
             tmp_config_p.unlink()  # cleanup
 
 
         # basic config validation
         if not isinstance(config_dict.get('INDI_SERVER'), str) or not isinstance(config_dict.get('CCD_CONFIG'), dict) or not isinstance(config_dict.get('INDI_CONFIG_DEFAULTS'), dict):
-            error = {
+            error_data = {
                 'form_global' : ['Please fix the errors above'],
                 'CONFIG_UPLOAD' : ['Not a valid indi-allsky config'],
             }
-            return jsonify(error), 400
+            return jsonify(error_data), 400
+
+
+        # replace config
+        self.indi_allsky_config = config_dict
+
+
+        # save new config
+        if not app.config['LOGIN_DISABLED']:
+            username = current_user.username
+        else:
+            username = 'system'
+
+
+        try:
+            self._indi_allsky_config_obj.save(username, 'Manual config restore from upload')
+            app.logger.info('Restored config from upload')
+        except ConfigSaveException as e:
+            error_data = {
+                'form_global' : ['Please fix the errors above'],
+                'CONFIG_UPLOAD' : [str(e)],
+            }
+            return jsonify(error_data), 400
 
 
         message = {
