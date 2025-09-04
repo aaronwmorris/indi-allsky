@@ -168,11 +168,18 @@ $('#form_config_restore').on('submit', function() {
                 'Restore'
             );
 
+
             successMessage.html(rdata['success-message']);
             successMessage.css({'display' : 'block'});
             setTimeout(function() {
                 successMessage.css({'display' : 'none'});
             }, 15000);
+
+
+            // reset fields
+            $("#CONFIG_UPLOAD").val('');
+            $("#RESET_KEYS").prop('checked', false);
+
         },
         error: function(rdata){
             $("#restore-button").attr("class", "btn btn-danger");
@@ -194,7 +201,14 @@ $('#form_config_restore').on('submit', function() {
 });
 
 
+function init() {
+    $("#CONFIG_UPLOAD").val('');
+    $("#RESET_KEYS").prop('checked', false);
+}
+
+
 $( document ).ready(function() {
+    init();
 });
 
 </script>
