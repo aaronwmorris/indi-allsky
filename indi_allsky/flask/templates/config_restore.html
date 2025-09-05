@@ -35,6 +35,23 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config_restore.FLUSH_CONFIGS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config_restore.FLUSH_CONFIGS(class='form-check-input') }}
+                <div id="FLUSH_CONFIGS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Remove all previous configs</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config_restore.RESET_KEYS.label }}
         </div>
         <div class="col-sm-2">
@@ -75,6 +92,7 @@ const field_names = [
 
 const checkbox_field_names = [
     'RESET_KEYS',
+    'FLUSH_CONFIGS',
 ];
 
 const file_field_names = [
@@ -143,6 +161,8 @@ $('#form_config_restore').on('submit', function() {
         //json_data[item] = fields[item].input.prop('checked');
         if (fields[item].input.prop('checked')) {
             formData.append(item, fields[item].input.prop('checked'));
+        } else {
+            formData.append(item, '');
         }
     });
 
@@ -178,6 +198,7 @@ $('#form_config_restore').on('submit', function() {
 
             // reset fields
             $("#CONFIG_UPLOAD").val('');
+            $("#FLUSH_CONFIGS").prop('checked', false);
             $("#RESET_KEYS").prop('checked', false);
 
         },
@@ -204,6 +225,7 @@ $('#form_config_restore').on('submit', function() {
 function init() {
     $("#CONFIG_UPLOAD").val('');
     $("#RESET_KEYS").prop('checked', false);
+    $("#FLUSH_CONFIGS").prop('checked', false);
 }
 
 

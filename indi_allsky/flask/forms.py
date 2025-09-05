@@ -5502,6 +5502,7 @@ class IndiAllskyConfigForm(FlaskForm):
 class IndiAllskyConfigRestoreForm(FlaskForm):
     CONFIG_UPLOAD        = FileField('Config File')
     RESET_KEYS           = BooleanField('Reset Security Keys')
+    FLUSH_CONFIGS        = BooleanField('Flush Configs')
 
 
 class IndiAllskyImageViewer(FlaskForm):

@@ -7763,6 +7763,7 @@ class AjaxConfigRestoreView(BaseView):
 
         config_form_file = request.files['CONFIG_UPLOAD']
         reset_keys = request.form.get('RESET_KEYS')
+        flush_configs = request.form.get('FLUSH_CONFIGS')
 
 
         f_tmp_config = tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.json')
@@ -7833,6 +7834,16 @@ class AjaxConfigRestoreView(BaseView):
 
 
         app.logger.info('Restored config from upload')
+
+
+        if flush_configs:
+            flush_entries = IndiAllSkyDbConfigTable.query\
+                .filter(IndiAllSkyDbConfigTable.id != self._indi_allsky_config_obj.config_id)
+
+            flush_entries.delete()
+            db.session.commit()
+
+            app.logger.warning('Config entries flushed')
 
 
         if reset_keys:
