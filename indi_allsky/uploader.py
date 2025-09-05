@@ -594,7 +594,7 @@ class FileUploader(Thread):
             db.session.commit()
 
 
-        logger.info('Remove local: %s', str(remove_local))
+        #logger.info('Remove local: %s', str(remove_local))
         self.cleanup(local_file_p, remove_local=remove_local)
 
 
