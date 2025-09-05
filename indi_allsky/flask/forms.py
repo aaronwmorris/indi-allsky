@@ -5512,6 +5512,7 @@ class IndiAllskyConfigRestoreForm(FlaskForm):
 
 
         if self.indi_allsky_config.get('ENCRYPT_PASSWORDS'):
+            # changing the password key would make encrypted password unrecoverable
             self.RESET_KEYS.render_kw = {'disabled' : 'disabled'}
 
 

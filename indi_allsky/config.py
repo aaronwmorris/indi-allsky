@@ -959,7 +959,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             .one()
 
 
-        #self._validateConfig()
+        self._validateConfig()
 
 
         config, encrypted = self._encryptPasswords()
@@ -991,25 +991,41 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
             if not isinstance(self.config[key], dict):
                 try:
-                    if not isinstance(self.config[key], type(self.base_config[key])):
+                    if isinstance(self.config[key], int):
+                        # jq will convert floats that end in .0 to ints
+                        valid_types = (int, float)
+                    else:
+                        valid_types = type(self.base_config[key])
+
+
+                    if not isinstance(self.config[key], valid_types):
                         app.logger.error('Config key has wrong type: [%s]', str(key))
+                        app.logger.info('Expected type: %s - Actual type: %s', str(type(self.base_config[key])), str(type(self.config[key])))
                 except KeyError:
                     app.logger.warning('Config key not found in base config: [%s]', str(key))
 
             else:
-                # check second level
+                # check second level (dict)
                 for key_l2 in self.config[key].keys():
 
                     if key in [x[0] for x in skip_keys_l2] and key_l2 in [x[1] for x in skip_keys_l2]:
                         #app.logger.info('Skipping key [%s][%s]', str(key), str(key_l2))
                         continue
 
+
                     try:
-                        if not isinstance(self.config[key][key_l2], type(self.base_config[key][key_l2])):
+                        if isinstance(self.config[key][key_l2], int):
+                            # jq will convert floats that end in .0 to ints
+                            valid_types = (int, float)
+                        else:
+                            valid_types = type(self.base_config[key][key_l2])
+
+
+                        if not isinstance(self.config[key][key_l2], valid_types):
                             app.logger.error('Config key (level 2) has wrong type: [%s][%s]', str(key), str(key_l2))
+                            app.logger.info('Expected type: %s - Actual type: %s', str(type(self.base_config[key][key_l2])), str(type(self.config[key][key_l2])))
                     except KeyError:
                         app.logger.warning('Config key not found in base config: [%s][%s]', str(key), str(key_l2))
-
 
 
     def _encryptPasswords(self):
