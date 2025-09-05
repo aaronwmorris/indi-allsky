@@ -5505,6 +5505,16 @@ class IndiAllskyConfigRestoreForm(FlaskForm):
     FLUSH_CONFIGS        = BooleanField('Flush Configs')
 
 
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyConfigRestoreForm, self).__init__(*args, **kwargs)
+
+        self.indi_allsky_config = kwargs.get('indi_allsky_config', {})
+
+
+        if self.indi_allsky_config.get('ENCRYPT_PASSWORDS'):
+            self.RESET_KEYS.render_kw = {'disabled' : 'disabled'}
+
+
 class IndiAllskyImageViewer(FlaskForm):
     CAMERA_ID            = HiddenField('Camera ID', validators=[DataRequired()])
     YEAR_SELECT          = SelectField('Year', choices=[], validators=[])

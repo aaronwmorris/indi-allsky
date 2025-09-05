@@ -7740,7 +7740,7 @@ class ConfigRestoreView(TemplateView):
 
         context['camera_id'] = self.camera.id
 
-        context['form_config_restore'] = IndiAllskyConfigRestoreForm()
+        context['form_config_restore'] = IndiAllskyConfigRestoreForm(indi_allsky_config=self.indi_allsky_config)
 
         return context
 
