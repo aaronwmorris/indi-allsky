@@ -43,6 +43,9 @@ var camera_id = {{ camera_id }};
 </tr>
 {% endfor %}
 </table>
+  <hr>
+    <div><a href="{{ url_for('indi_allsky.config_restore_view') }}"><span class="badge bg-danger text-dark">Config Restore</span></a></div>
+  <hr>
 </div>
 <div style="height:20px;"></div>
 <div style="font-size:12px;">Note: Configs from deleted users will not be displayed, but they are still in the database</div>

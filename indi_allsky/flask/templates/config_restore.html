@@ -23,6 +23,15 @@ var camera_id = {{ camera_id }};
     <hr>
 
     <div class="form-group row">
+        <div class="col-sm-2"></div>
+        <div class="col-sm-2">
+            <div><a href="{{ url_for('indi_allsky.config_list_view') }}"><span class="badge bg-success">Config History</span></a></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config_restore.CONFIG_UPLOAD.label(class='col-form-label') }}
         </div>
