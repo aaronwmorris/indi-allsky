@@ -1020,7 +1020,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
             f_key = Fernet(app.config['PASSWORD_KEY'].encode())
 
-            filetransfer__password = str(config['FILETRANSFER']['PASSWORD'])
+            filetransfer__password = str(config.get('FILETRANSFER', {}).get('PASSWORD', ''))
             if filetransfer__password:
                 filetransfer__password_e = f_key.encrypt(filetransfer__password.encode()).decode()
                 filetransfer__password = ''
@@ -1029,7 +1029,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 filetransfer__password = ''
 
 
-            s3upload__secret_key = str(config['S3UPLOAD']['SECRET_KEY'])
+            s3upload__secret_key = str(config.get('S3UPLOAD', {}).get('SECRET_KEY', ''))
             if s3upload__secret_key:
                 s3upload__secret_key_e = f_key.encrypt(s3upload__secret_key.encode()).decode()
                 s3upload__secret_key = ''
@@ -1038,7 +1038,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 s3upload__secret_key = ''
 
 
-            mqttpublish__password = str(config['MQTTPUBLISH']['PASSWORD'])
+            mqttpublish__password = str(config.get('MQTTPUBLISH', {}).get('PASSWORD', ''))
             if mqttpublish__password:
                 mqttpublish__password_e = f_key.encrypt(mqttpublish__password.encode()).decode()
                 mqttpublish__password = ''
@@ -1047,7 +1047,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 mqttpublish__password = ''
 
 
-            syncapi__apikey = str(config['SYNCAPI']['APIKEY'])
+            syncapi__apikey = str(config.get('SYNCAPI', {}).get('APIKEY', ''))
             if syncapi__apikey:
                 syncapi__apikey_e = f_key.encrypt(syncapi__apikey.encode()).decode()
                 syncapi__apikey = ''
@@ -1056,7 +1056,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 syncapi__apikey = ''
 
 
-            pycurl_camera__password = str(config['PYCURL_CAMERA']['PASSWORD'])
+            pycurl_camera__password = str(config.get('PYCURL_CAMERA', {}).get('PASSWORD', ''))
             if pycurl_camera__password:
                 pycurl_camera__password_e = f_key.encrypt(pycurl_camera__password.encode()).decode()
                 pycurl_camera__password = ''
@@ -1065,7 +1065,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 pycurl_camera__password = ''
 
 
-            temp_sensor__openweathermap_apikey = str(config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'])
+            temp_sensor__openweathermap_apikey = str(config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', ''))
             if temp_sensor__openweathermap_apikey:
                 temp_sensor__openweathermap_apikey_e = f_key.encrypt(temp_sensor__openweathermap_apikey.encode()).decode()
                 temp_sensor__openweathermap_apikey = ''
@@ -1074,7 +1074,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__openweathermap_apikey = ''
 
 
-            temp_sensor__wunderground_apikey = str(config['TEMP_SENSOR']['WUNDERGROUND_APIKEY'])
+            temp_sensor__wunderground_apikey = str(config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', ''))
             if temp_sensor__wunderground_apikey:
                 temp_sensor__wunderground_apikey_e = f_key.encrypt(temp_sensor__wunderground_apikey.encode()).decode()
                 temp_sensor__wunderground_apikey = ''
@@ -1083,7 +1083,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__wunderground_apikey = ''
 
 
-            temp_sensor__astrospheric_apikey = str(config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY'])
+            temp_sensor__astrospheric_apikey = str(config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', ''))
             if temp_sensor__astrospheric_apikey:
                 temp_sensor__astrospheric_apikey_e = f_key.encrypt(temp_sensor__astrospheric_apikey.encode()).decode()
                 temp_sensor__astrospheric_apikey = ''
@@ -1092,7 +1092,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__astrospheric_apikey = ''
 
 
-            temp_sensor__mqtt_password = str(config['TEMP_SENSOR']['MQTT_PASSWORD'])
+            temp_sensor__mqtt_password = str(config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD', ''))
             if temp_sensor__mqtt_password:
                 temp_sensor__mqtt_password_e = f_key.encrypt(temp_sensor__mqtt_password.encode()).decode()
                 temp_sensor__mqtt_password = ''
@@ -1101,7 +1101,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__mqtt_password = ''
 
 
-            device__mqtt_password = str(config['DEVICE']['MQTT_PASSWORD'])
+            device__mqtt_password = str(config.get('DEVICE', {}).get('MQTT_PASSWORD', ''))
             if device__mqtt_password:
                 device__mqtt_password_e = f_key.encrypt(device__mqtt_password.encode()).decode()
                 device__mqtt_password = ''
@@ -1110,7 +1110,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 device__mqtt_password = ''
 
 
-            adsb__password = str(config['ADSB']['PASSWORD'])
+            adsb__password = str(config.get('ADSB', {}).get('PASSWORD', ''))
             if adsb__password:
                 adsb__password_e = f_key.encrypt(adsb__password.encode()).decode()
                 adsb__password = ''
@@ -1122,27 +1122,27 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             # passwords should not be encrypted
             encrypted = False
 
-            filetransfer__password = str(config['FILETRANSFER']['PASSWORD'])
+            filetransfer__password = str(config.get('FILETRANSFER', {}).get('PASSWORD', ''))
             filetransfer__password_e = ''
-            s3upload__secret_key = str(config['S3UPLOAD']['SECRET_KEY'])
+            s3upload__secret_key = str(config.get('S3UPLOAD', {}).get('SECRET_KEY', ''))
             s3upload__secret_key_e = ''
-            mqttpublish__password = str(config['MQTTPUBLISH']['PASSWORD'])
+            mqttpublish__password = str(config.get('MQTTPUBLISH', {}).get('PASSWORD', ''))
             mqttpublish__password_e = ''
-            syncapi__apikey = str(config['SYNCAPI']['APIKEY'])
+            syncapi__apikey = str(config.get('SYNCAPI', {}).get('APIKEY', ''))
             syncapi__apikey_e = ''
-            pycurl_camera__password = str(config['PYCURL_CAMERA']['PASSWORD'])
+            pycurl_camera__password = str(config.get('PYCURL_CAMERA', {}).get('PASSWORD', ''))
             pycurl_camera__password_e = ''
-            temp_sensor__openweathermap_apikey = str(config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'])
+            temp_sensor__openweathermap_apikey = str(config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', ''))
             temp_sensor__openweathermap_apikey_e = ''
-            temp_sensor__wunderground_apikey = str(config['TEMP_SENSOR']['WUNDERGROUND_APIKEY'])
+            temp_sensor__wunderground_apikey = str(config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', ''))
             temp_sensor__wunderground_apikey_e = ''
-            temp_sensor__astrospheric_apikey = str(config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY'])
+            temp_sensor__astrospheric_apikey = str(config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', ''))
             temp_sensor__astrospheric_apikey_e = ''
-            temp_sensor__mqtt_password = str(config['TEMP_SENSOR']['MQTT_PASSWORD'])
+            temp_sensor__mqtt_password = str(config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD', ''))
             temp_sensor__mqtt_password_e = ''
-            device__mqtt_password = str(config['DEVICE']['MQTT_PASSWORD'])
+            device__mqtt_password = str(config.get('DEVICE', {}).get('MQTT_PASSWORD', ''))
             device__mqtt_password_e = ''
-            adsb__password = str(config['ADSB']['PASSWORD'])
+            adsb__password = str(config.get('ADSB', {}).get('PASSWORD', ''))
             adsb__password_e = ''
 
 
