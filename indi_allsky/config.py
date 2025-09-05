@@ -989,23 +989,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 continue
 
 
-            if not isinstance(self.config[key], dict):
-                try:
-                    if isinstance(self.config[key], int):
-                        # jq will convert floats that end in .0 to ints
-                        valid_types = (int, float)
-                    else:
-                        valid_types = type(self.base_config[key])
-
-
-                    if not isinstance(self.config[key], valid_types):
-                        app.logger.error('Config key has wrong type: [%s]', str(key))
-                        app.logger.info('Expected type: %s - Actual type: %s', str(type(self.base_config[key])), str(type(self.config[key])))
-                except KeyError:
-                    app.logger.warning('Config key not found in base config: [%s]', str(key))
-
-            else:
-                # check second level (dict)
+            if isinstance(self.config[key], dict):
+                # check 2nd level dict entries
                 for key_l2 in self.config[key].keys():
 
                     if key in [x[0] for x in skip_keys_l2] and key_l2 in [x[1] for x in skip_keys_l2]:
@@ -1022,10 +1007,25 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
 
                         if not isinstance(self.config[key][key_l2], valid_types):
-                            app.logger.error('Config key (level 2) has wrong type: [%s][%s]', str(key), str(key_l2))
-                            app.logger.info('Expected type: %s - Actual type: %s', str(type(self.base_config[key][key_l2])), str(type(self.config[key][key_l2])))
+                            app.logger.error('Config key has wrong type: [%s][%s] (%s vs %s)', str(key), str(key_l2), str(type(self.base_config[key][key_l2])), str(type(self.config[key][key_l2])))
+                            raise ConfigSaveException('Config key has wrong type: [{0:s}][{1:s}]'.format(str(key), str(key_l2)))
                     except KeyError:
                         app.logger.warning('Config key not found in base config: [%s][%s]', str(key), str(key_l2))
+
+            else:
+                try:
+                    if isinstance(self.config[key], int):
+                        # jq will convert floats that end in .0 to ints
+                        valid_types = (int, float)
+                    else:
+                        valid_types = type(self.base_config[key])
+
+
+                    if not isinstance(self.config[key], valid_types):
+                        app.logger.error('Config key has wrong type: [%s] (%s vs %s)', str(key), str(type(self.base_config[key])), str(type(self.config[key])))
+                        raise ConfigSaveException('Config key has wrong type: [{0:s}]'.format(str(key)))
+                except KeyError:
+                    app.logger.warning('Config key not found in base config: [%s]', str(key))
 
 
     def _encryptPasswords(self):
