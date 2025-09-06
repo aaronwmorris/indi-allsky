@@ -63,7 +63,7 @@ class LightningSensorAs3935_SparkFun(SensorBase):
         try:
             distance_km_avg = statistics.mean(distance_list)
         except statistics.StatisticsError:
-            distance_km_avg = 0
+            distance_km_avg = 0.0
 
 
         if distance_km_min == 0:
