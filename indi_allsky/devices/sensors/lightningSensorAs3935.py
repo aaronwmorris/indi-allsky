@@ -56,17 +56,17 @@ class LightningSensorAs3935_SparkFun(SensorBase):
             distance_km_min = min(distance_list)
             distance_km_max = max(distance_list)
         except ValueError:
-            distance_km_min = -1
-            distance_km_max = -1
+            distance_km_min = 0
+            distance_km_max = 0
 
 
         try:
             distance_km_avg = statistics.mean(distance_list)
         except statistics.StatisticsError:
-            distance_km_avg = -1.0
+            distance_km_avg = 0.0
 
 
-        if distance_km_min > -1:
+        if distance_km_min == 0:
             if self.config.get('TEMP_DISPLAY') == 'f':
                 # if using fahrenheit, return in miles
                 distance_min = self.km2mi(distance_km_min)
@@ -78,9 +78,9 @@ class LightningSensorAs3935_SparkFun(SensorBase):
                 distance_avg = distance_km_avg
 
         else:
-            distance_min = -1
-            distance_max = -1
-            distance_avg = -1.0
+            distance_min = 0
+            distance_max = 0
+            distance_avg = 0.0
 
 
         data = {
@@ -207,6 +207,14 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
             raise SensorException('AS3935 is not connected, check wiring')
 
 
+        self.as3935.reset()
+        time.sleep(1.0)
+
+        if not self.as3935.calibrate():
+            logger.error('[%s] AS3935 calibration failed', self.name)
+            time.sleep(3.0)
+
+
         if self.afemode_outdoor:
             self.as3935.indoor_outdoor = self.as3935.OUTDOOR
         else:
@@ -295,6 +303,14 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
 
         if not self.as3935.connected:
             raise SensorException('AS3935 is not connected, check wiring')
+
+
+        self.as3935.reset()
+        time.sleep(1.0)
+
+        if not self.as3935.calibrate():
+            logger.error('[%s] AS3935 calibration failed', self.name)
+            time.sleep(3.0)
 
 
         if self.afemode_outdoor:
