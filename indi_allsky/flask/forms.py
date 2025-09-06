@@ -3291,6 +3291,8 @@ class IndiAllskyConfigForm(FlaskForm):
         ('libx264', 'x264'),
         ('libvpx', 'webm'),
         ('h264_v4l2m2m', 'h264 (v4l2m2m) - Raspberry Pi'),
+        ('h264_nvenc', 'h264 (NVENC) - Nvidia GPU Encoder'),
+        ('h264_vaapi', 'h264 (VAAPI) - AMD GPU VCE Encoder'),
         ('h264_qsv', 'h264 (QSV) - Intel Quick Sync Video'),
         ('h264_omx', 'h264 (OMX) - Raspberry Pi (32-bit only)'),
         ('libx265', 'x265 hevc - DO NOT USE'),

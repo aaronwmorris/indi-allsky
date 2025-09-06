@@ -104,9 +104,20 @@ class TimelapseGenerator(object):
 
         cmd = ['ffmpeg']
 
+
         # add codec options
         if self.codec in ['h264_qsv']:
+            ### Intel QSV
             cmd.extend(['-init_hw_device', 'qsv=hw', '-filter_hw_device', 'hw'])
+        elif self.codec in ['h264_nvenc']:
+            ### Nvidia NVENC
+            #cmd.extend([])  # nothing to add currently
+            pass
+        elif self.codec in ['h264_vaapi']:
+            ### AMD VAAPI
+            #cmd.extend([])  # nothing to add currently
+            pass
+
 
         cmd.extend([
             '-y',
@@ -116,7 +127,7 @@ class TimelapseGenerator(object):
             #'-start_number', '0',
             #'-pattern_type', 'glob',
             '-i', '{0:s}/%05d.{1:s}'.format(str(seqfolder), self.config['IMAGE_FILE_TYPE']),
-            '-vcodec', '{0:s}'.format(self.codec),
+            '-c:v', '{0:s}'.format(self.codec),
             '-b:v', '{0:s}'.format(self.bitrate),
             #'-filter:v', 'setpts=50*PTS',
             '-pix_fmt', 'yuv420p',
