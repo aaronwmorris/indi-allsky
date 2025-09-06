@@ -2911,7 +2911,7 @@ def TEMP_SENSOR__AS3935_SPIKE_REJECTION_validator(form, field):
     if field.data < 1:
         raise ValidationError('Spike Rejection must be 1 to 11')
 
-    if field.data > 7:
+    if field.data > 11:
         raise ValidationError('Spike Rejection must be 1 to 11')
 
 
