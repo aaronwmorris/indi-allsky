@@ -14,6 +14,13 @@ logger = logging.getLogger('indi_allsky')
 
 class TimelapseGenerator(object):
 
+    ### System default
+    ffmpeg_bin = 'ffmpeg'
+
+    ### jellyfin-ffmpeg
+    #ffmpeg_bin = '/usr/lib/jellyfin-ffmpeg/ffmpeg'
+
+
     def __init__(
         self,
         config,
@@ -102,7 +109,7 @@ class TimelapseGenerator(object):
 
         start = time.time()
 
-        cmd = ['ffmpeg']
+        cmd = [self.ffmpeg_bin]
 
 
         # add codec options
