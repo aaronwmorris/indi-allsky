@@ -14,6 +14,13 @@ logger = logging.getLogger('indi_allsky')
 
 class TimelapseGenerator(object):
 
+    ### System default
+    ffmpeg_bin = 'ffmpeg'
+
+    ### jellyfin-ffmpeg
+    #ffmpeg_bin = '/usr/lib/jellyfin-ffmpeg/ffmpeg'
+
+
     def __init__(
         self,
         config,
@@ -102,11 +109,22 @@ class TimelapseGenerator(object):
 
         start = time.time()
 
-        cmd = ['ffmpeg']
+        cmd = [self.ffmpeg_bin]
+
 
         # add codec options
         if self.codec in ['h264_qsv']:
+            ### Intel QSV
             cmd.extend(['-init_hw_device', 'qsv=hw', '-filter_hw_device', 'hw'])
+        elif self.codec in ['h264_nvenc']:
+            ### Nvidia NVENC
+            #cmd.extend([])  # nothing to add currently
+            pass
+        elif self.codec in ['h264_vaapi']:
+            ### AMD VAAPI
+            #cmd.extend([])  # nothing to add currently
+            pass
+
 
         cmd.extend([
             '-y',
@@ -116,7 +134,7 @@ class TimelapseGenerator(object):
             #'-start_number', '0',
             #'-pattern_type', 'glob',
             '-i', '{0:s}/%05d.{1:s}'.format(str(seqfolder), self.config['IMAGE_FILE_TYPE']),
-            '-vcodec', '{0:s}'.format(self.codec),
+            '-c:v', '{0:s}'.format(self.codec),
             '-b:v', '{0:s}'.format(self.bitrate),
             #'-filter:v', 'setpts=50*PTS',
             '-pix_fmt', 'yuv420p',
