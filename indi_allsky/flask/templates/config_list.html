@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Config History{% endblock %}
+
+{% block head %}
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 5px;
+}
+</style>
+<script type="text/javascript">
+var camera_id = {{ camera_id }};
+</script>
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+<table>
+<tr>
+  <th>ID</th>
+  <th>Create</th>
+  <th>User</th>
+  <th>Level</th>
+  <th>Encrypted<br>Passwords</th>
+  <th>Link</th>
+  <th>Note</th>
+</div>
+{% for config in config_list %}
+<tr>
+  <td>{{ config.id}}</td>
+  <td>{{ config.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+  <td>{{ config.username }}</td>
+  <td>{{ config.level }}</td>
+  <td>{{ config.encrypted }}</td>
+  <td><a href="{{ url_for('indi_allsky.config_download_view', id=config.id) }}" class="text-decoration-none link-info"><span class="badge bg-primary">Download</span></a></td>
+  <td>{{ config.note }}</td>
+</tr>
+{% endfor %}
+</table>
+  <hr>
+    <div><a href="{{ url_for('indi_allsky.config_restore_view') }}"><span class="badge bg-danger text-dark">Config Restore</span></a></div>
+  <hr>
+</div>
+<div style="height:20px;"></div>
+<div style="font-size:12px;">Note: Configs from deleted users will not be displayed, but they are still in the database</div>
+{% endblock %}

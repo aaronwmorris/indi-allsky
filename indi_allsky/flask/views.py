@@ -2,7 +2,9 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 import io
+import tempfile
 import json
+from collections import OrderedDict
 import time
 import math
 import base64
@@ -31,6 +33,7 @@ from flask import redirect
 from flask import Response
 from flask import url_for
 from flask import send_from_directory
+from flask import send_file
 from flask import current_app as app
 
 from flask_login import login_required
@@ -104,6 +107,7 @@ from .forms import IndiAllskyLongTermKeogramForm
 from .forms import IndiAllskyNetworkManagerForm
 from .forms import IndiAllskyDriveManagerForm
 from .forms import IndiAllskyImageCircleHelperForm
+from .forms import IndiAllskyConfigRestoreForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -1786,6 +1790,9 @@ class ConfigView(FormView):
             context['camera_maxExposure'] = self.camera.maxExposure
 
 
+        context['config_id'] = self.indi_allsky_config_id
+
+
         fits_enabled = self.indi_allsky_config.get('IMAGE_SAVE_FITS')
         fits_save_period = self.indi_allsky_config.get('IMAGE_SAVE_FITS_PERIOD', 7200)
 
@@ -2830,8 +2837,10 @@ class AjaxConfigView(BaseView):
         )
 
         for leaf in leaf_list:
-            if not self.indi_allsky_config.get(leaf):
-                self.indi_allsky_config[leaf] = {}
+            try:
+                self.indi_allsky_config[leaf]
+            except KeyError:
+                self.indi_allsky_config[leaf] = dict()
 
 
         if not self.indi_allsky_config['CCD_CONFIG'].get('NIGHT'):
@@ -7694,6 +7703,196 @@ class ConfigListView(TemplateView):
         return context
 
 
+class ConfigDownloadView(BaseView):
+    decorators = [login_required]
+    methods = ['GET']
+
+
+    def dispatch_request(self):
+        config_id = int(request.args.get('id', -1))
+
+        # not catching NoResultFound
+        config_entry = IndiAllSkyDbConfigTable.query\
+            .filter(IndiAllSkyDbConfigTable.id == config_id)\
+            .one()
+
+
+        config = dict(config_entry.data)
+
+        config_str = json.dumps(config, indent=4, ensure_ascii=False)
+        config_buffer = io.BytesIO(config_str.encode())
+
+
+        data = {
+            'id'    : config_entry.id,
+            'ts'    : datetime.now(),
+            'level' : config_entry.level.replace('.', '-'),
+        }
+
+        download_name = 'config_indi-allsky_id-{id:d}_level-{level:s}_{ts:%Y%m%d_%H%M%S}.json'.format(**data)
+
+        return send_file(config_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
+
+
+class ConfigRestoreView(TemplateView):
+    decorators = [login_required]
+
+    def get_context(self):
+        context = super(ConfigRestoreView, self).get_context()
+
+        context['camera_id'] = self.camera.id
+
+        context['form_config_restore'] = IndiAllskyConfigRestoreForm(indi_allsky_config=self.indi_allsky_config)
+
+        return context
+
+
+class AjaxConfigRestoreView(BaseView):
+    decorators = [login_required]
+    methods = ['POST']
+
+
+    def dispatch_request(self):
+        if not current_user.is_admin:
+            return jsonify({}), 400
+
+        form_config_restore = IndiAllskyConfigRestoreForm(data=request.form)
+
+        if not form_config_restore.validate():
+            form_errors = form_config_restore.errors  # this must be a property
+            return jsonify(form_errors), 400
+
+
+        config_form_file = request.files['CONFIG_UPLOAD']
+        reset_keys = request.form.get('RESET_KEYS')
+        flush_configs = request.form.get('FLUSH_CONFIGS')
+
+
+        f_tmp_config = tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.json')
+        f_tmp_config.close()
+
+        tmp_config_p = Path(f_tmp_config.name)
+
+        config_form_file.save(str(tmp_config_p))
+
+
+        file_size = tmp_config_p.stat().st_size
+        if file_size == 0:
+            error_data = {
+                'form_global' : ['Please fix the errors above'],
+                'CONFIG_UPLOAD' : ['File is empty'],
+            }
+            tmp_config_p.unlink()  # cleanup
+            return jsonify(error_data), 400
+
+        if file_size > 100000:
+            error_data = {
+                'form_global' : ['Please fix the errors above'],
+                'CONFIG_UPLOAD' : ['File too large'],
+            }
+            tmp_config_p.unlink()  # cleanup
+            return jsonify(error_data), 400
+
+
+        try:
+            with io.open(str(tmp_config_p), 'rb') as config_f:
+                config_dict = json.load(config_f, object_pairs_hook=OrderedDict)
+        except ValueError:
+            error_data = {
+                'form_global' : ['Please fix the errors above'],
+                'CONFIG_UPLOAD' : ['Invalid JSON'],
+            }
+            return jsonify(error_data), 400
+        finally:
+            tmp_config_p.unlink()  # cleanup
+
+
+        # basic config validation
+        if not isinstance(config_dict.get('INDI_SERVER'), str) or not isinstance(config_dict.get('CCD_CONFIG'), dict) or not isinstance(config_dict.get('INDI_CONFIG_DEFAULTS'), dict):
+            error_data = {
+                'form_global' : ['Please fix the errors above'],
+                'CONFIG_UPLOAD' : ['Not a valid indi-allsky config'],
+            }
+            return jsonify(error_data), 400
+
+
+        # save new config
+        if not app.config['LOGIN_DISABLED']:
+            username = current_user.username
+        else:
+            username = 'system'
+
+
+        try:
+            # replace config
+            self._indi_allsky_config_obj.config = config_dict
+            self._indi_allsky_config_obj.save(username, 'Manual config restore from upload')
+        except ConfigSaveException as e:
+            error_data = {
+                'form_global' : ['Please fix the errors above'],
+                'CONFIG_UPLOAD' : [str(e)],
+            }
+            return jsonify(error_data), 400
+
+
+        app.logger.info('Restored config from upload')
+
+
+        if flush_configs:
+            flush_entries = IndiAllSkyDbConfigTable.query\
+                .filter(IndiAllSkyDbConfigTable.id != self._indi_allsky_config_obj.config_id)
+
+            flush_entries.delete()
+            db.session.commit()
+
+            app.logger.warning('Config entries flushed')
+
+
+        if reset_keys:
+            import shutil
+            import secrets
+            from cryptography.fernet import Fernet
+
+
+            flask_config_p = Path('/etc/indi-allsky/flask.json')
+
+
+            with io.open(str(flask_config_p), 'rb') as flask_config_f:
+                flask_config = json.load(flask_config_f, object_pairs_hook=OrderedDict)
+
+
+            new_flask_secret_key = secrets.token_hex()
+            new_flask_password_key = Fernet.generate_key().decode()
+
+
+            flask_config['SECRET_KEY'] = new_flask_secret_key
+            flask_config['PASSWORD_KEY'] = new_flask_password_key
+
+
+            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json', encoding='utf-8') as f_tmp_config:
+                json.dump(
+                    flask_config,
+                    f_tmp_config,
+                    indent=2,  # matches jq output
+                    ensure_ascii=False,
+                )
+
+                tmp_config_p = Path(f_tmp_config.name)
+
+
+            shutil.copy2(str(tmp_config_p), str(flask_config_p))
+            tmp_config_p.unlink()
+
+            flask_config_p.chmod(0o660)
+
+            app.logger.warning('Reset security keys')
+
+
+        message = {
+            'success-message' : 'Restored Config',
+        }
+        return jsonify(message)
+
 
 class AjaxSelectCameraView(BaseView):
     methods = ['POST']
@@ -10202,6 +10401,10 @@ bp_allsky.add_url_rule('/ajax/minigenerate', view_func=AjaxMiniTimelapseGenerato
 
 bp_allsky.add_url_rule('/config', view_func=ConfigView.as_view('config_view', template_name='config.html'))
 bp_allsky.add_url_rule('/ajax/config', view_func=AjaxConfigView.as_view('ajax_config_view'))
+bp_allsky.add_url_rule('/config/list', view_func=ConfigListView.as_view('config_list_view', template_name='config_list.html'))
+bp_allsky.add_url_rule('/config/download', view_func=ConfigDownloadView.as_view('config_download_view'))
+bp_allsky.add_url_rule('/config/restore', view_func=ConfigRestoreView.as_view('config_restore_view', template_name='config_restore.html'))
+bp_allsky.add_url_rule('/ajax/config/restore', view_func=AjaxConfigRestoreView.as_view('ajax_config_restore_view'))
 
 bp_allsky.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp_allsky.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
@@ -10279,5 +10482,4 @@ bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view',
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
-bp_allsky.add_url_rule('/configlist', view_func=ConfigListView.as_view('configlist_view', template_name='configlist.html'))
 

@@ -24,6 +24,7 @@ from .flask import db
 from sqlalchemy.orm.exc import NoResultFound
 
 from .version import __config_level__
+from .exceptions import ConfigSaveException
 
 
 app = create_app()
@@ -121,7 +122,7 @@ class IndiAllSkyConfigBase(object):
         "LOCATION_NAME"      : "",
         "LOCATION_LATITUDE"  : 33.0,
         "LOCATION_LONGITUDE" : -84.0,
-        "LOCATION_ELEVATION" : 300.0,
+        "LOCATION_ELEVATION" : 300,
         "CAPTURE_PAUSE"            : False,
         "TIMELAPSE_ENABLE"         : True,
         "TIMELAPSE_SKIP_FRAMES"    : 4,
@@ -143,8 +144,8 @@ class IndiAllSkyConfigBase(object):
         "CLAHE_CLIPLIMIT"          : 3.0,
         "CLAHE_GRIDSIZE"           : 8,
         "NIGHT_SUN_ALT_DEG"        : -6.0,
-        "NIGHT_MOONMODE_ALT_DEG"   : 0,
-        "NIGHT_MOONMODE_PHASE"     : 33,
+        "NIGHT_MOONMODE_ALT_DEG"   : 0.0,
+        "NIGHT_MOONMODE_PHASE"     : 33.0,
         "WEB_NONLOCAL_IMAGES"      : False,
         "WEB_LOCAL_IMAGES_ADMIN"   : False,
         "WEB_EXTRA_TEXT"           : "",
@@ -164,7 +165,7 @@ class IndiAllSkyConfigBase(object):
             "MOONMODE"          : False,
             "DAYTIME"           : False,
         },
-        "KEOGRAM_ANGLE"         : 0,
+        "KEOGRAM_ANGLE"         : 0.0,
         "KEOGRAM_H_SCALE"       : 100,
         "KEOGRAM_V_SCALE"       : 33,
         "KEOGRAM_CROP_TOP"      : 0,  # percent
@@ -218,7 +219,7 @@ class IndiAllSkyConfigBase(object):
         "IMAGE_ROTATE"     : "",  # empty, ROTATE_90_CLOCKWISE, ROTATE_90_COUNTERCLOCKWISE, ROTATE_180
         "IMAGE_ROTATE_ANGLE" : 0,
         "IMAGE_ROTATE_KEEP_SIZE"   : False,
-        #"IMAGE_ROTATE_WITH_OFFSET" : False,
+        #"IMAGE_ROTATE_WITH_OFFSET" : False,  # not used yet
         "IMAGE_FLIP_V"     : True,
         "IMAGE_FLIP_H"     : True,
         "IMAGE_SCALE"      : 100,
@@ -727,10 +728,6 @@ class IndiAllSkyConfigBase(object):
     def base_config(self):
         return self._base_config
 
-    @base_config.setter
-    def base_config(self, new_base_config):
-        pass  # read only
-
 
 class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
@@ -752,6 +749,15 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
     @property
     def config(self):
         return self._config
+
+    @config.setter
+    def config(self, new_config):
+        # basic validation
+        if not isinstance(new_config.get('INDI_SERVER'), str) or not isinstance(new_config.get('CCD_CONFIG'), dict) or not isinstance(new_config.get('INDI_CONFIG_DEFAULTS'), dict):
+            raise ConfigSaveException('Not a valid indi-allsky config')
+
+        self._config = OrderedDict(new_config)
+
 
     @property
     def config_id(self):
@@ -814,7 +820,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 
 
     def _decrypt_passwords(self):
-        config = self._config.copy()
+        config = self.config.copy()
 
         if config['ENCRYPT_PASSWORDS']:
             f_key = Fernet(app.config['PASSWORD_KEY'].encode())
@@ -921,6 +927,25 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             adsb__password = config.get('ADSB', {}).get('PASSWORD', '')
 
 
+        # sanity check
+        leaf_list = (
+            'FILETRANSFER',
+            'S3UPLOAD',
+            'MQTTPUBLISH',
+            'SYNCAPI',
+            'PYCURL_CAMERA',
+            'TEMP_SENSOR',
+            'DEVICE',
+            'ADSB',
+        )
+
+        for leaf in leaf_list:
+            try:
+                config[leaf]
+            except KeyError:
+                config[leaf] = dict()
+
+
         config['FILETRANSFER']['PASSWORD'] = filetransfer__password
         config['FILETRANSFER']['PASSWORD_E'] = ''
         config['S3UPLOAD']['SECRET_KEY'] = s3upload__secret_key
@@ -953,7 +978,11 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             .one()
 
 
+        self._validateConfig()
+
+
         config, encrypted = self._encryptPasswords()
+
 
         config_entry = self._setConfigEntry(config, user_entry, note, encrypted)
 
@@ -962,15 +991,71 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         return config_entry
 
 
+    def _validateConfig(self):
+        skip_keys = [
+            'INDI_CONFIG_DEFAULTS',
+            'INDI_CONFIG_DAY',
+        ]
+
+        skip_keys_l2 = [
+            ['FILETRANSFER', 'LIBCURL_OPTIONS'],
+        ]
+
+
+        for key in self.config.keys():
+            if key in skip_keys:
+                #app.logger.info('Skipping key [%s]', str(key))
+                continue
+
+
+            if isinstance(self.config[key], dict):
+                # check 2nd level dict entries
+                for key_l2 in self.config[key].keys():
+
+                    if key in [x[0] for x in skip_keys_l2] and key_l2 in [x[1] for x in skip_keys_l2]:
+                        #app.logger.info('Skipping key [%s][%s]', str(key), str(key_l2))
+                        continue
+
+
+                    try:
+                        if isinstance(self.config[key][key_l2], int):
+                            # jq will convert floats that end in .0 to ints
+                            valid_types = (int, float)
+                        else:
+                            valid_types = type(self.base_config[key][key_l2])
+
+
+                        if not isinstance(self.config[key][key_l2], valid_types):
+                            app.logger.error('Config key has wrong type: [%s][%s] (%s vs %s)', str(key), str(key_l2), str(type(self.base_config[key][key_l2])), str(type(self.config[key][key_l2])))
+                            raise ConfigSaveException('Config key has wrong type: [{0:s}][{1:s}]'.format(str(key), str(key_l2)))
+                    except KeyError:
+                        app.logger.warning('Config key not found in base config: [%s][%s]', str(key), str(key_l2))
+
+            else:
+                try:
+                    if isinstance(self.config[key], int):
+                        # jq will convert floats that end in .0 to ints
+                        valid_types = (int, float)
+                    else:
+                        valid_types = type(self.base_config[key])
+
+
+                    if not isinstance(self.config[key], valid_types):
+                        app.logger.error('Config key has wrong type: [%s] (%s vs %s)', str(key), str(type(self.base_config[key])), str(type(self.config[key])))
+                        raise ConfigSaveException('Config key has wrong type: [{0:s}]'.format(str(key)))
+                except KeyError:
+                    app.logger.warning('Config key not found in base config: [%s]', str(key))
+
+
     def _encryptPasswords(self):
-        config = self._config.copy()
+        config = self.config.copy()
 
         if config['ENCRYPT_PASSWORDS']:
             encrypted = True
 
             f_key = Fernet(app.config['PASSWORD_KEY'].encode())
 
-            filetransfer__password = str(config['FILETRANSFER']['PASSWORD'])
+            filetransfer__password = str(config.get('FILETRANSFER', {}).get('PASSWORD', ''))
             if filetransfer__password:
                 filetransfer__password_e = f_key.encrypt(filetransfer__password.encode()).decode()
                 filetransfer__password = ''
@@ -979,7 +1064,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 filetransfer__password = ''
 
 
-            s3upload__secret_key = str(config['S3UPLOAD']['SECRET_KEY'])
+            s3upload__secret_key = str(config.get('S3UPLOAD', {}).get('SECRET_KEY', ''))
             if s3upload__secret_key:
                 s3upload__secret_key_e = f_key.encrypt(s3upload__secret_key.encode()).decode()
                 s3upload__secret_key = ''
@@ -988,7 +1073,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 s3upload__secret_key = ''
 
 
-            mqttpublish__password = str(config['MQTTPUBLISH']['PASSWORD'])
+            mqttpublish__password = str(config.get('MQTTPUBLISH', {}).get('PASSWORD', ''))
             if mqttpublish__password:
                 mqttpublish__password_e = f_key.encrypt(mqttpublish__password.encode()).decode()
                 mqttpublish__password = ''
@@ -997,7 +1082,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 mqttpublish__password = ''
 
 
-            syncapi__apikey = str(config['SYNCAPI']['APIKEY'])
+            syncapi__apikey = str(config.get('SYNCAPI', {}).get('APIKEY', ''))
             if syncapi__apikey:
                 syncapi__apikey_e = f_key.encrypt(syncapi__apikey.encode()).decode()
                 syncapi__apikey = ''
@@ -1006,7 +1091,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 syncapi__apikey = ''
 
 
-            pycurl_camera__password = str(config['PYCURL_CAMERA']['PASSWORD'])
+            pycurl_camera__password = str(config.get('PYCURL_CAMERA', {}).get('PASSWORD', ''))
             if pycurl_camera__password:
                 pycurl_camera__password_e = f_key.encrypt(pycurl_camera__password.encode()).decode()
                 pycurl_camera__password = ''
@@ -1015,7 +1100,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 pycurl_camera__password = ''
 
 
-            temp_sensor__openweathermap_apikey = str(config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'])
+            temp_sensor__openweathermap_apikey = str(config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', ''))
             if temp_sensor__openweathermap_apikey:
                 temp_sensor__openweathermap_apikey_e = f_key.encrypt(temp_sensor__openweathermap_apikey.encode()).decode()
                 temp_sensor__openweathermap_apikey = ''
@@ -1024,7 +1109,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__openweathermap_apikey = ''
 
 
-            temp_sensor__wunderground_apikey = str(config['TEMP_SENSOR']['WUNDERGROUND_APIKEY'])
+            temp_sensor__wunderground_apikey = str(config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', ''))
             if temp_sensor__wunderground_apikey:
                 temp_sensor__wunderground_apikey_e = f_key.encrypt(temp_sensor__wunderground_apikey.encode()).decode()
                 temp_sensor__wunderground_apikey = ''
@@ -1033,7 +1118,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__wunderground_apikey = ''
 
 
-            temp_sensor__astrospheric_apikey = str(config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY'])
+            temp_sensor__astrospheric_apikey = str(config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', ''))
             if temp_sensor__astrospheric_apikey:
                 temp_sensor__astrospheric_apikey_e = f_key.encrypt(temp_sensor__astrospheric_apikey.encode()).decode()
                 temp_sensor__astrospheric_apikey = ''
@@ -1042,7 +1127,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__astrospheric_apikey = ''
 
 
-            temp_sensor__mqtt_password = str(config['TEMP_SENSOR']['MQTT_PASSWORD'])
+            temp_sensor__mqtt_password = str(config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD', ''))
             if temp_sensor__mqtt_password:
                 temp_sensor__mqtt_password_e = f_key.encrypt(temp_sensor__mqtt_password.encode()).decode()
                 temp_sensor__mqtt_password = ''
@@ -1051,7 +1136,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 temp_sensor__mqtt_password = ''
 
 
-            device__mqtt_password = str(config['DEVICE']['MQTT_PASSWORD'])
+            device__mqtt_password = str(config.get('DEVICE', {}).get('MQTT_PASSWORD', ''))
             if device__mqtt_password:
                 device__mqtt_password_e = f_key.encrypt(device__mqtt_password.encode()).decode()
                 device__mqtt_password = ''
@@ -1060,7 +1145,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 device__mqtt_password = ''
 
 
-            adsb__password = str(config['ADSB']['PASSWORD'])
+            adsb__password = str(config.get('ADSB', {}).get('PASSWORD', ''))
             if adsb__password:
                 adsb__password_e = f_key.encrypt(adsb__password.encode()).decode()
                 adsb__password = ''
@@ -1072,28 +1157,47 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             # passwords should not be encrypted
             encrypted = False
 
-            filetransfer__password = str(config['FILETRANSFER']['PASSWORD'])
+            filetransfer__password = str(config.get('FILETRANSFER', {}).get('PASSWORD', ''))
             filetransfer__password_e = ''
-            s3upload__secret_key = str(config['S3UPLOAD']['SECRET_KEY'])
+            s3upload__secret_key = str(config.get('S3UPLOAD', {}).get('SECRET_KEY', ''))
             s3upload__secret_key_e = ''
-            mqttpublish__password = str(config['MQTTPUBLISH']['PASSWORD'])
+            mqttpublish__password = str(config.get('MQTTPUBLISH', {}).get('PASSWORD', ''))
             mqttpublish__password_e = ''
-            syncapi__apikey = str(config['SYNCAPI']['APIKEY'])
+            syncapi__apikey = str(config.get('SYNCAPI', {}).get('APIKEY', ''))
             syncapi__apikey_e = ''
-            pycurl_camera__password = str(config['PYCURL_CAMERA']['PASSWORD'])
+            pycurl_camera__password = str(config.get('PYCURL_CAMERA', {}).get('PASSWORD', ''))
             pycurl_camera__password_e = ''
-            temp_sensor__openweathermap_apikey = str(config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'])
+            temp_sensor__openweathermap_apikey = str(config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', ''))
             temp_sensor__openweathermap_apikey_e = ''
-            temp_sensor__wunderground_apikey = str(config['TEMP_SENSOR']['WUNDERGROUND_APIKEY'])
+            temp_sensor__wunderground_apikey = str(config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', ''))
             temp_sensor__wunderground_apikey_e = ''
-            temp_sensor__astrospheric_apikey = str(config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY'])
+            temp_sensor__astrospheric_apikey = str(config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', ''))
             temp_sensor__astrospheric_apikey_e = ''
-            temp_sensor__mqtt_password = str(config['TEMP_SENSOR']['MQTT_PASSWORD'])
+            temp_sensor__mqtt_password = str(config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD', ''))
             temp_sensor__mqtt_password_e = ''
-            device__mqtt_password = str(config['DEVICE']['MQTT_PASSWORD'])
+            device__mqtt_password = str(config.get('DEVICE', {}).get('MQTT_PASSWORD', ''))
             device__mqtt_password_e = ''
-            adsb__password = str(config['ADSB']['PASSWORD'])
+            adsb__password = str(config.get('ADSB', {}).get('PASSWORD', ''))
             adsb__password_e = ''
+
+
+        # sanity check
+        leaf_list = (
+            'FILETRANSFER',
+            'S3UPLOAD',
+            'MQTTPUBLISH',
+            'SYNCAPI',
+            'PYCURL_CAMERA',
+            'TEMP_SENSOR',
+            'DEVICE',
+            'ADSB',
+        )
+
+        for leaf in leaf_list:
+            try:
+                config[leaf]
+            except KeyError:
+                config[leaf] = dict()
 
 
         config['FILETRANSFER']['PASSWORD'] = filetransfer__password
@@ -1199,7 +1303,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
         # check a few values to make sure this is a valid config
-        if not c.get('INDI_SERVER') or not c.get('CCD_CONFIG'):
+        if not isinstance(c.get('INDI_SERVER'), str) or not isinstance(c.get('CCD_CONFIG'), dict) or not isinstance(c.get('INDI_CONFIG_DEFAULTS'), dict):
             logger.error('Not a valid indi-allsky config')
             sys.exit(1)
 

@@ -54,6 +54,7 @@ class BaseView(View):
         self._indi_allsky_config_obj = IndiAllSkyConfig()
 
         self.indi_allsky_config = self._indi_allsky_config_obj.config
+        self.indi_allsky_config_id = self._indi_allsky_config_obj.config_id
 
         self._miscDb = miscDb(self.indi_allsky_config)
 
