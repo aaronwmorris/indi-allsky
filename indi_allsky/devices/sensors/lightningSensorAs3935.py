@@ -207,6 +207,14 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
             raise SensorException('AS3935 is not connected, check wiring')
 
 
+        self.as3935.reset()
+        time.sleep(1.0)
+
+        if not self.as3935.calibrate():
+            logger.error('[%s] AS3935 calibration failed', self.name)
+            time.sleep(3.0)
+
+
         if self.afemode_outdoor:
             self.as3935.indoor_outdoor = self.as3935.OUTDOOR
         else:
@@ -295,6 +303,14 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
 
         if not self.as3935.connected:
             raise SensorException('AS3935 is not connected, check wiring')
+
+
+        self.as3935.reset()
+        time.sleep(1.0)
+
+        if not self.as3935.calibrate():
+            logger.error('[%s] AS3935 calibration failed', self.name)
+            time.sleep(3.0)
 
 
         if self.afemode_outdoor:
