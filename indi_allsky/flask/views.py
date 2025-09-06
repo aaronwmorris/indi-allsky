@@ -2837,8 +2837,10 @@ class AjaxConfigView(BaseView):
         )
 
         for leaf in leaf_list:
-            if not self.indi_allsky_config.get(leaf):
-                self.indi_allsky_config[leaf] = {}
+            try:
+                self.indi_allsky_config[leaf]
+            except KeyError:
+                self.indi_allsky_config[leaf] = dict()
 
 
         if not self.indi_allsky_config['CCD_CONFIG'].get('NIGHT'):

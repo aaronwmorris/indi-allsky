@@ -927,6 +927,25 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             adsb__password = config.get('ADSB', {}).get('PASSWORD', '')
 
 
+        # sanity check
+        leaf_list = (
+            'FILETRANSFER',
+            'S3UPLOAD',
+            'MQTTPUBLISH',
+            'SYNCAPI',
+            'PYCURL_CAMERA',
+            'TEMP_SENSOR',
+            'DEVICE',
+            'ADSB',
+        )
+
+        for leaf in leaf_list:
+            try:
+                config[leaf]
+            except KeyError:
+                config[leaf] = dict()
+
+
         config['FILETRANSFER']['PASSWORD'] = filetransfer__password
         config['FILETRANSFER']['PASSWORD_E'] = ''
         config['S3UPLOAD']['SECRET_KEY'] = s3upload__secret_key
@@ -1160,6 +1179,25 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             device__mqtt_password_e = ''
             adsb__password = str(config.get('ADSB', {}).get('PASSWORD', ''))
             adsb__password_e = ''
+
+
+        # sanity check
+        leaf_list = (
+            'FILETRANSFER',
+            'S3UPLOAD',
+            'MQTTPUBLISH',
+            'SYNCAPI',
+            'PYCURL_CAMERA',
+            'TEMP_SENSOR',
+            'DEVICE',
+            'ADSB',
+        )
+
+        for leaf in leaf_list:
+            try:
+                config[leaf]
+            except KeyError:
+                config[leaf] = dict()
 
 
         config['FILETRANSFER']['PASSWORD'] = filetransfer__password
