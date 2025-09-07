@@ -981,6 +981,7 @@ if [ "${BUILD_INDI_CORE:-ask}" == "true" ]; then
 
 
     INDI_CORE_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_core.XXXXXXXX")
+    echo "Dir: $INDI_CORE_BUILD"
     cd "$INDI_CORE_BUILD"
 
     # Setup build
@@ -1027,6 +1028,7 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
         #### libs ####
         if [ "$INDI_3RDPARTY_LIBRARIES" == "all" ]; then
             INDI_3RDPARTY_LIB_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_lib.XXXXXXXX")
+            echo "Dir: $INDI_3RDPARTY_LIB_BUILD"
             cd "$INDI_3RDPARTY_LIB_BUILD"
 
 
@@ -1062,6 +1064,7 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
 
 
                 INDI_3RDPARTY_LIB_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_lib.XXXXXXXX")
+                echo "Dir: $INDI_3RDPARTY_LIB_BUILD"
                 cd "$INDI_3RDPARTY_LIB_BUILD"
 
 
@@ -1093,6 +1096,7 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
         #### drivers ####
         if [ "$INDI_3RDPARTY_DRIVERS" == "all" ]; then
             INDI_3RDPARTY_DRIVER_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_driver.XXXXXXXX")
+            echo "Dir: $INDI_3RDPARTY_DRIVER_BUILD"
             cd "$INDI_3RDPARTY_DRIVER_BUILD"
 
             # Setup driver build
@@ -1126,6 +1130,7 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
 
 
                 INDI_3RDPARTY_DRIVER_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_driver.XXXXXXXX")
+                echo "Dir: $INDI_3RDPARTY_DRIVER_BUILD"
                 cd "$INDI_3RDPARTY_DRIVER_BUILD"
 
                 # Setup driver build
