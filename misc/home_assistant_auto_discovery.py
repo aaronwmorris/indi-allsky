@@ -14,6 +14,7 @@ import re
 import psutil
 import ssl
 import paho.mqtt.publish as publish
+import paho.mqtt.enums
 from pprint import pformat  # noqa: F401
 import logging
 
@@ -1023,6 +1024,7 @@ class HADiscovery(object):
             keepalive=60,
             auth=mq_auth,
             tls=mq_tls,
+            protocol=paho.mqtt.enums.MQTTProtocolVersion.MQTTv5,
         )
 
 
