@@ -293,6 +293,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         git \
         cpio \
         tzdata \
+        locales \
         ca-certificates \
         avahi-daemon \
         swig \
@@ -372,6 +373,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         git \
         cpio \
         tzdata \
+        locales \
         ca-certificates \
         avahi-daemon \
         swig \
@@ -452,6 +454,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         git \
         cpio \
         tzdata \
+        locales \
         ca-certificates \
         avahi-daemon \
         swig \
@@ -532,6 +535,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         git \
         cpio \
         tzdata \
+        locales \
         ca-certificates \
         avahi-daemon \
         swig \
@@ -615,6 +619,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         git \
         cpio \
         tzdata \
+        locales \
         ca-certificates \
         avahi-daemon \
         swig \
@@ -699,6 +704,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         git \
         cpio \
         tzdata \
+        locales \
         ca-certificates \
         avahi-daemon \
         swig \
