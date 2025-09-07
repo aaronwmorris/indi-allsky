@@ -17,6 +17,7 @@ export PATH
 #BUILD_INDI_CORE="true"
 #BUILD_INDI_3RDPARTY="true"
 #BUILD_INDI_CAMERA_VENDOR="zwo"
+#BUILD_INDI_MAKE_BUILD_TYPE="Debug"
 #MAKE_CONCURRENT=x
 
 
@@ -27,6 +28,7 @@ OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 INDISERVER_SERVICE_NAME="indiserver"
 INDI_AUTO_TAG="v2.1.5"
 INDI_AUTO_DRIVERS="supported"
+MAKE_BUILD_TYPE="${BUILD_INDI_MAKE_BUILD_TYPE:-Debug}"
 ### end config ###
 
 
@@ -981,10 +983,12 @@ if [ "${BUILD_INDI_CORE:-ask}" == "true" ]; then
 
 
     INDI_CORE_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_core.XXXXXXXX")
+    echo "Dir: $INDI_CORE_BUILD"
     cd "$INDI_CORE_BUILD"
 
     # Setup build
-    $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_core"
+    echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=\"$MAKE_BUILD_TYPE\" \"${PROJECTS_FOLDER}/src/indi_core\""
+    $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE="$MAKE_BUILD_TYPE" "${PROJECTS_FOLDER}/src/indi_core"
 
     # Compile
     make -j "$MAKE_CONCURRENT"
@@ -1026,11 +1030,13 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
         #### libs ####
         if [ "$INDI_3RDPARTY_LIBRARIES" == "all" ]; then
             INDI_3RDPARTY_LIB_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_lib.XXXXXXXX")
+            echo "Dir: $INDI_3RDPARTY_LIB_BUILD"
             cd "$INDI_3RDPARTY_LIB_BUILD"
 
 
             # Setup library build
-            $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBS=1 "${PROJECTS_FOLDER}/src/indi_3rdparty"
+            echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=\"$MAKE_BUILD_TYPE\" -DBUILD_LIBS=1 \"${PROJECTS_FOLDER}/src/indi_3rdparty\""
+            $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE="$MAKE_BUILD_TYPE" -DBUILD_LIBS=1 "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
             # Compile
             make -j "$MAKE_CONCURRENT"
@@ -1046,25 +1052,27 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
                 echo
                 echo "Building library: $INDI_LIB"
                 echo
-                sleep 3
+                sleep 1
 
 
                 if [ ! -d "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_LIB" ]; then
                     echo
                     echo "WARNING: Library not found: $INDI_LIB"
                     echo
-                    sleep 3
+                    sleep 1
 
                     continue
                 fi
 
 
                 INDI_3RDPARTY_LIB_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_lib.XXXXXXXX")
+                echo "Dir: $INDI_3RDPARTY_LIB_BUILD"
                 cd "$INDI_3RDPARTY_LIB_BUILD"
 
 
                 # Setup library build
-                $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_LIB"
+                echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=\"$MAKE_BUILD_TYPE\" \"${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_LIB\""
+                $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE="$MAKE_BUILD_TYPE" "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_LIB"
 
                 # Compile
                 make -j "$MAKE_CONCURRENT"
@@ -1090,10 +1098,12 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
         #### drivers ####
         if [ "$INDI_3RDPARTY_DRIVERS" == "all" ]; then
             INDI_3RDPARTY_DRIVER_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_driver.XXXXXXXX")
+            echo "Dir: $INDI_3RDPARTY_DRIVER_BUILD"
             cd "$INDI_3RDPARTY_DRIVER_BUILD"
 
             # Setup driver build
-            $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty"
+            echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=\"$MAKE_BUILD_TYPE\" \"${PROJECTS_FOLDER}/src/indi_3rdparty\""
+            $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE="$MAKE_BUILD_TYPE" "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
             # Compile
             make -j "$MAKE_CONCURRENT"
@@ -1108,24 +1118,26 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
                 echo
                 echo "Building driver: $INDI_DRIVER"
                 echo
-                sleep 3
+                sleep 1
 
 
                 if [ ! -d "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_DRIVER" ]; then
                     echo
                     echo "WARNING: Driver not found: $INDI_DRIVER"
                     echo
-                    sleep 3
+                    sleep 1
 
                     continue
                 fi
 
 
                 INDI_3RDPARTY_DRIVER_BUILD=$(mktemp --directory "${PROJECTS_FOLDER}/build/indi_3rdparty_driver.XXXXXXXX")
+                echo "Dir: $INDI_3RDPARTY_DRIVER_BUILD"
                 cd "$INDI_3RDPARTY_DRIVER_BUILD"
 
                 # Setup driver build
-                $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_DRIVER"
+                echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=\"$MAKE_BUILD_TYPE\" \"${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_DRIVER\""
+                $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE="$MAKE_BUILD_TYPE" "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_DRIVER"
 
                 # Compile
                 make -j "$MAKE_CONCURRENT"

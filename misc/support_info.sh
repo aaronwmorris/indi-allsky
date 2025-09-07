@@ -209,15 +209,48 @@ find /dev/bus/usb -ls || true
 
 echo
 echo "video device Permissions"
-ls -l /dev/video* || true
+find /dev -type c -name "video*" -ls || true
 
 echo
 echo "v4l info"
-v4l2-ctl --list-devices || true
+if which v4l2-ctl >/dev/null 2>&1; then
+    v4l2-ctl --list-devices || true
+else
+    echo "v4l2-ctl not installed"
+fi
+
+
+polkit_perms="
+    org.freedesktop.login1.power-off
+    org.freedesktop.login1.reboot
+    org.freedesktop.NetworkManager.network-control
+    org.freedesktop.NetworkManager.wifi.scan
+    org.freedesktop.udisks2.power-off-drive
+    org.freedesktop.timedate1.set-time
+    org.freedesktop.login1.halt
+"
+# halt is supposed to be denied
 
 echo
-echo "Module info"
-lsmod || true
+echo "polkit permissions"
+if which pkcheck >/dev/null 2>&1; then
+    for perm in $polkit_perms; do
+        if pkcheck -p "$PPID" -a "$perm" >/dev/null 2>&1; then
+            echo -n "Permitted: "
+        else
+            echo -n "Denied:    "
+        fi
+
+        echo "$perm"
+    done
+else
+    echo "pkcheck not installed"
+fi
+
+
+#echo
+#echo "Module info"
+#lsmod || true
 
 
 echo
@@ -279,7 +312,7 @@ ss -ant | grep 7624 || true
 
 echo
 echo "Detected indi properties"
-indi_getprop -v 2>&1 || true
+indi_getprop -v 2>&1 | grep -v "^Telescope Simulator" || true
 
 
 if pkg-config --exists libcamera; then
@@ -308,7 +341,7 @@ elif which libcamera-hello >/dev/null 2>&1; then
     libcamera-hello --list-cameras || true
 else
     echo
-    echo "libcamera-hello not available"
+    echo "libcamera-hello not installed"
 fi
 
 

@@ -4448,7 +4448,6 @@ class SystemInfoView(TemplateView):
 
     def get_context(self):
         import platform
-        import ccdproc
         import astropy
         import flask
         import numpy
@@ -4462,11 +4461,6 @@ class SystemInfoView(TemplateView):
             pycurl = None
 
         try:
-            import paramiko
-        except ImportError:
-            paramiko = None
-
-        try:
             import paho.mqtt as paho_mqtt
         except ImportError:
             paho_mqtt = None
@@ -4475,6 +4469,11 @@ class SystemInfoView(TemplateView):
             import PyIndi
         except ImportError:
             PyIndi = None
+
+        try:
+            import skyfield
+        except ImportError:
+            skyfield = None
 
         context = super(SystemInfoView, self).get_context()
 
@@ -4528,7 +4527,6 @@ class SystemInfoView(TemplateView):
         context['ephem_version'] = str(getattr(ephem, '__version__', -1))
         context['numpy_version'] = str(getattr(numpy, '__version__', -1))
         context['astropy_version'] = str(getattr(astropy, '__version__', -1))
-        context['ccdproc_version'] = str(getattr(ccdproc, '__version__', -1))
         context['flask_version'] = str(getattr(flask, '__version__', -1))
         context['dbus_version'] = str(getattr(dbus, '__version__', -1))
 
@@ -4537,11 +4535,6 @@ class SystemInfoView(TemplateView):
             context['pycurl_version'] = str(getattr(pycurl, 'version', -1))
         else:
             context['pycurl_version'] = 'Not installed'
-
-        if paramiko:
-            context['paramiko_version'] = str(getattr(paramiko, '__version__', -1))
-        else:
-            context['paramiko_version'] = 'Not installed'
 
         if paho_mqtt:
             context['pahomqtt_version'] = str(getattr(paho_mqtt, '__version__', -1))
@@ -4556,6 +4549,11 @@ class SystemInfoView(TemplateView):
             ))
         else:
             context['pyindi_version'] = 'Not installed'
+
+        if skyfield:
+            context['skyfield_version'] = str(getattr(skyfield, '__version__', -1))
+        else:
+            context['skyfield_version'] = 'Not installed'
 
 
         context['now'] = self.camera_now
