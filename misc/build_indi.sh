@@ -17,6 +17,7 @@ export PATH
 #BUILD_INDI_CORE="true"
 #BUILD_INDI_3RDPARTY="true"
 #BUILD_INDI_CAMERA_VENDOR="zwo"
+#BUILD_INDI_MAKE_BUILD_TYPE="Debug"
 #MAKE_CONCURRENT=x
 
 
@@ -27,6 +28,7 @@ OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 INDISERVER_SERVICE_NAME="indiserver"
 INDI_AUTO_TAG="v2.1.5"
 INDI_AUTO_DRIVERS="supported"
+MAKE_BUILD_TYPE="${BUILD_INDI_MAKE_BUILD_TYPE:-Debug}"
 ### end config ###
 
 
@@ -985,8 +987,8 @@ if [ "${BUILD_INDI_CORE:-ask}" == "true" ]; then
     cd "$INDI_CORE_BUILD"
 
     # Setup build
-    echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=Release \"${PROJECTS_FOLDER}/src/indi_core\""
-    $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_core"
+    echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=\"$MAKE_BUILD_TYPE\" \"${PROJECTS_FOLDER}/src/indi_core\""
+    $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE="$MAKE_BUILD_TYPE" "${PROJECTS_FOLDER}/src/indi_core"
 
     # Compile
     make -j "$MAKE_CONCURRENT"
@@ -1033,8 +1035,8 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
 
 
             # Setup library build
-            echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBS=1 \"${PROJECTS_FOLDER}/src/indi_3rdparty\""
-            $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBS=1 "${PROJECTS_FOLDER}/src/indi_3rdparty"
+            echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=\"$MAKE_BUILD_TYPE\" -DBUILD_LIBS=1 \"${PROJECTS_FOLDER}/src/indi_3rdparty\""
+            $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE="$MAKE_BUILD_TYPE" -DBUILD_LIBS=1 "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
             # Compile
             make -j "$MAKE_CONCURRENT"
@@ -1069,8 +1071,8 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
 
 
                 # Setup library build
-                echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=Release \"${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_LIB\""
-                $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_LIB"
+                echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=\"$MAKE_BUILD_TYPE\" \"${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_LIB\""
+                $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE="$MAKE_BUILD_TYPE" "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_LIB"
 
                 # Compile
                 make -j "$MAKE_CONCURRENT"
@@ -1100,8 +1102,8 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
             cd "$INDI_3RDPARTY_DRIVER_BUILD"
 
             # Setup driver build
-            echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=Release \"${PROJECTS_FOLDER}/src/indi_3rdparty\""
-            $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty"
+            echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=\"$MAKE_BUILD_TYPE\" \"${PROJECTS_FOLDER}/src/indi_3rdparty\""
+            $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE="$MAKE_BUILD_TYPE" "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
             # Compile
             make -j "$MAKE_CONCURRENT"
@@ -1134,8 +1136,8 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
                 cd "$INDI_3RDPARTY_DRIVER_BUILD"
 
                 # Setup driver build
-                echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=Release \"${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_DRIVER\""
-                $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_DRIVER"
+                echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=\"$MAKE_BUILD_TYPE\" \"${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_DRIVER\""
+                $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE="$MAKE_BUILD_TYPE" "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_DRIVER"
 
                 # Compile
                 make -j "$MAKE_CONCURRENT"
