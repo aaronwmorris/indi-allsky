@@ -227,7 +227,9 @@ polkit_perms="
     org.freedesktop.NetworkManager.wifi.scan
     org.freedesktop.udisks2.power-off-drive
     org.freedesktop.timedate1.set-time
+    org.freedesktop.login1.halt
 "
+# halt is supposed to be denied
 
 echo
 echo "polkit permissions"
