@@ -209,11 +209,7 @@ find /dev/bus/usb -ls || true
 
 echo
 echo "video device Permissions"
-if [ -d "/dev/video" ]; then
-    ls -l /dev/video* || true
-else
-    echo "No devices in /dev/video"
-fi
+find /dev -type c -name "video*" -ls || true
 
 echo
 echo "v4l info"
