@@ -215,6 +215,33 @@ echo
 echo "v4l info"
 v4l2-ctl --list-devices || true
 
+
+polkit_perms="
+    org.freedesktop.login1.power-off
+    org.freedesktop.login1.reboot
+    org.freedesktop.NetworkManager.network-control
+    org.freedesktop.NetworkManager.wifi.scan
+    org.freedesktop.udisks2.power-off-drive
+    org.freedesktop.timedate1.set-time
+"
+
+echo
+echo "polkit permissions"
+if which pkcheck >/dev/null 2>&1; then
+    for perm in $polkit_perms; do
+        if pkcheck -p "$PPID" -a "$perm" >/dev/null 2>&1; then
+            echo -n "Permitted: "
+        else
+            echo -n "Denied:    "
+        fi
+
+        echo "$perm"
+    done
+else
+    echo "pkcheck not installed"
+fi
+
+
 echo
 echo "Module info"
 lsmod || true
