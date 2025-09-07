@@ -209,11 +209,19 @@ find /dev/bus/usb -ls || true
 
 echo
 echo "video device Permissions"
-ls -l /dev/video* || true
+if [ -d "/dev/video" ]; then
+    ls -l /dev/video* || true
+else
+    echo "No devices in /dev/video"
+fi
 
 echo
 echo "v4l info"
-v4l2-ctl --list-devices || true
+if which v4l2-ctl >/dev/null 2>&1; then
+    v4l2-ctl --list-devices || true
+else
+    echo "v4l2-ctl not installed"
+fi
 
 
 polkit_perms="
@@ -335,7 +343,7 @@ elif which libcamera-hello >/dev/null 2>&1; then
     libcamera-hello --list-cameras || true
 else
     echo
-    echo "libcamera-hello not available"
+    echo "libcamera-hello not installed"
 fi
 
 
