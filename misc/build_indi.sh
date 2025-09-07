@@ -1046,14 +1046,14 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
                 echo
                 echo "Building library: $INDI_LIB"
                 echo
-                sleep 3
+                sleep 1
 
 
                 if [ ! -d "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_LIB" ]; then
                     echo
                     echo "WARNING: Library not found: $INDI_LIB"
                     echo
-                    sleep 3
+                    sleep 1
 
                     continue
                 fi
@@ -1108,14 +1108,14 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
                 echo
                 echo "Building driver: $INDI_DRIVER"
                 echo
-                sleep 3
+                sleep 1
 
 
                 if [ ! -d "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_DRIVER" ]; then
                     echo
                     echo "WARNING: Driver not found: $INDI_DRIVER"
                     echo
-                    sleep 3
+                    sleep 1
 
                     continue
                 fi
