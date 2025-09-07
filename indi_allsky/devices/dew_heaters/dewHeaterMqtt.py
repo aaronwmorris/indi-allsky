@@ -134,7 +134,6 @@ class DewHeaterMqttStandard(DewHeaterMqttBase):
         user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
         user_properties.UserProperty = [
             ("Content-Type", "application/json"),
-            ("content-encoding", "UTF-8"),
         ]
 
 
@@ -198,7 +197,6 @@ class DewHeaterMqttPwm(DewHeaterMqttBase):
         user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
         user_properties.UserProperty = [
             ("Content-Type", "application/json"),
-            ("content-encoding", "UTF-8"),
         ]
 
 
