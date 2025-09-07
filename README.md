@@ -197,7 +197,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## INDI support
 | Version         | Note |
 | --------------- | ---- |
-| v2.1.5          | **Recommended for new builds**<br>[indi_libcamera_ccd will not build](https://github.com/indilib/indi-3rdparty/issues/1128) This technically affects all versions of indilib due to changes in the libcamera source code |
+| v2.1.5          | **Recommended for new builds**<br>[indi_libcamera_ccd will not build](https://github.com/indilib/indi-3rdparty/issues/1128) This technically affects all versions of indilib due to changes in the libcamera source code.  Build using indi-3rdparty HEAD |
 | v2.1.4          |      |
 | v2.1.3          |      |
 | v2.1.2.1        |      |
