@@ -984,6 +984,7 @@ if [ "${BUILD_INDI_CORE:-ask}" == "true" ]; then
     cd "$INDI_CORE_BUILD"
 
     # Setup build
+    echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=Release \"${PROJECTS_FOLDER}/src/indi_core\""
     $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_core"
 
     # Compile
@@ -1030,6 +1031,7 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
 
 
             # Setup library build
+            echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBS=1 \"${PROJECTS_FOLDER}/src/indi_3rdparty\""
             $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release -DBUILD_LIBS=1 "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
             # Compile
@@ -1064,6 +1066,7 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
 
 
                 # Setup library build
+                echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=Release \"${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_LIB\""
                 $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_LIB"
 
                 # Compile
@@ -1093,6 +1096,7 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
             cd "$INDI_3RDPARTY_DRIVER_BUILD"
 
             # Setup driver build
+            echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=Release \"${PROJECTS_FOLDER}/src/indi_3rdparty\""
             $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty"
 
             # Compile
@@ -1125,6 +1129,7 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
                 cd "$INDI_3RDPARTY_DRIVER_BUILD"
 
                 # Setup driver build
+                echo "$CMAKE_BIN -DCMAKE_INSTALL_PREFIX=\"${INSTALL_PREFIX}\" -DCMAKE_BUILD_TYPE=Release \"${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_DRIVER\""
                 $CMAKE_BIN -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" -DCMAKE_BUILD_TYPE=Release "${PROJECTS_FOLDER}/src/indi_3rdparty/$INDI_DRIVER"
 
                 # Compile
