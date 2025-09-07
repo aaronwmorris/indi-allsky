@@ -67,6 +67,7 @@ class paho_mqtt(GenericFileTransfer):
         super(paho_mqtt, self).put(*args, **kwargs)
 
         import paho.mqtt.publish as publish
+        import paho.mqtt.enums
         from paho.mqtt import MQTTException
 
 
@@ -114,6 +115,7 @@ class paho_mqtt(GenericFileTransfer):
                 keepalive=60,
                 auth=self.mq_auth,
                 tls=self.mq_tls,
+                protocol=paho.mqtt.enums.MQTTProtocolVersion.MQTTv5,
             )
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e
