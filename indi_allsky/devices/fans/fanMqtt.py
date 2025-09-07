@@ -21,7 +21,6 @@ class FanMqttBase(FanBase):
 
         import ssl
         import paho.mqtt.client as mqtt
-        import paho.mqtt.enums
 
 
         host = self.config.get('DEVICE', {}).get('MQTT_HOST', 'localhost')
@@ -36,7 +35,7 @@ class FanMqttBase(FanBase):
 
         self.client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-            protocol=paho.mqtt.enums.MQTTProtocolVersion.MQTTv5,
+            protocol=mqtt.MQTTv5,
         )
 
 

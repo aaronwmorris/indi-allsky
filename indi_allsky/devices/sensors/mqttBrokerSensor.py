@@ -42,7 +42,6 @@ class MqttBrokerSensor(SensorBase):
 
         import ssl
         import paho.mqtt.client as mqtt
-        import paho.mqtt.enums
 
         logger.warning('Initializing [%s] MQTT Broker Sensor', self.name)
 
@@ -60,7 +59,7 @@ class MqttBrokerSensor(SensorBase):
 
         client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-            protocol=paho.mqtt.enums.MQTTProtocolVersion.MQTTv5,
+            protocol=mqtt.MQTTv5,
         )
 
 
