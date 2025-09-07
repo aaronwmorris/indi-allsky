@@ -242,9 +242,9 @@ else
 fi
 
 
-echo
-echo "Module info"
-lsmod || true
+#echo
+#echo "Module info"
+#lsmod || true
 
 
 echo
@@ -306,7 +306,7 @@ ss -ant | grep 7624 || true
 
 echo
 echo "Detected indi properties"
-indi_getprop -v 2>&1 || true
+indi_getprop -v 2>&1 | grep -v "^Telescope Simulator" || true
 
 
 if pkg-config --exists libcamera; then
