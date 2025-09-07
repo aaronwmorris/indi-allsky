@@ -3069,16 +3069,22 @@ echo "Setup indi-allsky virtualenv pth"
 echo
 echo
 echo
+
+echo "Optional task: Reconfigure your devices localization settings:"
 echo
+echo "    sudo dpkg-reconfigure locales"
+
 
 if [ ! "$INDIALLSKY_START" == "true" ]; then
+    echo
+    echo
     echo "Services may be started at the command line or can be started from the web interface"
     echo
     echo "    systemctl --user start indi-allsky"
-    echo
-    echo
 fi
 
+echo
+echo
 echo "The web interface may be accessed with the following URL"
 echo " (You may have to manually access by IP)"
 echo
