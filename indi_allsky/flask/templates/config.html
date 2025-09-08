@@ -8707,6 +8707,46 @@ $('#form_config').on('submit', function() {
 });
 
 
+function group_on_change(trigger_checkbox_field, group_fields, group_checkbox_fields) {
+    $('#' + trigger_checkbox_field).on('change', function() {
+        // logic is reversed
+        if (!$('#' + trigger_checkbox_field).prop('checked')) {
+            group_fields.forEach(item => {
+                $('#' + item).attr({'readonly': true, 'disabled': true});
+                $('#' + item).addClass('bg-dark text-secondary');
+            });
+
+            group_checkbox_fields.forEach(item => {
+                $('#' + item).attr({'readonly': true, 'disabled': true});
+            });
+        } else {
+            group_fields.forEach(item => {
+                $('#' + item).removeAttr('readonly disabled');
+                $('#' + item).removeClass('bg-dark text-secondary');
+            });
+
+            group_checkbox_fields.forEach(item => {
+                $('#' + item).removeAttr('readonly disabled');
+            });
+        }
+    });
+}
+
+
+function group_on_ready(trigger_checkbox_field, group_fields, group_checkbox_fields) {
+    if (!$('#' + trigger_checkbox_field).prop('checked')) {
+        group_fields.forEach(item => {
+            $('#' + item).attr({'readonly': true, 'disabled': true});
+            $('#' + item).addClass('bg-dark text-secondary');
+        });
+
+        group_checkbox_fields.forEach(item => {
+            $('#' + item).attr({'readonly': true, 'disabled': true});
+        });
+    }
+}
+
+
 // Global timelapse
 $('#TIMELAPSE_ENABLE').on('change', function() {
     if ($('#TIMELAPSE_ENABLE').prop('checked')) {
@@ -8753,98 +8793,54 @@ $('#DAYTIME_CAPTURE_SAVE').on('change', function() {
     }
 });
 
+
+var group_fields_focus = [
+    'FOCUS_DELAY',
+];
+
 // Focus mode
-$('#FOCUS_MODE').on('change', function() {
-    if ($('#FOCUS_MODE').prop('checked')) {
-        $('#FOCUS_DELAY').removeAttr('readonly');
-        $('#FOCUS_DELAY').removeAttr('disabled');
-        $('#FOCUS_DELAY').removeClass('bg-dark');
-        $('#FOCUS_DELAY').removeClass('text-secondary');
-    } else {
-        $('#FOCUS_DELAY').attr('readonly', true);
-        $('#FOCUS_DELAY').attr('disabled', true);
-        $('#FOCUS_DELAY').addClass('bg-dark');
-        $('#FOCUS_DELAY').addClass('text-secondary');
-    }
-});
+group_on_change('FOCUS_MODE', group_fields_focus, []);
+
+
+var group_fields_cooling = [
+    'CCD_TEMP',
+];
 
 // CCD_COOLING
-$('#CCD_COOLING').on('change', function() {
-    if ($('#CCD_COOLING').prop('checked')) {
-        $('#CCD_TEMP').removeAttr('readonly');
-        $('#CCD_TEMP').removeAttr('disabled');
-        $('#CCD_TEMP').removeClass('bg-dark');
-        $('#CCD_TEMP').removeClass('text-secondary');
-    } else {
-        $('#CCD_TEMP').attr('readonly', true);
-        $('#CCD_TEMP').attr('disabled', true);
-        $('#CCD_TEMP').addClass('bg-dark');
-        $('#CCD_TEMP').addClass('text-secondary');
-    }
-});
+group_on_change('CCD_COOLING', group_fields_cooling, []);
 
-$('#CCD_COOLING_DAY').on('change', function() {
-    if ($('#CCD_COOLING_DAY').prop('checked')) {
-        $('#CCD_TEMP_DAY').removeAttr('readonly');
-        $('#CCD_TEMP_DAY').removeAttr('disabled');
-        $('#CCD_TEMP_DAY').removeClass('bg-dark');
-        $('#CCD_TEMP_DAY').removeClass('text-secondary');
-    } else {
-        $('#CCD_TEMP_DAY').attr('readonly', true);
-        $('#CCD_TEMP_DAY').attr('disabled', true);
-        $('#CCD_TEMP_DAY').addClass('bg-dark');
-        $('#CCD_TEMP_DAY').addClass('text-secondary');
-    }
-});
+
+var group_fields_cooling_day = [
+    'CCD_TEMP_DAY',
+];
+
+group_on_change('CCD_COOLING_DAY', group_fields_cooling_day, []);
+
+
+var group_fields_libcamera_awb = [
+    'LIBCAMERA__AWB',
+];
 
 // libcamera AWB
-$('#LIBCAMERA__AWB_ENABLE').on('change', function() {
-    if ($('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
-        $('#LIBCAMERA__AWB').removeAttr('disabled');
-        $('#LIBCAMERA__AWB').removeClass('bg-dark');
-        $('#LIBCAMERA__AWB').removeClass('text-secondary');
-    } else {
-        $('#LIBCAMERA__AWB').attr('disabled', true);
-        $('#LIBCAMERA__AWB').addClass('bg-dark');
-        $('#LIBCAMERA__AWB').addClass('text-secondary');
-    }
-});
+group_on_change('LIBCAMERA__AWB_ENABLE', group_fields_libcamera_awb, []);
+
+
+var group_fields_libcamera_awb_day = [
+    'LIBCAMERA__AWB_DAY',
+];
 
 // libcamera AWB DAY
-$('#LIBCAMERA__AWB_ENABLE_DAY').on('change', function() {
-    if ($('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
-        $('#LIBCAMERA__AWB_DAY').removeAttr('disabled');
-        $('#LIBCAMERA__AWB_DAY').removeClass('bg-dark');
-        $('#LIBCAMERA__AWB_DAY').removeClass('text-secondary');
-    } else {
-        $('#LIBCAMERA__AWB_DAY').attr('disabled', true);
-        $('#LIBCAMERA__AWB_DAY').addClass('bg-dark');
-        $('#LIBCAMERA__AWB_DAY').addClass('text-secondary');
-    }
-});
+group_on_change('LIBCAMERA__AWB_ENABLE_DAY', group_fields_libcamera_awb_day, []);
+
+
+var group_fields_st_moonmode = [
+    'STARTRAILS_MOON_ALT_THOLD',
+    'STARTRAILS_MOON_PHASE_THOLD',
+];
 
 // startrails moonmode
-$('#STARTRAILS_MOONMODE_THOLD').on('change', function() {
-    if ($('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
-        $('#STARTRAILS_MOON_ALT_THOLD').attr('disabled', true);
-        $('#STARTRAILS_MOON_ALT_THOLD').attr('readonly', true);
-        $('#STARTRAILS_MOON_ALT_THOLD').addClass('bg-dark');
-        $('#STARTRAILS_MOON_ALT_THOLD').addClass('text-secondary');
-        $('#STARTRAILS_MOON_PHASE_THOLD').attr('disabled', true);
-        $('#STARTRAILS_MOON_PHASE_THOLD').attr('readonly', true);
-        $('#STARTRAILS_MOON_PHASE_THOLD').addClass('bg-dark');
-        $('#STARTRAILS_MOON_PHASE_THOLD').addClass('text-secondary');
-    } else {
-        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('disabled');
-        $('#STARTRAILS_MOON_ALT_THOLD').removeAttr('readonly');
-        $('#STARTRAILS_MOON_ALT_THOLD').removeClass('bg-dark');
-        $('#STARTRAILS_MOON_ALT_THOLD').removeClass('text-secondary');
-        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('disabled');
-        $('#STARTRAILS_MOON_PHASE_THOLD').removeAttr('readonly');
-        $('#STARTRAILS_MOON_PHASE_THOLD').removeClass('bg-dark');
-        $('#STARTRAILS_MOON_PHASE_THOLD').removeClass('text-secondary');
-    }
-});
+group_on_change('STARTRAILS_MOONMODE_THOLD', group_fields_st_moonmode, []);
+
 
 // nonlocal assets
 $('#WEB_NONLOCAL_IMAGES').on('change', function() {
@@ -9129,45 +9125,6 @@ $('#FAN__THOLD_ENABLE').on('change', function() {
 });
 
 
-function group_on_change(trigger_checkbox_field, group_fields, group_checkbox_fields) {
-    $('#' + trigger_checkbox_field).on('change', function() {
-        // logic is reversed
-        if (!$('#' + trigger_checkbox_field).prop('checked')) {
-            group_fields.forEach(item => {
-                $('#' + item).attr({'readonly': true, 'disabled': true});
-                $('#' + item).addClass('bg-dark text-secondary');
-            });
-
-            group_checkbox_fields.forEach(item => {
-                $('#' + item).attr({'readonly': true, 'disabled': true});
-            });
-        } else {
-            group_fields.forEach(item => {
-                $('#' + item).removeAttr('readonly disabled');
-                $('#' + item).removeClass('bg-dark text-secondary');
-            });
-
-            group_checkbox_fields.forEach(item => {
-                $('#' + item).removeAttr('readonly disabled');
-            });
-        }
-    });
-}
-
-function group_on_ready(trigger_checkbox_field, group_fields, group_checkbox_fields) {
-    if (!$('#' + trigger_checkbox_field).prop('checked')) {
-        group_fields.forEach(item => {
-            $('#' + item).attr({'readonly': true, 'disabled': true});
-            $('#' + item).addClass('bg-dark text-secondary');
-        });
-
-        group_checkbox_fields_fits.forEach(item => {
-            $('#' + item).attr({'readonly': true, 'disabled': true});
-        });
-    }
-}
-
-
 var group_fields_fits = [
     'IMAGE_SAVE_FITS_PERIOD',
     'FITSHEADERS__0__KEY',
@@ -9297,53 +9254,20 @@ $( document ).ready(function() {
     }
 
     // FOCUS_MODE
-    if (!$('#FOCUS_MODE').prop('checked')) {
-        $('#FOCUS_DELAY').attr('readonly', true);
-        $('#FOCUS_DELAY').attr('disabled', true);
-        $('#FOCUS_DELAY').addClass('bg-dark');
-        $('#FOCUS_DELAY').addClass('text-secondary');
-    }
+    group_on_ready('FOCUS_MODE', group_fields_focus, []);
 
     // CCD_COOLING
-    if (!$('#CCD_COOLING').prop('checked')) {
-        $('#CCD_TEMP').attr('readonly', true);
-        $('#CCD_TEMP').attr('disabled', true);
-        $('#CCD_TEMP').addClass('bg-dark');
-        $('#CCD_TEMP').addClass('text-secondary');
-    }
-
-    if (!$('#CCD_COOLING_DAY').prop('checked')) {
-        $('#CCD_TEMP_DAY').attr('readonly', true);
-        $('#CCD_TEMP_DAY').attr('disabled', true);
-        $('#CCD_TEMP_DAY').addClass('bg-dark');
-        $('#CCD_TEMP_DAY').addClass('text-secondary');
-    }
+    group_on_ready('CCD_COOLING', group_fields_cooling, []);
+    group_on_ready('CCD_COOLING_DAY', group_fields_cooling_day, []);
 
     // libcamera AWB
-    if (!$('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
-        $('#LIBCAMERA__AWB').attr('disabled', true);
-        $('#LIBCAMERA__AWB').addClass('bg-dark');
-        $('#LIBCAMERA__AWB').addClass('text-secondary');
-    }
+    group_on_ready('LIBCAMERA__AWB_ENABLE', group_fields_libcamera_awb, []);
+    group_on_ready('LIBCAMERA__AWB_ENABLE_DAY', group_fields_libcamera_awb_day, []);
 
-    // libcamera AWB DAY
-    if (!$('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
-        $('#LIBCAMERA__AWB_DAY').attr('disabled', true);
-        $('#LIBCAMERA__AWB_DAY').addClass('bg-dark');
-        $('#LIBCAMERA__AWB_DAY').addClass('text-secondary');
-    }
 
     // startrails moonmode
-    if ($('#STARTRAILS_MOONMODE_THOLD').prop('checked')) {
-        $('#STARTRAILS_MOON_ALT_THOLD').attr('disabled', true);
-        $('#STARTRAILS_MOON_ALT_THOLD').attr('readonly', true);
-        $('#STARTRAILS_MOON_ALT_THOLD').addClass('bg-dark');
-        $('#STARTRAILS_MOON_ALT_THOLD').addClass('text-secondary');
-        $('#STARTRAILS_MOON_PHASE_THOLD').attr('disabled', true);
-        $('#STARTRAILS_MOON_PHASE_THOLD').attr('readonly', true);
-        $('#STARTRAILS_MOON_PHASE_THOLD').addClass('bg-dark');
-        $('#STARTRAILS_MOON_PHASE_THOLD').addClass('text-secondary');
-    }
+    group_on_ready('STARTRAILS_MOONMODE_THOLD', group_fields_st_moonmode, []);
+
 
     // nonlocal assets
     if (!$('#WEB_NONLOCAL_IMAGES').prop('checked')) {
