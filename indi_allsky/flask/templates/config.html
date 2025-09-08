@@ -9129,6 +9129,45 @@ $('#FAN__THOLD_ENABLE').on('change', function() {
 });
 
 
+function group_on_change(trigger_checkbox_field, group_fields, group_checkbox_fields) {
+    $('#' + trigger_checkbox_field).on('change', function() {
+        // logic is reversed
+        if (!$('#' + trigger_checkbox_field).prop('checked')) {
+            group_fields.forEach(item => {
+                $('#' + item).attr({'readonly': true, 'disabled': true});
+                $('#' + item).addClass('bg-dark text-secondary');
+            });
+
+            group_checkbox_fields.forEach(item => {
+                $('#' + item).attr({'readonly': true, 'disabled': true});
+            });
+        } else {
+            group_fields.forEach(item => {
+                $('#' + item).removeAttr('readonly disabled');
+                $('#' + item).removeClass('bg-dark text-secondary');
+            });
+
+            group_checkbox_fields.forEach(item => {
+                $('#' + item).removeAttr('readonly disabled');
+            });
+        }
+    });
+}
+
+function group_on_ready(trigger_checkbox_field, group_fields, group_checkbox_fields) {
+    if (!$('#' + trigger_checkbox_field).prop('checked')) {
+        group_fields.forEach(item => {
+            $('#' + item).attr({'readonly': true, 'disabled': true});
+            $('#' + item).addClass('bg-dark text-secondary');
+        });
+
+        group_checkbox_fields_fits.forEach(item => {
+            $('#' + item).attr({'readonly': true, 'disabled': true});
+        });
+    }
+}
+
+
 var group_fields_fits = [
     'IMAGE_SAVE_FITS_PERIOD',
     'FITSHEADERS__0__KEY',
@@ -9149,28 +9188,7 @@ var group_checkbox_fields_fits = [
 
 
 // FITS
-$('#IMAGE_SAVE_FITS').on('change', function() {
-    // logic is reversed
-    if (!$('#IMAGE_SAVE_FITS').prop('checked')) {
-        group_fields_fits.forEach(item => {
-            $('#' + item).attr({'readonly': true, 'disabled': true});
-            $('#' + item).addClass('bg-dark text-secondary');
-        });
-
-        group_checkbox_fields_fits.forEach(item => {
-            $('#' + item).attr({'readonly': true, 'disabled': true});
-        });
-    } else {
-        group_fields_fits.forEach(item => {
-            $('#' + item).removeAttr('readonly disabled');
-            $('#' + item).removeClass('bg-dark text-secondary');
-        });
-
-        group_checkbox_fields_fits.forEach(item => {
-            $('#' + item).removeAttr('readonly disabled');
-        });
-    }
-});
+group_on_change('IMAGE_SAVE_FITS', group_fields_fits, group_checkbox_fields_fits);
 
 
 var group_fields_export = [
@@ -9218,28 +9236,39 @@ var group_checkbox_fields_image_circle_mask = [
     'IMAGE_CIRCLE_MASK__OUTLINE'
 ];
 
-// Image Circle Mask
-$('#IMAGE_CIRCLE_MASK__ENABLE').on('change', function() {
-    if (!$('#IMAGE_CIRCLE_MASK__ENABLE').prop('checked')) {
-        group_fields_image_circle_mask.forEach(item => {
-            $('#' + item).attr({'readonly': true, 'disabled': true});
-            $('#' + item).addClass('bg-dark text-secondary');
-        });
+group_on_change('IMAGE_CIRCLE_MASK__ENABLE', group_fields_image_circle_mask, group_checkbox_fields_image_circle_mask);
 
-        group_checkbox_fields_image_circle_mask.forEach(item => {
-            $('#' + item).attr({'readonly': true, 'disabled': true});
-        });
-    } else {
-        group_fields_image_circle_mask.forEach(item => {
-            $('#' + item).removeAttr('readonly disabled');
-            $('#' + item).removeClass('bg-dark text-secondary');
-        });
 
-        group_checkbox_fields_image_circle_mask.forEach(item => {
-            $('#' + item).removeAttr('readonly disabled');
-        });
-    }
-});
+var group_fields_st_timelapse = [
+    'STARTRAILS_TIMELAPSE_MINFRAMES',
+    'STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER',
+    'STARTRAILS__IMAGE_CIRCLE_MASK_BLUR',
+    'STARTRAILS__IMAGE_CIRCLE_MASK_OPACITY',
+];
+
+var group_checkbox_fields_st_timelapse = [
+    'STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE',
+];
+
+
+group_on_change('STARTRAILS_TIMELAPSE', group_fields_st_timelapse, group_checkbox_fields_st_timelapse);
+
+
+var group_fields_fish2pano= [
+    'FISH2PANO__DIAMETER',
+    'FISH2PANO__OFFSET_X',
+    'FISH2PANO__OFFSET_Y',
+    'FISH2PANO__ROTATE_ANGLE',
+    'FISH2PANO__SCALE',
+    'FISH2PANO__MODULUS',
+];
+
+var group_checkbox_fields_fish2pano = [
+    'FISH2PANO__FLIP_H',
+];
+
+group_on_change('FISH2PANO__ENABLE', group_fields_fish2pano, group_checkbox_fields_fish2pano);
+
 
 
 $( document ).ready(function() {
@@ -9452,18 +9481,6 @@ $( document ).ready(function() {
     }
 
 
-    if (!$('#IMAGE_SAVE_FITS').prop('checked')) {
-        group_fields_fits.forEach(item => {
-            $('#' + item).attr({'readonly': true, 'disabled': true});
-            $('#' + item).addClass('bg-dark text-secondary');
-        });
-
-        group_checkbox_fields_fits.forEach(item => {
-            $('#' + item).attr({'readonly': true, 'disabled': true});
-        });
-    }
-
-
     if ($('#IMAGE_EXPORT_RAW').val() == '') {
         group_fields_export.forEach(item => {
             $('#' + item).attr({'readonly': true, 'disabled': true});
@@ -9476,17 +9493,10 @@ $( document ).ready(function() {
     }
 
 
-    if (!$('#IMAGE_CIRCLE_MASK__ENABLE').prop('checked')) {
-        group_fields_image_circle_mask.forEach(item => {
-            $('#' + item).attr({'readonly': true, 'disabled': true});
-            $('#' + item).addClass('bg-dark text-secondary');
-        });
-
-        group_checkbox_fields_image_circle_mask.forEach(item => {
-            $('#' + item).attr({'readonly': true, 'disabled': true});
-        });
-    }
-
+    group_on_ready('IMAGE_SAVE_FITS', group_fields_fits, group_checkbox_fields_fits);
+    group_on_ready('IMAGE_CIRCLE_MASK__ENABLE', group_fields_image_circle_mask, group_checkbox_fields_image_circle_mask);
+    group_on_ready('STARTRAILS_TIMELAPSE', group_fields_st_timelapse, group_checkbox_fields_st_timelapse);
+    group_on_ready('FISH2PANO__ENABLE', group_fields_fish2pano, group_checkbox_fields_fish2pano);
 });
 
 </script>
