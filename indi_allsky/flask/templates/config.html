@@ -8751,12 +8751,10 @@ function group_on_ready(trigger_checkbox_field, group_fields, group_checkbox_fie
 $('#TIMELAPSE_ENABLE').on('change', function() {
     if ($('#TIMELAPSE_ENABLE').prop('checked')) {
         $('#DAYTIME_TIMELAPSE').prop('checked', true);
-        $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
-        $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
+        $('#DAYTIME_TIMELAPSE').removeAttr('readonly disabled');
     } else {
         $('#DAYTIME_TIMELAPSE').prop('checked', false);
-        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
-        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+        $('#DAYTIME_TIMELAPSE').attr({'readonly': true, 'disabled': true});
     }
 });
 
@@ -8764,32 +8762,26 @@ $('#TIMELAPSE_ENABLE').on('change', function() {
 $('#DAYTIME_CAPTURE').on('change', function() {
     if ($('#DAYTIME_CAPTURE').prop('checked')) {
         $('#DAYTIME_CAPTURE_SAVE').prop('checked', true);
-        $('#DAYTIME_CAPTURE_SAVE').removeAttr('readonly');
-        $('#DAYTIME_CAPTURE_SAVE').removeAttr('disabled');
+        $('#DAYTIME_CAPTURE_SAVE').removeAttr('readonly disabled');
 
         $('#DAYTIME_TIMELAPSE').prop('checked', true);
-        $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
-        $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
+        $('#DAYTIME_TIMELAPSE').removeAttr('readonly disabled');
     } else {
         $('#DAYTIME_CAPTURE_SAVE').prop('checked', false);
-        $('#DAYTIME_CAPTURE_SAVE').attr('readonly', true);
-        $('#DAYTIME_CAPTURE_SAVE').attr('disabled', true);
+        $('#DAYTIME_CAPTURE_SAVE').attr({'readonly': true, 'disabled': true});
 
         $('#DAYTIME_TIMELAPSE').prop('checked', false);
-        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
-        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+        $('#DAYTIME_TIMELAPSE').attr({'readonly': true, 'disabled': true});
     }
 });
 
 $('#DAYTIME_CAPTURE_SAVE').on('change', function() {
     if ($('#DAYTIME_CAPTURE_SAVE').prop('checked')) {
         $('#DAYTIME_TIMELAPSE').prop('checked', true);
-        $('#DAYTIME_TIMELAPSE').removeAttr('readonly');
-        $('#DAYTIME_TIMELAPSE').removeAttr('disabled');
+        $('#DAYTIME_TIMELAPSE').removeAttr('readonly disabled');
     } else {
         $('#DAYTIME_TIMELAPSE').prop('checked', false);
-        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
-        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+        $('#DAYTIME_TIMELAPSE').attr({'readonly': true, 'disabled': true});
     }
 });
 
@@ -8848,7 +8840,7 @@ $('#WEB_NONLOCAL_IMAGES').on('change', function() {
         $('#WEB_LOCAL_IMAGES_ADMIN').removeAttr('disabled');
     } else {
         $('#WEB_LOCAL_IMAGES_ADMIN').prop('checked', false);
-        $('#WEB_LOCAL_IMAGES_ADMIN').attr('disabled', true);
+        $('#WEB_LOCAL_IMAGES_ADMIN').attr({'disabled': true});
     }
 });
 
@@ -8859,64 +8851,40 @@ $('#CARDINAL_DIRS__ENABLE').on('change', function() {
         $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', true);
     } else {
         $('#FISH2PANO__ENABLE_CARDINAL_DIRS').prop('checked', false);
-        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').attr('disabled', true);
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').attr({'disabled': true});
     }
 });
 
 // Night color settings
 $('#USE_NIGHT_COLOR').on('change', function() {
     if ($('#USE_NIGHT_COLOR').prop('checked')) {
-        $('#SCNR_ALGORITHM_DAY').attr('readonly', true);
-        $('#SCNR_ALGORITHM_DAY').attr('disabled', true);
-        $('#SCNR_ALGORITHM_DAY').addClass('bg-dark');
-        $('#SCNR_ALGORITHM_DAY').addClass('text-secondary');
-        $('#WBR_FACTOR_DAY').attr('readonly', true);
-        $('#WBR_FACTOR_DAY').attr('disabled', true);
-        $('#WBR_FACTOR_DAY').addClass('bg-dark');
-        $('#WBR_FACTOR_DAY').addClass('text-secondary');
-        $('#WBG_FACTOR_DAY').attr('readonly', true);
-        $('#WBG_FACTOR_DAY').attr('disabled', true);
-        $('#WBG_FACTOR_DAY').addClass('bg-dark');
-        $('#WBG_FACTOR_DAY').addClass('text-secondary');
-        $('#WBB_FACTOR_DAY').attr('readonly', true);
-        $('#WBB_FACTOR_DAY').attr('disabled', true);
-        $('#WBB_FACTOR_DAY').addClass('bg-dark');
-        $('#WBB_FACTOR_DAY').addClass('text-secondary');
-        $('#AUTO_WB_DAY').attr('disabled', true);
-        $('#SATURATION_FACTOR_DAY').attr('readonly', true);
-        $('#SATURATION_FACTOR_DAY').attr('disabled', true);
-        $('#SATURATION_FACTOR_DAY').addClass('bg-dark');
-        $('#SATURATION_FACTOR_DAY').addClass('text-secondary');
-        $('#GAMMA_CORRECTION_DAY').attr('readonly', true);
-        $('#GAMMA_CORRECTION_DAY').attr('disabled', true);
-        $('#GAMMA_CORRECTION_DAY').addClass('bg-dark');
-        $('#GAMMA_CORRECTION_DAY').addClass('text-secondary');
+        $('#SCNR_ALGORITHM_DAY').attr({'readonly': true, 'disabled': true});
+        $('#SCNR_ALGORITHM_DAY').addClass('bg-dark text-secondary');
+        $('#WBR_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#WBR_FACTOR_DAY').addClass('bg-dark text-secondary');
+        $('#WBG_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#WBG_FACTOR_DAY').addClass('bg-dark text-secondary');
+        $('#WBB_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#WBB_FACTOR_DAY').addClass('bg-dark text-secondary');
+        $('#AUTO_WB_DAY').attr({'disabled': true});
+        $('#SATURATION_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#SATURATION_FACTOR_DAY').addClass('bg-dark text-secondary');
+        $('#GAMMA_CORRECTION_DAY').attr({'readonly': true, 'disabled': true});
+        $('#GAMMA_CORRECTION_DAY').addClass('bg-dark text-secondary');
     } else {
-        $('#SCNR_ALGORITHM_DAY').removeAttr('readonly');
-        $('#SCNR_ALGORITHM_DAY').removeAttr('disabled');
-        $('#SCNR_ALGORITHM_DAY').removeClass('bg-dark');
-        $('#SCNR_ALGORITHM_DAY').removeClass('text-secondary');
-        $('#WBR_FACTOR_DAY').removeAttr('readonly');
-        $('#WBR_FACTOR_DAY').removeAttr('disabled');
-        $('#WBR_FACTOR_DAY').removeClass('bg-dark');
-        $('#WBR_FACTOR_DAY').removeClass('text-secondary');
-        $('#WBG_FACTOR_DAY').removeAttr('readonly');
-        $('#WBG_FACTOR_DAY').removeAttr('disabled');
-        $('#WBG_FACTOR_DAY').removeClass('bg-dark');
-        $('#WBG_FACTOR_DAY').removeClass('text-secondary');
-        $('#WBB_FACTOR_DAY').removeAttr('readonly');
-        $('#WBB_FACTOR_DAY').removeAttr('disabled');
-        $('#WBB_FACTOR_DAY').removeClass('bg-dark');
-        $('#WBB_FACTOR_DAY').removeClass('text-secondary');
+        $('#SCNR_ALGORITHM_DAY').removeAttr('readonly disabled');
+        $('#SCNR_ALGORITHM_DAY').removeClass('bg-dark text-secondary');
+        $('#WBR_FACTOR_DAY').removeAttr('readonly disabled');
+        $('#WBR_FACTOR_DAY').removeClass('bg-dark text-secondary');
+        $('#WBG_FACTOR_DAY').removeAttr('readonly disabled');
+        $('#WBG_FACTOR_DAY').removeClass('bg-dark text-secondary');
+        $('#WBB_FACTOR_DAY').removeAttr('readonly disabled');
+        $('#WBB_FACTOR_DAY').removeClass('bg-dark text-secondary');
         $('#AUTO_WB_DAY').removeAttr('disabled');
-        $('#SATURATION_FACTOR_DAY').removeAttr('readonly');
-        $('#SATURATION_FACTOR_DAY').removeAttr('disabled');
-        $('#SATURATION_FACTOR_DAY').removeClass('bg-dark');
-        $('#SATURATION_FACTOR_DAY').removeClass('text-secondary');
-        $('#GAMMA_CORRECTION_DAY').removeAttr('readonly');
-        $('#GAMMA_CORRECTION_DAY').removeAttr('disabled');
-        $('#GAMMA_CORRECTION_DAY').removeClass('bg-dark');
-        $('#GAMMA_CORRECTION_DAY').removeClass('text-secondary');
+        $('#SATURATION_FACTOR_DAY').removeAttr('readonly disabled');
+        $('#SATURATION_FACTOR_DAY').removeClass('bg-dark text-secondary');
+        $('#GAMMA_CORRECTION_DAY').removeAttr('readonly disabled');
+        $('#GAMMA_CORRECTION_DAY').removeClass('bg-dark text-secondary');
     }
 });
 
@@ -8924,47 +8892,27 @@ $('#USE_NIGHT_COLOR').on('change', function() {
 // Night timelapse settings
 $('#TIMELAPSE__USE_NIGHT_CONFIG').on('change', function() {
     if ($('#TIMELAPSE__USE_NIGHT_CONFIG').prop('checked')) {
-        $('#TIMELAPSE__PRE_PROCESSOR_DAY').attr('readonly', true);
-        $('#TIMELAPSE__PRE_PROCESSOR_DAY').attr('disabled', true);
-        $('#TIMELAPSE__PRE_PROCESSOR_DAY').addClass('bg-dark');
-        $('#TIMELAPSE__PRE_PROCESSOR_DAY').addClass('text-secondary');
-        $('#FFMPEG_FRAMERATE_DAY').attr('readonly', true);
-        $('#FFMPEG_FRAMERATE_DAY').attr('disabled', true);
-        $('#FFMPEG_FRAMERATE_DAY').addClass('bg-dark');
-        $('#FFMPEG_FRAMERATE_DAY').addClass('text-secondary');
-        $('#FFMPEG_BITRATE_DAY').attr('readonly', true);
-        $('#FFMPEG_BITRATE_DAY').attr('disabled', true);
-        $('#FFMPEG_BITRATE_DAY').addClass('bg-dark');
-        $('#FFMPEG_BITRATE_DAY').addClass('text-secondary');
-        $('#FFMPEG_VFSCALE_DAY').attr('readonly', true);
-        $('#FFMPEG_VFSCALE_DAY').attr('disabled', true);
-        $('#FFMPEG_VFSCALE_DAY').addClass('bg-dark');
-        $('#FFMPEG_VFSCALE_DAY').addClass('text-secondary');
-        $('#FFMPEG_EXTRA_OPTIONS_DAY').attr('readonly', true);
-        $('#FFMPEG_EXTRA_OPTIONS_DAY').attr('disabled', true);
-        $('#FFMPEG_EXTRA_OPTIONS_DAY').addClass('bg-dark');
-        $('#FFMPEG_EXTRA_OPTIONS_DAY').addClass('text-secondary');
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').addClass('bg-dark text-secondary');
+        $('#FFMPEG_FRAMERATE_DAY').attr({'readonly': true, 'disabled': true});
+        $('#FFMPEG_FRAMERATE_DAY').addClass('bg-dark text-secondary');
+        $('#FFMPEG_BITRATE_DAY').attr({'readonly': true, 'disabled': true});
+        $('#FFMPEG_BITRATE_DAY').addClass('bg-dark text-secondary');
+        $('#FFMPEG_VFSCALE_DAY').attr({'readonly': true, 'disabled': true});
+        $('#FFMPEG_VFSCALE_DAY').addClass('bg-dark text-secondary');
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').attr({'readonly': true, 'disabled': true});
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').addClass('bg-dark text-secondary');
     } else {
-        $('#TIMELAPSE__PRE_PROCESSOR_DAY').removeAttr('readonly');
-        $('#TIMELAPSE__PRE_PROCESSOR_DAY').removeAttr('disabled');
-        $('#TIMELAPSE__PRE_PROCESSOR_DAY').removeClass('bg-dark');
-        $('#TIMELAPSE__PRE_PROCESSOR_DAY').removeClass('text-secondary');
-        $('#FFMPEG_FRAMERATE_DAY').removeAttr('readonly');
-        $('#FFMPEG_FRAMERATE_DAY').removeAttr('disabled');
-        $('#FFMPEG_FRAMERATE_DAY').removeClass('bg-dark');
-        $('#FFMPEG_FRAMERATE_DAY').removeClass('text-secondary');
-        $('#FFMPEG_BITRATE_DAY').removeAttr('readonly');
-        $('#FFMPEG_BITRATE_DAY').removeAttr('disabled');
-        $('#FFMPEG_BITRATE_DAY').removeClass('bg-dark');
-        $('#FFMPEG_BITRATE_DAY').removeClass('text-secondary');
-        $('#FFMPEG_VFSCALE_DAY').removeAttr('readonly');
-        $('#FFMPEG_VFSCALE_DAY').removeAttr('disabled');
-        $('#FFMPEG_VFSCALE_DAY').removeClass('bg-dark');
-        $('#FFMPEG_VFSCALE_DAY').removeClass('text-secondary');
-        $('#FFMPEG_EXTRA_OPTIONS_DAY').removeAttr('readonly');
-        $('#FFMPEG_EXTRA_OPTIONS_DAY').removeAttr('disabled');
-        $('#FFMPEG_EXTRA_OPTIONS_DAY').removeClass('bg-dark');
-        $('#FFMPEG_EXTRA_OPTIONS_DAY').removeClass('text-secondary');
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').removeAttr('readonly disabled');
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').removeClass('bg-dark text-secondary');
+        $('#FFMPEG_FRAMERATE_DAY').removeAttr('readonly disabled');
+        $('#FFMPEG_FRAMERATE_DAY').removeClass('bg-dark text-secondary');
+        $('#FFMPEG_BITRATE_DAY').removeAttr('readonly disabled');
+        $('#FFMPEG_BITRATE_DAY').removeClass('bg-dark text-secondary');
+        $('#FFMPEG_VFSCALE_DAY').removeAttr('readonly disabled');
+        $('#FFMPEG_VFSCALE_DAY').removeClass('bg-dark text-secondary');
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').removeAttr('readonly disabled');
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').removeClass('bg-dark text-secondary');
     }
 });
 
@@ -8973,80 +8921,44 @@ $('#TIMELAPSE__USE_NIGHT_CONFIG').on('change', function() {
 $('#DEW_HEATER__THOLD_ENABLE').on('change', function() {
     if ($('#DEW_HEATER__THOLD_ENABLE').prop('checked')) {
         $('#DEW_HEATER__LEVEL_DEF').val(0);
-        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').removeAttr('readonly');
-        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').removeAttr('disabled');
-        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').removeClass('bg-dark');
-        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').removeClass('text-secondary');
-        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').removeAttr('readonly');
-        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').removeAttr('disabled');
-        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').removeClass('bg-dark');
-        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').removeClass('text-secondary');
-        $('#DEW_HEATER__MANUAL_TARGET').removeAttr('readonly');
-        $('#DEW_HEATER__MANUAL_TARGET').removeAttr('disabled');
-        $('#DEW_HEATER__MANUAL_TARGET').removeClass('bg-dark');
-        $('#DEW_HEATER__MANUAL_TARGET').removeClass('text-secondary');
-        $('#DEW_HEATER__LEVEL_LOW').removeAttr('readonly');
-        $('#DEW_HEATER__LEVEL_LOW').removeAttr('disabled');
-        $('#DEW_HEATER__LEVEL_LOW').removeClass('bg-dark');
-        $('#DEW_HEATER__LEVEL_LOW').removeClass('text-secondary');
-        $('#DEW_HEATER__LEVEL_MED').removeAttr('readonly');
-        $('#DEW_HEATER__LEVEL_MED').removeAttr('disabled');
-        $('#DEW_HEATER__LEVEL_MED').removeClass('bg-dark');
-        $('#DEW_HEATER__LEVEL_MED').removeClass('text-secondary');
-        $('#DEW_HEATER__LEVEL_HIGH').removeAttr('readonly');
-        $('#DEW_HEATER__LEVEL_HIGH').removeAttr('disabled');
-        $('#DEW_HEATER__LEVEL_HIGH').removeClass('bg-dark');
-        $('#DEW_HEATER__LEVEL_HIGH').removeClass('text-secondary');
-        $('#DEW_HEATER__THOLD_DIFF_LOW').removeAttr('readonly');
-        $('#DEW_HEATER__THOLD_DIFF_LOW').removeAttr('disabled');
-        $('#DEW_HEATER__THOLD_DIFF_LOW').removeClass('bg-dark');
-        $('#DEW_HEATER__THOLD_DIFF_LOW').removeClass('text-secondary');
-        $('#DEW_HEATER__THOLD_DIFF_MED').removeAttr('readonly');
-        $('#DEW_HEATER__THOLD_DIFF_MED').removeAttr('disabled');
-        $('#DEW_HEATER__THOLD_DIFF_MED').removeClass('bg-dark');
-        $('#DEW_HEATER__THOLD_DIFF_MED').removeClass('text-secondary');
-        $('#DEW_HEATER__THOLD_DIFF_HIGH').removeAttr('readonly');
-        $('#DEW_HEATER__THOLD_DIFF_HIGH').removeAttr('disabled');
-        $('#DEW_HEATER__THOLD_DIFF_HIGH').removeClass('bg-dark');
-        $('#DEW_HEATER__THOLD_DIFF_HIGH').removeClass('text-secondary');
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').removeAttr('readonly disabled');
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').removeClass('bg-dark text-secondary');
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').removeAttr('readonly disabled');
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').removeClass('bg-dark text-secondary');
+        $('#DEW_HEATER__MANUAL_TARGET').removeAttr('readonly disabled');
+        $('#DEW_HEATER__MANUAL_TARGET').removeClass('bg-dark text-secondary');
+        $('#DEW_HEATER__LEVEL_LOW').removeAttr('readonly disabled');
+        $('#DEW_HEATER__LEVEL_LOW').removeClass('bg-dark text-secondary');
+        $('#DEW_HEATER__LEVEL_MED').removeAttr('readonly disabled');
+        $('#DEW_HEATER__LEVEL_MED').removeClass('bg-dark text-secondary');
+        $('#DEW_HEATER__LEVEL_HIGH').removeAttr('readonly disabled');
+        $('#DEW_HEATER__LEVEL_HIGH').removeClass('bg-dark text-secondary');
+        $('#DEW_HEATER__THOLD_DIFF_LOW').removeAttr('readonly disabled');
+        $('#DEW_HEATER__THOLD_DIFF_LOW').removeClass('bg-dark text-secondary');
+        $('#DEW_HEATER__THOLD_DIFF_MED').removeAttr('readonly disabled');
+        $('#DEW_HEATER__THOLD_DIFF_MED').removeClass('bg-dark text-secondary');
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').removeAttr('readonly disabled');
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').removeClass('bg-dark text-secondary');
     } else {
         $('#DEW_HEATER__LEVEL_DEF').val(100);
-        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').attr('readonly', true);
-        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').attr('disabled', true);
-        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').addClass('bg-dark');
-        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').addClass('text-secondary');
-        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').attr('readonly', true);
-        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').attr('disabled', true);
-        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').addClass('bg-dark');
-        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').addClass('text-secondary');
-        $('#DEW_HEATER__MANUAL_TARGET').attr('readonly', true);
-        $('#DEW_HEATER__MANUAL_TARGET').attr('disabled', true);
-        $('#DEW_HEATER__MANUAL_TARGET').addClass('bg-dark');
-        $('#DEW_HEATER__MANUAL_TARGET').addClass('text-secondary');
-        $('#DEW_HEATER__LEVEL_LOW').attr('readonly', true);
-        $('#DEW_HEATER__LEVEL_LOW').attr('disabled', true);
-        $('#DEW_HEATER__LEVEL_LOW').addClass('bg-dark');
-        $('#DEW_HEATER__LEVEL_LOW').addClass('text-secondary');
-        $('#DEW_HEATER__LEVEL_MED').attr('readonly', true);
-        $('#DEW_HEATER__LEVEL_MED').attr('disabled', true);
-        $('#DEW_HEATER__LEVEL_MED').addClass('bg-dark');
-        $('#DEW_HEATER__LEVEL_MED').addClass('text-secondary');
-        $('#DEW_HEATER__LEVEL_HIGH').attr('readonly', true);
-        $('#DEW_HEATER__LEVEL_HIGH').attr('disabled', true);
-        $('#DEW_HEATER__LEVEL_HIGH').addClass('bg-dark');
-        $('#DEW_HEATER__LEVEL_HIGH').addClass('text-secondary');
-        $('#DEW_HEATER__THOLD_DIFF_LOW').attr('readonly', true);
-        $('#DEW_HEATER__THOLD_DIFF_LOW').attr('disabled', true);
-        $('#DEW_HEATER__THOLD_DIFF_LOW').addClass('bg-dark');
-        $('#DEW_HEATER__THOLD_DIFF_LOW').addClass('text-secondary');
-        $('#DEW_HEATER__THOLD_DIFF_MED').attr('readonly', true);
-        $('#DEW_HEATER__THOLD_DIFF_MED').attr('disabled', true);
-        $('#DEW_HEATER__THOLD_DIFF_MED').addClass('bg-dark');
-        $('#DEW_HEATER__THOLD_DIFF_MED').addClass('text-secondary');
-        $('#DEW_HEATER__THOLD_DIFF_HIGH').attr('readonly', true);
-        $('#DEW_HEATER__THOLD_DIFF_HIGH').attr('disabled', true);
-        $('#DEW_HEATER__THOLD_DIFF_HIGH').addClass('bg-dark');
-        $('#DEW_HEATER__THOLD_DIFF_HIGH').addClass('text-secondary');
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__MANUAL_TARGET').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__MANUAL_TARGET').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__LEVEL_LOW').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__LEVEL_LOW').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__LEVEL_MED').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__LEVEL_MED').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__LEVEL_HIGH').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__LEVEL_HIGH').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__THOLD_DIFF_LOW').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__THOLD_DIFF_LOW').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__THOLD_DIFF_MED').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__THOLD_DIFF_MED').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').addClass('bg-dark text-secondary');
     }
 });
 
@@ -9055,72 +8967,39 @@ $('#DEW_HEATER__THOLD_ENABLE').on('change', function() {
 $('#FAN__THOLD_ENABLE').on('change', function() {
     if ($('#FAN__THOLD_ENABLE').prop('checked')) {
         $('#FAN__LEVEL_DEF').val(0);
-        $('#FAN__TEMP_USER_VAR_SLOT').removeAttr('readonly');
-        $('#FAN__TEMP_USER_VAR_SLOT').removeAttr('disabled');
-        $('#FAN__TEMP_USER_VAR_SLOT').removeClass('bg-dark');
-        $('#FAN__TEMP_USER_VAR_SLOT').removeClass('text-secondary');
-        $('#FAN__TARGET').removeAttr('readonly');
-        $('#FAN__TARGET').removeAttr('disabled');
-        $('#FAN__TARGET').removeClass('bg-dark');
-        $('#FAN__TARGET').removeClass('text-secondary');
-        $('#FAN__LEVEL_LOW').removeAttr('readonly');
-        $('#FAN__LEVEL_LOW').removeAttr('disabled');
-        $('#FAN__LEVEL_LOW').removeClass('bg-dark');
-        $('#FAN__LEVEL_LOW').removeClass('text-secondary');
-        $('#FAN__LEVEL_MED').removeAttr('readonly');
-        $('#FAN__LEVEL_MED').removeAttr('disabled');
-        $('#FAN__LEVEL_MED').removeClass('bg-dark');
-        $('#FAN__LEVEL_MED').removeClass('text-secondary');
-        $('#FAN__LEVEL_HIGH').removeAttr('readonly');
-        $('#FAN__LEVEL_HIGH').removeAttr('disabled');
-        $('#FAN__LEVEL_HIGH').removeClass('bg-dark');
-        $('#FAN__LEVEL_HIGH').removeClass('text-secondary');
-        $('#FAN__THOLD_DIFF_LOW').removeAttr('readonly');
-        $('#FAN__THOLD_DIFF_LOW').removeAttr('disabled');
-        $('#FAN__THOLD_DIFF_LOW').removeClass('bg-dark');
-        $('#FAN__THOLD_DIFF_LOW').removeClass('text-secondary');
-        $('#FAN__THOLD_DIFF_MED').removeAttr('readonly');
-        $('#FAN__THOLD_DIFF_MED').removeAttr('disabled');
-        $('#FAN__THOLD_DIFF_MED').removeClass('bg-dark');
-        $('#FAN__THOLD_DIFF_MED').removeClass('text-secondary');
-        $('#FAN__THOLD_DIFF_HIGH').removeAttr('readonly');
-        $('#FAN__THOLD_DIFF_HIGH').removeAttr('disabled');
-        $('#FAN__THOLD_DIFF_HIGH').removeClass('bg-dark');
-        $('#FAN__THOLD_DIFF_HIGH').removeClass('text-secondary');
+        $('#FAN__TEMP_USER_VAR_SLOT').removeAttr('readonly disabled');
+        $('#FAN__TEMP_USER_VAR_SLOT').removeClass('bg-dark text-secondary');
+        $('#FAN__TARGET').removeAttr('readonly disabled');
+        $('#FAN__TARGET').removeClass('bg-dark text-secondary');
+        $('#FAN__LEVEL_LOW').removeAttr('readonly disabled');
+        $('#FAN__LEVEL_LOW').removeClass('bg-dark text-secondary');
+        $('#FAN__LEVEL_MED').removeAttr('readonly disabled');
+        $('#FAN__LEVEL_MED').removeClass('bg-dark text-secondary');
+        $('#FAN__LEVEL_HIGH').removeAttr('readonly disabled');
+        $('#FAN__LEVEL_HIGH').removeClass('bg-dark text-secondary');
+        $('#FAN__THOLD_DIFF_LOW').removeAttr('readonly disabled');
+        $('#FAN__THOLD_DIFF_LOW').removeClass('bg-dark text-secondary');
+        $('#FAN__THOLD_DIFF_MED').removeAttr('readonly disabled');
+        $('#FAN__THOLD_DIFF_MED').removeClass('bg-dark text-secondary');
+        $('#FAN__THOLD_DIFF_HIGH').removeAttr('readonly disabled');
+        $('#FAN__THOLD_DIFF_HIGH').removeClass('bg-dark text-secondary');
     } else {
         $('#FAN__LEVEL_DEF').val(100);
-        $('#FAN__TEMP_USER_VAR_SLOT').attr('readonly', true);
-        $('#FAN__TEMP_USER_VAR_SLOT').attr('disabled', true);
-        $('#FAN__TEMP_USER_VAR_SLOT').addClass('bg-dark');
-        $('#FAN__TEMP_USER_VAR_SLOT').addClass('text-secondary');
-        $('#FAN__TARGET').attr('readonly', true);
-        $('#FAN__TARGET').attr('disabled', true);
-        $('#FAN__TARGET').addClass('bg-dark');
-        $('#FAN__TARGET').addClass('text-secondary');
-        $('#FAN__LEVEL_LOW').attr('readonly', true);
-        $('#FAN__LEVEL_LOW').attr('disabled', true);
-        $('#FAN__LEVEL_LOW').addClass('bg-dark');
-        $('#FAN__LEVEL_LOW').addClass('text-secondary');
-        $('#FAN__LEVEL_MED').attr('readonly', true);
-        $('#FAN__LEVEL_MED').attr('disabled', true);
-        $('#FAN__LEVEL_MED').addClass('bg-dark');
-        $('#FAN__LEVEL_MED').addClass('text-secondary');
-        $('#FAN__LEVEL_HIGH').attr('readonly', true);
-        $('#FAN__LEVEL_HIGH').attr('disabled', true);
-        $('#FAN__LEVEL_HIGH').addClass('bg-dark');
-        $('#FAN__LEVEL_HIGH').addClass('text-secondary');
-        $('#FAN__THOLD_DIFF_LOW').attr('readonly', true);
-        $('#FAN__THOLD_DIFF_LOW').attr('disabled', true);
-        $('#FAN__THOLD_DIFF_LOW').addClass('bg-dark');
-        $('#FAN__THOLD_DIFF_LOW').addClass('text-secondary');
-        $('#FAN__THOLD_DIFF_MED').attr('readonly', true);
-        $('#FAN__THOLD_DIFF_MED').attr('disabled', true);
-        $('#FAN__THOLD_DIFF_MED').addClass('bg-dark');
-        $('#FAN__THOLD_DIFF_MED').addClass('text-secondary');
-        $('#FAN__THOLD_DIFF_HIGH').attr('readonly', true);
-        $('#FAN__THOLD_DIFF_HIGH').attr('disabled', true);
-        $('#FAN__THOLD_DIFF_HIGH').addClass('bg-dark');
-        $('#FAN__THOLD_DIFF_HIGH').addClass('text-secondary');
+        $('#FAN__TEMP_USER_VAR_SLOT').attr({'readonly': true, 'disabled': true});
+        $('#FAN__TEMP_USER_VAR_SLOT').addClass('bg-dark text-secondary');
+        $('#FAN__TARGET').addClass('bg-dark text-secondary');
+        $('#FAN__LEVEL_LOW').attr({'readonly': true, 'disabled': true});
+        $('#FAN__LEVEL_LOW').addClass('bg-dark text-secondary');
+        $('#FAN__LEVEL_MED').attr({'readonly': true, 'disabled': true});
+        $('#FAN__LEVEL_MED').addClass('bg-dark text-secondary');
+        $('#FAN__LEVEL_HIGH').attr({'readonly': true, 'disabled': true});
+        $('#FAN__LEVEL_HIGH').addClass('bg-dark text-secondary');
+        $('#FAN__THOLD_DIFF_LOW').attr({'readonly': true, 'disabled': true});
+        $('#FAN__THOLD_DIFF_LOW').addClass('bg-dark text-secondary');
+        $('#FAN__THOLD_DIFF_MED').attr({'readonly': true, 'disabled': true});
+        $('#FAN__THOLD_DIFF_MED').addClass('bg-dark text-secondary');
+        $('#FAN__THOLD_DIFF_HIGH').attr({'readonly': true, 'disabled': true});
+        $('#FAN__THOLD_DIFF_HIGH').addClass('bg-dark text-secondary');
     }
 });
 
@@ -9235,22 +9114,17 @@ group_on_change('FISH2PANO__ENABLE', group_fields_fish2pano, group_checkbox_fiel
 $( document ).ready(function() {
     // Global timelapse
     if (!$('#TIMELAPSE_ENABLE').prop('checked')) {
-        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
-        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+        $('#DAYTIME_TIMELAPSE').attr({'readonly': true, 'disabled': true});
     }
 
     // Daytime timelapse
     if (!$('#DAYTIME_CAPTURE').prop('checked')) {
-        $('#DAYTIME_CAPTURE_SAVE').attr('readonly', true);
-        $('#DAYTIME_CAPTURE_SAVE').attr('disabled', true);
-
-        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
-        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+        $('#DAYTIME_CAPTURE_SAVE').attr({'readonly': true, 'disabled': true});
+        $('#DAYTIME_TIMELAPSE').attr({'readonly': true, 'disabled': true});
     }
 
     if (!$('#DAYTIME_CAPTURE_SAVE').prop('checked')) {
-        $('#DAYTIME_TIMELAPSE').attr('readonly', true);
-        $('#DAYTIME_TIMELAPSE').attr('disabled', true);
+        $('#DAYTIME_TIMELAPSE').attr({'readonly': true, 'disabled': true});
     }
 
     // FOCUS_MODE
@@ -9271,141 +9145,86 @@ $( document ).ready(function() {
 
     // nonlocal assets
     if (!$('#WEB_NONLOCAL_IMAGES').prop('checked')) {
-        $('#WEB_LOCAL_IMAGES_ADMIN').attr('disabled', true);
+        $('#WEB_LOCAL_IMAGES_ADMIN').attr({'disabled': true});
     }
 
     // cardinal dirs
     if (!$('#CARDINAL_DIRS__ENABLE').prop('checked')) {
-        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').attr('disabled', true);
+        $('#FISH2PANO__ENABLE_CARDINAL_DIRS').attr({'disabled': true});
     }
 
     // Night color settings
     if ($('#USE_NIGHT_COLOR').prop('checked')) {
-        $('#SCNR_ALGORITHM_DAY').attr('readonly', true);
-        $('#SCNR_ALGORITHM_DAY').attr('disabled', true);
-        $('#SCNR_ALGORITHM_DAY').addClass('bg-dark');
-        $('#SCNR_ALGORITHM_DAY').addClass('text-secondary');
-        $('#WBR_FACTOR_DAY').attr('readonly', true);
-        $('#WBR_FACTOR_DAY').attr('disabled', true);
-        $('#WBR_FACTOR_DAY').addClass('bg-dark');
-        $('#WBR_FACTOR_DAY').addClass('text-secondary');
-        $('#WBG_FACTOR_DAY').attr('readonly', true);
-        $('#WBG_FACTOR_DAY').attr('disabled', true);
-        $('#WBG_FACTOR_DAY').addClass('bg-dark');
-        $('#WBG_FACTOR_DAY').addClass('text-secondary');
-        $('#WBB_FACTOR_DAY').attr('readonly', true);
-        $('#WBB_FACTOR_DAY').attr('disabled', true);
-        $('#WBB_FACTOR_DAY').addClass('bg-dark');
-        $('#WBB_FACTOR_DAY').addClass('text-secondary');
-        $('#AUTO_WB_DAY').attr('disabled', true);
-        $('#SATURATION_FACTOR_DAY').attr('readonly', true);
-        $('#SATURATION_FACTOR_DAY').attr('disabled', true);
-        $('#SATURATION_FACTOR_DAY').addClass('bg-dark');
-        $('#SATURATION_FACTOR_DAY').addClass('text-secondary');
-        $('#GAMMA_CORRECTION_DAY').attr('readonly', true);
-        $('#GAMMA_CORRECTION_DAY').attr('disabled', true);
-        $('#GAMMA_CORRECTION_DAY').addClass('bg-dark');
-        $('#GAMMA_CORRECTION_DAY').addClass('text-secondary');
+        $('#SCNR_ALGORITHM_DAY').attr({'readonly': true, 'disabled': true});
+        $('#SCNR_ALGORITHM_DAY').addClass('bg-dark text-secondary');
+        $('#WBR_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#WBR_FACTOR_DAY').addClass('bg-dark text-secondary');
+        $('#WBG_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#WBG_FACTOR_DAY').addClass('bg-dark text-secondary');
+        $('#WBB_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#WBB_FACTOR_DAY').addClass('bg-dark text-secondary');
+        $('#AUTO_WB_DAY').attr({'disabled': true});
+        $('#SATURATION_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#SATURATION_FACTOR_DAY').addClass('bg-dark text-secondary');
+        $('#GAMMA_CORRECTION_DAY').attr({'readonly': true, 'disabled': true});
+        $('#GAMMA_CORRECTION_DAY').addClass('bg-dark text-secondary');
     }
 
     // Night timelapse settings
     if ($('#TIMELAPSE__USE_NIGHT_CONFIG').prop('checked')) {
-        $('#TIMELAPSE__PRE_PROCESSOR_DAY').attr('readonly', true);
-        $('#TIMELAPSE__PRE_PROCESSOR_DAY').attr('disabled', true);
-        $('#TIMELAPSE__PRE_PROCESSOR_DAY').addClass('bg-dark');
-        $('#TIMELAPSE__PRE_PROCESSOR_DAY').addClass('text-secondary');
-        $('#FFMPEG_FRAMERATE_DAY').attr('readonly', true);
-        $('#FFMPEG_FRAMERATE_DAY').attr('disabled', true);
-        $('#FFMPEG_FRAMERATE_DAY').addClass('bg-dark');
-        $('#FFMPEG_FRAMERATE_DAY').addClass('text-secondary');
-        $('#FFMPEG_BITRATE_DAY').attr('readonly', true);
-        $('#FFMPEG_BITRATE_DAY').attr('disabled', true);
-        $('#FFMPEG_BITRATE_DAY').addClass('bg-dark');
-        $('#FFMPEG_BITRATE_DAY').addClass('text-secondary');
-        $('#FFMPEG_VFSCALE_DAY').attr('readonly', true);
-        $('#FFMPEG_VFSCALE_DAY').attr('disabled', true);
-        $('#FFMPEG_VFSCALE_DAY').addClass('bg-dark');
-        $('#FFMPEG_VFSCALE_DAY').addClass('text-secondary');
-        $('#FFMPEG_EXTRA_OPTIONS_DAY').attr('readonly', true);
-        $('#FFMPEG_EXTRA_OPTIONS_DAY').attr('disabled', true);
-        $('#FFMPEG_EXTRA_OPTIONS_DAY').addClass('bg-dark');
-        $('#FFMPEG_EXTRA_OPTIONS_DAY').addClass('text-secondary');
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#TIMELAPSE__PRE_PROCESSOR_DAY').addClass('bg-dark text-secondary');
+        $('#FFMPEG_FRAMERATE_DAY').attr({'readonly': true, 'disabled': true});
+        $('#FFMPEG_FRAMERATE_DAY').addClass('bg-dark text-secondary');
+        $('#FFMPEG_BITRATE_DAY').attr({'readonly': true, 'disabled': true});
+        $('#FFMPEG_BITRATE_DAY').addClass('bg-dark text-secondary');
+        $('#FFMPEG_VFSCALE_DAY').attr({'readonly': true, 'disabled': true});
+        $('#FFMPEG_VFSCALE_DAY').addClass('bg-dark text-secondary');
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').attr({'readonly': true, 'disabled': true});
+        $('#FFMPEG_EXTRA_OPTIONS_DAY').addClass('bg-dark text-secondary');
     }
 
     // Dew Heater thresholds
     if (!$('#DEW_HEATER__THOLD_ENABLE').prop('checked')) {
-        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').attr('readonly', true);
-        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').attr('disabled', true);
-        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').addClass('bg-dark');
-        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').addClass('text-secondary');
-        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').attr('readonly', true);
-        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').attr('disabled', true);
-        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').addClass('bg-dark');
-        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').addClass('text-secondary');
-        $('#DEW_HEATER__MANUAL_TARGET').attr('readonly', true);
-        $('#DEW_HEATER__MANUAL_TARGET').attr('disabled', true);
-        $('#DEW_HEATER__MANUAL_TARGET').addClass('bg-dark');
-        $('#DEW_HEATER__MANUAL_TARGET').addClass('text-secondary');
-        $('#DEW_HEATER__LEVEL_LOW').attr('readonly', true);
-        $('#DEW_HEATER__LEVEL_LOW').attr('disabled', true);
-        $('#DEW_HEATER__LEVEL_LOW').addClass('bg-dark');
-        $('#DEW_HEATER__LEVEL_LOW').addClass('text-secondary');
-        $('#DEW_HEATER__LEVEL_MED').attr('readonly', true);
-        $('#DEW_HEATER__LEVEL_MED').attr('disabled', true);
-        $('#DEW_HEATER__LEVEL_MED').addClass('bg-dark');
-        $('#DEW_HEATER__LEVEL_MED').addClass('text-secondary');
-        $('#DEW_HEATER__LEVEL_HIGH').attr('readonly', true);
-        $('#DEW_HEATER__LEVEL_HIGH').attr('disabled', true);
-        $('#DEW_HEATER__LEVEL_HIGH').addClass('bg-dark');
-        $('#DEW_HEATER__LEVEL_HIGH').addClass('text-secondary');
-        $('#DEW_HEATER__THOLD_DIFF_LOW').attr('readonly', true);
-        $('#DEW_HEATER__THOLD_DIFF_LOW').attr('disabled', true);
-        $('#DEW_HEATER__THOLD_DIFF_LOW').addClass('bg-dark');
-        $('#DEW_HEATER__THOLD_DIFF_LOW').addClass('text-secondary');
-        $('#DEW_HEATER__THOLD_DIFF_MED').attr('readonly', true);
-        $('#DEW_HEATER__THOLD_DIFF_MED').attr('disabled', true);
-        $('#DEW_HEATER__THOLD_DIFF_MED').addClass('bg-dark');
-        $('#DEW_HEATER__THOLD_DIFF_MED').addClass('text-secondary');
-        $('#DEW_HEATER__THOLD_DIFF_HIGH').attr('readonly', true);
-        $('#DEW_HEATER__THOLD_DIFF_HIGH').attr('disabled', true);
-        $('#DEW_HEATER__THOLD_DIFF_HIGH').addClass('bg-dark');
-        $('#DEW_HEATER__THOLD_DIFF_HIGH').addClass('text-secondary');
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__TEMP_USER_VAR_SLOT').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__DEWPOINT_USER_VAR_SLOT').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__MANUAL_TARGET').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__MANUAL_TARGET').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__LEVEL_LOW').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__LEVEL_LOW').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__LEVEL_MED').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__LEVEL_MED').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__LEVEL_HIGH').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__LEVEL_HIGH').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__THOLD_DIFF_LOW').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__THOLD_DIFF_LOW').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__THOLD_DIFF_MED').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__THOLD_DIFF_MED').addClass('bg-dark text-secondary');
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').attr({'readonly': true, 'disabled': true});
+        $('#DEW_HEATER__THOLD_DIFF_HIGH').addClass('bg-dark text-secondary');
     }
 
     // Fan thresholds
     if (!$('#FAN__THOLD_ENABLE').prop('checked')) {
-        $('#FAN__TEMP_USER_VAR_SLOT').attr('readonly', true);
-        $('#FAN__TEMP_USER_VAR_SLOT').attr('disabled', true);
-        $('#FAN__TEMP_USER_VAR_SLOT').addClass('bg-dark');
-        $('#FAN__TEMP_USER_VAR_SLOT').addClass('text-secondary');
-        $('#FAN__TARGET').attr('readonly', true);
+        $('#FAN__TEMP_USER_VAR_SLOT').attr({'readonly': true, 'disabled': true});
+        $('#FAN__TEMP_USER_VAR_SLOT').addClass('bg-dark text-secondary');
+        $('#FAN__TARGET').attr({'readonly': true, 'disabled': true});
         $('#FAN__TARGET').attr('disabled', true);
-        $('#FAN__TARGET').addClass('bg-dark');
-        $('#FAN__TARGET').addClass('text-secondary');
-        $('#FAN__LEVEL_LOW').attr('readonly', true);
-        $('#FAN__LEVEL_LOW').attr('disabled', true);
-        $('#FAN__LEVEL_LOW').addClass('bg-dark');
-        $('#FAN__LEVEL_LOW').addClass('text-secondary');
-        $('#FAN__LEVEL_MED').attr('readonly', true);
-        $('#FAN__LEVEL_MED').attr('disabled', true);
-        $('#FAN__LEVEL_MED').addClass('bg-dark');
-        $('#FAN__LEVEL_MED').addClass('text-secondary');
-        $('#FAN__LEVEL_HIGH').attr('readonly', true);
-        $('#FAN__LEVEL_HIGH').attr('disabled', true);
-        $('#FAN__LEVEL_HIGH').addClass('bg-dark');
-        $('#FAN__LEVEL_HIGH').addClass('text-secondary');
-        $('#FAN__THOLD_DIFF_LOW').attr('readonly', true);
-        $('#FAN__THOLD_DIFF_LOW').attr('disabled', true);
-        $('#FAN__THOLD_DIFF_LOW').addClass('bg-dark');
-        $('#FAN__THOLD_DIFF_LOW').addClass('text-secondary');
-        $('#FAN__THOLD_DIFF_MED').attr('readonly', true);
-        $('#FAN__THOLD_DIFF_MED').attr('disabled', true);
-        $('#FAN__THOLD_DIFF_MED').addClass('bg-dark');
-        $('#FAN__THOLD_DIFF_MED').addClass('text-secondary');
-        $('#FAN__THOLD_DIFF_HIGH').attr('readonly', true);
-        $('#FAN__THOLD_DIFF_HIGH').attr('disabled', true);
-        $('#FAN__THOLD_DIFF_HIGH').addClass('bg-dark');
-        $('#FAN__THOLD_DIFF_HIGH').addClass('text-secondary');
+        $('#FAN__TARGET').addClass('bg-dark text-secondary');
+        $('#FAN__LEVEL_LOW').attr({'readonly': true, 'disabled': true});
+        $('#FAN__LEVEL_LOW').addClass('bg-dark text-secondary');
+        $('#FAN__LEVEL_MED').attr({'readonly': true, 'disabled': true});
+        $('#FAN__LEVEL_MED').addClass('bg-dark text-secondary');
+        $('#FAN__LEVEL_HIGH').attr({'readonly': true, 'disabled': true});
+        $('#FAN__LEVEL_HIGH').addClass('bg-dark text-secondary');
+        $('#FAN__THOLD_DIFF_LOW').attr({'readonly': true, 'disabled': true});
+        $('#FAN__THOLD_DIFF_LOW').addClass('bg-dark text-secondary');
+        $('#FAN__THOLD_DIFF_MED').attr({'readonly': true, 'disabled': true});
+        $('#FAN__THOLD_DIFF_MED').addClass('bg-dark text-secondary');
+        $('#FAN__THOLD_DIFF_HIGH').attr({'readonly': true, 'disabled': true});
+        $('#FAN__THOLD_DIFF_HIGH').addClass('bg-dark text-secondary');
     }
 
 
