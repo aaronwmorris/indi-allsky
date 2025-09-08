@@ -33,7 +33,10 @@ class DewHeaterMqttBase(DewHeaterBase):
         self._qos = self.config.get('DEVICE', {}).get('MQTT_QOS', 0)
 
 
-        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        self.client = mqtt.Client(
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
+            protocol=mqtt.MQTTv5,
+        )
 
 
         if username:
@@ -52,7 +55,12 @@ class DewHeaterMqttBase(DewHeaterBase):
             self.client.tls_set(**mq_tls)
 
 
-        self.client.connect(host, port=port)
+        self.client.connect(
+            host,
+            port=port,
+        )
+
+
         self.client.on_connect = self.on_connect
         self.client.on_publish = self.on_publish
 
@@ -115,20 +123,37 @@ class DewHeaterMqttStandard(DewHeaterMqttBase):
 
     @state.setter
     def state(self, new_state):
+        import paho.mqtt.properties as mqtt_props
+        from paho.mqtt.packettypes import PacketTypes
+
+
         # any positive value is ON
         new_state_b = bool(new_state)
 
-        payload = {}
+
+        user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
+        user_properties.UserProperty = [
+            ("Content-Type", "application/json"),
+        ]
+
 
         if new_state_b:
             logger.warning('Set dew heater state: 100%')
-            payload['state'] = self.ON
-            self.client.publish(self.topic, payload=json.dumps(payload), qos=self.qos, retain=True)
+
+            payload = {
+                'state' : self.ON,
+            }
+
+            self.client.publish(self.topic, payload=json.dumps(payload), qos=self.qos, retain=True, properties=user_properties)
             self._state = 100
         else:
             logger.warning('Set dew heater state: 0%')
-            payload['state'] = self.OFF
-            self.client.publish(self.topic, payload=json.dumps(payload), qos=self.qos, retain=True)
+
+            payload = {
+                'state' : self.OFF,
+            }
+
+            self.client.publish(self.topic, payload=json.dumps(payload), qos=self.qos, retain=True, properties=user_properties)
             self._state = 0
 
 
@@ -147,6 +172,10 @@ class DewHeaterMqttPwm(DewHeaterMqttBase):
 
     @state.setter
     def state(self, new_state):
+        import paho.mqtt.properties as mqtt_props
+        from paho.mqtt.packettypes import PacketTypes
+
+
         # duty cycle must be a percentage between 0 and 100
         new_state_i = int(new_state)
 
@@ -165,13 +194,19 @@ class DewHeaterMqttPwm(DewHeaterMqttBase):
             new_duty_cycle = 100 - new_state_i
 
 
+        user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
+        user_properties.UserProperty = [
+            ("Content-Type", "application/json"),
+        ]
+
+
         payload = {
             'state' : new_duty_cycle,
         }
 
 
         logger.warning('Set dew heater state: %d%%', new_state_i)
-        self.client.publish(self.topic, payload=json.dumps(payload), qos=self.qos, retain=True)
+        self.client.publish(self.topic, payload=json.dumps(payload), qos=self.qos, retain=True, properties=user_properties)
 
         self._state = new_state_i
 

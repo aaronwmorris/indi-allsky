@@ -94,7 +94,12 @@ class MqttRemoteDewHeaterFan(object):
 
 
     def main(self):
-        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        self.client = mqtt.Client(
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
+            protocol=mqtt.MQTTv5,
+        )
+
+
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.client.on_subscribe = self.on_subscribe

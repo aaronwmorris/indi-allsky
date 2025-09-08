@@ -57,7 +57,12 @@ class MqttBrokerSensor(SensorBase):
         cert_bypass = self.config.get('TEMP_SENSOR', {}).get('MQTT_CERT_BYPASS', True)
 
 
-        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        client = mqtt.Client(
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
+            protocol=mqtt.MQTTv5,
+        )
+
+
         client.on_connect = self.on_connect
         client.on_message = self.on_message
         client.on_subscribe = self.on_subscribe
