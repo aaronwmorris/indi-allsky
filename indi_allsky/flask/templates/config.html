@@ -9171,6 +9171,40 @@ $('#IMAGE_SAVE_FITS').on('change', function() {
 });
 
 
+var group_fields_export = [
+    'IMAGE_EXPORT_FOLDER',
+];
+
+var group_checkbox_fields_export = [
+    'IMAGE_EXPORT_FLIP_V',
+    'IMAGE_EXPORT_FLIP_H',
+];
+
+// Export
+$('#IMAGE_EXPORT_RAW').on('change', function() {
+    if ($('#IMAGE_EXPORT_RAW').val() == '') {
+        group_fields_export.forEach(item => {
+            $('#' + item).attr({'readonly': true, 'disabled': true});
+            $('#' + item).addClass('bg-dark text-secondary');
+        });
+
+        group_checkbox_fields_export.forEach(item => {
+            $('#' + item).attr({'readonly': true, 'disabled': true});
+        });
+    } else {
+        group_fields_export.forEach(item => {
+            $('#' + item).removeAttr('readonly disabled');
+            $('#' + item).removeClass('bg-dark text-secondary');
+        });
+
+        group_checkbox_fields_export.forEach(item => {
+            $('#' + item).removeAttr('readonly disabled');
+        });
+    }
+});
+
+
+
 $( document ).ready(function() {
     // Global timelapse
     if (!$('#TIMELAPSE_ENABLE').prop('checked')) {
@@ -9388,6 +9422,18 @@ $( document ).ready(function() {
         });
 
         group_checkbox_fields_fits.forEach(item => {
+            $('#' + item).attr({'readonly': true, 'disabled': true});
+        });
+    }
+
+
+    if ($('#IMAGE_EXPORT_RAW').val() == '') {
+        group_fields_export.forEach(item => {
+            $('#' + item).attr({'readonly': true, 'disabled': true});
+            $('#' + item).addClass('bg-dark text-secondary');
+        });
+
+        group_checkbox_fields_export.forEach(item => {
             $('#' + item).attr({'readonly': true, 'disabled': true});
         });
     }
