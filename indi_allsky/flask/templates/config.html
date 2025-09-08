@@ -9127,6 +9127,49 @@ $('#FAN__THOLD_ENABLE').on('change', function() {
 });
 
 
+var group_fields_fits = [
+    'IMAGE_SAVE_FITS_PERIOD',
+    'FITSHEADERS__0__KEY',
+    'FITSHEADERS__0__VAL',
+    'FITSHEADERS__1__KEY',
+    'FITSHEADERS__1__VAL',
+    'FITSHEADERS__2__KEY',
+    'FITSHEADERS__2__VAL',
+    'FITSHEADERS__3__KEY',
+    'FITSHEADERS__3__VAL',
+    'FITSHEADERS__4__KEY',
+    'FITSHEADERS__4__VAL',
+];
+
+var group_checkbox_fields_fits = [
+    'IMAGE_SAVE_FITS_PRE_DARK'
+];
+
+
+// FITS
+$('#IMAGE_SAVE_FITS').on('change', function() {
+    // logic is reversed
+    if (!$('#IMAGE_SAVE_FITS').prop('checked')) {
+        group_fields_fits.forEach(item => {
+            $('#' + item).attr({'readonly': true, 'disabled': true});
+            $('#' + item).addClass('bg-dark text-secondary');
+        });
+
+        group_checkbox_fields_fits.forEach(item => {
+            $('#' + item).attr({'readonly': true, 'disabled': true});
+        });
+    } else {
+        group_fields_fits.forEach(item => {
+            $('#' + item).removeAttr('readonly disabled');
+            $('#' + item).removeClass('bg-dark text-secondary');
+        });
+
+        group_checkbox_fields_fits.forEach(item => {
+            $('#' + item).removeAttr('readonly disabled');
+        });
+    }
+});
+
 
 $( document ).ready(function() {
     // Global timelapse
@@ -9335,6 +9378,18 @@ $( document ).ready(function() {
         $('#FAN__THOLD_DIFF_HIGH').attr('disabled', true);
         $('#FAN__THOLD_DIFF_HIGH').addClass('bg-dark');
         $('#FAN__THOLD_DIFF_HIGH').addClass('text-secondary');
+    }
+
+
+    if (!$('#IMAGE_SAVE_FITS').prop('checked')) {
+        group_fields_fits.forEach(item => {
+            $('#' + item).attr({'readonly': true, 'disabled': true});
+            $('#' + item).addClass('bg-dark text-secondary');
+        });
+
+        group_checkbox_fields_fits.forEach(item => {
+            $('#' + item).attr({'readonly': true, 'disabled': true});
+        });
     }
 
 });
