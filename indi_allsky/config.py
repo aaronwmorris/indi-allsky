@@ -940,9 +940,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         )
 
         for leaf in leaf_list:
-            try:
-                config[leaf]
-            except KeyError:
+            if not isinstance(config.get(leaf), dict):
                 config[leaf] = dict()
 
 
@@ -1194,9 +1192,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         )
 
         for leaf in leaf_list:
-            try:
-                config[leaf]
-            except KeyError:
+            if not isinstance(config.get(leaf), dict):
                 config[leaf] = dict()
 
 
