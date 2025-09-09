@@ -167,15 +167,17 @@ $( document ).ready(function() {
         longitude: {{ camera_longitude }},
         az: {{ camera_az }},
         constellations: true,
-        ecliptic: true,
+        gridlines_eq: true,
         mouse: false,
-        keyboard: false,
+        keyboard: true,
         showdate: false,
         showpostion: false,
         gradient: false,
         showgalaxy: true,
         transparent: true,
 	});
+
+    planetarium.credit='';
 });
 
 </script>
@@ -190,7 +192,7 @@ $( document ).ready(function() {
         <div class="col-12 text-center">
             <img id="latest-image" class="fit">
         </div>
-        <div id="starmap" style="width:600px;height:600px;"></div>
+        <div id="starmap" style="width:1920px;height:1080px;"></div>
     </div>
 </div>
 {% endblock %}
