@@ -4110,7 +4110,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_LABEL_SYSTEM               = SelectField('Label Images', choices=IMAGE_LABEL_SYSTEM_choices, validators=[IMAGE_LABEL_SYSTEM_validator])
     TEXT_PROPERTIES__FONT_FACE       = SelectField('OpenCV Font', choices=TEXT_PROPERTIES__FONT_FACE_choices, validators=[DataRequired(), TEXT_PROPERTIES__FONT_FACE_validator])
     #TEXT_PROPERTIES__FONT_AA
-    TEXT_PROPERTIES__FONT_SCALE      = FloatField('Font Scale', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
+    TEXT_PROPERTIES__FONT_SCALE      = FloatField('Default Font Scale', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
     TEXT_PROPERTIES__FONT_THICKNESS  = IntegerField('Font Thickness', validators=[DataRequired(), TEXT_PROPERTIES__FONT_THICKNESS_validator])
     TEXT_PROPERTIES__FONT_OUTLINE    = BooleanField('Font Outline')
     TEXT_PROPERTIES__FONT_HEIGHT     = IntegerField('Text Height Offset', validators=[DataRequired(), TEXT_PROPERTIES__FONT_HEIGHT_validator])
@@ -4119,7 +4119,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEXT_PROPERTIES__FONT_COLOR      = StringField('Text Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     TEXT_PROPERTIES__PIL_FONT_FILE   = SelectField('Pillow Font', choices=TEXT_PROPERTIES__PIL_FONT_FILE_choices, validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_FILE_validator])
     TEXT_PROPERTIES__PIL_FONT_CUSTOM = StringField('Custom Font', validators=[TEXT_PROPERTIES__PIL_FONT_CUSTOM_validator])
-    TEXT_PROPERTIES__PIL_FONT_SIZE   = IntegerField('Font Size', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
+    TEXT_PROPERTIES__PIL_FONT_SIZE   = IntegerField('Default Font Size', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
     CARDINAL_DIRS__ENABLE            = BooleanField('Enable Cardinal Directions')
     CARDINAL_DIRS__FONT_COLOR        = StringField('Text Color (r,g,b)', validators=[DataRequired(), RGB_COLOR_validator])
     CARDINAL_DIRS__SWAP_NS           = BooleanField('Swap North/South')
