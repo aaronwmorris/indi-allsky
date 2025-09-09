@@ -2837,9 +2837,7 @@ class AjaxConfigView(BaseView):
         )
 
         for leaf in leaf_list:
-            try:
-                self.indi_allsky_config[leaf]
-            except KeyError:
+            if not isinstance(self.indi_allsky_config.get(leaf), dict):
                 self.indi_allsky_config[leaf] = dict()
 
 

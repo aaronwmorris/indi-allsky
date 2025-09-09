@@ -671,20 +671,14 @@ $('#scan-button').on('click', function() {
             );
 
 
-            $('#SSID_SELECT').removeAttr('readonly');
-            $('#SSID_SELECT').removeAttr('disabled');
-            $('#SSID_SELECT').removeClass('bg-dark');
-            $('#SSID_SELECT').removeClass('text-secondary');
+            $('#SSID_SELECT').removeAttr('readonly disabled');
+            $('#SSID_SELECT').removeClass('bg-dark text-secondary');
 
-            $('#SSID_PSK').removeAttr('readonly');
-            $('#SSID_PSK').removeAttr('disabled');
-            $('#SSID_PSK').removeClass('bg-dark');
-            $('#SSID_PSK').removeClass('text-secondary');
+            $('#SSID_PSK').removeAttr('readonly disabled');
+            $('#SSID_PSK').removeClass('bg-dark text-secondary');
 
-            $('#SSID_PRIORITY').removeAttr('readonly');
-            $('#SSID_PRIORITY').removeAttr('disabled');
-            $('#SSID_PRIORITY').removeClass('bg-dark');
-            $('#SSID_PRIORITY').removeClass('text-secondary');
+            $('#SSID_PRIORITY').removeAttr('readonly disabled');
+            $('#SSID_PRIORITY').removeClass('bg-dark text-secondary');
 
             $('#connect-button').removeAttr('disabled');
             $("#connect-button").attr("class", "btn btn-success");
@@ -829,45 +823,35 @@ $('#create-hotspot-button').on('click', function() {
 $('#HOTSPOT_NOSECURITY').on('change', function() {
     if ($('#HOTSPOT_NOSECURITY').prop('checked')) {
         $('#HOTSPOT_PSK').val('');
-        $('#HOTSPOT_PSK').attr('readonly', true);
-        $('#HOTSPOT_PSK').attr('disabled', true);
-        $('#HOTSPOT_PSK').addClass('bg-dark');
-        $('#HOTSPOT_PSK').addClass('text-secondary');
+        $('#HOTSPOT_PSK').attr({'readonly': true, 'disabled': true});
+        $('#HOTSPOT_PSK').addClass('bg-dark text-secondary');
     } else {
-        $('#HOTSPOT_PSK').removeAttr('readonly');
-        $('#HOTSPOT_PSK').removeAttr('disabled');
-        $('#HOTSPOT_PSK').removeClass('bg-dark');
-        $('#HOTSPOT_PSK').removeClass('text-secondary');
+        $('#HOTSPOT_PSK').removeAttr('readonly disabled');
+        $('#HOTSPOT_PSK').removeClass('bg-dark text-secondary');
     }
 });
 
 
 function init() {
-    $('#SSID_SELECT').attr('readonly', true);
-    $('#SSID_SELECT').attr('disabled', true);
-    $('#SSID_SELECT').addClass('bg-dark');
-    $('#SSID_SELECT').addClass('text-secondary');
+    $('#SSID_SELECT').attr({'readonly': true, 'disabled': true});
+    $('#SSID_SELECT').addClass('bg-dark text-secondary');
 
-    $('#SSID_PSK').attr('readonly', true);
-    $('#SSID_PSK').attr('disabled', true);
-    $('#SSID_PSK').addClass('bg-dark');
-    $('#SSID_PSK').addClass('text-secondary');
+    $('#SSID_PSK').attr({'readonly': true, 'disabled': true});
+    $('#SSID_PSK').addClass('bg-dark text-secondary');
 
-    $('#SSID_PRIORITY').attr('readonly', true);
-    $('#SSID_PRIORITY').attr('disabled', true);
-    $('#SSID_PRIORITY').addClass('bg-dark');
-    $('#SSID_PRIORITY').addClass('text-secondary');
+    $('#SSID_PRIORITY').attr({'readonly': true, 'disabled': true});
+    $('#SSID_PRIORITY').addClass('bg-dark text-secondary');
 
-    $('#connect-button').attr('disabled', true);
+    $('#connect-button').attr({'disabled': true});
     $('#connect-button').attr('class', 'btn btn-secondary');
 
     if ($('#WIFI_DEVICES_SELECT').val() == '') {
-        $('#scan-button').attr('disabled', true);
+        $('#scan-button').attr({'disabled': true});
         $('#scan-button').attr('class', 'btn btn-secondary');
     }
 
     if ($('#HOTSPOT_DEVICES_SELECT').val() == '') {
-        $('#create-hotspot-button').attr('disabled', true);
+        $('#create-hotspot-button').attr({'disabled': true});
         $('#create-hotspot-button').attr('class', 'btn btn-secondary');
     }
 
