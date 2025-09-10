@@ -45,3 +45,7 @@ class NotFound(Exception):
 
 class BackupFailure(Exception):
     pass
+
+
+class BinModeException(Exception):
+    pass

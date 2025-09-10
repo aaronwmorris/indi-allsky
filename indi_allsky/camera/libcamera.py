@@ -14,6 +14,7 @@ from .indi import IndiClient
 from .fake_indi import FakeIndiCcd
 
 from ..exceptions import TimeOutException
+from ..exceptions import BinModeException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -640,10 +641,6 @@ class IndiClientLibCameraGeneric(IndiClient):
     def setCcdScopeInfo(self, *args):
         # not supported
         pass
-
-
-class BinModeException(Exception):
-    pass
 
 
 class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
