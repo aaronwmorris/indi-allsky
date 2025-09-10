@@ -374,6 +374,28 @@ class IndexImgView(TemplateView):
         return context
 
 
+class VirtualSkyView(TemplateView):
+    title = 'VirtualSky'
+    latest_image_view = 'indi_allsky.js_latest_image_view'
+
+
+    def get_context(self):
+        context = super(VirtualSkyView, self).get_context()
+
+        context['title'] = self.title
+        context['camera_id'] = self.camera.id
+        context['latest_image_view'] = self.latest_image_view
+
+        refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
+        context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
+
+        context['camera_latitude'] = self.camera.latitude
+        context['camera_longitude'] = self.camera.longitude
+        context['camera_az'] = self.camera.az
+
+        return context
+
+
 class RealtimeKeogramView(TemplateView):
     title = 'Realtime Keogram'
 
@@ -10478,4 +10500,4 @@ bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view',
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
-
+bp_allsky.add_url_rule('/virtualsky', view_func=VirtualSkyView.as_view('virtualsky_view', template_name='virtualsky.html'))
