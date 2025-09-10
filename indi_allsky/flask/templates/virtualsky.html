@@ -5,12 +5,22 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
-.fit {
+#latest-image {
     max-width: 100%;
     max-height: 90vh;
     width: auto;
     height: auto;
     object-fit: contain;
+}
+
+#starmap_container {
+    position: absolute;
+    overflow: hidden;
+}
+
+#starmap {
+    width:1920px;
+    height:1080px;
 }
 </style>
 <script src="{{ url_for('indi_allsky.static', filename='virtualsky/stuquery.min.js') }}"></script>
@@ -190,9 +200,11 @@ $( document ).ready(function() {
     </div>
     <div class="row h-75 align-items-center">
         <div class="col-12 text-center">
-            <img id="latest-image" class="fit">
+            <div id="starmap_container">
+                <div id="starmap"></div>
+            </div>
+            <img id="latest-image">
         </div>
-        <div id="starmap" style="width:1920px;height:1080px;"></div>
     </div>
 </div>
 {% endblock %}
