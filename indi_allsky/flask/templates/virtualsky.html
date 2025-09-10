@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: {{ title }}{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+#latest-image {
+    max-width: 100%;
+    max-height: 90vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+#starmap_container {
+    position: absolute;
+    overflow: hidden;
+}
+
+#starmap {
+    width:1920px;
+    height:1080px;
+}
+</style>
+<script src="{{ url_for('indi_allsky.static', filename='virtualsky/stuquery.min.js') }}"></script>
+<script src="{{ url_for('indi_allsky.static', filename='virtualsky/virtualsky.min.js') }}" type="text/javascript"></script>
+<script type="text/javascript">
+var img;
+var json_data = {
+    'latest_image' : {
+        'url' : null,
+        'width': 0,
+        'height': 0,
+        'message' : ''
+    }
+};
+var max_age = 900;
+var camera_id = {{ camera_id }};
+var refreshInterval = {{ refreshInterval | int }};
+var night = {{ night }};
+var fullscreen = false;  //initial state
+
+var planetarium;
+
+function init() {
+    loadNextImage();
+    loop();
+}
+
+async function loop() {
+    //console.log('Starting loop');
+    while(json_data['latest_image']['url'] == null) {
+        await sleep(100);
+    }
+
+
+    img = new Image();
+    img.onload = function() {
+        $('#latest-image').attr({
+            'src': this.src,
+        });
+    };
+
+
+    showImage(json_data['latest_image']);
+
+    setTimeout(loop, refreshInterval);
+}
+
+
+function showImage(entry) {
+    console.log('Showing image ' + entry["url"]);
+    img.src = entry["url"];
+}
+
+
+function loadNextImage() {
+    console.log('Loading next image');
+    loadJS("{{ url_for(latest_image_view) }}", {'camera_id' : camera_id, 'limit_s' : max_age, 'night' : night}, function() {});
+    setTimeout(loadNextImage, refreshInterval);
+}
+
+function sleep(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function loadJS(url, data, onDone, onError) {
+    if(!onDone)onDone=function(){};
+    if(!onError)onError=function(){};
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        contentType: "application/json",
+        data: data,
+        success: function(rdata){
+            json_data = rdata
+            $('#message').html(json_data['latest_image']['message']);
+        },
+        error: function(rdata){
+            onError(rdata.status);
+            $('#message').html('Error loading data.  Please check the logs.');
+        },
+    });
+
+}
+
+
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    $(window).on("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    if (json_data['latest_image']) {
+        showImage(json_data['latest_image']);
+    };
+}
+setResizeHandler(resize_callback, 200);
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
+
+
+
+$( document ).ready(function() {
+    $('#latest-image').on("click", function() {
+        goFullscreen(this);
+    });
+
+    init();
+
+    planetarium = S.virtualsky({
+        id: 'starmap',
+        projection: 'fisheye',
+        latitude: {{ camera_latitude }},
+        longitude: {{ camera_longitude }},
+        az: {{ camera_az }},
+        live: true,
+        constellations: true,
+        gridlines_eq: true,
+        mouse: false,
+        keyboard: false,
+        showdate: false,
+        showposition: false,
+        gradient: false,
+        showgalaxy: true,
+        transparent: true,
+        credit: false,
+	});
+});
+
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container h-100">
+    <div class="row">
+        <div class="text-muted text-center" id="message">Loading...</div>
+    </div>
+    <div class="row h-75 align-items-center">
+        <div class="col-12 text-center">
+            <div id="starmap_container">
+                <div id="starmap"></div>
+            </div>
+            <img id="latest-image">
+        </div>
+    </div>
+</div>
+{% endblock %}
