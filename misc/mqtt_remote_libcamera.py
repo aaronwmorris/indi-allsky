@@ -19,6 +19,7 @@ MQTT_IMAGE_TOPIC = 'libcamera_image'
 
 
 import sys
+import io
 import time
 from pathlib import Path
 import json
@@ -151,8 +152,6 @@ class MqttRemoteLibcamera(object):
 
 
         ### Shutdown
-        self.abortCcdExposure()
-
         self.client.disconnect()
         self.client.loop_stop()
 
@@ -181,6 +180,10 @@ class MqttRemoteLibcamera(object):
 
 
     def getCcdExposureStatus(self):
+        import paho.mqtt.properties as mqtt_props
+        from paho.mqtt.packettypes import PacketTypes
+
+
         # returns camera_ready, exposure_state
         if self._libCameraProcessRunning():
             return
@@ -200,8 +203,60 @@ class MqttRemoteLibcamera(object):
                 # not returning, just log the error
 
 
-            # send image and metadata to queue
+            if not self.current_exposure_file_p.exists() or not self.current_metadata_file_p.exists():
+                logger.error('Image or metadata file does not exist, cancelling...')
 
+                try:
+                    self.current_exposure_file_p.unlink()
+                except FileNotFoundError:
+                    pass
+
+
+                try:
+                    self.current_metadata_file_p.unlink()
+                except FileNotFoundError:
+                    pass
+
+
+                return
+
+
+            metadata_user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
+            metadata_user_properties.UserProperty = [
+                ("Content-Type", "application/json"),
+            ]
+
+
+            with io.open(str(self.current_metadata_file_p), 'rb') as f_metadata:
+                payload = json.load(f_metadata.read())
+
+                self.client.publish(
+                    self.metadata_topic,
+                    payload=json.dumps(payload),
+                    qos=self.qos,
+                    retain=False,
+                    properties=metadata_user_properties,
+                )
+
+
+            image_user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
+            image_user_properties.UserProperty = [
+                ("Content-Type", "application/octet-stream"),
+            ]
+
+
+            with io.open(str(self.current_exposure_file_p), 'rb') as f_image:
+                self.client.publish(
+                    self.image_topic,
+                    payload=f_image.read(),  # this requires paho-mqtt >= v2.0.0
+                    qos=self.qos,
+                    retain=False,
+                    properties=metadata_user_properties,
+                )
+
+
+            self.current_exposure_file_p.unlink()
+            self.current_metadata_file_p.unlink()
 
 
     def _libCameraProcessRunning(self):
