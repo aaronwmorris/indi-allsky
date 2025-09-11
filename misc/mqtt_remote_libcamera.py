@@ -12,6 +12,7 @@ MQTT_HOSTNAME = os.environ.get('MQTT_HOSTNAME', 'localhost')
 MQTT_PORT = int(os.environ.get('MQTT_PORT', 8883))
 MQTT_USERNAME = os.environ.get('MQTT_USERNAME', 'username')
 MQTT_PASSWORD = os.environ.get('MQTT_PASSWORD', 'password123')
+MQTT_QOS = int(os.environ.get('MQTT_QOS', 0))
 MQTT_TLS = int(os.environ.get('MQTT_TLS', 1))
 MQTT_CERT_BYPASS = int(os.environ.get('MQTT_CERT_BYPASS', 1))
 
@@ -255,12 +256,10 @@ class MqttRemoteLibcamera(object):
 
 
             with io.open(str(self.current_metadata_file_p), 'rb') as f_metadata:
-                payload = json.load(f_metadata.read())
-
                 self.client.publish(
-                    self.metadata_topic,
-                    payload=json.dumps(payload),
-                    qos=self.qos,
+                    MQTT_METADATA_TOPIC,
+                    payload=json.load(f_metadata),
+                    qos=MQTT_QOS,
                     retain=False,
                     properties=metadata_user_properties,
                 )
@@ -274,9 +273,9 @@ class MqttRemoteLibcamera(object):
 
             with io.open(str(self.current_exposure_file_p), 'rb') as f_image:
                 self.client.publish(
-                    self.image_topic,
+                    MQTT_METADATA_TOPIC,
                     payload=f_image.read(),  # this requires paho-mqtt >= v2.0.0
-                    qos=self.qos,
+                    qos=MQTT_QOS,
                     retain=False,
                     properties=metadata_user_properties,
                 )
