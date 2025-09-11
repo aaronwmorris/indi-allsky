@@ -28,6 +28,7 @@ MQTT_FAN_TOPIC = 'fan_topic'
 
 
 import sys
+import time
 import json
 import ssl
 import paho.mqtt.client as mqtt
@@ -68,29 +69,17 @@ class MqttRemoteDewHeaterFan(object):
 
         self.client = None
 
+        self._shutdown = False
+
 
     def sigint_handler(self, signum, frame):
         logger.warning('Caught INT signal, shutting down')
-
-        self.client.disconnect()
-        self.client.loop_stop()
-
-        self.dew_heater.deinit()
-        self.fan.deinit()
-
-        sys.exit()
+        self._shutdown = True
 
 
     def sigterm_handler(self, signum, frame):
         logger.warning('Caught TERM signal, shutting down')
-
-        self.client.disconnect()
-        self.client.loop_stop()
-
-        self.dew_heater.deinit()
-        self.fan.deinit()
-
-        sys.exit()
+        self._shutdown = True
 
 
     def main(self):
@@ -136,7 +125,23 @@ class MqttRemoteDewHeaterFan(object):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
-        self.client.loop_forever()
+
+        self.client.loop_start()
+
+
+        while True:
+            time.sleep(1.0)
+
+            if self._shutdown:
+                break
+
+
+        ### Shutdown
+        self.client.disconnect()
+        self.client.loop_stop()
+
+        self.dew_heater.deinit()
+        self.fan.deinit()
 
 
     def on_subscribe(self, client, userdata, mid, reason_code_list, properties):
