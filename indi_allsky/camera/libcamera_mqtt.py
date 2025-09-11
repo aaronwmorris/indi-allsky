@@ -373,3 +373,30 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
             logger.info('Subscribing to metadata topic %s', self.metadata_topic)
             client.subscribe(self.metadata_topic)
 
+
+class IndiClientLibCameraImx477Mqtt(IndiClientLibCameraMqttGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx477Mqtt, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'imx477_mqtt'
+
+        self.camera_info = {
+            'width'         : 4056,
+            'height'        : 3040,
+            'pixel'         : 1.55,
+            'min_gain'      : 1,
+            'max_gain'      : 22,  # verified
+            'min_exposure'  : 0.0001,
+            'max_exposure'  : 200.0,
+            'cfa'           : 'BGGR',
+            'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            #1 : '--mode 4056:3040:12',
+            1 : '',
+            2 : '--mode 2028:1520:12',
+            4 : '--mode 1332:990:10',  # cropped
+        }
+

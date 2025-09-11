@@ -18,6 +18,7 @@ from .libcamera import IndiClientLibCameraImx298 as libcamera_imx298
 from .libcamera import IndiClientLibCameraImx500 as libcamera_imx500_ai
 from .libcamera import IndiClientLibCameraImx283 as libcamera_imx283
 from .libcamera import IndiClientLibCameraImx678 as libcamera_imx678
+from .libcamera_mqtt import IndiClientLibCameraImx477Mqtt as imx477_mqtt
 from .pycurl_camera import IndiClientPycurl as pycurl_camera
 from .test_cameras import IndiClientTestCameraBubbles as test_bubbles
 from .test_cameras import IndiClientTestCameraRotatingStars as test_rotating_stars
@@ -43,6 +44,7 @@ __all__ = (
     'libcamera_imx500_ai',
     'libcamera_imx283',
     'libcamera_imx678',
+    'imx477_mqtt',
     'pycurl_camera',
     'test_bubbles',
     'test_rotating_stars',
