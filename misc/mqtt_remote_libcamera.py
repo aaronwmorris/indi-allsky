@@ -143,6 +143,7 @@ class MqttRemoteLibcamera(object):
 
             try:
                 exposure_data = self.user_data['queue'].get_nowait()
+                logger.info('Exposure data: %s', str(exposure_data))
 
 
                 try:
@@ -180,7 +181,7 @@ class MqttRemoteLibcamera(object):
         logger.info('image command: %s', ' '.join(cmd))
 
 
-        self.exposureStartTime = time.time()
+        self.exposure_start_time = time.time()
 
         self.libcamera_process = subprocess.Popen(
             cmd,
@@ -231,6 +232,10 @@ class MqttRemoteLibcamera(object):
 
 
                 return
+
+
+            exposure_elapsed_s = time.time() - self.exposure_start_time
+            logger.info('Exposure completed in %0.4f s', exposure_elapsed_s)
 
 
             metadata_user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
