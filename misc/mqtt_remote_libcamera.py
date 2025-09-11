@@ -149,13 +149,23 @@ class MqttRemoteLibcamera(object):
                 try:
                     action_str = exposure_data['action']
                     method_action = getattr(self, action_str)
-                    method_action(**exposure_data['kwargs'])
                 except AttributeError:
                     logger.error('Unknown method: %s', action_str)
                     continue
                 except KeyError:
                     logger.error('Malformed exposure request')
                     continue
+
+
+                try:
+                    kwargs = exposure_data['kwargs']
+                except KeyError:
+                    logger.error('Malformed exposure request')
+                    continue
+
+
+                # execute method
+                method_action(**kwargs)
 
             except queue.Empty:
                 pass
