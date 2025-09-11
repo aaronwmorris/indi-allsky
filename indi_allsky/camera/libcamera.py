@@ -58,8 +58,10 @@ class IndiClientLibCameraGeneric(IndiClient):
         # pick correct executable
         if shutil.which('rpicam-still'):
             self.ccd_driver_exec = 'rpicam-still'
-        else:
+        elif shutil.which('libcamera-still'):
             self.ccd_driver_exec = 'libcamera-still'
+        else:
+            raise Exception('rpicam-still command not found')
 
 
         # override in subclass
@@ -286,7 +288,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 # log errors
                 stdout = self.libcamera_process.stdout
                 for line in stdout.readlines():
-                    logger.error('libcamera-still error: %s', line)
+                    logger.error('rpicam-still error: %s', line)
 
                 # not returning, just log the error
 
@@ -312,7 +314,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 # log errors
                 stdout = self.libcamera_process.stdout
                 for line in stdout.readlines():
-                    logger.error('libcamera-still error: %s', line)
+                    logger.error('rpicam-still error: %s', line)
 
                 # not returning, just log the error
 
@@ -462,13 +464,15 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         try:
-            self.current_exposure_file_p.unlink()
+            if self.current_exposure_file_p:
+                self.current_exposure_file_p.unlink()
         except FileNotFoundError:
             pass
 
 
         try:
-            self.current_metadata_file_p.unlink()
+            if self.current_metadata_file_p:
+                self.current_metadata_file_p.unlink()
         except FileNotFoundError:
             pass
 
