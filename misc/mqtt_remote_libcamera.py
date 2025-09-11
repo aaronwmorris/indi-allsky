@@ -143,7 +143,7 @@ class MqttRemoteLibcamera(object):
 
             try:
                 exposure_data = self.user_data['queue'].get_nowait()
-                logger.info('Exposure data: %s', str(exposure_data))
+                #logger.info('Exposure data: %s', str(exposure_data))
 
 
                 try:
@@ -154,7 +154,7 @@ class MqttRemoteLibcamera(object):
                     logger.error('Unknown method: %s', action_str)
                     continue
                 except KeyError:
-                    logger.error('Malformed data: %s', str(exposure_data))
+                    logger.error('Malformed exposure request')
                     continue
 
             except queue.Empty:
