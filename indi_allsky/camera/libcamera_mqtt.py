@@ -319,8 +319,10 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
         if message.topic == self.metadata_topic:
             logger.info('Received metadata message')
+            metadata_data = json.loads(message.payload)
+
             with io.open(str(self.current_metadata_file_p), 'w') as f_metadata:
-                json.dumps(f_metadata, message.payload)
+                json.dump(metadata_data, f_metadata)
 
             userdata['waiting_on_metadata'] = False
 
