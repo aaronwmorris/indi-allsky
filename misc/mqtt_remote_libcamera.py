@@ -174,7 +174,7 @@ class MqttRemoteLibcamera(object):
         files = kwargs['files']
 
 
-        self.current_exposure_file_p = Path(files['images'])
+        self.current_exposure_file_p = Path(files['image'])
         self.current_metadata_file_p = Path(files['metadata'])
 
 
