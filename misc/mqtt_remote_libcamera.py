@@ -255,10 +255,10 @@ class MqttRemoteLibcamera(object):
             ]
 
 
-            with io.open(str(self.current_metadata_file_p), 'rb') as f_metadata:
+            with io.open(str(self.current_metadata_file_p), 'r', encoding='utf-8') as f_metadata:
                 self.client.publish(
                     MQTT_METADATA_TOPIC,
-                    payload=json.load(f_metadata),
+                    payload=f_metadata.read(),
                     qos=MQTT_QOS,
                     retain=False,
                     properties=metadata_user_properties,
