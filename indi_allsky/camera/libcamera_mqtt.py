@@ -240,11 +240,13 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         payload = {
-            'action'   : 'setCcdExposure',
-            'cmd_args' : cmd,
-            'files'    : {
-                'metadata' : str(metadata_tmp_p),
-                'image'    : str(image_tmp_p),
+            'action' : 'setCcdExposure',
+            'kwargs' : {
+                'cmd'   : cmd,
+                'files' : {
+                    'metadata' : str(metadata_tmp_p),
+                    'image'    : str(image_tmp_p),
+                },
             },
         }
 
@@ -306,6 +308,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
         payload = {
             'action' : 'abortCcdExposure',
+            'kwargs' : {},
         }
 
         self.client.publish(self.exposure_topic, payload=json.dumps(payload), qos=self.qos, retain=False, properties=user_properties)

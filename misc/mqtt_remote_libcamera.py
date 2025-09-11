@@ -20,7 +20,10 @@ MQTT_IMAGE_TOPIC = 'libcamera_image'
 
 import sys
 import time
-#import json
+from pathlib import Path
+import json
+import queue
+import subprocess
 import ssl
 import paho.mqtt.client as mqtt
 import signal
@@ -41,8 +44,17 @@ class MqttRemoteLibcamera(object):
     def __init__(self):
         self.client = None
 
+        self.libcamera_process = None
+
         self.active_exposure = False
         self.exposure_start_time = None
+
+        self.current_exposure_file_p = None
+        self.current_metadata_file_p = None
+
+        self.user_data = {
+            'queue' : queue.Queue(),
+        }
 
         self._shutdown = False
 
@@ -69,6 +81,8 @@ class MqttRemoteLibcamera(object):
         self.client.on_message = self.on_message
         self.client.on_subscribe = self.on_subscribe
         #self.client.on_unsubscribe = self.on_unsubscribe
+
+        self.client.user_data_set(self.user_data)
 
 
         if MQTT_USERNAME:
@@ -105,16 +119,138 @@ class MqttRemoteLibcamera(object):
         self.client.loop_start()
 
 
+        ### Main program loop
         while True:
-            time.sleep(1.0)
+            time.sleep(0.1)
+
 
             if self._shutdown:
                 break
 
 
+            try:
+                exposure_data = self.user_data['queue'].get_nowait()
+
+
+                try:
+                    action_str = exposure_data['action']
+                    method_action = getattr(self, action_str)
+                    method_action(**exposure_data['kwargs'])
+                except AttributeError:
+                    logger.error('Unknown method: %s', action_str)
+                    continue
+                except KeyError:
+                    logger.error('Malformed data: %s', str(exposure_data))
+                    continue
+
+            except queue.Empty:
+                pass
+
+
+            self.getCcdExposureStatus()
+
+
         ### Shutdown
+        self.abortCcdExposure()
+
         self.client.disconnect()
         self.client.loop_stop()
+
+
+    def setCcdExposure(self, **kwargs):
+        cmd = kwargs['cmd']
+        files = kwargs['files']
+
+
+        self.current_exposure_file_p = Path(files['images'])
+        self.current_metadata_file_p = Path(files['metadata'])
+
+
+        logger.info('image command: %s', ' '.join(cmd))
+
+
+        self.exposureStartTime = time.time()
+
+        self.libcamera_process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+
+        self.active_exposure = True
+
+
+    def getCcdExposureStatus(self):
+        # returns camera_ready, exposure_state
+        if self._libCameraProcessRunning():
+            return
+
+
+        if self.active_exposure:
+            # if we get here, that means the camera is finished with the exposure
+            self.active_exposure = False
+
+
+            if self.libcamera_process.returncode != 0:
+                # log errors
+                stdout = self.libcamera_process.stdout
+                for line in stdout.readlines():
+                    logger.error('rpicam-still error: %s', line)
+
+                # not returning, just log the error
+
+
+            # send image and metadata to queue
+
+
+
+    def _libCameraProcessRunning(self):
+        if not self.libcamera_process:
+            return False
+
+        # poll returns None when process is active, rc (normally 0) when finished
+        poll = self.libcamera_process.poll()
+        if isinstance(poll, type(None)):
+            return True
+
+        return False
+
+
+    def abortCcdExposure(self, **kwargs):
+        if not self._libCameraProcessRunning():
+            return
+
+
+        logger.warning('Aborting exposure')
+
+        self.active_exposure = False
+
+        for _ in range(5):
+            if not self._libCameraProcessRunning():
+                break
+
+            self.libcamera_process.terminate()
+            time.sleep(0.5)
+            continue
+
+
+        if self._libCameraProcessRunning():
+            self.libcamera_process.kill()
+            self.libcamera_process.poll()  # close out the process
+
+
+        try:
+            if self.current_exposure_file_p:
+                self.current_exposure_file_p.unlink()
+        except FileNotFoundError:
+            pass
+
+
+        try:
+            if self.current_metadata_file_p:
+                self.current_metadata_file_p.unlink()
+        except FileNotFoundError:
+            pass
 
 
     def on_subscribe(self, client, userdata, mid, reason_code_list, properties):
@@ -137,7 +273,16 @@ class MqttRemoteLibcamera(object):
 
 
     def on_message(self, client, userdata, message):
-        pass
+        logger.info('Recieved exposure message')
+
+        try:
+            exposure_data = json.loads(message.payload)
+        except ValueError as e:
+            logger.error('MQTT JSON data error: %s', str(e))
+            return
+
+
+        userdata['queue'].put(exposure_data)
 
 
     def on_publish(self, client, userdata, mid, reason_code, properties):
