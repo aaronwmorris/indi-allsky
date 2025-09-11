@@ -275,7 +275,7 @@ class MqttRemoteLibcamera(object):
 
             with io.open(str(self.current_exposure_file_p), 'rb') as f_image:
                 self.client.publish(
-                    MQTT_METADATA_TOPIC,
+                    MQTT_IMAGE_TOPIC,
                     payload=f_image.read(),  # this requires paho-mqtt >= v2.0.0
                     qos=MQTT_QOS,
                     retain=False,
