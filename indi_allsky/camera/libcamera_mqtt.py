@@ -31,14 +31,14 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         }
 
 
-        host = self.config.get('MQTTPUBLISH', {}).get('MQTT_HOST', 'localhost')
-        port = self.config.get('MQTTPUBLISH', {}).get('MQTT_PORT', 8883)
-        username = self.config.get('MQTTPUBLISH', {}).get('MQTT_USERNAME', 'indi-allsky')
-        password = self.config.get('MQTTPUBLISH', {}).get('MQTT_PASSWORD', '')
-        tls = self.config.get('MQTTPUBLISH', {}).get('MQTT_TLS', True)
-        cert_bypass = self.config.get('MQTTPUBLISH', {}).get('MQTT_CERT_BYPASS', True)
+        host = self.config.get('MQTTPUBLISH', {}).get('HOST', 'localhost')
+        port = self.config.get('MQTTPUBLISH', {}).get('PORT', 8883)
+        username = self.config.get('MQTTPUBLISH', {}).get('USERNAME', 'indi-allsky')
+        password = self.config.get('MQTTPUBLISH', {}).get('PASSWORD', '')
+        tls = self.config.get('MQTTPUBLISH', {}).get('TLS', True)
+        cert_bypass = self.config.get('MQTTPUBLISH', {}).get('CERT_BYPASS', True)
 
-        self._qos = self.config.get('MQTTPUBLISH', {}).get('MQTT_QOS', 0)
+        self._qos = self.config.get('MQTTPUBLISH', {}).get('QOS', 0)
 
         self.exposure_topic = self.config.get('MQTTPUBLISH', {}).get('MQTT_EXPOSURE_TOPIC', 'libcamera_exposure')
         self.image_topic = self.config.get('MQTTPUBLISH', {}).get('MQTT_IMAGE_TOPIC', 'libcamera_image')
