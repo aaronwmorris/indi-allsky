@@ -1,5 +1,6 @@
 import time
 from pathlib import Path
+import io
 import tempfile
 import json
 import logging
@@ -14,6 +15,9 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
+    ccd_driver_exec = 'rpicam-still'
+
+
     def __init__(self, *args, **kwargs):
         super(IndiClientLibCameraMqttGeneric, self).__init__(*args, **kwargs)
         import ssl
@@ -22,7 +26,8 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
         # modified in MQTT methods
         self.user_data = {
-            'waiting_on_exposure': False
+            'waiting_on_image'    : False,
+            'waiting_on_metadata' : False,
         }
 
 
@@ -34,6 +39,10 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         cert_bypass = self.config.get('CAMERA', {}).get('MQTT_CERT_BYPASS', True)
 
         self._qos = self.config.get('CAMERA', {}).get('MQTT_QOS', 0)
+
+        self.exposure_topic = self.config.get('CAMERA', {}).get('MQTT_EXPOSURE_TOPIC', 'libcamera_exposure')
+        self.image_topic = self.config.get('CAMERA', {}).get('MQTT_IMAGE_TOPIC', 'libcamera_image')
+        self.metadata_topic = self.config.get('CAMERA', {}).get('MQTT_METADATA_TOPIC', 'libcamera_metadata')
 
 
         self.client = mqtt.Client(
@@ -73,6 +82,11 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.client.user_data_set(self.user_data)
 
         self.client.loop_start()
+
+
+    @property
+    def qos(self):
+        return self._qos
 
 
     def setCcdExposure(self, exposure, sync=False, timeout=None):
@@ -125,6 +139,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
         if image_type in ['dng']:
             cmd = [
+                self.ccd_driver_exec,
                 '--nopreview',
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
@@ -137,6 +152,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         elif image_type in ['jpg', 'png']:
             #logger.warning('RAW frame mode disabled due to low memory resources')
             cmd = [
+                self.ccd_driver_exec,
                 '--nopreview',
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
@@ -213,7 +229,8 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.exposureStartTime = time.time()
 
         self.active_exposure = True
-        self.user_data['waiting_on_exposure'] = True
+        self.user_data['waiting_on_image'] = True
+        self.user_data['waiting_on_metadata'] = True
 
 
         user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
@@ -223,20 +240,27 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         payload = {
-            'action'   : 'exposure',
+            'action'   : 'setCcdExposure',
             'cmd_args' : cmd,
+            'files'    : {
+                'metadata' : str(metadata_tmp_p),
+                'image'    : str(image_tmp_p),
+            },
         }
 
         self.client.publish(self.exposure_topic, payload=json.dumps(payload), qos=self.qos, retain=False, properties=user_properties)
 
 
         if sync:
-            pass
-            #    raise TimeOutException('Timeout waiting for exposure')
+            while self.user_data['waiting_on_metadata']:
+                time.sleep(0.1)
 
+            while self.user_data['waiting_on_image']:
+                time.sleep(0.1)
 
             self.active_exposure = False
-            self.user_data['waiting_on_exposure'] = False
+            self.user_data['waiting_on_image'] = False
+            self.user_data['waiting_on_metadata'] = False
 
             self._processMetadata()
 
@@ -245,14 +269,15 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
     def getCcdExposureStatus(self):
         # returns camera_ready, exposure_state
-        if not self.user_data['waiting_on_exposure']:
+        if self.user_data['waiting_on_metadata']:
+            return False, 'BUSY'
+
+        elif self.user_data['waiting_on_image']:
             return False, 'BUSY'
 
 
         if self.active_exposure:
-            # if we get here, that means the camera is finished with the exposure
             self.active_exposure = False
-
 
             self._processMetadata()
 
@@ -269,7 +294,8 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         logger.warning('Aborting exposure')
 
         self.active_exposure = False
-        self.user_data['waiting_on_exposure'] = False
+        self.user_data['waiting_on_image'] = False
+        self.user_data['waiting_on_metadata'] = False
 
 
         user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
@@ -279,18 +305,33 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         payload = {
-            'action' : 'abort',
+            'action' : 'abortCcdExposure',
         }
 
         self.client.publish(self.exposure_topic, payload=json.dumps(payload), qos=self.qos, retain=False, properties=user_properties)
 
 
     def on_message(self, client, userdata, message):
-        message.payload
-        message.properties
+        # The metadata should always be received first, the image data last
 
+        if message.topic == self.metadata_topic:
+            logger.info('Received metadata message')
+            with io.open(str(self.current_metadata_file_p), 'wb') as f_metadata:
+                json.dump(f_metadata, message.payload)
 
-        #userdata['waiting_on_exposure'] = False
+            userdata['waiting_on_metadata'] = False
+
+            return
+        elif message.topic == self.image_topic:
+            logger.info('Received image message')
+            with io.open(str(self.current_exposure_file_p), 'wb') as f_image:
+                f_image.write(message.payload)
+
+            userdata['waiting_on_image'] = False
+
+            return
+
+        logger.error('Unknown topic: %s', message.topic)
 
 
     def on_publish(self, client, userdata, mid, reason_code, properties):
@@ -323,9 +364,9 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         else:
             # we should always subscribe from on_connect callback to be sure
             # our subscribed is persisted across reconnections.
-            for topic in self.topic_list:
-                logger.info('Subscribing to topic %s', topic)
-                client.subscribe(topic)
+            logger.info('Subscribing to image topic %s', self.image_topic)
+            client.subscribe(self.image_topic)
 
-
+            logger.info('Subscribing to metadata topic %s', self.metadata_topic)
+            client.subscribe(self.metadata_topic)
 
