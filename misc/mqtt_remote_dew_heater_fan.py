@@ -10,21 +10,23 @@
 #rpi-lgpio  (remove RPi.GPIO first)
 
 
+import os
+
 ### Set pins here
 DEW_HEATER_PIN = 'D12'
 FAN_PIN = 'D13'
 
 
 ### MQTT settings
-MQTT_HOSTNAME = 'localhost'
-MQTT_PORT = 8883
-MQTT_USERNAME = 'username'
-MQTT_PASSWORD = 'password123'
-MQTT_TLS = True
-MQTT_CERT_BYPASS = True
+MQTT_HOSTNAME = os.environ.get('MQTT_HOSTNAME', 'localhost')
+MQTT_PORT = int(os.environ.get('MQTT_PORT', 8883))
+MQTT_USERNAME = os.environ.get('MQTT_USERNAME', 'username')
+MQTT_PASSWORD = os.environ.get('MQTT_PASSWORD', 'password123')
+MQTT_TLS = int(os.environ.get('MQTT_TLS', 1))
+MQTT_CERT_BYPASS = int(os.environ.get('MQTT_CERT_BYPASS', 1))
 
-MQTT_DEW_HEATER_TOPIC = 'dew_heater_topic'
-MQTT_FAN_TOPIC = 'fan_topic'
+MQTT_DEW_HEATER_TOPIC = os.environ.get('MQTT_DEW_HEATER_TOPIC', 'dew_heater_topic')
+MQTT_FAN_TOPIC = os.environ.get('MQTT_FAN_TOPIC', 'fan_topic')
 
 
 import sys
@@ -83,6 +85,15 @@ class MqttRemoteDewHeaterFan(object):
 
 
     def main(self):
+        logger.info('MQTT Hostname: %s', MQTT_HOSTNAME)
+        logger.info('MQTT Port:     %d', MQTT_PORT)
+        logger.info('MQTT Username: %s', MQTT_USERNAME)
+        logger.info('MQTT TLS:      %s', str(bool(MQTT_TLS)))
+        logger.info('Dew Heater Topic: %s', MQTT_DEW_HEATER_TOPIC)
+        logger.info('Fan Topic:        %s', MQTT_FAN_TOPIC)
+        time.sleep(3.0)
+
+
         self.client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
             protocol=mqtt.MQTTv5,

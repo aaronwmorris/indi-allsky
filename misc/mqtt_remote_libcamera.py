@@ -5,17 +5,19 @@
 #paho-mqtt >= 2.0.0
 
 
-### MQTT settings
-MQTT_HOSTNAME = 'localhost'
-MQTT_PORT = 8883
-MQTT_USERNAME = 'username'
-MQTT_PASSWORD = 'password123'
-MQTT_TLS = True
-MQTT_CERT_BYPASS = True
+import os
 
-MQTT_EXPOSURE_TOPIC = 'libcamera_exposure'
-MQTT_METADATA_TOPIC = 'libcamera_metadata'
-MQTT_IMAGE_TOPIC = 'libcamera_image'
+### MQTT settings
+MQTT_HOSTNAME = os.environ.get('MQTT_HOSTNAME', 'localhost')
+MQTT_PORT = int(os.environ.get('MQTT_PORT', 8883))
+MQTT_USERNAME = os.environ.get('MQTT_USERNAME', 'username')
+MQTT_PASSWORD = os.environ.get('MQTT_PASSWORD', 'password123')
+MQTT_TLS = int(os.environ.get('MQTT_TLS', 1))
+MQTT_CERT_BYPASS = int(os.environ.get('MQTT_CERT_BYPASS', 1))
+
+MQTT_EXPOSURE_TOPIC = os.environ.get('MQTT_EXPOSURE_TOPIC', 'libcamera_exposure')
+MQTT_METADATA_TOPIC = os.environ.get('MQTT_METADATA_TOPIC', 'libcamera_metadata')
+MQTT_IMAGE_TOPIC = os.environ.get('MQTT_IMAGE_TOPIC', 'libcamera_image')
 
 
 import sys
@@ -71,6 +73,16 @@ class MqttRemoteLibcamera(object):
 
 
     def run(self):
+        logger.info('MQTT Hostname: %s', MQTT_HOSTNAME)
+        logger.info('MQTT Port:     %d', MQTT_PORT)
+        logger.info('MQTT Username: %s', MQTT_USERNAME)
+        logger.info('MQTT TLS:      %s', str(bool(MQTT_TLS)))
+        logger.info('Exposure Topic:  %s', MQTT_EXPOSURE_TOPIC)
+        logger.info('Image Topic:     %s', MQTT_IMAGE_TOPIC)
+        logger.info('Metadata  Topic: %s', MQTT_METADATA_TOPIC)
+        time.sleep(3.0)
+
+
         self.client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
             protocol=mqtt.MQTTv5,
