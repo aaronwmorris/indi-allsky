@@ -49,6 +49,8 @@ class MqttBrokerSensor(SensorBase):
             'data' : [0.0, 0.0, 0.0, 0.0, 0.0],
         }
 
+
+        transport = self.config.get('TEMP_SENSOR', {}).get('MQTT_TRANSPORT', 'tcp')
         host = self.config.get('TEMP_SENSOR', {}).get('MQTT_HOST', 'localhost')
         port = self.config.get('TEMP_SENSOR', {}).get('MQTT_PORT', 8883)
         username = self.config.get('TEMP_SENSOR', {}).get('MQTT_USERNAME', 'indi-allsky')
@@ -60,6 +62,7 @@ class MqttBrokerSensor(SensorBase):
         client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
             protocol=mqtt.MQTTv5,
+            transport=transport,
         )
 
 

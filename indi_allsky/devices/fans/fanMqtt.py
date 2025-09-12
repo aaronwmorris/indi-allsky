@@ -23,6 +23,7 @@ class FanMqttBase(FanBase):
         import paho.mqtt.client as mqtt
 
 
+        transport = self.config.get('DEVICE', {}).get('MQTT_TRANSPORT', 'tcp')
         host = self.config.get('DEVICE', {}).get('MQTT_HOST', 'localhost')
         port = self.config.get('DEVICE', {}).get('MQTT_PORT', 8883)
         username = self.config.get('DEVICE', {}).get('MQTT_USERNAME', 'indi-allsky')
@@ -36,6 +37,7 @@ class FanMqttBase(FanBase):
         self.client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
             protocol=mqtt.MQTTv5,
+            transport=transport,
         )
 
 
