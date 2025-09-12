@@ -3136,7 +3136,7 @@ class IndiAllskyConfigForm(FlaskForm):
         'Special Function' : (
             ('indi_accumulator', 'INDI Accumulator'),
             ('indi_passive', 'INDI (Passive)'),
-            ('imx477_mqtt', 'MQTT IMX477 - Raspberry Pi HQ Camera'),
+            ('mqtt_imx477', 'MQTT IMX477 - Raspberry Pi HQ Camera'),
         ),
         'Test Cameras' : (
             ('test_rotating_stars', 'Test Camera - Rotating Stars'),

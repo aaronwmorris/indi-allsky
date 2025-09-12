@@ -388,7 +388,7 @@ class IndiClientLibCameraImx477Mqtt(IndiClientLibCameraMqttGeneric):
     def __init__(self, *args, **kwargs):
         super(IndiClientLibCameraImx477Mqtt, self).__init__(*args, **kwargs)
 
-        self.ccd_device_name = 'imx477_mqtt'
+        self.ccd_device_name = 'imx477 MQTT'
 
         self.camera_info = {
             'width'         : 4056,
