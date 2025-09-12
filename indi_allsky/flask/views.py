@@ -2381,6 +2381,17 @@ class ConfigView(FormView):
             'LIBCAMERA__CAMERA_ID'           : str(self.indi_allsky_config.get('LIBCAMERA', {}).get('CAMERA_ID', 0)),  # string in form, int in config
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
             'LIBCAMERA__EXTRA_OPTIONS_DAY'   : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS_DAY', ''),
+            'LIBCAMERA__MQTT_TRANSPORT'      : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_TRANSPORT', 'tcp'),
+            'LIBCAMERA__MQTT_HOST'           : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_HOST', 'localhost'),
+            'LIBCAMERA__MQTT_PORT'           : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_PORT', 8883),
+            'LIBCAMERA__MQTT_USERNAME'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_USERNAME', 'indi-allsky'),
+            'LIBCAMERA__MQTT_PASSWORD'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_PASSWORD', ''),
+            'LIBCAMERA__MQTT_QOS'            : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_QOS', 0),
+            'LIBCAMERA__MQTT_TLS'            : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_TLS', True),
+            'LIBCAMERA__MQTT_CERT_BYPASS'    : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_CERT_BYPASS', True),
+            'LIBCAMERA__MQTT_EXPOSURE_TOPIC' : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_EXPOSURE_TOPIC', 'libcamera/exposure'),
+            'LIBCAMERA__MQTT_IMAGE_TOPIC'    : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_IMAGE_TOPIC', 'libcamera/image'),
+            'LIBCAMERA__MQTT_METADATA_TOPIC' : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_METADATA_TOPIC', 'libcamera/metadata'),
             'PYCURL_CAMERA__URL'             : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('URL', ''),
             'PYCURL_CAMERA__IMAGE_FILE_TYPE' : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('IMAGE_FILE_TYPE', 'jpg'),
             'PYCURL_CAMERA__USERNAME'        : self.indi_allsky_config.get('PYCURL_CAMERA', {}).get('USERNAME', ''),
@@ -3280,6 +3291,17 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LIBCAMERA']['CAMERA_ID']               = int(request.json['LIBCAMERA__CAMERA_ID'])
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS']           = str(request.json['LIBCAMERA__EXTRA_OPTIONS'])
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS_DAY']       = str(request.json['LIBCAMERA__EXTRA_OPTIONS_DAY'])
+        self.indi_allsky_config['LIBCAMERA']['MQTT_TRANSPORT']          = str(request.json['LIBCAMERA__MQTT_TRANSPORT'])
+        self.indi_allsky_config['LIBCAMERA']['MQTT_HOST']               = str(request.json['LIBCAMERA__MQTT_HOST'])
+        self.indi_allsky_config['LIBCAMERA']['MQTT_PORT']               = int(request.json['LIBCAMERA__MQTT_PORT'])
+        self.indi_allsky_config['LIBCAMERA']['MQTT_USERNAME']           = str(request.json['LIBCAMERA__MQTT_USERNAME'])
+        self.indi_allsky_config['LIBCAMERA']['MQTT_PASSWORD']           = str(request.json['LIBCAMERA__MQTT_PASSWORD'])
+        self.indi_allsky_config['LIBCAMERA']['MQTT_QOS']                = int(request.json['LIBCAMERA__MQTT_QOS'])
+        self.indi_allsky_config['LIBCAMERA']['MQTT_TLS']                = bool(request.json['LIBCAMERA__MQTT_TLS'])
+        self.indi_allsky_config['LIBCAMERA']['MQTT_CERT_BYPASS']        = bool(request.json['LIBCAMERA__MQTT_CERT_BYPASS'])
+        self.indi_allsky_config['LIBCAMERA']['MQTT_EXPOSURE_TOPIC']     = str(request.json['LIBCAMERA__MQTT_EXPOSURE_TOPIC'])
+        self.indi_allsky_config['LIBCAMERA']['MQTT_IMAGE_TOPIC']        = str(request.json['LIBCAMERA__MQTT_IMAGE_TOPIC'])
+        self.indi_allsky_config['LIBCAMERA']['MQTT_METADATA_TOPIC']     = str(request.json['LIBCAMERA__MQTT_METADATA_TOPIC'])
         self.indi_allsky_config['PYCURL_CAMERA']['URL']                 = str(request.json['PYCURL_CAMERA__URL'])
         self.indi_allsky_config['PYCURL_CAMERA']['IMAGE_FILE_TYPE']     = str(request.json['PYCURL_CAMERA__IMAGE_FILE_TYPE'])
         self.indi_allsky_config['PYCURL_CAMERA']['USERNAME']            = str(request.json['PYCURL_CAMERA__USERNAME'])
