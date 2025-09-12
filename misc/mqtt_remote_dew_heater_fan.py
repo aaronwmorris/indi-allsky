@@ -18,6 +18,7 @@ FAN_PIN = 'D13'
 
 
 ### MQTT settings
+MQTT_TRANSPORT = os.environ.get('MQTT_TRANSPORT', 'tcp')
 MQTT_HOSTNAME = os.environ.get('MQTT_HOSTNAME', 'localhost')
 MQTT_PORT = int(os.environ.get('MQTT_PORT', 8883))
 MQTT_USERNAME = os.environ.get('MQTT_USERNAME', 'username')
@@ -85,10 +86,11 @@ class MqttRemoteDewHeaterFan(object):
 
 
     def main(self):
-        logger.info('MQTT Hostname: %s', MQTT_HOSTNAME)
-        logger.info('MQTT Port:     %d', MQTT_PORT)
-        logger.info('MQTT Username: %s', MQTT_USERNAME)
-        logger.info('MQTT TLS:      %s', str(bool(MQTT_TLS)))
+        logger.info('MQTT Transport:   %s', MQTT_TRANSPORT)
+        logger.info('MQTT Hostname:    %s', MQTT_HOSTNAME)
+        logger.info('MQTT Port:        %d', MQTT_PORT)
+        logger.info('MQTT Username:    %s', MQTT_USERNAME)
+        logger.info('MQTT TLS:         %s', str(bool(MQTT_TLS)))
         logger.info('Dew Heater Topic: %s', MQTT_DEW_HEATER_TOPIC)
         logger.info('Fan Topic:        %s', MQTT_FAN_TOPIC)
         time.sleep(3.0)
@@ -97,6 +99,7 @@ class MqttRemoteDewHeaterFan(object):
         self.client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
             protocol=mqtt.MQTTv5,
+            transport=MQTT_TRANSPORT,
         )
 
 
