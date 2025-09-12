@@ -392,6 +392,7 @@ if [ -n "${WHIPTAIL_BIN:-}" ]; then
             --radiolist "indi-allsky supports the following camera interfaces.\n\nWiki:  https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces\n\nPress space to select" 0 0 0 \
                 "indi" "For astro/planetary cameras normally connected via USB (ZWO, QHY, PlayerOne, SVBony, Altair, Touptek, etc)" "OFF" \
                 "libcamera" "Supports cameras connected via CSI interface on Raspberry Pi SBCs (Raspi HQ Camera, Camera Module 3, etc)" "OFF" \
+                "mqtt_libcamera" "MQTT controlled remote libcamera CSI camera" "OFF" \
                 "pycurl_camera" "Download images from a remote web camera" "OFF" \
                 "indi_accumulator" "Create synthetic exposures using multiple sub-exposures" "OFF" \
                 "indi_passive" "Connect a second instance of indi-allsky to an existing indi-allsky indiserver" "OFF" \
@@ -400,8 +401,8 @@ if [ -n "${WHIPTAIL_BIN:-}" ]; then
             3>&1 1>&2 2>&3)
 
 
-        # more specific libcamera selection
         if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
+            # more specific libcamera selection
 
             while [ -z "${LIBCAMERA_INTERFACE:-}" ]; do
                 LIBCAMERA_INTERFACE=$("$WHIPTAIL_BIN" \
@@ -437,7 +438,30 @@ if [ -n "${WHIPTAIL_BIN:-}" ]; then
             fi
 
             CAMERA_INTERFACE="$LIBCAMERA_INTERFACE"
+
+        elif [ "$CAMERA_INTERFACE" == "mqtt_libcamera" ]; then
+            # more specific mqtt libcamera selection
+
+            while [ -z "${MQTT_LIBCAMERA_INTERFACE:-}" ]; do
+                MQTT_LIBCAMERA_INTERFACE=$("$WHIPTAIL_BIN" \
+                    --title "Select a mqtt libcamera interface: " \
+                    --nocancel \
+                    --notags \
+                    --radiolist "https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces\n\nPress space to select" 0 0 0 \
+                        "mqtt_imx477" "IMX477 - Raspberry Pi HQ Camera" "OFF" \
+                        "restart" "Restart camera selection" "OFF" \
+                    3>&1 1>&2 2>&3)
+            done
+
+            if [ "$MQTT_LIBCAMERA_INTERFACE" == "restart" ]; then
+                CAMERA_INTERFACE=""
+                MQTT_LIBCAMERA_INTERFACE=""
+                continue
+            fi
+
+            CAMERA_INTERFACE="$MQTT_LIBCAMERA_INTERFACE"
         fi
+
     done
 else
     while [ -z "${CAMERA_INTERFACE:-}" ]; do
@@ -449,6 +473,7 @@ else
         echo
         echo "                indi: For astro/planetary cameras normally connected via USB (ZWO, QHY, PlayerOne, SVBony, Altair, Touptek, etc)"
         echo "           libcamera: Supports cameras connected via CSI interface on Raspberry Pi SBCs (Raspi HQ Camera, Camera Module 3, etc)"
+        echo "      mqtt_libcamera: MQTT controlled remote libcamera CSI camera"
         echo "       pycurl_camera: Download images from a remote web camera"
         echo "    indi_accumulator: Create synthetic exposures using multiple sub-exposures"
         echo "        indi_passive: Connect a second instance of indi-allsky to an existing indi-allsky indiserver"
@@ -457,7 +482,7 @@ else
         echo
 
         PS3="Select a camera interface: "
-        select camera_interface in indi libcamera pycurl_camera indi_accumulator indi_passive test_rotating_stars test_bubbles; do
+        select camera_interface in indi libcamera mqtt_libcamera pycurl_camera indi_accumulator indi_passive test_rotating_stars test_bubbles; do
             if [ -n "$camera_interface" ]; then
                 CAMERA_INTERFACE="$camera_interface"
                 break
@@ -465,8 +490,8 @@ else
         done
 
 
-        # more specific libcamera selection
         if [ "$CAMERA_INTERFACE" == "libcamera" ]; then
+            # more specific libcamera selection
             INSTALL_LIBCAMERA="true"
 
             echo
@@ -479,7 +504,21 @@ else
                     break
                 fi
             done
+
+        elif [ "$CAMERA_INTERFACE" == "mqtt_libcamera" ]; then
+            # more specific mqtt libcamera selection
+            echo
+            PS3="Select a mqtt libcamera interface: "
+            select mqtt_libcamera_interface in mqtt_imx477; do
+
+                if [ -n "$mqtt_libcamera_interface" ]; then
+                    # overwrite variable
+                    CAMERA_INTERFACE="$mqtt_libcamera_interface"
+                    break
+                fi
+            done
         fi
+
     done
 fi
 
