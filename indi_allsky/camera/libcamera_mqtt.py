@@ -240,12 +240,12 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         payload = {
-            'action' : 'setCcdExposure',
-            'kwargs' : {
-                'cmd'   : cmd,
-                'files' : {
-                    # file name is needed for the suffix
-                    'image'    : image_tmp_p.name,
+            'action'   : 'setCcdExposure',
+            'kwargs'   : {
+                'exposure'  : exposure,
+                'cmd'       : cmd,
+                'files'     : {
+                    'image' : image_tmp_p.name,  # file name is needed for the suffix
                 },
             },
         }

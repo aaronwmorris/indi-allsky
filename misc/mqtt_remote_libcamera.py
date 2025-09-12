@@ -182,6 +182,7 @@ class MqttRemoteLibcamera(object):
 
 
     def setCcdExposure(self, **kwargs):
+        exposure = kwargs['cmd']
         remote_cmd = kwargs['cmd']
         files = kwargs['files']
 
@@ -218,6 +219,7 @@ class MqttRemoteLibcamera(object):
 
 
         self.exposure_start_time = time.time()
+        logger.warning('Starting %0.6fs exposure', exposure)
 
         self.libcamera_process = subprocess.Popen(
             cmd,
