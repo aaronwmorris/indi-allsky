@@ -319,7 +319,12 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
         if message.topic == self.metadata_topic:
             logger.info('Received metadata message')
-            metadata_data = json.loads(message.payload)
+
+            try:
+                metadata_data = json.loads(message.payload)
+            except ValueError as e:
+                logger.error('JSON parse error: %s', str(e))
+                metadata_data = {}
 
             with io.open(str(self.current_metadata_file_p), 'w') as f_metadata:
                 json.dump(metadata_data, f_metadata)

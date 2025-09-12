@@ -280,8 +280,13 @@ class MqttRemoteLibcamera(object):
             ]
 
 
-            with io.open(str(self.current_metadata_file_p), 'r', encoding='utf-8') as f_metadata:
-                metadata_data = json.loads(f_metadata.read())
+            try:
+                with io.open(str(self.current_metadata_file_p), 'r', encoding='utf-8') as f_metadata:
+                    metadata_data = json.loads(f_metadata.read())
+            except ValueError as e:
+                logger.error('JSON parse error: %s', str(e))
+                metadata_data = {}
+
 
             logger.info('Publishing metadata: %s', MQTT_METADATA_TOPIC)
             self.client.publish(
