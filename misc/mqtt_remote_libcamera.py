@@ -138,10 +138,9 @@ class MqttRemoteLibcamera(object):
         while True:
             time.sleep(0.1)
 
-
             if self._shutdown:
-                break
-
+                if self.active_exposure:
+                    break
 
             try:
                 exposure_data = self.user_data['queue'].get_nowait()
