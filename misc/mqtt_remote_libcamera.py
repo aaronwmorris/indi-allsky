@@ -30,6 +30,7 @@ import tempfile
 import json
 import queue
 import subprocess
+import socket
 import ssl
 import paho.mqtt.client as mqtt
 import signal
@@ -124,11 +125,16 @@ class MqttRemoteLibcamera(object):
         try:
             self.client.connect(MQTT_HOSTNAME, port=MQTT_PORT)
         except ConnectionRefusedError as e:
-            logger.error('MQTT ConnectionRefusedError: %s', str(e))
-
-            self.dew_heater.deinit()
-            self.fan.deinit()
-
+            # log the error, client will continue to try to connect
+            logger.error('ConnectionRefusedError: %s', str(e))
+        except socket.gaierror as e:
+            logger.error('socket.gaierror: %s', str(e))
+            sys.exit(1)
+        except TimeoutError as e:
+            logger.error('TimeoutError: %s', str(e))
+            sys.exit(1)
+        except ssl.SSLCertVerificationError as e:
+            logger.error('SSLCertVerificationError: %s', str(e))
             sys.exit(1)
 
 
