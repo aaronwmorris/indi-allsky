@@ -519,6 +519,18 @@ class IndiAllSkyConfigBase(object):
             "CAMERA_ID"              : 0,
             "EXTRA_OPTIONS"          : "",
             "EXTRA_OPTIONS_DAY"      : "",
+            "MQTT_TRANSPORT"         : "tcp",  # tcp or websockets
+            "MQTT_HOST"              : "localhost",
+            "MQTT_PORT"              : 8883,  # 1883 = mqtt, 8883 = TLS
+            "MQTT_USERNAME"          : "indi-allsky",
+            "MQTT_PASSWORD"          : "",
+            "MQTT_PASSWORD_E"        : "",
+            "MQTT_QOS"               : 0,  # 0, 1, or 2
+            "MQTT_TLS"               : True,
+            "MQTT_CERT_BYPASS"       : True,
+            "MQTT_EXPOSURE_TOPIC"    : "libcamera/exposure",
+            "MQTT_IMAGE_TOPIC"       : "libcamera/image",
+            "MQTT_METADATA_TOPIC"    : "libcamera/metadata",
         },
         "PYCURL_CAMERA" : {
             "URL"                    : '',
@@ -905,6 +917,14 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 device__mqtt_password = config.get('DEVICE', {}).get('MQTT_PASSWORD', '')
 
 
+            libcamera__mqtt_password_e = config.get('LIBCAMERA', {}).get('MQTT_PASSWORD_E', '')
+            if libcamera__mqtt_password_e:
+                # not catching InvalidToken
+                libcamera__mqtt_password = f_key.decrypt(libcamera__mqtt_password_e.encode()).decode()
+            else:
+                libcamera__mqtt_password = config.get('LIBCAMERA', {}).get('MQTT_PASSWORD', '')
+
+
             adsb__password_e = config.get('ADSB', {}).get('PASSWORD_E', '')
             if adsb__password_e:
                 # not catching InvalidToken
@@ -924,6 +944,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             temp_sensor__astrospheric_apikey = config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', '')
             temp_sensor__mqtt_password = config.get('TEMP_SENSOR', {}).get('MQTT_PASSWORD', '')
             device__mqtt_password = config.get('DEVICE', {}).get('MQTT_PASSWORD', '')
+            libcamera__mqtt_password = config.get('LIBCAMERA', {}).get('MQTT_PASSWORD', '')
             adsb__password = config.get('ADSB', {}).get('PASSWORD', '')
 
 
@@ -936,6 +957,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             'PYCURL_CAMERA',
             'TEMP_SENSOR',
             'DEVICE',
+            'LIBCAMERA',
             'ADSB',
         )
 
@@ -964,6 +986,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['TEMP_SENSOR']['MQTT_PASSWORD_E'] = ''
         config['DEVICE']['MQTT_PASSWORD'] = device__mqtt_password
         config['DEVICE']['MQTT_PASSWORD_E'] = ''
+        config['LIBCAMERA']['MQTT_PASSWORD'] = libcamera__mqtt_password
+        config['LIBCAMERA']['MQTT_PASSWORD_E'] = ''
         config['ADSB']['PASSWORD'] = adsb__password
         config['ADSB']['PASSWORD_E'] = ''
 
@@ -1143,6 +1167,15 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 device__mqtt_password = ''
 
 
+            libcamera__mqtt_password = str(config.get('LIBCAMERA', {}).get('MQTT_PASSWORD', ''))
+            if libcamera__mqtt_password:
+                libcamera__mqtt_password_e = f_key.encrypt(libcamera__mqtt_password.encode()).decode()
+                libcamera__mqtt_password = ''
+            else:
+                libcamera__mqtt_password_e = ''
+                libcamera__mqtt_password = ''
+
+
             adsb__password = str(config.get('ADSB', {}).get('PASSWORD', ''))
             if adsb__password:
                 adsb__password_e = f_key.encrypt(adsb__password.encode()).decode()
@@ -1175,6 +1208,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             temp_sensor__mqtt_password_e = ''
             device__mqtt_password = str(config.get('DEVICE', {}).get('MQTT_PASSWORD', ''))
             device__mqtt_password_e = ''
+            libcamera__mqtt_password = str(config.get('LIBCAMERA', {}).get('MQTT_PASSWORD', ''))
+            libcamera__mqtt_password_e = ''
             adsb__password = str(config.get('ADSB', {}).get('PASSWORD', ''))
             adsb__password_e = ''
 
@@ -1188,6 +1223,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             'PYCURL_CAMERA',
             'TEMP_SENSOR',
             'DEVICE',
+            'LIBCAMERA',
             'ADSB',
         )
 
@@ -1216,6 +1252,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['TEMP_SENSOR']['MQTT_PASSWORD_E'] = temp_sensor__mqtt_password_e
         config['DEVICE']['MQTT_PASSWORD'] = device__mqtt_password
         config['DEVICE']['MQTT_PASSWORD_E'] = device__mqtt_password_e
+        config['LIBCAMERA']['MQTT_PASSWORD'] = libcamera__mqtt_password
+        config['LIBCAMERA']['MQTT_PASSWORD_E'] = libcamera__mqtt_password_e
         config['ADSB']['PASSWORD'] = adsb__password
         config['ADSB']['PASSWORD_E'] = adsb__password_e
 

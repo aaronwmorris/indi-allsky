@@ -2438,6 +2438,14 @@ def MQTTPUBLISH__BASE_TOPIC_validator(form, field):
         raise ValidationError('Base topic cannot end with slash')
 
 
+def MQTTPUBLISH__TOPIC_validator(form, field):
+    if re.search(r'^\/', field.data):
+        raise ValidationError('Topic cannot begin with slash')
+
+    if re.search(r'\/$', field.data):
+        raise ValidationError('Topic cannot end with slash')
+
+
 def MQTTPUBLISH__QOS_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -4286,6 +4294,17 @@ class IndiAllskyConfigForm(FlaskForm):
     LIBCAMERA__CAMERA_ID             = SelectField('Camera ID', choices=LIBCAMERA__CAMERA_ID_choices, validators=[LIBCAMERA__CAMERA_ID_validator])
     LIBCAMERA__EXTRA_OPTIONS         = StringField('Night libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     LIBCAMERA__EXTRA_OPTIONS_DAY     = StringField('Day libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
+    LIBCAMERA__MQTT_TRANSPORT        = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
+    LIBCAMERA__MQTT_HOST             = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
+    LIBCAMERA__MQTT_PORT             = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
+    LIBCAMERA__MQTT_USERNAME         = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
+    LIBCAMERA__MQTT_PASSWORD         = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[MQTTPUBLISH__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
+    LIBCAMERA__MQTT_QOS              = IntegerField('MQTT QoS', validators=[MQTTPUBLISH__QOS_validator])
+    LIBCAMERA__MQTT_TLS              = BooleanField('Use TLS')
+    LIBCAMERA__MQTT_CERT_BYPASS      = BooleanField('Disable Certificate Validation')
+    LIBCAMERA__MQTT_EXPOSURE_TOPIC   = StringField('Exposure Topic', validators=[DataRequired(), MQTTPUBLISH__TOPIC_validator])
+    LIBCAMERA__MQTT_IMAGE_TOPIC      = StringField('Image (Return) Topic', validators=[DataRequired(), MQTTPUBLISH__TOPIC_validator])
+    LIBCAMERA__MQTT_METADATA_TOPIC   = StringField('Metadata (Return) Topic', validators=[DataRequired(), MQTTPUBLISH__TOPIC_validator])
     PYCURL_CAMERA__URL               = StringField('pyCurl Camera URL', validators=[PYCURL_CAMERA__URL_validator])
     PYCURL_CAMERA__IMAGE_FILE_TYPE   = SelectField('File Type', choices=PYCURL_CAMERA__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), PYCURL_CAMERA__IMAGE_FILE_TYPE_validator])
     PYCURL_CAMERA__USERNAME          = StringField('Username', validators=[PYCURL_CAMERA__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
