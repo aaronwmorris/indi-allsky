@@ -23,6 +23,9 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiClientLibCameraGeneric(IndiClient):
 
+    ccd_driver_exec = 'rpicam-still'
+
+
     def __init__(self, *args, **kwargs):
         super(IndiClientLibCameraGeneric, self).__init__(*args, **kwargs)
 
@@ -60,8 +63,10 @@ class IndiClientLibCameraGeneric(IndiClient):
             self.ccd_driver_exec = 'rpicam-still'
         elif shutil.which('libcamera-still'):
             self.ccd_driver_exec = 'libcamera-still'
-        else:
-            raise Exception('rpicam-still command not found')
+
+
+        # this will fallback to the original self.ccd_driver_exec
+        logger.info('libcamera executable: %s', self.ccd_driver_exec)
 
 
         # override in subclass
