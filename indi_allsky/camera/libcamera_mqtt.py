@@ -91,6 +91,13 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         return self._qos
 
 
+    def disconnectServer(self, *args, **kwargs):
+        super(IndiClientLibCameraMqttGeneric, self).disconnectServer(*args, **kwargs)
+
+        self.client.disconnect()
+        self.client.loop_stop()
+
+
     def setCcdExposure(self, exposure, sync=False, timeout=None):
         import paho.mqtt.properties as mqtt_props
         from paho.mqtt.packettypes import PacketTypes
