@@ -104,6 +104,7 @@ class MqttRemoteDewHeaterFan(object):
 
 
         self.client.on_connect = self.on_connect
+        self.client.on_disconnect = self.on_disconnect
         self.client.on_message = self.on_message
         self.client.on_subscribe = self.on_subscribe
         #self.client.on_unsubscribe = self.on_unsubscribe
@@ -217,6 +218,10 @@ class MqttRemoteDewHeaterFan(object):
 
             logger.info('Subscribing to topic %s', MQTT_FAN_TOPIC)
             client.subscribe(MQTT_FAN_TOPIC)
+
+
+    def on_disconnect(self, client, userdata, flags, reason_code, properties):
+        logger.error('MQTT disconnected: %s', reason_code)
 
 
 class DeviceStandard(object):

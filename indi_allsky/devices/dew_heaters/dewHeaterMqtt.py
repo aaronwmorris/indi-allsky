@@ -64,6 +64,7 @@ class DewHeaterMqttBase(DewHeaterBase):
 
 
         self.client.on_connect = self.on_connect
+        self.client.on_disconnect = self.on_disconnect
         self.client.on_publish = self.on_publish
 
         self.client.loop_start()
@@ -95,6 +96,10 @@ class DewHeaterMqttBase(DewHeaterBase):
             logger.error('Failed to connect: %s', reason_code)
         else:
             logger.info('MQTT dew heater connected')
+
+
+    def on_disconnect(self, client, userdata, flags, reason_code, properties):
+        logger.error('MQTT disconnected: %s', reason_code)
 
 
     def on_publish(self, client, userdata, mid, reason_code, properties):

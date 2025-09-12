@@ -67,6 +67,7 @@ class MqttBrokerSensor(SensorBase):
 
 
         client.on_connect = self.on_connect
+        client.on_disconnect = self.on_disconnect
         client.on_message = self.on_message
         client.on_subscribe = self.on_subscribe
         #client.on_unsubscribe = self.on_unsubscribe
@@ -146,3 +147,6 @@ class MqttBrokerSensor(SensorBase):
                 logger.info('Subscribing to topic %s', topic)
                 client.subscribe(topic)
 
+
+    def on_disconnect(self, client, userdata, flags, reason_code, properties):
+        logger.error('MQTT disconnected: %s', reason_code)
