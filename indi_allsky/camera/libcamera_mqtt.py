@@ -159,7 +159,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
                 '--quality', '95',
                 '--gain', '{0:d}'.format(self.gain_v.value),
                 '--shutter', '{0:d}'.format(exposure_us),
-                '--metadata', '{metadata:s}'
+                '--metadata', '{metadata:s}',
                 '--metadata-format', 'json',
             ]
         else:
