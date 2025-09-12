@@ -84,7 +84,7 @@ class MqttRemoteLibcamera(object):
         logger.info('MQTT TLS:         %s', str(bool(MQTT_TLS)))
         logger.info('Exposure Topic:   %s', MQTT_EXPOSURE_TOPIC)
         logger.info('Image Topic:      %s', MQTT_IMAGE_TOPIC)
-        logger.info('Metadata  Topic:  %s', MQTT_METADATA_TOPIC)
+        logger.info('Metadata Topic:   %s', MQTT_METADATA_TOPIC)
         time.sleep(3.0)
 
 
