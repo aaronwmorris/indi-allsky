@@ -25,6 +25,7 @@ import sys
 import io
 import time
 from pathlib import Path
+import tempfile
 import json
 import queue
 import subprocess
@@ -181,14 +182,38 @@ class MqttRemoteLibcamera(object):
 
 
     def setCcdExposure(self, **kwargs):
-        cmd = kwargs['cmd']
+        remote_cmd = kwargs['cmd']
         files = kwargs['files']
 
 
-        self.current_exposure_file_p = Path(files['image'])
-        self.current_metadata_file_p = Path(files['metadata'])
+        remote_image_p = Path(files['image'])
 
 
+        try:
+            image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix=remote_image_p.suffix, delete=True)
+            image_tmp_f.close()
+            image_tmp_p = Path(image_tmp_f.name)
+
+            metadata_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=True)
+            metadata_tmp_f.close()
+            metadata_tmp_p = Path(metadata_tmp_f.name)
+        except OSError as e:
+            logger.error('OSError: %s', str(e))
+            return
+
+
+        self.current_exposure_file_p = image_tmp_p
+        self.current_metadata_file_p = metadata_tmp_p
+
+
+        data = {
+            'metadata' : str(metadata_tmp_p),
+            'image' : str(image_tmp_p),
+        }
+
+
+        ### fill in the file names
+        cmd = [x.format(**data) for x in remote_cmd]
         logger.info('image command: %s', ' '.join(cmd))
 
 

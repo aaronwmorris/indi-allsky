@@ -146,7 +146,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
                 '--denoise', 'off',
                 '--gain', '{0:d}'.format(self.gain_v.value),
                 '--shutter', '{0:d}'.format(exposure_us),
-                '--metadata', str(metadata_tmp_p),
+                '--metadata', '{metadata:s}',
                 '--metadata-format', 'json',
             ]
         elif image_type in ['jpg', 'png']:
@@ -159,7 +159,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
                 '--quality', '95',
                 '--gain', '{0:d}'.format(self.gain_v.value),
                 '--shutter', '{0:d}'.format(exposure_us),
-                '--metadata', str(metadata_tmp_p),
+                '--metadata', '{metadata:s}'
                 '--metadata-format', 'json',
             ]
         else:
@@ -220,7 +220,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         # Finally add output file
-        cmd.extend(['--output', str(image_tmp_p)])
+        cmd.extend(['--output', '{image:s}'])
 
 
         logger.info('image command: %s', ' '.join(cmd))
@@ -244,8 +244,8 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
             'kwargs' : {
                 'cmd'   : cmd,
                 'files' : {
-                    'metadata' : str(metadata_tmp_p),
-                    'image'    : str(image_tmp_p),
+                    # file name is needed for the suffix
+                    'image'    : image_tmp_p.name,
                 },
             },
         }
