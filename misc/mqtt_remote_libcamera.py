@@ -180,7 +180,7 @@ class MqttRemoteLibcamera(object):
 
 
     def setCcdExposure(self, **kwargs):
-        exposure = kwargs['cmd']
+        exposure = kwargs['exposure']
         remote_cmd = kwargs['cmd']
         files = kwargs['files']
 
