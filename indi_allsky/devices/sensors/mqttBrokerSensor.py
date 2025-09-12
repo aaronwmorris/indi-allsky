@@ -91,7 +91,13 @@ class MqttBrokerSensor(SensorBase):
             client.tls_set(**mq_tls)
 
 
-        client.connect(host, port=port)
+        try:
+            client.connect(host, port=port)
+        except ConnectionRefusedError as e:
+            # log the error, client will continue to try to connect
+            logger.error('ConnectionRefusedError: %s', str(e))
+
+
         client.loop_start()
 
 

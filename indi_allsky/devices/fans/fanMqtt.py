@@ -57,10 +57,14 @@ class FanMqttBase(FanBase):
             self.client.tls_set(**mq_tls)
 
 
-        self.client.connect(
-            host,
-            port=port,
-        )
+        try:
+            self.client.connect(
+                host,
+                port=port,
+            )
+        except ConnectionRefusedError as e:
+            # log the error, client will continue to try to connect
+            logger.error('ConnectionRefusedError: %s', str(e))
 
 
         self.client.on_connect = self.on_connect

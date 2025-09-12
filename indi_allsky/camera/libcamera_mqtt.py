@@ -69,6 +69,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
             self.client.tls_set(**mq_tls)
 
 
+        # not catching ConnectionRefusedError
         self.client.connect(
             host,
             port=port,
