@@ -417,3 +417,58 @@ class IndiClientLibCameraImx477Mqtt(IndiClientLibCameraMqttGeneric):
             4 : '--mode 1332:990:10',  # cropped
         }
 
+
+class IndiClientLibCameraImx378Mqtt(IndiClientLibCameraMqttGeneric):
+    # this model is almost identical to the imx477
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx378Mqtt, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'imx378 MQTT'
+
+        self.camera_info = {
+            'width'         : 4056,
+            'height'        : 3040,
+            'pixel'         : 1.55,
+            'min_gain'      : 1,
+            'max_gain'      : 22,  # verified
+            'min_exposure'  : 0.0001,
+            'max_exposure'  : 200.0,
+            'cfa'           : 'BGGR',
+            'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            #1 : '--mode 4056:3040:12',
+            1 : '',
+            2 : '--mode 2028:1520:12',
+            4 : '--mode 1332:990:10',  # cropped
+        }
+
+
+class IndiClientLibCameraImx708Mqtt(IndiClientLibCameraMqttGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraImx708Mqtt, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = 'imx708 MQTT'
+
+        self.camera_info = {
+            'width'         : 4608,
+            'height'        : 2592,
+            'pixel'         : 1.4,
+            'min_gain'      : 1,
+            'max_gain'      : 16,  # verified
+            'min_exposure'  : 0.00003,
+            'max_exposure'  : 112.0,
+            'cfa'           : 'BGGR',
+            'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            #1 : '--mode 4608:2592:10',
+            1 : '',
+            2 : '--mode 2304:1296:10',
+            4 : '--mode 1536:864:10',  # cropped
+        }
+

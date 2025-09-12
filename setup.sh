@@ -449,6 +449,8 @@ if [ -n "${WHIPTAIL_BIN:-}" ]; then
                     --notags \
                     --radiolist "https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces\n\nPress space to select" 0 0 0 \
                         "mqtt_imx477" "IMX477 - Raspberry Pi HQ Camera" "OFF" \
+                        "mqtt_imx378" "IMX378" "OFF" \
+                        "mqtt_imx708" "IMX708 - Camera Module 3" "OFF" \
                         "restart" "Restart camera selection" "OFF" \
                     3>&1 1>&2 2>&3)
             done
@@ -509,7 +511,7 @@ else
             # more specific mqtt libcamera selection
             echo
             PS3="Select a mqtt libcamera interface: "
-            select mqtt_libcamera_interface in mqtt_imx477; do
+            select mqtt_libcamera_interface in mqtt_imx477 mqtt_imx378 mqtt_imx708; do
 
                 if [ -n "$mqtt_libcamera_interface" ]; then
                     # overwrite variable
