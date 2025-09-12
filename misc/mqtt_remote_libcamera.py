@@ -16,9 +16,9 @@ MQTT_QOS = int(os.environ.get('MQTT_QOS', 0))
 MQTT_TLS = int(os.environ.get('MQTT_TLS', 1))
 MQTT_CERT_BYPASS = int(os.environ.get('MQTT_CERT_BYPASS', 1))
 
-MQTT_EXPOSURE_TOPIC = os.environ.get('MQTT_EXPOSURE_TOPIC', 'libcamera_exposure')
-MQTT_METADATA_TOPIC = os.environ.get('MQTT_METADATA_TOPIC', 'libcamera_metadata')
-MQTT_IMAGE_TOPIC = os.environ.get('MQTT_IMAGE_TOPIC', 'libcamera_image')
+MQTT_EXPOSURE_TOPIC = os.environ.get('MQTT_EXPOSURE_TOPIC', 'libcamera/exposure')
+MQTT_METADATA_TOPIC = os.environ.get('MQTT_METADATA_TOPIC', 'libcamera/metadata')
+MQTT_IMAGE_TOPIC = os.environ.get('MQTT_IMAGE_TOPIC', 'libcamera/image')
 
 
 import sys
@@ -283,6 +283,7 @@ class MqttRemoteLibcamera(object):
             with io.open(str(self.current_metadata_file_p), 'r', encoding='utf-8') as f_metadata:
                 metadata_data = json.loads(f_metadata.read())
 
+            logger.info('Publishing metadata: %s', MQTT_METADATA_TOPIC)
             self.client.publish(
                 MQTT_METADATA_TOPIC,
                 payload=json.dumps(metadata_data),
@@ -299,6 +300,7 @@ class MqttRemoteLibcamera(object):
 
 
             with io.open(str(self.current_exposure_file_p), 'rb') as f_image:
+                logger.info('Publishing image: %s', MQTT_IMAGE_TOPIC)
                 self.client.publish(
                     MQTT_IMAGE_TOPIC,
                     payload=f_image.read(),  # this requires paho-mqtt >= v2.0.0

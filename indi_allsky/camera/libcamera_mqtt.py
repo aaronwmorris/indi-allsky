@@ -40,9 +40,9 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
         self._qos = self.config.get('MQTTPUBLISH', {}).get('QOS', 0)
 
-        self.exposure_topic = self.config.get('MQTTPUBLISH', {}).get('MQTT_EXPOSURE_TOPIC', 'libcamera_exposure')
-        self.image_topic = self.config.get('MQTTPUBLISH', {}).get('MQTT_IMAGE_TOPIC', 'libcamera_image')
-        self.metadata_topic = self.config.get('MQTTPUBLISH', {}).get('MQTT_METADATA_TOPIC', 'libcamera_metadata')
+        self.exposure_topic = self.config.get('MQTTPUBLISH', {}).get('MQTT_EXPOSURE_TOPIC', 'libcamera/exposure')
+        self.image_topic = self.config.get('MQTTPUBLISH', {}).get('MQTT_IMAGE_TOPIC', 'libcamera/image')
+        self.metadata_topic = self.config.get('MQTTPUBLISH', {}).get('MQTT_METADATA_TOPIC', 'libcamera/metadata')
 
 
         self.client = mqtt.Client(
