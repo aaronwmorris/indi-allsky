@@ -278,6 +278,9 @@ class MqttRemoteLibcamera(object):
             exposure_delta = exposure_elapsed_s - self._exposure
             logger.info('Exposure received in %0.4fs (%+0.4fs)', exposure_elapsed_s, exposure_delta)
 
+            if exposure_delta < -1:
+                logger.error('%0.4fs EXPOSURE RECEIVED IN %0.4fs.  POSSIBLE CAMERA PROBLEM.', self._exposure, exposure_elapsed_s)
+
 
             metadata_user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
             metadata_user_properties.UserProperty = [
