@@ -312,6 +312,7 @@ ss -ant | grep 7624 || true
 
 echo
 echo "Detected indi properties"
+# this defaults to localhost, will not return data on remote indiserver
 indi_getprop -v 2>&1 | grep -v "^Telescope Simulator" || true
 
 
