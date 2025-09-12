@@ -53,6 +53,7 @@ class MqttRemoteLibcamera(object):
 
         self.active_exposure = False
         self.exposure_start_time = None
+        self._exposure = None
 
         self.current_exposure_file_p = None
         self.current_metadata_file_p = None
@@ -216,6 +217,9 @@ class MqttRemoteLibcamera(object):
         logger.info('image command: %s', ' '.join(cmd))
 
 
+        self._exposure = exposure
+
+
         self.exposure_start_time = time.time()
         logger.warning('Starting %0.6fs exposure', exposure)
 
@@ -271,7 +275,8 @@ class MqttRemoteLibcamera(object):
 
 
             exposure_elapsed_s = time.time() - self.exposure_start_time
-            logger.info('Exposure completed in %0.4f s', exposure_elapsed_s)
+            exposure_delta = exposure_elapsed_s - self._exposure
+            logger.info('Exposure received in %0.4fs (%+0.4fs)', exposure_elapsed_s, exposure_delta)
 
 
             metadata_user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
