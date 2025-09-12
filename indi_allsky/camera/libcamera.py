@@ -1,5 +1,4 @@
 import io
-import shutil
 from datetime import datetime
 from collections import OrderedDict
 import time
@@ -56,13 +55,6 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         self.ccd_device_name = 'CHANGEME'
-
-
-        # pick correct executable
-        if shutil.which('rpicam-still'):
-            self.ccd_driver_exec = 'rpicam-still'
-        elif shutil.which('libcamera-still'):
-            self.ccd_driver_exec = 'libcamera-still'
 
 
         # this will fallback to the original self.ccd_driver_exec
