@@ -1,4 +1,5 @@
 import io
+import shutil
 from datetime import datetime
 from collections import OrderedDict
 import time
@@ -22,7 +23,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiClientLibCameraGeneric(IndiClient):
 
-    ccd_driver_exec = 'rpicam-still'
+    libcamera_exec = 'rpicam-still'
 
 
     def __init__(self, *args, **kwargs):
@@ -55,6 +56,16 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         self.ccd_device_name = 'CHANGEME'
+
+
+        # pick correct executable
+        if shutil.which('rpicam-still'):
+            self.ccd_driver_exec = 'rpicam-still'
+        elif shutil.which('libcamera-still'):
+            self.ccd_driver_exec = 'libcamera-still'
+        else:
+            logger.warning('rpicam-still command not found')
+            self.ccd_driver_exec = self.libcamera_exec  # fallback
 
 
         # this will fallback to the original self.ccd_driver_exec
