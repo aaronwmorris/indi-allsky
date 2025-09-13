@@ -579,6 +579,22 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__CCM_DISABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.LIBCAMERA__CCM_DISABLE(class='form-check-input') }}
+                <div id="LIBCAMERA__CCM_DISABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>CCM may only be disabled when AWB is disabled</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Disabling CCM requires rpicam-apps 1.9.0 (released Sept 2025)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LIBCAMERA__IMMEDIATE.label }}
         </div>
         <div class="col-sm-2">
@@ -645,6 +661,22 @@ var camera_id = {{ camera_id }};
             <div id="LIBCAMERA__AWB_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__CCM_DISABLE_DAY.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.LIBCAMERA__CCM_DISABLE_DAY(class='form-check-input') }}
+                <div id="LIBCAMERA__CCM_DISABLE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>CCM may only be disabled when AWB is disabled</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Disabling CCM requires rpicam-apps 1.9.0 (released Sept 2025)</div>
         </div>
     </div>
 
@@ -8709,6 +8741,8 @@ const checkbox_field_names = [
     'YOUTUBE__UPLOAD_PANORAMA_VIDEO',
     'LIBCAMERA__AWB_ENABLE',
     'LIBCAMERA__AWB_ENABLE_DAY',
+    'LIBCAMERA__CCM_DISABLE',
+    'LIBCAMERA__CCM_DISABLE_DAY',
     'LIBCAMERA__IMMEDIATE',
     'LIBCAMERA__IMMEDIATE_DAY',
     'ACCUM_CAMERA__EVEN_EXPOSURES',
@@ -8947,20 +8981,32 @@ var group_fields_cooling_day = [
 group_on_change('CCD_COOLING_DAY', group_fields_cooling_day, []);
 
 
-var group_fields_libcamera_awb = [
-    'LIBCAMERA__AWB',
-];
-
 // libcamera AWB
-group_on_change('LIBCAMERA__AWB_ENABLE', group_fields_libcamera_awb, []);
+$('#LIBCAMERA__AWB_ENABLE').on('change', function() {
+    if ($('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
+        $('#LIBCAMERA__CCM_DISABLE').prop('checked', false);
+        $('#LIBCAMERA__CCM_DISABLE').attr({'disabled': true});
+        $('#LIBCAMERA__AWB').removeAttr('readonly disabled');
+        $('#LIBCAMERA__AWB').removeClass('bg-dark text-secondary');
+    } else {
+        $('#LIBCAMERA__CCM_DISABLE').removeAttr('disabled');
+        $('#LIBCAMERA__AWB').attr({'readonly': true, 'disabled': true});
+        $('#LIBCAMERA__AWB').addClass('bg-dark text-secondary');
+    }
+});
 
-
-var group_fields_libcamera_awb_day = [
-    'LIBCAMERA__AWB_DAY',
-];
-
-// libcamera AWB DAY
-group_on_change('LIBCAMERA__AWB_ENABLE_DAY', group_fields_libcamera_awb_day, []);
+$('#LIBCAMERA__AWB_ENABLE_DAY').on('change', function() {
+    if ($('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
+        $('#LIBCAMERA__CCM_DISABLE_DAY').prop('checked', false);
+        $('#LIBCAMERA__CCM_DISABLE_DAY').attr({'disabled': true});
+        $('#LIBCAMERA__AWB_DAY').removeAttr('readonly disabled');
+        $('#LIBCAMERA__AWB_DAY').removeClass('bg-dark text-secondary');
+    } else {
+        $('#LIBCAMERA__CCM_DISABLE_DAY').removeAttr('disabled');
+        $('#LIBCAMERA__AWB_DAY').attr({'readonly': true, 'disabled': true});
+        $('#LIBCAMERA__AWB_DAY').addClass('bg-dark text-secondary');
+    }
+});
 
 
 var group_fields_st_moonmode = [
@@ -9272,9 +9318,23 @@ $( document ).ready(function() {
     group_on_ready('CCD_COOLING', group_fields_cooling, []);
     group_on_ready('CCD_COOLING_DAY', group_fields_cooling_day, []);
 
+
     // libcamera AWB
-    group_on_ready('LIBCAMERA__AWB_ENABLE', group_fields_libcamera_awb, []);
-    group_on_ready('LIBCAMERA__AWB_ENABLE_DAY', group_fields_libcamera_awb_day, []);
+    if ($('#LIBCAMERA__AWB_ENABLE').prop('checked')) {
+        $('#LIBCAMERA__CCM_DISABLE').prop('checked', false);
+        $('#LIBCAMERA__CCM_DISABLE').attr({'disabled': true});
+    } else {
+        $('#LIBCAMERA__AWB').attr({'readonly': true, 'disabled': true});
+        $('#LIBCAMERA__AWB').addClass('bg-dark text-secondary');
+    }
+
+    if ($('#LIBCAMERA__AWB_ENABLE_DAY').prop('checked')) {
+        $('#LIBCAMERA__CCM_DISABLE_DAY').prop('checked', false);
+        $('#LIBCAMERA__CCM_DISABLE_DAY').attr({'disabled': true});
+    } else {
+        $('#LIBCAMERA__AWB_DAY').attr({'readonly': true, 'disabled': true});
+        $('#LIBCAMERA__AWB_DAY').addClass('bg-dark text-secondary');
+    }
 
 
     // startrails moonmode

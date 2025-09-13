@@ -2378,6 +2378,8 @@ class ConfigView(FormView):
             'LIBCAMERA__AWB_DAY'             : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_DAY', 'auto'),
             'LIBCAMERA__AWB_ENABLE'          : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_ENABLE', True),
             'LIBCAMERA__AWB_ENABLE_DAY'      : self.indi_allsky_config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY', True),
+            'LIBCAMERA__CCM_DISABLE'         : self.indi_allsky_config.get('LIBCAMERA', {}).get('CCM_DISABLE', False),
+            'LIBCAMERA__CCM_DISABLE_DAY'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('CCM_DISABLE_DAY', False),
             'LIBCAMERA__CAMERA_ID'           : str(self.indi_allsky_config.get('LIBCAMERA', {}).get('CAMERA_ID', 0)),  # string in form, int in config
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
             'LIBCAMERA__EXTRA_OPTIONS_DAY'   : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS_DAY', ''),
@@ -3288,6 +3290,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LIBCAMERA']['AWB_DAY']                 = str(request.json['LIBCAMERA__AWB_DAY'])
         self.indi_allsky_config['LIBCAMERA']['AWB_ENABLE']              = bool(request.json['LIBCAMERA__AWB_ENABLE'])
         self.indi_allsky_config['LIBCAMERA']['AWB_ENABLE_DAY']          = bool(request.json['LIBCAMERA__AWB_ENABLE_DAY'])
+        self.indi_allsky_config['LIBCAMERA']['CCM_DISABLE']             = bool(request.json['LIBCAMERA__CCM_DISABLE'])
+        self.indi_allsky_config['LIBCAMERA']['CCM_DISABLE_DAY']         = bool(request.json['LIBCAMERA__CCM_DISABLE_DAY'])
         self.indi_allsky_config['LIBCAMERA']['CAMERA_ID']               = int(request.json['LIBCAMERA__CAMERA_ID'])
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS']           = str(request.json['LIBCAMERA__EXTRA_OPTIONS'])
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS_DAY']       = str(request.json['LIBCAMERA__EXTRA_OPTIONS_DAY'])

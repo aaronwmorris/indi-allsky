@@ -183,6 +183,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
             if self.config.get('LIBCAMERA', {}).get('IMMEDIATE', True):
                 cmd.insert(1, '--immediate')
 
+
             # Auto white balance, AWB causes long exposure times at night
             if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'):
                 awb = self.config.get('LIBCAMERA', {}).get('AWB', 'auto')
@@ -192,11 +193,16 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
                 cmd.extend(['--awbgains', '1,1'])
 
 
+            # CCM
+            if self.config.get('LIBCAMERA', {}).get('CCM_DISABLE'):
+                cmd.extend(['--ccm', '1,1,1,1,1,1,1,1,1'])
+
         else:
             # daytime
 
             if self.config.get('LIBCAMERA', {}).get('IMMEDIATE_DAY', True):
                 cmd.insert(1, '--immediate')
+
 
             # Auto white balance, AWB causes long exposure times at night
             if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'):
@@ -205,6 +211,11 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
             else:
                 # awb enabled by default, the following disables
                 cmd.extend(['--awbgains', '1,1'])
+
+
+            # CCM
+            if self.config.get('LIBCAMERA', {}).get('CCM_DISABLE_DAY'):
+                cmd.extend(['--ccm', '1,1,1,1,1,1,1,1,1'])
 
 
         # add --mode flags for binning

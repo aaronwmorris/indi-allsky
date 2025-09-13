@@ -516,6 +516,8 @@ class IndiAllSkyConfigBase(object):
             "AWB_DAY"                : "auto",
             "AWB_ENABLE"             : True,
             "AWB_ENABLE_DAY"         : True,
+            "CCM_DISABLE"            : False,
+            "CCM_DISABLE_DAY"        : False,
             "CAMERA_ID"              : 0,
             "EXTRA_OPTIONS"          : "",
             "EXTRA_OPTIONS_DAY"      : "",
