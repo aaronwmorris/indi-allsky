@@ -83,6 +83,8 @@ PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyind
 WEBSERVER="${INDIALLSKY_WEBSERVER:-apache}"
 STELLARMATE="${INDIALLSKY_STELLARMATE:-false}"
 ASTROBERRY="${INDIALLSKY_ASTROBERRY:-false}"
+
+INSTALL_MOSQUITTO="${INDIALLSKY_INSTALL_MOSQUITTO:-}"
 #### end config ####
 
 
@@ -3005,7 +3007,7 @@ if systemctl --quiet is-enabled "ModemManager.service" 2>/dev/null; then
 fi
 
 
-### MQTT setup
+# MQTT setup
 if systemctl --quiet is-active "mosquitto.service" >/dev/null 2>&1; then
     INSTALL_MOSQUITTO="false"
     echo

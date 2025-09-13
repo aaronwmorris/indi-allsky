@@ -41,6 +41,8 @@ WEB_NAME="${INDIALLSKY_WEB_NAME:-}"
 WEB_EMAIL="${INDIALLSKY_WEB_EMAIL:-}"
 
 WEBSERVER="${INDIALLSKY_WEBSERVER:-apache}"
+
+INSTALL_MOSQUITTO="${INDIALLSKY_INSTALL_MOSQUITTO:-}"
 #### end config ####
  
  
@@ -1565,6 +1567,26 @@ systemctl --user restart "${GUNICORN_SERVICE_NAME}.service"
 echo
 echo "Setup indi-allsky virtualenv pth"
 "${ALLSKY_DIRECTORY}/misc/add_indi_allsky_pth.py"
+
+
+# MQTT setup
+if systemctl --quiet is-active "mosquitto.service" >/dev/null 2>&1; then
+    INSTALL_MOSQUITTO="false"
+    echo
+    echo "Mosquitto MQTT broker is already installed"
+fi
+
+while [ -z "${INSTALL_MOSQUITTO:-}" ]; do
+    if whiptail --title "MQTT Broker Setup" --yesno "Would you like to install and setup the mosquitto MQTT broker?" 0 0 --defaultno; then
+        INSTALL_MOSQUITTO="true"
+    else
+        INSTALL_MOSQUITTO="false"
+    fi
+done
+
+if [ "$INSTALL_MOSQUITTO" == "true" ]; then
+    "$ALLSKY_DIRECTORY/misc/setup_mosquitto_mqtt.sh"
+fi
 
 
 echo
