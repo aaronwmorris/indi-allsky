@@ -15,7 +15,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
-    ccd_driver_exec = 'rpicam-still'
+    libcamera_exec = 'rpicam-still'
 
 
     def __init__(self, *args, **kwargs):
@@ -149,7 +149,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
         if image_type in ['dng']:
             cmd = [
-                self.ccd_driver_exec,
+                self.libcamera_exec,
                 '--nopreview',
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
@@ -162,7 +162,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         elif image_type in ['jpg', 'png']:
             #logger.warning('RAW frame mode disabled due to low memory resources')
             cmd = [
-                self.ccd_driver_exec,
+                self.libcamera_exec,
                 '--nopreview',
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
