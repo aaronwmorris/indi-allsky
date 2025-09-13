@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+############################################
+# Listens for exposure requests on a MQTT  #
+# topic and returns the image and metadata #
+# back to MQTT                             #
+############################################
 
 
 ### Requirements
@@ -11,8 +16,8 @@ import os
 MQTT_TRANSPORT = os.environ.get('MQTT_TRANSPORT', 'tcp')
 MQTT_HOSTNAME = os.environ.get('MQTT_HOSTNAME', 'localhost')
 MQTT_PORT = int(os.environ.get('MQTT_PORT', 8883))
-MQTT_USERNAME = os.environ.get('MQTT_USERNAME', 'username')
-MQTT_PASSWORD = os.environ.get('MQTT_PASSWORD', 'password123')
+MQTT_USERNAME = os.environ.get('MQTT_USERNAME', 'CHANGEME')
+MQTT_PASSWORD = os.environ.get('MQTT_PASSWORD', 'CHANGEME')
 MQTT_QOS = int(os.environ.get('MQTT_QOS', 0))
 MQTT_TLS = int(os.environ.get('MQTT_TLS', 1))
 MQTT_CERT_BYPASS = int(os.environ.get('MQTT_CERT_BYPASS', 1))
