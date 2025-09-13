@@ -1,5 +1,4 @@
 import io
-import shutil
 from datetime import datetime
 from collections import OrderedDict
 import time
@@ -14,6 +13,7 @@ from .indi import IndiClient
 from .fake_indi import FakeIndiCcd
 
 from ..exceptions import TimeOutException
+from ..exceptions import BinModeException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -21,6 +21,9 @@ logger = logging.getLogger('indi_allsky')
 
 
 class IndiClientLibCameraGeneric(IndiClient):
+
+    ccd_driver_exec = 'rpicam-still'
+
 
     def __init__(self, *args, **kwargs):
         super(IndiClientLibCameraGeneric, self).__init__(*args, **kwargs)
@@ -54,11 +57,8 @@ class IndiClientLibCameraGeneric(IndiClient):
         self.ccd_device_name = 'CHANGEME'
 
 
-        # pick correct executable
-        if shutil.which('rpicam-still'):
-            self.ccd_driver_exec = 'rpicam-still'
-        else:
-            self.ccd_driver_exec = 'libcamera-still'
+        # this will fallback to the original self.ccd_driver_exec
+        logger.info('libcamera executable: %s', self.ccd_driver_exec)
 
 
         # override in subclass
@@ -285,7 +285,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 # log errors
                 stdout = self.libcamera_process.stdout
                 for line in stdout.readlines():
-                    logger.error('libcamera-still error: %s', line)
+                    logger.error('rpicam-still error: %s', line)
 
                 # not returning, just log the error
 
@@ -311,7 +311,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 # log errors
                 stdout = self.libcamera_process.stdout
                 for line in stdout.readlines():
-                    logger.error('libcamera-still error: %s', line)
+                    logger.error('rpicam-still error: %s', line)
 
                 # not returning, just log the error
 
@@ -461,13 +461,15 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         try:
-            self.current_exposure_file_p.unlink()
+            if self.current_exposure_file_p:
+                self.current_exposure_file_p.unlink()
         except FileNotFoundError:
             pass
 
 
         try:
-            self.current_metadata_file_p.unlink()
+            if self.current_metadata_file_p:
+                self.current_metadata_file_p.unlink()
         except FileNotFoundError:
             pass
 
@@ -640,10 +642,6 @@ class IndiClientLibCameraGeneric(IndiClient):
     def setCcdScopeInfo(self, *args):
         # not supported
         pass
-
-
-class BinModeException(Exception):
-    pass
 
 
 class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):

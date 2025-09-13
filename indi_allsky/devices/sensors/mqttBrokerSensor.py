@@ -49,6 +49,8 @@ class MqttBrokerSensor(SensorBase):
             'data' : [0.0, 0.0, 0.0, 0.0, 0.0],
         }
 
+
+        transport = self.config.get('TEMP_SENSOR', {}).get('MQTT_TRANSPORT', 'tcp')
         host = self.config.get('TEMP_SENSOR', {}).get('MQTT_HOST', 'localhost')
         port = self.config.get('TEMP_SENSOR', {}).get('MQTT_PORT', 8883)
         username = self.config.get('TEMP_SENSOR', {}).get('MQTT_USERNAME', 'indi-allsky')
@@ -60,10 +62,12 @@ class MqttBrokerSensor(SensorBase):
         client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
             protocol=mqtt.MQTTv5,
+            transport=transport,
         )
 
 
         client.on_connect = self.on_connect
+        client.on_disconnect = self.on_disconnect
         client.on_message = self.on_message
         client.on_subscribe = self.on_subscribe
         #client.on_unsubscribe = self.on_unsubscribe
@@ -87,7 +91,13 @@ class MqttBrokerSensor(SensorBase):
             client.tls_set(**mq_tls)
 
 
-        client.connect(host, port=port)
+        try:
+            client.connect(host, port=port)
+        except ConnectionRefusedError as e:
+            # log the error, client will continue to try to connect
+            logger.error('ConnectionRefusedError: %s', str(e))
+
+
         client.loop_start()
 
 
@@ -143,3 +153,6 @@ class MqttBrokerSensor(SensorBase):
                 logger.info('Subscribing to topic %s', topic)
                 client.subscribe(topic)
 
+
+    def on_disconnect(self, client, userdata, flags, reason_code, properties):
+        logger.error('MQTT disconnected: %s', reason_code)

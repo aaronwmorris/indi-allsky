@@ -10,25 +10,30 @@
 #rpi-lgpio  (remove RPi.GPIO first)
 
 
+import os
+
 ### Set pins here
 DEW_HEATER_PIN = 'D12'
 FAN_PIN = 'D13'
 
 
 ### MQTT settings
-MQTT_HOSTNAME = 'localhost'
-MQTT_PORT = 8883
-MQTT_USERNAME = 'username'
-MQTT_PASSWORD = 'password123'
-MQTT_TLS = True
-MQTT_CERT_BYPASS = True
+MQTT_TRANSPORT = os.environ.get('MQTT_TRANSPORT', 'tcp')
+MQTT_HOSTNAME = os.environ.get('MQTT_HOSTNAME', 'localhost')
+MQTT_PORT = int(os.environ.get('MQTT_PORT', 8883))
+MQTT_USERNAME = os.environ.get('MQTT_USERNAME', 'CHANGEME')
+MQTT_PASSWORD = os.environ.get('MQTT_PASSWORD', 'CHANGEME')
+MQTT_TLS = int(os.environ.get('MQTT_TLS', 1))
+MQTT_CERT_BYPASS = int(os.environ.get('MQTT_CERT_BYPASS', 1))
 
-MQTT_DEW_HEATER_TOPIC = 'dew_heater_topic'
-MQTT_FAN_TOPIC = 'fan_topic'
+MQTT_DEW_HEATER_TOPIC = os.environ.get('MQTT_DEW_HEATER_TOPIC', 'dew_heater_topic')
+MQTT_FAN_TOPIC = os.environ.get('MQTT_FAN_TOPIC', 'fan_topic')
 
 
 import sys
+import time
 import json
+import socket
 import ssl
 import paho.mqtt.client as mqtt
 import signal
@@ -68,39 +73,39 @@ class MqttRemoteDewHeaterFan(object):
 
         self.client = None
 
+        self._shutdown = False
+
 
     def sigint_handler(self, signum, frame):
         logger.warning('Caught INT signal, shutting down')
-
-        self.client.disconnect()
-        self.client.loop_stop()
-
-        self.dew_heater.deinit()
-        self.fan.deinit()
-
-        sys.exit()
+        self._shutdown = True
 
 
     def sigterm_handler(self, signum, frame):
         logger.warning('Caught TERM signal, shutting down')
-
-        self.client.disconnect()
-        self.client.loop_stop()
-
-        self.dew_heater.deinit()
-        self.fan.deinit()
-
-        sys.exit()
+        self._shutdown = True
 
 
     def main(self):
+        logger.info('MQTT Transport:   %s', MQTT_TRANSPORT)
+        logger.info('MQTT Hostname:    %s', MQTT_HOSTNAME)
+        logger.info('MQTT Port:        %d', MQTT_PORT)
+        logger.info('MQTT Username:    %s', MQTT_USERNAME)
+        logger.info('MQTT TLS:         %s', str(bool(MQTT_TLS)))
+        logger.info('Dew Heater Topic: %s', MQTT_DEW_HEATER_TOPIC)
+        logger.info('Fan Topic:        %s', MQTT_FAN_TOPIC)
+        time.sleep(3.0)
+
+
         self.client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
             protocol=mqtt.MQTTv5,
+            transport=MQTT_TRANSPORT,
         )
 
 
         self.client.on_connect = self.on_connect
+        self.client.on_disconnect = self.on_disconnect
         self.client.on_message = self.on_message
         self.client.on_subscribe = self.on_subscribe
         #self.client.on_unsubscribe = self.on_unsubscribe
@@ -125,7 +130,25 @@ class MqttRemoteDewHeaterFan(object):
         try:
             self.client.connect(MQTT_HOSTNAME, port=MQTT_PORT)
         except ConnectionRefusedError as e:
-            logger.error('MQTT ConnectionRefusedError: %s', str(e))
+            # log the error, client will continue to try to connect
+            logger.error('ConnectionRefusedError: %s', str(e))
+        except socket.gaierror as e:
+            logger.error('socket.gaierror: %s', str(e))
+
+            self.dew_heater.deinit()
+            self.fan.deinit()
+
+            sys.exit(1)
+        except TimeoutError as e:
+            logger.error('TimeoutError: %s', str(e))
+
+            self.dew_heater.deinit()
+            self.fan.deinit()
+
+            sys.exit(1)
+
+        except ssl.SSLCertVerificationError as e:
+            logger.error('SSLCertVerificationError: %s', str(e))
 
             self.dew_heater.deinit()
             self.fan.deinit()
@@ -136,7 +159,23 @@ class MqttRemoteDewHeaterFan(object):
         signal.signal(signal.SIGINT, self.sigint_handler)
         signal.signal(signal.SIGTERM, self.sigint_handler)
 
-        self.client.loop_forever()
+
+        self.client.loop_start()
+
+
+        while True:
+            time.sleep(1.0)
+
+            if self._shutdown:
+                break
+
+
+        ### Shutdown
+        self.client.disconnect()
+        self.client.loop_stop()
+
+        self.dew_heater.deinit()
+        self.fan.deinit()
 
 
     def on_subscribe(self, client, userdata, mid, reason_code_list, properties):
@@ -198,6 +237,10 @@ class MqttRemoteDewHeaterFan(object):
 
             logger.info('Subscribing to topic %s', MQTT_FAN_TOPIC)
             client.subscribe(MQTT_FAN_TOPIC)
+
+
+    def on_disconnect(self, client, userdata, flags, reason_code, properties):
+        logger.error('MQTT disconnected: %s', reason_code)
 
 
 class DeviceStandard(object):

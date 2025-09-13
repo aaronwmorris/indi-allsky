@@ -23,6 +23,7 @@ class FanMqttBase(FanBase):
         import paho.mqtt.client as mqtt
 
 
+        transport = self.config.get('DEVICE', {}).get('MQTT_TRANSPORT', 'tcp')
         host = self.config.get('DEVICE', {}).get('MQTT_HOST', 'localhost')
         port = self.config.get('DEVICE', {}).get('MQTT_PORT', 8883)
         username = self.config.get('DEVICE', {}).get('MQTT_USERNAME', 'indi-allsky')
@@ -36,6 +37,7 @@ class FanMqttBase(FanBase):
         self.client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
             protocol=mqtt.MQTTv5,
+            transport=transport,
         )
 
 
@@ -55,13 +57,18 @@ class FanMqttBase(FanBase):
             self.client.tls_set(**mq_tls)
 
 
-        self.client.connect(
-            host,
-            port=port,
-        )
+        try:
+            self.client.connect(
+                host,
+                port=port,
+            )
+        except ConnectionRefusedError as e:
+            # log the error, client will continue to try to connect
+            logger.error('ConnectionRefusedError: %s', str(e))
 
 
         self.client.on_connect = self.on_connect
+        self.client.on_disconnect = self.on_disconnect
         self.client.on_publish = self.on_publish
 
         self.client.loop_start()
@@ -93,6 +100,10 @@ class FanMqttBase(FanBase):
             logger.error('Failed to connect: %s', reason_code)
         else:
             logger.info('MQTT fan connected')
+
+
+    def on_disconnect(self, client, userdata, flags, reason_code, properties):
+        logger.error('MQTT disconnected: %s', reason_code)
 
 
     def on_publish(self, client, userdata, mid, reason_code, properties):
