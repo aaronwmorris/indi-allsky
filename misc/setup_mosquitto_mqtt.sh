@@ -267,12 +267,12 @@ sudo chmod 644 "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"
 
 while [ -z "${M_USER:-}" ]; do
     # shellcheck disable=SC2068
-    M_USER=$(whiptail --title "Username" --nocancel --inputbox "Please enter a username for mosquitto" 0 0 3>&1 1>&2 2>&3)
+    M_USER=$(whiptail --title "MQTT Username" --nocancel --inputbox "Please enter a MQTT username" 0 0 3>&1 1>&2 2>&3)
 done
 
 while [ -z "${M_PASS:-}" ]; do
     # shellcheck disable=SC2068
-    M_PASS=$(whiptail --title "Password" --nocancel --passwordbox "Please enter the password (8+ chars)" 0 0 3>&1 1>&2 2>&3)
+    M_PASS=$(whiptail --title "MQTT Password" --nocancel --passwordbox "Please enter the MQTT password (8+ chars)" 0 0 3>&1 1>&2 2>&3)
 
     if [ "${#M_PASS}" -lt 8 ]; then
         M_PASS=""
@@ -281,7 +281,7 @@ while [ -z "${M_PASS:-}" ]; do
     fi
 
 
-    M_PASS2=$(whiptail --title "Password (#2)" --nocancel --passwordbox "Please enter the password (8+ chars)" 0 0 3>&1 1>&2 2>&3)
+    M_PASS2=$(whiptail --title "MQTT Password (#2)" --nocancel --passwordbox "Please enter the MQTT password (8+ chars)" 0 0 3>&1 1>&2 2>&3)
 
     if [ "$M_PASS" != "$M_PASS2" ]; then
         M_PASS=""

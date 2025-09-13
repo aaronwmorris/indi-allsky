@@ -83,6 +83,8 @@ PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyind
 WEBSERVER="${INDIALLSKY_WEBSERVER:-apache}"
 STELLARMATE="${INDIALLSKY_STELLARMATE:-false}"
 ASTROBERRY="${INDIALLSKY_ASTROBERRY:-false}"
+
+INSTALL_MOSQUITTO="${INDIALLSKY_INSTALL_MOSQUITTO:-}"
 #### end config ####
 
 
@@ -3002,6 +3004,26 @@ echo "*** Disable ModemManger ***"
 if systemctl --quiet is-enabled "ModemManager.service" 2>/dev/null; then
     sudo systemctl stop ModemManager
     sudo systemctl disable ModemManager
+fi
+
+
+# MQTT setup
+if systemctl --quiet is-active "mosquitto.service" >/dev/null 2>&1; then
+    INSTALL_MOSQUITTO="false"
+    echo
+    echo "Mosquitto MQTT broker is already installed"
+fi
+
+while [ -z "${INSTALL_MOSQUITTO:-}" ]; do
+    if whiptail --title "MQTT Broker Setup" --yesno "Would you like to install and setup the mosquitto MQTT broker?" 0 0 --defaultno; then
+        INSTALL_MOSQUITTO="true"
+    else
+        INSTALL_MOSQUITTO="false"
+    fi
+done
+
+if [ "$INSTALL_MOSQUITTO" == "true" ]; then
+    "$ALLSKY_DIRECTORY/misc/setup_mosquitto_mqtt.sh"
 fi
 
 
