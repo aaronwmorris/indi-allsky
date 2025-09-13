@@ -3005,6 +3005,26 @@ if systemctl --quiet is-enabled "ModemManager.service" 2>/dev/null; then
 fi
 
 
+### MQTT setup
+if systemctl --quiet is-active "mosquitto.service" >/dev/null 2>&1; then
+    INSTALL_MOSQUITTO="false"
+    echo
+    echo "Mosquitto MQTT broker is already installed"
+fi
+
+while [ -z "${INSTALL_MOSQUITTO:-}" ]; do
+    if whiptail --title "MQTT Broker Setup" --yesno "Would you like to install and setup the mosquitto MQTT broker?" 0 0 --defaultno; then
+        INSTALL_MOSQUITTO="true"
+    else
+        INSTALL_MOSQUITTO="false"
+    fi
+done
+
+if [ "$INSTALL_MOSQUITTO" == "true" ]; then
+    "$ALLSKY_DIRECTORY/misc/setup_mosquitto_mqtt.sh"
+fi
+
+
 while [ -z "${INDIALLSKY_AUTOSTART:-}" ]; do
     if whiptail --title "Auto-start indi-allsky" --yesno "Do you want to start indi-allsky automatically at boot?" 0 0; then
         INDIALLSKY_AUTOSTART="true"
