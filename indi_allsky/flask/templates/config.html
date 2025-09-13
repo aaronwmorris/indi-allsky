@@ -579,6 +579,21 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__CCM_DISABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.LIBCAMERA__CCM_DISABLE(class='form-check-input') }}
+                <div id="LIBCAMERA__CCM_DISABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Disabling CCM requires rpicam-apps 1.9.0 (released Sept 2025)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LIBCAMERA__IMMEDIATE.label }}
         </div>
         <div class="col-sm-2">
@@ -645,21 +660,6 @@ var camera_id = {{ camera_id }};
             <div id="LIBCAMERA__AWB_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__CCM_DISABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.LIBCAMERA__CCM_DISABLE(class='form-check-input') }}
-                <div id="LIBCAMERA__CCM_DISABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Disabling CCM requires rpicam-apps 1.9.0 (released Sept 2025)</div>
         </div>
     </div>
 
