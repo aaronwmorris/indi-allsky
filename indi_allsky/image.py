@@ -285,7 +285,7 @@ class ImageWorker(Process):
         libcamera_ccm = i_dict.get('libcamera_ccm')
 
 
-        if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+        if self.config['CAMERA_INTERFACE'].startswith('libcamera_') or self.config['CAMERA_INTERFACE'].startswith('mqtt_'):
             if filename_p.suffix == '.dng':
                 self.libcamera_raw = True
                 self.image_processor.libcamera_raw = True

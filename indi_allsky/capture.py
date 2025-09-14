@@ -1636,12 +1636,13 @@ class CaptureWorker(Process):
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
 
-            if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+            if self.config['CAMERA_INTERFACE'].startswith('libcamera_') or self.config['CAMERA_INTERFACE'].startswith('mqtt_'):
                 libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'jpg')
                 if libcamera_image_type == 'dng':
                     self.indiclient.libcamera_bit_depth = 16
                 else:
                     self.indiclient.libcamera_bit_depth = 8
+
         else:
             logger.warning('Change to day')
 
@@ -1672,7 +1673,7 @@ class CaptureWorker(Process):
             self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 
-            if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+            if self.config['CAMERA_INTERFACE'].startswith('libcamera_') or self.config['CAMERA_INTERFACE'].startswith('mqtt_'):
                 libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'jpg')
                 if libcamera_image_type == 'dng':
                     self.indiclient.libcamera_bit_depth = 16
