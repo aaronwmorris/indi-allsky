@@ -248,9 +248,9 @@ else
 fi
 
 
-#echo
-#echo "Module info"
-#lsmod || true
+echo
+echo "Module info"
+lsmod | grep imx || true
 
 
 echo
