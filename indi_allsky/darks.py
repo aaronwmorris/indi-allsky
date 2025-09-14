@@ -736,7 +736,7 @@ class IndiAllSkyDarks(object):
 
 
     def _pre_temperature_action(self):
-        if self.camera_name.startswith('libcamera_'):
+        if self.config['CAMERA_INTERFACE'].startswith('libcamera_') or self.config['CAMERA_INTERFACE'].startswith('mqtt_'):
             # libcamera only reports temperature changes when an exposure is taken
             logger.warning('TAKING THROW AWAY EXPOSURE TO UPDATE TEMPERATURE')
             self.shoot(0.1, sync=True, timeout=10.0)
@@ -846,7 +846,7 @@ class IndiAllSkyDarks(object):
         completed_exposures = 0
 
 
-        if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+        if self.config['CAMERA_INTERFACE'].startswith('libcamera_') or self.config['CAMERA_INTERFACE'].startswith('mqtt_'):
             if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'):
                 logger.warning('DAYTIME AWB IS ENABLED.  DISABLING DAYTIME DARKS')
                 self.daytime = False
@@ -871,7 +871,7 @@ class IndiAllSkyDarks(object):
                 time.sleep(8.0)
 
 
-            if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+            if self.config['CAMERA_INTERFACE'].startswith('libcamera_') or self.config['CAMERA_INTERFACE'].startswith('mqtt_'):
                 libcamera_image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'jpg')
                 if libcamera_image_type == 'dng':
                     self.indiclient.libcamera_bit_depth = 16
@@ -936,7 +936,7 @@ class IndiAllSkyDarks(object):
 
 
 
-        if self.config['CAMERA_INTERFACE'].startswith('libcamera'):
+        if self.config['CAMERA_INTERFACE'].startswith('libcamera_') or self.config['CAMERA_INTERFACE'].startswith('mqtt_'):
             if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'):
                 logger.error('NIGHT AWB IS ENABLED.  CANCELING DARKS.')
                 sys.exit(1)
