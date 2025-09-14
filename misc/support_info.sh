@@ -335,14 +335,14 @@ echo "libcamera cameras"
 if which rpicam-hello >/dev/null 2>&1; then
     echo
     echo "rpicam-hello: $(which rpicam-hello)"
-    rpicam-hello --list-cameras || true
+    rpicam-hello --list-cameras --verbose || true
 elif which libcamera-hello >/dev/null 2>&1; then
     echo
     echo "libcamera-hello: $(which libcamera-hello)"
-    libcamera-hello --list-cameras || true
+    libcamera-hello --list-cameras --verbose || true
 else
     echo
-    echo "libcamera-hello not installed"
+    echo "rpicam-hello not installed"
 fi
 
 
