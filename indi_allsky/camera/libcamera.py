@@ -1119,7 +1119,7 @@ class IndiClientLibCameraImx335(IndiClientLibCameraGeneric):
             'height'        : 1944,
             'pixel'         : 2.0,
             'min_gain'      : 1,
-            'max_gain'      : 30,  # unverified
+            'max_gain'      : 1000,  # unverified
             'min_exposure'  : 0.000032,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',  # unverified
