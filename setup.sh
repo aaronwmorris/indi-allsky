@@ -421,6 +421,7 @@ if [ -n "${WHIPTAIL_BIN:-}" ]; then
                         "libcamera_imx462" "IMX462" "OFF" \
                         "libcamera_imx327" "IMX327" "OFF" \
                         "libcamera_imx678" "IMX678 - Darksee" "OFF" \
+                        "libcamera_imx335" "IMX335" "OFF" \
                         "libcamera_ov5647" "OV5647" "OFF" \
                         "libcamera_imx219" "IMX219 - Camera Module 2" "OFF" \
                         "libcamera_imx296_gs" "IMX296 - Global Shutter - Mono" "OFF" \
@@ -500,7 +501,7 @@ else
 
             echo
             PS3="Select a libcamera interface: "
-            select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_imx708 libcamera_imx519 libcamera_imx500_ai libcamera_imx283 libcamera_imx462 libcamera_imx327 libcamera_imx678 libcamera_ov5647 libcamera_imx219 libcamera_imx296_gs libcamera_imx296_gs_color libcamera_imx290 libcamera_imx298 libcamera_64mp_hawkeye libcamera_64mp_owlsight; do
+            select libcamera_interface in libcamera_imx477 libcamera_imx378 libcamera_imx708 libcamera_imx519 libcamera_imx500_ai libcamera_imx283 libcamera_imx462 libcamera_imx327 libcamera_imx678 libcamera_imx335 libcamera_ov5647 libcamera_imx219 libcamera_imx296_gs libcamera_imx296_gs_color libcamera_imx290 libcamera_imx298 libcamera_64mp_hawkeye libcamera_64mp_owlsight; do
 
                 if [ -n "$libcamera_interface" ]; then
                     # overwrite variable
