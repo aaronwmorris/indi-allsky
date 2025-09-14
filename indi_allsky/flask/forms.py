@@ -5057,7 +5057,7 @@ class IndiAllskyConfigForm(FlaskForm):
             self.FAN__THOLD_DIFF_MED.errors.append('MEDIUM must be less than HIGH')
             result = False
 
-        if self.DEW_HEATER__THOLD_DIFF_MED.data <= self.FAN__THOLD_DIFF_LOW.data:
+        if self.FAN__THOLD_DIFF_MED.data <= self.FAN__THOLD_DIFF_LOW.data:
             self.FAN__THOLD_DIFF_MED.errors.append('MEDIUM must be greater than LOW')
             self.FAN__THOLD_DIFF_LOW.errors.append('LOW must be less than MEDIUM')
             result = False
