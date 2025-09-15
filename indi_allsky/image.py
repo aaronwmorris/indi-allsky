@@ -265,6 +265,7 @@ class ImageWorker(Process):
 
         #filename = Path(task.data['filename'])
         #exposure = task.data['exposure']
+        #gain = task.data['gain']
         #exp_date = datetime.fromtimestamp(task.data['exp_time'])
         #exp_elapsed = task.data['exp_elapsed']
         #camera_id = task.data['camera_id']
@@ -273,6 +274,7 @@ class ImageWorker(Process):
 
         filename_p = Path(i_dict['filename'])
         exposure = i_dict['exposure']
+        gain = i_dict['gain']
         exp_date = datetime.fromtimestamp(i_dict['exp_time'])
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
@@ -342,7 +344,7 @@ class ImageWorker(Process):
 
 
         try:
-            i_ref = self.image_processor.add(filename_p, exposure, exp_date, exp_elapsed, camera)
+            i_ref = self.image_processor.add(filename_p, exposure, gain, exp_date, exp_elapsed, camera)
         except BadImage as e:
             logger.error('Bad Image: %s', str(e))
             filename_p.unlink()
@@ -356,7 +358,7 @@ class ImageWorker(Process):
         self.image_count += 1
 
 
-        self.start_image_save_pre_hook(exposure)
+        self.start_image_save_pre_hook(exposure, gain)
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
@@ -675,7 +677,7 @@ class ImageWorker(Process):
         latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, jpeg_exif=jpeg_exif)
 
         if new_filename:
-            self.start_image_save_post_hook(new_filename, exposure)
+            self.start_image_save_post_hook(new_filename, exposure, gain)
 
             image_metadata = {
                 'type'            : constants.IMAGE,
@@ -684,7 +686,7 @@ class ImageWorker(Process):
                 'utc_offset'      : exp_date.astimezone().utcoffset().total_seconds(),
                 'exposure'        : exposure,
                 'exp_elapsed'     : exp_elapsed,
-                'gain'            : self.gain_v.value,
+                'gain'            : float(gain),
                 'binmode'         : self.bin_v.value,
                 'temp'            : self.sensors_temp_av[0],
                 'adu'             : adu,
@@ -780,7 +782,7 @@ class ImageWorker(Process):
             mqtt_data = {
                 'exp_date' : exp_date.strftime('%Y-%m-%d %H:%M:%S'),
                 'exposure' : round(exposure, 6),
-                'gain'     : self.gain_v.value,
+                'gain'     : gain,
                 'bin'      : self.bin_v.value,
                 'temp'     : round(self.sensors_temp_av[0], 1),
                 'sunalt'   : round(self.image_processor.astrometric_data['sun_alt'], 1),
@@ -970,7 +972,7 @@ class ImageWorker(Process):
             'device'              : i_ref.camera_name,
             'night'               : self.night_v.value,
             'temp'                : self.sensors_temp_av[0],
-            'gain'                : self.gain_v.value,
+            'gain'                : i_ref.gain,
             'exposure'            : i_ref.exposure,
             'stable_exposure'     : int(self.target_adu_found),
             'target_adu'          : i_ref.target_adu,
@@ -1155,7 +1157,7 @@ class ImageWorker(Process):
             'dayDate'    : i_ref.day_date.strftime('%Y%m%d'),
             'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref.exposure,
-            'gain'       : self.gain_v.value,
+            'gain'       : i_ref.gain,
             'binmode'    : self.bin_v.value,
             'night'      : bool(self.night_v.value),
             'height'     : image_height,
@@ -1338,7 +1340,7 @@ class ImageWorker(Process):
             'dayDate'    : i_ref.day_date.strftime('%Y%m%d'),
             'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref.exposure,
-            'gain'       : self.gain_v.value,
+            'gain'       : i_ref.gain,
             'binmode'    : self.bin_v.value,
             'night'      : bool(self.night_v.value),
             'height'     : image_height,
@@ -1520,7 +1522,7 @@ class ImageWorker(Process):
             'device'              : i_ref.camera_name,
             'night'               : self.night_v.value,
             'temp'                : self.sensors_temp_av[0],
-            'gain'                : self.gain_v.value,
+            'gain'                : i_ref.gain,
             'exposure'            : i_ref.exposure,
             'stable_exposure'     : int(self.target_adu_found),
             'target_adu'          : i_ref.target_adu,
@@ -1682,7 +1684,7 @@ class ImageWorker(Process):
             'dayDate'    : i_ref.day_date.strftime('%Y%m%d'),
             'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref.exposure,
-            'gain'       : self.gain_v.value,
+            'gain'       : i_ref.gain,
             'binmode'    : self.bin_v.value,
             'night'      : bool(self.night_v.value),
             'height'     : panorama_height,
@@ -1958,7 +1960,7 @@ class ImageWorker(Process):
         return rgb_pixel_list
 
 
-    def start_image_save_pre_hook(self, exposure):
+    def start_image_save_pre_hook(self, exposure, gain):
         if self.image_processor.focus_mode:
             return
 
@@ -1993,7 +1995,7 @@ class ImageWorker(Process):
         cmd_env = {
             'DATA_JSON': str(self.pre_hook_datajson_name_p),  # the file used for the json data is communicated via environment variable
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
-            'GAIN'     : '{0:d}'.format(self.gain_v.value),
+            'GAIN'     : '{0:d}'.format(gain),
             'BIN'      : '{0:d}'.format(self.bin_v.value),
             'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
             'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),
@@ -2037,7 +2039,7 @@ class ImageWorker(Process):
             logger.error('Image pre-save script failed to execute')
 
 
-    def start_image_save_post_hook(self, image_p, exposure):
+    def start_image_save_post_hook(self, image_p, exposure, gain):
         if self.image_processor.focus_mode:
             return
 
@@ -2064,7 +2066,7 @@ class ImageWorker(Process):
         # Communicate sensor values as environment variables
         hook_env = {
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
-            'GAIN'     : '{0:d}'.format(self.gain_v.value),
+            'GAIN'     : '{0:d}'.format(gain),
             'BIN'      : '{0:d}'.format(self.bin_v.value),
             'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
             'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),
