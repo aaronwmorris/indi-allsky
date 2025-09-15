@@ -210,8 +210,8 @@ class IndiClientPycurl(IndiClient):
         self.current_exposure_file_p = image_tmp_p
 
 
-        self._exposure = exposure
-
+        self.exposure = exposure
+        self.gain = int(self.gain_v.value)
 
 
         self.exposureStartTime = time.time()
@@ -276,7 +276,8 @@ class IndiClientPycurl(IndiClient):
         ### process data in worker
         jobdata = {
             'filename'    : str(self.current_exposure_file_p),
-            'exposure'    : self._exposure,
+            'exposure'    : self.exposure,
+            'gain'        : self.gain,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,

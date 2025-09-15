@@ -120,7 +120,9 @@ class IndiClient(PyIndi.BaseClient):
         self._filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
         self._timeout = 10.0
+
         self._exposure = 0.0
+        self._gain = 0  # individual exposure gain
 
         self.exposureStartTime = None
 
@@ -188,6 +190,7 @@ class IndiClient(PyIndi.BaseClient):
     def timeout(self, new_timeout):
         self._timeout = float(new_timeout)
 
+
     @property
     def exposure(self):
         return self._exposure
@@ -195,6 +198,16 @@ class IndiClient(PyIndi.BaseClient):
     @exposure.setter
     def exposure(self, new_exposure):
         self._exposure = float(new_exposure)
+
+
+    @property
+    def gain(self):
+        return self._gain
+
+    @gain.setter
+    def gain(self, new_gain):
+        self._gain = int(new_gain)
+
 
     @property
     def filename_t(self):
@@ -322,6 +335,7 @@ class IndiClient(PyIndi.BaseClient):
         jobdata = {
             'filename'    : str(f_tmpfile_p),
             'exposure'    : self.exposure,
+            'gain'        : self.gain,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
@@ -966,7 +980,9 @@ class IndiClient(PyIndi.BaseClient):
         if not timeout:
             timeout = self.timeout
 
+
         self.exposure = exposure
+        self.gain = int(self.gain_v.value)
 
 
         self.exposureStartTime = time.time()

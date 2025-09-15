@@ -101,7 +101,9 @@ class IndiClientTestCameraBase(IndiClient):
             return
 
 
-        self._exposure = exposure
+        self.exposure = exposure
+        self.gain = int(self.gain_v.value)
+
 
         self.active_exposure = True
 
@@ -129,7 +131,7 @@ class IndiClientTestCameraBase(IndiClient):
 
 
         if sync:
-            time.sleep(self._exposure)
+            time.sleep(self.exposure)
 
             self.active_exposure = False
 
@@ -138,7 +140,7 @@ class IndiClientTestCameraBase(IndiClient):
 
     def getCcdExposureStatus(self):
         if self.active_exposure:
-            if time.time() - self.exposureStartTime < self._exposure:
+            if time.time() - self.exposureStartTime < self.exposure:
                 # wait until expected exposure finishes
                 return False, 'BUSY'
 
@@ -173,7 +175,8 @@ class IndiClientTestCameraBase(IndiClient):
         ### process data in worker
         jobdata = {
             'filename'    : str(self.current_exposure_file_p),
-            'exposure'    : self._exposure,
+            'exposure'    : self.exposure,
+            'gain'        : self.gain,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
@@ -343,10 +346,10 @@ class IndiClientTestCameraBase(IndiClient):
 
         hdulist[0].header['IMAGETYP'] = 'Light Frame'
         hdulist[0].header['INSTRUME'] = 'Test Camera'
-        hdulist[0].header['EXPTIME'] = float(self._exposure)
+        hdulist[0].header['EXPTIME'] = float(self.exposure)
         hdulist[0].header['XBINNING'] = 1
         hdulist[0].header['YBINNING'] = 1
-        hdulist[0].header['GAIN'] = float(self.gain_v.value)
+        hdulist[0].header['GAIN'] = float(self.gain)
         hdulist[0].header['CCD-TEMP'] = self._temp_val
         #hdulist[0].header['SITELAT'] =
         #hdulist[0].header['SITELONG'] =
