@@ -471,9 +471,9 @@ class IndiClientLibCameraImx708Mqtt(IndiClientLibCameraMqttGeneric):
             'height'        : 2592,
             'pixel'         : 1.4,
             'min_gain'      : 1,
-            'max_gain'      : 16,  # verified
-            'min_exposure'  : 0.00003,
-            'max_exposure'  : 112.0,
+            'max_gain'      : 16,
+            'min_exposure'  : 0.000026,
+            'max_exposure'  : 200.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
