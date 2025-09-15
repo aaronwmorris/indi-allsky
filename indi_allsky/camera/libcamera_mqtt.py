@@ -418,7 +418,7 @@ class IndiClientLibCameraImx477Mqtt(IndiClientLibCameraMqttGeneric):
             'min_gain'      : 1,
             'max_gain'      : 22,
             'min_exposure'  : 0.000114,
-            'max_exposure'  : 200.0,
+            'max_exposure'  : 600.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
@@ -444,9 +444,9 @@ class IndiClientLibCameraImx378Mqtt(IndiClientLibCameraMqttGeneric):
             'height'        : 3040,
             'pixel'         : 1.55,
             'min_gain'      : 1,
-            'max_gain'      : 22,  # verified
-            'min_exposure'  : 0.0001,
-            'max_exposure'  : 200.0,
+            'max_gain'      : 22,
+            'min_exposure'  : 0.000114,
+            'max_exposure'  : 600.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
