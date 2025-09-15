@@ -783,8 +783,8 @@ class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
             'height'        : 3496,
             'pixel'         : 1.22,
             'min_gain'      : 1,
-            'max_gain'      : 16,  # verified
-            'min_exposure'  : 0.0001,
+            'max_gain'      : 16,
+            'min_exposure'  : 0.000592,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',
             'bit_depth'     : 16,
