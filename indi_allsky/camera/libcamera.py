@@ -838,8 +838,8 @@ class IndiClientLibCameraOv64a40OwlSight(IndiClientLibCameraGeneric):
             'height'        : 6944,
             'pixel'         : 1.008,
             'min_gain'      : 1,
-            'max_gain'      : 16,  # verified
-            'min_exposure'  : 0.0001,
+            'max_gain'      : 16,
+            'min_exposure'  : 0.000580,
             'max_exposure'  : 200.0,  # capable of more
             'cfa'           : 'RGGB',  # unverified
             'bit_depth'     : 16,
@@ -1070,7 +1070,7 @@ class IndiClientLibCameraImx283(IndiClientLibCameraGeneric):
             'height'        : 3648,
             'pixel'         : 2.4,
             'min_gain'      : 1,
-            'max_gain'      : 22,  # verified
+            'max_gain'      : 22,
             'min_exposure'  : 0.000058,
             'max_exposure'  : 129.0,
             'cfa'           : 'RGGB',  # verified
