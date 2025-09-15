@@ -677,8 +677,8 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
             'height'        : 3040,
             'pixel'         : 1.55,
             'min_gain'      : 1,
-            'max_gain'      : 22,  # verified
-            'min_exposure'  : 0.0001,
+            'max_gain'      : 22,
+            'min_exposure'  : 0.000114,
             'max_exposure'  : 200.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
@@ -892,8 +892,8 @@ class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
             'height'        : 1088,
             'pixel'         : 3.45,
             'min_gain'      : 1,
-            'max_gain'      : 16,  # verified
-            'min_exposure'  : 0.0001,
+            'max_gain'      : 251,
+            'min_exposure'  : 0.016562,
             'max_exposure'  : 15.5,
             'cfa'           : None,  # mono
             'bit_depth'     : 16,
@@ -970,9 +970,9 @@ class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
             'height'        : 1080,
             'pixel'         : 2.9,
             'min_gain'      : 1,
-            'max_gain'      : 32,  # verified
-            'min_exposure'  : 0.00003,
-            'max_exposure'  : 200.0,
+            'max_gain'      : 29,
+            'min_exposure'  : 0.000014,
+            'max_exposure'  : 115.0,
             'cfa'           : 'RGGB',
             'bit_depth'     : 16,
         }
@@ -1118,10 +1118,10 @@ class IndiClientLibCameraImx335(IndiClientLibCameraGeneric):
             'height'        : 1944,
             'pixel'         : 2.0,
             'min_gain'      : 1,
-            'max_gain'      : 1000,  # unverified
-            'min_exposure'  : 0.000032,
-            'max_exposure'  : 200.0,
-            'cfa'           : 'RGGB',  # unverified
+            'max_gain'      : 1000,
+            'min_exposure'  : 0.000007,
+            'max_exposure'  : 1.0,
+            'cfa'           : 'RGGB',
             'bit_depth'     : 16,
         }
 
