@@ -69,6 +69,7 @@ class FakeIndiClient(object):
 
         self._timeout = 65.0
         self._exposure = 0.0
+        self._gain = 0
 
         self.exposureStartTime = None
 
@@ -118,6 +119,14 @@ class FakeIndiClient(object):
     @exposure.setter
     def exposure(self, new_exposure):
         self._exposure = float(new_exposure)
+
+    @property
+    def gain(self):
+        return self._gain
+
+    @gain.setter
+    def gain(self, new_gain):
+        self._gain = int(new_gain)
 
     @property
     def filename_t(self):

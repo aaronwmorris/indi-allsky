@@ -4058,8 +4058,9 @@ class Fits2JpegView(BaseView):
         hdulist = fits.open(filename_p)
 
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
+        gain = int(hdulist[0].header.get('GAIN', 0))
+        gain_v = Value('i', gain)
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
-        gain_v = Value('i', int(hdulist[0].header.get('GAIN', 0)))
         bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
         sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
@@ -4089,7 +4090,15 @@ class Fits2JpegView(BaseView):
         image_processor.update_astrometric_data(image_date)
 
 
-        image_processor.add(filename_p, exposure, image_date, 0.0, fits_entry.camera)
+        image_processor.add(
+            filename_p,
+            exposure,
+            gain,
+            image_date,
+            0.0,
+            fits_entry.camera,
+        )
+
 
         image_processor.debayer()
 
@@ -7134,9 +7143,10 @@ class JsonImageProcessingView(JsonView):
         hdulist = fits.open(filename_p)
 
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
-        position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
-        gain_v = Value('i', int(hdulist[0].header.get('GAIN', 0)))
+        gain = int(hdulist[0].header.get('GAIN', 0))
+        gain_v = Value('i', gain)
         bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
+        position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
         #sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         #sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         sensors_temp_av = Array('f', [0.0 for x in range(60)])
@@ -7170,7 +7180,14 @@ class JsonImageProcessingView(JsonView):
             # use mtime for date
             image_date = datetime.fromtimestamp(filename_p.stat().st_mtime)
 
-            image_processor.add(filename_p, exposure, image_date, 0.0, fits_entry.camera)
+            image_processor.add(
+                filename_p,
+                exposure,
+                gain,
+                image_date,
+                0.0,
+                fits_entry.camera,
+            )
 
             image_processor.debayer()
 
@@ -7213,9 +7230,18 @@ class JsonImageProcessingView(JsonView):
 
                     alt_hdulist = fits.open(f_image_p)
                     alt_exposure = float(alt_hdulist[0].header.get('EXPTIME', 0))
+                    alt_gain = int(alt_hdulist[0].header.get('GAIN', 0))
                     alt_hdulist.close()
 
-                    i_ref = image_processor.add(f_image_p, alt_exposure, pre_image_date, 0.0, f_image.camera)
+                    i_ref = image_processor.add(
+                        f_image_p,
+                        alt_exposure,
+                        alt_gain,
+                        pre_image_date,
+                        0.0,
+                        f_image.camera,
+                    )
+
                     image_processor._calibrate(i_ref)
                     image_processor._debayer(i_ref)
 
@@ -7230,7 +7256,15 @@ class JsonImageProcessingView(JsonView):
 
 
             # add image after preloading other images
-            image_processor.add(filename_p, exposure, datetime.now(), 0.0, fits_entry.camera)
+            image_processor.add(
+                filename_p,
+                exposure,
+                gain,
+                datetime.now(),
+                0.0,
+                fits_entry.camera,
+            )
+
 
             image_processor.calibrate()
 

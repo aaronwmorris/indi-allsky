@@ -356,7 +356,7 @@ class ImageProcessor(object):
         return self._astrometric_data
 
 
-    def add(self, filename, exposure, exp_date, exp_elapsed, camera):
+    def add(self, filename, exposure, gain, exp_date, exp_elapsed, camera):
         from astropy.io import fits
 
         filename_p = Path(filename)
@@ -409,7 +409,7 @@ class ImageProcessor(object):
             # in case a driver does not populate this info (libcamera)
             if isinstance(hdulist[0].header.get('GAIN'), type(None)):
                 logger.warning('FITS gain is not populated')
-                hdulist[0].header['GAIN'] = float(self.gain_v.value)
+                hdulist[0].header['GAIN'] = float(gain)
         elif filename_p.suffix in ['.jpg', '.jpeg']:
             ### OpenCV
             #data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
@@ -464,7 +464,7 @@ class ImageProcessor(object):
             hdulist[0].header['EXPTIME'] = float(exposure)
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
-            hdulist[0].header['GAIN'] = float(self.gain_v.value)
+            hdulist[0].header['GAIN'] = float(gain)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
             hdulist[0].header['SITELAT'] = self.position_av[0]
             hdulist[0].header['SITELONG'] = self.position_av[1]
@@ -519,7 +519,7 @@ class ImageProcessor(object):
             hdulist[0].header['EXPTIME'] = float(exposure)
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
-            hdulist[0].header['GAIN'] = float(self.gain_v.value)
+            hdulist[0].header['GAIN'] = float(gain)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
             hdulist[0].header['SITELAT'] = self.position_av[0]
             hdulist[0].header['SITELONG'] = self.position_av[1]
@@ -564,7 +564,7 @@ class ImageProcessor(object):
             hdulist[0].header['EXPTIME'] = float(exposure)
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
-            hdulist[0].header['GAIN'] = float(self.gain_v.value)
+            hdulist[0].header['GAIN'] = float(gain)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
             hdulist[0].header['SITELAT'] = self.position_av[0]
             hdulist[0].header['SITELONG'] = self.position_av[1]
@@ -643,6 +643,7 @@ class ImageProcessor(object):
             self.config,
             hdulist,
             exposure,
+            gain,
             exp_date,
             exp_elapsed,
             dayDate,
@@ -840,13 +841,13 @@ class ImageProcessor(object):
 
         if self.config.get('IMAGE_CALIBRATE_BPM'):
             # pick a bad pixel map that is closest to the exposure and temperature
-            logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, i_ref.exposure, self.sensors_temp_av[0])
+            logger.info('Searching for bad pixel map: gain %d, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[0])
             bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
                 .filter(IndiAllSkyDbBadPixelMapTable.camera_id == i_ref.camera_id)\
                 .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
                 .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == i_ref.image_bitpix)\
                 .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
-                .filter(IndiAllSkyDbBadPixelMapTable.gain >= self.gain_v.value)\
+                .filter(IndiAllSkyDbBadPixelMapTable.gain >= i_ref.gain)\
                 .filter(IndiAllSkyDbBadPixelMapTable.exposure >= i_ref.exposure)\
                 .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensors_temp_av[0])\
                 .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
@@ -867,7 +868,7 @@ class ImageProcessor(object):
                     .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
                     .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == i_ref.image_bitpix)\
                     .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
-                    .filter(IndiAllSkyDbBadPixelMapTable.gain >= self.gain_v.value)\
+                    .filter(IndiAllSkyDbBadPixelMapTable.gain >= i_ref.gain)\
                     .filter(IndiAllSkyDbBadPixelMapTable.exposure >= i_ref.exposure)\
                     .order_by(
                         IndiAllSkyDbBadPixelMapTable.gain.asc(),
@@ -884,7 +885,7 @@ class ImageProcessor(object):
                         i_ref.camera_id,
                         i_ref.image_bitpix,
                         float(i_ref.exposure),
-                        self.gain_v.value,
+                        i_ref.gain,
                         self.bin_v.value,
                         self.sensors_temp_av[0],
                     )
@@ -893,13 +894,13 @@ class ImageProcessor(object):
 
 
         # pick a dark frame that is closest to the exposure and temperature
-        logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', self.gain_v.value, i_ref.exposure, self.sensors_temp_av[0])
+        logger.info('Searching for dark frame: gain %d, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[0])
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
             .filter(IndiAllSkyDbDarkFrameTable.bitdepth == i_ref.image_bitpix)\
             .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
-            .filter(IndiAllSkyDbDarkFrameTable.gain >= self.gain_v.value)\
+            .filter(IndiAllSkyDbDarkFrameTable.gain >= i_ref.gain)\
             .filter(IndiAllSkyDbDarkFrameTable.exposure >= i_ref.exposure)\
             .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensors_temp_av[0])\
             .filter(IndiAllSkyDbDarkFrameTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
@@ -920,7 +921,7 @@ class ImageProcessor(object):
                 .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
                 .filter(IndiAllSkyDbDarkFrameTable.bitdepth == i_ref.image_bitpix)\
                 .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
-                .filter(IndiAllSkyDbDarkFrameTable.gain >= self.gain_v.value)\
+                .filter(IndiAllSkyDbDarkFrameTable.gain >= i_ref.gain)\
                 .filter(IndiAllSkyDbDarkFrameTable.exposure >= i_ref.exposure)\
                 .order_by(
                     IndiAllSkyDbDarkFrameTable.gain.asc(),
@@ -937,7 +938,7 @@ class ImageProcessor(object):
                     i_ref.camera_id,
                     i_ref.image_bitpix,
                     float(i_ref.exposure),
-                    self.gain_v.value,
+                    i_ref.gain,
                     self.bin_v.value,
                     self.sensors_temp_av[0],
                 )
@@ -1192,7 +1193,7 @@ class ImageProcessor(object):
             i_ref.sqm_value = 0
             return
 
-        i_ref.sqm_value = self._sqm.calculate(i_ref.opencv_data, i_ref.exposure, self.gain_v.value)
+        i_ref.sqm_value = self._sqm.calculate(i_ref.opencv_data, i_ref.exposure, i_ref.gain)
 
 
     def stack(self):
@@ -2422,7 +2423,7 @@ class ImageProcessor(object):
             'exposure'     : i_ref.exposure,
             'day_date'     : i_ref.day_date,
             'rational_exp' : rational_exp,
-            'gain'         : self.gain_v.value,
+            'gain'         : i_ref.gain,
             'temp_unit'    : temp_unit,
             'sqm'          : i_ref.sqm_value,
             'stars'        : len(i_ref.stars),
@@ -3748,6 +3749,7 @@ class ImageData(object):
         config,
         hdulist,
         exposure,
+        gain,
         exp_date,
         exp_elapsed,
         day_date,
@@ -3766,6 +3768,7 @@ class ImageData(object):
         self._hole_mask = None
 
         self._exposure = exposure
+        self._gain = gain
         self._exp_date = exp_date
         self._exp_elapsed = exp_elapsed
         self._day_date = day_date
@@ -3818,6 +3821,10 @@ class ImageData(object):
     @property
     def exposure(self):
         return self._exposure
+
+    @property
+    def gain(self):
+        return self._gain
 
     @property
     def exp_date(self):

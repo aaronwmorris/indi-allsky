@@ -143,7 +143,9 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.current_metadata_file_p = metadata_tmp_p
 
 
-        self._exposure = exposure
+        self.exposure = exposure
+        self.gain = int(self.gain_v.value)
+
 
         exposure_us = int(exposure * 1000000)
 

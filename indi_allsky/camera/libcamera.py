@@ -31,10 +31,6 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         self.libcamera_process = None
 
-        self._exposure = None
-
-        self._camera_id = None
-
         self._temp_val = -273.15  # absolute zero  :-)
         self._sensor_temp_metadata_key = 'SensorTemperature'
 
@@ -175,7 +171,9 @@ class IndiClientLibCameraGeneric(IndiClient):
         self.current_metadata_file_p = metadata_tmp_p
 
 
-        self._exposure = exposure
+        self.exposure = exposure
+        self.gain = int(self.gain_v.value)
+
 
         exposure_us = int(exposure * 1000000)
 
@@ -504,7 +502,8 @@ class IndiClientLibCameraGeneric(IndiClient):
         ### process data in worker
         jobdata = {
             'filename'    : str(self.current_exposure_file_p),
-            'exposure'    : self._exposure,
+            'exposure'    : self.exposure,
+            'gain'        : self.gain,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,

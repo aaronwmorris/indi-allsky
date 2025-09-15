@@ -83,7 +83,8 @@ class IndiClientPassive(IndiClient):
     def setCcdExposure(self, exposure, sync=False, timeout=None):
         self.exposureStartTime = time.time()
 
-        self._exposure = exposure
+        self.exposure = exposure
+        self.gain = int(self.gain_v.value)
 
         ctl_ccd_exposure = self.get_control(self.ccd_device, 'CCD_EXPOSURE', 'number')
 
