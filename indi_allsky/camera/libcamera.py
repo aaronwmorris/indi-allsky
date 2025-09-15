@@ -996,10 +996,10 @@ class IndiClientLibCameraImx327(IndiClientLibCameraGeneric):
             'height'        : 1080,
             'pixel'         : 2.9,
             'min_gain'      : 1,
-            'max_gain'      : 32,  # unverified
-            'min_exposure'  : 0.00003,
-            'max_exposure'  : 200.0,
-            'cfa'           : 'RGGB',  # unverified
+            'max_gain'      : 29,
+            'min_exposure'  : 0.000014,
+            'max_exposure'  : 115.0,
+            'cfa'           : 'RGGB',
             'bit_depth'     : 16,
         }
 
