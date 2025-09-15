@@ -416,9 +416,9 @@ class IndiClientLibCameraImx477Mqtt(IndiClientLibCameraMqttGeneric):
             'height'        : 3040,
             'pixel'         : 1.55,
             'min_gain'      : 1,
-            'max_gain'      : 22,  # verified
-            'min_exposure'  : 0.0001,
-            'max_exposure'  : 200.0,
+            'max_gain'      : 22,
+            'min_exposure'  : 0.000114,
+            'max_exposure'  : 600.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
@@ -444,9 +444,9 @@ class IndiClientLibCameraImx378Mqtt(IndiClientLibCameraMqttGeneric):
             'height'        : 3040,
             'pixel'         : 1.55,
             'min_gain'      : 1,
-            'max_gain'      : 22,  # verified
-            'min_exposure'  : 0.0001,
-            'max_exposure'  : 200.0,
+            'max_gain'      : 22,
+            'min_exposure'  : 0.000114,
+            'max_exposure'  : 600.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
@@ -471,9 +471,9 @@ class IndiClientLibCameraImx708Mqtt(IndiClientLibCameraMqttGeneric):
             'height'        : 2592,
             'pixel'         : 1.4,
             'min_gain'      : 1,
-            'max_gain'      : 16,  # verified
-            'min_exposure'  : 0.00003,
-            'max_exposure'  : 112.0,
+            'max_gain'      : 16,
+            'min_exposure'  : 0.000026,
+            'max_exposure'  : 200.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
