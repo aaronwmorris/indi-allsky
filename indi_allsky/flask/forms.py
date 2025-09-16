@@ -8410,18 +8410,22 @@ class IndiAllskyDriveManagerForm(FlaskForm):
 
 class IndiAllskyIndiServerChangeForm(FlaskForm):
     CAMERA_SERVER_SELECT = SelectField('Camera Server', choices=[], validators=[])
+    GPS_SERVER_SELECT = SelectField('GPS Server', choices=[], validators=[])
+
 
     def __init__(self, *args, **kwargs):
         super(IndiAllskyIndiServerChangeForm, self).__init__(*args, **kwargs)
 
         self.CAMERA_SERVER_SELECT.choices = self.getCameraServers()
+        self.GPS_SERVER_SELECT.choices = self.getGpsServers()
 
 
     def getCameraServers(self):
         import shutil
 
 
-        select_list = list()
+        select_list = []
+
 
         indiserver_bin = shutil.which('indiserver')
         if not indiserver_bin:
@@ -8431,14 +8435,34 @@ class IndiAllskyIndiServerChangeForm(FlaskForm):
         indiserver_p = Path(indiserver_bin)
 
 
-        camera_servers = indiserver_p.parent.glob('indi_*_ccd')
-        for server in sorted(camera_servers):
-            try:
-                desc = constants.INDISERVER_MAP[server.name]
-            except KeyError:
-                continue
+        for server in constants.INDISERVER_CAMERA_MAP.keys():
+            if indiserver_p.parent.joinpath(server).exists():
+                select_list.append([server, '{0:s} - [{1:s}]'.format(constants.INDISERVER_CAMERA_MAP[server], server)])
 
-            select_list.append([server.name, '{0:s} - [{1:s}]'.format(desc, server.name)])
+
+        return select_list
+
+
+    def getGpsServers(self):
+        import shutil
+
+
+        select_list = [
+            ['', 'None'],
+        ]
+
+
+        indiserver_bin = shutil.which('indiserver')
+        if not indiserver_bin:
+            return select_list
+
+
+        indiserver_p = Path(indiserver_bin)
+
+
+        for server in constants.INDISERVER_GPS_MAP.keys():
+            if indiserver_p.parent.joinpath(server).exists():
+                select_list.append([server, '{0:s} - [{1:s}]'.format(constants.INDISERVER_GPS_MAP[server], server)])
 
 
         return select_list

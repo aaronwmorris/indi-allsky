@@ -345,8 +345,8 @@ SENSOR_INDEX_MAP = {
 }
 
 
-INDISERVER_MAP = {
-    'indi_simulator_ccd'    : 'ZWO ASI',
+INDISERVER_CAMERA_MAP = {
+    'indi_simulator_ccd'    : 'CCD Simulator',
     'indi_asi_ccd'          : 'ZWO ASI',
     'indi_asi_single_ccd'   : 'ZWO ASI (Single)',
     'indi_playerone_ccd'    : 'PlayerOne Astronomy',
@@ -371,8 +371,12 @@ INDISERVER_MAP = {
     'indi_pentax_ccd'       : 'Pentax DSLR',
     'indi_v4l2_ccd'         : 'Linux V4L2',
     'indi_webcam_ccd'       : 'Web Camera',
+}
 
+
+INDISERVER_GPS_MAP = {
     'indi_gpsd'             : 'GPSd',
     'indi_gpsnmea'          : 'GPSd NEMA',
+    'indi_simulator_gps'    : 'GPS Simulator',
 }
 
