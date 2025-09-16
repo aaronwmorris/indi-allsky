@@ -4,7 +4,6 @@ import math
 import time
 import ipaddress
 import psutil
-import dbus
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
