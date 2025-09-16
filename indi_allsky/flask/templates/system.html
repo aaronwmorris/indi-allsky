@@ -528,8 +528,11 @@ $('#form_settime').on('submit', function() {
             <div class="col-sm-1">
                 <input class="form-check-input" id="INDISERVER_CHANGE_CONFIRM2" name="INDISERVER_CHANGE_CONFIRM2" type="checkbox" value="y"> Confirm 2
             </div>
-        </div>
 
+            <div id="form_indiserver_change_success-message" class="alert alert-success" role="alert" style="display: none;"></div>
+            <div id="form_indiserver_change_failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
+
+        </div>
     </form>
 
 </div><!-- end tab -->
@@ -1134,6 +1137,40 @@ $("#button_flush_daytime").on("click", function() {
 });
 
 
+const form_indiserver_change_successMessage = $('#form_indiserver_change_success-message');
+const form_indiserver_change_failureMessage = $('#form_indiserver_change_failure-message');
+const form_indiserver_change_field_names = [
+    'csrf_token',
+    'CAMERA_SERVER_SELECT',
+    'GPS_SERVER_SELECT',
+];
+const form_indiserver_change_checkbox_field_names = [
+    'RESTART_INDISERVER',
+];
+
+var form_indiserver_change_fields = {};
+// Populate fields object
+form_indiserver_change_field_names.forEach(item => {
+    form_indiserver_change_fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+form_indiserver_change_fields['form_indiserver_change_global'] = {
+    'input' : form_indiserver_change_failureMessage,
+    'error' : form_indiserver_change_failureMessage,
+};
+
+// Checkboxes
+form_indiserver_change_checkbox_field_names.forEach(item => {
+    form_indiserver_change_fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+
 $("#button_indiserver_change").on("click", function() {
     if (! $("#INDISERVER_CHANGE_CONFIRM1").prop('checked')) {
         console.log('Change indiserver checkbox not checked');
@@ -1145,6 +1182,26 @@ $("#button_indiserver_change").on("click", function() {
         return;
     }
 
+
+    // hide all errors
+    form_settime_successMessage.css({'display' : 'none'});
+    Object.keys(form_indiserver_change_fields).forEach((key) => {
+        form_indiserver_change_fields[key].error.css({'display' : 'none'});
+    });
+
+
+    // Populate fields object
+    var json_data = {};
+    form_indiserver_change_field_names.forEach(item => {
+        json_data[item] = form_indiserver_change_fields[item].input.val();
+    });
+
+    // checkboxes
+    form_indiserver_change_checkbox_field_names.forEach(item => {
+        json_data[item] = form_indiserver_change_fields[item].input.prop('checked');
+    });
+
+
     $("#INDISERVER_CHANGE_CONFIRM1").prop('checked', false);
     $("#INDISERVER_CHANGE_CONFIRM2").prop('checked', false);
 
@@ -1152,12 +1209,6 @@ $("#button_indiserver_change").on("click", function() {
       '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Update</span>'
     );
 
-
-    var json_data = {
-        'CAMERA_SERVER_SELECT'  : $('#CAMERA_SERVER_SELECT').val(),
-        'GPS_SERVER_SELECT'     : $('#GPS_SERVER_SELECT').val(),
-        'RESTART_INDISERVER'    : $('#RESTART_INDISERVER').prop('checked'),
-    };
 
     // turn off after fetching value
     $("#RESTART_INDISERVER").prop('checked', false);
@@ -1174,11 +1225,11 @@ $("#button_indiserver_change").on("click", function() {
                 'Update'
             );
 
-            //successMessage.html(rdata['success-message']);
-            //successMessage.css({'display' : 'block'});
-            //setTimeout(function() {
-            //    successMessage.css({'display' : 'none'});
-            //}, 15000);
+            form_indiserver_change_successMessage.html(rdata['success-message']);
+            form_indiserver_change_successMessage.css({'display' : 'block'});
+            setTimeout(function() {
+                form_indiserver_change_successMessage.css({'display' : 'none'});
+            }, 15000);
 
         },
         error: function(rdata){

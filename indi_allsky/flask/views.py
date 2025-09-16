@@ -5846,11 +5846,15 @@ class AjaxIndiServerChangeView(BaseView):
         self.reloadSystemdUnits()
 
 
+        success_message = 'Reconfigure completed.'
+
+
         if restart_indiserver:
             self.restartSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
+            success_message += ' Restart complete'
 
 
-        return jsonify({})
+        return jsonify({'success-message' : success_message})
 
 
     def reloadSystemdUnits(self, bus_type=dbus.SessionBus):
