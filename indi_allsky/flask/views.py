@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -5874,6 +5875,88 @@ class AjaxSystemInfoView(BaseView):
         return message_list
 
 
+class AjaxIndiServerChangeView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        import shutil
+
+        form_indiserver_change = IndiAllskyIndiServerChangeForm(data=request.json)
+
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                form_errors = form_indiserver_change.errors  # this must be a property
+                form_errors['form_global'] = ['You do not have permission to make configuration changes']
+                return jsonify(form_errors), 400
+
+
+        if not form_indiserver_change.validate():
+            form_errors = form_indiserver_change.errors  # this must be a property
+            return jsonify(form_errors), 400
+
+
+        camera_server = str(request.json['CAMERA_SERVER'])
+        gps_server = str(request.json['GPS_SERVER'])
+
+
+        # find the indiserver
+        if Path('/usr/local/bin/indiserver').exists():
+            indiserver_p = Path('/usr/local/bin/indiserver')
+        elif Path('/usr/bin/indiserver').exists():
+            indiserver_p = Path('/usr/bin/indiserver')
+        else:
+            which_indiserver = shutil.which('indiserver')
+
+            if which_indiserver:
+                indiserver_p = Path(which_indiserver)
+            else:
+                raise Exception('indiserver not found')
+
+
+        allsky_directory_p = Path(__file__).parent.parent.parent.absolute()
+
+
+        with io.open(str(allsky_directory_p.joinpath('service', 'indiserver.service')), 'r') as f_service_tmpl:
+            service_tmpl = f_service_tmpl.read()
+
+
+        service_tmpl.replace('%ALLSKY_DIRECTORY%', str(allsky_directory_p))
+        service_tmpl.replace('%INDI_DRIVER_PATH%', str(indiserver_p.parent.absolute()))
+        service_tmpl.replace('%INDI_PORT%', str(self.indi_allsky_config.get('INDI_PORT', 7624)))
+        service_tmpl.replace('%INDI_CCD_DRIVER%', camera_server)
+        service_tmpl.replace('%INDI_GPS_DRIVER%', gps_server)
+
+
+        indiserver_service_p = Path(os.environ.get('HOME', '/home/{0:s}'.format(os.getlogin()))).joinpath('.config', 'systemd', 'user', 'indiserver.service')
+
+
+        with io.open(str(indiserver_service_p), 'w') as f_indiserver_service:
+            f_indiserver_service.write(service_tmpl)
+
+
+        indiserver_service_p.chmod(0o644)
+
+
+        self.reloadSystemdUnits()
+
+
+    def reloadSystemdUnits(self, bus_type=dbus.SessionBus):
+        try:
+            bus = bus_type()
+        except dbus.exceptions.DBusException:
+            # This happens in docker
+            return 'D-Bus Unavailable', 'D-Bus Unavailable'
+
+        systemd1 = bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+
+        try:
+            manager.Reload()
+        except dbus.exceptions.DBusException:
+            return 'UNKNOWN', 'UNKNOWN'
+
+
 class TimelapseGeneratorView(TemplateView):
     decorators = [login_required]
 
@@ -10490,6 +10573,7 @@ bp_allsky.add_url_rule('/ajax/config/restore', view_func=AjaxConfigRestoreView.a
 bp_allsky.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp_allsky.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
 bp_allsky.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
+bp_allsky.add_url_rule('/ajax/indiserver', view_func=AjaxIndiServerChangeView.as_view('ajax_indiserver_change_view'))
 
 bp_allsky.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
 bp_allsky.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
