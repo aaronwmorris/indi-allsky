@@ -4617,8 +4617,22 @@ class SystemInfoView(TemplateView):
         context['form_settime'] = IndiAllskySetDateTimeForm()
         context['timedate1_dict'] = self.getSystemdTimeDate()
 
-        form_indiserver_change = IndiAllskyIndiServerChangeForm()
-        form_indiserver_change.CAMERA_SERVER_SELECT.default = self.camera.driver  # set the current camera driver as default
+
+
+        if self.camera.driver:
+            #app.logger.info('Current camera driver: %s', self.camera.driver)
+            camera_driver = self.camera.driver  # set the current camera driver as default
+        else:
+            camera_driver = 'indi_simulator_ccd'
+
+
+        indiserver_form_data = {
+            'CAMERA_SERVER_SELECT' : camera_driver,
+            'GPS_SERVER_SELECT'    : '',
+        }
+
+        form_indiserver_change = IndiAllskyIndiServerChangeForm(data=indiserver_form_data)
+
         context['form_indiserver_change'] = form_indiserver_change
 
 
