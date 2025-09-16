@@ -489,6 +489,22 @@ $('#form_settime').on('submit', function() {
         <hr>
 
         <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_indiserver_change.RESTART_INDISERVER.label }}
+            </div>
+            <div class="col-sm-2">
+                <div class="form-switch">
+                    {{ form_indiserver_change.RESTART_INDISERVER(class='form-check-input') }}
+                </div>
+            </div>
+            <div class="col-sm-8">
+                <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> This will interrupt operation if indi-allsky is operational</div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="form-group row">
             <div class="col-sm-1">
                 <button id="button_indiserver_change" class="btn btn-primary">Update</button>
             </div>
@@ -1119,7 +1135,11 @@ $("#button_indiserver_change").on("click", function() {
     var json_data = {
         'CAMERA_SERVER_SELECT'  : $('#CAMERA_SERVER_SELECT').val(),
         'GPS_SERVER_SELECT'     : $('#GPS_SERVER_SELECT').val(),
+        'RESTART_INDISERVER'    : $('#RESTART_INDISERVER').prop('checked'),
     };
+
+    // turn off after fetching value
+    $("#RESTART_INDISERVER").prop('checked', false);
 
 
     $.ajax({
@@ -1177,6 +1197,7 @@ $( document ).ready(function() {
     $("#FLUSH_DAYTIME_CONFIRM1").prop('checked', false);
     $("#FLUSH_DAYTIME_CONFIRM2").prop('checked', false);
     $("#INDISERVER_CHANGE_CONFIRM1").prop('checked', false);
+    $("#RESTART_INDISERVER").prop('checked', false);
 
 
     const now = new Date();

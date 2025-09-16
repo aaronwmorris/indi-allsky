@@ -8410,6 +8410,7 @@ class IndiAllskyDriveManagerForm(FlaskForm):
 class IndiAllskyIndiServerChangeForm(FlaskForm):
     CAMERA_SERVER_SELECT    = SelectField('Available Camera Servers', choices=[], validators=[])
     GPS_SERVER_SELECT       = SelectField('Available GPS Servers', choices=[], validators=[])
+    RESTART_INDISERVER      = BooleanField('Restart indiserver')
 
 
     def __init__(self, *args, **kwargs):
