@@ -8408,6 +8408,42 @@ class IndiAllskyDriveManagerForm(FlaskForm):
         return device_entries
 
 
+class IndiAllskyIndiServerChangeForm(FlaskForm):
+    CAMERA_SERVER_SELECT = SelectField('Camera Server', choices=[], validators=[])
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyIndiServerChangeForm, self).__init__(*args, **kwargs)
+
+        self.CAMERA_SERVER_SELECT.choices = self.getCameraServers()
+
+
+    def getCameraServers(self):
+        import shutil
+
+
+        select_list = list()
+
+        indiserver_bin = shutil.which('indiserver')
+        if not indiserver_bin:
+            return select_list
+
+
+        indiserver_p = Path(indiserver_bin)
+
+
+        camera_servers = indiserver_p.parent.glob('indi_*_ccd')
+        for server in sorted(camera_servers):
+            try:
+                desc = constants.INDISERVER_MAP[server.name]
+            except KeyError:
+                continue
+
+            select_list.append([server.name, '{0:s} - [{1:s}]'.format(desc, server.name)])
+
+
+        return select_list
+
+
 class IndiAllskyImageCircleHelperForm(FlaskForm):
     LINE_COLOR_choices = (
         ('#00ff00', 'Green'),

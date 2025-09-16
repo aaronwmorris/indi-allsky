@@ -108,6 +108,7 @@ from .forms import IndiAllskyNetworkManagerForm
 from .forms import IndiAllskyDriveManagerForm
 from .forms import IndiAllskyImageCircleHelperForm
 from .forms import IndiAllskyConfigRestoreForm
+from .forms import IndiAllskyIndiServerChangeForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -10001,6 +10002,23 @@ class ImageCircleHelperView(TemplateView):
         return context
 
 
+class IndiServerChangeView(TemplateView):
+    decorators = [login_required]
+
+    title = 'INDI Server Change'
+
+
+    def get_context(self):
+        context = super(IndiServerChangeView, self).get_context()
+
+        context['title'] = self.title
+        context['camera_id'] = self.camera.id
+
+        context['form_indiserver_change'] = IndiAllskyIndiServerChangeForm()
+
+        return context
+
+
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
@@ -10561,3 +10579,4 @@ bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
 bp_allsky.add_url_rule('/virtualsky', view_func=VirtualSkyView.as_view('virtualsky_view', template_name='virtualsky.html'))
+bp_allsky.add_url_rule('/indiserver', view_func=IndiServerChangeView.as_view('indiserver_change_view', template_name='indiserver_change.html'))

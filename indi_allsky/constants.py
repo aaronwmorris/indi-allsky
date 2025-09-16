@@ -344,3 +344,35 @@ SENSOR_INDEX_MAP = {
     '29'                : 29,
 }
 
+
+INDISERVER_MAP = {
+    'indi_simulator_ccd'    : 'ZWO ASI',
+    'indi_asi_ccd'          : 'ZWO ASI',
+    'indi_asi_single_ccd'   : 'ZWO ASI (Single)',
+    'indi_playerone_ccd'    : 'PlayerOne Astronomy',
+    'indi_playerone_single_ccd' : 'PlayerOne Astronomy (Single)',
+    'indi_toupcam_ccd'      : 'ToupTek',
+    'indi_altair_ccd'       : 'Altair',
+    'indi_omegonprocam_ccd' : 'Omegon',
+    'indi_ogmacam_ccd'      : 'Ogma',
+    'indi_tscam_ccd'        : 'indi_tscam_ccd',
+    'indi_nncam_ccd'        : 'indi_nncam_ccd',
+    'indi_svbony_ccd'       : 'SVBony',
+    #'indi_svbonycam_ccd'    : 'SVBony',
+    'indi_qhy_ccd'          : 'QHY',
+    'indi_sx_ccd'           : 'Starlight Xpress',
+    'indi_dsi_ccd'          : 'Meade DSI',
+    'indi_libcamera_ccd'    : 'libcamera (BETA)',
+    'indi_gphoto_ccd'       : 'DSLR gphoto',
+    'indi_canon_ccd'        : 'Canon DSLR',
+    'indi_sony_ccd'         : 'Sony DSLR',
+    'indi_nikon_ccd'        : 'Nikon DSLR',
+    'indi_fuji_ccd'         : 'Fuji DSLR',
+    'indi_pentax_ccd'       : 'Pentax DSLR',
+    'indi_v4l2_ccd'         : 'Linux V4L2',
+    'indi_webcam_ccd'       : 'Web Camera',
+
+    'indi_gpsd'             : 'GPSd',
+    'indi_gpsnmea'          : 'GPSd NEMA',
+}
+
