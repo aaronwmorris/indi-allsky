@@ -5896,8 +5896,8 @@ class AjaxIndiServerChangeView(BaseView):
             return jsonify(form_errors), 400
 
 
-        camera_server = str(request.json['CAMERA_SERVER'])
-        gps_server = str(request.json['GPS_SERVER'])
+        camera_server = str(request.json['CAMERA_SERVER_SELECT'])
+        gps_server = str(request.json['GPS_SERVER_SELECT'])
 
 
         # find the indiserver
@@ -5921,15 +5921,15 @@ class AjaxIndiServerChangeView(BaseView):
             service_tmpl = f_service_tmpl.read()
 
 
-        service_tmpl.replace('%ALLSKY_DIRECTORY%', str(allsky_directory_p))
-        service_tmpl.replace('%INDI_DRIVER_PATH%', str(indiserver_p.parent.absolute()))
-        service_tmpl.replace('%INDI_PORT%', str(self.indi_allsky_config.get('INDI_PORT', 7624)))
-        service_tmpl.replace('%INDI_CCD_DRIVER%', camera_server)
-        service_tmpl.replace('%INDI_GPS_DRIVER%', gps_server)
+        service_tmpl = service_tmpl.replace('%ALLSKY_DIRECTORY%', str(allsky_directory_p))\
+            .replace('%INDI_DRIVER_PATH%', str(indiserver_p.parent.absolute()))\
+            .replace('%INDI_PORT%', str(self.indi_allsky_config.get('INDI_PORT', 7624)))\
+            .replace('%INDI_CCD_DRIVER%', camera_server)\
+            .replace('%INDI_GPS_DRIVER%', gps_server)\
+            .replace('%INDISERVER_USER%', os.getlogin())
 
 
         indiserver_service_p = Path(os.environ.get('HOME', '/home/{0:s}'.format(os.getlogin()))).joinpath('.config', 'systemd', 'user', 'indiserver.service')
-
 
         with io.open(str(indiserver_service_p), 'w') as f_indiserver_service:
             f_indiserver_service.write(service_tmpl)
@@ -5939,6 +5939,9 @@ class AjaxIndiServerChangeView(BaseView):
 
 
         self.reloadSystemdUnits()
+
+
+        return jsonify({})
 
 
     def reloadSystemdUnits(self, bus_type=dbus.SessionBus):

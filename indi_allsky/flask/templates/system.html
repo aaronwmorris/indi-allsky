@@ -476,6 +476,7 @@ $('#form_settime').on('submit', function() {
                 {{ form_indiserver_change.CAMERA_SERVER_SELECT(class='form-select bg-secondary') }}
             </div>
         </div>
+
         <div class="form-group row">
             <div class="col-sm-2">
                 {{ form_indiserver_change.GPS_SERVER_SELECT.label(class='col-form-label') }}
@@ -484,6 +485,20 @@ $('#form_settime').on('submit', function() {
                 {{ form_indiserver_change.GPS_SERVER_SELECT(class='form-select bg-secondary') }}
             </div>
         </div>
+
+        <hr>
+
+        <div class="form-group row">
+            <div class="col-sm-1">
+                <button id="button_indiserver_change" class="btn btn-primary">Update</button>
+            </div>
+
+            <div class="col-sm-2">
+                <input class="form-check-input" id="INDISERVER_CHANGE_CONFIRM1" name="INDISERVER_CHANGE_CONFIRM1" type="checkbox" value="y"> Confirm
+            </div>
+
+        </div>
+
     </form>
 
 </div><!-- end tab -->
@@ -1088,6 +1103,56 @@ $("#button_flush_daytime").on("click", function() {
 });
 
 
+$("#button_indiserver_change").on("click", function() {
+    if (! $("#INDISERVER_CHANGE_CONFIRM1").prop('checked')) {
+        console.log('Change indiserver checkbox not checked');
+        return;
+    }
+
+    $("#INDISERVER_CHANGE_CONFIRM1").prop('checked', false);
+
+    $("#button_indiserver_change").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Update</span>'
+    );
+
+
+    var json_data = {
+        'CAMERA_SERVER_SELECT'  : $('#CAMERA_SERVER_SELECT').val(),
+        'GPS_SERVER_SELECT'     : $('#GPS_SERVER_SELECT').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_indiserver_change_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#button_indiserver_change").attr("class", "btn btn-success");
+            $("#button_indiserver_change").html(
+                'Update'
+            );
+
+            //successMessage.html(rdata['success-message']);
+            //successMessage.css({'display' : 'block'});
+            //setTimeout(function() {
+            //    successMessage.css({'display' : 'none'});
+            //}, 15000);
+
+        },
+        error: function(rdata){
+            $("#button_indiserver_change").attr("class", "btn btn-danger");
+            $("#button_indiserver_change").html(
+                'Update'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+        },
+    });
+
+
+});
+
 
 function reloadPage() {
     console.log('Reload page');
@@ -1111,6 +1176,8 @@ $( document ).ready(function() {
     $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked', false);
     $("#FLUSH_DAYTIME_CONFIRM1").prop('checked', false);
     $("#FLUSH_DAYTIME_CONFIRM2").prop('checked', false);
+    $("#INDISERVER_CHANGE_CONFIRM1").prop('checked', false);
+
 
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
