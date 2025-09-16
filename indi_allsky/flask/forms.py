@@ -7369,7 +7369,6 @@ class IndiAllskySystemInfoForm(FlaskForm):
     COMMAND_HIDDEN      = HiddenField('command_hidden', validators=[DataRequired()])
 
 
-
 class IndiAllskyLoopHistoryForm(FlaskForm):
     HISTORY_SELECT_choices = (
         ('900', '15 Minutes'),
@@ -8424,7 +8423,9 @@ class IndiAllskyIndiServerChangeForm(FlaskForm):
         import shutil
 
 
-        select_list = []
+        select_list = [
+            ['', 'None'],
+        ]
 
 
         indiserver_bin = shutil.which('indiserver')

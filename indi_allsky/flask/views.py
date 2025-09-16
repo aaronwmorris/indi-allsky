@@ -4616,6 +4616,9 @@ class SystemInfoView(TemplateView):
         context['form_settime'] = IndiAllskySetDateTimeForm()
         context['timedate1_dict'] = self.getSystemdTimeDate()
 
+        context['form_indiserver_change'] = IndiAllskyIndiServerChangeForm()
+
+
         return context
 
 
@@ -4836,6 +4839,69 @@ class SystemInfoView(TemplateView):
         return str(default_target)
 
 
+    def getSystemdUnitStatus(self, unit_name, bus_type=dbus.SessionBus):
+        try:
+            bus = bus_type()
+        except dbus.exceptions.DBusException:
+            # This happens in docker
+            return 'D-Bus Unavailable', 'D-Bus Unavailable'
+
+        systemd1 = bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+
+        try:
+            #service = bus.get_object('org.freedesktop.systemd1', object_path=manager.GetUnit(unit_name))
+
+            unit = manager.LoadUnit(unit_name)
+            service = bus.get_object('org.freedesktop.systemd1', str(unit))
+        except dbus.exceptions.DBusException:
+            return 'UNKNOWN', 'UNKNOWN'
+
+        interface = dbus.Interface(service, dbus_interface='org.freedesktop.DBus.Properties')
+        unit_active_state = interface.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
+        unit_file_state = interface.Get('org.freedesktop.systemd1.Unit', 'UnitFileState')
+
+        return str(unit_active_state), str(unit_file_state)
+
+
+    def getSystemdTimerTrigger(self, unit_name, bus_type=dbus.SessionBus):
+        try:
+            bus = bus_type()
+        except dbus.exceptions.DBusException:
+            # This happens in docker
+            return -1
+
+        systemd1 = bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+
+        try:
+            #service = bus.get_object('org.freedesktop.systemd1', object_path=manager.GetUnit(unit_name))
+
+            unit = manager.LoadUnit(unit_name)
+            service = bus.get_object('org.freedesktop.systemd1', str(unit))
+        except dbus.exceptions.DBusException:
+            return -1
+
+
+        interface = dbus.Interface(service, dbus_interface='org.freedesktop.DBus.Properties')
+        #timer_info = interface.Get('org.freedesktop.systemd1.Timer', 'TimersMonotonic')
+        #result = interface.Get('org.freedesktop.systemd1.Timer', 'Result')
+        next_usec = interface.Get('org.freedesktop.systemd1.Timer', 'NextElapseUSecMonotonic')
+
+
+        if next_usec == 18446744073709551615:
+            # already triggered
+            return -1
+
+
+        uptime_s = time.time() - psutil.boot_time()
+        next_trigger_s = int((next_usec / 1000000) - uptime_s)
+
+        app.logger.info('%s next trigger: %ss', unit_name, next_trigger_s)
+
+        return next_trigger_s
+
+
     def getSystemdTimeDate(self):
         try:
             session_bus = dbus.SystemBus()
@@ -4866,7 +4932,6 @@ class SystemInfoView(TemplateView):
         #app.logger.info('timedate1: %s', timedate1_dict)
 
         return timedate1_dict
-
 
 
 class TaskQueueView(TemplateView):
@@ -9939,23 +10004,6 @@ class ImageCircleHelperView(TemplateView):
         return context
 
 
-class IndiServerChangeView(TemplateView):
-    decorators = [login_required]
-
-    title = 'INDI Server Change'
-
-
-    def get_context(self):
-        context = super(IndiServerChangeView, self).get_context()
-
-        context['title'] = self.title
-        context['camera_id'] = self.camera.id
-
-        context['form_indiserver_change'] = IndiAllskyIndiServerChangeForm()
-
-        return context
-
-
 class AstroPanelView(TemplateView):
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
@@ -10516,4 +10564,3 @@ bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
 bp_allsky.add_url_rule('/virtualsky', view_func=VirtualSkyView.as_view('virtualsky_view', template_name='virtualsky.html'))
-bp_allsky.add_url_rule('/indiserver', view_func=IndiServerChangeView.as_view('indiserver_change_view', template_name='indiserver_change.html'))
