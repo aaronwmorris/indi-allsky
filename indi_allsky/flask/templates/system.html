@@ -38,7 +38,7 @@ var camera_id = {{ camera_id }};
   <div class="nav nav-tabs" id="nav-tab" role="tablist">
     <button class="nav-link link-info bg-dark active" id="nav-info-tab" data-bs-toggle="tab" data-bs-target="#nav-info" type="button" role="tab" aria-controls="nav-info" aria-selected="true">Information</button>
     <button class="nav-link link-warning bg-dark" id="nav-time-tab" data-bs-toggle="tab" data-bs-target="#nav-time" type="button" role="tab" aria-controls="nav-time" aria-selected="false">Time</button>
-    <button class="nav-link link-primary bg-dark" id="nav-indiserver-tab" data-bs-toggle="tab" data-bs-target="#nav-indiserver" type="button" role="tab" aria-controls="nav-indiserver" aria-selected="false">indiserver</button>
+    <button class="nav-link link-secondary bg-dark" id="nav-indiserver-tab" data-bs-toggle="tab" data-bs-target="#nav-indiserver" type="button" role="tab" aria-controls="nav-indiserver" aria-selected="false">indiserver</button>
     <button class="nav-link link-success bg-dark" id="nav-services-tab" data-bs-toggle="tab" data-bs-target="#nav-services" type="button" role="tab" aria-controls="nav-services" aria-selected="false">Services</button>
     <button class="nav-link link-danger bg-dark" id="nav-powercontrol-tab" data-bs-toggle="tab" data-bs-target="#nav-powercontrol" type="button" role="tab" aria-controls="nav-powercontrol" aria-selected="false">Utilities</button>
   </div>
@@ -465,6 +465,16 @@ $('#form_settime').on('submit', function() {
 
 </div><!-- end tab -->
 <div class="tab-pane fade" id="nav-indiserver" role="tabpanel" aria-labelledby="nav-indiserver-tab">
+    <hr>
+
+    <div>This page may be used to update the camera driver server that is currently configured in the local indiserver.</div>
+
+    <hr>
+
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> This has no effect on libcamera-based configurations</div>
+
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> The default camera selection will not update until the camera selection has changed</div>
+
     <hr>
 
     <form id="form_indiserver_change" onSubmit="return false;">
