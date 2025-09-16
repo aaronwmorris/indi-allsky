@@ -8408,8 +8408,8 @@ class IndiAllskyDriveManagerForm(FlaskForm):
 
 
 class IndiAllskyIndiServerChangeForm(FlaskForm):
-    CAMERA_SERVER_SELECT = SelectField('Camera Server', choices=[], validators=[])
-    GPS_SERVER_SELECT = SelectField('GPS Server', choices=[], validators=[])
+    CAMERA_SERVER_SELECT = SelectField('Available Camera Servers', choices=[], validators=[])
+    GPS_SERVER_SELECT = SelectField('Available GPS Servers', choices=[], validators=[])
 
 
     def __init__(self, *args, **kwargs):
@@ -8420,20 +8420,17 @@ class IndiAllskyIndiServerChangeForm(FlaskForm):
 
 
     def getCameraServers(self):
-        import shutil
-
-
         select_list = [
             ['', 'None'],
         ]
 
 
-        indiserver_bin = shutil.which('indiserver')
-        if not indiserver_bin:
+        if Path('/usr/local/bin/indiserver').exists():
+            indiserver_p = Path('/usr/local/bin/indiserver')
+        elif Path('/usr/bin/indiserver').exists():
+            indiserver_p = Path('/usr/bin/indiserver')
+        else:
             return select_list
-
-
-        indiserver_p = Path(indiserver_bin)
 
 
         for server in constants.INDISERVER_CAMERA_MAP.keys():
@@ -8445,20 +8442,17 @@ class IndiAllskyIndiServerChangeForm(FlaskForm):
 
 
     def getGpsServers(self):
-        import shutil
-
-
         select_list = [
             ['', 'None'],
         ]
 
 
-        indiserver_bin = shutil.which('indiserver')
-        if not indiserver_bin:
+        if Path('/usr/local/bin/indiserver').exists():
+            indiserver_p = Path('/usr/local/bin/indiserver')
+        elif Path('/usr/bin/indiserver').exists():
+            indiserver_p = Path('/usr/bin/indiserver')
+        else:
             return select_list
-
-
-        indiserver_p = Path(indiserver_bin)
 
 
         for server in constants.INDISERVER_GPS_MAP.keys():
