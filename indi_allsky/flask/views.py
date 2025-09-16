@@ -5802,6 +5802,7 @@ class AjaxIndiServerChangeView(BaseView):
 
         camera_server = str(request.json['CAMERA_SERVER_SELECT'])
         gps_server = str(request.json['GPS_SERVER_SELECT'])
+        restart_indiserver = bool(request.json['RESTART_INDISERVER'])
 
 
         # find the indiserver
@@ -5833,7 +5834,7 @@ class AjaxIndiServerChangeView(BaseView):
             .replace('%INDISERVER_USER%', os.getlogin())
 
 
-        indiserver_service_p = Path(os.environ.get('HOME', '/home/{0:s}'.format(os.getlogin()))).joinpath('.config', 'systemd', 'user', 'indiserver.service')
+        indiserver_service_p = Path(os.environ.get('HOME', '/home/{0:s}'.format(os.getlogin()))).joinpath('.config', 'systemd', 'user', app.config['INDISERVER_SERVICE_NAME'])
 
         with io.open(str(indiserver_service_p), 'w') as f_indiserver_service:
             f_indiserver_service.write(service_tmpl)
@@ -5843,6 +5844,10 @@ class AjaxIndiServerChangeView(BaseView):
 
 
         self.reloadSystemdUnits()
+
+
+        if restart_indiserver:
+            self.restartSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
 
 
         return jsonify({})
