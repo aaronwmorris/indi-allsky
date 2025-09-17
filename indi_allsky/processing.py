@@ -2391,7 +2391,7 @@ class ImageProcessor(object):
 
     def get_image_label(self, i_ref, adsb_aircraft_list, custom_hook_data):
         # gain is int, gain_f is float
-        image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain_f:%0.1f}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
+        image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain_f:0.1f}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
 
 
         if self.config.get('TEMP_DISPLAY') == 'f':
@@ -2424,7 +2424,7 @@ class ImageProcessor(object):
             'exposure'     : i_ref.exposure,
             'day_date'     : i_ref.day_date,
             'rational_exp' : rational_exp,
-            'gain'         : int(i_ref.gain),
+            'gain'         : int(i_ref.gain),  # gain is float
             'gain_f'       : float(i_ref.gain),
             'temp_unit'    : temp_unit,
             'sqm'          : i_ref.sqm_value,
