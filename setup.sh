@@ -3070,13 +3070,10 @@ done
 
 
 if [ "$INDIALLSKY_DISABLE_LEDS" == "true" ]; then
+    # System service, requires root
     sudo cp "${ALLSKY_DIRECTORY}/service/indi-allsky-disable-leds.sh" "/usr/local/sbin"
     sudo chown root:root "/usr/local/sbin/indi-allsky-disable-leds.sh"
     sudo chmod 755 "/usr/local/sbin/indi-allsky-disable-leds.sh"
-
-    sudo cp "${ALLSKY_DIRECTORY}/service/indi-allsky-disable-leds.timer" "/etc/systemd/system"
-    sudo chown root:root "/etc/systemd/system/indi-allsky-disable-leds.timer"
-    sudo chmod 644 "/etc/systemd/system/indi-allsky-disable-leds.timer"
 
     sudo cp "${ALLSKY_DIRECTORY}/service/indi-allsky-disable-leds.service" "/etc/systemd/system"
     sudo chown root:root "/etc/systemd/system/indi-allsky-disable-leds.service"
@@ -3084,8 +3081,7 @@ if [ "$INDIALLSKY_DISABLE_LEDS" == "true" ]; then
 
     sudo systemctl daemon-reload
 
-    sudo systemctl enable "indi-allsky-disable-leds.timer"
-    sudo systemctl disable "indi-allsky-disable-leds.service"
+    sudo systemctl enable "indi-allsky-disable-leds.service"
 
     # go ahead and disable LEDs
     sudo systemctl start "indi-allsky-disable-leds.service"

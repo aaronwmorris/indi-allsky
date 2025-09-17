@@ -1,9 +1,0 @@
-[Unit]
-Description=Timer for the indi-allsky to disable LEDs
-
-[Timer]
-### Start 30 seconds after boot
-OnBootSec=30
-
-[Install]
-WantedBy=timers.target
