@@ -523,6 +523,17 @@ var camera_id = {{ camera_id }};
 
     <hr>
 
+<div class="accordion accordion-flush" id="accordionFlushExample">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+        libcamera Settings
+      </button>
+    </h2>
+    <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+      <div class="accordion-body bg-dark bg-opacity-50">
+
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.LIBCAMERA__CAMERA_ID.label(class='col-form-label') }}
@@ -836,7 +847,19 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-6"></div>
     </div>
 
-    <hr>
+
+      </div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
+        PyCurl Camera Settings
+      </button>
+    </h2>
+    <div id="flush-collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+      <div class="accordion-body bg-dark bg-opacity-50">
+
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -887,7 +910,19 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
-    <hr>
+
+      </div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseThree" aria-expanded="false" aria-controls="flush-collapseThree">
+        Test Camera Settings
+      </button>
+    </h2>
+    <div id="flush-collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+      <div class="accordion-body bg-dark bg-opacity-50">
+
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -964,7 +999,19 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
-    <hr>
+
+      </div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseFour" aria-expanded="true" aria-controls="flush-collapseFour">
+        INDI Camera Settings
+      </button>
+    </h2>
+    <div id="flush-collapseFour" class="accordion-collapse collapse show" data-bs-parent="#accordionFlushExample">
+      <div class="accordion-body bg-dark bg-opacity-50">
+
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -995,6 +1042,11 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+
+      </div>
+    </div>
+  </div>
+</div>
 
 </div><!-- end camera tab -->
 <div class="tab-pane fade" id="nav-image" role="tabpanel" aria-labelledby="nav-image-tab">
