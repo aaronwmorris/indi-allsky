@@ -122,7 +122,7 @@ class IndiClient(PyIndi.BaseClient):
         self._timeout = 10.0
 
         self._exposure = 0.0
-        self._gain = 0  # individual exposure gain
+        self._gain = 0.0  # individual exposure gain
 
         self.exposureStartTime = None
 
@@ -206,7 +206,7 @@ class IndiClient(PyIndi.BaseClient):
 
     @gain.setter
     def gain(self, new_gain):
-        self._gain = int(new_gain)
+        self._gain = float(new_gain)
 
 
     @property
@@ -982,7 +982,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
         self.exposure = exposure
-        self.gain = int(self.gain_v.value)
+        self.gain = float(self.gain_v.value)
 
 
         self.exposureStartTime = time.time()
@@ -1024,9 +1024,9 @@ class IndiClient(PyIndi.BaseClient):
 
         # for cameras that do not support gain
         fake_gain_info = {
-            'current' : -1,
-            'min'     : -1,
-            'max'     : -1,
+            'current' : -1.0,
+            'min'     : -1.0,
+            'max'     : -1.0,
             'step'    : 1,
             'format'  : '',
         }
@@ -1084,7 +1084,7 @@ class IndiClient(PyIndi.BaseClient):
                 try:
                     # The label should be the ISO number in string format
                     gain_str = gain_ctl[index].getLabel()
-                    gain = int(gain_str)
+                    gain = float(gain_str)
                 except ValueError:
                     # skip values like "auto"
                     logger.warning('Skipping ISO setting "%s"', gain_str)
@@ -1100,7 +1100,7 @@ class IndiClient(PyIndi.BaseClient):
 
             try:
                 gain_info = {
-                    'current' : 0,  # this should not matter
+                    'current' : 0.0,  # this should not matter
                     'min'     : min(gain_list),
                     'max'     : max(gain_list),
                     'step'    : None,
@@ -1146,7 +1146,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def setCcdGain(self, gain_value):
-        logger.warning('Setting CCD gain to %s', str(gain_value))
+        logger.warning('Setting CCD gain to %0.1f', float(gain_value))
         indi_exec = self.ccd_device.getDriverExec()
 
         if indi_exec in [
