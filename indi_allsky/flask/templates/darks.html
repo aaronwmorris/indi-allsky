@@ -46,7 +46,7 @@ var camera_id = {{ camera_id }};
     <td>{{ dark.active }}</td>
     <td>{{ dark.width }}x{{ dark.height }}</td>
     <td>{{ dark.bitdepth }}</td>
-    <td>{{ dark.gain }}</td>
+    <td>{{ "%0.1f"|format(dark.gain | float) }}</td>
     <td>{{ dark.exposure }}</td>
     <td>{{ dark.binmode }}</td>
     <td>{{ "%0.2f"|format(dark.temp | float) }}</td>
@@ -87,7 +87,7 @@ var camera_id = {{ camera_id }};
     <td>{{ bpm.active }}</td>
     <td>{{ bpm.width }}x{{ bpm.height }}</td>
     <td>{{ bpm.bitdepth }}</td>
-    <td>{{ bpm.gain }}</td>
+    <td>{{ "%0.1f"|format(bpm.gain | float) }}</td>
     <td>{{ bpm.exposure }}</td>
     <td>{{ bpm.binmode }}</td>
     <td>{{ "%0.2f"|format(bpm.temp | float) }}</td>
