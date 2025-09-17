@@ -289,48 +289,6 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.ACCUM_CAMERA__SUB_EXPOSURE_MAX.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.ACCUM_CAMERA__SUB_EXPOSURE_MAX(class='form-control bg-secondary') }}
-            <div id="ACCUM_CAMERA__SUB_EXPOSURE_MAX-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Maximum sub-exposure for the accumulator camera.</div>
-            <div>The total exposure time will be divided by this value and the resulting sub-exposures will be summed into a unsigned 32-bit result</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.ACCUM_CAMERA__EVEN_EXPOSURES.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.ACCUM_CAMERA__EVEN_EXPOSURES(class='form-check-input') }}
-                <div id="ACCUM_CAMERA__EVEN_EXPOSURES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Ensure each sub-exposure is the same interval</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.ACCUM_CAMERA__CLAMP_16BIT.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.ACCUM_CAMERA__CLAMP_16BIT(class='form-check-input') }}
-                <div id="ACCUM_CAMERA__CLAMP_16BIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Clamp FITS to 16-bits.  FITS and Dark images will be clamped to uint16 (50% smaller than uint32)</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
             {{ form_config.IMAGE_QUEUE_MAX.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -522,6 +480,17 @@ var camera_id = {{ camera_id }};
     </div>
 
     <hr>
+
+<div class="accordion accordion-flush" id="accordionCameraSettings">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLibcamera" aria-expanded="false" aria-controls="collapseLibcamera">
+        libcamera Settings
+      </button>
+    </h2>
+    <div id="collapseLibcamera" class="accordion-collapse collapse" data-bs-parent="#accordionCameraSettings">
+      <div class="accordion-body bg-dark bg-opacity-50">
+
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -836,7 +805,19 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-6"></div>
     </div>
 
-    <hr>
+
+      </div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePycurl" aria-expanded="false" aria-controls="collapsePycurl">
+        PyCurl Camera Settings
+      </button>
+    </h2>
+    <div id="collapsePycurl" class="accordion-collapse collapse" data-bs-parent="#accordionCameraSettings">
+      <div class="accordion-body bg-dark bg-opacity-50">
+
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -887,7 +868,19 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
-    <hr>
+
+      </div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTestCamera" aria-expanded="false" aria-controls="collapseTestCamera">
+        Test Camera Settings
+      </button>
+    </h2>
+    <div id="collapseTestCamera" class="accordion-collapse collapse" data-bs-parent="#accordionCameraSettings">
+      <div class="accordion-body bg-dark bg-opacity-50">
+
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -964,7 +957,19 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
-    <hr>
+
+      </div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIndi" aria-expanded="true" aria-controls="collapseIndi">
+        INDI Camera Settings
+      </button>
+    </h2>
+    <div id="collapseIndi" class="accordion-collapse collapse show" data-bs-parent="#accordionCameraSettings">
+      <div class="accordion-body bg-dark bg-opacity-50">
+
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -995,6 +1000,53 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ACCUM_CAMERA__SUB_EXPOSURE_MAX.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.ACCUM_CAMERA__SUB_EXPOSURE_MAX(class='form-control bg-secondary') }}
+            <div id="ACCUM_CAMERA__SUB_EXPOSURE_MAX-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Maximum sub-exposure for the accumulator camera.</div>
+            <div>The total exposure time will be divided by this value and the resulting sub-exposures will be summed into a unsigned 32-bit result</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ACCUM_CAMERA__EVEN_EXPOSURES.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ACCUM_CAMERA__EVEN_EXPOSURES(class='form-check-input') }}
+                <div id="ACCUM_CAMERA__EVEN_EXPOSURES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Ensure each sub-exposure is the same interval</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.ACCUM_CAMERA__CLAMP_16BIT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.ACCUM_CAMERA__CLAMP_16BIT(class='form-check-input') }}
+                <div id="ACCUM_CAMERA__CLAMP_16BIT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Clamp FITS to 16-bits.  FITS and Dark images will be clamped to uint16 (50% smaller than uint32)</div>
+    </div>
+
+
+      </div>
+    </div>
+  </div>
+</div>
 
 </div><!-- end camera tab -->
 <div class="tab-pane fade" id="nav-image" role="tabpanel" aria-labelledby="nav-image-tab">
