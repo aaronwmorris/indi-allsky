@@ -3071,7 +3071,7 @@ done
 
 if [ "$INDIALLSKY_DISABLE_LEDS" == "true" ]; then
     # System service, requires root
-    sudo cp "${ALLSKY_DIRECTORY}/service/indi-allsky-disable-leds.sh" "/usr/local/sbin"
+    sudo cp "${ALLSKY_DIRECTORY}/misc/indi-allsky-disable-leds.sh" "/usr/local/sbin"
     sudo chown root:root "/usr/local/sbin/indi-allsky-disable-leds.sh"
     sudo chmod 755 "/usr/local/sbin/indi-allsky-disable-leds.sh"
 
