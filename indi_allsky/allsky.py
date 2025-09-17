@@ -149,7 +149,7 @@ class IndiAllSky(object):
             -1.0,  # maximum
         ])
 
-        self.gain_v = Value('i', -1)  # value set in CCD config
+        self.gain_v = Value('f', -1.0)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
 
 

@@ -93,7 +93,7 @@ class IndiAllSkyDarks(object):
         self.indi_config = self.config.get('INDI_CONFIG_DEFAULTS', {})
 
         self.exposure_av = Array('f', [-1.0])
-        self.gain_v = Value('i', -1)  # value set in CCD config
+        self.gain_v = Value('f', -1.0)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.sensors_temp_av = Array('f', [0.0])  # 0 ccd_temp
 
@@ -274,8 +274,8 @@ class IndiAllSkyDarks(object):
 
             'minExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('min')),
             'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
-            'minGain'     : int(ccd_info.get('GAIN_INFO', {}).get('min')),
-            'maxGain'     : int(ccd_info.get('GAIN_INFO', {}).get('max')),
+            'minGain'     : float(ccd_info.get('GAIN_INFO', {}).get('min')),
+            'maxGain'     : float(ccd_info.get('GAIN_INFO', {}).get('max')),
             'width'       : int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max')),
             'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
             'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
@@ -325,35 +325,35 @@ class IndiAllSkyDarks(object):
         ccd_max_gain = ccd_info['GAIN_INFO']['max']
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
-            logger.error('CCD night gain below minimum, changing to %d', int(ccd_min_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_min_gain)
+            logger.error('CCD night gain below minimum, changing to %0.1f', float(ccd_min_gain))
+            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['NIGHT']['GAIN'] > ccd_max_gain:
-            logger.error('CCD night gain above maximum, changing to %d', int(ccd_max_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = int(ccd_max_gain)
+            logger.error('CCD night gain above maximum, changing to %0.1f', float(ccd_max_gain))
+            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = float(ccd_max_gain)
             time.sleep(3)
 
         if self.config['CCD_CONFIG']['MOONMODE']['GAIN'] < ccd_min_gain:
-            logger.error('CCD moon mode gain below minimum, changing to %d', int(ccd_min_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_min_gain)
+            logger.error('CCD moon mode gain below minimum, changing to %0.1f', float(ccd_min_gain))
+            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['MOONMODE']['GAIN'] > ccd_max_gain:
-            logger.error('CCD moon mode gain above maximum, changing to %d', int(ccd_max_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = int(ccd_max_gain)
+            logger.error('CCD moon mode gain above maximum, changing to %0.1f', float(ccd_max_gain))
+            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = float(ccd_max_gain)
             time.sleep(3)
 
         if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
-            logger.error('CCD day gain below minimum, changing to %d', int(ccd_min_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_min_gain)
+            logger.error('CCD day gain below minimum, changing to %0.1f', float(ccd_min_gain))
+            self.config['CCD_CONFIG']['DAY']['GAIN'] = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_max_gain:
-            logger.error('CCD day gain above maximum, changing to %d', int(ccd_max_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = int(ccd_max_gain)
+            logger.error('CCD day gain above maximum, changing to %0.1f', float(ccd_max_gain))
+            self.config['CCD_CONFIG']['DAY']['GAIN'] = float(ccd_max_gain)
             time.sleep(3)
 
 
     def shoot(self, exposure, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.gain_v.value)
+        logger.info('Taking %0.8f s exposure (gain %0.1f)', exposure, self.gain_v.value)
 
         self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
 
@@ -812,8 +812,8 @@ class IndiAllSkyDarks(object):
         logger.info('Exposures: %s', ', '.join([str(x) for x in dark_exposures]))
 
 
-        bpm_filename_t = 'bpm_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
-        dark_filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
+        bpm_filename_t = 'bpm_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:0.1f}_bin{4:d}_{5:d}c_{6:s}.fit'
+        dark_filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:0.1f}_bin{4:d}_{5:d}c_{6:s}.fit'
         # 0  = ccd id
         # 1  = bits
         # 2  = exposure (seconds)
@@ -1380,7 +1380,7 @@ class IndiAllSkyDarksProcessor(object):
     def buildBadPixelMap(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         from astropy.io import fits
 
-        logger.info('Building bad pixel map for exposure %0.1fs, gain %d, bin %d', exposure, self.gain_v.value, self.bin_v.value)
+        logger.info('Building bad pixel map for exposure %0.1fs, gain %0.1f, bin %d', exposure, self.gain_v.value, self.bin_v.value)
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
@@ -1474,7 +1474,7 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
     def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         from astropy.io import fits
 
-        logger.info('Stacking dark frames for exposure %0.1fs, gain %d, bin %d', exposure, self.gain_v.value, self.bin_v.value)
+        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.1f, bin %d', exposure, self.gain_v.value, self.bin_v.value)
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
@@ -1563,7 +1563,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
         from astropy.stats import mad_std
         import ccdproc
 
-        logger.info('Stacking dark frames for exposure %0.1fs, gain %d, bin %d', exposure, self.gain_v.value, self.bin_v.value)
+        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.1f, bin %d', exposure, self.gain_v.value, self.bin_v.value)
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16

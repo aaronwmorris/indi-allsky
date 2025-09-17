@@ -52,15 +52,15 @@ class IndiAllSkyConfigBase(object):
         "LENS_AZIMUTH"      : 0.0,
         "CCD_CONFIG" : {
             "NIGHT" : {
-                "GAIN"    : 100,
+                "GAIN"    : 100.0,
                 "BINNING" : 1,
             },
             "MOONMODE" : {
-                "GAIN"    : 75,
+                "GAIN"    : 75.0,
                 "BINNING" : 1,
             },
             "DAY" : {
-                "GAIN"    : 0,
+                "GAIN"    : 0.0,
                 "BINNING" : 1,
             }
         },

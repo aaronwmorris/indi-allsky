@@ -4060,8 +4060,8 @@ class Fits2JpegView(BaseView):
         hdulist = fits.open(filename_p)
 
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
-        gain = int(hdulist[0].header.get('GAIN', 0))
-        gain_v = Value('i', gain)
+        gain = float(hdulist[0].header.get('GAIN', 0))
+        gain_v = Value('f', gain)
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
         bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
         sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
@@ -7145,8 +7145,8 @@ class JsonImageProcessingView(JsonView):
         hdulist = fits.open(filename_p)
 
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
-        gain = int(hdulist[0].header.get('GAIN', 0))
-        gain_v = Value('i', gain)
+        gain = float(hdulist[0].header.get('GAIN', 0))
+        gain_v = Value('f', gain)
         bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
         #sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
