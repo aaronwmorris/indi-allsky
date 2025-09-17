@@ -85,7 +85,7 @@ if which whiptail >/dev/null 2>&1; then
     WHIPTAIL_BIN=$(which whiptail)
 
     ### testing
-    WHIPTAIL_BIN=""
+    #WHIPTAIL_BIN=""
 fi
 
 
