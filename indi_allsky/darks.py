@@ -812,8 +812,9 @@ class IndiAllSkyDarks(object):
         logger.info('Exposures: %s', ', '.join([str(x) for x in dark_exposures]))
 
 
-        bpm_filename_t = 'bpm_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:0.1f}_bin{4:d}_{5:d}c_{6:s}.fit'
-        dark_filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:0.1f}_bin{4:d}_{5:d}c_{6:s}.fit'
+        # filename gain as int
+        bpm_filename_t = 'bpm_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
+        dark_filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
         # 0  = ccd id
         # 1  = bits
         # 2  = exposure (seconds)
@@ -1067,7 +1068,7 @@ class IndiAllSkyDarks(object):
             self.camera_id,
             image_bitpix,
             int(exposure),
-            self.gain_v.value,
+            int(self.gain_v.value),  # filename gain as int
             self.bin_v.value,
             int(self.sensors_temp_av[0]),
             date_str,
@@ -1076,7 +1077,7 @@ class IndiAllSkyDarks(object):
             self.camera_id,
             image_bitpix,
             int(exposure),
-            self.gain_v.value,
+            int(self.gain_v.value),  # filename gain as int
             self.bin_v.value,
             int(self.sensors_temp_av[0]),
             date_str,
