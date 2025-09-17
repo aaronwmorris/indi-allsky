@@ -702,7 +702,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'day_date'   : now.date(),
         'exposure'   : 1.0,
         'rational_exp' : '',
-        'gain'       : 1,
+        'gain'       : 1,  # originally int
         'gain_f'     : 1.0,
         'temp'       : -5.1,
         'temp_unit'  : 'C',
