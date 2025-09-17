@@ -1,0 +1,9 @@
+[Unit]
+Description=indi-allsky Disable LEDs
+After=network.target
+ 
+[Service]
+ExecStart=/usr/local/sbin/indi-allsky-disable-leds.sh
+
+[Install]
+WantedBy=default.target
