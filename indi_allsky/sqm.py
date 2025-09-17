@@ -18,7 +18,7 @@ class IndiAllskySqm(object):
 
 
     def calculate(self, img, exposure, gain):
-        #logger.info('Exposure: %0.6f, gain: %d', exposure, gain)
+        #logger.info('Exposure: %0.6f, gain: %0.1f', exposure, gain)
 
         if isinstance(self._sqm_mask, type(None)):
             # This only needs to be done once if a mask is not provided
