@@ -7369,7 +7369,6 @@ class IndiAllskySystemInfoForm(FlaskForm):
     COMMAND_HIDDEN      = HiddenField('command_hidden', validators=[DataRequired()])
 
 
-
 class IndiAllskyLoopHistoryForm(FlaskForm):
     HISTORY_SELECT_choices = (
         ('900', '15 Minutes'),
@@ -8406,6 +8405,63 @@ class IndiAllskyDriveManagerForm(FlaskForm):
             device_entries.append(('', 'No Devices'))
 
         return device_entries
+
+
+class IndiAllskyIndiServerChangeForm(FlaskForm):
+    CAMERA_SERVER_SELECT    = SelectField('Available Camera Drivers', choices=[], validators=[])
+    GPS_SERVER_SELECT       = SelectField('Available GPS Drivers', choices=[], validators=[])
+    RESTART_INDISERVER      = BooleanField('Restart indiserver')
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyIndiServerChangeForm, self).__init__(*args, **kwargs)
+
+        self.CAMERA_SERVER_SELECT.choices = self.getCameraServers()
+        self.GPS_SERVER_SELECT.choices = self.getGpsServers()
+
+
+    def getCameraServers(self):
+        select_list = [
+            ['', 'None'],
+        ]
+
+
+        if Path('/usr/local/bin/indiserver').exists():
+            indiserver_p = Path('/usr/local/bin/indiserver')
+        elif Path('/usr/bin/indiserver').exists():
+            indiserver_p = Path('/usr/bin/indiserver')
+        else:
+            return select_list
+
+
+        for server in constants.INDISERVER_CAMERA_MAP.keys():
+            if indiserver_p.parent.joinpath(server).exists():
+                select_list.append([server, '{0:s} - [{1:s}]'.format(constants.INDISERVER_CAMERA_MAP[server], server)])
+
+
+        return select_list
+
+
+    def getGpsServers(self):
+        select_list = [
+            ['', 'None'],
+        ]
+
+
+        if Path('/usr/local/bin/indiserver').exists():
+            indiserver_p = Path('/usr/local/bin/indiserver')
+        elif Path('/usr/bin/indiserver').exists():
+            indiserver_p = Path('/usr/bin/indiserver')
+        else:
+            return select_list
+
+
+        for server in constants.INDISERVER_GPS_MAP.keys():
+            if indiserver_p.parent.joinpath(server).exists():
+                select_list.append([server, '{0:s} - [{1:s}]'.format(constants.INDISERVER_GPS_MAP[server], server)])
+
+
+        return select_list
 
 
 class IndiAllskyImageCircleHelperForm(FlaskForm):

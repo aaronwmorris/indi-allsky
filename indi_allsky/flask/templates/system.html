@@ -4,7 +4,7 @@
 
 {% block head %}
 <style>
-#nav-info-tab, #nav-time-tab, #nav-services-tab, #nav-powercontrol-tab {
+#nav-info-tab, #nav-time-tab, #nav-services-tab, #nav-powercontrol-tab, #nav-indiserver-tab {
 	width: 150px;
 	margin-top: 10px;
 	margin-right: 5px;
@@ -38,6 +38,7 @@ var camera_id = {{ camera_id }};
   <div class="nav nav-tabs" id="nav-tab" role="tablist">
     <button class="nav-link link-info bg-dark active" id="nav-info-tab" data-bs-toggle="tab" data-bs-target="#nav-info" type="button" role="tab" aria-controls="nav-info" aria-selected="true">Information</button>
     <button class="nav-link link-warning bg-dark" id="nav-time-tab" data-bs-toggle="tab" data-bs-target="#nav-time" type="button" role="tab" aria-controls="nav-time" aria-selected="false">Time</button>
+    <button class="nav-link link-secondary bg-dark" id="nav-indiserver-tab" data-bs-toggle="tab" data-bs-target="#nav-indiserver" type="button" role="tab" aria-controls="nav-indiserver" aria-selected="false">INDI Drivers</button>
     <button class="nav-link link-success bg-dark" id="nav-services-tab" data-bs-toggle="tab" data-bs-target="#nav-services" type="button" role="tab" aria-controls="nav-services" aria-selected="false">Services</button>
     <button class="nav-link link-danger bg-dark" id="nav-powercontrol-tab" data-bs-toggle="tab" data-bs-target="#nav-powercontrol" type="button" role="tab" aria-controls="nav-powercontrol" aria-selected="false">Utilities</button>
   </div>
@@ -462,8 +463,77 @@ $('#form_settime').on('submit', function() {
 
 </script>
 
+</div><!-- end tab -->
+<div class="tab-pane fade" id="nav-indiserver" role="tabpanel" aria-labelledby="nav-indiserver-tab">
+    <hr>
 
+    <div>This page may be used to update the camera driver server that is currently configured in the local indiserver.</div>
 
+    <hr>
+
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> This has no effect on libcamera-based configurations</div>
+
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> The default driver selection will not update until the main camera selection [left] has changed</div>
+
+    <hr>
+
+    <form id="form_indiserver_change" onSubmit="return false;">
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_indiserver_change.CAMERA_SERVER_SELECT.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-6">
+                {{ form_indiserver_change.CAMERA_SERVER_SELECT(class='form-select bg-secondary') }}
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_indiserver_change.GPS_SERVER_SELECT.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-6">
+                {{ form_indiserver_change.GPS_SERVER_SELECT(class='form-select bg-secondary') }}
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_indiserver_change.RESTART_INDISERVER.label }}
+            </div>
+            <div class="col-sm-2">
+                <div class="form-switch">
+                    {{ form_indiserver_change.RESTART_INDISERVER(class='form-check-input') }}
+                </div>
+            </div>
+            <div class="col-sm-8">
+                <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> This will interrupt image capture if indi-allsky is operational</div>
+            </div>
+        </div>
+
+        <hr>
+        <hr>
+        <hr>
+
+        <div class="form-group row">
+            <div class="col-sm-1">
+                <input class="form-check-input" id="INDISERVER_CHANGE_CONFIRM1" name="INDISERVER_CHANGE_CONFIRM1" type="checkbox" value="y"> Confirm 1
+            </div>
+
+            <div class="col-sm-1">
+                <button id="button_indiserver_change" class="btn btn-primary">Update</button>
+            </div>
+
+            <div class="col-sm-1">
+                <input class="form-check-input" id="INDISERVER_CHANGE_CONFIRM2" name="INDISERVER_CHANGE_CONFIRM2" type="checkbox" value="y"> Confirm 2
+            </div>
+
+            <div id="form_indiserver_change_success-message" class="alert alert-success" role="alert" style="display: none;"></div>
+            <div id="form_indiserver_change_failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
+
+        </div>
+    </form>
 
 </div><!-- end tab -->
 <div class="tab-pane fade" id="nav-services" role="tabpanel" aria-labelledby="nav-services-tab">
@@ -1067,6 +1137,114 @@ $("#button_flush_daytime").on("click", function() {
 });
 
 
+const form_indiserver_change_successMessage = $('#form_indiserver_change_success-message');
+const form_indiserver_change_failureMessage = $('#form_indiserver_change_failure-message');
+const form_indiserver_change_field_names = [
+    'csrf_token',
+    'CAMERA_SERVER_SELECT',
+    'GPS_SERVER_SELECT',
+];
+const form_indiserver_change_checkbox_field_names = [
+    'RESTART_INDISERVER',
+];
+
+var form_indiserver_change_fields = {};
+// Populate fields object
+form_indiserver_change_field_names.forEach(item => {
+    form_indiserver_change_fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+form_indiserver_change_fields['form_indiserver_change_global'] = {
+    'input' : form_indiserver_change_failureMessage,
+    'error' : form_indiserver_change_failureMessage,
+};
+
+// Checkboxes
+form_indiserver_change_checkbox_field_names.forEach(item => {
+    form_indiserver_change_fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+
+$("#button_indiserver_change").on("click", function() {
+    if (! $("#INDISERVER_CHANGE_CONFIRM1").prop('checked')) {
+        console.log('Change indiserver checkbox not checked');
+        return;
+    }
+
+    if (! $("#INDISERVER_CHANGE_CONFIRM2").prop('checked')) {
+        console.log('Change indiserver checkbox not checked');
+        return;
+    }
+
+
+    // hide all errors
+    form_settime_successMessage.css({'display' : 'none'});
+    Object.keys(form_indiserver_change_fields).forEach((key) => {
+        form_indiserver_change_fields[key].error.css({'display' : 'none'});
+    });
+
+
+    // Populate fields object
+    var json_data = {};
+    form_indiserver_change_field_names.forEach(item => {
+        json_data[item] = form_indiserver_change_fields[item].input.val();
+    });
+
+    // checkboxes
+    form_indiserver_change_checkbox_field_names.forEach(item => {
+        json_data[item] = form_indiserver_change_fields[item].input.prop('checked');
+    });
+
+
+    $("#INDISERVER_CHANGE_CONFIRM1").prop('checked', false);
+    $("#INDISERVER_CHANGE_CONFIRM2").prop('checked', false);
+
+    $("#button_indiserver_change").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Update</span>'
+    );
+
+
+    // turn off after fetching value
+    $("#RESTART_INDISERVER").prop('checked', false);
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_indiserver_change_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#button_indiserver_change").attr("class", "btn btn-success");
+            $("#button_indiserver_change").html(
+                'Update'
+            );
+
+            form_indiserver_change_successMessage.html(rdata['success-message']);
+            form_indiserver_change_successMessage.css({'display' : 'block'});
+            setTimeout(function() {
+                form_indiserver_change_successMessage.css({'display' : 'none'});
+            }, 15000);
+
+        },
+        error: function(rdata){
+            $("#button_indiserver_change").attr("class", "btn btn-danger");
+            $("#button_indiserver_change").html(
+                'Update'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+        },
+    });
+
+
+});
+
 
 function reloadPage() {
     console.log('Reload page');
@@ -1090,6 +1268,10 @@ $( document ).ready(function() {
     $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked', false);
     $("#FLUSH_DAYTIME_CONFIRM1").prop('checked', false);
     $("#FLUSH_DAYTIME_CONFIRM2").prop('checked', false);
+    $("#INDISERVER_CHANGE_CONFIRM1").prop('checked', false);
+    $("#INDISERVER_CHANGE_CONFIRM2").prop('checked', false);
+    $("#RESTART_INDISERVER").prop('checked', false);
+
 
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());

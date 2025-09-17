@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -108,6 +109,7 @@ from .forms import IndiAllskyNetworkManagerForm
 from .forms import IndiAllskyDriveManagerForm
 from .forms import IndiAllskyImageCircleHelperForm
 from .forms import IndiAllskyConfigRestoreForm
+from .forms import IndiAllskyIndiServerChangeForm
 
 from .base_views import BaseView
 from .base_views import TemplateView
@@ -4615,6 +4617,25 @@ class SystemInfoView(TemplateView):
         context['form_settime'] = IndiAllskySetDateTimeForm()
         context['timedate1_dict'] = self.getSystemdTimeDate()
 
+
+
+        if self.camera.driver:
+            #app.logger.info('Current camera driver: %s', self.camera.driver)
+            camera_driver = self.camera.driver  # set the current camera driver as default
+        else:
+            camera_driver = 'indi_simulator_ccd'
+
+
+        indiserver_form_data = {
+            'CAMERA_SERVER_SELECT' : camera_driver,
+            'GPS_SERVER_SELECT'    : '',
+        }
+
+        form_indiserver_change = IndiAllskyIndiServerChangeForm(data=indiserver_form_data)
+
+        context['form_indiserver_change'] = form_indiserver_change
+
+
         return context
 
 
@@ -4835,69 +4856,6 @@ class SystemInfoView(TemplateView):
         return str(default_target)
 
 
-    def getSystemdUnitStatus(self, unit_name):
-        try:
-            session_bus = dbus.SessionBus()
-        except dbus.exceptions.DBusException:
-            # This happens in docker
-            return 'D-Bus Unavailable', 'D-Bus Unavailable'
-
-        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
-        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
-
-        try:
-            #service = session_bus.get_object('org.freedesktop.systemd1', object_path=manager.GetUnit(unit_name))
-
-            unit = manager.LoadUnit(unit_name)
-            service = session_bus.get_object('org.freedesktop.systemd1', str(unit))
-        except dbus.exceptions.DBusException:
-            return 'UNKNOWN', 'UNKNOWN'
-
-        interface = dbus.Interface(service, dbus_interface='org.freedesktop.DBus.Properties')
-        unit_active_state = interface.Get('org.freedesktop.systemd1.Unit', 'ActiveState')
-        unit_file_state = interface.Get('org.freedesktop.systemd1.Unit', 'UnitFileState')
-
-        return str(unit_active_state), str(unit_file_state)
-
-
-    def getSystemdTimerTrigger(self, unit_name):
-        try:
-            session_bus = dbus.SessionBus()
-        except dbus.exceptions.DBusException:
-            # This happens in docker
-            return -1
-
-        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
-        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
-
-        try:
-            #service = session_bus.get_object('org.freedesktop.systemd1', object_path=manager.GetUnit(unit_name))
-
-            unit = manager.LoadUnit(unit_name)
-            service = session_bus.get_object('org.freedesktop.systemd1', str(unit))
-        except dbus.exceptions.DBusException:
-            return -1
-
-
-        interface = dbus.Interface(service, dbus_interface='org.freedesktop.DBus.Properties')
-        #timer_info = interface.Get('org.freedesktop.systemd1.Timer', 'TimersMonotonic')
-        #result = interface.Get('org.freedesktop.systemd1.Timer', 'Result')
-        next_usec = interface.Get('org.freedesktop.systemd1.Timer', 'NextElapseUSecMonotonic')
-
-
-        if next_usec == 18446744073709551615:
-            # already triggered
-            return -1
-
-
-        uptime_s = time.time() - psutil.boot_time()
-        next_trigger_s = int((next_usec / 1000000) - uptime_s)
-
-        app.logger.info('%s next trigger: %ss', unit_name, next_trigger_s)
-
-        return next_trigger_s
-
-
     def getSystemdTimeDate(self):
         try:
             session_bus = dbus.SystemBus()
@@ -4928,7 +4886,6 @@ class SystemInfoView(TemplateView):
         #app.logger.info('timedate1: %s', timedate1_dict)
 
         return timedate1_dict
-
 
 
 class TaskQueueView(TemplateView):
@@ -5254,55 +5211,6 @@ class AjaxSystemInfoView(BaseView):
         }
 
         return jsonify(json_data)
-
-
-    def stopSystemdUnit(self, unit):
-        session_bus = dbus.SessionBus()
-        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
-        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
-        r = manager.StopUnit(unit, 'fail')
-
-        return r
-
-
-    def startSystemdUnit(self, unit):
-        session_bus = dbus.SessionBus()
-        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
-        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
-        r = manager.StartUnit(unit, 'fail')
-
-        return r
-
-
-    def hupSystemdUnit(self, unit):
-        session_bus = dbus.SessionBus()
-        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
-        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
-        r = manager.ReloadUnit(unit, 'fail')
-
-        return r
-
-
-    def disableSystemdUnit(self, unit):
-        session_bus = dbus.SessionBus()
-        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
-        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
-        r = manager.DisableUnitFiles([unit], False)
-
-        manager.Reload()
-
-        return r
-
-
-    def enableSystemdUnit(self, unit):
-        session_bus = dbus.SessionBus()
-        systemd1 = session_bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
-        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
-        r = manager.EnableUnitFiles([unit], False, True)
-
-        manager.Reload()
-
-        return r
 
 
     def rebootSystemd(self):
@@ -5869,6 +5777,100 @@ class AjaxSystemInfoView(BaseView):
         db.session.commit()
 
         return message_list
+
+
+class AjaxIndiServerChangeView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        import shutil
+
+        form_indiserver_change = IndiAllskyIndiServerChangeForm(data=request.json)
+
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                form_errors = form_indiserver_change.errors  # this must be a property
+                form_errors['form_global'] = ['You do not have permission to make configuration changes']
+                return jsonify(form_errors), 400
+
+
+        if not form_indiserver_change.validate():
+            form_errors = form_indiserver_change.errors  # this must be a property
+            return jsonify(form_errors), 400
+
+
+        camera_server = str(request.json['CAMERA_SERVER_SELECT'])
+        gps_server = str(request.json['GPS_SERVER_SELECT'])
+        restart_indiserver = bool(request.json['RESTART_INDISERVER'])
+
+
+        # find the indiserver
+        if Path('/usr/local/bin/indiserver').exists():
+            indiserver_p = Path('/usr/local/bin/indiserver')
+        elif Path('/usr/bin/indiserver').exists():
+            indiserver_p = Path('/usr/bin/indiserver')
+        else:
+            which_indiserver = shutil.which('indiserver')
+
+            if which_indiserver:
+                indiserver_p = Path(which_indiserver)
+            else:
+                raise Exception('indiserver not found')
+
+
+        allsky_directory_p = Path(__file__).parent.parent.parent.absolute()
+
+
+        with io.open(str(allsky_directory_p.joinpath('service', 'indiserver.service')), 'r') as f_service_tmpl:
+            service_tmpl = f_service_tmpl.read()
+
+
+        service_tmpl = service_tmpl.replace('%ALLSKY_DIRECTORY%', str(allsky_directory_p))\
+            .replace('%INDI_DRIVER_PATH%', str(indiserver_p.parent.absolute()))\
+            .replace('%INDI_PORT%', str(self.indi_allsky_config.get('INDI_PORT', 7624)))\
+            .replace('%INDI_CCD_DRIVER%', camera_server)\
+            .replace('%INDI_GPS_DRIVER%', gps_server)\
+            .replace('%INDISERVER_USER%', os.getlogin())
+
+
+        indiserver_service_p = Path(os.environ.get('HOME', '/home/{0:s}'.format(os.getlogin()))).joinpath('.config', 'systemd', 'user', app.config['INDISERVER_SERVICE_NAME'])
+
+        with io.open(str(indiserver_service_p), 'w') as f_indiserver_service:
+            f_indiserver_service.write(service_tmpl)
+
+
+        indiserver_service_p.chmod(0o644)
+
+
+        self.reloadSystemdUnits()
+
+
+        success_message = 'Reconfigure completed.'
+
+
+        if restart_indiserver:
+            self.restartSystemdUnit(app.config['INDISERVER_SERVICE_NAME'])
+            success_message += ' Restart complete'
+
+
+        return jsonify({'success-message' : success_message})
+
+
+    def reloadSystemdUnits(self, bus_type=dbus.SessionBus):
+        try:
+            bus = bus_type()
+        except dbus.exceptions.DBusException:
+            # This happens in docker
+            return 'D-Bus Unavailable', 'D-Bus Unavailable'
+
+        systemd1 = bus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+        manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
+
+        try:
+            manager.Reload()
+        except dbus.exceptions.DBusException:
+            return 'UNKNOWN', 'UNKNOWN'
 
 
 class TimelapseGeneratorView(TemplateView):
@@ -10487,6 +10489,7 @@ bp_allsky.add_url_rule('/ajax/config/restore', view_func=AjaxConfigRestoreView.a
 bp_allsky.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp_allsky.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
 bp_allsky.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
+bp_allsky.add_url_rule('/ajax/indiserver', view_func=AjaxIndiServerChangeView.as_view('ajax_indiserver_change_view'))
 
 bp_allsky.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
 bp_allsky.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
