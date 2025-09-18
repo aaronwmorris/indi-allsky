@@ -164,7 +164,7 @@ class ImportDarkFrames(object):
 
 
             try:
-                data['gain'] = int(hdulist[0].header['GAIN'])
+                data['gain'] = float(hdulist[0].header['GAIN'])
                 logger.info('Detected gain: %d', data['gain'])
             except KeyError:
                 logger.warning('Gain not logged')
@@ -237,7 +237,7 @@ class ImportDarkFrames(object):
 
 
             if isinstance(data.get('gain'), type(None)):
-                data['gain'] = self.select_int('What is the gain?')
+                data['gain'] = self.select_float('What is the gain?')
                 #logger.info('Selected: %d', data['gain'])
 
 
@@ -267,7 +267,7 @@ class ImportDarkFrames(object):
             print('\n')
             print('Size:        {0:d} x {1:d}'.format(data['image_width'], data['image_height']))
             print('Exposure:    {0:0.1f}'.format(data['exptime']))
-            print('Gain:        {0:d}'.format(data['gain']))
+            print('Gain:        {0:0.1f}'.format(data['gain']))
             print('Bin mode:    {0:d}'.format(data['binning']))
             print('Temperature: {0:0.1f}'.format(data['ccd_temp']))
             print('Bit depth:   {0:d}'.format(data['bitpix']))
@@ -342,6 +342,18 @@ class ImportDarkFrames(object):
             logger.error('Invalid input')
             return self.select_int(question)
 
+
+    def select_float(self, question):
+        #print('\n{0:s}\n'.format(question))
+
+        i = input('\n{0:s} [float] '.format(question))
+
+        try:
+            return float(i)
+        except ValueError:
+            # ask again
+            logger.error('Invalid input')
+            return self.select_float(question)
 
 
     def select_choice(self, question, option_list):
