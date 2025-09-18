@@ -113,7 +113,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             return
 
 
-        # Update shared gain value
+        # Update shared gin value
         with self.bin_v.get_lock():
             self.bin_v.value = int(bin_value)
 
@@ -184,7 +184,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
                 '--denoise', 'off',
-                '--gain', '{0:0.1f}'.format(self.gain_v.value),
+                '--gain', '{0:0.2f}'.format(self.gain_v.value),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
@@ -197,7 +197,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
-                '--gain', '{0:0.1f}'.format(self.gain_v.value),
+                '--gain', '{0:0.2f}'.format(self.gain_v.value),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',

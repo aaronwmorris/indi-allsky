@@ -2006,11 +2006,11 @@ class ConfigView(FormView):
             'LENS_OFFSET_Y'                  : self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
             'LENS_ALTITUDE'                  : self.indi_allsky_config.get('LENS_ALTITUDE', 90.0),
             'LENS_AZIMUTH'                   : self.indi_allsky_config.get('LENS_AZIMUTH', 0.0),
-            'CCD_CONFIG__NIGHT__GAIN'        : self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 100.0),
+            'CCD_CONFIG__NIGHT__GAIN'        : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 100.0), 2),  # limit to 2 decimals
             'CCD_CONFIG__NIGHT__BINNING'     : self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('BINNING', 1),
-            'CCD_CONFIG__MOONMODE__GAIN'     : self.indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('GAIN', 75.0),
+            'CCD_CONFIG__MOONMODE__GAIN'     : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('GAIN', 75.0), 2),  # limit to 2 decimals
             'CCD_CONFIG__MOONMODE__BINNING'  : self.indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('BINNING', 1),
-            'CCD_CONFIG__DAY__GAIN'          : self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('GAIN', 0.0),
+            'CCD_CONFIG__DAY__GAIN'          : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('GAIN', 0.0), 2),  # limit to 2 decimals
             'CCD_CONFIG__DAY__BINNING'       : self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('BINNING', 1),
             'CCD_EXPOSURE_MAX'               : self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0),
             'CCD_EXPOSURE_DEF'               : '{0:.6f}'.format(self.indi_allsky_config.get('CCD_EXPOSURE_DEF', 0.0)),  # force 6 digits of precision
@@ -2906,11 +2906,11 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LENS_OFFSET_Y']                        = int(request.json['LENS_OFFSET_Y'])
         self.indi_allsky_config['LENS_ALTITUDE']                        = float(request.json['LENS_ALTITUDE'])
         self.indi_allsky_config['LENS_AZIMUTH']                         = float(request.json['LENS_AZIMUTH'])
-        self.indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = float(request.json['CCD_CONFIG__NIGHT__GAIN'])
+        self.indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = round(float(request.json['CCD_CONFIG__NIGHT__GAIN']), 2)  # limit to 2 decimals
         self.indi_allsky_config['CCD_CONFIG']['NIGHT']['BINNING']       = int(request.json['CCD_CONFIG__NIGHT__BINNING'])
-        self.indi_allsky_config['CCD_CONFIG']['MOONMODE']['GAIN']       = float(request.json['CCD_CONFIG__MOONMODE__GAIN'])
+        self.indi_allsky_config['CCD_CONFIG']['MOONMODE']['GAIN']       = round(float(request.json['CCD_CONFIG__MOONMODE__GAIN']), 2)  # limit to 2 decimals
         self.indi_allsky_config['CCD_CONFIG']['MOONMODE']['BINNING']    = int(request.json['CCD_CONFIG__MOONMODE__BINNING'])
-        self.indi_allsky_config['CCD_CONFIG']['DAY']['GAIN']            = float(request.json['CCD_CONFIG__DAY__GAIN'])
+        self.indi_allsky_config['CCD_CONFIG']['DAY']['GAIN']            = round(float(request.json['CCD_CONFIG__DAY__GAIN']), 2)  # limit to 2 decimals
         self.indi_allsky_config['CCD_CONFIG']['DAY']['BINNING']         = int(request.json['CCD_CONFIG__DAY__BINNING'])
         self.indi_allsky_config['CCD_EXPOSURE_MAX']                     = float(request.json['CCD_EXPOSURE_MAX'])
         self.indi_allsky_config['CCD_EXPOSURE_DEF']                     = float(request.json['CCD_EXPOSURE_DEF'])
