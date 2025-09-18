@@ -2424,7 +2424,7 @@ class ImageProcessor(object):
             'exposure'     : i_ref.exposure,
             'day_date'     : i_ref.day_date,
             'rational_exp' : rational_exp,
-            'gain'         : int(i_ref.gain),  # gain is float
+            'gain'         : int(i_ref.gain),  # gain originally int
             'gain_f'       : float(i_ref.gain),
             'temp_unit'    : temp_unit,
             'sqm'          : i_ref.sqm_value,
