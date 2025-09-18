@@ -376,20 +376,26 @@ class IndiClientLibCameraGeneric(IndiClient):
         ### Gain
         try:
             analogue_gain = float(metadata_dict[self._analogue_gain_metadata_key])
-            logger.info('libcamera reported analogue gain: %0.2f', analogue_gain)
         except KeyError:
-            logger.error('libcamera camera analogue gain key not found')
+            #logger.error('libcamera camera analogue gain key not found')
+            analogue_gain = 0.0
         except ValueError:
-            logger.error('Unable to parse libcamera analogue gain')
+            #logger.error('Unable to parse libcamera analogue gain')
+            analogue_gain = 0.0
 
 
         try:
             digital_gain = float(metadata_dict[self._digital_gain_metadata_key])
-            logger.info('libcamera reported digital gain: %0.2f', digital_gain)
         except KeyError:
-            logger.error('libcamera camera digital gain key not found')
+            #logger.error('libcamera camera digital gain key not found')
+            digital_gain = 0.0
         except ValueError:
-            logger.error('Unable to parse libcamera digital gain')
+            #logger.error('Unable to parse libcamera digital gain')
+            digital_gain = 0.0
+
+
+        if analogue_gain:
+            logger.info('libcamera reported gain: %0.2f/%0.2f', analogue_gain, digital_gain)
 
 
         ### Temperature
