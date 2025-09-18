@@ -1995,7 +1995,7 @@ class ImageWorker(Process):
         cmd_env = {
             'DATA_JSON': str(self.pre_hook_datajson_name_p),  # the file used for the json data is communicated via environment variable
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
-            'GAIN'     : '{0:0.3f}'.format(gain),
+            'GAIN'     : '{0:0.2f}'.format(gain),
             'BIN'      : '{0:d}'.format(self.bin_v.value),
             'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
             'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),

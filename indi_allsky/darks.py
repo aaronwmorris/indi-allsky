@@ -343,7 +343,7 @@ class IndiAllSkyDarks(object):
             time.sleep(3)
 
         if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
-            logger.error('CCD day gain below minimum, changing to %0.12', float(ccd_min_gain))
+            logger.error('CCD day gain below minimum, changing to %0.12f', float(ccd_min_gain))
             self.config['CCD_CONFIG']['DAY']['GAIN'] = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_max_gain:
