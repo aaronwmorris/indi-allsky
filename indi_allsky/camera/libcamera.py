@@ -25,6 +25,13 @@ class IndiClientLibCameraGeneric(IndiClient):
 
     libcamera_exec = 'rpicam-still'
 
+    _temp_metadata_key = 'SensorTemperature'
+    _analogue_gain_metadata_key = 'AnalogueGain'
+    _digital_gain_metadata_key = 'DigitalGain'
+    _ccm_metadata_key = 'ColourCorrectionMatrix'
+    _awb_gains_metadata_key = 'ColourGains'
+    _black_level_metadata_key = 'SensorBlackLevels'
+
 
     def __init__(self, *args, **kwargs):
         super(IndiClientLibCameraGeneric, self).__init__(*args, **kwargs)
@@ -32,16 +39,12 @@ class IndiClientLibCameraGeneric(IndiClient):
         self.libcamera_process = None
 
         self._temp_val = -273.15  # absolute zero  :-)
-        self._sensor_temp_metadata_key = 'SensorTemperature'
 
         self._ccm = None
-        self._ccm_metadata_key = 'ColourCorrectionMatrix'
 
         self._awb_gains = None
-        self._awb_gains_metadata_key = 'ColourGains'
 
         self._black_level = 0
-        self._black_level_metadata_key = 'SensorBlackLevels'
 
         self.active_exposure = False
         self.current_exposure_file_p = None
@@ -368,6 +371,25 @@ class IndiClientLibCameraGeneric(IndiClient):
             self.current_metadata_file_p.unlink()
         except FileNotFoundError:
             pass
+
+
+        ### Gain
+        try:
+            analogue_gain = float(metadata_dict[self._analogue_gain_metadata_key])
+            logger.info('libcamera reported analogue gain: %0.3f', analogue_gain)
+        except KeyError:
+            logger.error('libcamera camera analogue gain key not found')
+        except ValueError:
+            logger.error('Unable to parse libcamera analogue gain')
+
+
+        try:
+            digital_gain = float(metadata_dict[self._digital_gain_metadata_key])
+            logger.info('libcamera reported digital gain: %0.3f', digital_gain)
+        except KeyError:
+            logger.error('libcamera camera digital gain key not found')
+        except ValueError:
+            logger.error('Unable to parse libcamera digital gain')
 
 
         ### Temperature
