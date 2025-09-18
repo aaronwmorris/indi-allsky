@@ -84,7 +84,7 @@ class IndiClientPassive(IndiClient):
         self.exposureStartTime = time.time()
 
         self.exposure = exposure
-        self.gain = float(self.gain_v.value)
+        self.gain = int(self.gain_v.value)
 
         ctl_ccd_exposure = self.get_control(self.ccd_device, 'CCD_EXPOSURE', 'number')
 
@@ -104,7 +104,7 @@ class IndiClientPassive(IndiClient):
     def setCcdGain(self, gain_value):
         # Update shared gain value
         with self.gain_v.get_lock():
-            self.gain_v.value = float(gain_value)
+            self.gain_v.value = float(int(gain_value))
 
 
     def setCcdBinning(self, bin_value):
@@ -112,7 +112,7 @@ class IndiClientPassive(IndiClient):
             # Assume default
             return
 
-        # Update shared gain value
+        # Update shared bin value
         with self.bin_v.get_lock():
             self.bin_v.value = int(bin_value)
 

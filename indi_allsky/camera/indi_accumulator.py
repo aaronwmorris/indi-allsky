@@ -91,7 +91,7 @@ class IndiClientIndiAccumulator(IndiClient):
         self.current_sub_exposure_count = 0  # reset
 
         self.exposure = exposure
-        self.gain = float(self.gain_v.value)
+        self.gain = int(self.gain_v.value)
         self.exposure_remain = float(exposure)
 
 
@@ -225,7 +225,7 @@ class IndiClientIndiAccumulator(IndiClient):
         jobdata = {
             'filename'    : str(tmpfile_p),
             'exposure'    : self.exposure,
-            'gain'        : self.gain,
+            'gain'        : float(self.gain),
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
