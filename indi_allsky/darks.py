@@ -325,35 +325,35 @@ class IndiAllSkyDarks(object):
         ccd_max_gain = float(ccd_info['GAIN_INFO']['max'])
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
-            logger.error('CCD night gain below minimum, changing to %0.1f', float(ccd_min_gain))
+            logger.error('CCD night gain below minimum, changing to %0.2f', float(ccd_min_gain))
             self.config['CCD_CONFIG']['NIGHT']['GAIN'] = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['NIGHT']['GAIN'] > ccd_max_gain:
-            logger.error('CCD night gain above maximum, changing to %0.1f', float(ccd_max_gain))
+            logger.error('CCD night gain above maximum, changing to %0.2f', float(ccd_max_gain))
             self.config['CCD_CONFIG']['NIGHT']['GAIN'] = float(ccd_max_gain)
             time.sleep(3)
 
         if self.config['CCD_CONFIG']['MOONMODE']['GAIN'] < ccd_min_gain:
-            logger.error('CCD moon mode gain below minimum, changing to %0.1f', float(ccd_min_gain))
+            logger.error('CCD moon mode gain below minimum, changing to %0.2f', float(ccd_min_gain))
             self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['MOONMODE']['GAIN'] > ccd_max_gain:
-            logger.error('CCD moon mode gain above maximum, changing to %0.1f', float(ccd_max_gain))
+            logger.error('CCD moon mode gain above maximum, changing to %0.2f', float(ccd_max_gain))
             self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = float(ccd_max_gain)
             time.sleep(3)
 
         if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
-            logger.error('CCD day gain below minimum, changing to %0.1f', float(ccd_min_gain))
+            logger.error('CCD day gain below minimum, changing to %0.12', float(ccd_min_gain))
             self.config['CCD_CONFIG']['DAY']['GAIN'] = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_max_gain:
-            logger.error('CCD day gain above maximum, changing to %0.1f', float(ccd_max_gain))
+            logger.error('CCD day gain above maximum, changing to %0.2f', float(ccd_max_gain))
             self.config['CCD_CONFIG']['DAY']['GAIN'] = float(ccd_max_gain)
             time.sleep(3)
 
 
     def shoot(self, exposure, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure (gain %0.1f)', exposure, self.gain_v.value)
+        logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, self.gain_v.value)
 
         self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
 
@@ -1380,7 +1380,7 @@ class IndiAllSkyDarksProcessor(object):
     def buildBadPixelMap(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         from astropy.io import fits
 
-        logger.info('Building bad pixel map for exposure %0.1fs, gain %0.1f, bin %d', exposure, self.gain_v.value, self.bin_v.value)
+        logger.info('Building bad pixel map for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_v.value, self.bin_v.value)
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
@@ -1474,7 +1474,7 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
     def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         from astropy.io import fits
 
-        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.1f, bin %d', exposure, self.gain_v.value, self.bin_v.value)
+        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_v.value, self.bin_v.value)
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
@@ -1563,7 +1563,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
         from astropy.stats import mad_std
         import ccdproc
 
-        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.1f, bin %d', exposure, self.gain_v.value, self.bin_v.value)
+        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_v.value, self.bin_v.value)
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16

@@ -782,7 +782,7 @@ class ImageWorker(Process):
             mqtt_data = {
                 'exp_date' : exp_date.strftime('%Y-%m-%d %H:%M:%S'),
                 'exposure' : round(exposure, 6),
-                'gain'     : round(gain, 1),
+                'gain'     : round(gain, 2),
                 'bin'      : self.bin_v.value,
                 'temp'     : round(self.sensors_temp_av[0], 1),
                 'sunalt'   : round(self.image_processor.astrometric_data['sun_alt'], 1),

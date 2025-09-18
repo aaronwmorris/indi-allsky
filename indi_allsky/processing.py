@@ -841,7 +841,7 @@ class ImageProcessor(object):
 
         if self.config.get('IMAGE_CALIBRATE_BPM'):
             # pick a bad pixel map that is closest to the exposure and temperature
-            logger.info('Searching for bad pixel map: gain %0.1f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[0])
+            logger.info('Searching for bad pixel map: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[0])
             bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
                 .filter(IndiAllSkyDbBadPixelMapTable.camera_id == i_ref.camera_id)\
                 .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
@@ -881,7 +881,7 @@ class ImageProcessor(object):
 
                 if not bpm_entry:
                     logger.warning(
-                        'Bad Pixel Map not found: ccd%d %dbit %0.7fs gain %0.1f bin %d %0.2fc',
+                        'Bad Pixel Map not found: ccd%d %dbit %0.7fs gain %0.2f bin %d %0.2fc',
                         i_ref.camera_id,
                         i_ref.image_bitpix,
                         float(i_ref.exposure),
@@ -894,7 +894,7 @@ class ImageProcessor(object):
 
 
         # pick a dark frame that is closest to the exposure and temperature
-        logger.info('Searching for dark frame: gain %0.1f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[0])
+        logger.info('Searching for dark frame: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[0])
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
@@ -934,7 +934,7 @@ class ImageProcessor(object):
 
             if not dark_frame_entry:
                 logger.warning(
-                    'Dark not found: ccd%d %dbit %0.7fs gain %0.1f bin %d %0.2fc',
+                    'Dark not found: ccd%d %dbit %0.7fs gain %0.2f bin %d %0.2fc',
                     i_ref.camera_id,
                     i_ref.image_bitpix,
                     float(i_ref.exposure),
@@ -2391,7 +2391,7 @@ class ImageProcessor(object):
 
     def get_image_label(self, i_ref, adsb_aircraft_list, custom_hook_data):
         # gain is int, gain_f is float
-        image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain_f:0.1f}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
+        image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain_f:0.2f}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
 
 
         if self.config.get('TEMP_DISPLAY') == 'f':
