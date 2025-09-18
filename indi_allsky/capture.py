@@ -1147,8 +1147,8 @@ class CaptureWorker(Process):
 
 
         # Validate gain settings
-        ccd_min_gain = ccd_info['GAIN_INFO']['min']
-        ccd_max_gain = ccd_info['GAIN_INFO']['max']
+        ccd_min_gain = float(ccd_info['GAIN_INFO']['min'])
+        ccd_max_gain = float(ccd_info['GAIN_INFO']['max'])
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
             logger.error('CCD night gain below minimum, changing to %0.1f', float(ccd_min_gain))
@@ -1417,7 +1417,7 @@ class CaptureWorker(Process):
 
         # Communicate sensor values as environment variables
         cmd_env = {
-            'GAIN'     : '{0:0.1f}'.format(self.gain_v.value),
+            'GAIN'     : '{0:0.3f}'.format(self.gain_v.value),
             'BIN'      : '{0:d}'.format(self.bin_v.value),
             'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
             'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),

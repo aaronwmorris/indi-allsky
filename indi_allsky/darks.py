@@ -321,8 +321,8 @@ class IndiAllSkyDarks(object):
 
 
         # Validate gain settings
-        ccd_min_gain = ccd_info['GAIN_INFO']['min']
-        ccd_max_gain = ccd_info['GAIN_INFO']['max']
+        ccd_min_gain = float(ccd_info['GAIN_INFO']['min'])
+        ccd_max_gain = float(ccd_info['GAIN_INFO']['max'])
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
             logger.error('CCD night gain below minimum, changing to %0.1f', float(ccd_min_gain))
@@ -812,8 +812,7 @@ class IndiAllSkyDarks(object):
         logger.info('Exposures: %s', ', '.join([str(x) for x in dark_exposures]))
 
 
-        # filename gain as int
-        bpm_filename_t = 'bpm_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
+        bpm_filename_t = 'bpm_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'  # filename gain as int
         dark_filename_t = 'dark_ccd{0:d}_{1:d}bit_{2:d}s_gain{3:d}_bin{4:d}_{5:d}c_{6:s}.fit'
         # 0  = ccd id
         # 1  = bits
