@@ -25,7 +25,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
     libcamera_exec = 'rpicam-still'
 
-    _temp_metadata_key = 'SensorTemperature'
+    _sensor_temp_metadata_key = 'SensorTemperature'
     _analogue_gain_metadata_key = 'AnalogueGain'
     _digital_gain_metadata_key = 'DigitalGain'
     _ccm_metadata_key = 'ColourCorrectionMatrix'
