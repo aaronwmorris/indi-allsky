@@ -306,10 +306,13 @@ class ImageWorker(Process):
             return
 
 
-        if filename_p.stat().st_size == 0:
+        image_size = filename_p.stat().st_size
+        if image_size == 0:
             logger.error('Frame is empty: %s', filename_p)
             filename_p.unlink()
             return
+
+        #logger.info('Image size: %0.2fMB', image_size / 1024 / 1024)
 
 
         camera = IndiAllSkyDbCameraTable.query\
