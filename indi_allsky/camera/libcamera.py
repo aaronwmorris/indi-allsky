@@ -868,16 +868,16 @@ class IndiClientLibCameraOv64a40OwlSight(IndiClientLibCameraGeneric):
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,
             'min_exposure'  : 0.000580,
-            'max_exposure'  : 200.0,  # capable of more
-            'cfa'           : 'RGGB',  # unverified
+            'max_exposure'  : 910.0,
+            'cfa'           : 'RGGB',
             'bit_depth'     : 16,
         }
 
         self._binmode_options = {
             1 : '',
-            #1 : '--mode 9152:6944',  # unverified
-            #2 : '--mode 4624:3472',
-            #4 : '--mode 2312:1736',
+            #1 : '--mode 9152:6944:10',
+            2 : '--mode 4624:3472:10',
+            4 : '--mode 2312:1736:10',
         }
 
 
