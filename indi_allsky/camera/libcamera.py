@@ -876,7 +876,7 @@ class IndiClientLibCameraOv64a40OwlSight(IndiClientLibCameraGeneric):
         self._binmode_options = {
             1 : '',
             #1 : '--mode 9152:6944:10',
-            2 : '--mode 4624:3472:10',
+            2 : '--mode 4624:3472:10',  # bin modes do not work well, exposure is not linear
             4 : '--mode 2312:1736:10',
         }
 
