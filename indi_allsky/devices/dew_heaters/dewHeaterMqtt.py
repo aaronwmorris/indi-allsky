@@ -119,12 +119,13 @@ class DewHeaterMqttStandard(DewHeaterMqttBase):
 
         invert_output = kwargs['invert_output']
 
-        if not invert_output:
-            self.ON = 100
-            self.OFF = 0
-        else:
+        if invert_output:
+            logger.warning('Dew heater logic reversed')
             self.ON = 0
             self.OFF = 100
+        else:
+            self.ON = 100
+            self.OFF = 0
 
 
     @property
@@ -175,6 +176,8 @@ class DewHeaterMqttPwm(DewHeaterMqttBase):
 
         self.invert_output = kwargs['invert_output']
 
+        if self.invert_output:
+            logger.warning('Dew heater logic reversed')
 
     @property
     def state(self):
@@ -199,10 +202,10 @@ class DewHeaterMqttPwm(DewHeaterMqttBase):
             return
 
 
-        if not self.invert_output:
-            new_duty_cycle = new_state_i
-        else:
+        if self.invert_output:
             new_duty_cycle = 100 - new_state_i
+        else:
+            new_duty_cycle = new_state_i
 
 
         user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)

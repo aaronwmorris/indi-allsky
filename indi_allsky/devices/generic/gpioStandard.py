@@ -26,16 +26,17 @@ class GpioStandard(GenericBase):
         self.pin.direction = digitalio.Direction.OUTPUT
 
 
-        if not invert_output:
-            self.ON = 1
-            self.OFF = 0
-            self.ON_LEVEL = 'high'
-            self.OFF_LEVEL = 'low'
-        else:
+        if invert_output:
+            logger.warning('GPIO logic reversed')
             self.ON = 0
             self.OFF = 1
             self.ON_LEVEL = 'low'
             self.OFF_LEVEL = 'high'
+        else:
+            self.ON = 1
+            self.OFF = 0
+            self.ON_LEVEL = 'high'
+            self.OFF_LEVEL = 'low'
 
 
         self._state = 0

@@ -26,12 +26,13 @@ class FanStandard(FanBase):
         self.pin.direction = digitalio.Direction.OUTPUT
 
 
-        if not invert_output:
-            self.ON = 1
-            self.OFF = 0
-        else:
+        if invert_output:
+            logger.warning('Fan logic reversed')
             self.ON = 0
             self.OFF = 1
+        else:
+            self.ON = 1
+            self.OFF = 0
 
 
         self._state = 0

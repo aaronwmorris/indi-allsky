@@ -25,6 +25,9 @@ class FanSoftwarePwmRpiGpio(FanBase):
 
         logger.info('Initializing Software PWM FAN device (%d Hz)', self.PWM_FREQUENCY)
 
+        if self.invert_output:
+            logger.warning('Fan logic reversed')
+
         #GPIO.setmode(GPIO.BOARD)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(pwm_pin, GPIO.OUT)
@@ -56,10 +59,10 @@ class FanSoftwarePwmRpiGpio(FanBase):
             return
 
 
-        if not self.invert_output:
-            new_duty_cycle = int(100 * new_state_i / 100)
-        else:
+        if self.invert_output:
             new_duty_cycle = int(100 * (100 - new_state_i) / 100)
+        else:
+            new_duty_cycle = int(100 * new_state_i / 100)
 
 
         logger.warning('Set fan state: %d%%', new_state_i)
@@ -96,6 +99,9 @@ class FanSoftwarePwmGpiozero(FanBase):
 
         self.pwm = PWMOutputDevice(pwm_pin, initial_value=0, frequency=self.PWM_FREQUENCY)
 
+        if self.invert_output:
+            logger.warning('Fan logic reversed')
+
         self._state = 0
 
         time.sleep(1.0)
@@ -120,10 +126,10 @@ class FanSoftwarePwmGpiozero(FanBase):
             return
 
 
-        if not self.invert_output:
-            new_duty_cycle = new_state_i / 100
-        else:
+        if self.invert_output:
             new_duty_cycle = 1 - (new_state_i / 100)
+        else:
+            new_duty_cycle = new_state_i / 100
 
 
         logger.warning('Set fan state: %d%%', new_state_i)
