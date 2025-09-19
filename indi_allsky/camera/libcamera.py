@@ -707,7 +707,7 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
             'min_gain'      : 1.0,
             'max_gain'      : 22.26,
             'min_exposure'  : 0.000114,
-            'max_exposure'  : 600.0,
+            'max_exposure'  : 694.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
@@ -735,7 +735,7 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
             'min_gain'      : 1.0,
             'max_gain'      : 22.26,
             'min_exposure'  : 0.000114,
-            'max_exposure'  : 600.0,
+            'max_exposure'  : 694.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
@@ -895,7 +895,7 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,
             'min_exposure'  : 0.000026,
-            'max_exposure'  : 200.0,
+            'max_exposure'  : 220.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
