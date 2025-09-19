@@ -25,6 +25,13 @@ class IndiClientLibCameraGeneric(IndiClient):
 
     libcamera_exec = 'rpicam-still'
 
+    _sensor_temp_metadata_key = 'SensorTemperature'
+    _analogue_gain_metadata_key = 'AnalogueGain'
+    _digital_gain_metadata_key = 'DigitalGain'
+    _ccm_metadata_key = 'ColourCorrectionMatrix'
+    _awb_gains_metadata_key = 'ColourGains'
+    _black_level_metadata_key = 'SensorBlackLevels'
+
 
     def __init__(self, *args, **kwargs):
         super(IndiClientLibCameraGeneric, self).__init__(*args, **kwargs)
@@ -32,16 +39,12 @@ class IndiClientLibCameraGeneric(IndiClient):
         self.libcamera_process = None
 
         self._temp_val = -273.15  # absolute zero  :-)
-        self._sensor_temp_metadata_key = 'SensorTemperature'
 
         self._ccm = None
-        self._ccm_metadata_key = 'ColourCorrectionMatrix'
 
         self._awb_gains = None
-        self._awb_gains_metadata_key = 'ColourGains'
 
         self._black_level = 0
-        self._black_level_metadata_key = 'SensorBlackLevels'
 
         self.active_exposure = False
         self.current_exposure_file_p = None
@@ -73,8 +76,8 @@ class IndiClientLibCameraGeneric(IndiClient):
             'width'         : 0,
             'height'        : 0,
             'pixel'         : 0.0,
-            'min_gain'      : 0,
-            'max_gain'      : 0,
+            'min_gain'      : 0.0,
+            'max_gain'      : 0.0,
             'min_exposure'  : 0.0,
             'max_exposure'  : 0.0,
             'cfa'           : 'CHANGEME',
@@ -104,7 +107,7 @@ class IndiClientLibCameraGeneric(IndiClient):
     def setCcdGain(self, new_gain_value):
         # Update shared gain value
         with self.gain_v.get_lock():
-            self.gain_v.value = int(new_gain_value)
+            self.gain_v.value = float(new_gain_value)
 
 
     def setCcdBinning(self, bin_value):
@@ -113,7 +116,7 @@ class IndiClientLibCameraGeneric(IndiClient):
             return
 
 
-        # Update shared gain value
+        # Update shared gin value
         with self.bin_v.get_lock():
             self.bin_v.value = int(bin_value)
 
@@ -172,7 +175,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         self.exposure = exposure
-        self.gain = int(self.gain_v.value)
+        self.gain = float(self.gain_v.value)
 
 
         exposure_us = int(exposure * 1000000)
@@ -184,7 +187,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
                 '--denoise', 'off',
-                '--gain', '{0:d}'.format(self.gain_v.value),
+                '--gain', '{0:0.2f}'.format(self.gain_v.value),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
@@ -197,7 +200,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
-                '--gain', '{0:d}'.format(self.gain_v.value),
+                '--gain', '{0:0.2f}'.format(self.gain_v.value),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
@@ -368,6 +371,31 @@ class IndiClientLibCameraGeneric(IndiClient):
             self.current_metadata_file_p.unlink()
         except FileNotFoundError:
             pass
+
+
+        ### Gain
+        try:
+            analogue_gain = float(metadata_dict[self._analogue_gain_metadata_key])
+        except KeyError:
+            #logger.error('libcamera camera analogue gain key not found')
+            analogue_gain = 0.0
+        except ValueError:
+            #logger.error('Unable to parse libcamera analogue gain')
+            analogue_gain = 0.0
+
+
+        try:
+            digital_gain = float(metadata_dict[self._digital_gain_metadata_key])
+        except KeyError:
+            #logger.error('libcamera camera digital gain key not found')
+            digital_gain = 0.0
+        except ValueError:
+            #logger.error('Unable to parse libcamera digital gain')
+            digital_gain = 0.0
+
+
+        if analogue_gain:
+            logger.info('libcamera reported gain: %0.2f/%0.2f', analogue_gain, digital_gain)
 
 
         ### Temperature
@@ -676,10 +704,10 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
             'width'         : 4056,
             'height'        : 3040,
             'pixel'         : 1.55,
-            'min_gain'      : 1,
-            'max_gain'      : 22,
+            'min_gain'      : 1.0,
+            'max_gain'      : 22.26,
             'min_exposure'  : 0.000114,
-            'max_exposure'  : 600.0,
+            'max_exposure'  : 694.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
@@ -704,10 +732,10 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
             'width'         : 4056,
             'height'        : 3040,
             'pixel'         : 1.55,
-            'min_gain'      : 1,
-            'max_gain'      : 22,
+            'min_gain'      : 1.0,
+            'max_gain'      : 22.26,
             'min_exposure'  : 0.000114,
-            'max_exposure'  : 600.0,
+            'max_exposure'  : 694.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
@@ -731,8 +759,8 @@ class IndiClientLibCameraOv5647(IndiClientLibCameraGeneric):
             'width'         : 2592,
             'height'        : 1944,
             'pixel'         : 1.4,
-            'min_gain'      : 1,
-            'max_gain'      : 16,
+            'min_gain'      : 1.0,
+            'max_gain'      : 16.0,
             'min_exposure'  : 0.0001,
             'max_exposure'  : 6.0,
             'cfa'           : 'BGGR',  # unverified
@@ -755,8 +783,8 @@ class IndiClientLibCameraImx219(IndiClientLibCameraGeneric):
             'width'         : 3280,
             'height'        : 2464,
             'pixel'         : 1.12,
-            'min_gain'      : 1,
-            'max_gain'      : 16,
+            'min_gain'      : 1.0,
+            'max_gain'      : 16.0,
             'min_exposure'  : 0.0001,
             'max_exposure'  : 11.76,
             'cfa'           : 'BGGR',
@@ -782,8 +810,8 @@ class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
             'width'         : 4656,
             'height'        : 3496,
             'pixel'         : 1.22,
-            'min_gain'      : 1,
-            'max_gain'      : 16,
+            'min_gain'      : 1.0,
+            'max_gain'      : 16.0,
             'min_exposure'  : 0.000592,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',
@@ -810,8 +838,8 @@ class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
             'width'         : 9152,
             'height'        : 6944,
             'pixel'         : 0.8,
-            'min_gain'      : 1,
-            'max_gain'      : 16,  # unverified
+            'min_gain'      : 1.0,
+            'max_gain'      : 16.0,  # unverified
             'min_exposure'  : 0.0001,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',
@@ -837,19 +865,19 @@ class IndiClientLibCameraOv64a40OwlSight(IndiClientLibCameraGeneric):
             'width'         : 9152,
             'height'        : 6944,
             'pixel'         : 1.008,
-            'min_gain'      : 1,
-            'max_gain'      : 16,
+            'min_gain'      : 1.0,
+            'max_gain'      : 16.0,
             'min_exposure'  : 0.000580,
-            'max_exposure'  : 200.0,  # capable of more
-            'cfa'           : 'RGGB',  # unverified
+            'max_exposure'  : 910.0,
+            'cfa'           : 'RGGB',
             'bit_depth'     : 16,
         }
 
         self._binmode_options = {
             1 : '',
-            #1 : '--mode 9152:6944',  # unverified
-            #2 : '--mode 4624:3472',
-            #4 : '--mode 2312:1736',
+            #1 : '--mode 9152:6944:10',
+            2 : '--mode 4624:3472:10',  # bin modes do not work well, exposure is not linear
+            4 : '--mode 2312:1736:10',
         }
 
 
@@ -864,10 +892,10 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
             'width'         : 4608,
             'height'        : 2592,
             'pixel'         : 1.4,
-            'min_gain'      : 1,
-            'max_gain'      : 16,
+            'min_gain'      : 1.0,
+            'max_gain'      : 16.0,
             'min_exposure'  : 0.000026,
-            'max_exposure'  : 200.0,
+            'max_exposure'  : 220.0,
             'cfa'           : 'BGGR',
             'bit_depth'     : 16,
         }
@@ -891,8 +919,8 @@ class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
             'width'         : 1456,
             'height'        : 1088,
             'pixel'         : 3.45,
-            'min_gain'      : 1,
-            'max_gain'      : 251,
+            'min_gain'      : 1.0,
+            'max_gain'      : 251.18,
             'min_exposure'  : 0.016562,
             'max_exposure'  : 15.5,
             'cfa'           : None,  # mono
@@ -917,8 +945,8 @@ class IndiClientLibCameraImx296Color(IndiClientLibCameraGeneric):
             'width'         : 1456,
             'height'        : 1088,
             'pixel'         : 3.45,
-            'min_gain'      : 1,
-            'max_gain'      : 16,  # verified
+            'min_gain'      : 1.0,
+            'max_gain'      : 16.0,  # verified
             'min_exposure'  : 0.0001,
             'max_exposure'  : 15.5,
             'cfa'           : 'RGGB',  # unverified
@@ -943,10 +971,10 @@ class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
             'width'         : 1920,
             'height'        : 1080,
             'pixel'         : 2.9,
-            'min_gain'      : 1,
-            'max_gain'      : 32,  # unverified
-            'min_exposure'  : 0.0001,
-            'max_exposure'  : 200.0,
+            'min_gain'      : 1.0,
+            'max_gain'      : 29.51,  # unverified
+            'min_exposure'  : 0.000014,
+            'max_exposure'  : 115.0,
             'cfa'           : 'GRBG',
             'bit_depth'     : 16,
         }
@@ -969,8 +997,8 @@ class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
             'width'         : 1920,
             'height'        : 1080,
             'pixel'         : 2.9,
-            'min_gain'      : 1,
-            'max_gain'      : 29,
+            'min_gain'      : 1.0,
+            'max_gain'      : 29.51,
             'min_exposure'  : 0.000014,
             'max_exposure'  : 115.0,
             'cfa'           : 'RGGB',
@@ -995,8 +1023,8 @@ class IndiClientLibCameraImx327(IndiClientLibCameraGeneric):
             'width'         : 1920,
             'height'        : 1080,
             'pixel'         : 2.9,
-            'min_gain'      : 1,
-            'max_gain'      : 29,
+            'min_gain'      : 1.0,
+            'max_gain'      : 29.51,
             'min_exposure'  : 0.000014,
             'max_exposure'  : 115.0,
             'cfa'           : 'RGGB',
@@ -1021,8 +1049,8 @@ class IndiClientLibCameraImx298(IndiClientLibCameraGeneric):
             'width'         : 4640,
             'height'        : 3472,
             'pixel'         : 1.12,
-            'min_gain'      : 1,
-            'max_gain'      : 16,  # unverified
+            'min_gain'      : 1.0,
+            'max_gain'      : 16.0,  # unverified
             'min_exposure'  : 0.0001,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',  # unverified
@@ -1045,8 +1073,8 @@ class IndiClientLibCameraImx500(IndiClientLibCameraGeneric):
             'width'         : 4056,
             'height'        : 3040,
             'pixel'         : 1.55,
-            'min_gain'      : 1,
-            'max_gain'      : 22,  # verified
+            'min_gain'      : 1.0,
+            'max_gain'      : 22.0,  # verified
             'min_exposure'  : 0.0002,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',  # verified
@@ -1069,8 +1097,8 @@ class IndiClientLibCameraImx283(IndiClientLibCameraGeneric):
             'width'         : 5472,
             'height'        : 3648,
             'pixel'         : 2.4,
-            'min_gain'      : 1,
-            'max_gain'      : 22,
+            'min_gain'      : 1.0,
+            'max_gain'      : 22.5,
             'min_exposure'  : 0.000058,
             'max_exposure'  : 129.0,
             'cfa'           : 'RGGB',  # verified
@@ -1093,8 +1121,8 @@ class IndiClientLibCameraImx678(IndiClientLibCameraGeneric):
             'width'         : 3840,
             'height'        : 2160,
             'pixel'         : 2.0,
-            'min_gain'      : 1,
-            'max_gain'      : 32,  # unverified
+            'min_gain'      : 1.0,
+            'max_gain'      : 32.0,  # unverified
             'min_exposure'  : 0.000032,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',  # verified
@@ -1117,8 +1145,8 @@ class IndiClientLibCameraImx335(IndiClientLibCameraGeneric):
             'width'         : 2592,
             'height'        : 1944,
             'pixel'         : 2.0,
-            'min_gain'      : 1,
-            'max_gain'      : 1000,
+            'min_gain'      : 1.0,
+            'max_gain'      : 1000.0,
             'min_exposure'  : 0.000007,
             'max_exposure'  : 1.0,
             'cfa'           : 'RGGB',

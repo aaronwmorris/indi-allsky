@@ -31,8 +31,8 @@ var camera_id = {{ camera_id }};
     <div class="col-1">{{ camera.width | int }}x{{ camera.height | int}}</div>
     <div class="col-1">{{ "%0.2f"|format(camera.pixelSize | float)}}</div>
     <div class="col-1">{{ camera.bits | int }}</div>
-    <div class="col-1">{{ camera.minGain | int }}-{{ camera.maxGain | int }}</div>
-    <div class="col-2">{{ "%0.6f"|format(camera.minExposure | float) }}-{{ "%0.1f"|format(camera.maxExposure | float) }}</div>
+    <div class="col-1">{{ "%0.2f"|format(camera.minGain | float) }} - {{ "%0.2f"|format(camera.maxGain | float) }}</div>
+    <div class="col-2">{{ "%0.6f"|format(camera.minExposure | float) }} - {{ "%0.1f"|format(camera.maxExposure | float) }}s</div>
 </div>
 {% endfor %}
 </div>

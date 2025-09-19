@@ -149,7 +149,7 @@ class IndiAllSky(object):
             -1.0,  # maximum
         ])
 
-        self.gain_v = Value('i', -1)  # value set in CCD config
+        self.gain_v = Value('f', -1.0)  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
 
 
@@ -1117,7 +1117,7 @@ class IndiAllSky(object):
                 'createDate_hour'   : d_createDate.hour,
                 'dayDate'    : d_dayDate,
                 'exposure'   : 0.0,
-                'gain'       : -1,
+                'gain'       : -1.0,
                 'binmode'    : 1,
                 'night'      : night,
                 'adu'        : 0.0,
@@ -1182,7 +1182,7 @@ class IndiAllSky(object):
                 'createDate_hour'   : d_createDate.hour,
                 'dayDate'    : d_dayDate,
                 'exposure'   : 0.0,
-                'gain'       : -1,
+                'gain'       : -1.0,
                 'binmode'    : 1,
                 'night'      : night,
                 'uploaded'   : False,

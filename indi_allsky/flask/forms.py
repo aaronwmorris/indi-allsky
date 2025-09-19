@@ -182,7 +182,7 @@ def LENS_AZIMUTH_validator(form, field):
 
 
 def ccd_GAIN_validator(form, field):
-    if not isinstance(field.data, int):
+    if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
     if field.data < 0:
@@ -702,7 +702,8 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'day_date'   : now.date(),
         'exposure'   : 1.0,
         'rational_exp' : '',
-        'gain'       : 1,
+        'gain'       : 1,  # originally int
+        'gain_f'     : 1.0,
         'temp'       : -5.1,
         'temp_unit'  : 'C',
         'sqm'        : 8000.0,
@@ -3880,11 +3881,11 @@ class IndiAllskyConfigForm(FlaskForm):
     LENS_OFFSET_Y                    = IntegerField('Y Offset', validators=[LENS_OFFSET_validator])
     LENS_ALTITUDE                    = FloatField('Altitude', validators=[LENS_ALTITUDE_validator])
     LENS_AZIMUTH                     = FloatField('Azimuth', validators=[LENS_AZIMUTH_validator])
-    CCD_CONFIG__NIGHT__GAIN          = IntegerField('Night Gain', validators=[ccd_GAIN_validator])
+    CCD_CONFIG__NIGHT__GAIN          = FloatField('Night Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__NIGHT__BINNING       = IntegerField('Night Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
-    CCD_CONFIG__MOONMODE__GAIN       = IntegerField('Moon Mode Gain', validators=[ccd_GAIN_validator])
+    CCD_CONFIG__MOONMODE__GAIN       = FloatField('Moon Mode Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__MOONMODE__BINNING    = IntegerField('Moon Mode Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
-    CCD_CONFIG__DAY__GAIN            = IntegerField('Daytime Gain', validators=[ccd_GAIN_validator])
+    CCD_CONFIG__DAY__GAIN            = FloatField('Daytime Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__DAY__BINNING         = IntegerField('Daytime Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
     CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_MAX_validator])
     CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_DEF_validator])

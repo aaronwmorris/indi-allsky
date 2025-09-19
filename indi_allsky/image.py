@@ -306,10 +306,13 @@ class ImageWorker(Process):
             return
 
 
-        if filename_p.stat().st_size == 0:
+        image_size = filename_p.stat().st_size
+        if image_size == 0:
             logger.error('Frame is empty: %s', filename_p)
             filename_p.unlink()
             return
+
+        #logger.info('Image size: %0.2fMB', image_size / 1024 / 1024)
 
 
         camera = IndiAllSkyDbCameraTable.query\
@@ -782,7 +785,7 @@ class ImageWorker(Process):
             mqtt_data = {
                 'exp_date' : exp_date.strftime('%Y-%m-%d %H:%M:%S'),
                 'exposure' : round(exposure, 6),
-                'gain'     : gain,
+                'gain'     : round(gain, 2),
                 'bin'      : self.bin_v.value,
                 'temp'     : round(self.sensors_temp_av[0], 1),
                 'sunalt'   : round(self.image_processor.astrometric_data['sun_alt'], 1),
@@ -1995,7 +1998,7 @@ class ImageWorker(Process):
         cmd_env = {
             'DATA_JSON': str(self.pre_hook_datajson_name_p),  # the file used for the json data is communicated via environment variable
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
-            'GAIN'     : '{0:d}'.format(gain),
+            'GAIN'     : '{0:0.2f}'.format(gain),
             'BIN'      : '{0:d}'.format(self.bin_v.value),
             'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
             'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),
@@ -2066,7 +2069,7 @@ class ImageWorker(Process):
         # Communicate sensor values as environment variables
         hook_env = {
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
-            'GAIN'     : '{0:d}'.format(gain),
+            'GAIN'     : '{0:0.3f}'.format(gain),
             'BIN'      : '{0:d}'.format(self.bin_v.value),
             'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
             'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),

@@ -122,7 +122,7 @@ class IndiClient(PyIndi.BaseClient):
         self._timeout = 10.0
 
         self._exposure = 0.0
-        self._gain = 0  # individual exposure gain
+        self._gain = 0.0  # individual exposure gain
 
         self.exposureStartTime = None
 
@@ -206,7 +206,7 @@ class IndiClient(PyIndi.BaseClient):
 
     @gain.setter
     def gain(self, new_gain):
-        self._gain = int(new_gain)
+        self._gain = float(new_gain)  # gain need to be stored as float for inheritance
 
 
     @property
@@ -982,7 +982,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
         self.exposure = exposure
-        self.gain = int(self.gain_v.value)
+        self.gain = self.gain_v.value
 
 
         self.exposureStartTime = time.time()
@@ -1146,7 +1146,9 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def setCcdGain(self, gain_value):
-        logger.warning('Setting CCD gain to %s', str(gain_value))
+        gain_value_i = int(gain_value)  # indi gains always treated as ints
+
+        logger.warning('Setting CCD gain to %0.2f', float(gain_value_i))
         indi_exec = self.ccd_device.getDriverExec()
 
         if indi_exec in [
@@ -1159,7 +1161,7 @@ class IndiClient(PyIndi.BaseClient):
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_CONTROLS" : {
-                        "Gain" : gain_value,
+                        "Gain" : gain_value_i,
                     },
                 },
             }
@@ -1173,7 +1175,7 @@ class IndiClient(PyIndi.BaseClient):
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_GAIN" : {
-                        "GAIN" : gain_value,
+                        "GAIN" : gain_value_i,
                     },
                 },
             }
@@ -1188,7 +1190,7 @@ class IndiClient(PyIndi.BaseClient):
                 gain_config = {
                     "PROPERTIES" : {
                         "CCD_CONTROLS" : {
-                            "Gain" : gain_value,
+                            "Gain" : gain_value_i,
                         },
                     },
                 }
@@ -1197,7 +1199,7 @@ class IndiClient(PyIndi.BaseClient):
                 gain_config = {
                     "PROPERTIES" : {
                         "CCD_GAIN" : {
-                            "GAIN" : gain_value,
+                            "GAIN" : gain_value_i,
                         },
                     },
                 }
@@ -1237,7 +1239,7 @@ class IndiClient(PyIndi.BaseClient):
                 gain_config = {
                     "PROPERTIES" : {
                         "Image Adjustments" : {
-                            "Gain" : gain_value,
+                            "Gain" : gain_value_i,
                         },
                     },
                 }
@@ -1251,7 +1253,7 @@ class IndiClient(PyIndi.BaseClient):
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_GAIN" : {
-                        "GAIN" : gain_value,
+                        "GAIN" : gain_value_i,
                     },
                 },
             }
@@ -1264,7 +1266,7 @@ class IndiClient(PyIndi.BaseClient):
 
         # Update shared gain value
         with self.gain_v.get_lock():
-            self.gain_v.value = int(gain_value)
+            self.gain_v.value = float(gain_value_i)
 
 
     def setCcdBinning(self, bin_value):
@@ -1308,7 +1310,7 @@ class IndiClient(PyIndi.BaseClient):
 
             self.configureDevice(self.ccd_device, binning_config)
 
-            # Update shared gain value
+            # Update shared bin value
             with self.bin_v.get_lock():
                 self.bin_v.value = new_bin_value[0]
         except TimeOutException:
