@@ -158,8 +158,8 @@ class IndiClientPycurl(IndiClient):
             'width'         : 1920,
             'height'        : 1080,
             'pixel'         : 2.0,
-            'min_gain'      : 0,
-            'max_gain'      : 0,
+            'min_gain'      : 0.0,
+            'max_gain'      : 0.0,
             'min_exposure'  : 0.000032,
             'max_exposure'  : 60.0,
             'cfa'           : None,
@@ -174,7 +174,7 @@ class IndiClientPycurl(IndiClient):
     def setCcdGain(self, new_gain_value):
         # Update shared gain value
         with self.gain_v.get_lock():
-            self.gain_v.value = int(new_gain_value)
+            self.gain_v.value = float(new_gain_value)
 
 
     def setCcdBinning(self, bin_value):
@@ -183,7 +183,7 @@ class IndiClientPycurl(IndiClient):
             return
 
 
-        # Update shared gain value
+        # Update shared bin value
         with self.bin_v.get_lock():
             self.bin_v.value = int(bin_value)
 
@@ -211,7 +211,7 @@ class IndiClientPycurl(IndiClient):
 
 
         self.exposure = exposure
-        self.gain = int(self.gain_v.value)
+        self.gain = float(self.gain_v.value)
 
 
         self.exposureStartTime = time.time()
