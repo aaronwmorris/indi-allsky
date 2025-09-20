@@ -1244,8 +1244,8 @@ var camera_id = {{ camera_id }};
             <div id="ADU_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div>x1, y1</div>
-            <div>* Not used if Detection Mask is defined *</div>
+            <div>Upper-left (x1, y1)</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Not used if Detection Mask is defined</div>
         </div>
     </div>
 
@@ -1260,7 +1260,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.ADU_ROI_Y2(class='form-control bg-secondary') }}
             <div id="ADU_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">x2, y2</div>
+        <div class="col-sm-6">Lower-right (x2, y2)</div>
     </div>
 
     <hr>
@@ -1803,7 +1803,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_CROP_ROI_Y1(class='form-control bg-secondary') }}
             <div id="IMAGE_CROP_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">x1, y1</div>
+        <div class="col-sm-6">Upper-left (x1, y1)</div>
     </div>
 
     <div class="form-group row">
@@ -1817,7 +1817,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_CROP_ROI_Y2(class='form-control bg-secondary') }}
             <div id="IMAGE_CROP_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">x2, y2</div>
+        <div class="col-sm-6">Lower-right (x2, y2)</div>
     </div>
 
     <div class="form-group row">
@@ -3362,8 +3362,8 @@ var camera_id = {{ camera_id }};
             <div id="SQM_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div>x1, y1</div>
-            <div>* Not used if Detection Mask is defined *</div>
+            <div>Upper-left (x1, y1)</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Not used if Detection Mask is defined</div>
         </div>
     </div>
 
@@ -3378,7 +3378,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.SQM_ROI_Y2(class='form-control bg-secondary') }}
             <div id="SQM_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">x2, y2</div>
+        <div class="col-sm-6">Lower-right (x2, y2)</div>
     </div>
 
     <hr>
