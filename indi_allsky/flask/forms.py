@@ -5791,7 +5791,7 @@ class IndiAllskyImageViewer(FlaskForm):
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 
-        app.logger.info('Found %d images', images_query.count())
+        app.logger.info('Found %d images for image viewer', images_query.count())
 
         images_data = list()
         for img in images_query:
@@ -6065,7 +6065,7 @@ class IndiAllskyFitsImageViewer(FlaskForm):
             .order_by(self.model.createDate.desc())
 
 
-        app.logger.info('Found %d images', images_query.count())
+        app.logger.info('Found %d FITS images', images_query.count())
 
         images_data = list()
         for img in images_query:
@@ -6361,7 +6361,7 @@ class IndiAllskyGalleryViewer(FlaskForm):
             .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 
-        app.logger.info('Found %d images', images_query.count())
+        app.logger.info('Found %d images for gallery', images_query.count())
 
         images_data = list()
         for img, thumb in images_query:
@@ -7006,7 +7006,7 @@ class IndiAllskyMiniVideoViewer(FlaskForm):
         )
 
 
-        app.logger.info('Found %d timelapses', videos_query.count())
+        app.logger.info('Found %d mini-timelapses', videos_query.count())
 
         videos_data = []
         for v in videos_query:
