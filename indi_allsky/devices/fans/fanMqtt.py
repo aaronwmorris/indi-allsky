@@ -74,7 +74,7 @@ class FanMqttBase(FanBase):
         self.client.loop_start()
 
 
-        self._state = 0
+        self._state = -1
 
         time.sleep(1.0)
 
@@ -128,6 +128,10 @@ class FanMqttStandard(FanMqttBase):
             self.OFF = 0
 
 
+        # set initial state
+        self.state = 0
+
+
     @property
     def state(self):
         return self._state
@@ -178,6 +182,10 @@ class FanMqttPwm(FanMqttBase):
 
         if self.invert_output:
             logger.warning('Fan logic reversed')
+
+
+        # set initial state
+        self.state = 0
 
 
     @property

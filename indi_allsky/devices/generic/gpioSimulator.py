@@ -12,7 +12,10 @@ class GpioSimulator(GenericBase):
     def __init__(self, *args, **kwargs):
         super(GpioSimulator, self).__init__(*args, **kwargs)
 
-        self._state = 0
+        self._state = -1
+
+        # set initial state
+        self.state = 0
 
 
     @property

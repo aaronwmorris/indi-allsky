@@ -41,9 +41,12 @@ class FanMotorKitPwm(FanBase):
 
         self.motor = getattr(kit, motor_name)
 
-        self._state = 0
+        self._state = -1
 
         time.sleep(1.0)
+
+        # set initial state
+        self.state = 0
 
 
     @property

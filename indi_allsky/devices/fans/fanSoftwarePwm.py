@@ -35,9 +35,12 @@ class FanSoftwarePwmRpiGpio(FanBase):
         self.pwm = GPIO.PWM(pwm_pin, self.PWM_FREQUENCY)
         self.pwm.start(0)
 
-        self._state = 0
+        self._state = -1
 
         time.sleep(1.0)
+
+        # set initial state
+        self.state = 0
 
 
     @property
@@ -102,9 +105,12 @@ class FanSoftwarePwmGpiozero(FanBase):
         if self.invert_output:
             logger.warning('Fan logic reversed')
 
-        self._state = 0
+        self._state = -1
 
         time.sleep(1.0)
+
+        # set initial state
+        self.state = 0
 
 
     @property

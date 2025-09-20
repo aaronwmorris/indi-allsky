@@ -39,9 +39,12 @@ class FanDockerPi4ChannelRelay_I2C(FanBase):
             self.OFF = 0
 
 
-        self._state = 0
+        self._state = -1
 
         time.sleep(1.0)
+
+        # set initial state
+        self.state = 0
 
 
     @property
