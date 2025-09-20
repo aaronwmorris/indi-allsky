@@ -3194,6 +3194,8 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.DETECT_MASK.label(class='col-form-label') }}
@@ -3204,11 +3206,9 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-5">
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Detection-Masks" class="text-decoration-none link-info" target="_blank">Detection Mask Wiki</a></div>
-            <div>Image mask file for detection area.  Must be a PNG</div>
+            <div>Image mask file for star, meteor, and SQM detection area.  Must be a PNG</div>
         </div>
     </div>
-
-    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3345,7 +3345,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>Central region to use for SQM calculations (not used if ROI defined)</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> SQM FoV/RoI used for stretching calculations</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> SQM FoV/RoI used for star count, meteor detection, and stretching calculations</div>
         </div>
     </div>
 
