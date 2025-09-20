@@ -117,7 +117,7 @@ class IndiAllskyDetectLines(object):
             img=mask,
             pt1=(x1, y1),
             pt2=(x2, y2),
-            color=(255),  # mono
+            color=255,  # mono
             thickness=cv2.FILLED,
         )
 
@@ -135,7 +135,7 @@ class IndiAllskyDetectLines(object):
                 img=self._sqm_mask,
                 pt1=(half_width, 0),
                 pt2=(half_width, image_height),
-                color=(0),  # mono
+                color=0,  # mono
                 thickness=71,
             )
 

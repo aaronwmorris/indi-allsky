@@ -553,7 +553,7 @@ class StarTrailGenerator(object):
             img=mask,
             pt1=(x1, y1),
             pt2=(x2, y2),
-            color=(255),  # mono
+            color=255,  # mono
             thickness=cv2.FILLED,
         )
 
@@ -581,7 +581,7 @@ class StarTrailGenerator(object):
             img=channel_mask,
             center=(center_x, center_y),
             radius=radius,
-            color=(255),
+            color=255,  # mono
             thickness=cv2.FILLED,
         )
 

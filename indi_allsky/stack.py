@@ -260,7 +260,7 @@ class IndiAllskyStacker(object):
             img=mask,
             pt1=(x1, y1),
             pt2=(x2, y2),
-            color=(255),  # mono
+            color=255,  # mono
             thickness=cv2.FILLED,
         )
 
