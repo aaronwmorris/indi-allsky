@@ -39,6 +39,9 @@ class FanStandard(FanBase):
 
         time.sleep(1.0)
 
+        # set initial state
+        self.state = 0
+
 
     @property
     def state(self):
