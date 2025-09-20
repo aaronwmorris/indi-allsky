@@ -1866,8 +1866,7 @@ class ImageProcessor(object):
 
     def circleHoles(self, i_ref):
         if len(self.image.shape) == 2:
-            # mono
-            color_bgr = 255
+            color_bgr = 255  # mono
         else:
             color_bgr = (0, 0, 64)
 
@@ -3689,7 +3688,7 @@ class ImageProcessor(object):
             img=mask,
             pt1=(x1, y1),
             pt2=(x2, y2),
-            color=(255),  # mono
+            color=255,  # mono
             thickness=cv2.FILLED,
         )
 
@@ -3722,7 +3721,7 @@ class ImageProcessor(object):
             img=channel_mask,
             center=(center_x, center_y),
             radius=radius,
-            color=(255),
+            color=255,  # mono
             thickness=cv2.FILLED,
         )
 
