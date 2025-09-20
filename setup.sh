@@ -1082,7 +1082,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
 
 
     if [[ "$INSTALL_LIBCAMERA" == "true" ]]; then
-        # this can fail on armbian debian based repos
+        # this can fail on non-raspberry pi OS repos
         sudo apt-get -y install \
             libcamera-apps || true
     fi

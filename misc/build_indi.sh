@@ -408,8 +408,11 @@ if [[ "$DISTRO" == "debian_13" ]]; then
 
     if [[ "$CPU_ARCH" == "aarch64" ]]; then
         sudo apt-get -y install \
-            libcamera-dev \
-            librpicam-app-dev
+            libcamera-dev
+
+        # this can fail on non-raspberry pi OS repos
+        sudo apt-get -y install \
+            librpicam-app-dev || true
     fi
 
 
@@ -474,8 +477,11 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
 
     if [[ "$CPU_ARCH" == "aarch64" ]]; then
         sudo apt-get -y install \
-            libcamera-dev \
-            librpicam-app-dev
+            libcamera-dev
+
+        # this can fail on non-raspberry pi OS repos
+        sudo apt-get -y install \
+            librpicam-app-dev || true
     fi
 
 elif [[ "$DISTRO" == "debian_11" ]]; then
