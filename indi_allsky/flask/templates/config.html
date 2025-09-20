@@ -1244,8 +1244,9 @@ var camera_id = {{ camera_id }};
             <div id="ADU_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div>x1, y1</div>
-            <div>* Not used if Detection Mask is defined *</div>
+            <div>Upper-left (x1, y1)</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Not used if Detection Mask is defined</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note 2</span> Coordinates are used before geometry changes (scaling, flipping, etc)</div>
         </div>
     </div>
 
@@ -1260,7 +1261,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.ADU_ROI_Y2(class='form-control bg-secondary') }}
             <div id="ADU_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">x2, y2</div>
+        <div class="col-sm-6">Lower-right (x2, y2)</div>
     </div>
 
     <hr>
@@ -1803,7 +1804,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_CROP_ROI_Y1(class='form-control bg-secondary') }}
             <div id="IMAGE_CROP_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">x1, y1</div>
+        <div class="col-sm-6">Upper-left (x1, y1)</div>
     </div>
 
     <div class="form-group row">
@@ -1817,7 +1818,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_CROP_ROI_Y2(class='form-control bg-secondary') }}
             <div id="IMAGE_CROP_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">x2, y2</div>
+        <div class="col-sm-6">Lower-right (x2, y2)</div>
     </div>
 
     <div class="form-group row">
@@ -2881,6 +2882,20 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">Color of Moon Orb</div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LOGO_OVERLAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.LOGO_OVERLAY(class='form-control bg-secondary') }}
+            <div id="LOGO_OVERLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>Logo overlay image.  Must have an alpha channel.</div>
+        </div>
+    </div>
 
 </div><!-- end overlays tab -->
 <div class="tab-pane fade" id="nav-timelapse" role="tabpanel" aria-labelledby="nav-timelapse-tab">
@@ -3174,7 +3189,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.DETECT_STARS_THOLD(class='form-control bg-secondary') }}
             <div id="DETECT_STARS_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">0.6 is a good value for color images, 0.55 for mono</div>
+        <div class="col-sm-8">0.5 - 0.6 is a good value to start</div>
     </div>
 
     <hr>
@@ -3194,6 +3209,8 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.DETECT_MASK.label(class='col-form-label') }}
@@ -3204,7 +3221,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-5">
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Detection-Masks" class="text-decoration-none link-info" target="_blank">Detection Mask Wiki</a></div>
-            <div>Image mask file for detection area.  Must be a PNG</div>
+            <div>Image mask file for star, meteor, and SQM detection area.  Must be a PNG</div>
         </div>
     </div>
 
@@ -3218,22 +3235,7 @@ var camera_id = {{ camera_id }};
                 <div id="DETECT_DRAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8">Mark detections on image for calibration</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LOGO_OVERLAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_config.LOGO_OVERLAY(class='form-control bg-secondary') }}
-            <div id="LOGO_OVERLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <div>Logo overlay image.  Must have an alpha channel.</div>
-        </div>
+        <div class="col-sm-8">Mark star and meteor line detections on image for calibration</div>
     </div>
 
     <hr>
@@ -3343,7 +3345,7 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>Central region to use for SQM calculations (not used if ROI defined)</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> SQM FoV/RoI used for stretching calculations</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> SQM FoV/RoI used for star count, meteor detection, and stretching calculations</div>
         </div>
     </div>
 
@@ -3361,8 +3363,9 @@ var camera_id = {{ camera_id }};
             <div id="SQM_ROI_Y1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div>x1, y1</div>
-            <div>* Not used if Detection Mask is defined *</div>
+            <div>Upper-left (x1, y1)</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Not used if Detection Mask is defined</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note 2</span> Coordinates are used before geometry changes (scaling, flipping, etc)</div>
         </div>
     </div>
 
@@ -3377,7 +3380,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.SQM_ROI_Y2(class='form-control bg-secondary') }}
             <div id="SQM_ROI_Y2-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">x2, y2</div>
+        <div class="col-sm-6">Lower-right (x2, y2)</div>
     </div>
 
     <hr>
