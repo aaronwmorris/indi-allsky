@@ -25,6 +25,9 @@ class DewHeaterSoftwarePwmRpiGpio(DewHeaterBase):
 
         logger.info('Initializing Software PWM DEW HEATER device (%d Hz)', self.PWM_FREQUENCY)
 
+        if self.invert_output:
+            logger.warning('Dew heater logic reversed')
+
         #GPIO.setmode(GPIO.BOARD)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(pwm_pin, GPIO.OUT)
@@ -32,7 +35,7 @@ class DewHeaterSoftwarePwmRpiGpio(DewHeaterBase):
         self.pwm = GPIO.PWM(pwm_pin, self.PWM_FREQUENCY)
         self.pwm.start(0)
 
-        self._state = 0
+        self._state = -1
 
         time.sleep(1.0)
 
@@ -56,10 +59,10 @@ class DewHeaterSoftwarePwmRpiGpio(DewHeaterBase):
             return
 
 
-        if not self.invert_output:
-            new_duty_cycle = int(100 * new_state_i / 100)
-        else:
+        if self.invert_output:
             new_duty_cycle = int(100 * (100 - new_state_i) / 100)
+        else:
+            new_duty_cycle = int(100 * new_state_i / 100)
 
 
         logger.warning('Set dew heater state: %d%%', new_state_i)
@@ -94,9 +97,12 @@ class DewHeaterSoftwarePwmGpiozero(DewHeaterBase):
 
         logger.info('Initializing Software PWM DEW HEATER device (%d Hz)', self.PWM_FREQUENCY)
 
+        if self.invert_output:
+            logger.warning('Dew heater logic reversed')
+
         self.pwm = PWMOutputDevice(pwm_pin, initial_value=0, frequency=self.PWM_FREQUENCY)
 
-        self._state = 0
+        self._state = -1
 
         time.sleep(1.0)
 
@@ -120,10 +126,10 @@ class DewHeaterSoftwarePwmGpiozero(DewHeaterBase):
             return
 
 
-        if not self.invert_output:
-            new_duty_cycle = new_state_i / 100
-        else:
+        if self.invert_output:
             new_duty_cycle = 1 - (new_state_i / 100)
+        else:
+            new_duty_cycle = new_state_i / 100
 
 
         logger.warning('Set dew heater state: %d%%', new_state_i)

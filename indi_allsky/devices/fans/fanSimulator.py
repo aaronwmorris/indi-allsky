@@ -12,7 +12,7 @@ class FanSimulator(FanBase):
     def __init__(self, *args, **kwargs):
         super(FanSimulator, self).__init__(*args, **kwargs)
 
-        self._state = 0
+        self._state = -1
 
 
     @property

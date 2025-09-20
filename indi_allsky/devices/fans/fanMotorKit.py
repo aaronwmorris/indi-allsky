@@ -30,6 +30,10 @@ class FanMotorKitPwm(FanBase):
 
         logger.info('Initializing MotorKit FAN device %s @ %s', motor_name, i2c_address_str)
 
+        if self.invert_output:
+            logger.warning('Fan logic reversed')
+
+
         i2c = board.I2C()
         #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
@@ -37,7 +41,7 @@ class FanMotorKitPwm(FanBase):
 
         self.motor = getattr(kit, motor_name)
 
-        self._state = 0
+        self._state = -1
 
         time.sleep(1.0)
 
@@ -61,10 +65,10 @@ class FanMotorKitPwm(FanBase):
             return
 
 
-        if not self.invert_output:
-            new_duty_cycle = new_state_i / 100
-        else:
+        if self.invert_output:
             new_duty_cycle = (100 - new_state_i) / 100
+        else:
+            new_duty_cycle = new_state_i / 100
 
 
         logger.warning('Set fan state: %d%%', new_state_i)

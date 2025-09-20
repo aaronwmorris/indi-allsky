@@ -20,11 +20,14 @@ class FanPwm(FanBase):
 
         logger.info('Initializing PWM FAN device')
 
+        if self.invert_output:
+            logger.warning('Fan logic reversed')
+
         pwm_pin = getattr(board, pin_1_name)
 
         self.pwm = pwmio.PWMOut(pwm_pin)
 
-        self._state = 0
+        self._state = -1
 
         time.sleep(1.0)
 
@@ -48,10 +51,10 @@ class FanPwm(FanBase):
             return
 
 
-        if not self.invert_output:
-            new_duty_cycle = int(((2 ** 16) - 1) * new_state_i / 100)
-        else:
+        if self.invert_output:
             new_duty_cycle = int(((2 ** 16) - 1) * (100 - new_state_i) / 100)
+        else:
+            new_duty_cycle = int(((2 ** 16) - 1) * new_state_i / 100)
 
 
         logger.warning('Set fan state: %d%%', new_state_i)

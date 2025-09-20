@@ -275,6 +275,9 @@ class SensorWorker(Process):
             self.gpio = indi_allsky_gpios.gpio_simulator(self.config)
 
 
+        # set initial state
+        self.gpio.state = 0
+
 
     def set_gpio(self, new_state):
         if self.gpio.state != new_state:
@@ -316,6 +319,9 @@ class SensorWorker(Process):
         else:
             self.dew_heater = dew_heaters.dew_heater_simulator(self.config)
 
+
+        # set initial state
+        self.dew_heater.state = 0
 
 
     def set_dew_heater(self, new_state):
@@ -362,6 +368,10 @@ class SensorWorker(Process):
 
         else:
             self.fan = fans.fan_simulator(self.config)
+
+
+        # set initial state
+        self.fan.state = 0
 
 
     def set_fan(self, new_state):
