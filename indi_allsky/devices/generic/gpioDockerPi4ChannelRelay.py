@@ -43,9 +43,12 @@ class GpioDockerPi4ChannelRelay_I2C(GenericBase):
             self.OFF_LEVEL = 'low'
 
 
-        self._state = None
+        self._state = -1
 
         time.sleep(1.0)
+
+        # set initial state
+        self.state = 0
 
 
     @property
