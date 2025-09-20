@@ -1,4 +1,4 @@
-import math
+#import math
 import cv2
 import logging
 
@@ -58,29 +58,29 @@ class IndiAllSkyDraw(object):
 
 
         ### Keogram meridian ###
-        logger.info('Draw keogram meridian')
-        if abs(self.config['KEOGRAM_ANGLE']) == 90.0:
-            # line is straight across
-            m_x1 = 0
-            m_y1 = int(image_height / 2)
-            m_x2 = image_width
-            m_y2 = m_y1
-        else:
-            opp_1 = math.tan(math.radians(self.config['KEOGRAM_ANGLE'])) * (image_height / 2)
+        #logger.info('Draw keogram meridian')
+        #if abs(self.config['KEOGRAM_ANGLE']) == 90.0:
+        #    # line is straight across
+        #    m_x1 = 0
+        #    m_y1 = int(image_height / 2)
+        #    m_x2 = image_width
+        #    m_y2 = m_y1
+        #else:
+        #    opp_1 = math.tan(math.radians(self.config['KEOGRAM_ANGLE'])) * (image_height / 2)
 
-            m_x1 = int(image_width / 2) + int(opp_1)
-            m_y1 = 0
-            m_x2 = int(image_width / 2) - int(opp_1)
-            m_y2 = image_height
+        #    m_x1 = int(image_width / 2) + int(opp_1)
+        #    m_y1 = 0
+        #    m_x2 = int(image_width / 2) - int(opp_1)
+        #    m_y2 = image_height
 
 
-        cv2.line(
-            data,
-            (m_x1, m_y1),
-            (m_x2, m_y2),
-            (64, 64, 64),
-            3,
-        )
+        #cv2.line(
+        #    data,
+        #    (m_x1, m_y1),
+        #    (m_x2, m_y2),
+        #    (64, 64, 64),
+        #    3,
+        #)
 
 
         return data
