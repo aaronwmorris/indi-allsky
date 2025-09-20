@@ -22,7 +22,27 @@ class IndiAllSkyDraw(object):
         image_height, image_width = data.shape[:2]
 
 
-        self.drawText_opencv(data, 'MARK DETECTIONS ENABLED', (int(image_width / 3), 25), (200, 200, 200))
+        # flip image to draw text
+        if self.config.get('IMAGE_FLIP_V'):
+            data = cv2.flip(data, 0)
+
+        if self.config.get('IMAGE_FLIP_H'):
+            data = cv2.flip(data, 1)
+
+        data = cv2.rotate(data, cv2.ROTATE_90_CLOCKWISE)
+
+
+        self.drawText_opencv(data, 'MARK DETECTIONS ENABLED', (int((image_height / 2) - (image_height / 4)), 25), (200, 200, 200))
+
+
+        # flip back to original
+        data = cv2.rotate(data, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+        if self.config.get('IMAGE_FLIP_V'):
+            data = cv2.flip(data, 0)
+
+        if self.config.get('IMAGE_FLIP_H'):
+            data = cv2.flip(data, 1)
 
 
         ### ADU & SQM ROI ###
