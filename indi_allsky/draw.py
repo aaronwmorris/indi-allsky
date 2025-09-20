@@ -25,10 +25,13 @@ class IndiAllSkyDraw(object):
         self.drawText_opencv(data, 'MARK DETECTIONS ENABLED', (int(image_width / 3), 25), (200, 200, 200))
 
 
-        ### ADU ROI ###
+        ### ADU & SQM ROI ###
         if isinstance(self._sqm_mask, type(None)):
             ### Draw ADU ROI if detection mask is not defined
             ###  Make sure the box calculation matches image.py
+            logger.info('Draw box around ADU_ROI and SQM_ROI')
+
+
             adu_roi = self.config.get('ADU_ROI', [])
 
             try:
@@ -44,14 +47,38 @@ class IndiAllSkyDraw(object):
                 adu_y2 = int((image_height / 2) + (image_height / adu_fov_div))
 
 
-            logger.info('Draw box around ADU_ROI')
             cv2.rectangle(
                 img=data,
                 pt1=(adu_x1, adu_y1),
                 pt2=(adu_x2, adu_y2),
-                color=(128, 128, 128),
+                color=(128, 64, 64),
                 thickness=1,
             )
+
+
+            sqm_roi = self.config.get('SQM_ROI', [])
+
+            try:
+                sqm_x1 = int(sqm_roi[0] / self.bin_v.value)
+                sqm_y1 = int(sqm_roi[1] / self.bin_v.value)
+                sqm_x2 = int(sqm_roi[2] / self.bin_v.value)
+                sqm_y2 = int(sqm_roi[3] / self.bin_v.value)
+            except IndexError:
+                sqm_fov_div = self.config.get('SQM_FOV_DIV', 4)
+                sqm_x1 = int((image_width / 2) - (image_width / sqm_fov_div))
+                sqm_y1 = int((image_height / 2) - (image_height / adu_fov_div))
+                sqm_x2 = int((image_width / 2) + (image_width / adu_fov_div))
+                sqm_y2 = int((image_height / 2) + (image_height / adu_fov_div))
+
+
+            cv2.rectangle(
+                img=data,
+                pt1=(sqm_x1, sqm_y1),
+                pt2=(sqm_x2, sqm_y2),
+                color=(64, 64, 128),
+                thickness=1,
+            )
+
         else:
             # apply mask to image
             data = cv2.bitwise_and(data, data, mask=self._sqm_mask)
