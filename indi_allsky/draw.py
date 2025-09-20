@@ -86,9 +86,9 @@ class IndiAllSkyDraw(object):
             except IndexError:
                 sqm_fov_div = self.config.get('SQM_FOV_DIV', 4)
                 sqm_x1 = int((image_width / 2) - (image_width / sqm_fov_div))
-                sqm_y1 = int((image_height / 2) - (image_height / adu_fov_div))
-                sqm_x2 = int((image_width / 2) + (image_width / adu_fov_div))
-                sqm_y2 = int((image_height / 2) + (image_height / adu_fov_div))
+                sqm_y1 = int((image_height / 2) - (image_height / sqm_fov_div))
+                sqm_x2 = int((image_width / 2) + (image_width / sqm_fov_div))
+                sqm_y2 = int((image_height / 2) + (image_height / sqm_fov_div))
 
 
             cv2.rectangle(
