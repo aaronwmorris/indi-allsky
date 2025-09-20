@@ -14,9 +14,6 @@ class DewHeaterSimulator(DewHeaterBase):
 
         self._state = -1
 
-        # set initial state
-        self.state = 0
-
 
     @property
     def state(self):

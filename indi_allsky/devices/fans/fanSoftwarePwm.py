@@ -39,9 +39,6 @@ class FanSoftwarePwmRpiGpio(FanBase):
 
         time.sleep(1.0)
 
-        # set initial state
-        self.state = 0
-
 
     @property
     def state(self):
@@ -108,9 +105,6 @@ class FanSoftwarePwmGpiozero(FanBase):
         self._state = -1
 
         time.sleep(1.0)
-
-        # set initial state
-        self.state = 0
 
 
     @property

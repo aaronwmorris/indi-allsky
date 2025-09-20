@@ -128,10 +128,6 @@ class FanMqttStandard(FanMqttBase):
             self.OFF = 0
 
 
-        # set initial state
-        self.state = 0
-
-
     @property
     def state(self):
         return self._state
@@ -182,10 +178,6 @@ class FanMqttPwm(FanMqttBase):
 
         if self.invert_output:
             logger.warning('Fan logic reversed')
-
-
-        # set initial state
-        self.state = 0
 
 
     @property
