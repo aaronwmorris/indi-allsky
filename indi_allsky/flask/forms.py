@@ -4653,6 +4653,36 @@ class IndiAllskyConfigForm(FlaskForm):
                 result = False
 
 
+        if self.ADU_ROI_X1.data and self.ADU_ROI_Y1.data and self.ADU_ROI_X2.data and self.ADU_ROI_Y2.data:
+            if self.ADU_ROI_X2.data <= self.ADU_ROI_X1.data:
+                self.ADU_ROI_X2.errors.append('X2 must be greater than X1')
+                result = False
+
+            if self.ADU_ROI_Y2.data <= self.ADU_ROI_Y1.data:
+                self.ADU_ROI_Y2.errors.append('Y2 must be greater than Y1')
+                result = False
+
+
+        if self.IMAGE_CROP_ROI_X1.data and self.IMAGE_CROP_ROI_Y1.data and self.IMAGE_CROP_ROI_X2.data and self.IMAGE_CROP_ROI_Y2.data:
+            if self.IMAGE_CROP_ROI_X2.data <= self.IMAGE_CROP_ROI_X1.data:
+                self.IMAGE_CROP_ROI_X2.errors.append('X2 must be greater than X1')
+                result = False
+
+            if self.IMAGE_CROP_ROI_Y2.data <= self.IMAGE_CROP_ROI_Y1.data:
+                self.IMAGE_CROP_ROI_Y2.errors.append('Y2 must be greater than Y1')
+                result = False
+
+
+        if self.SQM_ROI_X1.data and self.SQM_ROI_Y1.data and self.SQM_ROI_X2.data and self.SQM_ROI_Y2.data:
+            if self.SQM_ROI_X2.data <= self.SQM_ROI_X1.data:
+                self.SQM_ROI_X2.errors.append('X2 must be greater than X1')
+                result = False
+
+            if self.SQM_ROI_Y2.data <= self.SQM_ROI_Y1.data:
+                self.SQM_ROI_Y2.errors.append('Y2 must be greater than Y1')
+                result = False
+
+
         # check cropping
         mod_image_crop_x = (self.IMAGE_CROP_ROI_X2.data - self.IMAGE_CROP_ROI_X1.data) % 2
         if mod_image_crop_x:
