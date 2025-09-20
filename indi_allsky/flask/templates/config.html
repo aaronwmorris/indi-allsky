@@ -2881,6 +2881,20 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">Color of Moon Orb</div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LOGO_OVERLAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.LOGO_OVERLAY(class='form-control bg-secondary') }}
+            <div id="LOGO_OVERLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5">
+            <div>Logo overlay image.  Must have an alpha channel.</div>
+        </div>
+    </div>
 
 </div><!-- end overlays tab -->
 <div class="tab-pane fade" id="nav-timelapse" role="tabpanel" aria-labelledby="nav-timelapse-tab">
@@ -3221,21 +3235,6 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">Mark star and meteor line detections on image for calibration</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LOGO_OVERLAY.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-5">
-            {{ form_config.LOGO_OVERLAY(class='form-control bg-secondary') }}
-            <div id="LOGO_OVERLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-5">
-            <div>Logo overlay image.  Must have an alpha channel.</div>
-        </div>
     </div>
 
     <hr>
