@@ -35,9 +35,12 @@ class DewHeaterSoftwarePwmRpiGpio(DewHeaterBase):
         self.pwm = GPIO.PWM(pwm_pin, self.PWM_FREQUENCY)
         self.pwm.start(0)
 
-        self._state = 0
+        self._state = -1
 
         time.sleep(1.0)
+
+        # set initial state
+        self.state = 0
 
 
     @property
@@ -102,9 +105,12 @@ class DewHeaterSoftwarePwmGpiozero(DewHeaterBase):
 
         self.pwm = PWMOutputDevice(pwm_pin, initial_value=0, frequency=self.PWM_FREQUENCY)
 
-        self._state = 0
+        self._state = -1
 
         time.sleep(1.0)
+
+        # set initial state
+        self.state = 0
 
 
     @property

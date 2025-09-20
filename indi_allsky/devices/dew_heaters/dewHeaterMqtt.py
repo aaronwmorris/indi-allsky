@@ -74,7 +74,7 @@ class DewHeaterMqttBase(DewHeaterBase):
         self.client.loop_start()
 
 
-        self._state = 0
+        self._state = -1
 
         time.sleep(1.0)
 
@@ -127,6 +127,9 @@ class DewHeaterMqttStandard(DewHeaterMqttBase):
             self.ON = 100
             self.OFF = 0
 
+        # set initial state
+        self.state = 0
+
 
     @property
     def state(self):
@@ -178,6 +181,11 @@ class DewHeaterMqttPwm(DewHeaterMqttBase):
 
         if self.invert_output:
             logger.warning('Dew heater logic reversed')
+
+
+        # set initial state
+        self.state = 0
+
 
     @property
     def state(self):
