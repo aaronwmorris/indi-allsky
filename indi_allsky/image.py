@@ -1923,7 +1923,7 @@ class ImageWorker(Process):
 
         logger.warning('New calculated exposure: %0.8f', new_exposure)
         with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_NEXT] = new_exposure
+            self.exposure_av[constants.EXPOSURE_NEXT] = float(new_exposure)
 
 
     def save_longterm_keogram_data(self, exp_date, camera_id):
