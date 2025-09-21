@@ -224,7 +224,7 @@ class CaptureWorker(Process):
 
         self.exposure_av = exposure_av  # current, min night, min day, max
 
-        self.gain_av = gain_av  # current, max night, max day
+        self.gain_av = gain_av  # current, min, max night, max moon mode
 
         self.bin_v = bin_v
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
@@ -1153,30 +1153,44 @@ class CaptureWorker(Process):
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
             logger.error('CCD night gain below minimum, changing to %0.2f', float(ccd_min_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = float(ccd_min_gain)
+            gain_night = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['NIGHT']['GAIN'] > ccd_max_gain:
             logger.error('CCD night gain above maximum, changing to %0.2f', float(ccd_max_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = float(ccd_max_gain)
+            gain_night = float(ccd_max_gain)
             time.sleep(3)
+        else:
+            gain_night = float(self.config['CCD_CONFIG']['NIGHT']['GAIN'])
+
 
         if self.config['CCD_CONFIG']['MOONMODE']['GAIN'] < ccd_min_gain:
             logger.error('CCD moon mode gain below minimum, changing to %0.2f', float(ccd_min_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = float(ccd_min_gain)
+            gain_moonmode = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['MOONMODE']['GAIN'] > ccd_max_gain:
             logger.error('CCD moon mode gain above maximum, changing to %0.2f', float(ccd_max_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = float(ccd_max_gain)
+            gain_moonmode = float(ccd_max_gain)
             time.sleep(3)
+        else:
+            gain_moonmode = float(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
+
 
         if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
             logger.error('CCD day gain below minimum, changing to %0.2f', float(ccd_min_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = float(ccd_min_gain)
+            gain_day = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_max_gain:
             logger.error('CCD day gain above maximum, changing to %0.2f', float(ccd_max_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = float(ccd_max_gain)
+            gain_day = float(ccd_max_gain)
             time.sleep(3)
+        else:
+            gain_day = float(self.config['CCD_CONFIG']['DAY']['GAIN'])
+
+
+        with self.gain_av.get_lock():
+            self.gain_av[1] = gain_day
+            self.gain_av[2] = gain_night
+            self.gain_av[3] = gain_moonmode
 
 
     def _sync_camera(self, camera, camera_metadata):
@@ -1629,11 +1643,11 @@ class CaptureWorker(Process):
 
             if self.moonmode:
                 logger.warning('Change to night (moon mode)')
-                self.indiclient.setCcdGain(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
+                self.indiclient.setCcdGain(self.gain_av[3])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
             else:
                 logger.warning('Change to night (normal mode)')
-                self.indiclient.setCcdGain(self.config['CCD_CONFIG']['NIGHT']['GAIN'])
+                self.indiclient.setCcdGain(self.gain_av[2])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
 
@@ -1670,7 +1684,7 @@ class CaptureWorker(Process):
                 self.indiclient.disableCcdCooler()
 
 
-            self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
+            self.indiclient.setCcdGain(self.gain_av[1])
             self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 

@@ -93,7 +93,15 @@ class IndiAllSkyDarks(object):
         self.indi_config = self.config.get('INDI_CONFIG_DEFAULTS', {})
 
         self.exposure_av = Array('f', [-1.0])
-        self.gain_av = Array('f', [-1.0])  # value set in CCD config
+
+        self.gain_av = Array('f', [
+            -1.0,  # value set in CCD config
+            -1.0,  # minimum gain (day max)
+            -1.0,  # night maximum
+            -1.0,  # moon mode maximum
+        ])
+
+
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.sensors_temp_av = Array('f', [0.0])  # 0 ccd_temp
 
@@ -326,30 +334,44 @@ class IndiAllSkyDarks(object):
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
             logger.error('CCD night gain below minimum, changing to %0.2f', float(ccd_min_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = float(ccd_min_gain)
+            gain_night = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['NIGHT']['GAIN'] > ccd_max_gain:
             logger.error('CCD night gain above maximum, changing to %0.2f', float(ccd_max_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = float(ccd_max_gain)
+            gain_night = float(ccd_max_gain)
             time.sleep(3)
+        else:
+            gain_night = float(self.config['CCD_CONFIG']['NIGHT']['GAIN'])
+
 
         if self.config['CCD_CONFIG']['MOONMODE']['GAIN'] < ccd_min_gain:
             logger.error('CCD moon mode gain below minimum, changing to %0.2f', float(ccd_min_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = float(ccd_min_gain)
+            gain_moonmode = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['MOONMODE']['GAIN'] > ccd_max_gain:
             logger.error('CCD moon mode gain above maximum, changing to %0.2f', float(ccd_max_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = float(ccd_max_gain)
+            gain_moonmode = float(ccd_max_gain)
             time.sleep(3)
+        else:
+            gain_moonmode = float(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
+
 
         if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
             logger.error('CCD day gain below minimum, changing to %0.12f', float(ccd_min_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = float(ccd_min_gain)
+            gain_day = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_max_gain:
             logger.error('CCD day gain above maximum, changing to %0.2f', float(ccd_max_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = float(ccd_max_gain)
+            gain_day = float(ccd_max_gain)
             time.sleep(3)
+        else:
+            gain_day = float(self.config['CCD_CONFIG']['DAY']['GAIN'])
+
+
+        with self.gain_av.get_lock():
+            self.gain_av[1] = gain_day
+            self.gain_av[2] = gain_night
+            self.gain_av[3] = gain_moonmode
 
 
     def shoot(self, exposure, sync=True, timeout=None):
@@ -830,12 +852,12 @@ class IndiAllSkyDarks(object):
         # if NIGHT and MOONMODE have the same parameters, no need to double the work
         night_darks_odict.update(
             {
-                (self.config['CCD_CONFIG']['NIGHT']['GAIN'], self.config['CCD_CONFIG']['NIGHT']['BINNING']) : None,
+                (float(self.gain_av[2]), self.config['CCD_CONFIG']['NIGHT']['BINNING']) : None,
             }
         )
         night_darks_odict.update(
             {
-                (self.config['CCD_CONFIG']['MOONMODE']['GAIN'], self.config['CCD_CONFIG']['MOONMODE']['BINNING']) : None,
+                (float(self.gain_av[3]), self.config['CCD_CONFIG']['MOONMODE']['BINNING']) : None,
             }
         )
 
@@ -889,14 +911,14 @@ class IndiAllSkyDarks(object):
 
 
             ### DAY DARKS ###
-            day_params = (self.config['CCD_CONFIG']['DAY']['GAIN'], self.config['CCD_CONFIG']['DAY']['BINNING'])
+            day_params = (float(self.gain_av[1]), self.config['CCD_CONFIG']['DAY']['BINNING'])
             if day_params not in night_darks_odict.keys():
                 total_exposures = len(dark_exposures) * remaining_configs
                 estimated_time_left = self._estimate_runtime(dark_exposures, remaining_configs, overhead_per_exposure)
                 logger.info(f"Processing {total_exposures} darks, {self.count} exposures each. Estimated time left: {self._format_time(int(estimated_time_left))}")
 
 
-                self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
+                self.indiclient.setCcdGain(self.gain_av[1])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
                 # day will rarely exceed 1 second (with good cameras and proper conditions)

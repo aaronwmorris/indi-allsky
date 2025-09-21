@@ -151,8 +151,9 @@ class IndiAllSky(object):
 
         self.gain_av = Array('f', [
             -1.0,  # value set in CCD config
+            -1.0,  # minimum gain (day max)
             -1.0,  # night maximum
-            -1.0,  # day maximum, night minimum
+            -1.0,  # moon mode maximum
         ])
 
         self.bin_v = Value('i', 1)  # set 1 for sane default

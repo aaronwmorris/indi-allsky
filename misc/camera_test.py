@@ -73,7 +73,15 @@ class CameraTest(object):
 
         self.night_v = Value('i', -1)  # bogus initial value
         self.moonmode_v = Value('i', -1)  # bogus initial value
-        self.gain_av = Array('f', [-1.0])  # value set in CCD config
+
+        self.gain_av = Array('f', [
+            -1.0,  # value set in CCD config
+            -1.0,  # minimum gain (day max)
+            -1.0,  # night maximum
+            -1.0,  # moon mode maximum
+        ])
+
+
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.position_av = Array('f', [
             float(self.config['LOCATION_LATITUDE']),
@@ -323,30 +331,44 @@ class CameraTest(object):
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
             logger.error('CCD night gain below minimum, changing to %0.1f', float(ccd_min_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = float(ccd_min_gain)
+            gain_night = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['NIGHT']['GAIN'] > ccd_max_gain:
             logger.error('CCD night gain above maximum, changing to %0.1f', float(ccd_max_gain))
-            self.config['CCD_CONFIG']['NIGHT']['GAIN'] = float(ccd_max_gain)
+            gain_night = float(ccd_max_gain)
             time.sleep(3)
+        else:
+            gain_night = float(self.config['CCD_CONFIG']['NIGHT']['GAIN'])
+
 
         if self.config['CCD_CONFIG']['MOONMODE']['GAIN'] < ccd_min_gain:
             logger.error('CCD moon mode gain below minimum, changing to %01.f', float(ccd_min_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = float(ccd_min_gain)
+            gain_moonmode = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['MOONMODE']['GAIN'] > ccd_max_gain:
             logger.error('CCD moon mode gain above maximum, changing to %0.1f', float(ccd_max_gain))
-            self.config['CCD_CONFIG']['MOONMODE']['GAIN'] = float(ccd_max_gain)
+            gain_moonmode = float(ccd_max_gain)
             time.sleep(3)
+        else:
+            gain_moonmode = float(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
+
 
         if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
             logger.error('CCD day gain below minimum, changing to %0.1f', float(ccd_min_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = float(ccd_min_gain)
+            gain_day = float(ccd_min_gain)
             time.sleep(3)
         elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_max_gain:
             logger.error('CCD day gain above maximum, changing to %0.1f', float(ccd_max_gain))
-            self.config['CCD_CONFIG']['DAY']['GAIN'] = float(ccd_max_gain)
+            gain_day = float(ccd_max_gain)
             time.sleep(3)
+        else:
+            gain_day = float(self.config['CCD_CONFIG']['DAY']['GAIN'])
+
+
+        with self.gain_av.get_lock():
+            self.gain_av[1] = gain_day
+            self.gain_av[2] = gain_night
+            self.gain_av[3] = gain_moonmode
 
 
     def reconfigureCcd(self):
