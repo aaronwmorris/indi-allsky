@@ -1832,10 +1832,10 @@ class ImageWorker(Process):
 
         if self.night_v.value:
             target_adu = self.config['TARGET_ADU']
-            exposure_min = self.exposure_av[1]
+            exposure_min = self.exposure_av[constants.EXPOSURE_MIN_NIGHT]
         else:
             target_adu = self.config['TARGET_ADU_DAY']
-            exposure_min = self.exposure_av[2]
+            exposure_min = self.exposure_av[constants.EXPOSURE_MIN_DAY]
 
 
         # Brightness when the sun is in view (very short exposures) can change drastically when clouds pass through the view
@@ -1919,13 +1919,13 @@ class ImageWorker(Process):
         # Do not exceed the limits
         if new_exposure < exposure_min:
             new_exposure = float(exposure_min)
-        elif new_exposure > self.exposure_av[3]:
-            new_exposure = float(self.exposure_av[3])
+        elif new_exposure > self.exposure_av[constants.EXPOSURE_MAX]:
+            new_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
 
 
         logger.warning('New calculated exposure: %0.8f', new_exposure)
         with self.exposure_av.get_lock():
-            self.exposure_av[0] = new_exposure
+            self.exposure_av[constants.EXPOSURE_CURRENT] = new_exposure
 
 
     def save_longterm_keogram_data(self, exp_date, camera_id):
