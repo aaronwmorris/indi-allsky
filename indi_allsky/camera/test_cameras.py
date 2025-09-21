@@ -132,6 +132,11 @@ class IndiClientTestCameraBase(IndiClient):
         self._last_exposure_time = time.time()
 
 
+        # Update shared exposure value
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+
+
         if sync:
             time.sleep(self.exposure)
 

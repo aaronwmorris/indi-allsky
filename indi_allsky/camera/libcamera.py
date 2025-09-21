@@ -298,6 +298,12 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         self.active_exposure = True
 
+
+        # Update shared exposure value
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+
+
         if sync:
             try:
                 self.libcamera_process.wait(timeout=timeout)

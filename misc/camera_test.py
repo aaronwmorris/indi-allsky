@@ -75,6 +75,16 @@ class CameraTest(object):
         self.night_v = Value('i', -1)  # bogus initial value
         self.moonmode_v = Value('i', -1)  # bogus initial value
 
+
+        self.exposure_av = Array('f', [
+            -1.0,  # current exposure
+            -1.0,  # next exposure
+            -1.0,  # night minimum
+            -1.0,  # day minimum
+            -1.0,  # maximum
+        ])
+
+
         self.gain_av = Array('f', [
             -1.0,  # current gain
             -1.0,  # next gain
@@ -85,6 +95,8 @@ class CameraTest(object):
 
 
         self.bin_v = Value('i', 1)  # set 1 for sane default
+
+
         self.position_av = Array('f', [
             float(self.config['LOCATION_LATITUDE']),
             float(self.config['LOCATION_LONGITUDE']),
@@ -237,6 +249,7 @@ class CameraTest(object):
             self.config,
             self.image_q,
             self.position_av,
+            self.exposure_av,
             self.gain_av,
             self.bin_v,
             self.night_v,

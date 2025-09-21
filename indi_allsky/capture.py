@@ -220,13 +220,11 @@ class CaptureWorker(Process):
         self.video_q = video_q
         self.upload_q = upload_q
 
-        self.position_av = position_av  # lat, long, elev, ra, dec
-
-        self.exposure_av = exposure_av  # current, min night, min day, max
-
-        self.gain_av = gain_av  # current, next, min, max night, max moon mode
-
+        self.position_av = position_av
+        self.exposure_av = exposure_av
+        self.gain_av = gain_av
         self.bin_v = bin_v
+
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
         self.night_v = night_v
@@ -686,7 +684,8 @@ class CaptureWorker(Process):
 
                         frame_start_time = now
 
-                        self.shoot(self.exposure_av[constants.EXPOSURE_CURRENT], sync=False)
+                        self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], sync=False)
+
                         camera_ready = False
                         waiting_for_frame = True
 
@@ -742,6 +741,7 @@ class CaptureWorker(Process):
             self.config,
             self.image_q,
             self.position_av,
+            self.exposure_av,
             self.gain_av,
             self.bin_v,
             self.night_v,
@@ -1142,6 +1142,7 @@ class CaptureWorker(Process):
             # only set this on first start
             with self.exposure_av.get_lock():
                 self.exposure_av[constants.EXPOSURE_CURRENT] = float(ccd_exposure_default)
+                self.exposure_av[constants.EXPOSURE_NEXT] = float(ccd_exposure_default)
 
 
         logger.info('Default CCD exposure: {0:0.8f}'.format(ccd_exposure_default))

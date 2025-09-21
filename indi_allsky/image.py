@@ -92,11 +92,11 @@ class ImageWorker(Process):
         self.image_q = image_q
         self.upload_q = upload_q
 
-        self.position_av = position_av  # lat, long, elev, ra, dec
-
-        self.exposure_av = exposure_av  # current, min night, min day, max
+        self.position_av = position_av
+        self.exposure_av = exposure_av
         self.gain_av = gain_av
         self.bin_v = bin_v
+
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av
         self.night_v = night_v
@@ -1923,7 +1923,7 @@ class ImageWorker(Process):
 
         logger.warning('New calculated exposure: %0.8f', new_exposure)
         with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_CURRENT] = new_exposure
+            self.exposure_av[constants.EXPOSURE_NEXT] = new_exposure
 
 
     def save_longterm_keogram_data(self, exp_date, camera_id):

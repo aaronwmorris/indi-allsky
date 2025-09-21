@@ -93,6 +93,11 @@ class IndiClientPassive(IndiClient):
         self._ctl_ccd_exposure = ctl_ccd_exposure
 
 
+        # Update shared exposure value
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+
+
     def getCcdExposureStatus(self):
         camera_ready, exposure_state = self.ctl_ready(self._ctl_ccd_exposure)
 

@@ -95,6 +95,7 @@ class IndiClient(PyIndi.BaseClient):
         config,
         image_q,
         position_av,
+        exposure_av,
         gain_av,
         bin_v,
         night_v,
@@ -106,6 +107,7 @@ class IndiClient(PyIndi.BaseClient):
 
         self.position_av = position_av
 
+        self.exposure_av = exposure_av
         self.gain_av = gain_av
         self.bin_v = bin_v
 
@@ -983,7 +985,7 @@ class IndiClient(PyIndi.BaseClient):
             timeout = self.timeout
 
 
-        self.exposure = exposure
+        self.exposure = float(exposure)
         self.gain = float(self.gain_av[constants.GAIN_CURRENT])
 
 
@@ -992,6 +994,11 @@ class IndiClient(PyIndi.BaseClient):
         ctl_ccd_exposure = self.set_number(self.ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
 
         self._ctl_ccd_exposure = ctl_ccd_exposure
+
+
+        # Update shared exposure value
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
 
 
     def getCcdExposureStatus(self):

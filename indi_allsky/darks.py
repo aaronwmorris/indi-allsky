@@ -92,7 +92,15 @@ class IndiAllSkyDarks(object):
 
         self.indi_config = self.config.get('INDI_CONFIG_DEFAULTS', {})
 
-        self.exposure_av = Array('f', [-1.0])
+
+        self.exposure_av = Array('f', [
+            -1.0,  # current exposure
+            -1.0,  # next exposure
+            -1.0,  # night minimum
+            -1.0,  # day minimum
+            -1.0,  # maximum
+        ])
+
 
         self.gain_av = Array('f', [
             -1.0,  # current gain
@@ -216,6 +224,7 @@ class IndiAllSkyDarks(object):
             self.config,
             self.image_q,
             self.position_av,
+            self.exposure_av,
             self.gain_av,
             self.bin_v,
             self.night_v,

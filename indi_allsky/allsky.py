@@ -142,12 +142,15 @@ class IndiAllSky(object):
         # 8-9 reserved for future use
         self.sensors_user_av = Array('f', [0.0 for x in range(60)])
 
+
         self.exposure_av = Array('f', [
             -1.0,  # current exposure - these must be -1.0 to indicate unset
+            -1.0,  # next exposure
             -1.0,  # night minimum
             -1.0,  # day minimum
             -1.0,  # maximum
         ])
+
 
         self.gain_av = Array('f', [
             -1.0,  # current gain
@@ -156,6 +159,7 @@ class IndiAllSky(object):
             -1.0,  # night maximum
             -1.0,  # moon mode maximum
         ])
+
 
         self.bin_v = Value('i', 1)  # set 1 for sane default
 
