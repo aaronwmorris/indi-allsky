@@ -149,7 +149,12 @@ class IndiAllSky(object):
             -1.0,  # maximum
         ])
 
-        self.gain_v = Value('f', -1.0)  # value set in CCD config
+        self.gain_av = Array('f', [
+            -1.0,  # value set in CCD config
+            -1.0,  # night maximum
+            -1.0,  # day maximum, night minimum
+        ])
+
         self.bin_v = Value('i', 1)  # set 1 for sane default
 
 
@@ -375,7 +380,7 @@ class IndiAllSky(object):
             self.upload_q,
             self.position_av,
             self.exposure_av,
-            self.gain_v,
+            self.gain_av,
             self.bin_v,
             self.sensors_temp_av,
             self.sensors_user_av,
@@ -428,7 +433,7 @@ class IndiAllSky(object):
             self.upload_q,
             self.position_av,
             self.exposure_av,
-            self.gain_v,
+            self.gain_av,
             self.bin_v,
             self.sensors_temp_av,
             self.sensors_user_av,

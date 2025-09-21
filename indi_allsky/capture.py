@@ -201,7 +201,7 @@ class CaptureWorker(Process):
         upload_q,
         position_av,
         exposure_av,
-        gain_v,
+        gain_av,
         bin_v,
         sensors_temp_av,
         sensors_user_av,
@@ -224,7 +224,8 @@ class CaptureWorker(Process):
 
         self.exposure_av = exposure_av  # current, min night, min day, max
 
-        self.gain_v = gain_v
+        self.gain_av = gain_av  # current, max night, max day
+
         self.bin_v = bin_v
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
@@ -741,7 +742,7 @@ class CaptureWorker(Process):
             self.config,
             self.image_q,
             self.position_av,
-            self.gain_v,
+            self.gain_av,
             self.bin_v,
             self.night_v,
         )
@@ -1417,7 +1418,7 @@ class CaptureWorker(Process):
 
         # Communicate sensor values as environment variables
         cmd_env = {
-            'GAIN'     : '{0:0.2f}'.format(self.gain_v.value),
+            'GAIN'     : '{0:0.2f}'.format(self.gain_av[0]),
             'BIN'      : '{0:d}'.format(self.bin_v.value),
             'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
             'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
@@ -1912,7 +1913,7 @@ class CaptureWorker(Process):
 
 
     def shoot(self, exposure, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, self.gain_v.value)
+        logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, self.gain_av[0])
 
         self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
 

@@ -91,7 +91,7 @@ class IndiClientIndiAccumulator(IndiClient):
         self.current_sub_exposure_count = 0  # reset
 
         self.exposure = exposure
-        self.gain = self.gain_v.value
+        self.gain = float(self.gain_av[0])
         self.exposure_remain = float(exposure)
 
 

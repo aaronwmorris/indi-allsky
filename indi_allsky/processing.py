@@ -100,7 +100,7 @@ class ImageProcessor(object):
         self,
         config,
         position_av,
-        gain_v,
+        gain_av,
         bin_v,
         sensors_temp_av,
         sensors_user_av,
@@ -111,7 +111,7 @@ class ImageProcessor(object):
 
         self.position_av = position_av  # lat, long, elev, ra, dec
 
-        self.gain_v = gain_v
+        self.gain_av = gain_av
         self.bin_v = bin_v
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp

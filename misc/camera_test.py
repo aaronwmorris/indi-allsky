@@ -73,7 +73,7 @@ class CameraTest(object):
 
         self.night_v = Value('i', -1)  # bogus initial value
         self.moonmode_v = Value('i', -1)  # bogus initial value
-        self.gain_v = Value('f', -1.0)  # value set in CCD config
+        self.gain_av = Array('f', [-1.0])  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.position_av = Array('f', [
             float(self.config['LOCATION_LATITUDE']),
@@ -169,7 +169,7 @@ class CameraTest(object):
 
 
     def shoot(self, exposure, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure (gain %0.1f)', exposure, self.gain_v.value)
+        logger.info('Taking %0.8f s exposure (gain %0.1f)', exposure, self.gain_av[0])
 
         self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
 
@@ -227,7 +227,7 @@ class CameraTest(object):
             self.config,
             self.image_q,
             self.position_av,
-            self.gain_v,
+            self.gain_av,
             self.bin_v,
             self.night_v,
         )

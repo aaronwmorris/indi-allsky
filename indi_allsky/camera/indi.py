@@ -93,7 +93,7 @@ class IndiClient(PyIndi.BaseClient):
         config,
         image_q,
         position_av,
-        gain_v,
+        gain_av,
         bin_v,
         night_v,
     ):
@@ -104,7 +104,7 @@ class IndiClient(PyIndi.BaseClient):
 
         self.position_av = position_av
 
-        self.gain_v = gain_v
+        self.gain_av = gain_av
         self.bin_v = bin_v
 
         self.night_v = night_v
@@ -982,7 +982,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
         self.exposure = exposure
-        self.gain = self.gain_v.value
+        self.gain = float(self.gain_av[0])
 
 
         self.exposureStartTime = time.time()
@@ -1265,8 +1265,8 @@ class IndiClient(PyIndi.BaseClient):
 
 
         # Update shared gain value
-        with self.gain_v.get_lock():
-            self.gain_v.value = float(gain_value_i)
+        with self.gain_av.get_lock():
+            self.gain_av[0] = float(gain_value_i)
 
 
     def setCcdBinning(self, bin_value):

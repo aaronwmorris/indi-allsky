@@ -75,7 +75,7 @@ class ImageWorker(Process):
         upload_q,
         position_av,
         exposure_av,
-        gain_v,
+        gain_av,
         bin_v,
         sensors_temp_av,
         sensors_user_av,
@@ -95,7 +95,7 @@ class ImageWorker(Process):
         self.position_av = position_av  # lat, long, elev, ra, dec
 
         self.exposure_av = exposure_av  # current, min night, min day, max
-        self.gain_v = gain_v
+        self.gain_av = gain_av
         self.bin_v = bin_v
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av
@@ -123,7 +123,7 @@ class ImageWorker(Process):
         self.image_processor = ImageProcessor(
             self.config,
             self.position_av,
-            self.gain_v,
+            self.gain_av,
             self.bin_v,
             self.sensors_temp_av,
             self.sensors_user_av,

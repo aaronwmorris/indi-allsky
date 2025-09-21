@@ -76,13 +76,13 @@ class IndiClientTestCameraBase(IndiClient):
 
 
     def getCcdGain(self):
-        return self.gain_v.value
+        return float(self.gain_av[0])
 
 
     def setCcdGain(self, new_gain_value):
         # Update shared gain value
-        with self.gain_v.get_lock():
-            self.gain_v.value = float(new_gain_value)
+        with self.gain_av.get_lock():
+            self.gain_av[0] = float(new_gain_value)
 
 
     def setCcdBinning(self, bin_value):
@@ -102,7 +102,7 @@ class IndiClientTestCameraBase(IndiClient):
 
 
         self.exposure = exposure
-        self.gain = float(self.gain_v.value)
+        self.gain = float(self.gain_av[0])
 
 
         self.active_exposure = True

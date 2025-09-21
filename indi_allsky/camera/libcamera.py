@@ -101,13 +101,13 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
     def getCcdGain(self):
-        return self.gain_v.value
+        return float(self.gain_av[0])
 
 
     def setCcdGain(self, new_gain_value):
         # Update shared gain value
-        with self.gain_v.get_lock():
-            self.gain_v.value = float(new_gain_value)
+        with self.gain_av.get_lock():
+            self.gain_av[0] = float(new_gain_value)
 
 
     def setCcdBinning(self, bin_value):
@@ -175,7 +175,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         self.exposure = exposure
-        self.gain = float(self.gain_v.value)
+        self.gain = float(self.gain_av[0])
 
 
         exposure_us = int(exposure * 1000000)
@@ -187,7 +187,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
                 '--denoise', 'off',
-                '--gain', '{0:0.2f}'.format(self.gain_v.value),
+                '--gain', '{0:0.2f}'.format(self.gain_av[0]),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
@@ -200,7 +200,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
-                '--gain', '{0:0.2f}'.format(self.gain_v.value),
+                '--gain', '{0:0.2f}'.format(self.gain_av[0]),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',

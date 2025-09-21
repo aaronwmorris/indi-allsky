@@ -93,7 +93,7 @@ class IndiAllSkyDarks(object):
         self.indi_config = self.config.get('INDI_CONFIG_DEFAULTS', {})
 
         self.exposure_av = Array('f', [-1.0])
-        self.gain_v = Value('f', -1.0)  # value set in CCD config
+        self.gain_av = Array('f', [-1.0])  # value set in CCD config
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.sensors_temp_av = Array('f', [0.0])  # 0 ccd_temp
 
@@ -207,7 +207,7 @@ class IndiAllSkyDarks(object):
             self.config,
             self.image_q,
             self.position_av,
-            self.gain_v,
+            self.gain_av,
             self.bin_v,
             self.night_v,
         )
@@ -353,7 +353,7 @@ class IndiAllSkyDarks(object):
 
 
     def shoot(self, exposure, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, self.gain_v.value)
+        logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, self.gain_av[0])
 
         self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
 
@@ -455,7 +455,7 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['EXPTIME'] = float(exposure)
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
-            hdulist[0].header['GAIN'] = float(self.gain_v.value)
+            hdulist[0].header['GAIN'] = float(self.gain_av[0])
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
             #hdulist[0].header['BITPIX'] = 8
         elif filename_p.suffix in ['.png']:
@@ -490,7 +490,7 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['EXPTIME'] = float(exposure)
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
-            hdulist[0].header['GAIN'] = float(self.gain_v.value)
+            hdulist[0].header['GAIN'] = float(self.gain_av[0])
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
             #hdulist[0].header['BITPIX'] = 8
         elif filename_p.suffix in ['.dng']:
@@ -518,7 +518,7 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['EXPTIME'] = float(exposure)
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
-            hdulist[0].header['GAIN'] = float(self.gain_v.value)
+            hdulist[0].header['GAIN'] = float(self.gain_av[0])
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
             #hdulist[0].header['BITPIX'] = 16
 
@@ -1067,7 +1067,7 @@ class IndiAllSkyDarks(object):
             self.camera_id,
             image_bitpix,
             int(exposure),
-            int(self.gain_v.value),  # filename gain as int
+            int(self.gain_av[0]),  # filename gain as int
             self.bin_v.value,
             int(self.sensors_temp_av[0]),
             date_str,
@@ -1076,7 +1076,7 @@ class IndiAllSkyDarks(object):
             self.camera_id,
             image_bitpix,
             int(exposure),
-            int(self.gain_v.value),  # filename gain as int
+            int(self.gain_av[0]),  # filename gain as int
             self.bin_v.value,
             int(self.sensors_temp_av[0]),
             date_str,
@@ -1086,7 +1086,7 @@ class IndiAllSkyDarks(object):
         full_bpm_filename_p = self.darks_dir.joinpath(bpm_filename)
 
 
-        s = stacking_class(self.gain_v, self.bin_v)
+        s = stacking_class(self.gain_av, self.bin_v)
         s.bitmax = self.bitmax
         s.hotpixel_adu_percent = self.hotpixel_adu_percent
 
@@ -1101,9 +1101,9 @@ class IndiAllSkyDarks(object):
             'createDate' : exp_date.timestamp(),
             'bitdepth'   : image_bitpix,
             'exposure'   : exposure_f,
-            'gain'       : self.gain_v.value,
-            'binmode'    : self.bin_v.value,
-            'temp'       : self.sensors_temp_av[0],
+            'gain'       : float(self.gain_av[0]),
+            'binmode'    : int(self.bin_v.value),
+            'temp'       : float(self.sensors_temp_av[0]),
             'adu'        : bpm_adu_avg,
             'height'     : image_height,
             'width'      : image_width,
@@ -1120,9 +1120,9 @@ class IndiAllSkyDarks(object):
             'createDate' : exp_date.timestamp(),
             'bitdepth'   : image_bitpix,
             'exposure'   : exposure_f,
-            'gain'       : self.gain_v.value,
-            'binmode'    : self.bin_v.value,
-            'temp'       : self.sensors_temp_av[0],
+            'gain'       : float(self.gain_av[0]),
+            'binmode'    : int(self.bin_v.value),
+            'temp'       : float(self.sensors_temp_av[0]),
             'adu'        : dark_adu_avg,
             'height'     : image_height,
             'width'      : image_width,
@@ -1342,8 +1342,8 @@ class IndiAllSkyDarks(object):
 
 
 class IndiAllSkyDarksProcessor(object):
-    def __init__(self, gain_v, bin_v):
-        self.gain_v = gain_v
+    def __init__(self, gain_av, bin_v):
+        self.gain_av = gain_av
         self.bin_v = bin_v
 
         self._hotpixel_adu_percent = 90
@@ -1380,7 +1380,7 @@ class IndiAllSkyDarksProcessor(object):
     def buildBadPixelMap(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         from astropy.io import fits
 
-        logger.info('Building bad pixel map for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_v.value, self.bin_v.value)
+        logger.info('Building bad pixel map for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_av[0], self.bin_v.value)
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
@@ -1474,7 +1474,7 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
     def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         from astropy.io import fits
 
-        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_v.value, self.bin_v.value)
+        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_av[0], self.bin_v.value)
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
@@ -1563,7 +1563,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
         from astropy.stats import mad_std
         import ccdproc
 
-        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_v.value, self.bin_v.value)
+        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_av[0], self.bin_v.value)
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
