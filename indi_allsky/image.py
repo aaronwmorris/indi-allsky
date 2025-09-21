@@ -335,9 +335,7 @@ class ImageWorker(Process):
                 self.adsb_worker_idx,
                 self.config,
                 self.adsb_aircraft_q,
-                self.position_av[0],  # lat
-                self.position_av[1],  # long
-                self.position_av[2],  # elev
+                self.position_av,
             )
             self.adsb_worker.start()
 
@@ -797,9 +795,9 @@ class ImageWorker(Process):
                 'sqm'      : round(i_ref.sqm_value, 1),
                 'stars'    : len(i_ref.stars),
                 'detections' : len(i_ref.lines),
-                'latitude' : round(self.position_av[0], 3),
-                'longitude': round(self.position_av[1], 3),
-                'elevation': int(self.position_av[2]),
+                'latitude' : round(self.position_av[constants.POSITION_LATITUDE], 3),
+                'longitude': round(self.position_av[constants.POSITION_LONGITUDE], 3),
+                'elevation': int(self.position_av[constants.POSITION_ELEVATION]),
                 'smoke_rating'  : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
                 'aircraft'      : len(self.adsb_aircraft_list),
                 'sidereal_time' : self.image_processor.astrometric_data['sidereal_time'],
@@ -989,9 +987,9 @@ class ImageWorker(Process):
             'utc_offset'          : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'sqm_data'            : self.getSqmData(i_ref.camera_id),
             'stars_data'          : self.getStarsData(i_ref.camera_id),
-            'latitude'            : self.position_av[0],
-            'longitude'           : self.position_av[1],
-            'elevation'           : int(self.position_av[2]),
+            'latitude'            : self.position_av[constants.POSITION_LATITUDE],
+            'longitude'           : self.position_av[constants.POSITION_LONGITUDE],
+            'elevation'           : int(self.position_av[constants.POSITION_ELEVATION]),
             'sidereal_time'       : self.image_processor.astrometric_data['sidereal_time'],
             'kpindex'             : i_ref.kpindex,
             'aurora_mag_bt'       : i_ref.aurora_mag_bt,
@@ -1535,9 +1533,9 @@ class ImageWorker(Process):
             'sqm'                 : i_ref.sqm_value,
             'stars'               : len(i_ref.stars),
             'time'                : i_ref.exp_date.strftime('%s'),
-            'latitude'            : self.position_av[0],
-            'longitude'           : self.position_av[1],
-            'elevation'           : int(self.position_av[2]),
+            'latitude'            : self.position_av[constants.POSITION_LATITUDE],
+            'longitude'           : self.position_av[constants.POSITION_LONGITUDE],
+            'elevation'           : int(self.position_av[constants.POSITION_ELEVATION]),
             'kpindex'             : i_ref.kpindex,
             'ovation_max'         : int(i_ref.ovation_max),
             'aurora_mag_bt'       : i_ref.aurora_mag_bt,
@@ -2005,9 +2003,9 @@ class ImageWorker(Process):
             'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),
             'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
             'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
-            'LATITUDE' : '{0:0.3f}'.format(self.position_av[0]),
-            'LONGITUDE': '{0:0.3f}'.format(self.position_av[1]),
-            'ELEVATION': '{0:d}'.format(int(self.position_av[2])),
+            'LATITUDE' : '{0:0.3f}'.format(self.position_av[constants.POSITION_LATITUDE]),
+            'LONGITUDE': '{0:0.3f}'.format(self.position_av[constants.POSITION_LONGITUDE]),
+            'ELEVATION': '{0:d}'.format(int(self.position_av[constants.POSITION_ELEVATION])),
         }
 
 
@@ -2076,9 +2074,9 @@ class ImageWorker(Process):
             'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),
             'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
             'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
-            'LATITUDE' : '{0:0.3f}'.format(self.position_av[0]),
-            'LONGITUDE': '{0:0.3f}'.format(self.position_av[1]),
-            'ELEVATION': '{0:d}'.format(int(self.position_av[2])),
+            'LATITUDE' : '{0:0.3f}'.format(self.position_av[constants.POSITION_LATITUDE]),
+            'LONGITUDE': '{0:0.3f}'.format(self.position_av[constants.POSITION_LONGITUDE]),
+            'ELEVATION': '{0:d}'.format(int(self.position_av[constants.POSITION_ELEVATION])),
         }
 
 

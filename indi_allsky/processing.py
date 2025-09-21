@@ -466,10 +466,10 @@ class ImageProcessor(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(gain)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['SITELAT'] = self.position_av[0]
-            hdulist[0].header['SITELONG'] = self.position_av[1]
-            hdulist[0].header['RA'] = self.position_av[3]
-            hdulist[0].header['DEC'] = self.position_av[4]
+            hdulist[0].header['SITELAT'] = self.position_av[constants.POSITION_LATITUDE]
+            hdulist[0].header['SITELONG'] = self.position_av[constants.POSITION_LONGITUDE]
+            hdulist[0].header['RA'] = self.position_av[constants.POSITION_RA]
+            hdulist[0].header['DEC'] = self.position_av[constants.POSITION_DEC]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
             #hdulist[0].header['BITPIX'] = 8
 
@@ -521,10 +521,10 @@ class ImageProcessor(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(gain)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['SITELAT'] = self.position_av[0]
-            hdulist[0].header['SITELONG'] = self.position_av[1]
-            hdulist[0].header['RA'] = self.position_av[3]
-            hdulist[0].header['DEC'] = self.position_av[4]
+            hdulist[0].header['SITELAT'] = self.position_av[constants.POSITION_LATITUDE]
+            hdulist[0].header['SITELONG'] = self.position_av[constants.POSITION_LONGITUDE]
+            hdulist[0].header['RA'] = self.position_av[constants.POSITION_RA]
+            hdulist[0].header['DEC'] = self.position_av[constants.POSITION_DEC]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
             #hdulist[0].header['BITPIX'] = 8
 
@@ -566,10 +566,10 @@ class ImageProcessor(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(gain)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['SITELAT'] = self.position_av[0]
-            hdulist[0].header['SITELONG'] = self.position_av[1]
-            hdulist[0].header['RA'] = self.position_av[3]
-            hdulist[0].header['DEC'] = self.position_av[4]
+            hdulist[0].header['SITELAT'] = self.position_av[constants.POSITION_LATITUDE]
+            hdulist[0].header['SITELONG'] = self.position_av[constants.POSITION_LONGITUDE]
+            hdulist[0].header['RA'] = self.position_av[constants.POSITION_RA]
+            hdulist[0].header['DEC'] = self.position_av[constants.POSITION_DEC]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
             #hdulist[0].header['BITPIX'] = 16
 
@@ -2051,9 +2051,9 @@ class ImageProcessor(object):
         #utcnow = now.astimezone(timezone.utc) - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.position_av[1])
-        obs.lat = math.radians(self.position_av[0])
-        obs.elevation = self.position_av[2]
+        obs.lon = math.radians(self.position_av[constants.POSITION_LONGITUDE])
+        obs.lat = math.radians(self.position_av[constants.POSITION_LATITUDE])
+        obs.elevation = self.position_av[constants.POSITION_ELEVATION]
 
 
         # disable atmospheric refraction calcs
@@ -2482,9 +2482,9 @@ class ImageProcessor(object):
             'tiangong_up'       : self.astrometric_data['tiangong_up'],
             'tiangong_next_h'   : self.astrometric_data['tiangong_next_h'],
             'tiangong_next_alt' : self.astrometric_data['tiangong_next_alt'],
-            'latitude'     : self.position_av[0],
-            'longitude'    : self.position_av[1],
-            'elevation'    : int(self.position_av[2]),
+            'latitude'     : self.position_av[constants.POSITION_LATITUDE],
+            'longitude'    : self.position_av[constants.POSITION_LONGITUDE],
+            'elevation'    : int(self.position_av[constants.POSITION_ELEVATION]),
             'sidereal_time'        : self.astrometric_data['sidereal_time'],
             'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
             'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),
@@ -2700,9 +2700,9 @@ class ImageProcessor(object):
         #utcnow = datetime.now(tz=timezone.utc) - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.position_av[1])
-        obs.lat = math.radians(self.position_av[0])
-        obs.elevation = self.position_av[2]
+        obs.lon = math.radians(self.position_av[constants.POSITION_LONGITUDE])
+        obs.lat = math.radians(self.position_av[constants.POSITION_LATITUDE])
+        obs.elevation = self.position_av[constants.POSITION_ELEVATION]
 
 
         # disable atmospheric refraction calcs
@@ -3011,9 +3011,9 @@ class ImageProcessor(object):
         #utcnow = datetime.now(tz=timezone.utc) - timedelta(hours=13)  # testing
 
         obs = ephem.Observer()
-        obs.lon = math.radians(self.position_av[1])
-        obs.lat = math.radians(self.position_av[0])
-        obs.elevation = self.position_av[2]
+        obs.lon = math.radians(self.position_av[constants.POSITION_LONGITUDE])
+        obs.lat = math.radians(self.position_av[constants.POSITION_LATITUDE])
+        obs.elevation = self.position_av[constants.POSITION_ELEVATION]
 
 
         # disable atmospheric refraction calcs

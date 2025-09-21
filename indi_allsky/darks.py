@@ -292,9 +292,9 @@ class IndiAllSkyDarks(object):
             'cfa'         : constants.CFA_STR_MAP[cfa_pattern],
 
             'location'    : self.config['LOCATION_NAME'],
-            'latitude'    : self.position_av[0],
-            'longitude'   : self.position_av[1],
-            'elevation'   : int(self.position_av[2]),
+            'latitude'    : self.position_av[constants.POSITION_LATITUDE],
+            'longitude'   : self.position_av[constants.POSITION_LONGITUDE],
+            'elevation'   : int(self.position_av[constants.POSITION_ELEVATION]),
 
             'owner'           : self.config['OWNER'],
             'lensName'        : self.config['LENS_NAME'],

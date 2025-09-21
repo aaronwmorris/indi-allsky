@@ -863,8 +863,8 @@ class CaptureWorker(Process):
                 },
                 'PROPERTIES' : {
                     'GEOGRAPHIC_COORD' : {
-                        'LAT' : self.position_av[0],
-                        'LONG' : self.position_av[1],
+                        'LAT' : float(self.position_av[constants.POSITION_LATITUDE]),
+                        'LONG' : float(self.position_av[constants.POSITION_LONGITUDE]),
                     },
                 },
             }
@@ -938,9 +938,9 @@ class CaptureWorker(Process):
             'cfa'         : constants.CFA_STR_MAP[cfa_pattern],
 
             'location'    : self.config['LOCATION_NAME'],
-            'latitude'    : self.position_av[0],
-            'longitude'   : self.position_av[1],
-            'elevation'   : int(self.position_av[2]),
+            'latitude'    : float(self.position_av[constants.POSITION_LATITUDE]),
+            'longitude'   : float(self.position_av[constants.POSITION_LONGITUDE]),
+            'elevation'   : int(self.position_av[constants.POSITION_ELEVATION]),
 
             'tz'          : str(now.astimezone().tzinfo),
             'utc_offset'  : now.astimezone().utcoffset().total_seconds(),
@@ -1436,9 +1436,9 @@ class CaptureWorker(Process):
             'BIN'      : '{0:d}'.format(self.bin_v.value),
             'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
             'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
-            'LATITUDE' : '{0:0.3f}'.format(self.position_av[0]),
-            'LONGITUDE': '{0:0.3f}'.format(self.position_av[1]),
-            'ELEVATION': '{0:d}'.format(int(self.position_av[2])),
+            'LATITUDE' : '{0:0.3f}'.format(self.position_av[constants.POSITION_LATITUDE]),
+            'LONGITUDE': '{0:0.3f}'.format(self.position_av[constants.POSITION_LONGITUDE]),
+            'ELEVATION': '{0:d}'.format(int(self.position_av[constants.POSITION_ELEVATION])),
         }
 
 
@@ -1535,13 +1535,13 @@ class CaptureWorker(Process):
 
 
         # need 1/10 degree difference before updating location
-        if abs(gps_lat - self.position_av[0]) > 0.1:
+        if abs(gps_lat - self.position_av[constants.POSITION_LATITUDE]) > 0.1:
             self.updateConfigLocation(gps_lat, gps_long, gps_elev)
             update_position = True
-        elif abs(gps_long - self.position_av[1]) > 0.1:
+        elif abs(gps_long - self.position_av[constants.POSITION_LONGITUDE]) > 0.1:
             self.updateConfigLocation(gps_lat, gps_long, gps_elev)
             update_position = True
-        elif abs(gps_elev - self.position_av[2]) > 30:
+        elif abs(gps_elev - self.position_av[constants.POSITION_ELEVATION]) > 30:
             self.updateConfigLocation(gps_lat, gps_long, gps_elev)
             update_position = True
 
@@ -1549,9 +1549,9 @@ class CaptureWorker(Process):
         if update_position:
             # Update shared values
             with self.position_av.get_lock():
-                self.position_av[0] = float(gps_lat)
-                self.position_av[1] = float(gps_long)
-                self.position_av[2] = float(gps_elev)
+                self.position_av[constants.POSITION_LATITUDE] = float(gps_lat)
+                self.position_av[constants.POSITION_LONGITUDE] = float(gps_long)
+                self.position_av[constants.POSITION_ELEVATION] = float(gps_elev)
 
 
             self.reparkTelescope()
@@ -1577,8 +1577,8 @@ class CaptureWorker(Process):
 
         # Update shared values
         with self.position_av.get_lock():
-            self.position_av[3] = ra
-            self.position_av[4] = dec
+            self.position_av[constants.POSITION_RA] = float(ra)
+            self.position_av[constants.POSITION_DEC] = float(dec)
 
 
         return ra, dec
@@ -1614,7 +1614,7 @@ class CaptureWorker(Process):
             return
 
         self.indiclient.unparkTelescope()
-        self.indiclient.setTelescopeParkPosition(0.0, self.position_av[0])
+        self.indiclient.setTelescopeParkPosition(0.0, self.position_av[constants.POSITION_LATITUDE])
         self.indiclient.parkTelescope()
 
 
@@ -1711,9 +1711,9 @@ class CaptureWorker(Process):
 
     def detectNight(self):
         obs = ephem.Observer()
-        obs.lon = math.radians(self.position_av[1])
-        obs.lat = math.radians(self.position_av[0])
-        obs.elevation = self.position_av[2]
+        obs.lon = math.radians(self.position_av[constants.POSITION_LONGITUDE])
+        obs.lat = math.radians(self.position_av[constants.POSITION_LATITUDE])
+        obs.elevation = self.position_av[constants.POSITION_ELEVATION]
 
         # disable atmospheric refraction calcs
         obs.pressure = 0

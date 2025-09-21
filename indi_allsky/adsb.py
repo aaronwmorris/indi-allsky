@@ -10,6 +10,8 @@ import json
 import requests
 import logging
 
+from . import constants
+
 from threading import Thread
 
 requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
@@ -28,9 +30,7 @@ class AdsbAircraftHttpWorker(Thread):
         idx,
         config,
         adsb_aircraft_q,
-        latitude,
-        longitude,
-        elevation,
+        position_av,
     ):
         super(AdsbAircraftHttpWorker, self).__init__()
 
@@ -39,9 +39,7 @@ class AdsbAircraftHttpWorker(Thread):
         self.config = config
         self.adsb_aircraft_q = adsb_aircraft_q
 
-        self.latitude = latitude
-        self.longitude = longitude
-        self.elevation = elevation
+        self.position_av = position_av
 
 
     def run(self):
@@ -190,7 +188,7 @@ class AdsbAircraftHttpWorker(Thread):
 
 
             # "great circle" distance
-            aircraft_distance_m = self.haversine(self.longitude, self.latitude, aircraft_lon, aircraft_lat)
+            aircraft_distance_m = self.haversine(self.position_av[constants.POSITION_LONGITUDE], self.position_av[constants.POSITION_LATITUDE], aircraft_lon, aircraft_lat)
 
             # calculate dropoff of earths curvature
             elevation_dropoff_m = self.dropoff(aircraft_distance_m)
@@ -209,13 +207,13 @@ class AdsbAircraftHttpWorker(Thread):
             aircraft_alt = math.degrees(math.atan(aircraft_elevation_m_rel / aircraft_distance_m))  # not offsetting by local elevation
 
 
-            lat_dist_m = self.haversine(self.longitude, self.latitude, self.longitude, aircraft_lat)
-            long_dist_m = self.haversine(self.longitude, self.latitude, aircraft_lon, self.latitude)
+            lat_dist_m = self.haversine(self.position_av[constants.POSITION_LONGITUDE], self.position_av[constants.POSITION_LATITUDE], self.position_av[constants.POSITION_LONGITUDE], aircraft_lat)
+            long_dist_m = self.haversine(self.position_av[constants.POSITION_LONGITUDE], self.position_av[constants.POSITION_LATITUDE], aircraft_lon, self.position_av[constants.POSITION_LATITUDE])
 
-            if self.latitude > aircraft_lat:
+            if self.position_av[constants.POSITION_LATITUDE] > aircraft_lat:
                 lat_dist_m *= -1
 
-            if self.longitude > aircraft_lon:
+            if self.position_av[constants.POSITION_LONGITUDE] > aircraft_lon:
                 long_dist_m *= -1
 
 

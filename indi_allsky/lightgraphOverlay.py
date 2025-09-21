@@ -11,6 +11,7 @@ from PIL import ImageFont
 from PIL import ImageDraw
 import logging
 
+from . import constants
 
 logger = logging.getLogger('indi_allsky')
 
@@ -219,8 +220,8 @@ class IndiAllSkyLightgraphOverlay(object):
 
 
         obs = ephem.Observer()
-        obs.lat = math.radians(self.position_av[0])
-        obs.lon = math.radians(self.position_av[1])
+        obs.lat = math.radians(self.position_av[constants.POSITION_LATITUDE])
+        obs.lon = math.radians(self.position_av[constants.POSITION_LONGITUDE])
 
         # disable atmospheric refraction calcs
         obs.pressure = 0
