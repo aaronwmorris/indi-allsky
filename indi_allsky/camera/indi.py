@@ -20,6 +20,8 @@ from ..flask import create_app
 #from ..flask.models import TaskQueueState
 #from ..flask.models import IndiAllSkyDbTaskQueueTable
 
+from .. import constants
+
 from ..exceptions import TimeOutException
 from ..exceptions import CameraException
 
@@ -982,7 +984,7 @@ class IndiClient(PyIndi.BaseClient):
 
 
         self.exposure = exposure
-        self.gain = float(self.gain_av[0])
+        self.gain = float(self.gain_av[constants.GAIN_CURRENT])
 
 
         self.exposureStartTime = time.time()
@@ -1266,7 +1268,7 @@ class IndiClient(PyIndi.BaseClient):
 
         # Update shared gain value
         with self.gain_av.get_lock():
-            self.gain_av[0] = float(gain_value_i)
+            self.gain_av[constants.GAIN_CURRENT] = float(gain_value_i)
 
 
     def setCcdBinning(self, bin_value):

@@ -224,7 +224,7 @@ class CaptureWorker(Process):
 
         self.exposure_av = exposure_av  # current, min night, min day, max
 
-        self.gain_av = gain_av  # current, min, max night, max moon mode
+        self.gain_av = gain_av  # current, next, min, max night, max moon mode
 
         self.bin_v = bin_v
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
@@ -1188,9 +1188,9 @@ class CaptureWorker(Process):
 
 
         with self.gain_av.get_lock():
-            self.gain_av[1] = gain_day
-            self.gain_av[2] = gain_night
-            self.gain_av[3] = gain_moonmode
+            self.gain_av[constants.GAIN_MIN] = gain_day
+            self.gain_av[constants.GAIN_MAX_NIGHT] = gain_night
+            self.gain_av[constants.GAIN_MAX_MOONMODE] = gain_moonmode
 
 
     def _sync_camera(self, camera, camera_metadata):
@@ -1432,7 +1432,7 @@ class CaptureWorker(Process):
 
         # Communicate sensor values as environment variables
         cmd_env = {
-            'GAIN'     : '{0:0.2f}'.format(self.gain_av[0]),
+            'GAIN'     : '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
             'BIN'      : '{0:d}'.format(self.bin_v.value),
             'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
             'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
@@ -1643,11 +1643,11 @@ class CaptureWorker(Process):
 
             if self.moonmode:
                 logger.warning('Change to night (moon mode)')
-                self.indiclient.setCcdGain(self.gain_av[3])
+                self.indiclient.setCcdGain(self.gain_av[constants.GAIN_MAX_MOONMODE])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
             else:
                 logger.warning('Change to night (normal mode)')
-                self.indiclient.setCcdGain(self.gain_av[2])
+                self.indiclient.setCcdGain(self.gain_av[constants.GAIN_MAX_NIGHT])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
 
@@ -1684,7 +1684,7 @@ class CaptureWorker(Process):
                 self.indiclient.disableCcdCooler()
 
 
-            self.indiclient.setCcdGain(self.gain_av[1])
+            self.indiclient.setCcdGain(self.gain_av[constants.GAIN_MIN])
             self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 
@@ -1927,7 +1927,7 @@ class CaptureWorker(Process):
 
 
     def shoot(self, exposure, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, self.gain_av[0])
+        logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, self.gain_av[constants.GAIN_CURRENT])
 
         self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
 

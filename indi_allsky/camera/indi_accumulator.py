@@ -13,6 +13,8 @@ import PyIndi
 
 from .indi import IndiClient
 
+from .. import constants
+
 from ..exceptions import TimeOutException
 
 
@@ -91,7 +93,7 @@ class IndiClientIndiAccumulator(IndiClient):
         self.current_sub_exposure_count = 0  # reset
 
         self.exposure = exposure
-        self.gain = float(self.gain_av[0])
+        self.gain = float(self.gain_av[constants.GAIN_CURRENT])
         self.exposure_remain = float(exposure)
 
 

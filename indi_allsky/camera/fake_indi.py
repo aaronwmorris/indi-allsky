@@ -1,5 +1,7 @@
 import logging
 
+from .. import constants
+
 logger = logging.getLogger('indi_allsky')
 
 
@@ -369,7 +371,7 @@ class FakeIndiClient(object):
 
         # Update shared gain value
         with self.gain_av.get_lock():
-            self.gain_av[0] = float(new_gain_value)
+            self.gain_av[constants.GAIN_CURRENT] = float(new_gain_value)
 
 
     def setCcdBinning(self, bin_value):

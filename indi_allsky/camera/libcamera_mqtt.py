@@ -7,6 +7,8 @@ import logging
 
 from .libcamera import IndiClientLibCameraGeneric
 
+from .. import constants
+
 from ..exceptions import BinModeException
 
 
@@ -144,7 +146,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         self.exposure = exposure
-        self.gain = float(self.gain_av[0])
+        self.gain = float(self.gain_av[constants.GAIN_CURRENT])
 
 
         exposure_us = int(exposure * 1000000)
@@ -156,7 +158,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
                 '--denoise', 'off',
-                '--gain', '{0:0.2f}'.format(self.gain_av[0]),
+                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', '{metadata:s}',
                 '--metadata-format', 'json',
@@ -169,7 +171,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
-                '--gain', '{0:0.2f}'.format(self.gain_av[0]),
+                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', '{metadata:s}',
                 '--metadata-format', 'json',

@@ -4,6 +4,8 @@ import logging
 
 from .indi import IndiClient
 
+from .. import constants
+
 #from ..flask import db
 from ..flask import create_app
 
@@ -84,7 +86,7 @@ class IndiClientPassive(IndiClient):
         self.exposureStartTime = time.time()
 
         self.exposure = exposure
-        self.gain = float(self.gain_av[0])
+        self.gain = float(self.gain_av[constants.GAIN_CURRENT])
 
         ctl_ccd_exposure = self.get_control(self.ccd_device, 'CCD_EXPOSURE', 'number')
 
@@ -104,7 +106,7 @@ class IndiClientPassive(IndiClient):
     def setCcdGain(self, gain_value):
         # Update shared gain value
         with self.gain_av.get_lock():
-            self.gain_av[0] = float(int(gain_value))
+            self.gain_av[constants.GAIN_CURRENT] = float(int(gain_value))
 
 
     def setCcdBinning(self, bin_value):
