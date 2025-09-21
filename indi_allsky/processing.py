@@ -111,7 +111,7 @@ class ImageProcessor(object):
 
         self.position_av = position_av  # lat, long, elev, ra, dec
 
-        self.gain_av = gain_av
+        self.gain_av = gain_av  # only use index 0 in this class
         self.bin_v = bin_v
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
