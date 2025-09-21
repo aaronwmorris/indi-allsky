@@ -377,11 +377,11 @@ class CameraTest(object):
 
             if self.moonmode:
                 logger.warning('Change to night (moon mode)')
-                self.indiclient.setCcdGain(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
+                self.indiclient.setCcdGain(self.gain_av[3])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
             else:
                 logger.warning('Change to night (normal mode)')
-                self.indiclient.setCcdGain(self.config['CCD_CONFIG']['NIGHT']['GAIN'])
+                self.indiclient.setCcdGain(self.gain_av[2])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
 
@@ -399,7 +399,7 @@ class CameraTest(object):
             else:
                 self.indi_config = self.config['INDI_CONFIG_DEFAULTS']
 
-            self.indiclient.setCcdGain(self.config['CCD_CONFIG']['DAY']['GAIN'])
+            self.indiclient.setCcdGain(self.gain_av[1])
             self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 
