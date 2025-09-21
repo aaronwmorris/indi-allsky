@@ -161,7 +161,7 @@ class ImageProcessor(object):
             self._stretch = None
 
 
-        self._sqm = IndiAllskySqm(self.config, self.bin_v, mask=None)
+        self._sqm = IndiAllskySqm(self.config, self.gain_av, self.bin_v, mask=None)
         self._stars_detect = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
         self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)

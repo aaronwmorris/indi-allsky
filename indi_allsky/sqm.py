@@ -8,8 +8,15 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllskySqm(object):
 
-    def __init__(self, config, bin_v, mask=None):
+    def __init__(
+        self,
+        config,
+        gain_av,
+        bin_v,
+        mask=None,
+    ):
         self.config = config
+        self.gain_av = gain_av
         self.bin_v = bin_v
 
         # both masks will be combined
@@ -36,7 +43,7 @@ class IndiAllskySqm(object):
         sqm_avg = cv2.mean(src=img_gray, mask=self._sqm_mask)[0]
 
         # offset the sqm based on the exposure and gain
-        weighted_sqm_avg = (((self.config['CCD_EXPOSURE_MAX'] - exposure) / 10) + 1) * (sqm_avg * (((self.config['CCD_CONFIG']['NIGHT']['GAIN'] - gain) / 10) + 1))
+        weighted_sqm_avg = (((self.config['CCD_EXPOSURE_MAX'] - exposure) / 10) + 1) * (sqm_avg * (((float(self.gain_av[2]) - gain) / 10) + 1))
 
         logger.info('Raw SQM: %0.2f, Weighted SQM: %0.2f', sqm_avg, weighted_sqm_avg)
 
