@@ -101,7 +101,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.client.loop_stop()
 
 
-    def setCcdExposure(self, exposure, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
         import paho.mqtt.properties as mqtt_props
         from paho.mqtt.packettypes import PacketTypes
 
@@ -146,7 +146,9 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         self.exposure = exposure
-        self.gain = float(self.gain_av[constants.GAIN_CURRENT])
+
+        if self.gain != round(float(gain), 2):
+            self.setCcdGain(gain)
 
 
         exposure_us = int(exposure * 1000000)

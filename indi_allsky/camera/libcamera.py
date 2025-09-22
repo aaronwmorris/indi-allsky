@@ -107,9 +107,13 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
     def setCcdGain(self, new_gain_value):
+        gain_f = round(float(new_gain_value), 2)  # limit gain to 2 decimals
+
         # Update shared gain value
         with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_CURRENT] = float(new_gain_value)
+            self.gain_av[constants.GAIN_CURRENT] = gain_f
+
+        self.gain = gain_f
 
 
     def setCcdBinning(self, bin_value):
@@ -132,7 +136,7 @@ class IndiClientLibCameraGeneric(IndiClient):
         return option
 
 
-    def setCcdExposure(self, exposure, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
         if self.active_exposure:
             return
 
@@ -177,7 +181,9 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         self.exposure = exposure
-        self.gain = float(self.gain_av[constants.GAIN_CURRENT])
+
+        if self.gain != round(float(gain), 2):
+            self.setCcdGain(gain)
 
 
         exposure_us = int(exposure * 1000000)
