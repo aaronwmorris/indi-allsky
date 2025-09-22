@@ -101,8 +101,9 @@ EXPOSURE_MAX        = 4
 GAIN_CURRENT        = 0
 GAIN_NEXT           = 1
 GAIN_MIN            = 2
-GAIN_MAX_NIGHT      = 3
-GAIN_MAX_MOONMODE   = 4
+GAIN_MAX_DAY        = 3
+GAIN_MAX_NIGHT      = 4
+GAIN_MAX_MOONMODE   = 5
 
 
 # Leaving gaps for addtional classifications

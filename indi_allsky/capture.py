@@ -323,6 +323,17 @@ class CaptureWorker(Process):
     def saferun(self):
         #raise Exception('Test exception handling in worker')
 
+
+        self.detectNight()
+
+        ### Update shared values to match current state
+        with self.night_v.get_lock():
+            self.night_v.value = int(self.night)
+
+        with self.moonmode_v.get_lock():
+            self.moonmode_v.value = int(self.moonmode)
+
+
         with app.app_context():
             self._initialize()
 
@@ -349,17 +360,6 @@ class CaptureWorker(Process):
             datetime.fromtimestamp(self.next_forced_transition_time).strftime('%Y-%m-%d %H:%M:%S'),
             (self.next_forced_transition_time - time.time()) / 3600,
         )
-
-
-        self.detectNight()
-
-        ### Update shared values to match current state
-        with self.night_v.get_lock():
-            self.night_v.value = int(self.night)
-
-        with self.moonmode_v.get_lock():
-            self.moonmode_v.value = int(self.moonmode)
-
 
 
         ### main loop starts
@@ -1204,18 +1204,20 @@ class CaptureWorker(Process):
                 self.exposure_av[constants.EXPOSURE_NEXT] = float(ccd_exposure_default)
 
 
-        logger.info('Default CCD exposure: %0.8f}', ccd_exposure_default)
+        logger.info('Default CCD exposure: %0.8f', ccd_exposure_default)
 
 
         with self.gain_av.get_lock():
             self.gain_av[constants.GAIN_CURRENT] = float(ccd_gain_default)
             self.gain_av[constants.GAIN_NEXT] = float(ccd_gain_default)
             self.gain_av[constants.GAIN_MIN] = float(gain_day)
+            self.gain_av[constants.GAIN_MAX_DAY] = float(gain_day)
             self.gain_av[constants.GAIN_MAX_NIGHT] = float(gain_night)
             self.gain_av[constants.GAIN_MAX_MOONMODE] = float(gain_moonmode)
 
 
-        logger.info('Minimum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MIN])
+        logger.info('Minimum CCD gain: %0.2f', self.gain_av[constants.GAIN_MIN])
+        logger.info('Maximum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MAX_DAY])
         logger.info('Maximum CCD gain: %0.2f (night)', self.gain_av[constants.GAIN_MAX_NIGHT])
         logger.info('Maximum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MAX_MOONMODE])
         logger.info('Default CCD gain: %0.2f', ccd_gain_default)

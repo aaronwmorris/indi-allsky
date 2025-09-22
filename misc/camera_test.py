@@ -383,6 +383,7 @@ class CameraTest(object):
 
         with self.gain_av.get_lock():
             self.gain_av[constants.GAIN_MIN] = gain_day
+            self.gain_av[constants.GAIN_MAX_DAY] = gain_day
             self.gain_av[constants.GAIN_MAX_NIGHT] = gain_night
             self.gain_av[constants.GAIN_MAX_MOONMODE] = gain_moonmode
 
@@ -415,7 +416,7 @@ class CameraTest(object):
             else:
                 self.indi_config = self.config['INDI_CONFIG_DEFAULTS']
 
-            self.indiclient.setCcdGain(self.gain_av[constants.GAIN_MIN])
+            self.indiclient.setCcdGain(self.gain_av[constants.GAIN_MAX_DAY])
             self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 
