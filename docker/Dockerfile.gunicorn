@@ -1,5 +1,6 @@
 FROM python:3.11-slim
 
+ARG TZ
 ARG DEBIAN_FRONTEND=noninteractive
 
 USER root

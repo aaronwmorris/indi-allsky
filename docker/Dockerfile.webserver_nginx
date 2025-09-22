@@ -1,6 +1,7 @@
 
 FROM nginx:bookworm
 
+ARG TZ
 ARG INDIALLSKY_IMAGE_FOLDER
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -9,11 +10,17 @@ USER root
 RUN apt-get update
 RUN apt-get -y upgrade
 RUN apt-get -y install \
-    ca-certificates
+    ca-certificates \
+    tzdata
 
 
 # cleanup
 RUN apt-get clean
+
+
+# update timezone
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN dpkg-reconfigure -f noninteractive tzdata
 
 
 # need the uid and gid to match in all containers
