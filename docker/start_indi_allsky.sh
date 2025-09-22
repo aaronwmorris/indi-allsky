@@ -157,6 +157,8 @@ if [ -n "${CAPTURE_TMPDIR:-}" ]; then
     export TMPDIR
 fi
 
+# log the date (shows timezone)
+date
 
 # start the program
 

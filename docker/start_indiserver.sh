@@ -11,6 +11,9 @@ export PATH
 echo -n "System timezone: "
 cat /etc/timezone || true
 
+# log the date (shows timezone)
+date
+
 
 if [ -f "/usr/local/bin/indiserver" ]; then
     INDISERVER="/usr/local/bin/indiserver"
