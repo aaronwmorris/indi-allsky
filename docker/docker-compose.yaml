@@ -53,6 +53,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.gunicorn
+      args:
+        - TZ=${TZ}
     env_file: .env
     depends_on:
       - mariadb.indi.allsky
@@ -88,6 +90,7 @@ services:
       dockerfile: docker/Dockerfile.webserver_apache
       #dockerfile: docker/Dockerfile.webserver_nginx
       args:
+        - TZ=${TZ}
         - INDIALLSKY_IMAGE_FOLDER=${INDIALLSKY_IMAGE_FOLDER}
     env_file: .env
     depends_on:

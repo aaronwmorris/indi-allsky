@@ -10,6 +10,7 @@ import psutil
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 #from pprint import pformat
 import signal
 import logging
@@ -318,6 +319,8 @@ class IndiAllSky(object):
 
         uptime_s = time.time() - psutil.boot_time()
         logger.info('System uptime: %ds', uptime_s)
+
+        logger.info('System timezone: %s', datetime.now(timezone.utc).astimezone().tzinfo)
 
         #logger.info('Temp dir: %s', tempfile.gettempdir())
 
