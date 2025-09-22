@@ -8,6 +8,10 @@ PATH=/usr/local/bin:/usr/bin:/bin
 export PATH
 
 
+echo -n "System timezone: "
+cat /etc/timezone || true
+
+
 if [ -f "/usr/local/bin/indiserver" ]; then
     INDISERVER="/usr/local/bin/indiserver"
 else

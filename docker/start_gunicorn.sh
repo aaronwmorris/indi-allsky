@@ -140,6 +140,10 @@ if [ "${INDIALLSKY_WEB_GENERATE_APIKEY:-false}" == "true" ]; then
 fi
 
 
+echo -n "System timezone: "
+cat /etc/timezone || true
+
+
 # Log to stderr
 export GUNICORN_ERROR_LOG_HANDLER=wsgi
 
