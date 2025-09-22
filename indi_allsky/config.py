@@ -62,7 +62,9 @@ class IndiAllSkyConfigBase(object):
             "DAY" : {
                 "GAIN"    : 0.0,
                 "BINNING" : 1,
-            }
+            },
+            "AUTO_GAIN_ENABLE"  : False,
+            "AUTO_GAIN_DIV"     : 5,
         },
         "INDI_CONFIG_DEFAULTS" : {
             "SWITCHES" : {},
