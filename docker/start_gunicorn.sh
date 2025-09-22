@@ -143,6 +143,9 @@ fi
 echo -n "System timezone: "
 cat /etc/timezone || true
 
+# log the date (shows timezone)
+date
+
 
 # Log to stderr
 export GUNICORN_ERROR_LOG_HANDLER=wsgi

@@ -158,6 +158,12 @@ if [ -n "${CAPTURE_TMPDIR:-}" ]; then
 fi
 
 
+echo -n "System timezone: "
+cat /etc/timezone || true
+
+# log the date (shows timezone)
+date
+
 # start the program
 
 if [ "${INDIALLSKY_DARK_CAPTURE_ENABLE:-false}" == "true" ]; then
