@@ -745,6 +745,7 @@ class CaptureWorker(Process):
             self.gain_av,
             self.bin_v,
             self.night_v,
+            self.moonmode_v,
         )
 
 

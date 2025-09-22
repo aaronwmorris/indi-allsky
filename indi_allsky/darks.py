@@ -228,6 +228,7 @@ class IndiAllSkyDarks(object):
             self.gain_av,
             self.bin_v,
             self.night_v,
+            self.moonmode_v,
         )
 
 

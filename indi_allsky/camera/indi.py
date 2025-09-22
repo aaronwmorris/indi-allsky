@@ -99,6 +99,7 @@ class IndiClient(PyIndi.BaseClient):
         gain_av,
         bin_v,
         night_v,
+        moonmode_v,
     ):
         super(IndiClient, self).__init__()
 
@@ -112,6 +113,7 @@ class IndiClient(PyIndi.BaseClient):
         self.bin_v = bin_v
 
         self.night_v = night_v
+        self.moonmode_v = moonmode_v
 
         self._camera_id = None
 
@@ -126,7 +128,7 @@ class IndiClient(PyIndi.BaseClient):
         self._timeout = 10.0
 
         self._exposure = 0.0
-        self._gain = 0.0  # individual exposure gain
+        self._gain = -1.0  # individual exposure gain
 
         self.exposureStartTime = None
 
