@@ -982,13 +982,16 @@ class IndiClient(PyIndi.BaseClient):
         return temp_val
 
 
-    def setCcdExposure(self, exposure, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
         if not timeout:
             timeout = self.timeout
 
 
         self.exposure = float(exposure)
-        self.gain = float(self.gain_av[constants.GAIN_CURRENT])
+
+
+        if self.gain != float(int(gain)):
+            self.setCcdGain(gain)
 
 
         self.exposureStartTime = time.time()
@@ -1272,12 +1275,14 @@ class IndiClient(PyIndi.BaseClient):
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
 
-        self.configureDevice(self.ccd_device, gain_config)
+        self.configureDevice(self.ccd_device, gain_config, sleep=0.0)
 
 
         # Update shared gain value
         with self.gain_av.get_lock():
             self.gain_av[constants.GAIN_CURRENT] = float(gain_value_i)
+
+        self.gain = float(gain_value_i)
 
 
     def setCcdBinning(self, bin_value):

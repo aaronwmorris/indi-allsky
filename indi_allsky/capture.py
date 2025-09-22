@@ -684,7 +684,7 @@ class CaptureWorker(Process):
 
                         frame_start_time = now
 
-                        self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], sync=False)
+                        self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], self.gain_av[constants.GAIN_NEXT], sync=False)
 
                         camera_ready = False
                         waiting_for_frame = True
@@ -1109,46 +1109,6 @@ class CaptureWorker(Process):
         logger.info('Maximum CCD exposure: %0.8f', self.exposure_av[constants.EXPOSURE_MAX])
 
 
-        # set default exposure
-        if self.config.get('CCD_EXPOSURE_DEF'):
-            ccd_exposure_default = self.config['CCD_EXPOSURE_DEF']
-        else:
-            # use last exposure value within 10 minutes
-            now_minus_10min = datetime.now() - timedelta(minutes=10)
-
-            last_image = IndiAllSkyDbImageTable.query\
-                .join(IndiAllSkyDbImageTable.camera)\
-                .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-                .filter(IndiAllSkyDbImageTable.createDate > now_minus_10min)\
-                .order_by(IndiAllSkyDbImageTable.createDate.desc())\
-                .first()
-
-
-            if last_image:
-                ccd_exposure_default = float(last_image.exposure)
-                logger.warning('Reusing last stable exposure: %0.6f', ccd_exposure_default)
-            else:
-                #ccd_exposure_default = self.exposure_av[constants.EXPOSURE_MIN_NIGHT]
-                ccd_exposure_default = 0.01  # this should give better results for many cameras
-
-
-        # sanity check
-        if ccd_exposure_default > maximum_exposure:
-            ccd_exposure_default = maximum_exposure
-        if ccd_exposure_default < ccd_min_exp:
-            ccd_exposure_default = ccd_min_exp
-
-
-        if self.exposure_av[constants.EXPOSURE_CURRENT] == -1.0:
-            # only set this on first start
-            with self.exposure_av.get_lock():
-                self.exposure_av[constants.EXPOSURE_CURRENT] = float(ccd_exposure_default)
-                self.exposure_av[constants.EXPOSURE_NEXT] = float(ccd_exposure_default)
-
-
-        logger.info('Default CCD exposure: {0:0.8f}'.format(ccd_exposure_default))
-
-
         # Validate gain settings
         ccd_min_gain = float(ccd_info['GAIN_INFO']['min'])
         ccd_max_gain = float(ccd_info['GAIN_INFO']['max'])
@@ -1189,10 +1149,76 @@ class CaptureWorker(Process):
             gain_day = float(self.config['CCD_CONFIG']['DAY']['GAIN'])
 
 
+        # set default exposure, gain
+        if self.config.get('CCD_EXPOSURE_DEF'):
+            ccd_exposure_default = self.config['CCD_EXPOSURE_DEF']
+
+            if self.night_v.value:
+                if self.moonmode_v.value:
+                    ccd_gain_default = gain_moonmode
+                else:
+                    ccd_gain_default = gain_night
+            else:
+                ccd_gain_default = gain_day
+
+        else:
+            # use last exposure value within 10 minutes
+            now_minus_10min = datetime.now() - timedelta(minutes=10)
+
+            last_image = IndiAllSkyDbImageTable.query\
+                .join(IndiAllSkyDbImageTable.camera)\
+                .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
+                .filter(IndiAllSkyDbImageTable.createDate > now_minus_10min)\
+                .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+                .first()
+
+
+            if last_image:
+                ccd_exposure_default = float(last_image.exposure)
+                ccd_gain_default = float(last_image.gain)
+                logger.warning('Reusing last stable exposure: %0.6f, gain %0.2f', ccd_exposure_default, ccd_gain_default)
+            else:
+                #ccd_exposure_default = self.exposure_av[constants.EXPOSURE_MIN_NIGHT]
+                ccd_exposure_default = 0.01  # this should give better results for many cameras
+
+                if self.night_v.value:
+                    if self.moonmode_v.value:
+                        ccd_gain_default = gain_moonmode
+                    else:
+                        ccd_gain_default = gain_night
+                else:
+                    ccd_gain_default = gain_day
+
+
+        # sanity check
+        if ccd_exposure_default > maximum_exposure:
+            ccd_exposure_default = maximum_exposure
+        if ccd_exposure_default < ccd_min_exp:
+            ccd_exposure_default = ccd_min_exp
+
+
+        if self.exposure_av[constants.EXPOSURE_CURRENT] == -1.0:
+            # only set this on first start
+            with self.exposure_av.get_lock():
+                self.exposure_av[constants.EXPOSURE_CURRENT] = float(ccd_exposure_default)
+                self.exposure_av[constants.EXPOSURE_NEXT] = float(ccd_exposure_default)
+
+
+        logger.info('Default CCD exposure: %0.8f}', ccd_exposure_default)
+
+
         with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_MIN] = gain_day
-            self.gain_av[constants.GAIN_MAX_NIGHT] = gain_night
-            self.gain_av[constants.GAIN_MAX_MOONMODE] = gain_moonmode
+            self.gain_av[constants.GAIN_CURRENT] = float(ccd_gain_default)
+            self.gain_av[constants.GAIN_NEXT] = float(ccd_gain_default)
+            self.gain_av[constants.GAIN_MIN] = float(gain_day)
+            self.gain_av[constants.GAIN_MAX_NIGHT] = float(gain_night)
+            self.gain_av[constants.GAIN_MAX_MOONMODE] = float(gain_moonmode)
+
+
+        logger.info('Minimum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MIN])
+        logger.info('Maximum CCD gain: %0.2f (night)', self.gain_av[constants.GAIN_MAX_NIGHT])
+        logger.info('Maximum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MAX_MOONMODE])
+        logger.info('Default CCD gain: %0.2f', ccd_gain_default)
 
 
     def _sync_camera(self, camera, camera_metadata):
@@ -1232,7 +1258,7 @@ class CaptureWorker(Process):
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
-            self.shoot(7.0, sync=True, timeout=20.0)
+            self.shoot(7.0, self.gain_av[constants.GAIN_MIN], sync=True, timeout=20.0)
 
 
     def _periodic_tasks(self):
@@ -1645,11 +1671,9 @@ class CaptureWorker(Process):
 
             if self.moonmode:
                 logger.warning('Change to night (moon mode)')
-                self.indiclient.setCcdGain(self.gain_av[constants.GAIN_MAX_MOONMODE])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
             else:
                 logger.warning('Change to night (normal mode)')
-                self.indiclient.setCcdGain(self.gain_av[constants.GAIN_MAX_NIGHT])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
 
@@ -1686,7 +1710,6 @@ class CaptureWorker(Process):
                 self.indiclient.disableCcdCooler()
 
 
-            self.indiclient.setCcdGain(self.gain_av[constants.GAIN_MIN])
             self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 
@@ -1928,10 +1951,10 @@ class CaptureWorker(Process):
         self.video_q.put({'task_id' : task.id})
 
 
-    def shoot(self, exposure, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, self.gain_av[constants.GAIN_CURRENT])
+    def shoot(self, exposure, gain, sync=True, timeout=None):
+        logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, gain)
 
-        self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
+        self.indiclient.setCcdExposure(exposure, gain, sync=sync, timeout=timeout)
 
 
     def setTimeSystemd(self, new_datetime_utc):
