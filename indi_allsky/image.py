@@ -556,7 +556,7 @@ class ImageWorker(Process):
 
 
         # adu calculate (before processing)
-        adu, adu_average = self.calculate_exposure(adu, exposure)
+        adu, adu_average = self.calculate_exposure(adu, exposure, gain)
 
 
         # generate a new mask base once the target ADU is found
@@ -1853,7 +1853,7 @@ class ImageWorker(Process):
         self._miscUpload.upload_realtime_keogram(keogram_file, camera)
 
 
-    def calculate_exposure(self, adu, exposure):
+    def calculate_exposure(self, adu, exposure, gain):
         if adu <= 0.0:
             # ensure we do not divide by zero
             logger.warning('Zero average, setting a default of 0.1')
@@ -1896,7 +1896,7 @@ class ImageWorker(Process):
 
 
         if not self.target_adu_found:
-            self.recalculate_exposure(exposure, adu, target_adu, target_adu_min, target_adu_max, exposure_min, exp_scale_factor)
+            self.recalculate_exposure(exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exposure_min, exp_scale_factor)
             return adu, 0.0
 
 
@@ -1926,7 +1926,7 @@ class ImageWorker(Process):
         return adu, adu_average
 
 
-    def recalculate_exposure(self, exposure, adu, target_adu, target_adu_min, target_adu_max, exposure_min, exp_scale_factor):
+    def recalculate_exposure(self, exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exposure_min, exp_scale_factor):
 
         # Until we reach a good starting point, do not calculate a moving average
         if adu <= target_adu_max and adu >= target_adu_min:
@@ -1953,8 +1953,6 @@ class ImageWorker(Process):
             new_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
 
 
-        gain_current = float(self.gain_av[constants.GAIN_CURRENT])
-
         if self.night_v.value:
             if self.moonmode_v.value:
                 gain_min = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
@@ -1972,10 +1970,10 @@ class ImageWorker(Process):
                 # new exposure is higher
                 if new_exposure < self.auto_gain_exposure_cutoff_high:
                     # maintain same gain, increase exposure
-                    next_gain = gain_current
+                    next_gain = gain
                 else:
                     # increase gain, maintain exposure
-                    next_gain = gain_current + self.gain_step
+                    next_gain = gain + self.gain_step
                     new_exposure = exposure
 
                     # Do not exceed the gain limits
@@ -1985,10 +1983,10 @@ class ImageWorker(Process):
                 # new exposure is lower
                 if new_exposure > self.auto_gain_exposure_cutoff_low:
                     # maintain same gain, decrease exposure
-                    next_gain = gain_current
+                    next_gain = gain
                 else:
                     # decrease gain, maintain exposure
-                    next_gain = gain_current - self.gain_step
+                    next_gain = gain - self.gain_step
                     new_exposure = exposure
 
                     # Do not exceed the gain limits
