@@ -65,7 +65,8 @@ class ImageWorker(Process):
     sqm_history_minutes = 30
     stars_history_minutes = 30
 
-    auto_gain_exposure_cutoff_level = 80  # percent of max exposure
+    auto_gain_exposure_cutoff_level_low = 80  # percent of max exposure
+    auto_gain_exposure_cutoff_level_high = 95  # percent of max exposure
 
 
     def __init__(
@@ -142,7 +143,8 @@ class ImageWorker(Process):
 
 
         self._gain_step = None  # calculate on first image
-        self.auto_gain_exposure_cutoff = None
+        self.auto_gain_exposure_cutoff_low = None
+        self.auto_gain_exposure_cutoff_high = None
 
 
         self.image_save_hook_process = None  # used for both pre- and post-hooks
@@ -337,13 +339,17 @@ class ImageWorker(Process):
             auto_gain_div = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_DIV', 5)
             self._gain_step = round(gain_range / auto_gain_div, 2)
 
-            self.auto_gain_exposure_cutoff = self.exposure_av[constants.EXPOSURE_MAX] * (self.auto_gain_exposure_cutoff_level / 100)
-            if self.exposure_av[constants.EXPOSURE_MAX] - self.auto_gain_exposure_cutoff > 10.0:
-                self.auto_gain_exposure_cutoff = self.exposure_av[constants.EXPOSURE_MAX] - 10.0
+            self.auto_gain_exposure_cutoff_high = self.exposure_av[constants.EXPOSURE_MAX] * (self.auto_gain_exposure_cutoff_level_high / 100)
+            if self.exposure_av[constants.EXPOSURE_MAX] - self.auto_gain_exposure_cutoff_high < 1.0:
+                self.auto_gain_exposure_cutoff_high = self.exposure_av[constants.EXPOSURE_MAX] - 1.0
+
+            self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] * (self.auto_gain_exposure_cutoff_level_low / 100)
+            if self.exposure_av[constants.EXPOSURE_MAX] - self.auto_gain_exposure_cutoff_low > 10.0:
+                self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] - 10.0
 
             if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
                 logger.info('Gain Steps: %d @ %0.2f', auto_gain_div, self.gain_step)
-                logger.info('Auto-Gain Exposure cutoff: %0.2fs', self.auto_gain_exposure_cutoff)
+                logger.info('Auto-Gain Exposure cutoff: %0.2fs/%0.2fs', self.auto_gain_exposure_cutoff_low, self.auto_gain_exposure_cutoff_high)
 
 
         processing_start = time.time()
@@ -1940,16 +1946,59 @@ class ImageWorker(Process):
             new_exposure = exposure
 
 
-        # Do not exceed the limits
+        # Do not exceed the exposure limits
         if new_exposure < exposure_min:
             new_exposure = float(exposure_min)
         elif new_exposure > self.exposure_av[constants.EXPOSURE_MAX]:
             new_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
 
 
-        logger.warning('New calculated exposure: %0.8f', new_exposure)
+        gain_current = float(self.gain_av[constants.GAIN_CURRENT])
+
+        if self.night_v.value:
+            if self.moonmode_v.value:
+                gain_max = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
+                gain_min = float(self.gain_av[constants.GAIN_MAX_MOONMODE])
+            else:
+                gain_min = float(self.gain_av[constants.GAIN_MAX_NIGHT])
+                gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
+        else:
+            gain_min = float(self.gain_av[constants.GAIN_MAX_DAY])
+            gain_max = float(self.gain_av[constants.GAIN_MAX_DAY])
+
+
+        if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
+            if new_exposure < self.auto_gain_exposure_cutoff_low:
+                next_gain = gain_current - self.gain_step
+
+                # Do not exceed the gain limits
+                if next_gain < gain_min:
+                    next_gain = gain_min
+            elif new_exposure > self.auto_gain_exposure_cutoff_high:
+                next_gain = gain_current + self.gain_step
+
+                # Do not exceed the gain limits
+                if next_gain > gain_max:
+                    next_gain = gain_max
+            else:
+                # no change to gain
+                next_gain = gain_current
+        else:
+            # just set the gain to the max for the current mode
+            next_gain = gain_max
+
+
+        if next_gain != gain_current:
+            # change gain instead of exposure
+            new_exposure = exposure
+
+
+        logger.warning('New calculated exposure: %0.8f (gain %0.2f)', new_exposure, next_gain)
         with self.exposure_av.get_lock():
             self.exposure_av[constants.EXPOSURE_NEXT] = float(new_exposure)
+
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_NEXT] = float(next_gain)
 
 
     def save_longterm_keogram_data(self, exp_date, camera_id):
