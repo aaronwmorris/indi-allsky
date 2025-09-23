@@ -1862,10 +1862,8 @@ class ImageWorker(Process):
 
         if self.night_v.value:
             target_adu = self.config['TARGET_ADU']
-            exposure_min = self.exposure_av[constants.EXPOSURE_MIN_NIGHT]
         else:
             target_adu = self.config['TARGET_ADU_DAY']
-            exposure_min = self.exposure_av[constants.EXPOSURE_MIN_DAY]
 
 
         # Brightness when the sun is in view (very short exposures) can change drastically when clouds pass through the view
@@ -1896,7 +1894,7 @@ class ImageWorker(Process):
 
 
         if not self.target_adu_found:
-            self.recalculate_exposure(exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exposure_min, exp_scale_factor)
+            self.recalculate_exposure(exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor)
             return adu, 0.0
 
 
@@ -1926,7 +1924,7 @@ class ImageWorker(Process):
         return adu, adu_average
 
 
-    def recalculate_exposure(self, exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exposure_min, exp_scale_factor):
+    def recalculate_exposure(self, exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor):
 
         # Until we reach a good starting point, do not calculate a moving average
         if adu <= target_adu_max and adu >= target_adu_min:
@@ -1935,6 +1933,22 @@ class ImageWorker(Process):
             self.target_adu_found = True
             self.hist_adu = []
             return
+
+
+        if self.night_v.value:
+            exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
+
+            if self.moonmode_v.value:
+                gain_min = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
+                gain_max = float(self.gain_av[constants.GAIN_MAX_MOONMODE])
+            else:
+                gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
+                gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
+        else:
+            exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
+
+            gain_min = float(self.gain_av[constants.GAIN_MIN_DAY])
+            gain_max = float(self.gain_av[constants.GAIN_MAX_DAY])
 
 
         # Scale the exposure up and down based on targets
@@ -1951,18 +1965,6 @@ class ImageWorker(Process):
             new_exposure = float(exposure_min)
         elif new_exposure > self.exposure_av[constants.EXPOSURE_MAX]:
             new_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
-
-
-        if self.night_v.value:
-            if self.moonmode_v.value:
-                gain_min = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
-                gain_max = float(self.gain_av[constants.GAIN_MAX_MOONMODE])
-            else:
-                gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
-                gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
-        else:
-            gain_min = float(self.gain_av[constants.GAIN_MIN_DAY])
-            gain_max = float(self.gain_av[constants.GAIN_MAX_DAY])
 
 
         if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
