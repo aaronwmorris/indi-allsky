@@ -273,6 +273,7 @@ class HADiscovery(object):
 
 
         transport = self.config['MQTTPUBLISH']['TRANSPORT']
+        protocol = self.config['MQTTPUBLISH'].get('PROTOCOL', 'MQTTv5')
         hostname = self.config['MQTTPUBLISH']['HOST']
         port = self.config['MQTTPUBLISH']['PORT']
         username = self.config['MQTTPUBLISH']['USERNAME']
@@ -296,10 +297,11 @@ class HADiscovery(object):
         print('#################################################')
         print('')
         print('Transport: {0}'.format(transport))
-        print('Hostname: {0}'.format(hostname))
-        print('Port: {0}'.format(port))
-        print('TLS: {0}'.format(str(tls)))
-        print('Username: {0}'.format(username))
+        print('Protocol:  {0}'.format(protocol))
+        print('Hostname:  {0}'.format(hostname))
+        print('Port:      {0}'.format(port))
+        print('TLS:       {0}'.format(str(tls)))
+        print('Username:  {0}'.format(username))
         print('')
         print('Auto-discovery base topic: {0}'.format(self.discovery_base_topic))
         print('Device name:               {0}'.format(self.device_name))
@@ -1024,7 +1026,7 @@ class HADiscovery(object):
             keepalive=60,
             auth=mq_auth,
             tls=mq_tls,
-            protocol=paho.mqtt.enums.MQTTProtocolVersion.MQTTv5,
+            protocol=getattr(paho.mqtt.enums.MQTTProtocolVersion, protocol),
         )
 
 

@@ -32,6 +32,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         transport = self.config.get('LIBCAMERA', {}).get('MQTT_TRANSPORT', 'tcp')
+        protocol_str = self.config.get('LIBCAMERA', {}).get('MQTT_PROTOCOL', 'MQTTv5')
         host = self.config.get('LIBCAMERA', {}).get('MQTT_HOST', 'localhost')
         port = self.config.get('LIBCAMERA', {}).get('MQTT_PORT', 8883)
         username = self.config.get('LIBCAMERA', {}).get('MQTT_USERNAME', 'indi-allsky')
@@ -46,9 +47,16 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.metadata_topic = self.config.get('LIBCAMERA', {}).get('MQTT_METADATA_TOPIC', 'libcamera/metadata')
 
 
+        try:
+            protocol = getattr(mqtt, protocol_str)
+        except AttributeError:
+            logger.error('Unknown MQTT Protocol: %s', protocol_str)
+            raise
+
+
         self.client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-            protocol=mqtt.MQTTv5,
+            protocol=protocol,
             transport=transport,
         )
 

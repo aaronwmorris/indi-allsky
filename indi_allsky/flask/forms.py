@@ -1922,13 +1922,13 @@ def FILETRANSFER__HOST_validator(form, field):
 
 
 def MQTTPUBLISH__TRANSPORT_validator(form, field):
-    valid_transports = (
-        'tcp',
-        'websockets',
-    )
-
-    if field.data not in valid_transports:
+    if field.data not in list(zip(*form.MQTTPUBLISH__TRANSPORT_choices))[0]:
         raise ValidationError('Invalid transport')
+
+
+def MQTTPUBLISH__PROTOCOL_validator(form, field):
+    if field.data not in list(zip(*form.MQTTPUBLISH__PROTOCOL_choices))[0]:
+        raise ValidationError('Invalid protocol')
 
 
 def MQTTPUBLISH__HOST_validator(form, field):
@@ -3407,6 +3407,11 @@ class IndiAllskyConfigForm(FlaskForm):
         ('websockets', 'websockets'),
     )
 
+    MQTTPUBLISH__PROTOCOL_choices = (
+        ('MQTTv5', 'v5.0'),
+        ('MQTTv311', 'v3.1.1'),
+    )
+
     LIBCAMERA__IMAGE_FILE_TYPE_choices = (
         ('jpg', 'JPEG'),
         ('dng', 'DNG (raw)'),
@@ -4243,6 +4248,7 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__UPLOAD_RAW             = BooleanField('Upload RAW files')
     MQTTPUBLISH__ENABLE              = BooleanField('Enable MQTT Publishing')
     MQTTPUBLISH__TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
+    MQTTPUBLISH__PROTOCOL            = SelectField('MQTT Protocol', choices=MQTTPUBLISH__PROTOCOL_choices, validators=[DataRequired(), MQTTPUBLISH__PROTOCOL_validator])
     MQTTPUBLISH__HOST                = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
     MQTTPUBLISH__PORT                = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
     MQTTPUBLISH__USERNAME            = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
@@ -4301,6 +4307,7 @@ class IndiAllskyConfigForm(FlaskForm):
     LIBCAMERA__EXTRA_OPTIONS         = StringField('Night libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     LIBCAMERA__EXTRA_OPTIONS_DAY     = StringField('Day libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     LIBCAMERA__MQTT_TRANSPORT        = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
+    LIBCAMERA__MQTT_PROTOCOL         = SelectField('MQTT Protocol', choices=MQTTPUBLISH__PROTOCOL_choices, validators=[DataRequired(), MQTTPUBLISH__PROTOCOL_validator])
     LIBCAMERA__MQTT_HOST             = StringField('MQTT Host (libcamera)', validators=[MQTTPUBLISH__HOST_validator])
     LIBCAMERA__MQTT_PORT             = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
     LIBCAMERA__MQTT_USERNAME         = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
@@ -4366,6 +4373,7 @@ class IndiAllskyConfigForm(FlaskForm):
     GENERIC_GPIO__A_PIN_1            = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     GENERIC_GPIO__A_INVERT_OUTPUT    = BooleanField('Invert Output')
     DEVICE__MQTT_TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
+    DEVICE__MQTT_PROTOCOL            = SelectField('MQTT Protocol', choices=MQTTPUBLISH__PROTOCOL_choices, validators=[DataRequired(), MQTTPUBLISH__PROTOCOL_validator])
     DEVICE__MQTT_HOST                = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
     DEVICE__MQTT_PORT                = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
     DEVICE__MQTT_USERNAME            = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
@@ -4407,6 +4415,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__ECOWITT_APPLICATIONKEY = PasswordField('Ecowitt Application Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ECOWITT_APPLICATIONKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__ECOWITT_MACADDRESS     = StringField('Ecowitt Device MAC Address', validators=[TEMP_SENSOR__MACADDRESS_validator])
     TEMP_SENSOR__MQTT_TRANSPORT      = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
+    TEMP_SENSOR__MQTT_PROTOCOL       = SelectField('MQTT Protocol', choices=MQTTPUBLISH__PROTOCOL_choices, validators=[DataRequired(), MQTTPUBLISH__PROTOCOL_validator])
     TEMP_SENSOR__MQTT_HOST           = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
     TEMP_SENSOR__MQTT_PORT           = IntegerField('Port', validators=[DataRequired(), MQTTPUBLISH__PORT_validator])
     TEMP_SENSOR__MQTT_USERNAME       = StringField('Username', validators=[MQTTPUBLISH__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})

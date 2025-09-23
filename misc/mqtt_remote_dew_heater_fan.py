@@ -19,6 +19,7 @@ FAN_PIN = 'D13'
 
 ### MQTT settings
 MQTT_TRANSPORT = os.environ.get('MQTT_TRANSPORT', 'tcp')
+MQTT_PROTOCOL = os.environ.get('MQTT_PROTOCOL', 'MQTTv5')
 MQTT_HOSTNAME = os.environ.get('MQTT_HOSTNAME', 'localhost')
 MQTT_PORT = int(os.environ.get('MQTT_PORT', 8883))
 MQTT_USERNAME = os.environ.get('MQTT_USERNAME', 'CHANGEME')
@@ -88,6 +89,7 @@ class MqttRemoteDewHeaterFan(object):
 
     def main(self):
         logger.info('MQTT Transport:   %s', MQTT_TRANSPORT)
+        logger.info('MQTT Protocol:    %s', MQTT_PROTOCOL)
         logger.info('MQTT Hostname:    %s', MQTT_HOSTNAME)
         logger.info('MQTT Port:        %d', MQTT_PORT)
         logger.info('MQTT Username:    %s', MQTT_USERNAME)
@@ -97,9 +99,16 @@ class MqttRemoteDewHeaterFan(object):
         time.sleep(3.0)
 
 
+        try:
+            protocol = getattr(mqtt, MQTT_PROTOCOL)
+        except AttributeError:
+            logger.error('Unknown MQTT Protocol: %s', MQTT_PROTOCOL)
+            sys.exit(1)
+
+
         self.client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-            protocol=mqtt.MQTTv5,
+            protocol=protocol,
             transport=MQTT_TRANSPORT,
         )
 
