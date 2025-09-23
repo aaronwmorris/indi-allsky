@@ -65,6 +65,8 @@ class ImageWorker(Process):
     sqm_history_minutes = 30
     stars_history_minutes = 30
 
+    auto_gain_exposure_cutoff_level = 80  # percent of max exposure
+
 
     def __init__(
         self,
@@ -140,6 +142,8 @@ class ImageWorker(Process):
 
 
         self._gain_step = None  # calculate on first image
+        self.auto_gain_exposure_cutoff = None
+
 
         self.image_save_hook_process = None  # used for both pre- and post-hooks
         self.image_save_hook_process_start = 0
@@ -333,8 +337,13 @@ class ImageWorker(Process):
             auto_gain_div = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_DIV', 5)
             self._gain_step = round(gain_range / auto_gain_div, 2)
 
+            self.auto_gain_exposure_cutoff = self.exposure_av[constants.EXPOSURE_MAX] * (self.auto_gain_exposure_cutoff_level / 100)
+            if self.exposure_av[constants.EXPOSURE_MAX] - self.auto_gain_exposure_cutoff > 10.0:
+                self.auto_gain_exposure_cutoff = self.exposure_av[constants.EXPOSURE_MAX] - 10.0
+
             if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
                 logger.info('Gain Steps: %d @ %0.2f', auto_gain_div, self.gain_step)
+                logger.info('Auto-Gain Exposure cutoff: %0.2fs', self.auto_gain_exposure_cutoff)
 
 
         processing_start = time.time()
