@@ -29,6 +29,7 @@ class paho_mqtt(GenericFileTransfer):
         super(paho_mqtt, self).connect(*args, **kwargs)
 
         transport = kwargs['transport']
+        protocol = kwargs['protocol']
         hostname = kwargs['hostname']
         username = kwargs['username']
         password = kwargs.get('password') if kwargs.get('password') else None
@@ -37,7 +38,9 @@ class paho_mqtt(GenericFileTransfer):
 
 
         self.mq_transport = transport
+        self.mq_protocol = protocol
         self.mq_hostname = hostname
+
 
         if tls:
             self.mq_tls = {
@@ -115,7 +118,7 @@ class paho_mqtt(GenericFileTransfer):
                 keepalive=60,
                 auth=self.mq_auth,
                 tls=self.mq_tls,
-                protocol=paho.mqtt.enums.MQTTProtocolVersion.MQTTv5,
+                protocol=getattr(paho.mqtt.enums.MQTTProtocolVersion, self.mq_protocol),
             )
         except socket.gaierror as e:
             raise ConnectionFailure(str(e)) from e

@@ -330,6 +330,7 @@ class FileUploader(Thread):
         elif action == constants.TRANSFER_MQTT:
             connect_kwargs = {
                 'transport'   : self.config['MQTTPUBLISH']['TRANSPORT'],
+                'protocol'    : self.config['MQTTPUBLISH'].get('PROTOCOL', 'MQTTv5'),
                 'hostname'    : self.config['MQTTPUBLISH']['HOST'],
                 'username'    : self.config['MQTTPUBLISH']['USERNAME'],
                 'password'    : self.config['MQTTPUBLISH']['PASSWORD'],

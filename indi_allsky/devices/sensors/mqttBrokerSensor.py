@@ -51,6 +51,7 @@ class MqttBrokerSensor(SensorBase):
 
 
         transport = self.config.get('TEMP_SENSOR', {}).get('MQTT_TRANSPORT', 'tcp')
+        protocol_str = self.config.get('TEMP_SENSOR', {}).get('MQTT_PROTOCOL', 'MQTTv5')
         host = self.config.get('TEMP_SENSOR', {}).get('MQTT_HOST', 'localhost')
         port = self.config.get('TEMP_SENSOR', {}).get('MQTT_PORT', 8883)
         username = self.config.get('TEMP_SENSOR', {}).get('MQTT_USERNAME', 'indi-allsky')
@@ -59,9 +60,16 @@ class MqttBrokerSensor(SensorBase):
         cert_bypass = self.config.get('TEMP_SENSOR', {}).get('MQTT_CERT_BYPASS', True)
 
 
+        try:
+            protocol = getattr(mqtt, protocol_str)
+        except AttributeError:
+            logger.error('Unknown MQTT Protocol: %s', protocol_str)
+            raise
+
+
         client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-            protocol=mqtt.MQTTv5,
+            protocol=protocol,
             transport=transport,
         )
 

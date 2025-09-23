@@ -24,6 +24,7 @@ class FanMqttBase(FanBase):
 
 
         transport = self.config.get('DEVICE', {}).get('MQTT_TRANSPORT', 'tcp')
+        protocol_str = self.config.get('DEVICE', {}).get('MQTT_PROTOCOL', 'MQTTv5')
         host = self.config.get('DEVICE', {}).get('MQTT_HOST', 'localhost')
         port = self.config.get('DEVICE', {}).get('MQTT_PORT', 8883)
         username = self.config.get('DEVICE', {}).get('MQTT_USERNAME', 'indi-allsky')
@@ -34,9 +35,16 @@ class FanMqttBase(FanBase):
         self._qos = self.config.get('DEVICE', {}).get('MQTT_QOS', 0)
 
 
+        try:
+            protocol = getattr(mqtt, protocol_str)
+        except AttributeError:
+            logger.error('Unknown MQTT Protocol: %s', protocol_str)
+            raise
+
+
         self.client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-            protocol=mqtt.MQTTv5,
+            protocol=protocol,
             transport=transport,
         )
 
