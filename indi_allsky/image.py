@@ -1966,7 +1966,9 @@ class ImageWorker(Process):
 
 
         if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
-            if new_exposure > exposure:
+            if new_exposure == exposure:
+                pass
+            elif new_exposure > exposure:
                 # new exposure is higher
                 if new_exposure < self.auto_gain_exposure_cutoff_high:
                     # maintain same gain, increase exposure
@@ -1981,6 +1983,7 @@ class ImageWorker(Process):
                         next_gain = gain_max
             else:
                 # new exposure is lower
+                # FIXME scale gain down if it is above max
                 if new_exposure > self.auto_gain_exposure_cutoff_low:
                     # maintain same gain, decrease exposure
                     next_gain = gain
