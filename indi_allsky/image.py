@@ -1957,13 +1957,13 @@ class ImageWorker(Process):
 
         if self.night_v.value:
             if self.moonmode_v.value:
-                gain_max = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
-                gain_min = float(self.gain_av[constants.GAIN_MAX_MOONMODE])
+                gain_min = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
+                gain_max = float(self.gain_av[constants.GAIN_MAX_MOONMODE])
             else:
-                gain_min = float(self.gain_av[constants.GAIN_MAX_NIGHT])
+                gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
                 gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
         else:
-            gain_min = float(self.gain_av[constants.GAIN_MAX_DAY])
+            gain_min = float(self.gain_av[constants.GAIN_MIN_DAY])
             gain_max = float(self.gain_av[constants.GAIN_MAX_DAY])
 
 
