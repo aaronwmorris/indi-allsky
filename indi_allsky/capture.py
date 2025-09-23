@@ -1181,13 +1181,16 @@ class CaptureWorker(Process):
                 #ccd_exposure_default = self.exposure_av[constants.EXPOSURE_MIN_NIGHT]
                 ccd_exposure_default = 0.01  # this should give better results for many cameras
 
-                if self.night_v.value:
-                    if self.moonmode_v.value:
-                        ccd_gain_default = gain_moonmode
-                    else:
-                        ccd_gain_default = gain_night
-                else:
+                if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
                     ccd_gain_default = gain_day
+                else:
+                    if self.night_v.value:
+                        if self.moonmode_v.value:
+                            ccd_gain_default = gain_moonmode
+                        else:
+                            ccd_gain_default = gain_night
+                    else:
+                        ccd_gain_default = gain_day
 
 
         # sanity check
