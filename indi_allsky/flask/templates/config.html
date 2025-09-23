@@ -704,6 +704,17 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__MQTT_PROTOCOL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.LIBCAMERA__MQTT_PROTOCOL(class='form-select bg-secondary') }}
+            <div id="LIBCAMERA__MQTT_PROTOCOL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Protocol</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LIBCAMERA__MQTT_PORT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -5483,6 +5494,17 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.MQTTPUBLISH__PROTOCOL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MQTTPUBLISH__PROTOCOL(class='form-select bg-secondary') }}
+            <div id="MQTTPUBLISH__PROTOCOL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Protocol</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.MQTTPUBLISH__PORT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -7217,6 +7239,17 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__MQTT_PROTOCOL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__MQTT_PROTOCOL(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__MQTT_PROTOCOL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Protocol</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__MQTT_PORT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -7870,6 +7903,17 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.DEVICE__MQTT_PROTOCOL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.DEVICE__MQTT_PROTOCOL(class='form-select bg-secondary') }}
+            <div id="DEVICE__MQTT_PROTOCOL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">MQTT Protocol</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.DEVICE__MQTT_PORT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -8513,6 +8557,7 @@ const field_names = [
     'S3UPLOAD__ACL',
     'S3UPLOAD__STORAGE_CLASS',
     'MQTTPUBLISH__TRANSPORT',
+    'MQTTPUBLISH__PROTOCOL',
     'MQTTPUBLISH__HOST',
     'MQTTPUBLISH__PORT',
     'MQTTPUBLISH__USERNAME',
@@ -8552,6 +8597,7 @@ const field_names = [
     'LIBCAMERA__EXTRA_OPTIONS',
     'LIBCAMERA__EXTRA_OPTIONS_DAY',
     'LIBCAMERA__MQTT_TRANSPORT',
+    'LIBCAMERA__MQTT_PROTOCOL',
     'LIBCAMERA__MQTT_HOST',
     'LIBCAMERA__MQTT_PORT',
     'LIBCAMERA__MQTT_USERNAME',
@@ -8606,6 +8652,7 @@ const field_names = [
     'GENERIC_GPIO__A_I2C_ADDRESS',
     'GENERIC_GPIO__A_PIN_1',
     'DEVICE__MQTT_TRANSPORT',
+    'DEVICE__MQTT_PROTOCOL',
     'DEVICE__MQTT_HOST',
     'DEVICE__MQTT_PORT',
     'DEVICE__MQTT_USERNAME',
@@ -8645,6 +8692,7 @@ const field_names = [
     'TEMP_SENSOR__ECOWITT_APPLICATIONKEY',
     'TEMP_SENSOR__ECOWITT_MACADDRESS',
     'TEMP_SENSOR__MQTT_TRANSPORT',
+    'TEMP_SENSOR__MQTT_PROTOCOL',
     'TEMP_SENSOR__MQTT_HOST',
     'TEMP_SENSOR__MQTT_PORT',
     'TEMP_SENSOR__MQTT_USERNAME',

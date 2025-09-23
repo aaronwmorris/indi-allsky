@@ -468,6 +468,7 @@ class IndiAllSkyConfigBase(object):
         "MQTTPUBLISH" : {
             "ENABLE"                 : False,
             "TRANSPORT"              : "tcp",  # tcp or websockets
+            "PROTOCOL"               : "MQTTv5",
             "HOST"                   : "localhost",
             "PORT"                   : 8883,  # 1883 = mqtt, 8883 = TLS
             "USERNAME"               : "indi-allsky",
@@ -522,6 +523,7 @@ class IndiAllSkyConfigBase(object):
             "EXTRA_OPTIONS"          : "",
             "EXTRA_OPTIONS_DAY"      : "",
             "MQTT_TRANSPORT"         : "tcp",  # tcp or websockets
+            "MQTT_PROTOCOL"          : "MQTTv5",
             "MQTT_HOST"              : "localhost",
             "MQTT_PORT"              : 8883,  # 1883 = mqtt, 8883 = TLS
             "MQTT_USERNAME"          : "indi-allsky",
@@ -605,6 +607,7 @@ class IndiAllSkyConfigBase(object):
         },
         "DEVICE" : {
             "MQTT_TRANSPORT"         : "tcp",  # tcp or websockets
+            "MQTT_PROTOCOL"          : "MQTTv5",
             "MQTT_HOST"              : "localhost",
             "MQTT_PORT"              : 8883,  # 1883 = mqtt, 8883 = TLS
             "MQTT_USERNAME"          : "indi-allsky",
@@ -658,6 +661,7 @@ class IndiAllSkyConfigBase(object):
             "ECOWITT_APPLICATIONKEY_E" : "",
             "ECOWITT_MACADDRESS"       : "",
             "MQTT_TRANSPORT"         : "tcp",  # tcp or websockets
+            "MQTT_PROTOCOL"          : "MQTTv5",
             "MQTT_HOST"              : "localhost",
             "MQTT_PORT"              : 8883,  # 1883 = mqtt, 8883 = TLS
             "MQTT_USERNAME"          : "indi-allsky",

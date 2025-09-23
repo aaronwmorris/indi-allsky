@@ -2341,6 +2341,7 @@ class ConfigView(FormView):
             'S3UPLOAD__UPLOAD_RAW'           : self.indi_allsky_config.get('S3UPLOAD', {}).get('UPLOAD_RAW', False),
             'MQTTPUBLISH__ENABLE'            : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('ENABLE', False),
             'MQTTPUBLISH__TRANSPORT'         : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('TRANSPORT', 'tcp'),
+            'MQTTPUBLISH__PROTOCOL'          : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('PROTOCOL', 'MQTTv5'),
             'MQTTPUBLISH__HOST'              : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('HOST', 'localhost'),
             'MQTTPUBLISH__PORT'              : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('PORT', 8883),
             'MQTTPUBLISH__USERNAME'          : self.indi_allsky_config.get('MQTTPUBLISH', {}).get('USERNAME', 'indi-allsky'),
@@ -2386,6 +2387,7 @@ class ConfigView(FormView):
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
             'LIBCAMERA__EXTRA_OPTIONS_DAY'   : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS_DAY', ''),
             'LIBCAMERA__MQTT_TRANSPORT'      : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_TRANSPORT', 'tcp'),
+            'LIBCAMERA__MQTT_PROTOCOL'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_PROTOCOL', 'MQTTv5'),
             'LIBCAMERA__MQTT_HOST'           : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_HOST', 'localhost'),
             'LIBCAMERA__MQTT_PORT'           : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_PORT', 8883),
             'LIBCAMERA__MQTT_USERNAME'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_USERNAME', 'indi-allsky'),
@@ -2451,6 +2453,7 @@ class ConfigView(FormView):
             'GENERIC_GPIO__A_PIN_1'          : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_PIN_1', 'D21'),
             'GENERIC_GPIO__A_INVERT_OUTPUT'  : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_INVERT_OUTPUT', False),
             'DEVICE__MQTT_TRANSPORT'         : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_TRANSPORT', 'tcp'),
+            'DEVICE__MQTT_PROTOCOL'          : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_PROTOCOL', 'MQTTv5'),
             'DEVICE__MQTT_HOST'              : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_HOST', 'localhost'),
             'DEVICE__MQTT_PORT'              : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_PORT', 8883),
             'DEVICE__MQTT_USERNAME'          : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_USERNAME', 'indi-allsky'),
@@ -2492,6 +2495,7 @@ class ConfigView(FormView):
             'TEMP_SENSOR__ECOWITT_APPLICATIONKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ECOWITT_APPLICATIONKEY', ''),
             'TEMP_SENSOR__ECOWITT_MACADDRESS'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ECOWITT_MACADDRESS', ''),
             'TEMP_SENSOR__MQTT_TRANSPORT'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_TRANSPORT', 'tcp'),
+            'TEMP_SENSOR__MQTT_PROTOCOL'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_PROTOCOL', 'MQTTv5'),
             'TEMP_SENSOR__MQTT_HOST'         : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_HOST', 'localhost'),
             'TEMP_SENSOR__MQTT_PORT'         : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_PORT', 8883),
             'TEMP_SENSOR__MQTT_USERNAME'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('MQTT_USERNAME', 'indi-allsky'),
@@ -3243,6 +3247,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['S3UPLOAD']['UPLOAD_RAW']               = bool(request.json['S3UPLOAD__UPLOAD_RAW'])
         self.indi_allsky_config['MQTTPUBLISH']['ENABLE']                = bool(request.json['MQTTPUBLISH__ENABLE'])
         self.indi_allsky_config['MQTTPUBLISH']['TRANSPORT']             = str(request.json['MQTTPUBLISH__TRANSPORT'])
+        self.indi_allsky_config['MQTTPUBLISH']['PROTOCOL']              = str(request.json['MQTTPUBLISH__PROTOCOL'])
         self.indi_allsky_config['MQTTPUBLISH']['HOST']                  = str(request.json['MQTTPUBLISH__HOST'])
         self.indi_allsky_config['MQTTPUBLISH']['PORT']                  = int(request.json['MQTTPUBLISH__PORT'])
         self.indi_allsky_config['MQTTPUBLISH']['USERNAME']              = str(request.json['MQTTPUBLISH__USERNAME'])
@@ -3298,6 +3303,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS']           = str(request.json['LIBCAMERA__EXTRA_OPTIONS'])
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS_DAY']       = str(request.json['LIBCAMERA__EXTRA_OPTIONS_DAY'])
         self.indi_allsky_config['LIBCAMERA']['MQTT_TRANSPORT']          = str(request.json['LIBCAMERA__MQTT_TRANSPORT'])
+        self.indi_allsky_config['LIBCAMERA']['MQTT_PROTOCOL']           = str(request.json['LIBCAMERA__MQTT_PROTOCOL'])
         self.indi_allsky_config['LIBCAMERA']['MQTT_HOST']               = str(request.json['LIBCAMERA__MQTT_HOST'])
         self.indi_allsky_config['LIBCAMERA']['MQTT_PORT']               = int(request.json['LIBCAMERA__MQTT_PORT'])
         self.indi_allsky_config['LIBCAMERA']['MQTT_USERNAME']           = str(request.json['LIBCAMERA__MQTT_USERNAME'])
@@ -3363,6 +3369,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['GENERIC_GPIO']['A_PIN_1']              = str(request.json['GENERIC_GPIO__A_PIN_1'])
         self.indi_allsky_config['GENERIC_GPIO']['A_INVERT_OUTPUT']      = bool(request.json['GENERIC_GPIO__A_INVERT_OUTPUT'])
         self.indi_allsky_config['DEVICE']['MQTT_TRANSPORT']             = str(request.json['DEVICE__MQTT_TRANSPORT'])
+        self.indi_allsky_config['DEVICE']['MQTT_PROTOCOL']              = str(request.json['DEVICE__MQTT_PROTOCOL'])
         self.indi_allsky_config['DEVICE']['MQTT_HOST']                  = str(request.json['DEVICE__MQTT_HOST'])
         self.indi_allsky_config['DEVICE']['MQTT_PORT']                  = int(request.json['DEVICE__MQTT_PORT'])
         self.indi_allsky_config['DEVICE']['MQTT_USERNAME']              = str(request.json['DEVICE__MQTT_USERNAME'])
@@ -3404,6 +3411,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['ECOWITT_APPLICATIONKEY'] = str(request.json['TEMP_SENSOR__ECOWITT_APPLICATIONKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['ECOWITT_MACADDRESS']     = str(request.json['TEMP_SENSOR__ECOWITT_MACADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_TRANSPORT']        = str(request.json['TEMP_SENSOR__MQTT_TRANSPORT'])
+        self.indi_allsky_config['TEMP_SENSOR']['MQTT_PROTOCOL']         = str(request.json['TEMP_SENSOR__MQTT_PROTOCOL'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_HOST']             = str(request.json['TEMP_SENSOR__MQTT_HOST'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_PORT']             = int(request.json['TEMP_SENSOR__MQTT_PORT'])
         self.indi_allsky_config['TEMP_SENSOR']['MQTT_USERNAME']         = str(request.json['TEMP_SENSOR__MQTT_USERNAME'])
