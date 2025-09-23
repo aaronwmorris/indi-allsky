@@ -1968,29 +1968,35 @@ class ImageWorker(Process):
 
 
         if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
-            if new_exposure < self.auto_gain_exposure_cutoff_low:
-                next_gain = gain_current + self.gain_step
+            if new_exposure > exposure:
+                # new exposure is higher
+                if new_exposure < self.auto_gain_exposure_cutoff_high:
+                    # maintain same gain, increase exposure
+                    next_gain = gain_current
+                else:
+                    # increase gain, maintain exposure
+                    next_gain = gain_current + self.gain_step
+                    new_exposure = exposure
 
-                # Do not exceed the gain limits
-                if next_gain > gain_max:
-                    next_gain = gain_max
-            elif new_exposure > self.auto_gain_exposure_cutoff_high:
-                next_gain = gain_current - self.gain_step
-
-                # Do not exceed the gain limits
-                if next_gain < gain_min:
-                    next_gain = gain_min
+                    # Do not exceed the gain limits
+                    if next_gain > gain_max:
+                        next_gain = gain_max
             else:
-                # no change to gain
-                next_gain = gain_current
+                # new exposure is lower
+                if new_exposure > self.auto_gain_exposure_cutoff_low:
+                    # maintain same gain, decrease exposure
+                    next_gain = gain_current
+                else:
+                    # decrease gain, maintain exposure
+                    next_gain = gain_current - self.gain_step
+                    new_exposure = exposure
+
+                    # Do not exceed the gain limits
+                    if next_gain < gain_min:
+                        next_gain = gain_min
         else:
             # just set the gain to the max for the current mode
             next_gain = gain_max
-
-
-        if next_gain != gain_current:
-            # change gain instead of exposure
-            new_exposure = exposure
 
 
         logger.warning('New calculated exposure: %0.8f (gain %0.2f)', new_exposure, next_gain)
