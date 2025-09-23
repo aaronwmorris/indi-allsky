@@ -88,8 +88,11 @@ class CameraTest(object):
         self.gain_av = Array('f', [
             -1.0,  # current gain
             -1.0,  # next gain
-            -1.0,  # minimum gain (day max)
+            -1.0,  # day minimum
+            -1.0,  # day maximum
+            -1.0,  # night minimum
             -1.0,  # night maximum
+            -1.0,  # moon mode minimum
             -1.0,  # moon mode maximum
         ])
 
