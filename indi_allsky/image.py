@@ -1969,17 +1969,17 @@ class ImageWorker(Process):
 
         if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
             if new_exposure < self.auto_gain_exposure_cutoff_low:
-                next_gain = gain_current - self.gain_step
-
-                # Do not exceed the gain limits
-                if next_gain < gain_min:
-                    next_gain = gain_min
-            elif new_exposure > self.auto_gain_exposure_cutoff_high:
                 next_gain = gain_current + self.gain_step
 
                 # Do not exceed the gain limits
                 if next_gain > gain_max:
                     next_gain = gain_max
+            elif new_exposure > self.auto_gain_exposure_cutoff_high:
+                next_gain = gain_current - self.gain_step
+
+                # Do not exceed the gain limits
+                if next_gain < gain_min:
+                    next_gain = gain_min
             else:
                 # no change to gain
                 next_gain = gain_current
