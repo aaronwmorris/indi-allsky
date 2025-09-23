@@ -3408,8 +3408,8 @@ class IndiAllskyConfigForm(FlaskForm):
     )
 
     MQTTPUBLISH__PROTOCOL_choices = (
-        ('MQTTv311', 'v3.1.1'),
         ('MQTTv5', 'v5.0'),
+        ('MQTTv311', 'v3.1.1'),
     )
 
     LIBCAMERA__IMAGE_FILE_TYPE_choices = (
