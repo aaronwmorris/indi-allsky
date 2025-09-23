@@ -138,6 +138,9 @@ class ImageWorker(Process):
             self.night_v,
         )
 
+
+        self._gain_step = None  # calculate on first image
+
         self.image_save_hook_process = None  # used for both pre- and post-hooks
         self.image_save_hook_process_start = 0
         self.pre_hook_datajson_name_p = None
@@ -169,6 +172,10 @@ class ImageWorker(Process):
     def libcamera_raw(self, new_libcamera_raw):
         self._libcamera_raw = bool(new_libcamera_raw)
 
+
+    @property
+    def gain_step(self):
+        return self._gain_step
 
 
     def sighup_handler_worker(self, signum, frame):
@@ -318,6 +325,16 @@ class ImageWorker(Process):
         camera = IndiAllSkyDbCameraTable.query\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .one()
+
+
+        if isinstance(self.gain_step, type(None)):
+            # the gain steps cannot be calculated until the gain_av variable is populated
+            gain_range = self.gain_av[constants.GAIN_MAX_NIGHT] - self.gain_av[constants.GAIN_MAX_DAY]
+            auto_gain_div = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_DIV', 5)
+            self._gain_step = round(gain_range / auto_gain_div, 2)
+
+            if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
+                logger.info('Gain Steps: %d @ %0.2f', auto_gain_div, self.gain_step)
 
 
         processing_start = time.time()
