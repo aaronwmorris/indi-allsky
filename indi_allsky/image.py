@@ -1938,12 +1938,14 @@ class ImageWorker(Process):
         if self.night_v.value:
             exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
 
-            if self.moonmode_v.value:
-                gain_min = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
-                gain_max = float(self.gain_av[constants.GAIN_MAX_MOONMODE])
-            else:
-                gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
-                gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
+            gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
+            gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
+
+            if not self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
+                # ignore moon mode when using auto-gain
+                if self.moonmode_v.value:
+                    gain_min = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
+                    gain_max = float(self.gain_av[constants.GAIN_MAX_MOONMODE])
         else:
             exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
 
