@@ -341,7 +341,7 @@ class ImageWorker(Process):
 
             self._gain_step = gain_range / auto_gain_div
 
-            self.night_gain_steps = [round(self.gain_step * x) for x in range(auto_gain_div)]
+            self.night_gain_steps = [round(self.gain_step * x) for x in range(auto_gain_div)]  # round to ints
             self.night_gain_steps[0] = float(self.gain_av[constants.GAIN_MIN_NIGHT])
             self.night_gain_steps[-1] = float(self.gain_av[constants.GAIN_MAX_NIGHT])
 
@@ -1931,7 +1931,6 @@ class ImageWorker(Process):
 
 
     def recalculate_exposure(self, exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor):
-
         # Until we reach a good starting point, do not calculate a moving average
         if adu <= target_adu_max and adu >= target_adu_min:
             logger.warning('Found target value for exposure')
@@ -1947,8 +1946,8 @@ class ImageWorker(Process):
             gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
             gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
 
+            # ignore moon mode when using auto-gain
             if not self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
-                # ignore moon mode when using auto-gain
                 if self.moonmode_v.value:
                     gain_min = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
                     gain_max = float(self.gain_av[constants.GAIN_MAX_MOONMODE])
@@ -1977,34 +1976,45 @@ class ImageWorker(Process):
 
         if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
             if new_exposure == exposure:
-                pass
+                next_gain = gain
             elif new_exposure > exposure:
-                # new exposure is higher
-                if new_exposure < self.auto_gain_exposure_cutoff_high:
-                    # maintain same gain, increase exposure
+                # exposure/gain needs to increase
+                if gain >= gain_max:
+                    # already at max gain, let exposure increase
                     next_gain = gain
                 else:
-                    # increase gain, maintain exposure
-                    next_gain = gain + self.gain_step
-                    new_exposure = exposure
 
-                    # Do not exceed the gain limits
-                    if next_gain > gain_max:
-                        next_gain = gain_max
+                    if exposure < self.auto_gain_exposure_cutoff_high:
+                        # maintain same gain, increase exposure
+                        next_gain = gain
+                        new_exposure = min(new_exposure, self.auto_gain_exposure_cutoff_high)
+                    else:
+                        # increase gain, maintain exposure
+                        next_gain = gain + self.gain_step
+                        new_exposure = exposure
+
+                        # Do not exceed the gain limits
+                        if next_gain > gain_max:
+                            next_gain = gain_max
+
             else:
-                # new exposure is lower
-                # FIXME scale gain down if it is above max
-                if new_exposure > self.auto_gain_exposure_cutoff_low:
-                    # maintain same gain, decrease exposure
+                # exposure/gain needs to decrease
+                if gain <= gain_min:
+                    # already at minimum gain, let exposure decrease
                     next_gain = gain
                 else:
-                    # decrease gain, maintain exposure
-                    next_gain = gain - self.gain_step
-                    new_exposure = exposure
+                    if exposure > self.auto_gain_exposure_cutoff_low:
+                        # maintain same gain, decrease exposure
+                        next_gain = gain
+                        new_exposure = max(new_exposure, self.auto_gain_exposure_cutoff_low)
+                    else:
+                        # decrease gain, maintain exposure
+                        next_gain = gain - self.gain_step
+                        new_exposure = exposure
 
-                    # Do not exceed the gain limits
-                    if next_gain < gain_min:
-                        next_gain = gain_min
+                        # Do not exceed the gain limits
+                        if next_gain < gain_min:
+                            next_gain = gain_min
         else:
             # just set the gain to the max for the current mode
             next_gain = gain_max
