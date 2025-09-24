@@ -143,6 +143,7 @@ class ImageWorker(Process):
 
 
         self._gain_step = None  # calculate on first image
+        self.night_gain_steps = None  # list of fixed gain values
         self.auto_gain_exposure_cutoff_low = None
         self.auto_gain_exposure_cutoff_high = None
 
@@ -337,7 +338,12 @@ class ImageWorker(Process):
             # the gain steps cannot be calculated until the gain_av variable is populated
             gain_range = self.gain_av[constants.GAIN_MAX_NIGHT] - self.gain_av[constants.GAIN_MAX_DAY]
             auto_gain_div = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_DIV', 5)
-            self._gain_step = round(gain_range / auto_gain_div, 2)
+
+            self._gain_step = gain_range / auto_gain_div
+
+            self.night_gain_steps = [round(self.gain_step * x) for x in range(auto_gain_div)]
+            self.night_gain_steps[0] = float(self.gain_av[constants.GAIN_MIN_NIGHT])
+            self.night_gain_steps[-1] = float(self.gain_av[constants.GAIN_MAX_NIGHT])
 
             self.auto_gain_exposure_cutoff_high = self.exposure_av[constants.EXPOSURE_MAX] * (self.auto_gain_exposure_cutoff_level_high / 100)
             if self.exposure_av[constants.EXPOSURE_MAX] - self.auto_gain_exposure_cutoff_high < 1.0:
@@ -348,7 +354,7 @@ class ImageWorker(Process):
                 self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] - 10.0
 
             if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
-                logger.info('Gain Steps: %d @ %0.2f', auto_gain_div, self.gain_step)
+                logger.info('Gain Steps: %d @ %0.2f - %s', auto_gain_div, self.gain_step, self.night_gain_steps)
                 logger.info('Auto-Gain Exposure cutoff: %0.2fs/%0.2fs', self.auto_gain_exposure_cutoff_low, self.auto_gain_exposure_cutoff_high)
 
 
