@@ -1980,7 +1980,7 @@ class ImageWorker(Process):
 
         if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
             try:
-                gain_idx = self.auto_gain_step_list.index(gain)
+                auto_gain_idx = self.auto_gain_step_list.index(gain)
             except ValueError:
                 # fallback to min if gain does not match
                 logger.error('Current gain not found in list, reset to minimum gain')
@@ -2022,7 +2022,7 @@ class ImageWorker(Process):
                         new_exposure = max(new_exposure, self.auto_gain_exposure_cutoff_low)
                     else:
                         # decrease gain, maintain exposure
-                        next_gain = self.auto_gain_step_list[gain_idx - 1]
+                        next_gain = self.auto_gain_step_list[auto_gain_idx - 1]
                         new_exposure = exposure
 
                         # Do not exceed the gain limits
