@@ -64,7 +64,7 @@ class IndiAllSkyConfigBase(object):
                 "BINNING" : 1,
             },
             "AUTO_GAIN_ENABLE"  : False,
-            "AUTO_GAIN_DIV"     : 5,
+            "AUTO_GAIN_LEVELS"  : 5,
         },
         "INDI_CONFIG_DEFAULTS" : {
             "SWITCHES" : {},

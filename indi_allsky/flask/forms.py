@@ -251,9 +251,9 @@ def EXPOSURE_PERIOD_DAY_validator(form, field):
         raise ValidationError('Exposure period must be 1.0 or more')
 
 
-def CCD_CONFIG__AUTO_GAIN_DIV_validator(form, field):
-    if field.data not in list(zip(*form.CCD_CONFIG__AUTO_GAIN_DIV_choices))[0]:
-        raise ValidationError('Divisor must be between 2 and 10')
+def CCD_CONFIG__AUTO_GAIN_LEVELS_validator(form, field):
+    if field.data not in list(zip(*form.CCD_CONFIG__AUTO_GAIN_LEVELS_choices))[0]:
+        raise ValidationError('Divisor must be between 3 and 10')
 
 
 def TIMELAPSE_SKIP_FRAMES_validator(form, field):
@@ -3154,7 +3154,7 @@ class IndiAllskyConfigForm(FlaskForm):
     }
 
 
-    CCD_CONFIG__AUTO_GAIN_DIV_choices = (
+    CCD_CONFIG__AUTO_GAIN_LEVELS_choices = (
         ('10', '10'),
         ('9', '9'),
         ('8', '8'),
@@ -3163,7 +3163,6 @@ class IndiAllskyConfigForm(FlaskForm):
         ('5', '5'),
         ('4', '4'),
         ('3', '3'),
-        ('2', '2'),
     )
 
     CCD_BIT_DEPTH_choices = (
@@ -3906,7 +3905,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_CONFIG__DAY__GAIN            = FloatField('Daytime Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__DAY__BINNING         = IntegerField('Daytime Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
     CCD_CONFIG__AUTO_GAIN_ENABLE     = BooleanField('Enable Auto-Gain')
-    CCD_CONFIG__AUTO_GAIN_DIV        = SelectField('Auto-Gain Divisor', choices=CCD_CONFIG__AUTO_GAIN_DIV_choices, validators=[CCD_CONFIG__AUTO_GAIN_DIV_validator])
+    CCD_CONFIG__AUTO_GAIN_LEVELS     = SelectField('Auto-Gain Levels', choices=CCD_CONFIG__AUTO_GAIN_LEVELS_choices, validators=[CCD_CONFIG__AUTO_GAIN_LEVELS_validator])
     CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_MAX_validator])
     CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_DEF_validator])
     CCD_EXPOSURE_MIN                 = FloatField('Min Exposure (Night)', validators=[CCD_EXPOSURE_MIN_validator])
