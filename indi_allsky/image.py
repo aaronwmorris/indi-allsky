@@ -1996,7 +1996,6 @@ class ImageWorker(Process):
                     # already at max gain, increase exposure
                     next_gain = gain
                 else:
-
                     if exposure < self.auto_gain_exposure_cutoff_high:
                         # maintain gain, increase exposure
                         next_gain = gain
@@ -2005,10 +2004,6 @@ class ImageWorker(Process):
                         # increase gain, maintain exposure
                         next_gain = self.auto_gain_step_list[auto_gain_idx + 1]
                         new_exposure = exposure
-
-                        # Do not exceed the gain limits
-                        if next_gain > gain_max:
-                            next_gain = gain_max
 
             else:
                 # exposure/gain needs to decrease
@@ -2025,12 +2020,16 @@ class ImageWorker(Process):
                         next_gain = self.auto_gain_step_list[auto_gain_idx - 1]
                         new_exposure = exposure
 
-                        # Do not exceed the gain limits
-                        if next_gain < gain_min:
-                            next_gain = gain_min
         else:
             # just set the gain to the max for the current mode
             next_gain = gain_max
+
+
+        # Do not exceed the gain limits
+        if next_gain > gain_max:
+            next_gain = gain_max
+        elif next_gain < gain_min:
+            next_gain = gain_min
 
 
         logger.warning('New calculated exposure: %0.8f (gain %0.2f)', new_exposure, next_gain)
