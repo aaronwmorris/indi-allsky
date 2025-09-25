@@ -337,7 +337,7 @@ class ImageWorker(Process):
         if isinstance(self.gain_step, type(None)):
             # the gain steps cannot be calculated until the gain_av variable is populated
             gain_range = self.gain_av[constants.GAIN_MAX_NIGHT] - self.gain_av[constants.GAIN_MIN_NIGHT]
-            auto_gain_div = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_DIV', 5)
+            auto_gain_div = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_DIV', 5) - 1
 
 
             self._gain_step = gain_range / auto_gain_div
