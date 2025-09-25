@@ -65,7 +65,7 @@ class ImageWorker(Process):
     sqm_history_minutes = 30
     stars_history_minutes = 30
 
-    auto_gain_exposure_cutoff_level_low = 80  # percent of max exposure
+    auto_gain_exposure_cutoff_level_low = 75  # percent of max exposure
     auto_gain_exposure_cutoff_level_high = 95  # percent of max exposure
 
 
