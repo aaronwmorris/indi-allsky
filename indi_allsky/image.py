@@ -1964,18 +1964,18 @@ class ImageWorker(Process):
 
         # Scale the exposure up and down based on targets
         if adu > target_adu_max:
-            new_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
+            next_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
         elif adu < target_adu_min:
-            new_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
+            next_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
         else:
-            new_exposure = exposure
+            next_exposure = exposure
 
 
         # Do not exceed the exposure limits
-        if new_exposure < exposure_min:
-            new_exposure = float(exposure_min)
-        elif new_exposure > self.exposure_av[constants.EXPOSURE_MAX]:
-            new_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
+        if next_exposure < exposure_min:
+            next_exposure = float(exposure_min)
+        elif next_exposure > self.exposure_av[constants.EXPOSURE_MAX]:
+            next_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
 
 
         if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
@@ -1987,38 +1987,40 @@ class ImageWorker(Process):
                 auto_gain_idx = 0
 
 
-            if new_exposure == exposure:
+            if next_exposure == exposure:
                 # no change
                 next_gain = gain
-            elif new_exposure > exposure:
+            elif next_exposure > exposure:
                 # exposure/gain needs to increase
                 if gain == self.auto_gain_step_list[-1]:
                     # already at max gain, increase exposure
                     next_gain = gain
+                    next_exposure = min(next_exposure, self.auto_gain_exposure_cutoff_high)
                 else:
                     if exposure < self.auto_gain_exposure_cutoff_high:
                         # maintain gain, increase exposure
                         next_gain = gain
-                        new_exposure = min(new_exposure, self.auto_gain_exposure_cutoff_high)
+                        next_exposure = min(next_exposure, self.auto_gain_exposure_cutoff_high)
                     else:
                         # increase gain, maintain exposure
                         next_gain = self.auto_gain_step_list[auto_gain_idx + 1]
-                        new_exposure = exposure
+                        next_exposure = exposure
 
             else:
                 # exposure/gain needs to decrease
                 if gain == self.auto_gain_step_list[0]:
                     # already at minimum gain, decrease exposure
                     next_gain = gain
+                    next_exposure = max(next_exposure, self.auto_gain_exposure_cutoff_low)
                 else:
                     if exposure > self.auto_gain_exposure_cutoff_low:
                         # maintain gain, decrease exposure
                         next_gain = gain
-                        new_exposure = max(new_exposure, self.auto_gain_exposure_cutoff_low)
+                        next_exposure = max(next_exposure, self.auto_gain_exposure_cutoff_low)
                     else:
                         # decrease gain, maintain exposure
                         next_gain = self.auto_gain_step_list[auto_gain_idx - 1]
-                        new_exposure = exposure
+                        next_exposure = exposure
 
         else:
             # just set the gain to the max for the current mode
@@ -2032,9 +2034,9 @@ class ImageWorker(Process):
             next_gain = gain_min
 
 
-        logger.warning('New calculated exposure: %0.8f (gain %0.2f)', new_exposure, next_gain)
+        logger.warning('New calculated exposure: %0.8f (gain %0.2f)', next_exposure, next_gain)
         with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_NEXT] = float(new_exposure)
+            self.exposure_av[constants.EXPOSURE_NEXT] = float(next_exposure)
 
         with self.gain_av.get_lock():
             self.gain_av[constants.GAIN_NEXT] = float(next_gain)
