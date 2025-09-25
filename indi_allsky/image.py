@@ -340,7 +340,7 @@ class ImageWorker(Process):
             auto_gain_div = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_DIV', 5)
 
 
-            self._gain_step = gain_range / auto_gain_div
+            self._gain_step = gain_range / (auto_gain_div - 1)  # need gaps
 
             self.auto_gain_step_list = [float(round(self.gain_step * x)) for x in range(auto_gain_div)]  # round to ints
             self.auto_gain_step_list[0] = float(self.gain_av[constants.GAIN_MIN_NIGHT])  # replace first value
