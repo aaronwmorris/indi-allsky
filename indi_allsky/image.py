@@ -143,8 +143,7 @@ class ImageWorker(Process):
 
 
         self._gain_step = None  # calculate on first image
-        self.day_gain_steps = None  # list of fixed gain values
-        self.night_gain_steps = None  # list of fixed gain values
+        self.auto_gain_step_list = None  # list of fixed gain values
         self.auto_gain_exposure_cutoff_low = None
         self.auto_gain_exposure_cutoff_high = None
 
@@ -343,11 +342,9 @@ class ImageWorker(Process):
 
             self._gain_step = gain_range / auto_gain_div
 
-            self.night_gain_steps = [float(round(self.gain_step * x)) for x in range(auto_gain_div)]  # round to ints
-            self.night_gain_steps[0] = float(self.gain_av[constants.GAIN_MIN_NIGHT])  # replace first value
-            self.night_gain_steps[-1] = float(self.gain_av[constants.GAIN_MAX_NIGHT])  # replace last value
-
-            self.day_gain_steps = [float(self.gain_av[constants.GAIN_MIN_DAY])]  # replace last value
+            self.auto_gain_step_list = [float(round(self.gain_step * x)) for x in range(auto_gain_div)]  # round to ints
+            self.auto_gain_step_list[0] = float(self.gain_av[constants.GAIN_MIN_NIGHT])  # replace first value
+            self.auto_gain_step_list[-1] = float(self.gain_av[constants.GAIN_MAX_NIGHT])  # replace last value
 
 
             self.auto_gain_exposure_cutoff_high = self.exposure_av[constants.EXPOSURE_MAX] * (self.auto_gain_exposure_cutoff_level_high / 100)
@@ -361,7 +358,7 @@ class ImageWorker(Process):
 
             if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
                 logger.info('Gain Steps: %d @ %0.2f', auto_gain_div, self.gain_step)
-                logger.info('Gain Step list: %s', ', '.join(self.night_gain_steps))
+                logger.info('Gain Step list: %s', ', '.join(self.auto_gain_step_list))
                 logger.info('Auto-Gain Exposure cutoff: %0.2fs/%0.2fs', self.auto_gain_exposure_cutoff_low, self.auto_gain_exposure_cutoff_high)
 
 
@@ -1948,7 +1945,6 @@ class ImageWorker(Process):
 
 
         if self.night_v.value:
-            gain_steps = self.night_gain_steps
             exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
 
             gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
@@ -1960,7 +1956,6 @@ class ImageWorker(Process):
                     gain_min = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
                     gain_max = float(self.gain_av[constants.GAIN_MAX_MOONMODE])
         else:
-            gain_steps = self.day_gain_steps
             exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
 
             gain_min = float(self.gain_av[constants.GAIN_MIN_DAY])
@@ -1985,29 +1980,30 @@ class ImageWorker(Process):
 
         if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
             try:
-                gain_index = gain_steps.index(gain)
+                gain_idx = self.auto_gain_step_list.index(gain)
             except ValueError:
-                # reset gain to max
-                logger.error('Current gain not found in list, reset to max')
-                gain_index = len(gain_steps) - 1
+                # fallback to min if gain does not match
+                logger.error('Current gain not found in list, reset to minimum gain')
+                auto_gain_idx = 0
 
 
             if new_exposure == exposure:
+                # no change
                 next_gain = gain
             elif new_exposure > exposure:
                 # exposure/gain needs to increase
-                if gain == gain_steps[-1]:
-                    # already at max gain, let exposure increase
+                if gain == self.auto_gain_step_list[-1]:
+                    # already at max gain, increase exposure
                     next_gain = gain
                 else:
 
                     if exposure < self.auto_gain_exposure_cutoff_high:
-                        # maintain same gain, increase exposure
+                        # maintain gain, increase exposure
                         next_gain = gain
                         new_exposure = min(new_exposure, self.auto_gain_exposure_cutoff_high)
                     else:
                         # increase gain, maintain exposure
-                        next_gain = gain_steps[gain_index + 1]
+                        next_gain = self.auto_gain_step_list[auto_gain_idx + 1]
                         new_exposure = exposure
 
                         # Do not exceed the gain limits
@@ -2016,17 +2012,17 @@ class ImageWorker(Process):
 
             else:
                 # exposure/gain needs to decrease
-                if gain == gain_steps[0]:
-                    # already at minimum gain, let exposure decrease
+                if gain == self.auto_gain_step_list[0]:
+                    # already at minimum gain, decrease exposure
                     next_gain = gain
                 else:
                     if exposure > self.auto_gain_exposure_cutoff_low:
-                        # maintain same gain, decrease exposure
+                        # maintain gain, decrease exposure
                         next_gain = gain
                         new_exposure = max(new_exposure, self.auto_gain_exposure_cutoff_low)
                     else:
                         # decrease gain, maintain exposure
-                        next_gain = gain_steps[gain_index - 1]
+                        next_gain = self.auto_gain_step_list[gain_idx - 1]
                         new_exposure = exposure
 
                         # Do not exceed the gain limits
