@@ -358,7 +358,7 @@ class ImageWorker(Process):
 
             if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
                 logger.info('Gain Steps: %d @ %0.2f', auto_gain_div, self.gain_step)
-                logger.info('Gain Step list: %s', ', '.join(self.auto_gain_step_list))
+                logger.info('Gain Step list: %s', str(self.auto_gain_step_list))
                 logger.info('Auto-Gain Exposure cutoff: %0.2fs/%0.2fs', self.auto_gain_exposure_cutoff_low, self.auto_gain_exposure_cutoff_high)
 
 
