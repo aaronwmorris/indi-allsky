@@ -139,6 +139,10 @@ echo "System timezone"
 cat /etc/timezone || true
 
 echo
+echo "SystemD time data"
+timedatectl status || true
+
+echo
 echo "Uptime"
 uptime
 
