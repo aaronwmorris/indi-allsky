@@ -340,9 +340,9 @@ class ImageWorker(Process):
             auto_gain_levels = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_LEVELS', 5)
 
 
-            self._gain_step = gain_range / (auto_gain_levels - 1)
+            self._gain_step = gain_range / (auto_gain_levels - 1)  # need divisions
 
-            self.auto_gain_step_list = [float(round((self.gain_step * x) + self.gain_av[constants.GAIN_MIN_NIGHT])) for x in range(auto_gain_levels)]  # round to ints
+            self.auto_gain_step_list = [float(round((self.gain_step * x) + self.gain_av[constants.GAIN_MIN_NIGHT])) for x in range(auto_gain_levels)]  # round to ints due to indi
             #self.auto_gain_step_list[0] = float(self.gain_av[constants.GAIN_MIN_NIGHT])  # replace first value
             self.auto_gain_step_list[-1] = float(self.gain_av[constants.GAIN_MAX_NIGHT])  # replace last value
 
