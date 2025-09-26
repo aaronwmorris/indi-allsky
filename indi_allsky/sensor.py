@@ -46,7 +46,7 @@ class SensorWorker(Process):
         self.sensors_temp_av = sensors_temp_av
         self.sensors_user_av = sensors_user_av
         self.night_v = night_v
-        self.night = False
+        self.night = None  # None forces day/night change at startup
 
         self.gpio = None
         self.dew_heater = None
@@ -269,8 +269,6 @@ class SensorWorker(Process):
                 logger.error('Error initializing gpio controller: %s', str(e))
                 self.gpio = indi_allsky_gpios.gpio_simulator(self.config)
 
-            ### Do not set initial state on start
-
         else:
             self.gpio = indi_allsky_gpios.gpio_simulator(self.config)
 
@@ -313,8 +311,6 @@ class SensorWorker(Process):
             except (OSError, ValueError) as e:
                 logger.error('Error initializing dew heater controller: %s', str(e))
                 self.dew_heater = dew_heaters.dew_heater_simulator(self.config)
-
-            ### Do not set initial state on start
 
         else:
             self.dew_heater = dew_heaters.dew_heater_simulator(self.config)
@@ -362,9 +358,6 @@ class SensorWorker(Process):
             except (OSError, ValueError) as e:
                 logger.error('Error initializing fan controller: %s', str(e))
                 self.fan = fans.fan_simulator(self.config)
-
-
-            ### Do not set initial state on start
 
         else:
             self.fan = fans.fan_simulator(self.config)
