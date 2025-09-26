@@ -2010,11 +2010,11 @@ class ImageWorker(Process):
                     if exposure < self.auto_gain_exposure_cutoff_high:
                         # maintain gain, increase exposure
                         next_gain = gain
-                        next_exposure = min(next_exposure, self.auto_gain_exposure_cutoff_high)
+                        next_exposure = min(next_exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
                     else:
                         # increase gain, maintain exposure
                         next_gain = self.auto_gain_step_list[auto_gain_idx + 1]
-                        next_exposure = exposure
+                        next_exposure = min(exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
 
             else:
                 # exposure/gain needs to decrease
