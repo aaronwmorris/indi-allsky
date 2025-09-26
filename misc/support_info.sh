@@ -411,7 +411,7 @@ if [[ -n "${VIRTUAL_ENV:-}" ]]; then
     LOCATION_LATITUDE=$(echo "$INDI_ALLSKY_CONFIG" | jq -r '.LOCATION_LATITUDE')
     LOCATION_LONGITUDE=$(echo "$INDI_ALLSKY_CONFIG" | jq -r '.LOCATION_LONGITUDE')
 
-    INDI_ALLSKY_CONFIG=$(echo "$INDI_ALLSKY_CONFIG" | jq --argjson lat "$(printf '%0.0f' "$LOCATION_LATITUDE")" --argjson long "$(printf '%0.0f' "$LOCATION_LONGITUDE")" '.LOCATION_LATITUDE = $lat | .LOCATION_LONGITUDE = $long')
+    INDI_ALLSKY_CONFIG=$(echo "$INDI_ALLSKY_CONFIG" | jq --argjson lat "$(printf '%0.0f' "$LOCATION_LATITUDE" 2>/dev/null)" --argjson long "$(printf '%0.0f' "$LOCATION_LONGITUDE" 2>/dev/null)" '.LOCATION_LATITUDE = $lat | .LOCATION_LONGITUDE = $long')
 
 
     echo
