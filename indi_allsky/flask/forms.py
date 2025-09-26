@@ -253,7 +253,7 @@ def EXPOSURE_PERIOD_DAY_validator(form, field):
 
 def CCD_CONFIG__AUTO_GAIN_LEVELS_validator(form, field):
     if field.data not in list(zip(*form.CCD_CONFIG__AUTO_GAIN_LEVELS_choices))[0]:
-        raise ValidationError('Divisor must be between 3 and 10')
+        raise ValidationError('Invalid number of levels')
 
 
 def TIMELAPSE_SKIP_FRAMES_validator(form, field):
@@ -3155,6 +3155,8 @@ class IndiAllskyConfigForm(FlaskForm):
 
 
     CCD_CONFIG__AUTO_GAIN_LEVELS_choices = (
+        ('12', '12'),
+        ('11', '11'),
         ('10', '10'),
         ('9', '9'),
         ('8', '8'),
@@ -3162,7 +3164,6 @@ class IndiAllskyConfigForm(FlaskForm):
         ('6', '6'),
         ('5', '5'),
         ('4', '4'),
-        ('3', '3'),
     )
 
     CCD_BIT_DEPTH_choices = (
