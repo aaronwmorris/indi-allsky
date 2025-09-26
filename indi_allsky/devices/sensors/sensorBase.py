@@ -10,7 +10,7 @@ class SensorBase(object):
         self.night_v = args[2]
 
         self._slot = None  # var slot
-        self._night = None
+        self._night = None  # None forces day/night change at startup
 
         self.heater_on = False  # Sensor Heater
         self.heater_available = False
