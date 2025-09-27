@@ -990,7 +990,7 @@ class IndiClient(PyIndi.BaseClient):
         self.exposure = float(exposure)
 
 
-        if self.gain != float(gain):
+        if self.gain != round(float(gain), 2):
             self.setCcdGain(gain)
 
 
