@@ -208,11 +208,12 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
 
 
         self.as3935.reset()
-        time.sleep(1.0)
+        time.sleep(3.0)
 
-        if not self.as3935.calibrate():
+        while not self.as3935.calibrate():
             logger.error('[%s] AS3935 calibration failed', self.name)
             time.sleep(3.0)
+            logger.warning('[%s] AS3935 attempting calibration again', self.name)
 
 
         if self.afemode_outdoor:
@@ -306,11 +307,12 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
 
 
         self.as3935.reset()
-        time.sleep(1.0)
+        time.sleep(3.0)
 
-        if not self.as3935.calibrate():
+        while not self.as3935.calibrate():
             logger.error('[%s] AS3935 calibration failed', self.name)
             time.sleep(3.0)
+            logger.warning('[%s] AS3935 attempting calibration again', self.name)
 
 
         if self.afemode_outdoor:
