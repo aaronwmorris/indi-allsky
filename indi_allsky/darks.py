@@ -117,7 +117,8 @@ class IndiAllSkyDarks(object):
         self.bin_v = Value('i', 1)  # set 1 for sane default
         self.sensors_temp_av = Array('f', [0.0])  # 0 ccd_temp
 
-        self.night_v = Value('i', 1)  # bogus initial value
+        self.night_v = Value('i', -1)  # bogus initial value
+        self.moonmode_v = Value('i', 0)
 
         # not used, but required
         self.position_av = Array('f', [
@@ -383,16 +384,24 @@ class IndiAllSkyDarks(object):
 
 
         with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_MIN] = gain_day
-            self.gain_av[constants.GAIN_MAX_DAY] = gain_day
-            self.gain_av[constants.GAIN_MAX_NIGHT] = gain_night
-            self.gain_av[constants.GAIN_MAX_MOONMODE] = gain_moonmode
+            self.gain_av[constants.GAIN_CURRENT] = float(gain_day)  # just need a valid value
+            self.gain_av[constants.GAIN_NEXT] = float(gain_day)
+
+            self.gain_av[constants.GAIN_MAX_NIGHT] = float(gain_night)
+            self.gain_av[constants.GAIN_MAX_MOONMODE] = float(gain_moonmode)
+
+            # day is always lowest gain
+            self.gain_av[constants.GAIN_MAX_DAY] = float(gain_day)
+            self.gain_av[constants.GAIN_MIN_DAY] = float(gain_day)
+
+            self.gain_av[constants.GAIN_MIN_NIGHT] = float(gain_night)
+            self.gain_av[constants.GAIN_MIN_MOONMODE] = float(gain_moonmode)
 
 
-    def shoot(self, exposure, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, self.gain_av[constants.GAIN_CURRENT])
+    def shoot(self, exposure, gain, sync=True, timeout=None):
+        logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, gain)
 
-        self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
+        self.indiclient.setCcdExposure(exposure, gain, sync=sync, timeout=timeout)
 
 
     def _wait_for_image(self, exposure):
@@ -724,7 +733,7 @@ class IndiAllSkyDarks(object):
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
-            self.shoot(7.0, sync=True, timeout=20.0)
+            self.shoot(7.0, self.gain_av[constants.GAIN_MIN_DAY], sync=True, timeout=20.0)
 
 
             i_dict = self.image_q.get(timeout=10)
@@ -776,7 +785,7 @@ class IndiAllSkyDarks(object):
         if self.config['CAMERA_INTERFACE'].startswith('libcamera_') or self.config['CAMERA_INTERFACE'].startswith('mqtt_'):
             # libcamera only reports temperature changes when an exposure is taken
             logger.warning('TAKING THROW AWAY EXPOSURE TO UPDATE TEMPERATURE')
-            self.shoot(0.1, sync=True, timeout=10.0)
+            self.shoot(0.1, self.gain_av[constants.GAIN_MIN_DAY], sync=True, timeout=10.0)
             i_dict = self.image_q.get(timeout=10)
             filename = Path(i_dict['filename'])
 
@@ -787,7 +796,7 @@ class IndiAllSkyDarks(object):
         elif self.camera_server == 'indi_libcamera_ccd':
             # libcamera only reports temperature changes when an exposure is taken
             logger.warning('TAKING THROW AWAY EXPOSURE TO UPDATE TEMPERATURE')
-            self.shoot(0.1, sync=True, timeout=10.0)
+            self.shoot(0.1, self.gain_av[constants.GAIN_MIN_DAY], sync=True, timeout=10.0)
             i_dict = self.image_q.get(timeout=10)
             filename = Path(i_dict['filename'])
 
@@ -798,7 +807,7 @@ class IndiAllSkyDarks(object):
         elif 'indi_pylibcamera' in self.camera_server:  # SPECIAL CASE
             # libcamera only reports temperature changes when an exposure is taken
             logger.warning('TAKING THROW AWAY EXPOSURE TO UPDATE TEMPERATURE')
-            self.shoot(0.1, sync=True, timeout=10.0)
+            self.shoot(0.1, self.gain_av[constants.GAIN_MIN_DAY], sync=True, timeout=10.0)
             i_dict = self.image_q.get(timeout=10)
             filename = Path(i_dict['filename'])
 
@@ -933,7 +942,6 @@ class IndiAllSkyDarks(object):
                 logger.info(f"Processing {total_exposures} darks, {self.count} exposures each. Estimated time left: {self._format_time(int(estimated_time_left))}")
 
 
-                self.indiclient.setCcdGain(self.gain_av[constants.GAIN_MAX_DAY])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
                 # day will rarely exceed 1 second (with good cameras and proper conditions)
@@ -942,7 +950,7 @@ class IndiAllSkyDarks(object):
                     remaining_exposures = dark_exposures[index + 1:]
 
                     start = time.time()
-                    self._take_exposures(exposure, dark_filename_t, bpm_filename_t, stacking_class)
+                    self._take_exposures(exposure, self.gain_av[constants.GAIN_MAX_DAY], dark_filename_t, bpm_filename_t, stacking_class)
                     elapsed_s = time.time()
                     exposure_time = elapsed_s - start
 
@@ -1010,7 +1018,6 @@ class IndiAllSkyDarks(object):
 
         ### NIGHT DARKS ###
         for gain, binmode in night_darks_odict.keys():
-            self.indiclient.setCcdGain(gain)
             self.indiclient.setCcdBinning(binmode)
 
             for index, exposure in enumerate(dark_exposures):
@@ -1018,7 +1025,7 @@ class IndiAllSkyDarks(object):
                 remaining_exposures = dark_exposures[index + 1:]
 
                 start = time.time()
-                self._take_exposures(exposure, dark_filename_t, bpm_filename_t, stacking_class)
+                self._take_exposures(exposure, gain, dark_filename_t, bpm_filename_t, stacking_class)
                 elapsed_s = time.time()
                 exposure_time = elapsed_s - start
 
@@ -1032,7 +1039,7 @@ class IndiAllSkyDarks(object):
             remaining_configs -= 1
 
 
-    def _take_exposures(self, exposure, dark_filename_t, bpm_filename_t, stacking_class):
+    def _take_exposures(self, exposure, gain, dark_filename_t, bpm_filename_t, stacking_class):
         exposure_f = float(exposure)
 
         tmp_fit_dir = tempfile.TemporaryDirectory()    # context manager automatically deletes files when finished
@@ -1050,7 +1057,7 @@ class IndiAllSkyDarks(object):
 
             self._pre_shoot_reconfigure()
 
-            self.shoot(exposure_f, sync=True, timeout=180.0)  # flat 3 minute timeout
+            self.shoot(exposure_f, gain, sync=True, timeout=180.0)  # flat 3 minute timeout
 
             frame_elapsed = time.time() - start
             frame_delta = frame_elapsed - exposure_f
