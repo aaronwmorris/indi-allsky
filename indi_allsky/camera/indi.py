@@ -1160,9 +1160,10 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def setCcdGain(self, gain_value):
-        gain_value_i = int(gain_value)  # indi gains always treated as ints
+        gain_value_f0 = round(gain_value)  # round actual gain to nearest int
+        gain_value_f2 = round(gain_value, 2)
 
-        logger.warning('Setting CCD gain to %0.2f', float(gain_value_i))
+        logger.warning('Setting CCD gain to %0.2f', float(gain_value_f0))
         indi_exec = self.ccd_device.getDriverExec()
 
         if indi_exec in [
@@ -1175,7 +1176,7 @@ class IndiClient(PyIndi.BaseClient):
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_CONTROLS" : {
-                        "Gain" : gain_value_i,
+                        "Gain" : gain_value_f0,
                     },
                 },
             }
@@ -1189,7 +1190,7 @@ class IndiClient(PyIndi.BaseClient):
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_GAIN" : {
-                        "GAIN" : gain_value_i,
+                        "GAIN" : gain_value_f0,
                     },
                 },
             }
@@ -1204,7 +1205,7 @@ class IndiClient(PyIndi.BaseClient):
                 gain_config = {
                     "PROPERTIES" : {
                         "CCD_CONTROLS" : {
-                            "Gain" : gain_value_i,
+                            "Gain" : gain_value_f0,
                         },
                     },
                 }
@@ -1213,7 +1214,7 @@ class IndiClient(PyIndi.BaseClient):
                 gain_config = {
                     "PROPERTIES" : {
                         "CCD_GAIN" : {
-                            "GAIN" : gain_value_i,
+                            "GAIN" : gain_value_f0,
                         },
                     },
                 }
@@ -1227,7 +1228,7 @@ class IndiClient(PyIndi.BaseClient):
             logger.info('Mapping gain to ISO for libgphoto device')
 
             try:
-                gain_switch = self.__canon_gain_to_iso[gain_value]
+                gain_switch = self.__canon_gain_to_iso[int(gain_value)]
                 logger.info('Setting ISO switch: %s', gain_switch)
             except KeyError:
                 logger.error('Canon ISO not found for %s, using ISO 100', str(gain_value))
@@ -1253,7 +1254,7 @@ class IndiClient(PyIndi.BaseClient):
                 gain_config = {
                     "PROPERTIES" : {
                         "Image Adjustments" : {
-                            "Gain" : gain_value_i,
+                            "Gain" : gain_value_f0,
                         },
                     },
                 }
@@ -1267,7 +1268,7 @@ class IndiClient(PyIndi.BaseClient):
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_GAIN" : {
-                        "GAIN" : gain_value_i,
+                        "GAIN" : gain_value_f0,
                     },
                 },
             }
@@ -1280,9 +1281,9 @@ class IndiClient(PyIndi.BaseClient):
 
         # Update shared gain value
         with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_CURRENT] = float(gain_value_i)
+            self.gain_av[constants.GAIN_CURRENT] = float(gain_value_f2)
 
-        self.gain = float(gain_value_i)
+        self.gain = float(gain_value_f2)
 
 
     def setCcdBinning(self, bin_value):

@@ -66,7 +66,6 @@ class ImageWorker(Process):
     stars_history_minutes = 30
 
     auto_gain_exposure_cutoff_level_low = 80  # percent of max exposure
-    #auto_gain_exposure_cutoff_level_high = 95  # percent of max exposure
 
 
     def __init__(
@@ -342,15 +341,11 @@ class ImageWorker(Process):
 
             self._gain_step = gain_range / (auto_gain_levels - 1)  # need divisions
 
-            self.auto_gain_step_list = [float(round((self.gain_step * x) + self.gain_av[constants.GAIN_MIN_NIGHT])) for x in range(auto_gain_levels)]  # round to ints due to indi
-            #self.auto_gain_step_list[0] = float(self.gain_av[constants.GAIN_MIN_NIGHT])  # replace first value
+            self.auto_gain_step_list = [float(round(self.gain_step * x, 2) + self.gain_av[constants.GAIN_MIN_NIGHT]) for x in range(auto_gain_levels)]
             self.auto_gain_step_list[-1] = float(self.gain_av[constants.GAIN_MAX_NIGHT])  # replace last value
 
 
             self.auto_gain_exposure_cutoff_high = self.exposure_av[constants.EXPOSURE_MAX] - 0.5
-            #self.auto_gain_exposure_cutoff_high = self.exposure_av[constants.EXPOSURE_MAX] * (self.auto_gain_exposure_cutoff_level_high / 100)
-            #if self.exposure_av[constants.EXPOSURE_MAX] - self.auto_gain_exposure_cutoff_high < 1.0:
-            #    self.auto_gain_exposure_cutoff_high = self.exposure_av[constants.EXPOSURE_MAX] - 1.0
 
             self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] * (self.auto_gain_exposure_cutoff_level_low / 100)
             if self.exposure_av[constants.EXPOSURE_MAX] - self.auto_gain_exposure_cutoff_low > 10.0:
