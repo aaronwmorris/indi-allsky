@@ -132,7 +132,7 @@ class CameraTest(object):
         self.moonmode = False
         self.reconfigureCcd()
 
-        self.takeExposure(0.1)
+        self.takeExposure(0.1, self.gain_av[constants.GAIN_MAX_DAY])
 
 
         logger.warning('TESTING 1.0s EXPOSURE WITH NIGHT SETTINGS')
@@ -140,7 +140,7 @@ class CameraTest(object):
         self.moonmode = False
         self.reconfigureCcd()
 
-        self.takeExposure(1.0)
+        self.takeExposure(1.0, self.gain_av[constants.GAIN_MAX_NIGHT])
 
 
         logger.warning('TESTING 1.0s EXPOSURE WITH MOON MODE SETTINGS')
@@ -148,13 +148,13 @@ class CameraTest(object):
         self.moonmode = True
         self.reconfigureCcd()
 
-        self.takeExposure(1.0)
+        self.takeExposure(1.0, self.gain_av[constants.GAIN_MAX_MOONMODE])
 
 
-    def takeExposure(self, exposure):
+    def takeExposure(self, exposure, gain):
         frame_start_time = time.time()
 
-        self.shoot(exposure, sync=False)
+        self.shoot(exposure, gain, sync=False)
 
 
         while True:
@@ -193,10 +193,10 @@ class CameraTest(object):
         filename_p.unlink()
 
 
-    def shoot(self, exposure, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure (gain %0.1f)', exposure, self.gain_av[constants.GAIN_CURRENT])
+    def shoot(self, exposure, gain, sync=True, timeout=None):
+        logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, gain)
 
-        self.indiclient.setCcdExposure(exposure, sync=sync, timeout=timeout)
+        self.indiclient.setCcdExposure(exposure, gain, sync=sync, timeout=timeout)
 
 
     def _startup(self):
@@ -344,8 +344,8 @@ class CameraTest(object):
 
 
         # Validate gain settings
-        ccd_min_gain = ccd_info['GAIN_INFO']['min']
-        ccd_max_gain = ccd_info['GAIN_INFO']['max']
+        ccd_min_gain = float(ccd_info['GAIN_INFO']['min'])
+        ccd_max_gain = float(ccd_info['GAIN_INFO']['max'])
 
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
@@ -385,10 +385,26 @@ class CameraTest(object):
 
 
         with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_MIN] = gain_day
-            self.gain_av[constants.GAIN_MAX_DAY] = gain_day
-            self.gain_av[constants.GAIN_MAX_NIGHT] = gain_night
-            self.gain_av[constants.GAIN_MAX_MOONMODE] = gain_moonmode
+            self.gain_av[constants.GAIN_CURRENT] = float(gain_day)
+            self.gain_av[constants.GAIN_NEXT] = float(gain_day)
+
+            self.gain_av[constants.GAIN_MAX_NIGHT] = float(gain_night)
+            self.gain_av[constants.GAIN_MAX_MOONMODE] = float(gain_moonmode)
+
+            # day is always lowest gain
+            self.gain_av[constants.GAIN_MAX_DAY] = float(gain_day)
+            self.gain_av[constants.GAIN_MIN_DAY] = float(gain_day)
+
+            self.gain_av[constants.GAIN_MIN_NIGHT] = float(gain_night)
+            self.gain_av[constants.GAIN_MIN_MOONMODE] = float(gain_moonmode)
+
+
+        logger.info('Minimum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MIN_DAY])
+        logger.info('Maximum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MAX_DAY])
+        logger.info('Minimum CCD gain: %0.2f (night)', self.gain_av[constants.GAIN_MIN_NIGHT])
+        logger.info('Maximum CCD gain: %0.2f (night)', self.gain_av[constants.GAIN_MAX_NIGHT])
+        logger.info('Minimum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MIN_MOONMODE])
+        logger.info('Maximum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MAX_MOONMODE])
 
 
     def reconfigureCcd(self):
@@ -397,11 +413,9 @@ class CameraTest(object):
 
             if self.moonmode:
                 logger.warning('Change to night (moon mode)')
-                self.indiclient.setCcdGain(self.gain_av[constants.GAIN_MAX_MOONMODE])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
             else:
                 logger.warning('Change to night (normal mode)')
-                self.indiclient.setCcdGain(self.gain_av[constants.GAIN_MAX_NIGHT])
                 self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
 
@@ -419,7 +433,6 @@ class CameraTest(object):
             else:
                 self.indi_config = self.config['INDI_CONFIG_DEFAULTS']
 
-            self.indiclient.setCcdGain(self.gain_av[constants.GAIN_MAX_DAY])
             self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 

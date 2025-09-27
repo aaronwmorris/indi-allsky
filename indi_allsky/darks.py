@@ -398,6 +398,14 @@ class IndiAllSkyDarks(object):
             self.gain_av[constants.GAIN_MIN_MOONMODE] = float(gain_moonmode)
 
 
+        logger.info('Minimum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MIN_DAY])
+        logger.info('Maximum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MAX_DAY])
+        logger.info('Minimum CCD gain: %0.2f (night)', self.gain_av[constants.GAIN_MIN_NIGHT])
+        logger.info('Maximum CCD gain: %0.2f (night)', self.gain_av[constants.GAIN_MAX_NIGHT])
+        logger.info('Minimum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MIN_MOONMODE])
+        logger.info('Maximum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MAX_MOONMODE])
+
+
     def shoot(self, exposure, gain, sync=True, timeout=None):
         logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, gain)
 
