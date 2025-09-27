@@ -3905,7 +3905,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_CONFIG__MOONMODE__BINNING    = IntegerField('Moon Mode Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
     CCD_CONFIG__DAY__GAIN            = FloatField('Daytime Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__DAY__BINNING         = IntegerField('Daytime Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
-    CCD_CONFIG__AUTO_GAIN_ENABLE     = BooleanField('Enable Auto-Gain')
+    CCD_CONFIG__AUTO_GAIN_ENABLE     = BooleanField('Enable Exposure Priority Gain Mode [Auto-Gain]')
     CCD_CONFIG__AUTO_GAIN_LEVELS     = SelectField('Auto-Gain Levels', choices=CCD_CONFIG__AUTO_GAIN_LEVELS_choices, validators=[CCD_CONFIG__AUTO_GAIN_LEVELS_validator])
     CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_MAX_validator])
     CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_DEF_validator])
