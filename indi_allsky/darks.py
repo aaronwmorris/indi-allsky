@@ -69,6 +69,7 @@ class IndiAllSkyDarks(object):
 
         self._daytime = True  # build daytime dark library
 
+        self._gain_list = []
         self._count = 10
         self._temp_delta = 5.0
         self._time_delta = 5
@@ -148,6 +149,31 @@ class IndiAllSkyDarks(object):
     def count(self, new_count):
         #logger.info('Changing image count to %d', int(new_count))
         self._count = int(new_count)
+
+
+    @property
+    def gain_list(self):
+        return self._gain_list
+
+    @gain_list.setter
+    def gain_list(self, new_list_str):
+        if isinstance(new_list_str, type(None)):
+            logger.warning('Using gain values from config')
+            time.sleep(3.0)
+            return
+
+        try:
+            gain_list = [float(round(x, 2)) for x in new_list_str]
+        except ValueError:
+            logger.error('Invalid gain list: %s', str(new_list_str))
+            sys.exit(1)
+        except TypeError:
+            logger.error('Invalid gain list: %s', str(new_list_str))
+            sys.exit(1)
+
+
+        self._gain_list = sorted(gain_list, reverse=True)
+        logger.warning('Using gain list: %s', ', '.join(['{0:0.2f}'.format(x) for x in self._gain_list]))
 
 
     @property
@@ -881,17 +907,30 @@ class IndiAllSkyDarks(object):
         night_darks_odict = OrderedDict()  # using OrderedDict as a pseudo-set, we only care about keys
         # keys are a tuple of (gain, binmode)
 
-        # if NIGHT and MOONMODE have the same parameters, no need to double the work
-        night_darks_odict.update(
-            {
-                (float(self.gain_av[constants.GAIN_MAX_NIGHT]), self.config['CCD_CONFIG']['NIGHT']['BINNING']) : None,
-            }
-        )
-        night_darks_odict.update(
-            {
-                (float(self.gain_av[constants.GAIN_MAX_MOONMODE]), self.config['CCD_CONFIG']['MOONMODE']['BINNING']) : None,
-            }
-        )
+
+        if self.gain_list:
+            # use CLI values for gain
+            self.daytime = False
+
+            for gain in self.gain_list:
+                night_darks_odict.update(
+                    {
+                        (float(gain), self.config['CCD_CONFIG']['NIGHT']['BINNING']) : None,
+                    }
+                )
+        else:
+            # use config values for gain
+            # if NIGHT and MOONMODE have the same parameters, no need to double the work
+            night_darks_odict.update(
+                {
+                    (float(self.gain_av[constants.GAIN_MAX_NIGHT]), self.config['CCD_CONFIG']['NIGHT']['BINNING']) : None,
+                }
+            )
+            night_darks_odict.update(
+                {
+                    (float(self.gain_av[constants.GAIN_MAX_MOONMODE]), self.config['CCD_CONFIG']['MOONMODE']['BINNING']) : None,
+                }
+            )
 
 
         ### take darks
