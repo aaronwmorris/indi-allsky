@@ -342,7 +342,7 @@ class ImageWorker(Process):
             self._gain_step = gain_range / (auto_gain_levels - 1)  # need divisions
 
             self.auto_gain_step_list = [float(round((self.gain_step * x) + self.gain_av[constants.GAIN_MIN_NIGHT], 2)) for x in range(auto_gain_levels)]
-            self.auto_gain_step_list[-1] = float(self.gain_av[constants.GAIN_MAX_NIGHT])  # replace last value
+            self.auto_gain_step_list[-1] = float(round(self.gain_av[constants.GAIN_MAX_NIGHT], 2))  # replace last value, round is necessary
 
 
             self.auto_gain_exposure_cutoff_high = self.exposure_av[constants.EXPOSURE_MAX] - 0.5
