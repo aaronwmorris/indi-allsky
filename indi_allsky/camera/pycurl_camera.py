@@ -174,11 +174,13 @@ class IndiClientPycurl(IndiClient):
 
 
     def setCcdGain(self, new_gain_value):
+        gain_f = float(round(new_gain_value), 2)
+
         # Update shared gain value
         with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_CURRENT] = float(new_gain_value)
+            self.gain_av[constants.GAIN_CURRENT] = gain_f
 
-        self.gain = new_gain_value
+        self.gain = gain_f
 
 
     def setCcdBinning(self, bin_value):

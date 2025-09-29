@@ -1160,8 +1160,9 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def setCcdGain(self, new_gain_value):
-        gain_f = round(float(new_gain_value), 2)  # limit gain to 2 decimals
-        gain_value_indi = int(round(new_gain_value))  # round actual gain to nearest int
+        gain_f = float(round(new_gain_value, 2))  # limit gain to 2 decimals
+        #gain_value_indi = round(new_gain_value)  # round actual gain to nearest int
+        gain_value_indi = gain_f
 
         logger.warning('Setting CCD gain to %0.2f', float(gain_value_indi))
         indi_exec = self.ccd_device.getDriverExec()
@@ -1281,9 +1282,9 @@ class IndiClient(PyIndi.BaseClient):
 
         # Update shared gain value
         with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_CURRENT] = float(gain_f)
+            self.gain_av[constants.GAIN_CURRENT] = gain_f
 
-        self.gain = float(gain_f)
+        self.gain = gain_f
 
 
     def setCcdBinning(self, bin_value):

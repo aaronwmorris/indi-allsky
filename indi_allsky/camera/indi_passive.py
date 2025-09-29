@@ -111,7 +111,7 @@ class IndiClientPassive(IndiClient):
 
 
     def setCcdGain(self, gain_value):
-        gain_f = float(int(gain_value))
+        gain_f = float(round(gain_value), 2)
 
         # Update shared gain value
         with self.gain_av.get_lock():

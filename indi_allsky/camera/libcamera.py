@@ -107,7 +107,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
     def setCcdGain(self, new_gain_value):
-        gain_f = round(float(new_gain_value), 2)  # limit gain to 2 decimals
+        gain_f = float(round(new_gain_value, 2))  # limit gain to 2 decimals
 
         # Update shared gain value
         with self.gain_av.get_lock():
