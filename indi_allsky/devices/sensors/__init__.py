@@ -27,6 +27,7 @@ from .tempSensorHtu31d import TempSensorHtu31d_I2C as blinka_temp_sensor_htu31d_
 from .tempSensorAhtx0 import TempSensorAhtx0_I2C as blinka_temp_sensor_ahtx0_i2c
 
 from .tempSensorMlx90614 import TempSensorMlx90614_I2C as blinka_temp_sensor_mlx90614_i2c
+from .tempSensorMlx90615 import TempSensorMlx90615_I2C as blinka_temp_sensor_mlx90615_i2c
 from .tempSensorMlx90640 import TempSensorMlx90640_I2C as blinka_temp_sensor_mlx90640_i2c
 
 from .tempSensorScd30 import TempSensorScd30_I2C as blinka_temp_sensor_scd30_i2c
@@ -91,6 +92,7 @@ __all__ = (
     'blinka_temp_sensor_htu31d_i2c',
     'blinka_temp_sensor_ahtx0_i2c',
     'blinka_temp_sensor_mlx90614_i2c',
+    'blinka_temp_sensor_mlx90615_i2c',
     'blinka_temp_sensor_mlx90640_i2c',
     'blinka_temp_sensor_scd30_i2c',
     'blinka_temp_sensor_scd4x_i2c',
