@@ -124,11 +124,6 @@ def LENS_NAME_validator(form, field):
     if not field.data:
         return
 
-    lens_regex = r'^[a-zA-Z0-9\.\ \-\/]+$'
-
-    if not re.search(lens_regex, field.data):
-        raise ValidationError('Invalid lens name')
-
 
 def LENS_FOCAL_LENGTH_validator(form, field):
     if not isinstance(field.data, (int, float)):
@@ -595,11 +590,6 @@ def DETECT_STARS_THOLD_validator(form, field):
 def LOCATION_NAME_validator(form, field):
     if not field.data:
         return
-
-    name_regex = r'^[a-zA-Z0-9_,\.\-\/\:\ ]+$'
-
-    if not re.search(name_regex, field.data):
-        raise ValidationError('Invalid name')
 
 
 def LOCATION_LATITUDE_validator(form, field):
@@ -1185,10 +1175,11 @@ def IMAGE_FILE_COMPRESSION__PNG_validator(form, field):
 
 
 def VARLIB_FOLDER_validator(form, field):
-    folder_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
+    folder_regex = r'[^a-zA-Z0-9_\.\-\/]'
 
-    if not re.search(folder_regex, field.data):
-        raise ValidationError('Invalid folder name')
+    m = re.findall(folder_regex, field.data)
+    if m:
+        raise ValidationError('Folder contains disallowed characters: {0:s}'.format(', '.join(set(m))))
 
     if re.search(r'\/$', field.data):
         raise ValidationError('Directory cannot end with slash')
@@ -1221,10 +1212,11 @@ def VARLIB_FOLDER_validator(form, field):
 
 
 def IMAGE_FOLDER_validator(form, field):
-    folder_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
+    folder_regex = r'[^a-zA-Z0-9_\.\-\/]'
 
-    if not re.search(folder_regex, field.data):
-        raise ValidationError('Invalid folder name')
+    m = re.findall(folder_regex, field.data)
+    if m:
+        raise ValidationError('Folder contains disallowed characters: {0:s}'.format(', '.join(set(m))))
 
     if re.search(r'\/$', field.data):
         raise ValidationError('Directory cannot end with slash')
@@ -1245,10 +1237,11 @@ def IMAGE_FOLDER_validator(form, field):
 
 
 def IMAGE_EXPORT_FOLDER_validator(form, field):
-    folder_regex = r'^[a-zA-Z0-9_\.\-\/]+$'
+    folder_regex = r'[^a-zA-Z0-9_\.\-\/]'
 
-    if not re.search(folder_regex, field.data):
-        raise ValidationError('Invalid folder name')
+    m = re.findall(folder_regex, field.data)
+    if m:
+        raise ValidationError('Folder contains disallowed characters: {0:s}'.format(', '.join(set(m))))
 
     if re.search(r'\/$', field.data):
         raise ValidationError('Directory cannot end with slash')
