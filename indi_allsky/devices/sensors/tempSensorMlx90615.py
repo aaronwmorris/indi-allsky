@@ -67,7 +67,9 @@ class TempSensorMlx90615_I2C(TempSensorMlx90615):
 
         import board
         #import busio
-        from . import adafruit_mlx90615
+
+        #from . import adafruit_mlx90615
+        import aaronwmorris_mlx90615
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
@@ -75,4 +77,6 @@ class TempSensorMlx90615_I2C(TempSensorMlx90615):
         i2c = board.I2C()
         #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        self.mlx = adafruit_mlx90615.MLX90615(i2c, address=i2c_address)
+
+        #self.mlx = adafruit_mlx90615.MLX90615(i2c, address=i2c_address)
+        self.mlx = aaronwmorris_mlx90615.MLX90615(i2c, address=i2c_address)
