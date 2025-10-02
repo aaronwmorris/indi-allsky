@@ -32,7 +32,7 @@ adafruit-circuitpython-pca9685
 adafruit-circuitpython-motorkit
 sparkfun-circuitpython-qwiicas3935
 sparkfun-qwiic-mmc5983ma
-git+https://github.com/aaronwmorris/CircuitPython_MLX90615.git
+git+https://github.com/aaronwmorris/CircuitPython_MLX90615.git@ab15707
 
 ### does not work on raspi
 #adafruit-circuitpython-ds18x20
