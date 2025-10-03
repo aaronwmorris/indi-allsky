@@ -7,6 +7,8 @@ import logging
 
 from .libcamera import IndiClientLibCameraGeneric
 
+from .. import constants
+
 from ..exceptions import BinModeException
 
 
@@ -107,7 +109,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.client.loop_stop()
 
 
-    def setCcdExposure(self, exposure, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
         import paho.mqtt.properties as mqtt_props
         from paho.mqtt.packettypes import PacketTypes
 
@@ -152,7 +154,9 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         self.exposure = exposure
-        self.gain = float(self.gain_v.value)
+
+        if self.gain != round(float(gain), 2):
+            self.setCcdGain(gain)
 
 
         exposure_us = int(exposure * 1000000)
@@ -164,7 +168,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
                 '--denoise', 'off',
-                '--gain', '{0:0.2f}'.format(self.gain_v.value),
+                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', '{metadata:s}',
                 '--metadata-format', 'json',
@@ -177,7 +181,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
-                '--gain', '{0:0.2f}'.format(self.gain_v.value),
+                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', '{metadata:s}',
                 '--metadata-format', 'json',
@@ -282,6 +286,11 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         }
 
         self.client.publish(self.exposure_topic, payload=json.dumps(payload), qos=self.qos, retain=False, properties=user_properties)
+
+
+        # Update shared exposure value
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
 
 
         if sync:

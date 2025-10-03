@@ -5,6 +5,8 @@ import logging
 
 import ephem
 
+from . import constants
+
 logger = logging.getLogger('indi_allsky')
 
 
@@ -25,9 +27,9 @@ class IndiAllSkyDateCalcs(object):
 
         obs = ephem.Observer()
         sun = ephem.Sun()
-        obs.lon = math.radians(self.position_av[1])
-        obs.lat = math.radians(self.position_av[0])
-        obs.elevation = self.position_av[2]
+        obs.lon = math.radians(self.position_av[constants.POSITION_LONGITUDE])
+        obs.lat = math.radians(self.position_av[constants.POSITION_LATITUDE])
+        obs.elevation = self.position_av[constants.POSITION_ELEVATION]
 
         # disable atmospheric refraction calcs
         obs.pressure = 0
@@ -93,9 +95,9 @@ class IndiAllSkyDateCalcs(object):
 
         obs = ephem.Observer()
         sun = ephem.Sun()
-        obs.lon = math.radians(self.position_av[1])
-        obs.lat = math.radians(self.position_av[0])
-        obs.elevation = self.position_av[2]
+        obs.lon = math.radians(self.position_av[constants.POSITION_LONGITUDE])
+        obs.lat = math.radians(self.position_av[constants.POSITION_LATITUDE])
+        obs.elevation = self.position_av[constants.POSITION_ELEVATION]
 
         # disable atmospheric refraction calcs
         obs.pressure = 0

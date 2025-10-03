@@ -81,6 +81,33 @@ CFA_MAP_STR = {
 }
 
 
+# Position indexes
+POSITION_LATITUDE   = 0
+POSITION_LONGITUDE  = 1
+POSITION_ELEVATION  = 2
+POSITION_RA         = 3
+POSITION_DEC        = 4
+
+
+# Exposure indexes
+EXPOSURE_CURRENT    = 0
+EXPOSURE_NEXT       = 1
+EXPOSURE_MIN_NIGHT  = 2
+EXPOSURE_MIN_DAY    = 3
+EXPOSURE_MAX        = 4
+
+
+# Gain indexes
+GAIN_CURRENT        = 0
+GAIN_NEXT           = 1
+GAIN_MIN_DAY        = 2
+GAIN_MAX_DAY        = 3
+GAIN_MIN_NIGHT      = 4
+GAIN_MAX_NIGHT      = 5
+GAIN_MIN_MOONMODE   = 6
+GAIN_MAX_MOONMODE   = 7
+
+
 # Leaving gaps for addtional classifications
 SMOKE_RATING_NODATA  = -1
 SMOKE_RATING_CLEAR   = 1

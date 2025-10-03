@@ -13,6 +13,8 @@ import logging
 from .indi import IndiClient
 from .fake_indi import FakeIndiCcd
 
+from .. import constants
+
 from ..exceptions import TimeOutException
 from ..exceptions import BinModeException
 
@@ -101,13 +103,17 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
     def getCcdGain(self):
-        return self.gain_v.value
+        return float(self.gain_av[constants.GAIN_CURRENT])
 
 
     def setCcdGain(self, new_gain_value):
+        gain_f = float(round(new_gain_value, 2))  # limit gain to 2 decimals
+
         # Update shared gain value
-        with self.gain_v.get_lock():
-            self.gain_v.value = float(new_gain_value)
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_CURRENT] = gain_f
+
+        self.gain = gain_f
 
 
     def setCcdBinning(self, bin_value):
@@ -130,7 +136,7 @@ class IndiClientLibCameraGeneric(IndiClient):
         return option
 
 
-    def setCcdExposure(self, exposure, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
         if self.active_exposure:
             return
 
@@ -175,7 +181,9 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         self.exposure = exposure
-        self.gain = float(self.gain_v.value)
+
+        if self.gain != round(float(gain), 2):
+            self.setCcdGain(gain)
 
 
         exposure_us = int(exposure * 1000000)
@@ -187,7 +195,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
                 '--denoise', 'off',
-                '--gain', '{0:0.2f}'.format(self.gain_v.value),
+                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
@@ -200,7 +208,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
-                '--gain', '{0:0.2f}'.format(self.gain_v.value),
+                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
@@ -295,6 +303,12 @@ class IndiClientLibCameraGeneric(IndiClient):
         )
 
         self.active_exposure = True
+
+
+        # Update shared exposure value
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+
 
         if sync:
             try:

@@ -246,6 +246,11 @@ def EXPOSURE_PERIOD_DAY_validator(form, field):
         raise ValidationError('Exposure period must be 1.0 or more')
 
 
+def CCD_CONFIG__AUTO_GAIN_LEVELS_validator(form, field):
+    if field.data not in list(zip(*form.CCD_CONFIG__AUTO_GAIN_LEVELS_choices))[0]:
+        raise ValidationError('Invalid number of levels')
+
+
 def TIMELAPSE_SKIP_FRAMES_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -3141,6 +3146,19 @@ class IndiAllskyConfigForm(FlaskForm):
         ),
     }
 
+
+    CCD_CONFIG__AUTO_GAIN_LEVELS_choices = (
+        ('12', '12'),
+        ('11', '11'),
+        ('10', '10'),
+        ('9', '9'),
+        ('8', '8'),
+        ('7', '7'),
+        ('6', '6'),
+        ('5', '5'),
+        ('4', '4'),
+    )
+
     CCD_BIT_DEPTH_choices = (
         ('0', 'Auto Detect'),
         ('8', '8'),
@@ -3886,6 +3904,8 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_CONFIG__MOONMODE__BINNING    = IntegerField('Moon Mode Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
     CCD_CONFIG__DAY__GAIN            = FloatField('Daytime Gain', validators=[ccd_GAIN_validator])
     CCD_CONFIG__DAY__BINNING         = IntegerField('Daytime Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
+    CCD_CONFIG__AUTO_GAIN_ENABLE     = BooleanField('Enable Exposure Priority Gain Mode [Auto-Gain]')
+    CCD_CONFIG__AUTO_GAIN_LEVELS     = SelectField('Auto-Gain Levels', choices=CCD_CONFIG__AUTO_GAIN_LEVELS_choices, validators=[CCD_CONFIG__AUTO_GAIN_LEVELS_validator])
     CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_MAX_validator])
     CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_DEF_validator])
     CCD_EXPOSURE_MIN                 = FloatField('Min Exposure (Night)', validators=[CCD_EXPOSURE_MIN_validator])

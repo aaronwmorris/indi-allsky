@@ -1,5 +1,7 @@
 import logging
 
+from .. import constants
+
 logger = logging.getLogger('indi_allsky')
 
 
@@ -13,7 +15,7 @@ class FakeIndiClient(object):
         longitude_v,
         ra_v,
         dec_v,
-        gain_v,
+        gain_av,
         bin_v,
         night_v,
     ):
@@ -28,7 +30,7 @@ class FakeIndiClient(object):
         self.ra_v = ra_v
         self.dec_v = dec_v
 
-        self.gain_v = gain_v
+        self.gain_av = gain_av
         self.bin_v = bin_v
 
         self.night_v = night_v
@@ -365,11 +367,11 @@ class FakeIndiClient(object):
 
 
     def setCcdGain(self, new_gain_value):
-        self._ccd_gain = int(new_gain_value)
+        self._ccd_gain = float(new_gain_value)
 
         # Update shared gain value
-        with self.gain_v.get_lock():
-            self.gain_v.value = int(new_gain_value)
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_CURRENT] = float(new_gain_value)
 
 
     def setCcdBinning(self, bin_value):

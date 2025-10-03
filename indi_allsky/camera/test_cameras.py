@@ -10,6 +10,8 @@ import logging
 from .indi import IndiClient
 from .fake_indi import FakeIndiCcd
 
+from .. import constants
+
 #from ..exceptions import TimeOutException
 
 
@@ -76,13 +78,17 @@ class IndiClientTestCameraBase(IndiClient):
 
 
     def getCcdGain(self):
-        return self.gain_v.value
+        return float(self.gain_av[constants.GAIN_CURRENT])
 
 
     def setCcdGain(self, new_gain_value):
+        gain_f = float(round(new_gain_value), 2)
+
         # Update shared gain value
-        with self.gain_v.get_lock():
-            self.gain_v.value = float(new_gain_value)
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_CURRENT] = gain_f
+
+        self.gain = gain_f
 
 
     def setCcdBinning(self, bin_value):
@@ -96,13 +102,13 @@ class IndiClientTestCameraBase(IndiClient):
             self.bin_v.value = int(bin_value)
 
 
-    def setCcdExposure(self, exposure, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
         if self.active_exposure:
             return
 
 
         self.exposure = exposure
-        self.gain = float(self.gain_v.value)
+        self.setCcdGain(gain)  # gain does not do anything
 
 
         self.active_exposure = True
@@ -128,6 +134,11 @@ class IndiClientTestCameraBase(IndiClient):
 
         # update reference
         self._last_exposure_time = time.time()
+
+
+        # Update shared exposure value
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
 
 
         if sync:

@@ -20,6 +20,8 @@ from ..flask import create_app
 #from ..flask.models import TaskQueueState
 #from ..flask.models import IndiAllSkyDbTaskQueueTable
 
+from .. import constants
+
 from ..exceptions import TimeOutException
 from ..exceptions import CameraException
 
@@ -93,9 +95,11 @@ class IndiClient(PyIndi.BaseClient):
         config,
         image_q,
         position_av,
-        gain_v,
+        exposure_av,
+        gain_av,
         bin_v,
         night_v,
+        moonmode_v,
     ):
         super(IndiClient, self).__init__()
 
@@ -104,10 +108,12 @@ class IndiClient(PyIndi.BaseClient):
 
         self.position_av = position_av
 
-        self.gain_v = gain_v
+        self.exposure_av = exposure_av
+        self.gain_av = gain_av
         self.bin_v = bin_v
 
         self.night_v = night_v
+        self.moonmode_v = moonmode_v
 
         self._camera_id = None
 
@@ -122,7 +128,7 @@ class IndiClient(PyIndi.BaseClient):
         self._timeout = 10.0
 
         self._exposure = 0.0
-        self._gain = 0.0  # individual exposure gain
+        self._gain = -1.0  # individual exposure gain
 
         self.exposureStartTime = None
 
@@ -976,13 +982,16 @@ class IndiClient(PyIndi.BaseClient):
         return temp_val
 
 
-    def setCcdExposure(self, exposure, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
         if not timeout:
             timeout = self.timeout
 
 
-        self.exposure = exposure
-        self.gain = self.gain_v.value
+        self.exposure = float(exposure)
+
+
+        if self.gain != round(float(gain), 2):
+            self.setCcdGain(gain)
 
 
         self.exposureStartTime = time.time()
@@ -990,6 +999,11 @@ class IndiClient(PyIndi.BaseClient):
         ctl_ccd_exposure = self.set_number(self.ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure}, sync=sync, timeout=timeout)
 
         self._ctl_ccd_exposure = ctl_ccd_exposure
+
+
+        # Update shared exposure value
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
 
 
     def getCcdExposureStatus(self):
@@ -1145,10 +1159,12 @@ class IndiClient(PyIndi.BaseClient):
         return gain_info
 
 
-    def setCcdGain(self, gain_value):
-        gain_value_i = int(gain_value)  # indi gains always treated as ints
+    def setCcdGain(self, new_gain_value):
+        gain_f = float(round(new_gain_value, 2))  # limit gain to 2 decimals
+        #gain_value_indi = round(new_gain_value)  # round actual gain to nearest int
+        gain_value_indi = gain_f
 
-        logger.warning('Setting CCD gain to %0.2f', float(gain_value_i))
+        logger.warning('Setting CCD gain to %0.2f', float(gain_value_indi))
         indi_exec = self.ccd_device.getDriverExec()
 
         if indi_exec in [
@@ -1161,7 +1177,7 @@ class IndiClient(PyIndi.BaseClient):
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_CONTROLS" : {
-                        "Gain" : gain_value_i,
+                        "Gain" : gain_value_indi,
                     },
                 },
             }
@@ -1175,7 +1191,7 @@ class IndiClient(PyIndi.BaseClient):
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_GAIN" : {
-                        "GAIN" : gain_value_i,
+                        "GAIN" : gain_value_indi,
                     },
                 },
             }
@@ -1190,7 +1206,7 @@ class IndiClient(PyIndi.BaseClient):
                 gain_config = {
                     "PROPERTIES" : {
                         "CCD_CONTROLS" : {
-                            "Gain" : gain_value_i,
+                            "Gain" : gain_value_indi,
                         },
                     },
                 }
@@ -1199,7 +1215,7 @@ class IndiClient(PyIndi.BaseClient):
                 gain_config = {
                     "PROPERTIES" : {
                         "CCD_GAIN" : {
-                            "GAIN" : gain_value_i,
+                            "GAIN" : gain_value_indi,
                         },
                     },
                 }
@@ -1213,10 +1229,10 @@ class IndiClient(PyIndi.BaseClient):
             logger.info('Mapping gain to ISO for libgphoto device')
 
             try:
-                gain_switch = self.__canon_gain_to_iso[gain_value]
+                gain_switch = self.__canon_gain_to_iso[int(new_gain_value)]
                 logger.info('Setting ISO switch: %s', gain_switch)
             except KeyError:
-                logger.error('Canon ISO not found for %s, using ISO 100', str(gain_value))
+                logger.error('Canon ISO not found for %s, using ISO 100', str(new_gain_value))
                 gain_switch = 'ISO1'
 
             gain_config = {
@@ -1239,7 +1255,7 @@ class IndiClient(PyIndi.BaseClient):
                 gain_config = {
                     "PROPERTIES" : {
                         "Image Adjustments" : {
-                            "Gain" : gain_value_i,
+                            "Gain" : gain_value_indi,
                         },
                     },
                 }
@@ -1247,13 +1263,13 @@ class IndiClient(PyIndi.BaseClient):
                 logger.warning('Timeout: indi_v4l2_ccd does not support gain settings')
                 gain_config = {}
         elif indi_exec in ['rpicam-still', 'libcamera-still', 'indi_fake_ccd']:
-            return self.ccd_device.setCcdGain(gain_value)
+            return self.ccd_device.setCcdGain(gain_f)
         elif 'indi_pylibcamera' in indi_exec:  # SPECIAL CASE
             # the exec name can have many variations
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_GAIN" : {
-                        "GAIN" : gain_value_i,
+                        "GAIN" : gain_value_indi,
                     },
                 },
             }
@@ -1261,12 +1277,14 @@ class IndiClient(PyIndi.BaseClient):
             raise Exception('Gain config not implemented for {0:s}, open an enhancement request'.format(indi_exec))
 
 
-        self.configureDevice(self.ccd_device, gain_config)
+        self.configureDevice(self.ccd_device, gain_config, sleep=0.0)
 
 
         # Update shared gain value
-        with self.gain_v.get_lock():
-            self.gain_v.value = float(gain_value_i)
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_CURRENT] = gain_f
+
+        self.gain = gain_f
 
 
     def setCcdBinning(self, bin_value):

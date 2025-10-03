@@ -83,9 +83,7 @@ class TestAdsb(object):
             self.adsb_worker_idx,
             self.config,
             self.adsb_aircraft_q,
-            self.position_av[0],  # lat
-            self.position_av[1],  # long
-            self.position_av[2],  # elev
+            self.position_av,
         )
         self.adsb_worker.start()
 

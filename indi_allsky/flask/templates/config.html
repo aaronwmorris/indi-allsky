@@ -189,6 +189,39 @@ var camera_id = {{ camera_id }};
 
     <hr>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__AUTO_GAIN_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CCD_CONFIG__AUTO_GAIN_ENABLE(class='form-check-input') }}
+                <div id="CCD_CONFIG__AUTO_GAIN_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Exposure Priority Gain Mode dynamically adjusts the gain to maximize exposure times</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Maximum gain will be night gain, minimum will be daytime gain (Moon mode is ignored)</div>
+        </div>
+
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS(class='form-select bg-secondary') }}
+            <div id="CCD_CONFIG__AUTO_GAIN_LEVELS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Gain will be divided into even levels between min and max</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Setting this value too low will cause exposure/gain flapping</div>
+        </div>
+    </div>
+
+    <hr>
+
     <div><span class="badge rounded-pill bg-info text-dark">Info</span> A full service restart (not reload) is recommended when changing exposure controls</div>
 
     <hr>
@@ -8284,6 +8317,7 @@ const field_names = [
     'CCD_CONFIG__MOONMODE__BINNING',
     'CCD_CONFIG__DAY__GAIN',
     'CCD_CONFIG__DAY__BINNING',
+    'CCD_CONFIG__AUTO_GAIN_LEVELS',
     'CCD_EXPOSURE_MAX',
     'CCD_EXPOSURE_DEF',
     'CCD_EXPOSURE_MIN',
@@ -8741,6 +8775,7 @@ const field_names = [
 
 const checkbox_field_names = [
     'ENCRYPT_PASSWORDS',
+    'CCD_CONFIG__AUTO_GAIN_ENABLE',
     'FOCUS_MODE',
     'USE_NIGHT_COLOR',
     'AUTO_WB',
