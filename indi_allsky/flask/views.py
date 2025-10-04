@@ -3768,7 +3768,7 @@ class AjaxSetTimezoneView(BaseView):
 
 
     def setTimezoneSystemd(self, new_timezone_str):
-        app.logger.warning('Setting system timezone to %s (UTC)', new_timezone_str)
+        app.logger.warning('Setting system timezone to %s', new_timezone_str)
 
 
         system_bus = dbus.SystemBus()
