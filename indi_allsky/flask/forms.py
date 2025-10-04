@@ -7478,6 +7478,43 @@ class IndiAllskySetDateTimeForm(FlaskForm):
     NEW_DATETIME = DateTimeLocalField('New Datetime', render_kw={'step' : '1'}, format='%Y-%m-%dT%H:%M:%S', validators=[DataRequired()])
 
 
+class IndiAllskySetTimezoneForm(FlaskForm):
+
+    NEW_TIMEZONE = SelectField('New Timezone', validators=[DataRequired()])
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskySetTimezoneForm, self).__init__(*args, **kwargs)
+
+        self.NEW_TIMEZONE.choices = self.getSystemdTimezones()
+
+
+    def getSystemdTimezones(self):
+        try:
+            session_bus = dbus.SystemBus()
+        except dbus.exceptions.DBusException:
+            return (['D-Bus Unavailable', 'D-Bus Unavailable'],)
+
+
+        timedate1 = session_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
+        manager = dbus.Interface(timedate1, 'org.freedesktop.timedate1')
+
+        systemd_timezones = manager.ListTimezones()
+
+        #app.logger.info('Timezones: %s', timezone_list)
+
+
+        timezone_list = list()
+        for tz in systemd_timezones:
+            timezone_list.append([str(tz), str(tz)])
+
+
+        # ensure sorted by name
+        timezone_list_sorted = sorted(timezone_list, key=lambda x: x[0])
+
+
+        return timezone_list_sorted
+
 
 class IndiAllskyFocusForm(FlaskForm):
     ZOOM_SELECT_choices = (

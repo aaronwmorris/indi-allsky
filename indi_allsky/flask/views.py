@@ -95,6 +95,7 @@ from .forms import IndiAllskySystemInfoForm
 from .forms import IndiAllskyLoopHistoryForm
 from .forms import IndiAllskyChartHistoryForm
 from .forms import IndiAllskySetDateTimeForm
+from .forms import IndiAllskySetTimezoneForm
 from .forms import IndiAllskyTimelapseGeneratorForm
 from .forms import IndiAllskyFocusForm
 from .forms import IndiAllskyLogViewerForm
@@ -3662,6 +3663,7 @@ class AjaxSetTimeView(BaseView):
 
 
         new_datetime_str = str(request.json['NEW_DATETIME'])
+
         new_datetime = datetime.strptime(new_datetime_str, '%Y-%m-%dT%H:%M:%S').astimezone()
 
         new_datetime_utc = new_datetime.astimezone(tz=timezone.utc)
@@ -3720,6 +3722,60 @@ class AjaxSetTimeView(BaseView):
         time.sleep(5.0)  # give enough time for time sync to diable
 
         r2 = manager.SetTime(epoch_msec, False, False)
+
+        return r2
+
+
+class AjaxSetTimezoneView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        form_timezone = IndiAllskySetTimezoneForm(data=request.json)
+
+
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                form_errors = form_timezone.errors  # this must be a property
+                form_errors['form_settimezone_global'] = ['You do not have permission to make configuration changes']
+                return jsonify(form_errors), 400
+
+
+        if not form_timezone.validate():
+            form_errors = form_timezone.errors  # this must be a property
+            form_errors['form_settimezone_global'] = ['Please fix the errors above']
+            return jsonify(form_errors), 400
+
+
+        new_timezone_str = str(request.json['NEW_TIMEZONE'])
+
+
+        try:
+            self.setTimezoneSystemd(new_timezone_str)
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('DBus Error: %s', str(e))
+            errors = {
+                'form_settime_global' : 'DBus Error: {0:s}'.format(str(e)),
+            }
+            return jsonify(errors), 400
+
+
+        message = {
+            'success-message' : 'System timezone updated.',
+        }
+
+        return jsonify(message)
+
+
+    def setTimezoneSystemd(self, new_timezone_str):
+        app.logger.warning('Setting system timezone to %s (UTC)', new_timezone_str)
+
+
+        system_bus = dbus.SystemBus()
+        timedate1 = system_bus.get_object('org.freedesktop.timedate1', '/org/freedesktop/timedate1')
+        manager = dbus.Interface(timedate1, 'org.freedesktop.timedate1')
+
+        r2 = manager.SetTimezone(new_timezone_str, False)
 
         return r2
 
@@ -4627,8 +4683,16 @@ class SystemInfoView(TemplateView):
 
         context['now'] = self.camera_now
         context['form_settime'] = IndiAllskySetDateTimeForm()
-        context['timedate1_dict'] = self.getSystemdTimeDate()
 
+
+        timedate1_dict = self.getSystemdTimeDate()
+        context['timedate1_dict'] = timedate1_dict
+
+
+        timezone_data = {
+            'NEW_TIMEZONE' : timedate1_dict['Timezone'],
+        }
+        context['form_timezone'] = IndiAllskySetTimezoneForm(data=timezone_data)
 
 
         if self.camera.driver:
@@ -10501,6 +10565,7 @@ bp_allsky.add_url_rule('/ajax/config/restore', view_func=AjaxConfigRestoreView.a
 bp_allsky.add_url_rule('/system', view_func=SystemInfoView.as_view('system_view', template_name='system.html'))
 bp_allsky.add_url_rule('/ajax/system', view_func=AjaxSystemInfoView.as_view('ajax_system_view'))
 bp_allsky.add_url_rule('/ajax/settime', view_func=AjaxSetTimeView.as_view('ajax_settime_view'))
+bp_allsky.add_url_rule('/ajax/settimezone', view_func=AjaxSetTimezoneView.as_view('ajax_settimezone_view'))
 bp_allsky.add_url_rule('/ajax/indiserver', view_func=AjaxIndiServerChangeView.as_view('ajax_indiserver_change_view'))
 
 bp_allsky.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
