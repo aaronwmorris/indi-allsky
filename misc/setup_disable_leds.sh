@@ -21,7 +21,7 @@ echo "#######################################################"
 
 
 if [ -f "/proc/device-tree/model" ]; then
-    SYSTEM_MODEL=$(cat /proc/device-tree/model)
+    SYSTEM_MODEL=$(tr -c '[:print:]' ' ' </proc/device-tree/model)
 else
     echo
     echo "ERROR: LED disable function not supported on this system"

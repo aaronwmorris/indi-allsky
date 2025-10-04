@@ -65,7 +65,7 @@ MEM_TOTAL=$(grep MemTotal /proc/meminfo | awk "{print \$2}")
 
 
 if [ -f "/proc/device-tree/model" ]; then
-    SYSTEM_MODEL=$(cat /proc/device-tree/model)
+    SYSTEM_MODEL=$(tr -c '[:print:]' ' ' </proc/device-tree/model)
 else
     SYSTEM_MODEL="Generic PC"
 fi
