@@ -323,6 +323,22 @@ var camera_id = {{ camera_id }};
 <hr>
 
 <div class="row">
+    <div>
+        <span class="badge rounded-pill bg-danger">Danger</span>
+        <span class="col-sm-12 text-danger font-weight-bold"> Changing the system time during operation can cause unpredictable behavior.  It is recommend restarting both indiserver and indi-allsky.</span>
+    </div>
+</div>
+
+<div class="row">
+    <div>
+        <span class="badge rounded-pill bg-warning text-dark">Warning</span>
+        <span class="col-sm-12 text-warning"> Manually setting time will disable NTP time sync (permanently)</span>
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
     <div class="col-sm-2">System time</div>
     <div class="col-sm-4">&nbsp;&nbsp;&nbsp;{{ now.strftime('%m / %d / %Y, %I : %M : %S %P') }}</div>
 </div>
@@ -347,7 +363,7 @@ var camera_id = {{ camera_id }};
 
     <div class="row">
         <div class="col-sm-2">
-            <button class="btn btn-primary">Update Time</button>
+            <button class="btn btn-primary">Set Time</button>
         </div>
         <div class="col-sm-1 loader" id="loader_settime"></div>
     </div>
@@ -355,25 +371,10 @@ var camera_id = {{ camera_id }};
 
 <hr>
 
-
-<div class="row">
-    <div>
-        <span class="badge rounded-pill bg-danger">Danger</span>
-        <span class="col-sm-12 text-danger font-weight-bold"> Changing the system time during operation can cause unpredictable behavior.  It is recommend restarting both indiserver and indi-allsky.</span>
-    </div>
-</div>
-<div class="row">
-    <div>
-        <span class="badge rounded-pill bg-warning text-dark">Warning</span>
-        <span class="col-sm-12 text-warning"> Manually setting time will disable NTP time sync (permanently)</span>
-    </div>
-</div>
-
 <div class="row">
     <div class="col-sm-12">Time sync can be manually re-enabled on the CLI by issuing the following command</div>
     <div class="col-sm-12"><pre>timedatectl set-ntp true</pre></div>
 </div>
-
 
 <script>
 const form_settime_successMessage = $('#form_settime_success-message');
@@ -405,9 +406,6 @@ form_settime_checkbox_field_names.forEach(item => {
         'error' : $('#' + item + '-error'),
     };
 });
-
-
-// ajax setup later
 
 
 $('#form_settime').on('submit', function() {
@@ -456,6 +454,119 @@ $('#form_settime').on('submit', function() {
             });
 
             $("#loader_settime").css({'display' : 'none'});
+        },
+    });
+
+});
+
+</script>
+
+<hr>
+
+<form id="form_timezone" onSubmit="return false;">
+    {{ form_timezone.csrf_token }}
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_timezone.NEW_TIMEZONE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_timezone.NEW_TIMEZONE(class='form-select bg-secondary') }}
+            <div id="NEW_TIMEZONE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6"></div>
+    </div>
+
+    <div id="form_timezone_success-message" class="text-success" style="display: none;"></div>
+    <div id="form_timezone_failure-message" class="invalid-feedback text-danger" style="display: none;"></div>
+
+    <div class="row">
+        <div class="col-sm-2">
+            <button class="btn btn-primary">Update Timezone</button>
+        </div>
+        <div class="col-sm-1 loader" id="loader_timezone"></div>
+    </div>
+</form>
+
+<hr>
+
+<script>
+const form_timezone_successMessage = $('#form_timezone_success-message');
+const form_timezone_failureMessage = $('#form_timezone_failure-message');
+const form_timezone_field_names = [
+    'csrf_token',
+    'NEW_TIMEZONE',
+];
+const form_timezone_checkbox_field_names = [];
+
+var form_timezone_fields = {};
+// Populate fields object
+form_timezone_field_names.forEach(item => {
+    form_timezone_fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+form_timezone_fields['form_timezone_global'] = {
+    'input' : form_timezone_failureMessage,
+    'error' : form_timezone_failureMessage,
+};
+
+// Checkboxes
+form_timezone_checkbox_field_names.forEach(item => {
+    form_timezone_fields[item] = {
+        'input' : $('#' + item),
+        'error' : $('#' + item + '-error'),
+    };
+});
+
+
+$('#form_timezone').on('submit', function() {
+
+    // hide all errors
+    form_timezone_successMessage.css({'display' : 'none'});
+    Object.keys(form_timezone_fields).forEach((key) => {
+        form_timezone_fields[key].error.css({'display' : 'none'});
+    });
+
+
+    // Populate fields object
+    var json_data = {};
+    form_timezone_field_names.forEach(item => {
+        json_data[item] = form_timezone_fields[item].input.val();
+    });
+
+    // checkboxes
+    form_timezone_checkbox_field_names.forEach(item => {
+        json_data[item] = form_timezone_fields[item].input.prop('checked');
+    });
+
+
+    $("#loader_timezone").css({'display' : 'block'});
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_settimezone_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(data){
+            form_timezone_successMessage.html(data['success-message']);
+            form_timezone_successMessage.css({'display' : 'block'});
+            setTimeout(function() {
+                form_timezone_successMessage.css({'display' : 'none'});
+            }, 60000);
+
+            $("#loader_timezone").css({'display' : 'none'});
+        },
+        error: function(data){
+            var errors = JSON.parse(data.responseText);
+            Object.keys(errors).forEach((key) => {
+                form_timezone_fields[key].input.addClass('is-invalid');
+                form_timezone_fields[key].error.html(errors[key][0]);
+                form_timezone_fields[key].error.css({'display' : 'block'});
+            });
+
+            $("#loader_timezone").css({'display' : 'none'});
         },
     });
 
