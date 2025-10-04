@@ -56,33 +56,39 @@ if echo "$SYSTEM_MODEL" | grep -i "raspberry" >/dev/null 2>&1; then
     fi
 
 
-    # Power LED
-    if ! grep "^dtparam=pwr_led_trigger=" /boot/firmware/config.txt >/dev/null 2>&1; then
-        echo "dtparam=pwr_led_trigger=none" | sudo tee -a /boot/firmware/config.txt
-    fi
+    TMP_CONFIG=$(mktemp)
 
-    if ! grep "^dtparam=pwr_led_activelow=" /boot/firmware/config.txt >/dev/null 2>&1; then
-        echo "dtparam=pwr_led_activelow=off" | sudo tee -a /boot/firmware/config.txt
-    fi
+    # remove original lines
+    sed \
+     -e '/^[^#]\?dtparam=pwr_led_trigger=.*$/d' \
+     -e '/^[^#]\?dtparam=pwr_led_activelow=.*$/d' \
+     -e '/^[^#]\?dtparam=act_led_trigger=.*$/d' \
+     -e '/^[^#]\?dtparam=act_led_activelow=.*$/d' \
+     -e '/^[^#]\?dtparam=eth_led0=.*$/d' \
+     -e '/^[^#]\?dtparam=eth_led1=.*$/d' \
+     /boot/firmware/config.txt > "$TMP_CONFIG"
+
+
+    # Power LED
+    # shellcheck disable=SC2129
+    echo "dtparam=pwr_led_trigger=none" >> "$TMP_CONFIG"
+    echo "dtparam=pwr_led_activelow=on" >> "$TMP_CONFIG"
 
 
     # Activity LED
-    if ! grep "^dtparam=act_led_trigger=" /boot/firmware/config.txt >/dev/null 2>&1; then
-        echo "dtparam=act_led_trigger=none" | sudo tee -a /boot/firmware/config.txt
-    fi
-
-    if ! grep "^dtparam=act_led_activelow=" /boot/firmware/config.txt >/dev/null 2>&1; then
-        echo "dtparam=act_led_activelow=off" | sudo tee -a /boot/firmware/config.txt
-    fi
+    echo "dtparam=act_led_trigger=none" >> "$TMP_CONFIG"
+    echo "dtparam=act_led_activelow=off" >> "$TMP_CONFIG"
 
 
     # Ethernet LEDs
-    if ! grep "^dtparam=eth_led0=" /boot/firmware/config.txt >/dev/null 2>&1; then
-        echo "dtparam=eth_led0=4" | sudo tee -a /boot/firmware/config.txt
-    fi
-    if ! grep "^dtparam=eth_led1=" /boot/firmware/config.txt >/dev/null 2>&1; then
-        echo "dtparam=eth_led1=4" | sudo tee -a /boot/firmware/config.txt
-    fi
+    echo "dtparam=eth_led0=4" >> "$TMP_CONFIG"
+    echo "dtparam=eth_led1=4" >> "$TMP_CONFIG"
+
+
+    sudo cp -f "$TMP_CONFIG" "/boot/firmware/config.txt"
+    sudo chown root:root "/boot/firmware/config.txt"
+    sudo chmod 644 "/boot/firmware/config.txt"
+
 
     echo
     echo
