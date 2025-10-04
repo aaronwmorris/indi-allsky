@@ -59,6 +59,8 @@ class SensorWorker(Process):
         # dew heater
         self.dh_temp_slot = self.config.get('DEW_HEATER', {}).get('TEMP_USER_VAR_SLOT', 'sensor_user_10')
         self.dh_dewpoint_slot = self.config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 'sensor_user_2')
+        self.dh_hold_seconds = self.config.get('DEW_HEATER', {}).get('HOLD_SECONDS', 0)
+        self.dh_last_change_time = 0
 
         self.dh_level_default = self.config.get('DEW_HEATER', {}).get('LEVEL_DEF', 0)
         self.dh_level_low = self.config.get('DEW_HEATER', {}).get('LEVEL_LOW', 33)
@@ -69,9 +71,12 @@ class SensorWorker(Process):
         self.dh_thold_diff_med = self.config.get('DEW_HEATER', {}).get('THOLD_DIFF_MED', 10)
         self.dh_thold_diff_high = self.config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', 5)
 
+
         # fan
         self.fan_target = self.config.get('FAN', {}).get('TARGET', 30.0)
         self.fan_temp_slot = self.config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 'sensor_user_10')
+        self.fan_hold_seconds = self.config.get('FAN', {}).get('HOLD_SECONDS', 0)
+        self.fan_last_change_time = 0
 
         self.fan_level_default = self.config.get('FAN', {}).get('LEVEL_DEF', 0)
         self.fan_level_low = self.config.get('FAN', {}).get('LEVEL_LOW', 33)
@@ -81,7 +86,6 @@ class SensorWorker(Process):
         self.fan_thold_diff_low = self.config.get('FAN', {}).get('THOLD_DIFF_LOW', -10)
         self.fan_thold_diff_med = self.config.get('FAN', {}).get('THOLD_DIFF_MED', -5)
         self.fan_thold_diff_high = self.config.get('FAN', {}).get('THOLD_DIFF_HIGH', 0)
-
 
         self._shutdown = False
         #self._stopper = threading.Event()
@@ -219,13 +223,13 @@ class SensorWorker(Process):
 
             # dew heater
             if not self.dew_heater.state:
-                self.set_dew_heater(self.dh_level_default)
+                self.set_dew_heater(self.dh_level_default, force=True)
 
 
             # fan
             if self.config.get('FAN', {}).get('ENABLE_NIGHT'):
                 if not self.fan.state:
-                    self.set_fan(self.fan_level_default)
+                    self.set_fan(self.fan_level_default, force=True)
             else:
                 self.set_fan(0)
 
@@ -239,14 +243,14 @@ class SensorWorker(Process):
             # dew heater
             if self.config.get('DEW_HEATER', {}).get('ENABLE_DAY'):
                 if not self.dew_heater.state:
-                    self.set_dew_heater(self.dh_level_default)
+                    self.set_dew_heater(self.dh_level_default, force=True)
             else:
                 self.set_dew_heater(0)
 
 
             # fan
             if not self.fan.state:
-                self.set_fan(self.fan_level_default)
+                self.set_fan(self.fan_level_default, force=True)
 
 
     def init_gpio(self):
@@ -320,8 +324,16 @@ class SensorWorker(Process):
         self.dew_heater.state = 0
 
 
-    def set_dew_heater(self, new_state):
+    def set_dew_heater(self, new_state, force=False):
         if self.dew_heater.state != new_state:
+            now_time = time.time()
+
+            if not force:
+                if self.dh_last_change_time > (now_time - self.dh_hold_seconds):
+                    logger.info('Dew Heater will hold for an additional %ds', int(self.dh_last_change_time - (now_time - self.dh_hold_seconds)))
+                    return
+
+
             try:
                 self.dew_heater.state = new_state
             except DeviceControlException as e:
@@ -334,6 +346,8 @@ class SensorWorker(Process):
                 logger.error('Dew heater IOError: %s', str(e))
                 return
 
+
+            self.dh_last_change_time = now_time
 
             with self.sensors_user_av.get_lock():
                 self.sensors_user_av[1] = float(self.dew_heater.state)
@@ -367,8 +381,16 @@ class SensorWorker(Process):
         self.fan.state = 0
 
 
-    def set_fan(self, new_state):
+    def set_fan(self, new_state, force=False):
         if self.fan.state != new_state:
+            now_time = time.time()
+
+            if not force:
+                if self.fan_last_change_time > (now_time - self.fan_hold_seconds):
+                    logger.info('Fan will hold for an additional %ds', int(self.fan_last_change_time - (now_time - self.fan_hold_seconds)))
+                    return
+
+
             try:
                 self.fan.state = new_state
             except DeviceControlException as e:
@@ -381,6 +403,8 @@ class SensorWorker(Process):
                 logger.error('Fan IOError: %s', str(e))
                 return
 
+
+            self.fan_last_change_time = now_time
 
             with self.sensors_user_av.get_lock():
                 self.sensors_user_av[4] = float(self.fan.state)
@@ -609,6 +633,7 @@ class SensorWorker(Process):
 
         dh_temp_delta = current_temp - target_val
         logger.info('Dew Heater threshold current: %0.1f, target: %0.1f, delta: %0.1f (%0.0f%%)', current_temp, target_val, dh_temp_delta, self.dew_heater.state)
+
 
         if dh_temp_delta <= self.dh_thold_diff_high:
             # set dew heater to high
