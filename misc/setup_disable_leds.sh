@@ -48,7 +48,7 @@ sleep 10
 sudo true
 
 
-if echo "$SYSTEM_MODEL" | grep -i "raspberry" >/dev/null 2>&1; then
+if echo "$SYSTEM_MODEL" | grep -i "raspberry pi 5" >/dev/null 2>&1; then
     if [ ! -f "/boot/firmware/config.txt" ]; then
         echo
         echo "ERROR: /boot/firmware/config.txt not found"
@@ -60,12 +60,58 @@ if echo "$SYSTEM_MODEL" | grep -i "raspberry" >/dev/null 2>&1; then
 
     # remove original lines
     sed \
-     -e '/^[^#]\?dtparam=pwr_led_trigger=.*$/d' \
-     -e '/^[^#]\?dtparam=pwr_led_activelow=.*$/d' \
-     -e '/^[^#]\?dtparam=act_led_trigger=.*$/d' \
-     -e '/^[^#]\?dtparam=act_led_activelow=.*$/d' \
-     -e '/^[^#]\?dtparam=eth_led0=.*$/d' \
-     -e '/^[^#]\?dtparam=eth_led1=.*$/d' \
+     -e '/^dtparam=pwr_led_trigger=.*$/d' \
+     -e '/^dtparam=pwr_led_activelow=.*$/d' \
+     -e '/^dtparam=act_led_trigger=.*$/d' \
+     -e '/^dtparam=act_led_activelow=.*$/d' \
+     -e '/^dtparam=eth_led0=.*$/d' \
+     -e '/^dtparam=eth_led1=.*$/d' \
+     /boot/firmware/config.txt > "$TMP_CONFIG"
+
+
+    # Power LED
+    # shellcheck disable=SC2129
+    echo "dtparam=pwr_led_trigger=none" >> "$TMP_CONFIG"
+    echo "dtparam=pwr_led_activelow=off" >> "$TMP_CONFIG"
+
+
+    # Activity LED
+    echo "dtparam=act_led_trigger=none" >> "$TMP_CONFIG"
+    echo "dtparam=act_led_activelow=off" >> "$TMP_CONFIG"
+
+
+    # Ethernet LEDs
+    echo "dtparam=eth_led0=4" >> "$TMP_CONFIG"
+    echo "dtparam=eth_led1=4" >> "$TMP_CONFIG"
+
+
+    sudo cp -f "$TMP_CONFIG" "/boot/firmware/config.txt"
+    sudo chown root:root "/boot/firmware/config.txt"
+    sudo chmod 644 "/boot/firmware/config.txt"
+
+
+    echo
+    echo
+    echo "LEDs should be disabled at next boot"
+
+elif echo "$SYSTEM_MODEL" | grep -i "raspberry pi [34]" >/dev/null 2>&1; then
+    if [ ! -f "/boot/firmware/config.txt" ]; then
+        echo
+        echo "ERROR: /boot/firmware/config.txt not found"
+        exit 1
+    fi
+
+
+    TMP_CONFIG=$(mktemp)
+
+    # remove original lines
+    sed \
+     -e '/^dtparam=pwr_led_trigger=.*$/d' \
+     -e '/^dtparam=pwr_led_activelow=.*$/d' \
+     -e '/^dtparam=act_led_trigger=.*$/d' \
+     -e '/^dtparam=act_led_activelow=.*$/d' \
+     -e '/^dtparam=eth_led0=.*$/d' \
+     -e '/^dtparam=eth_led1=.*$/d' \
      /boot/firmware/config.txt > "$TMP_CONFIG"
 
 
