@@ -905,21 +905,31 @@ done
 
 
 if [ "$INDIALLSKY_DISABLE_LEDS" == "true" ]; then
-    # System service, requires root
-    sudo cp "${ALLSKY_DIRECTORY}/misc/indi-allsky-disable-leds.sh" "/usr/local/sbin"
-    sudo chown root:root "/usr/local/sbin/indi-allsky-disable-leds.sh"
-    sudo chmod 755 "/usr/local/sbin/indi-allsky-disable-leds.sh"
+    "${ALLSKY_DIRECTORY}/misc/setup_disable_leds.sh" || true
+fi
 
-    sudo cp "${ALLSKY_DIRECTORY}/service/indi-allsky-disable-leds.service" "/etc/systemd/system"
-    sudo chown root:root "/etc/systemd/system/indi-allsky-disable-leds.service"
-    sudo chmod 644 "/etc/systemd/system/indi-allsky-disable-leds.service"
 
-    sudo systemctl daemon-reload
+while [ -z "${INDIALLSKY_ENABLE_WATCHDOG:-}" ]; do
+    if whiptail --title "Enable Watchdog" --yesno "Would you like to enable the SystemD watchdog daemon?\n\nThis will automatically reboot your system if it becomes unresponsive." 0 0 --defaultno; then
+        INDIALLSKY_ENABLE_WATCHDOG="true"
+    else
+        INDIALLSKY_ENABLE_WATCHDOG="false"
+    fi
+done
 
-    sudo systemctl enable "indi-allsky-disable-leds.service"
 
-    # go ahead and disable LEDs
-    sudo systemctl start "indi-allsky-disable-leds.service"
+if [ "$INDIALLSKY_ENABLE_WATCHDOG" == "true" ]; then
+    [[ ! -d "/etc/systemd/system.conf.d" ]] && sudo mkdir -m 755 "/etc/systemd/system.conf.d"
+    sudo chown root:root "/etc/systemd/system.conf.d"
+
+    sudo tee /etc/systemd/system.conf.d/indi-allsky-watchdog.conf <<EOF
+[Manager]
+RuntimeWatchdogSec=10
+ShutdownWatchdogSec=10min
+EOF
+
+    sudo chown root:root "/etc/systemd/system.conf.d/indi-allsky-watchdog.conf"
+    sudo chmod 644 "/etc/systemd/system.conf.d/indi-allsky-watchdog.conf"
 fi
 
 
