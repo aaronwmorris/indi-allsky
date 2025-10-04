@@ -60,8 +60,8 @@ if echo "$SYSTEM_MODEL" | grep -i "raspberry pi 5" >/dev/null 2>&1; then
 
     # remove original lines
     sed \
-     -e '/^dtparam=pwr_led_trigger=.*$/d' \
-     -e '/^dtparam=pwr_led_activelow=.*$/d' \
+     -e '/^dtparam=power_led_trigger=.*$/d' \
+     -e '/^dtparam=power_led_activelow=.*$/d' \
      -e '/^dtparam=act_led_trigger=.*$/d' \
      -e '/^dtparam=act_led_activelow=.*$/d' \
      -e '/^dtparam=eth_led0=.*$/d' \
@@ -71,8 +71,8 @@ if echo "$SYSTEM_MODEL" | grep -i "raspberry pi 5" >/dev/null 2>&1; then
 
     # Power LED
     # shellcheck disable=SC2129
-    echo "dtparam=pwr_led_trigger=none" >> "$TMP_CONFIG"
-    echo "dtparam=pwr_led_activelow=off" >> "$TMP_CONFIG"
+    echo "dtparam=power_led_trigger=none" >> "$TMP_CONFIG"
+    echo "dtparam=power_led_activelow=off" >> "$TMP_CONFIG"
 
 
     # Activity LED
