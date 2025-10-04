@@ -60,12 +60,12 @@ if echo "$SYSTEM_MODEL" | grep -i "raspberry pi 5" >/dev/null 2>&1; then
 
     # remove original lines
     sed \
-     -e '/^dtparam=power_led_trigger=.*$/d' \
-     -e '/^dtparam=power_led_activelow=.*$/d' \
-     -e '/^dtparam=act_led_trigger=.*$/d' \
-     -e '/^dtparam=act_led_activelow=.*$/d' \
-     -e '/^dtparam=eth_led0=.*$/d' \
-     -e '/^dtparam=eth_led1=.*$/d' \
+     -e '/^dtparam=power_led_trigger=.*$/Id' \
+     -e '/^dtparam=power_led_activelow=.*$/Id' \
+     -e '/^dtparam=act_led_trigger=.*$/Id' \
+     -e '/^dtparam=act_led_activelow=.*$/Id' \
+     -e '/^dtparam=eth_led0=.*$/Id' \
+     -e '/^dtparam=eth_led1=.*$/Id' \
      /boot/firmware/config.txt > "$TMP_CONFIG"
 
 
@@ -106,12 +106,12 @@ elif echo "$SYSTEM_MODEL" | grep -i "raspberry pi [34]" >/dev/null 2>&1; then
 
     # remove original lines
     sed \
-     -e '/^dtparam=pwr_led_trigger=.*$/d' \
-     -e '/^dtparam=pwr_led_activelow=.*$/d' \
-     -e '/^dtparam=act_led_trigger=.*$/d' \
-     -e '/^dtparam=act_led_activelow=.*$/d' \
-     -e '/^dtparam=eth_led0=.*$/d' \
-     -e '/^dtparam=eth_led1=.*$/d' \
+     -e '/^dtparam=pwr_led_trigger=.*$/Id' \
+     -e '/^dtparam=pwr_led_activelow=.*$/Id' \
+     -e '/^dtparam=act_led_trigger=.*$/Id' \
+     -e '/^dtparam=act_led_activelow=.*$/Id' \
+     -e '/^dtparam=eth_led0=.*$/Id' \
+     -e '/^dtparam=eth_led1=.*$/Id' \
      /boot/firmware/config.txt > "$TMP_CONFIG"
 
 
