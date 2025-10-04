@@ -3074,6 +3074,30 @@ if [ "$INDIALLSKY_DISABLE_LEDS" == "true" ]; then
 fi
 
 
+while [ -z "${INDIALLSKY_ENABLE_WATCHDOG:-}" ]; do
+    if whiptail --title "Enable Watchdog" --yesno "Would you like to enable the SystemD watchdog daemon?\n\nThis will automatically reboot your system if it becomes unresponsive." 0 0 --defaultno; then
+        INDIALLSKY_ENABLE_WATCHDOG="true"
+    else
+        INDIALLSKY_ENABLE_WATCHDOG="false"
+    fi
+done
+
+
+if [ "$INDIALLSKY_ENABLE_WATCHDOG" == "true" ]; then
+    [[ ! -d "/etc/systemd/system.conf.d" ]] && sudo mkdir -m 755 "/etc/systemd/system.conf.d"
+    sudo chown root:root "/etc/systemd/system.conf.d"
+
+    sudo tee /etc/systemd/system.conf.d/indi-allsky-watchdog.conf <<EOF
+[Manager]
+RuntimeWatchdogSec=10
+ShutdownWatchdogSec=10min
+EOF
+
+    sudo chown root:root "/etc/systemd/system.conf.d/indi-allsky-watchdog.conf"
+    sudo chmod 644 "/etc/systemd/system.conf.d/indi-allsky-watchdog.conf"
+fi
+
+
 if [ "$INDIALLSKY_START" == "true" ]; then
     echo "Starting indi-allsky..."
     sleep 3
@@ -3103,8 +3127,9 @@ EOF
 
 
     ### reduces disk i/o for system journal
-    [[ ! -d "/etc/systemd/journald.conf.d" ]] && sudo mkdir -m 755 /etc/systemd/journald.conf.d
-    sudo tee /etc/systemd/journald.conf.d/90-indi-allsky.conf <<EOF
+    [[ ! -d "/etc/systemd/journald.conf.d" ]] && sudo mkdir -m 755 "/etc/systemd/journald.conf.d"
+    sudo chown root:root "/etc/systemd/journald.conf.d"
+    sudo tee "/etc/systemd/journald.conf.d/90-indi-allsky.conf" <<EOF
 [Journal]
 Storage=volatile
 Compress=yes
@@ -3112,6 +3137,9 @@ RateLimitIntervalSec=30s
 RateLimitBurst=10000
 SystemMaxUse=20M
 EOF
+
+    sudo chown root:root "/etc/systemd/journald.conf.d/90-indi-allsky.conf"
+    sudo chmod 644 "/etc/systemd/journald.conf.d/90-indi-allsky.conf"
 
     sudo systemctl restart systemd-journald
     sleep 3
