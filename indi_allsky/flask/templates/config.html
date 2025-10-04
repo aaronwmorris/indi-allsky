@@ -7549,6 +7549,21 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__HOLD_SECONDS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__HOLD_SECONDS(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__HOLD_SECONDS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Prevent Dew Heater status from changing too often</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.DEW_HEATER__LEVEL_LOW.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -7582,6 +7597,8 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">
         </div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -7753,6 +7770,21 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.FAN__HOLD_SECONDS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FAN__HOLD_SECONDS(class='form-control bg-secondary') }}
+            <div id="FAN__HOLD_SECONDS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Prevent Fan status from changing too often</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.FAN__LEVEL_LOW.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -7789,6 +7821,8 @@ var camera_id = {{ camera_id }};
             <div></div>
         </div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -8670,6 +8704,7 @@ const field_names = [
     'DEW_HEATER__THOLD_DIFF_LOW',
     'DEW_HEATER__THOLD_DIFF_MED',
     'DEW_HEATER__THOLD_DIFF_HIGH',
+    'DEW_HEATER__HOLD_SECONDS',
     'FAN__CLASSNAME',
     'FAN__I2C_ADDRESS',
     'FAN__PIN_1',
@@ -8682,6 +8717,7 @@ const field_names = [
     'FAN__THOLD_DIFF_LOW',
     'FAN__THOLD_DIFF_MED',
     'FAN__THOLD_DIFF_HIGH',
+    'FAN__HOLD_SECONDS',
     'GENERIC_GPIO__A_CLASSNAME',
     'GENERIC_GPIO__A_I2C_ADDRESS',
     'GENERIC_GPIO__A_PIN_1',
