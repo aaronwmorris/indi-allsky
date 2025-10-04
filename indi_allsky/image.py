@@ -65,6 +65,8 @@ class ImageWorker(Process):
     sqm_history_minutes = 30
     stars_history_minutes = 30
 
+    auto_gain_exposure_cutoff_level_low = 80  # percent of max exposure
+
 
     def __init__(
         self,
@@ -75,7 +77,7 @@ class ImageWorker(Process):
         upload_q,
         position_av,
         exposure_av,
-        gain_v,
+        gain_av,
         bin_v,
         sensors_temp_av,
         sensors_user_av,
@@ -92,11 +94,11 @@ class ImageWorker(Process):
         self.image_q = image_q
         self.upload_q = upload_q
 
-        self.position_av = position_av  # lat, long, elev, ra, dec
-
-        self.exposure_av = exposure_av  # current, min night, min day, max
-        self.gain_v = gain_v
+        self.position_av = position_av
+        self.exposure_av = exposure_av
+        self.gain_av = gain_av
         self.bin_v = bin_v
+
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av
         self.night_v = night_v
@@ -123,7 +125,7 @@ class ImageWorker(Process):
         self.image_processor = ImageProcessor(
             self.config,
             self.position_av,
-            self.gain_v,
+            self.gain_av,
             self.bin_v,
             self.sensors_temp_av,
             self.sensors_user_av,
@@ -137,6 +139,13 @@ class ImageWorker(Process):
             self.upload_q,
             self.night_v,
         )
+
+
+        self._gain_step = None  # calculate on first image
+        self.auto_gain_step_list = None  # list of fixed gain values
+        self.auto_gain_exposure_cutoff_low = None
+        self.auto_gain_exposure_cutoff_high = None
+
 
         self.image_save_hook_process = None  # used for both pre- and post-hooks
         self.image_save_hook_process_start = 0
@@ -169,6 +178,10 @@ class ImageWorker(Process):
     def libcamera_raw(self, new_libcamera_raw):
         self._libcamera_raw = bool(new_libcamera_raw)
 
+
+    @property
+    def gain_step(self):
+        return self._gain_step
 
 
     def sighup_handler_worker(self, signum, frame):
@@ -320,6 +333,31 @@ class ImageWorker(Process):
             .one()
 
 
+        if isinstance(self.gain_step, type(None)):
+            # the gain steps cannot be calculated until the gain_av variable is populated
+            gain_range = self.gain_av[constants.GAIN_MAX_NIGHT] - self.gain_av[constants.GAIN_MIN_NIGHT]
+            auto_gain_levels = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_LEVELS', 5)
+
+
+            self._gain_step = gain_range / (auto_gain_levels - 1)  # need divisions
+
+            self.auto_gain_step_list = [float(round((self.gain_step * x) + self.gain_av[constants.GAIN_MIN_NIGHT], 2)) for x in range(auto_gain_levels)]
+            self.auto_gain_step_list[-1] = float(round(self.gain_av[constants.GAIN_MAX_NIGHT], 2))  # replace last value, round is necessary
+
+
+            self.auto_gain_exposure_cutoff_high = self.exposure_av[constants.EXPOSURE_MAX] - 0.5
+
+            self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] * (self.auto_gain_exposure_cutoff_level_low / 100)
+            if self.exposure_av[constants.EXPOSURE_MAX] - self.auto_gain_exposure_cutoff_low > 10.0:
+                self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] - 10.0
+
+
+            if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
+                logger.info('Gain Steps: %d @ %0.2f', auto_gain_levels, self.gain_step)
+                logger.info('Gain Step list: %s', str(self.auto_gain_step_list))
+                logger.info('Auto-Gain Exposure cutoff: %0.2fs/%0.2fs', self.auto_gain_exposure_cutoff_low, self.auto_gain_exposure_cutoff_high)
+
+
         processing_start = time.time()
 
 
@@ -335,9 +373,7 @@ class ImageWorker(Process):
                 self.adsb_worker_idx,
                 self.config,
                 self.adsb_aircraft_q,
-                self.position_av[0],  # lat
-                self.position_av[1],  # long
-                self.position_av[2],  # elev
+                self.position_av,
             )
             self.adsb_worker.start()
 
@@ -526,7 +562,7 @@ class ImageWorker(Process):
 
 
         # adu calculate (before processing)
-        adu, adu_average = self.calculate_exposure(adu, exposure)
+        adu, adu_average = self.calculate_exposure(adu, exposure, gain)
 
 
         # generate a new mask base once the target ADU is found
@@ -797,9 +833,9 @@ class ImageWorker(Process):
                 'sqm'      : round(i_ref.sqm_value, 1),
                 'stars'    : len(i_ref.stars),
                 'detections' : len(i_ref.lines),
-                'latitude' : round(self.position_av[0], 3),
-                'longitude': round(self.position_av[1], 3),
-                'elevation': int(self.position_av[2]),
+                'latitude' : round(self.position_av[constants.POSITION_LATITUDE], 3),
+                'longitude': round(self.position_av[constants.POSITION_LONGITUDE], 3),
+                'elevation': int(self.position_av[constants.POSITION_ELEVATION]),
                 'smoke_rating'  : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
                 'aircraft'      : len(self.adsb_aircraft_list),
                 'sidereal_time' : self.image_processor.astrometric_data['sidereal_time'],
@@ -989,9 +1025,9 @@ class ImageWorker(Process):
             'utc_offset'          : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'sqm_data'            : self.getSqmData(i_ref.camera_id),
             'stars_data'          : self.getStarsData(i_ref.camera_id),
-            'latitude'            : self.position_av[0],
-            'longitude'           : self.position_av[1],
-            'elevation'           : int(self.position_av[2]),
+            'latitude'            : self.position_av[constants.POSITION_LATITUDE],
+            'longitude'           : self.position_av[constants.POSITION_LONGITUDE],
+            'elevation'           : int(self.position_av[constants.POSITION_ELEVATION]),
             'sidereal_time'       : self.image_processor.astrometric_data['sidereal_time'],
             'kpindex'             : i_ref.kpindex,
             'aurora_mag_bt'       : i_ref.aurora_mag_bt,
@@ -1535,9 +1571,9 @@ class ImageWorker(Process):
             'sqm'                 : i_ref.sqm_value,
             'stars'               : len(i_ref.stars),
             'time'                : i_ref.exp_date.strftime('%s'),
-            'latitude'            : self.position_av[0],
-            'longitude'           : self.position_av[1],
-            'elevation'           : int(self.position_av[2]),
+            'latitude'            : self.position_av[constants.POSITION_LATITUDE],
+            'longitude'           : self.position_av[constants.POSITION_LONGITUDE],
+            'elevation'           : int(self.position_av[constants.POSITION_ELEVATION]),
             'kpindex'             : i_ref.kpindex,
             'ovation_max'         : int(i_ref.ovation_max),
             'aurora_mag_bt'       : i_ref.aurora_mag_bt,
@@ -1823,7 +1859,7 @@ class ImageWorker(Process):
         self._miscUpload.upload_realtime_keogram(keogram_file, camera)
 
 
-    def calculate_exposure(self, adu, exposure):
+    def calculate_exposure(self, adu, exposure, gain):
         if adu <= 0.0:
             # ensure we do not divide by zero
             logger.warning('Zero average, setting a default of 0.1')
@@ -1832,10 +1868,8 @@ class ImageWorker(Process):
 
         if self.night_v.value:
             target_adu = self.config['TARGET_ADU']
-            exposure_min = self.exposure_av[1]
         else:
             target_adu = self.config['TARGET_ADU_DAY']
-            exposure_min = self.exposure_av[2]
 
 
         # Brightness when the sun is in view (very short exposures) can change drastically when clouds pass through the view
@@ -1866,7 +1900,7 @@ class ImageWorker(Process):
 
 
         if not self.target_adu_found:
-            self.recalculate_exposure(exposure, adu, target_adu, target_adu_min, target_adu_max, exposure_min, exp_scale_factor)
+            self.recalculate_exposure(exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor)
             return adu, 0.0
 
 
@@ -1896,8 +1930,7 @@ class ImageWorker(Process):
         return adu, adu_average
 
 
-    def recalculate_exposure(self, exposure, adu, target_adu, target_adu_min, target_adu_max, exposure_min, exp_scale_factor):
-
+    def recalculate_exposure(self, exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor):
         # Until we reach a good starting point, do not calculate a moving average
         if adu <= target_adu_max and adu >= target_adu_min:
             logger.warning('Found target value for exposure')
@@ -1907,25 +1940,110 @@ class ImageWorker(Process):
             return
 
 
+        if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
+            # moonmode settings are ignored with auto-gain
+
+            if self.night_v.value:
+                exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
+            else:
+                exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
+
+            gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
+            gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
+        else:
+            if self.night_v.value:
+                exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
+
+                if self.moonmode_v.value:
+                    gain_min = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
+                    gain_max = float(self.gain_av[constants.GAIN_MAX_MOONMODE])
+                else:
+                    gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
+                    gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
+
+            else:
+                exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
+
+                gain_min = float(self.gain_av[constants.GAIN_MIN_DAY])
+                gain_max = float(self.gain_av[constants.GAIN_MAX_DAY])
+
+
         # Scale the exposure up and down based on targets
         if adu > target_adu_max:
-            new_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
+            next_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
         elif adu < target_adu_min:
-            new_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
+            next_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
         else:
-            new_exposure = exposure
+            next_exposure = exposure
 
 
-        # Do not exceed the limits
-        if new_exposure < exposure_min:
-            new_exposure = float(exposure_min)
-        elif new_exposure > self.exposure_av[3]:
-            new_exposure = float(self.exposure_av[3])
+        # Do not exceed the exposure limits
+        if next_exposure < exposure_min:
+            next_exposure = float(exposure_min)
+        elif next_exposure > self.exposure_av[constants.EXPOSURE_MAX]:
+            next_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
 
 
-        logger.warning('New calculated exposure: %0.8f', new_exposure)
+        if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
+            try:
+                auto_gain_idx = self.auto_gain_step_list.index(gain)
+            except ValueError:
+                # fallback to min if gain does not match
+                logger.error('Current gain not found in list, reset to minimum gain')
+                auto_gain_idx = 0
+
+
+            if next_exposure == exposure:
+                # no change
+                next_gain = gain
+            elif next_exposure > exposure:
+                # exposure/gain needs to increase
+                if gain == self.auto_gain_step_list[-1]:
+                    # already at max gain, increase exposure
+                    next_gain = gain
+                else:
+                    if exposure < self.auto_gain_exposure_cutoff_high:
+                        # maintain gain, increase exposure
+                        next_gain = gain
+                        next_exposure = min(next_exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
+                    else:
+                        # increase gain, maintain exposure
+                        next_gain = self.auto_gain_step_list[auto_gain_idx + 1]
+                        next_exposure = min(exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
+
+            else:
+                # exposure/gain needs to decrease
+                if gain == self.auto_gain_step_list[0]:
+                    # already at minimum gain, decrease exposure
+                    next_gain = gain
+                else:
+                    if exposure > self.auto_gain_exposure_cutoff_low:
+                        # maintain gain, decrease exposure
+                        next_gain = gain
+                        next_exposure = max(next_exposure, self.auto_gain_exposure_cutoff_low)
+                    else:
+                        # decrease gain, maintain exposure
+                        next_gain = self.auto_gain_step_list[auto_gain_idx - 1]
+                        next_exposure = exposure
+
+        else:
+            # just set the gain to the max for the current mode
+            next_gain = gain_max
+
+
+        # Do not exceed the gain limits
+        if next_gain > gain_max:
+            next_gain = gain_max
+        elif next_gain < gain_min:
+            next_gain = gain_min
+
+
+        logger.warning('New calculated exposure: %0.8f (gain %0.2f)', next_exposure, next_gain)
         with self.exposure_av.get_lock():
-            self.exposure_av[0] = new_exposure
+            self.exposure_av[constants.EXPOSURE_NEXT] = float(next_exposure)
+
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_NEXT] = float(next_gain)
 
 
     def save_longterm_keogram_data(self, exp_date, camera_id):
@@ -2005,9 +2123,9 @@ class ImageWorker(Process):
             'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),
             'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
             'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
-            'LATITUDE' : '{0:0.3f}'.format(self.position_av[0]),
-            'LONGITUDE': '{0:0.3f}'.format(self.position_av[1]),
-            'ELEVATION': '{0:d}'.format(int(self.position_av[2])),
+            'LATITUDE' : '{0:0.3f}'.format(self.position_av[constants.POSITION_LATITUDE]),
+            'LONGITUDE': '{0:0.3f}'.format(self.position_av[constants.POSITION_LONGITUDE]),
+            'ELEVATION': '{0:d}'.format(int(self.position_av[constants.POSITION_ELEVATION])),
         }
 
 
@@ -2076,9 +2194,9 @@ class ImageWorker(Process):
             'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),
             'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
             'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
-            'LATITUDE' : '{0:0.3f}'.format(self.position_av[0]),
-            'LONGITUDE': '{0:0.3f}'.format(self.position_av[1]),
-            'ELEVATION': '{0:d}'.format(int(self.position_av[2])),
+            'LATITUDE' : '{0:0.3f}'.format(self.position_av[constants.POSITION_LATITUDE]),
+            'LONGITUDE': '{0:0.3f}'.format(self.position_av[constants.POSITION_LONGITUDE]),
+            'ELEVATION': '{0:d}'.format(int(self.position_av[constants.POSITION_ELEVATION])),
         }
 
 

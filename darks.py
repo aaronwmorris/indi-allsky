@@ -38,6 +38,14 @@ if __name__ == "__main__":
         default=10,
     )
     argparser.add_argument(
+        '--gains',
+        '-g',
+        help='gain list [default: auto]',
+        nargs='+',
+        type=float,
+        required=False,
+    )
+    argparser.add_argument(
         '--temp_delta',
         '-t',
         help='temperature delta between dark frame sets [default: 5.0]',
@@ -110,6 +118,7 @@ if __name__ == "__main__":
     iad.daytime = args.daytime
     iad.reverse = args.reverse
     iad.flush_camera_id = args.flush_id
+    iad.gain_list = args.gains
 
     action_func = getattr(iad, args.action)
     action_func()
