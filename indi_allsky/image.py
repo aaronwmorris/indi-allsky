@@ -2024,7 +2024,7 @@ class ImageWorker(Process):
                     else:
                         # decrease gain, maintain exposure
                         next_gain = self.auto_gain_step_list[auto_gain_idx - 1]
-                        next_exposure = exposure
+                        next_exposure = max(exposure, self.auto_gain_exposure_cutoff_low)
 
         else:
             # just set the gain to the max for the current mode
