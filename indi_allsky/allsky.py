@@ -1512,8 +1512,8 @@ class IndiAllSky(object):
     def updateConfigLocation(self, latitude, longitude, elevation, camera_id):
         logger.warning('Updating indi-allsky config with new geographic location')
 
-        self.config['LOCATION_LATITUDE'] = round(float(latitude), 4)
-        self.config['LOCATION_LONGITUDE'] = round(float(longitude), 4)
+        self.config['LOCATION_LATITUDE'] = round(float(latitude), 3)
+        self.config['LOCATION_LONGITUDE'] = round(float(longitude), 3)
         self.config['LOCATION_ELEVATION'] = int(elevation)
 
 
