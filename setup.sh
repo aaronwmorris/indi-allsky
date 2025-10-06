@@ -1950,7 +1950,63 @@ fi
 INDI_CCD_DRIVERS=()
 cd "$INDI_DRIVER_PATH" || catch_error
 for I in indi_*_ccd indi_rpicam* indi_pylibcamera*; do
-    INDI_CCD_DRIVERS[${#INDI_CCD_DRIVERS[@]}]="$I $I OFF"
+    if [ "$I" == "indi_simulator_ccd" ]; then
+        I_DESC="CCD Simulator - [$I]"
+    elif [ "$I" == "indi_asi_ccd" ]; then
+        I_DESC="ZWO ASI - [$I]"
+    elif [ "$I" == "indi_asi_single_ccd" ]; then
+        I_DESC="ZWO ASI (Single) - [$I]"
+    elif [ "$I" == "indi_playerone_ccd" ]; then
+        I_DESC="PlayerOne Astronomy - [$I]"
+    elif [ "$I" == "indi_playerone_single_ccd" ]; then
+        I_DESC="PlayerOne Astronomy (Single) - [$I]"
+    elif [ "$I" == "indi_toupcam_ccd" ]; then
+        I_DESC="ToupTek - [$I]"
+    elif [ "$I" == "indi_altair_ccd" ]; then
+        I_DESC="Altair - [$I]"
+    elif [ "$I" == "indi_omegonprocam_ccd" ]; then
+        I_DESC="Omegon - [$I]"
+    elif [ "$I" == "indi_ogmacam_ccd" ]; then
+        I_DESC="Ogma - [$I]"
+    elif [ "$I" == "indi_tscam_ccd" ]; then
+        I_DESC="indi_tscam_ccd - [$I]"
+    elif [ "$I" == "indi_nncam_ccd" ]; then
+        I_DESC="indi_nncam_ccd - [$I]"
+    elif [ "$I" == "indi_svbony_ccd" ]; then
+        I_DESC="SVBony - [$I]"
+    elif [ "$I" == "indi_qhy_ccd" ]; then
+        I_DESC="QHY - [$I]"
+    elif [ "$I" == "indi_sx_ccd" ]; then
+        I_DESC="Starlight Xpress - [$I]"
+    elif [ "$I" == "indi_dsi_ccd" ]; then
+        I_DESC="Meade DSI - [$I]"
+    elif [ "$I" == "indi_libcamera_ccd" ]; then
+        I_DESC="libcamera (BETA) - [$I]"
+    elif [ "$I" == "indi_gphoto_ccd" ]; then
+        I_DESC="GPhoto DSLR - [$I]"
+    elif [ "$I" == "indi_canon_ccd" ]; then
+        I_DESC="Canon DSLR - [$I]"
+    elif [ "$I" == "indi_sony_ccd" ]; then
+        I_DESC="Sony DSLR - [$I]"
+    elif [ "$I" == "indi_nikon_ccd" ]; then
+        I_DESC="Nikon DSLR - [$I]"
+    elif [ "$I" == "indi_fuji_ccd" ]; then
+        I_DESC="Fuji DSLR - [$I]"
+    elif [ "$I" == "indi_pentax_ccd" ]; then
+        I_DESC="Pentax DSLR - [$I]"
+    elif [ "$I" == "indi_v4l2_ccd" ]; then
+        I_DESC="Linux V4L2 - [$I]"
+    elif [ "$I" == "indi_webcam_ccd" ]; then
+        I_DESC="Web Camera - [$I]"
+    else
+        # skip unknown drivers
+        continue
+    fi
+
+
+    INDI_CCD_DRIVERS[${#INDI_CCD_DRIVERS[@]}]="$I"
+    INDI_CCD_DRIVERS[${#INDI_CCD_DRIVERS[@]}]="$I_DESC"
+    INDI_CCD_DRIVERS[${#INDI_CCD_DRIVERS[@]}]="OFF"
 done
 cd "$OLDPWD" || catch_error
 
@@ -1961,7 +2017,7 @@ if [[ "$INSTALL_INDISERVER" == "true" ]]; then
     if [[ "$CAMERA_INTERFACE" == "indi" || "$CAMERA_INTERFACE" == "indi_accumulator" ]]; then
         while [ -z "${CCD_DRIVER:-}" ]; do
             # shellcheck disable=SC2068
-            CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_CCD_DRIVERS[@]} 3>&1 1>&2 2>&3)
+            CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 "${INDI_CCD_DRIVERS[@]}" 3>&1 1>&2 2>&3)
         done
     else
         # simulator will not affect anything
@@ -1972,12 +2028,24 @@ fi
 #echo $CCD_DRIVER
 
 
-
 # get list of gps drivers
 INDI_GPS_DRIVERS=("None None ON")
 cd "$INDI_DRIVER_PATH" || catch_error
 for I in indi_gps* indi_simulator_gps; do
-    INDI_GPS_DRIVERS[${#INDI_GPS_DRIVERS[@]}]="$I $I OFF"
+    if [ "$I" == "indi_gpsd" ]; then
+        I_DESC="GPSd - [$I]"
+    elif [ "$I" == "indi_gpsnmea" ]; then
+        I_DESC="GPSd NEMA - [$I]"
+    elif [ "$I" == "indi_simulator_gps" ]; then
+        I_DESC="GPS Simulator - [$I]"
+    else
+        continue
+    fi
+
+
+    INDI_GPS_DRIVERS[${#INDI_GPS_DRIVERS[@]}]="$I"
+    INDI_GPS_DRIVERS[${#INDI_GPS_DRIVERS[@]}]="$I_DESC"
+    INDI_GPS_DRIVERS[${#INDI_GPS_DRIVERS[@]}]="OFF"
 done
 cd "$OLDPWD" || catch_error
 
@@ -1987,7 +2055,7 @@ cd "$OLDPWD" || catch_error
 if [[ "$INSTALL_INDISERVER" == "true" ]]; then
     while [ -z "${GPS_DRIVER:-}" ]; do
         # shellcheck disable=SC2068
-        GPS_DRIVER=$(whiptail --title "GPS Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_GPS_DRIVERS[@]} 3>&1 1>&2 2>&3)
+        GPS_DRIVER=$(whiptail --title "GPS Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 "${INDI_GPS_DRIVERS[@]}" 3>&1 1>&2 2>&3)
     done
 fi
 
