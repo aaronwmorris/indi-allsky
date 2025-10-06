@@ -3699,7 +3699,7 @@ class AjaxSetTimeView(BaseView):
         except dbus.exceptions.DBusException as e:
             app.logger.error('DBus Error: %s', str(e))
             errors = {
-                'form_settime_global' : 'DBus Error: {0:s}'.format(str(e)),
+                'form_settime_global' : ['DBus Error: {0:s}'.format(str(e))],
             }
             return jsonify(errors), 400
 
@@ -3741,13 +3741,13 @@ class AjaxSetTimezoneView(BaseView):
         if not app.config['LOGIN_DISABLED']:
             if not current_user.is_admin:
                 form_errors = form_timezone.errors  # this must be a property
-                form_errors['form_settimezone_global'] = ['You do not have permission to make configuration changes']
+                form_errors['form_timezone_global'] = ['You do not have permission to make configuration changes']
                 return jsonify(form_errors), 400
 
 
         if not form_timezone.validate():
             form_errors = form_timezone.errors  # this must be a property
-            form_errors['form_settimezone_global'] = ['Please fix the errors above']
+            form_errors['form_timezone_global'] = ['Please fix the errors above']
             return jsonify(form_errors), 400
 
 
@@ -3759,7 +3759,7 @@ class AjaxSetTimezoneView(BaseView):
         except dbus.exceptions.DBusException as e:
             app.logger.error('DBus Error: %s', str(e))
             errors = {
-                'form_settime_global' : 'DBus Error: {0:s}'.format(str(e)),
+                'form_timezone_global' : ['DBus Error: {0:s}'.format(str(e))],
             }
             return jsonify(errors), 400
 
