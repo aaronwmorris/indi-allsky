@@ -4701,7 +4701,10 @@ class SystemInfoView(TemplateView):
 
         if self.camera.driver:
             #app.logger.info('Current camera driver: %s', self.camera.driver)
-            camera_driver = self.camera.driver  # set the current camera driver as default
+            if self.camera.driver == 'rpicam-still':
+                camera_driver = 'indi_simulator_ccd'
+            else:
+                camera_driver = self.camera.driver  # set the current camera driver as default
         else:
             camera_driver = 'indi_simulator_ccd'
 
