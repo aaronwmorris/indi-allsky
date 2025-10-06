@@ -2065,8 +2065,8 @@ class ConfigView(FormView):
             'HEALTHCHECK__DISK_USAGE'        : self.indi_allsky_config.get('HEALTHCHECK', {}).get('DISK_USAGE', 90.0),
             'HEALTHCHECK__SWAP_USAGE'        : self.indi_allsky_config.get('HEALTHCHECK', {}).get('SWAP_USAGE', 90.0),
             'LOCATION_NAME'                  : self.indi_allsky_config.get('LOCATION_NAME', ''),
-            'LOCATION_LATITUDE'              : self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0),
-            'LOCATION_LONGITUDE'             : self.indi_allsky_config.get('LOCATION_LONGITUDE', 0.0),
+            'LOCATION_LATITUDE'              : '{0:+0.3f}'.format(self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0)),
+            'LOCATION_LONGITUDE'             : '{0:+0.3f}'.format(self.indi_allsky_config.get('LOCATION_LONGITUDE', 0.0)),
             'LOCATION_ELEVATION'             : self.indi_allsky_config.get('LOCATION_ELEVATION', 0),
             'TIMELAPSE_ENABLE'               : self.indi_allsky_config.get('TIMELAPSE_ENABLE', True),
             'TIMELAPSE_SKIP_FRAMES'          : self.indi_allsky_config.get('TIMELAPSE_SKIP_FRAMES', 4),
@@ -2973,8 +2973,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['HEALTHCHECK']['DISK_USAGE']            = float(request.json['HEALTHCHECK__DISK_USAGE'])
         self.indi_allsky_config['HEALTHCHECK']['SWAP_USAGE']            = float(request.json['HEALTHCHECK__SWAP_USAGE'])
         self.indi_allsky_config['LOCATION_NAME']                        = str(request.json['LOCATION_NAME'])
-        self.indi_allsky_config['LOCATION_LATITUDE']                    = float(request.json['LOCATION_LATITUDE'])
-        self.indi_allsky_config['LOCATION_LONGITUDE']                   = float(request.json['LOCATION_LONGITUDE'])
+        self.indi_allsky_config['LOCATION_LATITUDE']                    = float(round(float(request.json['LOCATION_LATITUDE']), 3))
+        self.indi_allsky_config['LOCATION_LONGITUDE']                   = float(round(float(request.json['LOCATION_LONGITUDE']), 3))
         self.indi_allsky_config['LOCATION_ELEVATION']                   = int(request.json['LOCATION_ELEVATION'])
         self.indi_allsky_config['TIMELAPSE_ENABLE']                     = bool(request.json['TIMELAPSE_ENABLE'])
         self.indi_allsky_config['TIMELAPSE_SKIP_FRAMES']                = int(request.json['TIMELAPSE_SKIP_FRAMES'])
