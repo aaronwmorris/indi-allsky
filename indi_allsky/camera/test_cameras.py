@@ -82,7 +82,7 @@ class IndiClientTestCameraBase(IndiClient):
 
 
     def setCcdGain(self, new_gain_value):
-        gain_f = float(round(new_gain_value), 2)
+        gain_f = float(round(new_gain_value, 2))
 
         # Update shared gain value
         with self.gain_av.get_lock():
