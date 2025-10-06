@@ -1099,14 +1099,14 @@ class ImageProcessor(object):
             ### using an offset of 2 because want the same color pixel for bayered data
             for y, x in numpy.argwhere(i_ref.hole_mask):
                 try:
-                    alt_value_1 = data[y + 2][x]
-                except IndexError:
                     alt_value_1 = data[y - 2][x]
+                except IndexError:
+                    alt_value_1 = data[y + 2][x]
 
                 try:
-                    alt_value_2 = data[y][x + 2]
-                except IndexError:
                     alt_value_2 = data[y][x - 2]
+                except IndexError:
+                    alt_value_2 = data[y][x + 2]
 
 
                 data[y][x] = numpy.maximum(alt_value_1, alt_value_2)
@@ -1114,22 +1114,22 @@ class ImageProcessor(object):
             # RGB (fits)
             for y, x in numpy.argwhere(i_ref.hole_mask):
                 try:
-                    r_alt_value_1 = data[0][y + 2][x]
-                    g_alt_value_1 = data[1][y + 2][x]
-                    b_alt_value_1 = data[2][y + 2][x]
-                except IndexError:
                     r_alt_value_1 = data[0][y - 2][x]
                     g_alt_value_1 = data[1][y - 2][x]
                     b_alt_value_1 = data[2][y - 2][x]
+                except IndexError:
+                    r_alt_value_1 = data[0][y + 2][x]
+                    g_alt_value_1 = data[1][y + 2][x]
+                    b_alt_value_1 = data[2][y + 2][x]
 
                 try:
-                    r_alt_value_2 = data[0][y][x + 2]
-                    g_alt_value_2 = data[1][y][x + 2]
-                    b_alt_value_2 = data[2][y][x + 2]
-                except IndexError:
                     r_alt_value_2 = data[0][y][x - 2]
                     g_alt_value_2 = data[1][y][x - 2]
                     b_alt_value_2 = data[2][y][x - 2]
+                except IndexError:
+                    r_alt_value_2 = data[0][y][x + 2]
+                    g_alt_value_2 = data[1][y][x + 2]
+                    b_alt_value_2 = data[2][y][x + 2]
 
 
                 data[0][y][x] = max(r_alt_value_1, r_alt_value_2)
