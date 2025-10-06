@@ -5,10 +5,10 @@
 {% block head %}
 <style>
 #nav-info-tab, #nav-time-tab, #nav-services-tab, #nav-powercontrol-tab, #nav-indiserver-tab {
-	width: 150px;
-	margin-top: 10px;
-	margin-right: 5px;
-	height: 50px;
+    width: 150px;
+    margin-top: 10px;
+    margin-right: 5px;
+    height: 50px;
 }
 
 .loader {
@@ -189,7 +189,7 @@ var camera_id = {{ camera_id }};
     </div>
     <div class="row">
         <div class="col-sm-2"></div>
-	<div class="col-sm-10"><hr></div>
+    <div class="col-sm-10"><hr></div>
     </div>
 {% endfor %}
 
@@ -473,7 +473,9 @@ $('#form_settime').on('submit', function() {
             {{ form_timezone.NEW_TIMEZONE(class='form-select bg-secondary') }}
             <div id="NEW_TIMEZONE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6"></div>
+        <div class="col-sm-6">
+            <div><span class="badge rounded-pill bg-info">Info</span><span> Older timezone specifications may not be supported even though they are reported here.  Use modern timezone labels such as <b>America/New_York</b></span></div>
+        </div>
     </div>
 
     <div id="form_timezone_success-message" class="text-success" style="display: none;"></div>
@@ -582,7 +584,7 @@ $('#form_timezone').on('submit', function() {
 
     <hr>
 
-    <div><span class="badge rounded-pill bg-info text-dark">Note</span> This has no effect on libcamera-based configurations</div>
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> This has no effect on libcamera-based configurations.  CCD Simulator is normally configured when libcamera is in use</div>
 
     <div><span class="badge rounded-pill bg-info text-dark">Note</span> The default driver selection will not update until the main camera selection [left] has changed</div>
 
