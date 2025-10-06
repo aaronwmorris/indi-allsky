@@ -473,7 +473,9 @@ $('#form_settime').on('submit', function() {
             {{ form_timezone.NEW_TIMEZONE(class='form-select bg-secondary') }}
             <div id="NEW_TIMEZONE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6"></div>
+        <div class="col-sm-6">
+            <div><span class="badge rounded-pill bg-info">Info</span><span> Older timezone specifications may not be supported even though they are reported here.  Use modern timezone labels such as <b>America/New_York</b></span></div>
+	</div>
     </div>
 
     <div id="form_timezone_success-message" class="text-success" style="display: none;"></div>
