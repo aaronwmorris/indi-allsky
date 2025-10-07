@@ -47,25 +47,25 @@
 
                 <ul class="nav nav-pills flex-sm-column flex-row flex-nowrap flex-shrink-1 flex-sm-grow-0 flex-grow-1 mb-sm-auto mb-0 justify-content-center align-items-center align-items-sm-start" id="menu">
                     <li class="nav-item">
-                        <a href="{{ url_for('indi_allsky.index_view') }}" class="nav-link px-sm-0 px-2">
+                        <a href="{{ url_for('indi_allsky.index_view') }}" class="nav-link link-info px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/house-fill.svg') }}" width="16" height="16" alt="Latest"><span class="ms-1 d-none d-sm-inline">Latest</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('indi_allsky.image_loop_view') }}" class="nav-link px-sm-0 px-2">
+                        <a href="{{ url_for('indi_allsky.image_loop_view') }}" class="nav-link link-info px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/repeat.svg') }}" width="16" height="16" alt="Loop"><span class="ms-1 d-none d-sm-inline">Loop</span></a>
                     </li>
                     <li>
-                        <a href="{{ url_for('indi_allsky.sqm_view') }}" class="nav-link px-sm-0 px-2">
+                        <a href="{{ url_for('indi_allsky.sqm_view') }}" class="nav-link link-info px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/cloud-moon-fill.svg') }}" width="16" height="16" alt="SQM"><span class="ms-1 d-none d-sm-inline">SQM</span></a>
                     </li>
                     <li>
-                        <a href="{{ url_for('indi_allsky.chart_view') }}" class="nav-link px-sm-0 px-2">
+                        <a href="{{ url_for('indi_allsky.chart_view') }}" class="nav-link link-info px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/graph-up.svg') }}" width="16" height="16" alt="Charts"><span class="ms-1 d-none d-sm-inline">Charts</span></a>
                     </li>
 
                     <li class="dropdown">
-                        <a href="#" class="nav-link dropdown-toggle px-sm-0 px-1" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a href="#" class="nav-link link-info dropdown-toggle px-sm-0 px-1" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fs-5 bi-bootstrap"></i>
                             <img src="{{ url_for('indi_allsky.static', filename='svg/play-btn-fill.svg') }}" width="16" height="16" alt="Media">
                             <span class="ms-1 d-none d-sm-inline">Media</span>
@@ -113,7 +113,7 @@
                     </li>
 
                     <li class="dropdown">
-                        <a href="#" class="nav-link dropdown-toggle px-sm-0 px-1" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a href="#" class="nav-link link-info dropdown-toggle px-sm-0 px-1" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fs-5 bi-bootstrap"></i>
                             <img src="{{ url_for('indi_allsky.static', filename='svg/tools.svg') }}" width="16" height="16" alt="Tools">
                             <span class="ms-1 d-none d-sm-inline">Tools</span>
@@ -187,11 +187,11 @@
 
                     {% if current_user.is_authenticated or login_disabled %}
                     <li>
-                        <a href="{{ url_for('indi_allsky.config_view') }}" class="nav-link px-sm-0 px-2">
+                        <a href="{{ url_for('indi_allsky.config_view') }}" class="nav-link link-info px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/toggles.svg') }}" width="16" height="16" alt="Config"><span class="ms-1 d-none d-sm-inline">Config</span> </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('indi_allsky.system_view') }}" class="nav-link px-sm-0 px-2">
+                        <a href="{{ url_for('indi_allsky.system_view') }}" class="nav-link link-info px-sm-0 px-2">
                             <img src="{{ url_for('indi_allsky.static', filename='svg/gear-fill.svg') }}" width="16" height="16" alt="System"><span class="ms-1 d-none d-sm-inline">System</span> </a>
                     </li>
                     {% endif %}
