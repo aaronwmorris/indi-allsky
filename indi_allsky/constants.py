@@ -379,7 +379,7 @@ INDISERVER_CAMERA_MAP = {
     'indi_playerone_ccd'    : 'PlayerOne Astronomy',
     'indi_playerone_single_ccd' : 'PlayerOne Astronomy (Single)',
     'indi_toupcam_ccd'      : 'ToupTek',
-    'indi_altair_ccd'       : 'Altair',
+    'indi_altair_ccd'       : 'Altair Astro',
     'indi_omegonprocam_ccd' : 'Omegon',
     'indi_ogmacam_ccd'      : 'Ogma',
     'indi_tscam_ccd'        : 'indi_tscam_ccd',
