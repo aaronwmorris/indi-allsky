@@ -1946,13 +1946,46 @@ else
 fi
 
 
-# get list of ccd drivers
+### Camera ###
+
+# Need this list so drivers are listed in specific order
+INDI_CCD_DRIVER_ORDER=("indi_simulator_ccd" "indi_asi_ccd" "indi_asi_single_ccd" "indi_playerone_ccd" "indi_playerone_single_ccd" "indi_toupcam_ccd" "indi_altair_ccd" "indi_omegonprocam_ccd" "indi_ogmacam_ccd" "indi_tscam_ccd" "indi_nncam_ccd" "indi_svbony_ccd" "indi_qhy_ccd" "indi_sx_ccd" "indi_dsi_ccd" "indi_libcamera_ccd" "indi_gphoto_ccd" "indi_canon_ccd" "indi_sony_ccd" "indi_nikon_ccd" "indi_fuji_ccd" "indi_pentax_ccd" "indi_v4l2_ccd" "indi_webcam_ccd")
+
+declare -A INDI_CCD_DRIVER_MAP
+INDI_CCD_DRIVER_MAP[indi_simulator_ccd]="CCD Simulator"
+INDI_CCD_DRIVER_MAP[indi_asi_ccd]="ZWO ASI"
+INDI_CCD_DRIVER_MAP[indi_asi_single_ccd]="ZWO ASI (Single)"
+INDI_CCD_DRIVER_MAP[indi_playerone_ccd]="PlayerOne Astronomy"
+INDI_CCD_DRIVER_MAP[indi_playerone_single_ccd]="PlayerOne Astronomy (Single)"
+INDI_CCD_DRIVER_MAP[indi_toupcam_ccd]="ToupTek"
+INDI_CCD_DRIVER_MAP[indi_altair_ccd]="Altair Astro"
+INDI_CCD_DRIVER_MAP[indi_omegonprocam_ccd]="Omegon"
+INDI_CCD_DRIVER_MAP[indi_ogmacam_ccd]="Ogma"
+INDI_CCD_DRIVER_MAP[indi_tscam_ccd]="indi_tscam_ccd"
+INDI_CCD_DRIVER_MAP[indi_nncam_ccd]="indi_nncam_ccd"
+INDI_CCD_DRIVER_MAP[indi_svbony_ccd]="SVBony"
+INDI_CCD_DRIVER_MAP[indi_qhy_ccd]="QHY CCD"
+INDI_CCD_DRIVER_MAP[indi_sx_ccd]="Starlight Xpress"
+INDI_CCD_DRIVER_MAP[indi_dsi_ccd]="Meade DSI"
+INDI_CCD_DRIVER_MAP[indi_libcamera_ccd]="libcamera (BETA)"
+INDI_CCD_DRIVER_MAP[indi_gphoto_ccd]="GPhoto DSLR"
+INDI_CCD_DRIVER_MAP[indi_canon_ccd]="Canon DSLR"
+INDI_CCD_DRIVER_MAP[indi_sony_ccd]="Sony DSLR"
+INDI_CCD_DRIVER_MAP[indi_nikon_ccd]="Nikon DSLR"
+INDI_CCD_DRIVER_MAP[indi_fuji_ccd]="Fuji DSLR"
+INDI_CCD_DRIVER_MAP[indi_pentax_ccd]="Pentax DSLR"
+INDI_CCD_DRIVER_MAP[indi_v4l2_ccd]="Linux V4L2"
+INDI_CCD_DRIVER_MAP[indi_webcam_ccd]="Web Camera"
+
+
 INDI_CCD_DRIVERS=()
-cd "$INDI_DRIVER_PATH" || catch_error
-for I in indi_*_ccd indi_rpicam* indi_pylibcamera*; do
-    INDI_CCD_DRIVERS[${#INDI_CCD_DRIVERS[@]}]="$I $I OFF"
+for item in "${INDI_CCD_DRIVER_ORDER[@]}"; do
+    if [ -f "$INDI_DRIVER_PATH/$item" ]; then
+        INDI_CCD_DRIVERS[${#INDI_CCD_DRIVERS[@]}]="$item"
+        INDI_CCD_DRIVERS[${#INDI_CCD_DRIVERS[@]}]="${INDI_CCD_DRIVER_MAP[$item]}"
+        INDI_CCD_DRIVERS[${#INDI_CCD_DRIVERS[@]}]="OFF"
+    fi
 done
-cd "$OLDPWD" || catch_error
 
 #echo ${INDI_CCD_DRIVERS[@]}
 
@@ -1961,7 +1994,7 @@ if [[ "$INSTALL_INDISERVER" == "true" ]]; then
     if [[ "$CAMERA_INTERFACE" == "indi" || "$CAMERA_INTERFACE" == "indi_accumulator" ]]; then
         while [ -z "${CCD_DRIVER:-}" ]; do
             # shellcheck disable=SC2068
-            CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_CCD_DRIVERS[@]} 3>&1 1>&2 2>&3)
+            CCD_DRIVER=$(whiptail --title "Camera Driver" --nocancel --radiolist "Press space to select" 0 0 0 "${INDI_CCD_DRIVERS[@]}" 3>&1 1>&2 2>&3)
         done
     else
         # simulator will not affect anything
@@ -1972,14 +2005,23 @@ fi
 #echo $CCD_DRIVER
 
 
+### GPS ###
+INDI_GPS_DRIVER_ORDER=("indi_gpsd" "indi_gpsnmea" "indi_simulator_gps")
 
-# get list of gps drivers
-INDI_GPS_DRIVERS=("None None ON")
-cd "$INDI_DRIVER_PATH" || catch_error
-for I in indi_gps* indi_simulator_gps; do
-    INDI_GPS_DRIVERS[${#INDI_GPS_DRIVERS[@]}]="$I $I OFF"
+declare -A INDI_GPS_DRIVER_MAP
+INDI_GPS_DRIVER_MAP[indi_gpsd]="GPSd"
+INDI_GPS_DRIVER_MAP[indi_gpsnmea]="GPSd NMEA"
+INDI_GPS_DRIVER_MAP[indi_simulator_gps]="GPS Simulator"
+
+
+INDI_GPS_DRIVERS=("None" "None" "ON")
+for item in "${INDI_GPS_DRIVER_ORDER[@]}"; do
+    if [ -f "$INDI_DRIVER_PATH/$item" ]; then
+        INDI_GPS_DRIVERS[${#INDI_GPS_DRIVERS[@]}]="$item"
+        INDI_GPS_DRIVERS[${#INDI_GPS_DRIVERS[@]}]="${INDI_GPS_DRIVER_MAP[$item]}"
+        INDI_GPS_DRIVERS[${#INDI_GPS_DRIVERS[@]}]="OFF"
+    fi
 done
-cd "$OLDPWD" || catch_error
 
 #echo ${INDI_GPS_DRIVERS[@]}
 
@@ -1987,7 +2029,7 @@ cd "$OLDPWD" || catch_error
 if [[ "$INSTALL_INDISERVER" == "true" ]]; then
     while [ -z "${GPS_DRIVER:-}" ]; do
         # shellcheck disable=SC2068
-        GPS_DRIVER=$(whiptail --title "GPS Driver" --nocancel --notags --radiolist "Press space to select" 0 0 0 ${INDI_GPS_DRIVERS[@]} 3>&1 1>&2 2>&3)
+        GPS_DRIVER=$(whiptail --title "GPS Driver" --nocancel --radiolist "Press space to select" 0 0 0 "${INDI_GPS_DRIVERS[@]}" 3>&1 1>&2 2>&3)
     done
 fi
 

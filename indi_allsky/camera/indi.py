@@ -1052,6 +1052,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_toupcam_ccd',
             'indi_altair_ccd',
             'indi_playerone_ccd',
+            'indi_playerone_single_ccd',
         ]:
             gain_ctl = self.get_control(self.ccd_device, 'CCD_CONTROLS', 'number')
             gain_index_dict = self.__map_indexes(gain_ctl, ['Gain'])
@@ -1173,6 +1174,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_toupcam_ccd',
             'indi_altair_ccd',
             'indi_playerone_ccd',
+            'indi_playerone_single_ccd',
         ]:
             gain_config = {
                 "PROPERTIES" : {
