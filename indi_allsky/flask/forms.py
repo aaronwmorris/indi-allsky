@@ -3132,7 +3132,7 @@ def INDI_CONFIG_DAY_validator(*args):
 class IndiAllskyConfigForm(FlaskForm):
     CAMERA_INTERFACE_choices = {
         'INDI' : (
-            ('indi', 'INDI'),
+            ('indi', 'INDI - ZWO, PlayerOne, SVBony, Altair, ToupTek, etc'),
         ),
         'libcamera' : (
             ('libcamera_imx477', 'libcamera IMX477 - Raspberry Pi HQ Camera'),
