@@ -1851,6 +1851,8 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-6">Upper-left (x1, y1)</div>
     </div>
 
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2 col-form-label">
         </div>
@@ -1864,6 +1866,24 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-6">Lower-right (x2, y2)</div>
     </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_CROP_IMAGE_CIRCLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_CROP_IMAGE_CIRCLE(class='form-check-input') }}
+                <div id="IMAGE_CROP_IMAGE_CIRCLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Crop image to image circle boundary</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Image circle offsets are maintained in the final image</div>
+        </div>
+    </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3361,22 +3381,6 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_CIRCLE_MASK__CROP.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.IMAGE_CIRCLE_MASK__CROP(class='form-check-input') }}
-                <div id="IMAGE_CIRCLE_MASK__CROP-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Crop image to image circle boundary</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Image circle offsets are maintained in the final image</div>
         </div>
     </div>
 
@@ -8864,7 +8868,7 @@ const checkbox_field_names = [
     'IMAGE_FLIP_H',
     'IMAGE_CIRCLE_MASK__ENABLE',
     'IMAGE_CIRCLE_MASK__OUTLINE',
-    'IMAGE_CIRCLE_MASK__CROP',
+    'IMAGE_CROP_IMAGE_CIRCLE',
     'FISH2PANO__ENABLE',
     'FISH2PANO__FLIP_H',
     'FISH2PANO__ENABLE_CARDINAL_DIRS',

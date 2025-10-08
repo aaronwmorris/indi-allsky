@@ -612,6 +612,21 @@ var fullscreen = false;  //initial state
 
     <hr>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_CROP_IMAGE_CIRCLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.IMAGE_CROP_IMAGE_CIRCLE(class='form-check-input') }}
+                <div id="IMAGE_CROP_IMAGE_CIRCLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Crop image to image circle boundary</div>
+    </div>
+
+    <hr>
+
     <div>
       <h5>These options are applied to the unprocessed image automatically</h5>
     </div>
@@ -949,19 +964,6 @@ var fullscreen = false;  //initial state
         <div class="col-sm-8">
             <div></div>
         </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_image_processing.IMAGE_CIRCLE_MASK__CROP.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_image_processing.IMAGE_CIRCLE_MASK__CROP(class='form-check-input') }}
-                <div id="IMAGE_CIRCLE_MASK__CROP-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Crop image to image circle boundary</div>
     </div>
 
     <div class="form-group row">
@@ -1979,7 +1981,7 @@ const checkbox_field_names = [
     'LIGHTGRAPH_OVERLAY__HOUR_LINES',
     'IMAGE_CIRCLE_MASK__ENABLE',
     'IMAGE_CIRCLE_MASK__OUTLINE',
-    'IMAGE_CIRCLE_MASK__CROP',
+    'IMAGE_CROP_IMAGE_CIRCLE',
     'CARDINAL_DIRS__ENABLE',
     'CARDINAL_DIRS__SWAP_NS',
     'CARDINAL_DIRS__SWAP_EW',
