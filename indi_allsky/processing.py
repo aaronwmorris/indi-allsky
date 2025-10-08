@@ -1495,7 +1495,7 @@ class ImageProcessor(object):
             image_height, image_width = self.image.shape[:2]
 
             lens_offset_x = self.config.get('LENS_OFFSET_X', 0)
-            lens_offset_y = self.config.get('LENS_OFFSET_Y', 0)  # minus
+            lens_offset_y = self.config.get('LENS_OFFSET_Y', 0)
             image_center_x = int(image_width / 2)
             image_center_y = int(image_height / 2)
             radius = int(self.config.get('LENS_IMAGE_CIRCLE', 3000) / 2)
@@ -1503,17 +1503,17 @@ class ImageProcessor(object):
             # need to maintain same offset of image circle
             if lens_offset_x >= 0:
                 x1 = max(0, (image_center_x - radius))
-                x2 = min(image_width, (image_center_x + radius) + abs(lens_offset_x))
+                x2 = min(image_width, (image_center_x + radius) + lens_offset_x)
             else:
-                x1 = max(0, (image_center_x - radius) - abs(lens_offset_x))
+                x1 = max(0, (image_center_x - radius) + lens_offset_x)  # offset is negative
                 x2 = min(image_width, (image_center_x + radius))
 
             if lens_offset_y >= 0:
-                y1 = max(0, (image_center_y - radius) - abs(lens_offset_y))
+                y1 = max(0, (image_center_y - radius) - lens_offset_y)
                 y2 = min(image_height, (image_center_y + radius))
             else:
                 y1 = max(0, (image_center_y - radius))
-                y2 = min(image_height, (image_center_y + radius) + abs(lens_offset_y))
+                y2 = min(image_height, (image_center_y + radius) - lens_offset_y)  # offset is negative
 
             self.image = self.image[
                 y1:y2,
