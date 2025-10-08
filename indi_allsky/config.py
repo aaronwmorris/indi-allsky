@@ -267,6 +267,7 @@ class IndiAllSkyConfigBase(object):
             "BLUR"     : 35,
             "OPACITY"  : 100,
             "OUTLINE"  : False,
+            "CROP"     : False,
         },
         "FISH2PANO" : {
             "ENABLE"   : False,

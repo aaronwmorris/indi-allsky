@@ -1909,6 +1909,25 @@ class ImageProcessor(object):
             )
 
 
+        if self.config.get('IMAGE_CIRCLE_MASK', {}).get('CROP'):
+            logger.info('Cropping to image circle mask')
+            image_height, image_width = self.image.shape[:2]
+
+            center_x = int(image_width / 2) + self.config.get('LENS_OFFSET_X', 0)
+            center_y = int(image_height / 2) - self.config.get('LENS_OFFSET_Y', 0)  # minus
+            radius = int(self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2)
+
+            x1 = max(0, center_x - radius)
+            y1 = max(0, center_y - radius)
+            x2 = min(image_width, center_x + radius)
+            y2 = min(image_height, center_y + radius)
+
+            self.image = self.image[
+                y1:y2,
+                x1:x2,
+            ]
+
+
         #alpha_elapsed_s = time.time() - alpha_start
         #logger.info('Image circle mask in %0.4f s', alpha_elapsed_s)
 
