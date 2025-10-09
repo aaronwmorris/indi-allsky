@@ -742,6 +742,11 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         dbus-user-session
 
 
+    # this can fail on non-raspberry pi OS repos
+    sudo apt-get -y install \
+        liblgpio-dev || true
+
+
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then
         sudo apt-get -y install \
             mariadb-server
