@@ -733,7 +733,6 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         jq \
         sqlite3 \
         libgpiod3 \
-        liblgpio-dev \
         i2c-tools \
         network-manager \
         udisks2 \
