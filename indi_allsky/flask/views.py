@@ -2159,6 +2159,7 @@ class ConfigView(FormView):
             'IMAGE_CIRCLE_MASK__BLUR'        : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('BLUR', 35),
             'IMAGE_CIRCLE_MASK__OPACITY'     : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('OPACITY', 100),
             'IMAGE_CIRCLE_MASK__OUTLINE'     : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('OUTLINE', False),
+            'IMAGE_CROP_IMAGE_CIRCLE'        : self.indi_allsky_config.get('IMAGE_CROP_IMAGE_CIRCLE', False),
             'FISH2PANO__ENABLE'              : self.indi_allsky_config.get('FISH2PANO', {}).get('ENABLE', False),
             'FISH2PANO__DIAMETER'            : self.indi_allsky_config.get('FISH2PANO', {}).get('DIAMETER', 3000),
             'FISH2PANO__OFFSET_X'            : self.indi_allsky_config.get('FISH2PANO', {}).get('OFFSET_X', 0),
@@ -3069,6 +3070,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_CIRCLE_MASK']['BLUR']            = int(request.json['IMAGE_CIRCLE_MASK__BLUR'])
         self.indi_allsky_config['IMAGE_CIRCLE_MASK']['OPACITY']         = int(request.json['IMAGE_CIRCLE_MASK__OPACITY'])
         self.indi_allsky_config['IMAGE_CIRCLE_MASK']['OUTLINE']         = bool(request.json['IMAGE_CIRCLE_MASK__OUTLINE'])
+        self.indi_allsky_config['IMAGE_CROP_IMAGE_CIRCLE']              = bool(request.json['IMAGE_CROP_IMAGE_CIRCLE'])
         self.indi_allsky_config['FISH2PANO']['ENABLE']                  = bool(request.json['FISH2PANO__ENABLE'])
         self.indi_allsky_config['FISH2PANO']['DIAMETER']                = int(request.json['FISH2PANO__DIAMETER'])
         self.indi_allsky_config['FISH2PANO']['OFFSET_X']                = int(request.json['FISH2PANO__OFFSET_X'])
@@ -6894,6 +6896,7 @@ class ImageProcessingView(TemplateView):
             'IMAGE_CIRCLE_MASK__BLUR'        : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('BLUR', 35),
             'IMAGE_CIRCLE_MASK__OPACITY'     : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('OPACITY', 100),
             'IMAGE_CIRCLE_MASK__OUTLINE'     : self.indi_allsky_config.get('IMAGE_CIRCLE_MASK', {}).get('OUTLINE', False),
+            'IMAGE_CROP_IMAGE_CIRCLE'        : self.indi_allsky_config.get('IMAGE_CROP_IMAGE_CIRCLE', False),
             'MOON_OVERLAY__ENABLE'           : False,
             'MOON_OVERLAY__X'                : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('X', -500),
             'MOON_OVERLAY__Y'                : self.indi_allsky_config.get('MOON_OVERLAY', {}).get('Y', -200),
@@ -7145,6 +7148,7 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_CIRCLE_MASK']['BLUR']            = int(request.json['IMAGE_CIRCLE_MASK__BLUR'])
         p_config['IMAGE_CIRCLE_MASK']['OPACITY']         = int(request.json['IMAGE_CIRCLE_MASK__OPACITY'])
         p_config['IMAGE_CIRCLE_MASK']['OUTLINE']         = bool(request.json['IMAGE_CIRCLE_MASK__OUTLINE'])
+        p_config['IMAGE_CROP_IMAGE_CIRCLE']              = bool(request.json['IMAGE_CROP_IMAGE_CIRCLE'])
         p_config['IMAGE_BORDER']['TOP']                  = int(request.json['IMAGE_BORDER__TOP'])
         p_config['IMAGE_BORDER']['LEFT']                 = int(request.json['IMAGE_BORDER__LEFT'])
         p_config['IMAGE_BORDER']['RIGHT']                = int(request.json['IMAGE_BORDER__RIGHT'])
@@ -7388,6 +7392,8 @@ class JsonImageProcessingView(JsonView):
             if p_config.get('IMAGE_FLIP_H'):
                 image_processor.flip_h()
 
+            # crop
+            image_processor.crop_image()
 
             # green removal
             image_processor.scnr()

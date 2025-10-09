@@ -600,8 +600,7 @@ class ImageWorker(Process):
 
 
         # crop
-        if self.config.get('IMAGE_CROP_ROI'):
-            self.image_processor.crop_image()
+        self.image_processor.crop_image()
 
 
         # green removal
