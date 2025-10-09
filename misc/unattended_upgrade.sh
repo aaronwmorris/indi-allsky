@@ -339,13 +339,17 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         jq \
         sqlite3 \
         libgpiod3 \
-        liblgpio-dev \
         i2c-tools \
         network-manager \
         udisks2 \
         dnsmasq-base \
         polkitd \
         dbus-user-session
+
+
+    # this can fail on non-raspberry pi OS repos
+    sudo apt-get -y install \
+        liblgpio-dev || true
 
 elif [[ "$DISTRO" == "debian_12" ]]; then
     if [ "$CPU_ARCH" == "armv6l" ]; then
