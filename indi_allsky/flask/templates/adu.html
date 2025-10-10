@@ -55,10 +55,10 @@ var camera_id = {{ camera_id }};
 <script>
 function init() {
     new DataTable('#adu-table', {
-        searching: false,
+        searching: true,
         lengthMenu: [20, 50, 100, -1],
         layout: {
-            topEnd: 'buttons',
+            topEnd: ['buttons', 'search'],
         },
         buttons: [
             'copy',

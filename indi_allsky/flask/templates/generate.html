@@ -234,9 +234,9 @@ $( document ).ready(function() {
 
 
     new DataTable('#tasks-table', {
-        searching: false,
+        searching: true,
         layout: {
-            topEnd: 'buttons',
+            topEnd: ['buttons', 'search'],
         },
         buttons: [
             'copy',

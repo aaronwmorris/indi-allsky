@@ -109,9 +109,9 @@ var camera_id = {{ camera_id }};
 <script>
 function init() {
     new DataTable('#darks-table', {
-        searching: false,
+        searching: true,
         layout: {
-            topEnd: 'buttons',
+            topEnd: ['buttons', 'search'],
         },
         buttons: [
             'copy',
@@ -121,9 +121,9 @@ function init() {
     });
 
     new DataTable('#bpm-table', {
-        searching: false,
+        searching: true,
         layout: {
-            topEnd: 'buttons',
+            topEnd: ['buttons', 'search'],
         },
         buttons: [
             'copy',
