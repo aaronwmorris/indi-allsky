@@ -8,6 +8,8 @@ pre {
     white-space: pre-wrap;
 }
 </style>
+<link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/clipboard.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
@@ -18,24 +20,49 @@ var camera_id = {{ camera_id }};
 {% block content %}
 <div class="container">
 
-<div class="col-sm-2">
-    <span class="badge pill bg-primary copy-clipboard" style="cursor: pointer;" data-clipboard-target="#lag_info">Copy to Clipboard</span>
-</div>
-
-<hr>
-
 <div class="row" style="display:block;">
-    <div class="col-sm-12">
-      <pre>
-        <textarea id="lag_info" rows="40" style="width:95%;background-color:#888888;">{{ image_lag_str }}</textarea>
-      </pre>
-    </div>
+  <div class="col-sm-12">
+    <table id="lag-table" class="table table-striped compact">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Date</th>
+          <th>Exposure</th>
+          <th>Elapsed</th>
+          <th>Delta</th>
+          <th>Period</th>
+          <th>Processing</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in image_lag_q %}
+        <tr>
+          <td>{{ row.id }}</td>
+          <td>{{ row.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td>{{ "%0.7f"|format(row.exposure) }}</td>
+          <td>{{ "%0.2f"|format(row.exp_elapsed | float) }}</td>
+          <td>{{ "%+0.3f"|format(row.delta | float) }}</td>
+          <td>{{ row.lag_diff }}</td>
+          <td>{{ "%0.2f"|format(row.process_elapsed | float) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
-
 
 <script>
 function init() {
-    new ClipboardJS('.copy-clipboard');
+    new DataTable('#lag-table', {
+        searching: false,
+        layout: {
+            topEnd: 'buttons',
+        },
+        buttons: [
+            'csv',
+            'excel',
+        ]
+    });
 }
 
 
