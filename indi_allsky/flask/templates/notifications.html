@@ -5,6 +5,8 @@
 {% block head %}
 <style>
 </style>
+<link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
@@ -14,22 +16,52 @@ var camera_id = {{ camera_id }};
 {% block content %}
 <div class="container">
 <div class="row">
-    <div class="col-1 fw-bold">ID</div>
-    <div class="col-sm-1 fw-bold">Category</div>
-    <div class="col-sm-2 fw-bold">Create</div>
-    <div class="col-sm-2 fw-bold">Expire</div>
-    <div class="col-1 fw-bold">Acked</div>
-    <div class="col-sm-5 fw-bold">Notification</div>
+  <table id="notifications-table" class="table table-striped compact">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Category</th>
+        <th>Create</th>
+        <th>Expire</th>
+        <th>Acked</th>
+        <th>Notification</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for notice in notice_list %}
+      <tr>
+        <td>{{ notice.id }}</td>
+        <td>{{ notice.category }}</td>
+        <td>{{ notice.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        <td>{{ notice.expireDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        <td>{{ notice.ack }}</td>
+        <td>{{ notice.notification }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
-{% for notice in notice_list %}
-<div class="row">
-    <div class="col-1">{{ notice.id }}</div>
-    <div class="col-sm-1">{{ notice.category }}</div>
-    <div class="col-sm-2">{{ notice.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
-    <div class="col-sm-2">{{ notice.expireDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
-    <div class="col-1">{{ notice.ack }}</div>
-    <div class="col-sm-5">{{ notice.notification }}</div>
-</div>
-{% endfor %}
-</div>
+
+<script>
+function init() {
+    new DataTable('#notifications-table', {
+        searching: true,
+        lengthMenu: [20, 50, 100, -1],
+        layout: {
+            topEnd: ['buttons', 'search'],
+        },
+        buttons: [
+            'copy',
+            'csv',
+            'excel',
+        ]
+    });
+}
+
+
+$( document ).ready(function() {
+    init();
+});
+</script>
+
 {% endblock %}

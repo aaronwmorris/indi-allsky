@@ -5,6 +5,8 @@
 {% block head %}
 <style>
 </style>
+<link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
@@ -14,22 +16,51 @@ var camera_id = {{ camera_id }};
 {% block content %}
 <div class="container">
 <div class="row">
-    <div class="col-1 fw-bold">ID</div>
-    <div class="col-sm-2 fw-bold">Date</div>
-    <div class="col-sm-1 fw-bold">Queue</div>
-    <div class="col-sm-2 fw-bold">Action</div>
-    <div class="col-sm-1 fw-bold">State</div>
-    <div class="col-sm-5 fw-bold">Result</div>
+  <table id="tasks-table" class="table table-striped compact">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Date</th>
+        <th>Queue</th>
+        <th>Action</th>
+        <th>State</th>
+        <th>Result</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for task in task_list %}
+      <tr>
+        <td>{{ task.id }}</td>
+        <td>{{ task.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        <td>{{ task.queue }}</td>
+        <td>{{ task.action }}</td>
+        <td>{{ task.state }}</td>
+        <td>{{ task.result }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
-{% for task in task_list %}
-<div class="row">
-    <div class="col-1">{{ task.id }}</div>
-    <div class="col-sm-2">{{ task.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
-    <div class="col-sm-1">{{ task.queue }}</div>
-    <div class="col-sm-2">{{ task.action }}</div>
-    <div class="col-sm-1">{{ task.state }}</div>
-    <div class="col-sm-5">{{ task.result }}</div>
-</div>
-{% endfor %}
-</div>
+
+<script>
+function init() {
+    new DataTable('#tasks-table', {
+        searching: true,
+        lengthMenu: [20, 50, 100, -1],
+        layout: {
+            topEnd: ['buttons', 'search'],
+        },
+        buttons: [
+            'copy',
+            'csv',
+            'excel',
+        ]
+    });
+}
+
+
+$( document ).ready(function() {
+    init();
+});
+</script>
 {% endblock %}
