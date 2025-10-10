@@ -5946,7 +5946,7 @@ class TimelapseGeneratorView(TemplateView):
 
         camera_now_minus_12h = self.camera_now - timedelta(hours=12)
 
-        tasks = IndiAllSkyDbTaskQueueTable.query\
+        tasks_q = IndiAllSkyDbTaskQueueTable.query\
             .filter(
                 and_(
                     IndiAllSkyDbTaskQueueTable.createDate > camera_now_minus_12h,
@@ -5958,7 +5958,7 @@ class TimelapseGeneratorView(TemplateView):
 
 
         task_list = list()
-        for task in tasks:
+        for task in tasks_q:
             if task.data:
                 task_data = task.data
             else:
