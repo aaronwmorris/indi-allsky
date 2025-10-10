@@ -110,12 +110,27 @@ var camera_id = {{ camera_id }};
 function init() {
     new DataTable('#darks-table', {
         searching: false,
+        layout: {
+            topEnd: 'buttons',
+        },
+        buttons: [
+            'copy',
+            'csv',
+            'excel',
+        ]
     });
 
     new DataTable('#bpm-table', {
         searching: false,
+        layout: {
+            topEnd: 'buttons',
+        },
+        buttons: [
+            'copy',
+            'csv',
+            'excel',
+        ]
     });
-
 }
 
 

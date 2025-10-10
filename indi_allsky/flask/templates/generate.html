@@ -235,7 +235,14 @@ $( document ).ready(function() {
 
     new DataTable('#tasks-table', {
         searching: false,
-        layout: {},
+        layout: {
+            topEnd: 'buttons',
+        },
+        buttons: [
+            'copy',
+            'csv',
+            'excel',
+        ]
     });
 });
 
