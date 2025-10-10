@@ -8,7 +8,8 @@ pre {
     white-space: pre-wrap;
 }
 </style>
-<script type="text/javascript" src="{{ url_for('indi_allsky.static', filename='js/clipboard.min.js') }}"></script>
+<link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
@@ -18,27 +19,53 @@ var camera_id = {{ camera_id }};
 {% block content %}
 <div class="container">
 
-<div class="col-sm-2">
-    <span class="badge pill bg-primary copy-clipboard" style="cursor: pointer;" data-clipboard-target="#rolling_adu_info">Copy to Clipboard</span>
-</div>
-
-<hr>
-
 <h4>Image stats in 15 minute blocks</h4>
 
 <div class="row" style="display:block;">
-    <div class="col-sm-12">
-      <pre>
-        <textarea id="rolling_adu_info" rows="40" style="width:95%;background-color:#888888;">{{ rolling_adu_str }}</textarea>
-      </pre>
-    </div>
+  <div class="col-sm-12">
+    <table id="adu-table" class="table table-striped compact">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Count</th>
+          <th>Exposure Avg</th>
+          <th>ADU Avg</th>
+          <th>SQM Avg</th>
+          <th>Stars Avg</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rolling_adu_q %}
+        <tr>
+          <td>{{ row.dt.strftime('%Y-%m-%d %H:%M') }}
+          <td>{{ row.i_count }}
+          <td>{{ "%0.4f"|format(row.exposure_avg) }}
+          <td>{{ "%0.2f"|format(row.adu_avg) }}
+          <td>{{ "%0.2f"|format(row.sqm_avg) }}
+          <td>{{ "%0.1f"|format(row.stars_avg) }}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 </div>
 
 <script>
 function init() {
-    new ClipboardJS('.copy-clipboard');
+    new DataTable('#adu-table', {
+        searching: true,
+        lengthMenu: [20, 50, 100, -1],
+        layout: {
+            topEnd: ['buttons', 'search'],
+        },
+        buttons: [
+            'copy',
+            'csv',
+            'excel',
+        ]
+    });
 }
 
 

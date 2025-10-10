@@ -860,8 +860,6 @@ class ImageLagView(TemplateView):
     def get_context(self):
         context = super(ImageLagView, self).get_context()
 
-        from prettytable import PrettyTable
-
         context['camera_id'] = self.camera.id
 
 
@@ -883,7 +881,7 @@ class ImageLagView(TemplateView):
             createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate)  # sqlite
 
 
-        image_lag_list = IndiAllSkyDbImageTable.query\
+        image_lag_q = IndiAllSkyDbImageTable.query\
             .add_columns(
                 IndiAllSkyDbImageTable.id,
                 IndiAllSkyDbImageTable.createDate,
@@ -906,30 +904,7 @@ class ImageLagView(TemplateView):
         # filter is just to make it faster
 
 
-        table = PrettyTable()
-        table.field_names = [
-            'ID',
-            'Date',
-            'Exposure',
-            'Elapsed',
-            'Delta',
-            'Period',
-            'Processing',
-        ]
-
-        for entry in image_lag_list:
-            table.add_row([
-                entry.id,
-                entry.createDate.strftime('%Y-%m-%d %H:%M:%S'),
-                '{0:0.7f}'.format(entry.exposure),
-                '{0:0.2f}'.format(entry.exp_elapsed),
-                '{0:+0.3f}'.format(entry.delta),
-                entry.lag_diff,
-                '{0:0.2f}'.format(entry.process_elapsed),
-            ])
-
-
-        context['image_lag_str'] = str(table)
+        context['image_lag_q'] = image_lag_q
 
         return context
 
@@ -937,8 +912,6 @@ class ImageLagView(TemplateView):
 class RollingAduView(TemplateView):
     def get_context(self):
         context = super(RollingAduView, self).get_context()
-
-        from prettytable import PrettyTable
 
 
         context['camera_id'] = self.camera.id
@@ -957,7 +930,7 @@ class RollingAduView(TemplateView):
             createDate_s = func.unix_timestamp(IndiAllSkyDbImageTable.createDate)  # mysql
 
             # this should give us average exposure, adu in 15 minute sets, during the night
-            rolling_adu_list = IndiAllSkyDbImageTable.query\
+            rolling_adu_q = IndiAllSkyDbImageTable.query\
                 .add_columns(
                     func.floor(createDate_s / 900).label('interval'),
                     IndiAllSkyDbImageTable.createDate.label('dt'),
@@ -990,7 +963,7 @@ class RollingAduView(TemplateView):
             createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate)  # sqlite
 
             # this should give us average exposure, adu in 15 minute sets, during the night
-            rolling_adu_list = IndiAllSkyDbImageTable.query\
+            rolling_adu_q = IndiAllSkyDbImageTable.query\
                 .add_columns(
                     IndiAllSkyDbImageTable.createDate.label('dt'),
                     func.count(IndiAllSkyDbImageTable.id).label('i_count'),
@@ -1015,28 +988,7 @@ class RollingAduView(TemplateView):
                 .order_by(IndiAllSkyDbImageTable.createDate.desc())
 
 
-        table = PrettyTable()
-        table.field_names = [
-            'Date',
-            'Count',
-            'Exposure Avg',
-            'ADU Avg',
-            'SQM Avg',
-            'Stars Avg',
-        ]
-
-        for entry in rolling_adu_list:
-            table.add_row([
-                entry.dt.strftime('%Y-%m-%d %H:%M'),
-                entry.i_count,
-                '{0:0.4f}'.format(entry.exposure_avg),
-                '{0:0.2f}'.format(entry.adu_avg),
-                '{0:0.2f}'.format(entry.sqm_avg),
-                '{0:0.1f}'.format(entry.stars_avg),
-            ])
-
-
-        context['rolling_adu_str'] = str(table)
+        context['rolling_adu_q'] = rolling_adu_q
 
         return context
 
@@ -5994,7 +5946,7 @@ class TimelapseGeneratorView(TemplateView):
 
         camera_now_minus_12h = self.camera_now - timedelta(hours=12)
 
-        tasks = IndiAllSkyDbTaskQueueTable.query\
+        tasks_q = IndiAllSkyDbTaskQueueTable.query\
             .filter(
                 and_(
                     IndiAllSkyDbTaskQueueTable.createDate > camera_now_minus_12h,
@@ -6006,7 +5958,7 @@ class TimelapseGeneratorView(TemplateView):
 
 
         task_list = list()
-        for task in tasks:
+        for task in tasks_q:
             if task.data:
                 task_data = task.data
             else:

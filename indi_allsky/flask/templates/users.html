@@ -5,6 +5,8 @@
 {% block head %}
 <style>
 </style>
+<link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
@@ -14,22 +16,53 @@ var camera_id = {{ camera_id }};
 {% block content %}
 <div class="container">
 <div class="row">
-    <div class="col-sm-2 fw-bold">Create</div>
-    <div class="col-sm-2 fw-bold">Username</div>
-    <div class="col-sm-2 fw-bold">Name</div>
-    <div class="col-1 fw-bold">Active</div>
-    <div class="col-1 fw-bold">Staff</div>
-    <div class="col-1 fw-bold">Admin</div>
+  <table id="users-table" class="table table-striped compact">
+    <thead>
+      <tr>
+        <th>Create</th>
+        <th>Username</th>
+        <th>Name</th>
+        <th>Active</th>
+        <th>Staff</th>
+        <th>Admin</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in user_list %}
+      <tr>
+        <td>{{ user.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.name }}</td>
+        <td>{{ user.active }}</td>
+        <td>{{ user.staff }}</td>
+        <td>{{ user.admin }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
-{% for user in user_list %}
-<div class="row">
-    <div class="col-sm-2">{{ user.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
-    <div class="col-sm-2">{{ user.username }}</div>
-    <div class="col-sm-2">{{ user.name }}</div>
-    <div class="col-1">{{ user.active }}</div>
-    <div class="col-1">{{ user.staff }}</div>
-    <div class="col-1">{{ user.admin }}</div>
-</div>
-{% endfor %}
-</div>
+
+<script>
+function init() {
+    new DataTable('#users-table', {
+        searching: true,
+        lengthMenu: [20, 50, 100, -1],
+        layout: {
+            topEnd: ['buttons', 'search'],
+        },
+        buttons: [
+            'copy',
+            'csv',
+            'excel',
+        ]
+    });
+}
+
+
+$( document ).ready(function() {
+    init();
+});
+</script>
+
+
 {% endblock %}
