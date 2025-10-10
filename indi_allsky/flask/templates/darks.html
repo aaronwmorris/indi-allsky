@@ -13,6 +13,8 @@ th, td {
   padding: 5px;
 }
 </style>
+<link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
@@ -21,8 +23,8 @@ var camera_id = {{ camera_id }};
 
 {% block content %}
 <h3>Dark Frames</h3>
-<table>
-<tr>
+<table id="darks-table" class="table table-striped compact">
+  <thead>
     <th>ID</th>
     <th>Date</th>
     <th>Active</th>
@@ -38,33 +40,35 @@ var camera_id = {{ camera_id }};
     <th>File</th>
     <th>Size (MB)</th>
     <th>Method</th>
-</tr>
-{% for dark in darkframe_list %}
-<tr>
-    <td>{{ dark.id }}</td>
-    <td>{{ dark.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-    <td>{{ dark.active }}</td>
-    <td>{{ dark.width }}x{{ dark.height }}</td>
-    <td>{{ dark.bitdepth }}</td>
-    <td>{{ "%0.2f"|format(dark.gain | float) }}</td>
-    <td>{{ dark.exposure }}</td>
-    <td>{{ dark.binmode }}</td>
-    <td>{{ "%0.2f"|format(dark.temp | float) }}</td>
-    <td>{{ "%0.1f"|format(dark.adu | float) }}</td>
-    <td>{{ dark.hot_pixels }}</td>
-    <td><a href="{{ url_for('indi_allsky.image_processing_view', type='dark', id=dark.id) }}"><span class="badge bg-success">Process</span></a></td>
-    <td><a href="{{ dark.url }}" class="text-decoration-none link-info"><span class="badge bg-primary">Download</span></a></td>
-    <td>{{ "%0.1f"|format(dark.size_mb | float) }}</td>
-    <td>{{ dark.method }}</td>
-</tr>
-{% endfor %}
+  </thead>
+  <tbody>
+    {% for dark in darkframe_list %}
+    <tr>
+      <td>{{ dark.id }}</td>
+      <td>{{ dark.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+      <td>{{ dark.active }}</td>
+      <td>{{ dark.width }}x{{ dark.height }}</td>
+      <td>{{ dark.bitdepth }}</td>
+      <td>{{ "%0.2f"|format(dark.gain | float) }}</td>
+      <td>{{ dark.exposure }}</td>
+      <td>{{ dark.binmode }}</td>
+      <td>{{ "%0.2f"|format(dark.temp | float) }}</td>
+      <td>{{ "%0.1f"|format(dark.adu | float) }}</td>
+      <td>{{ dark.hot_pixels }}</td>
+      <td><a href="{{ url_for('indi_allsky.image_processing_view', type='dark', id=dark.id) }}"><span class="badge bg-success">Process</span></a></td>
+      <td><a href="{{ dark.url }}" class="text-decoration-none link-info"><span class="badge bg-primary">Download</span></a></td>
+      <td>{{ "%0.1f"|format(dark.size_mb | float) }}</td>
+      <td>{{ dark.method }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 
 <hr>
 
 <h3>Bad Pixel Maps</h3>
-<table>
-<tr>
+<table id="bpm-table" class="table table-striped compact">
+  <thead>
     <th>ID</th>
     <th>Date</th>
     <th>Active</th>
@@ -79,25 +83,45 @@ var camera_id = {{ camera_id }};
     <th>View</th>
     <th>File</th>
     <th>Size (MB)</th>
-</tr>
-{% for bpm in bpm_list %}
-<tr>
-    <td>{{ bpm.id }}</td>
-    <td>{{ bpm.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-    <td>{{ bpm.active }}</td>
-    <td>{{ bpm.width }}x{{ bpm.height }}</td>
-    <td>{{ bpm.bitdepth }}</td>
-    <td>{{ "%0.2f"|format(bpm.gain | float) }}</td>
-    <td>{{ bpm.exposure }}</td>
-    <td>{{ bpm.binmode }}</td>
-    <td>{{ "%0.2f"|format(bpm.temp | float) }}</td>
-    <td>{{ "%0.1f"|format(bpm.adu | float) }}</td>
-    <td>{{ bpm.hot_pixels }}</td>
-    <td><a href="{{ url_for('indi_allsky.image_processing_view', type='bpm', id=bpm.id) }}"><span class="badge bg-success">Process</span></a></td>
-    <td><a href="{{ bpm.url }}" class="text-decoration-none link-info"><span class="badge bg-primary">Download</span></a></td>
-    <td>{{ "%0.1f"|format(bpm.size_mb | float) }}</td>
-</tr>
-{% endfor %}
+  </thead>
+  <tbody>
+    {% for bpm in bpm_list %}
+    <tr>
+      <td>{{ bpm.id }}</td>
+      <td>{{ bpm.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+      <td>{{ bpm.active }}</td>
+      <td>{{ bpm.width }}x{{ bpm.height }}</td>
+      <td>{{ bpm.bitdepth }}</td>
+      <td>{{ "%0.2f"|format(bpm.gain | float) }}</td>
+      <td>{{ bpm.exposure }}</td>
+      <td>{{ bpm.binmode }}</td>
+      <td>{{ "%0.2f"|format(bpm.temp | float) }}</td>
+      <td>{{ "%0.1f"|format(bpm.adu | float) }}</td>
+      <td>{{ bpm.hot_pixels }}</td>
+      <td><a href="{{ url_for('indi_allsky.image_processing_view', type='bpm', id=bpm.id) }}"><span class="badge bg-success">Process</span></a></td>
+      <td><a href="{{ bpm.url }}" class="text-decoration-none link-info"><span class="badge bg-primary">Download</span></a></td>
+      <td>{{ "%0.1f"|format(bpm.size_mb | float) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
+
+<script>
+function init() {
+    new DataTable('#darks-table', {
+        searching: false,
+    });
+
+    new DataTable('#bpm-table', {
+        searching: false,
+    });
+
+}
+
+
+$( document ).ready(function() {
+    init();
+});
+
 
 {% endblock %}
