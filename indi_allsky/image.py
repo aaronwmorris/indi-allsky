@@ -144,6 +144,7 @@ class ImageWorker(Process):
         self._gain_step = None  # calculate on first image
         self.auto_gain_step_list = None  # list of fixed gain values
         self.auto_gain_exposure_cutoff_low = None
+        self.auto_gain_exposure_cutoff_mid = None
         self.auto_gain_exposure_cutoff_high = None
 
 
@@ -351,11 +352,18 @@ class ImageWorker(Process):
             if self.exposure_av[constants.EXPOSURE_MAX] - self.auto_gain_exposure_cutoff_low > 10.0:
                 self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] - 10.0
 
+            self.auto_gain_exposure_cutoff_mid = self.auto_gain_exposure_cutoff_high - ((self.auto_gain_exposure_cutoff_high - self.auto_gain_exposure_cutoff_low) / 2)
+
 
             if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
                 logger.info('Gain Steps: %d @ %0.2f', auto_gain_levels, self.gain_step)
                 logger.info('Gain Step list: %s', str(self.auto_gain_step_list))
-                logger.info('Auto-Gain Exposure cutoff: %0.2fs/%0.2fs', self.auto_gain_exposure_cutoff_low, self.auto_gain_exposure_cutoff_high)
+                logger.info(
+                    'Auto-Gain Exposure cutoff: Low: %0.2fs - Mid: %0.2fs - High: %0.2fs',
+                    self.auto_gain_exposure_cutoff_low,
+                    self.auto_gain_exposure_cutoff_mid,
+                    self.auto_gain_exposure_cutoff_high,
+                )
 
 
         processing_start = time.time()
@@ -2023,7 +2031,8 @@ class ImageWorker(Process):
                     else:
                         # decrease gain, maintain exposure
                         next_gain = self.auto_gain_step_list[auto_gain_idx - 1]
-                        next_exposure = max(exposure, self.auto_gain_exposure_cutoff_low)
+                        #next_exposure = max(exposure, self.auto_gain_exposure_cutoff_low)
+                        next_exposure = max(exposure, self.auto_gain_exposure_cutoff_mid)
 
         else:
             # just set the gain to the max for the current mode
