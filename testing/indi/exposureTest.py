@@ -307,6 +307,7 @@ class IndiClient(PyIndi.BaseClient):
             'indi_altair_ccd',
             'indi_altaircam_ccd',
             'indi_nncam_ccd',
+            'indi_tscam_ccd',
             'indi_ogmacam_ccd',
             'indi_omegonprocam_ccd',
             'indi_playerone_ccd',
