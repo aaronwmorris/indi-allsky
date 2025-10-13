@@ -2062,6 +2062,25 @@ class ImageWorker(Process):
             next_gain = gain_min
 
 
+        ### Check for exposure flapping
+        # Flapping is defined when the exposure increases then immediately decreases (or the opposite)
+        # and cannot find a stable value.  The result is the image brightness will flash
+        if self.exposure_av[constants.EXPOSURE_DELTA] > 0 and exposure_delta < 0:
+            # exposure is decreasing
+            exposure_offset = exposure_delta / 2
+            next_exposure -= exposure_offset  # offset will be negative
+            exposure_delta -= exposure_offset
+
+            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.6fs', exposure_offset * -1)
+        elif self.exposure_av[constants.EXPOSURE_DELTA] < 0 and exposure_delta > 0:
+            # exposure is increasing
+            exposure_offset = exposure_delta / 2
+            next_exposure -= exposure_offset
+            exposure_delta -= exposure_offset
+
+            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.6fs', exposure_offset * -1)
+
+
         logger.warning('New calculated exposure: %0.8f @ gain %0.2f (%+0.6fs/%+0.2f)', next_exposure, next_gain, exposure_delta, gain_delta)
         with self.exposure_av.get_lock():
             self.exposure_av[constants.EXPOSURE_NEXT] = float(next_exposure)
