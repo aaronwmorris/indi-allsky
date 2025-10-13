@@ -2081,7 +2081,7 @@ class ImageWorker(Process):
             logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.6fs', exposure_offset * -1)
 
 
-        logger.warning('New calculated exposure: %0.8f @ gain %0.2f (%+0.6fs/%+0.2f)', next_exposure, next_gain, exposure_delta, gain_delta)
+        logger.warning('New calculated exposure: %0.6fs (%+0.6f) @ gain %0.2f (%+0.2f)', next_exposure, exposure_delta, next_gain, gain_delta)
         with self.exposure_av.get_lock():
             self.exposure_av[constants.EXPOSURE_NEXT] = float(next_exposure)
             self.exposure_av[constants.EXPOSURE_DELTA] = float(exposure_delta)
