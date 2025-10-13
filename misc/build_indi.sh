@@ -228,7 +228,7 @@ else
         echo "Auto build settings:"
         echo "  OS Package Upgrade: YES"
         echo "  INDI Version (Core): $INDI_CORE_AUTO_TAG"
-        echo "  INDI Version (3rdparty): $INDI_CORE_AUTO_TAG"
+        echo "  INDI Version (3rdparty): $INDI_3RDPARTY_AUTO_TAG"
         echo "  Drivers: $INDI_AUTO_DRIVERS"
         echo
 
@@ -248,6 +248,7 @@ if [ "$BUILD_INDI_SETTINGS" == "auto" ]; then
     BUILD_INDI_CORE="true"
     BUILD_INDI_3RDPARTY="true"
     INDI_CORE_TAG="$INDI_CORE_AUTO_TAG"
+    INDI_3RDPARTY_TAG="$INDI_3RDPARTY_AUTO_TAG"
     BUILD_INDI_CAMERA_VENDOR="$INDI_AUTO_DRIVERS"
 
     echo
@@ -256,8 +257,9 @@ if [ "$BUILD_INDI_SETTINGS" == "auto" ]; then
     echo
     echo "OS_PACKAGE_UPGRADE=$OS_PACKAGE_UPGRADE"
     echo "BUILD_INDI_CORE=$BUILD_INDI_CORE"
-    echo "BUILD_INDI_3RDPARTY=$BUILD_INDI_CORE"
+    echo "BUILD_INDI_3RDPARTY=$BUILD_INDI_3RDPARTY"
     echo "INDI_CORE_TAG=$INDI_CORE_TAG"
+    echo "INDI_3RDPARTY_TAG=$INDI_3RDPARTY_TAG"
     echo "BUILD_INDI_CAMERA_VENDOR=$BUILD_INDI_CAMERA_VENDOR"
     echo
 
@@ -811,7 +813,7 @@ done
 
 
 echo
-echo "Selected $INDI_CORE_TAG"
+echo "Selected core tag: $INDI_CORE_TAG"
 sleep 3
 
 
@@ -836,7 +838,7 @@ done
 
 
 echo
-echo "Selected $INDI_3RDPARTY_TAG"
+echo "Selected 3rdparty tag: $INDI_3RDPARTY_TAG"
 sleep 3
 
 
