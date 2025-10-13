@@ -43,7 +43,11 @@ trap handler_SIGINT SIGINT
 
 if [ -n "${1:-}" ]; then
     INDI_CORE_TAG="$1"
-    INDI_3RDPARTY_TAG="$1"
+fi
+
+
+if [ -n "${2:-}" ]; then
+    INDI_3RDPARTY_TAG="$2"
 fi
 
 
