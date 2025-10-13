@@ -26,7 +26,8 @@ OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 
 ### config ###
 INDISERVER_SERVICE_NAME="indiserver"
-INDI_AUTO_TAG="v2.1.5"
+INDI_CORE_AUTO_TAG="v2.1.6"
+INDI_3RDPARTY_AUTO_TAG="v2.1.6"
 INDI_AUTO_DRIVERS="supported"
 MAKE_BUILD_TYPE="${BUILD_INDI_MAKE_BUILD_TYPE:-Debug}"
 ### end config ###
@@ -42,7 +43,11 @@ trap handler_SIGINT SIGINT
 
 if [ -n "${1:-}" ]; then
     INDI_CORE_TAG="$1"
-    INDI_3RDPARTY_TAG="$1"
+fi
+
+
+if [ -n "${2:-}" ]; then
+    INDI_3RDPARTY_TAG="$2"
 fi
 
 
@@ -211,7 +216,7 @@ if [ -n "${WHIPTAIL_BIN:-}" ]; then
             --title "Build Type" \
             --nocancel \
             --notags \
-            --radiolist "Automatic or Manual build\n\nAuto build settings:\n  OS Package Upgrade: YES\n  INDI Version: $INDI_AUTO_TAG\n  Drivers: $INDI_AUTO_DRIVERS\n\nPress space to select" 0 0 0 \
+            --radiolist "Automatic or Manual build\n\nAuto build settings:\n  OS Package Upgrade: YES\n  INDI Version (Core): $INDI_CORE_AUTO_TAG\n  INDI Version (3rdparty): $INDI_3RDPARTY_AUTO_TAG\n  Drivers: $INDI_AUTO_DRIVERS\n\nPress space to select" 0 0 0 \
                 "auto" "Automatic" "ON" \
                 "manual" "Manual" "OFF" \
             3>&1 1>&2 2>&3)
@@ -226,7 +231,8 @@ else
         echo
         echo "Auto build settings:"
         echo "  OS Package Upgrade: YES"
-        echo "  INDI Version: $INDI_AUTO_TAG"
+        echo "  INDI Version (Core): $INDI_CORE_AUTO_TAG"
+        echo "  INDI Version (3rdparty): $INDI_3RDPARTY_AUTO_TAG"
         echo "  Drivers: $INDI_AUTO_DRIVERS"
         echo
 
@@ -245,7 +251,8 @@ if [ "$BUILD_INDI_SETTINGS" == "auto" ]; then
     OS_PACKAGE_UPGRADE="true"
     BUILD_INDI_CORE="true"
     BUILD_INDI_3RDPARTY="true"
-    INDI_CORE_TAG="$INDI_AUTO_TAG"
+    INDI_CORE_TAG="$INDI_CORE_AUTO_TAG"
+    INDI_3RDPARTY_TAG="$INDI_3RDPARTY_AUTO_TAG"
     BUILD_INDI_CAMERA_VENDOR="$INDI_AUTO_DRIVERS"
 
     echo
@@ -254,8 +261,9 @@ if [ "$BUILD_INDI_SETTINGS" == "auto" ]; then
     echo
     echo "OS_PACKAGE_UPGRADE=$OS_PACKAGE_UPGRADE"
     echo "BUILD_INDI_CORE=$BUILD_INDI_CORE"
-    echo "BUILD_INDI_3RDPARTY=$BUILD_INDI_CORE"
+    echo "BUILD_INDI_3RDPARTY=$BUILD_INDI_3RDPARTY"
     echo "INDI_CORE_TAG=$INDI_CORE_TAG"
+    echo "INDI_3RDPARTY_TAG=$INDI_3RDPARTY_TAG"
     echo "BUILD_INDI_CAMERA_VENDOR=$BUILD_INDI_CAMERA_VENDOR"
     echo
 
@@ -791,11 +799,12 @@ sudo ldconfig
 while [ -z "${INDI_CORE_TAG:-}" ]; do
     # shellcheck disable=SC2068
     INDI_CORE_TAG=$(whiptail \
-        --title "INDI version" \
+        --title "INDI version (Core)" \
         --nocancel \
         --notags \
         --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-            "v2.1.5" "v2.1.5 - Recommended" "ON" \
+            "v2.1.6" "v2.1.6 - Recommended" "ON" \
+            "v2.1.5" "v2.1.5" "OFF" \
             "v2.1.4" "v2.1.4" "OFF" \
             "v2.1.3" "v2.1.3" "OFF" \
             "v2.1.2.1" "v2.1.2.1" "OFF" \
@@ -807,11 +816,33 @@ while [ -z "${INDI_CORE_TAG:-}" ]; do
 done
 
 
-INDI_3RDPARTY_TAG="$INDI_CORE_TAG"
+echo
+echo "Selected core tag: $INDI_CORE_TAG"
+sleep 3
+
+
+while [ -z "${INDI_3RDPARTY_TAG:-}" ]; do
+    # shellcheck disable=SC2068
+    INDI_3RDPARTY_TAG=$(whiptail \
+        --title "INDI version (3rdparty)" \
+        --nocancel \
+        --notags \
+        --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
+            "v2.1.6" "v2.1.6 - Recommended" "ON" \
+            "v2.1.5" "v2.1.5" "OFF" \
+            "v2.1.4" "v2.1.4" "OFF" \
+            "v2.1.3" "v2.1.3" "OFF" \
+            "v2.1.2.1" "v2.1.2.1" "OFF" \
+            "v2.1.2" "v2.1.2" "OFF" \
+            "v2.1.1" "v2.1.1" "OFF" \
+            "v2.1.0" "v2.1.0" "OFF" \
+            "HEAD" "HEAD - Development" "OFF" \
+        3>&1 1>&2 2>&3)
+done
 
 
 echo
-echo "Selected $INDI_CORE_TAG"
+echo "Selected 3rdparty tag: $INDI_3RDPARTY_TAG"
 sleep 3
 
 

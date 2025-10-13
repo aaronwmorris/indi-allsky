@@ -204,7 +204,8 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## INDI support
 | Version         | Note |
 | --------------- | ---- |
-| v2.1.5          | **Recommended for new builds**<br>[indi_libcamera_ccd will not build](https://github.com/indilib/indi-3rdparty/issues/1128) This technically affects all versions of indilib due to changes in the libcamera source code.  Build using indi-3rdparty HEAD |
+| v2.1.6          | **Recommended for new builds**<br>Reports as 2.1.5 after build<br>Minimum for rpicam-apps 1.9.0 (indi_libcamera_ccd) |
+| v2.1.5          |      |
 | v2.1.4          |      |
 | v2.1.3          |      |
 | v2.1.2.1        |      |
