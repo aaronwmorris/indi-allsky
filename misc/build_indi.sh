@@ -26,7 +26,7 @@ OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 
 ### config ###
 INDISERVER_SERVICE_NAME="indiserver"
-INDI_AUTO_TAG="v2.1.5"
+INDI_AUTO_TAG="v2.1.6"
 INDI_AUTO_DRIVERS="supported"
 MAKE_BUILD_TYPE="${BUILD_INDI_MAKE_BUILD_TYPE:-Debug}"
 ### end config ###
@@ -795,7 +795,8 @@ while [ -z "${INDI_CORE_TAG:-}" ]; do
         --nocancel \
         --notags \
         --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-            "v2.1.5" "v2.1.5 - Recommended" "ON" \
+            "v2.1.6" "v2.1.6" "ON" \
+            "v2.1.5" "v2.1.5 - Recommended" "OFF" \
             "v2.1.4" "v2.1.4" "OFF" \
             "v2.1.3" "v2.1.3" "OFF" \
             "v2.1.2.1" "v2.1.2.1" "OFF" \
