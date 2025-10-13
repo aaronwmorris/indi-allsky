@@ -2004,23 +2004,27 @@ class ImageWorker(Process):
                 # no change
                 next_gain = gain
                 exposure_delta = 0.0
+                gain_delta = 0.0
             elif next_exposure > exposure:
                 # exposure/gain needs to increase
                 if gain == self.auto_gain_step_list[-1]:
                     # already at max gain, increase exposure
                     next_gain = gain
                     exposure_delta = next_exposure - exposure
+                    gain_delta = 0.0
                 else:
                     if exposure < self.auto_gain_exposure_cutoff_high:
                         # maintain gain, increase exposure
                         next_gain = gain
                         next_exposure = min(next_exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
                         exposure_delta = next_exposure - exposure
+                        gain_delta = 0.0
                     else:
                         # increase gain, maintain exposure
                         next_gain = self.auto_gain_step_list[auto_gain_idx + 1]
                         next_exposure = min(exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
                         exposure_delta = 0.0
+                        gain_delta = next_gain - gain
 
             else:
                 # exposure/gain needs to decrease
@@ -2028,23 +2032,27 @@ class ImageWorker(Process):
                     # already at minimum gain, decrease exposure
                     next_gain = gain
                     exposure_delta = next_exposure - exposure
+                    gain_delta = 0.0
                 else:
                     if exposure > self.auto_gain_exposure_cutoff_low:
                         # maintain gain, decrease exposure
                         next_gain = gain
                         next_exposure = max(next_exposure, self.auto_gain_exposure_cutoff_low)
                         exposure_delta = next_exposure - exposure
+                        gain_delta = 0.0
                     else:
                         # decrease gain, maintain exposure
                         next_gain = self.auto_gain_step_list[auto_gain_idx - 1]
                         #next_exposure = max(exposure, self.auto_gain_exposure_cutoff_low)
                         next_exposure = max(exposure, self.auto_gain_exposure_cutoff_mid)
                         exposure_delta = 0.0
+                        gain_delta = next_gain - gain
 
         else:
             # just set the gain to the max for the current mode
             next_gain = gain_max
             exposure_delta = next_exposure - exposure
+            gain_delta = 0.0
 
 
         # Do not exceed the gain limits
@@ -2054,13 +2062,14 @@ class ImageWorker(Process):
             next_gain = gain_min
 
 
-        logger.warning('New calculated exposure: %0.8f @ gain %0.2f (%+0.6fs)', next_exposure, next_gain, exposure_delta)
+        logger.warning('New calculated exposure: %0.8f @ gain %0.2f (%+0.6fs/%+0.2f)', next_exposure, next_gain, exposure_delta, gain_delta)
         with self.exposure_av.get_lock():
             self.exposure_av[constants.EXPOSURE_NEXT] = float(next_exposure)
             self.exposure_av[constants.EXPOSURE_DELTA] = float(exposure_delta)
 
         with self.gain_av.get_lock():
             self.gain_av[constants.GAIN_NEXT] = float(next_gain)
+            self.exposure_av[constants.GAIN_DELTA] = float(gain_delta)
 
 
     def save_longterm_keogram_data(self, exp_date, camera_id):

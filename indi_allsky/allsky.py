@@ -157,6 +157,7 @@ class IndiAllSky(object):
         self.gain_av = Array('f', [
             -1.0,  # current gain
             -1.0,  # next gain
+            -1.0,  # gain delta
             -1.0,  # day minimum
             -1.0,  # day maximum
             -1.0,  # night minimum

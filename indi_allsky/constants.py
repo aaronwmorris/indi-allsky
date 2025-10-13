@@ -101,12 +101,13 @@ EXPOSURE_MAX        = 5
 # Gain indexes
 GAIN_CURRENT        = 0
 GAIN_NEXT           = 1
-GAIN_MIN_DAY        = 2
-GAIN_MAX_DAY        = 3
-GAIN_MIN_NIGHT      = 4
-GAIN_MAX_NIGHT      = 5
-GAIN_MIN_MOONMODE   = 6
-GAIN_MAX_MOONMODE   = 7
+GAIN_DELTA          = 2
+GAIN_MIN_DAY        = 3
+GAIN_MAX_DAY        = 4
+GAIN_MIN_NIGHT      = 5
+GAIN_MAX_NIGHT      = 6
+GAIN_MIN_MOONMODE   = 7
+GAIN_MAX_MOONMODE   = 8
 
 
 # Leaving gaps for addtional classifications
