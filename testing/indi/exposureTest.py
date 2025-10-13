@@ -305,6 +305,10 @@ class IndiClient(PyIndi.BaseClient):
             'indi_asi_single_ccd',
             'indi_toupcam_ccd',
             'indi_altair_ccd',
+            'indi_altaircam_ccd',
+            'indi_nncam_ccd',
+            'indi_ogmacam_ccd',
+            'indi_omegonprocam_ccd',
             'indi_playerone_ccd',
         ]:
             gain_config = {
@@ -330,6 +334,7 @@ class IndiClient(PyIndi.BaseClient):
             }
         elif indi_exec in [
             'indi_svbony_ccd',
+            'indi_svbonycam_ccd',
             'indi_sv305_ccd',  # legacy name
         ]:
             # the GAIN property changed in INDI 2.0.4
