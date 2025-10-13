@@ -8,7 +8,7 @@ services:
       #dockerfile: docker/Dockerfile.indi_base_ubuntu2404
       args:
         - TZ=${TZ}
-        - INDI_VERSION=${INDIALLSKY_INDI_VERSION}
+        - INDI_CORE_VERSION=${INDIALLSKY_INDI_CORE_VERSION}
         - LIBCAMERA_TAG=${INDIALLSKY_LIBCAMERA_TAG}
         - RPICAM_APPS_TAG=${INDIALLSKY_RPICAM_APPS_TAG}
     env_file: .env
@@ -35,7 +35,7 @@ services:
       dockerfile: docker/Dockerfile.indiserver_debian12
       #dockerfile: docker/Dockerfile.indiserver_ubuntu2404
       args:
-        - INDI_VERSION=${INDIALLSKY_INDI_VERSION}
+        - INDI_3RDPARTY_VERSION=${INDIALLSKY_INDI_3RDPARTY_VERSION}
         - INDI_CAMERA_VENDOR=${INDIALLSKY_CAMERA_VENDOR}
     env_file: .env
     depends_on:

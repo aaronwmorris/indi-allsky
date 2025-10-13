@@ -1,7 +1,7 @@
 FROM debian:bookworm-slim AS indi.base
 
 ARG TZ
-ARG INDI_VERSION
+ARG INDI_CORE_VERSION
 ARG LIBCAMERA_TAG
 ARG RPICAM_APPS_TAG
 ARG DEBIAN_FRONTEND=noninteractive
@@ -51,7 +51,7 @@ ENV BUILD_INDI_SETTINGS=manual
 ENV BUILD_INDI_CORE=true
 ENV BUILD_INDI_3RDPARTY=false
 ENV BUILD_INDI_OS_PACKAGE_UPGRADE=false
-RUN bash build_indi.sh $INDI_VERSION \
+RUN bash build_indi.sh $INDI_CORE_VERSION \
     && rm -fR /home/allsky/Projects \
     && sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
