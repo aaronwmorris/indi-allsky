@@ -728,7 +728,7 @@ cd "$OLDPWD" || catch_error
 ### Camera ###
 
 # Need this list so drivers are listed in specific order
-INDI_CCD_DRIVER_ORDER=("indi_simulator_ccd" "indi_asi_ccd" "indi_asi_single_ccd" "indi_playerone_ccd" "indi_playerone_single_ccd" "indi_toupcam_ccd" "indi_altair_ccd" "indi_omegonprocam_ccd" "indi_ogmacam_ccd" "indi_tscam_ccd" "indi_nncam_ccd" "indi_svbony_ccd" "indi_qhy_ccd" "indi_sx_ccd" "indi_dsi_ccd" "indi_libcamera_ccd" "indi_gphoto_ccd" "indi_canon_ccd" "indi_sony_ccd" "indi_nikon_ccd" "indi_fuji_ccd" "indi_pentax_ccd" "indi_v4l2_ccd" "indi_webcam_ccd")
+INDI_CCD_DRIVER_ORDER=("indi_simulator_ccd" "indi_asi_ccd" "indi_asi_single_ccd" "indi_playerone_ccd" "indi_playerone_single_ccd" "indi_toupcam_ccd" "indi_altaircam_ccd"  "indi_altair_ccd" "indi_omegonprocam_ccd" "indi_ogmacam_ccd" "indi_tscam_ccd" "indi_nncam_ccd" "indi_svbony_ccd" "indi_svbonycam_ccd" "indi_qhy_ccd" "indi_sx_ccd" "indi_dsi_ccd" "indi_libcamera_ccd" "indi_gphoto_ccd" "indi_canon_ccd" "indi_sony_ccd" "indi_nikon_ccd" "indi_fuji_ccd" "indi_pentax_ccd" "indi_v4l2_ccd" "indi_webcam_ccd")
 
 declare -A INDI_CCD_DRIVER_MAP
 INDI_CCD_DRIVER_MAP[indi_simulator_ccd]="CCD Simulator"
@@ -737,12 +737,14 @@ INDI_CCD_DRIVER_MAP[indi_asi_single_ccd]="ZWO ASI (Single)"
 INDI_CCD_DRIVER_MAP[indi_playerone_ccd]="PlayerOne Astronomy"
 INDI_CCD_DRIVER_MAP[indi_playerone_single_ccd]="PlayerOne Astronomy (Single)"
 INDI_CCD_DRIVER_MAP[indi_toupcam_ccd]="ToupTek"
-INDI_CCD_DRIVER_MAP[indi_altair_ccd]="Altair Astro"
+INDI_CCD_DRIVER_MAP[indi_altaircam_ccd]="Altair Astro (new)"
+INDI_CCD_DRIVER_MAP[indi_altair_ccd]="Altair Astro (old)"
 INDI_CCD_DRIVER_MAP[indi_omegonprocam_ccd]="Omegon"
 INDI_CCD_DRIVER_MAP[indi_ogmacam_ccd]="Ogma"
 INDI_CCD_DRIVER_MAP[indi_tscam_ccd]="indi_tscam_ccd"
 INDI_CCD_DRIVER_MAP[indi_nncam_ccd]="indi_nncam_ccd"
 INDI_CCD_DRIVER_MAP[indi_svbony_ccd]="SVBony"
+INDI_CCD_DRIVER_MAP[indi_svbonycam_ccd]="SVBony"
 INDI_CCD_DRIVER_MAP[indi_qhy_ccd]="QHY CCD"
 INDI_CCD_DRIVER_MAP[indi_sx_ccd]="Starlight Xpress"
 INDI_CCD_DRIVER_MAP[indi_dsi_ccd]="Meade DSI"
