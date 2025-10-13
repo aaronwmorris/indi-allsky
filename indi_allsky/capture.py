@@ -1200,6 +1200,13 @@ class CaptureWorker(Process):
             ccd_exposure_default = ccd_min_exp
 
 
+        # sanity check
+        if ccd_gain_default > gain_night:
+            ccd_gain_default = gain_night
+        if ccd_gain_default < gain_day:
+            ccd_exposure_default = gain_day
+
+
         if self.exposure_av[constants.EXPOSURE_CURRENT] == -1.0:
             # only set this on first start
             with self.exposure_av.get_lock():
