@@ -97,6 +97,7 @@ class IndiAllSkyDarks(object):
         self.exposure_av = Array('f', [
             -1.0,  # current exposure
             -1.0,  # next exposure
+            -1.0,  # exposure delta
             -1.0,  # night minimum
             -1.0,  # day minimum
             -1.0,  # maximum

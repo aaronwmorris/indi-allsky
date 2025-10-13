@@ -1212,6 +1212,7 @@ class CaptureWorker(Process):
             with self.exposure_av.get_lock():
                 self.exposure_av[constants.EXPOSURE_CURRENT] = float(ccd_exposure_default)
                 self.exposure_av[constants.EXPOSURE_NEXT] = float(ccd_exposure_default)
+                self.exposure_av[constants.EXPOSURE_DELTA] = 0.0
 
 
         logger.info('Default CCD exposure: %0.8f', ccd_exposure_default)

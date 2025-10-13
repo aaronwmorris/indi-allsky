@@ -92,9 +92,10 @@ POSITION_DEC        = 4
 # Exposure indexes
 EXPOSURE_CURRENT    = 0
 EXPOSURE_NEXT       = 1
-EXPOSURE_MIN_NIGHT  = 2
-EXPOSURE_MIN_DAY    = 3
-EXPOSURE_MAX        = 4
+EXPOSURE_DELTA      = 2
+EXPOSURE_MIN_NIGHT  = 3
+EXPOSURE_MIN_DAY    = 4
+EXPOSURE_MAX        = 5
 
 
 # Gain indexes
