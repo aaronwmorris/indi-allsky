@@ -2308,8 +2308,8 @@ class ImageProcessor(object):
                     self.astrometric_data['iss_next_alt'] = math.degrees(iss_next_pass[3])
                 else:
                     self.astrometric_data['iss_next_alt'] = 0.0
-            except ValueError as e:
-                logger.warning('ISS next pass error: %s', str(e))
+            except ValueError as e:  # noqa: F841
+                #logger.warning('ISS next pass error: %s', str(e))
                 self.astrometric_data['iss_next_h'] = 0.0
                 self.astrometric_data['iss_next_alt'] = 0.0
         else:
@@ -2346,8 +2346,8 @@ class ImageProcessor(object):
                     self.astrometric_data['hst_next_alt'] = math.degrees(hst_next_pass[3])
                 else:
                     self.astrometric_data['hst_next_h'] = 0.0
-            except ValueError as e:
-                logger.warning('HST next pass error: %s', str(e))
+            except ValueError as e:  # noqa: F841
+                #logger.warning('HST next pass error: %s', str(e))
                 self.astrometric_data['hst_next_h'] = 0.0
                 self.astrometric_data['hst_next_alt'] = 0.0
         else:
@@ -2384,8 +2384,8 @@ class ImageProcessor(object):
                     self.astrometric_data['tiangong_next_alt'] = math.degrees(tiangong_next_pass[3])
                 else:
                     self.astrometric_data['tiangong_next_alt'] = 0.0
-            except ValueError as e:
-                logger.warning('TIANGONG next pass error: %s', str(e))
+            except ValueError as e:  # noqa: F841
+                #logger.warning('TIANGONG next pass error: %s', str(e))
                 self.astrometric_data['tiangong_next_h'] = 0.0
                 self.astrometric_data['tiangong_next_alt'] = 0.0
         else:
