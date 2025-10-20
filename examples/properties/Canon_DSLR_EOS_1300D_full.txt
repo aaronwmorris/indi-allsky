@@ -1,0 +1,1673 @@
+#########################################
+########## Start properties #############
+#########################################
+```
+CONNECTION
+  CONNECT [Connect] (switch)
+    state: ON
+    permissions: READ_WRITE
+  DISCONNECT [Disconnect] (switch)
+    state: OFF
+    permissions: READ_WRITE
+DRIVER_INFO
+  DRIVER_NAME [Name] (text)
+    current: GPhoto CCD
+    permissions: READ_ONLY
+  DRIVER_EXEC [Exec] (text)
+    current: indi_canon_ccd
+    permissions: READ_ONLY
+  DRIVER_VERSION [Version] (text)
+    current: 3.4
+    permissions: READ_ONLY
+  DRIVER_INTERFACE [Interface] (text)
+    current: 10
+    permissions: READ_ONLY
+POLLING_PERIOD
+  PERIOD_MS [Period (ms)] (number)
+    current: 1000.0
+    min: 10.0
+    max: 600000.0
+    step: 1000.0
+    format: %.f
+    permissions: READ_WRITE
+DEBUG
+  ENABLE [Enable] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  DISABLE [Disable] (switch)
+    state: ON
+    permissions: READ_WRITE
+SIMULATION
+  ENABLE [Enable] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  DISABLE [Disable] (switch)
+    state: ON
+    permissions: READ_WRITE
+CONFIG_PROCESS
+  CONFIG_LOAD [Load] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  CONFIG_SAVE [Save] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  CONFIG_DEFAULT [Default] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  CONFIG_PURGE [Purge] (switch)
+    state: OFF
+    permissions: READ_WRITE
+ACTIVE_DEVICES
+  ACTIVE_TELESCOPE [Telescope] (text)
+    current: Telescope Simulator
+    permissions: READ_WRITE
+  ACTIVE_ROTATOR [Rotator] (text)
+    current: Rotator Simulator
+    permissions: READ_WRITE
+  ACTIVE_FOCUSER [Focuser] (text)
+    current: Focuser Simulator
+    permissions: READ_WRITE
+  ACTIVE_FILTER [Filter] (text)
+    current: CCD Simulator
+    permissions: READ_WRITE
+  ACTIVE_SKYQUALITY [Sky Quality] (text)
+    current: SQM
+    permissions: READ_WRITE
+DEVICE_PORT
+  PORT [Port] (text)
+    current: usb:001,005
+    permissions: READ_WRITE
+CCD_EXPOSURE
+  CCD_EXPOSURE_VALUE [Duration (s)] (number)
+    current: 0.0
+    min: 0.00025
+    max: 3600.0
+    step: 1.0
+    format: %5.2f
+    permissions: READ_WRITE
+CCD_ABORT_EXPOSURE
+  ABORT [Abort] (switch)
+    state: OFF
+    permissions: READ_WRITE
+CCD_FRAME
+  X [Left ] (number)
+    current: 0.0
+    min: 0.0
+    max: 5201.0
+    step: 0.0
+    format: %4.0f
+    permissions: READ_WRITE
+  Y [Top] (number)
+    current: 0.0
+    min: 0.0
+    max: 3463.0
+    step: 0.0
+    format: %4.0f
+    permissions: READ_WRITE
+  WIDTH [Width] (number)
+    current: 5184.0
+    min: 1.0
+    max: 5202.0
+    step: 0.0
+    format: %4.0f
+    permissions: READ_WRITE
+  HEIGHT [Height] (number)
+    current: 3456.0
+    min: 1.0
+    max: 3464.0
+    step: 0.0
+    format: %4.0f
+    permissions: READ_WRITE
+CCD_FRAME_RESET
+  RESET [Reset] (switch)
+    state: OFF
+    permissions: WRITE_ONLY
+CCD_BINNING
+  HOR_BIN [X] (number)
+    current: 1.0
+    min: 1.0
+    max: 4.0
+    step: 1.0
+    format: %2.0f
+    permissions: READ_WRITE
+  VER_BIN [Y] (number)
+    current: 1.0
+    min: 1.0
+    max: 4.0
+    step: 1.0
+    format: %2.0f
+    permissions: READ_WRITE
+FITS_HEADER
+  KEYWORD_NAME [Name] (text)
+    current: 
+    permissions: WRITE_ONLY
+  KEYWORD_VALUE [Value] (text)
+    current: 
+    permissions: WRITE_ONLY
+  KEYWORD_COMMENT [Comment] (text)
+    current: 
+    permissions: WRITE_ONLY
+CCD_CAPTURE_FORMAT
+  FORMAT_1 [Large Fine JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  FORMAT_2 [Large Normal JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  FORMAT_3 [Medium Fine JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  FORMAT_4 [Medium Normal JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  FORMAT_5 [Small Fine JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  FORMAT_6 [Small Normal JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  FORMAT_7 [Smaller JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  FORMAT_8 [Tiny JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  FORMAT_9 [RAW] (switch)
+    state: ON
+    permissions: READ_WRITE
+CCD_TRANSFER_FORMAT
+  FORMAT_FITS [FITS] (switch)
+    state: ON
+    permissions: READ_WRITE
+  FORMAT_NATIVE [Native] (switch)
+    state: OFF
+    permissions: READ_WRITE
+CCD_INFO
+  CCD_MAX_X [Max. Width] (number)
+    current: 5202.0
+    min: 1.0
+    max: 16000.0
+    step: 0.0
+    format: %.f
+    permissions: READ_WRITE
+  CCD_MAX_Y [Max. Height] (number)
+    current: 3464.0
+    min: 1.0
+    max: 16000.0
+    step: 0.0
+    format: %.f
+    permissions: READ_WRITE
+  CCD_PIXEL_SIZE [Pixel size (um)] (number)
+    current: 4.300000190734863
+    min: 1.0
+    max: 40.0
+    step: 0.0
+    format: %.2f
+    permissions: READ_WRITE
+  CCD_PIXEL_SIZE_X [Pixel size X] (number)
+    current: 4.300000190734863
+    min: 1.0
+    max: 40.0
+    step: 0.0
+    format: %.2f
+    permissions: READ_WRITE
+  CCD_PIXEL_SIZE_Y [Pixel size Y] (number)
+    current: 4.300000190734863
+    min: 1.0
+    max: 40.0
+    step: 0.0
+    format: %.2f
+    permissions: READ_WRITE
+  CCD_BITSPERPIXEL [Bits per pixel] (number)
+    current: 16.0
+    min: 8.0
+    max: 64.0
+    step: 0.0
+    format: %.f
+    permissions: READ_WRITE
+CCD_COMPRESSION
+  INDI_ENABLED [Enabled] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  INDI_DISABLED [Disabled] (switch)
+    state: ON
+    permissions: READ_WRITE
+CCD1
+CCD_FRAME_TYPE
+  FRAME_LIGHT [Light] (switch)
+    state: ON
+    permissions: READ_WRITE
+  FRAME_BIAS [Bias] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  FRAME_DARK [Dark] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  FRAME_FLAT [Flat] (switch)
+    state: OFF
+    permissions: READ_WRITE
+CCD_CFA
+  CFA_OFFSET_X [X Offset] (text)
+    current: 0
+    permissions: READ_WRITE
+  CFA_OFFSET_Y [Y Offset] (text)
+    current: 0
+    permissions: READ_WRITE
+  CFA_TYPE [Filter] (text)
+    current: GBRG
+    permissions: READ_WRITE
+SCOPE_INFO
+  FOCAL_LENGTH [Focal Length (mm)] (number)
+    current: 2.5
+    min: 0.0
+    max: 10000.0
+    step: 1.0
+    format: %g
+    permissions: READ_WRITE
+  APERTURE [Aperture (mm)] (number)
+    current: 1.25
+    min: 0.0
+    max: 3000.0
+    step: 1.0
+    format: %g
+    permissions: READ_WRITE
+WCS_CONTROL
+  WCS_ENABLE [Enable] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  WCS_DISABLE [Disable] (switch)
+    state: ON
+    permissions: READ_WRITE
+UPLOAD_MODE
+  UPLOAD_CLIENT [Client] (switch)
+    state: ON
+    permissions: READ_WRITE
+  UPLOAD_LOCAL [Local] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  UPLOAD_BOTH [Both] (switch)
+    state: OFF
+    permissions: READ_WRITE
+UPLOAD_SETTINGS
+  UPLOAD_DIR [Dir] (text)
+    current: /home/aaron
+    permissions: READ_WRITE
+  UPLOAD_PREFIX [Prefix] (text)
+    current: IMAGE_XXX
+    permissions: READ_WRITE
+CCD_FAST_TOGGLE
+  INDI_ENABLED [Enabled] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  INDI_DISABLED [Disabled] (switch)
+    state: ON
+    permissions: READ_WRITE
+CCD_FAST_COUNT
+  FRAMES [Frames] (number)
+    current: 1.0
+    min: 0.0
+    max: 100000.0
+    step: 1.0
+    format: %.f
+    permissions: READ_WRITE
+CCD_VIDEO_STREAM
+  STREAM_ON [Stream On] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  STREAM_OFF [Stream Off] (switch)
+    state: ON
+    permissions: READ_WRITE
+STREAM_DELAY
+  STREAM_DELAY_TIME [Delay (s)] (number)
+    current: 0.0
+    min: 0.0
+    max: 60.0
+    step: 0.001
+    format: %.3f
+    permissions: READ_ONLY
+FPS
+  EST_FPS [Instant.] (number)
+    current: 30.0
+    min: 0.0
+    max: 999.0
+    step: 0.0
+    format: %.2f
+    permissions: READ_ONLY
+  AVG_FPS [Average (1 sec.)] (number)
+    current: 30.0
+    min: 0.0
+    max: 999.0
+    step: 0.0
+    format: %.2f
+    permissions: READ_ONLY
+RECORD_STREAM
+  RECORD_ON [Record On] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  RECORD_DURATION_ON [Record (Duration)] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  RECORD_FRAME_ON [Record (Frames)] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  RECORD_OFF [Record Off] (switch)
+    state: ON
+    permissions: READ_WRITE
+RECORD_FILE
+  RECORD_FILE_DIR [Dir.] (text)
+    current: /home/aaron/Videos/indi__D_
+    permissions: READ_WRITE
+  RECORD_FILE_NAME [Name] (text)
+    current: indi_record__T_
+    permissions: READ_WRITE
+RECORD_OPTIONS
+  RECORD_DURATION [Duration (sec)] (number)
+    current: 1.0
+    min: 0.001
+    max: 999999.0
+    step: 0.0
+    format: %.3f
+    permissions: READ_WRITE
+  RECORD_FRAME_TOTAL [Frames] (number)
+    current: 30.0
+    min: 1.0
+    max: 999999999.0
+    step: 1.0
+    format: %.f
+    permissions: READ_WRITE
+CCD_STREAM_FRAME
+  X [Left] (number)
+    current: 0.0
+    min: 0.0
+    max: 0.0
+    step: 0.0
+    format: %.f
+    permissions: READ_WRITE
+  Y [Top] (number)
+    current: 0.0
+    min: 0.0
+    max: 0.0
+    step: 0.0
+    format: %.f
+    permissions: READ_WRITE
+  WIDTH [Width] (number)
+    current: 0.0
+    min: 0.0
+    max: 0.0
+    step: 0.0
+    format: %.f
+    permissions: READ_WRITE
+  HEIGHT [Height] (number)
+    current: 0.0
+    min: 0.0
+    max: 0.0
+    step: 0.0
+    format: %.f
+    permissions: READ_WRITE
+CCD_STREAM_ENCODER
+  RAW [RAW] (switch)
+    state: ON
+    permissions: READ_WRITE
+  MJPEG [MJPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+CCD_STREAM_RECORDER
+  SER [SER] (switch)
+    state: ON
+    permissions: READ_WRITE
+LIMITS
+  LIMITS_BUFFER_MAX [Maximum Buffer Size (MB)] (number)
+    current: 512.0
+    min: 1.0
+    max: 65536.0
+    step: 1.0
+    format: %.0f
+    permissions: READ_WRITE
+  LIMITS_PREVIEW_FPS [Maximum Preview FPS] (number)
+    current: 10.0
+    min: 1.0
+    max: 120.0
+    step: 1.0
+    format: %.0f
+    permissions: READ_WRITE
+CCD_EXPOSURE_PRESETS
+  EXPOSURE_PRESET0 [bulb] (switch)
+    state: ON
+    permissions: READ_WRITE
+  EXPOSURE_PRESET1 [30] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET2 [25] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET3 [20] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET4 [15] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET5 [13] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET6 [10.3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET7 [8] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET8 [6.3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET9 [5] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET10 [4] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET11 [3.2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET12 [2.5] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET13 [2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET14 [1.6] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET15 [1.3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET16 [1] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET17 [0.8] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET18 [0.6] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET19 [0.5] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET20 [0.4] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET21 [0.3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET22 [1/4] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET23 [1/5] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET24 [1/6] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET25 [1/8] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET26 [1/10] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET27 [1/13] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET28 [1/15] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET29 [1/20] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET30 [1/25] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET31 [1/30] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET32 [1/40] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET33 [1/50] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET34 [1/60] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET35 [1/80] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET36 [1/100] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET37 [1/125] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET38 [1/160] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET39 [1/200] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET40 [1/250] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET41 [1/320] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET42 [1/400] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET43 [1/500] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET44 [1/640] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET45 [1/800] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET46 [1/1000] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET47 [1/1250] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET48 [1/1600] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET49 [1/2000] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET50 [1/2500] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET51 [1/3200] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  EXPOSURE_PRESET52 [1/4000] (switch)
+    state: OFF
+    permissions: READ_WRITE
+CCD_ISO
+  ISO0 [Auto] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  ISO1 [100] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  ISO2 [200] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  ISO3 [400] (switch)
+    state: ON
+    permissions: READ_WRITE
+  ISO4 [800] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  ISO5 [1600] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  ISO6 [3200] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  ISO7 [6400] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  ISO8 [12800] (switch)
+    state: OFF
+    permissions: READ_WRITE
+Auto Focus
+  Set [Set] (switch)
+    state: OFF
+    permissions: READ_WRITE
+FOCUS_MOTION
+  FOCUS_INWARD [Focus In] (switch)
+    state: ON
+    permissions: READ_WRITE
+  FOCUS_OUTWARD [Focus Out] (switch)
+    state: OFF
+    permissions: READ_WRITE
+REL_FOCUS_POSITION
+  FOCUS_RELATIVE_POSITION [Steps] (number)
+    current: 0.0
+    min: 0.0
+    max: 100000.0
+    step: 1000.0
+    format: %.f
+    permissions: READ_WRITE
+CCD_CAPTURE_TARGET
+  RAM [RAM] (switch)
+    state: ON
+    permissions: READ_WRITE
+  SD Card [SD Card] (switch)
+    state: OFF
+    permissions: READ_WRITE
+CCD_SD_CARD_ACTION
+  Save [Save] (switch)
+    state: ON
+    permissions: READ_WRITE
+  Delete [Delete] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  Ignore [Ignore] (switch)
+    state: OFF
+    permissions: READ_WRITE
+syncdatetimeutc
+  syncdatetimeutc0 [On] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  syncdatetimeutc1 [Off] (switch)
+    state: ON
+    permissions: READ_WRITE
+syncdatetime
+  syncdatetime0 [On] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  syncdatetime1 [Off] (switch)
+    state: ON
+    permissions: READ_WRITE
+uilock
+  uilock0 [On] (switch)
+    state: ON
+    permissions: READ_WRITE
+  uilock1 [Off] (switch)
+    state: OFF
+    permissions: READ_WRITE
+popupflash
+  popupflash0 [On] (switch)
+    state: ON
+    permissions: READ_WRITE
+  popupflash1 [Off] (switch)
+    state: OFF
+    permissions: READ_WRITE
+autofocusdrive
+  autofocusdrive0 [On] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autofocusdrive1 [Off] (switch)
+    state: ON
+    permissions: READ_WRITE
+manualfocusdrive
+  manualfocusdrive0 [Near 1] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  manualfocusdrive1 [Near 2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  manualfocusdrive2 [Near 3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  manualfocusdrive3 [None] (switch)
+    state: ON
+    permissions: READ_WRITE
+  manualfocusdrive4 [Far 1] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  manualfocusdrive5 [Far 2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  manualfocusdrive6 [Far 3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+cancelautofocus
+  cancelautofocus0 [On] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  cancelautofocus1 [Off] (switch)
+    state: ON
+    permissions: READ_WRITE
+eoszoom
+  eoszoom [eoszoom] (text)
+    current: 0
+    permissions: READ_WRITE
+eoszoomposition
+  eoszoomposition [eoszoomposition] (text)
+    current: 0,0
+    permissions: READ_WRITE
+viewfinder
+  viewfinder0 [On] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  viewfinder1 [Off] (switch)
+    state: ON
+    permissions: READ_WRITE
+eosmoviemode
+  eosmoviemode0 [On] (switch)
+    state: ON
+    permissions: READ_WRITE
+  eosmoviemode1 [Off] (switch)
+    state: OFF
+    permissions: READ_WRITE
+opcode
+  opcode [opcode] (text)
+    current: 0x1001,0xparam1,0xparam2
+    permissions: READ_WRITE
+datetimeutc
+  datetimeutc [datetimeutc] (text)
+    current: 2025-10-20T16:36:01Z
+    permissions: READ_WRITE
+datetime
+  datetime [datetime] (text)
+    current: 2025-10-20T17:36:01Z
+    permissions: READ_WRITE
+reviewtime
+  reviewtime0 [None] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  reviewtime1 [2 seconds] (switch)
+    state: ON
+    permissions: READ_WRITE
+  reviewtime2 [4 seconds] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  reviewtime3 [8 seconds] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  reviewtime4 [Hold] (switch)
+    state: OFF
+    permissions: READ_WRITE
+output
+  output0 [TFT] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  output1 [PC] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  output2 [TFT + PC] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  output3 [MOBILE] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  output4 [TFT + MOBILE] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  output5 [PC + MOBILE] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  output6 [TFT + PC + MOBILE] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  output7 [MOBILE2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  output8 [TFT + MOBILE2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  output9 [PC + MOBILE2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  output10 [TFT + PC + MOBILE2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  output11 [Off] (switch)
+    state: ON
+    permissions: READ_WRITE
+movierecordtarget
+  movierecordtarget0 [None] (switch)
+    state: ON
+    permissions: READ_WRITE
+evfmode
+  evfmode0 [1] (switch)
+    state: ON
+    permissions: READ_WRITE
+  evfmode1 [0] (switch)
+    state: OFF
+    permissions: READ_WRITE
+ownername
+  ownername [ownername] (text)
+    current: 
+    permissions: READ_WRITE
+artist
+  artist [artist] (text)
+    current: 
+    permissions: READ_WRITE
+copyright
+  copyright [copyright] (text)
+    current: 
+    permissions: READ_WRITE
+customfuncex
+  customfuncex [customfuncex] (text)
+    current: bc,4,1,2c,3,101,1,0,103,1,1,10f,1,0,2,2c,3,201,1,0,202,1,0,203,1,0,3,14,1,50e,1,0,4,38,4,701,1,0,704,1,0,70e,1,1,811,1,0,
+    permissions: READ_WRITE
+focusinfo
+  focusinfo [focusinfo] (text)
+    current: eosversion=0,size=5184x3456,size2=5184x3456,points={{0,743,117,181},{-839,393,172,129},{839,393,172,129},{-1394,0,172,129},{0,0,224,222},{1394,0,172,129},{-839,-393,172,129},{839,-393,172,129},{0,-743,117,181}},select={},unknown={ff010000ffff}
+    permissions: READ_ONLY
+strobofiring
+  strobofiring0 [0] (switch)
+    state: ON
+    permissions: READ_ONLY
+  strobofiring1 [1] (switch)
+    state: OFF
+    permissions: READ_ONLY
+  strobofiring2 [2] (switch)
+    state: OFF
+    permissions: READ_ONLY
+flashcharged
+  flashcharged [flashcharged] (text)
+    current: 0
+    permissions: READ_ONLY
+autopoweroff
+  autopoweroff [autopoweroff] (text)
+    current: 900
+    permissions: READ_WRITE
+depthoffield
+  depthoffield [depthoffield] (text)
+    current: 0
+    permissions: READ_WRITE
+capturetarget
+  capturetarget0 [Internal RAM] (switch)
+    state: ON
+    permissions: READ_WRITE
+  capturetarget1 [Memory card] (switch)
+    state: OFF
+    permissions: READ_WRITE
+capture
+  capture0 [On] (switch)
+    state: ON
+    permissions: READ_WRITE
+  capture1 [Off] (switch)
+    state: OFF
+    permissions: READ_WRITE
+remotemode
+  remotemode [remotemode] (text)
+    current: 1
+    permissions: READ_WRITE
+eventmode
+  eventmode [eventmode] (text)
+    current: 0
+    permissions: READ_WRITE
+serialnumber
+  serialnumber [serialnumber] (text)
+    current: 0000000
+    permissions: READ_ONLY
+manufacturer
+  manufacturer [manufacturer] (text)
+    current: Canon Inc.
+    permissions: READ_ONLY
+cameramodel
+  cameramodel [cameramodel] (text)
+    current: Canon EOS Rebel T6
+    permissions: READ_ONLY
+deviceversion
+  deviceversion [deviceversion] (text)
+    current: 3-1.1.0
+    permissions: READ_ONLY
+vendorextension
+  vendorextension [vendorextension] (text)
+    current: 
+    permissions: READ_ONLY
+model
+  model [model] (text)
+    current: 2147484676
+    permissions: READ_ONLY
+ptpversion
+  ptpversion [ptpversion] (text)
+    current: 256
+    permissions: READ_ONLY
+batterylevel
+  batterylevel [batterylevel] (text)
+    current: 100%
+    permissions: READ_ONLY
+lensname
+  lensname [lensname] (text)
+    current: EF50mm f/1.4 USM
+    permissions: READ_ONLY
+eosserialnumber
+  eosserialnumber [eosserialnumber] (text)
+    current: 000000000000
+    permissions: READ_ONLY
+shuttercounter
+  shuttercounter [shuttercounter] (text)
+    current: 2499
+    permissions: READ_ONLY
+availableshots
+  availableshots [availableshots] (text)
+    current: 37428
+    permissions: READ_ONLY
+eosmovieswitch
+  eosmovieswitch [eosmovieswitch] (text)
+    current: 0
+    permissions: READ_ONLY
+imageformatsd
+  imageformatsd0 [Large Fine JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  imageformatsd1 [Large Normal JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  imageformatsd2 [Medium Fine JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  imageformatsd3 [Medium Normal JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  imageformatsd4 [Small Fine JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  imageformatsd5 [Small Normal JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  imageformatsd6 [Smaller JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  imageformatsd7 [Tiny JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  imageformatsd8 [RAW + Large Fine JPEG] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  imageformatsd9 [RAW] (switch)
+    state: ON
+    permissions: READ_WRITE
+whitebalance
+  whitebalance0 [Auto] (switch)
+    state: ON
+    permissions: READ_WRITE
+  whitebalance1 [AWB White] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalance2 [Daylight] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalance3 [Shadow] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalance4 [Cloudy] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalance5 [Tungsten] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalance6 [Fluorescent] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalance7 [Flash] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalance8 [Manual] (switch)
+    state: OFF
+    permissions: READ_WRITE
+whitebalanceadjusta
+  whitebalanceadjusta0 [-9] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta1 [-8] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta2 [-7] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta3 [-6] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta4 [-5] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta5 [-4] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta6 [-3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta7 [-2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta8 [-1] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta9 [0] (switch)
+    state: ON
+    permissions: READ_WRITE
+  whitebalanceadjusta10 [1] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta11 [2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta12 [3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta13 [4] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta14 [5] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta15 [6] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta16 [7] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta17 [8] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjusta18 [9] (switch)
+    state: OFF
+    permissions: READ_WRITE
+whitebalanceadjustb
+  whitebalanceadjustb0 [-9] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb1 [-8] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb2 [-7] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb3 [-6] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb4 [-5] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb5 [-4] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb6 [-3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb7 [-2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb8 [-1] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb9 [0] (switch)
+    state: ON
+    permissions: READ_WRITE
+  whitebalanceadjustb10 [1] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb11 [2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb12 [3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb13 [4] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb14 [5] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb15 [6] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb16 [7] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb17 [8] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  whitebalanceadjustb18 [9] (switch)
+    state: OFF
+    permissions: READ_WRITE
+whitebalancexa
+  whitebalancexa0 [0] (switch)
+    state: ON
+    permissions: READ_ONLY
+  whitebalancexa1 [1] (switch)
+    state: OFF
+    permissions: READ_ONLY
+  whitebalancexa2 [2] (switch)
+    state: OFF
+    permissions: READ_ONLY
+  whitebalancexa3 [3] (switch)
+    state: OFF
+    permissions: READ_ONLY
+whitebalancexb
+  whitebalancexb0 [0] (switch)
+    state: ON
+    permissions: READ_ONLY
+  whitebalancexb1 [1] (switch)
+    state: OFF
+    permissions: READ_ONLY
+  whitebalancexb2 [2] (switch)
+    state: OFF
+    permissions: READ_ONLY
+  whitebalancexb3 [3] (switch)
+    state: OFF
+    permissions: READ_ONLY
+colorspace
+  colorspace0 [sRGB] (switch)
+    state: ON
+    permissions: READ_WRITE
+  colorspace1 [AdobeRGB] (switch)
+    state: OFF
+    permissions: READ_WRITE
+exposurecompensation
+  exposurecompensation0 [0] (switch)
+    state: ON
+    permissions: READ_WRITE
+focusmode
+  focusmode0 [One Shot] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  focusmode1 [AI Focus] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  focusmode2 [AI Servo] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  focusmode3 [Manual] (switch)
+    state: ON
+    permissions: READ_WRITE
+aspectratio
+  aspectratio0 [3:2] (switch)
+    state: ON
+    permissions: READ_WRITE
+  aspectratio1 [4:3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aspectratio2 [16:9] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aspectratio3 [1:1] (switch)
+    state: OFF
+    permissions: READ_WRITE
+storageid
+  storageid [storageid] (text)
+    current: 00020000
+    permissions: READ_WRITE
+autoexposuremode
+  autoexposuremode0 [P] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode1 [TV] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode2 [AV] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode3 [Manual] (switch)
+    state: ON
+    permissions: READ_WRITE
+  autoexposuremode4 [Bulb] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode5 [A_DEP] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode6 [DEP] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode7 [Custom] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode8 [Lock] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode9 [Green] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode10 [Night Portrait] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode11 [Sports] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode12 [Portrait] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode13 [Landscape] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode14 [Closeup] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode15 [Flash Off] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode16 [C2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode17 [C3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode18 [Creative Auto] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode19 [Movie] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode20 [Auto] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode21 [Handheld Night Scene] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode22 [HDR Backlight Control] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode23 [SCN] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode24 [Food] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode25 [Grainy B/W] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode26 [Soft focus] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode27 [Toy camera effect] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode28 [Fish-eye effect] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode29 [Water painting effect] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode30 [Miniature effect] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode31 [HDR art standard] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode32 [HDR art vivid] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode33 [HDR art bold] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode34 [HDR art embossed] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode35 [Panning] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode36 [HDR] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode37 [Self Portrait] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode38 [Hybrid Auto] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode39 [Smooth skin] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremode40 [Fv] (switch)
+    state: OFF
+    permissions: READ_WRITE
+autoexposuremodedial
+  autoexposuremodedial0 [P] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial1 [TV] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial2 [AV] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial3 [Manual] (switch)
+    state: ON
+    permissions: READ_WRITE
+  autoexposuremodedial4 [Bulb] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial5 [A_DEP] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial6 [DEP] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial7 [Custom] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial8 [Lock] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial9 [Green] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial10 [Night Portrait] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial11 [Sports] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial12 [Portrait] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial13 [Landscape] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial14 [Closeup] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial15 [Flash Off] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial16 [C2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial17 [C3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial18 [Creative Auto] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial19 [Movie] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial20 [Auto] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial21 [Handheld Night Scene] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial22 [HDR Backlight Control] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial23 [SCN] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial24 [Food] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial25 [Grainy B/W] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial26 [Soft focus] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial27 [Toy camera effect] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial28 [Fish-eye effect] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial29 [Water painting effect] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial30 [Miniature effect] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial31 [HDR art standard] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial32 [HDR art vivid] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial33 [HDR art bold] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial34 [HDR art embossed] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial35 [Panning] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial36 [HDR] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial37 [Self Portrait] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial38 [Hybrid Auto] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial39 [Smooth skin] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  autoexposuremodedial40 [Fv] (switch)
+    state: OFF
+    permissions: READ_WRITE
+drivemode
+  drivemode0 [Single] (switch)
+    state: ON
+    permissions: READ_WRITE
+  drivemode1 [Continuous] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  drivemode2 [Timer 10 sec] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  drivemode3 [Timer 2 sec] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  drivemode4 [Continuous timer] (switch)
+    state: OFF
+    permissions: READ_WRITE
+picturestyle
+  picturestyle0 [Auto] (switch)
+    state: ON
+    permissions: READ_WRITE
+  picturestyle1 [Standard] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  picturestyle2 [Portrait] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  picturestyle3 [Landscape] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  picturestyle4 [Neutral] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  picturestyle5 [Faithful] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  picturestyle6 [Monochrome] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  picturestyle7 [User defined 1] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  picturestyle8 [User defined 2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  picturestyle9 [User defined 3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+aperture
+  aperture0 [1.4] (switch)
+    state: ON
+    permissions: READ_WRITE
+  aperture1 [1.6] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture2 [1.8] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture3 [2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture4 [2.2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture5 [2.5] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture6 [2.8] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture7 [3.2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture8 [3.5] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture9 [4] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture10 [4.5] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture11 [5] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture12 [5.6] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture13 [6.3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture14 [7.1] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture15 [8] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture16 [9] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture17 [10] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture18 [11] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture19 [13] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture20 [14] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture21 [16] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture22 [18] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture23 [20] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aperture24 [22] (switch)
+    state: OFF
+    permissions: READ_WRITE
+meteringmode
+  meteringmode0 [Evaluative] (switch)
+    state: ON
+    permissions: READ_WRITE
+  meteringmode1 [Partial] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  meteringmode2 [Center-weighted average] (switch)
+    state: OFF
+    permissions: READ_WRITE
+liveviewsize
+  liveviewsize0 [Large] (switch)
+    state: ON
+    permissions: READ_WRITE
+  liveviewsize1 [Medium] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  liveviewsize2 [Small] (switch)
+    state: OFF
+    permissions: READ_WRITE
+bracketmode
+  bracketmode0 [Unknown value 0000] (switch)
+    state: ON
+    permissions: READ_WRITE
+aeb
+  aeb0 [off] (switch)
+    state: ON
+    permissions: READ_WRITE
+  aeb1 [+/- 1/3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aeb2 [+/- 2/3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aeb3 [+/- 1] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aeb4 [+/- 1 1/3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aeb5 [+/- 1 2/3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  aeb6 [+/- 2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+alomode
+  alomode0 [Standard (disabled in manual exposure)] (switch)
+    state: ON
+    permissions: READ_WRITE
+  alomode1 [x1] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  alomode2 [x2] (switch)
+    state: OFF
+    permissions: READ_WRITE
+  alomode3 [x3] (switch)
+    state: OFF
+    permissions: READ_WRITE
+d402
+  d402 [d402] (text)
+    current: Canon EOS Rebel T6
+    permissions: READ_ONLY
+d407
+  d407 [d407] (text)
+    current: 1
+    permissions: READ_ONLY
+d406
+  d406 [d406] (text)
+    current: Unknown Initiator
+    permissions: READ_WRITE
+d303
+  d303 [d303] (text)
+    current: 1
+    permissions: READ_ONLY
+5001
+  50010 [100] (switch)
+    state: ON
+    permissions: READ_ONLY
+  50011 [0] (switch)
+    state: OFF
+    permissions: READ_ONLY
+  50012 [75] (switch)
+    state: OFF
+    permissions: READ_ONLY
+  50013 [0] (switch)
+    state: OFF
+    permissions: READ_ONLY
+  50014 [50] (switch)
+    state: OFF
+    permissions: READ_ONLY
+MIRROR_LOCK
+  MIRROR_LOCK_SECONDS [Seconds] (number)
+    current: 0.0
+    min: 0.0
+    max: 10.0
+    step: 1.0
+    format: %1.0f
+    permissions: READ_WRITE
+CCD_TEMPERATURE
+  CCD_TEMPERATURE_VALUE [Temperature (C)] (number)
+    current: 21.0
+    min: -50.0
+    max: 50.0
+    step: 0.0
+    format: %5.2f
+    permissions: READ_ONLY
+CCD_FORCE_BLOB
+  On [On] (switch)
+    state: ON
+    permissions: READ_WRITE
+  Off [Off] (switch)
+    state: OFF
+    permissions: READ_WRITE
+CCD_DOWNLOAD_TIMEOUT
+  VALUE [Seconds] (number)
+    current: 60.0
+    min: 0.0
+    max: 300.0
+    step: 30.0
+    format: %.f
+    permissions: READ_WRITE
+```
+#########################################
+########### End properties ##############
+#########################################
