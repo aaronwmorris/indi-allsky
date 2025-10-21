@@ -144,7 +144,6 @@ class IndiClientPycurl(IndiClient):
 
 
         self.active_exposure = False
-        self.exposureStartTime = None
         self.current_exposure_file_p = None
         self.current_metadata_file_p = None
 

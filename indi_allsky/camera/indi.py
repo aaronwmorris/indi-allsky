@@ -130,7 +130,7 @@ class IndiClient(PyIndi.BaseClient):
         self._exposure = 0.0
         self._gain = -1.0  # individual exposure gain
 
-        self.exposureStartTime = None
+        self.exposureStartTime = 0
 
         self._disconnected = False
 
