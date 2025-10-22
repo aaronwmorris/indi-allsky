@@ -7549,6 +7549,114 @@ class JsonLogView(JsonView):
         return jsonify(json_data)
 
 
+class LogDownloadView(BaseView):
+    decorators = [login_required]
+    methods = ['GET']
+
+
+    def dispatch_request(self):
+        import gzip
+
+        log_file_p = Path('/var/log/indi-allsky/indi-allsky.log')
+        line_size = 150  # assuming lines have an average length
+
+        lines = int(request.args.get('lines', 20000))
+
+
+        if not log_file_p.exists():
+            # this can happen in docker
+            return
+
+
+        read_bytes = lines * line_size
+
+
+        log_file_size = log_file_p.stat().st_size
+        if log_file_size == 0:
+            return
+        elif log_file_size < read_bytes:
+            # just read the whole file
+            #app.logger.info('Returning %d bytes of log data', log_file_size)
+            log_file_seek = 0
+        else:
+            #app.logger.info('Returning %d bytes of log data', read_bytes)
+            log_file_seek = log_file_size - read_bytes
+
+
+        log_file_f = io.open(log_file_p, 'rb')
+        log_file_f.seek(log_file_seek)
+        log_data = log_file_f.read()
+
+        log_file_f.close()
+
+
+        log_buffer = io.BytesIO(gzip.compress(log_data))
+
+
+        data = {
+            'ts'    : datetime.now(),
+        }
+
+
+        download_name = 'indi-allsky_log_{ts:%Y%m%d_%H%M%S}.txt.gz'.format(**data)
+
+        return send_file(log_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
+
+
+class LogWebappDownloadView(BaseView):
+    decorators = [login_required]
+    methods = ['GET']
+
+
+    def dispatch_request(self):
+        import gzip
+
+        log_file_p = Path('/var/log/indi-allsky/webapp-indi-allsky.log')
+        line_size = 150  # assuming lines have an average length
+
+        lines = int(request.args.get('lines', 20000))
+
+
+        if not log_file_p.exists():
+            # this can happen in docker
+            return
+
+
+        read_bytes = lines * line_size
+
+
+        log_file_size = log_file_p.stat().st_size
+        if log_file_size == 0:
+            return
+        elif log_file_size < read_bytes:
+            # just read the whole file
+            #app.logger.info('Returning %d bytes of log data', log_file_size)
+            log_file_seek = 0
+        else:
+            #app.logger.info('Returning %d bytes of log data', read_bytes)
+            log_file_seek = log_file_size - read_bytes
+
+
+        log_file_f = io.open(log_file_p, 'rb')
+        log_file_f.seek(log_file_seek)
+        log_data = log_file_f.read()
+
+        log_file_f.close()
+
+
+        log_buffer = io.BytesIO(gzip.compress(log_data))
+
+
+        data = {
+            'ts'    : datetime.now(),
+        }
+
+
+        download_name = 'indi-allsky_webapp_log_{ts:%Y%m%d_%H%M%S}.txt.gz'.format(**data)
+
+        return send_file(log_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
+
+
 class SupportInfoView(TemplateView):
     decorators = [login_required]
 
@@ -7725,6 +7833,7 @@ class UserInfoView(TemplateView):
 
 class AjaxUserInfoView(BaseView):
     methods = ['POST']
+    decorators = [login_required]
 
 
     def __init__(self, **kwargs):
@@ -7850,7 +7959,7 @@ class ConfigDownloadView(BaseView):
             'level' : config_entry.level.replace('.', '-'),
         }
 
-        download_name = 'config_indi-allsky_id-{id:d}_level-{level:s}_{ts:%Y%m%d_%H%M%S}.json'.format(**data)
+        download_name = 'indi-allsky_config_id-{id:d}_level-{level:s}_{ts:%Y%m%d_%H%M%S}.json'.format(**data)
 
         return send_file(config_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
 
@@ -10539,6 +10648,8 @@ bp_allsky.add_url_rule('/ajax/focuscontroller', view_func=AjaxFocusControllerVie
 
 bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
 bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
+bp_allsky.add_url_rule('/log/download', view_func=LogDownloadView.as_view('log_download_view'))
+bp_allsky.add_url_rule('/log/webapp_download', view_func=LogWebappDownloadView.as_view('log_webapp_download_view'))
 
 bp_allsky.add_url_rule('/support', view_func=SupportInfoView.as_view('support_info_view', template_name='support_info.html'))
 bp_allsky.add_url_rule('/js/support', view_func=JsonSupportInfoView.as_view('js_support_info_view'))
