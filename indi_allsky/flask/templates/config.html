@@ -53,7 +53,12 @@ var camera_id = {{ camera_id }};
 
 {% if fits_enabled %}
 <hr>
-<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Saving FITS files is enabled</div>
+<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Saving FITS files is enabled [Image tab]</div>
+{% endif %}
+
+{% if mark_detections_enabled %}
+<hr>
+<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Mark Detections on Image is enabled [Processing tab]</div>
 {% endif %}
 
 <hr>

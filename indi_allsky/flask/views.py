@@ -1770,6 +1770,7 @@ class ConfigView(FormView):
         context['config_id'] = self.indi_allsky_config_id
 
 
+        ### a few checks to start
         fits_enabled = self.indi_allsky_config.get('IMAGE_SAVE_FITS')
         fits_save_period = self.indi_allsky_config.get('IMAGE_SAVE_FITS_PERIOD', 7200)
 
@@ -1778,6 +1779,10 @@ class ConfigView(FormView):
             context['fits_enabled'] = fits_enabled
 
 
+        context['mark_detections_enabled'] = self.indi_allsky_config.get('DETECT_DRAW')
+
+
+        ### timezone validator
         if not self.validate_longitude_timezone():
             context['longitude_validation_message'] = '<span class="badge rounded-pill bg-warning text-dark">Warning</span><span class="text-warning"> Longitude validation failed.  Incorrect time, timezone, or longitude could cause this condition</span>'
         else:
@@ -7565,7 +7570,7 @@ class LogDownloadView(BaseView):
 
         if not log_file_p.exists():
             # this can happen in docker
-            return
+            return 'Log file does not exist'
 
 
         read_bytes = lines * line_size
@@ -7573,7 +7578,7 @@ class LogDownloadView(BaseView):
 
         log_file_size = log_file_p.stat().st_size
         if log_file_size == 0:
-            return
+            return 'Log file is empty'
         elif log_file_size < read_bytes:
             # just read the whole file
             #app.logger.info('Returning %d bytes of log data', log_file_size)
@@ -7619,7 +7624,7 @@ class LogWebappDownloadView(BaseView):
 
         if not log_file_p.exists():
             # this can happen in docker
-            return
+            return 'Log file does not exist'
 
 
         read_bytes = lines * line_size
@@ -7627,7 +7632,7 @@ class LogWebappDownloadView(BaseView):
 
         log_file_size = log_file_p.stat().st_size
         if log_file_size == 0:
-            return
+            return 'Log file is empty'
         elif log_file_size < read_bytes:
             # just read the whole file
             #app.logger.info('Returning %d bytes of log data', log_file_size)
