@@ -1770,6 +1770,7 @@ class ConfigView(FormView):
         context['config_id'] = self.indi_allsky_config_id
 
 
+        ### a few checks to start
         fits_enabled = self.indi_allsky_config.get('IMAGE_SAVE_FITS')
         fits_save_period = self.indi_allsky_config.get('IMAGE_SAVE_FITS_PERIOD', 7200)
 
@@ -1778,6 +1779,10 @@ class ConfigView(FormView):
             context['fits_enabled'] = fits_enabled
 
 
+        context['mark_detections_enabled'] = self.indi_allsky_config.get('DETECT_DRAW')
+
+
+        ### timezone validator
         if not self.validate_longitude_timezone():
             context['longitude_validation_message'] = '<span class="badge rounded-pill bg-warning text-dark">Warning</span><span class="text-warning"> Longitude validation failed.  Incorrect time, timezone, or longitude could cause this condition</span>'
         else:
