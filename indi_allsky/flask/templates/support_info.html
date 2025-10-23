@@ -84,9 +84,42 @@ function loadJS(url, onDone, onError) {
 }
 
 
+async function createGzipFile(dataString, filename) {
+  // Convert the string to a Uint8Array
+  const textEncoder = new TextEncoder();
+  const dataBytes = textEncoder.encode(dataString);
+
+  // Create a ReadableStream from the data
+  const readableStream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(dataBytes);
+      controller.close();
+    }
+  });
+
+  // Create a CompressionStream for gzip
+  const compressionStream = new CompressionStream('gzip');
+
+  // Pipe the data through the compression stream
+  const compressedStream = readableStream.pipeThrough(compressionStream);
+
+  // Convert the compressed stream to a Blob
+  const compressedBlob = await new Response(compressedStream).blob();
+
+  // Create a download link for the Blob
+  const url = URL.createObjectURL(compressedBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url); // Clean up the object URL
+}
+
+
 function saveTextAsFile() {
     var textToWrite = $('#support_info').val();
-    var textFileAsBlob = new Blob([ textToWrite ], { type: 'text/plain' });
 
     var d = new Date(Date.now());
     var year = d.getFullYear();
@@ -96,28 +129,9 @@ function saveTextAsFile() {
     var minute = '' + d.getMinutes();
     var second = '' + d.getSeconds();
 
-    var fileNameToSaveAs = "indi-allsky_support_info_" + year + month + day + "_" + hour + minute + second + ".txt";
+    var fileNameToSaveAs = "indi-allsky_support_info_" + year + month + day + "_" + hour + minute + second + ".txt.gz";
 
-    var downloadLink = document.createElement("a");
-    downloadLink.download = fileNameToSaveAs;
-    downloadLink.innerHTML = "Download File";
-    if (window.webkitURL != null) {
-      // Chrome allows the link to be clicked without actually adding it to the DOM.
-      downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
-    } else {
-      // Firefox requires the link to be added to the DOM before it can be clicked.
-      downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
-      downloadLink.onclick = destroyClickedElement;
-      downloadLink.style.display = "none";
-      document.body.appendChild(downloadLink);
-    }
-
-    downloadLink.click();
-}
-
-function destroyClickedElement(event) {
-    // remove the link from the DOM
-    document.body.removeChild(event.target);
+    createGzipFile(textToWrite, fileNameToSaveAs);
 }
 
 
