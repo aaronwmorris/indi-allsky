@@ -7570,7 +7570,7 @@ class LogDownloadView(BaseView):
 
         if not log_file_p.exists():
             # this can happen in docker
-            return
+            return 'Log file does not exist'
 
 
         read_bytes = lines * line_size
@@ -7578,7 +7578,7 @@ class LogDownloadView(BaseView):
 
         log_file_size = log_file_p.stat().st_size
         if log_file_size == 0:
-            return
+            return 'Log file is empty'
         elif log_file_size < read_bytes:
             # just read the whole file
             #app.logger.info('Returning %d bytes of log data', log_file_size)
@@ -7624,7 +7624,7 @@ class LogWebappDownloadView(BaseView):
 
         if not log_file_p.exists():
             # this can happen in docker
-            return
+            return 'Log file does not exist'
 
 
         read_bytes = lines * line_size
@@ -7632,7 +7632,7 @@ class LogWebappDownloadView(BaseView):
 
         log_file_size = log_file_p.stat().st_size
         if log_file_size == 0:
-            return
+            return 'Log file is empty'
         elif log_file_size < read_bytes:
             # just read the whole file
             #app.logger.info('Returning %d bytes of log data', log_file_size)
