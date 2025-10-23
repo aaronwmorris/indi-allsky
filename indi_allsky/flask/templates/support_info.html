@@ -76,6 +76,9 @@ function loadJS(url, onDone, onError) {
         success: function(json_data){
             $("#support_info").text(json_data['support_info']);
             $("#loader_support").css({'display' : 'none'});
+
+            // add download action
+            $('#dl_support').on('click', saveTextAsFile);
         },
         error: function(data){
             onError(data.status);
@@ -139,8 +142,6 @@ function init() {
     new ClipboardJS('.copy-clipboard');
 
     loadSupportInfo();
-
-    $('#dl_support').on('click', saveTextAsFile);
 }
 
 
