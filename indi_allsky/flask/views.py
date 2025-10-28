@@ -7477,7 +7477,9 @@ class JsonLogView(JsonView):
 
 
     def dispatch_request(self):
+        log_file_p = Path('/var/log/indi-allsky/indi-allsky.log')
         line_size = 150  # assuming lines have an average length
+
 
         lines = int(request.json.get('lines', 500))
         filter_str = str(request.json.get('filter', ''))[:30]  # limit to 30 characters
@@ -7500,9 +7502,6 @@ class JsonLogView(JsonView):
         read_bytes = lines * line_size
 
 
-        log_file_p = Path('/var/log/indi-allsky/indi-allsky.log')
-
-
         if not log_file_p.exists():
             # this can happen in docker
             json_data['log'] = 'ERROR: Log file missing'
@@ -7519,11 +7518,12 @@ class JsonLogView(JsonView):
             log_file_seek = log_file_size - read_bytes
 
 
-        log_file_f = io.open(log_file_p, 'r')
-        log_file_f.seek(log_file_seek)
-        log_lines = log_file_f.readlines()
-
-        log_file_f.close()
+        try:
+            with io.open(log_file_p, 'r') as log_file_f:
+                log_file_f.seek(log_file_seek)
+                log_lines = log_file_f.readlines()
+        except PermissionError as e:
+            log_lines = ['', 'PermissionError: {0:s}'.format(str(e))]
 
 
         try:
@@ -7588,11 +7588,12 @@ class LogDownloadView(BaseView):
             log_file_seek = log_file_size - read_bytes
 
 
-        log_file_f = io.open(log_file_p, 'rb')
-        log_file_f.seek(log_file_seek)
-        log_data = log_file_f.read()
-
-        log_file_f.close()
+        try:
+            with io.open(log_file_p, 'rb') as log_file_f:
+                log_file_f.seek(log_file_seek)
+                log_data = log_file_f.read()
+        except PermissionError as e:
+            return 'PermissionError: {0:s}'.format(str(e))
 
 
         log_buffer = io.BytesIO(gzip.compress(log_data))
@@ -7619,6 +7620,61 @@ class LogWebappDownloadView(BaseView):
         log_file_p = Path('/var/log/indi-allsky/webapp-indi-allsky.log')
         line_size = 150  # assuming lines have an average length
 
+        lines = int(request.args.get('lines', 5000))
+
+
+        if not log_file_p.exists():
+            # this can happen in docker
+            return 'Log file does not exist'
+
+
+        read_bytes = lines * line_size
+
+
+        log_file_size = log_file_p.stat().st_size
+        if log_file_size == 0:
+            return 'Log file is empty'
+        elif log_file_size < read_bytes:
+            # just read the whole file
+            #app.logger.info('Returning %d bytes of log data', log_file_size)
+            log_file_seek = 0
+        else:
+            #app.logger.info('Returning %d bytes of log data', read_bytes)
+            log_file_seek = log_file_size - read_bytes
+
+
+        try:
+            with io.open(log_file_p, 'rb') as log_file_f:
+                log_file_f.seek(log_file_seek)
+                log_data = log_file_f.read()
+        except PermissionError as e:
+            return 'PermissionError: {0:s}'.format(str(e))
+
+
+        log_buffer = io.BytesIO(gzip.compress(log_data))
+
+
+        data = {
+            'ts'    : datetime.now(),
+        }
+
+
+        download_name = 'indi-allsky_webapp_log_{ts:%Y%m%d_%H%M%S}.txt.gz'.format(**data)
+
+        return send_file(log_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
+
+
+class LogSyslogDownloadView(BaseView):
+    decorators = [login_required]
+    methods = ['GET']
+
+
+    def dispatch_request(self):
+        import gzip
+
+        log_file_p = Path('/var/log/syslog')
+        line_size = 150  # assuming lines have an average length
+
         lines = int(request.args.get('lines', 20000))
 
 
@@ -7642,11 +7698,12 @@ class LogWebappDownloadView(BaseView):
             log_file_seek = log_file_size - read_bytes
 
 
-        log_file_f = io.open(log_file_p, 'rb')
-        log_file_f.seek(log_file_seek)
-        log_data = log_file_f.read()
-
-        log_file_f.close()
+        try:
+            with io.open(log_file_p, 'rb') as log_file_f:
+                log_file_f.seek(log_file_seek)
+                log_data = log_file_f.read()
+        except PermissionError as e:
+            return 'PermissionError: {0:s}'.format(str(e))
 
 
         log_buffer = io.BytesIO(gzip.compress(log_data))
@@ -7657,7 +7714,62 @@ class LogWebappDownloadView(BaseView):
         }
 
 
-        download_name = 'indi-allsky_webapp_log_{ts:%Y%m%d_%H%M%S}.txt.gz'.format(**data)
+        download_name = 'indi-allsky_syslog_log_{ts:%Y%m%d_%H%M%S}.txt.gz'.format(**data)
+
+        return send_file(log_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
+
+
+class LogKernDownloadView(BaseView):
+    decorators = [login_required]
+    methods = ['GET']
+
+
+    def dispatch_request(self):
+        import gzip
+
+        log_file_p = Path('/var/log/kern.log')
+        line_size = 150  # assuming lines have an average length
+
+        lines = int(request.args.get('lines', 20000))
+
+
+        if not log_file_p.exists():
+            # this can happen in docker
+            return 'Log file does not exist'
+
+
+        read_bytes = lines * line_size
+
+
+        log_file_size = log_file_p.stat().st_size
+        if log_file_size == 0:
+            return 'Log file is empty'
+        elif log_file_size < read_bytes:
+            # just read the whole file
+            #app.logger.info('Returning %d bytes of log data', log_file_size)
+            log_file_seek = 0
+        else:
+            #app.logger.info('Returning %d bytes of log data', read_bytes)
+            log_file_seek = log_file_size - read_bytes
+
+
+        try:
+            with io.open(log_file_p, 'rb') as log_file_f:
+                log_file_f.seek(log_file_seek)
+                log_data = log_file_f.read()
+        except PermissionError as e:
+            return 'PermissionError: {0:s}'.format(str(e))
+
+
+        log_buffer = io.BytesIO(gzip.compress(log_data))
+
+
+        data = {
+            'ts'    : datetime.now(),
+        }
+
+
+        download_name = 'indi-allsky_kern_log_{ts:%Y%m%d_%H%M%S}.txt.gz'.format(**data)
 
         return send_file(log_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
 
@@ -10655,6 +10767,8 @@ bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_na
 bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
 bp_allsky.add_url_rule('/log/download', view_func=LogDownloadView.as_view('log_download_view'))
 bp_allsky.add_url_rule('/log/webapp_download', view_func=LogWebappDownloadView.as_view('log_webapp_download_view'))
+bp_allsky.add_url_rule('/log/syslog_download', view_func=LogSyslogDownloadView.as_view('log_syslog_download_view'))
+bp_allsky.add_url_rule('/log/kern_download', view_func=LogKernDownloadView.as_view('log_kern_download_view'))
 
 bp_allsky.add_url_rule('/support', view_func=SupportInfoView.as_view('support_info_view', template_name='support_info.html'))
 bp_allsky.add_url_rule('/js/support', view_func=JsonSupportInfoView.as_view('js_support_info_view'))

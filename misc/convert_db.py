@@ -9,6 +9,7 @@ import sys
 #import argparse
 import time
 import json
+import signal
 import logging
 #import ssl
 from sqlalchemy import create_engine
@@ -50,6 +51,9 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 class ConvertDb(object):
 
+    LIMIT_ROWS = 10000
+
+
     def __init__(self):
         self.src_session = self._dbConnect(SRC_ENGINE)
         self.dst_session = self._dbConnect(DST_ENGINE)
@@ -60,9 +64,15 @@ class ConvertDb(object):
         return Session()
 
 
+    def sigint_handler_main(self, signum, frame):
+        logger.warning('Ignoring INT signal')
+
+
     def main(self):
-        logger.warning('Migrating in 5 seconds...')
-        time.sleep(5.0)
+        logger.warning('Migrating in 10 seconds...')
+        time.sleep(10.0)
+
+        signal.signal(signal.SIGINT, self.sigint_handler_main)
 
         self.migrate_table(src_IndiAllSkyDbCameraTable, dst_IndiAllSkyDbCameraTable)
         self.migrate_table(src_IndiAllSkyDbUserTable, dst_IndiAllSkyDbUserTable)
@@ -94,35 +104,47 @@ class ConvertDb(object):
         #logger.warning('Column list: %s', ','.join(column_list))
 
 
-        src_query = self.src_session.query(src_class)
-
-        dst_entries = list()
-        for row in src_query:
-            dst_entry = dict()
-
-            for col_name in column_list:
-                if col_name == 'data':
-                    # columns named data are all json mapped
-                    json_data = json.dumps(getattr(row, col_name))
-                    dst_entry[col_name] = json_data
-                else:
-                    col = getattr(row, col_name)
-                    dst_entry[col_name] = col
-
-            dst_entries.append(dst_entry)
-
-
-
         start_time = time.time()
 
-        logger.warning('Importing %d rows', len(dst_entries))
+        offset = 0
+        while True:
+            src_query = self.src_session.query(src_class)\
+                .order_by(src_class.id)\
+                .limit(self.LIMIT_ROWS)\
+                .offset(offset)
 
-        try:
-            self.dst_session.bulk_insert_mappings(dst_class, dst_entries)
-            self.dst_session.commit()
-        except IntegrityError as e:
-            logger.error('Integrity error: %s', str(e))
-            sys.exit(1)
+
+            offset += self.LIMIT_ROWS
+
+
+            dst_entries = list()
+            for row in src_query:
+                dst_entry = dict()
+
+                for col_name in column_list:
+                    if col_name == 'data':
+                        # columns named data are all json mapped
+                        json_data = json.dumps(getattr(row, col_name))
+                        dst_entry[col_name] = json_data
+                    else:
+                        col = getattr(row, col_name)
+                        dst_entry[col_name] = col
+
+                dst_entries.append(dst_entry)
+
+
+            if len(dst_entries) == 0:
+                break
+
+
+            logger.warning('  Importing %d rows (offset %d)', len(dst_entries), offset)
+
+            try:
+                self.dst_session.bulk_insert_mappings(dst_class, dst_entries)
+                self.dst_session.commit()
+            except IntegrityError as e:
+                logger.error('Integrity error: %s', str(e))
+                sys.exit(1)
 
 
         elapsed = time.time() - start_time

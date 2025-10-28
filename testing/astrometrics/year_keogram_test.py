@@ -22,6 +22,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy.sql import func
+from sqlalchemy.orm.exc import NoResultFound
 #from sqlalchemy import cast
 #from sqlalchemy.orm import relationship
 #from sqlalchemy import Index
@@ -90,9 +91,20 @@ class YearKeogramTest(object):
         start_time = now.timestamp()
 
 
-        rows = self.generate_lightgraph_year()
-        logger.info('Rows: %d', len(rows))
-        self.build_db(rows)
+        try:
+            # if a row is returned, data is already populated
+            self.session.query(
+                LongTermKeogramTable,
+            )\
+                .limit(1)\
+                .one()
+
+            logger.warning('Database is pre-populated, using existing data')
+        except NoResultFound:
+            logger.warning('Populating database')
+            rows = self.generate_lightgraph_year()
+            logger.info('Rows: %d', len(rows))
+            self.build_db(rows)
 
 
         query_start_date = datetime.strptime(now.strftime('%Y0101_120000'), '%Y%m%d_%H%M%S')
@@ -154,7 +166,8 @@ class YearKeogramTest(object):
             .filter(LongTermKeogramTable.ts < query_end_ts)\
             .group_by(ltk_interval)
 
-        ### order is not necessary
+
+        ### order is probably not necessary
         #    .order_by(ltk_interval.asc())
 
         #    .join(CameraTable)\
@@ -174,7 +187,7 @@ class YearKeogramTest(object):
 
         i = 0
         while i % query_limit == 0:
-            q_offset = q.offset(i).limit(query_limit)
+            q_offset = q.limit(query_limit).offset(i)
 
             for row in q_offset:
 
@@ -248,8 +261,8 @@ class YearKeogramTest(object):
 
 
     def _getDbConn(self):
-        engine = create_engine('sqlite://', echo=False)  # In memory db
-        #engine = create_engine('sqlite:///{0:s}'.format(str(Path(__file__).parent.joinpath('year.sqlite'))), echo=False)
+        #engine = create_engine('sqlite://', echo=False)  # In memory db
+        engine = create_engine('sqlite:///{0:s}'.format(str(Path(__file__).parent.joinpath('year.sqlite'))), echo=False)
         Base.metadata.create_all(bind=engine)
         Session = sessionmaker(bind=engine)
 

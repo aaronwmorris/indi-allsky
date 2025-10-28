@@ -139,7 +139,8 @@ class LongTermKeogramGenerator(object):
             .filter(IndiAllSkyDbLongTermKeogramTable.ts < query_end_ts)\
             .group_by(ltk_interval)
 
-        ### order is unnecessary
+
+        ### order is proably unnecessary
         #    .order_by(ltk_interval.asc())
 
 
@@ -156,7 +157,7 @@ class LongTermKeogramGenerator(object):
 
         i = 0
         while i % query_limit == 0:
-            q_offset = q.offset(i).limit(query_limit)
+            q_offset = q.limit(query_limit).offset(i)
 
             for row in q_offset:
                 second_offset = row.interval - query_start_offset

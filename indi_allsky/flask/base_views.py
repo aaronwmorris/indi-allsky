@@ -1154,6 +1154,7 @@ class FakeCamera(object):
     nightSunAlt = -6.0
     alt = 0.0
     az = 0.0
+    driver = ''
     owner = ''
     location = ''
     lensName = ''

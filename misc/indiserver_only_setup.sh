@@ -894,8 +894,8 @@ fi
 
 
 # for GPS and serial port access
-echo "**** Ensure user is a member of the dialout, video groups ****"
-for GRP in dialout video; do
+echo "**** Ensure user is a member of special groups ****"
+for GRP in dialout video adm; do
     if getent group "$GRP" >/dev/null 2>&1; then
         sudo usermod -a -G "$GRP" "$USER"
     fi

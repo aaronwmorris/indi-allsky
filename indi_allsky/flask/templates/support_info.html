@@ -22,11 +22,11 @@ var camera_id = {{ camera_id }};
         <span class="badge pill bg-primary copy-clipboard" style="cursor: pointer;" data-clipboard-target="#support_info">Copy Support Info to Clipboard</span>
     </div>
     <div class="col-sm-2">
-        <span id="dl_support" class="badge pill bg-info text-dark" style="cursor: pointer;">Download</span>
+        <span id="dl_support" class="badge pill bg-info text-dark" style="cursor: pointer;">Support Info<br>Download</span>
     </div>
     <div class="col-sm-2">
         <a href="https://github.com/aaronwmorris/indi-allsky/issues" class="text-decoration-none link-info" target="_blank">
-            <span class="badge pill bg-danger">indi-allsky GitHub Issues</span>
+            <span class="badge pill bg-danger">indi-allsky<br>GitHub Issues</span>
         </a>
     </div>
     <div class="col-sm-1">
@@ -43,6 +43,20 @@ var camera_id = {{ camera_id }};
       </div>
     </div>
 </div>
+
+<hr>
+
+<div class="row">
+    <div class="col-sm-6">
+    </div>
+    <div class="col-sm-1">
+        <a href="{{ url_for('indi_allsky.log_syslog_download_view') }}"><span class="badge pill bg-primary">OS System Log<br>Download</span></a>
+    </div>
+    <div class="col-sm-1">
+        <a href="{{ url_for('indi_allsky.log_kern_download_view') }}"><span class="badge pill bg-warning text-dark">Kernel Log<br>Download</span></a>
+    </div>
+</div>
+
 
 <hr>
 Support info can be pasted directly into an issue
