@@ -164,8 +164,11 @@ class YearKeogramTest(object):
         )\
             .filter(LongTermKeogramTable.ts >= query_start_ts)\
             .filter(LongTermKeogramTable.ts < query_end_ts)\
-            .group_by(ltk_interval)\
-            .order_by(ltk_interval.asc())
+            .group_by(ltk_interval)
+
+
+        ### order is probably not necessary
+        #    .order_by(ltk_interval.asc())
 
         #    .join(CameraTable)\
         #    .filter(CameraTable.id == 1)\
