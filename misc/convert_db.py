@@ -9,6 +9,7 @@ import sys
 #import argparse
 import time
 import json
+import signal
 import logging
 #import ssl
 from sqlalchemy import create_engine
@@ -60,9 +61,15 @@ class ConvertDb(object):
         return Session()
 
 
+    def sigint_handler_main(self, signum, frame):
+        logger.warning('Ignoring INT signal')
+
+
     def main(self):
-        logger.warning('Migrating in 5 seconds...')
-        time.sleep(5.0)
+        logger.warning('Migrating in 10 seconds...')
+        time.sleep(10.0)
+
+        signal.signal(signal.SIGINT, self.sigint_handler_main)
 
         self.migrate_table(src_IndiAllSkyDbCameraTable, dst_IndiAllSkyDbCameraTable)
         self.migrate_table(src_IndiAllSkyDbUserTable, dst_IndiAllSkyDbUserTable)
