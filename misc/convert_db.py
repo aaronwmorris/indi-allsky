@@ -28,9 +28,10 @@ logger.setLevel(logging.INFO)
 #logging.getLogger('sqlalchemy').setLevel(logging.INFO)
 
 
+### Most conversions would be sqlite -> mysql
+### If you want to convert from mysql -> sqlite, a small code change is need below (commented out)
 SRC_URL = 'sqlite:////var/lib/indi-allsky/indi-allsky.sqlite'
-
-DST_URL = 'mysql+mysqlconnector://indi_allsky_own:password@localhost:3306/indi_allsky?charset=utf8mb4&collation=utf8mb4_unicode_ci'
+DST_URL = 'mysql+mysqlconnector://username:password@localhost:3306/indi_allsky?charset=utf8mb4&collation=utf8mb4_unicode_ci'
 
 
 
@@ -121,8 +122,16 @@ class ConvertDb(object):
                 for col_name in column_list:
                     if col_name == 'data':
                         # columns named data are all json mapped
+
+                        ### sqlite to mysql
                         json_data = json.dumps(getattr(row, col_name))
                         dst_entry[col_name] = json_data
+
+                        ### mysql to sqlite
+                        #data = getattr(row, col_name)
+                        #if isinstance(data, type(None)):
+                        #    json_data = json.loads(data)
+                        #    dst_entry[col_name] = json_data
                     else:
                         col = getattr(row, col_name)
                         dst_entry[col_name] = col
