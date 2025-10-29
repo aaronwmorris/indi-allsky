@@ -114,9 +114,6 @@ class ConvertDb(object):
                 .offset(offset)
 
 
-            offset += self.LIMIT_ROWS
-
-
             dst_entries = list()
             for row in src_query:
                 dst_entry = dict()
@@ -145,6 +142,9 @@ class ConvertDb(object):
             except IntegrityError as e:
                 logger.error('Integrity error: %s', str(e))
                 sys.exit(1)
+
+
+            offset += self.LIMIT_ROWS
 
 
         elapsed = time.time() - start_time
