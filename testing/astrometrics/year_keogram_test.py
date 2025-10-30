@@ -23,7 +23,7 @@ from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy.sql import func
 from sqlalchemy.orm.exc import NoResultFound
-#from sqlalchemy import cast
+from sqlalchemy import cast
 #from sqlalchemy.orm import relationship
 #from sqlalchemy import Index
 #from sqlalchemy import ForeignKey
@@ -124,7 +124,7 @@ class YearKeogramTest(object):
         logger.info('Query start offset: %d', query_start_offset)
 
 
-        ltk_interval = func.floor(LongTermKeogramTable.ts / self.alignment_seconds).label('interval')
+        ltk_interval = cast(LongTermKeogramTable.ts / self.alignment_seconds, Integer).label('interval')  # cast is slightly faster than func.floor
 
         ### database math appears to be slower than performing in python
         #ltk_second_offset = (ltk_interval - query_start_offset).label('second_offset')
