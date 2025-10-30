@@ -960,7 +960,7 @@ class RollingAduView(TemplateView):
             # fixme
         else:
             # assume sqlite
-            createDate_s = func.strftime('%s', IndiAllSkyDbImageTable.createDate)  # sqlite
+            createDate_s = cast(func.strftime('%s', IndiAllSkyDbImageTable.createDate), Integer)  # sqlite
 
             # this should give us average exposure, adu in 15 minute sets, during the night
             rolling_adu_q = IndiAllSkyDbImageTable.query\
@@ -984,8 +984,8 @@ class RollingAduView(TemplateView):
                         )
                     )
                 )\
-                .group_by(cast(createDate_s, Integer) / 900)\
-                .order_by(IndiAllSkyDbImageTable.createDate.desc())
+                .group_by(cast(createDate_s / 900, Integer))\
+                .order_by(IndiAllSkyDbImageTable.createDate.desc())  # cast is slightly faster than floor
 
 
         context['rolling_adu_q'] = rolling_adu_q

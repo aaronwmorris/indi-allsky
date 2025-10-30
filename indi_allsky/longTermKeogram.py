@@ -6,6 +6,8 @@ import logging
 import numpy
 
 from sqlalchemy import func
+from sqlalchemy import cast
+from sqlalchemy.types import Integer
 
 from .flask import db
 from .flask import create_app
@@ -113,7 +115,7 @@ class LongTermKeogramGenerator(object):
 
 
 
-        ltk_interval = func.floor(IndiAllSkyDbLongTermKeogramTable.ts / self.alignment_seconds).label('interval')
+        ltk_interval = cast(IndiAllSkyDbLongTermKeogramTable.ts / self.alignment_seconds, Integer).label('interval')  # cast is slightly faster than func.floor
 
         q = db.session.query(
             ltk_interval,
