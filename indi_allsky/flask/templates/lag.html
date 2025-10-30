@@ -24,7 +24,6 @@ var camera_id = {{ camera_id }};
     <table id="lag-table" class="table table-striped compact">
       <thead>
         <tr>
-          <th>ID</th>
           <th>Date</th>
           <th>Exposure</th>
           <th>Elapsed</th>
@@ -36,7 +35,6 @@ var camera_id = {{ camera_id }};
       <tbody>
         {% for row in image_lag_q %}
         <tr>
-          <td>{{ row.id }}</td>
           <td>{{ row.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
           <td>{{ "%0.7f"|format(row.exposure) }}</td>
           <td>{{ "%0.2f"|format(row.exp_elapsed | float) }}</td>
@@ -54,6 +52,7 @@ var camera_id = {{ camera_id }};
 function init() {
     new DataTable('#lag-table', {
         searching: true,
+        order: [[0, 'desc']],
         lengthMenu: [20, 50, 100, -1],
         layout: {
             topEnd: ['buttons', 'search'],

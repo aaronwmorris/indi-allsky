@@ -110,6 +110,7 @@ var camera_id = {{ camera_id }};
 function init() {
     new DataTable('#darks-table', {
         searching: true,
+        order: [[1, 'desc']],
         layout: {
             topEnd: ['buttons', 'search'],
         },
@@ -122,6 +123,7 @@ function init() {
 
     new DataTable('#bpm-table', {
         searching: true,
+        order: [[1, 'desc']],
         layout: {
             topEnd: ['buttons', 'search'],
         },

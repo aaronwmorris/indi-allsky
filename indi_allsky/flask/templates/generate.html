@@ -235,6 +235,7 @@ $( document ).ready(function() {
 
     new DataTable('#tasks-table', {
         searching: true,
+        order: [[1, 'desc']],
         layout: {
             topEnd: ['buttons', 'search'],
         },

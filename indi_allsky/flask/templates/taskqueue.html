@@ -46,6 +46,7 @@ var camera_id = {{ camera_id }};
 function init() {
     new DataTable('#tasks-table', {
         searching: true,
+        order: [[1, 'desc']],
         lengthMenu: [20, 50, 100, -1],
         layout: {
             topEnd: ['buttons', 'search'],
