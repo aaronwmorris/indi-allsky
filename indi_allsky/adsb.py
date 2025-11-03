@@ -251,7 +251,8 @@ class AdsbAircraftHttpWorker(Thread):
                 aircraft_az,
             )
 
-            aircraft_list.append({
+
+            aircraft_data = {
                 'id'        : aircraft_id,
                 'flight'    : aircraft_flight,
                 'squawk'    : aircraft_squawk,
@@ -259,12 +260,30 @@ class AdsbAircraftHttpWorker(Thread):
                 'latitude'  : aircraft_lat,
                 'longitude' : aircraft_lon,
                 'elevation' : aircraft_elevation_km,
-                'altitude'  : aircraft_elevation_km,  # alias
+                'elevation_m'  : aircraft_elevation_m,
+                'elevation_ft' : self.m2ft(aircraft_elevation_m),
+                'elevation_mi' : self.km2mi(aircraft_elevation_km),
                 'distance'  : aircraft_distance_km,
+                'distance_m'  : aircraft_distance_m,
+                'distance_ft' : self.m2ft(aircraft_distance_m),
+                'distance_mi' : self.km2mi(aircraft_distance_km),
                 'range'     : aircraft_range_km,
+                'range_m'   : aircraft_range_km * 1000,
+                'range_ft'  : self.m2ft(aircraft_range_km * 1000),
+                'range_mi'  : self.km2mi(aircraft_range_km),
                 'alt'       : aircraft_alt,
                 'az'        : aircraft_az,
-            })
+            }
+
+
+            # aliases
+            aircraft_data['altitude'] = aircraft_data['elevation']
+            aircraft_data['altitude_m'] = aircraft_data['elevation_m']
+            aircraft_data['altitude_ft'] = aircraft_data['elevation_ft']
+            aircraft_data['altitude_mi'] = aircraft_data['elevation_mi']
+
+
+            aircraft_list.append(aircraft_data)
 
 
         # sort by most visible aircraft
@@ -272,6 +291,16 @@ class AdsbAircraftHttpWorker(Thread):
 
 
         return sorted_aircraft_list
+
+
+    def m2ft(self, m):
+        # meters to feet
+        return m * 3.28084
+
+
+    def km2mi(self, km):
+        # kilometers to miles
+        return km * 0.6213711922
 
 
     def haversine(self, lon1, lat1, lon2, lat2):
