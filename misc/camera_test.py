@@ -194,7 +194,7 @@ class CameraTest(object):
 
 
     def shoot(self, exposure, gain, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure (gain %0.2f)', exposure, gain)
+        logger.info('Taking %0.8fs exposure (gain %0.2f)', exposure, gain)
 
         self.indiclient.setCcdExposure(exposure, gain, sync=sync, timeout=timeout)
 

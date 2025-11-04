@@ -206,6 +206,7 @@ class MqttRemoteLibcamera(object):
 
     def setCcdExposure(self, **kwargs):
         exposure = kwargs['exposure']
+        gain = kwargs['gain']
         remote_cmd = kwargs['cmd']
         files = kwargs['files']
 
@@ -245,7 +246,7 @@ class MqttRemoteLibcamera(object):
 
 
         self.exposure_start_time = time.time()
-        logger.warning('Starting %0.6fs exposure', exposure)
+        logger.warning('Taking %0.8fs exposure (gain %0.2f)', exposure, gain)
 
         self.libcamera_process = subprocess.Popen(
             cmd,
@@ -304,6 +305,10 @@ class MqttRemoteLibcamera(object):
 
             if exposure_delta < -1:
                 logger.error('%0.4fs EXPOSURE RECEIVED IN %0.4fs.  POSSIBLE CAMERA PROBLEM.', self._exposure, exposure_elapsed_s)
+
+
+            image_size = self.current_exposure_file_p.stat().st_size
+            logger.info('Image file: %0.1f MB', image_size / 1024 / 1024)
 
 
             metadata_user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)

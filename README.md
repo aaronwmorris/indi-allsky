@@ -115,13 +115,14 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
         * IMX335
         * IMX462
         * IMX327
-        * 64mp HawkEye (IMX682)
-        * 64mp OwlSight (OV64A40)
+        * 64MP HawkEye (IMX682)
+        * 64MP OwlSight (OV64A40)
         * other libcamera supported modules
     * Raspberry Pi Camera modules remotely controlled via MQTT
         * HQ Camera (IMX477)
         * IMX378
         * Camera Module v3 (IMX708)
+        * 64MP OwlSight (OV64A40)
         * Additional cameras upon request
     * DSLRs
     * Generic web cameras

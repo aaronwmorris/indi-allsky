@@ -429,7 +429,7 @@ if [ -n "${WHIPTAIL_BIN:-}" ]; then
                         "libcamera_imx290" "IMX290" "OFF" \
                         "libcamera_imx298" "IMX298" "OFF" \
                         "libcamera_64mp_hawkeye" "64MP Hawkeye (IMX682)" "OFF" \
-                        "libcamera_64mp_owlsight" "64MP Owlsight (OV64A40)" "OFF" \
+                        "libcamera_64mp_owlsight" "64MP OwlSight (OV64A40)" "OFF" \
                         "restart" "Restart camera selection" "OFF" \
                     3>&1 1>&2 2>&3)
             done
@@ -454,6 +454,7 @@ if [ -n "${WHIPTAIL_BIN:-}" ]; then
                         "mqtt_imx477" "IMX477 - Raspberry Pi HQ Camera" "OFF" \
                         "mqtt_imx378" "IMX378" "OFF" \
                         "mqtt_imx708" "IMX708 - Camera Module 3" "OFF" \
+                        "mqtt_64mp_owlsight" "64MP OwlSight (OV64A40)" "OFF" \
                         "restart" "Restart camera selection" "OFF" \
                     3>&1 1>&2 2>&3)
             done
@@ -514,7 +515,7 @@ else
             # more specific mqtt libcamera selection
             echo
             PS3="Select a mqtt libcamera interface: "
-            select mqtt_libcamera_interface in mqtt_imx477 mqtt_imx378 mqtt_imx708; do
+            select mqtt_libcamera_interface in mqtt_imx477 mqtt_imx378 mqtt_imx708 mqtt_64mp_owlsight; do
 
                 if [ -n "$mqtt_libcamera_interface" ]; then
                     # overwrite variable

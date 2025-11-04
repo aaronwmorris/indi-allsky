@@ -278,6 +278,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
             'action'   : 'setCcdExposure',
             'kwargs'   : {
                 'exposure'  : exposure,
+                'gain'      : gain,
                 'cmd'       : cmd,
                 'files'     : {
                     'image' : image_tmp_p.name,  # file name is needed for the suffix
@@ -500,5 +501,32 @@ class IndiClientLibCameraImx708Mqtt(IndiClientLibCameraMqttGeneric):
             1 : '',
             2 : '--mode 2304:1296:10',
             4 : '--mode 1536:864:10',  # cropped
+        }
+
+
+class IndiClientLibCameraOv64a40OwlSightMqtt(IndiClientLibCameraMqttGeneric):
+
+    def __init__(self, *args, **kwargs):
+        super(IndiClientLibCameraOv64a40OwlSightMqtt, self).__init__(*args, **kwargs)
+
+        self.ccd_device_name = '64MP OwlSight MQTT'
+
+        self.camera_info = {
+            'width'         : 9152,
+            'height'        : 6944,
+            'pixel'         : 1.008,
+            'min_gain'      : 1.0,
+            'max_gain'      : 16.0,
+            'min_exposure'  : 0.000580,
+            'max_exposure'  : 910.0,
+            'cfa'           : 'RGGB',
+            'bit_depth'     : 16,
+        }
+
+        self._binmode_options = {
+            1 : '',
+            #1 : '--mode 9152:6944:10',
+            2 : '--mode 4624:3472:10',  # bin modes do not work well, exposure is not linear
+            4 : '--mode 2312:1736:10',
         }
 

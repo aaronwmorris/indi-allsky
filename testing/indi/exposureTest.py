@@ -625,7 +625,7 @@ class IndiExposureTest(object):
 
 
     def shoot(self, ccdDevice, exposure, sync=True, timeout=None):
-        logger.info('Taking %0.8f s exposure (gain %d)', exposure, self.current_gain)
+        logger.info('Taking %0.8fs exposure (gain %d)', exposure, self.current_gain)
         ctl = self.indiclient.setCcdExposure(ccdDevice, exposure, sync=sync, timeout=timeout)
 
         return ctl
