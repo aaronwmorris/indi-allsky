@@ -3175,6 +3175,7 @@ class IndiAllskyConfigForm(FlaskForm):
             ('mqtt_imx477', 'MQTT IMX477 - Raspberry Pi HQ Camera'),
             ('mqtt_imx378', 'MQTT IMX378'),
             ('mqtt_imx708', 'MQTT IMX708 - Camera Module 3'),
+            ('mqtt_64mp_owlsight', 'MQTT 64MP OwlSight'),
         ),
         'Test Cameras' : (
             ('test_rotating_stars', 'Test Camera - Rotating Stars'),
