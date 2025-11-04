@@ -278,6 +278,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
             'action'   : 'setCcdExposure',
             'kwargs'   : {
                 'exposure'  : exposure,
+                'gain'      : gain,
                 'cmd'       : cmd,
                 'files'     : {
                     'image' : image_tmp_p.name,  # file name is needed for the suffix
