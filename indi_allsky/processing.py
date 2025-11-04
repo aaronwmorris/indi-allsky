@@ -366,6 +366,9 @@ class ImageProcessor(object):
         self.image = None
 
 
+        image_size = filename_p.stat().st_size
+
+
         # update keogram store path
         if isinstance(self._keogram_store_p, type(None)):
             self._keogram_store_p = self.varlib_folder_p.joinpath(self._keogram_store_tmpl.format(camera.id))
@@ -627,7 +630,15 @@ class ImageProcessor(object):
         #logger.info('Final HDU Header = %s', pformat(hdulist[0].header))
 
 
-        logger.info('Image data - bits: %d, cfa: %s, offsets: X %d, Y %d, row order: %s', image_bitpix, str(image_bayerpat), image_xbayroff, image_ybayroff, image_roworder)
+        logger.info(
+            'Image data - size: %0.1f MB, bits: %d, cfa: %s, offsets: X %d, Y %d, row order: %s',
+            image_size / 1024 / 1024,
+            image_bitpix,
+            str(image_bayerpat),
+            image_xbayroff,
+            image_ybayroff,
+            image_roworder,
+        )
 
 
         dayDate = self._dateCalcs.calcDayDate(exp_date)

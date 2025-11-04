@@ -307,6 +307,10 @@ class MqttRemoteLibcamera(object):
                 logger.error('%0.4fs EXPOSURE RECEIVED IN %0.4fs.  POSSIBLE CAMERA PROBLEM.', self._exposure, exposure_elapsed_s)
 
 
+            image_size = self.current_exposure_file_p.stat().st_size
+            logger.info('Image file: %0.1f MB', image_size / 1024 / 1024)
+
+
             metadata_user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
             metadata_user_properties.UserProperty = [
                 ("Content-Type", "application/json"),
