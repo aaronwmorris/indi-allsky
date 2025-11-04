@@ -4,15 +4,9 @@
 
 {% block head %}
 <style>
-table, th, td {
-  border: 1px solid black;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 5px;
-}
 </style>
+<link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
@@ -21,32 +15,69 @@ var camera_id = {{ camera_id }};
 
 {% block content %}
 <div class="container">
-<table>
-<tr>
-  <th>ID</th>
-  <th>Create</th>
-  <th>User</th>
-  <th>Level</th>
-  <th>Encrypted<br>Passwords</th>
-  <th>Link</th>
-  <th>Note</th>
+
+<div class="row" style="display:block;">
+  <div class="col-sm-12">
+<table id="config-table" class="table table-striped compact">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Create</th>
+      <th>User</th>
+      <th>Level</th>
+      <th>Encrypted<br>Passwords</th>
+      <th>Link</th>
+      <th>Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for config in config_list %}
+    <tr>
+      <td>{{ config.id}}</td>
+      <td>{{ config.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+      <td>{{ config.username }}</td>
+      <td>{{ config.level }}</td>
+      <td>{{ config.encrypted }}</td>
+      <td><a href="{{ url_for('indi_allsky.config_download_view', id=config.id) }}" class="text-decoration-none link-info"><span class="badge bg-primary">Download</span></a></td>
+      <td>{{ config.note }}</td>
+    </tr>
+    {% endfor %}
+      </tbody>
+    </table>
+      <hr>
+        <div><a href="{{ url_for('indi_allsky.config_restore_view') }}"><span class="badge bg-danger text-dark">Config Restore</span></a></div>
+      <hr>
+    </div>
+    <div style="height:20px;"></div>
+    <div style="font-size:12px;">Note: Configs from deleted users will not be displayed, but they are still in the database</div>
+  </div>
+
 </div>
-{% for config in config_list %}
-<tr>
-  <td>{{ config.id}}</td>
-  <td>{{ config.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-  <td>{{ config.username }}</td>
-  <td>{{ config.level }}</td>
-  <td>{{ config.encrypted }}</td>
-  <td><a href="{{ url_for('indi_allsky.config_download_view', id=config.id) }}" class="text-decoration-none link-info"><span class="badge bg-primary">Download</span></a></td>
-  <td>{{ config.note }}</td>
-</tr>
-{% endfor %}
-</table>
-  <hr>
-    <div><a href="{{ url_for('indi_allsky.config_restore_view') }}"><span class="badge bg-danger text-dark">Config Restore</span></a></div>
-  <hr>
 </div>
-<div style="height:20px;"></div>
-<div style="font-size:12px;">Note: Configs from deleted users will not be displayed, but they are still in the database</div>
+
+<script>
+function init() {
+    new DataTable('#config-table', {
+        searching: true,
+        order: [[1, 'desc']],
+        lengthMenu: [20, 50, 100, -1],
+        layout: {
+            topEnd: ['buttons', 'search'],
+        },
+        buttons: [
+            'copy',
+            'csv',
+            'excel',
+        ]
+    });
+}
+
+
+$( document ).ready(function() {
+    init();
+});
+
+</script>
+
 {% endblock %}
+
