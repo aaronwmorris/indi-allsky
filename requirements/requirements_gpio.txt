@@ -3,6 +3,7 @@ gpiod
 gpiozero
 pyserial
 adafruit-circuitpython-dht
+adafruit-circuitpython-bmp280
 adafruit-circuitpython-bme280
 adafruit-circuitpython-bme680
 circuitpython-bmp180
