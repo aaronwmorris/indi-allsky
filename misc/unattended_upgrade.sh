@@ -802,6 +802,25 @@ if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
 fi
 
 
+echo "**** Setting up upgrade-indi-allsky service ****"
+TMP_UPGRADE=$(mktemp)
+sed \
+ -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ "${ALLSKY_DIRECTORY}/service/upgrade-indi-allsky.service" > "$TMP_UPGRADE"
+
+cp -f "$TMP_UPGRADE" "${HOME}/.config/systemd/user/${UPGRADE_ALLSKY_SERVICE_NAME}.service"
+chmod 644 "${HOME}/.config/systemd/user/${UPGRADE_ALLSKY_SERVICE_NAME}.service"
+[[ -f "$TMP_UPGRADE" ]] && rm -f "$TMP_UPGRADE"
+
+
+systemctl --user daemon-reload
+
+
+# upgrade service is disabled by default
+systemctl --user disable "${UPGRADE_ALLSKY_SERVICE_NAME}.service"
+
+
 echo "**** Flask config ****"
 
 TMP_FLASK=$(mktemp --suffix=.json)
