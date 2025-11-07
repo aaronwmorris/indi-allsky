@@ -230,6 +230,7 @@ if ! git diff --quiet --exit-code >/dev/null 2>&1; then
     echo "Code modifications are active.  Exiting..."
     echo
     echo "You can reset the code using \"git reset --hard\" (WARNING: This will destroy any changes you have made)"
+    echo "  \"git stash\" and \"git stash pop\" can be used to store/restore changes during the upgrade process"
     exit 1
 fi
 
