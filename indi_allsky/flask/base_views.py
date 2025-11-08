@@ -1177,23 +1177,29 @@ class TemplateView(BaseView):
             data['sensor_user_{0:d}'.format(x)] = image_metadata.get('sensor_user_{0:d}'.format(x), 0.0)
 
 
-        # dew heater
-        if data['sensor_user_1']:
-            data['dew_heater_status'] = 'On'
+        # Only populate if there is valid data
+        if self.latest_image_entry:
+            # dew heater
+            if data['sensor_user_1']:
+                data['dew_heater_status'] = 'On'
+            else:
+                data['dew_heater_status'] = 'Off'
+
+            # fan
+            if data['sensor_user_4']:
+                data['fan_status'] = 'On'
+            else:
+                data['fan_status'] = 'Off'
+
+
+            try:
+                data['wind_dir'] = self.cardinal_directions[round(data['sensor_user_6'] / (360 / (len(self.cardinal_directions) - 1)))]
+            except IndexError:
+                data['wind_dir'] = 'Error'
         else:
-            data['dew_heater_status'] = 'Off'
-
-        # fan
-        if data['sensor_user_4']:
-            data['fan_status'] = 'On'
-        else:
-            data['fan_status'] = 'Off'
-
-
-        try:
-            data['wind_dir'] = self.cardinal_directions[round(data['sensor_user_6'] / (360 / (len(self.cardinal_directions) - 1)))]
-        except IndexError:
-            data['wind_dir'] = 'Error'
+            data['dew_heater_status'] = 'No data'
+            data['fan_status'] = 'No data'
+            data['wind_dir'] = 'No data'
 
 
         return data
