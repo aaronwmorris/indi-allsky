@@ -863,6 +863,8 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'stars'           : 0,
         'detections'      : 0,
         'process_elapsed' : 0.0,
+        'uptime'          : 0,
+        'uptime_str'      : '',
         'dew_heater_status' : '',
         'fan_status'        : '',
         'wind_dir'          : '',
