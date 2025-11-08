@@ -1012,6 +1012,9 @@ class BaseView(View):
 
 class TemplateView(BaseView):
 
+    cardinal_directions = ('N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N')
+
+
     def __init__(self, template_name, **kwargs):
         super(TemplateView, self).__init__(**kwargs)
         self.template_name = template_name
@@ -1055,6 +1058,12 @@ class TemplateView(BaseView):
         status_data.update(self.get_astrometric_info())
         status_data.update(self.get_smoke_info())
         status_data.update(self.get_aurora_info())
+        status_data.update(self.get_image_data())
+
+
+        status_data['uptime'] = int(time.time() - psutil.boot_time())
+        status_data['uptime_str'] = self.getUptime()
+
 
         #app.logger.info('Status data: %s', status_data)
 
@@ -1128,6 +1137,85 @@ class TemplateView(BaseView):
             return '<a href="{0:s}" style="text-decoration: none">Login</a>'.format(url_for('auth_indi_allsky.login_view'))
 
         return '<a href="{0:s}" style="text-decoration: none">{1:s}</a>'.format(url_for('indi_allsky.user_view'), current_user.username)
+
+
+    def get_image_data(self):
+        if self.latest_image_entry:
+            data = {
+                'exposure'        : self.latest_image_entry.exposure,
+                'exp_elapsed'     : self.latest_image_entry.exp_elapsed,
+                'gain'            : self.latest_image_entry.gain,
+                'binmode'         : self.latest_image_entry.binmode,
+                'temp'            : self.latest_image_entry.temp,
+                'adu'             : self.latest_image_entry.adu,
+                'sqm'             : self.latest_image_entry.sqm,
+                'stars'           : self.latest_image_entry.stars,
+                'detections'      : self.latest_image_entry.detections,
+                'process_elapsed' : self.latest_image_entry.process_elapsed,
+            }
+
+            image_metadata = self.latest_image_entry.data
+        else:
+            data = {
+                'exposure'        : 0.0,
+                'exp_elapsed'     : 0.0,
+                'gain'            : 0.0,
+                'binmode'         : 1,
+                'temp'            : 0.0,
+                'adu'             : 0.0,
+                'sqm'             : 0.0,
+                'stars'           : 0,
+                'detections'      : 0,
+                'process_elapsed' : 0.0,
+            }
+
+            image_metadata = dict()  # no metadata
+
+
+        for x in range(60):
+            data['sensor_temp_{0:d}'.format(x)] = image_metadata.get('sensor_temp_{0:d}'.format(x), 0.0)
+            data['sensor_user_{0:d}'.format(x)] = image_metadata.get('sensor_user_{0:d}'.format(x), 0.0)
+
+
+        # dew heater
+        if data['sensor_user_1']:
+            data['dew_heater_status'] = 'On'
+        else:
+            data['dew_heater_status'] = 'Off'
+
+        # fan
+        if data['sensor_user_4']:
+            data['fan_status'] = 'On'
+        else:
+            data['fan_status'] = 'Off'
+
+
+        try:
+            data['wind_dir'] = self.cardinal_directions[round(data['sensor_user_6'] / (360 / (len(self.cardinal_directions) - 1)))]
+        except IndexError:
+            data['wind_dir'] = 'Error'
+
+
+        return data
+
+
+    def getUptime(self):
+        uptime_s = time.time() - psutil.boot_time()
+
+        days = int(uptime_s / 86400)
+        uptime_s -= (days * 86400)
+
+        hours = int(uptime_s / 3600)
+        uptime_s -= (hours * 3600)
+
+        minutes = int(uptime_s / 60)
+        uptime_s -= (minutes * 60)
+
+        #seconds = int(uptime_s)
+
+        uptime_str = '{0:d} days, {1:d}:{2:d}'.format(days, hours, minutes)
+
+        return uptime_str
 
 
 class FormView(TemplateView):
