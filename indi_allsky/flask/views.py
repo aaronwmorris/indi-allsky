@@ -9060,13 +9060,14 @@ class AjaxNetworkManagerView(BaseView):
             ap_path = str(request.json['AP_PATH'])
             psk = str(request.json['PSK'])
             priority = int(request.json['PRIORITY'])
+            retries = int(request.json['RETRIES'])
 
             if not ap_path:
                 return jsonify({
                     'failure-message' : 'No AP selected',
                 }), 400
 
-            return self.connectAP(interface, ap_path, psk, priority)
+            return self.connectAP(interface, ap_path, psk, priority, retries)
 
         elif command == 'createhotspot':
             interface = str(request.json['INTERFACE'])
@@ -9646,7 +9647,7 @@ class AjaxNetworkManagerView(BaseView):
         })
 
 
-    def connectAP(self, interface_name, ap_path, psk, priority):
+    def connectAP(self, interface_name, ap_path, psk, priority, retries):
         bus = dbus.SystemBus()
 
         manager_bus_object = bus.get_object(
@@ -9666,7 +9667,7 @@ class AjaxNetworkManagerView(BaseView):
                 'type' : '802-11-wireless',
                 'autoconnect' : True,
                 'autoconnect-priority' : priority,
-                'autoconnect-retries' : 3,
+                'autoconnect-retries' : retries,
             },
             '802-11-wireless': {
                 'security': '802-11-wireless-security',
@@ -9978,26 +9979,26 @@ class AjaxDriveManagerView(BaseView):
                 drive_TimeMediaDetected = ''
 
 
-            drive_dict = {
-                'Id' : drive_id,
-                'Vendor' : str(settings_dict['Vendor']),
-                'Model' : str(settings_dict['Model']),
-                'Size' : '{0:0.1f} GB'.format(float(settings_dict['Size']) / 1024 / 1024 / 1024),
-                'ConnectionBus' : str(settings_dict['ConnectionBus']),
-                'Serial' : str(settings_dict['Serial']),
-                'Media' : str(settings_dict['Media']),
-                'MediaCompatibility' : ', '.join(str(x) for x in settings_dict['MediaCompatibility']),
-                'CanPowerOff' : bool(settings_dict['CanPowerOff']),
-                'Removable' : bool(settings_dict['Removable']),
-                'Ejectable' : bool(settings_dict['Ejectable']),
-                'TimeDetected' : drive_TimeDetected,
-                'TimeMediaDetected' : drive_TimeMediaDetected,
-            }
+            drive_data = [
+                [0, 'Id', drive_id],
+                [1, 'Vendor', str(settings_dict['Vendor'])],
+                [2, 'Model', str(settings_dict['Model'])],
+                [3, 'Size', '{0:0.1f} GB'.format(float(settings_dict['Size']) / 1024 / 1024 / 1024)],
+                [4, 'ConnectionBus', str(settings_dict['ConnectionBus'])],
+                [5, 'Serial', str(settings_dict['Serial'])],
+                [6, 'Media', str(settings_dict['Media'])],
+                [7, 'MediaCompatibility', ', '.join(str(x) for x in settings_dict['MediaCompatibility'])],
+                [8, 'CanPowerOff', bool(settings_dict['CanPowerOff'])],
+                [9, 'Removable', bool(settings_dict['Removable'])],
+                [10, 'Ejectable', bool(settings_dict['Ejectable'])],
+                [11, 'TimeDetected', drive_TimeDetected],
+                [12, 'TimeMediaDetected', drive_TimeMediaDetected],
+            ]
 
 
             return_data = {
                 'success-message' : '',
-                'drive_data' : drive_dict,
+                'drive_data' : drive_data,
             }
 
             return jsonify(return_data)
