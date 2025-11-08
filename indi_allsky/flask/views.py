@@ -9060,13 +9060,14 @@ class AjaxNetworkManagerView(BaseView):
             ap_path = str(request.json['AP_PATH'])
             psk = str(request.json['PSK'])
             priority = int(request.json['PRIORITY'])
+            retries = int(request.json['RETRIES'])
 
             if not ap_path:
                 return jsonify({
                     'failure-message' : 'No AP selected',
                 }), 400
 
-            return self.connectAP(interface, ap_path, psk, priority)
+            return self.connectAP(interface, ap_path, psk, priority, retries)
 
         elif command == 'createhotspot':
             interface = str(request.json['INTERFACE'])
@@ -9646,7 +9647,7 @@ class AjaxNetworkManagerView(BaseView):
         })
 
 
-    def connectAP(self, interface_name, ap_path, psk, priority):
+    def connectAP(self, interface_name, ap_path, psk, priority, retries):
         bus = dbus.SystemBus()
 
         manager_bus_object = bus.get_object(
@@ -9666,7 +9667,7 @@ class AjaxNetworkManagerView(BaseView):
                 'type' : '802-11-wireless',
                 'autoconnect' : True,
                 'autoconnect-priority' : priority,
-                'autoconnect-retries' : 3,
+                'autoconnect-retries' : retries,
             },
             '802-11-wireless': {
                 'security': '802-11-wireless-security',

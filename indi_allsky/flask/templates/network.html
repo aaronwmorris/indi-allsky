@@ -129,6 +129,19 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_connections.SSID_RETRIES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_connections.SSID_RETRIES(class='form-control bg-secondary') }}
+            <div id="SSID_RETRIES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-2">
+            0 will retry forever (but never failover to a lower priority)
+        </div>
+    </div>
+
 </div><!-- end wificonnect tab -->
 <div class="tab-pane fade" id="nav-hotspot" role="tabpanel" aria-labelledby="nav-hotspot-tab">
 
@@ -680,6 +693,9 @@ $('#scan-button').on('click', function() {
             $('#SSID_PRIORITY').removeAttr('readonly disabled');
             $('#SSID_PRIORITY').removeClass('bg-dark text-secondary');
 
+            $('#SSID_RETRIES').removeAttr('readonly disabled');
+            $('#SSID_RETRIES').removeClass('bg-dark text-secondary');
+
             $('#connect-button').removeAttr('disabled');
             $("#connect-button").attr("class", "btn btn-success");
 
@@ -727,6 +743,7 @@ $('#connect-button').on('click', function() {
         'AP_PATH' : $('#SSID_SELECT').val(),
         'PSK' : $('#SSID_PSK').val(),
         'PRIORITY' : $('#SSID_PRIORITY').val(),
+        'RETRIES' : $('#SSID_RETRIES').val(),
     };
 
 
@@ -841,6 +858,9 @@ function init() {
 
     $('#SSID_PRIORITY').attr({'readonly': true, 'disabled': true});
     $('#SSID_PRIORITY').addClass('bg-dark text-secondary');
+
+    $('#SSID_RETRIES').attr({'readonly': true, 'disabled': true});
+    $('#SSID_RETRIES').addClass('bg-dark text-secondary');
 
     $('#connect-button').attr({'disabled': true});
     $('#connect-button').attr('class', 'btn btn-secondary');
