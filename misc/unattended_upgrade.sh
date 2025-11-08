@@ -230,6 +230,7 @@ if ! git diff --quiet --exit-code >/dev/null 2>&1; then
     echo "Code modifications are active.  Exiting..."
     echo
     echo "You can reset the code using \"git reset --hard\" (WARNING: This will destroy any changes you have made)"
+    echo "  \"git stash\" and \"git stash pop\" can be used to store/restore changes during the upgrade process"
     exit 1
 fi
 
@@ -800,6 +801,25 @@ if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
         fi
     fi
 fi
+
+
+echo "**** Setting up upgrade-indi-allsky service ****"
+TMP_UPGRADE=$(mktemp)
+sed \
+ -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+ -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+ "${ALLSKY_DIRECTORY}/service/upgrade-indi-allsky.service" > "$TMP_UPGRADE"
+
+cp -f "$TMP_UPGRADE" "${HOME}/.config/systemd/user/${UPGRADE_ALLSKY_SERVICE_NAME}.service"
+chmod 644 "${HOME}/.config/systemd/user/${UPGRADE_ALLSKY_SERVICE_NAME}.service"
+[[ -f "$TMP_UPGRADE" ]] && rm -f "$TMP_UPGRADE"
+
+
+systemctl --user daemon-reload
+
+
+# upgrade service is disabled by default
+systemctl --user disable "${UPGRADE_ALLSKY_SERVICE_NAME}.service"
 
 
 echo "**** Flask config ****"
