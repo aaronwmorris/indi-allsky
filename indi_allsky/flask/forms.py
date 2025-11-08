@@ -787,7 +787,6 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         test_data['sensor_temp_{0:d}_c'.format(x)] = 0.0
         test_data['sensor_temp_{0:d}_k'.format(x)] = 0.0
 
-    for x in range(60):
         # other sensors
         test_data['sensor_user_{0:d}'.format(x)] = 0.0
 
@@ -853,7 +852,31 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'az' : 0.0,
         'camera_name' : '',
         'camera_friendly_name' : '',
+
+        'exposure'        : 0.0,
+        'exp_elapsed'     : 0.0,
+        'gain'            : 0.0,
+        'binmode'         : 1,
+        'temp'            : 0.0,
+        'adu'             : 0.0,
+        'sqm'             : 0.0,
+        'stars'           : 0,
+        'detections'      : 0,
+        'process_elapsed' : 0.0,
+        'uptime'          : 0,
+        'uptime_str'      : '',
+        'dew_heater_status' : '',
+        'fan_status'        : '',
+        'wind_dir'          : '',
     }
+
+
+    for x in range(60):
+        # temperature sensors
+        test_data['sensor_temp_{0:d}'.format(x)] = 0.0
+
+        # other sensors
+        test_data['sensor_user_{0:d}'.format(x)] = 0.0
 
 
     try:
