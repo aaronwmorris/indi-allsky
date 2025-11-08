@@ -12,15 +12,6 @@
 	height: 50px;
 }
 
-table, th, td {
-  border: 1px solid black;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 3px;
-}
-
 .inline {
    display: inline;
 }
@@ -29,6 +20,8 @@ th, td {
   display: block;
 }
 </style>
+<link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
@@ -85,8 +78,17 @@ var camera_id = {{ camera_id }};
     <hr>
 
     <div class="row">
+        <div class="col-sm-2"></div>
         <div class="col-sm-5">
-            <div id="drive-info"></div>
+          <table id="drive-info" class="table table-striped compact" data-bs-theme="dark">
+            <thead>
+              <tr>
+                <th>Row</th>
+                <th>Key</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+          </table>
         </div>
     </div>
 
@@ -128,20 +130,29 @@ var camera_id = {{ camera_id }};
 <script type="text/javascript">
 
 function updateDriveInfo(rdata) {
-    var drive_table = $('<table />', {
+    var table_data = [];
+
+    $('#drive-info').DataTable({
+        data: rdata.drive_data,
+        searching: false,
+        paging: false,
+        ordering:  false,
+        layout: {
+            topEnd: ['buttons'],
+        },
+        buttons: [
+            'copy',
+            'csv',
+            'excel',
+        ],
+        columnDefs: [
+        {
+            target: 0,
+            visible: false,
+            searchable: false
+        },
+        ]
     });
-
-    fields_list = ['Vendor', 'Model', 'Serial', 'Size', 'Media', 'MediaCompatibility', 'ConnectionBus', 'CanPowerOff', 'Ejectable', 'Removable', 'TimeDetected', 'TimeMediaDetected'];
-    fields_list.forEach(item => {
-        var tr = $('<tr />', {});
-
-        tr.append($('<td />', {}).html(item));
-        tr.append($('<td />', {}).html(rdata['drive_data'][item].toString()));
-
-        drive_table.append(tr);
-    });
-
-    $('#drive-info').html(drive_table);
 }
 
 

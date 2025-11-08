@@ -9979,26 +9979,26 @@ class AjaxDriveManagerView(BaseView):
                 drive_TimeMediaDetected = ''
 
 
-            drive_dict = {
-                'Id' : drive_id,
-                'Vendor' : str(settings_dict['Vendor']),
-                'Model' : str(settings_dict['Model']),
-                'Size' : '{0:0.1f} GB'.format(float(settings_dict['Size']) / 1024 / 1024 / 1024),
-                'ConnectionBus' : str(settings_dict['ConnectionBus']),
-                'Serial' : str(settings_dict['Serial']),
-                'Media' : str(settings_dict['Media']),
-                'MediaCompatibility' : ', '.join(str(x) for x in settings_dict['MediaCompatibility']),
-                'CanPowerOff' : bool(settings_dict['CanPowerOff']),
-                'Removable' : bool(settings_dict['Removable']),
-                'Ejectable' : bool(settings_dict['Ejectable']),
-                'TimeDetected' : drive_TimeDetected,
-                'TimeMediaDetected' : drive_TimeMediaDetected,
-            }
+            drive_data = [
+                [0, 'Id', drive_id],
+                [1, 'Vendor', str(settings_dict['Vendor'])],
+                [2, 'Model', str(settings_dict['Model'])],
+                [3, 'Size', '{0:0.1f} GB'.format(float(settings_dict['Size']) / 1024 / 1024 / 1024)],
+                [4, 'ConnectionBus', str(settings_dict['ConnectionBus'])],
+                [5, 'Serial', str(settings_dict['Serial'])],
+                [6, 'Media', str(settings_dict['Media'])],
+                [7, 'MediaCompatibility', ', '.join(str(x) for x in settings_dict['MediaCompatibility'])],
+                [8, 'CanPowerOff', bool(settings_dict['CanPowerOff'])],
+                [9, 'Removable', bool(settings_dict['Removable'])],
+                [10, 'Ejectable', bool(settings_dict['Ejectable'])],
+                [11, 'TimeDetected', drive_TimeDetected],
+                [12, 'TimeMediaDetected', drive_TimeMediaDetected],
+            ]
 
 
             return_data = {
                 'success-message' : '',
-                'drive_data' : drive_dict,
+                'drive_data' : drive_data,
             }
 
             return jsonify(return_data)
