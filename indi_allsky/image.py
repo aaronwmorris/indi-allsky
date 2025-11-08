@@ -757,6 +757,7 @@ class ImageWorker(Process):
 
 
             image_add_data = {
+                'uptime'            : i_ref.uptime,
                 'kpindex'           : i_ref.kpindex,
                 'ovation_max'       : i_ref.ovation_max,
                 'aurora_mag_bt'     : i_ref.aurora_mag_bt,

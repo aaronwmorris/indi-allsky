@@ -10,6 +10,7 @@ import time
 import signal
 import numpy
 import cv2
+import psutil
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -3850,6 +3851,7 @@ class ImageData(object):
         self._lines = list()
         self._stars = list()
 
+        self._uptime = int(time.time() - psutil.boot_time())
 
         self.detectBitDepth()
 
@@ -3955,6 +3957,11 @@ class ImageData(object):
     @opencv_data.setter
     def opencv_data(self, new_opencv_data):
         self._opencv_data = new_opencv_data
+
+
+    @property
+    def uptime(self):
+        return self._uptime
 
 
     @property
