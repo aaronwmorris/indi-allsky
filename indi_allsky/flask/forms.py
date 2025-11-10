@@ -8130,7 +8130,7 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
                 conn_dict[settings_uuid]['type'] = '802-3-ethernet'
             elif settings_type == '802-11-wireless':
                 conn_dict[settings_uuid]['type'] = '802-11-wireless'
-                conn_dict[settings_uuid]['powersave'] = int(settings_dict['connection']['802-11-wireless'].get('powersave', 0))
+                conn_dict[settings_uuid]['powersave'] = int(settings_dict['802-11-wireless'].get('powersave', 0))
             else:
                 conn_dict[settings_uuid]['type'] = 'other'
 
