@@ -55,11 +55,14 @@ var camera_id = {{ camera_id }};
             <button id="deactivate-button" class="btn btn-warning">Deactivate</button>
             <button id="delete-button" class="btn btn-dark text-danger">Delete</button>
             <hr>
-            <button id="autostart-button" class="btn btn-info">Enable auto-start</button>
-            <button id="no-autostart-button" class="btn btn-secondary">Disable auto-start</button>
+            <button id="autostart-button" class="btn btn-info">Enable<br>Auto-start</button>
+            <button id="no-autostart-button" class="btn btn-secondary">Disable<br>Auto-start</button>
             <hr>
             <button id="incpriority-button" class="btn btn-primary">+10 priority</button>
             <button id="decpriority-button" class="btn btn-secondary">-10 priority</button>
+            <hr>
+            <button id="powersavedisable-button" class="btn btn-success">Disable<br>Powersave</button>
+            <button id="powersaveenable-button" class="btn btn-warning">Enable<br>Powersave</button>
         </div>
         <div class="col-sm-1">
             <input class="form-check-input" id="CONN_CONFIRM1" name="CONN_CONFIRM1" type="checkbox" value="y"> Confirm
@@ -438,7 +441,7 @@ $('#autostart-button').on('click', function() {
 
     $("#autostart-button").attr("class", "btn btn-info");
     $("#autostart-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Enable auto-start</span>'
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Enable<br>Auto-start</span>'
     );
 
 
@@ -455,7 +458,7 @@ $('#autostart-button').on('click', function() {
         data: JSON.stringify(json_data),
         success: function(rdata){
             $("#autostart-button").html(
-              'Enable auto-start'
+              'Enable<br>Auto-start'
             );
 
             $('#success-message').html(rdata['success-message']);
@@ -467,7 +470,7 @@ $('#autostart-button').on('click', function() {
         error: function(rdata){
             $("#autostart-button").attr("class", "btn btn-danger");
             $("#autostart-button").html(
-              'Enable auto-start'
+              'Enable<br>Auto-start'
             );
 
             var errors = JSON.parse(rdata.responseText);
@@ -498,7 +501,7 @@ $('#no-autostart-button').on('click', function() {
 
     $("#no-autostart-button").attr("class", "btn btn-secondary");
     $("#no-autostart-button").html(
-      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Disable auto-start</span>'
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Disable<br>Auto-start</span>'
     );
 
 
@@ -515,7 +518,7 @@ $('#no-autostart-button').on('click', function() {
         data: JSON.stringify(json_data),
         success: function(rdata){
             $("#no-autostart-button").html(
-              'Disable auto-start'
+              'Disable<br>Auto-start'
             );
 
             $('#success-message').html(rdata['success-message']);
@@ -527,7 +530,7 @@ $('#no-autostart-button').on('click', function() {
         error: function(rdata){
             $("#no-autostart-button").attr("class", "btn btn-danger");
             $("#no-autostart-button").html(
-              'Disable auto-start'
+              'Disable<br>Auto-start'
             );
 
             var errors = JSON.parse(rdata.responseText);
@@ -587,7 +590,7 @@ $('#incpriority-button').on('click', function() {
         error: function(rdata){
             $("#incpriority-button").attr("class", "btn btn-danger");
             $("#incpriority-button").html(
-              'Enable auto-start'
+              'Enable<br>Auto-start'
             );
 
             var errors = JSON.parse(rdata.responseText);
@@ -648,6 +651,126 @@ $('#decpriority-button').on('click', function() {
             $("#decpriority-button").attr("class", "btn btn-danger");
             $("#decpriority-button").html(
               '-10 priority'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
+        },
+    });
+});
+
+
+$('#powersavedisable-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+
+    if (! $("#CONN_CONFIRM1").prop('checked')) {
+        console.log('Confirm checkbox not checked');
+        return;
+    }
+    $("#CONN_CONFIRM1").prop('checked', false);
+
+
+    if ( $('#CONNECTIONS_SELECT').val() == "" ){
+        return;
+    }
+
+
+    $("#powersavedisable-button").attr("class", "btn btn-success");
+    $("#powersavedisable-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Disable<br>Powersave</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'powersavedisable',
+        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_network_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#powersavedisable-button").html(
+              'Disable<br>Powersave'
+            );
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
+        },
+        error: function(rdata){
+            $("#powersavedisable-button").attr("class", "btn btn-danger");
+            $("#powersavedisable-button").html(
+              'Disable<br>Powersave'
+            );
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
+        },
+    });
+});
+
+
+$('#powersaveenable-button').on('click', function() {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+
+    if (! $("#CONN_CONFIRM1").prop('checked')) {
+        console.log('Confirm checkbox not checked');
+        return;
+    }
+    $("#CONN_CONFIRM1").prop('checked', false);
+
+
+    if ( $('#CONNECTIONS_SELECT').val() == "" ){
+        return;
+    }
+
+
+    $("#powersaveenable-button").attr("class", "btn btn-warning");
+    $("#powersaveenable-button").html(
+      '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status">Enable<br>Powersave</span>'
+    );
+
+
+    var json_data = {
+        'COMMAND' : 'powersaveenable',
+        'CONNECTION' : $('#CONNECTIONS_SELECT').val(),
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_network_manager_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#powersaveenable-button").html(
+              'Enable<br>Powersave'
+            );
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
+        },
+        error: function(rdata){
+            $("#powersaveenable-button").attr("class", "btn btn-danger");
+            $("#powersaveenable-button").html(
+              'Enable<br>Powersave'
             );
 
             var errors = JSON.parse(rdata.responseText);

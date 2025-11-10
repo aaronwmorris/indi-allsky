@@ -8049,6 +8049,13 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
         '802-11-wireless': 2,
     }
 
+    nm_powersave_str = {
+        0 : 'Default (Enabled)',
+        1 : 'Ignore',
+        2 : 'Disabled',
+        3 : 'Enabled',
+    }
+
 
     def __init__(self, *args, **kwargs):
         super(IndiAllskyNetworkManagerForm, self).__init__(*args, **kwargs)
@@ -8130,6 +8137,7 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
                 conn_dict[settings_uuid]['type'] = '802-3-ethernet'
             elif settings_type == '802-11-wireless':
                 conn_dict[settings_uuid]['type'] = '802-11-wireless'
+                conn_dict[settings_uuid]['powersave'] = int(settings_dict['802-11-wireless'].get('powersave', -1))
             else:
                 conn_dict[settings_uuid]['type'] = 'other'
 
@@ -8231,16 +8239,23 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
 
 
         for c in filter(lambda item: item[1]['type'] == '802-11-wireless', conn_items_list_sorted):
-            autostart_str = '*'if c[1]['autoconnect'] else ''
+            try:
+                powersave_str = self.nm_powersave_str[c[1]['powersave']]
+            except KeyError:
+                powersave_str = 'UNKNOWN'
+
+            autostart_str = '*' if c[1]['autoconnect'] else ''
+
             conn_select_wifi_list.append((
                 c[0],
-                '{0:s}{1:s} [{2:s}] - {3:s} - {4:s} [prio: {5:d}]'.format(
+                '{0:s}{1:s} [{2:s}] - {3:s} - {4:s} [prio: {5:d}] [powersave: {6:s}]'.format(
                     autostart_str,
                     c[1]['id'],
                     ','.join(c[1]['devices']),
                     ','.join(c[1]['addresses']),
                     c[1]['state'],
                     c[1]['autoconnect-priority'],
+                    powersave_str,
                 )
             ))
 

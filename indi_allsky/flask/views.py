@@ -9045,6 +9045,14 @@ class AjaxNetworkManagerView(BaseView):
             connection_uuid = str(request.json['CONNECTION'])
             return self.decrementConnectionPriority(connection_uuid)
 
+        elif command == 'powersavedisable':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.setPowersave(connection_uuid, powersave=False)
+
+        elif command == 'powersaveenable':
+            connection_uuid = str(request.json['CONNECTION'])
+            return self.setPowersave(connection_uuid, powersave=True)
+
         elif command == 'scanap':
             interface = str(request.json['INTERFACE'])
 
@@ -9473,6 +9481,73 @@ class AjaxNetworkManagerView(BaseView):
 
     def decrementConnectionPriority(self, connection_uuid, increment=-10):
         return self.incrementConnectionPriority(connection_uuid, increment=increment)
+
+
+    def setPowersave(self, connection_uuid, powersave=False):
+        bus = dbus.SystemBus()
+
+
+        try:
+            nm_settings = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager/Settings")
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'D-Bus Exception: {0:s}'.format(str(e)),
+            }), 400
+
+
+        try:
+            settings_path = self.getSettingsPath(bus, nm_settings, connection_uuid)
+        except NotFound:
+            app.logger.error('Connection settings not found')
+            return jsonify({
+                'failure-message' : 'Connection settings not found',
+            }), 400
+
+
+        settings = dbus.Interface(
+            bus.get_object("org.freedesktop.NetworkManager", settings_path),
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_connection = dbus.Interface(
+            settings,
+            "org.freedesktop.NetworkManager.Settings.Connection")
+
+
+        settings_dict = settings_connection.GetSettings()
+
+
+        if settings_dict['connection']['type'] != '802-11-wireless':
+            return jsonify({
+                'failure-message' : 'Powersave only valid for wifi connections',
+            }), 400
+
+
+        if powersave:
+            nm_powersave = 3  # enabled
+        else:
+            nm_powersave = 2  # disabled
+
+        settings_dict['802-11-wireless']['powersave'] = nm_powersave
+
+
+        try:
+            settings_connection.Update(settings_dict)
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'Configure Failed: {0:s}'.format(str(e)),
+            }), 400
+
+
+        time.sleep(2.0)  # give some time for system to register
+
+        return jsonify({
+            'success-message' : 'Configure Successful',
+        })
 
 
     def getSettingsPath(self, bus, nm_settings, connection_uuid):
