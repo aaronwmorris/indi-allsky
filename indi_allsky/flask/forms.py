@@ -8235,7 +8235,7 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
             autostart_str = '*'if c[1]['autoconnect'] else ''
             conn_select_wifi_list.append((
                 c[0],
-                '{0:s}{1:s} [{2:s}] - {3:s} - {4:s} [prio: {5:d}] [pwr: {6:d}]'.format(
+                '{0:s}{1:s} [{2:s}] - {3:s} - {4:s} [prio: {5:d}] [powersave: {6:d}]'.format(
                     autostart_str,
                     c[1]['id'],
                     ','.join(c[1]['devices']),
