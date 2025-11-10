@@ -8050,10 +8050,10 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
     }
 
     nm_powersave_str = {
-        0 : 'Default (Active)',
+        0 : 'Default (Enabled)',
         1 : 'Ignore',
-        2 : 'Disable',
-        3 : 'Enable',
+        2 : 'Disabled',
+        3 : 'Enabled',
     }
 
 
