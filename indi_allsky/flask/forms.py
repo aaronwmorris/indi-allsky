@@ -8130,6 +8130,7 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
                 conn_dict[settings_uuid]['type'] = '802-3-ethernet'
             elif settings_type == '802-11-wireless':
                 conn_dict[settings_uuid]['type'] = '802-11-wireless'
+                conn_dict[settings_uuid]['powersave'] = int(settings_dict['connection'].get('802-11-wireless.powersave', 0)),
             else:
                 conn_dict[settings_uuid]['type'] = 'other'
 
@@ -8234,13 +8235,14 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
             autostart_str = '*'if c[1]['autoconnect'] else ''
             conn_select_wifi_list.append((
                 c[0],
-                '{0:s}{1:s} [{2:s}] - {3:s} - {4:s} [prio: {5:d}]'.format(
+                '{0:s}{1:s} [{2:s}] - {3:s} - {4:s} [prio: {5:d}] [pwr: {6:d}]'.format(
                     autostart_str,
                     c[1]['id'],
                     ','.join(c[1]['devices']),
                     ','.join(c[1]['addresses']),
                     c[1]['state'],
                     c[1]['autoconnect-priority'],
+                    c[1]['powersave'],
                 )
             ))
 
