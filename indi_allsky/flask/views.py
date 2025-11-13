@@ -142,7 +142,19 @@ class AjaxStatusUpdateView(BaseView):
     def dispatch_request(self):
         camera_id = int(request.args['camera_id'])
 
+
         self.cameraSetup(camera_id=camera_id)
+
+        # query the latest image entry
+        camera_now_minus_15m = self.camera_now - timedelta(minutes=15)
+        self.latest_image_entry = db.session.query(
+            IndiAllSkyDbImageTable,
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
+            .filter(IndiAllSkyDbImageTable.createDate > camera_now_minus_15m)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
 
 
         status_data = dict()
@@ -151,6 +163,12 @@ class AjaxStatusUpdateView(BaseView):
         status_data.update(self.get_astrometric_info())
         status_data.update(self.get_smoke_info())
         status_data.update(self.get_aurora_info())
+        status_data.update(self.get_image_data())
+
+
+        status_data['uptime'] = int(time.time() - psutil.boot_time())
+        status_data['uptime_str'] = self.getUptime()
+
 
         data = {
             'status_text' : self.get_status_text(status_data) + self.get_web_extra_text(),
