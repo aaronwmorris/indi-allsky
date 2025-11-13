@@ -8667,6 +8667,7 @@ class IndiAllskyImageCircleHelperForm(FlaskForm):
     OFFSET_Y                = IntegerField('Y Offset', default=0, render_kw={'step' : '25'})
     LINE_WIDTH              = IntegerField('Line', default=5)
     LINE_COLOR              = SelectField('Line', choices=LINE_COLOR_choices)
+    KEOGRAM_LINE            = BooleanField('Keogram Line')
     KEOGRAM_ANGLE           = FloatField('Keogram Angle')
 
 

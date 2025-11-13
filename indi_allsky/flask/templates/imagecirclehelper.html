@@ -29,6 +29,7 @@ function showImage(url) {
     var circle_radius = parseInt($("#IMAGE_CIRCLE_DIAMETER").val()) / 2;
     var offset_x = parseInt($("#OFFSET_X").val());
     var offset_y = parseInt($("#OFFSET_Y").val());
+    var keogram_line = $('#KEOGRAM_LINE').prop('checked');
     var keogram_angle = parseFloat($("#KEOGRAM_ANGLE").val());
     var line_width = parseInt($("#LINE_WIDTH").val());
     var line_color = $("#LINE_COLOR").val();
@@ -89,12 +90,14 @@ function showImage(url) {
 
 
         // keogram line
-        var opp_1 = Math.tan((keogram_angle * (Math.PI / 180))) * (canvas.height / 2)
+        if (keogram_line) {
+            var opp_1 = Math.tan((keogram_angle * (Math.PI / 180))) * (canvas.height / 2)
 
-        context.moveTo(parseInt((canvas.width / 2) + opp_1 + (offset_x * ratio)), parseInt(0 - (offset_y * ratio)));
-        context.lineTo(parseInt((canvas.width / 2) - opp_1 + (offset_x * ratio)), parseInt(canvas.height - (offset_y * ratio)));
+            context.moveTo(parseInt((canvas.width / 2) + opp_1 + (offset_x * ratio)), parseInt(0 - (offset_y * ratio)));
+            context.lineTo(parseInt((canvas.width / 2) - opp_1 + (offset_x * ratio)), parseInt(canvas.height - (offset_y * ratio)));
 
-        context.stroke();
+            context.stroke();
+        }
     };
 
 
@@ -209,6 +212,11 @@ function closeFullscreen() {
         <div class="col-sm-2">
             {{ form_imagecircle.KEOGRAM_ANGLE(class='form-control bg-secondary') }}
         </div>
+        <div class="col-sm-1">
+            <div class="form-switch">
+            {{ form_imagecircle.KEOGRAM_LINE(class='form-check-input') }}
+            </div>
+        </div>
     </div>
 </form>
 
@@ -274,6 +282,11 @@ $("#OFFSET_X").on("change", function() {
 
 
 $("#OFFSET_Y").on("change", function() {
+    showImage(latest_image_url);
+});
+
+
+$("#KEOGRAM_LINE").on("change", function() {
     showImage(latest_image_url);
 });
 
