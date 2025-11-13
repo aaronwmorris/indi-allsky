@@ -29,6 +29,8 @@ function showImage(url) {
     var circle_radius = parseInt($("#IMAGE_CIRCLE_DIAMETER").val()) / 2;
     var offset_x = parseInt($("#OFFSET_X").val());
     var offset_y = parseInt($("#OFFSET_Y").val());
+    var keogram_line = $('#KEOGRAM_LINE').prop('checked');
+    var keogram_angle = parseFloat($("#KEOGRAM_ANGLE").val());
     var line_width = parseInt($("#LINE_WIDTH").val());
     var line_color = $("#LINE_COLOR").val();
 
@@ -86,6 +88,16 @@ function showImage(url) {
         context.stroke();
         //context.fill();
 
+
+        // keogram line
+        if (keogram_line) {
+            var opp_1 = Math.tan((keogram_angle * (Math.PI / 180))) * (canvas.height / 2)
+
+            context.moveTo(parseInt((canvas.width / 2) + opp_1 + (offset_x * ratio)), parseInt(0 - (offset_y * ratio)));
+            context.lineTo(parseInt((canvas.width / 2) - opp_1 + (offset_x * ratio)), parseInt(canvas.height - (offset_y * ratio)));
+
+            context.stroke();
+        }
     };
 
 
@@ -192,6 +204,20 @@ function closeFullscreen() {
             <button class="btn btn-primary">Refresh</button>
         </div>
     </div>
+
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_imagecircle.KEOGRAM_ANGLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_imagecircle.KEOGRAM_ANGLE(class='form-control bg-secondary') }}
+        </div>
+        <div class="col-sm-1">
+            <div class="form-switch">
+            {{ form_imagecircle.KEOGRAM_LINE(class='form-check-input') }}
+            </div>
+        </div>
+    </div>
 </form>
 
 <hr>
@@ -250,13 +276,22 @@ $("#IMAGE_CIRCLE_DIAMETER").on("change", function() {
 });
 
 
-
 $("#OFFSET_X").on("change", function() {
     showImage(latest_image_url);
 });
 
 
 $("#OFFSET_Y").on("change", function() {
+    showImage(latest_image_url);
+});
+
+
+$("#KEOGRAM_LINE").on("change", function() {
+    showImage(latest_image_url);
+});
+
+
+$("#KEOGRAM_ANGLE").on("change", function() {
     showImage(latest_image_url);
 });
 

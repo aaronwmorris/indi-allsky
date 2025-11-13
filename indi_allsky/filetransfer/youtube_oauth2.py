@@ -1,5 +1,5 @@
 from .generic import GenericFileTransfer
-#from .exceptions import AuthenticationFailure
+from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
 #from .exceptions import TransferFailure
 #from .exceptions import PermissionFailure
@@ -125,6 +125,7 @@ class youtube_oauth2(GenericFileTransfer):
 
     def resumable_upload(self, insert_request):
         from googleapiclient.errors import HttpError
+        import google.auth.exceptions
         import httplib2
 
         retriable_exceptions = (httplib2.HttpLib2Error)
@@ -144,6 +145,9 @@ class youtube_oauth2(GenericFileTransfer):
                         return response
                     else:
                         raise Exception('The upload failed with an unexpected response: {0:s}'.format(response))
+            except google.auth.exceptions.RefreshError as e:
+                logger.error('RefreshError: %s', str(e))
+                raise AuthenticationFailure from e
             except HttpError as e:
                 if e.resp.status in RETRIABLE_STATUS_CODES:
                     error = 'A retriable HTTP error {0} occurred:\n{1}'.format(e.resp.status, e.content)
