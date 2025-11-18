@@ -264,6 +264,16 @@ class IndiClient(PyIndi.BaseClient):
         if p.getType() == PyIndi.INDI_BLOB:
             p_blob = PyIndi.PropertyBlob(p)
             #logger.info("new Blob %s for %s", p_blob.getName(), p_blob.getDeviceName())
+
+            if isinstance(self.ccd_device, type(None)):
+                return
+
+
+            if not p_blob.getDeviceName() == self.ccd_device.getDeviceName():
+                logger.error('Blob does not match for CCD device')
+                return
+
+
             self.processBlob(p_blob[0])
         elif p.getType() == PyIndi.INDI_NUMBER:
             #p_number = PyIndi.PropertyNumber(p)
