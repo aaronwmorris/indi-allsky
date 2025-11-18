@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+##################################################################
+# This script enumerates camera properties                       #
+##################################################################
+
 
 import PyIndi
 import time
@@ -75,7 +79,7 @@ class IndiProperties(PyIndi.BaseClient):
             str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
         ))
 
-        logger.info("INDI version: %s", pyindi_version)
+        logger.warning("INDI version: %s", pyindi_version)
 
 
     def newDevice(self, d):
@@ -117,7 +121,7 @@ class IndiProperties(PyIndi.BaseClient):
 
     def main(self):
         ccd_list = self._findCcds()
-        logger.info('Found %d CCDs', len(ccd_list))
+        logger.warning('Found %d CCDs', len(ccd_list))
 
         for device_ccd in ccd_list:
 
