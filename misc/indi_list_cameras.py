@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+##################################################################
+# This script lists all cameras/CCDs connected to the indiserver #
+##################################################################
+
 
 import PyIndi
 import ctypes

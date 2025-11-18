@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+##################################################################
+# This script enumerates camera properties                       #
+##################################################################
+
 
 import PyIndi
 import time
