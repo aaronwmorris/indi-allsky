@@ -8,6 +8,7 @@ import PyIndi
 import ctypes
 import sys
 import time
+from prettytable import PrettyTable
 import logging
 
 
@@ -99,9 +100,16 @@ class IndiListCameras(PyIndi.BaseClient):
         logger.warning('Found %d CCDs', len(ccd_list))
 
 
+        table = PrettyTable()
+        table.field_names = ['', 'Name', 'Driver']
+
+
         print()
         for x in range(len(ccd_list)):
-            print('{0:d} - \"{1:s}\"'.format(x, ccd_list[x].getDeviceName()))
+            table.add_row([str(x), ccd_list[x].getDeviceName(), ccd_list[x].getDriverExec()])
+
+
+        print(table)
 
 
 if __name__ == "__main__":
