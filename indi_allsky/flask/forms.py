@@ -104,11 +104,6 @@ def INDI_CAMERA_NAME_validator(form, field):
     if not field.data:
         return
 
-    camera_regex = r'^[a-zA-Z0-9\ \-]+$'
-
-    if not re.search(camera_regex, field.data):
-        raise ValidationError('Invalid camera name')
-
 
 def OWNER_validator(form, field):
     if not field.data:
