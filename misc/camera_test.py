@@ -79,6 +79,7 @@ class CameraTest(object):
         self.exposure_av = Array('f', [
             -1.0,  # current exposure
             -1.0,  # next exposure
+            -1.0,  # exposure delta
             -1.0,  # night minimum
             -1.0,  # day minimum
             -1.0,  # maximum
@@ -88,6 +89,7 @@ class CameraTest(object):
         self.gain_av = Array('f', [
             -1.0,  # current gain
             -1.0,  # next gain
+            -1.0,  # gain delta
             -1.0,  # day minimum
             -1.0,  # day maximum
             -1.0,  # night minimum
