@@ -2779,7 +2779,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.CARDINAL_DIRS__OFFSET_X.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.CARDINAL_DIRS__OFFSET_X(class='form-control bg-secondary') }}
+            {{ form_config.CARDINAL_DIRS__OFFSET_X(class='form-control bg-dark text-secondary') }}
             <div id="CARDINAL_DIRS__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Not Used - Use Lens offsets on Location Tab</div>
@@ -2790,7 +2790,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.CARDINAL_DIRS__OFFSET_Y.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.CARDINAL_DIRS__OFFSET_Y(class='form-control bg-secondary') }}
+            {{ form_config.CARDINAL_DIRS__OFFSET_Y(class='form-control bg-dark text-secondary') }}
             <div id="CARDINAL_DIRS__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8"></div>
@@ -3342,7 +3342,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_X.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_X(class='form-control bg-secondary') }}
+            {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_X(class='form-control bg-dark text-secondary') }}
             <div id="IMAGE_CIRCLE_MASK__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
@@ -3355,7 +3355,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_Y.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_Y(class='form-control bg-secondary') }}
+            {{ form_config.IMAGE_CIRCLE_MASK__OFFSET_Y(class='form-control bg-dark text-secondary') }}
             <div id="IMAGE_CIRCLE_MASK__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
@@ -3920,7 +3920,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.FISH2PANO__OFFSET_X.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.FISH2PANO__OFFSET_X(class='form-control bg-secondary') }}
+            {{ form_config.FISH2PANO__OFFSET_X(class='form-control bg-dark text-secondary') }}
             <div id="FISH2PANO__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
@@ -3933,7 +3933,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.FISH2PANO__OFFSET_Y.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.FISH2PANO__OFFSET_Y(class='form-control bg-secondary') }}
+            {{ form_config.FISH2PANO__OFFSET_Y(class='form-control bg-dark text-secondary') }}
             <div id="FISH2PANO__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
@@ -9447,8 +9447,6 @@ $('#IMAGE_EXPORT_RAW').on('change', function() {
 
 var group_fields_image_circle_mask= [
     'IMAGE_CIRCLE_MASK__DIAMETER',
-    'IMAGE_CIRCLE_MASK__OFFSET_X',
-    'IMAGE_CIRCLE_MASK__OFFSET_Y',
     'IMAGE_CIRCLE_MASK__BLUR',
     'IMAGE_CIRCLE_MASK__OPACITY',
 ];
@@ -9477,8 +9475,6 @@ group_on_change('STARTRAILS_TIMELAPSE', group_fields_st_timelapse, group_checkbo
 
 var group_fields_fish2pano= [
     'FISH2PANO__DIAMETER',
-    'FISH2PANO__OFFSET_X',
-    'FISH2PANO__OFFSET_Y',
     'FISH2PANO__ROTATE_ANGLE',
     'FISH2PANO__SCALE',
     'FISH2PANO__MODULUS',
