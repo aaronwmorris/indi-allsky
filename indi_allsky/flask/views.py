@@ -9673,7 +9673,18 @@ class AjaxNetworkManagerView(BaseView):
 
 
         try:
-            device.RequestScan({})
+            device.RequestScan(dbus.Dictionary({}, signature='sv'))
+        except dbus.exceptions.DBusException as e:
+            app.logger.error('D-Bus Exception: %s', str(e))
+            return jsonify({
+                'failure-message' : 'RequestScan Failed: {0:s}'.format(str(e)),
+            }), 400
+
+
+        time.sleep(10.0)
+
+
+        try:
             accesspoints_paths_list = device.GetAccessPoints()
         except dbus.exceptions.DBusException as e:
             app.logger.error('D-Bus Exception: %s', str(e))
