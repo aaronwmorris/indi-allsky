@@ -116,6 +116,7 @@ class IndiAllSkyConfigBase(object):
         "DETECT_STARS" : True,
         "DETECT_STARS_THOLD" : 0.6,
         "DETECT_METEORS" : False,
+        "DETECT_METEORS_THOLD" : 125,
         "DETECT_MASK" : "",
         "DETECT_DRAW" : False,
         "LOGO_OVERLAY" : "",

@@ -3278,6 +3278,17 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DETECT_METEORS_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DETECT_METEORS_THOLD(class='form-control bg-secondary') }}
+            <div id="DETECT_METEORS_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Default: 125 - Increase to 250 if too many false detections</div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -8422,6 +8433,7 @@ const field_names = [
     'SQM_ROI_Y2',
     'SQM_FOV_DIV',
     'DETECT_STARS_THOLD',
+    'DETECT_METEORS_THOLD',
     'DETECT_MASK',
     'LOGO_OVERLAY',
     'HEALTHCHECK__DISK_USAGE',
