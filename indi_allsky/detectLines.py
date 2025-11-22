@@ -17,7 +17,6 @@ class IndiAllskyDetectLines(object):
 
     rho = 1  # distance resolution in pixels of the Hough grid
     theta = numpy.pi / 180  # angular resolution in radians of the Hough grid
-    threshold = 125  # minimum number of votes (intersections in Hough grid cell)
     min_line_length = 40  # minimum number of pixels making up a line
     max_line_gap = 20  # maximum gap in pixels between connectable line segments
 
@@ -30,6 +29,10 @@ class IndiAllskyDetectLines(object):
 
         self._sqm_mask = mask
         self._sqm_gradient_mask = None
+
+
+        # minimum number of votes (intersections in Hough grid cell)
+        self.threshold = self.config.get('DETECT_METEORS_THOLD', 125)
 
 
     def detectLines(self, original_img):

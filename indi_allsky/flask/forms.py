@@ -587,6 +587,17 @@ def DETECT_STARS_THOLD_validator(form, field):
         raise ValidationError('Threshold must be 1.0 or less')
 
 
+def DETECT_METEORS_THOLD_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data <= 10:
+        raise ValidationError('Threshold must be greater than 10')
+
+    if field.data > 1000:
+        raise ValidationError('Threshold must be 1000 or less')
+
+
 def LOCATION_NAME_validator(form, field):
     if not field.data:
         return
@@ -4010,6 +4021,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DETECT_STARS                     = BooleanField('Star Detection')
     DETECT_STARS_THOLD               = FloatField('Star Detection Threshold', validators=[DataRequired(), DETECT_STARS_THOLD_validator])
     DETECT_METEORS                   = BooleanField('Meteor Detection')
+    DETECT_METEORS_THOLD             = IntegerField('Meteor Detection Threshold', validators=[DataRequired(), DETECT_METEORS_THOLD_validator])
     DETECT_MASK                      = StringField('Detection Mask', validators=[DETECT_MASK_validator])
     DETECT_DRAW                      = BooleanField('Mark Detections on Image')
     LOGO_OVERLAY                     = StringField('Logo Overlay', validators=[LOGO_OVERLAY_validator])
