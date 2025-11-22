@@ -370,6 +370,7 @@ class HADiscovery(object):
                 'config' : {
                     'name' : 'Camera Gain',
                     'unit_of_measurement' : '',
+                    'state_class' : 'measurement',
                     'unique_id' : 'indi_allsky_gain_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'gain')),
                     'device'   : {
@@ -499,7 +500,8 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_sqm',
                 'config' : {
                     'name' : 'SQM',
-                    'unit_of_measurement' : '',
+                    'unit_of_measurement' : 'mag/arcsec²',
+                    'state_class' : 'measurement',
                     'unique_id' : 'indi_allsky_sqm_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'sqm')),
                     'device'   : {
@@ -516,6 +518,7 @@ class HADiscovery(object):
                 'config' : {
                     'name' : 'Stars',
                     'unit_of_measurement' : '',
+                    'state_class' : 'measurement',
                     'unique_id' : 'indi_allsky_stars_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'stars')),
                     'device'   : {
@@ -532,6 +535,7 @@ class HADiscovery(object):
                 'config' : {
                     'name' : 'Detections',
                     'unit_of_measurement' : '',
+                    'state_class' : 'measurement',
                     'unique_id' : 'indi_allsky_detections_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'detections')),
                     'device'   : {
@@ -596,6 +600,7 @@ class HADiscovery(object):
                 'config' : {
                     'name' : 'K-P Index',
                     'unit_of_measurement' : '',
+                    'state_class' : 'measurement',
                     'unique_id' : 'indi_allsky_kpindex_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'kpindex')),
                     'device'   : {
@@ -627,7 +632,7 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_aurora_mag_bt',
                 'config' : {
                     'name' : 'Solar Wind Bt [nT]',
-                    'unit_of_measurement' : '',
+                    'unit_of_measurement' : 'nT',
                     'unique_id' : 'indi_allsky_aurora_mag_bt_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'aurora_mag_bt')),
                     'device'   : {
@@ -643,7 +648,8 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_aurora_mag_gsm_bz',
                 'config' : {
                     'name' : 'Solar Wind Bz',
-                    'unit_of_measurement' : '',
+                    'unit_of_measurement' : 'nT',
+                    'state_class' : 'measurement',
                     'unique_id' : 'indi_allsky_aurora_mag_gsm_bz_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'aurora_mag_gsm_bz')),
                     'device'   : {
@@ -659,7 +665,7 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_aurora_plasma_density',
                 'config' : {
                     'name' : 'Solar Wind Plasma Density [1/cm³]',
-                    'unit_of_measurement' : '',
+                    'unit_of_measurement' : '1/cm³',
                     'unique_id' : 'indi_allsky_aurora_plasma_density_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'aurora_plasma_density')),
                     'device'   : {
@@ -675,7 +681,7 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_aurora_plasma_speed',
                 'config' : {
                     'name' : 'Solar Wind Plasma Speed [km/s]',
-                    'unit_of_measurement' : '',
+                    'unit_of_measurement' : 'km/s',
                     'unique_id' : 'indi_allsky_aurora_plasma_speed_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'aurora_plasma_speed')),
                     'device'   : {
@@ -707,7 +713,7 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_aurora_n_hemi_gw',
                 'config' : {
                     'name' : 'Hemispheric Power - Northern [GW]',
-                    'unit_of_measurement' : '',
+                    'unit_of_measurement' : 'GW',
                     'unique_id' : 'indi_allsky_aurora_n_hemi_gw_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'aurora_n_hemi_gw')),
                     'device'   : {
@@ -723,7 +729,7 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_aurora_s_hemi_gw',
                 'config' : {
                     'name' : 'Hemispheric Power - Southern [GW]',
-                    'unit_of_measurement' : '',
+                    'unit_of_measurement' : 'GW',
                     'unique_id' : 'indi_allsky_aurora_s_hemi_gw_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'aurora_s_hemi_gw')),
                     'device'   : {
@@ -793,7 +799,7 @@ class HADiscovery(object):
                 'object_id' : 'indi_allsky_cpu_total',
                 'config' : {
                     'name' : 'CPU Total',
-                    'unit_of_measurement' : '',
+                    'unit_of_measurement' : '%',
                     'unique_id' : 'indi_allsky_cpu_total_{0}'.format(self.unique_id_base),
                     'state_topic' : '/'.join((indi_allsky_base_topic, 'cpu', 'total')),
                     'device'   : {
