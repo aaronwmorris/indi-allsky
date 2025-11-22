@@ -939,7 +939,189 @@ class HADiscovery(object):
 
 
         # user sensors
-        for i in range(60):
+
+        # Camera temp
+        extended_sensor_list.append({
+            'component' : 'sensor',
+            'object_id' : 'indi_allsky_sensor_user_0',
+            'config' : {
+                'name' : self.SENSOR_SLOT_choices[0][0],
+                'unit_of_measurement' : '°',
+                'unique_id' : 'indi_allsky_sensor_user_0_{0}'.format(self.unique_id_base),
+                'state_topic' : '/'.join((indi_allsky_base_topic, 'sensor_user_0')),
+                'device'   : {
+                    'name' : self.device_name,
+                    'identifiers' : [
+                        self.device_name,
+                    ],
+                },
+            },
+        })
+
+        # Dew Heater Level
+        extended_sensor_list.append({
+            'component' : 'sensor',
+            'object_id' : 'indi_allsky_sensor_user_1',
+            'config' : {
+                'name' : self.SENSOR_SLOT_choices[1][0],
+                'unit_of_measurement' : '%',
+                'unique_id' : 'indi_allsky_sensor_user_1_{0}'.format(self.unique_id_base),
+                'state_topic' : '/'.join((indi_allsky_base_topic, 'sensor_user_1')),
+                'device'   : {
+                    'name' : self.device_name,
+                    'identifiers' : [
+                        self.device_name,
+                    ],
+                },
+            },
+        })
+
+        # Dew Point
+        extended_sensor_list.append({
+            'component' : 'sensor',
+            'object_id' : 'indi_allsky_sensor_user_2',
+            'config' : {
+                'name' : self.SENSOR_SLOT_choices[2][0],
+                'unit_of_measurement' : '°',
+                'unique_id' : 'indi_allsky_sensor_user_2_{0}'.format(self.unique_id_base),
+                'state_topic' : '/'.join((indi_allsky_base_topic, 'sensor_user_2')),
+                'device'   : {
+                    'name' : self.device_name,
+                    'identifiers' : [
+                        self.device_name,
+                    ],
+                },
+            },
+        })
+
+        # Frost Point
+        extended_sensor_list.append({
+            'component' : 'sensor',
+            'object_id' : 'indi_allsky_sensor_user_3',
+            'config' : {
+                'name' : self.SENSOR_SLOT_choices[3][0],
+                'unit_of_measurement' : '°',
+                'unique_id' : 'indi_allsky_sensor_user_3_{0}'.format(self.unique_id_base),
+                'state_topic' : '/'.join((indi_allsky_base_topic, 'sensor_user_3')),
+                'device'   : {
+                    'name' : self.device_name,
+                    'identifiers' : [
+                        self.device_name,
+                    ],
+                },
+            },
+        })
+
+        # Fan Level
+        extended_sensor_list.append({
+            'component' : 'sensor',
+            'object_id' : 'indi_allsky_sensor_user_4',
+            'config' : {
+                'name' : self.SENSOR_SLOT_choices[4][0],
+                'unit_of_measurement' : '%',
+                'unique_id' : 'indi_allsky_sensor_user_4_{0}'.format(self.unique_id_base),
+                'state_topic' : '/'.join((indi_allsky_base_topic, 'sensor_user_4')),
+                'device'   : {
+                    'name' : self.device_name,
+                    'identifiers' : [
+                        self.device_name,
+                    ],
+                },
+            },
+        })
+
+        # Heat Index
+        extended_sensor_list.append({
+            'component' : 'sensor',
+            'object_id' : 'indi_allsky_sensor_user_5',
+            'config' : {
+                'name' : self.SENSOR_SLOT_choices[5][0],
+                'unit_of_measurement' : '°',
+                'unique_id' : 'indi_allsky_sensor_user_5_{0}'.format(self.unique_id_base),
+                'state_topic' : '/'.join((indi_allsky_base_topic, 'sensor_user_5')),
+                'device'   : {
+                    'name' : self.device_name,
+                    'identifiers' : [
+                        self.device_name,
+                    ],
+                },
+            },
+        })
+
+        # Wind Direction (angle/degrees/azimuth)
+        extended_sensor_list.append({
+            'component' : 'sensor',
+            'object_id' : 'indi_allsky_sensor_user_6',
+            'config' : {
+                'name' : self.SENSOR_SLOT_choices[6][0],
+                'unit_of_measurement' : '',  # not sure about this one
+                'unique_id' : 'indi_allsky_sensor_user_6_{0}'.format(self.unique_id_base),
+                'state_topic' : '/'.join((indi_allsky_base_topic, 'sensor_user_6')),
+                'device'   : {
+                    'name' : self.device_name,
+                    'identifiers' : [
+                        self.device_name,
+                    ],
+                },
+            },
+        })
+
+        # SQM
+        extended_sensor_list.append({
+            'component' : 'sensor',
+            'object_id' : 'indi_allsky_sensor_user_7',
+            'config' : {
+                'name' : self.SENSOR_SLOT_choices[7][0],
+                'unit_of_measurement' : 'mag/arcsec²',
+                'unique_id' : 'indi_allsky_sensor_user_7_{0}'.format(self.unique_id_base),
+                'state_topic' : '/'.join((indi_allsky_base_topic, 'sensor_user_7')),
+                'device'   : {
+                    'name' : self.device_name,
+                    'identifiers' : [
+                        self.device_name,
+                    ],
+                },
+            },
+        })
+
+        # Future
+        extended_sensor_list.append({
+            'component' : 'sensor',
+            'object_id' : 'indi_allsky_sensor_user_8',
+            'config' : {
+                'name' : self.SENSOR_SLOT_choices[8][0],
+                'unit_of_measurement' : '',
+                'unique_id' : 'indi_allsky_sensor_user_8_{0}'.format(self.unique_id_base),
+                'state_topic' : '/'.join((indi_allsky_base_topic, 'sensor_user_8')),
+                'device'   : {
+                    'name' : self.device_name,
+                    'identifiers' : [
+                        self.device_name,
+                    ],
+                },
+            },
+        })
+
+        # Future
+        extended_sensor_list.append({
+            'component' : 'sensor',
+            'object_id' : 'indi_allsky_sensor_user_9',
+            'config' : {
+                'name' : self.SENSOR_SLOT_choices[9][0],
+                'unit_of_measurement' : '',
+                'unique_id' : 'indi_allsky_sensor_user_9_{0}'.format(self.unique_id_base),
+                'state_topic' : '/'.join((indi_allsky_base_topic, 'sensor_user_9')),
+                'device'   : {
+                    'name' : self.device_name,
+                    'identifiers' : [
+                        self.device_name,
+                    ],
+                },
+            },
+        })
+
+
+        for i in range(10, 60):
             extended_sensor_list.append({
                 'component' : 'sensor',
                 'object_id' : 'indi_allsky_sensor_user_{0}'.format(i),
