@@ -1,12 +1,14 @@
 from .generic import GenericFileTransfer
 #from .exceptions import AuthenticationFailure
 from .exceptions import ConnectionFailure
+from .exceptions import CertificateValidationFailure
 from .exceptions import TransferFailure
 
 from pathlib import Path
 #from datetime import datetime
 #from datetime import timedelta
 import socket
+import ssl
 import time
 import urllib3.exceptions
 import logging
@@ -128,6 +130,8 @@ class boto3_s3(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except ConnectionRefusedError as e:
             raise ConnectionFailure(str(e)) from e
+        except ssl.SSLEOFError as e:
+            raise CertificateValidationFailure(str(e)) from e
         except botocore.exceptions.ConnectTimeoutError as e:
             raise ConnectionFailure(str(e)) from e
         except urllib3.exceptions.ReadTimeoutError as e:
@@ -136,6 +140,8 @@ class boto3_s3(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except urllib3.exceptions.ProtocolError as e:
             raise ConnectionFailure(str(e)) from e
+        except urllib3.exceptions.SSLError as e:
+            raise CertificateValidationFailure(str(e)) from e
         except botocore.exceptions.ReadTimeoutError as e:
             raise ConnectionFailure(str(e)) from e
         except botocore.exceptions.EndpointConnectionError as e:
@@ -144,6 +150,9 @@ class boto3_s3(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except boto3.exceptions.S3UploadFailedError as e:
             raise TransferFailure(str(e)) from e
+        except botocore.exceptions.SSLError as e:
+            raise CertificateValidationFailure(str(e)) from e
+
 
         upload_elapsed_s = time.time() - start
         local_file_size = local_file_p.stat().st_size
@@ -171,6 +180,8 @@ class boto3_s3(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except ConnectionRefusedError as e:
             raise ConnectionFailure(str(e)) from e
+        except ssl.SSLEOFError as e:
+            raise CertificateValidationFailure(str(e)) from e
         except botocore.exceptions.ConnectTimeoutError as e:
             raise ConnectionFailure(str(e)) from e
         except urllib3.exceptions.ReadTimeoutError as e:
@@ -179,6 +190,8 @@ class boto3_s3(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except urllib3.exceptions.ProtocolError as e:
             raise ConnectionFailure(str(e)) from e
+        except urllib3.exceptions.SSLError as e:
+            raise CertificateValidationFailure(str(e)) from e
         except botocore.exceptions.ReadTimeoutError as e:
             raise ConnectionFailure(str(e)) from e
         except botocore.exceptions.EndpointConnectionError as e:
@@ -187,6 +200,8 @@ class boto3_s3(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except boto3.exceptions.S3UploadFailedError as e:
             raise TransferFailure(str(e)) from e
+        except botocore.exceptions.SSLError as e:
+            raise CertificateValidationFailure(str(e)) from e
 
 
         logger.info('S3 object deleted: %s', key)
