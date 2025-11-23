@@ -8,6 +8,7 @@ from pathlib import Path
 #from datetime import datetime
 #from datetime import timedelta
 import socket
+import ssl
 import time
 import urllib3.exceptions
 import logging
@@ -129,6 +130,8 @@ class boto3_s3(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except ConnectionRefusedError as e:
             raise ConnectionFailure(str(e)) from e
+        except ssl.SSLEOFError as e:
+            raise CertificateValidationFailure(str(e)) from e
         except botocore.exceptions.ConnectTimeoutError as e:
             raise ConnectionFailure(str(e)) from e
         except urllib3.exceptions.ReadTimeoutError as e:
@@ -177,6 +180,8 @@ class boto3_s3(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except ConnectionRefusedError as e:
             raise ConnectionFailure(str(e)) from e
+        except ssl.SSLEOFError as e:
+            raise CertificateValidationFailure(str(e)) from e
         except botocore.exceptions.ConnectTimeoutError as e:
             raise ConnectionFailure(str(e)) from e
         except urllib3.exceptions.ReadTimeoutError as e:
