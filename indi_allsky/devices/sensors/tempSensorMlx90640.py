@@ -22,6 +22,8 @@ class TempSensorMlx90640(SensorBase):
             self.mlx.getFrame(frame)
         except RuntimeError as e:
             raise SensorReadException(str(e)) from e
+        except ValueError as e:
+            raise SensorReadException(str(e)) from e
 
 
         data = list()
