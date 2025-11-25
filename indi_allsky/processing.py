@@ -2115,7 +2115,13 @@ class ImageProcessor(object):
 
         sun = ephem.Sun()
         sun.compute(obs)
-        self.astrometric_data['sun_alt'] = math.degrees(sun.alt)
+        sun_alt = math.degrees(sun.alt)
+        self.astrometric_data['sun_alt'] = sun_alt
+
+        if sun_alt >= 0:
+            self.astrometric_data['sun_up'] = 'Yes'
+        else:
+            self.astrometric_data['sun_up'] = 'No'
 
 
         moon = ephem.Moon()
@@ -2490,6 +2496,7 @@ class ImageProcessor(object):
             'aurora_s_hemi_gw' : i_ref.aurora_s_hemi_gw,
             'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'sun_alt'      : self.astrometric_data['sun_alt'],
+            'sun_up'       : self.astrometric_data['sun_up'],
             'sun_next_rise'     : self.astrometric_data['sun_next_rise'],
             'sun_next_rise_h'   : self.astrometric_data['sun_next_rise_h'],
             'sun_next_set'      : self.astrometric_data['sun_next_set'],

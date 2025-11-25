@@ -712,6 +712,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'detections' : 'True',
         'owner'      : 'foobar',
         'sun_alt'    : 0.0,
+        'sun_up'     : 'No',
         'sun_next_rise'     : '',
         'sun_next_rise_h'   : 0.0,
         'sun_next_set'      : '',
