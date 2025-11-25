@@ -313,6 +313,7 @@ var camera_id = {{ camera_id }};
 <div class="row">
     <div class="col-sm-2">RTC Available</div>
     <div class="col-sm-4">{{ timedate1_dict.LocalRTC }}</div>
+    <div class="col-sm-6"><span class="badge rounded-pill bg-info text-dark">Note</span> Note: RTC almost always reports False even when one is available</div>
 </div>
 
 <div class="row">
@@ -325,16 +326,25 @@ var camera_id = {{ camera_id }};
 <div class="row">
     <div>
         <span class="badge rounded-pill bg-danger">Danger</span>
-        <span class="col-sm-12 text-danger font-weight-bold"> Changing the system time during operation can cause unpredictable behavior.  It is recommend restarting both indiserver and indi-allsky.</span>
+        <span class="col-sm-12 text-danger font-weight-bold"> Changing the system time during operation can cause unpredictable behavior.  It is recommended to restart both indiserver and indi-allsky.</span>
     </div>
 </div>
 
 <div class="row">
     <div>
         <span class="badge rounded-pill bg-warning text-dark">Warning</span>
-        <span class="col-sm-12 text-warning"> Manually setting time will disable NTP time sync (permanently)</span>
+        <span class="col-sm-12 text-warning"> Manually setting time will disable NTP time sync</span>
     </div>
 </div>
+
+<div class="row">
+    <div>
+        <span class="badge rounded-pill bg-info text-dark">Note</span>
+        <span class="col-sm-12 text-info"> Time sync can be manually re-enabled on the CLI by issuing the following command</span>
+        <div class="col-sm-12"><pre>timedatectl set-ntp true</pre></div>
+    </div>
+</div>
+
 
 <hr>
 
@@ -370,11 +380,6 @@ var camera_id = {{ camera_id }};
 </form>
 
 <hr>
-
-<div class="row">
-    <div class="col-sm-12">Time sync can be manually re-enabled on the CLI by issuing the following command</div>
-    <div class="col-sm-12"><pre>timedatectl set-ntp true</pre></div>
-</div>
 
 <script>
 const form_settime_successMessage = $('#form_settime_success-message');
