@@ -47,6 +47,9 @@ from .miscDb import miscDb
 class BaseView(View):
     decorators = [login_optional]  # auth based on app.config['INDI_ALLSKY_AUTH_ALL_VIEWS']
 
+    cardinal_directions = ('N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N')
+
+
     def __init__(self, **kwargs):
         super(BaseView, self).__init__(**kwargs)
         from ..config import IndiAllSkyConfig  # prevent circular import
@@ -1096,9 +1099,6 @@ class BaseView(View):
 
 
 class TemplateView(BaseView):
-
-    cardinal_directions = ('N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N')
-
 
     def __init__(self, template_name, **kwargs):
         super(TemplateView, self).__init__(**kwargs)
