@@ -7533,6 +7533,10 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
     def getDistinctDays(self, camera_id):
+
+        ### get image count
+        # this is 10x slower on mysql vs sqlite
+        # still acceptable performance
         days_query_images = db.session.query(
             func.distinct(IndiAllSkyDbImageTable.dayDate).label('dayDate_distinct'),
             IndiAllSkyDbImageTable.night,
@@ -7576,7 +7580,9 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                 day_dict[dayDate]['Day']['image_count'] = entry.image_count
 
 
-        # add panorama count
+        ### get parorama count
+        # this is 10x slower on mysql vs sqlite
+        # still acceptable performance
         days_query_panorama_images = db.session.query(
             func.distinct(IndiAllSkyDbPanoramaImageTable.dayDate).label('dayDate_distinct'),
             IndiAllSkyDbPanoramaImageTable.night,
