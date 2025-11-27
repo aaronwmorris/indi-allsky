@@ -7662,45 +7662,46 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
                 # star trail
-                startrail_entry = IndiAllSkyDbStarTrailsTable.query\
-                    .join(IndiAllSkyDbStarTrailsTable.camera)\
-                    .filter(
-                        and_(
-                            IndiAllSkyDbCameraTable.id == camera_id,
-                            IndiAllSkyDbStarTrailsTable.dayDate == entry['dayDate'],
-                            IndiAllSkyDbStarTrailsTable.night == entry['night'],
-                        )
-                    )\
-                    .first()
+                if tod == 'Night':
+                    startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                        .join(IndiAllSkyDbStarTrailsTable.camera)\
+                        .filter(
+                            and_(
+                                IndiAllSkyDbCameraTable.id == camera_id,
+                                IndiAllSkyDbStarTrailsTable.dayDate == entry['dayDate'],
+                                IndiAllSkyDbStarTrailsTable.night == entry['night'],
+                            )
+                        )\
+                        .first()
 
-                if startrail_entry:
-                    if not startrail_entry.success:
-                        day_str = '{0:s} [!S]'.format(day_str)
+                    if startrail_entry:
+                        if not startrail_entry.success:
+                            day_str = '{0:s} [!S]'.format(day_str)
+                        else:
+                            day_str = '{0:s} [S]'.format(day_str)
                     else:
-                        day_str = '{0:s} [S]'.format(day_str)
-                else:
-                    day_str = '{0:s} [ ]'.format(day_str)
+                        day_str = '{0:s} [ ]'.format(day_str)
 
 
-                # star trail video
-                startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
-                    .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
-                    .filter(
-                        and_(
-                            IndiAllSkyDbCameraTable.id == camera_id,
-                            IndiAllSkyDbStarTrailsVideoTable.dayDate == entry['dayDate'],
-                            IndiAllSkyDbStarTrailsVideoTable.night == entry['night'],
-                        )
-                    )\
-                    .first()
+                    # star trail video
+                    startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                        .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
+                        .filter(
+                            and_(
+                                IndiAllSkyDbCameraTable.id == camera_id,
+                                IndiAllSkyDbStarTrailsVideoTable.dayDate == entry['dayDate'],
+                                IndiAllSkyDbStarTrailsVideoTable.night == entry['night'],
+                            )
+                        )\
+                        .first()
 
-                if startrail_video_entry:
-                    if not startrail_video_entry.success:
-                        day_str = '{0:s} [!ST]'.format(day_str)
+                    if startrail_video_entry:
+                        if not startrail_video_entry.success:
+                            day_str = '{0:s} [!ST]'.format(day_str)
+                        else:
+                            day_str = '{0:s} [ST]'.format(day_str)
                     else:
-                        day_str = '{0:s} [ST]'.format(day_str)
-                else:
-                    day_str = '{0:s} [ ]'.format(day_str)
+                        day_str = '{0:s} [ ]'.format(day_str)
 
 
                 # panorama video
