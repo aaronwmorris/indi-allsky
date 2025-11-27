@@ -7661,6 +7661,27 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                     day_str = '{0:s} [ ]'.format(day_str)
 
 
+                # panorama video
+                panorama_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
+                    .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+                    .filter(
+                        and_(
+                            IndiAllSkyDbCameraTable.id == camera_id,
+                            IndiAllSkyDbPanoramaVideoTable.dayDate == entry['dayDate'],
+                            IndiAllSkyDbPanoramaVideoTable.night == entry['night'],
+                        )
+                    )\
+                    .first()
+
+                if panorama_video_entry:
+                    if not panorama_video_entry.success:
+                        day_str = '{0:s} [!P]'.format(day_str)
+                    else:
+                        day_str = '{0:s} [P]'.format(day_str)
+                else:
+                    day_str = '{0:s} [ ]'.format(day_str)
+
+
                 # star trail
                 if tod == 'Night':
                     startrail_entry = IndiAllSkyDbStarTrailsTable.query\
@@ -7702,27 +7723,6 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                             day_str = '{0:s} [ST]'.format(day_str)
                     else:
                         day_str = '{0:s} [ ]'.format(day_str)
-
-
-                # panorama video
-                panorama_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
-                    .join(IndiAllSkyDbPanoramaVideoTable.camera)\
-                    .filter(
-                        and_(
-                            IndiAllSkyDbCameraTable.id == camera_id,
-                            IndiAllSkyDbPanoramaVideoTable.dayDate == entry['dayDate'],
-                            IndiAllSkyDbPanoramaVideoTable.night == entry['night'],
-                        )
-                    )\
-                    .first()
-
-                if panorama_video_entry:
-                    if not panorama_video_entry.success:
-                        day_str = '{0:s} [!P]'.format(day_str)
-                    else:
-                        day_str = '{0:s} [P]'.format(day_str)
-                else:
-                    day_str = '{0:s} [ ]'.format(day_str)
 
 
                 day_str = '{0:s} - {1:d}/{2:d} images'.format(day_str, entry['image_count'], entry['panoramaimage_count'])
