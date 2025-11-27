@@ -4,6 +4,7 @@ import io
 import re
 import json
 import time
+from collections import OrderedDict
 from datetime import datetime
 import tempfile
 from urllib.parse import urlparse
@@ -7212,7 +7213,8 @@ class IndiAllskyMiniVideoViewerPreload(IndiAllskyMiniVideoViewer):
 
 
 
-class IndiAllskyTimelapseGeneratorForm(FlaskForm):
+class IndiAllskyTimelapseGeneratorForm_old(FlaskForm):
+    # to be deleted
     ACTION_SELECT_choices = (
         ('none', '(Please select an action)'),
         ('generate_video_k_st', 'Generate All'),
@@ -7496,6 +7498,256 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
         return day_choices
 
+
+class IndiAllskyTimelapseGeneratorForm(FlaskForm):
+    ACTION_SELECT_choices = (
+        ('none', '(Please select an action)'),
+        ('generate_video_k_st', 'Generate All'),
+        ('generate_video', 'Generate Timelapse Only'),
+        ('generate_k_st', 'Generate Keogram/Star Trails'),
+        ('generate_panorama_video', 'Generate Panorama Timelapse'),
+        ('delete_video_k_st_p', 'Delete Timelapse/Keogram/Star Trails/Panorama'),
+        ('delete_video', 'Delete Timelapse Only'),
+        ('delete_k_st', 'Delete Keogram/Star Trails'),
+        ('delete_panorama_video', 'Delete Panorama Timelapse'),
+        ('upload_endofnight', 'Upload End-of-Night Data [today only]'),
+        ('delete_images', 'Delete Images for date *DANGER*'),
+    )
+
+    CAMERA_ID          = HiddenField('Camera ID', validators=[DataRequired()])
+    ACTION_SELECT      = SelectField('Action', choices=ACTION_SELECT_choices, validators=[DataRequired()])
+    DAY_SELECT         = SelectField('Day', choices=[], validators=[DataRequired()])
+    CONFIRM1           = BooleanField('Confirm')
+
+
+    def __init__(self, *args, **kwargs):
+        super(IndiAllskyTimelapseGeneratorForm, self).__init__(*args, **kwargs)
+
+        self.camera_id = kwargs['camera_id']
+
+        dates_start = time.time()
+
+        self.DAY_SELECT.choices = self.getDistinctDays(self.camera_id)
+
+        dates_elapsed_s = time.time() - dates_start
+        app.logger.info('Dates processed in %0.4f s', dates_elapsed_s)
+
+
+    def getDistinctDays(self, camera_id):
+
+        ### get image count
+        # this is 10x slower on mysql vs sqlite
+        # still acceptable performance
+        days_query_images = db.session.query(
+            func.distinct(IndiAllSkyDbImageTable.dayDate).label('dayDate_distinct'),
+            IndiAllSkyDbImageTable.night,
+            func.count(IndiAllSkyDbImageTable.id).label('image_count'),
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .group_by(IndiAllSkyDbImageTable.dayDate, IndiAllSkyDbImageTable.night)\
+            .order_by(IndiAllSkyDbImageTable.dayDate.desc())
+
+
+
+        day_dict = OrderedDict()
+        for entry in days_query_images:
+            if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+                # mysql returns a date object
+                dayDate = entry.dayDate_distinct
+            else:
+                # sqlite returns a string
+                dayDate = datetime.strptime(entry.dayDate_distinct, '%Y-%m-%d').date()
+
+            if not day_dict.get(dayDate):
+                day_dict[dayDate] = OrderedDict({
+                    'Night' : {
+                        'image_count' : 0,
+                        'panoramaimage_count' : 0,
+                        'night' : True,
+                        'dayDate' : dayDate,
+                    },
+                    'Day' : {
+                        'image_count' : 0,
+                        'panoramaimage_count' : 0,
+                        'night' : False,
+                        'dayDate' : dayDate,
+                    },
+                })
+
+            if entry.night:
+                day_dict[dayDate]['Night']['image_count'] = entry.image_count
+            else:
+                day_dict[dayDate]['Day']['image_count'] = entry.image_count
+
+
+        ### get parorama count
+        # this is 10x slower on mysql vs sqlite
+        # still acceptable performance
+        days_query_panorama_images = db.session.query(
+            func.distinct(IndiAllSkyDbPanoramaImageTable.dayDate).label('dayDate_distinct'),
+            IndiAllSkyDbPanoramaImageTable.night,
+            func.count(IndiAllSkyDbPanoramaImageTable.id).label('image_count'),
+        )\
+            .join(IndiAllSkyDbPanoramaImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .group_by(IndiAllSkyDbPanoramaImageTable.dayDate, IndiAllSkyDbPanoramaImageTable.night)\
+            .order_by(IndiAllSkyDbPanoramaImageTable.dayDate.desc())
+
+
+        for entry in days_query_panorama_images:
+            dayDate = datetime.strptime(entry.dayDate_distinct, '%Y-%m-%d').date()
+
+            if not day_dict.get(dayDate):
+                day_dict[dayDate] = OrderedDict({
+                    'Night' : {
+                        'image_count' : 0,
+                        'panoramaimage_count' : 0,
+                        'night' : sa_true(),
+                        'dayDate' : dayDate,
+                    },
+                    'Day' : {
+                        'image_count' : 0,
+                        'panoramaimage_count' : 0,
+                        'night' : sa_false(),
+                        'dayDate' : dayDate,
+                    },
+                })
+
+
+            if entry.night:
+                day_dict[dayDate]['Night']['panoramaimage_count'] = entry.image_count
+            else:
+                day_dict[dayDate]['Day']['panoramaimage_count'] = entry.image_count
+
+
+        # Build choices
+        day_choices = list()
+        for k, tod_dict in day_dict.items():
+            for tod, entry in tod_dict.items():
+                if tod == 'Night':
+                    day_str = '{0:%Y-%m-%d} Night'.format(entry['dayDate'])
+                else:
+                    day_str = '{0:%Y-%m-%d} Day'.format(entry['dayDate'])
+
+
+                # videos
+                video_entry = IndiAllSkyDbVideoTable.query\
+                    .join(IndiAllSkyDbVideoTable.camera)\
+                    .filter(
+                        and_(
+                            IndiAllSkyDbCameraTable.id == camera_id,
+                            IndiAllSkyDbVideoTable.dayDate == entry['dayDate'],
+                            IndiAllSkyDbVideoTable.night == entry['night'],
+                        )
+                    )\
+                    .first()
+
+                if video_entry:
+                    if not video_entry.success:
+                        day_str = '{0:s} [!T]'.format(day_str)
+                    else:
+                        day_str = '{0:s} [T]'.format(day_str)
+                else:
+                    day_str = '{0:s} [ ]'.format(day_str)
+
+
+                # keogram
+                keogram_entry = IndiAllSkyDbKeogramTable.query\
+                    .join(IndiAllSkyDbKeogramTable.camera)\
+                    .filter(
+                        and_(
+                            IndiAllSkyDbCameraTable.id == camera_id,
+                            IndiAllSkyDbKeogramTable.dayDate == entry['dayDate'],
+                            IndiAllSkyDbKeogramTable.night == entry['night'],
+                        )
+                    )\
+                    .first()
+
+                if keogram_entry:
+                    if not keogram_entry.success:
+                        day_str = '{0:s} [!K]'.format(day_str)
+                    else:
+                        day_str = '{0:s} [K]'.format(day_str)
+                else:
+                    day_str = '{0:s} [ ]'.format(day_str)
+
+
+                # panorama video
+                panorama_video_entry = IndiAllSkyDbPanoramaVideoTable.query\
+                    .join(IndiAllSkyDbPanoramaVideoTable.camera)\
+                    .filter(
+                        and_(
+                            IndiAllSkyDbCameraTable.id == camera_id,
+                            IndiAllSkyDbPanoramaVideoTable.dayDate == entry['dayDate'],
+                            IndiAllSkyDbPanoramaVideoTable.night == entry['night'],
+                        )
+                    )\
+                    .first()
+
+                if panorama_video_entry:
+                    if not panorama_video_entry.success:
+                        day_str = '{0:s} [!P]'.format(day_str)
+                    else:
+                        day_str = '{0:s} [P]'.format(day_str)
+                else:
+                    day_str = '{0:s} [ ]'.format(day_str)
+
+
+                # star trail
+                if tod == 'Night':
+                    startrail_entry = IndiAllSkyDbStarTrailsTable.query\
+                        .join(IndiAllSkyDbStarTrailsTable.camera)\
+                        .filter(
+                            and_(
+                                IndiAllSkyDbCameraTable.id == camera_id,
+                                IndiAllSkyDbStarTrailsTable.dayDate == entry['dayDate'],
+                                IndiAllSkyDbStarTrailsTable.night == entry['night'],
+                            )
+                        )\
+                        .first()
+
+                    if startrail_entry:
+                        if not startrail_entry.success:
+                            day_str = '{0:s} [!S]'.format(day_str)
+                        else:
+                            day_str = '{0:s} [S]'.format(day_str)
+                    else:
+                        day_str = '{0:s} [ ]'.format(day_str)
+
+
+                    # star trail video
+                    startrail_video_entry = IndiAllSkyDbStarTrailsVideoTable.query\
+                        .join(IndiAllSkyDbStarTrailsVideoTable.camera)\
+                        .filter(
+                            and_(
+                                IndiAllSkyDbCameraTable.id == camera_id,
+                                IndiAllSkyDbStarTrailsVideoTable.dayDate == entry['dayDate'],
+                                IndiAllSkyDbStarTrailsVideoTable.night == entry['night'],
+                            )
+                        )\
+                        .first()
+
+                    if startrail_video_entry:
+                        if not startrail_video_entry.success:
+                            day_str = '{0:s} [!ST]'.format(day_str)
+                        else:
+                            day_str = '{0:s} [ST]'.format(day_str)
+                    else:
+                        day_str = '{0:s} [ ]'.format(day_str)
+
+
+                day_str = '{0:s} - {1:d}/{2:d} images'.format(day_str, entry['image_count'], entry['panoramaimage_count'])
+
+
+                if tod == 'Night':
+                    entry_night = ('{0:%Y-%m-%d}_night'.format(entry['dayDate']), day_str)
+                    day_choices.append(entry_night)
+                else:
+                    entry_day = ('{0:%Y-%m-%d}_day'.format(entry['dayDate']), day_str)
+                    day_choices.append(entry_day)
+
+        return day_choices
 
 
 class IndiAllskySystemInfoForm(FlaskForm):
