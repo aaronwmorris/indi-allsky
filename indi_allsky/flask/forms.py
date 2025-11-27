@@ -7214,6 +7214,7 @@ class IndiAllskyMiniVideoViewerPreload(IndiAllskyMiniVideoViewer):
 
 
 class IndiAllskyTimelapseGeneratorForm_old(FlaskForm):
+    # to be deleted
     ACTION_SELECT_choices = (
         ('none', '(Please select an action)'),
         ('generate_video_k_st', 'Generate All'),
