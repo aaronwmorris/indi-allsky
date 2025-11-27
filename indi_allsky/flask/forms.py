@@ -7547,7 +7547,7 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
         day_dict = OrderedDict()
         for entry in days_query_images:
-            dayDate = datetime.strptime(entry.dayDate_distinct, '%Y-%m-%d')
+            dayDate = datetime.strptime(entry.dayDate_distinct, '%Y-%m-%d').date()
 
             if not day_dict.get(dayDate):
                 day_dict[dayDate] = OrderedDict({
@@ -7584,7 +7584,7 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
         for entry in days_query_panorama_images:
-            dayDate = datetime.strptime(entry.dayDate_distinct, '%Y-%m-%d')
+            dayDate = datetime.strptime(entry.dayDate_distinct, '%Y-%m-%d').date()
 
             if not day_dict.get(dayDate):
                 day_dict[dayDate] = OrderedDict({
