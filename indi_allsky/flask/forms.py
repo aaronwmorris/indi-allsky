@@ -7591,13 +7591,13 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                     'Night' : {
                         'image_count' : 0,
                         'panoramaimage_count' : 0,
-                        'night' : True,
+                        'night' : sa_true(),
                         'dayDate' : dayDate,
                     },
                     'Day' : {
                         'image_count' : 0,
                         'panoramaimage_count' : 0,
-                        'night' : False,
+                        'night' : sa_false(),
                         'dayDate' : dayDate,
                     },
                 })
@@ -7612,8 +7612,8 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
         # Build choices
         day_choices = list()
         for k, tod_dict in day_dict.items():
-            for k2, entry in tod_dict.items():
-                if k2 == 'Night':
+            for tod, entry in tod_dict.items():
+                if tod == 'Night':
                     day_str = '{0:s} Night'.format(entry['dayDate'].strftime('%Y-%m-%d'))
                 else:
                     day_str = '{0:s} Day'.format(entry['dayDate'].strftime('%Y-%m-%d'))
@@ -7727,7 +7727,7 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
                 day_str = '{0:s} - {1:d}/{2:d} images'.format(day_str, entry['image_count'], entry['panoramaimage_count'])
 
 
-                if entry['night']:
+                if tod == 'Night':
                     entry_night = ('{0:s}_night'.format(day_str), day_str)
                     day_choices.append(entry_night)
                 else:
