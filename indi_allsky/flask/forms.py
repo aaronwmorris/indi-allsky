@@ -7614,9 +7614,9 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
         for k, tod_dict in day_dict.items():
             for tod, entry in tod_dict.items():
                 if tod == 'Night':
-                    day_str = '{0:s} Night'.format(entry['dayDate'].strftime('%Y-%m-%d'))
+                    day_str = '{0:%Y-%m-%d} Night'.format(entry['dayDate'])
                 else:
-                    day_str = '{0:s} Day'.format(entry['dayDate'].strftime('%Y-%m-%d'))
+                    day_str = '{0:%Y-%m-%d} Day'.format(entry['dayDate'])
 
 
                 # videos
@@ -7728,10 +7728,10 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
                 if tod == 'Night':
-                    entry_night = ('{0:s}_night'.format(day_str), day_str)
+                    entry_night = ('{0:%Y-%m-%d}_night'.format(entry['dayDate']), day_str)
                     day_choices.append(entry_night)
                 else:
-                    entry_day = ('{0:s}_day'.format(day_str), day_str)
+                    entry_day = ('{0:%Y-%m-%d}_day'.format(entry['dayDate']), day_str)
                     day_choices.append(entry_day)
 
         return day_choices
