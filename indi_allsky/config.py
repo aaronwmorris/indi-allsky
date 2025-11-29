@@ -611,6 +611,12 @@ class IndiAllSkyConfigBase(object):
             "A_PIN_1"                : "D21",
             "A_INVERT_OUTPUT"        : False,
         },
+        "MANUAL_GPIO" : {
+            "CLASSNAME"              : "",
+            "A_PIN_1"                : "17",
+            "B_PIN_1"                : "13",
+            "C_PIN_1"                : "21",
+        },
         "DEVICE" : {
             "MQTT_TRANSPORT"         : "tcp",  # tcp or websockets
             "MQTT_PROTOCOL"          : "MQTTv5",

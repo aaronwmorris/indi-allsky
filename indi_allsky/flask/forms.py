@@ -2776,6 +2776,11 @@ def GENERIC_GPIO__CLASSNAME_validator(form, field):
         raise ValidationError('Invalid selection')
 
 
+def MANUAL_GPIO__CLASSNAME_validator(form, field):
+    if field.data not in list(zip(*form.MANUAL_GPIO__CLASSNAME_choices))[0]:
+        raise ValidationError('Invalid selection')
+
+
 def TEMP_SENSOR__CLASSNAME_validator(form, field):
     sensors = list()
     for v in form.TEMP_SENSOR__CLASSNAME_choices.values():
@@ -3576,6 +3581,11 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'None'),
         ('blinka_gpio_standard', 'GPIO - Standard'),
         ('gpio_dockerpi_4channel_relay', 'GPIO - DockerPi 4 Channel Relay (BETA)'),
+    )
+
+    MANUAL_GPIO__CLASSNAME_choices = (
+        ('', 'None'),
+        ('rpigpio_gpio_rpigpio', 'RPi.GPIO - Raspberry Pi'),
     )
 
     TEMP_SENSOR__CLASSNAME_choices = {
@@ -4460,6 +4470,10 @@ class IndiAllskyConfigForm(FlaskForm):
     GENERIC_GPIO__A_I2C_ADDRESS      = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     GENERIC_GPIO__A_PIN_1            = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     GENERIC_GPIO__A_INVERT_OUTPUT    = BooleanField('Invert Output')
+    MANUAL_GPIO__CLASSNAME           = SelectField('Manual GPIO Class', choices=MANUAL_GPIO__CLASSNAME_choices, validators=[MANUAL_GPIO__CLASSNAME_validator])
+    MANUAL_GPIO__A_PIN_1             = StringField('Manual Pin A', validators=[DEVICE_PIN_NAME_validator])
+    MANUAL_GPIO__B_PIN_1             = StringField('Manual Pin B', validators=[DEVICE_PIN_NAME_validator])
+    MANUAL_GPIO__C_PIN_1             = StringField('Manual Pin C', validators=[DEVICE_PIN_NAME_validator])
     DEVICE__MQTT_TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     DEVICE__MQTT_PROTOCOL            = SelectField('MQTT Protocol', choices=MQTTPUBLISH__PROTOCOL_choices, validators=[DataRequired(), MQTTPUBLISH__PROTOCOL_validator])
     DEVICE__MQTT_HOST                = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])

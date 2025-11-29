@@ -2434,6 +2434,10 @@ class ConfigView(FormView):
             'GENERIC_GPIO__A_I2C_ADDRESS'    : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_I2C_ADDRESS', '0x12'),
             'GENERIC_GPIO__A_PIN_1'          : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_PIN_1', 'D21'),
             'GENERIC_GPIO__A_INVERT_OUTPUT'  : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_INVERT_OUTPUT', False),
+            'MANUAL_GPIO__CLASSNAME'         : self.indi_allsky_config.get('MANUAL_GPIO', {}).get('CLASSNAME', ''),
+            'MANUAL_GPIO__A_PIN_1'           : self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_1', '17'),
+            'MANUAL_GPIO__B_PIN_1'           : self.indi_allsky_config.get('MANUAL_GPIO', {}).get('B_PIN_1', '13'),
+            'MANUAL_GPIO__C_PIN_1'           : self.indi_allsky_config.get('MANUAL_GPIO', {}).get('C_PIN_1', '21'),
             'DEVICE__MQTT_TRANSPORT'         : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_TRANSPORT', 'tcp'),
             'DEVICE__MQTT_PROTOCOL'          : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_PROTOCOL', 'MQTTv5'),
             'DEVICE__MQTT_HOST'              : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_HOST', 'localhost'),
@@ -2844,6 +2848,7 @@ class AjaxConfigView(BaseView):
             'DEW_HEATER',
             'FAN',
             'GENERIC_GPIO',
+            'MANUAL_GPIO',
             'DEVICE',
             'TEMP_SENSOR',
             'THUMBNAILS',
@@ -3356,6 +3361,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['GENERIC_GPIO']['A_I2C_ADDRESS']        = str(request.json['GENERIC_GPIO__A_I2C_ADDRESS'])
         self.indi_allsky_config['GENERIC_GPIO']['A_PIN_1']              = str(request.json['GENERIC_GPIO__A_PIN_1'])
         self.indi_allsky_config['GENERIC_GPIO']['A_INVERT_OUTPUT']      = bool(request.json['GENERIC_GPIO__A_INVERT_OUTPUT'])
+        self.indi_allsky_config['MANUAL_GPIO']['CLASSNAME']             = str(request.json['MANUAL_GPIO__CLASSNAME'])
+        self.indi_allsky_config['MANUAL_GPIO']['A_PIN_1']               = str(request.json['MANUAL_GPIO__A_PIN_1'])
+        self.indi_allsky_config['MANUAL_GPIO']['B_PIN_1']               = str(request.json['MANUAL_GPIO__B_PIN_1'])
+        self.indi_allsky_config['MANUAL_GPIO']['C_PIN_1']               = str(request.json['MANUAL_GPIO__C_PIN_1'])
         self.indi_allsky_config['DEVICE']['MQTT_TRANSPORT']             = str(request.json['DEVICE__MQTT_TRANSPORT'])
         self.indi_allsky_config['DEVICE']['MQTT_PROTOCOL']              = str(request.json['DEVICE__MQTT_PROTOCOL'])
         self.indi_allsky_config['DEVICE']['MQTT_HOST']                  = str(request.json['DEVICE__MQTT_HOST'])
