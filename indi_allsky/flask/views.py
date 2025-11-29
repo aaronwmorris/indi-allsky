@@ -6756,6 +6756,58 @@ class AjaxFocusControllerView(BaseView):
         return jsonify(r)
 
 
+class ManualGpioView(TemplateView):
+    decorators = [login_required]
+    title = 'Manual GPIO'
+
+
+    def get_context(self):
+        context = super(ManualGpioView, self).get_context()
+
+        from ..devices import generic as indi_allsky_gpio
+
+
+        context['title'] = self.title
+        context['camera_id'] = self.camera.id
+
+
+        gpio_class_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_CLASSNAME')
+
+        if not gpio_class_str:
+            context['pin_1_state'] = False
+            context['pin_2_state'] = False
+            context['pin_3_state'] = False
+
+            return context
+
+
+        try:
+            gpio_class = getattr(indi_allsky_gpio, gpio_class_str)
+        except AttributeError:
+            context['pin_1_state'] = False
+            context['pin_2_state'] = False
+            context['pin_3_state'] = False
+
+            return context
+
+
+        pin_1_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_1')
+        pin_2_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_2')
+        pin_3_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_3')
+
+
+        pin_1 = gpio_class(pin_1_name=pin_1_str)
+        pin_2 = gpio_class(pin_1_name=pin_2_str)
+        pin_3 = gpio_class(pin_1_name=pin_3_str)
+
+
+        context['pin_1_state'] = pin_1.state
+        context['pin_2_state'] = pin_2.state
+        context['pin_3_state'] = pin_3.state
+
+        return context
+
+
 class ImageProcessingView(TemplateView):
     decorators = [login_required]
 
@@ -10880,6 +10932,8 @@ bp_allsky.add_url_rule('/ajax/indiserver', view_func=AjaxIndiServerChangeView.as
 bp_allsky.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
 bp_allsky.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
 bp_allsky.add_url_rule('/ajax/focuscontroller', view_func=AjaxFocusControllerView.as_view('focus_controller_view'))
+
+bp_allsky.add_url_rule('/manual_gpio', view_func=ManualGpioView.as_view('manual_gpio_view', template_name='manual_gpio.html'))
 
 bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
 bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))

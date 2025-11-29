@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: {{ title }}{% endblock %}
+
+{% block head %}
+<meta charset="UTF-8">
+<style>
+</style>
+<script type="text/javascript">
+var pin_1_state = {{ pin_1_state }};
+var pin_2_state = {{ pin_2_state }};
+var pin_3_state = {{ pin_3_state }};
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container h-100">
+
+</div>
+
+<script>
+
+function init() {
+}
+
+$( document ).ready(function() {
+    init();
+});
+</script>
+
+
+{% endblock %}
