@@ -6774,9 +6774,13 @@ class ManualGpioView(TemplateView):
         gpio_class_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_CLASSNAME')
 
         if not gpio_class_str:
-            context['pin_1_state'] = False
-            context['pin_2_state'] = False
-            context['pin_3_state'] = False
+            context['gpio_class'] = ''
+            context['pin_1_state'] = 0
+            context['pin_2_state'] = 0
+            context['pin_3_state'] = 0
+            context['pin_1_name'] = 'n/a'
+            context['pin_2_name'] = 'n/a'
+            context['pin_3_name'] = 'n/a'
 
             return context
 
@@ -6784,9 +6788,13 @@ class ManualGpioView(TemplateView):
         try:
             gpio_class = getattr(indi_allsky_gpio, gpio_class_str)
         except AttributeError:
-            context['pin_1_state'] = False
-            context['pin_2_state'] = False
-            context['pin_3_state'] = False
+            context['gpio_class'] = ''
+            context['pin_1_state'] = 0
+            context['pin_2_state'] = 0
+            context['pin_3_state'] = 0
+            context['pin_1_name'] = 'n/a'
+            context['pin_2_name'] = 'n/a'
+            context['pin_3_name'] = 'n/a'
 
             return context
 
@@ -6801,9 +6809,15 @@ class ManualGpioView(TemplateView):
         pin_3 = gpio_class(pin_1_name=pin_3_str)
 
 
-        context['pin_1_state'] = pin_1.state
-        context['pin_2_state'] = pin_2.state
-        context['pin_3_state'] = pin_3.state
+        context['gpio_class'] = gpio_class_str
+
+        context['pin_1_name'] = pin_1_str
+        context['pin_2_name'] = pin_2_str
+        context['pin_3_name'] = pin_3_str
+
+        context['pin_1_state'] = int(pin_1.state)
+        context['pin_2_state'] = int(pin_2.state)
+        context['pin_3_state'] = int(pin_3.state)
 
         return context
 
