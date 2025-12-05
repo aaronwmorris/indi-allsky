@@ -212,6 +212,10 @@ echo "USB Permissions"
 find /dev/bus/usb -ls || true
 
 echo
+echo "DMA Heap Permissions"
+find /dev/dma_heap -ls || true
+
+echo
 echo "video device Permissions"
 find /dev -type c -name "video*" -ls || true
 
