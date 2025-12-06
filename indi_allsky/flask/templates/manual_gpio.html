@@ -22,10 +22,10 @@ var pin_3_state = {{ pin_3_state }};
 
 <div class="form-group row">
     <div class="col-sm-2">
-      Pin 1
+      1 - Pin {{ pin_1_name }}
     </div>
     <div class="col-sm-2">
-        <button id="pin-1-button" class="btn btn-dark" disabled="disabled">{{ pin_1_name }}</button>
+        <button id="pin-1-button" class="btn btn-dark" disabled="disabled">n/a</button>
     </div>
 </div>
 
@@ -33,10 +33,10 @@ var pin_3_state = {{ pin_3_state }};
 
 <div class="form-group row">
     <div class="col-sm-2">
-      Pin 2
+      2 - Pin {{ pin_2_name }}
     </div>
     <div class="col-sm-2">
-        <button id="pin-2-button" class="btn btn-dark" disabled="disabled">{{ pin_2_name }}</button>
+        <button id="pin-2-button" class="btn btn-dark" disabled="disabled">n/a</button>
     </div>
 </div>
 
@@ -44,13 +44,12 @@ var pin_3_state = {{ pin_3_state }};
 
 <div class="form-group row">
     <div class="col-sm-2">
-      Pin 3
+      3 - Pin {{ pin_3_name }}
     </div>
     <div class="col-sm-2">
-        <button id="pin-3-button" class="btn btn-dark" disabled="disabled">{{ pin_3_name }}</button>
+        <button id="pin-3-button" class="btn btn-dark" disabled="disabled">n/a</button>
     </div>
 </div>
-
 
 </div>
 
@@ -60,20 +59,26 @@ function init() {
     if (gpio_class) {
         if (pin_1_state) {
             $('#pin-1-button').addClass('btn-success');
+            $('#pin-1-button').text('On');
         } else {
             $('#pin-1-button').addClass('btn-danger');
+            $('#pin-1-button').text('Off');
         }
 
         if (pin_2_state) {
             $('#pin-2-button').addClass('btn-success');
+            $('#pin-2-button').text('On');
         } else {
             $('#pin-2-button').addClass('btn-danger');
+            $('#pin-2-button').text('Off');
         }
 
         if (pin_3_state) {
             $('#pin-3-button').addClass('btn-success');
+            $('#pin-2-button').text('On');
         } else {
             $('#pin-3-button').addClass('btn-danger');
+            $('#pin-3-button').text('Off');
         }
 
         $('#pin-1-button').removeClass('btn-dark');
