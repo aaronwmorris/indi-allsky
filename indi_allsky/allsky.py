@@ -1,5 +1,6 @@
 import platform
 import sys
+import locale
 import fcntl
 #import errno
 import os
@@ -71,6 +72,9 @@ class IndiAllSky(object):
 
     def __init__(self):
         self.name = 'Main'
+
+        # should be inherited by all of the sub-processes
+        locale.setlocale(locale.LC_ALL, '')
 
         self.pid_lock = None
 
@@ -337,6 +341,9 @@ class IndiAllSky(object):
         logger.info('System uptime: %ds', uptime_s)
 
         logger.info('System timezone: %s', datetime.now(timezone.utc).astimezone().tzinfo)
+
+        locale_info = locale.getlocale()
+        logger.info('System locale: %s', '.'.join([str(x) for x in locale_info]))
 
         #logger.info('Temp dir: %s', tempfile.gettempdir())
 
