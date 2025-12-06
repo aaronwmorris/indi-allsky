@@ -6772,13 +6772,16 @@ class ManualGpioView(TemplateView):
 
 
         gpio_class_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_CLASSNAME')
+        pin_1_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_1', '-1')
+        pin_2_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_2', '-1')
+        pin_3_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_3', '-1')
+
+        context['pin_names'] = [pin_1_str, pin_2_str, pin_3_str]
+
 
         if not gpio_class_str:
             context['gpio_class'] = ''
             context['pin_states'] = [None, 0, 0, 0]
-            context['pin_1_name'] = 'n/a'
-            context['pin_2_name'] = 'n/a'
-            context['pin_3_name'] = 'n/a'
 
             return context
 
@@ -6788,16 +6791,8 @@ class ManualGpioView(TemplateView):
         except AttributeError:
             context['gpio_class'] = ''
             context['pin_states'] = [None, 0, 0, 0]
-            context['pin_1_name'] = 'n/a'
-            context['pin_2_name'] = 'n/a'
-            context['pin_3_name'] = 'n/a'
 
             return context
-
-
-        pin_1_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_1')
-        pin_2_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_2')
-        pin_3_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_3')
 
 
         pin_1 = gpio_class(self.indi_allsky_config, pin_1_name=pin_1_str)
@@ -6807,7 +6802,6 @@ class ManualGpioView(TemplateView):
 
         context['gpio_class'] = gpio_class_str
 
-        context['pin_names'] = [pin_1_str, pin_2_str, pin_3_str]
         context['pin_states'] = [int(pin_1.state), int(pin_2.state), int(pin_3.state)]
 
         return context
@@ -6860,7 +6854,7 @@ class AjaxManualGpioView(BaseView):
         pin = gpio_class(self.indi_allsky_config, pin_1_name=pin_str)
         pin.state = new_pin_state
 
-        time.sleep(1.0)
+        time.sleep(0.5)
 
         message = {
             'success-message' : 'Pin configured',
