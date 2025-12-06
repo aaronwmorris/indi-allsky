@@ -1814,7 +1814,7 @@ if [ ! -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
 fi
 
 
-if whiptail --title "Optional Python Modules" --yesno "Would you like to install optional python modules? (Additional database, object storage support)" 0 0 --defaultno; then
+if whiptail --title "Optional Python Modules" --yesno "Would you like to install optional python modules? (Additional database, object storage, YouTube support)" 0 0 --defaultno; then
     OPTIONAL_PYTHON_MODULES=true
 fi
 
