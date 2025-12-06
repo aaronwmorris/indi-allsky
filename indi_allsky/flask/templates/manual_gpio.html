@@ -12,9 +12,7 @@
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 var gpio_class = "{{ gpio_class}}";
-var pin_1_state = {{ pin_1_state }};
-var pin_2_state = {{ pin_2_state }};
-var pin_3_state = {{ pin_3_state }};
+var pin_states = {{ pin_states | tojson }};
 </script>
 {% endblock %}
 
@@ -25,7 +23,7 @@ var pin_3_state = {{ pin_3_state }};
 
 <div class="form-group row">
     <div class="col-sm-2">
-      1 - Pin {{ pin_1_name }}
+      1 - Pin {{ pin_names[0] }}
     </div>
     <div class="col-sm-2">
         <button id="pin-1-button" class="btn btn-dark" disabled="disabled">n/a</button>
@@ -36,7 +34,7 @@ var pin_3_state = {{ pin_3_state }};
 
 <div class="form-group row">
     <div class="col-sm-2">
-      2 - Pin {{ pin_2_name }}
+      2 - Pin {{ pin_names[1] }}
     </div>
     <div class="col-sm-2">
         <button id="pin-2-button" class="btn btn-dark" disabled="disabled">n/a</button>
@@ -47,7 +45,7 @@ var pin_3_state = {{ pin_3_state }};
 
 <div class="form-group row">
     <div class="col-sm-2">
-      3 - Pin {{ pin_3_name }}
+      3 - Pin {{ pin_names[2] }}
     </div>
     <div class="col-sm-2">
         <button id="pin-3-button" class="btn btn-dark" disabled="disabled">n/a</button>
@@ -63,6 +61,9 @@ var pin_3_state = {{ pin_3_state }};
     <div class="col-sm-2">
         <input class="form-check-input" id="PIN_CONFIRM1" name="PIN_CONFIRM1" type="checkbox" value="y"> Confirm
     </div>
+</div>
+
+<div class="form-group row">
     <div class="col-sm-5">
         <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
         <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
@@ -71,10 +72,27 @@ var pin_3_state = {{ pin_3_state }};
 
 <script>
 
-function togglePin(pin_id, pin_state, pin_button) {
+
+$('#pin-1-button').on('click', function() {
+    togglePin(1, !Boolean(pin_states[0]), 'pin-1-button');
+});
+
+$('#pin-2-button').on('click', function() {
+    togglePin(2, !Boolean(pin_states[1]), 'pin-2-button');
+});
+
+$('#pin-3-button').on('click', function() {
+    togglePin(3, !Boolean(pin_states[2]), 'pin-3-button');
+});
+
+function togglePin(pin_id, new_pin_state, pin_button) {
     $('#success-message').css({'display' : 'none'});
     $('#failure-message').css({'display' : 'none'});
 
+    if (! $("#PIN_CONFIRM1").prop('checked')) {
+        console.log('Confirm checkbox not checked');
+        return;
+    }
     $("#PIN_CONFIRM1").prop('checked', false);
 
     $('#pin-loader').css({'display' : 'block'});
@@ -84,7 +102,7 @@ function togglePin(pin_id, pin_state, pin_button) {
 
     var json_data = {
         'PIN_ID' : pin_id,
-        'PIN_STATE' : pin_state,
+        'NEW_PIN_STATE' : new_pin_state,
     };
 
 
@@ -95,15 +113,22 @@ function togglePin(pin_id, pin_state, pin_button) {
         data: JSON.stringify(json_data),
         success: function(rdata){
             $('#pin-loader').css({'display' : 'none'});
-            $('#' + pin_button).attr({'disabled' : 'disabled'});
+            $('#' + pin_button).removeAttr('disabled');
+
 
             if (rdata['pin_state']) {
                 $('#' + pin_button).removeClass('btn-success btn-danger');
                 $('#' + pin_button).addClass('btn-success');
+                $('#' + pin_button).text('On');
             } else {
                 $('#' + pin_button).removeClass('btn-success btn-danger');
                 $('#' + pin_button).addClass('btn-danger');
+                $('#' + pin_button).text('Off');
             }
+
+            // update states
+            pin_states[pin_id - 1] = Number(rdata['pin_state']);
+
 
             $('#success-message').html(rdata['success-message']);
             $('#success-message').css({'display' : 'block'});
@@ -113,10 +138,10 @@ function togglePin(pin_id, pin_state, pin_button) {
         },
         error: function(rdata){
             $('#pin-loader').css({'display' : 'none'});
-            $('#pin-1-button').removeAttr('disabled');
 
             var errors = JSON.parse(rdata.responseText);
 
+            $('#' + pin_button).removeAttr('disabled');
             $('#failure-message').html(errors['failure-message']);
             $('#failure-message').css({'display' : 'block'});
         },
@@ -128,7 +153,7 @@ function init() {
     $("#PIN_CONFIRM1").prop('checked', false);
 
     if (gpio_class) {
-        if (pin_1_state) {
+        if (pin_states[0]) {
             $('#pin-1-button').addClass('btn-success');
             $('#pin-1-button').text('On');
         } else {
@@ -136,7 +161,7 @@ function init() {
             $('#pin-1-button').text('Off');
         }
 
-        if (pin_2_state) {
+        if (pin_states[1]) {
             $('#pin-2-button').addClass('btn-success');
             $('#pin-2-button').text('On');
         } else {
@@ -144,9 +169,9 @@ function init() {
             $('#pin-2-button').text('Off');
         }
 
-        if (pin_3_state) {
+        if (pin_states[2]) {
             $('#pin-3-button').addClass('btn-success');
-            $('#pin-2-button').text('On');
+            $('#pin-3-button').text('On');
         } else {
             $('#pin-3-button').addClass('btn-danger');
             $('#pin-3-button').text('Off');

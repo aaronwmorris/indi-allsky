@@ -6775,9 +6775,7 @@ class ManualGpioView(TemplateView):
 
         if not gpio_class_str:
             context['gpio_class'] = ''
-            context['pin_1_state'] = 0
-            context['pin_2_state'] = 0
-            context['pin_3_state'] = 0
+            context['pin_states'] = [None, 0, 0, 0]
             context['pin_1_name'] = 'n/a'
             context['pin_2_name'] = 'n/a'
             context['pin_3_name'] = 'n/a'
@@ -6789,9 +6787,7 @@ class ManualGpioView(TemplateView):
             gpio_class = getattr(indi_allsky_gpio, gpio_class_str)
         except AttributeError:
             context['gpio_class'] = ''
-            context['pin_1_state'] = 0
-            context['pin_2_state'] = 0
-            context['pin_3_state'] = 0
+            context['pin_states'] = [None, 0, 0, 0]
             context['pin_1_name'] = 'n/a'
             context['pin_2_name'] = 'n/a'
             context['pin_3_name'] = 'n/a'
@@ -6811,13 +6807,8 @@ class ManualGpioView(TemplateView):
 
         context['gpio_class'] = gpio_class_str
 
-        context['pin_1_name'] = pin_1_str
-        context['pin_2_name'] = pin_2_str
-        context['pin_3_name'] = pin_3_str
-
-        context['pin_1_state'] = int(pin_1.state)
-        context['pin_2_state'] = int(pin_2.state)
-        context['pin_3_state'] = int(pin_3.state)
+        context['pin_names'] = [pin_1_str, pin_2_str, pin_3_str]
+        context['pin_states'] = [int(pin_1.state), int(pin_2.state), int(pin_3.state)]
 
         return context
 
@@ -6839,7 +6830,7 @@ class AjaxManualGpioView(BaseView):
 
 
         pin_id = int(request.json['PIN_ID'])
-        pin_state = request.json['PIN_STATE']
+        new_pin_state = request.json['NEW_PIN_STATE']
 
 
         gpio_class_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_CLASSNAME')
@@ -6867,7 +6858,7 @@ class AjaxManualGpioView(BaseView):
 
 
         pin = gpio_class(self.indi_allsky_config, pin_1_name=pin_str)
-        pin.state = pin_state
+        pin.state = new_pin_state
 
         time.sleep(1.0)
 
