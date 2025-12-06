@@ -614,7 +614,7 @@ class IndiAllSkyConfigBase(object):
         "MANUAL_GPIO" : {
             "A_CLASSNAME"            : "",
             "A_PIN_1"                : "21",
-            "A_PIN_2"                : "5",
+            "A_PIN_2"                : "25",
             "A_PIN_3"                : "16",
         },
         "DEVICE" : {
