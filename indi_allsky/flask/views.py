@@ -6804,9 +6804,9 @@ class ManualGpioView(TemplateView):
         pin_3_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_3')
 
 
-        pin_1 = gpio_class(pin_1_name=pin_1_str)
-        pin_2 = gpio_class(pin_1_name=pin_2_str)
-        pin_3 = gpio_class(pin_1_name=pin_3_str)
+        pin_1 = gpio_class(self.indi_allsky_config, pin_1_name=pin_1_str)
+        pin_2 = gpio_class(self.indi_allsky_config, pin_1_name=pin_2_str)
+        pin_3 = gpio_class(self.indi_allsky_config, pin_1_name=pin_3_str)
 
 
         context['gpio_class'] = gpio_class_str
