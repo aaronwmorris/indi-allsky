@@ -3585,7 +3585,7 @@ class IndiAllskyConfigForm(FlaskForm):
 
     MANUAL_GPIO__CLASSNAME_choices = (
         ('', 'None'),
-        ('rpigpio_gpio_rpigpio', 'RPi.GPIO - Raspberry Pi'),
+        ('rpigpio_gpio_rpigpio', 'Raspberry Pi - [RPi.GPIO]'),
     )
 
     TEMP_SENSOR__CLASSNAME_choices = {
