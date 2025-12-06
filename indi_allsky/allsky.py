@@ -73,6 +73,9 @@ class IndiAllSky(object):
     def __init__(self):
         self.name = 'Main'
 
+        # should be inherited by all of the sub-processes
+        locale.setlocale(locale.LC_ALL, '')
+
         self.pid_lock = None
 
         with app.app_context():

@@ -1,5 +1,6 @@
 import os
 import sys
+import locale
 import io
 import time
 import math
@@ -58,6 +59,9 @@ logger = logging.getLogger('indi_allsky')
 class IndiAllSkyDarks(object):
 
     def __init__(self):
+        # should be inherited by all of the sub-processes
+        locale.setlocale(locale.LC_ALL, '')
+
         with app.app_context():
             try:
                 self._config_obj = IndiAllSkyConfig()

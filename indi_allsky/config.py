@@ -1,5 +1,6 @@
 import sys
 import os
+import locale
 import time
 from datetime import datetime
 from datetime import timezone
@@ -1282,6 +1283,9 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
 class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
     def __init__(self):
+        # should be inherited by all of the sub-processes
+        locale.setlocale(locale.LC_ALL, '')
+
         # not calling parent constructor
         self._config = self.base_config.copy()  # populate initial values
 
