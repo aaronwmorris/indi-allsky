@@ -35,6 +35,14 @@ var pin_states = {{ pin_states | tojson }};
 <hr>
 
 <div class="form-group row">
+    <div class="col-sm-12">
+        <div><span class="badge rounded-pill bg-info text-dark">Note</span> Some pins will read HIGH by default due to the internal pull-up being enabled at boot</div>
+    </div>
+</div>
+
+<hr>
+
+<div class="form-group row">
     <div class="col-sm-2">
       Pin {{ pin_names[0] }}
     </div>
