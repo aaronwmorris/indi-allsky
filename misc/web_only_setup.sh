@@ -991,7 +991,10 @@ echo "**** Indi-allsky config ****"
 sudo chown -R "$USER":"$PGRP" "$ALLSKY_ETC"
 sudo chmod 775 "${ALLSKY_ETC}"
 
-touch "${ALLSKY_ETC}/indi-allsky.env"
+
+if [ ! -e "${ALLSKY_ETC}/indi-allsky.env" ]; then
+    cp "${ALLSKY_DIRECTORY}/service/indi-allsky.env" "${ALLSKY_ETC}/indi-allsky.env"
+fi
 chmod 600 "${ALLSKY_ETC}/indi-allsky.env"
 
 
