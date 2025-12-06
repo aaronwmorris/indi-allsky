@@ -5,6 +5,9 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
+#pin-loader {
+  display: none;
+}
 </style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
@@ -51,11 +54,79 @@ var pin_3_state = {{ pin_3_state }};
     </div>
 </div>
 
+<hr>
+
+<div class="form-group row">
+    <div class="col-sm-2">
+        <span id="pin-loader" class="spinner-border" aria-hidden="true"></span>
+    </div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="PIN_CONFIRM1" name="PIN_CONFIRM1" type="checkbox" value="y"> Confirm
+    </div>
+    <div class="col-sm-5">
+        <div id="success-message" class="alert alert-success" role="alert" style="display: none;"></div>
+        <div id="failure-message" class="alert alert-danger" role="alert" style="display: none;"></div>
+    </div>
 </div>
 
 <script>
 
+function togglePin(pin_id, pin_state, pin_button) {
+    $('#success-message').css({'display' : 'none'});
+    $('#failure-message').css({'display' : 'none'});
+
+    $("#PIN_CONFIRM1").prop('checked', false);
+
+    $('#pin-loader').css({'display' : 'block'});
+
+    $('#' + pin_button).attr({'disabled' : 'disabled'});
+
+
+    var json_data = {
+        'PIN_ID' : pin_id,
+        'PIN_STATE' : pin_state,
+    };
+
+
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_manual_gpio_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $('#pin-loader').css({'display' : 'none'});
+            $('#' + pin_button).attr({'disabled' : 'disabled'});
+
+            if (rdata['pin_state']) {
+                $('#' + pin_button).removeClass('btn-success btn-danger');
+                $('#' + pin_button).addClass('btn-success');
+            } else {
+                $('#' + pin_button).removeClass('btn-success btn-danger');
+                $('#' + pin_button).addClass('btn-danger');
+            }
+
+            $('#success-message').html(rdata['success-message']);
+            $('#success-message').css({'display' : 'block'});
+            setTimeout(function() {
+                $('#success-message').css({'display' : 'none'});
+            }, 15000);
+        },
+        error: function(rdata){
+            $('#pin-loader').css({'display' : 'none'});
+            $('#pin-1-button').removeAttr('disabled');
+
+            var errors = JSON.parse(rdata.responseText);
+
+            $('#failure-message').html(errors['failure-message']);
+            $('#failure-message').css({'display' : 'block'});
+        },
+    });
+}
+
+
 function init() {
+    $("#PIN_CONFIRM1").prop('checked', false);
+
     if (gpio_class) {
         if (pin_1_state) {
             $('#pin-1-button').addClass('btn-success');
