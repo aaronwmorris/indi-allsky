@@ -2434,6 +2434,10 @@ class ConfigView(FormView):
             'GENERIC_GPIO__A_I2C_ADDRESS'    : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_I2C_ADDRESS', '0x12'),
             'GENERIC_GPIO__A_PIN_1'          : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_PIN_1', 'D21'),
             'GENERIC_GPIO__A_INVERT_OUTPUT'  : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_INVERT_OUTPUT', False),
+            'MANUAL_GPIO__A_CLASSNAME'       : self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_CLASSNAME', ''),
+            'MANUAL_GPIO__A_PIN_1'           : self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_1', '21'),
+            'MANUAL_GPIO__A_PIN_2'           : self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_2', '25'),
+            'MANUAL_GPIO__A_PIN_3'           : self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_3', '16'),
             'DEVICE__MQTT_TRANSPORT'         : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_TRANSPORT', 'tcp'),
             'DEVICE__MQTT_PROTOCOL'          : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_PROTOCOL', 'MQTTv5'),
             'DEVICE__MQTT_HOST'              : self.indi_allsky_config.get('DEVICE', {}).get('MQTT_HOST', 'localhost'),
@@ -2844,6 +2848,7 @@ class AjaxConfigView(BaseView):
             'DEW_HEATER',
             'FAN',
             'GENERIC_GPIO',
+            'MANUAL_GPIO',
             'DEVICE',
             'TEMP_SENSOR',
             'THUMBNAILS',
@@ -3356,6 +3361,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['GENERIC_GPIO']['A_I2C_ADDRESS']        = str(request.json['GENERIC_GPIO__A_I2C_ADDRESS'])
         self.indi_allsky_config['GENERIC_GPIO']['A_PIN_1']              = str(request.json['GENERIC_GPIO__A_PIN_1'])
         self.indi_allsky_config['GENERIC_GPIO']['A_INVERT_OUTPUT']      = bool(request.json['GENERIC_GPIO__A_INVERT_OUTPUT'])
+        self.indi_allsky_config['MANUAL_GPIO']['A_CLASSNAME']           = str(request.json['MANUAL_GPIO__A_CLASSNAME'])
+        self.indi_allsky_config['MANUAL_GPIO']['A_PIN_1']               = str(request.json['MANUAL_GPIO__A_PIN_1'])
+        self.indi_allsky_config['MANUAL_GPIO']['A_PIN_2']               = str(request.json['MANUAL_GPIO__A_PIN_2'])
+        self.indi_allsky_config['MANUAL_GPIO']['A_PIN_3']               = str(request.json['MANUAL_GPIO__A_PIN_3'])
         self.indi_allsky_config['DEVICE']['MQTT_TRANSPORT']             = str(request.json['DEVICE__MQTT_TRANSPORT'])
         self.indi_allsky_config['DEVICE']['MQTT_PROTOCOL']              = str(request.json['DEVICE__MQTT_PROTOCOL'])
         self.indi_allsky_config['DEVICE']['MQTT_HOST']                  = str(request.json['DEVICE__MQTT_HOST'])
@@ -6745,6 +6754,116 @@ class AjaxFocusControllerView(BaseView):
         }
 
         return jsonify(r)
+
+
+class ManualGpioView(TemplateView):
+    decorators = [login_required]
+    title = 'Manual GPIO'
+
+
+    def get_context(self):
+        context = super(ManualGpioView, self).get_context()
+
+        from ..devices import generic as indi_allsky_gpio
+
+
+        context['title'] = self.title
+        context['camera_id'] = self.camera.id
+
+
+        gpio_class_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_CLASSNAME')
+        pin_1_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_1', '-1')
+        pin_2_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_2', '-1')
+        pin_3_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_3', '-1')
+
+        context['pin_names'] = [pin_1_str, pin_2_str, pin_3_str]
+
+
+        if not gpio_class_str:
+            context['gpio_class'] = ''
+            context['pin_states'] = [None, 0, 0, 0]
+
+            return context
+
+
+        try:
+            gpio_class = getattr(indi_allsky_gpio, gpio_class_str)
+        except AttributeError:
+            context['gpio_class'] = ''
+            context['pin_states'] = [None, 0, 0, 0]
+
+            return context
+
+
+        pin_1 = gpio_class(self.indi_allsky_config, pin_1_name=pin_1_str)
+        pin_2 = gpio_class(self.indi_allsky_config, pin_1_name=pin_2_str)
+        pin_3 = gpio_class(self.indi_allsky_config, pin_1_name=pin_3_str)
+
+
+        context['gpio_class'] = gpio_class_str
+
+        context['pin_states'] = [int(pin_1.state), int(pin_2.state), int(pin_3.state)]
+
+        return context
+
+
+class AjaxManualGpioView(BaseView):
+    methods = ['POST']
+    decorators = [login_required]
+
+    def dispatch_request(self):
+        if not app.config['LOGIN_DISABLED']:
+            if not current_user.is_admin:
+                message = {
+                    'failure-message' : 'User is not an admin',
+                }
+                return jsonify({}), 400
+
+
+        from ..devices import generic as indi_allsky_gpio
+
+
+        pin_id = int(request.json['PIN_ID'])
+        new_pin_state = request.json['NEW_PIN_STATE']
+
+
+        gpio_class_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_CLASSNAME')
+        if not gpio_class_str:
+            message = {
+                'failure-message' : 'Manual GPIO not configured',
+            }
+            return jsonify(message), 400
+
+        try:
+            gpio_class = getattr(indi_allsky_gpio, gpio_class_str)
+        except AttributeError:
+            message = {
+                'failure-message' : 'Invalid GPIO class',
+            }
+            return jsonify(), 400
+
+
+        pin_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_{0:d}'.format(pin_id))
+        if not pin_str:
+            message = {
+                'failure-message' : 'Unknown pin'
+            }
+            return jsonify({}), 400
+
+
+        pin = gpio_class(self.indi_allsky_config, pin_1_name=pin_str)
+        pin.state = new_pin_state
+
+        time.sleep(0.5)
+
+        message = {
+            'success-message' : 'Pin configured',
+            'pin_name' : pin_str,
+            'pin_id' : pin_id,
+            'pin_state' : pin.state,
+        }
+
+        return jsonify(message)
 
 
 class ImageProcessingView(TemplateView):
@@ -10871,6 +10990,9 @@ bp_allsky.add_url_rule('/ajax/indiserver', view_func=AjaxIndiServerChangeView.as
 bp_allsky.add_url_rule('/focus', view_func=FocusView.as_view('focus_view', template_name='focus.html'))
 bp_allsky.add_url_rule('/js/focus', view_func=JsonFocusView.as_view('js_focus_view'))
 bp_allsky.add_url_rule('/ajax/focuscontroller', view_func=AjaxFocusControllerView.as_view('focus_controller_view'))
+
+bp_allsky.add_url_rule('/manual_gpio', view_func=ManualGpioView.as_view('manual_gpio_view', template_name='manual_gpio.html'))
+bp_allsky.add_url_rule('/ajax/manual_gpio', view_func=AjaxManualGpioView.as_view('ajax_manual_gpio_view'))
 
 bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
 bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))

@@ -7391,6 +7391,60 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.MANUAL_GPIO__A_CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.MANUAL_GPIO__A_CLASSNAME(class='form-select bg-secondary') }}
+            <div id="MANUAL_GPIO__A_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="{{ url_for('indi_allsky.manual_gpio_view') }}" class="text-decoration-none link-info">Manual GPIO Control</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MANUAL_GPIO__A_PIN_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.MANUAL_GPIO__A_PIN_1(class='form-control bg-secondary') }}
+            <div id="MANUAL_GPIO__A_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: 21 (GPIO21 / Pin 40 Raspi)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MANUAL_GPIO__A_PIN_2.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.MANUAL_GPIO__A_PIN_2(class='form-control bg-secondary') }}
+            <div id="MANUAL_GPIO__A_PIN_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: 25 (GPIO25 / Pin 22 Raspi)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.MANUAL_GPIO__A_PIN_3.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.MANUAL_GPIO__A_PIN_3(class='form-control bg-secondary') }}
+            <div id="MANUAL_GPIO__A_PIN_3-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: 16 (GPIO16 / Pin 36 Raspi)</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.GENERIC_GPIO__A_CLASSNAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -8758,6 +8812,10 @@ const field_names = [
     'GENERIC_GPIO__A_CLASSNAME',
     'GENERIC_GPIO__A_I2C_ADDRESS',
     'GENERIC_GPIO__A_PIN_1',
+    'MANUAL_GPIO__A_CLASSNAME',
+    'MANUAL_GPIO__A_PIN_1',
+    'MANUAL_GPIO__A_PIN_2',
+    'MANUAL_GPIO__A_PIN_3',
     'DEVICE__MQTT_TRANSPORT',
     'DEVICE__MQTT_PROTOCOL',
     'DEVICE__MQTT_HOST',

@@ -26,7 +26,7 @@ class GpioRpiGpio(GenericBase):
 
         self._state = bool(GPIO.input(self.gpio_pin))
 
-        time.sleep(1.0)
+        time.sleep(0.25)
 
 
     @property

@@ -2776,6 +2776,11 @@ def GENERIC_GPIO__CLASSNAME_validator(form, field):
         raise ValidationError('Invalid selection')
 
 
+def MANUAL_GPIO__CLASSNAME_validator(form, field):
+    if field.data not in list(zip(*form.MANUAL_GPIO__CLASSNAME_choices))[0]:
+        raise ValidationError('Invalid selection')
+
+
 def TEMP_SENSOR__CLASSNAME_validator(form, field):
     sensors = list()
     for v in form.TEMP_SENSOR__CLASSNAME_choices.values():
@@ -3576,6 +3581,11 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'None'),
         ('blinka_gpio_standard', 'GPIO - Standard'),
         ('gpio_dockerpi_4channel_relay', 'GPIO - DockerPi 4 Channel Relay (BETA)'),
+    )
+
+    MANUAL_GPIO__CLASSNAME_choices = (
+        ('', 'None'),
+        ('rpigpio_gpio_rpigpio', 'Raspberry Pi - [RPi.GPIO]'),
     )
 
     TEMP_SENSOR__CLASSNAME_choices = {
@@ -4456,10 +4466,14 @@ class IndiAllskyConfigForm(FlaskForm):
     FAN__THOLD_DIFF_MED              = IntegerField('Medium Threshold Delta', validators=[FAN__THOLD_DIFF_validator])
     FAN__THOLD_DIFF_HIGH             = IntegerField('High Threshold Delta', validators=[FAN__THOLD_DIFF_validator])
     FAN__HOLD_SECONDS                = IntegerField('Change Hold Time (seconds)', validators=[FAN__HOLD_SECONDS_validator])
-    GENERIC_GPIO__A_CLASSNAME        = SelectField('GPIO', choices=GENERIC_GPIO__CLASSNAME_choices, validators=[GENERIC_GPIO__CLASSNAME_validator])
+    GENERIC_GPIO__A_CLASSNAME        = SelectField('Automated GPIO', choices=GENERIC_GPIO__CLASSNAME_choices, validators=[GENERIC_GPIO__CLASSNAME_validator])
     GENERIC_GPIO__A_I2C_ADDRESS      = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     GENERIC_GPIO__A_PIN_1            = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])
     GENERIC_GPIO__A_INVERT_OUTPUT    = BooleanField('Invert Output')
+    MANUAL_GPIO__A_CLASSNAME         = SelectField('Manual GPIO Class', choices=MANUAL_GPIO__CLASSNAME_choices, validators=[MANUAL_GPIO__CLASSNAME_validator])
+    MANUAL_GPIO__A_PIN_1             = StringField('Manual Pin 1', validators=[DEVICE_PIN_NAME_validator])
+    MANUAL_GPIO__A_PIN_2             = StringField('Manual Pin 2', validators=[DEVICE_PIN_NAME_validator])
+    MANUAL_GPIO__A_PIN_3             = StringField('Manual Pin 3', validators=[DEVICE_PIN_NAME_validator])
     DEVICE__MQTT_TRANSPORT           = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
     DEVICE__MQTT_PROTOCOL            = SelectField('MQTT Protocol', choices=MQTTPUBLISH__PROTOCOL_choices, validators=[DataRequired(), MQTTPUBLISH__PROTOCOL_validator])
     DEVICE__MQTT_HOST                = StringField('MQTT Host', validators=[MQTTPUBLISH__HOST_validator])
@@ -5249,6 +5263,74 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except AttributeError:
                     self.GENERIC_GPIO__A_CLASSNAME.errors.append('I2C not available for your system')
+                    result = False
+
+        # manual gpio
+        if self.MANUAL_GPIO__A_CLASSNAME.data:
+            if self.MANUAL_GPIO__A_CLASSNAME.data.startswith('rpigpio_'):
+                try:
+                    import RPi.GPIO  # noqa: F401, F811
+
+                    if self.MANUAL_GPIO__A_PIN_1.data:
+                        try:
+                            pin_int = int(self.MANUAL_GPIO__A_PIN_1.data)
+
+                            if pin_int < 1:
+                                self.MANUAL_GPIO__A_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.MANUAL_GPIO__A_PIN_1.data))
+                                result = False
+                            elif pin_int > 40:
+                                self.MANUAL_GPIO__A_PIN_1.errors.append('PIN {0:s} not valid for your system'.format(self.MANUAL_GPIO__A_PIN_1.data))
+                                result = False
+                        except ValueError:
+                            self.MANUAL_GPIO__A_PIN_1.errors.append('PIN must be a number')
+                            result = False
+                    else:
+                        self.MANUAL_GPIO__A_PIN_1.errors.append('PIN must be defined')
+                        result = False
+
+
+                    if self.MANUAL_GPIO__A_PIN_2.data:
+                        try:
+                            pin_int = int(self.MANUAL_GPIO__A_PIN_2.data)
+
+                            if pin_int < 1:
+                                self.MANUAL_GPIO__A_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.MANUAL_GPIO__A_PIN_2.data))
+                                result = False
+                            elif pin_int > 40:
+                                self.MANUAL_GPIO__A_PIN_2.errors.append('PIN {0:s} not valid for your system'.format(self.MANUAL_GPIO__A_PIN_2.data))
+                                result = False
+                        except ValueError:
+                            self.MANUAL_GPIO__A_PIN_2.errors.append('PIN must be a number')
+                            result = False
+                    else:
+                        self.MANUAL_GPIO__A_PIN_2.errors.append('PIN must be defined')
+                        result = False
+
+
+                    if self.MANUAL_GPIO__A_PIN_3.data:
+                        try:
+                            pin_int = int(self.MANUAL_GPIO__A_PIN_3.data)
+
+                            if pin_int < 1:
+                                self.MANUAL_GPIO__A_PIN_3.errors.append('PIN {0:s} not valid for your system'.format(self.MANUAL_GPIO__A_PIN_3.data))
+                                result = False
+                            elif pin_int > 40:
+                                self.MANUAL_GPIO__A_PIN_3.errors.append('PIN {0:s} not valid for your system'.format(self.MANUAL_GPIO__A_PIN_3.data))
+                                result = False
+                        except ValueError:
+                            self.MANUAL_GPIO__A_PIN_3.errors.append('PIN must be a number')
+                            result = False
+                    else:
+                        self.MANUAL_GPIO__A_PIN_3.errors.append('PIN must be defined')
+                        result = False
+                except ImportError:
+                    self.MANUAL_GPIO__A_CLASSNAME.errors.append('GPIO python modules not installed')
+                    result = False
+                except PermissionError:
+                    self.MANUAL_GPIO__A_CLASSNAME.errors.append('GPIO permissions need to be fixed')
+                    result = False
+                except RuntimeError as e:
+                    self.MANUAL_GPIO__A_CLASSNAME.errors.append('RuntimeError: {0:s}'.format(str(e)))
                     result = False
 
 
