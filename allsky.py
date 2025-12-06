@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import locale
 import logging
 import logging.handlers
 import traceback
@@ -48,6 +49,9 @@ sys.excepthook = unhandled_exception
 
 
 if __name__ == "__main__":
+    # should be inherited by all of the sub-processes
+    locale.setlocale(locale.LC_ALL, '')
+
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         'action',

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import locale
 import argparse
 import logging
 
@@ -18,6 +19,9 @@ logger.addHandler(LOG_HANDLER_STREAM)
 
 
 if __name__ == "__main__":
+    # should be inherited by all of the sub-processes
+    locale.setlocale(locale.LC_ALL, '')
+
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         'action',
