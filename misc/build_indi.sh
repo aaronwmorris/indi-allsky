@@ -26,8 +26,8 @@ OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 
 ### config ###
 INDISERVER_SERVICE_NAME="indiserver"
-INDI_CORE_AUTO_TAG="v2.1.6"
-INDI_3RDPARTY_AUTO_TAG="v2.1.6"
+INDI_CORE_AUTO_TAG="v2.1.7"
+INDI_3RDPARTY_AUTO_TAG="v2.1.7.1"
 INDI_AUTO_DRIVERS="supported"
 MAKE_BUILD_TYPE="${BUILD_INDI_MAKE_BUILD_TYPE:-Debug}"
 ### end config ###
@@ -803,7 +803,8 @@ while [ -z "${INDI_CORE_TAG:-}" ]; do
         --nocancel \
         --notags \
         --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-            "v2.1.6" "v2.1.6 - Recommended" "ON" \
+            "v2.1.7" "v2.1.7 - Recommended" "ON" \
+            "v2.1.6" "v2.1.6" "OFF" \
             "v2.1.5" "v2.1.5" "OFF" \
             "v2.1.4" "v2.1.4" "OFF" \
             "v2.1.3" "v2.1.3" "OFF" \
@@ -828,7 +829,9 @@ while [ -z "${INDI_3RDPARTY_TAG:-}" ]; do
         --nocancel \
         --notags \
         --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-            "v2.1.6" "v2.1.6 - Recommended" "ON" \
+            "v2.1.7.1" "v2.1.7.1 - Recommended" "ON" \
+            "v2.1.7" "v2.1.7" "OFF" \
+            "v2.1.6" "v2.1.6" "OFF" \
             "v2.1.5" "v2.1.5" "OFF" \
             "v2.1.4" "v2.1.4" "OFF" \
             "v2.1.3" "v2.1.3" "OFF" \

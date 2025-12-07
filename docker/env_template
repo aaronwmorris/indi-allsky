@@ -36,17 +36,16 @@ INDIALLSKY_MOSQUITTO_PASS=%WEB_PASS%
 INDIALLSKY_WEB_GENERATE_APIKEY=false
 
 # Only used on the debian build
-INDIALLSKY_INDI_CORE_VERSION=v2.1.6
-INDIALLSKY_INDI_3RDPARTY_VERSION=v2.1.6
+INDIALLSKY_INDI_CORE_VERSION=v2.1.7
+INDIALLSKY_INDI_3RDPARTY_VERSION=v2.1.7.1
 
 # "supported" includes all supported camera drivers except libcamera
 # asi, qhy, playerone, sx, touptek, svbony, libcamera, gphoto, webcam
 INDIALLSKY_CAMERA_VENDOR=supported
 
 # libcamera is commented out of Dockerfile.indi_base_debian12
-# last successful build on x86_64 was v0.2.0+rpt20240418
-INDIALLSKY_LIBCAMERA_TAG=v0.3.0+rpt20240617
-INDIALLSKY_RPICAM_APPS_TAG=v1.5.0
+INDIALLSKY_LIBCAMERA_TAG=v0.6.0+rpt20251202
+INDIALLSKY_RPICAM_APPS_TAG=v1.10.1
 
 INDIALLSKY_MARIADB_HOST=mariadb.indi.allsky
 INDIALLSKY_MARIADB_PORT=3306
