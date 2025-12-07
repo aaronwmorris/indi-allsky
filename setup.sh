@@ -2664,6 +2664,12 @@ elif [[ "$WEBSERVER" == "nginx" ]]; then
 
 
         if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+            if [ -f "/etc/nginx/sites-available/indi-allsky.conf" ]; then
+                # backup existing config
+                sudo cp -f "/etc/nginx/sites-available/indi-allsky.conf" "/etc/nginx/sites-available/indi-allsky.conf_backup_$(date +%Y%m%d_%H%M%S)"
+            fi
+
+
             sudo cp -f "$TMP_HTTP" /etc/nginx/sites-available/indi-allsky.conf
             sudo chown root:root /etc/nginx/sites-available/indi-allsky.conf
             sudo chmod 644 /etc/nginx/sites-available/indi-allsky.conf
@@ -2744,7 +2750,6 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
         while [ -z "${WEBSERVER_CONFIG:-}" ]; do
             if whiptail --title "Web Server Configuration" --yesno "Do you want to update the web server configuration?\n\nIf you have performed customizations to the apache config, you should choose \"no\"\n\n(Hint: Most people should pick \"yes\")" 0 0; then
                 WEBSERVER_CONFIG="true"
-                #sudo cp -f /etc/apache2/sites-enabled/indi-allsky.conf /etc/apache2/sites-enabled/indi-allsky.conf_old
             else
                 WEBSERVER_CONFIG="false"
             fi
@@ -2769,6 +2774,12 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
 
 
         if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+            if [ -f "/etc/apache2/sites-available/indi-allsky.conf" ]; then
+                # backup existing config
+                sudo cp -f "/etc/apache2/sites-available/indi-allsky.conf" "/etc/apache2/sites-available/indi-allsky.backup_$(date +%Y%m%d_%H%M%S)"
+            fi
+
+
             sudo cp -f "$TMP_HTTP" /etc/apache2/sites-available/indi-allsky.conf
             sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
             sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
