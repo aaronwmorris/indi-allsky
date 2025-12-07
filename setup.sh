@@ -2650,12 +2650,6 @@ elif [[ "$WEBSERVER" == "nginx" ]]; then
 
 
     if [ "$WEBSERVER_CONFIG" == "true" ]; then
-        if [ -f "/etc/nginx/sites-available/indi-allsky.conf" ]; then
-            # backup existing config
-            sudo cp -f "/etc/nginx/sites-available/indi-allsky.conf" "/etc/nginx/sites-available/indi-allsky.conf_backup_$(date +%Y%m%d_%H%M%S)"
-        fi
-
-
         echo "**** Setup nginx ****"
         TMP_HTTP=$(mktemp)
         sed \
@@ -2670,6 +2664,12 @@ elif [[ "$WEBSERVER" == "nginx" ]]; then
 
 
         if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+            if [ -f "/etc/nginx/sites-available/indi-allsky.conf" ]; then
+                # backup existing config
+                sudo cp -f "/etc/nginx/sites-available/indi-allsky.conf" "/etc/nginx/sites-available/indi-allsky.conf_backup_$(date +%Y%m%d_%H%M%S)"
+            fi
+
+
             sudo cp -f "$TMP_HTTP" /etc/nginx/sites-available/indi-allsky.conf
             sudo chown root:root /etc/nginx/sites-available/indi-allsky.conf
             sudo chmod 644 /etc/nginx/sites-available/indi-allsky.conf
@@ -2761,12 +2761,6 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
 
 
     if [ "$WEBSERVER_CONFIG" == "true" ]; then
-        if [ -f "/etc/apache2/sites-available/indi-allsky.conf" ]; then
-            # backup existing config
-            sudo cp -f "/etc/apache2/sites-available/indi-allsky.conf" "/etc/apache2/sites-available/indi-allsky.backup_$(date +%Y%m%d_%H%M%S)"
-        fi
-
-
         echo "**** Start apache2 service ****"
         TMP_HTTP=$(mktemp)
         sed \
@@ -2780,6 +2774,12 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
 
 
         if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+            if [ -f "/etc/apache2/sites-available/indi-allsky.conf" ]; then
+                # backup existing config
+                sudo cp -f "/etc/apache2/sites-available/indi-allsky.conf" "/etc/apache2/sites-available/indi-allsky.backup_$(date +%Y%m%d_%H%M%S)"
+            fi
+
+
             sudo cp -f "$TMP_HTTP" /etc/apache2/sites-available/indi-allsky.conf
             sudo chown root:root /etc/apache2/sites-available/indi-allsky.conf
             sudo chmod 644 /etc/apache2/sites-available/indi-allsky.conf
