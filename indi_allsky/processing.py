@@ -2470,10 +2470,11 @@ class ImageProcessor(object):
             rational_exp = '{0:d}/{1:d}'.format(exp_remain_frac.numerator, exp_remain_frac.denominator)
 
 
-
         label_data = {
             'timestamp'    : i_ref.exp_date,
             'ts'           : i_ref.exp_date,  # shortcut
+            'timestamp_utc': i_ref.exp_date_utc,
+            'ts_utc'       : i_ref.exp_date_utc,  # shortcut
             'exposure'     : i_ref.exposure,
             'day_date'     : i_ref.day_date,
             'rational_exp' : rational_exp,
@@ -3886,6 +3887,10 @@ class ImageData(object):
     @property
     def exp_date(self):
         return self._exp_date
+
+    @property
+    def exp_date_utc(self):
+        return self._exp_date.astimezone(timezone.utc)
 
     @property
     def exp_elapsed(self):
