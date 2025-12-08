@@ -6,6 +6,7 @@ import json
 import time
 from collections import OrderedDict
 from datetime import datetime
+from datetime import timezone
 import tempfile
 from urllib.parse import urlparse
 import psutil
@@ -697,10 +698,13 @@ def IMAGE_LABEL_SYSTEM_validator(form, field):
 
 def IMAGE_LABEL_TEMPLATE_validator(form, field):
     now = datetime.now()
+    now_utc = now.astimezone(timezone.utc)
 
     test_data = {
         'timestamp'  : now,
         'ts'         : now,
+        'timestamp_utc' : now_utc,
+        'ts_utc'     : now_utc,
         'day_date'   : now.date(),
         'exposure'   : 1.0,
         'rational_exp' : '',
