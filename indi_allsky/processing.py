@@ -2171,11 +2171,11 @@ class ImageProcessor(object):
             self.astrometric_data['sun_next_set_h'] = 0.0
 
 
+        obs.horizon = math.radians(-18.0)
         obs.date = utcnow  # reset
         sun.compute(obs)
 
         try:
-            obs.horizon = math.radians(-18.0)
             sun_next_astro_twilight_rise = obs.next_rising(sun)
             self.astrometric_data['sun_next_astro_twilight_rise'] = ephem.localtime(sun_next_astro_twilight_rise).strftime('%H:%M')
             self.astrometric_data['sun_next_astro_twilight_rise_h'] = (sun_next_astro_twilight_rise.datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
@@ -2191,7 +2191,6 @@ class ImageProcessor(object):
         sun.compute(obs)
 
         try:
-            obs.horizon = math.radians(-18.0)
             sun_next_astro_twilight_set = obs.next_setting(sun)
             self.astrometric_data['sun_next_astro_twilight_set'] = ephem.localtime(sun_next_astro_twilight_set).strftime('%H:%M')
             self.astrometric_data['sun_next_astro_twilight_set_h'] = (sun_next_astro_twilight_set.datetime() - utcnow.replace(tzinfo=None)).total_seconds() / 3600
