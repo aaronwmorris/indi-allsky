@@ -75,8 +75,11 @@ logger = logging.getLogger('indi_allsky')
 class VideoWorker(Process):
 
     thumbnail_keogram_width = 1000
+    thumbnail_keogram_height_opt = 350  # if image is taller than width, it is scaled using height instead
     thumbnail_startrail_width = 300
+    thumbnail_startrail_height_opt = 200
     thumbnail_mini_timelapse_width = 300
+    thumbnail_mini_timelapse_height_opt = 200
 
 
     def __init__(
@@ -721,6 +724,7 @@ class VideoWorker(Process):
             camera.id,
             mini_video_thumbnail_metadata,
             new_width=self.thumbnail_mini_timelapse_width,
+            opt_height=self.thumbnail_mini_timelapse_height_opt,
             image_entry=image_entry,  # use target image for thumbnail
         )
 
@@ -1496,6 +1500,7 @@ class VideoWorker(Process):
             camera.id,
             keogram_thumbnail_metadata,
             new_width=self.thumbnail_keogram_width,
+            opt_height=self.thumbnail_keogram_height_opt,
         )
 
 
@@ -1533,6 +1538,7 @@ class VideoWorker(Process):
                 camera.id,
                 startrail_thumbnail_metadata,
                 new_width=self.thumbnail_startrail_width,
+                opt_height=self.thumbnail_startrail_height_opt,
             )
 
 
