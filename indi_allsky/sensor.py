@@ -608,11 +608,10 @@ class SensorWorker(Process):
         if manual_target:
             target_val = manual_target
         else:
-            if str(self.dh_temp_slot).startswith('sensor_temp'):
+            if str(self.dh_dewpoint_slot).startswith('sensor_temp'):
                 target_val = self.sensors_temp_av[constants.SENSOR_INDEX_MAP[self.dh_dewpoint_slot]]  # dew point
             else:
                 target_val = self.sensors_user_av[constants.SENSOR_INDEX_MAP[self.dh_dewpoint_slot]]  # dew point
-
 
         if not target_val:
             logger.warning('Dew heater target dew point is 0, possible misconfiguration')
