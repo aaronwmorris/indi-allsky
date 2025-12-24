@@ -1108,7 +1108,7 @@ class miscDb(object):
         db.session.commit()
 
 
-    def addThumbnail(self, entry, entry_metadata, camera_id, thumbnail_metadata, new_width=150, numpy_data=None, image_entry=None):
+    def addThumbnail(self, entry, entry_metadata, camera_id, thumbnail_metadata, new_width=150, opt_height=100, numpy_data=None, image_entry=None):
         if entry.thumbnail_uuid:
             return
 
@@ -1257,24 +1257,40 @@ class miscDb(object):
 
         img_height, img_width = img.shape[:2]
 
-        if new_width < img_width:
+        if img_width >= img_height:
             scale = new_width / img_width
-            new_height = int(img_height * scale)
-
-            thumbnail_data = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_AREA)
+            thumb_width = int(new_width)
+            thumb_height = int(img_height * scale)
         else:
-            # keep the same dimensions
-            thumbnail_data = img
-            new_width = img_width
-            new_height = img_height
+            # scale based on height
+            scale = opt_height / img_height
+            thumb_width = int(img_width * scale)
+            thumb_height = int(opt_height)
+
+
+        thumbnail_data = cv2.resize(img, (thumb_width, thumb_height), interpolation=cv2.INTER_AREA)
+
+
+        mod_height = thumb_height % 2
+        mod_width = thumb_width % 2
+
+        if mod_height or mod_width:
+            # width and height needs to be divisible by 2
+            thumb_height -= mod_height
+            thumb_width -= mod_width
+
+            thumbnail_data = thumbnail_data[
+                0:thumb_height,
+                0:thumb_width,
+            ]
 
 
         # insert new metadata
         entry_metadata['thumbnail_uuid'] = thumbnail_uuid_str
         thumbnail_metadata['uuid'] = thumbnail_uuid_str
         thumbnail_metadata['dayDate'] = dayDate.strftime('%Y%m%d')
-        thumbnail_metadata['width'] = new_width
-        thumbnail_metadata['height'] = new_height
+        thumbnail_metadata['width'] = thumb_width
+        thumbnail_metadata['height'] = thumb_height
 
 
         cv2.imwrite(str(thumbnail_filename_p), thumbnail_data, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
@@ -1285,8 +1301,8 @@ class miscDb(object):
             filename=str(thumbnail_filename_p.relative_to(self.image_dir)),
             createDate=createDate,
             origin=thumbnail_metadata['origin'],
-            width=new_width,
-            height=new_height,
+            width=thumb_width,
+            height=thumb_height,
             camera_id=camera_id,
             data=thumbnail_metadata.get('data', {}),
             s3_key=thumbnail_metadata.get('s3_key'),
