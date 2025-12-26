@@ -3,6 +3,8 @@ import logging
 
 from .fanBase import FanBase
 
+from ..exceptions import DeviceControlException
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -18,12 +20,18 @@ class FanStandard(FanBase):
         import board
         import digitalio
 
+
         logger.info('Initializing standard FAN device')
 
         pin1 = getattr(board, pin_1_name)
 
-        self.pin = digitalio.DigitalInOut(pin1)
-        self.pin.direction = digitalio.Direction.OUTPUT
+
+        try:
+            self.pin = digitalio.DigitalInOut(pin1)
+            self.pin.direction = digitalio.Direction.OUTPUT
+        except Exception as e:  # catch all exceptions, not raspberry pi specific
+            logger.error('GPIO exception: %s', str(e))
+            raise DeviceControlException from e
 
 
         if invert_output:
