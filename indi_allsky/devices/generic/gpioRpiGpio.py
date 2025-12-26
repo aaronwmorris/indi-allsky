@@ -2,6 +2,7 @@ import time
 import logging
 
 from .genericBase import GenericBase
+
 from ..exceptions import DeviceControlException
 
 
@@ -24,7 +25,7 @@ class GpioRpiGpio(GenericBase):
             #GPIO.setmode(GPIO.BOARD)
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(self.gpio_pin, GPIO.OUT)
-        except GPIO.lgpio.error as e:
+        except Exception as e:  # catch all exceptions, not raspberry pi specific
             logger.error('GPIO exception: %s', str(e))
             raise DeviceControlException from e
 

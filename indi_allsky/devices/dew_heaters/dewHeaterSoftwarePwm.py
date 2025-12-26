@@ -108,7 +108,13 @@ class DewHeaterSoftwarePwmGpiozero(DewHeaterBase):
         if self.invert_output:
             logger.warning('Dew heater logic reversed')
 
-        self.pwm = PWMOutputDevice(pwm_pin, initial_value=0, frequency=self.PWM_FREQUENCY)
+
+        try:
+            self.pwm = PWMOutputDevice(pwm_pin, initial_value=0, frequency=self.PWM_FREQUENCY)
+        except Exception as e:  # catch all exceptions, not raspberry pi specific
+            logger.error('GPIO exception: %s', str(e))
+            raise DeviceControlException from e
+
 
         self._state = -1
 
