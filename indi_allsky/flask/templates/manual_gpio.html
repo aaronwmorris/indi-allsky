@@ -36,7 +36,15 @@ var pin_states = {{ pin_states | tojson }};
 
 <div class="form-group row">
     <div class="col-sm-12">
-        <div><span class="badge rounded-pill bg-info text-dark">Note</span> Some pins will read HIGH by default due to the internal pull-up being enabled at boot</div>
+        <div><span class="badge rounded-pill bg-info text-dark">Note</span> Some pins will read HIGH by default due to the internal pull-up being enabled at boot.  Raspberry Pi GPIOs 1-8 have pull-ups enabled by default.</div>
+    </div>
+</div>
+
+<hr>
+
+<div class="form-group row">
+    <div class="col-sm-12">
+        <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> It is not recommended to manually control the Dew Heater and Fan pins here.  If you try, it will result in a locked GPIO which may prevent indi-allsky from managing the devices or an error here.</div>
     </div>
 </div>
 
