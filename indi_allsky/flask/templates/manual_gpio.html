@@ -174,39 +174,58 @@ function init() {
     $("#PIN_CONFIRM1").prop('checked', false);
 
     if (gpio_class) {
-        if (pin_states[0]) {
-            $('#pin-1-button').addClass('btn-success');
-            $('#pin-1-button').text('On');
+        if (pin_states[0] != -1) {
+            if (pin_states[0]) {
+                $('#pin-1-button').addClass('btn-success');
+                $('#pin-1-button').text('On');
+            } else {
+                $('#pin-1-button').addClass('btn-danger');
+                $('#pin-1-button').text('Off');
+            }
+
+            $('#pin-1-button').removeClass('btn-dark');
+            $('#pin-1-button').removeAttr('disabled');
         } else {
-            $('#pin-1-button').addClass('btn-danger');
-            $('#pin-1-button').text('Off');
+            $('#pin-1-button').text('Error');
+            $('#pin-1-button').attr({'disabled' : 'disabled'});
         }
 
-        if (pin_states[1]) {
-            $('#pin-2-button').addClass('btn-success');
-            $('#pin-2-button').text('On');
+
+        if (pin_states[1] != -1) {
+            if (pin_states[1]) {
+                $('#pin-2-button').addClass('btn-success');
+                $('#pin-2-button').text('On');
+            } else {
+                $('#pin-2-button').addClass('btn-danger');
+                $('#pin-2-button').text('Off');
+            }
+
+            $('#pin-2-button').removeClass('btn-dark');
+            $('#pin-2-button').removeAttr('disabled');
         } else {
-            $('#pin-2-button').addClass('btn-danger');
-            $('#pin-2-button').text('Off');
+            $('#pin-2-button').text('Error');
+            $('#pin-2-button').attr({'disabled' : 'disabled'});
         }
 
-        if (pin_states[2]) {
-            $('#pin-3-button').addClass('btn-success');
-            $('#pin-3-button').text('On');
+
+        if (pin_states[2] != -1) {
+            if (pin_states[2]) {
+                $('#pin-3-button').addClass('btn-success');
+                $('#pin-3-button').text('On');
+            } else {
+                $('#pin-3-button').addClass('btn-danger');
+                $('#pin-3-button').text('Off');
+            }
+
+            $('#pin-3-button').removeClass('btn-dark');
+            $('#pin-3-button').removeAttr('disabled');
         } else {
-            $('#pin-3-button').addClass('btn-danger');
-            $('#pin-3-button').text('Off');
+            $('#pin-3-button').text('Error');
+            $('#pin-3-button').attr({'disabled' : 'disabled'});
         }
-
-        $('#pin-1-button').removeClass('btn-dark');
-        $('#pin-2-button').removeClass('btn-dark');
-        $('#pin-3-button').removeClass('btn-dark');
-
-        $('#pin-1-button').removeAttr('disabled');
-        $('#pin-2-button').removeAttr('disabled');
-        $('#pin-3-button').removeAttr('disabled');
     }
 }
+
 
 $( document ).ready(function() {
     init();
