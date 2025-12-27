@@ -3,6 +3,8 @@ import logging
 
 from .fanBase import FanBase
 
+from ..exceptions import DeviceControlException
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -28,9 +30,15 @@ class FanSoftwarePwmRpiGpio(FanBase):
         if self.invert_output:
             logger.warning('Fan logic reversed')
 
-        #GPIO.setmode(GPIO.BOARD)
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(pwm_pin, GPIO.OUT)
+
+        try:
+            #GPIO.setmode(GPIO.BOARD)
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(pwm_pin, GPIO.OUT)
+        except Exception as e:  # catch all exceptions, not raspberry pi specific
+            logger.error('GPIO exception: %s', str(e))
+            raise DeviceControlException from e
+
 
         self.pwm = GPIO.PWM(pwm_pin, self.PWM_FREQUENCY)
         self.pwm.start(0)
@@ -97,7 +105,13 @@ class FanSoftwarePwmGpiozero(FanBase):
 
         logger.info('Initializing Software PWM FAN device (%d Hz)', self.PWM_FREQUENCY)
 
-        self.pwm = PWMOutputDevice(pwm_pin, initial_value=0, frequency=self.PWM_FREQUENCY)
+
+        try:
+            self.pwm = PWMOutputDevice(pwm_pin, initial_value=0, frequency=self.PWM_FREQUENCY)
+        except Exception as e:  # catch all exceptions, not raspberry pi specific
+            logger.error('GPIO exception: %s', str(e))
+            raise DeviceControlException from e
+
 
         if self.invert_output:
             logger.warning('Fan logic reversed')

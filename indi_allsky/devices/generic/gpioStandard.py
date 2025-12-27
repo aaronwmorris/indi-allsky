@@ -3,6 +3,8 @@ import logging
 
 from .genericBase import GenericBase
 
+from ..exceptions import DeviceControlException
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -22,8 +24,13 @@ class GpioStandard(GenericBase):
 
         pin1 = getattr(board, pin_1_name)
 
-        self.pin = digitalio.DigitalInOut(pin1)
-        self.pin.direction = digitalio.Direction.OUTPUT
+
+        try:
+            self.pin = digitalio.DigitalInOut(pin1)
+            self.pin.direction = digitalio.Direction.OUTPUT
+        except Exception as e:  # catch all exceptions, not raspberry pi specific
+            logger.error('GPIO exception: %s', str(e))
+            raise DeviceControlException from e
 
 
         if invert_output:

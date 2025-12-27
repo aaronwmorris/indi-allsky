@@ -3,6 +3,8 @@ import logging
 
 from .dewHeaterBase import DewHeaterBase
 
+from ..exceptions import DeviceControlException
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -25,7 +27,13 @@ class DewHeaterPwm(DewHeaterBase):
 
         pwm_pin = getattr(board, pin_1_name)
 
-        self.pwm = pwmio.PWMOut(pwm_pin)
+
+        try:
+            self.pwm = pwmio.PWMOut(pwm_pin)
+        except Exception as e:  # catch all exceptions, not raspberry pi specific
+            logger.error('GPIO exception: %s', str(e))
+            raise DeviceControlException from e
+
 
         self._state = -1
 

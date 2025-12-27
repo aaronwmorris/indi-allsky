@@ -3,6 +3,8 @@ import logging
 
 from .genericBase import GenericBase
 
+from ..exceptions import DeviceControlException
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -19,9 +21,13 @@ class GpioRpiGpio(GenericBase):
         import RPi.GPIO as GPIO
 
 
-        #GPIO.setmode(GPIO.BOARD)
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.gpio_pin, GPIO.OUT)
+        try:
+            #GPIO.setmode(GPIO.BOARD)
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(self.gpio_pin, GPIO.OUT)
+        except Exception as e:  # catch all exceptions, not raspberry pi specific
+            logger.error('GPIO exception: %s', str(e))
+            raise DeviceControlException from e
 
 
         self._state = bool(GPIO.input(self.gpio_pin))
@@ -50,3 +56,10 @@ class GpioRpiGpio(GenericBase):
             GPIO.output(self.gpio_pin, GPIO.LOW)
             self._state = False
 
+
+    def deinit(self):
+        super(GpioRpiGpio, self).deinit()
+
+        import RPi.GPIO as GPIO
+
+        GPIO.cleanup(self.gpio_pin)  # this will return the pin to the default state

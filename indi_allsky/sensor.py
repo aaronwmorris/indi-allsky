@@ -272,6 +272,9 @@ class SensorWorker(Process):
             except (OSError, ValueError) as e:
                 logger.error('Error initializing gpio controller: %s', str(e))
                 self.gpio = indi_allsky_gpios.gpio_simulator(self.config)
+            except DeviceControlException as e:
+                logger.error('Error initializing gpio controller: %s', str(e))
+                self.gpio = indi_allsky_gpios.gpio_simulator(self.config)
 
         else:
             self.gpio = indi_allsky_gpios.gpio_simulator(self.config)
@@ -313,6 +316,9 @@ class SensorWorker(Process):
                     invert_output=dh_invert_output,
                 )
             except (OSError, ValueError) as e:
+                logger.error('Error initializing dew heater controller: %s', str(e))
+                self.dew_heater = dew_heaters.dew_heater_simulator(self.config)
+            except DeviceControlException as e:
                 logger.error('Error initializing dew heater controller: %s', str(e))
                 self.dew_heater = dew_heaters.dew_heater_simulator(self.config)
 
@@ -370,6 +376,9 @@ class SensorWorker(Process):
                     invert_output=fan_invert_output,
                 )
             except (OSError, ValueError) as e:
+                logger.error('Error initializing fan controller: %s', str(e))
+                self.fan = fans.fan_simulator(self.config)
+            except DeviceControlException as e:
                 logger.error('Error initializing fan controller: %s', str(e))
                 self.fan = fans.fan_simulator(self.config)
 

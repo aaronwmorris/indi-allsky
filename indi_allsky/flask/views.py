@@ -6765,6 +6765,7 @@ class ManualGpioView(TemplateView):
         context = super(ManualGpioView, self).get_context()
 
         from ..devices import generic as indi_allsky_gpio
+        from ..devices.exceptions import DeviceControlException
 
 
         context['title'] = self.title
@@ -6776,12 +6777,12 @@ class ManualGpioView(TemplateView):
         pin_2_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_2', '-1')
         pin_3_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_3', '-1')
 
-        context['pin_names'] = [pin_1_str, pin_2_str, pin_3_str]
 
+        context['pin_names'] = [pin_1_str, pin_2_str, pin_3_str]
 
         if not gpio_class_str:
             context['gpio_class'] = ''
-            context['pin_states'] = [None, 0, 0, 0]
+            context['pin_states'] = [-1, -1, -1]
 
             return context
 
@@ -6790,19 +6791,39 @@ class ManualGpioView(TemplateView):
             gpio_class = getattr(indi_allsky_gpio, gpio_class_str)
         except AttributeError:
             context['gpio_class'] = ''
-            context['pin_states'] = [None, 0, 0, 0]
+            context['pin_states'] = [-1, -1, -1]
 
             return context
 
 
-        pin_1 = gpio_class(self.indi_allsky_config, pin_1_name=pin_1_str)
-        pin_2 = gpio_class(self.indi_allsky_config, pin_1_name=pin_2_str)
-        pin_3 = gpio_class(self.indi_allsky_config, pin_1_name=pin_3_str)
+        pin_states = [None, None, None]
+
+        try:
+            pin_1 = gpio_class(self.indi_allsky_config, pin_1_name=pin_1_str)
+            pin_states[0] = int(pin_1.state)
+            #pin_1.deinit()  # deinit returns pin to default state
+        except DeviceControlException:
+            pin_states[0] = -1
+
+
+        try:
+            pin_2 = gpio_class(self.indi_allsky_config, pin_1_name=pin_2_str)
+            pin_states[1] = int(pin_2.state)
+            #pin_2.deinit()  # deinit returns pin to default state
+        except DeviceControlException:
+            pin_states[1] = -1
+
+
+        try:
+            pin_3 = gpio_class(self.indi_allsky_config, pin_1_name=pin_3_str)
+            pin_states[2] = int(pin_3.state)
+            #pin_3.deinit()  # deinit returns pin to default state
+        except DeviceControlException:
+            pin_states[2] = -1
 
 
         context['gpio_class'] = gpio_class_str
-
-        context['pin_states'] = [int(pin_1.state), int(pin_2.state), int(pin_3.state)]
+        context['pin_states'] = pin_states
 
         return context
 
@@ -6862,6 +6883,9 @@ class AjaxManualGpioView(BaseView):
             'pin_id' : pin_id,
             'pin_state' : pin.state,
         }
+
+
+        #pin.deinit()  # deinit returns pin to default state
 
         return jsonify(message)
 
