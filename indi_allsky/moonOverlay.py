@@ -111,38 +111,41 @@ class IndiAllSkyMoonOverlay(object):
 
         mask = numpy.zeros([moon_height, moon_width, 3], dtype=numpy.uint8)
 
+        #logger.info('moon_height: %d, moon_width: %d, moon_radius: %d, start_scale: %s', moon_height, moon_width, moon_radius, str(start_scale))
         mask = cv2.circle(
-            mask,
-            (int(moon_height / 2), int(moon_width / 2)),
-            moon_radius,
-            start_scale,
-            cv2.FILLED,
+            img=mask,
+            center=(int(moon_height / 2), int(moon_width / 2)),
+            radius=moon_radius,
+            color=start_scale,
+            thickness=cv2.FILLED,
         )
 
 
         ### cover half the moon
+        #logger.info('moon_height: %d, moon_width: %d, moon_radius: %d, half_start: %d, half_end: %d, half_scale: %s', moon_height, moon_width, moon_radius, half_start, half_end, str(half_scale))
         mask = cv2.ellipse(
-            mask,
-            (int(moon_height / 2), int(moon_width / 2)),
-            (moon_radius, moon_radius),
-            270,
-            half_start,
-            half_end,
-            half_scale,
-            cv2.FILLED,
+            img=mask,
+            center=(int(moon_height / 2), int(moon_width / 2)),
+            axes=(moon_radius, moon_radius),
+            angle=270,
+            startAngle=half_start,
+            endAngle=half_end,
+            color=half_scale,
+            thickness=cv2.FILLED,
         )
 
 
         ### crecent
+        #logger.info('moon_height: %d, moon_width: %d, moon_radius: %d, ellipse_b: %d, crecent_scale: %s', moon_height, moon_width, moon_radius, ellipse_b, str(crecent_scale))
         mask = cv2.ellipse(
-            mask,
-            (int(moon_height / 2), int(moon_width / 2)),
-            (moon_radius, ellipse_b),
-            270,
-            0,
-            360,
-            crecent_scale,
-            cv2.FILLED,
+            img=mask,
+            center=(int(moon_height / 2), int(moon_width / 2)),
+            axes=(moon_radius, ellipse_b),
+            angle=270,
+            startAngle=0,
+            endAngle=360,
+            color=crecent_scale,
+            thickness=cv2.FILLED,
         )
 
 
