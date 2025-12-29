@@ -4823,6 +4823,99 @@ class IndiAllskyConfigForm(FlaskForm):
             result = False
 
 
+        # file transfer validation
+        if not self.FILETRANSFER__HOST.data:
+            if self.FILETRANSFER__UPLOAD_IMAGE.data:
+                self.FILETRANSFER__UPLOAD_IMAGE.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_PANORAMA.data:
+                self.FILETRANSFER__UPLOAD_PANORAMA.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_RAW.data:
+                self.FILETRANSFER__UPLOAD_RAW.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_FITS.data:
+                self.FILETRANSFER__UPLOAD_FITS.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_METADATA.data:
+                self.FILETRANSFER__UPLOAD_METADATA.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_VIDEO.data:
+                self.FILETRANSFER__UPLOAD_VIDEO.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_MINI_VIDEO.data:
+                self.FILETRANSFER__UPLOAD_MINI_VIDEO.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_KEOGRAM.data:
+                self.FILETRANSFER__UPLOAD_KEOGRAM.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_STARTRAIL.data:
+                self.FILETRANSFER__UPLOAD_STARTRAIL.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_STARTRAIL_VIDEO.data:
+                self.FILETRANSFER__UPLOAD_STARTRAIL_VIDEO.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_PANORAMA_VIDEO.data:
+                self.FILETRANSFER__UPLOAD_PANORAMA_VIDEO.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_ENDOFNIGHT.data:
+                self.FILETRANSFER__UPLOAD_ENDOFNIGHT.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_REALTIME_KEOGRAM.data:
+                self.FILETRANSFER__UPLOAD_REALTIME_KEOGRAM.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_LATEST_IMAGE.data:
+                self.FILETRANSFER__UPLOAD_LATEST_IMAGE.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_LATEST_PANORAMA.data:
+                self.FILETRANSFER__UPLOAD_LATEST_PANORAMA.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_LATEST_RAW.data:
+                self.FILETRANSFER__UPLOAD_LATEST_RAW.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_LATEST_VIDEO.data:
+                self.FILETRANSFER__UPLOAD_LATEST_VIDEO.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_DB_BACKUP.data:
+                self.FILETRANSFER__UPLOAD_DB_BACKUP.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+
         # focuser
         if self.FOCUSER__CLASSNAME.data:
             if self.FOCUSER__CLASSNAME.data.startswith('blinka_'):
