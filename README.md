@@ -660,6 +660,11 @@ Please let me know if you want to make an addition or correction.
 * [PampaSkies](http://www.pampaskies.com/gallery3/Equipment/All-Sky-Camera-with-Sky-Condition-Detection)
 * [The Suffolk Sky](http://www.suffolksky.com/all-sky-camera/)
 * [Boletim da Sociedade Astronômica Brasileira](https://sab-astro.org.br/wp-content/uploads/2023/04/GabrielSantos2.pdf)
+* [Aircraft data / ADS-B tracking via adsb.fi](https://allsky-rodgau.com/aircraft-data-ads-b-tracking-for-my-allsky-camera-via-adsb-fi-1336/)
+* [indi Allsky live images in WordPress](https://allsky-rodgau.com/indi-allsky-live-images-in-wordpress-structure-and-functionality-of-my-plugin-1648/)
+* [Raspberry Pi as a digital picture frame in kiosk mode](https://allsky-rodgau.com/raspberry-pi-as-a-digital-picture-frame-in-kiosk-mode-hardware-setup-troubleshooting-1610/)
+* [Automatic indi-allsky backup on external drive](https://allsky-rodgau.com/automatic-indi-allsky-backup-on-external-drive-fritzbox-nas-1653/)
+* [Optimal configuration for indi-allsky](https://allsky-rodgau.com/optimal-configuration-for-indi-allsky-stable-day-night-transition-and-reliable-moon-mode-1541/)
 
 
 ## Alternatives
