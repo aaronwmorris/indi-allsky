@@ -2007,7 +2007,10 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_EXPORT_RAW(class='form-select bg-secondary') }}
             <div id="IMAGE_EXPORT_RAW-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Enable saving raw (non-stacked) images</div>
+        <div class="col-sm-8">
+            <div>Enable saving unaltered images (no labels, unprocessed, etc)</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> "RAW" is not meant in a traditional photography sense, RAW just means unaltered data.  FITS data (below) is true RAW data.</div>
+        </div>
     </div>
 
     <div class="form-group row">
@@ -2059,7 +2062,9 @@ var camera_id = {{ camera_id }};
                 <div id="IMAGE_SAVE_FITS-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8">Enable saving raw FITS (non-stacked) data</div>
+        <div class="col-sm-8">
+            <div>Enable saving RAW (unprocessed, non-stacked, etc) data in FITS format</div>
+        </div>
     </div>
 
     <div class="form-group row">
