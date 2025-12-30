@@ -43,6 +43,7 @@ class IndiAllSkyConfigBase(object):
         "INDI_PORT"   : 7624,
         "INDI_CAMERA_NAME" : "",
         "OWNER" : "",
+        "INSTANCE_NAME" : "indi-allsky",
         "LENS_NAME" : "AllSky Lens",
         "LENS_FOCAL_LENGTH" : 2.5,
         "LENS_FOCAL_RATIO"  : 2.0,

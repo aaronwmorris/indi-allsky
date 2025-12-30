@@ -185,8 +185,6 @@ class IndexCanvasView(TemplateView):
     def get_context(self):
         context = super(IndexCanvasView, self).get_context()
 
-        context['title'] = self.title
-        context['camera_id'] = self.camera.id
         context['latest_image_view'] = self.latest_image_view
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
@@ -385,8 +383,6 @@ class IndexImgView(TemplateView):
     def get_context(self):
         context = super(IndexImgView, self).get_context()
 
-        context['title'] = self.title
-        context['camera_id'] = self.camera.id
         context['latest_image_view'] = self.latest_image_view
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
@@ -403,8 +399,6 @@ class VirtualSkyView(TemplateView):
     def get_context(self):
         context = super(VirtualSkyView, self).get_context()
 
-        context['title'] = self.title
-        context['camera_id'] = self.camera.id
         context['latest_image_view'] = self.latest_image_view
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
@@ -424,8 +418,6 @@ class RealtimeKeogramView(TemplateView):
     def get_context(self):
         context = super(RealtimeKeogramView, self).get_context()
 
-        context['title'] = self.title
-        context['camera_id'] = self.camera.id
         context['keogram_uri'] = str(Path('images').joinpath('ccd_{0:s}'.format(self.camera.uuid), 'realtime_keogram.{0:s}'.format(self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'))))
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
@@ -744,10 +736,10 @@ class PublicIndexView(BaseView):
 
 
 class MaskView(TemplateView):
+    title = 'Mask Base'
+
     def get_context(self):
         context = super(MaskView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         mask_image_uri = Path('images/mask_base.png')
 
@@ -769,10 +761,10 @@ class MaskView(TemplateView):
 
 
 class CamerasView(TemplateView):
+    title = 'Cameras'
+
     def get_context(self):
         context = super(CamerasView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         context['camera_list'] = IndiAllSkyDbCameraTable.query\
             .all()
@@ -781,10 +773,10 @@ class CamerasView(TemplateView):
 
 
 class DarkFramesView(TemplateView):
+    title = 'Dark Frames'
+
     def get_context(self):
         context = super(DarkFramesView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         darkframe_list = IndiAllSkyDbDarkFrameTable.query\
             .join(IndiAllSkyDbCameraTable)\
@@ -875,11 +867,10 @@ class DarkFramesView(TemplateView):
 
 
 class ImageLagView(TemplateView):
+    title = 'Image Lag'
+
     def get_context(self):
         context = super(ImageLagView, self).get_context()
-
-        context['camera_id'] = self.camera.id
-
 
         timestamp = int(request.args.get('timestamp', 0))
         if not timestamp:
@@ -928,11 +919,10 @@ class ImageLagView(TemplateView):
 
 
 class RollingAduView(TemplateView):
+    title = 'Historical ADU'
+
     def get_context(self):
         context = super(RollingAduView, self).get_context()
-
-
-        context['camera_id'] = self.camera.id
 
 
         timestamp = int(request.args.get('timestamp', 0))
@@ -1012,10 +1002,10 @@ class RollingAduView(TemplateView):
 
 
 class SqmView(TemplateView):
+    title = 'SQM'
+
     def get_context(self):
         context = super(SqmView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
         context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
@@ -1030,8 +1020,6 @@ class ImageLoopCanvasView(TemplateView):
     def get_context(self):
         context = super(ImageLoopCanvasView, self).get_context()
 
-        context['title'] = self.title
-        context['camera_id'] = self.camera.id
         context['image_loop_view'] = self.image_loop_view
 
         context['timestamp'] = int(request.args.get('timestamp', 0))
@@ -1223,8 +1211,6 @@ class ImageLoopImgView(TemplateView):
     def get_context(self):
         context = super(ImageLoopImgView, self).get_context()
 
-        context['title'] = self.title
-        context['camera_id'] = self.camera.id
         context['image_loop_view'] = self.image_loop_view
 
         context['timestamp'] = int(request.args.get('timestamp', 0))
@@ -1306,10 +1292,11 @@ class JsonRawImageLoopView(JsonImageLoopView):
 
 
 class ChartView(TemplateView):
+    title = 'Charts'
+
     def get_context(self):
         context = super(ChartView, self).get_context()
 
-        context['camera_id'] = self.camera.id
         context['timestamp'] = int(request.args.get('timestamp', 0))
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
@@ -1767,14 +1754,12 @@ class JsonChartView(JsonView):
 
 
 class ConfigView(FormView):
+    title = 'Config'
     decorators = [login_required]
 
     def get_context(self):
         context = super(ConfigView, self).get_context()
 
-        camera_id = self.camera.id
-
-        context['camera_id'] = camera_id
         context['camera_minGain'] = self.camera.minGain
         context['camera_maxGain'] = self.camera.maxGain
         context['camera_minExposure'] = self.camera.minExposure
@@ -3773,12 +3758,11 @@ class AjaxSetTimezoneView(BaseView):
 
 
 class ImageViewerView(FormView):
+    title = 'Image Viewer'
     decorators = [login_optional_media]
 
     def get_context(self):
         context = super(ImageViewerView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         form_data = {
             'CAMERA_ID'    : self.camera.id,
@@ -3945,12 +3929,11 @@ class AjaxImageViewerView(BaseView):
 
 
 class FitsImageViewerView(FormView):
+    title = 'FITS Image Viewer'
     decorators = [login_required]
 
     def get_context(self):
         context = super(FitsImageViewerView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         form_data = {
             'CAMERA_ID'    : self.camera.id,
@@ -4203,12 +4186,11 @@ class Fits2JpegView(BaseView):
 
 
 class GalleryViewerView(FormView):
+    title = 'Gallery'
     decorators = [login_optional_media]
 
     def get_context(self):
         context = super(GalleryViewerView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         form_data = {
             'CAMERA_ID'    : self.camera.id,
@@ -4371,12 +4353,11 @@ class AjaxGalleryViewerView(BaseView):
 
 
 class VideoViewerView(FormView):
+    title = 'Timelapse Viewer'
     decorators = [login_optional_media]
 
     def get_context(self):
         context = super(VideoViewerView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         context['youtube__enable'] = int(self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', 0))
 
@@ -4468,12 +4449,11 @@ class AjaxVideoViewerView(BaseView):
 
 
 class MiniVideoViewerView(FormView):
+    title = 'Mini-Timelapse Viewer'
     decorators = [login_optional_media]
 
     def get_context(self):
         context = super(MiniVideoViewerView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         context['youtube__enable'] = int(self.indi_allsky_config.get('YOUTUBE', {}).get('ENABLE', 0))
 
@@ -4561,6 +4541,7 @@ class AjaxMiniVideoViewerView(BaseView):
 
 
 class SystemInfoView(TemplateView):
+    title = 'System Info'
     decorators = [login_required]
 
     def get_context(self):
@@ -4593,8 +4574,6 @@ class SystemInfoView(TemplateView):
             skyfield = None
 
         context = super(SystemInfoView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         context['release'] = str(__version__)
 
@@ -4960,12 +4939,11 @@ class SystemInfoView(TemplateView):
 
 
 class TaskQueueView(TemplateView):
+    title = 'Task Queue'
     decorators = [login_required]
 
     def get_context(self):
         context = super(TaskQueueView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         state_list = (
             TaskQueueState.MANUAL,
@@ -5945,16 +5923,12 @@ class AjaxIndiServerChangeView(BaseView):
 
 
 class TimelapseGeneratorView(TemplateView):
+    title = 'Generate'
     decorators = [login_required]
-
-    def __init__(self, **kwargs):
-        super(TimelapseGeneratorView, self).__init__(**kwargs)
 
 
     def get_context(self):
         context = super(TimelapseGeneratorView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         form_data = {
             'CAMERA_ID' : self.camera.id,
@@ -6555,12 +6529,11 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
 class FocusView(TemplateView):
+    title = 'Focus'
     decorators = [login_required]
 
     def get_context(self):
         context = super(FocusView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         context['form_focus'] = IndiAllskyFocusForm()
 
@@ -6768,10 +6741,6 @@ class ManualGpioView(TemplateView):
         from ..devices.exceptions import DeviceControlException
 
 
-        context['title'] = self.title
-        context['camera_id'] = self.camera.id
-
-
         gpio_class_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_CLASSNAME')
         pin_1_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_1', '-1')
         pin_2_str = self.indi_allsky_config.get('MANUAL_GPIO', {}).get('A_PIN_2', '-1')
@@ -6891,12 +6860,11 @@ class AjaxManualGpioView(BaseView):
 
 
 class ImageProcessingView(TemplateView):
+    title = 'Image Processing'
     decorators = [login_required]
 
     def get_context(self):
         context = super(ImageProcessingView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         fits_id = int(request.args.get('id', 0))
         frame_type = str(request.args.get('type', 'light'))
@@ -7620,12 +7588,12 @@ class JsonImageProcessingView(JsonView):
 
 
 class LogView(TemplateView):
+    title = 'Log Viewer'
     decorators = [login_required]
 
     def get_context(self):
         context = super(LogView, self).get_context()
 
-        context['camera_id'] = self.camera.id
         context['form_logviewer'] = IndiAllskyLogViewerForm()
 
         return context
@@ -7938,11 +7906,11 @@ class LogKernDownloadView(BaseView):
 
 
 class SupportInfoView(TemplateView):
+    title = 'Support Info'
     decorators = [login_required]
 
     def get_context(self):
         context = super(SupportInfoView, self).get_context()
-        context['camera_id'] = self.camera.id
         return context
 
 
@@ -7982,12 +7950,11 @@ class JsonSupportInfoView(JsonView):
 
 
 class NotificationsView(TemplateView):
+    title = 'Notifications'
     decorators = [login_required]
 
     def get_context(self):
         context = super(NotificationsView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         notices = IndiAllSkyDbNotificationTable.query\
             .order_by(IndiAllSkyDbNotificationTable.createDate.desc())\
@@ -8094,6 +8061,7 @@ class AjaxNotificationView(BaseView):
 
 
 class UserInfoView(TemplateView):
+    title = 'User Info'
     decorators = [login_required]
 
     def get_context(self):
@@ -8172,12 +8140,11 @@ class AjaxUserInfoView(BaseView):
 
 
 class UsersView(TemplateView):
+    title = 'Users'
     decorators = [login_required]
 
     def get_context(self):
         context = super(UsersView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         user_list = IndiAllSkyDbUserTable.query\
             .order_by(IndiAllSkyDbUserTable.createDate.asc())
@@ -8188,12 +8155,11 @@ class UsersView(TemplateView):
 
 
 class ConfigListView(TemplateView):
+    title = 'Config History'
     decorators = [login_required]
 
     def get_context(self):
         context = super(ConfigListView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         config_list = IndiAllSkyDbConfigTable.query\
             .add_columns(
@@ -8245,6 +8211,7 @@ class ConfigDownloadView(BaseView):
 
 
 class ConfigRestoreView(TemplateView):
+    title = 'Config Restore'
     decorators = [login_required]
 
     def get_context(self):
@@ -8438,15 +8405,11 @@ class AjaxSelectCameraView(BaseView):
 
 
 class CameraLensView(TemplateView):
-
-    def __init__(self, **kwargs):
-        super(CameraLensView, self).__init__(**kwargs)
+    title = 'Camera/Lens Info'
 
 
     def get_context(self):
         context = super(CameraLensView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         camera = IndiAllSkyDbCameraTable.query\
             .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
@@ -8650,10 +8613,10 @@ class AjaxUploadYoutubeView(BaseView):
 
 
 class CameraSimulatorView(TemplateView):
+    title = 'Camera Simulator'
+
     def get_context(self):
         context = super(CameraSimulatorView, self).get_context()
-
-        context['camera_id'] = self.camera.id
 
         lens = str(request.args.get('lens', 'zwo_f1.2_2.5mm_1-2'))
         sensor = str(request.args.get('sensor', 'imx477'))
@@ -8682,9 +8645,6 @@ class TimelapseImageView(TemplateView):
     def get_context(self):
         context = super(TimelapseImageView, self).get_context()
 
-        context['camera_id'] = self.camera.id
-
-        context['title'] = self.title
         context['file_view'] = self.file_view
 
         image_id = int(request.args.get('id', -1))
@@ -8879,8 +8839,6 @@ class MiniTimelapseGeneratorView(TemplateView):
 
         image_id = int(request.args.get('image_id', 0))
 
-        context['camera_id'] = self.camera.id
-
         if image_id:
             image_entry = IndiAllSkyDbImageTable.query\
                 .join(IndiAllSkyDbImageTable.camera)\
@@ -8986,9 +8944,6 @@ class LongTermKeogramView(TemplateView):
     def get_context(self):
         context = super(LongTermKeogramView, self).get_context()
 
-
-        context['title'] = self.title
-        context['camera_id'] = self.camera.id
 
         data = {
             'CAMERA_ID' : self.camera.id
@@ -9121,9 +9076,6 @@ class NetworkManagerView(TemplateView):
 
     def get_context(self):
         context = super(NetworkManagerView, self).get_context()
-
-        context['camera_id'] = self.camera.id
-        context['title'] = self.title
 
 
         try:
@@ -10106,9 +10058,6 @@ class DriveManagerView(TemplateView):
     def get_context(self):
         context = super(DriveManagerView, self).get_context()
 
-        context['camera_id'] = self.camera.id
-        context['title'] = self.title
-
 
         try:
             # detect if udisks2 is available
@@ -10470,9 +10419,6 @@ class ImageCircleHelperView(TemplateView):
     def get_context(self):
         context = super(ImageCircleHelperView, self).get_context()
 
-        context['title'] = self.title
-        context['camera_id'] = self.camera.id
-
 
         form_data = {
             'IMAGE_CIRCLE_DIAMETER' : self.camera.lensImageCircle,
@@ -10523,9 +10469,10 @@ class ImageCircleHelperView(TemplateView):
 
 
 class AstroPanelView(TemplateView):
+    title = 'astropanel'
+
     def get_context(self):
         context = super(AstroPanelView, self).get_context()
-        context['camera_id'] = self.camera.id
         return context
 
 
