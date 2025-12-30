@@ -1154,6 +1154,7 @@ class TemplateView(BaseView):
         #app.logger.info('Status data: %s', status_data)
 
         context = {
+            'website_title'      : self.indi_allsky_config.get('WEBSITE', {}).get('TITLE', 'indi-allsky'),
             'title'              : self.title,
             'camera_id'          : self.camera.id,
             'status_text'        : self.get_status_text(status_data) + self.get_web_extra_text(),

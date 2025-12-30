@@ -1958,6 +1958,7 @@ class ConfigView(FormView):
             'INDI_SERVER'                    : self.indi_allsky_config.get('INDI_SERVER', 'localhost'),
             'INDI_PORT'                      : self.indi_allsky_config.get('INDI_PORT', 7624),
             'INDI_CAMERA_NAME'               : self.indi_allsky_config.get('INDI_CAMERA_NAME', ''),
+            'WEBSITE__TITLE'                 : self.indi_allsky_config.get('WEBSITE', {}).get('TITLE', 'indi-allsky'),
             'OWNER'                          : self.indi_allsky_config.get('OWNER', ''),
             'LENS_NAME'                      : self.indi_allsky_config.get('LENS_NAME', 'AllSky Lens'),
             'LENS_FOCAL_LENGTH'              : self.indi_allsky_config.get('LENS_FOCAL_LENGTH', 2.5),
@@ -2811,6 +2812,7 @@ class AjaxConfigView(BaseView):
 
         # sanity check
         leaf_list = (
+            'WEBSITE',
             'CCD_CONFIG',
             'IMAGE_FILE_COMPRESSION',
             'IMAGE_CIRCLE_MASK',
@@ -2873,6 +2875,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['INDI_SERVER']                          = str(request.json['INDI_SERVER'])
         self.indi_allsky_config['INDI_PORT']                            = int(request.json['INDI_PORT'])
         self.indi_allsky_config['INDI_CAMERA_NAME']                     = str(request.json['INDI_CAMERA_NAME'])
+        self.indi_allsky_config['WEBSITE']['TITLE']                     = str(request.json['WEBSITE__TITLE'])
         self.indi_allsky_config['OWNER']                                = str(request.json['OWNER'])
         self.indi_allsky_config['LENS_NAME']                            = str(request.json['LENS_NAME'])
         self.indi_allsky_config['LENS_FOCAL_LENGTH']                    = float(request.json['LENS_FOCAL_LENGTH'])
@@ -8746,9 +8749,6 @@ class TimelapseVideoView(TemplateView):
     def get_context(self):
         context = super(TimelapseVideoView, self).get_context()
 
-        context['camera_id'] = self.camera.id
-
-        context['title'] = self.title
         context['file_view'] = self.file_view
 
         video_id = int(request.args.get('id', -1))
@@ -8854,7 +8854,6 @@ class MiniTimelapseGeneratorView(TemplateView):
                 .first()
 
 
-        context['title'] = self.title
         context['image_loop_view'] = self.image_loop_view
 
         context['timestamp'] = int(image_entry.createDate.timestamp())

@@ -107,6 +107,10 @@ def INDI_CAMERA_NAME_validator(form, field):
         return
 
 
+def WEBSITE__TITLE_validator(form, field):
+    pass
+
+
 def OWNER_validator(form, field):
     if not field.data:
         return
@@ -3974,6 +3978,7 @@ class IndiAllskyConfigForm(FlaskForm):
     INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
     INDI_PORT                        = IntegerField('INDI port', validators=[DataRequired(), INDI_PORT_validator])
     INDI_CAMERA_NAME                 = StringField('INDI Camera Name', validators=[INDI_CAMERA_NAME_validator])
+    WEBSITE__TITLE                   = StringField('Website Title', validators=[WEBSITE__TITLE_validator])
     OWNER                            = StringField('Owner', validators=[OWNER_validator])
     LENS_NAME                        = StringField('Lens Name', validators=[LENS_NAME_validator])
     LENS_FOCAL_LENGTH                = FloatField('Focal Length', validators=[LENS_FOCAL_LENGTH_validator])
