@@ -2713,11 +2713,10 @@ def DEW_HEATER__LEVEL_validator(form, field):
 
 
 def DEW_HEATER__THOLD_DIFF_validator(form, field):
-    if not isinstance(field.data, int):
+    try:
+        int(field.data)
+    except ValueError:
         raise ValidationError('Please enter a valid number')
-
-    if field.data < 0:
-        raise ValidationError('Threshold delta must be 0 or greater')
 
 
 def DEW_HEATER__MANUAL_TARGET_validator(form, field):
@@ -2754,7 +2753,9 @@ def FAN__LEVEL_validator(form, field):
 
 
 def FAN__THOLD_DIFF_validator(form, field):
-    if not isinstance(field.data, int):
+    try:
+        int(field.data)
+    except ValueError:
         raise ValidationError('Please enter a valid number')
 
 
@@ -4450,9 +4451,9 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__LEVEL_LOW            = IntegerField('Low Setting', validators=[DEW_HEATER__LEVEL_validator])
     DEW_HEATER__LEVEL_MED            = IntegerField('Medium Setting', validators=[DEW_HEATER__LEVEL_validator])
     DEW_HEATER__LEVEL_HIGH           = IntegerField('High Setting', validators=[DEW_HEATER__LEVEL_validator])
-    DEW_HEATER__THOLD_DIFF_LOW       = IntegerField('Low Threshold Delta', validators=[DEW_HEATER__THOLD_DIFF_validator])
-    DEW_HEATER__THOLD_DIFF_MED       = IntegerField('Medium Threshold Delta', validators=[DEW_HEATER__THOLD_DIFF_validator])
-    DEW_HEATER__THOLD_DIFF_HIGH      = IntegerField('High Threshold Delta', validators=[DEW_HEATER__THOLD_DIFF_validator])
+    DEW_HEATER__THOLD_DIFF_LOW       = StringField('Low Threshold Delta', validators=[DEW_HEATER__THOLD_DIFF_validator])
+    DEW_HEATER__THOLD_DIFF_MED       = StringField('Medium Threshold Delta', validators=[DEW_HEATER__THOLD_DIFF_validator])
+    DEW_HEATER__THOLD_DIFF_HIGH      = StringField('High Threshold Delta', validators=[DEW_HEATER__THOLD_DIFF_validator])
     DEW_HEATER__HOLD_SECONDS         = IntegerField('Change Hold Time (seconds)', validators=[DEW_HEATER__HOLD_SECONDS_validator])
     FAN__CLASSNAME                   = SelectField('Fan', choices=FAN__CLASSNAME_choices, validators=[FAN__CLASSNAME_validator])
     FAN__ENABLE_NIGHT                = BooleanField('Enable Night')
@@ -4466,9 +4467,9 @@ class IndiAllskyConfigForm(FlaskForm):
     FAN__LEVEL_LOW                   = IntegerField('Low Setting', validators=[FAN__LEVEL_validator])
     FAN__LEVEL_MED                   = IntegerField('Medium Setting', validators=[FAN__LEVEL_validator])
     FAN__LEVEL_HIGH                  = IntegerField('High Setting', validators=[FAN__LEVEL_validator])
-    FAN__THOLD_DIFF_LOW              = IntegerField('Low Threshold Delta', validators=[FAN__THOLD_DIFF_validator])
-    FAN__THOLD_DIFF_MED              = IntegerField('Medium Threshold Delta', validators=[FAN__THOLD_DIFF_validator])
-    FAN__THOLD_DIFF_HIGH             = IntegerField('High Threshold Delta', validators=[FAN__THOLD_DIFF_validator])
+    FAN__THOLD_DIFF_LOW              = StringField('Low Threshold Delta', validators=[FAN__THOLD_DIFF_validator])
+    FAN__THOLD_DIFF_MED              = StringField('Medium Threshold Delta', validators=[FAN__THOLD_DIFF_validator])
+    FAN__THOLD_DIFF_HIGH             = StringField('High Threshold Delta', validators=[FAN__THOLD_DIFF_validator])
     FAN__HOLD_SECONDS                = IntegerField('Change Hold Time (seconds)', validators=[FAN__HOLD_SECONDS_validator])
     GENERIC_GPIO__A_CLASSNAME        = SelectField('Automated GPIO', choices=GENERIC_GPIO__CLASSNAME_choices, validators=[GENERIC_GPIO__CLASSNAME_validator])
     GENERIC_GPIO__A_I2C_ADDRESS      = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
@@ -4822,6 +4823,99 @@ class IndiAllskyConfigForm(FlaskForm):
             result = False
 
 
+        # file transfer validation
+        if not self.FILETRANSFER__HOST.data:
+            if self.FILETRANSFER__UPLOAD_IMAGE.data:
+                self.FILETRANSFER__UPLOAD_IMAGE.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_PANORAMA.data:
+                self.FILETRANSFER__UPLOAD_PANORAMA.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_RAW.data:
+                self.FILETRANSFER__UPLOAD_RAW.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_FITS.data:
+                self.FILETRANSFER__UPLOAD_FITS.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_METADATA.data:
+                self.FILETRANSFER__UPLOAD_METADATA.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_VIDEO.data:
+                self.FILETRANSFER__UPLOAD_VIDEO.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_MINI_VIDEO.data:
+                self.FILETRANSFER__UPLOAD_MINI_VIDEO.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_KEOGRAM.data:
+                self.FILETRANSFER__UPLOAD_KEOGRAM.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_STARTRAIL.data:
+                self.FILETRANSFER__UPLOAD_STARTRAIL.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_STARTRAIL_VIDEO.data:
+                self.FILETRANSFER__UPLOAD_STARTRAIL_VIDEO.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_PANORAMA_VIDEO.data:
+                self.FILETRANSFER__UPLOAD_PANORAMA_VIDEO.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_ENDOFNIGHT.data:
+                self.FILETRANSFER__UPLOAD_ENDOFNIGHT.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_REALTIME_KEOGRAM.data:
+                self.FILETRANSFER__UPLOAD_REALTIME_KEOGRAM.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_LATEST_IMAGE.data:
+                self.FILETRANSFER__UPLOAD_LATEST_IMAGE.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_LATEST_PANORAMA.data:
+                self.FILETRANSFER__UPLOAD_LATEST_PANORAMA.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_LATEST_RAW.data:
+                self.FILETRANSFER__UPLOAD_LATEST_RAW.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_LATEST_VIDEO.data:
+                self.FILETRANSFER__UPLOAD_LATEST_VIDEO.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+            if self.FILETRANSFER__UPLOAD_DB_BACKUP.data:
+                self.FILETRANSFER__UPLOAD_DB_BACKUP.errors.append('No file transfer host is configured')
+                self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
+                result = False
+
+
         # focuser
         if self.FOCUSER__CLASSNAME.data:
             if self.FOCUSER__CLASSNAME.data.startswith('blinka_'):
@@ -5046,15 +5140,20 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
 
-        if self.DEW_HEATER__THOLD_DIFF_HIGH.data >= self.DEW_HEATER__THOLD_DIFF_MED.data:
-            self.DEW_HEATER__THOLD_DIFF_HIGH.errors.append('HIGH must be less than MEDIUM')
-            self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM must be greater than HIGH')
-            result = False
+        try:
+            if int(self.DEW_HEATER__THOLD_DIFF_HIGH.data) >= int(self.DEW_HEATER__THOLD_DIFF_MED.data):
+                self.DEW_HEATER__THOLD_DIFF_HIGH.errors.append('HIGH must be less than MEDIUM')
+                self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM must be greater than HIGH')
+                result = False
 
-        if self.DEW_HEATER__THOLD_DIFF_MED.data >= self.DEW_HEATER__THOLD_DIFF_LOW.data:
-            self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM must be less than LOW')
-            self.DEW_HEATER__THOLD_DIFF_LOW.errors.append('LOW must be greater than MEDIUM')
-            result = False
+
+            if int(self.DEW_HEATER__THOLD_DIFF_MED.data) >= int(self.DEW_HEATER__THOLD_DIFF_LOW.data):
+                self.DEW_HEATER__THOLD_DIFF_MED.errors.append('MEDIUM must be less than LOW')
+                self.DEW_HEATER__THOLD_DIFF_LOW.errors.append('LOW must be greater than MEDIUM')
+                result = False
+        except ValueError:
+            # integer validation is caught later
+            pass
 
 
         # fan
@@ -5198,15 +5297,19 @@ class IndiAllskyConfigForm(FlaskForm):
                     result = False
 
 
-        if self.FAN__THOLD_DIFF_HIGH.data <= self.FAN__THOLD_DIFF_MED.data:
-            self.FAN__THOLD_DIFF_HIGH.errors.append('HIGH must be greater than MEDIUM')
-            self.FAN__THOLD_DIFF_MED.errors.append('MEDIUM must be less than HIGH')
-            result = False
+        try:
+            if int(self.FAN__THOLD_DIFF_HIGH.data) <= int(self.FAN__THOLD_DIFF_MED.data):
+                self.FAN__THOLD_DIFF_HIGH.errors.append('HIGH must be greater than MEDIUM')
+                self.FAN__THOLD_DIFF_MED.errors.append('MEDIUM must be less than HIGH')
+                result = False
 
-        if self.FAN__THOLD_DIFF_MED.data <= self.FAN__THOLD_DIFF_LOW.data:
-            self.FAN__THOLD_DIFF_MED.errors.append('MEDIUM must be greater than LOW')
-            self.FAN__THOLD_DIFF_LOW.errors.append('LOW must be less than MEDIUM')
-            result = False
+            if int(self.FAN__THOLD_DIFF_MED.data) <= int(self.FAN__THOLD_DIFF_LOW.data):
+                self.FAN__THOLD_DIFF_MED.errors.append('MEDIUM must be greater than LOW')
+                self.FAN__THOLD_DIFF_LOW.errors.append('LOW must be less than MEDIUM')
+                result = False
+        except ValueError:
+            # integer validation is caught later
+            pass
 
 
         # generic gpio
