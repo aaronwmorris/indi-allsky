@@ -107,6 +107,10 @@ def INDI_CAMERA_NAME_validator(form, field):
         return
 
 
+def WEBSITE__TITLE_validator(form, field):
+    pass
+
+
 def OWNER_validator(form, field):
     if not field.data:
         return
@@ -3974,6 +3978,7 @@ class IndiAllskyConfigForm(FlaskForm):
     INDI_SERVER                      = StringField('INDI Server', validators=[DataRequired(), INDI_SERVER_validator])
     INDI_PORT                        = IntegerField('INDI port', validators=[DataRequired(), INDI_PORT_validator])
     INDI_CAMERA_NAME                 = StringField('INDI Camera Name', validators=[INDI_CAMERA_NAME_validator])
+    WEBSITE__TITLE                   = StringField('Website Title', validators=[WEBSITE__TITLE_validator])
     OWNER                            = StringField('Owner', validators=[OWNER_validator])
     LENS_NAME                        = StringField('Lens Name', validators=[LENS_NAME_validator])
     LENS_FOCAL_LENGTH                = FloatField('Focal Length', validators=[LENS_FOCAL_LENGTH_validator])
@@ -4977,6 +4982,10 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.FOCUSER__GPIO_PIN_4.errors.append('GPIO permissions need to be fixed')
                     result = False
 
+                except AttributeError as e:
+                    self.FOCUSER__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
+                    result = False
+
             elif self.FOCUSER__CLASSNAME.data.startswith('motorkit_'):
                 try:
                     from adafruit_motorkit import MotorKit  # noqa: F401
@@ -5026,6 +5035,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:
                     self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except AttributeError as e:
+                    self.DEW_HEATER__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.DEW_HEATER__CLASSNAME.data.startswith('rpigpio_'):
@@ -5182,6 +5195,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except AttributeError as e:
+                    self.FAN__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.FAN__CLASSNAME.data.startswith('rpigpio_'):

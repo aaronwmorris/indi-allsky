@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}indi-allsky: Config{% endblock %}
+{% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
 
 {% block head %}
 <style>
@@ -4728,6 +4728,21 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.WEBSITE__TITLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WEBSITE__TITLE(class='form-control bg-secondary') }}
+            <div id="WEBSITE__TITLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Page title prefix</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.ADMIN_NETWORKS_FLASK.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -8436,6 +8451,7 @@ const field_names = [
     'INDI_SERVER',
     'INDI_PORT',
     'INDI_CAMERA_NAME',
+    'WEBSITE__TITLE',
     'OWNER',
     'LENS_NAME',
     'LENS_FOCAL_LENGTH',
