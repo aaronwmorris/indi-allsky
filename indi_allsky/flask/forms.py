@@ -2740,6 +2740,18 @@ def DEW_HEATER__HOLD_SECONDS_validator(form, field):
         raise ValidationError('Must be 600 or less')
 
 
+def PWM_FREQUENCY_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+
+    if field.data < 10:
+        raise ValidationError('Must be 10 or greater')
+
+    if field.data > 10000:
+        raise ValidationError('Must be 10000 or less')
+
+
 def FAN__CLASSNAME_validator(form, field):
     if field.data not in list(zip(*form.FAN__CLASSNAME_choices))[0]:
         raise ValidationError('Invalid selection')
@@ -4460,6 +4472,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DEW_HEATER__THOLD_DIFF_MED       = StringField('Medium Threshold Delta', validators=[DEW_HEATER__THOLD_DIFF_validator])
     DEW_HEATER__THOLD_DIFF_HIGH      = StringField('High Threshold Delta', validators=[DEW_HEATER__THOLD_DIFF_validator])
     DEW_HEATER__HOLD_SECONDS         = IntegerField('Change Hold Time (seconds)', validators=[DEW_HEATER__HOLD_SECONDS_validator])
+    DEW_HEATER__PWM_FREQUENCY        = IntegerField('PWM Frequency', validators=[PWM_FREQUENCY_validator])
     FAN__CLASSNAME                   = SelectField('Fan', choices=FAN__CLASSNAME_choices, validators=[FAN__CLASSNAME_validator])
     FAN__ENABLE_NIGHT                = BooleanField('Enable Night')
     FAN__I2C_ADDRESS                 = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
@@ -4476,6 +4489,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FAN__THOLD_DIFF_MED              = StringField('Medium Threshold Delta', validators=[FAN__THOLD_DIFF_validator])
     FAN__THOLD_DIFF_HIGH             = StringField('High Threshold Delta', validators=[FAN__THOLD_DIFF_validator])
     FAN__HOLD_SECONDS                = IntegerField('Change Hold Time (seconds)', validators=[FAN__HOLD_SECONDS_validator])
+    FAN__PWM_FREQUENCY               = IntegerField('PWM Frequency', validators=[PWM_FREQUENCY_validator])
     GENERIC_GPIO__A_CLASSNAME        = SelectField('Automated GPIO', choices=GENERIC_GPIO__CLASSNAME_choices, validators=[GENERIC_GPIO__CLASSNAME_validator])
     GENERIC_GPIO__A_I2C_ADDRESS      = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     GENERIC_GPIO__A_PIN_1            = StringField('Pin/Port', validators=[DEVICE_PIN_NAME_validator])

@@ -16,11 +16,12 @@ class DewHeaterPwm(DewHeaterBase):
 
         pin_1_name = kwargs['pin_1_name']
         self.invert_output = kwargs['invert_output']
+        pwm_frequency = kwargs['pwm_frequency']
 
         import board
         import pwmio
 
-        logger.info('Initializing PWM DEW HEATER device')
+        logger.info('Initializing PWM DEW HEATER device: %s (%d Hz)', str(pin_1_name), pwm_frequency)
 
         if self.invert_output:
             logger.warning('Dew heater logic reversed')
@@ -29,7 +30,7 @@ class DewHeaterPwm(DewHeaterBase):
 
 
         try:
-            self.pwm = pwmio.PWMOut(pwm_pin)
+            self.pwm = pwmio.PWMOut(pwm_pin, frequency=pwm_frequency)
         except Exception as e:  # catch all exceptions, not raspberry pi specific
             logger.error('GPIO exception: %s', str(e))
             raise DeviceControlException from e

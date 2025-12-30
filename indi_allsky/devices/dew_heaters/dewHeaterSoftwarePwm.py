@@ -25,7 +25,7 @@ class DewHeaterSoftwarePwmRpiGpio(DewHeaterBase):
 
         import RPi.GPIO as GPIO
 
-        logger.info('Initializing Software PWM DEW HEATER device (%d Hz)', self.PWM_FREQUENCY)
+        logger.info('Initializing Software PWM DEW HEATER device: %s (%d Hz)', str(pin_1_name), self.PWM_FREQUENCY)
 
         if self.invert_output:
             logger.warning('Dew heater logic reversed')

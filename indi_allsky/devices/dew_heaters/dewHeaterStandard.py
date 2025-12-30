@@ -20,7 +20,7 @@ class DewHeaterStandard(DewHeaterBase):
         import board
         import digitalio
 
-        logger.info('Initializing standard DEW HEATER device')
+        logger.info('Initializing standard DEW HEATER device: %s', str(pin_1_name))
 
         pin1 = getattr(board, pin_1_name)
 

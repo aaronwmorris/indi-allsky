@@ -307,6 +307,7 @@ class SensorWorker(Process):
             dh_i2c_address = self.config.get('DEW_HEATER', {}).get('I2C_ADDRESS', '0x10')
             dh_pin_1 = self.config.get('DEW_HEATER', {}).get('PIN_1', 'notdefined')
             dh_invert_output = self.config.get('DEW_HEATER', {}).get('INVERT_OUTPUT', False)
+            dh_pwm_frequency = self.config.get('DEW_HEATER', {}).get('PWM_FREQUENCY', 500)
 
             try:
                 self.dew_heater = dh_class(
@@ -314,6 +315,7 @@ class SensorWorker(Process):
                     i2c_address=dh_i2c_address,
                     pin_1_name=dh_pin_1,
                     invert_output=dh_invert_output,
+                    pwm_freqency=dh_pwm_frequency,
                 )
             except (OSError, ValueError) as e:
                 logger.error('Error initializing dew heater controller: %s', str(e))
@@ -367,6 +369,7 @@ class SensorWorker(Process):
             fan_i2c_address = self.config.get('FAN', {}).get('I2C_ADDRESS', '0x11')
             fan_pin_1 = self.config.get('FAN', {}).get('PIN_1', 'notdefined')
             fan_invert_output = self.config.get('FAN', {}).get('INVERT_OUTPUT', False)
+            fan_pwm_frequency = self.config.get('FAN', {}).get('PWM_FREQUENCY', 500)
 
             try:
                 self.fan = fan_class(
@@ -374,6 +377,7 @@ class SensorWorker(Process):
                     i2c_address=fan_i2c_address,
                     pin_1_name=fan_pin_1,
                     invert_output=fan_invert_output,
+                    pwm_freqency=fan_pwm_frequency,
                 )
             except (OSError, ValueError) as e:
                 logger.error('Error initializing fan controller: %s', str(e))
