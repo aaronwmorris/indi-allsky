@@ -178,7 +178,7 @@ class AjaxStatusUpdateView(BaseView):
 
 
 class IndexCanvasView(TemplateView):
-    title = 'Latest'
+    page_title = 'Latest'
     latest_image_view = 'indi_allsky.js_latest_image_view'
 
 
@@ -376,7 +376,7 @@ class JsonLatestImageView(JsonView):
 
 
 class IndexImgView(TemplateView):
-    title = 'Latest'
+    page_title = 'Latest'
     latest_image_view = 'indi_allsky.js_latest_image_view'
 
 
@@ -392,7 +392,7 @@ class IndexImgView(TemplateView):
 
 
 class VirtualSkyView(TemplateView):
-    title = 'VirtualSky'
+    page_title = 'VirtualSky'
     latest_image_view = 'indi_allsky.js_latest_image_view'
 
 
@@ -412,7 +412,7 @@ class VirtualSkyView(TemplateView):
 
 
 class RealtimeKeogramView(TemplateView):
-    title = 'Realtime Keogram'
+    page_title = 'Realtime Keogram'
 
 
     def get_context(self):
@@ -700,12 +700,12 @@ class LatestPanoramaVideoWatchRedirect(LatestTimelapseVideoWatchRedirect):
 
 
 class LatestPanoramaCanvasView(IndexCanvasView):
-    title = 'Panorama'
+    page_title = 'Panorama'
     latest_image_view = 'indi_allsky.js_latest_panorama_view'
 
 
 class LatestPanoramaImgView(IndexImgView):
-    title = 'Panorama'
+    page_title = 'Panorama'
     latest_image_view = 'indi_allsky.js_latest_panorama_view'
 
 
@@ -715,12 +715,12 @@ class JsonLatestPanoramaView(JsonLatestImageView):
 
 
 class LatestRawImageCanvasView(IndexCanvasView):
-    title = 'RAW Image'
+    page_title = 'RAW Image'
     latest_image_view = 'indi_allsky.js_latest_rawimage_view'
 
 
 class LatestRawImageImgView(IndexImgView):
-    title = 'RAW Image'
+    page_title = 'RAW Image'
     latest_image_view = 'indi_allsky.js_latest_rawimage_view'
 
 
@@ -736,7 +736,7 @@ class PublicIndexView(BaseView):
 
 
 class MaskView(TemplateView):
-    title = 'Mask Base'
+    page_title = 'Mask Base'
 
     def get_context(self):
         context = super(MaskView, self).get_context()
@@ -761,7 +761,7 @@ class MaskView(TemplateView):
 
 
 class CamerasView(TemplateView):
-    title = 'Cameras'
+    page_title = 'Cameras'
 
     def get_context(self):
         context = super(CamerasView, self).get_context()
@@ -773,7 +773,7 @@ class CamerasView(TemplateView):
 
 
 class DarkFramesView(TemplateView):
-    title = 'Dark Frames'
+    page_title = 'Dark Frames'
 
     def get_context(self):
         context = super(DarkFramesView, self).get_context()
@@ -867,7 +867,7 @@ class DarkFramesView(TemplateView):
 
 
 class ImageLagView(TemplateView):
-    title = 'Image Lag'
+    page_title = 'Image Lag'
 
     def get_context(self):
         context = super(ImageLagView, self).get_context()
@@ -919,7 +919,7 @@ class ImageLagView(TemplateView):
 
 
 class RollingAduView(TemplateView):
-    title = 'Historical ADU'
+    page_title = 'Historical ADU'
 
     def get_context(self):
         context = super(RollingAduView, self).get_context()
@@ -1002,7 +1002,7 @@ class RollingAduView(TemplateView):
 
 
 class SqmView(TemplateView):
-    title = 'SQM'
+    page_title = 'SQM'
 
     def get_context(self):
         context = super(SqmView, self).get_context()
@@ -1014,7 +1014,7 @@ class SqmView(TemplateView):
 
 
 class ImageLoopCanvasView(TemplateView):
-    title = 'Loop'
+    page_title = 'Loop'
     image_loop_view = 'indi_allsky.js_image_loop_view'
 
     def get_context(self):
@@ -1205,7 +1205,7 @@ class JsonImageLoopView(JsonView):
 
 
 class ImageLoopImgView(TemplateView):
-    title = 'Loop'
+    page_title = 'Loop'
     image_loop_view = 'indi_allsky.js_image_loop_view'
 
     def get_context(self):
@@ -1224,12 +1224,12 @@ class ImageLoopImgView(TemplateView):
 
 
 class PanoramaLoopCanvasView(ImageLoopCanvasView):
-    title = 'Panorama Loop'
+    page_title = 'Panorama Loop'
     image_loop_view = 'indi_allsky.js_panorama_loop_view'
 
 
 class PanoramaLoopImgView(ImageLoopImgView):
-    title = 'Panorama Loop'
+    page_title = 'Panorama Loop'
     image_loop_view = 'indi_allsky.js_panorama_loop_view'
 
 
@@ -1258,12 +1258,12 @@ class JsonPanoramaLoopView(JsonImageLoopView):
 
 
 class RawImageLoopCanvasView(ImageLoopCanvasView):
-    title = 'RAW Image Loop'
+    page_title = 'RAW Image Loop'
     image_loop_view = 'indi_allsky.js_rawimage_loop_view'
 
 
 class RawImageLoopImgView(ImageLoopImgView):
-    title = 'RAW Image Loop'
+    page_title = 'RAW Image Loop'
     image_loop_view = 'indi_allsky.js_rawimage_loop_view'
 
 
@@ -1292,7 +1292,7 @@ class JsonRawImageLoopView(JsonImageLoopView):
 
 
 class ChartView(TemplateView):
-    title = 'Charts'
+    page_title = 'Charts'
 
     def get_context(self):
         context = super(ChartView, self).get_context()
@@ -1754,7 +1754,7 @@ class JsonChartView(JsonView):
 
 
 class ConfigView(FormView):
-    title = 'Config'
+    page_title = 'Config'
     decorators = [login_required]
 
     def get_context(self):
@@ -3761,7 +3761,7 @@ class AjaxSetTimezoneView(BaseView):
 
 
 class ImageViewerView(FormView):
-    title = 'Image Viewer'
+    page_title = 'Image Viewer'
     decorators = [login_optional_media]
 
     def get_context(self):
@@ -3932,7 +3932,7 @@ class AjaxImageViewerView(BaseView):
 
 
 class FitsImageViewerView(FormView):
-    title = 'FITS Image Viewer'
+    page_title = 'FITS Image Viewer'
     decorators = [login_required]
 
     def get_context(self):
@@ -4189,7 +4189,7 @@ class Fits2JpegView(BaseView):
 
 
 class GalleryViewerView(FormView):
-    title = 'Gallery'
+    page_title = 'Gallery'
     decorators = [login_optional_media]
 
     def get_context(self):
@@ -4356,7 +4356,7 @@ class AjaxGalleryViewerView(BaseView):
 
 
 class VideoViewerView(FormView):
-    title = 'Timelapse Viewer'
+    page_title = 'Timelapse Viewer'
     decorators = [login_optional_media]
 
     def get_context(self):
@@ -4452,7 +4452,7 @@ class AjaxVideoViewerView(BaseView):
 
 
 class MiniVideoViewerView(FormView):
-    title = 'Mini-Timelapse Viewer'
+    page_title = 'Mini-Timelapse Viewer'
     decorators = [login_optional_media]
 
     def get_context(self):
@@ -4544,7 +4544,7 @@ class AjaxMiniVideoViewerView(BaseView):
 
 
 class SystemInfoView(TemplateView):
-    title = 'System Info'
+    page_title = 'System Info'
     decorators = [login_required]
 
     def get_context(self):
@@ -4942,7 +4942,7 @@ class SystemInfoView(TemplateView):
 
 
 class TaskQueueView(TemplateView):
-    title = 'Task Queue'
+    page_title = 'Task Queue'
     decorators = [login_required]
 
     def get_context(self):
@@ -5926,7 +5926,7 @@ class AjaxIndiServerChangeView(BaseView):
 
 
 class TimelapseGeneratorView(TemplateView):
-    title = 'Generate'
+    page_title = 'Generate'
     decorators = [login_required]
 
 
@@ -6532,7 +6532,7 @@ class AjaxTimelapseGeneratorView(BaseView):
 
 
 class FocusView(TemplateView):
-    title = 'Focus'
+    page_title = 'Focus'
     decorators = [login_required]
 
     def get_context(self):
@@ -6734,7 +6734,7 @@ class AjaxFocusControllerView(BaseView):
 
 class ManualGpioView(TemplateView):
     decorators = [login_required]
-    title = 'Manual GPIO'
+    page_title = 'Manual GPIO'
 
 
     def get_context(self):
@@ -6863,7 +6863,7 @@ class AjaxManualGpioView(BaseView):
 
 
 class ImageProcessingView(TemplateView):
-    title = 'Image Processing'
+    page_title = 'Image Processing'
     decorators = [login_required]
 
     def get_context(self):
@@ -7591,7 +7591,7 @@ class JsonImageProcessingView(JsonView):
 
 
 class LogView(TemplateView):
-    title = 'Log Viewer'
+    page_title = 'Log Viewer'
     decorators = [login_required]
 
     def get_context(self):
@@ -7909,7 +7909,7 @@ class LogKernDownloadView(BaseView):
 
 
 class SupportInfoView(TemplateView):
-    title = 'Support Info'
+    page_title = 'Support Info'
     decorators = [login_required]
 
     def get_context(self):
@@ -7953,7 +7953,7 @@ class JsonSupportInfoView(JsonView):
 
 
 class NotificationsView(TemplateView):
-    title = 'Notifications'
+    page_title = 'Notifications'
     decorators = [login_required]
 
     def get_context(self):
@@ -8064,7 +8064,7 @@ class AjaxNotificationView(BaseView):
 
 
 class UserInfoView(TemplateView):
-    title = 'User Info'
+    page_title = 'User Info'
     decorators = [login_required]
 
     def get_context(self):
@@ -8143,7 +8143,7 @@ class AjaxUserInfoView(BaseView):
 
 
 class UsersView(TemplateView):
-    title = 'Users'
+    page_title = 'Users'
     decorators = [login_required]
 
     def get_context(self):
@@ -8158,7 +8158,7 @@ class UsersView(TemplateView):
 
 
 class ConfigListView(TemplateView):
-    title = 'Config History'
+    page_title = 'Config History'
     decorators = [login_required]
 
     def get_context(self):
@@ -8214,7 +8214,7 @@ class ConfigDownloadView(BaseView):
 
 
 class ConfigRestoreView(TemplateView):
-    title = 'Config Restore'
+    page_title = 'Config Restore'
     decorators = [login_required]
 
     def get_context(self):
@@ -8408,7 +8408,7 @@ class AjaxSelectCameraView(BaseView):
 
 
 class CameraLensView(TemplateView):
-    title = 'Camera/Lens Info'
+    page_title = 'Camera/Lens Info'
 
 
     def get_context(self):
@@ -8616,7 +8616,7 @@ class AjaxUploadYoutubeView(BaseView):
 
 
 class CameraSimulatorView(TemplateView):
-    title = 'Camera Simulator'
+    page_title = 'Camera Simulator'
 
     def get_context(self):
         context = super(CameraSimulatorView, self).get_context()
@@ -8640,7 +8640,7 @@ class CameraSimulatorView(TemplateView):
 
 class TimelapseImageView(TemplateView):
     model = IndiAllSkyDbImageTable
-    title = 'Timelapse Image'
+    page_title = 'Timelapse Image'
     file_view = 'indi_allsky.timelapse_image_view'
     decorators = [login_optional_media]
 
@@ -8717,31 +8717,31 @@ class TimelapseImageView(TemplateView):
 
 class PanoramaImageView(TimelapseImageView):
     model = IndiAllSkyDbPanoramaImageTable
-    title = 'Panorama Image'
+    page_title = 'Panorama Image'
     file_view = 'indi_allsky.panorama_image_view'
 
 
 class KeogramImageView(TimelapseImageView):
     model = IndiAllSkyDbKeogramTable
-    title = 'Keogram'
+    page_title = 'Keogram'
     file_view = 'indi_allsky.keogram_image_view'
 
 
 class StartrailImageView(TimelapseImageView):
     model = IndiAllSkyDbStarTrailsTable
-    title = 'Startrail Image'
+    page_title = 'Startrail Image'
     file_view = 'indi_allsky.startrail_image_view'
 
 
 class RawImageView(TimelapseImageView):
     model = IndiAllSkyDbRawImageTable
-    title = 'RAW Image'
+    page_title = 'RAW Image'
     file_view = 'indi_allsky.raw_image_view'
 
 
 class TimelapseVideoView(TemplateView):
     model = IndiAllSkyDbVideoTable
-    title = 'Timelapse Video'
+    page_title = 'Timelapse Video'
     file_view = 'indi_allsky.timelapse_video_view'
     decorators = [login_optional_media]
 
@@ -8812,26 +8812,26 @@ class TimelapseVideoView(TemplateView):
 
 class MiniTimelapseVideoView(TimelapseVideoView):
     model = IndiAllSkyDbMiniVideoTable
-    title = 'Mini Timelapse'
+    page_title = 'Mini Timelapse'
     file_view = 'indi_allsky.mini_timelapse_video_view'
 
 
 class StartrailVideoView(TimelapseVideoView):
     model = IndiAllSkyDbStarTrailsVideoTable
-    title = 'Startrail Video'
+    page_title = 'Startrail Video'
     file_view = 'indi_allsky.startrail_video_view'
 
 
 class PanoramaVideoView(TimelapseVideoView):
     model = IndiAllSkyDbPanoramaVideoTable
-    title = 'Panorama Video'
+    page_title = 'Panorama Video'
     file_view = 'indi_allsky.panorama_video_view'
 
 
 class MiniTimelapseGeneratorView(TemplateView):
     decorators = [login_required]
 
-    title = 'Mini Timelapse'
+    page_title = 'Mini Timelapse'
     image_loop_view = 'indi_allsky.js_image_loop_view'
 
     def get_context(self):
@@ -8937,7 +8937,7 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
 
 class LongTermKeogramView(TemplateView):
     decorators = [login_required]
-    title = 'Long Term Keogram'
+    page_title = 'Long Term Keogram'
 
 
     def get_context(self):
@@ -9071,7 +9071,7 @@ class JsonLongTermKeogramView(JsonView):
 
 class NetworkManagerView(TemplateView):
     decorators = [login_required]
-    title = 'Network'
+    page_title = 'Network'
 
     def get_context(self):
         context = super(NetworkManagerView, self).get_context()
@@ -10052,7 +10052,7 @@ class AjaxNetworkManagerView(BaseView):
 
 class DriveManagerView(TemplateView):
     decorators = [login_required]
-    title = 'Drives'
+    page_title = 'Drives'
 
     def get_context(self):
         context = super(DriveManagerView, self).get_context()
@@ -10411,7 +10411,7 @@ class AjaxDriveManagerView(BaseView):
 class ImageCircleHelperView(TemplateView):
     decorators = [login_required]
 
-    title = 'Image Circle Helper'
+    page_title = 'Image Circle Helper'
     model = IndiAllSkyDbImageTable
 
 
@@ -10468,7 +10468,7 @@ class ImageCircleHelperView(TemplateView):
 
 
 class AstroPanelView(TemplateView):
-    title = 'astropanel'
+    page_title = 'astropanel'
 
     def get_context(self):
         context = super(AstroPanelView, self).get_context()

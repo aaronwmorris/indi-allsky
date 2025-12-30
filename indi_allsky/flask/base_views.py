@@ -1099,7 +1099,7 @@ class BaseView(View):
 
 
 class TemplateView(BaseView):
-    title = 'CHANGEME'
+    page_title = 'CHANGEME'
 
     def __init__(self, template_name, **kwargs):
         super(TemplateView, self).__init__(**kwargs)
@@ -1155,7 +1155,7 @@ class TemplateView(BaseView):
 
         context = {
             'website_title'      : self.indi_allsky_config.get('WEBSITE', {}).get('TITLE', 'indi-allsky'),
-            'title'              : self.title,
+            'page_title'         : self.page_title,
             'camera_id'          : self.camera.id,
             'status_text'        : self.get_status_text(status_data) + self.get_web_extra_text(),
             'username_text'      : self.get_user_info(),
