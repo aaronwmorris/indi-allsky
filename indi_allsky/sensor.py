@@ -315,7 +315,7 @@ class SensorWorker(Process):
                     i2c_address=dh_i2c_address,
                     pin_1_name=dh_pin_1,
                     invert_output=dh_invert_output,
-                    pwm_freqency=dh_pwm_frequency,
+                    pwm_frequency=dh_pwm_frequency,
                 )
             except (OSError, ValueError) as e:
                 logger.error('Error initializing dew heater controller: %s', str(e))
@@ -377,7 +377,7 @@ class SensorWorker(Process):
                     i2c_address=fan_i2c_address,
                     pin_1_name=fan_pin_1,
                     invert_output=fan_invert_output,
-                    pwm_freqency=fan_pwm_frequency,
+                    pwm_frequency=fan_pwm_frequency,
                 )
             except (OSError, ValueError) as e:
                 logger.error('Error initializing fan controller: %s', str(e))
