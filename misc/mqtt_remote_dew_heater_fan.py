@@ -298,17 +298,18 @@ class DeviceStandard(object):
 
 
 class DevicePwm(object):
-    def __init__(self, name, pin_name):
+
+    def __init__(self, name, pin_name, pwm_frequency=500):
         self.name = name
 
         import board
         import pwmio
 
-        logger.info('Initializing PWM %s device on pin %s', self.name, pin_name)
+        logger.info('Initializing PWM %s device: %s (%d Hz)', self.name, pin_name, pwm_frequency)
 
         pin = getattr(board, pin_name)
 
-        self.pwm = pwmio.PWMOut(pin)
+        self.pwm = pwmio.PWMOut(pin, frequency=pwm_frequency)
 
         self._state = 0
 
@@ -347,9 +348,8 @@ class DevicePwm(object):
 
 
 class DeviceSoftwarePwm(object):
-    PWM_FREQUENCY = 100
 
-    def __init__(self, name, pin_name):
+    def __init__(self, name, pin_name, pwm_frequency=100):
         self.name = name
 
 
@@ -362,21 +362,22 @@ class DeviceSoftwarePwm(object):
             pwm_pin = pin.id
 
 
-        logger.info('Initializing Software PWM %s device on pin %d (%d Hz)', self.name, pwm_pin, self.PWM_FREQUENCY)
+        logger.info('Initializing Software PWM %s device: %d (%d Hz)', self.name, pwm_pin, pwm_frequency)
 
 
         import RPi.GPIO as GPIO
         #GPIO.setmode(GPIO.BOARD)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(pwm_pin, GPIO.OUT)
-        self.pwm = GPIO.PWM(pwm_pin, self.PWM_FREQUENCY)
+
+        self.pwm = GPIO.PWM(pwm_pin, pwm_frequency)
         self.pwm.start(0)
 
 
         ### gpiozero
         #from gpiozero import PWMOutputDevice
-        #logger.info('Initializing Software PWM FAN device (%d Hz)', self.PWM_FREQUENCY)
-        #self.pwm = PWMOutputDevice(pwm_pin, initial_value=0, frequency=self.PWM_FREQUENCY)
+        #logger.info('Initializing Software PWM FAN device (%d Hz)', pwm_frequency)
+        #self.pwm = PWMOutputDevice(pwm_pin, initial_value=0, frequency=pwm_frequency)
 
 
         self._state = 0
