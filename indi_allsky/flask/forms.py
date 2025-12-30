@@ -4982,6 +4982,10 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.FOCUSER__GPIO_PIN_4.errors.append('GPIO permissions need to be fixed')
                     result = False
 
+                except AttributeError as e:
+                    self.FOCUSER__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
+                    result = False
+
             elif self.FOCUSER__CLASSNAME.data.startswith('motorkit_'):
                 try:
                     from adafruit_motorkit import MotorKit  # noqa: F401
@@ -5031,6 +5035,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:
                     self.DEW_HEATER__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except AttributeError as e:
+                    self.DEW_HEATER__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.DEW_HEATER__CLASSNAME.data.startswith('rpigpio_'):
@@ -5187,6 +5195,10 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 except PermissionError:
                     self.FAN__PIN_1.errors.append('GPIO permissions need to be fixed')
+                    result = False
+
+                except AttributeError as e:
+                    self.FAN__CLASSNAME.errors.append('AttributeError: {0:s}'.format(str(e)))
                     result = False
 
             elif self.FAN__CLASSNAME.data.startswith('rpigpio_'):
