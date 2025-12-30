@@ -2745,8 +2745,8 @@ def PWM_FREQUENCY_validator(form, field):
         raise ValidationError('Please enter a valid number')
 
 
-    if field.data < 10:
-        raise ValidationError('Must be 10 or greater')
+    if field.data < 1:
+        raise ValidationError('Must be 1 or greater')
 
     if field.data > 10000:
         raise ValidationError('Must be 10000 or less')
