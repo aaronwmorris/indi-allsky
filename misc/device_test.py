@@ -215,7 +215,7 @@ class TestDevices(object):
 
             else:
                 logger.info('Device On')
-                self.device.state = self.thold_level_high
+                self.device.state = 100
                 time.sleep(self.sleep)
 
 
