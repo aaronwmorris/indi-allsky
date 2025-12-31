@@ -103,7 +103,7 @@ class FanSoftwarePwmGpiozero(FanBase):
 
         from gpiozero import PWMOutputDevice
 
-        logger.info('Initializing Software PWM FAN device (%d Hz)', self.PWM_FREQUENCY)
+        logger.info('Initializing Software PWM FAN device: %s (%d Hz)', str(pin_1_name), self.PWM_FREQUENCY)
 
 
         try:
