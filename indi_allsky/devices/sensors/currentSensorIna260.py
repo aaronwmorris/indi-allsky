@@ -82,7 +82,7 @@ class CurrentSensorIna260_I2C(CurrentSensorIna260):
         i2c = board.I2C()
         #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
         #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        self.ina260 = INA260(i2c, addr=i2c_address)
+        self.ina260 = INA260(i2c, address=i2c_address)
 
 
         #self.ina260.mode = Mode.CONTINUOUS
