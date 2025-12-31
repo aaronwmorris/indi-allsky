@@ -72,6 +72,7 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Current Sensors
     * INA219
     * INA228
+    * INA260
     * INA23x
     * INA3221
 * Lightning Sensors
