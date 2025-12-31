@@ -55,6 +55,8 @@ class TestDevices(object):
 
         self.config = self._config_obj.config
 
+        self._sleep = 5
+
         self.device = None
         self.thold_enable = None
         self.thold_level_low = 0
@@ -62,6 +64,16 @@ class TestDevices(object):
         self.thold_level_high = 0
 
         self._shutdown = False
+
+
+    @property
+    def sleep(self):
+        return self._sleep
+
+    @sleep.setter
+    def sleep(self, new_sleep):
+        #logger.info('Changing image count to %d', int(new_count))
+        self._sleep = int(new_sleep)
 
 
     def sigint_handler(self, signum, frame):
@@ -156,6 +168,9 @@ class TestDevices(object):
                     invert_output=a_gpio_invert_output,
                 )
 
+                # set initial state
+                self.device.state = 0
+
                 self.thold_enable = False  # GPIO has no thresholds
 
             else:
@@ -182,26 +197,26 @@ class TestDevices(object):
             if self.thold_enable:
                 logger.info('Device Level Low')
                 self.device.state = self.thold_level_low
-                time.sleep(5)
+                time.sleep(self.sleep)
 
                 self.check_shutdown()
 
 
                 logger.info('Device Level Medium')
                 self.device.state = self.thold_level_med
-                time.sleep(5)
+                time.sleep(self.sleep)
 
                 self.check_shutdown()
 
 
                 logger.info('Device Level High')
                 self.device.state = self.thold_level_high
-                time.sleep(5)
+                time.sleep(self.sleep)
 
             else:
                 logger.info('Device On')
                 self.device.state = self.thold_level_high
-                time.sleep(5)
+                time.sleep(self.sleep)
 
 
             self.check_shutdown()
@@ -209,7 +224,7 @@ class TestDevices(object):
 
             logger.info('Device Off')
             self.device.state = 0
-            time.sleep(5)
+            time.sleep(self.sleep)
 
 
             self.check_shutdown()
@@ -234,11 +249,20 @@ if __name__ == "__main__":
             'auto_gpio',
         ),
     )
+    argparser.add_argument(
+        '--sleep',
+        '-s',
+        help='sleep time between changes [default: 5]',
+        type=int,
+        default=5,
+    )
+
 
     args = argparser.parse_args()
 
 
     td = TestDevices()
+    td.sleep = 5
 
     td.main(args.device)
 
