@@ -20,7 +20,7 @@ class GpioStandard(GenericBase):
         import board
         import digitalio
 
-        logger.info('Initializing standard GPIO device')
+        logger.info('Initializing standard GPIO device: %s', str(pin_1_name))
 
         pin1 = getattr(board, pin_1_name)
 
