@@ -21,7 +21,7 @@ class FanStandard(FanBase):
         import digitalio
 
 
-        logger.info('Initializing standard FAN device')
+        logger.info('Initializing standard FAN device: %s', str(pin_1_name))
 
         pin1 = getattr(board, pin_1_name)
 

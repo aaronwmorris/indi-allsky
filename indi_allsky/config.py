@@ -590,6 +590,7 @@ class IndiAllSkyConfigBase(object):
             "THOLD_DIFF_MED"         : 10,
             "THOLD_DIFF_HIGH"        : 5,
             "HOLD_SECONDS"           : 0,
+            "PWM_FREQUENCY"          : 500,
         },
         "FAN" : {
             "CLASSNAME"              : "",
@@ -608,6 +609,7 @@ class IndiAllSkyConfigBase(object):
             "THOLD_DIFF_MED"         : -5,
             "THOLD_DIFF_HIGH"        : 0,
             "HOLD_SECONDS"           : 0,
+            "PWM_FREQUENCY"          : 500,
         },
         "GENERIC_GPIO" : {
             "A_CLASSNAME"            : "",

@@ -2400,6 +2400,7 @@ class ConfigView(FormView):
             'DEW_HEATER__THOLD_DIFF_MED'     : '{0:+d}'.format(self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_MED', 10)),
             'DEW_HEATER__THOLD_DIFF_HIGH'    : '{0:+d}'.format(self.indi_allsky_config.get('DEW_HEATER', {}).get('THOLD_DIFF_HIGH', 5)),
             'DEW_HEATER__HOLD_SECONDS'       : self.indi_allsky_config.get('DEW_HEATER', {}).get('HOLD_SECONDS', 0),
+            'DEW_HEATER__PWM_FREQUENCY'      : self.indi_allsky_config.get('DEW_HEATER', {}).get('PWM_FREQUENCY', 500),
             'FAN__CLASSNAME'                 : self.indi_allsky_config.get('FAN', {}).get('CLASSNAME', ''),
             'FAN__I2C_ADDRESS'               : self.indi_allsky_config.get('FAN', {}).get('I2C_ADDRESS', '0x11'),
             'FAN__PIN_1'                     : self.indi_allsky_config.get('FAN', {}).get('PIN_1', 'D13'),
@@ -2416,6 +2417,7 @@ class ConfigView(FormView):
             'FAN__THOLD_DIFF_MED'            : '{0:+d}'.format(self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_MED', -5)),
             'FAN__THOLD_DIFF_HIGH'           : '{0:+d}'.format(self.indi_allsky_config.get('FAN', {}).get('THOLD_DIFF_HIGH', 0)),
             'FAN__HOLD_SECONDS'              : self.indi_allsky_config.get('FAN', {}).get('HOLD_SECONDS', 0),
+            'FAN__PWM_FREQUENCY'             : self.indi_allsky_config.get('FAN', {}).get('PWM_FREQUENCY', 500),
             'GENERIC_GPIO__A_CLASSNAME'      : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_CLASSNAME', ''),
             'GENERIC_GPIO__A_I2C_ADDRESS'    : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_I2C_ADDRESS', '0x12'),
             'GENERIC_GPIO__A_PIN_1'          : self.indi_allsky_config.get('GENERIC_GPIO', {}).get('A_PIN_1', 'D21'),
@@ -3329,6 +3331,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['DEW_HEATER']['THOLD_DIFF_MED']         = int(request.json['DEW_HEATER__THOLD_DIFF_MED'])
         self.indi_allsky_config['DEW_HEATER']['THOLD_DIFF_HIGH']        = int(request.json['DEW_HEATER__THOLD_DIFF_HIGH'])
         self.indi_allsky_config['DEW_HEATER']['HOLD_SECONDS']           = int(request.json['DEW_HEATER__HOLD_SECONDS'])
+        self.indi_allsky_config['DEW_HEATER']['PWM_FREQUENCY']          = int(request.json['DEW_HEATER__PWM_FREQUENCY'])
         self.indi_allsky_config['FAN']['CLASSNAME']                     = str(request.json['FAN__CLASSNAME'])
         self.indi_allsky_config['FAN']['I2C_ADDRESS']                   = str(request.json['FAN__I2C_ADDRESS'])
         self.indi_allsky_config['FAN']['PIN_1']                         = str(request.json['FAN__PIN_1'])
@@ -3345,6 +3348,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FAN']['THOLD_DIFF_MED']                = int(request.json['FAN__THOLD_DIFF_MED'])
         self.indi_allsky_config['FAN']['THOLD_DIFF_HIGH']               = int(request.json['FAN__THOLD_DIFF_HIGH'])
         self.indi_allsky_config['FAN']['HOLD_SECONDS']                  = int(request.json['FAN__HOLD_SECONDS'])
+        self.indi_allsky_config['FAN']['PWM_FREQUENCY']                 = int(request.json['FAN__PWM_FREQUENCY'])
         self.indi_allsky_config['GENERIC_GPIO']['A_CLASSNAME']          = str(request.json['GENERIC_GPIO__A_CLASSNAME'])
         self.indi_allsky_config['GENERIC_GPIO']['A_I2C_ADDRESS']        = str(request.json['GENERIC_GPIO__A_I2C_ADDRESS'])
         self.indi_allsky_config['GENERIC_GPIO']['A_PIN_1']              = str(request.json['GENERIC_GPIO__A_PIN_1'])

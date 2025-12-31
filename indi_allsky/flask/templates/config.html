@@ -7592,6 +7592,19 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__PWM_FREQUENCY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DEW_HEATER__PWM_FREQUENCY(class='form-control bg-secondary') }}
+            <div id="DEW_HEATER__PWM_FREQUENCY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default: 500 - Only used for Hardware PWM</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.DEW_HEATER__ENABLE_DAY.label }}
         </div>
         <div class="col-sm-2">
@@ -7821,6 +7834,19 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">
             <div>Default duty cycle of PWM</div>
             <div><span class="badge rounded-pill bg-info text-dark">Note</span> If you enable fan thresholds, this should be set to 0</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.FAN__PWM_FREQUENCY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.FAN__PWM_FREQUENCY(class='form-control bg-secondary') }}
+            <div id="FAN__PWM_FREQUENCY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default: 500</div>
         </div>
     </div>
 
@@ -8822,6 +8848,7 @@ const field_names = [
     'DEW_HEATER__THOLD_DIFF_MED',
     'DEW_HEATER__THOLD_DIFF_HIGH',
     'DEW_HEATER__HOLD_SECONDS',
+    'DEW_HEATER__PWM_FREQUENCY',
     'FAN__CLASSNAME',
     'FAN__I2C_ADDRESS',
     'FAN__PIN_1',
@@ -8835,6 +8862,7 @@ const field_names = [
     'FAN__THOLD_DIFF_MED',
     'FAN__THOLD_DIFF_HIGH',
     'FAN__HOLD_SECONDS',
+    'FAN__PWM_FREQUENCY',
     'GENERIC_GPIO__A_CLASSNAME',
     'GENERIC_GPIO__A_I2C_ADDRESS',
     'GENERIC_GPIO__A_PIN_1',

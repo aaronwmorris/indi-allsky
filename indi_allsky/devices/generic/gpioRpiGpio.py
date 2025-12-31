@@ -21,6 +21,8 @@ class GpioRpiGpio(GenericBase):
         import RPi.GPIO as GPIO
 
 
+        logger.info('Initializing GPIO device: %s', str(pin_1_name))
+
         try:
             #GPIO.setmode(GPIO.BOARD)
             GPIO.setmode(GPIO.BCM)
