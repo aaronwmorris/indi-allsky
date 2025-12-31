@@ -6729,6 +6729,10 @@ class AjaxFocusControllerView(BaseView):
             return jsonify(json_data), 400
 
 
+        # cleanup
+        focuser_interface.deinit()
+
+
         r = {
             'steps' : steps_offset,
         }

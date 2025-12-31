@@ -1,9 +1,10 @@
-import board
-import digitalio
 import time
 import logging
 
 from .focuserBase import FocuserBase
+
+from ..exceptions import DeviceControlException
+
 
 logger = logging.getLogger('indi_allsky')
 
@@ -30,6 +31,10 @@ class focuser_28byj(FocuserBase):
     def __init__(self, *args, **kwargs):
         super(focuser_28byj, self).__init__(*args, **kwargs)
 
+        import board
+        import digitalio
+
+
         pin_names = kwargs['pin_names']
 
         pin1 = getattr(board, pin_names[0])
@@ -37,16 +42,21 @@ class focuser_28byj(FocuserBase):
         pin3 = getattr(board, pin_names[2])
         pin4 = getattr(board, pin_names[3])
 
-        self.pins = [
-            digitalio.DigitalInOut(pin1),
-            digitalio.DigitalInOut(pin2),
-            digitalio.DigitalInOut(pin3),
-            digitalio.DigitalInOut(pin4),
-        ]
 
-        for pin in self.pins:
-            # set all pins to output
-            pin.direction = digitalio.Direction.OUTPUT
+        try:
+            self.pins = [
+                digitalio.DigitalInOut(pin1),
+                digitalio.DigitalInOut(pin2),
+                digitalio.DigitalInOut(pin3),
+                digitalio.DigitalInOut(pin4),
+            ]
+
+            for pin in self.pins:
+                # set all pins to output
+                pin.direction = digitalio.Direction.OUTPUT
+        except Exception as e:  # catch all exceptions, not raspberry pi specific
+            logger.error('GPIO exception: %s', str(e))
+            raise DeviceControlException from e
 
 
     def move(self, direction, degrees):
