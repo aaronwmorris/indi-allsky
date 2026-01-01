@@ -192,9 +192,15 @@ echo
 echo "gpsd user info"
 id gpsd || true
 
+echo
 echo "Process info"
 # shellcheck disable=SC2009
 ps auxwww | grep indi | grep -v grep || true
+
+echo
+echo "Mosquitto processes"
+# shellcheck disable=SC2009
+ps auxwww | grep mosquitto | grep -v grep || true
 
 echo
 echo "Check for virtual sessions"
