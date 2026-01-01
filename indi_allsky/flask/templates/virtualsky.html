@@ -16,11 +16,13 @@
 #starmap_container {
     position: absolute;
     overflow: hidden;
+    /* Debugging */
+    border: 3px solid red;
+    box-sizing: border-box;
 }
 
 #starmap {
-    width:1920px;
-    height:1080px;
+    position: relative;
 }
 </style>
 <script src="{{ url_for('indi_allsky.static', filename='virtualsky/stuquery.min.js') }}"></script>
@@ -54,11 +56,61 @@ async function loop() {
         await sleep(100);
     }
 
+    var image_width = json_data['latest_image']['width'];
+    var image_height = json_data['latest_image']['height'];
 
     img = new Image();
     img.onload = function() {
         $('#latest-image').attr({
             'src': this.src,
+        });
+
+        // Get the rendered size of the image and save w/h
+        const render_width = $('#latest-image').width();
+        const render_height = $('#latest-image').height();
+
+        // Determine offsets of the starmap overlay
+        const bias_left = -( {{ camera_lensimagecircle }} * render_width / image_width - render_width ) / 2;
+        const bias_top = -( {{ camera_lensimagecircle }} * render_width / image_width - render_height ) / 2;
+
+        // Apply those dimensions to the starmap container
+        $('#starmap_container').css({
+            width: render_width + 'px',
+            height: render_height  + 'px'
+        });
+
+        // Apply those dimensions to the starmap itself
+        $('#starmap').css({
+            left: bias_left + 'px',
+            top: bias_top + 'px'
+        });
+
+
+    // Moved the planetarium code to inside the image onload function
+    // so that I can use the calculated rendered image size.
+    planetarium = S.virtualsky({
+        id: 'starmap',
+        projection: 'fisheye',
+        latitude: {{ camera_latitude }},
+        longitude: {{ camera_longitude }},
+        az: {{ 180 - camera_az }},
+        live: true,
+        constellations: true,
+        gridlines_eq: true,
+        mouse: false,
+        keyboard: false,
+        showdate: false,
+        showposition: false,
+        gradient: false,
+        showgalaxy: true,
+        transparent: true,
+        credit: false,
+        /* force the star map size here by using the lensImageCircle
+        and resizing based on the ratio of the actual image sized versus rendered size */
+        width: {{ camera_lensimagecircle }} * render_width / image_width,
+        height: {{ camera_lensimagecircle }} * render_width / image_width,
+        /* debugging - reduce star count */
+        magnitude: 4,
         });
     };
 
@@ -169,25 +221,6 @@ $( document ).ready(function() {
     });
 
     init();
-
-    planetarium = S.virtualsky({
-        id: 'starmap',
-        projection: 'fisheye',
-        latitude: {{ camera_latitude }},
-        longitude: {{ camera_longitude }},
-        az: {{ camera_az }},
-        live: true,
-        constellations: true,
-        gridlines_eq: true,
-        mouse: false,
-        keyboard: false,
-        showdate: false,
-        showposition: false,
-        gradient: false,
-        showgalaxy: true,
-        transparent: true,
-        credit: false,
-	});
 });
 
 </script>
