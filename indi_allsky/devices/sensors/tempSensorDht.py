@@ -17,6 +17,8 @@ class TempSensorDht2x(SensorBase):
             rel_h = float(self.dht.humidity)
         except RuntimeError as e:
             raise SensorReadException(str(e)) from e
+        except OverflowError as e:
+            raise SensorReadException(str(e)) from e
 
 
         logger.info('[%s] DHT - temp: %0.1fc, humidity: %0.1f%%', self.name, temp_c, rel_h)
