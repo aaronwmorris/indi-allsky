@@ -1174,13 +1174,13 @@ class ImageProcessor(object):
 
         if mask_dimensions != image_dimensions:
             # This is a canary message.  The cv2.mean() call will fail below, as well as many other functions later.
-            logger.error('Detection mask dimensions do not match image')
+            logger.error('Detection mask dimensions %dx%d do not match image %dx%d', mask_dimensions[1], mask_dimensions[0], image_dimensions[1], image_dimensions[0])
 
             self._miscDb.addNotification(
                 NotificationCategory.MEDIA,
                 'detection_mask',
-                'Detection mask dimensions do not match image',
-                expire=timedelta(minutes=30),
+                'Detection mask dimensions {0:d}x{1:d} do not match image {2:d}x{3:d}'.format(mask_dimensions[1], mask_dimensions[0], image_dimensions[1], image_dimensions[0]),
+                expire=timedelta(minutes=15),
             )
 
 
