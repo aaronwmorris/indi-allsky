@@ -78,6 +78,8 @@ class IndiAllSkyDbCameraTable(db.Model):
     lensFocalLength = db.Column(db.Float, nullable=True)
     lensFocalRatio = db.Column(db.Float, nullable=True)
     lensImageCircle = db.Column(db.Integer, nullable=True)  # pixels
+    lensOffsetX = db.Column(db.Integer, server_default='0', nullable=False)  # pixels
+    lensOffsetY = db.Column(db.Integer, server_default='0', nullable=False)  # pixels
 
     daytime_capture = db.Column(db.Boolean, server_default=expression.true(), nullable=False)
     daytime_capture_save = db.Column(db.Boolean, server_default=expression.true(), nullable=False)
