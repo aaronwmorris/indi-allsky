@@ -2,7 +2,7 @@ import io
 import re
 from pathlib import Path
 from datetime import datetime
-#from datetime import timedelta
+from datetime import timedelta
 from datetime import timezone
 import math
 import random  # noqa: F401
@@ -36,9 +36,11 @@ from .utils import IndiAllSkyDateCalcs
 from .moonOverlay import IndiAllSkyMoonOverlay
 from .lightgraphOverlay import IndiAllSkyLightgraphOverlay
 
+from .flask.miscDb import miscDb
 from .flask.models import IndiAllSkyDbBadPixelMapTable
 from .flask.models import IndiAllSkyDbDarkFrameTable
 from .flask.models import IndiAllSkyDbTleDataTable
+from .flask.models import NotificationCategory
 
 from sqlalchemy.sql.expression import true as sa_true
 
@@ -118,6 +120,8 @@ class ImageProcessor(object):
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
         self.night_v = night_v
         self.moonmode_v = moonmode_v
+
+        self._miscDb = miscDb(self.config)
 
         self._astrometric_data = dict()
 
@@ -1171,6 +1175,13 @@ class ImageProcessor(object):
         if mask_dimensions != image_dimensions:
             # This is a canary message.  The cv2.mean() call will fail below, as well as many other functions later.
             logger.error('Detection mask dimensions do not match image')
+
+            self._miscDb.addNotification(
+                NotificationCategory.MEDIA,
+                'detection_mask',
+                'Detection mask dimensions do not match image',
+                expire=timedelta(minutes=30),
+            )
 
 
         if len(self.image.shape) == 2:
