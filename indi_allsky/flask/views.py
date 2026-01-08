@@ -407,6 +407,11 @@ class VirtualSkyView(TemplateView):
         context['camera_latitude'] = self.camera.latitude
         context['camera_longitude'] = self.camera.longitude
         context['camera_az'] = self.camera.az
+        #context['camera_width'] = self.camera.width
+        #context['camera_height'] = self.camera.height
+        context['camera_lensimagecircle'] = self.camera.lensImageCircle
+        context['camera_lens_offset_x'] = self.indi_allsky_config.get('LENS_OFFSET_X', 0)
+        context['camera_lens_offset_y'] = self.indi_allsky_config.get('LENS_OFFSET_Y', 0)
 
         return context
 
