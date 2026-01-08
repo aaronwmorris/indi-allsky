@@ -77,8 +77,8 @@ async function loop() {
         const render_height = $('#latest-image').height();
 
         // Determine offsets of the starmap overlay
-        const bias_left = -( {{ camera_lensimagecircle }} * render_width / image_width - render_width ) / 2;
-        const bias_top = -( {{ camera_lensimagecircle }} * render_width / image_width - render_height ) / 2;
+        const bias_left = -( ( {{ camera_lensimagecircle }} + {{ camera_lens_offset_x }} ) * render_width / image_width - render_width ) / 2;
+        const bias_top = -( ( {{ camera_lensimagecircle }} + {{ camera_lens_offset_y }} ) * render_width / image_width - render_height ) / 2;
 
         // Apply those dimensions to the starmap container
         $('#starmap_container').css({
