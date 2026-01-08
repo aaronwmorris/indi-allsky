@@ -407,6 +407,11 @@ class VirtualSkyView(TemplateView):
         context['camera_latitude'] = self.camera.latitude
         context['camera_longitude'] = self.camera.longitude
         context['camera_az'] = self.camera.az
+        context['camera_alt'] = self.camera.alt
+
+        context['camera_lensimagecircle'] = self.camera.lensImageCircle
+        context['camera_lens_offset_x'] = self.camera.lensOffsetX
+        context['camera_lens_offset_y'] = self.camera.lensOffsetY
 
         return context
 

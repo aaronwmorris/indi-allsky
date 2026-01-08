@@ -951,6 +951,9 @@ class CaptureWorker(Process):
             'lensFocalLength' : self.config['LENS_FOCAL_LENGTH'],
             'lensFocalRatio'  : self.config['LENS_FOCAL_RATIO'],
             'lensImageCircle' : self.config['LENS_IMAGE_CIRCLE'],
+            'lensOffsetX'     : self.config.get('LENS_OFFSET_X', 0),
+            'lensOffsetY'     : self.config.get('LENS_OFFSET_Y', 0),
+
             'alt'             : self.config['LENS_ALTITUDE'],
             'az'              : self.config['LENS_AZIMUTH'],
             'nightSunAlt'     : self.config['NIGHT_SUN_ALT_DEG'],
