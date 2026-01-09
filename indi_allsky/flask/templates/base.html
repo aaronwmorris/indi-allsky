@@ -124,8 +124,12 @@
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/camera-fill.svg') }}" width="16" height="16" alt="Camera Info"><span class="ms-1 d-none d-sm-inline">Camera Info</span></a>
                             </li>
                             <li>
+                                <a href="{{ url_for('indi_allsky.virtualsky_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/globe2.svg') }}" width="16" height="16" alt="VirtualSky"><span class="ms-1 d-none d-sm-inline">VirtualSky</span></a>
+                            </li>
+                            <li>
                                 <a href="{{ url_for('indi_allsky.camera_simulator_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/circle.svg') }}" width="16" height="16" alt="Camera Simulator"><span class="ms-1 d-none d-sm-inline">Camera Simulator</span> </a>
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/circle.svg') }}" width="16" height="16" alt="Camera Simulator"><span class="ms-1 d-none d-sm-inline">Camera Simulator</span></a>
                             </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.astropanel_view') }}" class="dropdown-item">
