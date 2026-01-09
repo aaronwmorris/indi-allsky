@@ -18,7 +18,10 @@ var latest_image_url = "{{ latest_image_url }}";
 
 function init() {
     $('#message').empty();
+
     showImage(latest_image_url);
+
+    updateAzimuthAngle();
 }
 
 
@@ -97,20 +100,37 @@ function showImage(url) {
             context.lineTo(parseInt((canvas.width / 2) - opp_1 + (offset_x * ratio)), parseInt(canvas.height - (offset_y * ratio)));
 
             context.stroke();
-
-
-            if (keogram_angle < 0) {
-                var azimuth = 360 + keogram_angle;
-            } else {
-                var azimuth = keogram_angle;
-            }
-
-            $('#azimuth').text('Azimuth: ' + azimuth);
         }
     };
 
 
     img.src = url;
+}
+
+
+function updateAzimuthAngle() {
+    var keogram_angle = parseFloat($("#KEOGRAM_ANGLE").val());
+
+    if (keogram_angle < 0) {
+        var azimuth = 360 + keogram_angle;
+    } else {
+        var azimuth = keogram_angle;
+    }
+
+    $('#AZIMUTH_ANGLE').val(azimuth);
+}
+
+
+function updateKeogramAngle() {
+    var azimuth_angle = parseFloat($("#AZIMUTH_ANGLE").val());
+
+    if (azimuth_angle > 180) {
+        var keogram_angle = 360 - azimuth_angle;
+    } else {
+        var keogram_angle = azimuth_angle;
+    }
+
+    $('#KEOGRAM_ANGLE').val(keogram_angle);
 }
 
 
@@ -214,20 +234,32 @@ function closeFullscreen() {
         </div>
     </div>
 
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-1">
             {{ form_imagecircle.KEOGRAM_ANGLE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
             {{ form_imagecircle.KEOGRAM_ANGLE(class='form-control bg-secondary') }}
-            <div id="azimuth" style="font-size:12px">Azimuth:</div>
         </div>
+        <div class="col-sm-1">
+            {{ form_imagecircle.AZIMUTH_ANGLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_imagecircle.AZIMUTH_ANGLE(class='form-control bg-secondary') }}
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-1"></div>
         <div class="col-sm-1">
             <div class="form-switch">
             {{ form_imagecircle.KEOGRAM_LINE(class='form-check-input') }}
             </div>
         </div>
     </div>
+
 </form>
 
 <hr>
@@ -303,6 +335,14 @@ $("#KEOGRAM_LINE").on("change", function() {
 
 $("#KEOGRAM_ANGLE").on("change", function() {
     showImage(latest_image_url);
+
+    updateAzimuthAngle();
+});
+
+$("#AZIMUTH_ANGLE").on("change", function() {
+    showImage(latest_image_url);
+
+    updateKeogramAngle();
 });
 
 
