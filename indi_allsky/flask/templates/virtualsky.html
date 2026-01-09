@@ -48,11 +48,32 @@ var max_age = 900;
 var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
 var night = {{ night }};
-var fullscreen = false;  //initial state
+var fullscreen = false;  // initial state
+var camera_az = {{ camera_az }};
+var vs_az = 0;  // initial state
 
 var planetarium;
 
 function init() {
+    // Azimuth manipulations
+    console.log("Camera Azimuth: " + camera_az);
+
+    // VirtualSky reverses north/south for some reason
+    vs_az = 180 - camera_az;
+
+    // Make sure azimuth is between 0 and 360
+    if (vs_az >= 360) {
+        vs_az -= 360;
+    } else if (vs_az < 0) {
+        vs_az += 360;
+    }
+
+    // Most cameras are east/west reversed
+    vs_az = 360 - vs_az;
+
+    console.log("Calculated VirtualSky Azimuth: " + vs_az);
+
+
     loadNextImage();
     loop();
 }
@@ -100,7 +121,7 @@ async function loop() {
         projection: 'fisheye',
         latitude: {{ camera_latitude }},
         longitude: {{ camera_longitude }},
-        az: {{ 180 - camera_az }},
+        az: vs_az,
         live: true,
         constellations: true,
         gridlines_eq: true,
