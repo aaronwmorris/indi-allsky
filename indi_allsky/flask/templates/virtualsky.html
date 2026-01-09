@@ -99,53 +99,54 @@ async function loop() {
             'src': this.src,
         });
 
-        // Get the rendered size of the image and save w/h
-        const render_width = $('#latest-image').width();
-        const render_height = $('#latest-image').height();
 
-        // Determine offsets of the starmap overlay
-        const bias_left = -( ( camera_lensimagecircle + camera_lens_offset_x ) * render_width / image_width - render_width ) / 2;
-        const bias_top = -( ( camera_lensimagecircle + camera_lens_offset_y ) * render_width / image_width - render_height ) / 2;
+        if (! planetarium) {
+            // Get the rendered size of the image and save w/h
+            const render_width = $('#latest-image').width();
+            const render_height = $('#latest-image').height();
 
-        // Apply those dimensions to the starmap container
-        $('#starmap_container').css({
-            width: render_width + 'px',
-            height: render_height  + 'px'
-        });
+            // Determine offsets of the starmap overlay
+            const bias_left = -( ( camera_lensimagecircle + camera_lens_offset_x ) * render_width / image_width - render_width ) / 2;
+            const bias_top = -( ( camera_lensimagecircle + camera_lens_offset_y ) * render_width / image_width - render_height ) / 2;
 
-        // Apply those dimensions to the starmap itself
-        $('#starmap').css({
-            left: bias_left + 'px',
-            top: bias_top + 'px'
-        });
+            // Apply those dimensions to the starmap container
+            $('#starmap_container').css({
+                width: render_width + 'px',
+                height: render_height  + 'px'
+            });
+
+            // Apply those dimensions to the starmap itself
+            $('#starmap').css({
+                left: bias_left + 'px',
+                top: bias_top + 'px'
+            });
 
 
-    // Moved the planetarium code to inside the image onload function
-    // so that I can use the calculated rendered image size.
-    planetarium = S.virtualsky({
-        id: 'starmap',
-        projection: 'fisheye',
-        latitude: camera_latitude,
-        longitude: camera_longitude,
-        az: vs_az,
-        live: true,
-        constellations: true,
-        gridlines_eq: true,
-        mouse: false,
-        keyboard: false,
-        showdate: false,
-        showposition: false,
-        gradient: false,
-        showgalaxy: true,
-        transparent: true,
-        credit: false,
-        /* force the star map size here by using the lensImageCircle
-        and resizing based on the ratio of the actual image sized versus rendered size */
-        width: camera_lensimagecircle * render_width / image_width,
-        height: camera_lensimagecircle * render_width / image_width,
-        /* debugging - reduce star count */
-        magnitude: 4,
-        });
+            planetarium = S.virtualsky({
+                id: 'starmap',
+                projection: 'fisheye',
+                latitude: camera_latitude,
+                longitude: camera_longitude,
+                az: vs_az,
+                live: true,
+                constellations: true,
+                gridlines_eq: true,
+                mouse: false,
+                keyboard: false,
+                showdate: false,
+                showposition: false,
+                gradient: false,
+                showgalaxy: true,
+                transparent: true,
+                credit: false,
+                /* force the star map size here by using the lensImageCircle
+                and resizing based on the ratio of the actual image sized versus rendered size */
+                width: camera_lensimagecircle * render_width / image_width,
+                height: camera_lensimagecircle * render_width / image_width,
+                /* debugging - reduce star count */
+                magnitude: 4,
+            });
+        }
     };
 
 
