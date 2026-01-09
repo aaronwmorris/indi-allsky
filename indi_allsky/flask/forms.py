@@ -30,6 +30,7 @@ from wtforms import HiddenField
 from wtforms import DateTimeLocalField
 from wtforms import FileField
 from wtforms.widgets import PasswordInput
+from wtforms.widgets import NumberInput
 from wtforms.validators import DataRequired
 #from wtforms.validators import regexp as validator_regexp
 from wtforms.validators import ValidationError
@@ -9149,7 +9150,7 @@ class IndiAllskyImageCircleHelperForm(FlaskForm):
     LINE_WIDTH              = IntegerField('Line', default=5)
     LINE_COLOR              = SelectField('Line', choices=LINE_COLOR_choices)
     KEOGRAM_LINE            = BooleanField('Keogram Line')
-    KEOGRAM_ANGLE           = FloatField('Keogram Angle', render_kw={'type' : 'number', 'step' : 0.5})
+    KEOGRAM_ANGLE           = FloatField('Keogram Angle', widget=NumberInput(min=-180, max=180, step=0.5))
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):

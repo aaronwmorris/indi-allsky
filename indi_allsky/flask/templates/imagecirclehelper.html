@@ -97,6 +97,15 @@ function showImage(url) {
             context.lineTo(parseInt((canvas.width / 2) - opp_1 + (offset_x * ratio)), parseInt(canvas.height - (offset_y * ratio)));
 
             context.stroke();
+
+
+            if (keogram_angle < 0) {
+                var azimuth = 360 + keogram_angle;
+            } else {
+                var azimuth = keogram_angle;
+            }
+
+            $('#azimuth').text('Azimuth:' + azimuth);
         }
     };
 
@@ -211,6 +220,7 @@ function closeFullscreen() {
         </div>
         <div class="col-sm-2">
             {{ form_imagecircle.KEOGRAM_ANGLE(class='form-control bg-secondary') }}
+            <div id="azimuth" style="font-size:12px">Azimuth:</div>
         </div>
         <div class="col-sm-1">
             <div class="form-switch">
