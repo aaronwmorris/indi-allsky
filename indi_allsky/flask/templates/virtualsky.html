@@ -115,9 +115,11 @@ async function loop() {
             const render_width = $('#latest-image').width();
             const render_height = $('#latest-image').height();
 
+            const image_scale = render_width / image_width;
+
             // Determine offsets of the starmap overlay
-            const bias_left = -( ( camera_lensimagecircle + camera_lens_offset_x ) * render_width / image_width - render_width ) / 2;
-            const bias_top = -( ( camera_lensimagecircle + camera_lens_offset_y ) * render_width / image_width - render_height ) / 2;
+            const bias_left = ((( camera_lensimagecircle * image_scale - render_width ) / 2) - ( camera_lens_offset_x * image_scale )) * -1;
+            const bias_top = ((( camera_lensimagecircle * image_scale - render_height ) / 2) + ( camera_lens_offset_y * image_scale )) * -1;
 
             // Apply those dimensions to the starmap container
             $('#starmap_container').css({
@@ -151,8 +153,8 @@ async function loop() {
                 credit: false,
                 /* force the star map size here by using the lensImageCircle
                 and resizing based on the ratio of the actual image sized versus rendered size */
-                width: camera_lensimagecircle * render_width / image_width,
-                height: camera_lensimagecircle * render_width / image_width,
+                width: camera_lensimagecircle * image_scale,
+                height: camera_lensimagecircle * image_scale,
                 /* debugging - reduce star count */
                 magnitude: 4,
             });
