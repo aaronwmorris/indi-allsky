@@ -404,14 +404,26 @@ class VirtualSkyView(TemplateView):
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
         context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
 
+
+        ### Camera DB settings
         context['camera_latitude'] = self.camera.latitude
         context['camera_longitude'] = self.camera.longitude
         context['camera_az'] = self.camera.az
         context['camera_alt'] = self.camera.alt
-
         context['camera_lensimagecircle'] = self.camera.lensImageCircle
         context['camera_lens_offset_x'] = self.camera.lensOffsetX
         context['camera_lens_offset_y'] = self.camera.lensOffsetY
+
+
+        ### Debugging - Use config for faster testing
+        #context['camera_latitude'] = self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0)
+        #context['camera_longitude'] = self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0)
+        #context['camera_az'] = self.indi_allsky_config.get('LENS_AZIMUTH', 0.0)
+        #context['camera_alt'] = self.indi_allsky_config.get('LENS_ALTITUDE', 90.0)
+        #context['camera_lensimagecircle'] = self.indi_allsky_config.get('LENS_IMAGE_CIRCLE', 0.0)
+        #context['camera_lens_offset_x'] = self.indi_allsky_config.get('LENS_OFFSET_X', 0.0)
+        #context['camera_lens_offset_y'] = self.indi_allsky_config.get('LENS_OFFSET_Y', 0.0)
+
 
         return context
 
