@@ -24,8 +24,8 @@
     left: 0;
     overflow: hidden;
     /* Debugging */
-    border: 3px solid red;
-    box-sizing: border-box;
+    /* border: 3px solid red; */
+    /* box-sizing: border-box; */
 }
 
 #starmap {
@@ -142,6 +142,8 @@ async function loop() {
                 az: vs_az,
                 live: true,
                 constellations: true,
+                showstarlabels: true,
+                showplanetlabels: true,
                 gridlines_eq: true,
                 mouse: false,
                 keyboard: false,
@@ -150,13 +152,13 @@ async function loop() {
                 gradient: false,
                 showgalaxy: true,
                 transparent: true,
+                cardinalpoints: true,
                 credit: false,
                 /* force the star map size here by using the lensImageCircle
                 and resizing based on the ratio of the actual image sized versus rendered size */
                 width: camera_lensimagecircle * image_scale,
                 height: camera_lensimagecircle * image_scale,
-                /* debugging - reduce star count */
-                magnitude: 4,
+                magnitude: 5,
             });
 
 
