@@ -57,10 +57,13 @@ var camera_lens_offset_x = {{ camera_lens_offset_x }};
 var camera_lens_offset_y = {{ camera_lens_offset_y }};
 var camera_az = {{ camera_az }};
 var vs_az = 0;  // initial state
-
 var planetarium;
+var redraw_planetarium = true;
+
 
 function init() {
+    redraw_planetarium = true;
+
     console.log("Latitude: " + camera_latitude);
     console.log("Longitude: " + camera_longitude);
     console.log("Camera Image Circle: " + camera_lensimagecircle);
@@ -107,7 +110,7 @@ async function loop() {
         });
 
 
-        if (! planetarium) {
+        if (redraw_planetarium) {
             // Get the rendered size of the image and save w/h
             const render_width = $('#latest-image').width();
             const render_height = $('#latest-image').height();
@@ -153,6 +156,9 @@ async function loop() {
                 /* debugging - reduce star count */
                 magnitude: 4,
             });
+
+
+            redraw_planetarium = false;
         }
     };
 
@@ -217,6 +223,7 @@ function setResizeHandler(callback, timeout) {
 
 function resize_callback() {
     if (json_data['latest_image']) {
+        redraw_planetarium = true;
         showImage(json_data['latest_image']);
     };
 }
