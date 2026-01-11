@@ -86,6 +86,7 @@ function init() {
         vs_az += 360;
     }
 
+
     // Most cameras are east/west reversed
     vs_az = 360 - vs_az;
 
@@ -93,10 +94,14 @@ function init() {
 
 
     // Calculate latitude and longitude offset
-    if (vs_az % 180 > 90) {
-        az_90 = 90 - (camera_az % 90)
-    } else {
+    if (camera_az < 90) {
         az_90 = camera_az % 90
+    } else if (camera_az >= 90 && camera_az < 180) {
+        az_90 = 90 - (camera_az % 90)
+    } else if (camera_az >= 180 && camera_az < 270) {
+        az_90 = camera_az % 90
+    } else {
+        az_90 = 90 - (caemra_az % 90)
     }
 
 
