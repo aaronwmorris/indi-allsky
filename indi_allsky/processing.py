@@ -3702,8 +3702,12 @@ class ImageProcessor(object):
             return False, None  # False so the image is not retried
 
 
+        overlay_height, overlay_width = overlay_img.shape[:2]
+        image_height, image_width = image.shape[:2]
+
+
         if overlay_img.shape[:2] != image.shape[:2]:
-            logger.error('Logo dimensions do not match image')
+            logger.error('Logo dimensions do not match image - %dx%d vs %dx%d', overlay_width, overlay_height, image_width, image_height)
             return False, None  # False so the image is not retried
 
 
