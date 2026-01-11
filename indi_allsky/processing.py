@@ -3707,7 +3707,15 @@ class ImageProcessor(object):
 
 
         if overlay_img.shape[:2] != image.shape[:2]:
-            logger.error('Logo dimensions do not match image - %dx%d vs %dx%d', overlay_width, overlay_height, image_width, image_height)
+            logger.error('Logo Overlay dimensions do not match image - %dx%d vs %dx%d', overlay_width, overlay_height, image_width, image_height)
+
+            self._miscDb.addNotification(
+                NotificationCategory.MEDIA,
+                'logo_overlay',
+                'Logo Overlay dimensions do not match image - {0:d}x{1:d} vs {2:d}x{3:d}'.format(overlay_width, overlay_height, image_width, image_height),
+                expire=timedelta(minutes=15),
+            )
+
             return False, None  # False so the image is not retried
 
 
