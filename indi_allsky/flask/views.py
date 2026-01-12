@@ -109,6 +109,7 @@ from .forms import IndiAllskyLongTermKeogramForm
 from .forms import IndiAllskyNetworkManagerForm
 from .forms import IndiAllskyDriveManagerForm
 from .forms import IndiAllskyImageCircleHelperForm
+from .forms import IndiAllskyVirtualSkyHelperForm
 from .forms import IndiAllskyConfigRestoreForm
 from .forms import IndiAllskyIndiServerChangeForm
 
@@ -411,6 +412,9 @@ class VirtualSkyView(TemplateView):
 
         context['timestamp'] = timestamp
         context['live'] = int(live)
+
+
+        context['form_virtualsky'] = IndiAllskyVirtualSkyHelperForm()
 
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000

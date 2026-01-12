@@ -59,7 +59,7 @@ var camera_lens_offset_x = {{ camera_lens_offset_x }};
 var camera_lens_offset_y = {{ camera_lens_offset_y }};
 var camera_az = {{ camera_az }};
 var camera_alt = {{ camera_alt }};
-var vs_az = 0;  // initial state
+
 var planetarium;
 var redraw_planetarium = true;
 
@@ -78,21 +78,7 @@ function init() {
     console.log("Camera Azimuth: " + camera_az);
     console.log("Camera Altitude: " + camera_alt);
 
-    // VirtualSky reverses north/south for some reason
-    vs_az = 180 - camera_az;
-
-    // Make sure azimuth is between 0 and 360
-    if (vs_az >= 360) {
-        vs_az -= 360;
-    } else if (vs_az < 0) {
-        vs_az += 360;
-    }
-
-
-    // Most cameras are east/west reversed
-    vs_az = 360 - vs_az;
-
-    console.log("Calculated VirtualSky Azimuth: " + vs_az);
+    $("#AZIMUTH_ANGLE").val(camera_az);
 
 
     // Calculate latitude and longitude offset
@@ -135,11 +121,8 @@ function init() {
     console.log("Latitude Offset: " + lat_deg_offset);
     console.log("Longitude Offset: " + long_deg_offset);
 
-    camera_latitude += lat_deg_offset;
-    camera_longitude += long_deg_offset;
-
-    console.log("Latitude (with offset): " + camera_latitude);
-    console.log("Longitude (with offset): " + camera_longitude);
+    $("#LATITUDE_OFFSET").val(lat_deg_offset.toFixed(2));
+    $("#LONGITUDE_OFFSET").val(long_deg_offset.toFixed(2));
 
 
     loadNextImage();
@@ -163,6 +146,17 @@ async function loop() {
 
 
         if (redraw_planetarium) {
+            azimuth_angle = $("#AZIMUTH_ANGLE").val();
+            latitude_offset = $("#LATITUDE_OFFSET").val();
+            longitude_offset = $("#LONGITUDE_OFFSET").val();
+
+            var vs_latitude = camera_latitude + latitude_offset;
+            var vs_longitude = camera_longitude + longitude_offset;
+
+            console.log("Latitude (with offset): " + vs_latitude);
+            console.log("Longitude (with offset): " + vs_longitude);
+
+
             // Get the rendered size of the image and save w/h
             const render_width = $('#latest-image').width();
             const render_height = $('#latest-image').height();
@@ -186,6 +180,23 @@ async function loop() {
             });
 
 
+            // VirtualSky reverses north/south for some reason
+            var vs_az = 180 - camera_az;
+
+            // Make sure azimuth is between 0 and 360
+            if (vs_az >= 360) {
+                vs_az -= 360;
+            } else if (vs_az < 0) {
+                vs_az += 360;
+            }
+
+
+            // Most cameras are east/west reversed
+            var vs_az = 360 - vs_az;
+            console.log("Calculated VirtualSky Azimuth: " + vs_az);
+
+
+
             if (timestamp) {
                 var clock = new Date(timestamp * 1000);
             } else {
@@ -199,8 +210,8 @@ async function loop() {
                 projection: 'fisheye',
                 live: Boolean(live),
                 clock: clock,
-                latitude: camera_latitude,
-                longitude: camera_longitude,
+                latitude: vs_latitude,
+                longitude: vs_longitude,
                 az: vs_az,
                 constellations: true,
                 showstarlabels: true,
@@ -328,7 +339,6 @@ function closeFullscreen() {
 }
 
 
-
 $( document ).ready(function() {
     $('#latest-image').on("click", function() {
         goFullscreen(this);
@@ -342,6 +352,38 @@ $( document ).ready(function() {
 
 {% block content %}
 <div class="container h-100">
+<form id="form_virtualsky" onSubmit="return false;">
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_virtualsky.AZIMUTH_ANGLE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_virtualsky.AZIMUTH_ANGLE(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.LATITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_virtualsky.LATITUDE_OFFSET(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.LONGITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_virtualsky.LONGITUDE_OFFSET(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            <!-- This button does not do anything, it just gives the user something to click instead of the image (which will go fullscreen) -->
+            <button class="btn btn-primary">Refresh</button>
+        </div>
+    </div>
+</form>
+
+    <hr>
+
     <div class="row">
         <div class="text-muted text-center" id="message">Loading...</div>
     </div>
