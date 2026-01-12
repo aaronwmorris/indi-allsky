@@ -78,8 +78,6 @@ function init() {
     console.log("Camera Azimuth: " + camera_az);
     console.log("Camera Altitude: " + camera_alt);
 
-    $("#AZIMUTH_ANGLE").val(camera_az);
-
 
     // Calculate latitude and longitude offset
     if (camera_az < 90) {
@@ -121,8 +119,12 @@ function init() {
     console.log("Latitude Offset: " + lat_deg_offset);
     console.log("Longitude Offset: " + long_deg_offset);
 
+
+    // Set form values
     $("#LATITUDE_OFFSET").val(lat_deg_offset.toFixed(2));
     $("#LONGITUDE_OFFSET").val(long_deg_offset.toFixed(2));
+    $("#AZIMUTH_ANGLE").val(camera_az);
+    $("#IMAGE_CIRCLE_DIAMETER").val(camera_lensimagecircle);
 
 
     loadNextImage();
@@ -149,6 +151,7 @@ async function loop() {
             azimuth_angle = Number($("#AZIMUTH_ANGLE").val());
             latitude_offset = Number($("#LATITUDE_OFFSET").val());
             longitude_offset = Number($("#LONGITUDE_OFFSET").val());
+            image_circle_diameter = Number($("#IMAGE_CIRCLE_DIAMETER").val());
 
             var vs_latitude = camera_latitude + latitude_offset;
             var vs_longitude = camera_longitude + longitude_offset;
@@ -164,8 +167,8 @@ async function loop() {
             const image_scale = render_width / image_width;
 
             // Determine offsets of the starmap overlay
-            const bias_left = ((( camera_lensimagecircle * image_scale - render_width ) / 2) - ( camera_lens_offset_x * image_scale )) * -1;
-            const bias_top = ((( camera_lensimagecircle * image_scale - render_height ) / 2) + ( camera_lens_offset_y * image_scale )) * -1;
+            const bias_left = ((( image_circle_diameter * image_scale - render_width ) / 2) - ( camera_lens_offset_x * image_scale )) * -1;
+            const bias_top = ((( image_circle_diameter * image_scale - render_height ) / 2) + ( camera_lens_offset_y * image_scale )) * -1;
 
             // Apply those dimensions to the starmap container
             $('#starmap_container').css({
@@ -228,8 +231,8 @@ async function loop() {
                 credit: false,
                 /* force the star map size here by using the lensImageCircle
                 and resizing based on the ratio of the actual image sized versus rendered size */
-                width: camera_lensimagecircle * image_scale,
-                height: camera_lensimagecircle * image_scale,
+                width: image_circle_diameter * image_scale,
+                height: image_circle_diameter * image_scale,
                 magnitude: 5,
             });
 
@@ -367,6 +370,14 @@ function closeFullscreen() {
         </div>
 
         <div class="col-sm-1">
+            {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
+        </div>
+
+
+        <div class="col-sm-1">
             <!-- This button does not do anything, it just gives the user something to click instead of the image (which will go fullscreen) -->
             <button class="btn btn-primary">Refresh</button>
         </div>
@@ -417,6 +428,12 @@ $("#LONGITUDE_OFFSET").on("change", function() {
     };
 });
 
+$("#IMAGE_CIRCLE_DIAMETER").on("change", function() {
+    if (json_data['latest_image']) {
+        redraw_planetarium = true;
+        showImage(json_data['latest_image']);
+    };
+});
 
 $( document ).ready(function() {
     $('#latest-image').on("click", function() {
