@@ -197,7 +197,7 @@ async function loop() {
             planetarium = S.virtualsky({
                 id: 'starmap',
                 projection: 'fisheye',
-                live: live,
+                live: Boolean(live),
                 clock: clock,
                 latitude: camera_latitude,
                 longitude: camera_longitude,
