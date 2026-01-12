@@ -109,6 +109,7 @@ from .forms import IndiAllskyLongTermKeogramForm
 from .forms import IndiAllskyNetworkManagerForm
 from .forms import IndiAllskyDriveManagerForm
 from .forms import IndiAllskyImageCircleHelperForm
+from .forms import IndiAllskyVirtualSkyHelperForm
 from .forms import IndiAllskyConfigRestoreForm
 from .forms import IndiAllskyIndiServerChangeForm
 
@@ -400,6 +401,21 @@ class VirtualSkyView(TemplateView):
         context = super(VirtualSkyView, self).get_context()
 
         context['latest_image_view'] = self.latest_image_view
+
+
+        timestamp = int(request.args.get('timestamp', 0))
+        if not timestamp:
+            live = True
+        else:
+            live = False  # Do not live update planetarium
+
+
+        context['timestamp'] = timestamp
+        context['live'] = int(live)
+
+
+        context['form_virtualsky'] = IndiAllskyVirtualSkyHelperForm()
+
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
         context['refreshInterval'] = refreshInterval_ms + 1000  # additional time for exposures to download
