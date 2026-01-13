@@ -72,6 +72,4 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
 
 
 class IndiAllSky_Mode2_MTF_Stretch_x2(IndiAllSky_Mode2_MTF_Stretch):
-
-    operation_count = 2
-
+    pass
