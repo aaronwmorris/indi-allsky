@@ -194,7 +194,9 @@ async function loop() {
 
 
             // Most cameras are east/west reversed
-            var vs_az = 360 - vs_az;
+            if (! flip_ew) {
+                var vs_az = 360 - vs_az;
+            }
             console.log("Calculated VirtualSky Azimuth: " + vs_az);
 
 
