@@ -80,6 +80,7 @@ function init() {
 
 
     // Calculate latitude and longitude offset
+    /*
     if (camera_az < 90) {
         az_90 = camera_az % 90
     } else if (camera_az >= 90 && camera_az < 180) {
@@ -123,6 +124,11 @@ function init() {
     // Set form values
     $("#LATITUDE_OFFSET").val(lat_deg_offset.toFixed(2));
     $("#LONGITUDE_OFFSET").val(long_deg_offset.toFixed(2));
+    */
+
+
+    $("#LATITUDE_OFFSET").val(0.0);
+    $("#LONGITUDE_OFFSET").val(0.0);
     $("#AZIMUTH_ANGLE").val(camera_az);
     $("#IMAGE_CIRCLE_DIAMETER").val(camera_lensimagecircle);
 
