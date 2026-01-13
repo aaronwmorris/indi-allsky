@@ -2091,6 +2091,7 @@ class ConfigView(FormView):
             'IMAGE_STRETCH__CLASSNAME'       : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('CLASSNAME', ''),
             'IMAGE_STRETCH__MODE1_GAMMA'     : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0),
             'IMAGE_STRETCH__MODE1_STDDEVS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 2.25),
+            'IMAGE_STRETCH__MODE2_BLACK_CLIP': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_BLACK_CLIP', -2.8),
             'IMAGE_STRETCH__MODE2_SHADOWS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_SHADOWS', 0.0),
             'IMAGE_STRETCH__MODE2_MIDTONES'  : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_MIDTONES', 0.35),
             'IMAGE_STRETCH__MODE2_HIGHLIGHTS': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_HIGHLIGHTS', 1.0),
@@ -3010,6 +3011,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_STRETCH']['CLASSNAME']           = str(request.json['IMAGE_STRETCH__CLASSNAME'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE1_GAMMA']         = float(request.json['IMAGE_STRETCH__MODE1_GAMMA'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE1_STDDEVS']       = float(request.json['IMAGE_STRETCH__MODE1_STDDEVS'])
+        self.indi_allsky_config['IMAGE_STRETCH']['MODE2_BLACK_CLIP']    = float(request.json['IMAGE_STRETCH__MODE2_BLACK_CLIP'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE2_SHADOWS']       = float(request.json['IMAGE_STRETCH__MODE2_SHADOWS'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE2_MIDTONES']      = float(request.json['IMAGE_STRETCH__MODE2_MIDTONES'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE2_HIGHLIGHTS']    = float(request.json['IMAGE_STRETCH__MODE2_HIGHLIGHTS'])
@@ -6952,6 +6954,7 @@ class ImageProcessingView(TemplateView):
             'IMAGE_STRETCH__CLASSNAME'       : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('CLASSNAME', ''),
             'IMAGE_STRETCH__MODE1_GAMMA'     : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0),
             'IMAGE_STRETCH__MODE1_STDDEVS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 2.25),
+            'IMAGE_STRETCH__MODE2_BLACK_CLIP': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_BLACK_CLIP', -2.8),
             'IMAGE_STRETCH__MODE2_SHADOWS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_SHADOWS', 0.0),
             'IMAGE_STRETCH__MODE2_MIDTONES'  : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_MIDTONES', 0.35),
             'IMAGE_STRETCH__MODE2_HIGHLIGHTS': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_HIGHLIGHTS', 1.0),
@@ -7209,6 +7212,7 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_STRETCH']['CLASSNAME']           = str(request.json['IMAGE_STRETCH__CLASSNAME'])
         p_config['IMAGE_STRETCH']['MODE1_GAMMA']         = float(request.json['IMAGE_STRETCH__MODE1_GAMMA'])
         p_config['IMAGE_STRETCH']['MODE1_STDDEVS']       = float(request.json['IMAGE_STRETCH__MODE1_STDDEVS'])
+        p_config['IMAGE_STRETCH']['MODE2_BLACK_CLIP']    = float(request.json['IMAGE_STRETCH__MODE2_BLACK_CLIP'])
         p_config['IMAGE_STRETCH']['MODE2_SHADOWS']       = float(request.json['IMAGE_STRETCH__MODE2_SHADOWS'])
         p_config['IMAGE_STRETCH']['MODE2_MIDTONES']      = float(request.json['IMAGE_STRETCH__MODE2_MIDTONES'])
         p_config['IMAGE_STRETCH']['MODE2_HIGHLIGHTS']    = float(request.json['IMAGE_STRETCH__MODE2_HIGHLIGHTS'])
