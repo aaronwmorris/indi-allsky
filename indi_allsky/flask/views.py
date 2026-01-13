@@ -2410,6 +2410,11 @@ class ConfigView(FormView):
             'TEST_CAMERA__ROTATING_STAR_COUNT'  : self.indi_allsky_config.get('TEST_CAMERA', {}).get('ROTATING_STAR_COUNT', 30000),
             'TEST_CAMERA__ROTATING_STAR_FACTOR' : self.indi_allsky_config.get('TEST_CAMERA', {}).get('ROTATING_STAR_FACTOR', 1.0),
             'TEST_CAMERA__BUBBLE_COUNT'      : self.indi_allsky_config.get('TEST_CAMERA', {}).get('BUBBLE_COUNT', 1000),
+            'VIRTUALSKY__IMAGE_CIRCLE_DIAMETER' : self.indi_allsky_config.get('VIRTUALSKY', {}).get('IMAGE_CIRCLE_DIAMETER', 3500),
+            'VIRTUALSKY__LATITUDE_OFFSET'    : self.indi_allsky_config.get('VIRTUALSKY', {}).get('LATITUDE_OFFSET', 0.0),
+            'VIRTUALSKY__LONGITUDE_OFFSET'   : self.indi_allsky_config.get('VIRTUALSKY', {}).get('LONGITUDE_OFFSET', 0.0),
+            'VIRTUALSKY__OFFSET_X'           : self.indi_allsky_config.get('VIRTUALSKY', {}).get('OFFSET_X', 0),
+            'VIRTUALSKY__OFFSET_Y'           : self.indi_allsky_config.get('VIRTUALSKY', {}).get('OFFSET_Y', 0),
             'FOCUSER__CLASSNAME'             : self.indi_allsky_config.get('FOCUSER', {}).get('CLASSNAME', ''),
             'FOCUSER__GPIO_PIN_1'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_1', 'D17'),
             'FOCUSER__GPIO_PIN_2'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_2', 'D18'),
@@ -2866,6 +2871,7 @@ class AjaxConfigView(BaseView):
             'PYCURL_CAMERA',
             'ACCUM_CAMERA',
             'TEST_CAMERA',
+            'VIRTUALSKY',
             'FOCUSER',
             'DEW_HEATER',
             'FAN',
@@ -3341,6 +3347,11 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEST_CAMERA']['ROTATING_STAR_COUNT']   = int(request.json['TEST_CAMERA__ROTATING_STAR_COUNT'])
         self.indi_allsky_config['TEST_CAMERA']['ROTATING_STAR_FACTOR']  = float(request.json['TEST_CAMERA__ROTATING_STAR_FACTOR'])
         self.indi_allsky_config['TEST_CAMERA']['BUBBLE_COUNT']          = int(request.json['TEST_CAMERA__BUBBLE_COUNT'])
+        self.indi_allsky_config['VIRTUALSKY']['IMAGE_CIRCLE_DIAMETER']  = int(request.json['VIRTUALSKY__IMAGE_CIRCLE_DIAMETER'])
+        self.indi_allsky_config['VIRTUALSKY']['LATITUDE_OFFSET']        = float(request.json['VIRTUALSKY__LATITUDE_OFFSET'])
+        self.indi_allsky_config['VIRTUALSKY']['LONGITUDE_OFFSET']       = float(request.json['VIRTUALSKY__LONGITUDE_OFFSET'])
+        self.indi_allsky_config['VIRTUALSKY']['OFFSET_X']               = int(request.json['VIRTUALSKY__OFFSET_X'])
+        self.indi_allsky_config['VIRTUALSKY']['OFFSET_Y']               = int(request.json['VIRTUALSKY__OFFSET_Y'])
         self.indi_allsky_config['FOCUSER']['CLASSNAME']                 = str(request.json['FOCUSER__CLASSNAME'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_1']                = str(request.json['FOCUSER__GPIO_PIN_1'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_2']                = str(request.json['FOCUSER__GPIO_PIN_2'])

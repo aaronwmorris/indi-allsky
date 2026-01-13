@@ -4386,6 +4386,63 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">Moon illumnation percentage to enable Moon Mode</div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__IMAGE_CIRCLE_DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__LATITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__LATITUDE_OFFSET(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__LATITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__LONGITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__LONGITUDE_OFFSET(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__LONGITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__OFFSET_X(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__OFFSET_Y(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
 </div><!-- end location tab -->
 <div class="tab-pane fade" id="nav-admin" role="tabpanel" aria-labelledby="nav-admin-tab">
 
@@ -8828,6 +8885,11 @@ const field_names = [
     'TEST_CAMERA__ROTATING_STAR_COUNT',
     'TEST_CAMERA__ROTATING_STAR_FACTOR',
     'TEST_CAMERA__BUBBLE_COUNT',
+    'VIRTUALSKY__IMAGE_CIRCLE_DIAMETER',
+    'VIRTUALSKY__LATITUDE_OFFSET',
+    'VIRTUALSKY__LONGITUDE_OFFSET',
+    'VIRTUALSKY__OFFSET_X',
+    'VIRTUALSKY__OFFSET_Y',
     'FOCUSER__CLASSNAME',
     'FOCUSER__GPIO_PIN_1',
     'FOCUSER__GPIO_PIN_2',
