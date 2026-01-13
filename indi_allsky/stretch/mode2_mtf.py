@@ -1,6 +1,6 @@
 ### Mode 2 stretch is the Midtone Transfer Function based on PixInsight and Siril
 ###
-### https://pixinsight.com/doc/tools/HistogramTransformation/HistogramTransformation.html
+### https://pixinsight.com/forum/index.php?threads/auto-histogram-settings-to-replicate-auto-stf.8205/#post-55143
 ### https://siril.readthedocs.io/en/latest/processing/stretching.html
 
 import time
