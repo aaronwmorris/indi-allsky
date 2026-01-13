@@ -54,11 +54,8 @@ var fullscreen = false;  // initial state
 
 var camera_latitude = {{ camera_latitude }};
 var camera_longitude = {{ camera_longitude }};
-var camera_lensimagecircle = {{ camera_lensimagecircle }};
-var camera_lens_offset_x = {{ camera_lens_offset_x }};
-var camera_lens_offset_y = {{ camera_lens_offset_y }};
-var camera_az = {{ camera_az }};
-var camera_alt = {{ camera_alt }};
+var flip_ns = {{ flip_ns }};
+var flip_ew = {{ flip_ew }};
 
 var planetarium;
 var redraw_planetarium = true;
@@ -69,14 +66,14 @@ function init() {
 
     console.log("Camera Latitude: " + camera_latitude);
     console.log("Camera Longitude: " + camera_longitude);
-    console.log("Camera Image Circle: " + camera_lensimagecircle);
-    console.log("Lens Offset X: " + camera_lens_offset_x);
-    console.log("Lens Offset Y: " + camera_lens_offset_y);
+    //console.log("Camera Image Circle: " + camera_lensimagecircle);
+    //console.log("Lens Offset X: " + camera_lens_offset_x);
+    //console.log("Lens Offset Y: " + camera_lens_offset_y);
 
 
     // Azimuth manipulations
-    console.log("Camera Azimuth: " + camera_az);
-    console.log("Camera Altitude: " + camera_alt);
+    //console.log("Camera Azimuth: " + camera_az);
+    //console.log("Camera Altitude: " + camera_alt);
 
 
     // Calculate latitude and longitude offset
@@ -125,14 +122,6 @@ function init() {
     $("#LATITUDE_OFFSET").val(lat_deg_offset.toFixed(2));
     $("#LONGITUDE_OFFSET").val(long_deg_offset.toFixed(2));
     */
-
-
-    $("#LATITUDE_OFFSET").val(0.0);
-    $("#LONGITUDE_OFFSET").val(0.0);
-    $("#AZIMUTH_ANGLE").val(camera_az);
-    $("#IMAGE_CIRCLE_DIAMETER").val(camera_lensimagecircle);
-    $("#OFFSET_X").val(camera_lens_offset_x);
-    $("#OFFSET_Y").val(camera_lens_offset_y);
 
 
     loadNextImage();

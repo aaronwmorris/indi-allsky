@@ -414,7 +414,16 @@ class VirtualSkyView(TemplateView):
         context['live'] = int(live)
 
 
-        context['form_virtualsky'] = IndiAllskyVirtualSkyHelperForm()
+        data = {
+            'AZIMUTH_ANGLE'         : self.camera.az,
+            'IMAGE_CIRCLE_DIAMETER' : self.camera.data.get('vs_image_circle_diameter', 3500),
+            'LATITUDE_OFFSET'       : self.camera.data.get('vs_latitude_offset', 0.0),
+            'LONGITUDE_OFFSET'      : self.camera.data.get('vs_longitude_offset', 0.0),
+            'OFFSET_X'              : self.camera.data.get('vs_offset_x', 0.0),
+            'OFFSET_Y'              : self.camera.data.get('vs_offset_y', 0.0),
+        }
+
+        context['form_virtualsky'] = IndiAllskyVirtualSkyHelperForm(data=data)
 
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
@@ -424,21 +433,8 @@ class VirtualSkyView(TemplateView):
         ### Camera DB settings
         context['camera_latitude'] = self.camera.latitude
         context['camera_longitude'] = self.camera.longitude
-        context['camera_az'] = self.camera.az
-        context['camera_alt'] = self.camera.alt
-        context['camera_lensimagecircle'] = self.camera.lensImageCircle
-        context['camera_lens_offset_x'] = self.camera.lensOffsetX
-        context['camera_lens_offset_y'] = self.camera.lensOffsetY
-
-
-        ### Debugging - Use config for faster testing
-        #context['camera_latitude'] = self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0)
-        #context['camera_longitude'] = self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0)
-        #context['camera_az'] = self.indi_allsky_config.get('LENS_AZIMUTH', 0.0)
-        #context['camera_alt'] = self.indi_allsky_config.get('LENS_ALTITUDE', 90.0)
-        #context['camera_lensimagecircle'] = self.indi_allsky_config.get('LENS_IMAGE_CIRCLE', 0.0)
-        #context['camera_lens_offset_x'] = self.indi_allsky_config.get('LENS_OFFSET_X', 0.0)
-        #context['camera_lens_offset_y'] = self.indi_allsky_config.get('LENS_OFFSET_Y', 0.0)
+        context['flip_ns'] = int(self.camera.data.get('vs_flip_ns', False))
+        context['flip_ew'] = int(self.camera.data.get('vs_flip_ew', False))
 
 
         return context
