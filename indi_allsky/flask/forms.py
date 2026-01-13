@@ -9156,9 +9156,11 @@ class IndiAllskyImageCircleHelperForm(FlaskForm):
 
 class IndiAllskyVirtualSkyHelperForm(FlaskForm):
     AZIMUTH_ANGLE           = FloatField('Azimuth Angle', widget=NumberInput(min=0.0, max=359.99, step=0.5))
-    LATITUDE_OFFSET         = FloatField('Latitude Offset', widget=NumberInput(step=0.5))
-    LONGITUDE_OFFSET        = FloatField('Longitude Offset', widget=NumberInput(step=0.5))
+    LATITUDE_OFFSET         = FloatField('Latitude Offset', widget=NumberInput(step=0.25))
+    LONGITUDE_OFFSET        = FloatField('Longitude Offset', widget=NumberInput(step=0.25))
     IMAGE_CIRCLE_DIAMETER   = IntegerField('Diameter', widget=NumberInput(step=5))
+    OFFSET_X                = IntegerField('X Offset', default=0, widget=NumberInput(step=10))
+    OFFSET_Y                = IntegerField('Y Offset', default=0, widget=NumberInput(step=10))
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):
