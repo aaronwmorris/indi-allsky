@@ -193,6 +193,16 @@ async function loop() {
             }
 
 
+            if (flip_ns) {
+                if (vs_az <= 180) {
+                    vs_az = Math.abs(vs_az - 180);
+                } else {
+                    vs_az = 540 - vs_az;
+                }
+
+            }
+
+
             // Most cameras are east/west reversed
             if (! flip_ew) {
                 var vs_az = 360 - vs_az;
