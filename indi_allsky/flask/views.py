@@ -437,6 +437,10 @@ class VirtualSkyView(TemplateView):
         context['flip_ew'] = int(self.camera.data.get('vs_flip_ew', False))
 
 
+        ### Calculate time offset
+        context['time_offset'] = self.camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
+
+
         return context
 
 

@@ -50,6 +50,7 @@ var fullscreen = false;  // initial state
 
 var camera_latitude = {{ camera_latitude }};
 var camera_longitude = {{ camera_longitude }};
+var time_offset = {{ time_offset }};
 var flip_ns = {{ flip_ns }};
 var flip_ew = {{ flip_ew }};
 
@@ -208,11 +209,12 @@ async function loop() {
 
 
             if (timestamp) {
-                var clock = new Date(timestamp * 1000);
+                var clock = new Date((timestamp - time_offset) * 1000);
             } else {
                 var clock = new Date();
             }
 
+            console.log("Time Offset: " + time_offset);
             console.log("Date: " + clock);
             console.log("Live: " + live);
 
