@@ -564,6 +564,15 @@ class IndiAllSkyConfigBase(object):
             "ROTATING_STAR_FACTOR"   : 1.0,
             "BUBBLE_COUNT"           : 1000,
         },
+        "VIRTUALSKY" : {
+            "IMAGE_CIRCLE_DIAMETER"  : 3500,
+            "LATITUDE_OFFSET"        : 0.0,
+            "LONGITUDE_OFFSET"       : 0.0,
+            "OFFSET_X"               : 0,
+            "OFFSET_Y"               : 0,
+            "FLIP_NS"                : False,
+            "FLIP_EW"                : False,
+        },
         "FOCUSER" : {
             "CLASSNAME"              : "",
             "GPIO_PIN_1"             : "D17",

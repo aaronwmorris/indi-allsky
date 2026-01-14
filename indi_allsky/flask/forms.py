@@ -2696,6 +2696,34 @@ def TEST_CAMERA__BUBBLE_COUNT_validator(form, field):
         raise ValidationError('Count must be 10 or greater')
 
 
+def VIRTUALSKY__IMAGE_CIRCLE_DIAMETER_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+    if field.data < 0:
+        raise ValidationError('Value must be 0 or greater')
+
+
+def VIRTUALSKY__LATITUDE_OFFSET_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
+
+
+def VIRTUALSKY__LONGITUDE_OFFSET_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
+
+
+def VIRTUALSKY__OFFSET_X_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+
+def VIRTUALSKY__OFFSET_Y_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+
 def FOCUSER__CLASSNAME_validator(form, field):
     if field.data not in list(zip(*form.FOCUSER__CLASSNAME_choices))[0]:
         raise ValidationError('Invalid selection')
@@ -4451,6 +4479,13 @@ class IndiAllskyConfigForm(FlaskForm):
     TEST_CAMERA__ROTATING_STAR_COUNT    = IntegerField('Test Camera - Rotating Star Count', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_COUNT_validator])
     TEST_CAMERA__ROTATING_STAR_FACTOR   = FloatField('Test Camera - Rotating Star Rotation Factor', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_FACTOR_validator])
     TEST_CAMERA__BUBBLE_COUNT           = IntegerField('Test Camera - Bubble Count', validators=[DataRequired(), TEST_CAMERA__BUBBLE_COUNT_validator])
+    VIRTUALSKY__IMAGE_CIRCLE_DIAMETER   = IntegerField('VirtualSky Image Circle', validators=[VIRTUALSKY__IMAGE_CIRCLE_DIAMETER_validator])
+    VIRTUALSKY__LATITUDE_OFFSET         = FloatField('Latitude Offset', validators=[VIRTUALSKY__LATITUDE_OFFSET_validator], widget=NumberInput(step=0.25))
+    VIRTUALSKY__LONGITUDE_OFFSET        = FloatField('Longitude Offset', validators=[VIRTUALSKY__LONGITUDE_OFFSET_validator], widget=NumberInput(step=0.25))
+    VIRTUALSKY__OFFSET_X                = IntegerField('X Offset', validators=[VIRTUALSKY__OFFSET_X_validator])
+    VIRTUALSKY__OFFSET_Y                = IntegerField('Y Offset', validators=[VIRTUALSKY__OFFSET_Y_validator])
+    VIRTUALSKY__FLIP_NS              = BooleanField('Flip North/South')
+    VIRTUALSKY__FLIP_EW              = BooleanField('Flip East/West')
     FOCUSER__CLASSNAME               = SelectField('Focuser', choices=FOCUSER__CLASSNAME_choices, validators=[FOCUSER__CLASSNAME_validator])
     FOCUSER__GPIO_PIN_1              = StringField('GPIO Pin 1', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_2              = StringField('GPIO Pin 2', validators=[DEVICE_PIN_NAME_validator])
@@ -9156,9 +9191,11 @@ class IndiAllskyImageCircleHelperForm(FlaskForm):
 
 class IndiAllskyVirtualSkyHelperForm(FlaskForm):
     AZIMUTH_ANGLE           = FloatField('Azimuth Angle', widget=NumberInput(min=0.0, max=359.99, step=0.5))
-    LATITUDE_OFFSET         = FloatField('Latitude Offset', widget=NumberInput(step=0.5))
-    LONGITUDE_OFFSET        = FloatField('Longitude Offset', widget=NumberInput(step=0.5))
+    LATITUDE_OFFSET         = FloatField('Latitude Offset', widget=NumberInput(step=0.25))
+    LONGITUDE_OFFSET        = FloatField('Longitude Offset', widget=NumberInput(step=0.25))
     IMAGE_CIRCLE_DIAMETER   = IntegerField('Diameter', widget=NumberInput(step=5))
+    OFFSET_X                = IntegerField('X Offset', default=0, widget=NumberInput(step=10))
+    OFFSET_Y                = IntegerField('Y Offset', default=0, widget=NumberInput(step=10))
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):

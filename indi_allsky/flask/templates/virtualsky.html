@@ -54,11 +54,8 @@ var fullscreen = false;  // initial state
 
 var camera_latitude = {{ camera_latitude }};
 var camera_longitude = {{ camera_longitude }};
-var camera_lensimagecircle = {{ camera_lensimagecircle }};
-var camera_lens_offset_x = {{ camera_lens_offset_x }};
-var camera_lens_offset_y = {{ camera_lens_offset_y }};
-var camera_az = {{ camera_az }};
-var camera_alt = {{ camera_alt }};
+var flip_ns = {{ flip_ns }};
+var flip_ew = {{ flip_ew }};
 
 var planetarium;
 var redraw_planetarium = true;
@@ -69,17 +66,18 @@ function init() {
 
     console.log("Camera Latitude: " + camera_latitude);
     console.log("Camera Longitude: " + camera_longitude);
-    console.log("Camera Image Circle: " + camera_lensimagecircle);
-    console.log("Lens Offset X: " + camera_lens_offset_x);
-    console.log("Lens Offset Y: " + camera_lens_offset_y);
+    //console.log("Camera Image Circle: " + camera_lensimagecircle);
+    //console.log("Lens Offset X: " + camera_lens_offset_x);
+    //console.log("Lens Offset Y: " + camera_lens_offset_y);
 
 
     // Azimuth manipulations
-    console.log("Camera Azimuth: " + camera_az);
-    console.log("Camera Altitude: " + camera_alt);
+    //console.log("Camera Azimuth: " + camera_az);
+    //console.log("Camera Altitude: " + camera_alt);
 
 
     // Calculate latitude and longitude offset
+    /*
     if (camera_az < 90) {
         az_90 = camera_az % 90
     } else if (camera_az >= 90 && camera_az < 180) {
@@ -123,8 +121,7 @@ function init() {
     // Set form values
     $("#LATITUDE_OFFSET").val(lat_deg_offset.toFixed(2));
     $("#LONGITUDE_OFFSET").val(long_deg_offset.toFixed(2));
-    $("#AZIMUTH_ANGLE").val(camera_az);
-    $("#IMAGE_CIRCLE_DIAMETER").val(camera_lensimagecircle);
+    */
 
 
     loadNextImage();
@@ -152,6 +149,8 @@ async function loop() {
             latitude_offset = Number($("#LATITUDE_OFFSET").val());
             longitude_offset = Number($("#LONGITUDE_OFFSET").val());
             image_circle_diameter = Number($("#IMAGE_CIRCLE_DIAMETER").val());
+            offset_x = Number($("#OFFSET_X").val());
+            offset_y = Number($("#OFFSET_Y").val());
 
             var vs_latitude = camera_latitude + latitude_offset;
             var vs_longitude = camera_longitude + longitude_offset;
@@ -167,8 +166,8 @@ async function loop() {
             const image_scale = render_width / image_width;
 
             // Determine offsets of the starmap overlay
-            const bias_left = ((( image_circle_diameter * image_scale - render_width ) / 2) - ( camera_lens_offset_x * image_scale )) * -1;
-            const bias_top = ((( image_circle_diameter * image_scale - render_height ) / 2) + ( camera_lens_offset_y * image_scale )) * -1;
+            const bias_left = ((( image_circle_diameter * image_scale - render_width ) / 2) - ( offset_x * image_scale )) * -1;
+            const bias_top = ((( image_circle_diameter * image_scale - render_height ) / 2) + ( offset_y * image_scale )) * -1;
 
             // Apply those dimensions to the starmap container
             $('#starmap_container').css({
@@ -194,8 +193,20 @@ async function loop() {
             }
 
 
+            if (flip_ns) {
+                if (vs_az <= 180) {
+                    vs_az = Math.abs(vs_az - 180);
+                } else {
+                    vs_az = 540 - vs_az;
+                }
+
+            }
+
+
             // Most cameras are east/west reversed
-            var vs_az = 360 - vs_az;
+            if (! flip_ew) {
+                var vs_az = 360 - vs_az;
+            }
             console.log("Calculated VirtualSky Azimuth: " + vs_az);
 
 
@@ -376,10 +387,18 @@ function closeFullscreen() {
             {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
         </div>
 
+        <div class="col-sm-1">
+            {{ form_virtualsky.OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_virtualsky.OFFSET_X(class='form-control bg-secondary') }}
+        </div>
 
         <div class="col-sm-1">
-            <!-- This button does not do anything, it just gives the user something to click instead of the image (which will go fullscreen) -->
-            <button class="btn btn-primary">Refresh</button>
+            {{ form_virtualsky.OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_virtualsky.OFFSET_Y(class='form-control bg-secondary') }}
         </div>
     </div>
 </form>
@@ -434,6 +453,21 @@ $("#IMAGE_CIRCLE_DIAMETER").on("change", function() {
         showImage(json_data['latest_image']);
     };
 });
+
+$("#OFFSET_X").on("change", function() {
+    if (json_data['latest_image']) {
+        redraw_planetarium = true;
+        showImage(json_data['latest_image']);
+    };
+});
+
+$("#OFFSET_Y").on("change", function() {
+    if (json_data['latest_image']) {
+        redraw_planetarium = true;
+        showImage(json_data['latest_image']);
+    };
+});
+
 
 $( document ).ready(function() {
     $('#latest-image').on("click", function() {
