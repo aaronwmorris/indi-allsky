@@ -9196,6 +9196,8 @@ class IndiAllskyVirtualSkyHelperForm(FlaskForm):
     IMAGE_CIRCLE_DIAMETER   = IntegerField('Diameter', widget=NumberInput(step=5))
     OFFSET_X                = IntegerField('X Offset', default=0, widget=NumberInput(step=10))
     OFFSET_Y                = IntegerField('Y Offset', default=0, widget=NumberInput(step=10))
+    FLIP_NS                 = BooleanField('Flip North/South')
+    FLIP_EW                 = BooleanField('Flip East/West')
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):

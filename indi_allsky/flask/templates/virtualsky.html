@@ -51,8 +51,6 @@ var fullscreen = false;  // initial state
 var camera_latitude = {{ camera_latitude }};
 var camera_longitude = {{ camera_longitude }};
 var time_offset = {{ time_offset }};
-var flip_ns = {{ flip_ns }};
-var flip_ew = {{ flip_ew }};
 
 var planetarium;
 var redraw_planetarium = true;
@@ -148,6 +146,8 @@ async function loop() {
             image_circle_diameter = Number($("#IMAGE_CIRCLE_DIAMETER").val());
             offset_x = Number($("#OFFSET_X").val());
             offset_y = Number($("#OFFSET_Y").val());
+            flip_ns = $("#FLIP_NS").prop('checked');
+            flip_ew = $("#FLIP_EW").prop('checked');
 
             var vs_latitude = camera_latitude + latitude_offset;
             var vs_longitude = camera_longitude + longitude_offset;
@@ -357,47 +357,75 @@ function closeFullscreen() {
 {% block content %}
 <div class="container h-100">
 <form id="form_virtualsky" onSubmit="return false;">
-    <div class="form-group row">
+    <div class="form-group row" style="font-size:12px">
         <div class="col-sm-1">
             {{ form_virtualsky.AZIMUTH_ANGLE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.AZIMUTH_ANGLE(class='form-control bg-secondary') }}
         </div>
 
         <div class="col-sm-1">
             {{ form_virtualsky.LATITUDE_OFFSET.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.LATITUDE_OFFSET(class='form-control bg-secondary') }}
-        </div>
 
         <div class="col-sm-1">
             {{ form_virtualsky.LONGITUDE_OFFSET.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.LONGITUDE_OFFSET(class='form-control bg-secondary') }}
         </div>
 
         <div class="col-sm-1">
             {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
-        </div>
 
         <div class="col-sm-1">
             {{ form_virtualsky.OFFSET_X.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.OFFSET_X(class='form-control bg-secondary') }}
         </div>
 
         <div class="col-sm-1">
             {{ form_virtualsky.OFFSET_Y.label(class='col-form-label') }}
         </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.FLIP_NS.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.FLIP_EW.label(class='col-form-label') }}
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-1">
+            {{ form_virtualsky.AZIMUTH_ANGLE(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.LATITUDE_OFFSET(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.LONGITUDE_OFFSET(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.OFFSET_X(class='form-control bg-secondary') }}
+        </div>
+
         <div class="col-sm-1">
             {{ form_virtualsky.OFFSET_Y(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            <div class="form-switch">
+                {{ form_virtualsky.FLIP_NS(class='form-check-input') }}
+            </div>
+        </div>
+
+        <div class="col-sm-1">
+            <div class="form-switch">
+                {{ form_virtualsky.FLIP_EW(class='form-check-input') }}
+            </div>
         </div>
     </div>
 </form>
@@ -461,6 +489,20 @@ $("#OFFSET_X").on("change", function() {
 });
 
 $("#OFFSET_Y").on("change", function() {
+    if (json_data['image_list'].length > 0) {
+        redraw_planetarium = true;
+        showImage(json_data['image_list'][0]);
+    };
+});
+
+$("#FLIP_NS").on("change", function() {
+    if (json_data['image_list'].length > 0) {
+        redraw_planetarium = true;
+        showImage(json_data['image_list'][0]);
+    };
+});
+
+$("#FLIP_EW").on("change", function() {
     if (json_data['image_list'].length > 0) {
         redraw_planetarium = true;
         showImage(json_data['image_list'][0]);

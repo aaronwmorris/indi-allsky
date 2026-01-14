@@ -421,6 +421,8 @@ class VirtualSkyView(TemplateView):
             'LONGITUDE_OFFSET'      : self.camera.data.get('vs_longitude_offset', 0.0),
             'OFFSET_X'              : self.camera.data.get('vs_offset_x', 0.0),
             'OFFSET_Y'              : self.camera.data.get('vs_offset_y', 0.0),
+            'FLIP_NS'               : self.camera.data.get('vs_flip_ns', False),
+            'FLIP_EW'               : self.camera.data.get('vs_flip_ew', False),
         }
 
         context['form_virtualsky'] = IndiAllskyVirtualSkyHelperForm(data=data)
@@ -433,8 +435,6 @@ class VirtualSkyView(TemplateView):
         ### Camera DB settings
         context['camera_latitude'] = self.camera.latitude
         context['camera_longitude'] = self.camera.longitude
-        context['flip_ns'] = int(self.camera.data.get('vs_flip_ns', False))
-        context['flip_ew'] = int(self.camera.data.get('vs_flip_ew', False))
 
 
         ### Calculate time offset
