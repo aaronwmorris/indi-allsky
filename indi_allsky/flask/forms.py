@@ -4484,8 +4484,8 @@ class IndiAllskyConfigForm(FlaskForm):
     VIRTUALSKY__LONGITUDE_OFFSET        = FloatField('Longitude Offset', validators=[VIRTUALSKY__LONGITUDE_OFFSET_validator], widget=NumberInput(step=0.25))
     VIRTUALSKY__OFFSET_X                = IntegerField('X Offset', validators=[VIRTUALSKY__OFFSET_X_validator])
     VIRTUALSKY__OFFSET_Y                = IntegerField('Y Offset', validators=[VIRTUALSKY__OFFSET_Y_validator])
-    VIRTUALSKY__FLIP_NS              = BooleanField('Flip North/South')
-    VIRTUALSKY__FLIP_EW              = BooleanField('Flip East/West')
+    #VIRTUALSKY__FLIP_NS              = BooleanField('Flip North/South')
+    #VIRTUALSKY__FLIP_EW              = BooleanField('Flip East/West')
     FOCUSER__CLASSNAME               = SelectField('Focuser', choices=FOCUSER__CLASSNAME_choices, validators=[FOCUSER__CLASSNAME_validator])
     FOCUSER__GPIO_PIN_1              = StringField('GPIO Pin 1', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_2              = StringField('GPIO Pin 2', validators=[DEVICE_PIN_NAME_validator])
@@ -9196,8 +9196,8 @@ class IndiAllskyVirtualSkyHelperForm(FlaskForm):
     IMAGE_CIRCLE_DIAMETER   = IntegerField('Diameter', widget=NumberInput(step=5))
     OFFSET_X                = IntegerField('X Offset', default=0, widget=NumberInput(step=10))
     OFFSET_Y                = IntegerField('Y Offset', default=0, widget=NumberInput(step=10))
-    FLIP_NS                 = BooleanField('Flip North/South')
-    FLIP_EW                 = BooleanField('Flip East/West')
+    #FLIP_NS                 = BooleanField('Flip North/South')
+    #FLIP_EW                 = BooleanField('Flip East/West')
 
 
 class IndiAllskyCameraSimulatorForm(FlaskForm):
