@@ -42,7 +42,9 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
         # these will result in 0.0 to 1.0 normalized values
         data = ((data - shadows_val) / (highlights_val - shadows_val)).astype(numpy.float32)
 
+        is_mono = False
         if len(data.shape) < 3:
+            is_mono = True
             data = numpy.expand_dims(data, axis=2)
         
         data_moveaxis = numpy.moveaxis(data, source=-1, destination=0)
@@ -57,6 +59,9 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
         stretched_image[stretched_image < 0] = 0                # clip low end
         stretched_image[stretched_image > data_max] = data_max  # clip high end
         stretched_image = stretched_image.astype(numpy_dtype)   # this must come after clipping
+
+        if is_mono:
+            stretched_image = stretched_image.squeeze(2)
 
         stretch_elapsed_s = time.time() - stretch_start
         logger.info('Stretch in %0.4f s', stretch_elapsed_s)
