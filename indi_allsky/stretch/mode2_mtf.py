@@ -41,6 +41,10 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
 
         # these will result in 0.0 to 1.0 normalized values
         data = ((data - shadows_val) / (highlights_val - shadows_val)).astype(numpy.float32)
+
+        if len(data.shape) < 3:
+            data = numpy.expand_dims(data, axis=2)
+        
         data_moveaxis = numpy.moveaxis(data, source=-1, destination=0)
 
         n = data.shape[2]
