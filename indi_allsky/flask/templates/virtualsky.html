@@ -37,12 +37,8 @@
 <script type="text/javascript">
 var img;
 var json_data = {
-    'latest_image' : {
-        'url' : null,
-        'width': 0,
-        'height': 0,
-        'message' : ''
-    }
+    'image_list' : [],
+    'message' : '',
 };
 var max_age = 900;
 var camera_id = {{ camera_id }};
@@ -130,12 +126,12 @@ function init() {
 
 async function loop() {
     //console.log('Starting loop');
-    while(json_data['latest_image']['url'] == null) {
+    while(json_data['image_list'].length == 0) {
         await sleep(100);
     }
 
-    var image_width = json_data['latest_image']['width'];
-    var image_height = json_data['latest_image']['height'];
+    var image_width = json_data['image_list'][0]['width'];
+    var image_height = json_data['image_list'][0]['height'];
 
     img = new Image();
     img.onload = function() {
@@ -218,6 +214,7 @@ async function loop() {
             }
 
             console.log("Date: " + clock);
+            console.log("Live: " + live);
 
             planetarium = S.virtualsky({
                 id: 'starmap',
@@ -253,7 +250,7 @@ async function loop() {
     };
 
 
-    showImage(json_data['latest_image']);
+    showImage(json_data['image_list'][0]);
 
     setTimeout(loop, refreshInterval);
 }
@@ -267,7 +264,7 @@ function showImage(entry) {
 
 function loadNextImage() {
     console.log('Loading next image');
-    loadJS("{{ url_for(latest_image_view) }}", {'camera_id' : camera_id, 'limit_s' : max_age, 'night' : night}, function() {});
+    loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : 60, 'timestamp' : timestamp}, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
 
@@ -286,7 +283,7 @@ function loadJS(url, data, onDone, onError) {
         data: data,
         success: function(rdata){
             json_data = rdata
-            $('#message').html(json_data['latest_image']['message']);
+            $('#message').html(json_data['message']);
         },
         error: function(rdata){
             onError(rdata.status);
@@ -312,9 +309,9 @@ function setResizeHandler(callback, timeout) {
 }
 
 function resize_callback() {
-    if (json_data['latest_image']) {
+    if (json_data['image_list'].length > 0) {
         redraw_planetarium = true;
-        showImage(json_data['latest_image']);
+        showImage(json_data['image_list'][0]);
     };
 }
 setResizeHandler(resize_callback, 200);
@@ -427,44 +424,44 @@ function closeFullscreen() {
 
 <script>
 $("#AZIMUTH_ANGLE").on("change", function() {
-    if (json_data['latest_image']) {
+    if (json_data['image_list'].length > 0) {
         redraw_planetarium = true;
-        showImage(json_data['latest_image']);
+        showImage(json_data['image_list'][0]);
     };
 });
 
 $("#LATITUDE_OFFSET").on("change", function() {
-    if (json_data['latest_image']) {
+    if (json_data['image_list'].length > 0) {
         redraw_planetarium = true;
-        showImage(json_data['latest_image']);
+        showImage(json_data['image_list'][0]);
     };
 });
 
 $("#LONGITUDE_OFFSET").on("change", function() {
-    if (json_data['latest_image']) {
+    if (json_data['image_list'].length > 0) {
         redraw_planetarium = true;
-        showImage(json_data['latest_image']);
+        showImage(json_data['image_list'][0]);
     };
 });
 
 $("#IMAGE_CIRCLE_DIAMETER").on("change", function() {
-    if (json_data['latest_image']) {
+    if (json_data['image_list'].length > 0) {
         redraw_planetarium = true;
-        showImage(json_data['latest_image']);
+        showImage(json_data['image_list'][0]);
     };
 });
 
 $("#OFFSET_X").on("change", function() {
-    if (json_data['latest_image']) {
+    if (json_data['image_list'].length > 0) {
         redraw_planetarium = true;
-        showImage(json_data['latest_image']);
+        showImage(json_data['image_list'][0]);
     };
 });
 
 $("#OFFSET_Y").on("change", function() {
-    if (json_data['latest_image']) {
+    if (json_data['image_list'].length > 0) {
         redraw_planetarium = true;
-        showImage(json_data['latest_image']);
+        showImage(json_data['image_list'][0]);
     };
 });
 

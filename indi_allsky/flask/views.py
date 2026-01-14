@@ -394,13 +394,13 @@ class IndexImgView(TemplateView):
 
 class VirtualSkyView(TemplateView):
     page_title = 'VirtualSky'
-    latest_image_view = 'indi_allsky.js_latest_image_view'
+    image_loop_view = 'indi_allsky.js_image_loop_view'
 
 
     def get_context(self):
         context = super(VirtualSkyView, self).get_context()
 
-        context['latest_image_view'] = self.latest_image_view
+        context['image_loop_view'] = self.image_loop_view
 
 
         timestamp = int(request.args.get('timestamp', 0))
