@@ -201,6 +201,7 @@ function closeFullscreen() {
         <img id="image" class="fit">
 
         <div style="margin-top: 20px;">
+            <span id="virtualsky_here"></span>
             <span id="loop_here"></span>
             <span id="mini_generate_here"></span>
             <span id="chart_here"></span>
@@ -664,6 +665,21 @@ function init() {
             } else {
                 $('#EXCLUDE_EXCLUDE').prop('checked', false);
             }
+
+
+            // Add VirtualSky link
+            $('#virtualsky_here').html(
+                $('<a />', {
+                    'href' : "{{ url_for('indi_allsky.virtualsky_view') }}?timestamp=" + image_data[image_index]['ts'],
+                    'target' : '_blank',
+                    'rel'    : 'noopener noreferrer',
+                }).html(
+                    $('<span />', {
+                        'text'  : 'VirtualSky',
+                        'class' : "badge pill bg-dark",
+                    })
+                )
+            );
 
 
             // Add Loop here link
