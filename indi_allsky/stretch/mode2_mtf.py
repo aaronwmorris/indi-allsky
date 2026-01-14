@@ -71,7 +71,9 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
 
 
     def _mtf(self, midtones, data):
-        return ((midtones - 1) * data) / (((2 * midtones - 1) * data) - midtones)
+        a = (midtones - 1) * data
+        b = ((2 * midtones - 1) * data) - midtones
+        return numpy.divide(a, b, where=b != 0)
 
 
 
