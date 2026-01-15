@@ -300,7 +300,7 @@ echo "Watchdog info"
 if [ -d "/sys/class/watchdog" ]; then
     WATCHDOGS=$(find /sys/class/watchdog -maxdepth 1 -type l 2>&1)
     for WATCHDOG in $WATCHDOGS; do
-        echo -n "$WATCHDOG: "
+        echo -n "$(basename "$WATCHDOG"): "
 
         if [ -e "$WATCHDOG/state" ]; then
             echo -n "$(<"$WATCHDOG/state") "
