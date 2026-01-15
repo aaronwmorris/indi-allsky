@@ -40,7 +40,7 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
         highlights_val = int(self.highlights * data_max)
 
         # these will result in 0.0 to 1.0 normalized values
-        data = ((data - shadows_val) / (highlights_val - shadows_val)).astype(numpy.float32)
+        data = (data / data_max).astype(numpy.float32)
 
         is_mono = False
         if len(data.shape) < 3:
@@ -56,6 +56,7 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
         
         stretched_image = self._mtf(self._mtf(self.midtones, m - c), numpy.maximum(0.0, (data - c) / (1 - c)))
         stretched_image = stretched_image * data_max            # scale back to real values
+        stretched_image = self._normalize_to_range(stretched_image, 0 - shadows_val, data_max + (data_max - highlights_val))
         stretched_image[stretched_image < 0] = 0                # clip low end
         stretched_image[stretched_image > data_max] = data_max  # clip high end
         stretched_image = stretched_image.astype(numpy_dtype)   # this must come after clipping
@@ -79,6 +80,15 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
         a = (midtones - 1) * data
         b = ((2 * midtones - 1) * data) - midtones
         return numpy.divide(a, b, where=b != 0)
+
+    def _normalize_to_range(self, a, min_value, max_value):
+        a_min = numpy.min(a)
+        a_max = numpy.max(a)
+
+        if a_max - a_min == 0:
+            return numpy.full_like(a, (a_min + a_max) / 2)
+
+        return ((a - a_min) / (a_max - a_min)) * (max_value - min_value) + min_value
 
 
 
