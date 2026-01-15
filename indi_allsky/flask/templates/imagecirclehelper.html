@@ -195,31 +195,55 @@ function closeFullscreen() {
 <div class="container h-100">
 
 <form id="form_imagecircle" onSubmit="return false;">
-    <div class="form-group row">
+    <div class="form-group row" style="font-size:12px">
+        <div class="col-sm-2"></div>
         <div class="col-sm-1">
             {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
         </div>
 
         <div class="col-sm-1">
             {{ form_imagecircle.OFFSET_X.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-1">
-            {{ form_imagecircle.OFFSET_X(class='form-control bg-secondary') }}
-        </div>
 
         <div class="col-sm-1">
             {{ form_imagecircle.OFFSET_Y.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_imagecircle.OFFSET_Y(class='form-control bg-secondary') }}
         </div>
 
         <div class="col-sm-1">
             {{ form_imagecircle.LINE_WIDTH.label(class='col-form-label') }}
         </div>
+
+        <div class="col-sm-2">
+            {{ form_imagecircle.LINE_COLOR.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_imagecircle.KEOGRAM_ANGLE.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_imagecircle.AZIMUTH_ANGLE.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_imagecircle.KEOGRAM_LINE.label(class='col-form-label') }}
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2"></div>
+        <div class="col-sm-1">
+            {{ form_imagecircle.IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_imagecircle.OFFSET_X(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_imagecircle.OFFSET_Y(class='form-control bg-secondary') }}
+        </div>
+
         <div class="col-sm-1">
             {{ form_imagecircle.LINE_WIDTH(class='form-control bg-secondary') }}
         </div>
@@ -229,30 +253,13 @@ function closeFullscreen() {
         </div>
 
         <div class="col-sm-1">
-            <!-- This button does not do anything, it just gives the user something to click instead of the image (which will go fullscreen) -->
-            <button class="btn btn-primary">Refresh</button>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-1">
-            {{ form_imagecircle.KEOGRAM_ANGLE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
             {{ form_imagecircle.KEOGRAM_ANGLE(class='form-control bg-secondary') }}
         </div>
+
         <div class="col-sm-1">
-            {{ form_imagecircle.AZIMUTH_ANGLE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
             {{ form_imagecircle.AZIMUTH_ANGLE(class='form-control bg-secondary') }}
         </div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-1"></div>
         <div class="col-sm-1">
             <div class="form-switch">
             {{ form_imagecircle.KEOGRAM_LINE(class='form-check-input') }}
