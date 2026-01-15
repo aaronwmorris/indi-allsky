@@ -4448,35 +4448,6 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">
         </div>
     </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__FLIP_NS.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.VIRTUALSKY__FLIP_NS(class='form-check-input') }}
-                <div id="VIRTUALSKY__FLIP_NS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__FLIP_EW.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.VIRTUALSKY__FLIP_EW(class='form-check-input') }}
-                <div id="VIRTUALSKY__FLIP_EW-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
 </div><!-- end location tab -->
 <div class="tab-pane fade" id="nav-admin" role="tabpanel" aria-labelledby="nav-admin-tab">
 
@@ -9168,8 +9139,6 @@ const checkbox_field_names = [
     'LIBCAMERA__IMMEDIATE_DAY',
     'ACCUM_CAMERA__EVEN_EXPOSURES',
     'ACCUM_CAMERA__CLAMP_16BIT',
-    'VIRTUALSKY__FLIP_NS',
-    'VIRTUALSKY__FLIP_EW',
     'TEMP_SENSOR__DHT_USE_PULSEIO',
     'TEMP_SENSOR__SHT3X_HEATER_NIGHT',
     'TEMP_SENSOR__SHT3X_HEATER_DAY',

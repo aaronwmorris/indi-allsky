@@ -12,7 +12,7 @@
 
 #latest-image {
     max-width: 100%;
-    max-height: 90vh;
+    max-height: 80vh;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -51,8 +51,6 @@ var fullscreen = false;  // initial state
 var camera_latitude = {{ camera_latitude }};
 var camera_longitude = {{ camera_longitude }};
 var time_offset = {{ time_offset }};
-var flip_ns = {{ flip_ns }};
-var flip_ew = {{ flip_ew }};
 
 var planetarium;
 var redraw_planetarium = true;
@@ -190,22 +188,9 @@ async function loop() {
             }
 
 
-            if (flip_ns) {
-                if (vs_az <= 180) {
-                    vs_az = Math.abs(vs_az - 180);
-                } else {
-                    vs_az = 540 - vs_az;
-                }
-
-            }
-
-
             // Most cameras are east/west reversed
-            if (! flip_ew) {
-                var vs_az = 360 - vs_az;
-            }
+            var vs_az = 360 - vs_az;
             console.log("Calculated VirtualSky Azimuth: " + vs_az);
-
 
 
             if (timestamp) {
@@ -357,45 +342,55 @@ function closeFullscreen() {
 {% block content %}
 <div class="container h-100">
 <form id="form_virtualsky" onSubmit="return false;">
-    <div class="form-group row">
+    <div class="form-group row" style="font-size:12px">
+        <div class="col-sm-3"></div>
         <div class="col-sm-1">
             {{ form_virtualsky.AZIMUTH_ANGLE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.AZIMUTH_ANGLE(class='form-control bg-secondary') }}
         </div>
 
         <div class="col-sm-1">
             {{ form_virtualsky.LATITUDE_OFFSET.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.LATITUDE_OFFSET(class='form-control bg-secondary') }}
-        </div>
 
         <div class="col-sm-1">
             {{ form_virtualsky.LONGITUDE_OFFSET.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.LONGITUDE_OFFSET(class='form-control bg-secondary') }}
         </div>
 
         <div class="col-sm-1">
             {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
-        </div>
 
         <div class="col-sm-1">
             {{ form_virtualsky.OFFSET_X.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.OFFSET_X(class='form-control bg-secondary') }}
         </div>
 
         <div class="col-sm-1">
             {{ form_virtualsky.OFFSET_Y.label(class='col-form-label') }}
         </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-3"></div>
+        <div class="col-sm-1">
+            {{ form_virtualsky.AZIMUTH_ANGLE(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.LATITUDE_OFFSET(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.LONGITUDE_OFFSET(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.OFFSET_X(class='form-control bg-secondary') }}
+        </div>
+
         <div class="col-sm-1">
             {{ form_virtualsky.OFFSET_Y(class='form-control bg-secondary') }}
         </div>
