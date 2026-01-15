@@ -316,6 +316,14 @@ if [ -d "/sys/class/watchdog" ]; then
     done
 fi
 
+echo
+systemd-analyze cat-config systemd/system.conf.d || true
+
+
+echo
+echo "SystemD Journal info"
+systemd-analyze cat-config systemd/journald.conf.d || true
+
 
 echo
 echo "git status"
