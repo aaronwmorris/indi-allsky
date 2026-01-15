@@ -404,14 +404,7 @@ class VirtualSkyView(TemplateView):
 
 
         timestamp = int(request.args.get('timestamp', 0))
-        if not timestamp:
-            live = True
-        else:
-            live = False  # Do not live update planetarium
-
-
         context['timestamp'] = timestamp
-        context['live'] = int(live)
 
 
         data = {
@@ -1155,9 +1148,10 @@ class JsonImageLoopView(JsonView):
 
 
             data = {
-                'url'    : str(url),
-                'width'  : i.width,
-                'height' : i.height,
+                'url'       : str(url),
+                'width'     : i.width,
+                'height'    : i.height,
+                'timestamp' : int(i.createDate.timestamp()),
             }
 
 

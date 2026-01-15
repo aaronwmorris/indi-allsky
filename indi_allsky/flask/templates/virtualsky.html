@@ -44,7 +44,6 @@ var max_age = 900;
 var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
 var timestamp = {{ timestamp | int }};  // does not really do anything yet
-var live = {{ live }};
 var night = {{ night }};
 var fullscreen = false;  // initial state
 
@@ -131,6 +130,7 @@ async function loop() {
 
     var image_width = json_data['image_list'][0]['width'];
     var image_height = json_data['image_list'][0]['height'];
+    var image_timestamp = json_data['image_list'][0]['timestamp'];
 
     img = new Image();
     img.onload = function() {
@@ -193,20 +193,16 @@ async function loop() {
             console.log("Calculated VirtualSky Azimuth: " + vs_az);
 
 
-            if (timestamp) {
-                var clock = new Date((timestamp - time_offset) * 1000);
-            } else {
-                var clock = new Date();
-            }
-
+            // Using image timestamp for planetarium
+            var clock = new Date((image_timestamp - time_offset) * 1000);
             console.log("Time Offset: " + time_offset);
             console.log("Date: " + clock);
-            console.log("Live: " + live);
+
 
             planetarium = S.virtualsky({
                 id: 'starmap',
                 projection: 'fisheye',
-                live: Boolean(live),
+                live: false,
                 clock: clock,
                 latitude: vs_latitude,
                 longitude: vs_longitude,
@@ -251,7 +247,7 @@ function showImage(entry) {
 
 function loadNextImage() {
     console.log('Loading next image');
-    loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : 60, 'timestamp' : timestamp}, function() {});
+    loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : 900, 'timestamp' : timestamp}, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
 
