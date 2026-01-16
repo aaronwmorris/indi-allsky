@@ -139,6 +139,8 @@ async function loop() {
 
 
         if (redraw_planetarium || image_timestamp != last_image_timestamp) {
+            magnitude = Number($("#MAGNITUDE").val());
+            constellations = $("#CONSTELLATIONS").prop('checked');
             azimuth_angle = Number($("#AZIMUTH_ANGLE").val());
             latitude_offset = Number($("#LATITUDE_OFFSET").val());
             longitude_offset = Number($("#LONGITUDE_OFFSET").val());
@@ -206,7 +208,8 @@ async function loop() {
                 latitude: vs_latitude,
                 longitude: vs_longitude,
                 az: vs_az,
-                constellations: true,
+                magnitude: magnitude,
+                constellations: constellations,
                 showstarlabels: true,
                 showplanetlabels: true,
                 gridlines_eq: true,
@@ -223,7 +226,6 @@ async function loop() {
                 and resizing based on the ratio of the actual image sized versus rendered size */
                 width: image_circle_diameter * image_scale,
                 height: image_circle_diameter * image_scale,
-                magnitude: 5,
             });
 
 
@@ -277,7 +279,6 @@ function loadJS(url, data, onDone, onError) {
             $('#message').html('Error loading data.  Please check the logs.');
         },
     });
-
 }
 
 </script>
@@ -287,7 +288,7 @@ function loadJS(url, data, onDone, onError) {
 <div class="container h-100">
 <form id="form_virtualsky" onSubmit="return false;">
     <div class="form-group row" style="font-size:12px">
-        <div class="col-sm-3"></div>
+        <div class="col-sm-2"></div>
         <div class="col-sm-1">
             {{ form_virtualsky.AZIMUTH_ANGLE.label(class='col-form-label') }}
         </div>
@@ -311,10 +312,18 @@ function loadJS(url, data, onDone, onError) {
         <div class="col-sm-1">
             {{ form_virtualsky.OFFSET_Y.label(class='col-form-label') }}
         </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.MAGNITUDE.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.CONSTELLATIONS.label(class='col-form-label') }}
+        </div>
     </div>
 
     <div class="form-group row">
-        <div class="col-sm-3"></div>
+        <div class="col-sm-2"></div>
         <div class="col-sm-1">
             {{ form_virtualsky.AZIMUTH_ANGLE(class='form-control bg-secondary') }}
         </div>
@@ -337,6 +346,16 @@ function loadJS(url, data, onDone, onError) {
 
         <div class="col-sm-1">
             {{ form_virtualsky.OFFSET_Y(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.MAGNITUDE(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            <div class="form-switch">
+                {{ form_virtualsky.CONSTELLATIONS(class='form-check-input') }}
+            </div>
         </div>
     </div>
 </form>
@@ -394,6 +413,14 @@ $("#OFFSET_X").on("change", function() {
 });
 
 $("#OFFSET_Y").on("change", function() {
+    forceRedrawPlanetarium();
+});
+
+$("#MAGNITUDE").on("change", function() {
+    forceRedrawPlanetarium();
+});
+
+$("#CONSTELLATIONS").on("change", function() {
     forceRedrawPlanetarium();
 });
 
