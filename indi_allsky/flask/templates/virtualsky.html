@@ -52,12 +52,11 @@ var camera_longitude = {{ camera_longitude }};
 var time_offset = {{ time_offset }};
 
 var planetarium;
-var redraw_planetarium = true;
+var redraw_planetarium = false;
+var last_image_timestamp = 0;
 
 
 function init() {
-    redraw_planetarium = true;
-
     console.log("Camera Latitude: " + camera_latitude);
     console.log("Camera Longitude: " + camera_longitude);
     //console.log("Camera Image Circle: " + camera_lensimagecircle);
@@ -139,7 +138,7 @@ async function loop() {
         });
 
 
-        if (redraw_planetarium) {
+        if (redraw_planetarium && image_timestamp != last_image_timestamp) {
             azimuth_angle = Number($("#AZIMUTH_ANGLE").val());
             latitude_offset = Number($("#LATITUDE_OFFSET").val());
             longitude_offset = Number($("#LONGITUDE_OFFSET").val());
@@ -229,6 +228,9 @@ async function loop() {
 
 
             redraw_planetarium = false;
+
+            // update timestamp
+            last_image_timestamp = image_timestamp;
         }
     };
 
@@ -267,6 +269,8 @@ function loadJS(url, data, onDone, onError) {
         success: function(rdata){
             json_data = rdata
             $('#message').html(json_data['message']);
+
+            redraw_planetarium = true;
         },
         error: function(rdata){
             onError(rdata.status);
@@ -294,6 +298,8 @@ function setResizeHandler(callback, timeout) {
 function resize_callback() {
     if (json_data['image_list'].length > 0) {
         redraw_planetarium = true;
+        last_image_timestamp = 0;
+
         showImage(json_data['image_list'][0]);
     };
 }
@@ -416,46 +422,38 @@ function closeFullscreen() {
 </div>
 
 <script>
-$("#AZIMUTH_ANGLE").on("change", function() {
+function forceRedrawPlanetarium() {
     if (json_data['image_list'].length > 0) {
         redraw_planetarium = true;
+        last_image_timestamp = 0;
+
         showImage(json_data['image_list'][0]);
     };
+}
+
+
+$("#AZIMUTH_ANGLE").on("change", function() {
+    forceRedrawPlanetarium();
 });
 
 $("#LATITUDE_OFFSET").on("change", function() {
-    if (json_data['image_list'].length > 0) {
-        redraw_planetarium = true;
-        showImage(json_data['image_list'][0]);
-    };
+    forceRedrawPlanetarium();
 });
 
 $("#LONGITUDE_OFFSET").on("change", function() {
-    if (json_data['image_list'].length > 0) {
-        redraw_planetarium = true;
-        showImage(json_data['image_list'][0]);
-    };
+    forceRedrawPlanetarium();
 });
 
 $("#IMAGE_CIRCLE_DIAMETER").on("change", function() {
-    if (json_data['image_list'].length > 0) {
-        redraw_planetarium = true;
-        showImage(json_data['image_list'][0]);
-    };
+    forceRedrawPlanetarium();
 });
 
 $("#OFFSET_X").on("change", function() {
-    if (json_data['image_list'].length > 0) {
-        redraw_planetarium = true;
-        showImage(json_data['image_list'][0]);
-    };
+    forceRedrawPlanetarium();
 });
 
 $("#OFFSET_Y").on("change", function() {
-    if (json_data['image_list'].length > 0) {
-        redraw_planetarium = true;
-        showImage(json_data['image_list'][0]);
-    };
+    forceRedrawPlanetarium();
 });
 
 
