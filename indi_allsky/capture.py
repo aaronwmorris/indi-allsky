@@ -972,7 +972,7 @@ class CaptureWorker(Process):
 
 
         # virtualsky
-        camera_metadata['data']['vs_magnitude'] = self.config.get('VIRTUALSKY', {}).get('MAGNITUDE', 5.0)
+        camera_metadata['data']['vs_magnitude'] = self.config.get('VIRTUALSKY', {}).get('MAGNITUDE', 6.0)
         camera_metadata['data']['vs_constellations'] = self.config.get('VIRTUALSKY', {}).get('CONSTELLATIONS', True)
         camera_metadata['data']['vs_image_circle_diameter'] = self.config.get('VIRTUALSKY', {}).get('IMAGE_CIRCLE_DIAMETER', 3500)
         camera_metadata['data']['vs_latitude_offset'] = self.config.get('VIRTUALSKY', {}).get('LATITUDE_OFFSET', 0.0)

@@ -565,7 +565,7 @@ class IndiAllSkyConfigBase(object):
             "BUBBLE_COUNT"           : 1000,
         },
         "VIRTUALSKY" : {
-            "MAGNITUDE"              : 5.0,
+            "MAGNITUDE"              : 6.0,
             "CONSTELLATIONS"         : True,
             "IMAGE_CIRCLE_DIAMETER"  : 3500,
             "LATITUDE_OFFSET"        : 0.0,
