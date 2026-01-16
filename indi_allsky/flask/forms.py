@@ -4486,6 +4486,8 @@ class IndiAllskyConfigForm(FlaskForm):
     TEST_CAMERA__BUBBLE_COUNT           = IntegerField('Test Camera - Bubble Count', validators=[DataRequired(), TEST_CAMERA__BUBBLE_COUNT_validator])
     VIRTUALSKY__MAGNITUDE               = FloatField('VirtualSky Limiting Magnitude', validators=[VIRTUALSKY__MAGNITUDE_validator], widget=NumberInput(step=0.25))
     VIRTUALSKY__CONSTELLATIONS          = BooleanField('Show Constellations')
+    VIRTUALSKY__SHOWSTARS               = BooleanField('Show Stars')
+    VIRTUALSKY__SHOWPLANETS             = BooleanField('Show Planets')
     VIRTUALSKY__IMAGE_CIRCLE_DIAMETER   = IntegerField('Image Circle', validators=[VIRTUALSKY__IMAGE_CIRCLE_DIAMETER_validator])
     VIRTUALSKY__LATITUDE_OFFSET         = FloatField('VirtualSky Latitude Offset', validators=[VIRTUALSKY__LATITUDE_OFFSET_validator], widget=NumberInput(step=0.25))
     VIRTUALSKY__LONGITUDE_OFFSET        = FloatField('VirtualSky Longitude Offset', validators=[VIRTUALSKY__LONGITUDE_OFFSET_validator], widget=NumberInput(step=0.25))
@@ -9205,6 +9207,8 @@ class IndiAllskyVirtualSkyHelperForm(FlaskForm):
     OFFSET_Y                = IntegerField('Y Offset', default=0, widget=NumberInput(step=10))
     MAGNITUDE               = FloatField('Magnitude', widget=NumberInput(step=0.25))
     CONSTELLATIONS          = BooleanField('Constellations')
+    SHOWSTARS               = BooleanField('Stars')
+    SHOWPLANETS             = BooleanField('Planets')
     #FLIP_NS                 = BooleanField('Flip North/South')
     #FLIP_EW                 = BooleanField('Flip East/West')
 

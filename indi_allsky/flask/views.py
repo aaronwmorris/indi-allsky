@@ -416,6 +416,8 @@ class VirtualSkyView(TemplateView):
             'OFFSET_Y'              : self.camera.data.get('vs_offset_y', 0.0),
             'MAGNITUDE'             : self.camera.data.get('vs_magnitude', 6.0),
             'CONSTELLATIONS'        : self.camera.data.get('vs_constellations', True),
+            'SHOWSTARS'             : self.camera.data.get('vs_showstars', True),
+            'SHOWPLANETS'           : self.camera.data.get('vs_showplanets', True),
             #'FLIP_NS'               : self.camera.data.get('vs_flip_ns', False),
             #'FLIP_EW'               : self.camera.data.get('vs_flip_ew', False),
         }
@@ -2408,6 +2410,8 @@ class ConfigView(FormView):
             'TEST_CAMERA__BUBBLE_COUNT'      : self.indi_allsky_config.get('TEST_CAMERA', {}).get('BUBBLE_COUNT', 1000),
             'VIRTUALSKY__MAGNITUDE'          : self.indi_allsky_config.get('VIRTUALSKY', {}).get('MAGNITUDE', 6.0),
             'VIRTUALSKY__CONSTELLATIONS'     : self.indi_allsky_config.get('VIRTUALSKY', {}).get('CONSTELLATIONS', True),
+            'VIRTUALSKY__SHOWSTARS'          : self.indi_allsky_config.get('VIRTUALSKY', {}).get('SHOWSTARS', True),
+            'VIRTUALSKY__SHOWPLANETS'        : self.indi_allsky_config.get('VIRTUALSKY', {}).get('SHOWPLANETS', True),
             'VIRTUALSKY__IMAGE_CIRCLE_DIAMETER' : self.indi_allsky_config.get('VIRTUALSKY', {}).get('IMAGE_CIRCLE_DIAMETER', 3500),
             'VIRTUALSKY__LATITUDE_OFFSET'    : self.indi_allsky_config.get('VIRTUALSKY', {}).get('LATITUDE_OFFSET', 0.0),
             'VIRTUALSKY__LONGITUDE_OFFSET'   : self.indi_allsky_config.get('VIRTUALSKY', {}).get('LONGITUDE_OFFSET', 0.0),
@@ -3349,6 +3353,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEST_CAMERA']['BUBBLE_COUNT']          = int(request.json['TEST_CAMERA__BUBBLE_COUNT'])
         self.indi_allsky_config['VIRTUALSKY']['MAGNITUDE']              = float(request.json['VIRTUALSKY__MAGNITUDE'])
         self.indi_allsky_config['VIRTUALSKY']['CONSTELLATIONS']         = bool(request.json['VIRTUALSKY__CONSTELLATIONS'])
+        self.indi_allsky_config['VIRTUALSKY']['SHOWSTARS']              = bool(request.json['VIRTUALSKY__SHOWSTARS'])
+        self.indi_allsky_config['VIRTUALSKY']['SHOWPLANETS']            = bool(request.json['VIRTUALSKY__SHOWPLANETS'])
         self.indi_allsky_config['VIRTUALSKY']['IMAGE_CIRCLE_DIAMETER']  = int(request.json['VIRTUALSKY__IMAGE_CIRCLE_DIAMETER'])
         self.indi_allsky_config['VIRTUALSKY']['LATITUDE_OFFSET']        = float(request.json['VIRTUALSKY__LATITUDE_OFFSET'])
         self.indi_allsky_config['VIRTUALSKY']['LONGITUDE_OFFSET']       = float(request.json['VIRTUALSKY__LONGITUDE_OFFSET'])

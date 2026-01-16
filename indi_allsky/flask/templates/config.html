@@ -4415,6 +4415,35 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__SHOWSTARS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.VIRTUALSKY__SHOWSTARS(class='form-check-input') }}
+                <div id="VIRTUALSKY__SHOWSTARS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            Labels are always displayed
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__SHOWPLANETS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.VIRTUALSKY__SHOWPLANETS(class='form-check-input') }}
+                <div id="VIRTUALSKY__SHOWPLANETS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -9170,6 +9199,8 @@ const checkbox_field_names = [
     'ACCUM_CAMERA__EVEN_EXPOSURES',
     'ACCUM_CAMERA__CLAMP_16BIT',
     'VIRTUALSKY__CONSTELLATIONS',
+    'VIRTUALSKY__SHOWSTARS',
+    'VIRTUALSKY__SHOWPLANETS',
     'TEMP_SENSOR__DHT_USE_PULSEIO',
     'TEMP_SENSOR__SHT3X_HEATER_NIGHT',
     'TEMP_SENSOR__SHT3X_HEATER_DAY',
