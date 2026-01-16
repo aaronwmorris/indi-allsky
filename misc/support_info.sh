@@ -295,6 +295,37 @@ fi
 
 
 echo
+echo "Watchdog info"
+
+if [ -d "/sys/class/watchdog" ]; then
+    WATCHDOGS=$(find /sys/class/watchdog -maxdepth 1 -type l 2>&1)
+    for WATCHDOG in $WATCHDOGS; do
+        echo -n "$(basename "$WATCHDOG"): "
+
+        if [ -e "$WATCHDOG/state" ]; then
+            echo -n "$(<"$WATCHDOG/state") "
+        else
+            echo -n "UNKNOWN "
+        fi
+
+        if [ -e "$WATCHDOG/status" ]; then
+            echo "$(<"$WATCHDOG/status")"
+        else
+            echo
+        fi
+    done
+fi
+
+echo
+systemd-analyze cat-config systemd/system.conf.d || true
+
+
+echo
+echo "SystemD Journal info"
+systemd-analyze cat-config systemd/journald.conf.d || true
+
+
+echo
 echo "git status"
 git status | head -n 100
 

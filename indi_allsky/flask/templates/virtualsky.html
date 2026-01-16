@@ -12,7 +12,7 @@
 
 #latest-image {
     max-width: 100%;
-    max-height: 90vh;
+    max-height: 80vh;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -37,49 +37,40 @@
 <script type="text/javascript">
 var img;
 var json_data = {
-    'latest_image' : {
-        'url' : null,
-        'width': 0,
-        'height': 0,
-        'message' : ''
-    }
+    'image_list' : [],
+    'message' : '',
 };
 var max_age = 900;
 var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
 var timestamp = {{ timestamp | int }};  // does not really do anything yet
-var live = {{ live }};
 var night = {{ night }};
 var fullscreen = false;  // initial state
 
 var camera_latitude = {{ camera_latitude }};
 var camera_longitude = {{ camera_longitude }};
-var camera_lensimagecircle = {{ camera_lensimagecircle }};
-var camera_lens_offset_x = {{ camera_lens_offset_x }};
-var camera_lens_offset_y = {{ camera_lens_offset_y }};
-var camera_az = {{ camera_az }};
-var camera_alt = {{ camera_alt }};
+var time_offset = {{ time_offset }};
 
 var planetarium;
-var redraw_planetarium = true;
+var redraw_planetarium = false;
+var last_image_timestamp = 0;
 
 
 function init() {
-    redraw_planetarium = true;
-
     console.log("Camera Latitude: " + camera_latitude);
     console.log("Camera Longitude: " + camera_longitude);
-    console.log("Camera Image Circle: " + camera_lensimagecircle);
-    console.log("Lens Offset X: " + camera_lens_offset_x);
-    console.log("Lens Offset Y: " + camera_lens_offset_y);
+    //console.log("Camera Image Circle: " + camera_lensimagecircle);
+    //console.log("Lens Offset X: " + camera_lens_offset_x);
+    //console.log("Lens Offset Y: " + camera_lens_offset_y);
 
 
     // Azimuth manipulations
-    console.log("Camera Azimuth: " + camera_az);
-    console.log("Camera Altitude: " + camera_alt);
+    //console.log("Camera Azimuth: " + camera_az);
+    //console.log("Camera Altitude: " + camera_alt);
 
 
     // Calculate latitude and longitude offset
+    /*
     if (camera_az < 90) {
         az_90 = camera_az % 90
     } else if (camera_az >= 90 && camera_az < 180) {
@@ -123,8 +114,7 @@ function init() {
     // Set form values
     $("#LATITUDE_OFFSET").val(lat_deg_offset.toFixed(2));
     $("#LONGITUDE_OFFSET").val(long_deg_offset.toFixed(2));
-    $("#AZIMUTH_ANGLE").val(camera_az);
-    $("#IMAGE_CIRCLE_DIAMETER").val(camera_lensimagecircle);
+    */
 
 
     loadNextImage();
@@ -133,12 +123,13 @@ function init() {
 
 async function loop() {
     //console.log('Starting loop');
-    while(json_data['latest_image']['url'] == null) {
+    while(json_data['image_list'].length == 0) {
         await sleep(100);
     }
 
-    var image_width = json_data['latest_image']['width'];
-    var image_height = json_data['latest_image']['height'];
+    var image_width = json_data['image_list'][0]['width'];
+    var image_height = json_data['image_list'][0]['height'];
+    var image_timestamp = json_data['image_list'][0]['timestamp'];
 
     img = new Image();
     img.onload = function() {
@@ -147,11 +138,18 @@ async function loop() {
         });
 
 
-        if (redraw_planetarium) {
-            azimuth_angle = Number($("#AZIMUTH_ANGLE").val());
-            latitude_offset = Number($("#LATITUDE_OFFSET").val());
-            longitude_offset = Number($("#LONGITUDE_OFFSET").val());
-            image_circle_diameter = Number($("#IMAGE_CIRCLE_DIAMETER").val());
+        if (redraw_planetarium || image_timestamp != last_image_timestamp) {
+            var magnitude = Number($("#MAGNITUDE").val());
+            var constellations = $("#CONSTELLATIONS").prop('checked');
+            var showstars = $("#SHOWSTARS").prop('checked');
+            var showplanets = $("#SHOWPLANETS").prop('checked');
+
+            var azimuth_angle = Number($("#AZIMUTH_ANGLE").val());
+            var latitude_offset = Number($("#LATITUDE_OFFSET").val());
+            var longitude_offset = Number($("#LONGITUDE_OFFSET").val());
+            var image_circle_diameter = Number($("#IMAGE_CIRCLE_DIAMETER").val());
+            var offset_x = Number($("#OFFSET_X").val());
+            var offset_y = Number($("#OFFSET_Y").val());
 
             var vs_latitude = camera_latitude + latitude_offset;
             var vs_longitude = camera_longitude + longitude_offset;
@@ -167,8 +165,8 @@ async function loop() {
             const image_scale = render_width / image_width;
 
             // Determine offsets of the starmap overlay
-            const bias_left = ((( image_circle_diameter * image_scale - render_width ) / 2) - ( camera_lens_offset_x * image_scale )) * -1;
-            const bias_top = ((( image_circle_diameter * image_scale - render_height ) / 2) + ( camera_lens_offset_y * image_scale )) * -1;
+            const bias_left = ((( image_circle_diameter * image_scale - render_width ) / 2) - ( offset_x * image_scale )) * -1;
+            const bias_top = ((( image_circle_diameter * image_scale - render_height ) / 2) + ( offset_y * image_scale )) * -1;
 
             // Apply those dimensions to the starmap container
             $('#starmap_container').css({
@@ -199,25 +197,25 @@ async function loop() {
             console.log("Calculated VirtualSky Azimuth: " + vs_az);
 
 
-
-            if (timestamp) {
-                var clock = new Date(timestamp * 1000);
-            } else {
-                var clock = new Date();
-            }
-
+            // Using image timestamp for planetarium
+            var clock = new Date((image_timestamp - time_offset) * 1000);
+            console.log("Time Offset: " + time_offset);
             console.log("Date: " + clock);
+
 
             planetarium = S.virtualsky({
                 id: 'starmap',
                 projection: 'fisheye',
-                live: Boolean(live),
+                live: false,
                 clock: clock,
                 latitude: vs_latitude,
                 longitude: vs_longitude,
                 az: vs_az,
-                constellations: true,
+                magnitude: magnitude,
+                constellations: constellations,
+                showstars: showstars,
                 showstarlabels: true,
+                showplanets: showplanets,
                 showplanetlabels: true,
                 gridlines_eq: true,
                 mouse: false,
@@ -233,16 +231,18 @@ async function loop() {
                 and resizing based on the ratio of the actual image sized versus rendered size */
                 width: image_circle_diameter * image_scale,
                 height: image_circle_diameter * image_scale,
-                magnitude: 5,
             });
 
 
             redraw_planetarium = false;
+
+            // update timestamp
+            last_image_timestamp = image_timestamp;
         }
     };
 
 
-    showImage(json_data['latest_image']);
+    showImage(json_data['image_list'][0]);
 
     setTimeout(loop, refreshInterval);
 }
@@ -256,7 +256,7 @@ function showImage(entry) {
 
 function loadNextImage() {
     console.log('Loading next image');
-    loadJS("{{ url_for(latest_image_view) }}", {'camera_id' : camera_id, 'limit_s' : max_age, 'night' : night}, function() {});
+    loadJS("{{ url_for(image_loop_view) }}", {'camera_id' : camera_id, 'limit_s' : 900, 'timestamp' : timestamp}, function() {});
     setTimeout(loadNextImage, refreshInterval);
 }
 
@@ -275,16 +275,187 @@ function loadJS(url, data, onDone, onError) {
         data: data,
         success: function(rdata){
             json_data = rdata
-            $('#message').html(json_data['latest_image']['message']);
+            $('#message').html(json_data['message']);
+
+            redraw_planetarium = true;
         },
         error: function(rdata){
             onError(rdata.status);
             $('#message').html('Error loading data.  Please check the logs.');
         },
     });
-
 }
 
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container h-100">
+<form id="form_virtualsky" onSubmit="return false;">
+    <div class="form-group row" style="font-size:12px">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-1">
+            {{ form_virtualsky.AZIMUTH_ANGLE.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.LATITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.LONGITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.OFFSET_X.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.OFFSET_Y.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.MAGNITUDE.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.CONSTELLATIONS.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.SHOWSTARS.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.SHOWPLANETS.label(class='col-form-label') }}
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-1">
+            {{ form_virtualsky.AZIMUTH_ANGLE(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.LATITUDE_OFFSET(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.LONGITUDE_OFFSET(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.OFFSET_X(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.OFFSET_Y(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.MAGNITUDE(class='form-control bg-secondary') }}
+        </div>
+
+        <div class="col-sm-1">
+            <div class="form-switch">
+                {{ form_virtualsky.CONSTELLATIONS(class='form-check-input') }}
+            </div>
+        </div>
+
+        <div class="col-sm-1">
+            <div class="form-switch">
+                {{ form_virtualsky.SHOWSTARS(class='form-check-input') }}
+            </div>
+        </div>
+
+        <div class="col-sm-1">
+            <div class="form-switch">
+                {{ form_virtualsky.SHOWPLANETS(class='form-check-input') }}
+            </div>
+        </div>
+    </div>
+</form>
+
+    <hr>
+
+    <div class="row">
+        <div class="text-muted text-center" id="message">Loading...</div>
+    </div>
+    <div class="row align-items-center">
+        <div class="col-12 text-center" style="font-size:10px">
+            Latitude / Longitude / Azimuth / Image Circle / Offsets must be correctly configured under Config -> Location [tab]
+        </div>
+    </div>
+    <div class="row h-75 align-items-center">
+        <div class="col-12 text-center">
+          <div id="wrapper">
+            <img id="latest-image">
+            <div id="starmap_container">
+                <div id="starmap"></div>
+            </div>
+          </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function forceRedrawPlanetarium() {
+    if (json_data['image_list'].length > 0) {
+        redraw_planetarium = true;
+
+        showImage(json_data['image_list'][0]);
+    };
+}
+
+
+$("#AZIMUTH_ANGLE").on("change", function() {
+    forceRedrawPlanetarium();
+});
+
+$("#LATITUDE_OFFSET").on("change", function() {
+    forceRedrawPlanetarium();
+});
+
+$("#LONGITUDE_OFFSET").on("change", function() {
+    forceRedrawPlanetarium();
+});
+
+$("#IMAGE_CIRCLE_DIAMETER").on("change", function() {
+    forceRedrawPlanetarium();
+});
+
+$("#OFFSET_X").on("change", function() {
+    forceRedrawPlanetarium();
+});
+
+$("#OFFSET_Y").on("change", function() {
+    forceRedrawPlanetarium();
+});
+
+$("#MAGNITUDE").on("change", function() {
+    forceRedrawPlanetarium();
+});
+
+$("#CONSTELLATIONS").on("change", function() {
+    forceRedrawPlanetarium();
+});
+
+$("#SHOWSTARS").on("change", function() {
+    forceRedrawPlanetarium();
+});
+
+$("#SHOWPLANETS").on("change", function() {
+    forceRedrawPlanetarium();
+});
 
 function setResizeHandler(callback, timeout) {
     var timer_id = undefined;
@@ -301,10 +472,7 @@ function setResizeHandler(callback, timeout) {
 }
 
 function resize_callback() {
-    if (json_data['latest_image']) {
-        redraw_planetarium = true;
-        showImage(json_data['latest_image']);
-    };
+    forceRedrawPlanetarium();
 }
 setResizeHandler(resize_callback, 200);
 
@@ -341,99 +509,6 @@ function closeFullscreen() {
     fullscreen = false;
 }
 
-</script>
-{% endblock %}
-
-{% block content %}
-<div class="container h-100">
-<form id="form_virtualsky" onSubmit="return false;">
-    <div class="form-group row">
-        <div class="col-sm-1">
-            {{ form_virtualsky.AZIMUTH_ANGLE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.AZIMUTH_ANGLE(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.LATITUDE_OFFSET.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.LATITUDE_OFFSET(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.LONGITUDE_OFFSET.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.LONGITUDE_OFFSET(class='form-control bg-secondary') }}
-        </div>
-
-        <div class="col-sm-1">
-            {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_virtualsky.IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
-        </div>
-
-
-        <div class="col-sm-1">
-            <!-- This button does not do anything, it just gives the user something to click instead of the image (which will go fullscreen) -->
-            <button class="btn btn-primary">Refresh</button>
-        </div>
-    </div>
-</form>
-
-    <hr>
-
-    <div class="row">
-        <div class="text-muted text-center" id="message">Loading...</div>
-    </div>
-    <div class="row align-items-center">
-        <div class="col-12 text-center" style="font-size:10px">
-            Latitude / Longitude / Azimuth / Image Circle / Offsets must be correctly configured under Config -> Location [tab]
-        </div>
-    </div>
-    <div class="row h-75 align-items-center">
-        <div class="col-12 text-center">
-          <div id="wrapper">
-            <img id="latest-image">
-            <div id="starmap_container">
-                <div id="starmap"></div>
-            </div>
-          </div>
-        </div>
-    </div>
-</div>
-
-<script>
-$("#AZIMUTH_ANGLE").on("change", function() {
-    if (json_data['latest_image']) {
-        redraw_planetarium = true;
-        showImage(json_data['latest_image']);
-    };
-});
-
-$("#LATITUDE_OFFSET").on("change", function() {
-    if (json_data['latest_image']) {
-        redraw_planetarium = true;
-        showImage(json_data['latest_image']);
-    };
-});
-
-$("#LONGITUDE_OFFSET").on("change", function() {
-    if (json_data['latest_image']) {
-        redraw_planetarium = true;
-        showImage(json_data['latest_image']);
-    };
-});
-
-$("#IMAGE_CIRCLE_DIAMETER").on("change", function() {
-    if (json_data['latest_image']) {
-        redraw_planetarium = true;
-        showImage(json_data['latest_image']);
-    };
-});
 
 $( document ).ready(function() {
     $('#latest-image').on("click", function() {

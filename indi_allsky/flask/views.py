@@ -394,27 +394,35 @@ class IndexImgView(TemplateView):
 
 class VirtualSkyView(TemplateView):
     page_title = 'VirtualSky'
-    latest_image_view = 'indi_allsky.js_latest_image_view'
+    image_loop_view = 'indi_allsky.js_image_loop_view'
 
 
     def get_context(self):
         context = super(VirtualSkyView, self).get_context()
 
-        context['latest_image_view'] = self.latest_image_view
+        context['image_loop_view'] = self.image_loop_view
 
 
         timestamp = int(request.args.get('timestamp', 0))
-        if not timestamp:
-            live = True
-        else:
-            live = False  # Do not live update planetarium
-
-
         context['timestamp'] = timestamp
-        context['live'] = int(live)
 
 
-        context['form_virtualsky'] = IndiAllskyVirtualSkyHelperForm()
+        data = {
+            'AZIMUTH_ANGLE'         : self.camera.az,
+            'IMAGE_CIRCLE_DIAMETER' : self.camera.data.get('vs_image_circle_diameter', 3500),
+            'LATITUDE_OFFSET'       : self.camera.data.get('vs_latitude_offset', 0.0),
+            'LONGITUDE_OFFSET'      : self.camera.data.get('vs_longitude_offset', 0.0),
+            'OFFSET_X'              : self.camera.data.get('vs_offset_x', 0.0),
+            'OFFSET_Y'              : self.camera.data.get('vs_offset_y', 0.0),
+            'MAGNITUDE'             : self.camera.data.get('vs_magnitude', 6.0),
+            'CONSTELLATIONS'        : self.camera.data.get('vs_constellations', True),
+            'SHOWSTARS'             : self.camera.data.get('vs_showstars', True),
+            'SHOWPLANETS'           : self.camera.data.get('vs_showplanets', True),
+            #'FLIP_NS'               : self.camera.data.get('vs_flip_ns', False),
+            #'FLIP_EW'               : self.camera.data.get('vs_flip_ew', False),
+        }
+
+        context['form_virtualsky'] = IndiAllskyVirtualSkyHelperForm(data=data)
 
 
         refreshInterval_ms = math.ceil(self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0)) * 1000
@@ -424,21 +432,10 @@ class VirtualSkyView(TemplateView):
         ### Camera DB settings
         context['camera_latitude'] = self.camera.latitude
         context['camera_longitude'] = self.camera.longitude
-        context['camera_az'] = self.camera.az
-        context['camera_alt'] = self.camera.alt
-        context['camera_lensimagecircle'] = self.camera.lensImageCircle
-        context['camera_lens_offset_x'] = self.camera.lensOffsetX
-        context['camera_lens_offset_y'] = self.camera.lensOffsetY
 
 
-        ### Debugging - Use config for faster testing
-        #context['camera_latitude'] = self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0)
-        #context['camera_longitude'] = self.indi_allsky_config.get('LOCATION_LATITUDE', 0.0)
-        #context['camera_az'] = self.indi_allsky_config.get('LENS_AZIMUTH', 0.0)
-        #context['camera_alt'] = self.indi_allsky_config.get('LENS_ALTITUDE', 90.0)
-        #context['camera_lensimagecircle'] = self.indi_allsky_config.get('LENS_IMAGE_CIRCLE', 0.0)
-        #context['camera_lens_offset_x'] = self.indi_allsky_config.get('LENS_OFFSET_X', 0.0)
-        #context['camera_lens_offset_y'] = self.indi_allsky_config.get('LENS_OFFSET_Y', 0.0)
+        ### Calculate time offset
+        context['time_offset'] = self.camera.utc_offset - datetime.now().astimezone().utcoffset().total_seconds()
 
 
         return context
@@ -1155,9 +1152,10 @@ class JsonImageLoopView(JsonView):
 
 
             data = {
-                'url'    : str(url),
-                'width'  : i.width,
-                'height' : i.height,
+                'url'       : str(url),
+                'width'     : i.width,
+                'height'    : i.height,
+                'timestamp' : int(i.createDate.timestamp()),
             }
 
 
@@ -2414,6 +2412,17 @@ class ConfigView(FormView):
             'TEST_CAMERA__ROTATING_STAR_COUNT'  : self.indi_allsky_config.get('TEST_CAMERA', {}).get('ROTATING_STAR_COUNT', 30000),
             'TEST_CAMERA__ROTATING_STAR_FACTOR' : self.indi_allsky_config.get('TEST_CAMERA', {}).get('ROTATING_STAR_FACTOR', 1.0),
             'TEST_CAMERA__BUBBLE_COUNT'      : self.indi_allsky_config.get('TEST_CAMERA', {}).get('BUBBLE_COUNT', 1000),
+            'VIRTUALSKY__MAGNITUDE'          : self.indi_allsky_config.get('VIRTUALSKY', {}).get('MAGNITUDE', 6.0),
+            'VIRTUALSKY__CONSTELLATIONS'     : self.indi_allsky_config.get('VIRTUALSKY', {}).get('CONSTELLATIONS', True),
+            'VIRTUALSKY__SHOWSTARS'          : self.indi_allsky_config.get('VIRTUALSKY', {}).get('SHOWSTARS', True),
+            'VIRTUALSKY__SHOWPLANETS'        : self.indi_allsky_config.get('VIRTUALSKY', {}).get('SHOWPLANETS', True),
+            'VIRTUALSKY__IMAGE_CIRCLE_DIAMETER' : self.indi_allsky_config.get('VIRTUALSKY', {}).get('IMAGE_CIRCLE_DIAMETER', 3500),
+            'VIRTUALSKY__LATITUDE_OFFSET'    : self.indi_allsky_config.get('VIRTUALSKY', {}).get('LATITUDE_OFFSET', 0.0),
+            'VIRTUALSKY__LONGITUDE_OFFSET'   : self.indi_allsky_config.get('VIRTUALSKY', {}).get('LONGITUDE_OFFSET', 0.0),
+            'VIRTUALSKY__OFFSET_X'           : self.indi_allsky_config.get('VIRTUALSKY', {}).get('OFFSET_X', 0),
+            'VIRTUALSKY__OFFSET_Y'           : self.indi_allsky_config.get('VIRTUALSKY', {}).get('OFFSET_Y', 0),
+            #'VIRTUALSKY__FLIP_NS'            : self.indi_allsky_config.get('VIRTUALSKY', {}).get('FLIP_NS', False),
+            #'VIRTUALSKY__FLIP_EW'            : self.indi_allsky_config.get('VIRTUALSKY', {}).get('FLIP_EW', False),
             'FOCUSER__CLASSNAME'             : self.indi_allsky_config.get('FOCUSER', {}).get('CLASSNAME', ''),
             'FOCUSER__GPIO_PIN_1'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_1', 'D17'),
             'FOCUSER__GPIO_PIN_2'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_2', 'D18'),
@@ -2870,6 +2879,7 @@ class AjaxConfigView(BaseView):
             'PYCURL_CAMERA',
             'ACCUM_CAMERA',
             'TEST_CAMERA',
+            'VIRTUALSKY',
             'FOCUSER',
             'DEW_HEATER',
             'FAN',
@@ -3349,6 +3359,17 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEST_CAMERA']['ROTATING_STAR_COUNT']   = int(request.json['TEST_CAMERA__ROTATING_STAR_COUNT'])
         self.indi_allsky_config['TEST_CAMERA']['ROTATING_STAR_FACTOR']  = float(request.json['TEST_CAMERA__ROTATING_STAR_FACTOR'])
         self.indi_allsky_config['TEST_CAMERA']['BUBBLE_COUNT']          = int(request.json['TEST_CAMERA__BUBBLE_COUNT'])
+        self.indi_allsky_config['VIRTUALSKY']['MAGNITUDE']              = float(request.json['VIRTUALSKY__MAGNITUDE'])
+        self.indi_allsky_config['VIRTUALSKY']['CONSTELLATIONS']         = bool(request.json['VIRTUALSKY__CONSTELLATIONS'])
+        self.indi_allsky_config['VIRTUALSKY']['SHOWSTARS']              = bool(request.json['VIRTUALSKY__SHOWSTARS'])
+        self.indi_allsky_config['VIRTUALSKY']['SHOWPLANETS']            = bool(request.json['VIRTUALSKY__SHOWPLANETS'])
+        self.indi_allsky_config['VIRTUALSKY']['IMAGE_CIRCLE_DIAMETER']  = int(request.json['VIRTUALSKY__IMAGE_CIRCLE_DIAMETER'])
+        self.indi_allsky_config['VIRTUALSKY']['LATITUDE_OFFSET']        = float(request.json['VIRTUALSKY__LATITUDE_OFFSET'])
+        self.indi_allsky_config['VIRTUALSKY']['LONGITUDE_OFFSET']       = float(request.json['VIRTUALSKY__LONGITUDE_OFFSET'])
+        self.indi_allsky_config['VIRTUALSKY']['OFFSET_X']               = int(request.json['VIRTUALSKY__OFFSET_X'])
+        self.indi_allsky_config['VIRTUALSKY']['OFFSET_Y']               = int(request.json['VIRTUALSKY__OFFSET_Y'])
+        #self.indi_allsky_config['VIRTUALSKY']['FLIP_NS']                = bool(request.json['VIRTUALSKY__FLIP_NS'])
+        #self.indi_allsky_config['VIRTUALSKY']['FLIP_EW']                = bool(request.json['VIRTUALSKY__FLIP_EW'])
         self.indi_allsky_config['FOCUSER']['CLASSNAME']                 = str(request.json['FOCUSER__CLASSNAME'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_1']                = str(request.json['FOCUSER__GPIO_PIN_1'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_2']                = str(request.json['FOCUSER__GPIO_PIN_2'])
