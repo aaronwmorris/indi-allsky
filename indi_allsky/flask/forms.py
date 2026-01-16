@@ -2696,6 +2696,11 @@ def TEST_CAMERA__BUBBLE_COUNT_validator(form, field):
         raise ValidationError('Count must be 10 or greater')
 
 
+def VIRTUALSKY__MAGNITUDE_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
+
+
 def VIRTUALSKY__IMAGE_CIRCLE_DIAMETER_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter a valid number')
@@ -4479,9 +4484,11 @@ class IndiAllskyConfigForm(FlaskForm):
     TEST_CAMERA__ROTATING_STAR_COUNT    = IntegerField('Test Camera - Rotating Star Count', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_COUNT_validator])
     TEST_CAMERA__ROTATING_STAR_FACTOR   = FloatField('Test Camera - Rotating Star Rotation Factor', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_FACTOR_validator])
     TEST_CAMERA__BUBBLE_COUNT           = IntegerField('Test Camera - Bubble Count', validators=[DataRequired(), TEST_CAMERA__BUBBLE_COUNT_validator])
-    VIRTUALSKY__IMAGE_CIRCLE_DIAMETER   = IntegerField('VirtualSky Image Circle', validators=[VIRTUALSKY__IMAGE_CIRCLE_DIAMETER_validator])
-    VIRTUALSKY__LATITUDE_OFFSET         = FloatField('Latitude Offset', validators=[VIRTUALSKY__LATITUDE_OFFSET_validator], widget=NumberInput(step=0.25))
-    VIRTUALSKY__LONGITUDE_OFFSET        = FloatField('Longitude Offset', validators=[VIRTUALSKY__LONGITUDE_OFFSET_validator], widget=NumberInput(step=0.25))
+    VIRTUALSKY__MAGNITUDE               = FloatField('VirtualSky Limiting Magnitude', validators=[VIRTUALSKY__MAGNITUDE_validator], widget=NumberInput(step=0.25))
+    VIRTUALSKY__CONSTELLATIONS          = BooleanField('Show Constellations')
+    VIRTUALSKY__IMAGE_CIRCLE_DIAMETER   = IntegerField('Image Circle', validators=[VIRTUALSKY__IMAGE_CIRCLE_DIAMETER_validator])
+    VIRTUALSKY__LATITUDE_OFFSET         = FloatField('VirtualSky Latitude Offset', validators=[VIRTUALSKY__LATITUDE_OFFSET_validator], widget=NumberInput(step=0.25))
+    VIRTUALSKY__LONGITUDE_OFFSET        = FloatField('VirtualSky Longitude Offset', validators=[VIRTUALSKY__LONGITUDE_OFFSET_validator], widget=NumberInput(step=0.25))
     VIRTUALSKY__OFFSET_X                = IntegerField('X Offset', validators=[VIRTUALSKY__OFFSET_X_validator])
     VIRTUALSKY__OFFSET_Y                = IntegerField('Y Offset', validators=[VIRTUALSKY__OFFSET_Y_validator])
     #VIRTUALSKY__FLIP_NS              = BooleanField('Flip North/South')
@@ -9196,6 +9203,8 @@ class IndiAllskyVirtualSkyHelperForm(FlaskForm):
     IMAGE_CIRCLE_DIAMETER   = IntegerField('Diameter', widget=NumberInput(step=5))
     OFFSET_X                = IntegerField('X Offset', default=0, widget=NumberInput(step=10))
     OFFSET_Y                = IntegerField('Y Offset', default=0, widget=NumberInput(step=10))
+    MAGNITUDE               = FloatField('Magnitude', widget=NumberInput(step=0.25))
+    CONSTELLATIONS          = BooleanField('Constellations')
     #FLIP_NS                 = BooleanField('Flip North/South')
     #FLIP_EW                 = BooleanField('Flip East/West')
 
