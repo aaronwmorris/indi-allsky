@@ -138,7 +138,7 @@ async function loop() {
         });
 
 
-        if (redraw_planetarium && image_timestamp != last_image_timestamp) {
+        if (redraw_planetarium || image_timestamp != last_image_timestamp) {
             azimuth_angle = Number($("#AZIMUTH_ANGLE").val());
             latitude_offset = Number($("#LATITUDE_OFFSET").val());
             longitude_offset = Number($("#LONGITUDE_OFFSET").val());
@@ -367,7 +367,6 @@ function loadJS(url, data, onDone, onError) {
 function forceRedrawPlanetarium() {
     if (json_data['image_list'].length > 0) {
         redraw_planetarium = true;
-        last_image_timestamp = 0;
 
         showImage(json_data['image_list'][0]);
     };
