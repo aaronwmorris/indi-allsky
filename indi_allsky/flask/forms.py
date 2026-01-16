@@ -3636,6 +3636,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('mode1_stddev_cutoff', 'Standard Deviation Cutoff (Original)'),
         ('mode2_mtf', 'Midtone Transfer Function Transformation'),
         ('mode2_mtf_x2', 'Midtone Transfer Function Transformation (Double)'),
+        ('mode3_adaptive_mtf', 'Adaptive Midtone Transfer Function Transformation'),
     )
 
 
