@@ -1429,19 +1429,6 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.IMAGE_STRETCH__MODE2_BLACK_CLIP.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.IMAGE_STRETCH__MODE2_BLACK_CLIP(class='form-control bg-secondary') }}
-            <div id="IMAGE_STRETCH__MODE2_BLACK_CLIP-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Default -2.8 - It is recommended not to adjust this setting</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
             {{ form_config.IMAGE_STRETCH__MODE2_SHADOWS.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -1474,6 +1461,59 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_config.IMAGE_STRETCH__MODE2_HIGHLIGHTS(class='form-control bg-secondary') }}
             <div id="IMAGE_STRETCH__MODE2_HIGHLIGHTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default 1.0 - It is recommended not to adjust this setting</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE3_BLACK_CLIP.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE3_BLACK_CLIP(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE3_BLACK_CLIP-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default -2.8 - It is recommended not to adjust this setting</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE2_SHADOWS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE2_SHADOWS(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE2_SHADOWS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Default 0.0 - With 0.03 this gives a nice subtle effect</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE3_MIDTONES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE3_MIDTONES(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE3_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Values less than 0.5 enhances midtones, greater than 0.5 darkens midtones (0.5 results in the original image)</div>
+            <div>0.25 - 0.35 are good values to start</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE3_HIGHLIGHTS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_STRETCH__MODE3_HIGHLIGHTS(class='form-control bg-secondary') }}
+            <div id="IMAGE_STRETCH__MODE3_HIGHLIGHTS-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
             <div>Default 1.0 - It is recommended not to adjust this setting</div>
@@ -8580,10 +8620,13 @@ const field_names = [
     'IMAGE_STRETCH__CLASSNAME',
     'IMAGE_STRETCH__MODE1_GAMMA',
     'IMAGE_STRETCH__MODE1_STDDEVS',
-    'IMAGE_STRETCH__MODE2_BLACK_CLIP',
     'IMAGE_STRETCH__MODE2_SHADOWS',
     'IMAGE_STRETCH__MODE2_MIDTONES',
     'IMAGE_STRETCH__MODE2_HIGHLIGHTS',
+    'IMAGE_STRETCH__MODE3_BLACK_CLIP',
+    'IMAGE_STRETCH__MODE3_SHADOWS',
+    'IMAGE_STRETCH__MODE3_MIDTONES',
+    'IMAGE_STRETCH__MODE3_HIGHLIGHTS',
     'KEOGRAM_ANGLE',
     'KEOGRAM_H_SCALE',
     'KEOGRAM_V_SCALE',

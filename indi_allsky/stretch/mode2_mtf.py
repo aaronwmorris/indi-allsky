@@ -1,6 +1,6 @@
 ### Mode 2 stretch is the Midtone Transfer Function based on PixInsight and Siril
 ###
-### https://pixinsight.com/forum/index.php?threads/auto-histogram-settings-to-replicate-auto-stf.8205/#post-55143
+### https://pixinsight.com/doc/tools/HistogramTransformation/HistogramTransformation.html
 ### https://siril.readthedocs.io/en/latest/processing/stretching.html
 
 import time
@@ -14,15 +14,17 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
 
+    operation_count = 1
+
+
     def __init__(self, *args, **kwargs):
         super(IndiAllSky_Mode2_MTF_Stretch, self).__init__(*args, **kwargs)
 
-        self.black_clip = self.config.get('IMAGE_STRETCH', {}).get('MODE2_BLACK_CLIP', -2.8)
         self.shadows = self.config.get('IMAGE_STRETCH', {}).get('MODE2_SHADOWS', 0.0)
         self.midtones = self.config.get('IMAGE_STRETCH', {}).get('MODE2_MIDTONES', 0.35)
         self.highlights = self.config.get('IMAGE_STRETCH', {}).get('MODE2_HIGHLIGHTS', 1.0)
-        
-        self.scale_factor = 1.4826
+
+        self._mtf_lut = None
 
 
     def stretch(self, data, image_bit_depth):
@@ -30,39 +32,44 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
 
         stretch_start = time.time()
 
-        if image_bit_depth == 8:
-            numpy_dtype = numpy.uint8
-        else:
-            numpy_dtype = numpy.uint16
 
-        data_max = (2 ** image_bit_depth) - 1
-        shadows_val = int(self.shadows * data_max)
-        highlights_val = int(self.highlights * data_max)
+        if isinstance(self._mtf_lut, type(None)):
+            # only need to generate the lookup table once
+            if image_bit_depth == 8:
+                numpy_dtype = numpy.uint8
+            else:
+                numpy_dtype = numpy.uint16
 
-        # these will result in 0.0 to 1.0 normalized values
-        data = (data / data_max).astype(numpy.float32)
 
-        is_mono = False
-        if len(data.shape) < 3:
-            is_mono = True
-            data = numpy.expand_dims(data, axis=2)
-        
-        data_moveaxis = numpy.moveaxis(data, source=-1, destination=0)
+            data_max = (2 ** image_bit_depth) - 1
 
-        n = data.shape[2]
-        m = (numpy.sum(numpy.median(p) for p in data_moveaxis) / n).astype(numpy.float32)
-        d = (numpy.sum(self._mdev(p) for p in data_moveaxis) / n).astype(numpy.float32)
-        c = numpy.minimum(numpy.maximum(0.0, m + self.black_clip * self.scale_factor * d), 1.0)
-        
-        stretched_image = self._mtf(self._mtf(self.midtones, m - c), numpy.maximum(0.0, (data - c) / (1 - c)))
-        stretched_image = stretched_image * data_max            # scale back to real values
-        stretched_image = self._normalize_to_range(stretched_image, 0 - shadows_val, data_max + (data_max - highlights_val))
-        stretched_image[stretched_image < 0] = 0                # clip low end
-        stretched_image[stretched_image > data_max] = data_max  # clip high end
-        stretched_image = stretched_image.astype(numpy_dtype)   # this must come after clipping
 
-        if is_mono:
-            stretched_image = stretched_image.squeeze(2)
+            range_array = numpy.arange(0, data_max + 1, dtype=numpy.float32)
+            shadows_val = int(self.shadows * data_max)
+            highlights_val = int(self.highlights * data_max)
+
+            # these will result in 1.0 normalized values
+            lut = (range_array - shadows_val) / (highlights_val - shadows_val)
+            lut = ((self.midtones - 1) * lut) / (((2 * self.midtones - 1) * lut) - self.midtones)
+
+            # back to real values
+            lut = lut * data_max
+
+
+            lut[lut < 0] = 0  # clip low end
+            lut[lut > data_max] = data_max  # clip high end
+
+            lut = lut.astype(numpy_dtype)  # this must come after clipping
+
+            #logger.info('Min: %d, Max: %d', numpy.min(lut), numpy.max(lut))
+
+            self._mtf_lut = lut
+
+
+        stretched_image = data
+        for x in range(self.operation_count):
+            stretched_image = self._mtf_lut.take(stretched_image, mode='raise')
+
 
         stretch_elapsed_s = time.time() - stretch_start
         logger.info('Stretch in %0.4f s', stretch_elapsed_s)
@@ -70,27 +77,7 @@ class IndiAllSky_Mode2_MTF_Stretch(IndiAllSky_Stretch_Base):
         return stretched_image
 
 
-    def _mdev(self, data):
-        med = numpy.median(data)
-        abs_devs = numpy.abs(data - med)
-        return numpy.median(abs_devs) * self.scale_factor
-
-
-    def _mtf(self, midtones, data):
-        a = (midtones - 1) * data
-        b = ((2 * midtones - 1) * data) - midtones
-        return numpy.divide(a, b, where=b != 0)
-
-    def _normalize_to_range(self, a, min_value, max_value):
-        a_min = numpy.min(a)
-        a_max = numpy.max(a)
-
-        if a_max - a_min == 0:
-            return numpy.full_like(a, (a_min + a_max) / 2)
-
-        return ((a - a_min) / (a_max - a_min)) * (max_value - min_value) + min_value
-
-
 
 class IndiAllSky_Mode2_MTF_Stretch_x2(IndiAllSky_Mode2_MTF_Stretch):
-    pass
+
+    operation_count = 2

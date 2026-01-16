@@ -959,17 +959,6 @@ def IMAGE_STRETCH__MODE1_STDDEVS_validator(form, field):
         raise ValidationError('Standard deviations must be 1.0 or greater')
 
 
-def IMAGE_STRETCH__MODE2_BLACK_CLIP_validator(form, field):
-    if not isinstance(field.data, (int, float)):
-        raise ValidationError('Please enter valid number')
-
-    if field.data < -10:
-        raise ValidationError('Value must be -10.0 or greater')
-
-    if field.data > 0:
-        raise ValidationError('Value must be 0.0 or less')
-
-
 def IMAGE_STRETCH__MODE2_SHADOWS_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -993,6 +982,50 @@ def IMAGE_STRETCH__MODE2_MIDTONES_validator(form, field):
 
 
 def IMAGE_STRETCH__MODE2_HIGHLIGHTS_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.5:
+        raise ValidationError('Value must be 0.5 or greater')
+
+    if field.data > 1:
+        raise ValidationError('Value must be 1.0 or less')
+
+
+def IMAGE_STRETCH__MODE3_BLACK_CLIP_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < -10:
+        raise ValidationError('Value must be -10.0 or greater')
+
+    if field.data > 0:
+        raise ValidationError('Value must be 0.0 or less')
+
+
+def IMAGE_STRETCH__MODE3_SHADOWS_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Value must be 0.0 or greater')
+
+    if field.data > 0.5:
+        raise ValidationError('Value must be 0.5 or less')
+
+
+def IMAGE_STRETCH__MODE3_MIDTONES_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Value must be 0.0 or greater')
+
+    if field.data > 1:
+        raise ValidationError('Value must be 1.0 or less')
+
+
+def IMAGE_STRETCH__MODE3_HIGHLIGHTS_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
@@ -4111,10 +4144,13 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_STRETCH__CLASSNAME         = SelectField('Stretch Function', choices=IMAGE_STRETCH__CLASSNAME_choices, validators=[IMAGE_STRETCH__CLASSNAME_validator])
     IMAGE_STRETCH__MODE1_GAMMA       = FloatField('StdDev Cutoff - Stretching Gamma', validators=[IMAGE_STRETCH__MODE1_GAMMA_validator])
     IMAGE_STRETCH__MODE1_STDDEVS     = FloatField('StdDev Cutoff - Stretching Std Deviations', validators=[DataRequired(), IMAGE_STRETCH__MODE1_STDDEVS_validator])
-    IMAGE_STRETCH__MODE2_BLACK_CLIP  = FloatField('MTF - Black Clip', validators=[IMAGE_STRETCH__MODE2_BLACK_CLIP_validator])
     IMAGE_STRETCH__MODE2_SHADOWS     = FloatField('MTF - Shadows Cutoff', validators=[IMAGE_STRETCH__MODE2_SHADOWS_validator])
     IMAGE_STRETCH__MODE2_MIDTONES    = FloatField('MTF - Midtones Target', validators=[IMAGE_STRETCH__MODE2_MIDTONES_validator])
     IMAGE_STRETCH__MODE2_HIGHLIGHTS  = FloatField('MTF - Highlights Cutoff', validators=[IMAGE_STRETCH__MODE2_HIGHLIGHTS_validator])
+    IMAGE_STRETCH__MODE3_BLACK_CLIP  = FloatField('Adaptive MTF - Black Clip', validators=[IMAGE_STRETCH__MODE3_BLACK_CLIP_validator])
+    IMAGE_STRETCH__MODE3_SHADOWS     = FloatField('Adaptive MTF - Shadows Cutoff', validators=[IMAGE_STRETCH__MODE3_SHADOWS_validator])
+    IMAGE_STRETCH__MODE3_MIDTONES    = FloatField('Adaptive MTF - Midtones Target', validators=[IMAGE_STRETCH__MODE3_MIDTONES_validator])
+    IMAGE_STRETCH__MODE3_HIGHLIGHTS  = FloatField('Adaptive MTF - Highlights Cutoff', validators=[IMAGE_STRETCH__MODE3_HIGHLIGHTS_validator])
     IMAGE_STRETCH__SPLIT             = BooleanField('Stretching split screen')
     IMAGE_STRETCH__MOONMODE          = BooleanField('Moon Mode Stretching')
     IMAGE_STRETCH__DAYTIME           = BooleanField('Daytime Stretching')
@@ -8275,10 +8311,13 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     IMAGE_STRETCH__CLASSNAME         = SelectField('Stretch Function', choices=IndiAllskyConfigForm.IMAGE_STRETCH__CLASSNAME_choices, validators=[IMAGE_STRETCH__CLASSNAME_validator])
     IMAGE_STRETCH__MODE1_GAMMA       = FloatField('Stretching Gamma', validators=[IMAGE_STRETCH__MODE1_GAMMA_validator])
     IMAGE_STRETCH__MODE1_STDDEVS     = FloatField('Stretching Std Deviations', validators=[DataRequired(), IMAGE_STRETCH__MODE1_STDDEVS_validator])
-    IMAGE_STRETCH__MODE2_BLACK_CLIP  = FloatField('MTF - Black Clip', validators=[IMAGE_STRETCH__MODE2_BLACK_CLIP_validator])
     IMAGE_STRETCH__MODE2_SHADOWS     = FloatField('MTF - Shadows Cutoff', validators=[IMAGE_STRETCH__MODE2_SHADOWS_validator])
     IMAGE_STRETCH__MODE2_MIDTONES    = FloatField('MTF - Midtones Target', validators=[IMAGE_STRETCH__MODE2_MIDTONES_validator])
     IMAGE_STRETCH__MODE2_HIGHLIGHTS  = FloatField('MTF - Highlights Cutoff', validators=[IMAGE_STRETCH__MODE2_HIGHLIGHTS_validator])
+    IMAGE_STRETCH__MODE3_BLACK_CLIP  = FloatField('Adaptive MTF - Black Clip', validators=[IMAGE_STRETCH__MODE3_BLACK_CLIP_validator])
+    IMAGE_STRETCH__MODE3_SHADOWS     = FloatField('Adaptive MTF - Shadows Cutoff', validators=[IMAGE_STRETCH__MODE3_SHADOWS_validator])
+    IMAGE_STRETCH__MODE3_MIDTONES    = FloatField('Adaptive MTF - Midtones Target', validators=[IMAGE_STRETCH__MODE3_MIDTONES_validator])
+    IMAGE_STRETCH__MODE3_HIGHLIGHTS  = FloatField('Adaptive MTF - Highlights Cutoff', validators=[IMAGE_STRETCH__MODE3_HIGHLIGHTS_validator])
     #IMAGE_STRETCH__SPLIT            = BooleanField('Stretching split screen')
     CFA_PATTERN                      = SelectField('Bayer Pattern', choices=CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
     SCNR_ALGORITHM                   = SelectField('SCNR (green reduction)', choices=IndiAllskyConfigForm.SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
