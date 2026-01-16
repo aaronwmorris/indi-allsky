@@ -139,14 +139,17 @@ async function loop() {
 
 
         if (redraw_planetarium || image_timestamp != last_image_timestamp) {
-            magnitude = Number($("#MAGNITUDE").val());
-            constellations = $("#CONSTELLATIONS").prop('checked');
-            azimuth_angle = Number($("#AZIMUTH_ANGLE").val());
-            latitude_offset = Number($("#LATITUDE_OFFSET").val());
-            longitude_offset = Number($("#LONGITUDE_OFFSET").val());
-            image_circle_diameter = Number($("#IMAGE_CIRCLE_DIAMETER").val());
-            offset_x = Number($("#OFFSET_X").val());
-            offset_y = Number($("#OFFSET_Y").val());
+            var magnitude = Number($("#MAGNITUDE").val());
+            var constellations = $("#CONSTELLATIONS").prop('checked');
+            var showstars = $("#SHOWSTARS").prop('checked');
+            var showplanets = $("#SHOWPLANETS").prop('checked');
+
+            var azimuth_angle = Number($("#AZIMUTH_ANGLE").val());
+            var latitude_offset = Number($("#LATITUDE_OFFSET").val());
+            var longitude_offset = Number($("#LONGITUDE_OFFSET").val());
+            var image_circle_diameter = Number($("#IMAGE_CIRCLE_DIAMETER").val());
+            var offset_x = Number($("#OFFSET_X").val());
+            var offset_y = Number($("#OFFSET_Y").val());
 
             var vs_latitude = camera_latitude + latitude_offset;
             var vs_longitude = camera_longitude + longitude_offset;
@@ -210,7 +213,9 @@ async function loop() {
                 az: vs_az,
                 magnitude: magnitude,
                 constellations: constellations,
+                showstars: showstars,
                 showstarlabels: true,
+                showplanets: showplanets,
                 showplanetlabels: true,
                 gridlines_eq: true,
                 mouse: false,
@@ -288,7 +293,7 @@ function loadJS(url, data, onDone, onError) {
 <div class="container h-100">
 <form id="form_virtualsky" onSubmit="return false;">
     <div class="form-group row" style="font-size:12px">
-        <div class="col-sm-2"></div>
+        <div class="col-sm-1"></div>
         <div class="col-sm-1">
             {{ form_virtualsky.AZIMUTH_ANGLE.label(class='col-form-label') }}
         </div>
@@ -320,10 +325,18 @@ function loadJS(url, data, onDone, onError) {
         <div class="col-sm-1">
             {{ form_virtualsky.CONSTELLATIONS.label(class='col-form-label') }}
         </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.SHOWSTARS.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_virtualsky.SHOWPLANETS.label(class='col-form-label') }}
+        </div>
     </div>
 
     <div class="form-group row">
-        <div class="col-sm-2"></div>
+        <div class="col-sm-1"></div>
         <div class="col-sm-1">
             {{ form_virtualsky.AZIMUTH_ANGLE(class='form-control bg-secondary') }}
         </div>
@@ -355,6 +368,18 @@ function loadJS(url, data, onDone, onError) {
         <div class="col-sm-1">
             <div class="form-switch">
                 {{ form_virtualsky.CONSTELLATIONS(class='form-check-input') }}
+            </div>
+        </div>
+
+        <div class="col-sm-1">
+            <div class="form-switch">
+                {{ form_virtualsky.SHOWSTARS(class='form-check-input') }}
+            </div>
+        </div>
+
+        <div class="col-sm-1">
+            <div class="form-switch">
+                {{ form_virtualsky.SHOWPLANETS(class='form-check-input') }}
             </div>
         </div>
     </div>
@@ -424,6 +449,13 @@ $("#CONSTELLATIONS").on("change", function() {
     forceRedrawPlanetarium();
 });
 
+$("#SHOWSTARS").on("change", function() {
+    forceRedrawPlanetarium();
+});
+
+$("#SHOWPLANETS").on("change", function() {
+    forceRedrawPlanetarium();
+});
 
 function setResizeHandler(callback, timeout) {
     var timer_id = undefined;
