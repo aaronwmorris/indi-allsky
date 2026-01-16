@@ -280,64 +280,6 @@ function loadJS(url, data, onDone, onError) {
 
 }
 
-
-function setResizeHandler(callback, timeout) {
-    var timer_id = undefined;
-    $(window).on("resize", function() {
-        if(timer_id != undefined) {
-            clearTimeout(timer_id);
-            timer_id = undefined;
-        }
-        timer_id = setTimeout(function() {
-            timer_id = undefined;
-            callback();
-        }, timeout);
-    });
-}
-
-function resize_callback() {
-    if (json_data['image_list'].length > 0) {
-        redraw_planetarium = true;
-        last_image_timestamp = 0;
-
-        showImage(json_data['image_list'][0]);
-    };
-}
-setResizeHandler(resize_callback, 200);
-
-
-function goFullscreen(elem) {
-    if(fullscreen) {
-        closeFullscreen();
-    } else {
-        openFullscreen(elem);
-    }
-}
-
-function openFullscreen(elem) {
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-    } else if (elem.webkitRequestFullscreen) { /* Safari */
-        elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) { /* IE11 */
-        elem.msRequestFullscreen();
-    }
-
-    fullscreen = true;
-}
-
-function closeFullscreen() {
-    if (document.exitFullscreen) {
-        document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) { /* Safari */
-        document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) { /* IE11 */
-        document.msExitFullscreen();
-    }
-
-    fullscreen = false;
-}
-
 </script>
 {% endblock %}
 
@@ -455,6 +397,59 @@ $("#OFFSET_X").on("change", function() {
 $("#OFFSET_Y").on("change", function() {
     forceRedrawPlanetarium();
 });
+
+
+function setResizeHandler(callback, timeout) {
+    var timer_id = undefined;
+    $(window).on("resize", function() {
+        if(timer_id != undefined) {
+            clearTimeout(timer_id);
+            timer_id = undefined;
+        }
+        timer_id = setTimeout(function() {
+            timer_id = undefined;
+            callback();
+        }, timeout);
+    });
+}
+
+function resize_callback() {
+    forceRedrawPlanetarium();
+}
+setResizeHandler(resize_callback, 200);
+
+
+function goFullscreen(elem) {
+    if(fullscreen) {
+        closeFullscreen();
+    } else {
+        openFullscreen(elem);
+    }
+}
+
+function openFullscreen(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+
+    fullscreen = true;
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) { /* IE11 */
+        document.msExitFullscreen();
+    }
+
+    fullscreen = false;
+}
 
 
 $( document ).ready(function() {
