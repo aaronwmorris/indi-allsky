@@ -52,7 +52,7 @@ var camera_longitude = {{ camera_longitude }};
 var time_offset = {{ time_offset }};
 
 var planetarium;
-var redraw_planetarium = true;
+var redraw_planetarium = false;
 
 
 function init() {
@@ -267,6 +267,8 @@ function loadJS(url, data, onDone, onError) {
         success: function(rdata){
             json_data = rdata
             $('#message').html(json_data['message']);
+
+            redraw_planetarium = true;
         },
         error: function(rdata){
             onError(rdata.status);
