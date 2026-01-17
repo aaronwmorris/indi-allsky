@@ -4472,6 +4472,20 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__CONSTELLATIONLABELS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.VIRTUALSKY__CONSTELLATIONLABELS(class='form-check-input') }}
+                <div id="VIRTUALSKY__CONSTELLATIONLABELS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.VIRTUALSKY__SHOWSTARS.label }}
         </div>
         <div class="col-sm-2">
@@ -4481,7 +4495,20 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">
-            Labels are always displayed
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__SHOWSTARLABELS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.VIRTUALSKY__SHOWSTARLABELS(class='form-check-input') }}
+                <div id="VIRTUALSKY__SHOWSTARLABELS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
         </div>
     </div>
 
@@ -4493,6 +4520,21 @@ var camera_id = {{ camera_id }};
             <div class="form-switch">
                 {{ form_config.VIRTUALSKY__SHOWPLANETS(class='form-check-input') }}
                 <div id="VIRTUALSKY__SHOWPLANETS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Disabling planets will also disable planet labels</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__SHOWPLANETLABELS.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.VIRTUALSKY__SHOWPLANETLABELS(class='form-check-input') }}
+                <div id="VIRTUALSKY__SHOWPLANETLABELS-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
         <div class="col-sm-8">
@@ -9258,8 +9300,11 @@ const checkbox_field_names = [
     'ACCUM_CAMERA__EVEN_EXPOSURES',
     'ACCUM_CAMERA__CLAMP_16BIT',
     'VIRTUALSKY__CONSTELLATIONS',
+    'VIRTUALSKY__CONSTELLATIONLABELS',
     'VIRTUALSKY__SHOWSTARS',
+    'VIRTUALSKY__SHOWSTARLABELS',
     'VIRTUALSKY__SHOWPLANETS',
+    'VIRTUALSKY__SHOWPLANETLABELS',
     'TEMP_SENSOR__DHT_USE_PULSEIO',
     'TEMP_SENSOR__SHT3X_HEATER_NIGHT',
     'TEMP_SENSOR__SHT3X_HEATER_DAY',
