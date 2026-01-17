@@ -567,7 +567,7 @@ class IndiAllSkyConfigBase(object):
         "VIRTUALSKY" : {
             "MAGNITUDE"              : 6.0,
             "CONSTELLATIONS"         : True,
-            "CONSTELLATIONLABELS"    : True,
+            "CONSTELLATIONLABELS"    : False,
             "SHOWSTARS"              : True,
             "SHOWSTARLABELS"         : True,
             "SHOWPLANETS"            : True,
