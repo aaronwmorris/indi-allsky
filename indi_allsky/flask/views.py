@@ -433,8 +433,13 @@ class VirtualSkyView(TemplateView):
 
 
         ### Camera DB settings
-        context['camera_latitude'] = self.camera.latitude
-        context['camera_longitude'] = self.camera.longitude
+        if self.config.get('IMAGE_EXIF_PRIVACY'):
+            # reduce precision for privacy
+            context['camera_latitude'] = float(round(self.camera.latitude))
+            context['camera_longitude'] = float(round(self.camera.longitude))
+        else:
+            context['camera_latitude'] = self.camera.latitude
+            context['camera_longitude'] = self.camera.longitude
 
 
         ### Calculate time offset
