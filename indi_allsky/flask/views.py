@@ -8499,6 +8499,12 @@ class CameraLensView(TemplateView):
 
         context['camera'] = camera
 
+        if self.indi_allsky_config.get('PRIVACY_MODE'):
+            context['owner'] = 'Private'
+        else:
+            context['owner'] = camera.owner
+
+
         context['camera_cfa'] = constants.CFA_MAP_STR[camera.cfa]
         context['lensAperture'] = camera.lensFocalLength / camera.lensFocalRatio
 
@@ -8561,7 +8567,6 @@ class CameraLensView(TemplateView):
         degrees, minutes = divmod(minutes, 60)
         degrees = degrees if is_positive else -degrees
         return degrees, minutes, seconds
-
 
 
 class AjaxImageExcludeView(BaseView):
