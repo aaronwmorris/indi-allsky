@@ -433,7 +433,7 @@ class VirtualSkyView(TemplateView):
 
 
         ### Camera DB settings
-        if self.config.get('PRIVACY_MODE'):
+        if self.indi_allsky_config.get('PRIVACY_MODE'):
             # reduce precision for privacy
             context['camera_latitude'] = float(round(self.camera.latitude))
             context['camera_longitude'] = float(round(self.camera.longitude))
