@@ -348,8 +348,15 @@ class BaseView(View):
 
         data = dict()
 
-        data['latitude'] = latitude
-        data['longitude'] = longitude
+
+        if self.indi_allsky_config.get('PRIVACY_MODE'):
+            data['latitude'] = float(round(latitude))
+            data['longitude'] = float(round(longitude))
+        else:
+            data['latitude'] = latitude
+            data['longitude'] = longitude
+
+
         data['elevation'] = elevation
 
 

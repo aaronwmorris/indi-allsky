@@ -4172,6 +4172,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_CALIBRATE_HOLE_THOLD       = IntegerField('Hole ADU Threshold %', validators=[IMAGE_CALIBRATE_HOLE_THOLD_validator])
     IMAGE_CALIBRATE_MANUAL_OFFSET    = IntegerField('Manual Offset', validators=[IMAGE_CALIBRATE_MANUAL_OFFSET_validator])
     IMAGE_SAVE_FITS_PRE_DARK         = BooleanField('Save FITS Pre-Calibration')
+    PRIVACY_MODE                     = BooleanField('Enable Privacy Mode')
     IMAGE_EXIF_PRIVACY               = BooleanField('Enable EXIF Privacy')
     IMAGE_FILE_TYPE                  = SelectField('Image file type', choices=IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_FILE_TYPE_validator])
     IMAGE_FILE_COMPRESSION__JPG      = IntegerField('JPEG Quality', validators=[DataRequired(), IMAGE_FILE_COMPRESSION__JPG_validator])
