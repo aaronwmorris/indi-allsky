@@ -326,8 +326,6 @@ class StarTrailGenerator(object):
             self.excluded_images['pixels'] += 1
             return
 
-        self._trail_count += 1
-
 
         if self.min_stars > 0:
             if isinstance(star_count, type(None)):
@@ -338,6 +336,8 @@ class StarTrailGenerator(object):
                 self.excluded_images['stars'] += 1
                 return
 
+
+        self._trail_count += 1
 
 
         ### This can be used to mask out the text around the image circle
