@@ -22,6 +22,7 @@ class IndiAllSky_Mode3_Adaptive_MTF_Stretch(IndiAllSky_Stretch_Base):
         self.midtones = self.config.get('IMAGE_STRETCH', {}).get('MODE3_MIDTONES', 0.35)
         self.highlights = self.config.get('IMAGE_STRETCH', {}).get('MODE3_HIGHLIGHTS', 1.0)
         
+        self.stride = 20
         self.scale_factor = 1.4826
 
 
@@ -39,30 +40,28 @@ class IndiAllSky_Mode3_Adaptive_MTF_Stretch(IndiAllSky_Stretch_Base):
         shadows_val = int(self.shadows * data_max)
         highlights_val = int(self.highlights * data_max)
 
+        if data.shape[0] > self.stride and data.shape[1] > self.stride:
+            samples = data[::self.stride, ::self.stride]
+        else:
+            samples = data
+        
         # these will result in 0.0 to 1.0 normalized values
-        data = (data / data_max).astype(numpy.float32)
+        samples = (samples / data_max).astype(numpy.float32)
+        axis = (0, 1)
 
-        is_mono = False
-        if len(data.shape) < 3:
-            is_mono = True
-            data = numpy.expand_dims(data, axis=2)
+        m = numpy.mean(numpy.median(samples, axis=axis)).astype(numpy.float32)
+        d = numpy.mean(self._mdev(samples, axis)).astype(numpy.float32)
+        c = numpy.clip(m + self.black_clip * self.scale_factor * d, 0.0, 1.0)
+
+        lut = numpy.arange(data_max + 1, dtype=numpy.float32) / data_max
         
-        data_moveaxis = numpy.moveaxis(data, source=-1, destination=0)
-
-        n = data.shape[2]
-        m = (numpy.sum(numpy.median(p) for p in data_moveaxis) / n).astype(numpy.float32)
-        d = (numpy.sum(self._mdev(p) for p in data_moveaxis) / n).astype(numpy.float32)
-        c = numpy.minimum(numpy.maximum(0.0, m + self.black_clip * self.scale_factor * d), 1.0)
+        stretched_lut = self._mtf(self._mtf(self.midtones, m - c), numpy.maximum(0.0, (lut - c) / (1 - c)))
+        stretched_lut = stretched_lut * data_max  # scale back to real values
+        stretched_lut = self._normalize_to_range(stretched_lut, 0 - shadows_val, data_max + (data_max - highlights_val))
+        stretched_lut = numpy.clip(stretched_lut, 0, data_max)
+        stretched_lut = stretched_lut.astype(numpy_dtype)
         
-        stretched_image = self._mtf(self._mtf(self.midtones, m - c), numpy.maximum(0.0, (data - c) / (1 - c)))
-        stretched_image = stretched_image * data_max            # scale back to real values
-        stretched_image = self._normalize_to_range(stretched_image, 0 - shadows_val, data_max + (data_max - highlights_val))
-        stretched_image[stretched_image < 0] = 0                # clip low end
-        stretched_image[stretched_image > data_max] = data_max  # clip high end
-        stretched_image = stretched_image.astype(numpy_dtype)   # this must come after clipping
-
-        if is_mono:
-            stretched_image = stretched_image.squeeze(2)
+        stretched_image = stretched_lut.take(data, mode='raise')
 
         stretch_elapsed_s = time.time() - stretch_start
         logger.info('Stretch in %0.4f s', stretch_elapsed_s)
@@ -70,10 +69,10 @@ class IndiAllSky_Mode3_Adaptive_MTF_Stretch(IndiAllSky_Stretch_Base):
         return stretched_image
 
 
-    def _mdev(self, data):
-        med = numpy.median(data)
-        abs_devs = numpy.abs(data - med)
-        return numpy.median(abs_devs) * self.scale_factor
+    def _mdev(self, data, axis=None):
+        med = numpy.median(data, axis=axis)
+        mad = numpy.abs(data - med)
+        return numpy.median(mad) * self.scale_factor
 
 
     def _mtf(self, midtones, data):
