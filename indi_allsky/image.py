@@ -489,8 +489,13 @@ class ImageWorker(Process):
                 zeroth_ifd[piexif.ImageIFD.Copyright] = camera.owner
 
 
-            long_deg, long_min, long_sec = self.decdeg2dms(camera.longitude)
-            lat_deg, lat_min, lat_sec = self.decdeg2dms(camera.latitude)
+            if self.config.get('PRIVACY_MODE'):
+                long_deg, long_min, long_sec = self.decdeg2dms(float(round(camera.longitude)))
+                lat_deg, lat_min, lat_sec = self.decdeg2dms(float(round(camera.latitude)))
+            else:
+                long_deg, long_min, long_sec = self.decdeg2dms(camera.longitude)
+                lat_deg, lat_min, lat_sec = self.decdeg2dms(camera.latitude)
+
 
             if long_deg < 0:
                 long_ref = 'W'

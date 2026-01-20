@@ -433,8 +433,13 @@ class VirtualSkyView(TemplateView):
 
 
         ### Camera DB settings
-        context['camera_latitude'] = self.camera.latitude
-        context['camera_longitude'] = self.camera.longitude
+        if self.indi_allsky_config.get('PRIVACY_MODE'):
+            # reduce precision for privacy
+            context['camera_latitude'] = float(round(self.camera.latitude))
+            context['camera_longitude'] = float(round(self.camera.longitude))
+        else:
+            context['camera_latitude'] = self.camera.latitude
+            context['camera_longitude'] = self.camera.longitude
 
 
         ### Calculate time offset
@@ -2135,6 +2140,7 @@ class ConfigView(FormView):
             'IMAGE_CALIBRATE_HOLE_THOLD'     : self.indi_allsky_config.get('IMAGE_CALIBRATE_HOLE_THOLD', 30),
             'IMAGE_CALIBRATE_MANUAL_OFFSET'  : self.indi_allsky_config.get('IMAGE_CALIBRATE_MANUAL_OFFSET', 0),
             'IMAGE_SAVE_FITS_PRE_DARK'       : self.indi_allsky_config.get('IMAGE_SAVE_FITS_PRE_DARK', False),
+            'PRIVACY_MODE'                   : self.indi_allsky_config.get('PRIVACY_MODE', False),
             'IMAGE_EXIF_PRIVACY'             : self.indi_allsky_config.get('IMAGE_EXIF_PRIVACY', False),
             'IMAGE_FILE_TYPE'                : self.indi_allsky_config.get('IMAGE_FILE_TYPE', 'jpg'),
             'IMAGE_FILE_COMPRESSION__JPG'    : self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('jpg', 90),
@@ -3073,6 +3079,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_CALIBRATE_HOLE_THOLD']           = int(request.json['IMAGE_CALIBRATE_HOLE_THOLD'])
         self.indi_allsky_config['IMAGE_CALIBRATE_MANUAL_OFFSET']        = int(request.json['IMAGE_CALIBRATE_MANUAL_OFFSET'])
         self.indi_allsky_config['IMAGE_SAVE_FITS_PRE_DARK']             = bool(request.json['IMAGE_SAVE_FITS_PRE_DARK'])
+        self.indi_allsky_config['PRIVACY_MODE']                         = bool(request.json['PRIVACY_MODE'])
         self.indi_allsky_config['IMAGE_EXIF_PRIVACY']                   = bool(request.json['IMAGE_EXIF_PRIVACY'])
         self.indi_allsky_config['IMAGE_FILE_TYPE']                      = str(request.json['IMAGE_FILE_TYPE'])
         self.indi_allsky_config['IMAGE_FILE_COMPRESSION']['jpg']        = int(request.json['IMAGE_FILE_COMPRESSION__JPG'])
@@ -8508,6 +8515,12 @@ class CameraLensView(TemplateView):
 
         context['camera'] = camera
 
+        if self.indi_allsky_config.get('PRIVACY_MODE'):
+            context['owner'] = 'Private'
+        else:
+            context['owner'] = camera.owner
+
+
         context['camera_cfa'] = constants.CFA_MAP_STR[camera.cfa]
         context['lensAperture'] = camera.lensFocalLength / camera.lensFocalRatio
 
@@ -8570,7 +8583,6 @@ class CameraLensView(TemplateView):
         degrees, minutes = divmod(minutes, 60)
         degrees = degrees if is_positive else -degrees
         return degrees, minutes, seconds
-
 
 
 class AjaxImageExcludeView(BaseView):

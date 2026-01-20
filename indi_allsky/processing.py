@@ -474,12 +474,20 @@ class ImageProcessor(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(gain)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['SITELAT'] = self.position_av[constants.POSITION_LATITUDE]
-            hdulist[0].header['SITELONG'] = self.position_av[constants.POSITION_LONGITUDE]
-            hdulist[0].header['RA'] = self.position_av[constants.POSITION_RA]
-            hdulist[0].header['DEC'] = self.position_av[constants.POSITION_DEC]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
             #hdulist[0].header['BITPIX'] = 8
+
+
+            if self.config.get('PRIVACY_MODE'):
+                hdulist[0].header['SITELAT'] = float(round(self.position_av[constants.POSITION_LATITUDE]))
+                hdulist[0].header['SITELONG'] = float(round(self.position_av[constants.POSITION_LONGITUDE]))
+                hdulist[0].header['RA'] = float(int(self.position_av[constants.POSITION_RA]))
+                hdulist[0].header['DEC'] = float(int(self.position_av[constants.POSITION_DEC]))
+            else:
+                hdulist[0].header['SITELAT'] = self.position_av[constants.POSITION_LATITUDE]
+                hdulist[0].header['SITELONG'] = self.position_av[constants.POSITION_LONGITUDE]
+                hdulist[0].header['RA'] = self.position_av[constants.POSITION_RA]
+                hdulist[0].header['DEC'] = self.position_av[constants.POSITION_DEC]
 
 
             aperture = camera.lensFocalLength / camera.lensFocalRatio
@@ -529,12 +537,20 @@ class ImageProcessor(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(gain)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['SITELAT'] = self.position_av[constants.POSITION_LATITUDE]
-            hdulist[0].header['SITELONG'] = self.position_av[constants.POSITION_LONGITUDE]
-            hdulist[0].header['RA'] = self.position_av[constants.POSITION_RA]
-            hdulist[0].header['DEC'] = self.position_av[constants.POSITION_DEC]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
             #hdulist[0].header['BITPIX'] = 8
+
+
+            if self.config.get('PRIVACY_MODE'):
+                hdulist[0].header['SITELAT'] = float(round(self.position_av[constants.POSITION_LATITUDE]))
+                hdulist[0].header['SITELONG'] = float(round(self.position_av[constants.POSITION_LONGITUDE]))
+                hdulist[0].header['RA'] = float(int(self.position_av[constants.POSITION_RA]))
+                hdulist[0].header['DEC'] = float(int(self.position_av[constants.POSITION_DEC]))
+            else:
+                hdulist[0].header['SITELAT'] = self.position_av[constants.POSITION_LATITUDE]
+                hdulist[0].header['SITELONG'] = self.position_av[constants.POSITION_LONGITUDE]
+                hdulist[0].header['RA'] = self.position_av[constants.POSITION_RA]
+                hdulist[0].header['DEC'] = self.position_av[constants.POSITION_DEC]
 
 
             aperture = camera.lensFocalLength / camera.lensFocalRatio
@@ -574,12 +590,20 @@ class ImageProcessor(object):
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(gain)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
-            hdulist[0].header['SITELAT'] = self.position_av[constants.POSITION_LATITUDE]
-            hdulist[0].header['SITELONG'] = self.position_av[constants.POSITION_LONGITUDE]
-            hdulist[0].header['RA'] = self.position_av[constants.POSITION_RA]
-            hdulist[0].header['DEC'] = self.position_av[constants.POSITION_DEC]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
             #hdulist[0].header['BITPIX'] = 16
+
+
+            if self.config.get('PRIVACY_MODE'):
+                hdulist[0].header['SITELAT'] = float(round(self.position_av[constants.POSITION_LATITUDE]))
+                hdulist[0].header['SITELONG'] = float(round(self.position_av[constants.POSITION_LONGITUDE]))
+                hdulist[0].header['RA'] = float(int(self.position_av[constants.POSITION_RA]))
+                hdulist[0].header['DEC'] = float(int(self.position_av[constants.POSITION_DEC]))
+            else:
+                hdulist[0].header['SITELAT'] = self.position_av[constants.POSITION_LATITUDE]
+                hdulist[0].header['SITELONG'] = self.position_av[constants.POSITION_LONGITUDE]
+                hdulist[0].header['RA'] = self.position_av[constants.POSITION_RA]
+                hdulist[0].header['DEC'] = self.position_av[constants.POSITION_DEC]
 
 
             aperture = camera.lensFocalLength / camera.lensFocalRatio
@@ -2548,13 +2572,19 @@ class ImageProcessor(object):
             'tiangong_up'       : self.astrometric_data['tiangong_up'],
             'tiangong_next_h'   : self.astrometric_data['tiangong_next_h'],
             'tiangong_next_alt' : self.astrometric_data['tiangong_next_alt'],
-            'latitude'     : self.position_av[constants.POSITION_LATITUDE],
-            'longitude'    : self.position_av[constants.POSITION_LONGITUDE],
             'elevation'    : int(self.position_av[constants.POSITION_ELEVATION]),
             'sidereal_time'        : self.astrometric_data['sidereal_time'],
             'stretch_m1_gamma'     : self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 0.0),
             'stretch_m1_stddevs'   : self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 0.0),
         }
+
+
+        if self.config.get('PRIVACY_MODE'):
+            label_data['latitude']  = float(round(self.position_av[constants.POSITION_LATITUDE]))
+            label_data['longitude'] = float(round(self.position_av[constants.POSITION_LONGITUDE]))
+        else:
+            label_data['latitude']  = self.position_av[constants.POSITION_LATITUDE]
+            label_data['longitude'] = self.position_av[constants.POSITION_LONGITUDE]
 
 
         # stacking data

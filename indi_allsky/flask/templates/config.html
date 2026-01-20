@@ -4218,6 +4218,23 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.PRIVACY_MODE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.PRIVACY_MODE(class='form-check-input') }}
+                <div id="PRIVACY_MODE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Reduces precision of Latitude and Longitude information when it is exposed</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.IMAGE_EXIF_PRIVACY.label }}
         </div>
         <div class="col-sm-2">
@@ -4227,10 +4244,8 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">
-            <div>
-                <div>Exclude private identifying information from EXIF tags including owner and GPS details</div>
-                <div>Camera information is still included.  Only valid for JPEG images</div>
-            </div>
+            <div>Exclude private identifying information from image EXIF tags including owner and GPS details</div>
+            <div>Camera information is still included.  Only valid for JPEG images</div>
         </div>
     </div>
 
@@ -9218,6 +9233,7 @@ const checkbox_field_names = [
     'STARTRAILS_USE_DB_DATA',
     'STARTRAILS_TIMELAPSE',
     'STARTRAILS__IMAGE_CIRCLE_MASK_ENABLE',
+    'PRIVACY_MODE',
     'IMAGE_EXIF_PRIVACY',
     'TIMELAPSE_OVERWRITE',
     'IMAGE_FLIP_V',
