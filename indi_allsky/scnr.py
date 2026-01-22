@@ -133,7 +133,7 @@ class IndiAllskyScnr(object):
                     midtones = self.config.get('SCNR_MTF_MIDTONES_DAY', 0.65)
 
 
-            shadows_val = 0
+            shadows_val = 0  # no clipping
             highlights_val = 255
 
             data_max = 255
