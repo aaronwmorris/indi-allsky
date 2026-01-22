@@ -2039,6 +2039,12 @@ class ConfigView(FormView):
             'WBB_FACTOR_DAY'                 : self.indi_allsky_config.get('WBB_FACTOR_DAY', 1.0),
             'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
             'AUTO_WB_DAY'                    : self.indi_allsky_config.get('AUTO_WB_DAY', False),
+            'WBR_MTF_MIDTONES'               : self.indi_allsky_config.get('WBR_MTF_MIDTONES', 0.5),
+            'WBG_MTF_MIDTONES'               : self.indi_allsky_config.get('WBG_MTF_MIDTONES', 0.5),
+            'WBB_MTF_MIDTONES'               : self.indi_allsky_config.get('WBB_MTF_MIDTONES', 0.5),
+            'WBR_MTF_MIDTONES_DAY'           : self.indi_allsky_config.get('WBR_MTF_MIDTONES_DAY', 0.5),
+            'WBG_MTF_MIDTONES_DAY'           : self.indi_allsky_config.get('WBG_MTF_MIDTONES_DAY', 0.5),
+            'WBB_MTF_MIDTONES_DAY'           : self.indi_allsky_config.get('WBB_MTF_MIDTONES_DAY', 0.5),
             'SATURATION_FACTOR'              : self.indi_allsky_config.get('SATURATION_FACTOR', 1.0),
             'SATURATION_FACTOR_DAY'          : self.indi_allsky_config.get('SATURATION_FACTOR_DAY', 1.0),
             'GAMMA_CORRECTION'               : self.indi_allsky_config.get('GAMMA_CORRECTION', 1.0),
@@ -2974,6 +2980,12 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['WBR_FACTOR_DAY']                       = float(request.json['WBR_FACTOR_DAY'])
         self.indi_allsky_config['WBG_FACTOR_DAY']                       = float(request.json['WBG_FACTOR_DAY'])
         self.indi_allsky_config['WBB_FACTOR_DAY']                       = float(request.json['WBB_FACTOR_DAY'])
+        self.indi_allsky_config['WBR_MTF_MIDTONES']                     = float(request.json['WBR_MTF_MIDTONES'])
+        self.indi_allsky_config['WBG_MTF_MIDTONES']                     = float(request.json['WBG_MTF_MIDTONES'])
+        self.indi_allsky_config['WBB_MTF_MIDTONES']                     = float(request.json['WBB_MTF_MIDTONES'])
+        self.indi_allsky_config['WBR_MTF_MIDTONES_DAY']                 = float(request.json['WBR_MTF_MIDTONES_DAY'])
+        self.indi_allsky_config['WBG_MTF_MIDTONES_DAY']                 = float(request.json['WBG_MTF_MIDTONES_DAY'])
+        self.indi_allsky_config['WBB_MTF_MIDTONES_DAY']                 = float(request.json['WBB_MTF_MIDTONES_DAY'])
         self.indi_allsky_config['SATURATION_FACTOR']                    = float(request.json['SATURATION_FACTOR'])
         self.indi_allsky_config['SATURATION_FACTOR_DAY']                = float(request.json['SATURATION_FACTOR_DAY'])
         self.indi_allsky_config['GAMMA_CORRECTION']                     = float(request.json['GAMMA_CORRECTION'])
@@ -7003,6 +7015,9 @@ class ImageProcessingView(TemplateView):
             'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
             'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
             'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
+            'WBR_MTF_MIDTONES'               : self.indi_allsky_config.get('WBR_MTF_MIDTONES', 0.5),
+            'WBG_MTF_MIDTONES'               : self.indi_allsky_config.get('WBG_MTF_MIDTONES', 0.5),
+            'WBB_MTF_MIDTONES'               : self.indi_allsky_config.get('WBB_MTF_MIDTONES', 0.5),
             'SATURATION_FACTOR'              : self.indi_allsky_config.get('SATURATION_FACTOR', 1.0),
             'GAMMA_CORRECTION'               : self.indi_allsky_config.get('GAMMA_CORRECTION', 1.0),
             'IMAGE_ROTATE'                   : self.indi_allsky_config.get('IMAGE_ROTATE', ''),
