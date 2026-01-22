@@ -7594,8 +7594,8 @@ class JsonImageProcessingView(JsonView):
 
 
             # white balance
-            image_processor.white_balance_manual_bgr()
             image_processor.white_balance_mtf()
+            image_processor.white_balance_manual_bgr()
             image_processor.white_balance_auto_bgr()
 
 

@@ -621,8 +621,8 @@ class ImageWorker(Process):
 
 
         # white balance
-        self.image_processor.white_balance_manual_bgr()
         self.image_processor.white_balance_mtf()
+        self.image_processor.white_balance_manual_bgr()
         self.image_processor.white_balance_auto_bgr()
 
 
