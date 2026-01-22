@@ -153,7 +153,7 @@ class IndiAllskyScnr(object):
 
             lut = lut.astype(numpy.uint8)  # this must come after clipping
 
-            logger.info('Min: %d, Max: %d', numpy.min(lut), numpy.max(lut))
+            #logger.info('Min: %d, Max: %d', numpy.min(lut), numpy.max(lut))
 
             self._mtf_lut = lut
 

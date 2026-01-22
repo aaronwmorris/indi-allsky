@@ -456,12 +456,6 @@ var fullscreen = false;  //initial state
         </div>
         <div class="col-sm-7">
             <div>SCNR algorithm to apply to reduce green bias in image</div>
-            <div>
-              <ul>
-                <li>Average Neutral - Good colors <span class="badge rounded-pill bg-warning text-dark">Warning</span> Can cause a magenta bias (especially during the day)</li>
-                <li>Maximum Neutral - Use this if you enable day time caputures</li>
-              </ul>
-            </div>
         </div>
     </div>
 
@@ -475,6 +469,8 @@ var fullscreen = false;  //initial state
         </div>
         <div class="col-sm-8">Range 0.5-1.0.  0.5 = no change</div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -509,6 +505,47 @@ var fullscreen = false;  //initial state
         <div class="col-sm-8"></div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.WBR_MTF_MIDTONES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.WBR_MTF_MIDTONES(class='form-control bg-secondary') }}
+            <div id="WBR_MTF_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Midtone Transfer Function stretch</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.WBG_MTF_MIDTONES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.WBG_MTF_MIDTONES(class='form-control bg-secondary') }}
+            <div id="WBG_MTF_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>0.5 means no change.  Less than 0.5 increases the color, greater than 0.5 decreases the color</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.WBB_MTF_MIDTONES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.WBB_MTF_MIDTONES(class='form-control bg-secondary') }}
+            <div id="WBB_MTF_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_image_processing.AUTO_WB.label }}
@@ -521,6 +558,8 @@ var fullscreen = false;  //initial state
         </div>
         <div class="col-sm-8">Auto WB is applied after manual WB settings</div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -1887,6 +1926,9 @@ const field_names = [
     'WBR_FACTOR',
     'WBG_FACTOR',
     'WBB_FACTOR',
+    'WBR_MTF_MIDTONES',
+    'WBG_MTF_MIDTONES',
+    'WBB_MTF_MIDTONES',
     'SATURATION_FACTOR',
     'GAMMA_CORRECTION',
     'IMAGE_COLORMAP',

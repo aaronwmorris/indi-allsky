@@ -338,6 +338,17 @@ def WB_FACTOR_validator(form, field):
         raise ValidationError('Balance factor must be less than 4.0')
 
 
+def WB_MTF_MIDTONES_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.0:
+        raise ValidationError('Value must be 0.0 or more')
+
+    if field.data > 1.0:
+        raise ValidationError('Value must be 1.0 or less')
+
+
 def SATURATION_FACTOR_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
@@ -4071,14 +4082,20 @@ class IndiAllskyConfigForm(FlaskForm):
     SCNR_ALGORITHM_DAY               = SelectField('SCNR (Day)', choices=SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
     SCNR_MTF_MIDTONES                = FloatField('SCNR MTF Midtones (Night)', validators=[SCNR_MTF_MIDTONES_validator])
     SCNR_MTF_MIDTONES_DAY            = FloatField('SCNR MTF Midtones (Day)', validators=[SCNR_MTF_MIDTONES_validator])
-    WBR_FACTOR                       = FloatField('Red Balance Factor (Night)', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
-    WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
-    WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
-    WBR_FACTOR_DAY                   = FloatField('Red Balance Factor (Day)', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
-    WBG_FACTOR_DAY                   = FloatField('Green Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
-    WBB_FACTOR_DAY                   = FloatField('Blue Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
+    WBR_FACTOR                       = FloatField('Red Balance Factor (Night)', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.05))
+    WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.05))
+    WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.05))
+    WBR_FACTOR_DAY                   = FloatField('Red Balance Factor (Day)', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.05))
+    WBG_FACTOR_DAY                   = FloatField('Green Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.05))
+    WBB_FACTOR_DAY                   = FloatField('Blue Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.05))
     AUTO_WB                          = BooleanField('Auto White Balance (Night)')
     AUTO_WB_DAY                      = BooleanField('Auto White Balance (Day)')
+    WBR_MTF_MIDTONES                 = FloatField('Red Balance MTF Midtones (Night)', validators=[WB_MTF_MIDTONES_validator], widget=NumberInput(step=0.05))
+    WBG_MTF_MIDTONES                 = FloatField('Green Balance MTF Midtones', validators=[WB_MTF_MIDTONES_validator], widget=NumberInput(step=0.05))
+    WBB_MTF_MIDTONES                 = FloatField('Blue Balance MTF Midtones', validators=[WB_MTF_MIDTONES_validator], widget=NumberInput(step=0.05))
+    WBR_MTF_MIDTONES_DAY             = FloatField('Red Balance MTF Midtones (Day)', validators=[WB_MTF_MIDTONES_validator], widget=NumberInput(step=0.05))
+    WBG_MTF_MIDTONES_DAY             = FloatField('Green Balance MTF Midtones', validators=[WB_MTF_MIDTONES_validator], widget=NumberInput(step=0.05))
+    WBB_MTF_MIDTONES_DAY             = FloatField('Blue Balance MTF Midtones', validators=[WB_MTF_MIDTONES_validator], widget=NumberInput(step=0.05))
     SATURATION_FACTOR                = FloatField('Saturation Factor (Night)', validators=[SATURATION_FACTOR_validator], widget=NumberInput(step=0.1))
     SATURATION_FACTOR_DAY            = FloatField('Saturation Factor (Day)', validators=[SATURATION_FACTOR_validator], widget=NumberInput(step=0.1))
     GAMMA_CORRECTION                 = FloatField('Gamma Correction (Night)', validators=[GAMMA_CORRECTION_validator], widget=NumberInput(step=0.1))
@@ -8332,10 +8349,13 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     CFA_PATTERN                      = SelectField('Bayer Pattern', choices=CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
     SCNR_ALGORITHM                   = SelectField('SCNR (green reduction)', choices=IndiAllskyConfigForm.SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
     SCNR_MTF_MIDTONES                = FloatField('SCNR MTF Midtones', validators=[SCNR_MTF_MIDTONES_validator])
-    WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
-    WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
-    WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
+    WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.05))
+    WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.05))
+    WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.05))
     AUTO_WB                          = BooleanField('Auto White Balance')
+    WBR_MTF_MIDTONES                 = FloatField('Red Balance MTF Midtones', validators=[WB_MTF_MIDTONES_validator], widget=NumberInput(step=0.05))
+    WBG_MTF_MIDTONES                 = FloatField('Green Balance MTF Midtones', validators=[WB_MTF_MIDTONES_validator], widget=NumberInput(step=0.05))
+    WBB_MTF_MIDTONES                 = FloatField('Blue Balance MTF Midtones', validators=[WB_MTF_MIDTONES_validator], widget=NumberInput(step=0.05))
     SATURATION_FACTOR                = FloatField('Saturation Factor', validators=[SATURATION_FACTOR_validator], widget=NumberInput(step=0.1))
     GAMMA_CORRECTION                 = FloatField('Gamma Correction', validators=[GAMMA_CORRECTION_validator], widget=NumberInput(step=0.1))
     IMAGE_ROTATE                     = SelectField('Rotate Image', choices=IndiAllskyConfigForm.IMAGE_ROTATE_choices, validators=[IMAGE_ROTATE_validator])

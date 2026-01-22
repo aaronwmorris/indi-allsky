@@ -175,6 +175,11 @@ class ImageProcessor(object):
         self._moon_overlay = IndiAllSkyMoonOverlay(self.config)
         self._lightgraph_overlay = IndiAllSkyLightgraphOverlay(self.config, self.position_av)
 
+        self._wb_mtf_night = 1
+        self._wbb_mtf_lut = None
+        self._wbg_mtf_lut = None
+        self._wbr_mtf_lut = None
+
         self._orb = IndiAllskyOrbGenerator(self.config)
         self._orb.sun_alt_deg = self.config['NIGHT_SUN_ALT_DEG']
         self._orb.azimuth_offset = self.config['ORB_PROPERTIES'].get('AZ_OFFSET', 0.0)
@@ -1781,6 +1786,98 @@ class ImageProcessor(object):
         r = cv2.addWeighted(src1=r, alpha=kr, src2=0, beta=0, gamma=0)
 
         self.image = cv2.merge([b, g, r])
+
+
+    def white_balance_mtf(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
+
+        if len(self.image.shape) == 2:
+            # mono
+            return
+
+
+        if self.config.get('USE_NIGHT_COLOR', True):
+            WBB_MTF_MIDTONES = float(self.config.get('WBB_MTF_MIDTONES', 0.5))
+            WBG_MTF_MIDTONES = float(self.config.get('WBG_MTF_MIDTONES', 0.5))
+            WBR_MTF_MIDTONES = float(self.config.get('WBR_MTF_MIDTONES', 0.5))
+        else:
+            if self.night_v.value:
+                # night
+                WBB_MTF_MIDTONES = float(self.config.get('WBB_MTF_MIDTONES', 0.5))
+                WBG_MTF_MIDTONES = float(self.config.get('WBG_MTF_MIDTONES', 0.5))
+                WBR_MTF_MIDTONES = float(self.config.get('WBR_MTF_MIDTONES', 0.5))
+            else:
+                # day
+                WBB_MTF_MIDTONES = float(self.config.get('WBB_MTF_MIDTONES', 0.5))
+                WBG_MTF_MIDTONES = float(self.config.get('WBG_MTF_MIDTONES', 0.5))
+                WBR_MTF_MIDTONES = float(self.config.get('WBR_MTF_MIDTONES', 0.5))
+
+
+        if WBB_MTF_MIDTONES == 0.5 and WBG_MTF_MIDTONES == 0.5 and WBR_MTF_MIDTONES == 0.5:
+            # no action
+            return
+
+
+        self._white_balance_mtf(WBB_MTF_MIDTONES, WBG_MTF_MIDTONES, WBR_MTF_MIDTONES)
+        return True
+
+
+    def _white_balance_mtf(self, WBB_MTF_MIDTONES, WBG_MTF_MIDTONES, WBR_MTF_MIDTONES):
+        if self._wb_mtf_night != self.night_v.value:
+            self._wb_mtf_night = self.night_v.value
+            self._wbb_mtf_lut = None  # recalculate LUT
+            self._wbg_mtf_lut = None  # recalculate LUT
+            self._wbr_mtf_lut = None  # recalculate LUT
+
+
+        if isinstance(self._wbb_mtf_lut, type(None)):
+            self._wbb_mtf_lut = self._generate_white_balance_lut(WBB_MTF_MIDTONES)
+
+        if isinstance(self._wbg_mtf_lut, type(None)):
+            self._wbg_mtf_lut = self._generate_white_balance_lut(WBG_MTF_MIDTONES)
+
+        if isinstance(self._wbr_mtf_lut, type(None)):
+            self._wbr_mtf_lut = self._generate_white_balance_lut(WBR_MTF_MIDTONES)
+
+
+        b, g, r = cv2.split(self.image)
+
+
+        mtf_b = self._wbb_mtf_lut.take(b, mode='raise')
+        mtf_g = self._wbg_mtf_lut.take(g, mode='raise')
+        mtf_r = self._wbr_mtf_lut.take(r, mode='raise')
+
+
+        self.image = cv2.merge((mtf_b, mtf_g, mtf_r))
+
+
+    def _generate_white_balance_lut(self, midtones):
+        shadows_val = 0  # no clipping
+        highlights_val = 255
+
+        data_max = 255
+
+        range_array = numpy.arange(0, data_max + 1, dtype=numpy.float32)
+
+        # these will result in 1.0 normalized values
+        lut = (range_array - shadows_val) / (highlights_val - shadows_val)
+        lut = ((midtones - 1) * lut) / (((2 * midtones - 1) * lut) - midtones)
+
+        # back to real values
+        lut = lut * data_max
+
+
+        lut[lut < 0] = 0  # clip low end
+        lut[lut > data_max] = data_max  # clip high end
+
+        lut = lut.astype(numpy.uint8)  # this must come after clipping
+
+        #logger.info('Min: %d, Max: %d', numpy.min(lut), numpy.max(lut))
+
+        return lut
 
 
     def saturation_adjust(self):
