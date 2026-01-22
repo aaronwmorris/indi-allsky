@@ -3369,6 +3369,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'Disabled'),
         ('average_neutral', 'Average Neutral'),
         ('maximum_neutral', 'Maximum Neutral'),
+        ('green_mtf', 'Midtone Transfer Function'),
     )
 
     IMAGE_EXPORT_RAW_choices = (
