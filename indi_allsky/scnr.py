@@ -16,12 +16,24 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllskyScnr(object):
 
-    def __init__(self, config):
+    def __init__(self, config, night_v):
         self.config = config
+        self.night_v = night_v
+
+        self._night = None
 
         self.amount = self.config.get('SCNR_AMOUNT', 0.50)  # not currently used
 
         self._mtf_lut = None
+
+
+    @property
+    def night(self):
+        return self._night
+
+    @night.setter
+    def night(self, new_night):
+        self._night = int(bool(new_night))
 
 
     def additive_mask(self, scidata):
@@ -104,8 +116,22 @@ class IndiAllskyScnr(object):
         #mtf_start = time.time()
 
 
+        if self.night != self.night_v.value:
+            self.night = self.night_v.value
+            self._mtf_lut = None  # recalculate LUT
+
+
         if isinstance(self._mtf_lut, type(None)):
-            midtones = self.config.get('SCNR_MTF_MIDTONES', 0.65)
+            if self.config.get('USE_NIGHT_COLOR', True):
+                midtones = self.config.get('SCNR_MTF_MIDTONES', 0.65)
+            else:
+                if self.night_v.value:
+                    # night
+                    midtones = self.config.get('SCNR_MTF_MIDTONES', 0.65)
+                else:
+                    # day
+                    midtones = self.config.get('SCNR_MTF_MIDTONES_DAY', 0.65)
+
 
             shadows_val = 0
             highlights_val = 255

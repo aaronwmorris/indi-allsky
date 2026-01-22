@@ -170,7 +170,7 @@ class ImageProcessor(object):
         self._stars_detect = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
         self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
         self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)
-        self._ia_scnr = IndiAllskyScnr(self.config)
+        self._ia_scnr = IndiAllskyScnr(self.config, self.night_v)
         self._cardinal_dirs_label = IndiAllskyCardinalDirsLabel(self.config)
         self._moon_overlay = IndiAllSkyMoonOverlay(self.config)
         self._lightgraph_overlay = IndiAllSkyLightgraphOverlay(self.config, self.position_av)
