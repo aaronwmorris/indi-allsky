@@ -123,11 +123,11 @@ class IndiAllskyScnr(object):
 
         if isinstance(self._mtf_lut, type(None)):
             if self.config.get('USE_NIGHT_COLOR', True):
-                midtones = self.config.get('SCNR_MTF_MIDTONES', 0.65)
+                midtones = self.config.get('SCNR_MTF_MIDTONES', 0.55)
             else:
                 if self.night_v.value:
                     # night
-                    midtones = self.config.get('SCNR_MTF_MIDTONES', 0.65)
+                    midtones = self.config.get('SCNR_MTF_MIDTONES', 0.55)
                 else:
                     # day
                     midtones = self.config.get('SCNR_MTF_MIDTONES_DAY', 0.65)
