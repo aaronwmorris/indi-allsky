@@ -365,6 +365,17 @@ def SCNR_ALGORITHM_validator(form, field):
         raise ValidationError('Please select a valid algorithm')
 
 
+def SCNR_MTF_MIDTONES_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.5:
+        raise ValidationError('Value must be 0.5 or more')
+
+    if field.data > 1.0:
+        raise ValidationError('Value must be 1.0 or less')
+
+
 def TEMP_DISPLAY_validator(form, field):
     if field.data not in list(zip(*form.TEMP_DISPLAY_choices))[0]:
         raise ValidationError('Please select the temperature system for display')
@@ -3369,6 +3380,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('', 'Disabled'),
         ('average_neutral', 'Average Neutral'),
         ('maximum_neutral', 'Maximum Neutral'),
+        ('green_mtf', 'Midtone Transfer Function'),
     )
 
     IMAGE_EXPORT_RAW_choices = (
@@ -4057,6 +4069,8 @@ class IndiAllskyConfigForm(FlaskForm):
     USE_NIGHT_COLOR                  = BooleanField('Use Night Color Settings')
     SCNR_ALGORITHM                   = SelectField('SCNR (Night)', choices=SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
     SCNR_ALGORITHM_DAY               = SelectField('SCNR (Day)', choices=SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
+    SCNR_MTF_MIDTONES                = FloatField('SCNR MTF Midtones (Night)', validators=[SCNR_MTF_MIDTONES_validator])
+    SCNR_MTF_MIDTONES_DAY            = FloatField('SCNR MTF Midtones (Day)', validators=[SCNR_MTF_MIDTONES_validator])
     WBR_FACTOR                       = FloatField('Red Balance Factor (Night)', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
     WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
     WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
@@ -8317,6 +8331,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     #IMAGE_STRETCH__SPLIT            = BooleanField('Stretching split screen')
     CFA_PATTERN                      = SelectField('Bayer Pattern', choices=CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
     SCNR_ALGORITHM                   = SelectField('SCNR (green reduction)', choices=IndiAllskyConfigForm.SCNR_ALGORITHM_choices, validators=[SCNR_ALGORITHM_validator])
+    SCNR_MTF_MIDTONES                = FloatField('SCNR MTF Midtones', validators=[SCNR_MTF_MIDTONES_validator])
     WBR_FACTOR                       = FloatField('Red Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
     WBG_FACTOR                       = FloatField('Green Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))
     WBB_FACTOR                       = FloatField('Blue Balance Factor', validators=[WB_FACTOR_validator], widget=NumberInput(step=0.1))

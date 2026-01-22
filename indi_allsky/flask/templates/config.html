@@ -1533,13 +1533,18 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-7">
             <div>SCNR algorithm to apply to reduce green bias in image</div>
-            <div>
-              <ul>
-                <li>Average Neutral</li>
-                <li>Maximum Neutral</li>
-              </ul>
-            </div>
         </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SCNR_MTF_MIDTONES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.SCNR_MTF_MIDTONES(class='form-control bg-secondary') }}
+            <div id="SCNR_MTF_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Range: 0.5-1.0. 0.5 = No change</div>
     </div>
 
     <div class="form-group row">
@@ -1642,6 +1647,17 @@ var camera_id = {{ camera_id }};
               </ul>
             </div>
         </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SCNR_MTF_MIDTONES_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.SCNR_MTF_MIDTONES_DAY(class='form-control bg-secondary') }}
+            <div id="SCNR_MTF_MIDTONES_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Range: 0.5-1.0. 0.5 = No change</div>
     </div>
 
     <div class="form-group row">
@@ -8695,6 +8711,8 @@ const field_names = [
     'CFA_PATTERN',
     'SCNR_ALGORITHM',
     'SCNR_ALGORITHM_DAY',
+    'SCNR_MTF_MIDTONES',
+    'SCNR_MTF_MIDTONES_DAY',
     'CCD_TEMP',
     'CCD_TEMP_DAY',
     'TEMP_DISPLAY',
@@ -9559,6 +9577,8 @@ $('#USE_NIGHT_COLOR').on('change', function() {
     if ($('#USE_NIGHT_COLOR').prop('checked')) {
         $('#SCNR_ALGORITHM_DAY').attr({'readonly': true, 'disabled': true});
         $('#SCNR_ALGORITHM_DAY').addClass('bg-dark text-secondary');
+        $('#SCNR_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
+        $('#SCNR_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
         $('#WBR_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#WBR_FACTOR_DAY').addClass('bg-dark text-secondary');
         $('#WBG_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
@@ -9573,6 +9593,8 @@ $('#USE_NIGHT_COLOR').on('change', function() {
     } else {
         $('#SCNR_ALGORITHM_DAY').removeAttr('readonly disabled');
         $('#SCNR_ALGORITHM_DAY').removeClass('bg-dark text-secondary');
+        $('#SCNR_MTF_MIDTONES_DAY').removeAttr('readonly disabled');
+        $('#SCNR_MTF_MIDTONES_DAY').removeClass('bg-dark text-secondary');
         $('#WBR_FACTOR_DAY').removeAttr('readonly disabled');
         $('#WBR_FACTOR_DAY').removeClass('bg-dark text-secondary');
         $('#WBG_FACTOR_DAY').removeAttr('readonly disabled');
@@ -9866,6 +9888,8 @@ $( document ).ready(function() {
     if ($('#USE_NIGHT_COLOR').prop('checked')) {
         $('#SCNR_ALGORITHM_DAY').attr({'readonly': true, 'disabled': true});
         $('#SCNR_ALGORITHM_DAY').addClass('bg-dark text-secondary');
+        $('#SCNR_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
+        $('#SCNR_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
         $('#WBR_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#WBR_FACTOR_DAY').addClass('bg-dark text-secondary');
         $('#WBG_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
