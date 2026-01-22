@@ -1846,9 +1846,9 @@ class ImageProcessor(object):
         b, g, r = cv2.split(self.image)
 
 
-        mtf_b = self._mtf_lut.take(b, mode='raise')
-        mtf_g = self._mtf_lut.take(g, mode='raise')
-        mtf_r = self._mtf_lut.take(r, mode='raise')
+        mtf_b = self._wbb_mtf_lut.take(b, mode='raise')
+        mtf_g = self._wbg_mtf_lut.take(g, mode='raise')
+        mtf_r = self._wbr_mtf_lut.take(r, mode='raise')
 
 
         self.image = cv2.merge((mtf_b, mtf_g, mtf_r))
