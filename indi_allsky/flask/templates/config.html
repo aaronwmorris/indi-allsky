@@ -9577,6 +9577,8 @@ $('#USE_NIGHT_COLOR').on('change', function() {
     if ($('#USE_NIGHT_COLOR').prop('checked')) {
         $('#SCNR_ALGORITHM_DAY').attr({'readonly': true, 'disabled': true});
         $('#SCNR_ALGORITHM_DAY').addClass('bg-dark text-secondary');
+        $('#SCNR_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
+        $('#SCNR_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
         $('#WBR_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#WBR_FACTOR_DAY').addClass('bg-dark text-secondary');
         $('#WBG_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
@@ -9591,6 +9593,8 @@ $('#USE_NIGHT_COLOR').on('change', function() {
     } else {
         $('#SCNR_ALGORITHM_DAY').removeAttr('readonly disabled');
         $('#SCNR_ALGORITHM_DAY').removeClass('bg-dark text-secondary');
+        $('#SCNR_MTF_MIDTONES_DAY').removeAttr('readonly disabled');
+        $('#SCNR_MTF_MIDTONES_DAY').removeClass('bg-dark text-secondary');
         $('#WBR_FACTOR_DAY').removeAttr('readonly disabled');
         $('#WBR_FACTOR_DAY').removeClass('bg-dark text-secondary');
         $('#WBG_FACTOR_DAY').removeAttr('readonly disabled');
@@ -9884,6 +9888,8 @@ $( document ).ready(function() {
     if ($('#USE_NIGHT_COLOR').prop('checked')) {
         $('#SCNR_ALGORITHM_DAY').attr({'readonly': true, 'disabled': true});
         $('#SCNR_ALGORITHM_DAY').addClass('bg-dark text-secondary');
+        $('#SCNR_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
+        $('#SCNR_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
         $('#WBR_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#WBR_FACTOR_DAY').addClass('bg-dark text-secondary');
         $('#WBG_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
