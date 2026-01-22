@@ -105,7 +105,7 @@ class IndiAllskyScnr(object):
 
 
         if isinstance(self._mtf_lut, type(None)):
-            midtones = 0.65
+            midtones = self.config.get('SCNR_MTF_MIDTONES', 0.65)
 
             shadows_val = 0
             highlights_val = 255

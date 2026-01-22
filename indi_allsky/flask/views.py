@@ -2029,6 +2029,7 @@ class ConfigView(FormView):
             'USE_NIGHT_COLOR'                : self.indi_allsky_config.get('USE_NIGHT_COLOR', True),
             'SCNR_ALGORITHM'                 : self.indi_allsky_config.get('SCNR_ALGORITHM', ''),
             'SCNR_ALGORITHM_DAY'             : self.indi_allsky_config.get('SCNR_ALGORITHM_DAY', ''),
+            'SCNR_MTF_MIDTONES'              : self.indi_allsky_config.get('SCNR_MTF_MIDTONES', 0.65),
             'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
             'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
             'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
@@ -2964,6 +2965,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['USE_NIGHT_COLOR']                      = bool(request.json['USE_NIGHT_COLOR'])
         self.indi_allsky_config['SCNR_ALGORITHM']                       = str(request.json['SCNR_ALGORITHM'])
         self.indi_allsky_config['SCNR_ALGORITHM_DAY']                   = str(request.json['SCNR_ALGORITHM_DAY'])
+        self.indi_allsky_config['SCNR_MTF_MIDTONES']                    = float(request.json['SCNR_MTF_MIDTONES'])
         self.indi_allsky_config['WBR_FACTOR']                           = float(request.json['WBR_FACTOR'])
         self.indi_allsky_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
         self.indi_allsky_config['WBB_FACTOR']                           = float(request.json['WBB_FACTOR'])
@@ -6994,6 +6996,7 @@ class ImageProcessingView(TemplateView):
             'IMAGE_STRETCH__MODE2_HIGHLIGHTS': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_HIGHLIGHTS', 1.0),
             'CFA_PATTERN'                    : self.indi_allsky_config.get('CFA_PATTERN', ''),
             'SCNR_ALGORITHM'                 : self.indi_allsky_config.get('SCNR_ALGORITHM', ''),
+            'SCNR_MTF_MIDTONES'              : self.indi_allsky_config.get('SCNR_MTF_MIDTONES', 0.65),
             'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
             'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
             'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
@@ -7252,6 +7255,7 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_STRETCH']['SPLIT']               = False
         p_config['CFA_PATTERN']                          = str(request.json['CFA_PATTERN'])
         p_config['SCNR_ALGORITHM']                       = str(request.json['SCNR_ALGORITHM'])
+        p_config['SCNR_MTF_MIDTONES']                    = float(request.json['SCNR_MTF_MIDTONES'])
         p_config['WBR_FACTOR']                           = float(request.json['WBR_FACTOR'])
         p_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
         p_config['WBB_FACTOR']                           = float(request.json['WBB_FACTOR'])

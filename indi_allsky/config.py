@@ -90,6 +90,7 @@ class IndiAllSkyConfigBase(object):
         "USE_NIGHT_COLOR"  : True,
         "SCNR_ALGORITHM"   : "",  # empty string, average_neutral, or maximum_neutral
         "SCNR_ALGORITHM_DAY" : "",
+        "SCNR_MTF_MIDTONES"  : 0.65,
         "WBR_FACTOR"       : 1.0,
         "WBG_FACTOR"       : 1.0,
         "WBB_FACTOR"       : 1.0,
