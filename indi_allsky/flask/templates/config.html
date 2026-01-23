@@ -1588,14 +1588,21 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-7">
             <div>SCNR algorithm to apply to reduce green bias in image</div>
-            <div>
-              <ul>
-                <li>Average Neutral</li>
-                <li>Maximum Neutral</li>
-              </ul>
-            </div>
         </div>
     </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SCNR_MTF_MIDTONES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.SCNR_MTF_MIDTONES(class='form-control bg-secondary') }}
+            <div id="SCNR_MTF_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Range: 0.5-1.0. 0.5 = No change</div>
+    </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -1630,6 +1637,45 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8"></div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WBR_MTF_MIDTONES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WBR_MTF_MIDTONES(class='form-control bg-secondary') }}
+            <div id="WBR_MTF_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Midtone Transfer Function stretch</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WBG_MTF_MIDTONES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WBG_MTF_MIDTONES(class='form-control bg-secondary') }}
+            <div id="WBG_MTF_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>0.5 means no change.  Less than 0.5 increases the color, greater than 0.5 decreases the color</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WBB_MTF_MIDTONES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WBB_MTF_MIDTONES(class='form-control bg-secondary') }}
+            <div id="WBB_MTF_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.AUTO_WB.label }}
@@ -1642,6 +1688,8 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">Auto WB is applied after manual WB settings</div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -1701,6 +1749,19 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.SCNR_MTF_MIDTONES_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.SCNR_MTF_MIDTONES_DAY(class='form-control bg-secondary') }}
+            <div id="SCNR_MTF_MIDTONES_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Range: 0.5-1.0. 0.5 = No change</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.WBR_FACTOR_DAY.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -1732,6 +1793,47 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8"></div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WBR_MTF_MIDTONES_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WBR_MTF_MIDTONES_DAY(class='form-control bg-secondary') }}
+            <div id="WBR_MTF_MIDTONES_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Midtone Transfer Function stretch</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WBG_MTF_MIDTONES_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WBG_MTF_MIDTONES_DAY(class='form-control bg-secondary') }}
+            <div id="WBG_MTF_MIDTONES_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>0.5 means no change.  Less than 0.5 increases the color, greater than 0.5 decreases the color</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.WBB_MTF_MIDTONES_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.WBB_MTF_MIDTONES_DAY(class='form-control bg-secondary') }}
+            <div id="WBB_MTF_MIDTONES_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.AUTO_WB_DAY.label }}
@@ -1744,6 +1846,8 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">Auto WB is applied after manual WB settings</div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -8743,6 +8847,12 @@ const field_names = [
     'WBR_FACTOR_DAY',
     'WBG_FACTOR_DAY',
     'WBB_FACTOR_DAY',
+    'WBR_MTF_MIDTONES',
+    'WBG_MTF_MIDTONES',
+    'WBB_MTF_MIDTONES',
+    'WBR_MTF_MIDTONES_DAY',
+    'WBG_MTF_MIDTONES_DAY',
+    'WBB_MTF_MIDTONES_DAY',
     'SATURATION_FACTOR',
     'SATURATION_FACTOR_DAY',
     'GAMMA_CORRECTION',
@@ -8750,6 +8860,8 @@ const field_names = [
     'CFA_PATTERN',
     'SCNR_ALGORITHM',
     'SCNR_ALGORITHM_DAY',
+    'SCNR_MTF_MIDTONES',
+    'SCNR_MTF_MIDTONES_DAY',
     'CCD_TEMP',
     'CCD_TEMP_DAY',
     'TEMP_DISPLAY',
@@ -9618,12 +9730,20 @@ $('#USE_NIGHT_COLOR').on('change', function() {
     if ($('#USE_NIGHT_COLOR').prop('checked')) {
         $('#SCNR_ALGORITHM_DAY').attr({'readonly': true, 'disabled': true});
         $('#SCNR_ALGORITHM_DAY').addClass('bg-dark text-secondary');
+        $('#SCNR_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
+        $('#SCNR_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
         $('#WBR_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#WBR_FACTOR_DAY').addClass('bg-dark text-secondary');
         $('#WBG_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#WBG_FACTOR_DAY').addClass('bg-dark text-secondary');
         $('#WBB_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#WBB_FACTOR_DAY').addClass('bg-dark text-secondary');
+        $('#WBR_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
+        $('#WBR_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
+        $('#WBG_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
+        $('#WBG_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
+        $('#WBB_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
+        $('#WBB_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
         $('#AUTO_WB_DAY').attr({'disabled': true});
         $('#SATURATION_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#SATURATION_FACTOR_DAY').addClass('bg-dark text-secondary');
@@ -9632,12 +9752,20 @@ $('#USE_NIGHT_COLOR').on('change', function() {
     } else {
         $('#SCNR_ALGORITHM_DAY').removeAttr('readonly disabled');
         $('#SCNR_ALGORITHM_DAY').removeClass('bg-dark text-secondary');
+        $('#SCNR_MTF_MIDTONES_DAY').removeAttr('readonly disabled');
+        $('#SCNR_MTF_MIDTONES_DAY').removeClass('bg-dark text-secondary');
         $('#WBR_FACTOR_DAY').removeAttr('readonly disabled');
         $('#WBR_FACTOR_DAY').removeClass('bg-dark text-secondary');
         $('#WBG_FACTOR_DAY').removeAttr('readonly disabled');
         $('#WBG_FACTOR_DAY').removeClass('bg-dark text-secondary');
         $('#WBB_FACTOR_DAY').removeAttr('readonly disabled');
         $('#WBB_FACTOR_DAY').removeClass('bg-dark text-secondary');
+        $('#WBR_MTF_MIDTONES_DAY').removeAttr('readonly disabled');
+        $('#WBR_MTF_MIDTONES_DAY').removeClass('bg-dark text-secondary');
+        $('#WBG_MTF_MIDTONES_DAY').removeAttr('readonly disabled');
+        $('#WBG_MTF_MIDTONES_DAY').removeClass('bg-dark text-secondary');
+        $('#WBB_MTF_MIDTONES_DAY').removeAttr('readonly disabled');
+        $('#WBB_MTF_MIDTONES_DAY').removeClass('bg-dark text-secondary');
         $('#AUTO_WB_DAY').removeAttr('disabled');
         $('#SATURATION_FACTOR_DAY').removeAttr('readonly disabled');
         $('#SATURATION_FACTOR_DAY').removeClass('bg-dark text-secondary');
@@ -9925,12 +10053,20 @@ $( document ).ready(function() {
     if ($('#USE_NIGHT_COLOR').prop('checked')) {
         $('#SCNR_ALGORITHM_DAY').attr({'readonly': true, 'disabled': true});
         $('#SCNR_ALGORITHM_DAY').addClass('bg-dark text-secondary');
+        $('#SCNR_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
+        $('#SCNR_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
         $('#WBR_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#WBR_FACTOR_DAY').addClass('bg-dark text-secondary');
         $('#WBG_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#WBG_FACTOR_DAY').addClass('bg-dark text-secondary');
         $('#WBB_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#WBB_FACTOR_DAY').addClass('bg-dark text-secondary');
+        $('#WBR_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
+        $('#WBR_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
+        $('#WBG_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
+        $('#WBG_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
+        $('#WBB_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
+        $('#WBB_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
         $('#AUTO_WB_DAY').attr({'disabled': true});
         $('#SATURATION_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#SATURATION_FACTOR_DAY').addClass('bg-dark text-secondary');

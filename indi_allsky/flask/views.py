@@ -2029,6 +2029,8 @@ class ConfigView(FormView):
             'USE_NIGHT_COLOR'                : self.indi_allsky_config.get('USE_NIGHT_COLOR', True),
             'SCNR_ALGORITHM'                 : self.indi_allsky_config.get('SCNR_ALGORITHM', ''),
             'SCNR_ALGORITHM_DAY'             : self.indi_allsky_config.get('SCNR_ALGORITHM_DAY', ''),
+            'SCNR_MTF_MIDTONES'              : self.indi_allsky_config.get('SCNR_MTF_MIDTONES', 0.55),
+            'SCNR_MTF_MIDTONES_DAY'          : self.indi_allsky_config.get('SCNR_MTF_MIDTONES_DAY', 0.55),
             'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
             'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
             'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
@@ -2037,6 +2039,12 @@ class ConfigView(FormView):
             'WBB_FACTOR_DAY'                 : self.indi_allsky_config.get('WBB_FACTOR_DAY', 1.0),
             'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
             'AUTO_WB_DAY'                    : self.indi_allsky_config.get('AUTO_WB_DAY', False),
+            'WBR_MTF_MIDTONES'               : self.indi_allsky_config.get('WBR_MTF_MIDTONES', 0.5),
+            'WBG_MTF_MIDTONES'               : self.indi_allsky_config.get('WBG_MTF_MIDTONES', 0.5),
+            'WBB_MTF_MIDTONES'               : self.indi_allsky_config.get('WBB_MTF_MIDTONES', 0.5),
+            'WBR_MTF_MIDTONES_DAY'           : self.indi_allsky_config.get('WBR_MTF_MIDTONES_DAY', 0.5),
+            'WBG_MTF_MIDTONES_DAY'           : self.indi_allsky_config.get('WBG_MTF_MIDTONES_DAY', 0.5),
+            'WBB_MTF_MIDTONES_DAY'           : self.indi_allsky_config.get('WBB_MTF_MIDTONES_DAY', 0.5),
             'SATURATION_FACTOR'              : self.indi_allsky_config.get('SATURATION_FACTOR', 1.0),
             'SATURATION_FACTOR_DAY'          : self.indi_allsky_config.get('SATURATION_FACTOR_DAY', 1.0),
             'GAMMA_CORRECTION'               : self.indi_allsky_config.get('GAMMA_CORRECTION', 1.0),
@@ -2968,12 +2976,20 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['USE_NIGHT_COLOR']                      = bool(request.json['USE_NIGHT_COLOR'])
         self.indi_allsky_config['SCNR_ALGORITHM']                       = str(request.json['SCNR_ALGORITHM'])
         self.indi_allsky_config['SCNR_ALGORITHM_DAY']                   = str(request.json['SCNR_ALGORITHM_DAY'])
+        self.indi_allsky_config['SCNR_MTF_MIDTONES']                    = float(request.json['SCNR_MTF_MIDTONES'])
+        self.indi_allsky_config['SCNR_MTF_MIDTONES_DAY']                = float(request.json['SCNR_MTF_MIDTONES_DAY'])
         self.indi_allsky_config['WBR_FACTOR']                           = float(request.json['WBR_FACTOR'])
         self.indi_allsky_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
         self.indi_allsky_config['WBB_FACTOR']                           = float(request.json['WBB_FACTOR'])
         self.indi_allsky_config['WBR_FACTOR_DAY']                       = float(request.json['WBR_FACTOR_DAY'])
         self.indi_allsky_config['WBG_FACTOR_DAY']                       = float(request.json['WBG_FACTOR_DAY'])
         self.indi_allsky_config['WBB_FACTOR_DAY']                       = float(request.json['WBB_FACTOR_DAY'])
+        self.indi_allsky_config['WBR_MTF_MIDTONES']                     = float(request.json['WBR_MTF_MIDTONES'])
+        self.indi_allsky_config['WBG_MTF_MIDTONES']                     = float(request.json['WBG_MTF_MIDTONES'])
+        self.indi_allsky_config['WBB_MTF_MIDTONES']                     = float(request.json['WBB_MTF_MIDTONES'])
+        self.indi_allsky_config['WBR_MTF_MIDTONES_DAY']                 = float(request.json['WBR_MTF_MIDTONES_DAY'])
+        self.indi_allsky_config['WBG_MTF_MIDTONES_DAY']                 = float(request.json['WBG_MTF_MIDTONES_DAY'])
+        self.indi_allsky_config['WBB_MTF_MIDTONES_DAY']                 = float(request.json['WBB_MTF_MIDTONES_DAY'])
         self.indi_allsky_config['SATURATION_FACTOR']                    = float(request.json['SATURATION_FACTOR'])
         self.indi_allsky_config['SATURATION_FACTOR_DAY']                = float(request.json['SATURATION_FACTOR_DAY'])
         self.indi_allsky_config['GAMMA_CORRECTION']                     = float(request.json['GAMMA_CORRECTION'])
@@ -7006,10 +7022,14 @@ class ImageProcessingView(TemplateView):
             'IMAGE_STRETCH__MODE3_HIGHLIGHTS': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE3_HIGHLIGHTS', 1.0),
             'CFA_PATTERN'                    : self.indi_allsky_config.get('CFA_PATTERN', ''),
             'SCNR_ALGORITHM'                 : self.indi_allsky_config.get('SCNR_ALGORITHM', ''),
+            'SCNR_MTF_MIDTONES'              : self.indi_allsky_config.get('SCNR_MTF_MIDTONES', 0.65),
             'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
             'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
             'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
             'AUTO_WB'                        : self.indi_allsky_config.get('AUTO_WB', False),
+            'WBR_MTF_MIDTONES'               : self.indi_allsky_config.get('WBR_MTF_MIDTONES', 0.5),
+            'WBG_MTF_MIDTONES'               : self.indi_allsky_config.get('WBG_MTF_MIDTONES', 0.5),
+            'WBB_MTF_MIDTONES'               : self.indi_allsky_config.get('WBB_MTF_MIDTONES', 0.5),
             'SATURATION_FACTOR'              : self.indi_allsky_config.get('SATURATION_FACTOR', 1.0),
             'GAMMA_CORRECTION'               : self.indi_allsky_config.get('GAMMA_CORRECTION', 1.0),
             'IMAGE_ROTATE'                   : self.indi_allsky_config.get('IMAGE_ROTATE', ''),
@@ -7268,9 +7288,14 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_STRETCH']['SPLIT']               = False
         p_config['CFA_PATTERN']                          = str(request.json['CFA_PATTERN'])
         p_config['SCNR_ALGORITHM']                       = str(request.json['SCNR_ALGORITHM'])
+        p_config['SCNR_MTF_MIDTONES']                    = float(request.json['SCNR_MTF_MIDTONES'])
         p_config['WBR_FACTOR']                           = float(request.json['WBR_FACTOR'])
         p_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
         p_config['WBB_FACTOR']                           = float(request.json['WBB_FACTOR'])
+        p_config['WBR_MTF_MIDTONES']                     = float(request.json['WBR_MTF_MIDTONES'])
+        p_config['WBG_MTF_MIDTONES']                     = float(request.json['WBG_MTF_MIDTONES'])
+        p_config['WBB_MTF_MIDTONES']                     = float(request.json['WBB_MTF_MIDTONES'])
+        p_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
         p_config['SATURATION_FACTOR']                    = float(request.json['SATURATION_FACTOR'])
         p_config['GAMMA_CORRECTION']                     = float(request.json['GAMMA_CORRECTION'])
         p_config['IMAGE_ROTATE']                         = str(request.json['IMAGE_ROTATE'])
@@ -7585,6 +7610,7 @@ class JsonImageProcessingView(JsonView):
 
 
             # white balance
+            image_processor.white_balance_mtf()
             image_processor.white_balance_manual_bgr()
             image_processor.white_balance_auto_bgr()
 
