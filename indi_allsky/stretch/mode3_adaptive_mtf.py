@@ -19,7 +19,7 @@ class IndiAllSky_Mode3_Adaptive_MTF_Stretch(IndiAllSky_Stretch_Base):
 
         self.black_clip = self.config.get('IMAGE_STRETCH', {}).get('MODE3_BLACK_CLIP', -2.8)
         self.shadows = self.config.get('IMAGE_STRETCH', {}).get('MODE3_SHADOWS', 0.0)
-        self.midtones = self.config.get('IMAGE_STRETCH', {}).get('MODE3_MIDTONES', 0.35)
+        self.midtones = self.config.get('IMAGE_STRETCH', {}).get('MODE3_MIDTONES', 0.25)
         self.highlights = self.config.get('IMAGE_STRETCH', {}).get('MODE3_HIGHLIGHTS', 1.0)
         
         self.stride = 20

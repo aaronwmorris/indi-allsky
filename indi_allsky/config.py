@@ -178,7 +178,7 @@ class IndiAllSkyConfigBase(object):
             "MODE2_HIGHLIGHTS"  : 1.0,
             "MODE3_BLACK_CLIP"  : -2.8,
             "MODE3_SHADOWS"     : 0.0,
-            "MODE3_MIDTONES"    : 0.35,
+            "MODE3_MIDTONES"    : 0.25,
             "MODE3_HIGHLIGHTS"  : 1.0,
             "SPLIT"             : False,
             "MOONMODE"          : False,
