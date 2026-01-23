@@ -1478,7 +1478,8 @@ var camera_id = {{ camera_id }};
             <div id="IMAGE_STRETCH__MODE3_BLACK_CLIP-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Default -2.8 - It is recommended not to adjust this setting</div>
+            <div>Black clipping point in normalized MAD units from the median pixel value of the image</div>
+            <div>Default -2.8 - It is recommended to prefer adjusting shadows instead of this</div>
         </div>
     </div>
 
@@ -1504,7 +1505,8 @@ var camera_id = {{ camera_id }};
             <div id="IMAGE_STRETCH__MODE3_MIDTONES-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>0.25 - 0.35 are good values to start. Lower may be ideal if the FOV fills a small proportion of the sensor area.</div>
+            <div>Target median pixel value of the image</div>
+            <div>0.25 - 0.35 are good values to start. Lower may be ideal if the FOV fills a small proportion of the sensor area</div>
         </div>
     </div>
 
