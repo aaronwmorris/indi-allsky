@@ -1,17 +1,22 @@
 import logging
-import smbus
 
 from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorReadException
 
+
 logger = logging.getLogger('indi_allsky')
 
 
 class UpsHatWaveshareE_MCU_I2C(SensorBase):
-    """
+    """Waveshare UPS HAT (E) MCU reader (I2C addr 0x2D).
+
     Waveshare UPS HAT (E) MCU reader (I2C addr 0x2D).
     Liefert Batterie-/VBUS-/Zellwerte als Slots (floats).
+
+    WICHTIG: Verwende CircuitPython/Blinka I2C (board.I2C + I2CDevice) statt smbus,
+    damit mehrere Module/Devices im selben Prozess denselben I2C-Bus teilen können
+    (Singleton/Locking über Blinka/Adafruit BusDevice).
     """
 
 
@@ -34,7 +39,6 @@ class UpsHatWaveshareE_MCU_I2C(SensorBase):
             'Cell2 Voltage (mV)',
             'Cell3 Voltage (mV)',
             'Cell4 Voltage (mV)',
-            # Wenn du alle 4 Zellen willst: count=14 und unten Cell3/Cell4 ergänzen
         ),
         'types' : (
             constants.SENSOR_MISC,
@@ -66,9 +70,24 @@ class UpsHatWaveshareE_MCU_I2C(SensorBase):
 
         i2c_address_str = kwargs.get('i2c_address', '0x2d')
         self.i2c_address = int(i2c_address_str, 16)  # config liefert string
-        self.bus = smbus.SMBus(1)
+
+        # Defer imports so environments without Blinka don't break module import.
+        import board
+        import adafruit_bus_device.i2c_device as i2cdevice
 
         logger.warning('Initializing [%s] Waveshare UPS HAT (E) MCU @ %s', self.name, hex(self.i2c_address))
+
+        # board.I2C() is shared/singleton-like under Blinka and supports locking.
+        self._i2c = board.I2C()
+        # i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)  # optional alternative
+        self._device = i2cdevice.I2CDevice(self._i2c, self.i2c_address)
+
+        # Reusable buffers to avoid allocations on each update()
+        self._reg_buf = bytearray(1)
+        self._buf_status = bytearray(1)
+        self._buf_vbus = bytearray(6)
+        self._buf_bat = bytearray(12)
+        self._buf_cells = bytearray(8)
 
 
     def _u16(self, lo, hi):
@@ -82,10 +101,19 @@ class UpsHatWaveshareE_MCU_I2C(SensorBase):
         return v
 
 
+    def _read_into(self, register, buf):
+        """Read `len(buf)` bytes from `register` into `buf`."""
+        self._reg_buf[0] = register
+        with self._device as i2c:
+            # Write one-byte register pointer, then read into buffer.
+            i2c.write_then_readinto(self._reg_buf, buf, out_end=1)
+
+
     def update(self):
         try:
             # Status @ 0x02
-            st = self.bus.read_i2c_block_data(self.i2c_address, 0x02, 0x01)[0]
+            self._read_into(0x02, self._buf_status)
+            st = self._buf_status[0]
             if st & self.BIT_FAST:
                 state = 3.0
             elif st & self.BIT_CHG:
@@ -96,13 +124,15 @@ class UpsHatWaveshareE_MCU_I2C(SensorBase):
                 state = 0.0
 
             # VBUS @ 0x10 (6 bytes): mV, mA, mW (u16)
-            d = self.bus.read_i2c_block_data(self.i2c_address, 0x10, 0x06)
+            self._read_into(0x10, self._buf_vbus)
+            d = self._buf_vbus
             vbus_mv = float(self._u16(d[0], d[1]))
             vbus_ma = float(self._u16(d[2], d[3]))
             vbus_mw = float(self._u16(d[4], d[5]))
 
             # Battery @ 0x20 (12 bytes)
-            d = self.bus.read_i2c_block_data(self.i2c_address, 0x20, 0x0C)
+            self._read_into(0x20, self._buf_bat)
+            d = self._buf_bat
             bat_mv  = float(self._u16(d[0], d[1]))
             bat_ma  = float(self._s16(d[2], d[3]))   # signed!
             bat_pct = float(self._u16(d[4], d[5]))
@@ -110,14 +140,15 @@ class UpsHatWaveshareE_MCU_I2C(SensorBase):
             tte_min = float(self._u16(d[8], d[9]))
             ttf_min = float(self._u16(d[10], d[11]))
 
-            # Cells @ 0x30 (8 bytes) – hier nur Cell1+Cell2 als Beispiel
-            d = self.bus.read_i2c_block_data(self.i2c_address, 0x30, 0x08)
+            # Cells @ 0x30 (8 bytes)
+            self._read_into(0x30, self._buf_cells)
+            d = self._buf_cells
             c1 = float(self._u16(d[0], d[1]))
             c2 = float(self._u16(d[2], d[3]))
             c3 = float(self._u16(d[4], d[5]))
             c4 = float(self._u16(d[6], d[7]))
 
-        except OSError as e:
+        except (OSError, RuntimeError, ValueError) as e:
             raise SensorReadException(str(e)) from e
 
 
