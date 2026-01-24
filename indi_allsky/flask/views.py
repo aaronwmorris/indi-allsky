@@ -2108,6 +2108,10 @@ class ConfigView(FormView):
             'IMAGE_STRETCH__MODE2_SHADOWS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_SHADOWS', 0.0),
             'IMAGE_STRETCH__MODE2_MIDTONES'  : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_MIDTONES', 0.35),
             'IMAGE_STRETCH__MODE2_HIGHLIGHTS': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_HIGHLIGHTS', 1.0),
+            'IMAGE_STRETCH__MODE3_BLACK_CLIP': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE3_BLACK_CLIP', -2.8),
+            'IMAGE_STRETCH__MODE3_SHADOWS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE3_SHADOWS', 0.0),
+            'IMAGE_STRETCH__MODE3_MIDTONES'  : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE3_MIDTONES', 0.25),
+            'IMAGE_STRETCH__MODE3_HIGHLIGHTS': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE3_HIGHLIGHTS', 1.0),
             'IMAGE_STRETCH__SPLIT'           : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('SPLIT', False),
             'IMAGE_STRETCH__MOONMODE'        : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MOONMODE', False),
             'IMAGE_STRETCH__DAYTIME'         : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('DAYTIME', False),
@@ -3051,6 +3055,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_STRETCH']['MODE2_SHADOWS']       = float(request.json['IMAGE_STRETCH__MODE2_SHADOWS'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE2_MIDTONES']      = float(request.json['IMAGE_STRETCH__MODE2_MIDTONES'])
         self.indi_allsky_config['IMAGE_STRETCH']['MODE2_HIGHLIGHTS']    = float(request.json['IMAGE_STRETCH__MODE2_HIGHLIGHTS'])
+        self.indi_allsky_config['IMAGE_STRETCH']['MODE3_BLACK_CLIP']    = float(request.json['IMAGE_STRETCH__MODE3_BLACK_CLIP'])
+        self.indi_allsky_config['IMAGE_STRETCH']['MODE3_SHADOWS']       = float(request.json['IMAGE_STRETCH__MODE3_SHADOWS'])
+        self.indi_allsky_config['IMAGE_STRETCH']['MODE3_MIDTONES']      = float(request.json['IMAGE_STRETCH__MODE3_MIDTONES'])
+        self.indi_allsky_config['IMAGE_STRETCH']['MODE3_HIGHLIGHTS']    = float(request.json['IMAGE_STRETCH__MODE3_HIGHLIGHTS'])
         self.indi_allsky_config['IMAGE_STRETCH']['SPLIT']               = bool(request.json['IMAGE_STRETCH__SPLIT'])
         self.indi_allsky_config['IMAGE_STRETCH']['MOONMODE']            = bool(request.json['IMAGE_STRETCH__MOONMODE'])
         self.indi_allsky_config['IMAGE_STRETCH']['DAYTIME']             = bool(request.json['IMAGE_STRETCH__DAYTIME'])
@@ -7008,6 +7016,10 @@ class ImageProcessingView(TemplateView):
             'IMAGE_STRETCH__MODE2_SHADOWS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_SHADOWS', 0.0),
             'IMAGE_STRETCH__MODE2_MIDTONES'  : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_MIDTONES', 0.35),
             'IMAGE_STRETCH__MODE2_HIGHLIGHTS': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE2_HIGHLIGHTS', 1.0),
+            'IMAGE_STRETCH__MODE3_BLACK_CLIP': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE3_BLACK_CLIP', -2.8),
+            'IMAGE_STRETCH__MODE3_SHADOWS'   : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE3_SHADOWS', 0.0),
+            'IMAGE_STRETCH__MODE3_MIDTONES'  : self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE3_MIDTONES', 0.25),
+            'IMAGE_STRETCH__MODE3_HIGHLIGHTS': self.indi_allsky_config.get('IMAGE_STRETCH', {}).get('MODE3_HIGHLIGHTS', 1.0),
             'CFA_PATTERN'                    : self.indi_allsky_config.get('CFA_PATTERN', ''),
             'SCNR_ALGORITHM'                 : self.indi_allsky_config.get('SCNR_ALGORITHM', ''),
             'SCNR_MTF_MIDTONES'              : self.indi_allsky_config.get('SCNR_MTF_MIDTONES', 0.65),
@@ -7269,6 +7281,10 @@ class JsonImageProcessingView(JsonView):
         p_config['IMAGE_STRETCH']['MODE2_SHADOWS']       = float(request.json['IMAGE_STRETCH__MODE2_SHADOWS'])
         p_config['IMAGE_STRETCH']['MODE2_MIDTONES']      = float(request.json['IMAGE_STRETCH__MODE2_MIDTONES'])
         p_config['IMAGE_STRETCH']['MODE2_HIGHLIGHTS']    = float(request.json['IMAGE_STRETCH__MODE2_HIGHLIGHTS'])
+        p_config['IMAGE_STRETCH']['MODE3_BLACK_CLIP']    = float(request.json['IMAGE_STRETCH__MODE3_BLACK_CLIP'])
+        p_config['IMAGE_STRETCH']['MODE3_SHADOWS']       = float(request.json['IMAGE_STRETCH__MODE3_SHADOWS'])
+        p_config['IMAGE_STRETCH']['MODE3_MIDTONES']      = float(request.json['IMAGE_STRETCH__MODE3_MIDTONES'])
+        p_config['IMAGE_STRETCH']['MODE3_HIGHLIGHTS']    = float(request.json['IMAGE_STRETCH__MODE3_HIGHLIGHTS'])
         p_config['IMAGE_STRETCH']['SPLIT']               = False
         p_config['CFA_PATTERN']                          = str(request.json['CFA_PATTERN'])
         p_config['SCNR_ALGORITHM']                       = str(request.json['SCNR_ALGORITHM'])
