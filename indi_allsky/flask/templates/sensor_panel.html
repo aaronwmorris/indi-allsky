@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}indi-allsky: Sensor Panel{% endblock %}
+
+{% block head %}
+
+<script type="text/javascript">
+var camera_id = {{ camera_id }};
+var refreshInterval = 5000;
+
+function formatNumber(v) {
+  if (v === null || v === undefined) return '-';
+  if (typeof v !== 'number') return String(v);
+  return v.toFixed(6);
+}
+
+function loadSensorPanel() {
+  loadJS("{{ url_for('indi_allsky.js_sensor_panel_view') }}", {'camera_id': camera_id}, function(){});
+  setTimeout(loadSensorPanel, refreshInterval);
+}
+
+function loadJS(url, data, onDone, onError) {
+  if(!onDone)onDone=function(){};
+  if(!onError)onError=function(){};
+
+  $.ajax({
+    type: "GET",
+    url: url,
+    contentType: "application/json",
+    data: data,
+    success: function(rdata){
+      // update timestamp
+      if (rdata.last_update !== null) {
+        $('#sp_last_update').text(rdata.last_update);
+      }
+      if (rdata.last_update_age_s !== null) {
+        $('#sp_last_age').text(rdata.last_update_age_s);
+      }
+
+      // update visible slot values only (elements exist only for rows shown)
+      for (let i = 0; i < 60; i++) {
+        let elU = document.getElementById('val_sensor_user_' + i);
+        if (elU) elU.textContent = formatNumber(rdata.sensor_user[i]);
+
+        let elT = document.getElementById('val_sensor_temp_' + i);
+        if (elT) elT.textContent = formatNumber(rdata.sensor_temp[i]);
+      }
+
+      onDone();
+    },
+    error: function(rdata){
+      onError(rdata.status);
+    },
+  });
+}
+
+$(document).ready(function() {
+  loadSensorPanel();
+});
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h3 class="text-light mb-0">Sensor Panel</h3>
+        {% if last_update %}
+            <div class="text-secondary" style="font-size: 12px;">
+                Last update: <span id="sp_last_update">{{ last_update }}</span>
+                {% if last_update_age_s is not none %}
+                    (<span id="sp_last_age">{{ last_update_age_s }}</span>s ago)
+                {% else %}
+                    (<span id="sp_last_age">-</span>s ago)
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="text-warning" style="font-size: 12px;">No recent image metadata available (waiting for first capture?)</div>
+        {% endif %}
+    </div>
+
+    <div>
+        {% if show_all %}
+            <a class="btn btn-sm btn-outline-info" href="{{ url_for('indi_allsky.sensor_panel_view') }}">Show used only</a>
+        {% else %}
+            <a class="btn btn-sm btn-outline-info" href="{{ url_for('indi_allsky.sensor_panel_view', all=1) }}">Show all slots</a>
+        {% endif %}
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-12 col-xl-6 mb-4">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header text-light">User sensor slots</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 120px;">Slot</th>
+                                <th>Label</th>
+                                <th style="width: 160px;" class="text-end">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in user_rows %}
+                            <tr>
+                                <td class="text-secondary">{{ r.slot }}</td>
+                                <td class="text-light">{{ r.label }}</td>
+                                <td class="text-end text-warning">
+                                    <span id="val_sensor_user_{{ r.index }}">
+                                       {% if r.value is number %}{{ '%0.6f'|format(r.value) }}{% else %}{{ r.value }}{% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-6 mb-4">
+        <div class="card bg-dark border-secondary">
+            <div class="card-header text-light">Temp sensor slots</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 120px;">Slot</th>
+                                <th>Label</th>
+                                <th style="width: 160px;" class="text-end">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in temp_rows %}
+                            <tr>
+                                <td class="text-secondary">{{ r.slot }}</td>
+                                <td class="text-light">{{ r.label }}</td>
+                                <td class="text-end text-warning">
+                                    <span id="val_sensor_temp_{{ r.index }}">
+                                       {% if r.value is number %}{{ '%0.6f'|format(r.value) }}{% else %}{{ r.value }}{% endif %}
+                                    </span> 
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

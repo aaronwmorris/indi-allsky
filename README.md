@@ -1,3 +1,12 @@
+# indi-allsky-mobile fork from indi-allsky
+
+## added features
+
+* support Waveshare UPS hat (e) battery monitor i2c readings
+* added watchdog daemeon template for gentle shutdown when battery low
+* added button to read location via browser geolocation API
+* added sensor panel to show all sensor readings in one table
+
 # indi-allsky
 indi-allsky is software used to manage a Linux-based All Sky Camera using the INDI framework.  Theoretically, any INDI supported CCD/CMOS camera can be functional.
 
