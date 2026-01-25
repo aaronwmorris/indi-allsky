@@ -56,7 +56,7 @@ from .tempSensorLm35_Ads1x15 import TempSensorLm35_Ads1115_I2C as cpads_temp_sen
 
 from .magSensorMmc5983ma import MagSensorMmc5983maSF_I2C as qwiic_mag_sensor_mmc5983ma_i2c
 
-from .upsHatWaveshareE import UpsHatWaveshareE_MCU_I2C as ups_hat_waveshare_e_mcu_i2c
+from .upsHatWaveshareE import UpsHatWaveshareE_MCU_I2C as blinka_ups_hat_waveshare_e_mcu_i2c
 
 from .currentSensorIna219 import CurrentSensorIna219_I2C as blinka_current_sensor_ina219_i2c
 from .currentSensorIna3221 import CurrentSensorIna3221_I2C as blinka_current_sensor_ina3221_i2c
@@ -111,7 +111,7 @@ __all__ = (
     'blinka_light_sensor_bh1750_i2c',
     'blinka_light_sensor_si1145_i2c',
     'blinka_light_sensor_ltr390_i2c',
-    'ups_hat_waveshare_e_mcu_i2c',
+    'blinka_ups_hat_waveshare_e_mcu_i2c',
     'blinka_current_sensor_ina219_i2c',
     'blinka_current_sensor_ina3221_i2c',
     'blinka_current_sensor_ina23x_i2c',

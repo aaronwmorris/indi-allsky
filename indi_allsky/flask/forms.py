@@ -3765,7 +3765,7 @@ class IndiAllskyConfigForm(FlaskForm):
             ('qwiic_mag_sensor_mmc5983ma_i2c', 'MMC5983MA i2c - X/Y/Z/Temp (4 slots)'),
         ),
         'Current Sensors' : (
-            ('ups_hat_waveshare_e_mcu_i2c', 'Waveshare UPS HAT (E) MCU @0x2D - Battery/VBUS/Cells (12 slots)'),
+            ('blinka_ups_hat_waveshare_e_mcu_i2c', 'Waveshare UPS HAT (E) MCU @0x2D - Battery/VBUS/Cells (12 slots)'),
             ('blinka_current_sensor_ina219_i2c', 'INA219 i2c - V/A/W (3 slots)'),
             ('blinka_current_sensor_ina228_i2c', 'INA228 i2c - V/A/W/Temp (4 slots)'),
             ('blinka_current_sensor_ina260_i2c', 'INA260 i2c - V/A/W (3 slots)'),
