@@ -65,15 +65,15 @@ class LightSensorBh1750_I2C(LightSensorBh1750):
         i2c_address_str = kwargs['i2c_address']
 
         import board
-        #import busio
+        import busio
         import adafruit_bh1750
 
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] BH1750 I2C light sensor device @ %s', self.name, hex(i2c_address))
-        i2c = board.I2C()
+        #i2c = board.I2C()
         #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+        i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
         self.bh1750 = adafruit_bh1750.BH1750(i2c, address=i2c_address)
 
 

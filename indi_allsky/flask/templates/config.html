@@ -4399,6 +4399,23 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            <label class="col-form-label">Browser Location</label>
+        </div>
+        <div class="col-sm-2">
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="setLocationFromBrowser();">
+                Use browser location
+            </button>
+        </div>
+        <div class="col-sm-8">
+            <div class="form-text text-secondary">
+                Your browser will ask for permission. Coordinates are only filled into the form after you approve.
+            </div>
+            <div id="BROWSER_LOCATION_STATUS" class="form-text text-secondary"></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LOCATION_ELEVATION.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -9565,6 +9582,68 @@ $('#form_config').on('submit', function() {
 
 });
 
+function setBrowserLocationStatus(msg, is_error) {
+    const el = document.getElementById('BROWSER_LOCATION_STATUS');
+    if (!el) return;
+
+    el.classList.remove('text-danger', 'text-success', 'text-secondary');
+
+    if (is_error) {
+        el.classList.add('text-danger');
+    } else {
+        el.classList.add('text-success');
+    }
+
+    el.textContent = msg;
+}
+
+function setLocationFromBrowser() {
+    // Many browsers require HTTPS (or localhost) for geolocation.
+    const isLocalhost = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const isSecure = (window.isSecureContext === true);
+
+    if (!navigator.geolocation) {
+        setBrowserLocationStatus('Geolocation is not supported by this browser.', true);
+        return;
+    }
+
+    if (!isSecure && !isLocalhost) {
+        setBrowserLocationStatus('Geolocation usually requires HTTPS (or localhost). If this fails, use HTTPS or a localhost/SSH tunnel.', true);
+    } else {
+        setBrowserLocationStatus('Requesting browser location…', false);
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(pos) {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+
+            // Repo-genau: IDs sind LOCATION_LATITUDE / LOCATION_LONGITUDE / LOCATION_ELEVATION
+            const latEl = document.getElementById('LOCATION_LATITUDE');
+            const lonEl = document.getElementById('LOCATION_LONGITUDE');
+            const eleEl = document.getElementById('LOCATION_ELEVATION');
+
+            if (latEl) latEl.value = lat.toFixed(6);
+            if (lonEl) lonEl.value = lon.toFixed(6);
+
+            // altitude is optional, often null
+            if (eleEl && pos.coords.altitude !== null && pos.coords.altitude !== undefined) {
+                eleEl.value = String(Math.round(pos.coords.altitude));
+            }
+
+            const acc = (pos.coords.accuracy !== undefined && pos.coords.accuracy !== null) ? Math.round(pos.coords.accuracy) : null;
+            if (acc !== null) {
+                setBrowserLocationStatus('Location filled. Accuracy ~ ' + acc + ' m. Don’t forget to Save.', false);
+            } else {
+                setBrowserLocationStatus('Location filled. Don’t forget to Save.', false);
+            }
+        },
+        function(err) {
+            setBrowserLocationStatus('Location error: ' + err.message, true);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+}
 
 function group_on_change(trigger_checkbox_field, group_fields, group_checkbox_fields) {
     $('#' + trigger_checkbox_field).on('change', function() {
