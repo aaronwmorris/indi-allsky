@@ -374,6 +374,37 @@ class IndiAllskyCardinalDirsLabel(object):
         )
 
 
+        ### debugging
+        #opp_1 = math.tan(math.radians(self.config.get('LENS_AZIMUTH', 0) + 180)) * (height / 2)
+        #m1_x1 = int(width / 2) + int(opp_1)
+        #m1_y1 = 0
+        #m1_x2 = int(width / 2) - int(opp_1)
+        #m1_y2 = height
+
+        #cv2.line(
+        #    img=image,
+        #    pt1=(m1_x1, m1_y1),
+        #    pt2=(m1_x2, m1_y2),
+        #    color=(64, 64, 32),
+        #    thickness=3,
+        #)
+
+
+        #opp_2 = math.tan(math.radians(self.config.get('LENS_AZIMUTH', 0) + 90)) * (height / 2)
+        #m2_x1 = int(width / 2) + int(opp_2)
+        #m2_y1 = 0
+        #m2_x2 = int(width / 2) - int(opp_2)
+        #m2_y2 = height
+
+        #cv2.line(
+        #    img=image,
+        #    pt1=(m2_x1, m2_y1),
+        #    pt2=(m2_x2, m2_y2),
+        #    color=(32, 64, 64),
+        #    thickness=3,
+        #)
+
+
     def panorama_label(self, image):
         height, width = image.shape[:2]
 
