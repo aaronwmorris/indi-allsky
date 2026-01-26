@@ -53,6 +53,7 @@ RUN apt-get update \
         libglib2.0-dev\
         libglib2.0-0 \
         libxcb1-dev \
+        libxcb1 \
         dbus-daemon
 
 
@@ -78,6 +79,7 @@ RUN apt-get remove --purge -y \
         pkg-config \
         libdbus-1-dev \
         libglib2.0-dev \
+        libxcb1-dev \
         python3-dev \
         dbus-daemon \
     && apt-get autoremove --purge -y \
