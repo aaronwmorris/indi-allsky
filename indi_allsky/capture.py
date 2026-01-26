@@ -2100,8 +2100,15 @@ class CaptureWorker(Process):
         temp_sensor__d_classname = self.config.get('TEMP_SENSOR', {}).get('D_CLASSNAME', '')
         temp_sensor__d_label = self.config.get('TEMP_SENSOR', {}).get('D_LABEL', 'Sensor D')
         temp_sensor__d_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_40')
+        temp_sensor__e_classname = self.config.get('TEMP_SENSOR', {}).get('E_CLASSNAME', '')
+        temp_sensor__e_label = self.config.get('TEMP_SENSOR', {}).get('E_LABEL', 'Sensor E')
+        temp_sensor__e_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('E_USER_VAR_SLOT', 'sensor_user_50')
+        temp_sensor__f_classname = self.config.get('TEMP_SENSOR', {}).get('F_CLASSNAME', '')
+        temp_sensor__f_label = self.config.get('TEMP_SENSOR', {}).get('F_LABEL', 'Sensor F')
+        temp_sensor__f_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('F_USER_VAR_SLOT', 'sensor_user_55')
 
 
+        ### Sensor A
         if temp_sensor__a_classname:
             try:
                 temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
@@ -2121,6 +2128,7 @@ class CaptureWorker(Process):
                 logger.error('Unknown sensor class: %s', temp_sensor__a_classname)
 
 
+        ### Sensor B
         if temp_sensor__b_classname:
             try:
                 temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
@@ -2140,6 +2148,7 @@ class CaptureWorker(Process):
                 logger.error('Unknown sensor class: %s', temp_sensor__b_classname)
 
 
+        ### Sensor C
         if temp_sensor__c_classname:
             try:
                 temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
@@ -2159,6 +2168,7 @@ class CaptureWorker(Process):
                 logger.error('Unknown sensor class: %s', temp_sensor__c_classname)
 
 
+        ### Sensor D
         if temp_sensor__d_classname:
             try:
                 temp_sensor__d_class = getattr(indi_allsky_sensors, temp_sensor__d_classname)
@@ -2176,6 +2186,46 @@ class CaptureWorker(Process):
                         pass
             except AttributeError:
                 logger.error('Unknown sensor class: %s', temp_sensor__d_classname)
+
+
+        ### Sensor E
+        if temp_sensor__e_classname:
+            try:
+                temp_sensor__e_class = getattr(indi_allsky_sensors, temp_sensor__e_classname)
+                sensor_e_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__e_user_var_slot)]
+
+                for x in range(temp_sensor__e_class.METADATA['count']):
+                    try:
+                        self.SENSOR_SLOTS[sensor_e_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
+                            temp_sensor__e_class.METADATA['name'],
+                            temp_sensor__e_label,
+                            temp_sensor__e_class.METADATA['labels'][x],
+                        )
+                    except IndexError:
+                        logger.error('Not enough slots for sensor values')
+                        pass
+            except AttributeError:
+                logger.error('Unknown sensor class: %s', temp_sensor__e_classname)
+
+
+        ### Sensor F
+        if temp_sensor__f_classname:
+            try:
+                temp_sensor__f_class = getattr(indi_allsky_sensors, temp_sensor__f_classname)
+                sensor_f_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__f_user_var_slot)]
+
+                for x in range(temp_sensor__f_class.METADATA['count']):
+                    try:
+                        self.SENSOR_SLOTS[sensor_f_index + x][1] = '{0:s} - {1:s} - {2:s}'.format(
+                            temp_sensor__f_class.METADATA['name'],
+                            temp_sensor__f_label,
+                            temp_sensor__f_class.METADATA['labels'][x],
+                        )
+                    except IndexError:
+                        logger.error('Not enough slots for sensor values')
+                        pass
+            except AttributeError:
+                logger.error('Unknown sensor class: %s', temp_sensor__f_classname)
 
 
         # Set system temp names
