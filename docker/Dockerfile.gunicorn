@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 ARG TZ
 ARG DEBIAN_FRONTEND=noninteractive
@@ -52,6 +52,8 @@ RUN apt-get update \
         libdbus-1-3 \
         libglib2.0-dev\
         libglib2.0-0 \
+        libxcb1-dev \
+        libxcb1 \
         dbus-daemon
 
 
@@ -77,6 +79,7 @@ RUN apt-get remove --purge -y \
         pkg-config \
         libdbus-1-dev \
         libglib2.0-dev \
+        libxcb1-dev \
         python3-dev \
         dbus-daemon \
     && apt-get autoremove --purge -y \
