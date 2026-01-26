@@ -1374,6 +1374,7 @@ class ChartView(TemplateView):
 
         return context
 
+
 class JsonSensorPanelView(JsonView):
     def __init__(self, **kwargs):
         super(JsonSensorPanelView, self).__init__(**kwargs)
@@ -1482,6 +1483,7 @@ class SensorPanelView(TemplateView):
         context['temp_rows'] = temp_rows
 
         return context
+
 
 class JsonChartView(JsonView):
     def __init__(self, **kwargs):
