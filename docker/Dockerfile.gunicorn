@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 ARG TZ
 ARG DEBIAN_FRONTEND=noninteractive
@@ -52,6 +52,7 @@ RUN apt-get update \
         libdbus-1-3 \
         libglib2.0-dev\
         libglib2.0-0 \
+        libxcb1-dev \
         dbus-daemon
 
 
