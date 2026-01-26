@@ -133,6 +133,7 @@ class IndiClient(PyIndi.BaseClient):
         self.exposureStartTime = 0
 
         self._disconnected = False
+        self._ccd_removed = False
 
         logger.info('creating an instance of IndiClient')
 
@@ -152,6 +153,13 @@ class IndiClient(PyIndi.BaseClient):
     def disconnected(self, new_disconnected):
         self._disconnected = bool(new_disconnected)
 
+    @property
+    def ccd_removed(self):
+        return self._ccd_removed
+
+    @ccd_removed.setter
+    def ccd_removed(self, new_ccd_removed):
+        self._ccd_removed = bool(new_ccd_removed)
 
     @property
     def camera_id(self):
@@ -244,6 +252,12 @@ class IndiClient(PyIndi.BaseClient):
 
     def removeDevice(self, d):
         logger.info("remove device %s", d.getDeviceName())
+
+        if isinstance(self.ccd_device, type(None)):
+            return
+
+        if d.getDeviceName() == self.ccd_device.getDeviceName():
+            self.ccd_removed = True
 
 
     def newProperty(self, p):

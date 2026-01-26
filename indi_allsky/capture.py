@@ -376,6 +376,11 @@ class CaptureWorker(Process):
                 return
 
 
+            if self.indiclient.ccd_removed:
+                logger.error('indiclient indicates the camera has been removed, restarting capture process')
+                return
+
+
             try:
                 c_dict = self.capture_q.get(False)
 
