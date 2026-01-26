@@ -377,6 +377,9 @@ class CaptureWorker(Process):
 
 
             if self.indiclient.ccd_removed:
+                # INDI >= 2.1.7 supports hotplugging cameras
+                # If a [USB] camera is disconnected, it should automatically be detected when reconnected
+                # Older than 2.1.7 requires indiserver to be restarted
                 logger.error('indiclient indicates the camera has been removed, restarting capture process')
                 return
 
