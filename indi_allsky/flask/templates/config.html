@@ -6994,7 +6994,7 @@ var camera_id = {{ camera_id }};
             <div id="TEMP_SENSOR__D_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Example: D26 (GPIO16 / Pin 37 Raspi)</div>
+            <div>Example: D26 (GPIO26 / Pin 37 Raspi)</div>
             <div>Example: P0 - Pin for ADS1x15 ADC</div>
             <div>Unused for most i2c devices - CS for SPI</div>
         </div>
@@ -7032,6 +7032,166 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__D_USER_VAR_SLOT(class='form-select bg-secondary') }}
             <div id="TEMP_SENSOR__D_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>All sensor values will populate multiple slots starting at this slot</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__E_CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__E_CLASSNAME(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__E_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__E_LABEL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__E_LABEL(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__E_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__E_PIN_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__E_PIN_1(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__E_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D25 (GPIO25 / Pin 22 Raspi)</div>
+            <div>Example: P0 - Pin for ADS1x15 ADC</div>
+            <div>Unused for most i2c devices - CS for SPI</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__E_PIN_2.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__E_PIN_2(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__E_PIN_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__E_I2C_ADDRESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__E_I2C_ADDRESS(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__E_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Hexadecimal address - Example: 0x51</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__E_USER_VAR_SLOT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__E_USER_VAR_SLOT(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__E_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>All sensor values will populate multiple slots starting at this slot</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__F_CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__F_CLASSNAME(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__F_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__F_LABEL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__F_LABEL(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__E_LABEL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__F_PIN_1.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__F_PIN_1(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__F_PIN_1-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: D27 (GPIO27 / Pin 13 Raspi)</div>
+            <div>Example: P0 - Pin for ADS1x15 ADC</div>
+            <div>Unused for most i2c devices - CS for SPI</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__F_PIN_2.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__F_PIN_2(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__F_PIN_2-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__F_I2C_ADDRESS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__F_I2C_ADDRESS(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__F_I2C_ADDRESS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Hexadecimal address - Example: 0x52</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__F_USER_VAR_SLOT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__F_USER_VAR_SLOT(class='form-select bg-secondary') }}
+            <div id="TEMP_SENSOR__F_USER_VAR_SLOT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
             <div>All sensor values will populate multiple slots starting at this slot</div>
@@ -9273,6 +9433,18 @@ const field_names = [
     'TEMP_SENSOR__D_PIN_2',
     'TEMP_SENSOR__D_USER_VAR_SLOT',
     'TEMP_SENSOR__D_I2C_ADDRESS',
+    'TEMP_SENSOR__E_CLASSNAME',
+    'TEMP_SENSOR__E_LABEL',
+    'TEMP_SENSOR__E_PIN_1',
+    'TEMP_SENSOR__E_PIN_2',
+    'TEMP_SENSOR__E_USER_VAR_SLOT',
+    'TEMP_SENSOR__E_I2C_ADDRESS',
+    'TEMP_SENSOR__F_CLASSNAME',
+    'TEMP_SENSOR__F_LABEL',
+    'TEMP_SENSOR__F_PIN_1',
+    'TEMP_SENSOR__F_PIN_2',
+    'TEMP_SENSOR__F_USER_VAR_SLOT',
+    'TEMP_SENSOR__F_I2C_ADDRESS',
     'TEMP_SENSOR__OPENWEATHERMAP_APIKEY',
     'TEMP_SENSOR__WUNDERGROUND_APIKEY',
     'TEMP_SENSOR__ASTROSPHERIC_APIKEY',
