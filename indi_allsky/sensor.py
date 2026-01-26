@@ -51,7 +51,7 @@ class SensorWorker(Process):
         self.gpio = None
         self.dew_heater = None
         self.fan = None
-        self.sensors = [None, None, None, None]
+        self.sensors = [None, None, None, None, None, None]
 
         self.next_run = time.time()  # run immediately
         self.next_run_offset = 15
@@ -570,6 +570,80 @@ class SensorWorker(Process):
 
         sensor_3_key = self.config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_40')
         self.sensors[3].slot = constants.SENSOR_INDEX_MAP[sensor_3_key]
+
+
+        ### Sensor E
+        e_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('E_CLASSNAME')
+        if e_sensor_classname:
+            e_sensor = getattr(indi_allsky_sensors, e_sensor_classname)
+
+            e_sensor_label = self.config.get('TEMP_SENSOR', {}).get('E_LABEL', 'Sensor E')
+            e_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('E_I2C_ADDRESS', '0x51')
+            e_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('E_PIN_1', 'notdefined')
+            e_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('E_PIN_2', 'notdefined')
+
+            try:
+                self.sensors[4] = e_sensor(
+                    self.config,
+                    e_sensor_label,
+                    self.night_v,
+                    pin_1_name=e_sensor_pin_1_name,
+                    pin_2_name=e_sensor_pin_2_name,
+                    i2c_address=e_sensor_i2c_address,
+                )
+            except (OSError, ValueError) as e:
+                logger.error('Error initializing sensor: %s', str(e))
+                self.sensors[4] = indi_allsky_sensors.sensor_simulator(
+                    self.config,
+                    'Sensor E',
+                    self.night_v,
+                )
+        else:
+            self.sensors[4] = indi_allsky_sensors.sensor_simulator(
+                self.config,
+                'Sensor E',
+                self.night_v,
+            )
+
+        sensor_4_key = self.config.get('TEMP_SENSOR', {}).get('E_USER_VAR_SLOT', 'sensor_user_50')
+        self.sensors[4].slot = constants.SENSOR_INDEX_MAP[sensor_4_key]
+
+
+        ### Sensor F
+        f_sensor_classname = self.config.get('TEMP_SENSOR', {}).get('F_CLASSNAME')
+        if f_sensor_classname:
+            f_sensor = getattr(indi_allsky_sensors, f_sensor_classname)
+
+            f_sensor_label = self.config.get('TEMP_SENSOR', {}).get('F_LABEL', 'Sensor F')
+            f_sensor_i2c_address = self.config.get('TEMP_SENSOR', {}).get('F_I2C_ADDRESS', '0x52')
+            f_sensor_pin_1_name = self.config.get('TEMP_SENSOR', {}).get('F_PIN_1', 'notdefined')
+            f_sensor_pin_2_name = self.config.get('TEMP_SENSOR', {}).get('F_PIN_2', 'notdefined')
+
+            try:
+                self.sensors[5] = f_sensor(
+                    self.config,
+                    f_sensor_label,
+                    self.night_v,
+                    pin_1_name=f_sensor_pin_1_name,
+                    pin_2_name=f_sensor_pin_2_name,
+                    i2c_address=f_sensor_i2c_address,
+                )
+            except (OSError, ValueError) as e:
+                logger.error('Error initializing sensor: %s', str(e))
+                self.sensors[5] = indi_allsky_sensors.sensor_simulator(
+                    self.config,
+                    'Sensor F',
+                    self.night_v,
+                )
+        else:
+            self.sensors[5] = indi_allsky_sensors.sensor_simulator(
+                self.config,
+                'Sensor F',
+                self.night_v,
+            )
+
+        sensor_5_key = self.config.get('TEMP_SENSOR', {}).get('F_USER_VAR_SLOT', 'sensor_user_55')
+        self.sensors[5].slot = constants.SENSOR_INDEX_MAP[sensor_5_key]
 
 
     def update_sensors(self):
