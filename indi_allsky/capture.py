@@ -1006,16 +1006,25 @@ class CaptureWorker(Process):
             camera_metadata['data'][k] = v
 
 
+        # Charts
         camera_metadata['data']['custom_chart_1_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 'sensor_user_10')
+        camera_metadata['data']['custom_chart_1_min'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_1_MIN', 0.0)
         camera_metadata['data']['custom_chart_2_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 'sensor_user_11')
+        camera_metadata['data']['custom_chart_2_min'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_2_MIN', 0.0)
         camera_metadata['data']['custom_chart_3_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 'sensor_user_12')
+        camera_metadata['data']['custom_chart_3_min'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_3_MIN', 0.0)
         camera_metadata['data']['custom_chart_4_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 'sensor_user_13')
+        camera_metadata['data']['custom_chart_4_min'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_4_MIN', 0.0)
         camera_metadata['data']['custom_chart_5_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 'sensor_user_14')
+        camera_metadata['data']['custom_chart_5_min'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_5_MIN', 0.0)
         camera_metadata['data']['custom_chart_6_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 'sensor_user_15')
+        camera_metadata['data']['custom_chart_6_min'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_6_MIN', 0.0)
         camera_metadata['data']['custom_chart_7_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_7', 'sensor_user_16')
+        camera_metadata['data']['custom_chart_7_min'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_7_MIN', 0.0)
         camera_metadata['data']['custom_chart_8_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_8', 'sensor_user_17')
+        camera_metadata['data']['custom_chart_8_min'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_8_MIN', 0.0)
         camera_metadata['data']['custom_chart_9_key'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_9', 'sensor_user_18')
-
+        camera_metadata['data']['custom_chart_9_min'] = self.config.get('CHARTS', {}).get('CUSTOM_SLOT_9_MIN', 0.0)
 
 
         try:

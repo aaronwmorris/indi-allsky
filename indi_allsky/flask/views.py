@@ -1362,14 +1362,23 @@ class ChartView(TemplateView):
 
 
         context['label_custom_chart_1'] = camera_data.get(custom_chart_1_key, 'Unset')
+        context['min_custom_chart_1'] = camera_data.get('custom_chart_1_min', 0.0)
         context['label_custom_chart_2'] = camera_data.get(custom_chart_2_key, 'Unset')
+        context['min_custom_chart_2'] = camera_data.get('custom_chart_2_min', 0.0)
         context['label_custom_chart_3'] = camera_data.get(custom_chart_3_key, 'Unset')
+        context['min_custom_chart_3'] = camera_data.get('custom_chart_3_min', 0.0)
         context['label_custom_chart_4'] = camera_data.get(custom_chart_4_key, 'Unset')
+        context['min_custom_chart_4'] = camera_data.get('custom_chart_4_min', 0.0)
         context['label_custom_chart_5'] = camera_data.get(custom_chart_5_key, 'Unset')
+        context['min_custom_chart_5'] = camera_data.get('custom_chart_5_min', 0.0)
         context['label_custom_chart_6'] = camera_data.get(custom_chart_6_key, 'Unset')
+        context['min_custom_chart_6'] = camera_data.get('custom_chart_6_min', 0.0)
         context['label_custom_chart_7'] = camera_data.get(custom_chart_7_key, 'Unset')
+        context['min_custom_chart_7'] = camera_data.get('custom_chart_7_min', 0.0)
         context['label_custom_chart_8'] = camera_data.get(custom_chart_8_key, 'Unset')
+        context['min_custom_chart_8'] = camera_data.get('custom_chart_8_min', 0.0)
         context['label_custom_chart_9'] = camera_data.get(custom_chart_9_key, 'Unset')
+        context['min_custom_chart_9'] = camera_data.get('custom_chart_9_min', 0.0)
 
 
         return context
