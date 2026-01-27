@@ -288,7 +288,7 @@ class IndiAllSkyConfigBase(object):
             "OUTLINE"  : False,
         },
         "FISH2PANO" : {
-            "ENABLE"   : False,
+            "ENABLE"   : True,
             "DIAMETER" : 3000,
             "OFFSET_X" : 0,
             "OFFSET_Y" : 0,
