@@ -4,7 +4,7 @@ services:
     image: indi.base
     build:
       context: ..
-      dockerfile: docker/Dockerfile.indi_base_debian12
+      dockerfile: docker/Dockerfile.indi_base_debian13
       #dockerfile: docker/Dockerfile.indi_base_ubuntu2404
       args:
         - TZ=${TZ}
@@ -32,7 +32,7 @@ services:
       context: ..
       additional_contexts:
         indi.base: "service:indi.base"
-      dockerfile: docker/Dockerfile.indiserver_debian12
+      dockerfile: docker/Dockerfile.indiserver_debian13
       #dockerfile: docker/Dockerfile.indiserver_ubuntu2404
       args:
         - INDI_3RDPARTY_VERSION=${INDIALLSKY_INDI_3RDPARTY_VERSION}

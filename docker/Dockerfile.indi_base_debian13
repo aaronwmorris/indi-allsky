@@ -1,0 +1,60 @@
+FROM debian:trixie-slim AS indi.base
+
+ARG TZ
+ARG INDI_CORE_VERSION
+ARG LIBCAMERA_TAG
+ARG RPICAM_APPS_TAG
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN export DEBIAN_FRONTEND=noninteractive \
+    && apt-get update \
+    && apt-get -y upgrade \
+    && apt-get -y install \
+      --no-install-recommends \
+      --no-install-suggests \
+        build-essential \
+        iproute2 \
+        apt-utils \
+        i2c-tools \
+        locales \
+        tzdata \
+        procps \
+        sudo \
+        git \
+        jq \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+
+# update timezone
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN dpkg-reconfigure -f noninteractive tzdata
+
+
+# need the uid and gid to match in all containers
+RUN groupadd --gid 10001 allsky
+RUN useradd --create-home --no-user-group --uid 10001 --gid allsky --groups dialout,video,adm --home-dir /home/allsky --shell /bin/bash allsky
+RUN if getent group gpio >/dev/null 2>&1; then usermod -a -G gpio allsky; fi
+RUN if getent group i2c >/dev/null 2>&1; then usermod -a -G i2c allsky; fi
+RUN if getent group spi >/dev/null 2>&1; then usermod -a -G spi allsky; fi
+
+RUN echo "allsky ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/allsky
+RUN chmod 0440 /etc/sudoers.d/allsky
+
+COPY --chown=allsky:allsky misc/build_indi.sh /home/allsky
+RUN chmod 755 /home/allsky/build_indi.sh
+
+USER allsky
+WORKDIR /home/allsky
+
+
+ENV BUILD_INDI_SETTINGS=manual
+ENV BUILD_INDI_CORE=true
+ENV BUILD_INDI_3RDPARTY=false
+ENV BUILD_INDI_OS_PACKAGE_UPGRADE=false
+RUN bash build_indi.sh $INDI_CORE_VERSION null \
+    && rm -fR /home/allsky/Projects \
+    && sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+
+### libcamera build is prone to failure
+#RUN ./build_libcamera.sh $LIBCAMERA_TAG $RPICAM_APPS_TAG
