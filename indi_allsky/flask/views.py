@@ -8468,8 +8468,68 @@ class ConfigDownloadView(BaseView):
     methods = ['GET']
 
 
+    redact_dict = {
+        'OWNER' : 'REDACTED',
+        'FILETRANSFER' : {
+            'PASSWORD' : 'REDACTED',
+            'PASSWORD_E' : '',
+        },
+        'S3UPLOAD' : {
+            'SECRET_KEY' : 'REDACTED',
+            'SECRET_KEY_E' : '',
+        },
+        'MQTTPUBLISH' : {
+            'PASSWORD' : 'REDACTED',
+            'PASSWORD_E' : '',
+        },
+        'SYNCAPI' : {
+            'APIKEY' : 'REDACTED',
+            'APIKEY_E' : '',
+        },
+        'PYCURL_CAMERA' : {
+            'PASSWORD' : 'REDACTED',
+            'PASSWORD_E' : '',
+        },
+        'TEMP_SENSOR' : {
+            'OPENWEATHERMAP_APIKEY' : 'REDACTED',
+            'OPENWEATHERMAP_APIKEY_E' : '',
+            'WUNDERGROUND_APIKEY' : 'REDACTED',
+            'WUNDERGROUND_APIKEY_E' : '',
+            'ASTROSPHERIC_APIKEY' : 'REDACTED',
+            'ASTROSPHERIC_APIKEY_E' : '',
+            'AMBIENTWEATHER_APIKEY' : 'REDACTED',
+            'AMBIENTWEATHER_APIKEY_E' : '',
+            'AMBIENTWEATHER_APPLICATIONKEY' : 'REDACTED',
+            'AMBIENTWEATHER_APPLICATIONKEY_E' : '',
+            'AMBIENTWEATHER_MACADDRESS' : 'REDACTED',
+            'AMBIENTWEATHER_MACADDRESS_E' : '',
+            'ECOWITT_APIKEY' : 'REDACTED',
+            'ECOWITT_APIKEY_E' : '',
+            'ECOWITT_APPLICATIONKEY' : 'REDACTED',
+            'ECOWITT_APPLICATIONKEY_E' : '',
+            'ECOWITT_MACADDRESS' : 'REDACTED',
+            'ECOWITT_MACADDRESS_E' : '',
+            'MQTT_PASSWORD' : 'REDACTED',
+            'MQTT_PASSWORD_E' : '',
+        },
+        'DEVICE' : {
+            'MQTT_PASSWORD' : 'REDACTED',
+            'MQTT_PASSWORD_E' : '',
+        },
+        'LIBCAMERA' : {
+            'MQTT_PASSWORD' : 'REDACTED',
+            'MQTT_PASSWORD_E' : '',
+        },
+        'ADSB' : {
+            'PASSWORD' : 'REDACTED',
+            'PASSWORD_E' : '',
+        },
+    }
+
+
     def dispatch_request(self):
         config_id = int(request.args.get('id', -1))
+        redact = bool(request.args.get('redact', 0))
 
         # not catching NoResultFound
         config_entry = IndiAllSkyDbConfigTable.query\
@@ -8478,6 +8538,12 @@ class ConfigDownloadView(BaseView):
 
 
         config = dict(config_entry.data)
+
+
+        if redact:
+            app.logger.warning('Redacting sensitive info from config download')
+            config = self.dict_merge(config, self.redact_dict)
+
 
         config_str = json.dumps(config, indent=4, ensure_ascii=False)
         config_buffer = io.BytesIO(config_str.encode())
@@ -8492,6 +8558,21 @@ class ConfigDownloadView(BaseView):
         download_name = 'indi-allsky_config_id-{id:d}_level-{level:s}_{ts:%Y%m%d_%H%M%S}.json'.format(**data)
 
         return send_file(config_buffer, mimetype='application/octet-stream', download_name=download_name, as_attachment=True)
+
+
+    def dict_merge(self, a_dict, b_dict, path=[]):
+        for k in b_dict.keys():
+            if k in a_dict.keys():
+                if isinstance(a_dict[k], (str, int, float, bool)) and isinstance(b_dict[k], (str, int, float, bool)):
+                    a_dict[k] = b_dict[k]
+                elif isinstance(a_dict[k], dict) and isinstance(b_dict[k], dict):
+                    self.dict_merge(a_dict[k], b_dict[k], path + [str(k)])  # recursion
+                else:
+                    raise Exception('Dictionary conflict at ' + '.'.join(path + [str(k)]))
+            else:
+                a_dict[k] = b_dict[k]
+
+        return a_dict
 
 
 class ConfigRestoreView(TemplateView):
