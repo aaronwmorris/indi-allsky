@@ -423,7 +423,6 @@ if [[ "$DISTRO" == "debian_13" ]]; then
             librpicam-app-dev || true
     fi
 
-
 elif [[ "$DISTRO" == "debian_12" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
     for p in $BLOCKING_PACKAGES; do
@@ -548,7 +547,6 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         libnutclient-dev \
         libzmq3-dev \
         zlib1g-dev
-
 
 elif [[ "$DISTRO" == "debian_10" ]]; then
     BLOCKING_PACKAGES="indi-full libindi-data libindi-dev libindi-plugins"
@@ -796,59 +794,6 @@ sudo ldconfig
 [[ ! -d "${PROJECTS_FOLDER}/build" ]] && mkdir "${PROJECTS_FOLDER}/build"
 
 
-while [ -z "${INDI_CORE_TAG:-}" ]; do
-    # shellcheck disable=SC2068
-    INDI_CORE_TAG=$(whiptail \
-        --title "INDI version (Core)" \
-        --nocancel \
-        --notags \
-        --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-            "v2.1.7" "v2.1.7 - Recommended" "ON" \
-            "v2.1.6" "v2.1.6" "OFF" \
-            "v2.1.5" "v2.1.5" "OFF" \
-            "v2.1.4" "v2.1.4" "OFF" \
-            "v2.1.3" "v2.1.3" "OFF" \
-            "v2.1.2.1" "v2.1.2.1" "OFF" \
-            "v2.1.2" "v2.1.2" "OFF" \
-            "v2.1.1" "v2.1.1" "OFF" \
-            "v2.1.0" "v2.1.0" "OFF" \
-            "HEAD" "HEAD - Development" "OFF" \
-        3>&1 1>&2 2>&3)
-done
-
-
-echo
-echo "Selected core tag: $INDI_CORE_TAG"
-sleep 3
-
-
-while [ -z "${INDI_3RDPARTY_TAG:-}" ]; do
-    # shellcheck disable=SC2068
-    INDI_3RDPARTY_TAG=$(whiptail \
-        --title "INDI version (3rdparty)" \
-        --nocancel \
-        --notags \
-        --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-            "v2.1.7.1" "v2.1.7.1 - Recommended" "ON" \
-            "v2.1.7" "v2.1.7" "OFF" \
-            "v2.1.6" "v2.1.6" "OFF" \
-            "v2.1.5" "v2.1.5" "OFF" \
-            "v2.1.4" "v2.1.4" "OFF" \
-            "v2.1.3" "v2.1.3" "OFF" \
-            "v2.1.2.1" "v2.1.2.1" "OFF" \
-            "v2.1.2" "v2.1.2" "OFF" \
-            "v2.1.1" "v2.1.1" "OFF" \
-            "v2.1.0" "v2.1.0" "OFF" \
-            "HEAD" "HEAD - Development" "OFF" \
-        3>&1 1>&2 2>&3)
-done
-
-
-echo
-echo "Selected 3rdparty tag: $INDI_3RDPARTY_TAG"
-sleep 3
-
-
 if [[ "${BUILD_INDI_CORE:-ask}" == "ask" || "${BUILD_INDI_3RDPARTY:-ask}" == "ask" ]]; then
     while [ -z "${INDI_COMPONENT:-}" ]; do
         INDI_COMPONENT=$(whiptail \
@@ -892,117 +837,174 @@ if [[ "${BUILD_INDI_CORE:-ask}" == "ask" || "${BUILD_INDI_3RDPARTY:-ask}" == "as
 fi
 
 
-if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
-    while [ "${BUILD_INDI_CAMERA_VENDOR:-ask}" == "ask" ]; do
-        BUILD_INDI_CAMERA_VENDOR=$(whiptail \
-            --title "Camera Vendor" \
+if [ "$BUILD_INDI_CORE" == "true" ]; then
+    while [ -z "${INDI_CORE_TAG:-}" ]; do
+        # shellcheck disable=SC2068
+        INDI_CORE_TAG=$(whiptail \
+            --title "INDI version (Core)" \
             --nocancel \
             --notags \
-            --radiolist "Select which camera vendor to build\n\nPress space to select" 0 0 0 \
-                "supported" "Supported Cameras" "ON" \
-                "asi" "ZWO ASI Camera" "OFF" \
-                "playerone" "PlayerOne Astronomy" "OFF" \
-                "touptek" "ToupTek / Altair / Omegon / Meade / etc" "OFF" \
-                "svbony" "SVBony" "OFF" \
-                "qhy" "QHY" "OFF" \
-                "sx" "Starlight Xpress" "OFF" \
-                "dsi" "Meade DSI" "OFF" \
-                "libcamera" "indi-libcamera [BETA] (this is not the standard libcamera support)" "OFF" \
-                "gphoto" "DSLR - Canon / Nikon / Sony / Pentax / Fuji / etc" "OFF" \
-                "webcam" "Web Camera - indi_webcam_ccd" "OFF" \
-                "all" "All drivers" "OFF" \
+            --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
+                "v2.1.7" "v2.1.7 - Recommended" "ON" \
+                "v2.1.6" "v2.1.6" "OFF" \
+                "v2.1.5" "v2.1.5" "OFF" \
+                "v2.1.4" "v2.1.4" "OFF" \
+                "v2.1.3" "v2.1.3" "OFF" \
+                "v2.1.2.1" "v2.1.2.1" "OFF" \
+                "v2.1.2" "v2.1.2" "OFF" \
+                "v2.1.1" "v2.1.1" "OFF" \
+                "v2.1.0" "v2.1.0" "OFF" \
+                "HEAD" "HEAD - Development" "OFF" \
             3>&1 1>&2 2>&3)
     done
 
 
-    if [[ "$BUILD_INDI_CAMERA_VENDOR" == "all" ]]; then
-        INDI_3RDPARTY_LIBRARIES="all"
-        INDI_3RDPARTY_DRIVERS="all"
-        echo
-        echo "Building all drivers"
-        echo
-        sleep 3
-    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "asi" || "$BUILD_INDI_CAMERA_VENDOR" == "zwo" ]]; then
-        INDI_3RDPARTY_LIBRARIES="libasi"
-        INDI_3RDPARTY_DRIVERS="indi-asi indi-gpsd indi-gpsnmea"
-        echo
-        echo "Building ZWO ASI drivers"
-        echo
-        sleep 3
-    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "playerone" ]]; then
-        INDI_3RDPARTY_LIBRARIES="libplayerone"
-        INDI_3RDPARTY_DRIVERS="indi-playerone indi-gpsd indi-gpsnmea"
-        echo
-        echo "Building PlayerOne Astronomy drivers"
-        echo
-        sleep 3
-    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "svbony" ]]; then
-        INDI_3RDPARTY_LIBRARIES="libsvbony"
-        INDI_3RDPARTY_DRIVERS="indi-svbony indi-gpsd indi-gpsnmea"
-        echo
-        echo "Building SVBony drivers"
-        echo
-        sleep 3
-    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "qhy" ]]; then
-        INDI_3RDPARTY_LIBRARIES="libqhy"
-        INDI_3RDPARTY_DRIVERS="indi-qhy indi-gpsd indi-gpsnmea"
-        echo
-        echo "Building QHY drivers"
-        echo
-        sleep 3
-    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "sx" ]]; then
-        INDI_3RDPARTY_LIBRARIES=""
-        INDI_3RDPARTY_DRIVERS="indi-sx indi-gpsd indi-gpsnmea"
-        echo
-        echo "Building Starlight Xpress drivers"
-        echo
-        sleep 3
-    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "dsi" ]]; then
-        INDI_3RDPARTY_LIBRARIES=""
-        INDI_3RDPARTY_DRIVERS="indi-dsi indi-gpsd indi-gpsnmea"
-        echo
-        echo "Building Meade DSI drivers"
-        echo
-        sleep 3
-    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "libcamera" ]]; then
-        INDI_3RDPARTY_LIBRARIES=""
-        INDI_3RDPARTY_DRIVERS="indi-libcamera indi-gpsd indi-gpsnmea"
-        echo
-        echo "Building libcamera driver"
-        echo
-        sleep 3
-    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "gphoto" ]]; then
-        INDI_3RDPARTY_LIBRARIES=""
-        INDI_3RDPARTY_DRIVERS="indi-gphoto indi-gpsd indi-gpsnmea"
-        echo
-        echo "Building gphoto DSLR drivers"
-        echo
-        sleep 3
-    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "webcam" ]]; then
-        INDI_3RDPARTY_LIBRARIES=""
-        INDI_3RDPARTY_DRIVERS="indi-webcam indi-gpsd indi-gpsnmea"
-        echo
-        echo "Building INDI webcam driver"
-        echo
-        sleep 3
-    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "touptek" ]]; then
-        INDI_3RDPARTY_LIBRARIES="libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam libsvbonycam"
-        INDI_3RDPARTY_DRIVERS="indi-toupbase indi-gpsd indi-gpsnmea"
-        echo
-        echo "Building ToupTek (including Altair, Omegon, Meade, etc) drivers"
-        echo
-        sleep 3
-    elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "supported" ]]; then
-        INDI_3RDPARTY_LIBRARIES="libasi libplayerone libsvbony libqhy libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam libsvbonycam"
-        INDI_3RDPARTY_DRIVERS="indi-asi indi-playerone indi-svbony indi-qhy indi-sx indi-dsi indi-toupbase indi-gphoto indi-webcam indi-gpsd indi-gpsnmea"
-        echo
-        echo "Building supported camera drivers"
-        echo
-        sleep 3
-    else
-        echo
-        echo "Invalid selection"
-        exit 1
+    echo
+    echo "Selected core tag: $INDI_CORE_TAG"
+    sleep 3
+fi
+
+
+if [ "$BUILD_INDI_3RDPARTY" == "true" ]; then
+    while [ -z "${INDI_3RDPARTY_TAG:-}" ]; do
+        # shellcheck disable=SC2068
+        INDI_3RDPARTY_TAG=$(whiptail \
+            --title "INDI version (3rdparty)" \
+            --nocancel \
+            --notags \
+            --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
+                "v2.1.7.1" "v2.1.7.1 - Recommended" "ON" \
+                "v2.1.7" "v2.1.7" "OFF" \
+                "v2.1.6" "v2.1.6" "OFF" \
+                "v2.1.5" "v2.1.5" "OFF" \
+                "v2.1.4" "v2.1.4" "OFF" \
+                "v2.1.3" "v2.1.3" "OFF" \
+                "v2.1.2.1" "v2.1.2.1" "OFF" \
+                "v2.1.2" "v2.1.2" "OFF" \
+                "v2.1.1" "v2.1.1" "OFF" \
+                "v2.1.0" "v2.1.0" "OFF" \
+                "HEAD" "HEAD - Development" "OFF" \
+            3>&1 1>&2 2>&3)
+    done
+
+
+    echo
+    echo "Selected 3rdparty tag: $INDI_3RDPARTY_TAG"
+    sleep 3
+
+
+    if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
+        while [ "${BUILD_INDI_CAMERA_VENDOR:-ask}" == "ask" ]; do
+            BUILD_INDI_CAMERA_VENDOR=$(whiptail \
+                --title "Camera Vendor" \
+                --nocancel \
+                --notags \
+                --radiolist "Select which camera vendor to build\n\nPress space to select" 0 0 0 \
+                    "supported" "Supported Cameras" "ON" \
+                    "asi" "ZWO ASI Camera" "OFF" \
+                    "playerone" "PlayerOne Astronomy" "OFF" \
+                    "touptek" "ToupTek / Altair / Omegon / Meade / etc" "OFF" \
+                    "svbony" "SVBony" "OFF" \
+                    "qhy" "QHY" "OFF" \
+                    "sx" "Starlight Xpress" "OFF" \
+                    "dsi" "Meade DSI" "OFF" \
+                    "libcamera" "indi-libcamera [BETA] (this is not the standard libcamera support)" "OFF" \
+                    "gphoto" "DSLR - Canon / Nikon / Sony / Pentax / Fuji / etc" "OFF" \
+                    "webcam" "Web Camera - indi_webcam_ccd" "OFF" \
+                    "all" "All drivers" "OFF" \
+                3>&1 1>&2 2>&3)
+        done
+
+
+        if [[ "$BUILD_INDI_CAMERA_VENDOR" == "all" ]]; then
+            INDI_3RDPARTY_LIBRARIES="all"
+            INDI_3RDPARTY_DRIVERS="all"
+            echo
+            echo "Building all drivers"
+            echo
+            sleep 3
+        elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "asi" || "$BUILD_INDI_CAMERA_VENDOR" == "zwo" ]]; then
+            INDI_3RDPARTY_LIBRARIES="libasi"
+            INDI_3RDPARTY_DRIVERS="indi-asi indi-gpsd indi-gpsnmea"
+            echo
+            echo "Building ZWO ASI drivers"
+            echo
+            sleep 3
+        elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "playerone" ]]; then
+            INDI_3RDPARTY_LIBRARIES="libplayerone"
+            INDI_3RDPARTY_DRIVERS="indi-playerone indi-gpsd indi-gpsnmea"
+            echo
+            echo "Building PlayerOne Astronomy drivers"
+            echo
+            sleep 3
+        elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "svbony" ]]; then
+            INDI_3RDPARTY_LIBRARIES="libsvbony"
+            INDI_3RDPARTY_DRIVERS="indi-svbony indi-gpsd indi-gpsnmea"
+            echo
+            echo "Building SVBony drivers"
+            echo
+            sleep 3
+        elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "qhy" ]]; then
+            INDI_3RDPARTY_LIBRARIES="libqhy"
+            INDI_3RDPARTY_DRIVERS="indi-qhy indi-gpsd indi-gpsnmea"
+            echo
+            echo "Building QHY drivers"
+            echo
+            sleep 3
+        elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "sx" ]]; then
+            INDI_3RDPARTY_LIBRARIES=""
+            INDI_3RDPARTY_DRIVERS="indi-sx indi-gpsd indi-gpsnmea"
+            echo
+            echo "Building Starlight Xpress drivers"
+            echo
+            sleep 3
+        elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "dsi" ]]; then
+            INDI_3RDPARTY_LIBRARIES=""
+            INDI_3RDPARTY_DRIVERS="indi-dsi indi-gpsd indi-gpsnmea"
+            echo
+            echo "Building Meade DSI drivers"
+            echo
+            sleep 3
+        elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "libcamera" ]]; then
+            INDI_3RDPARTY_LIBRARIES=""
+            INDI_3RDPARTY_DRIVERS="indi-libcamera indi-gpsd indi-gpsnmea"
+            echo
+            echo "Building libcamera driver"
+            echo
+            sleep 3
+        elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "gphoto" ]]; then
+            INDI_3RDPARTY_LIBRARIES=""
+            INDI_3RDPARTY_DRIVERS="indi-gphoto indi-gpsd indi-gpsnmea"
+            echo
+            echo "Building gphoto DSLR drivers"
+            echo
+            sleep 3
+        elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "webcam" ]]; then
+            INDI_3RDPARTY_LIBRARIES=""
+            INDI_3RDPARTY_DRIVERS="indi-webcam indi-gpsd indi-gpsnmea"
+            echo
+            echo "Building INDI webcam driver"
+            echo
+            sleep 3
+        elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "touptek" ]]; then
+            INDI_3RDPARTY_LIBRARIES="libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam libsvbonycam"
+            INDI_3RDPARTY_DRIVERS="indi-toupbase indi-gpsd indi-gpsnmea"
+            echo
+            echo "Building ToupTek (including Altair, Omegon, Meade, etc) drivers"
+            echo
+            sleep 3
+        elif [[ "$BUILD_INDI_CAMERA_VENDOR" == "supported" ]]; then
+            INDI_3RDPARTY_LIBRARIES="libasi libplayerone libsvbony libqhy libtoupcam libaltaircam libbressercam libmallincam libmeadecam libnncam libogmacam libomegonprocam libstarshootg libtscam libsvbonycam"
+            INDI_3RDPARTY_DRIVERS="indi-asi indi-playerone indi-svbony indi-qhy indi-sx indi-dsi indi-toupbase indi-gphoto indi-webcam indi-gpsd indi-gpsnmea"
+            echo
+            echo "Building supported camera drivers"
+            echo
+            sleep 3
+        else
+            echo
+            echo "Invalid selection"
+            exit 1
+        fi
     fi
 fi
 
