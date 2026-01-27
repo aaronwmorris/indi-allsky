@@ -55,6 +55,5 @@ prettytable
 lxml
 shapely >= 2.0.6
 requests-toolbelt
-fish2pano >= 0.4.1
 pytz
 mysql-connector-python
