@@ -2701,14 +2701,23 @@ class ConfigView(FormView):
             'TEMP_SENSOR__AS3935_NOISE_LEVEL'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_NOISE_LEVEL', 2),
             'TEMP_SENSOR__AS3935_SPIKE_REJECTION': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_SPIKE_REJECTION', 2),
             'CHARTS__CUSTOM_SLOT_1'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 'sensor_user_10'),
+            'CHARTS__CUSTOM_SLOT_1_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1_MIN', 0.0),
             'CHARTS__CUSTOM_SLOT_2'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 'sensor_user_11'),
+            'CHARTS__CUSTOM_SLOT_2_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2_MIN', 0.0),
             'CHARTS__CUSTOM_SLOT_3'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3', 'sensor_user_12'),
+            'CHARTS__CUSTOM_SLOT_3_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_3_MIN', 0.0),
             'CHARTS__CUSTOM_SLOT_4'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4', 'sensor_user_13'),
+            'CHARTS__CUSTOM_SLOT_4_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_4_MIN', 0.0),
             'CHARTS__CUSTOM_SLOT_5'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5', 'sensor_user_14'),
+            'CHARTS__CUSTOM_SLOT_5_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_5_MIN', 0.0),
             'CHARTS__CUSTOM_SLOT_6'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6', 'sensor_user_15'),
+            'CHARTS__CUSTOM_SLOT_6_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_6_MIN', 0.0),
             'CHARTS__CUSTOM_SLOT_7'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_7', 'sensor_user_16'),
+            'CHARTS__CUSTOM_SLOT_7_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_7_MIN', 0.0),
             'CHARTS__CUSTOM_SLOT_8'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_8', 'sensor_user_14'),
+            'CHARTS__CUSTOM_SLOT_8_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_8_MIN', 0.0),
             'CHARTS__CUSTOM_SLOT_9'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_9', 'sensor_user_15'),
+            'CHARTS__CUSTOM_SLOT_9_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_9_MIN', 0.0),
             'ADSB__ENABLE'                   : self.indi_allsky_config.get('ADSB', {}).get('ENABLE', False),
             'ADSB__DUMP1090_URL'             : self.indi_allsky_config.get('ADSB', {}).get('DUMP1090_URL', 'https://localhost/dump1090/data/aircraft.json'),
             'ADSB__USERNAME'                 : self.indi_allsky_config.get('ADSB', {}).get('USERNAME', ''),
@@ -3672,14 +3681,23 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['AS3935_NOISE_LEVEL']    = int(request.json['TEMP_SENSOR__AS3935_NOISE_LEVEL'])
         self.indi_allsky_config['TEMP_SENSOR']['AS3935_SPIKE_REJECTION'] = int(request.json['TEMP_SENSOR__AS3935_SPIKE_REJECTION'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1']              = str(request.json['CHARTS__CUSTOM_SLOT_1'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_1_MIN'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2']              = str(request.json['CHARTS__CUSTOM_SLOT_2'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_2_MIN'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_3']              = str(request.json['CHARTS__CUSTOM_SLOT_3'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_3_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_3_MIN'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_4']              = str(request.json['CHARTS__CUSTOM_SLOT_4'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_4_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_4_MIN'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_5']              = str(request.json['CHARTS__CUSTOM_SLOT_5'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_5_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_5_MIN'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_6']              = str(request.json['CHARTS__CUSTOM_SLOT_6'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_6_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_6_MIN'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_7']              = str(request.json['CHARTS__CUSTOM_SLOT_7'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_7_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_7_MIN'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_8']              = str(request.json['CHARTS__CUSTOM_SLOT_8'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_8_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_8_MIN'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_9']              = str(request.json['CHARTS__CUSTOM_SLOT_9'])
+        self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_9_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_9_MIN'])
         self.indi_allsky_config['ADSB']['ENABLE']                       = bool(request.json['ADSB__ENABLE'])
         self.indi_allsky_config['ADSB']['DUMP1090_URL']                 = str(request.json['ADSB__DUMP1090_URL'])
         self.indi_allsky_config['ADSB']['USERNAME']                     = str(request.json['ADSB__USERNAME'])
