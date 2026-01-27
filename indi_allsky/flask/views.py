@@ -8544,6 +8544,10 @@ class ConfigDownloadView(BaseView):
             app.logger.warning('Redacting sensitive info from config download')
             config = self.dict_merge(config, self.redact_dict)
 
+            # reduce precision of lat/long
+            config['LOCATION_LATITUDE'] = float(round(config['LOCATION_LATITUDE']))
+            config['LOCATION_LONGITUDE'] = float(round(config['LOCATION_LONGITUDE']))
+
 
         config_str = json.dumps(config, indent=4, ensure_ascii=False)
         config_buffer = io.BytesIO(config_str.encode())
