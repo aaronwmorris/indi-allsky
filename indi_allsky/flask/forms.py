@@ -2988,6 +2988,11 @@ def CUSTOM_CHART_validator(form, field):
         raise ValidationError('Invalid selection')
 
 
+def CUSTOM_CHART_MIN_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter a valid number')
+
+
 def SENSOR_USER_VAR_SLOT_validator(form, field):
     if field.data not in list(zip(*form.SENSOR_USER_VAR_SLOT_choices))[0]:
         raise ValidationError('Invalid selection')
@@ -4728,14 +4733,23 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__AS3935_NOISE_LEVEL     = IntegerField('AS3935 Noise Level Threshold', validators=[DataRequired(), TEMP_SENSOR__AS3935_NOISE_LEVEL_validator])
     TEMP_SENSOR__AS3935_SPIKE_REJECTION = IntegerField('AS3935 Spike Rejection', validators=[DataRequired(), TEMP_SENSOR__AS3935_SPIKE_REJECTION_validator])
     CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_1_MIN        = FloatField('Chart 1 Minimum', validators=[CUSTOM_CHART_MIN_validator])
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_2_MIN        = FloatField('Chart 2 Minimum', validators=[CUSTOM_CHART_MIN_validator])
     CHARTS__CUSTOM_SLOT_3            = SelectField('Extra Chart Slot 3', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_3_MIN        = FloatField('Chart 3 Minimum', validators=[CUSTOM_CHART_MIN_validator])
     CHARTS__CUSTOM_SLOT_4            = SelectField('Extra Chart Slot 4', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_4_MIN        = FloatField('Chart 4 Minimum', validators=[CUSTOM_CHART_MIN_validator])
     CHARTS__CUSTOM_SLOT_5            = SelectField('Extra Chart Slot 5', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_5_MIN        = FloatField('Chart 5 Minimum', validators=[CUSTOM_CHART_MIN_validator])
     CHARTS__CUSTOM_SLOT_6            = SelectField('Extra Chart Slot 6', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_6_MIN        = FloatField('Chart 6 Minimum', validators=[CUSTOM_CHART_MIN_validator])
     CHARTS__CUSTOM_SLOT_7            = SelectField('Extra Chart Slot 7', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_7_MIN        = FloatField('Chart 7 Minimum', validators=[CUSTOM_CHART_MIN_validator])
     CHARTS__CUSTOM_SLOT_8            = SelectField('Extra Chart Slot 8', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_8_MIN        = FloatField('Chart 8 Minimum', validators=[CUSTOM_CHART_MIN_validator])
     CHARTS__CUSTOM_SLOT_9            = SelectField('Extra Chart Slot 9', choices=[], validators=[CUSTOM_CHART_validator])
+    CHARTS__CUSTOM_SLOT_9_MIN        = FloatField('Chart 9 Minimum', validators=[CUSTOM_CHART_MIN_validator])
     ADSB__ENABLE                     = BooleanField('Enable ADS-B Tracking')
     ADSB__DUMP1090_URL               = StringField('Dump1090 URL', validators=[ADSB__DUMP1090_URL_validator])
     ADSB__USERNAME                   = StringField('Username', validators=[ADSB__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
