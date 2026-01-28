@@ -9322,6 +9322,7 @@ class LongTermKeogramView(TemplateView):
         context['form_longterm_keogram'] = IndiAllskyLongTermKeogramForm(data=data)
 
 
+        # Load cached longterm keogram if it exists
         longterm_keogram_image_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath('ccd_{0:s}'.format(self.camera.uuid), 'longterm_keogram.png')
         if longterm_keogram_image_p.is_file():
             image_age_s = time.time() - longterm_keogram_image_p.stat().st_mtime
@@ -9330,8 +9331,8 @@ class LongTermKeogramView(TemplateView):
             image_age_hours = int((image_age_s % 86400) / 3600)
             image_age_minutes = int(((image_age_s % 86400) % 3600 ) / 60)
 
-            context['keogram_age'] = 'Generated {0:d} Days, {1:d} Hours, {2:d} Minutes'.format(image_age_days, image_age_hours, image_age_minutes)
-            context['keogram_uri'] = str(Path('images').joinpath('ccd_{0:s}'.format(self.camera.uuid), 'realtime_keogram.png'))
+            context['keogram_age'] = 'Generated {0:d} days, {1:d} hours, {2:d} minutes ago'.format(image_age_days, image_age_hours, image_age_minutes)
+            context['keogram_uri'] = str(Path('images').joinpath('ccd_{0:s}'.format(self.camera.uuid), 'longterm_keogram.png'))
         else:
             context['keogram_age'] = ''
             context['keogram_uri'] = ''
@@ -9431,6 +9432,7 @@ class JsonLongTermKeogramView(JsonView):
         _, image_a = cv2.imencode('.png', keogram_data, [cv2.IMWRITE_PNG_COMPRESSION, png_compress_level])
 
 
+        # Save longterm keogram so it can be cached and loaded later
         longterm_keogram_image_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath('ccd_{0:s}'.format(self.camera.uuid), 'longterm_keogram.png')
         with io.open(str(longterm_keogram_image_p), 'wb') as lt_image_f:
             app.logger.info('Writing keogram: %s', longterm_keogram_image_p)

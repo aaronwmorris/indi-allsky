@@ -21,11 +21,14 @@ var json_data = {
     'message'    : '',
 };
 var camera_id = {{ camera_id }};
+var keogram_age = "{{ keogram_age }}";
+var keogram_uri = "{{ keogram_uri }}";
 var fullscreen = false;  //initial state
 var page_settings;  // set later
 
-function showImage(image_b64) {
-    if (image_b64 == null) {
+
+function showImage(image_b64, image_uri) {
+    if (image_b64 == null && image_uri == "") {
         return;
     }
 
@@ -38,7 +41,17 @@ function showImage(image_b64) {
     };
 
 
-    img.src = "data:image/png;base64," + image_b64;
+    // Prefer base64 data to static URI
+    if (image_b64) {
+        img.src = "data:image/png;base64," + image_b64;
+    } else {
+        img.src = image_uri;
+        $('#success_message').html(keogram_age);
+        $('#success_message').css({'display' : 'block'});
+        setTimeout(function() {
+            $('#success_message').css({'display' : 'none'});
+        }, 15000);
+    }
 }
 
 
@@ -155,6 +168,7 @@ function closeFullscreen() {
 
 <script>
 function init() {
+    showImage(json_data['image_b64'], keogram_uri);
 }
 
 
@@ -227,9 +241,7 @@ function setResizeHandler(callback, timeout) {
 }
 
 function resize_callback() {
-    if (json_data['image_b64']) {
-        showImage(json_data['image_b64']);
-    };
+    showImage(json_data['image_b64'], keogram_uri);
 }
 setResizeHandler(resize_callback, 200);
 
@@ -275,7 +287,7 @@ $('#form_longterm_keogram').on('submit', function() {
               'Generate'
             );
 
-            showImage(json_data['image_b64']);
+            showImage(json_data['image_b64'], keogram_uri);
 
 
             $("#img_download").html(
