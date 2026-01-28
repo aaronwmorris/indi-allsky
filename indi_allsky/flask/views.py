@@ -9433,6 +9433,9 @@ class JsonLongTermKeogramView(JsonView):
 
 
         # Save longterm keogram so it can be cached and loaded later
+        # It may take longer than 180 seconds to generate the keogram and the browser will stop
+        #  waiting for the image and drop the connection.  The flask process will usually continue
+        #  and should save the image to the filesystem
         longterm_keogram_image_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath('ccd_{0:s}'.format(self.camera.uuid), 'longterm_keogram.png')
         with io.open(str(longterm_keogram_image_p), 'wb') as lt_image_f:
             app.logger.info('Writing keogram: %s', longterm_keogram_image_p)
