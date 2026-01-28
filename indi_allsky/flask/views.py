@@ -9321,6 +9321,23 @@ class LongTermKeogramView(TemplateView):
 
         context['form_longterm_keogram'] = IndiAllskyLongTermKeogramForm(data=data)
 
+
+        # Load cached longterm keogram if it exists
+        longterm_keogram_image_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath('ccd_{0:s}'.format(self.camera.uuid), 'longterm_keogram.jpg')
+        if longterm_keogram_image_p.is_file():
+            image_age_s = time.time() - longterm_keogram_image_p.stat().st_mtime
+
+            image_age_days = int(image_age_s / 86400)
+            image_age_hours = int((image_age_s % 86400) / 3600)
+            image_age_minutes = int(((image_age_s % 86400) % 3600 ) / 60)
+
+            context['keogram_age'] = 'Generated {0:d} days, {1:d} hours, {2:d} minutes ago'.format(image_age_days, image_age_hours, image_age_minutes)
+            context['keogram_uri'] = str(Path('images').joinpath('ccd_{0:s}'.format(self.camera.uuid), 'longterm_keogram.jpg'))
+        else:
+            context['keogram_age'] = ''
+            context['keogram_uri'] = ''
+
+
         return context
 
 
@@ -9329,13 +9346,9 @@ class JsonLongTermKeogramView(JsonView):
     decorators = [login_required]
 
 
-    def __init__(self, **kwargs):
-        super(JsonLongTermKeogramView, self).__init__(**kwargs)
-
-
     def dispatch_request(self):
         import cv2
-        #from PIL import Image
+        from PIL import Image
 
         form_longterm_keogram = IndiAllskyLongTermKeogramForm(data=request.json)
 
@@ -9376,6 +9389,9 @@ class JsonLongTermKeogramView(JsonView):
             return jsonify(json_data), 400
 
 
+        self.cameraSetup(camera_id=camera_id)
+
+
         keogram_start = time.time()
 
         if end == 'today':
@@ -9399,7 +9415,7 @@ class JsonLongTermKeogramView(JsonView):
 
         from ..longTermKeogram import LongTermKeogramGenerator
         ltg_gen = LongTermKeogramGenerator()
-        ltg_gen.camera_id = camera_id
+        ltg_gen.camera_id = self.camera.id
         ltg_gen.days = query_days
         ltg_gen.alignment_seconds = alignment_seconds
         ltg_gen.offset_seconds = offset_seconds
@@ -9409,18 +9425,29 @@ class JsonLongTermKeogramView(JsonView):
         keogram_data = ltg_gen.generate(query_start_date, query_end_date)
 
 
-        png_compress_level = self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 5)
+        jpg_compress_level = self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('jpg', 95)
+        #png_compress_level = self.indi_allsky_config.get('IMAGE_FILE_COMPRESSION', {}).get('png', 5)
 
 
         ### OpenCV
-        _, image_a = cv2.imencode('.png', keogram_data, [cv2.IMWRITE_PNG_COMPRESSION, png_compress_level])
-        image_buffer = io.BytesIO(image_a.tobytes())
+        #_, image_a = cv2.imencode('.png', keogram_data, [cv2.IMWRITE_PNG_COMPRESSION, png_compress_level])
+        #image_buffer = io.BytesIO(image_a.tobytes())
 
 
         ### pillow
-        #image_buffer = io.BytesIO()
-        #img = Image.fromarray(cv2.cvtColor(keogram_data, cv2.COLOR_BGR2RGB))
-        #img.save(image_buffer, format='PNG', compress_level=png_compression_level)
+        image_buffer = io.BytesIO()
+        img = Image.fromarray(cv2.cvtColor(keogram_data, cv2.COLOR_BGR2RGB))
+        img.save(image_buffer, format='JPEG', compress_level=jpg_compress_level)
+
+
+        # Save longterm keogram so it can be cached and loaded later
+        # It may take longer than 180 seconds to generate the keogram and the browser will stop
+        #  waiting for the image and drop the connection.  The flask process will usually continue
+        #  and should save the image to the filesystem
+        longterm_keogram_image_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath('ccd_{0:s}'.format(self.camera.uuid), 'longterm_keogram.jpg')
+        with io.open(str(longterm_keogram_image_p), 'wb') as lt_image_f:
+            app.logger.info('Writing keogram: %s', longterm_keogram_image_p)
+            lt_image_f.write(image_buffer.getbuffer())
 
 
         json_image_b64 = base64.b64encode(image_buffer.getvalue())
@@ -9485,10 +9512,6 @@ class AjaxNetworkManagerView(BaseView):
         'Deactivating' : 3,
         'Not Active'   : 4,
     }
-
-
-    def __init__(self, **kwargs):
-        super(AjaxNetworkManagerView, self).__init__(**kwargs)
 
 
     def dispatch_request(self):

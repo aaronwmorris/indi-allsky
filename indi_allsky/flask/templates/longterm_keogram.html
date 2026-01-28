@@ -21,11 +21,14 @@ var json_data = {
     'message'    : '',
 };
 var camera_id = {{ camera_id }};
+var keogram_age = "{{ keogram_age }}";
+var keogram_uri = "{{ keogram_uri }}";
 var fullscreen = false;  //initial state
 var page_settings;  // set later
 
-function showImage(image_b64) {
-    if (image_b64 == null) {
+
+function showImage(image_b64, image_uri) {
+    if (image_b64 == null && image_uri == "") {
         return;
     }
 
@@ -38,7 +41,26 @@ function showImage(image_b64) {
     };
 
 
-    img.src = "data:image/png;base64," + image_b64;
+    // Prefer base64 data to static URI
+    if (image_b64) {
+        img.src = "data:image/jpeg;base64," + image_b64;
+    } else {
+        img.src = image_uri + "?t=" + new Date().getTime();
+
+        $("#img_download").html(
+            $('<a />', {
+                'href'     : image_uri + "?t=" + new Date().getTime(),
+                'download' : "keogram_longterm_" + Math.floor(Date.now() / 1000) + ".jpg",
+            }).html(
+                $('<span />', {
+                    'text'  : 'Download',
+                    'class' : "badge pill bg-info text-dark",
+                })
+            )
+        );
+
+        $('#processing_time').text(keogram_age);
+    }
 }
 
 
@@ -155,6 +177,7 @@ function closeFullscreen() {
 
 <script>
 function init() {
+    showImage(json_data['image_b64'], keogram_uri);
 }
 
 
@@ -227,9 +250,7 @@ function setResizeHandler(callback, timeout) {
 }
 
 function resize_callback() {
-    if (json_data['image_b64']) {
-        showImage(json_data['image_b64']);
-    };
+    showImage(json_data['image_b64'], keogram_uri);
 }
 setResizeHandler(resize_callback, 200);
 
@@ -275,13 +296,13 @@ $('#form_longterm_keogram').on('submit', function() {
               'Generate'
             );
 
-            showImage(json_data['image_b64']);
+            showImage(json_data['image_b64'], keogram_uri);
 
 
             $("#img_download").html(
                 $('<a />', {
-                    'href'     : "data:image/png;base64," + json_data['image_b64'],
-                    'download' : "keogram_longterm_" + Math.floor(Date.now() / 1000) + ".png",
+                    'href'     : "data:image/jpeg;base64," + json_data['image_b64'],
+                    'download' : "keogram_longterm_" + Math.floor(Date.now() / 1000) + ".jpg",
                 }).html(
                     $('<span />', {
                         'text'  : 'Download',
