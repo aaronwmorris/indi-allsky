@@ -3782,7 +3782,7 @@ class IndiAllskyConfigForm(FlaskForm):
             ('blinka_sparkfun_lightning_sensor_as3935_i2c', 'AS3935 i2c - (6 slots) [BETA]'),
         ),
         'Remote' : (
-            ('mqtt_broker_sensor', 'MQTT Broker Sensor - (5 slots)'),
+            ('mqtt_broker_sensor', 'MQTT Broker Sensor - (10 slots)'),
         ),
         'Testing' : (
             ('sensor_data_generator', 'Test Data Generator - (7 slots)'),
@@ -5756,6 +5756,17 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.TEMP_SENSOR__A_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
                     result = False
 
+            elif self.TEMP_SENSOR__A_CLASSNAME.data.startswith('mqtt_broker_'):
+                if self.TEMP_SENSOR__A_PIN_1.data:
+                    topic_list = self.TEMP_SENSOR__A_PIN_1.data.split(',')
+
+                    if len(topic_list) != len(set(topic_list)):
+                        self.TEMP_SENSOR__A_PIN_1.errors.append('Contains duplicate topics')
+                        result = False
+                else:
+                    self.TEMP_SENSOR__A_PIN_1.errors.append('Topics must be defined')
+                    result = False
+
 
         # sensor B
         if self.TEMP_SENSOR__B_CLASSNAME.data:
@@ -5835,7 +5846,18 @@ class IndiAllskyConfigForm(FlaskForm):
                 try:
                     import qwiic_i2c  # noqa: F401,F811
                 except ImportError:
-                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
+                    self.TEMP_SENSOR__B_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
+                    result = False
+
+            elif self.TEMP_SENSOR__B_CLASSNAME.data.startswith('mqtt_broker_'):
+                if self.TEMP_SENSOR__B_PIN_1.data:
+                    topic_list = self.TEMP_SENSOR__B_PIN_1.data.split(',')
+
+                    if len(topic_list) != len(set(topic_list)):
+                        self.TEMP_SENSOR__B_PIN_1.errors.append('Contains duplicate topics')
+                        result = False
+                else:
+                    self.TEMP_SENSOR__B_PIN_1.errors.append('Topics must be defined')
                     result = False
 
 
@@ -5917,7 +5939,18 @@ class IndiAllskyConfigForm(FlaskForm):
                 try:
                     import qwiic_i2c  # noqa: F401,F811
                 except ImportError:
-                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
+                    self.TEMP_SENSOR__C_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
+                    result = False
+
+            elif self.TEMP_SENSOR__C_CLASSNAME.data.startswith('mqtt_broker_'):
+                if self.TEMP_SENSOR__C_PIN_1.data:
+                    topic_list = self.TEMP_SENSOR__C_PIN_1.data.split(',')
+
+                    if len(topic_list) != len(set(topic_list)):
+                        self.TEMP_SENSOR__C_PIN_1.errors.append('Contains duplicate topics')
+                        result = False
+                else:
+                    self.TEMP_SENSOR__C_PIN_1.errors.append('Topics must be defined')
                     result = False
 
 
@@ -5999,7 +6032,18 @@ class IndiAllskyConfigForm(FlaskForm):
                 try:
                     import qwiic_i2c  # noqa: F401,F811
                 except ImportError:
-                    self.TEMP_SENSOR__A_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
+                    self.TEMP_SENSOR__D_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
+                    result = False
+
+            elif self.TEMP_SENSOR__D_CLASSNAME.data.startswith('mqtt_broker_'):
+                if self.TEMP_SENSOR__D_PIN_1.data:
+                    topic_list = self.TEMP_SENSOR__D_PIN_1.data.split(',')
+
+                    if len(topic_list) != len(set(topic_list)):
+                        self.TEMP_SENSOR__D_PIN_1.errors.append('Contains duplicate topics')
+                        result = False
+                else:
+                    self.TEMP_SENSOR__D_PIN_1.errors.append('Topics must be defined')
                     result = False
 
 
@@ -6084,6 +6128,17 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.TEMP_SENSOR__E_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
                     result = False
 
+            elif self.TEMP_SENSOR__E_CLASSNAME.data.startswith('mqtt_broker_'):
+                if self.TEMP_SENSOR__E_PIN_1.data:
+                    topic_list = self.TEMP_SENSOR__E_PIN_1.data.split(',')
+
+                    if len(topic_list) != len(set(topic_list)):
+                        self.TEMP_SENSOR__E_PIN_1.errors.append('Contains duplicate topics')
+                        result = False
+                else:
+                    self.TEMP_SENSOR__E_PIN_1.errors.append('Topics must be defined')
+                    result = False
+
 
         # sensor F
         if self.TEMP_SENSOR__F_CLASSNAME.data:
@@ -6164,6 +6219,17 @@ class IndiAllskyConfigForm(FlaskForm):
                     import qwiic_i2c  # noqa: F401,F811
                 except ImportError:
                     self.TEMP_SENSOR__F_CLASSNAME.errors.append('SparkFun QWIIC modules not installed')
+                    result = False
+
+            elif self.TEMP_SENSOR__F_CLASSNAME.data.startswith('mqtt_broker_'):
+                if self.TEMP_SENSOR__F_PIN_1.data:
+                    topic_list = self.TEMP_SENSOR__F_PIN_1.data.split(',')
+
+                    if len(topic_list) != len(set(topic_list)):
+                        self.TEMP_SENSOR__F_PIN_1.errors.append('Contains duplicate topics')
+                        result = False
+                else:
+                    self.TEMP_SENSOR__F_PIN_1.errors.append('Topics must be defined')
                     result = False
 
 
