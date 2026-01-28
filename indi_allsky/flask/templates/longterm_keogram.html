@@ -43,7 +43,7 @@ function showImage(image_b64, image_uri) {
 
     // Prefer base64 data to static URI
     if (image_b64) {
-        img.src = "data:image/png;base64," + image_b64;
+        img.src = "data:image/jpeg;base64," + image_b64;
     } else {
         img.src = image_uri + "?t=" + new Date().getTime();
 
@@ -293,8 +293,8 @@ $('#form_longterm_keogram').on('submit', function() {
 
             $("#img_download").html(
                 $('<a />', {
-                    'href'     : "data:image/png;base64," + json_data['image_b64'],
-                    'download' : "keogram_longterm_" + Math.floor(Date.now() / 1000) + ".png",
+                    'href'     : "data:image/jpeg;base64," + json_data['image_b64'],
+                    'download' : "keogram_longterm_" + Math.floor(Date.now() / 1000) + ".jpg",
                 }).html(
                     $('<span />', {
                         'text'  : 'Download',
