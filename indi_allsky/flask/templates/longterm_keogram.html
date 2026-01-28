@@ -45,12 +45,13 @@ function showImage(image_b64, image_uri) {
     if (image_b64) {
         img.src = "data:image/png;base64," + image_b64;
     } else {
-        img.src = image_uri;
+        img.src = image_uri + "?t=" + new Date().getTime();
+
         $('#success_message').html(keogram_age);
         $('#success_message').css({'display' : 'block'});
         setTimeout(function() {
             $('#success_message').css({'display' : 'none'});
-        }, 15000);
+        }, 30000);
     }
 }
 
