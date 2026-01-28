@@ -47,11 +47,19 @@ function showImage(image_b64, image_uri) {
     } else {
         img.src = image_uri + "?t=" + new Date().getTime();
 
-        $('#success_message').html(keogram_age);
-        $('#success_message').css({'display' : 'block'});
-        setTimeout(function() {
-            $('#success_message').css({'display' : 'none'});
-        }, 30000);
+        $("#img_download").html(
+            $('<a />', {
+                'href'     : image_uri + "?t=" + new Date().getTime(),
+                'download' : "keogram_longterm_" + Math.floor(Date.now() / 1000) + ".jpg",
+            }).html(
+                $('<span />', {
+                    'text'  : 'Download',
+                    'class' : "badge pill bg-info text-dark",
+                })
+            )
+        );
+
+        $('#processing_time').text(keogram_age);
     }
 }
 
