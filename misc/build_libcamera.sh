@@ -37,7 +37,7 @@ if [ -n "${2:-}" ]; then
     RPICAM_APPS_TAG="$2"
 else
     #RPICAM_APPS_TAG="HEAD"
-    RPICAM_APPS_TAG="v1.10.1"
+    RPICAM_APPS_TAG="v1.11.0"
 fi
 
 
@@ -186,13 +186,14 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         python3-pip python3-jinja2 \
         libboost-dev \
         libgnutls28-dev openssl libtiff5-dev pybind11-dev \
-        qtbase5-dev libqt5core5t64 libqt5gui5t64 libqt5widgets5t64 \
+        qtbase5-dev libqt5core5a libqt5gui5 libqt5widgets5 \
         meson cmake \
         python3-yaml python3-ply \
         libglib2.0-dev libgstreamer-plugins-base1.0-dev \
+        libavcodec-dev libavdevice-dev libavformat-dev libswresample-dev \
         libboost-program-options-dev libdrm-dev libexif-dev \
-        ninja-build
-
+        ninja-build \
+        libepoxy-dev libjpeg-dev libtiff5-dev libpng-dev libopencv-dev
 
 elif [[ "$DISTRO" == "debian_12" ]]; then
     BLOCKING_PACKAGES="libcamera libcamera-apps libcamera-apps-lite rpicam-apps rpicam-apps-lite"
@@ -222,9 +223,10 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         meson cmake \
         python3-yaml python3-ply \
         libglib2.0-dev libgstreamer-plugins-base1.0-dev \
+        libavcodec-dev libavdevice-dev libavformat-dev libswresample-dev \
         libboost-program-options-dev libdrm-dev libexif-dev \
-        ninja-build
-
+        ninja-build \
+        libepoxy-dev libjpeg-dev libtiff5-dev libpng-dev libopencv-dev
 
 elif [[ "$DISTRO" == "debian_11" ]]; then
     BLOCKING_PACKAGES="libcamera libcamera-apps libcamera-apps-lite"
@@ -283,9 +285,10 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         meson cmake \
         python3-yaml python3-ply \
         libglib2.0-dev libgstreamer-plugins-base1.0-dev \
+        libavcodec-dev libavdevice-dev libavformat-dev libswresample-dev \
         libboost-program-options-dev libdrm-dev libexif-dev \
-        ninja-build
-
+        ninja-build \
+        libepoxy-dev libjpeg-dev libtiff5-dev libpng-dev libopencv-dev
 
 elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     BLOCKING_PACKAGES="libcamera libcamera-apps"
@@ -317,7 +320,6 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         libglib2.0-dev libgstreamer-plugins-base1.0-dev \
         libboost-program-options-dev libdrm-dev libexif-dev \
         ninja-build
-
 
 elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     BLOCKING_PACKAGES="libcamera libcamera-apps"
@@ -425,7 +427,11 @@ if [ "${BUILD_RPICAM_APPS:-true}" == "true" ]; then
 
 
     # Setup build
+
+    # headless
     #meson setup build -Denable_libav=disabled -Denable_drm=enabled -Denable_egl=disabled -Denable_qt=disabled -Denable_opencv=disabled -Denable_tflite=disabled
+
+    # full build
     meson setup build -Denable_libav=enabled -Denable_drm=enabled -Denable_egl=enabled -Denable_qt=enabled -Denable_opencv=disabled -Denable_tflite=disabled
 
     # Compile
