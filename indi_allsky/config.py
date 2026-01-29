@@ -194,6 +194,9 @@ class IndiAllSkyConfigBase(object):
             "ENABLE"        : True,
             "OFFSET_X"      : 0,
             "OFFSET_Y"      : 0,
+            "PIL_FONT_SIZE" : 30,
+            "OPENCV_FONT_SCALE" : 0.8,
+            "MONTH_LABEL_TEMPLATE" : "{month:%B %Y}",
         },
         "REALTIME_KEOGRAM" : {
             "MAX_ENTRIES"   : 1000,

@@ -2243,6 +2243,9 @@ class ConfigView(FormView):
             'LONGTERM_KEOGRAM__ENABLE'       : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('ENABLE', True),
             'LONGTERM_KEOGRAM__OFFSET_X'     : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('OFFSET_X', 0),
             'LONGTERM_KEOGRAM__OFFSET_Y'     : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('OFFSET_Y', 0),
+            'LONGTERM_KEOGRAM__OPENCV_FONT_SCALE'    : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('OPENCV_FONT_SCALE', 0.8),
+            'LONGTERM_KEOGRAM__PIL_FONT_SIZE'        : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('PIL_FONT_SIZE', 30),
+            'LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE' : self.indi_allsky_config.get('LONGTERM_KEOGRAM', {}).get('MONTH_LABEL_TEMPLATE', '{month:%B %Y}'),
             'REALTIME_KEOGRAM__MAX_ENTRIES'  : self.indi_allsky_config.get('REALTIME_KEOGRAM', {}).get('MAX_ENTRIES', 1000),
             'REALTIME_KEOGRAM__SAVE_INTERVAL': self.indi_allsky_config.get('REALTIME_KEOGRAM', {}).get('SAVE_INTERVAL', 25),
             'REALTIME_KEOGRAM__LABEL'        : self.indi_allsky_config.get('REALTIME_KEOGRAM', {}).get('LABEL', False),
@@ -3211,6 +3214,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LONGTERM_KEOGRAM']['ENABLE']           = bool(request.json['LONGTERM_KEOGRAM__ENABLE'])
         self.indi_allsky_config['LONGTERM_KEOGRAM']['OFFSET_X']         = int(request.json['LONGTERM_KEOGRAM__OFFSET_X'])
         self.indi_allsky_config['LONGTERM_KEOGRAM']['OFFSET_Y']         = int(request.json['LONGTERM_KEOGRAM__OFFSET_Y'])
+        self.indi_allsky_config['LONGTERM_KEOGRAM']['OPENCV_FONT_SCALE']    = float(request.json['LONGTERM_KEOGRAM__OPENCV_FONT_SCALE'])
+        self.indi_allsky_config['LONGTERM_KEOGRAM']['PIL_FONT_SIZE']        = int(request.json['LONGTERM_KEOGRAM__PIL_FONT_SIZE'])
+        self.indi_allsky_config['LONGTERM_KEOGRAM']['MONTH_LABEL_TEMPLATE'] = str(request.json['LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE'])
         self.indi_allsky_config['REALTIME_KEOGRAM']['MAX_ENTRIES']      = int(request.json['REALTIME_KEOGRAM__MAX_ENTRIES'])
         self.indi_allsky_config['REALTIME_KEOGRAM']['SAVE_INTERVAL']    = int(request.json['REALTIME_KEOGRAM__SAVE_INTERVAL'])
         self.indi_allsky_config['REALTIME_KEOGRAM']['LABEL']            = bool(request.json['REALTIME_KEOGRAM__LABEL'])
@@ -9364,6 +9370,7 @@ class JsonLongTermKeogramView(JsonView):
         alignment_seconds = int(request.json['ALIGNMENT_SELECT'])
         offset_seconds = int(request.json['OFFSET_SELECT'])
         reverse = bool(request.json['REVERSE'])
+        label = bool(request.json['LABEL'])
 
 
         if query_days > 2000:
@@ -9414,13 +9421,14 @@ class JsonLongTermKeogramView(JsonView):
 
 
         from ..longTermKeogram import LongTermKeogramGenerator
-        ltg_gen = LongTermKeogramGenerator()
+        ltg_gen = LongTermKeogramGenerator(self.indi_allsky_config)
         ltg_gen.camera_id = self.camera.id
         ltg_gen.days = query_days
         ltg_gen.alignment_seconds = alignment_seconds
         ltg_gen.offset_seconds = offset_seconds
         ltg_gen.period_pixels = period_pixels
         ltg_gen.reverse = reverse
+        ltg_gen.label = label
 
         keogram_data = ltg_gen.generate(query_start_date, query_end_date)
 

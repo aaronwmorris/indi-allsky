@@ -185,6 +185,18 @@ class YearKeogramTest(object):
 
         query_limit = 300000  # limit memory impact on database
 
+
+        # generate a list of days
+        day_list = list()
+        for i in range(total_days):
+            day_date = (query_start_date + timedelta(days=i)).date()
+
+            day_list.append({
+                'month' : day_date.month,
+                'date'  : day_date,
+            })
+
+
         i = 0
         while i % query_limit == 0:
             q_offset = q.limit(query_limit).offset(i)
@@ -242,7 +254,12 @@ class YearKeogramTest(object):
         #logger.info(numpy_data[0:3])
 
         keogram_data = numpy.reshape(numpy_data, ((total_days * self.period_pixels), self.periods_per_day, 3))
-        keogram_data = numpy.flip(keogram_data, axis=0)  # newer data at top
+
+
+        # newer data at top
+        keogram_data = numpy.flip(keogram_data, axis=0)
+        day_list.reverse()
+
 
         logger.info(keogram_data.shape)
         #logger.info(keogram_data[0:3])
@@ -253,6 +270,66 @@ class YearKeogramTest(object):
 
 
         keogram_height, keogram_width = keogram_data.shape[:2]
+
+
+        last_month = day_list[0]['month']  # skip first month
+        for i, day in enumerate(day_list):
+            if day['month'] == last_month:
+                continue
+
+            last_month = day['month']
+
+
+            y = i * self.period_pixels
+            label = '{0:%B %Y}'.format(day_list[i - 1]['date'])  # previous month
+
+
+            cv2.line(
+                img=keogram_data,
+                pt1=(0, y),
+                pt2=(int(keogram_width * 0.15), y),
+                color=(0, 0, 0),
+                lineType=cv2.LINE_AA,
+                thickness=2,
+            )  # black outline
+
+            cv2.line(
+                img=keogram_data,
+                pt1=(0, y),
+                pt2=(int(keogram_width * 0.15), y),
+                color=(200, 200, 200),
+                lineType=cv2.LINE_AA,
+                thickness=1,
+            )
+
+
+            cv2.putText(
+                img=keogram_data,
+                text=label,
+                org=(5, y - 10),
+                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                color=(0, 0, 0),
+                lineType=cv2.LINE_AA,
+                fontScale=0.8,
+                thickness=2,
+            )  # black outline
+
+            cv2.putText(
+                img=keogram_data,
+                text=label,
+                org=(5, y - 10),
+                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                color=(200, 200, 200),
+                lineType=cv2.LINE_AA,
+                fontScale=0.8,
+                thickness=1,
+            )
+
+
+
+        #logger.info('Labels: %s', str(month_label_list))
+
+
         #keogram_data = cv2.resize(keogram_data, (keogram_width, keogram_height * 3), interpolation=cv2.INTER_AREA)
         cv2.imwrite(Path(__file__).parent.joinpath('year.jpg'), keogram_data, [cv2.IMWRITE_JPEG_QUALITY, 90])
 

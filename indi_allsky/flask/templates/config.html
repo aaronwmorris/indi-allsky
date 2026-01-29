@@ -3836,6 +3836,42 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Example: {month:%B %Y}</div>
+            <div>%B is the locale specific name of the month - %b is the shortened version</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LONGTERM_KEOGRAM__PIL_FONT_SIZE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LONGTERM_KEOGRAM__PIL_FONT_SIZE(class='form-control bg-secondary') }}
+            <div id="LONGTERM_KEOGRAM__PIL_FONT_SIZE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.LONGTERM_KEOGRAM__OPENCV_FONT_SCALE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LONGTERM_KEOGRAM__OPENCV_FONT_SCALE(class='form-control bg-secondary') }}
+            <div id="LONGTERM_KEOGRAM__OPENCV_FONT_SCALE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -9232,6 +9268,9 @@ const field_names = [
     'KEOGRAM_CROP_BOTTOM',
     'LONGTERM_KEOGRAM__OFFSET_X',
     'LONGTERM_KEOGRAM__OFFSET_Y',
+    'LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE',
+    'LONGTERM_KEOGRAM__PIL_FONT_SIZE',
+    'LONGTERM_KEOGRAM__OPENCV_FONT_SCALE',
     'REALTIME_KEOGRAM__MAX_ENTRIES',
     'REALTIME_KEOGRAM__SAVE_INTERVAL',
     'STARTRAILS_MAX_ADU',
