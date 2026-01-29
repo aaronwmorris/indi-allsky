@@ -48,11 +48,14 @@ RUN apt-get update \
         libglib2.0-0 \
         libcfitsio-dev \
         libcfitsio10 \
+        libunwind-dev \
+        libunwind8 \
         libnova-dev \
         python3-dev \
         dbus-daemon \
         swig
 
+# libunwind is for libcamera
 
 USER allsky
 WORKDIR /home/allsky
@@ -78,6 +81,7 @@ RUN apt-get remove --purge -y \
         libdbus-1-dev \
         libglib2.0-dev \
         libcfitsio-dev \
+        libunwind-dev \
         python3-dev \
         dbus-daemon \
         swig \
