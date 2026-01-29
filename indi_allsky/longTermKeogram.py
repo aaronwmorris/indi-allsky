@@ -299,6 +299,9 @@ class LongTermKeogramGenerator(object):
             label = label_template.format(**label_data)
 
 
+            font_scale = self.config.get('LONGTERM_KEOGRAM', {}).get('OPENCV_FONT_SCALE', 0.8)
+
+
             if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
                 cv2.line(
                     img=keogram_data,
@@ -327,7 +330,7 @@ class LongTermKeogramGenerator(object):
                     fontFace=fontFace,
                     color=(0, 0, 0),
                     lineType=lineType,
-                    fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                    fontScale=font_scale,
                     thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
                 )  # black outline
 
@@ -338,7 +341,7 @@ class LongTermKeogramGenerator(object):
                 fontFace=fontFace,
                 color=tuple(color_bgr),
                 lineType=lineType,
-                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                fontScale=font_scale,
                 thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
             )
 
@@ -362,7 +365,7 @@ class LongTermKeogramGenerator(object):
             pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
 
 
-        pillow_font_size = self.config['TEXT_PROPERTIES']['PIL_FONT_SIZE']
+        pillow_font_size = self.config.get('LONGTERM_KEOGRAM', {}).get('PIL_FONT_SIZE', 30)
 
         font = ImageFont.truetype(str(pillow_font_file_p), pillow_font_size)
         draw = ImageDraw.Draw(keogram_rgb)

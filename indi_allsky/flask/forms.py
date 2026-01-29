@@ -4249,6 +4249,8 @@ class IndiAllskyConfigForm(FlaskForm):
     LONGTERM_KEOGRAM__ENABLE         = BooleanField('Enable Long Term Keogram')
     LONGTERM_KEOGRAM__OFFSET_X       = IntegerField('X Offset', validators=[LONGTERM_KEOGRAM__OFFSET_X_validator])
     LONGTERM_KEOGRAM__OFFSET_Y       = IntegerField('Y Offset', validators=[LONGTERM_KEOGRAM__OFFSET_Y_validator])
+    LONGTERM_KEOGRAM__OPENCV_FONT_SCALE    = FloatField('Font Scale (opencv)', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
+    LONGTERM_KEOGRAM__PIL_FONT_SIZE        = IntegerField('Font Size (pillow)', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
     LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE = StringField('Month Label Template', validators=[LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE_validator])
     REALTIME_KEOGRAM__MAX_ENTRIES    = IntegerField('Realtime Keogram Max Entries', validators=[REALTIME_KEOGRAM__MAX_ENTRIES_validator])
     REALTIME_KEOGRAM__SAVE_INTERVAL  = IntegerField('Save Interval', validators=[REALTIME_KEOGRAM__SAVE_INTERVAL_validator])
