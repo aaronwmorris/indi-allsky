@@ -40,6 +40,9 @@ RUN if getent group spi >/dev/null 2>&1; then usermod -a -G spi allsky; fi
 RUN echo "allsky ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/allsky
 RUN chmod 0440 /etc/sudoers.d/allsky
 
+COPY --chown=allsky:allsky misc/build_libcamera.sh /home/allsky
+RUN chmod 755 /home/allsky/build_libcamera.sh
+
 COPY --chown=allsky:allsky misc/build_indi.sh /home/allsky
 RUN chmod 755 /home/allsky/build_indi.sh
 
@@ -47,14 +50,16 @@ USER allsky
 WORKDIR /home/allsky
 
 
+### libcamera build is prone to failure
+#RUN ./build_libcamera.sh $LIBCAMERA_TAG $RPICAM_APPS_TAG
+
+
 ENV BUILD_INDI_SETTINGS=manual
 ENV BUILD_INDI_CORE=true
 ENV BUILD_INDI_3RDPARTY=false
 ENV BUILD_INDI_OS_PACKAGE_UPGRADE=false
-RUN bash build_indi.sh $INDI_CORE_VERSION null \
-    && rm -fR /home/allsky/Projects \
+RUN bash build_indi.sh $INDI_CORE_VERSION null
+
+
+RUN rm -fR /home/allsky/Projects \
     && sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-
-### libcamera build is prone to failure
-#RUN ./build_libcamera.sh $LIBCAMERA_TAG $RPICAM_APPS_TAG
