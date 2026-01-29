@@ -9414,7 +9414,7 @@ class JsonLongTermKeogramView(JsonView):
 
 
         from ..longTermKeogram import LongTermKeogramGenerator
-        ltg_gen = LongTermKeogramGenerator()
+        ltg_gen = LongTermKeogramGenerator(self.indi_allsky_config)
         ltg_gen.camera_id = self.camera.id
         ltg_gen.days = query_days
         ltg_gen.alignment_seconds = alignment_seconds

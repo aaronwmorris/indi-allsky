@@ -1,5 +1,6 @@
 
 import math
+from pathlib import Path
 from datetime import datetime
 import logging
 
@@ -22,13 +23,26 @@ logger = logging.getLogger('indi_allsky')
 
 
 class LongTermKeogramGenerator(object):
-    def __init__(self):
+
+    # label settings
+    line_thickness = 2
+
+
+    def __init__(self, config):
+        self.config = config
+
+
         self._camera_id = None
         self._days = None
         self._alignment_seconds = None
         self._offset_seconds = None
         self._period_pixels = None
         self._reverse = False
+        self._label = False
+
+
+        base_path  = Path(__file__).parent
+        self.font_path  = base_path.joinpath('fonts')
 
 
     @property
@@ -56,6 +70,15 @@ class LongTermKeogramGenerator(object):
     @reverse.setter
     def reverse(self, new_reverse):
         self._reverse = bool(new_reverse)
+
+
+    @property
+    def label(self):
+        return self._label
+
+    @label.setter
+    def label(self, new_label):
+        self._label = bool(new_label)
 
 
     @property
@@ -114,7 +137,6 @@ class LongTermKeogramGenerator(object):
         query_start_offset = int(query_start_ts / self.alignment_seconds)
 
 
-
         ltk_interval = cast(IndiAllSkyDbLongTermKeogramTable.ts / self.alignment_seconds, Integer).label('interval')  # cast is slightly faster than func.floor
 
         q = db.session.query(
@@ -157,6 +179,10 @@ class LongTermKeogramGenerator(object):
             query_limit = 300000
 
 
+        last_day = -1
+        day_list = list()
+
+
         i = 0
         while i % query_limit == 0:
             q_offset = q.limit(query_limit).offset(i)
@@ -165,6 +191,17 @@ class LongTermKeogramGenerator(object):
                 second_offset = row.interval - query_start_offset
                 day = int(second_offset / periods_per_day)
                 index = second_offset + (day * (periods_per_day * (self.period_pixels - 1)))
+
+
+                if last_day != day:
+                    row_date = datetime.fromtimestamp(row.interval * self.alignment_seconds).date()
+                    day_list.append({
+                        'month'     : row_date.month,
+                        'date'      : row_date,
+                    })
+
+                    last_day = day
+
 
                 if self.period_pixels == 5:
                     numpy_data[index + (periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
@@ -196,7 +233,9 @@ class LongTermKeogramGenerator(object):
 
 
         if not self.reverse:
-            keogram_data = numpy.flip(keogram_data, axis=0)  # newer data at top
+            # newer data at top
+            keogram_data = numpy.flip(keogram_data, axis=0)
+            day_list.reverse()
 
 
         # sanity check
@@ -205,4 +244,170 @@ class LongTermKeogramGenerator(object):
         #keogram_data[keogram_data > 255] = 255
 
 
+        #app.logger.info('Days: %s', str(day_list))
+
+        # apply time labels
+        keogram_data = self.applyLabels(keogram_data, day_list)
+
+
         return keogram_data
+
+
+    def applyLabels(self, keogram_data, day_list):
+        if self.label:
+            image_label_system = self.config.get('IMAGE_LABEL_SYSTEM', 'pillow')
+
+            if image_label_system == 'opencv':
+                keogram_data = self.applyLabels_opencv(keogram_data, day_list)
+            else:
+                # pillow is default
+                keogram_data = self.applyLabels_pillow(keogram_data, day_list)
+        else:
+            #logger.warning('Keogram labels disabled')
+            pass
+
+
+        return keogram_data
+
+
+    def applyLabels_opencv(self, keogram_data, day_list):
+        import cv2
+
+        keogram_height, keogram_width = keogram_data.shape[:2]
+
+        fontFace = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_FACE'])
+        lineType = getattr(cv2, self.config['TEXT_PROPERTIES']['FONT_AA'])
+
+        color_bgr = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])
+        color_bgr.reverse()
+
+
+        last_month = day_list[0]['month']  # skip first month
+        for i, day in enumerate(day_list):
+            if day['month'] == last_month:
+                continue
+
+            last_month = day['month']
+
+
+            y = i * self.period_pixels
+            label = '{0:%B %Y}'.format(day_list[i - 1]['date'])  # previous month
+
+
+            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+                cv2.line(
+                    img=keogram_data,
+                    pt1=(0, y),
+                    pt2=(int(keogram_width * 0.15), y),
+                    color=(0, 0, 0),
+                    lineType=lineType,
+                    thickness=self.line_thickness + 1,
+                )  # black outline
+
+            cv2.line(
+                img=keogram_data,
+                pt1=(0, y),
+                pt2=(int(keogram_width * 0.15), y),
+                color=tuple(color_bgr),
+                lineType=lineType,
+                thickness=self.line_thickness,
+            )
+
+
+            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+                cv2.putText(
+                    img=keogram_data,
+                    text=label,
+                    org=(5, y - 10),
+                    fontFace=fontFace,
+                    color=(0, 0, 0),
+                    lineType=lineType,
+                    fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                    thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'] + 1,
+                )  # black outline
+
+            cv2.putText(
+                img=keogram_data,
+                text=label,
+                org=(5, y - 10),
+                fontFace=fontFace,
+                color=tuple(color_bgr),
+                lineType=lineType,
+                fontScale=self.config['TEXT_PROPERTIES']['FONT_SCALE'],
+                thickness=self.config['TEXT_PROPERTIES']['FONT_THICKNESS'],
+            )
+
+
+        return keogram_data
+
+
+    def applyLabels_pillow(self, keogram_data, day_list):
+        import cv2
+        from PIL import Image
+        from PIL import ImageFont
+        from PIL import ImageDraw
+
+        keogram_rgb = Image.fromarray(cv2.cvtColor(keogram_data, cv2.COLOR_BGR2RGB))
+        keogram_width, keogram_height  = keogram_rgb.size  # backwards from opencv
+
+
+        if self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'] == 'custom':
+            pillow_font_file_p = Path(self.config['TEXT_PROPERTIES']['PIL_FONT_CUSTOM'])
+        else:
+            pillow_font_file_p = self.font_path.joinpath(self.config['TEXT_PROPERTIES']['PIL_FONT_FILE'])
+
+
+        pillow_font_size = self.config['TEXT_PROPERTIES']['PIL_FONT_SIZE']
+
+        font = ImageFont.truetype(str(pillow_font_file_p), pillow_font_size)
+        draw = ImageDraw.Draw(keogram_rgb)
+
+        color_rgb = list(self.config['TEXT_PROPERTIES']['FONT_COLOR'])  # RGB for pillow
+
+
+        if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+            # black outline
+            stroke_width = 4
+        else:
+            stroke_width = 0
+
+
+        last_month = day_list[0]['month']  # skip first month
+        for i, day in enumerate(day_list):
+            if day['month'] == last_month:
+                continue
+
+            last_month = day['month']
+
+
+            y = i * self.period_pixels
+            label = '{0:%B %Y}'.format(day_list[i - 1]['date'])  # previous month
+
+
+            if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
+                draw.line(
+                    ((0, y), (int(keogram_width * 0.15), y)),
+                    fill=(0, 0, 0),
+                    width=self.line_thickness + 3,
+                )
+            draw.line(
+                ((0, y), (int(keogram_width * 0.15), y)),
+                fill=tuple(color_rgb),
+                width=self.line_thickness + 1,
+            )
+
+
+            draw.text(
+                (5, y - 5),
+                label,
+                fill=tuple(color_rgb),
+                font=font,
+                stroke_width=stroke_width,
+                stroke_fill=(0, 0, 0),
+                anchor='ld',  # left-descender
+            )
+
+
+        # convert back to numpy array
+        return cv2.cvtColor(numpy.array(keogram_rgb), cv2.COLOR_RGB2BGR)
+
