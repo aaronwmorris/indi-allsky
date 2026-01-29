@@ -194,6 +194,7 @@ class IndiAllSkyConfigBase(object):
             "ENABLE"        : True,
             "OFFSET_X"      : 0,
             "OFFSET_Y"      : 0,
+            "MONTH_LABEL_TEMPLATE" : "{month:%B %Y}",
         },
         "REALTIME_KEOGRAM" : {
             "MAX_ENTRIES"   : 1000,

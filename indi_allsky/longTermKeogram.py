@@ -289,7 +289,14 @@ class LongTermKeogramGenerator(object):
 
 
             y = i * self.period_pixels
-            label = '{0:%B %Y}'.format(day_list[i - 1]['date'])  # previous month
+
+
+            label_template = self.config.get('LONGTERM_KEOGRAM', {}).get('MONTH_LABEL_TEMPLATE', '{month:%B %Y}')
+            label_data = {
+                'month' : day_list[i - 1]['date'],
+            }
+
+            label = label_template.format(**label_data)
 
 
             if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:
@@ -379,7 +386,14 @@ class LongTermKeogramGenerator(object):
 
 
             y = i * self.period_pixels
-            label = '{0:%B %Y}'.format(day_list[i - 1]['date'])  # previous month
+
+
+            label_template = self.config.get('LONGTERM_KEOGRAM', {}).get('MONTH_LABEL_TEMPLATE', '{month:%B %Y}')
+            label_data = {
+                'month' : day_list[i - 1]['date'],
+            }
+
+            label = label_template.format(**label_data)
 
 
             if self.config['TEXT_PROPERTIES']['FONT_OUTLINE']:

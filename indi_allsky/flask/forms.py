@@ -1135,6 +1135,21 @@ def LONGTERM_KEOGRAM__OFFSET_Y_validator(form, field):
         raise ValidationError('Please enter valid number')
 
 
+def LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE_validator(form, field):
+    now = datetime.now()
+
+    test_data = {
+        'month'   : now.date(),
+    }
+
+    try:
+        field.data.format(**test_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
 def REALTIME_KEOGRAM__MAX_ENTRIES_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -4234,6 +4249,7 @@ class IndiAllskyConfigForm(FlaskForm):
     LONGTERM_KEOGRAM__ENABLE         = BooleanField('Enable Long Term Keogram')
     LONGTERM_KEOGRAM__OFFSET_X       = IntegerField('X Offset', validators=[LONGTERM_KEOGRAM__OFFSET_X_validator])
     LONGTERM_KEOGRAM__OFFSET_Y       = IntegerField('Y Offset', validators=[LONGTERM_KEOGRAM__OFFSET_Y_validator])
+    LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE = StringField('Month Label Template', validators=[LONGTERM_KEOGRAM__MONTH_LABEL_TEMPLATE_validator])
     REALTIME_KEOGRAM__MAX_ENTRIES    = IntegerField('Realtime Keogram Max Entries', validators=[REALTIME_KEOGRAM__MAX_ENTRIES_validator])
     REALTIME_KEOGRAM__SAVE_INTERVAL  = IntegerField('Save Interval', validators=[REALTIME_KEOGRAM__SAVE_INTERVAL_validator])
     REALTIME_KEOGRAM__LABEL          = BooleanField('Label Realtime Keogram')
