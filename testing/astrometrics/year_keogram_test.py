@@ -186,8 +186,16 @@ class YearKeogramTest(object):
         query_limit = 300000  # limit memory impact on database
 
 
-        last_day = -1
+        # generate a list of days
         day_list = list()
+        for i in range(total_days):
+            day_date = (query_start_date + timedelta(days=i)).date()
+
+            day_list.append({
+                'month' : day_date.month,
+                'date'  : day_date,
+            })
+
 
         i = 0
         while i % query_limit == 0:
@@ -200,16 +208,6 @@ class YearKeogramTest(object):
                 day = int(second_offset / self.periods_per_day)
                 index = second_offset + (day * (self.periods_per_day * (self.period_pixels - 1)))
                 #logger.info('Row: %d, second_offset: %d, day: %d, index: %d', i, row.second_offset, row.day, row.index)
-
-
-                if last_day != day:
-                    row_date = datetime.fromtimestamp(row.interval * self.alignment_seconds).date()
-                    day_list.append({
-                        'month'     : row_date.month,
-                        'date'      : row_date,
-                    })
-
-                    last_day = day
 
 
                 try:

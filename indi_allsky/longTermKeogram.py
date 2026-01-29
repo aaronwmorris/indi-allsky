@@ -2,6 +2,7 @@
 import math
 from pathlib import Path
 from datetime import datetime
+from datetime import timedelta
 import logging
 
 import numpy
@@ -38,7 +39,7 @@ class LongTermKeogramGenerator(object):
         self._offset_seconds = None
         self._period_pixels = None
         self._reverse = False
-        self._label = False
+        self._label = True
 
 
         base_path  = Path(__file__).parent
@@ -179,8 +180,15 @@ class LongTermKeogramGenerator(object):
             query_limit = 300000
 
 
-        last_day = -1
+        # generate a list of days
         day_list = list()
+        for i in range(total_days):
+            day_date = (query_start_date + timedelta(days=i)).date()
+
+            day_list.append({
+                'month' : day_date.month,
+                'date'  : day_date,
+            })
 
 
         i = 0
@@ -191,16 +199,6 @@ class LongTermKeogramGenerator(object):
                 second_offset = row.interval - query_start_offset
                 day = int(second_offset / periods_per_day)
                 index = second_offset + (day * (periods_per_day * (self.period_pixels - 1)))
-
-
-                if last_day != day:
-                    row_date = datetime.fromtimestamp(row.interval * self.alignment_seconds).date()
-                    day_list.append({
-                        'month'     : row_date.month,
-                        'date'      : row_date,
-                    })
-
-                    last_day = day
 
 
                 if self.period_pixels == 5:
