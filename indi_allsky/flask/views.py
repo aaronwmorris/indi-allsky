@@ -9364,6 +9364,7 @@ class JsonLongTermKeogramView(JsonView):
         alignment_seconds = int(request.json['ALIGNMENT_SELECT'])
         offset_seconds = int(request.json['OFFSET_SELECT'])
         reverse = bool(request.json['REVERSE'])
+        label = bool(request.json['LABEL'])
 
 
         if query_days > 2000:
@@ -9421,6 +9422,7 @@ class JsonLongTermKeogramView(JsonView):
         ltg_gen.offset_seconds = offset_seconds
         ltg_gen.period_pixels = period_pixels
         ltg_gen.reverse = reverse
+        ltg_gen.label = label
 
         keogram_data = ltg_gen.generate(query_start_date, query_end_date)
 

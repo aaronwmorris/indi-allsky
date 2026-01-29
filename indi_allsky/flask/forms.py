@@ -8970,6 +8970,7 @@ class IndiAllskyLongTermKeogramForm(FlaskForm):
     ALIGNMENT_SELECT        = SelectField('Alignment', choices=ALIGNMENT_SELECT_choices, default=ALIGNMENT_SELECT_choices[4][0], validators=[DataRequired()])
     OFFSET_SELECT           = SelectField('Hour Offset', choices=OFFSET_SELECT_choices, default=OFFSET_SELECT_choices[12][0], validators=[DataRequired()])
     REVERSE                 = BooleanField('Reverse')
+    LABEL                   = BooleanField('Label')
 
 
 class IndiAllskyNetworkManagerForm(FlaskForm):

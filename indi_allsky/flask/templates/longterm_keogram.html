@@ -103,7 +103,7 @@ function closeFullscreen() {
 <div class="container h-100">
 
 <form id="form_longterm_keogram" onSubmit="return false; "autocomplete="off">
-    <div class="form-group row">
+    <div class="form-group row" style="font-size:12px">
         {{ form_longterm_keogram.CAMERA_ID() }}
 
         <div class="col-sm-2">
@@ -123,6 +123,9 @@ function closeFullscreen() {
         </div>
         <div class="col-sm-1">
             {{ form_longterm_keogram.REVERSE.label(class='col-form-label') }}
+            <div class="form-switch">
+                {{ form_longterm_keogram.REVERSE(class='form-check-input') }}
+            </div>
         </div>
         <div class="col-sm-2">
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Long-Term-Keogram" class="text-decoration-none link-info" target="_blank">Long Term Keogram Wiki</a></div>
@@ -144,8 +147,11 @@ function closeFullscreen() {
         <div class="col-sm-1">
             {{ form_longterm_keogram.OFFSET_SELECT(class='form-select bg-secondary') }}
         </div>
-        <div class="col-sm-1">
-            {{ form_longterm_keogram.REVERSE(class='form-check-input') }}
+        <div class="col-sm-1" style="font-size:12px">
+            {{ form_longterm_keogram.LABEL.label(class='col-form-label') }}
+            <div class="form-switch">
+                {{ form_longterm_keogram.LABEL(class='form-check-input') }}
+            </div>
         </div>
         <div class="col-sm-1">
             <button id="generate-button" class="btn btn-success">Generate</button>
@@ -195,6 +201,7 @@ $( document ).ready(function() {
             page_settings["alignment_seconds"] = $("#ALIGNMENT_SELECT").val();
             page_settings["offset_seconds"] = $("#OFFSET_SELECT").val();
             page_settings["reverse"] = $("#REVERSE").prop('checked');
+            page_settings["label"] = $("#LABEL").prop('checked');
 
             localStorage.setItem("longterm_keogram_settings", JSON.stringify(page_settings));
         }
@@ -223,6 +230,12 @@ $( document ).ready(function() {
     if(typeof page_settings["reverse"] !== "undefined") {
         if (page_settings["reverse"]) {
             $("#REVERSE").prop('checked', true);
+        }
+    }
+
+    if(typeof page_settings["label"] !== "undefined") {
+        if (page_settings["label"]) {
+            $("#LABEL").prop('checked', true);
         }
     }
 
@@ -264,6 +277,7 @@ $('#form_longterm_keogram').on('submit', function() {
         'ALIGNMENT_SELECT' : $('#ALIGNMENT_SELECT').val(),
         'OFFSET_SELECT' : $('#OFFSET_SELECT').val(),
         'REVERSE' : $('#REVERSE').prop('checked'),
+        'LABEL' : $('#LABEL').prop('checked'),
     }
 
 
@@ -274,6 +288,7 @@ $('#form_longterm_keogram').on('submit', function() {
         page_settings["alignment_seconds"] = form_data['ALIGNMENT_SELECT'];
         page_settings["offset_seconds"] = form_data['OFFSET_SELECT'];
         page_settings["reverse"] = form_data['REVERSE'];
+        page_settings["label"] = form_data['LABEL'];
         localStorage.setItem("longterm_keogram_settings", JSON.stringify(page_settings));
     }
 
