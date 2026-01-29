@@ -22,8 +22,18 @@ class MqttBrokerSensor(SensorBase):
             'Topic 3',
             'Topic 4',
             'Topic 5',
+            'Topic 6',
+            'Topic 7',
+            'Topic 8',
+            'Topic 9',
+            'Topic 10',
         ),
         'types' : (
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
+            constants.SENSOR_MISC,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
             constants.SENSOR_MISC,
@@ -38,7 +48,7 @@ class MqttBrokerSensor(SensorBase):
 
         topics_str = kwargs['pin_1_name']
         topics = topics_str.split(',')
-        self.topic_list = list(topics[:5])
+        self.topic_list = list(topics[:10])
 
         import ssl
         import paho.mqtt.client as mqtt
@@ -46,7 +56,7 @@ class MqttBrokerSensor(SensorBase):
         logger.warning('Initializing [%s] MQTT Broker Sensor', self.name)
 
         self.data = {
-            'data' : [0.0, 0.0, 0.0, 0.0, 0.0],
+            'data' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         }
 
 
@@ -110,7 +120,7 @@ class MqttBrokerSensor(SensorBase):
 
 
     def update(self):
-        logger.info('[%s] MQTT Broker - values: %0.3f, %0.3f, %0.3f, %0.3f, %0.3f', self.name, *self.data['data'])
+        logger.info('[%s] MQTT Broker - values: %0.3f, %0.3f, %0.3f, %0.3f, %0.3f, %0.3f, %0.3f, %0.3f, %0.3f, %0.3f', self.name, *self.data['data'])
 
         return self.data
 
