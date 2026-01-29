@@ -37,7 +37,7 @@ if [ -n "${2:-}" ]; then
     RPICAM_APPS_TAG="$2"
 else
     #RPICAM_APPS_TAG="HEAD"
-    RPICAM_APPS_TAG="v1.10.1"
+    RPICAM_APPS_TAG="v1.11.0"
 fi
 
 
