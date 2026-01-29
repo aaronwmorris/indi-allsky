@@ -400,7 +400,7 @@ class LongTermKeogramGenerator(object):
                 draw.line(
                     ((0, y), (int(keogram_width * 0.15), y)),
                     fill=(0, 0, 0),
-                    width=self.line_thickness + 3,
+                    width=self.line_thickness + 5,  # +4
                 )
             draw.line(
                 ((0, y), (int(keogram_width * 0.15), y)),
