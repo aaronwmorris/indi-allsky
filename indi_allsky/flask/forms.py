@@ -2930,6 +2930,22 @@ def TEMP_SENSOR__LABEL_validator(form, field):
     pass
 
 
+def TEMP_SENSOR__TITLE_TEMPLATE_validator(form, field):
+    test_data = {
+        'name'  : '',
+        'label' : '',
+        'probe' : '',
+    }
+
+
+    try:
+        field.data.format(**test_data)
+    except KeyError as e:
+        raise ValidationError('KeyError: {0:s}'.format(str(e)))
+    except ValueError as e:
+        raise ValidationError('ValueError: {0:s}'.format(str(e)))
+
+
 def I2C_ADDRESS_validator(form, field):
     try:
         address = int(field.data, 16)
@@ -4667,36 +4683,42 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__A_PIN_2             = StringField('Pin/Port 2', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__A_USER_VAR_SLOT     = SelectField('Sensor A Initial Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__A_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
+    TEMP_SENSOR__A_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__B_CLASSNAME         = SelectField('Sensor B', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__B_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__B_PIN_1             = StringField('Pin/Port 1', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__B_PIN_2             = StringField('Pin/Port 2', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__B_USER_VAR_SLOT     = SelectField('Sensor B Initial Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__B_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
+    TEMP_SENSOR__B_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__C_CLASSNAME         = SelectField('Sensor C', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__C_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__C_PIN_1             = StringField('Pin/Port 1', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__C_PIN_2             = StringField('Pin/Port 2', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__C_USER_VAR_SLOT     = SelectField('Sensor C Initial Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__C_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
+    TEMP_SENSOR__C_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__D_CLASSNAME         = SelectField('Sensor D', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__D_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__D_PIN_1             = StringField('Pin/Port 1', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__D_PIN_2             = StringField('Pin/Port 2', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__D_USER_VAR_SLOT     = SelectField('Sensor D Initial Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__D_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
+    TEMP_SENSOR__D_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__E_CLASSNAME         = SelectField('Sensor E', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__E_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__E_PIN_1             = StringField('Pin/Port 1', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__E_PIN_2             = StringField('Pin/Port 2', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__E_USER_VAR_SLOT     = SelectField('Sensor E Initial Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__E_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
+    TEMP_SENSOR__E_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__F_CLASSNAME         = SelectField('Sensor F', choices=TEMP_SENSOR__CLASSNAME_choices, validators=[TEMP_SENSOR__CLASSNAME_validator])
     TEMP_SENSOR__F_LABEL             = StringField('Label', validators=[DataRequired(), TEMP_SENSOR__LABEL_validator])
     TEMP_SENSOR__F_PIN_1             = StringField('Pin/Port 1', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__F_PIN_2             = StringField('Pin/Port 2', validators=[DEVICE_PIN_NAME_validator])
     TEMP_SENSOR__F_USER_VAR_SLOT     = SelectField('Sensor F Initial Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__F_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
+    TEMP_SENSOR__F_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__WUNDERGROUND_APIKEY = PasswordField('Weather Underground API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__WUNDERGROUND_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__ASTROSPHERIC_APIKEY = PasswordField('Astrospheric API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ASTROSPHERIC_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
@@ -4805,18 +4827,23 @@ class IndiAllskyConfigForm(FlaskForm):
         temp_sensor__a_classname = str(data['TEMP_SENSOR__A_CLASSNAME'])
         temp_sensor__a_label = str(data['TEMP_SENSOR__A_LABEL'])
         temp_sensor__a_user_var_slot = str(data['TEMP_SENSOR__A_USER_VAR_SLOT'])
+
         temp_sensor__b_classname = str(data['TEMP_SENSOR__B_CLASSNAME'])
         temp_sensor__b_label = str(data['TEMP_SENSOR__B_LABEL'])
         temp_sensor__b_user_var_slot = str(data['TEMP_SENSOR__B_USER_VAR_SLOT'])
+
         temp_sensor__c_classname = str(data['TEMP_SENSOR__C_CLASSNAME'])
         temp_sensor__c_label = str(data['TEMP_SENSOR__C_LABEL'])
         temp_sensor__c_user_var_slot = str(data['TEMP_SENSOR__C_USER_VAR_SLOT'])
+
         temp_sensor__d_classname = str(data['TEMP_SENSOR__D_CLASSNAME'])
         temp_sensor__d_label = str(data['TEMP_SENSOR__D_LABEL'])
         temp_sensor__d_user_var_slot = str(data['TEMP_SENSOR__D_USER_VAR_SLOT'])
+
         temp_sensor__e_classname = str(data['TEMP_SENSOR__E_CLASSNAME'])
         temp_sensor__e_label = str(data['TEMP_SENSOR__E_LABEL'])
         temp_sensor__e_user_var_slot = str(data['TEMP_SENSOR__E_USER_VAR_SLOT'])
+
         temp_sensor__f_classname = str(data['TEMP_SENSOR__F_CLASSNAME'])
         temp_sensor__f_label = str(data['TEMP_SENSOR__F_LABEL'])
         temp_sensor__f_user_var_slot = str(data['TEMP_SENSOR__F_USER_VAR_SLOT'])
@@ -4829,12 +4856,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
                     try:
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_a_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_a_index + x,
-                            temp_sensor__a_class.METADATA['name'],
-                            temp_sensor__a_label,
-                            temp_sensor__a_class.METADATA['labels'][x],
-                        )
+                        sensor_label_data = {
+                            'index' : slot_a_index + x,
+                            'name'  : temp_sensor__a_class.METADATA['name'],
+                            'label' : temp_sensor__a_label,
+                            'probe' : temp_sensor__a_class.METADATA['labels'][x],
+                        }
+
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_a_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
                     except IndexError:
                         app.logger.error('Not enough slots for sensor values')
                         pass
@@ -4849,12 +4878,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
                     try:
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_b_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_b_index + x,
-                            temp_sensor__b_class.METADATA['name'],
-                            temp_sensor__b_label,
-                            temp_sensor__b_class.METADATA['labels'][x],
-                        )
+                        sensor_label_data = {
+                            'index' : slot_b_index + x,
+                            'name'  : temp_sensor__b_class.METADATA['name'],
+                            'label' : temp_sensor__b_label,
+                            'probe' : temp_sensor__b_class.METADATA['labels'][x],
+                        }
+
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_b_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
                     except IndexError:
                         app.logger.error('Not enough slots for sensor values')
                         pass
@@ -4869,12 +4900,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
                     try:
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_c_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_c_index + x,
-                            temp_sensor__c_class.METADATA['name'],
-                            temp_sensor__c_label,
-                            temp_sensor__c_class.METADATA['labels'][x],
-                        )
+                        sensor_label_data = {
+                            'index' : slot_c_index + x,
+                            'name'  : temp_sensor__c_class.METADATA['name'],
+                            'label' : temp_sensor__c_label,
+                            'probe' : temp_sensor__c_class.METADATA['labels'][x],
+                        }
+
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_c_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
                     except IndexError:
                         app.logger.error('Not enough slots for sensor values')
                         pass
@@ -4889,12 +4922,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 for x in range(temp_sensor__d_class.METADATA['count']):
                     try:
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_d_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_d_index + x,
-                            temp_sensor__d_class.METADATA['name'],
-                            temp_sensor__d_label,
-                            temp_sensor__d_class.METADATA['labels'][x],
-                        )
+                        sensor_label_data = {
+                            'index' : slot_d_index + x,
+                            'name'  : temp_sensor__d_class.METADATA['name'],
+                            'label' : temp_sensor__d_label,
+                            'probe' : temp_sensor__d_class.METADATA['labels'][x],
+                        }
+
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_d_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
                     except IndexError:
                         app.logger.error('Not enough slots for sensor values')
                         pass
@@ -4909,12 +4944,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 for x in range(temp_sensor__e_class.METADATA['count']):
                     try:
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_e_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_e_index + x,
-                            temp_sensor__e_class.METADATA['name'],
-                            temp_sensor__e_label,
-                            temp_sensor__e_class.METADATA['labels'][x],
-                        )
+                        sensor_label_data = {
+                            'index' : slot_e_index + x,
+                            'name'  : temp_sensor__e_class.METADATA['name'],
+                            'label' : temp_sensor__e_label,
+                            'probe' : temp_sensor__e_class.METADATA['labels'][x],
+                        }
+
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_e_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
                     except IndexError:
                         app.logger.error('Not enough slots for sensor values')
                         pass
@@ -4929,12 +4966,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 for x in range(temp_sensor__f_class.METADATA['count']):
                     try:
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_f_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_f_index + x,
-                            temp_sensor__f_class.METADATA['name'],
-                            temp_sensor__f_label,
-                            temp_sensor__f_class.METADATA['labels'][x],
-                        )
+                        sensor_label_data = {
+                            'index' : slot_f_index + x,
+                            'name'  : temp_sensor__f_class.METADATA['name'],
+                            'label' : temp_sensor__f_label,
+                            'probe' : temp_sensor__f_class.METADATA['labels'][x],
+                        }
+
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_f_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
                     except IndexError:
                         app.logger.error('Not enough slots for sensor values')
                         pass

@@ -43,7 +43,7 @@ INDIALLSKY_INDI_3RDPARTY_VERSION=v2.1.7.1
 # asi, qhy, playerone, sx, touptek, svbony, libcamera, gphoto, webcam
 INDIALLSKY_CAMERA_VENDOR=supported
 
-# libcamera is commented out of Dockerfile.indi_base_debian12
+# libcamera is commented out of Dockerfile.indi_base_debian13
 INDIALLSKY_LIBCAMERA_TAG=v0.6.0+rpt20251202
 INDIALLSKY_RPICAM_APPS_TAG=v1.11.0
 

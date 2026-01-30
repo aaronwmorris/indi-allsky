@@ -1224,21 +1224,32 @@ class HADiscovery(object):
         temp_sensor__a_classname = self.config.get('TEMP_SENSOR', {}).get('A_CLASSNAME', '')
         temp_sensor__a_label = self.config.get('TEMP_SENSOR', {}).get('A_LABEL', 'Sensor A')
         temp_sensor__a_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 'sensor_user_10')
+        temp_sensor__a_title_template = self.config.get('TEMP_SENSOR', {}).get('A_TITLE_TEMPLATE', '{name:s} - {label:s} - {probe:s}')
+
         temp_sensor__b_classname = self.config.get('TEMP_SENSOR', {}).get('B_CLASSNAME', '')
         temp_sensor__b_label = self.config.get('TEMP_SENSOR', {}).get('B_LABEL', 'Sensor B')
         temp_sensor__b_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_20')
+        temp_sensor__b_title_template = self.config.get('TEMP_SENSOR', {}).get('B_TITLE_TEMPLATE', '{name:s} - {label:s} - {probe:s}')
+
         temp_sensor__c_classname = self.config.get('TEMP_SENSOR', {}).get('C_CLASSNAME', '')
         temp_sensor__c_label = self.config.get('TEMP_SENSOR', {}).get('C_LABEL', 'Sensor C')
         temp_sensor__c_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_30')
+        temp_sensor__c_title_template = self.config.get('TEMP_SENSOR', {}).get('C_TITLE_TEMPLATE', '{name:s} - {label:s} - {probe:s}')
+
         temp_sensor__d_classname = self.config.get('TEMP_SENSOR', {}).get('D_CLASSNAME', '')
         temp_sensor__d_label = self.config.get('TEMP_SENSOR', {}).get('D_LABEL', 'Sensor D')
         temp_sensor__d_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_40')
+        temp_sensor__d_title_template = self.config.get('TEMP_SENSOR', {}).get('D_TITLE_TEMPLATE', '{name:s} - {label:s} - {probe:s}')
+
         temp_sensor__e_classname = self.config.get('TEMP_SENSOR', {}).get('E_CLASSNAME', '')
         temp_sensor__e_label = self.config.get('TEMP_SENSOR', {}).get('E_LABEL', 'Sensor E')
         temp_sensor__e_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('E_USER_VAR_SLOT', 'sensor_user_50')
+        temp_sensor__e_title_template = self.config.get('TEMP_SENSOR', {}).get('E_TITLE_TEMPLATE', '{name:s} - {label:s} - {probe:s}')
+
         temp_sensor__f_classname = self.config.get('TEMP_SENSOR', {}).get('F_CLASSNAME', '')
         temp_sensor__f_label = self.config.get('TEMP_SENSOR', {}).get('F_LABEL', 'Sensor F')
         temp_sensor__f_user_var_slot = self.config.get('TEMP_SENSOR', {}).get('F_USER_VAR_SLOT', 'sensor_user_55')
+        temp_sensor__f_title_template = self.config.get('TEMP_SENSOR', {}).get('F_TITLE_TEMPLATE', '{name:s} - {label:s} - {probe:s}')
 
 
         ### Sensor A
@@ -1249,12 +1260,14 @@ class HADiscovery(object):
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
                     try:
+                        sensor_label_data = {
+                            'name'  : temp_sensor__a_class.METADATA['name'],
+                            'label' : temp_sensor__a_label,
+                            'probe' : temp_sensor__a_class.METADATA['labels'][x],
+                        }
+
                         self.SENSOR_SLOT_choices[sensor_a_index + x] = (
-                            '{0:s} - {1:s} - {2:s}'.format(
-                                temp_sensor__a_class.METADATA['name'],
-                                temp_sensor__a_label,
-                                temp_sensor__a_class.METADATA['labels'][x],
-                            ),
+                            temp_sensor__a_title_template.format(**sensor_label_data),
                             temp_sensor__a_class.METADATA['types'][x],
                         )
                     except IndexError:
@@ -1272,12 +1285,14 @@ class HADiscovery(object):
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
                     try:
+                        sensor_label_data = {
+                            'name'  : temp_sensor__b_class.METADATA['name'],
+                            'label' : temp_sensor__b_label,
+                            'probe' : temp_sensor__b_class.METADATA['labels'][x],
+                        }
+
                         self.SENSOR_SLOT_choices[sensor_b_index + x] = (
-                            '{0:s} - {1:s} - {2:s}'.format(
-                                temp_sensor__b_class.METADATA['name'],
-                                temp_sensor__b_label,
-                                temp_sensor__b_class.METADATA['labels'][x],
-                            ),
+                            temp_sensor__b_title_template.format(**sensor_label_data),
                             temp_sensor__b_class.METADATA['types'][x],
                         )
                     except IndexError:
@@ -1295,12 +1310,14 @@ class HADiscovery(object):
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
                     try:
+                        sensor_label_data = {
+                            'name'  : temp_sensor__c_class.METADATA['name'],
+                            'label' : temp_sensor__c_label,
+                            'probe' : temp_sensor__c_class.METADATA['labels'][x],
+                        }
+
                         self.SENSOR_SLOT_choices[sensor_c_index + x] = (
-                            '{0:s} - {1:s} - {2:s}'.format(
-                                temp_sensor__c_class.METADATA['name'],
-                                temp_sensor__c_label,
-                                temp_sensor__c_class.METADATA['labels'][x],
-                            ),
+                            temp_sensor__c_title_template.format(**sensor_label_data),
                             temp_sensor__c_class.METADATA['types'][x],
                         )
                     except IndexError:
@@ -1318,12 +1335,14 @@ class HADiscovery(object):
 
                 for x in range(temp_sensor__d_class.METADATA['count']):
                     try:
+                        sensor_label_data = {
+                            'name'  : temp_sensor__d_class.METADATA['name'],
+                            'label' : temp_sensor__d_label,
+                            'probe' : temp_sensor__d_class.METADATA['labels'][x],
+                        }
+
                         self.SENSOR_SLOT_choices[sensor_d_index + x] = (
-                            '{0:s} - {1:s} - {2:s}'.format(
-                                temp_sensor__d_class.METADATA['name'],
-                                temp_sensor__d_label,
-                                temp_sensor__d_class.METADATA['labels'][x],
-                            ),
+                            temp_sensor__d_title_template.format(**sensor_label_data),
                             temp_sensor__d_class.METADATA['types'][x],
                         )
                     except IndexError:
@@ -1341,12 +1360,14 @@ class HADiscovery(object):
 
                 for x in range(temp_sensor__e_class.METADATA['count']):
                     try:
+                        sensor_label_data = {
+                            'name'  : temp_sensor__e_class.METADATA['name'],
+                            'label' : temp_sensor__e_label,
+                            'probe' : temp_sensor__e_class.METADATA['labels'][x],
+                        }
+
                         self.SENSOR_SLOT_choices[sensor_e_index + x] = (
-                            '{0:s} - {1:s} - {2:s}'.format(
-                                temp_sensor__e_class.METADATA['name'],
-                                temp_sensor__e_label,
-                                temp_sensor__e_class.METADATA['labels'][x],
-                            ),
+                            temp_sensor__e_title_template.format(**sensor_label_data),
                             temp_sensor__e_class.METADATA['types'][x],
                         )
                     except IndexError:
@@ -1364,12 +1385,14 @@ class HADiscovery(object):
 
                 for x in range(temp_sensor__f_class.METADATA['count']):
                     try:
+                        sensor_label_data = {
+                            'name'  : temp_sensor__f_class.METADATA['name'],
+                            'label' : temp_sensor__f_label,
+                            'probe' : temp_sensor__f_class.METADATA['labels'][x],
+                        }
+
                         self.SENSOR_SLOT_choices[sensor_f_index + x] = (
-                            '{0:s} - {1:s} - {2:s}'.format(
-                                temp_sensor__f_class.METADATA['name'],
-                                temp_sensor__f_label,
-                                temp_sensor__f_class.METADATA['labels'][x],
-                            ),
+                            temp_sensor__f_title_template.format(**sensor_label_data),
                             temp_sensor__f_class.METADATA['types'][x],
                         )
                     except IndexError:

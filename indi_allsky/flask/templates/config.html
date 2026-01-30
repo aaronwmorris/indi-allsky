@@ -4618,6 +4618,70 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__LATITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__LATITUDE_OFFSET(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__LATITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky" class="text-decoration-none link-info" target="_blank">VirtualSky Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__LONGITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__LONGITUDE_OFFSET(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__LONGITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Changes to VirtualSky settings will become available after a Reload</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__IMAGE_CIRCLE_DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__OFFSET_X(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__OFFSET_Y(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.VIRTUALSKY__MAGNITUDE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -4709,69 +4773,6 @@ var camera_id = {{ camera_id }};
                 {{ form_config.VIRTUALSKY__SHOWPLANETLABELS(class='form-check-input') }}
                 <div id="VIRTUALSKY__SHOWPLANETLABELS-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__LATITUDE_OFFSET.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__LATITUDE_OFFSET(class='form-control bg-secondary') }}
-            <div id="VIRTUALSKY__LATITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Changes to VirtualSky settings will become available after a Reload</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__LONGITUDE_OFFSET.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__LONGITUDE_OFFSET(class='form-control bg-secondary') }}
-            <div id="VIRTUALSKY__LONGITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
-            <div id="VIRTUALSKY__IMAGE_CIRCLE_DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__OFFSET_X.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__OFFSET_X(class='form-control bg-secondary') }}
-            <div id="VIRTUALSKY__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__OFFSET_Y.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__OFFSET_Y(class='form-control bg-secondary') }}
-            <div id="VIRTUALSKY__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
         </div>
@@ -6954,6 +6955,20 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__A_TITLE_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__A_TITLE_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__A_TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>Available variables:</div>
+            <div><pre>name, label, probe</pre></div>
+        </div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -7031,6 +7046,20 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>All sensor values will populate multiple slots starting at this slot</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__B_TITLE_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__B_TITLE_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__B_TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>Available variables:</div>
+            <div><pre>name, label, probe</pre></div>
         </div>
     </div>
 
@@ -7114,6 +7143,20 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__C_TITLE_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__C_TITLE_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__C_TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>Available variables:</div>
+            <div><pre>name, label, probe</pre></div>
+        </div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -7191,6 +7234,20 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>All sensor values will populate multiple slots starting at this slot</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__D_TITLE_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__D_TITLE_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__D_TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>Available variables:</div>
+            <div><pre>name, label, probe</pre></div>
         </div>
     </div>
 
@@ -7274,6 +7331,20 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__E_TITLE_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__E_TITLE_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__E_TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>Available variables:</div>
+            <div><pre>name, label, probe</pre></div>
+        </div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -7351,6 +7422,20 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>All sensor values will populate multiple slots starting at this slot</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__F_TITLE_TEMPLATE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.TEMP_SENSOR__F_TITLE_TEMPLATE(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__F_TITLE_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>Available variables:</div>
+            <div><pre>name, label, probe</pre></div>
         </div>
     </div>
 
@@ -9583,36 +9668,42 @@ const field_names = [
     'TEMP_SENSOR__A_PIN_2',
     'TEMP_SENSOR__A_USER_VAR_SLOT',
     'TEMP_SENSOR__A_I2C_ADDRESS',
+    'TEMP_SENSOR__A_TITLE_TEMPLATE',
     'TEMP_SENSOR__B_CLASSNAME',
     'TEMP_SENSOR__B_LABEL',
     'TEMP_SENSOR__B_PIN_1',
     'TEMP_SENSOR__B_PIN_2',
     'TEMP_SENSOR__B_USER_VAR_SLOT',
     'TEMP_SENSOR__B_I2C_ADDRESS',
+    'TEMP_SENSOR__B_TITLE_TEMPLATE',
     'TEMP_SENSOR__C_CLASSNAME',
     'TEMP_SENSOR__C_LABEL',
     'TEMP_SENSOR__C_PIN_1',
     'TEMP_SENSOR__C_PIN_2',
     'TEMP_SENSOR__C_USER_VAR_SLOT',
     'TEMP_SENSOR__C_I2C_ADDRESS',
+    'TEMP_SENSOR__C_TITLE_TEMPLATE',
     'TEMP_SENSOR__D_CLASSNAME',
     'TEMP_SENSOR__D_LABEL',
     'TEMP_SENSOR__D_PIN_1',
     'TEMP_SENSOR__D_PIN_2',
     'TEMP_SENSOR__D_USER_VAR_SLOT',
     'TEMP_SENSOR__D_I2C_ADDRESS',
+    'TEMP_SENSOR__D_TITLE_TEMPLATE',
     'TEMP_SENSOR__E_CLASSNAME',
     'TEMP_SENSOR__E_LABEL',
     'TEMP_SENSOR__E_PIN_1',
     'TEMP_SENSOR__E_PIN_2',
     'TEMP_SENSOR__E_USER_VAR_SLOT',
     'TEMP_SENSOR__E_I2C_ADDRESS',
+    'TEMP_SENSOR__E_TITLE_TEMPLATE',
     'TEMP_SENSOR__F_CLASSNAME',
     'TEMP_SENSOR__F_LABEL',
     'TEMP_SENSOR__F_PIN_1',
     'TEMP_SENSOR__F_PIN_2',
     'TEMP_SENSOR__F_USER_VAR_SLOT',
     'TEMP_SENSOR__F_I2C_ADDRESS',
+    'TEMP_SENSOR__F_TITLE_TEMPLATE',
     'TEMP_SENSOR__OPENWEATHERMAP_APIKEY',
     'TEMP_SENSOR__WUNDERGROUND_APIKEY',
     'TEMP_SENSOR__ASTROSPHERIC_APIKEY',
