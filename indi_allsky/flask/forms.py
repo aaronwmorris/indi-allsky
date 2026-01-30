@@ -4829,12 +4829,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
                     try:
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_a_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_a_index + x,
-                            temp_sensor__a_class.METADATA['name'],
-                            temp_sensor__a_label,
-                            temp_sensor__a_class.METADATA['labels'][x],
-                        )
+                        sensor_label_data = {
+                            'sensor_index' : slot_a_index + x,
+                            'sensor_name'  : temp_sensor__a_class.METADATA['name'],
+                            'sensor_label' : temp_sensor__a_label,
+                            'sensor_probe' : temp_sensor__a_class.METADATA['labels'][x],
+                        }
+
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_a_index + x][1] = '({sensor_index:d}) {sensor_name:s} - {sensor_label:s} - {sensor_probe:s}'.format(**sensor_label_data)
                     except IndexError:
                         app.logger.error('Not enough slots for sensor values')
                         pass
@@ -4849,12 +4851,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
                     try:
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_b_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_b_index + x,
-                            temp_sensor__b_class.METADATA['name'],
-                            temp_sensor__b_label,
-                            temp_sensor__b_class.METADATA['labels'][x],
-                        )
+                        sensor_label_data = {
+                            'sensor_index' : slot_b_index + x,
+                            'sensor_name'  : temp_sensor__b_class.METADATA['name'],
+                            'sensor_label' : temp_sensor__b_label,
+                            'sensor_probe' : temp_sensor__b_class.METADATA['labels'][x],
+                        }
+
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_b_index + x][1] = '({sensor_index:d}) {sensor_name:s} - {sensor_label:s} - {sensor_probe:s}'.format(**sensor_label_data)
                     except IndexError:
                         app.logger.error('Not enough slots for sensor values')
                         pass
@@ -4869,12 +4873,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
                     try:
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_c_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_c_index + x,
-                            temp_sensor__c_class.METADATA['name'],
-                            temp_sensor__c_label,
-                            temp_sensor__c_class.METADATA['labels'][x],
-                        )
+                        sensor_label_data = {
+                            'sensor_index' : slot_c_index + x,
+                            'sensor_name'  : temp_sensor__c_class.METADATA['name'],
+                            'sensor_label' : temp_sensor__c_label,
+                            'sensor_probe' : temp_sensor__c_class.METADATA['labels'][x],
+                        }
+
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_c_index + x][1] = '({sensor_index:d}) {sensor_name:s} - {sensor_label:s} - {sensor_probe:s}'.format(**sensor_label_data)
                     except IndexError:
                         app.logger.error('Not enough slots for sensor values')
                         pass
@@ -4889,12 +4895,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 for x in range(temp_sensor__d_class.METADATA['count']):
                     try:
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_d_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_d_index + x,
-                            temp_sensor__d_class.METADATA['name'],
-                            temp_sensor__d_label,
-                            temp_sensor__d_class.METADATA['labels'][x],
-                        )
+                        sensor_label_data = {
+                            'sensor_index' : slot_d_index + x,
+                            'sensor_name'  : temp_sensor__d_class.METADATA['name'],
+                            'sensor_label' : temp_sensor__d_label,
+                            'sensor_probe' : temp_sensor__d_class.METADATA['labels'][x],
+                        }
+
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_d_index + x][1] = '({sensor_index:d}) {sensor_name:s} - {sensor_label:s} - {sensor_probe:s}'.format(**sensor_label_data)
                     except IndexError:
                         app.logger.error('Not enough slots for sensor values')
                         pass
@@ -4909,12 +4917,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 for x in range(temp_sensor__e_class.METADATA['count']):
                     try:
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_e_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_e_index + x,
-                            temp_sensor__e_class.METADATA['name'],
-                            temp_sensor__e_label,
-                            temp_sensor__e_class.METADATA['labels'][x],
-                        )
+                        sensor_label_data = {
+                            'sensor_index' : slot_e_index + x,
+                            'sensor_name'  : temp_sensor__e_class.METADATA['name'],
+                            'sensor_label' : temp_sensor__e_label,
+                            'sensor_probe' : temp_sensor__e_class.METADATA['labels'][x],
+                        }
+
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_e_index + x][1] = '({sensor_index:d}) {sensor_name:s} - {sensor_label:s} - {sensor_probe:s}'.format(**sensor_label_data)
                     except IndexError:
                         app.logger.error('Not enough slots for sensor values')
                         pass
@@ -4929,12 +4939,14 @@ class IndiAllskyConfigForm(FlaskForm):
 
                 for x in range(temp_sensor__f_class.METADATA['count']):
                     try:
-                        self.SENSOR_SLOT_choices['User Sensors'][slot_f_index + x][1] = '({0:d}) {1:s} - {2:s} - {3:s}'.format(
-                            slot_f_index + x,
-                            temp_sensor__f_class.METADATA['name'],
-                            temp_sensor__f_label,
-                            temp_sensor__f_class.METADATA['labels'][x],
-                        )
+                        sensor_label_data = {
+                            'sensor_index' : slot_f_index + x,
+                            'sensor_name'  : temp_sensor__f_class.METADATA['name'],
+                            'sensor_label' : temp_sensor__f_label,
+                            'sensor_probe' : temp_sensor__f_class.METADATA['labels'][x],
+                        }
+
+                        self.SENSOR_SLOT_choices['User Sensors'][slot_f_index + x][1] = '({sensor_index:d}) {sensor_name:s} - {sensor_label:s} - {sensor_probe:s}'.format(**sensor_label_data)
                     except IndexError:
                         app.logger.error('Not enough slots for sensor values')
                         pass
