@@ -4869,6 +4869,8 @@ class SystemInfoView(TemplateView):
 
         context['temp_list'] = self.getTemps()
 
+        context['fan_list'] = self.getFans()
+
         context['net_list'] = self.getNetworkIps()
 
         context['systemd_target'] = self.getSystemdTarget()
@@ -5126,6 +5128,54 @@ class SystemInfoView(TemplateView):
 
         return temp_list
 
+    def getFans(self):
+        fan_list = list()
+
+        # 1) Standard: psutil sensors_fans()
+        try:
+            fan_info = psutil.sensors_fans()
+        except Exception:
+            fan_info = dict()
+
+        for f_key in sorted(fan_info):  # stable ordering
+            for i, f in enumerate(fan_info[f_key]):
+                try:
+                    rpm = float(getattr(f, 'current', 0.0) or 0.0)
+                except Exception:
+                    rpm = 0.0
+
+                if not getattr(f, 'label', ''):
+                    label = str(i)
+                else:
+                    label = f.label
+
+                topic = '{0:s}/{1:s}'.format(f_key, label)
+                topic_sub = re.sub(r'[#+\$\*\>\ ]', '_', topic)
+
+                fan_list.append({
+                    'name' : topic_sub,
+                    'rpm'  : rpm,
+                })
+
+        # 2) Raspberry Pi 5 Active Cooler / fan connector fallback via sysfs
+        # Typical path: /sys/devices/platform/cooling_fan/hwmon/hwmon*/fan1_input
+        if not fan_list:
+            try:
+                base = Path('/sys/devices/platform/cooling_fan/hwmon')
+                for fan_input in base.glob('hwmon*/fan1_input'):
+                    try:
+                        rpm = float(int(fan_input.read_text().strip()))
+                        fan_list.append({
+                            'name' : 'cooling_fan/fan1',
+                            'rpm'  : rpm,
+                        })
+                    except Exception:
+                        pass
+                    break
+            except Exception:
+                pass
+
+        return fan_list
 
     def getNetworkIps(self):
         net_info = psutil.net_if_addrs()
