@@ -4618,6 +4618,70 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__LATITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__LATITUDE_OFFSET(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__LATITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky" class="text-decoration-none link-info" target="_blank">VirtualSky Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__LONGITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__LONGITUDE_OFFSET(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__LONGITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Changes to VirtualSky settings will become available after a Reload</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__IMAGE_CIRCLE_DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__OFFSET_X(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.VIRTUALSKY__OFFSET_Y(class='form-control bg-secondary') }}
+            <div id="VIRTUALSKY__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.VIRTUALSKY__MAGNITUDE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -4709,69 +4773,6 @@ var camera_id = {{ camera_id }};
                 {{ form_config.VIRTUALSKY__SHOWPLANETLABELS(class='form-check-input') }}
                 <div id="VIRTUALSKY__SHOWPLANETLABELS-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__LATITUDE_OFFSET.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__LATITUDE_OFFSET(class='form-control bg-secondary') }}
-            <div id="VIRTUALSKY__LATITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Changes to VirtualSky settings will become available after a Reload</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__LONGITUDE_OFFSET.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__LONGITUDE_OFFSET(class='form-control bg-secondary') }}
-            <div id="VIRTUALSKY__LONGITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
-            <div id="VIRTUALSKY__IMAGE_CIRCLE_DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__OFFSET_X.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__OFFSET_X(class='form-control bg-secondary') }}
-            <div id="VIRTUALSKY__OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__OFFSET_Y.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.VIRTUALSKY__OFFSET_Y(class='form-control bg-secondary') }}
-            <div id="VIRTUALSKY__OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
         </div>
