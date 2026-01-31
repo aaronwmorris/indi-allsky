@@ -9544,7 +9544,6 @@ class NetworkManagerView(TemplateView):
     def get_context(self):
         context = super(NetworkManagerView, self).get_context()
 
-
         try:
             context['hostname'] = socket.gethostname().split('.')[0]
         except IndexError:

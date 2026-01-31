@@ -1170,6 +1170,7 @@ class TemplateView(BaseView):
             'status_text'        : self.get_status_text(status_data) + self.get_web_extra_text(),
             'username_text'      : self.get_user_info(),
             'login_disabled'     : self.login_disabled,
+            'docker'             : self.docker,
         }
 
         # night set in get_astrometric_info()

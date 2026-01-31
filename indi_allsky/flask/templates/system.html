@@ -45,6 +45,13 @@ var camera_id = {{ camera_id }};
 </nav>
 
 
+<!-- should be above tab contents -->
+{% if docker %}
+<hr>
+<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Containerized environment detected.  Service and time controls will not function.</div>
+{% endif %}
+
+
 <div class="tab-content" id="nav-tabContent">
   <div class="tab-pane fade show active" id="nav-info" role="tabpanel" aria-labelledby="nav-info-tab">
 

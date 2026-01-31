@@ -136,6 +136,14 @@ $( document ).ready(function() {
 {% endblock %}
 
 {% block content %}
+
+{% if docker %}
+<hr>
+<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Containerized environment detected. Direct log access is not available.</div>
+<hr>
+{% endif %}
+
+
 <form id="form_logviewer" onSubmit="return false;">
     <div class="form-group row">
         <div class="col-sm-1">
