@@ -12,6 +12,10 @@
     height: auto;
     object-fit: contain;
 }
+
+#longterm_keogram_form_div {
+    display: none;
+}
 </style>
 <script type="text/javascript">
 var img;
@@ -26,6 +30,11 @@ var keogram_uri = "{{ keogram_uri }}";
 var fullscreen = false;  //initial state
 var page_settings;  // set later
 
+{% if current_user.is_authenticated or login_disabled %}
+var is_authenticated = true;
+{% else %}
+var is_authenticated = false;
+{% endif %}
 
 function showImage(image_b64, image_uri) {
     if (image_b64 == null && image_uri == "") {
@@ -102,69 +111,71 @@ function closeFullscreen() {
 {% block content %}
 <div class="container h-100">
 
-<form id="form_longterm_keogram" onSubmit="return false; "autocomplete="off">
-    <div class="form-group row" style="font-size:12px">
-        {{ form_longterm_keogram.CAMERA_ID() }}
+<div id="longterm_keogram_form_div">
+    <form id="form_longterm_keogram" onSubmit="return false; "autocomplete="off">
+        <div class="form-group row" style="font-size:12px">
+            {{ form_longterm_keogram.CAMERA_ID() }}
 
-        <div class="col-sm-2">
-            {{ form_longterm_keogram.END_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_longterm_keogram.DAYS_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_longterm_keogram.PIXELS_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_longterm_keogram.ALIGNMENT_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_longterm_keogram.OFFSET_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_longterm_keogram.REVERSE.label(class='col-form-label') }}
-            <div class="form-switch">
-                {{ form_longterm_keogram.REVERSE(class='form-check-input') }}
+            <div class="col-sm-2">
+                {{ form_longterm_keogram.END_SELECT.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-2">
+                {{ form_longterm_keogram.DAYS_SELECT.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-1">
+                {{ form_longterm_keogram.PIXELS_SELECT.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-2">
+                {{ form_longterm_keogram.ALIGNMENT_SELECT.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-1">
+                {{ form_longterm_keogram.OFFSET_SELECT.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-1">
+                {{ form_longterm_keogram.REVERSE.label(class='col-form-label') }}
+                <div class="form-switch">
+                    {{ form_longterm_keogram.REVERSE(class='form-check-input') }}
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Long-Term-Keogram" class="text-decoration-none link-info" target="_blank">Long Term Keogram Wiki</a></div>
             </div>
         </div>
-        <div class="col-sm-2">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Long-Term-Keogram" class="text-decoration-none link-info" target="_blank">Long Term Keogram Wiki</a></div>
-        </div>
-    </div>
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_longterm_keogram.END_SELECT(class='form-select bg-secondary') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_longterm_keogram.DAYS_SELECT(class='form-select bg-secondary') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_longterm_keogram.PIXELS_SELECT(class='form-select bg-secondary') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_longterm_keogram.ALIGNMENT_SELECT(class='form-select bg-secondary') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_longterm_keogram.OFFSET_SELECT(class='form-select bg-secondary') }}
-        </div>
-        <div class="col-sm-1" style="font-size:12px">
-            {{ form_longterm_keogram.LABEL.label(class='col-form-label') }}
-            <div class="form-switch">
-                {{ form_longterm_keogram.LABEL(class='form-check-input') }}
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_longterm_keogram.END_SELECT(class='form-select bg-secondary') }}
+            </div>
+            <div class="col-sm-2">
+                {{ form_longterm_keogram.DAYS_SELECT(class='form-select bg-secondary') }}
+            </div>
+            <div class="col-sm-1">
+                {{ form_longterm_keogram.PIXELS_SELECT(class='form-select bg-secondary') }}
+            </div>
+            <div class="col-sm-2">
+                {{ form_longterm_keogram.ALIGNMENT_SELECT(class='form-select bg-secondary') }}
+            </div>
+            <div class="col-sm-1">
+                {{ form_longterm_keogram.OFFSET_SELECT(class='form-select bg-secondary') }}
+            </div>
+            <div class="col-sm-1" style="font-size:12px">
+                {{ form_longterm_keogram.LABEL.label(class='col-form-label') }}
+                <div class="form-switch">
+                    {{ form_longterm_keogram.LABEL(class='form-check-input') }}
+                </div>
+            </div>
+            <div class="col-sm-1">
+                <button id="generate-button" class="btn btn-success">Generate</button>
             </div>
         </div>
-        <div class="col-sm-1">
-            <button id="generate-button" class="btn btn-success">Generate</button>
-        </div>
+    </form>
+
+    <hr>
+
+    <div class="row">
+        <div class="text-success text-center" id="success_message" style="display: none;"></div>
+        <div class="text-danger text-center" id="failure_message" style="display: none;"></div>
+        <div class="text-muted text-center" id="message"></div>
     </div>
-</form>
-
-<hr>
-
-<div class="row">
-    <div class="text-success text-center" id="success_message" style="display: none;"></div>
-    <div class="text-danger text-center" id="failure_message" style="display: none;"></div>
-    <div class="text-muted text-center" id="message"></div>
 </div>
 
 <div class="row h-75 align-items-center">
@@ -183,6 +194,11 @@ function closeFullscreen() {
 
 <script>
 function init() {
+    if (is_authenticated) {
+        // Only show form if logged in
+        $('#longterm_keogram_form_div').css({'display' : 'block'});
+    }
+
     showImage(json_data['image_b64'], keogram_uri);
 }
 

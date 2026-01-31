@@ -99,11 +99,6 @@
                                 <a href="{{ url_for('indi_allsky.panorama_loop_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/repeat.svg') }}" width="16" height="16" alt="Panorama Loop"><span class="ms-1 d-none d-sm-inline">Panorama Loop</span></a>
                             </li>
-                            {% if current_user.is_authenticated or login_disabled %}
-                            <li>
-                                <a href="{{ url_for('indi_allsky.fitsimageviewer_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/image-fill.svg') }}" width="16" height="16" alt="FITS Viewer"><span class="ms-1 d-none d-sm-inline">FITS Viewer</span></a>
-                            </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.realtime_keogram_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/input-cursor.svg') }}" width="16" height="16" alt="Realtime Keogram"><span class="ms-1 d-none d-sm-inline">Realtime Keogram</span></a>
@@ -111,6 +106,11 @@
                             <li>
                                 <a href="{{ url_for('indi_allsky.longterm_keogram_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/distribute-horizontal.svg') }}" width="16" height="16" alt="Long Term Keogram"><span class="ms-1 d-none d-sm-inline">Long Term Keogram</span></a>
+                            </li>
+                            {% if current_user.is_authenticated or login_disabled %}
+                            <li>
+                                <a href="{{ url_for('indi_allsky.fitsimageviewer_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/image-fill.svg') }}" width="16" height="16" alt="FITS Viewer"><span class="ms-1 d-none d-sm-inline">FITS Viewer</span></a>
                             </li>
                             {% endif %}
                         </ul>

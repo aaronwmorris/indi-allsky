@@ -9381,13 +9381,11 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
 
 
 class LongTermKeogramView(TemplateView):
-    decorators = [login_required]
     page_title = 'Long Term Keogram'
 
 
     def get_context(self):
         context = super(LongTermKeogramView, self).get_context()
-
 
         data = {
             'CAMERA_ID' : self.camera.id
