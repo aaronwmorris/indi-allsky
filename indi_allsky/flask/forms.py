@@ -9083,7 +9083,10 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
 
 
     def getConnections(self):
-        bus = dbus.SystemBus()
+        try:
+            bus = dbus.SystemBus()
+        except dbus.exceptions.DBusException:
+            return (['D-Bus Unavailable', 'D-Bus Unavailable'],)
 
 
         try:
@@ -9326,7 +9329,10 @@ class IndiAllskyNetworkManagerForm(FlaskForm):
 
 
     def getWifiDevices(self):
-        bus = dbus.SystemBus()
+        try:
+            bus = dbus.SystemBus()
+        except dbus.exceptions.DBusException:
+            return (['D-Bus Unavailable', 'D-Bus Unavailable'],)
 
 
         try:
@@ -9413,7 +9419,10 @@ class IndiAllskyDriveManagerForm(FlaskForm):
 
 
     def getDrives(self, removable=False):
-        bus = dbus.SystemBus()
+        try:
+            bus = dbus.SystemBus()
+        except dbus.exceptions.DBusException:
+            return (['D-Bus Unavailable', 'D-Bus Unavailable'],)
 
 
         try:
@@ -9497,7 +9506,10 @@ class IndiAllskyDriveManagerForm(FlaskForm):
 
 
     def getDevices(self, mounted=True):
-        bus = dbus.SystemBus()
+        try:
+            bus = dbus.SystemBus()
+        except dbus.exceptions.DBusException:
+            return (['D-Bus Unavailable', 'D-Bus Unavailable'],)
 
 
         try:
