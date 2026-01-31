@@ -107,7 +107,7 @@
                     <li class="dropdown">
                         <a href="#" class="nav-link link-info dropdown-toggle px-sm-0 px-1" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fs-5 bi-bootstrap"></i>
-                            <img src="{{ url_for('indi_allsky.static', filename='svg/info-square.svg') }}" width="16" height="16" alt="Info">
+                            <img src="{{ url_for('indi_allsky.static', filename='svg/info-square-fill.svg') }}" width="16" height="16" alt="Info">
                             <span class="ms-1 d-none d-sm-inline">Info</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown">
@@ -130,7 +130,7 @@
                             </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.rolling_adu_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/info-square-fill.svg') }}" width="16" height="16" alt="ADU History"><span class="ms-1 d-none d-sm-inline">ADU History</span></a>
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/info-square.svg') }}" width="16" height="16" alt="ADU History"><span class="ms-1 d-none d-sm-inline">ADU History</span></a>
                             </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.image_lag_view') }}" class="dropdown-item">
