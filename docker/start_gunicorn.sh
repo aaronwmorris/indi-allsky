@@ -151,6 +151,10 @@ date
 export GUNICORN_ERROR_LOG_HANDLER=wsgi
 
 
+# Environment variable to indicate running in containerized environment
+export INDIALLSKY_DOCKER=1
+
+
 # start the program
 exec gunicorn \
     --bind 0.0.0.0:8000 \
