@@ -7955,10 +7955,6 @@ class JsonLogView(JsonView):
     methods = ['POST']
     decorators = [login_required]
 
-    def __init__(self, **kwargs):
-        super(JsonLogView, self).__init__(**kwargs)
-
-
     def dispatch_request(self):
         log_file_p = Path('/var/log/indi-allsky/indi-allsky.log')
         line_size = 150  # assuming lines have an average length
@@ -8017,7 +8013,9 @@ class JsonLogView(JsonView):
             log_lines = list()
 
 
-        if filter_str:
+        if len(log_lines) == 0:
+            log_lines.append('[indi-allsky log empty]')
+        elif filter_str:
             filter_regex = re.compile(filter_str, re.IGNORECASE)
 
             filtered_lines = list()
@@ -8030,6 +8028,9 @@ class JsonLogView(JsonView):
 
             # replace original
             log_lines = filtered_lines
+
+            if len(log_lines) == 0:
+                log_lines.append('[No matching lines]')
 
 
         json_data['log'] = ''.join(log_lines)
@@ -9543,7 +9544,6 @@ class NetworkManagerView(TemplateView):
 
     def get_context(self):
         context = super(NetworkManagerView, self).get_context()
-
 
         try:
             context['hostname'] = socket.gethostname().split('.')[0]

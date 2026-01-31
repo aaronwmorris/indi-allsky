@@ -1,3 +1,4 @@
+import os
 import io
 import socket
 import math
@@ -62,10 +63,14 @@ class BaseView(View):
 
         self._miscDb = miscDb(self.indi_allsky_config)
 
-        self.camera = None
+        self.login_disabled = app.config.get('LOGIN_DISABLED', False)
 
         ### Any non-TemplateView that needs camera related variables needs to call cameraSetup(camera_id=camera_id)
         ### This means the camera_id variable needs to be passed to the view via parameter or form element
+        self.camera = None
+
+        # This environment variable should be in place for any containerized environment
+        self.docker = bool(os.environ.get('INDIALLSKY_DOCKER'))
 
 
     def cameraSetup(self, camera_id=None):
@@ -1117,8 +1122,6 @@ class TemplateView(BaseView):
 
         self.check_config(self._indi_allsky_config_obj)
 
-        self.login_disabled = app.config.get('LOGIN_DISABLED', False)
-
         # night set in get_astrometric_info()
         self.night = True
 
@@ -1167,6 +1170,7 @@ class TemplateView(BaseView):
             'status_text'        : self.get_status_text(status_data) + self.get_web_extra_text(),
             'username_text'      : self.get_user_info(),
             'login_disabled'     : self.login_disabled,
+            'docker'             : self.docker,
         }
 
         # night set in get_astrometric_info()

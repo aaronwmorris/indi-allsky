@@ -40,6 +40,10 @@ var camera_id = {{ camera_id }};
 
 
 <!-- should be above tab contents -->
+{% if docker %}
+<hr>
+<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Containerized environment detected.  Drive controls will not function.</div>
+{% endif %}
 
 <hr>
 
