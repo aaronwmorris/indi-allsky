@@ -31,14 +31,14 @@ var camera_id = {{ camera_id }};
 
 
 <!-- should be above tab contents -->
-{% if not nm_installed %}
-<hr>
-<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Network Manager is not available</div>
-{% endif %}
-
 {% if docker %}
 <hr>
 <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Containerized environment detected.  Network controls will not function.</div>
+{% endif %}
+
+{% if not nm_installed %}
+<hr>
+<div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Network Manager is not available</div>
 {% endif %}
 <hr>
 
