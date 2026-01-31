@@ -164,6 +164,11 @@ cat /etc/timezone || true
 # log the date (shows timezone)
 date
 
+
+# Environment variable to indicate running in containerized environment
+export INDIALLSKY_DOCKER=1
+
+
 # start the program
 
 if [ "${INDIALLSKY_DARK_CAPTURE_ENABLE:-false}" == "true" ]; then
