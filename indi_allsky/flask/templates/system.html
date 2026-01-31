@@ -205,6 +205,21 @@ var camera_id = {{ camera_id }};
     </div>
 {% endfor %}
 
+{% if fan_list %}
+<hr>
+
+<div class="row">
+    <div class="col-sm-2"><h4>System Fan</h4></div>
+</div>
+
+{% for f in fan_list %}
+    <div class="row">
+        <div class="col-sm-3 text-end">{{f['name']}}</div>
+        <div class="col-sm-2">{{"%.0f"|format(f['rpm'])}} RPM</div>
+    </div>
+{% endfor %}
+{% endif %}
+
 <hr>
 
 <div class="row">
