@@ -259,8 +259,14 @@ class CaptureWorker(Process):
         self.image_queue_backoff = self.config.get('IMAGE_QUEUE_BACKOFF', 0.5)
         self.add_period_delay = 0.0
 
-        self.periodic_tasks_time = time.time() + self.periodic_tasks_offset
-        #self.periodic_tasks_time = time.time()  # testing
+
+        now_time = time.time()
+
+        self.periodic_tasks_time = now_time + self.periodic_tasks_offset
+        #self.periodic_tasks_time = now_time  # testing
+
+        self.sqm_tasks_offset = self.config.get('CAMERA_SQM', {}).get('PERIOD', 900)
+        self.sqm_tasks_time = now_time + self.sqm_tasks_offset
 
         self.exposure_timeout = self.config.get('CCD_EXPOSURE_TIMEOUT', 330)
 
@@ -514,8 +520,8 @@ class CaptureWorker(Process):
                 if self.config.get('CAPTURE_PAUSE'):
                     logger.warning('*** CAPTURE PAUSED ***')
 
-                    now = time.time()
-                    self._miscDb.setState('WATCHDOG', int(now))
+                    now_time = time.time()
+                    self._miscDb.setState('WATCHDOG', int(now_time))
                     self._miscDb.setState('STATUS', constants.STATUS_PAUSED)
 
                     if self._shutdown:
@@ -535,8 +541,8 @@ class CaptureWorker(Process):
                     logger.info('Daytime capture disabled')
                     self.generate_timelapse_flag = False
 
-                    now = time.time()
-                    self._miscDb.setState('WATCHDOG', int(now))
+                    now_time = time.time()
+                    self._miscDb.setState('WATCHDOG', int(now_time))
                     self._miscDb.setState('STATUS', constants.STATUS_SLEEPING)
 
                     if self._shutdown:
@@ -576,8 +582,8 @@ class CaptureWorker(Process):
                 while True:
                     time.sleep(0.05)
 
-                    now = time.time()
-                    if now >= loop_end:
+                    now_time = time.time()
+                    if now_time >= loop_end:
                         break
 
                     last_camera_ready = camera_ready
@@ -600,11 +606,11 @@ class CaptureWorker(Process):
                     # Camera is ready, not taking an exposure #
                     ###########################################
                     if not last_camera_ready:
-                        camera_ready_time = now
+                        camera_ready_time = now_time
 
 
                     if waiting_for_frame:
-                        frame_elapsed = now - frame_start_time
+                        frame_elapsed = now_time - frame_start_time
                         frame_delta = frame_elapsed - self.exposure_av[constants.EXPOSURE_CURRENT]
 
                         waiting_for_frame = False
@@ -652,8 +658,15 @@ class CaptureWorker(Process):
                         self.reconfigureCcd()
 
 
-                    # these tasks run every ~3 minutes
-                    self._periodic_tasks()
+                    # take SQM exposure
+                    if self.config.get('CAMERA_SQM', {}).get('ENABLE'):
+                        if now_time > self.sqm_tasks_time:
+                            self._sqm_exposure()
+
+
+                    # these tasks run every ~5 minutes
+                    if now_time > self.periodic_tasks_time:
+                        self._periodic_tasks()
 
 
                     # update system time from time offset
@@ -679,18 +692,18 @@ class CaptureWorker(Process):
 
 
 
-                    if now >= next_frame_time:
+                    if now_time >= next_frame_time:
                         #######################
                         # Start next exposure #
                         #######################
 
-                        total_elapsed = now - frame_start_time
+                        total_elapsed = now_time - frame_start_time
 
 
                         self.capture_pre_hook()
 
 
-                        frame_start_time = now
+                        frame_start_time = now_time
 
                         self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], self.gain_av[constants.GAIN_NEXT], sync=False)
 
@@ -727,7 +740,7 @@ class CaptureWorker(Process):
                         if self.focus_mode:
                             # Start frame immediately in focus mode
                             logger.warning('*** FOCUS MODE ENABLED ***')
-                            next_frame_time = now + self.config.get('FOCUS_DELAY', 4.0) + self.add_period_delay
+                            next_frame_time = now_time + self.config.get('FOCUS_DELAY', 4.0) + self.add_period_delay
                         elif self.night:
                             next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD'] + self.add_period_delay
                         else:
@@ -736,7 +749,7 @@ class CaptureWorker(Process):
                         logger.info('Total time since last exposure %0.4f s', total_elapsed)
 
 
-                loop_elapsed = now - loop_start_time
+                loop_elapsed = time.time() - loop_start_time
                 logger.debug('Loop completed in %0.4f s', loop_elapsed)
 
 
@@ -1149,6 +1162,33 @@ class CaptureWorker(Process):
         logger.info('Maximum CCD exposure: %0.8f', self.exposure_av[constants.EXPOSURE_MAX])
 
 
+        # set SQM exposure
+        sqm_exposure = float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 15.0))
+        if sqm_exposure < ccd_min_exp:
+            logger.warning(
+                'SQM exposure %0.8f too low, increasing to %0.8f',
+                sqm_exposure,
+                ccd_min_exp,
+            )
+
+            sqm_exposure = ccd_min_exp
+
+        elif sqm_exposure > ccd_max_exp:
+            logger.warning(
+                'SQM exposure %0.8f too high, decreasing to %0.8f',
+                sqm_exposure,
+                ccd_max_exp,
+            )
+
+            sqm_exposure = ccd_max_exp
+
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_SQM] = float(sqm_exposure)
+
+
+        logger.info('SQM CCD exposure: %0.8f', self.exposure_av[constants.EXPOSURE_SQM])
+
+
         # Validate gain settings
         ccd_min_gain = float(ccd_info['GAIN_INFO']['min'])
         ccd_max_gain = float(ccd_info['GAIN_INFO']['max'])
@@ -1187,6 +1227,18 @@ class CaptureWorker(Process):
             time.sleep(3)
         else:
             gain_day = float(self.config['CCD_CONFIG']['DAY']['GAIN'])
+
+
+        if self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0) < ccd_min_gain:
+            logger.error('CCD sqm gain below minimum, changing to %0.2f', float(ccd_min_gain))
+            gain_sqm = float(ccd_min_gain)
+            time.sleep(3)
+        elif self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0)  > ccd_max_gain:
+            logger.error('CCD sqm gain above maximum, changing to %0.2f', float(ccd_max_gain))
+            gain_sqm = float(ccd_max_gain)
+            time.sleep(3)
+        else:
+            gain_sqm = self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0)
 
 
         # set default exposure, gain
@@ -1269,6 +1321,8 @@ class CaptureWorker(Process):
             self.gain_av[constants.GAIN_MAX_DAY] = float(gain_day)
             self.gain_av[constants.GAIN_MIN_DAY] = float(gain_day)
 
+            self.gain_av[constants.GAIN_SQM] = float(gain_sqm)
+
             if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
                 self.gain_av[constants.GAIN_MIN_NIGHT] = float(gain_day)
                 self.gain_av[constants.GAIN_MIN_MOONMODE] = float(gain_day)
@@ -1283,6 +1337,7 @@ class CaptureWorker(Process):
         logger.info('Maximum CCD gain: %0.2f (night)', self.gain_av[constants.GAIN_MAX_NIGHT])
         logger.info('Minimum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MIN_MOONMODE])
         logger.info('Maximum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MAX_MOONMODE])
+        logger.info('SQM CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_SQM])
         logger.info('Default CCD gain: %0.2f', ccd_gain_default)
 
 
@@ -1326,21 +1381,29 @@ class CaptureWorker(Process):
             self.shoot(7.0, self.gain_av[constants.GAIN_MIN], sync=True, timeout=20.0)
 
 
-    def _periodic_tasks(self):
-        # Tasks that need to be run periodically
-        now = time.time()
-
-        if self.periodic_tasks_time > now:
-            return
+    def _sqm_exposure(self):
+        now_time = time.time()
 
         # set next reconfigure time
-        self.periodic_tasks_time = now + self.periodic_tasks_offset
+        self.sqm_tasks_time = now_time + self.sqm_tasks_offset
+
+        logger.warning('SQM Exposuretriggered')
+
+        self.shoot(self.exposure_av[constants.EXPOSURE_SQM], self.gain_av[constants.GAIN_SQM], sync=True, timeout=300.0)
+
+
+    def _periodic_tasks(self):
+        # Tasks that need to be run periodically
+        now_time = time.time()
+
+        # set next reconfigure time
+        self.periodic_tasks_time = now_time + self.periodic_tasks_offset
 
         logger.warning('Periodic tasks triggered')
 
 
         # Update watchdog
-        self._miscDb.setState('WATCHDOG', int(now))
+        self._miscDb.setState('WATCHDOG', int(now_time))
 
 
         if self.camera_server in ['indi_asi_ccd']:
@@ -2016,10 +2079,11 @@ class CaptureWorker(Process):
         self.video_q.put({'task_id' : task.id})
 
 
-    def shoot(self, exposure, gain, sync=True, timeout=None):
+    def shoot(self, exposure, gain, sync=True, timeout=None, sqm=False):
+        # sqm used for an image taking at a specific exposure/gain for a controlled SQM measurement
         logger.info('Taking %0.8fs exposure (gain %0.2f)', exposure, gain)
 
-        self.indiclient.setCcdExposure(exposure, gain, sync=sync, timeout=timeout)
+        self.indiclient.setCcdExposure(exposure, gain, sync=sync, timeout=timeout, sqm=sqm)
 
 
     def setTimeSystemd(self, new_datetime_utc):

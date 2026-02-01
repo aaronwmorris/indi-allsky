@@ -96,6 +96,7 @@ EXPOSURE_DELTA      = 2
 EXPOSURE_MIN_NIGHT  = 3
 EXPOSURE_MIN_DAY    = 4
 EXPOSURE_MAX        = 5
+EXPOSURE_SQM        = 6
 
 
 # Gain indexes
@@ -108,6 +109,7 @@ GAIN_MIN_NIGHT      = 5
 GAIN_MAX_NIGHT      = 6
 GAIN_MIN_MOONMODE   = 7
 GAIN_MAX_MOONMODE   = 8
+GAIN_SQM            = 9
 
 
 # Leaving gaps for addtional classifications

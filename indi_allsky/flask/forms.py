@@ -178,7 +178,7 @@ def LENS_AZIMUTH_validator(form, field):
         raise ValidationError('Azimuth must be 360 or less')
 
 
-def ccd_GAIN_validator(form, field):
+def CCD_GAIN_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
@@ -186,7 +186,10 @@ def ccd_GAIN_validator(form, field):
         raise ValidationError('Gain must be 0 or higher')
 
 
-def ccd_BINNING_validator(form, field):
+def CCD_BINNING_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
     if field.data <= 0:
         raise ValidationError('Bin mode must be more than 0')
 
@@ -194,15 +197,7 @@ def ccd_BINNING_validator(form, field):
         raise ValidationError('Bin mode must be less than 4')
 
 
-def CCD_EXPOSURE_MAX_validator(form, field):
-    if field.data <= 0.0:
-        raise ValidationError('Max Exposure must be more than 0')
-
-    if field.data > 120.0:
-        raise ValidationError('Max Exposure cannot be more than 120')
-
-
-def CCD_EXPOSURE_DEF_validator(form, field):
+def CCD_EXPOSURE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
@@ -211,17 +206,6 @@ def CCD_EXPOSURE_DEF_validator(form, field):
 
     if field.data > 120.0:
         raise ValidationError('Default Exposure cannot be more than 120')
-
-
-def CCD_EXPOSURE_MIN_validator(form, field):
-    if not isinstance(field.data, (int, float)):
-        raise ValidationError('Please enter valid number')
-
-    if field.data < 0.0:
-        raise ValidationError('Minimum Exposure must be 0 or more')
-
-    if field.data > 120.0:
-        raise ValidationError('Minimum Exposure cannot be more than 120')
 
 
 def CCD_EXPOSURE_TIMEOUT_validator(form, field):
@@ -246,6 +230,14 @@ def EXPOSURE_PERIOD_DAY_validator(form, field):
 
     if field.data < 1.0:
         raise ValidationError('Exposure period must be 1.0 or more')
+
+
+def CAMERA_SQM__PERIOD_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 120:
+        raise ValidationError('Value must be 120 or more')
 
 
 def CCD_CONFIG__AUTO_GAIN_LEVELS_validator(form, field):
@@ -4140,22 +4132,26 @@ class IndiAllskyConfigForm(FlaskForm):
     LENS_OFFSET_Y                    = IntegerField('Y Offset', validators=[LENS_OFFSET_validator])
     LENS_ALTITUDE                    = FloatField('Altitude', validators=[LENS_ALTITUDE_validator])
     LENS_AZIMUTH                     = FloatField('Azimuth', validators=[LENS_AZIMUTH_validator])
-    CCD_CONFIG__NIGHT__GAIN          = FloatField('Night Gain', validators=[ccd_GAIN_validator], widget=NumberInput(step=1.0))
-    CCD_CONFIG__NIGHT__BINNING       = IntegerField('Night Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
-    CCD_CONFIG__MOONMODE__GAIN       = FloatField('Moon Mode Gain', validators=[ccd_GAIN_validator], widget=NumberInput(step=1.0))
-    CCD_CONFIG__MOONMODE__BINNING    = IntegerField('Moon Mode Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
-    CCD_CONFIG__DAY__GAIN            = FloatField('Daytime Gain', validators=[ccd_GAIN_validator], widget=NumberInput(step=1.0))
-    CCD_CONFIG__DAY__BINNING         = IntegerField('Daytime Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
+    CCD_CONFIG__NIGHT__GAIN          = FloatField('Night Gain', validators=[CCD_GAIN_validator])
+    CCD_CONFIG__NIGHT__BINNING       = IntegerField('Night Bin Mode', validators=[DataRequired(), CCD_BINNING_validator])
+    CCD_CONFIG__MOONMODE__GAIN       = FloatField('Moon Mode Gain', validators=[CCD_GAIN_validator])
+    CCD_CONFIG__MOONMODE__BINNING    = IntegerField('Moon Mode Bin Mode', validators=[DataRequired(), CCD_BINNING_validator])
+    CCD_CONFIG__DAY__GAIN            = FloatField('Daytime Gain', validators=[CCD_GAIN_validator])
+    CCD_CONFIG__DAY__BINNING         = IntegerField('Daytime Bin Mode', validators=[DataRequired(), CCD_BINNING_validator])
     CCD_CONFIG__AUTO_GAIN_ENABLE     = BooleanField('Enable Exposure Priority Gain Mode [Auto-Gain]')
     CCD_CONFIG__AUTO_GAIN_LEVELS     = SelectField('Auto-Gain Levels', choices=CCD_CONFIG__AUTO_GAIN_LEVELS_choices, validators=[CCD_CONFIG__AUTO_GAIN_LEVELS_validator])
-    CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_MAX_validator])
-    CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_DEF_validator])
-    CCD_EXPOSURE_MIN                 = FloatField('Min Exposure (Night)', validators=[CCD_EXPOSURE_MIN_validator])
-    CCD_EXPOSURE_MIN_DAY             = FloatField('Min Exposure (Day)', validators=[CCD_EXPOSURE_MIN_validator])
+    CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_validator])
+    CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_validator])
+    CCD_EXPOSURE_MIN                 = FloatField('Min Exposure (Night)', validators=[CCD_EXPOSURE_validator])
+    CCD_EXPOSURE_MIN_DAY             = FloatField('Min Exposure (Day)', validators=[CCD_EXPOSURE_validator])
     CCD_EXPOSURE_TIMEOUT             = IntegerField('Exposure Timeout', validators=[CCD_EXPOSURE_TIMEOUT_validator])
     CCD_BIT_DEPTH                    = SelectField('Camera Bit Depth', choices=CCD_BIT_DEPTH_choices, validators=[CCD_BIT_DEPTH_validator])
     EXPOSURE_PERIOD                  = FloatField('Exposure Period (Night)', validators=[DataRequired(), EXPOSURE_PERIOD_validator])
     EXPOSURE_PERIOD_DAY              = FloatField('Exposure Period (Day)', validators=[DataRequired(), EXPOSURE_PERIOD_DAY_validator])
+    CAMERA_SQM__ENABLE               = BooleanField('Enable Camera SQM')
+    CAMERA_SQM__EXPOSURE             = FloatField('SQM Exposure', validators=[DataRequired(), CCD_EXPOSURE_validator])
+    CAMERA_SQM__GAIN                 = FloatField('SQM Gain', validators=[DataRequired(), CCD_GAIN_validator])
+    CAMERA_SQM__PERIOD               = IntegerField('SQM Gain', validators=[DataRequired(), CAMERA_SQM__PERIOD_validator])
     FOCUS_MODE                       = BooleanField('Focus Mode')
     FOCUS_DELAY                      = FloatField('Focus Delay', validators=[DataRequired(), FOCUS_DELAY_validator])
     CFA_PATTERN                      = SelectField('Bayer Pattern', choices=CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])

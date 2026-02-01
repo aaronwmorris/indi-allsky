@@ -143,8 +143,9 @@ class IndiAllSky(object):
         # 4 fan level
         # 5 heat index
         # 6 wind direction in degrees
-        # 7 sqm
-        # 8-9 reserved for future use
+        # 7 sensor sqm
+        # 8 camera sqm
+        # 9 reserved for future use
         self.sensors_user_av = Array('f', [0.0 for x in range(60)])
 
 
@@ -155,6 +156,7 @@ class IndiAllSky(object):
             -1.0,  # night minimum
             -1.0,  # day minimum
             -1.0,  # maximum
+            -1.0,  # sqm
         ])
 
 
@@ -168,6 +170,7 @@ class IndiAllSky(object):
             -1.0,  # night maximum
             -1.0,  # moon mode minimum
             -1.0,  # moon mode maximum
+            -1.0,  # sqm
         ])
 
 

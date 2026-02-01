@@ -105,6 +105,7 @@ class IndiAllSkyDarks(object):
             -1.0,  # night minimum
             -1.0,  # day minimum
             -1.0,  # maximum
+            -1.0,  # sqm
         ])
 
 
@@ -118,6 +119,7 @@ class IndiAllSkyDarks(object):
             -1.0,  # night maximum
             -1.0,  # moon mode minimum
             -1.0,  # moon mode maximum
+            -1.0,  # sqm
         ])
 
 

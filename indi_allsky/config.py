@@ -84,6 +84,12 @@ class IndiAllSkyConfigBase(object):
         "CCD_BIT_DEPTH"        : 0,  # 0 is auto
         "EXPOSURE_PERIOD"      : 15.00000,
         "EXPOSURE_PERIOD_DAY"  : 15.00000,
+        "CAMERA_SQM" : {
+            "ENABLE"    : False,
+            "EXPOSURE"  : 15.00000,
+            "GAIN"      : 0.0,
+            "PERIOD"    : 900,
+        },
         "FOCUS_MODE"           : False,
         "FOCUS_DELAY"          : 4.0,
         "CFA_PATTERN"      : "",  # None, GRBG, RGGB, BGGR, GBRG

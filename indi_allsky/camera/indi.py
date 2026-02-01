@@ -129,6 +129,7 @@ class IndiClient(PyIndi.BaseClient):
 
         self._exposure = 0.0
         self._gain = -1.0  # individual exposure gain
+        self._sqm = False
 
         self.exposureStartTime = 0
 
@@ -203,6 +204,15 @@ class IndiClient(PyIndi.BaseClient):
     @timeout.setter
     def timeout(self, new_timeout):
         self._timeout = float(new_timeout)
+
+
+    @property
+    def sqm(self):
+        return self._sqm
+
+    @sqm.setter
+    def sqm(self, new_sqm):
+        self._sqm = bool(new_sqm)
 
 
     @property
@@ -367,11 +377,15 @@ class IndiClient(PyIndi.BaseClient):
             'filename'    : str(f_tmpfile_p),
             'exposure'    : self.exposure,
             'gain'        : self.gain,
+            'sqm'         : self.sqm,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
             'filename_t'  : self._filename_t,
         }
+
+        self.sqm = False  # reset
+
 
         ### Not using DB task queue to reduce DB I/O
         #with app.app_context():
@@ -1007,10 +1021,11 @@ class IndiClient(PyIndi.BaseClient):
         return temp_val
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, sync=False, timeout=None, sqm=False):
         if not timeout:
             timeout = self.timeout
 
+        self.sqm = sqm
 
         self.exposure = float(exposure)
 

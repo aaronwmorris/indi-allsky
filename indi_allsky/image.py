@@ -293,6 +293,7 @@ class ImageWorker(Process):
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
         filename_t = i_dict.get('filename_t')
+        sqm = i_dict.get('sqm')
 
 
         # libcamera
@@ -332,6 +333,17 @@ class ImageWorker(Process):
         camera = IndiAllSkyDbCameraTable.query\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .one()
+
+
+        ### Special function: image is for SQM calculations only
+        if sqm:
+            self.image_processor.sqm_processing(
+                filename_p,
+                camera,
+            )
+
+            filename_p.unlink()
+            return
 
 
         if isinstance(self.gain_step, type(None)):
@@ -391,7 +403,14 @@ class ImageWorker(Process):
 
 
         try:
-            i_ref = self.image_processor.add(filename_p, exposure, gain, exp_date, exp_elapsed, camera)
+            i_ref = self.image_processor.add(
+                filename_p,
+                exposure,
+                gain,
+                exp_date,
+                exp_elapsed,
+                camera,
+            )
         except BadImage as e:
             logger.error('Bad Image: %s', str(e))
             filename_p.unlink()

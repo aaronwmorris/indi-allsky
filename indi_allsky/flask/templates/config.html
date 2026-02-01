@@ -327,6 +327,61 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CAMERA_SQM__ENABLE(class='form-check-input') }}
+                <div id="CAMERA_SQM__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__EXPOSURE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__GAIN(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__PERIOD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__PERIOD(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__PERIOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.IMAGE_QUEUE_MAX.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -9259,6 +9314,9 @@ const field_names = [
     'IMAGE_CALIBRATE_HOLE_THOLD',
     'EXPOSURE_PERIOD',
     'EXPOSURE_PERIOD_DAY',
+    'CAMERA_SQM__EXPOSURE',
+    'CAMERA_SQM__GAIN',
+    'CAMERA_SQM__PERIOD',
     'FOCUS_DELAY',
     'WBR_FACTOR',
     'WBG_FACTOR',
@@ -9764,6 +9822,7 @@ const field_names = [
 const checkbox_field_names = [
     'ENCRYPT_PASSWORDS',
     'CCD_CONFIG__AUTO_GAIN_ENABLE',
+    'CAMERA_SQM__ENABLE',
     'FOCUS_MODE',
     'USE_NIGHT_COLOR',
     'AUTO_WB',
