@@ -775,6 +775,7 @@ class PublicIndexView(BaseView):
 
 class MaskView(TemplateView):
     page_title = 'Mask Base'
+    decorators = [login_required]
 
     def get_context(self):
         context = super(MaskView, self).get_context()
@@ -800,6 +801,7 @@ class MaskView(TemplateView):
 
 class CamerasView(TemplateView):
     page_title = 'Cameras'
+    decorators = [login_required]
 
     def get_context(self):
         context = super(CamerasView, self).get_context()
@@ -812,6 +814,7 @@ class CamerasView(TemplateView):
 
 class DarkFramesView(TemplateView):
     page_title = 'Dark Frames'
+    decorators = [login_required]
 
     def get_context(self):
         context = super(DarkFramesView, self).get_context()
@@ -906,6 +909,7 @@ class DarkFramesView(TemplateView):
 
 class ImageLagView(TemplateView):
     page_title = 'Image Lag'
+    decorators = [login_required]
 
     def get_context(self):
         context = super(ImageLagView, self).get_context()
@@ -958,6 +962,7 @@ class ImageLagView(TemplateView):
 
 class RollingAduView(TemplateView):
     page_title = 'Historical ADU'
+    decorators = [login_required]
 
     def get_context(self):
         context = super(RollingAduView, self).get_context()
@@ -9376,13 +9381,11 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
 
 
 class LongTermKeogramView(TemplateView):
-    decorators = [login_required]
     page_title = 'Long Term Keogram'
 
 
     def get_context(self):
         context = super(LongTermKeogramView, self).get_context()
-
 
         data = {
             'CAMERA_ID' : self.camera.id
@@ -10949,10 +10952,6 @@ class AjaxAstroPanelView(BaseView):
     methods = ['GET', 'POST']
 
 
-    def __init__(self, **kwargs):
-        super(AjaxAstroPanelView, self).__init__(**kwargs)
-
-
     def dispatch_request(self):
         camera_id = int(request.args['camera_id'])
 
@@ -11469,6 +11468,8 @@ bp_allsky.add_url_rule('/ajax/network', view_func=AjaxNetworkManagerView.as_view
 bp_allsky.add_url_rule('/drives', view_func=DriveManagerView.as_view('drive_manager_view', template_name='drive_manager.html'))
 bp_allsky.add_url_rule('/ajax/drives', view_func=AjaxDriveManagerView.as_view('ajax_drive_manager_view'))
 
+bp_allsky.add_url_rule('/virtualsky', view_func=VirtualSkyView.as_view('virtualsky_view', template_name='virtualsky.html'))
+
 bp_allsky.add_url_rule('/ajax/notification', view_func=AjaxNotificationView.as_view('ajax_notification_view'))
 bp_allsky.add_url_rule('/ajax/selectcamera', view_func=AjaxSelectCameraView.as_view('ajax_select_camera_view'))
 bp_allsky.add_url_rule('/ajax/uploadyoutube', view_func=AjaxUploadYoutubeView.as_view('ajax_upload_youtube_view'))
@@ -11503,4 +11504,3 @@ bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view',
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
-bp_allsky.add_url_rule('/virtualsky', view_func=VirtualSkyView.as_view('virtualsky_view', template_name='virtualsky.html'))
