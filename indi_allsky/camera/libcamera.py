@@ -136,9 +136,13 @@ class IndiClientLibCameraGeneric(IndiClient):
         return option
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, sync=False, timeout=None, sqm_exposure=False):
         if self.active_exposure:
             return
+
+
+        self.exposure = exposure
+        self.sqm_exposure = sqm_exposure
 
 
         libcamera_camera_id = self.config.get('LIBCAMERA', {}).get('CAMERA_ID', 0)
@@ -179,8 +183,6 @@ class IndiClientLibCameraGeneric(IndiClient):
         self.current_exposure_file_p = image_tmp_p
         self.current_metadata_file_p = metadata_tmp_p
 
-
-        self.exposure = exposure
 
         if self.gain != round(float(gain), 2):
             self.setCcdGain(gain)

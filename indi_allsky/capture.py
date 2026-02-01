@@ -63,8 +63,8 @@ class CaptureWorker(Process):
         ['sensor_user_4', 'Fan Level'],
         ['sensor_user_5', 'Heat Index'],
         ['sensor_user_6', 'Wind Dir Degrees'],
-        ['sensor_user_7', 'SQM'],
-        ['sensor_user_8', 'Future Use 8'],
+        ['sensor_user_7', 'Sensor SQM'],
+        ['sensor_user_8', 'Camera SQM'],
         ['sensor_user_9', 'Future Use 9'],
         ['sensor_user_10', 'User Slot 10'],
         ['sensor_user_11', 'User Slot 11'],
@@ -1387,9 +1387,9 @@ class CaptureWorker(Process):
         # set next reconfigure time
         self.sqm_tasks_time = now_time + self.sqm_tasks_offset
 
-        logger.warning('SQM Exposuretriggered')
+        logger.warning('SQM exposure triggered')
 
-        self.shoot(self.exposure_av[constants.EXPOSURE_SQM], self.gain_av[constants.GAIN_SQM], sync=True, timeout=300.0)
+        self.shoot(self.exposure_av[constants.EXPOSURE_SQM], self.gain_av[constants.GAIN_SQM], sync=True, timeout=300.0, sqm_exposure=True)
 
 
     def _periodic_tasks(self):
@@ -2079,11 +2079,11 @@ class CaptureWorker(Process):
         self.video_q.put({'task_id' : task.id})
 
 
-    def shoot(self, exposure, gain, sync=True, timeout=None, sqm=False):
+    def shoot(self, exposure, gain, sync=True, timeout=None, sqm_exposure=False):
         # sqm used for an image taking at a specific exposure/gain for a controlled SQM measurement
         logger.info('Taking %0.8fs exposure (gain %0.2f)', exposure, gain)
 
-        self.indiclient.setCcdExposure(exposure, gain, sync=sync, timeout=timeout, sqm=sqm)
+        self.indiclient.setCcdExposure(exposure, gain, sync=sync, timeout=timeout, sqm_exposure=sqm_exposure)
 
 
     def setTimeSystemd(self, new_datetime_utc):

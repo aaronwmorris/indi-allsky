@@ -193,9 +193,13 @@ class IndiClientPycurl(IndiClient):
             self.bin_v.value = int(bin_value)
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, sync=False, timeout=None, sqm_exposure=False):
         if self.active_exposure:
             return
+
+
+        self.exposure = exposure
+        self.sqm_exposure = sqm_exposure
 
 
         file_type = self.config['PYCURL_CAMERA'].get('IMAGE_FILE_TYPE', 'jpg')
@@ -215,7 +219,6 @@ class IndiClientPycurl(IndiClient):
         self.current_exposure_file_p = image_tmp_p
 
 
-        self.exposure = exposure
         self.setCcdGain(gain)  # gain does not do anything
 
 

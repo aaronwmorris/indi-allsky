@@ -293,7 +293,7 @@ class ImageWorker(Process):
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
         filename_t = i_dict.get('filename_t')
-        sqm = i_dict.get('sqm')
+        sqm_exposure = i_dict.get('sqm_exposure')
 
 
         # libcamera
@@ -336,7 +336,7 @@ class ImageWorker(Process):
 
 
         ### Special function: image is for SQM calculations only
-        if sqm:
+        if sqm_exposure:
             self.image_processor.sqm_processing(
                 filename_p,
                 camera,

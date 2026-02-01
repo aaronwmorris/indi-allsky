@@ -102,12 +102,14 @@ class IndiClientTestCameraBase(IndiClient):
             self.bin_v.value = int(bin_value)
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, sync=False, timeout=None, sqm_exposure=False):
         if self.active_exposure:
             return
 
 
         self.exposure = exposure
+        self.sqm_exposure = sqm_exposure
+
         self.setCcdGain(gain)  # gain does not do anything
 
 

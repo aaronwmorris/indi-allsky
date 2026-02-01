@@ -82,10 +82,11 @@ class IndiClientPassive(IndiClient):
         pass
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, sync=False, timeout=None, sqm_exposure=False):
         self.exposureStartTime = time.time()
 
-        self.exposure = exposure
+        self.exposure = float(exposure)
+        self.sqm_exposure = sqm_exposure
 
         if self.gain != float(int(gain)):
             self.setCcdGain(gain)
