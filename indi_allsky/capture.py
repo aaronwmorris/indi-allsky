@@ -653,15 +653,20 @@ class CaptureWorker(Process):
                         return
 
 
-                    # reconfigure if needed
-                    if self.reconfigure_camera:
-                        self.reconfigureCcd()
-
-
                     # take SQM exposure
                     if self.config.get('CAMERA_SQM', {}).get('ENABLE'):
                         if now_time > self.sqm_tasks_time:
                             self._sqm_exposure()
+
+                            camera_ready = False
+                            waiting_for_frame = True
+
+                            continue
+
+
+                    # reconfigure if needed
+                    if self.reconfigure_camera:
+                        self.reconfigureCcd()
 
 
                     # these tasks run every ~5 minutes
@@ -689,7 +694,6 @@ class CaptureWorker(Process):
                             next_frame_time = time.time() + self.config['EXPOSURE_PERIOD_DAY']
 
                         break  # go ahead and break the loop to update other timestamps
-
 
 
                     if now_time >= next_frame_time:
@@ -1389,7 +1393,7 @@ class CaptureWorker(Process):
 
         logger.warning('SQM exposure triggered')
 
-        self.shoot(self.exposure_av[constants.EXPOSURE_SQM], self.gain_av[constants.GAIN_SQM], sync=True, timeout=300.0, sqm_exposure=True)
+        self.shoot(self.exposure_av[constants.EXPOSURE_SQM], self.gain_av[constants.GAIN_SQM], sync=False, timeout=300.0, sqm_exposure=True)
 
 
     def _periodic_tasks(self):
