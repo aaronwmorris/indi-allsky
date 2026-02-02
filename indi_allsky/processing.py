@@ -366,7 +366,19 @@ class ImageProcessor(object):
         return self._astrometric_data
 
 
+    def sqm_processing(self, filename, camera):
+        pass
+
+
     def add(self, filename, exposure, gain, exp_date, exp_elapsed, camera):
+        image_data = self._add(filename, exposure, gain, exp_date, exp_elapsed, camera)
+
+        self.image_list.insert(0, image_data)  # new image is first in list
+
+        return image_data
+
+
+    def _add(self, filename, exposure, gain, exp_date, exp_elapsed, camera):
         from astropy.io import fits
 
         filename_p = Path(filename)
@@ -750,15 +762,13 @@ class ImageProcessor(object):
                 pass
 
 
-        self.image_list.insert(0, image_data)  # new image is first in list
-
         return image_data
 
 
     def debayer(self):
         i_ref = self.getLatestImage()
 
-        self._debayer(i_ref)
+        i_ref.opencv_data = self._debayer(i_ref)
 
 
     def _debayer(self, i_ref):
@@ -800,8 +810,7 @@ class ImageProcessor(object):
             data = numpy.swapaxes(data, 0, 2)
             data = numpy.swapaxes(data, 0, 1)
 
-            i_ref.opencv_data = cv2.cvtColor(data, cv2.COLOR_RGB2BGR)
-            return
+            return cv2.cvtColor(data, cv2.COLOR_RGB2BGR)
 
 
         ### now we reach the debayer stage
@@ -816,8 +825,7 @@ class ImageProcessor(object):
         if not image_bayerpat:
             # assume mono data
             logger.error('No bayer pattern detected')
-            i_ref.opencv_data = data
-            return
+            return data
 
 
         if self.config.get('NIGHT_GRAYSCALE') and self.night_v.value:
@@ -828,7 +836,7 @@ class ImageProcessor(object):
             debayer_algorithm = self.__cfa_bgr_map[image_bayerpat]
 
 
-        i_ref.opencv_data = cv2.cvtColor(data, debayer_algorithm)
+        return cv2.cvtColor(data, debayer_algorithm)
 
 
     def getLatestImage(self):
