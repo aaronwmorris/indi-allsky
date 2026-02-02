@@ -371,11 +371,11 @@ class ImageProcessor(object):
 
 
     def add(self, filename, exposure, gain, exp_date, exp_elapsed, camera):
-        image_data = self._add(filename, exposure, gain, exp_date, exp_elapsed, camera)
+        i_ref = self._add(filename, exposure, gain, exp_date, exp_elapsed, camera)
 
-        self.image_list.insert(0, image_data)  # new image is first in list
+        self.image_list.insert(0, i_ref)  # new image is first in list
 
-        return image_data
+        return i_ref
 
 
     def _add(self, filename, exposure, gain, exp_date, exp_elapsed, camera):
@@ -696,7 +696,7 @@ class ImageProcessor(object):
             target_adu = self.config['TARGET_ADU_DAY']
 
 
-        image_data = ImageData(
+        i_ref = ImageData(
             self.config,
             hdulist,
             exposure,
@@ -715,7 +715,7 @@ class ImageProcessor(object):
         )
 
 
-        detected_bit_depth = image_data.detected_bit_depth
+        detected_bit_depth = i_ref.detected_bit_depth
 
         config_ccd_bit_depth = self.config.get('CCD_BIT_DEPTH', 0)
         if config_ccd_bit_depth:
@@ -736,24 +736,24 @@ class ImageProcessor(object):
         instrume_header = hdulist[0].header.get('INSTRUME', '')
         if instrume_header == 'indi_pylibcamera':
             # OFFSET_0, _1, _2, _3 are the SensorBlackLevels metadata from libcamera
-            image_data.libcamera_black_level = int(hdulist[0].header.get('OFFSET_0', 0))
+            i_ref.libcamera_black_level = int(hdulist[0].header.get('OFFSET_0', 0))
 
 
         # aurora and smoke data
         camera_data = camera.data
         if camera_data:
-            image_data.kpindex = float(camera_data.get('KPINDEX_CURRENT', 0.0))
-            image_data.ovation_max = int(camera_data.get('OVATION_MAX', 0))
-            image_data.aurora_mag_bt = float(camera_data.get('AURORA_MAG_BT', 0.0))
-            image_data.aurora_mag_gsm_bz = float(camera_data.get('AURORA_MAG_GSM_BZ', 0.0))
-            image_data.aurora_plasma_density = float(camera_data.get('AURORA_PLASMA_DENSITY', 0.0))
-            image_data.aurora_plasma_speed = float(camera_data.get('AURORA_PLASMA_SPEED', 0.0))
-            image_data.aurora_plasma_temp = int(camera_data.get('AURORA_PLASMA_TEMP', 0))
-            image_data.aurora_n_hemi_gw = int(camera_data.get('AURORA_N_HEMI_GW', 0))
-            image_data.aurora_s_hemi_gw = int(camera_data.get('AURORA_S_HEMI_GW', 0))
+            i_ref.kpindex = float(camera_data.get('KPINDEX_CURRENT', 0.0))
+            i_ref.ovation_max = int(camera_data.get('OVATION_MAX', 0))
+            i_ref.aurora_mag_bt = float(camera_data.get('AURORA_MAG_BT', 0.0))
+            i_ref.aurora_mag_gsm_bz = float(camera_data.get('AURORA_MAG_GSM_BZ', 0.0))
+            i_ref.aurora_plasma_density = float(camera_data.get('AURORA_PLASMA_DENSITY', 0.0))
+            i_ref.aurora_plasma_speed = float(camera_data.get('AURORA_PLASMA_SPEED', 0.0))
+            i_ref.aurora_plasma_temp = int(camera_data.get('AURORA_PLASMA_TEMP', 0))
+            i_ref.aurora_n_hemi_gw = int(camera_data.get('AURORA_N_HEMI_GW', 0))
+            i_ref.aurora_s_hemi_gw = int(camera_data.get('AURORA_S_HEMI_GW', 0))
 
             try:
-                image_data.smoke_rating = int(camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA))
+                i_ref.smoke_rating = int(camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA))
             except ValueError:
                 # fix legacy values (str) until updated
                 pass
@@ -762,7 +762,7 @@ class ImageProcessor(object):
                 pass
 
 
-        return image_data
+        return i_ref
 
 
     def debayer(self):
