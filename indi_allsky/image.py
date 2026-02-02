@@ -486,9 +486,9 @@ class ImageWorker(Process):
         }
 
 
-        if self.sensors_temp_av[0] > -150:
+        if self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] > -150:
             # Add temperature data
-            temperature_frac = Fraction(self.sensors_temp_av[0]).limit_denominator()
+            temperature_frac = Fraction(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]).limit_denominator()
             exif_ifd[piexif.ExifIFD.Temperature] = (temperature_frac.numerator, temperature_frac.denominator)
 
 
@@ -754,7 +754,7 @@ class ImageWorker(Process):
                 'exp_elapsed'     : exp_elapsed,
                 'gain'            : float(gain),
                 'binmode'         : self.bin_v.value,
-                'temp'            : self.sensors_temp_av[0],
+                'temp'            : self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
                 'adu'             : adu,
                 'stable'          : self.target_adu_found,
                 'moonmode'        : bool(self.moonmode_v.value),
@@ -859,7 +859,7 @@ class ImageWorker(Process):
                 'exposure' : round(exposure, 6),
                 'gain'     : round(gain, 2),
                 'bin'      : self.bin_v.value,
-                'temp'     : round(self.sensors_temp_av[0], 1),
+                'temp'     : round(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP], 1),
                 'sunalt'   : round(self.image_processor.astrometric_data['sun_alt'], 1),
                 'moonalt'  : round(self.image_processor.astrometric_data['moon_alt'], 1),
                 'moonphase': round(self.image_processor.astrometric_data['moon_phase'], 1),
@@ -1054,7 +1054,7 @@ class ImageWorker(Process):
             'type'                : constants.METADATA,
             'device'              : i_ref.camera_name,
             'night'               : self.night_v.value,
-            'temp'                : self.sensors_temp_av[0],
+            'temp'                : self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
             'gain'                : i_ref.gain,
             'exposure'            : i_ref.exposure,
             'stable_exposure'     : int(self.target_adu_found),
@@ -1612,7 +1612,7 @@ class ImageWorker(Process):
             'class'               : 'ccd',
             'device'              : i_ref.camera_name,
             'night'               : self.night_v.value,
-            'temp'                : self.sensors_temp_av[0],
+            'temp'                : self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
             'gain'                : i_ref.gain,
             'exposure'            : i_ref.exposure,
             'stable_exposure'     : int(self.target_adu_found),

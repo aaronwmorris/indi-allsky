@@ -198,12 +198,17 @@ class SensorWorker(Process):
             self.update_sensors()
 
 
-            if self.sensors_user_av[2]:
-                logger.info('Dew Point: %0.1f, Frost Point: %0.1f, Heat Index: %0.1f', self.sensors_user_av[2], self.sensors_user_av[3], self.sensors_user_av[5])
+            if self.sensors_user_av[constants.SENSOR_USER_DEW_POINT]:
+                logger.info(
+                    'Dew Point: %0.1f, Frost Point: %0.1f, Heat Index: %0.1f',
+                    self.sensors_user_av[constants.SENSOR_USER_DEW_POINT],
+                    self.sensors_user_av[constants.SENSOR_USER_FROST_POINT],
+                    self.sensors_user_av[constants.SENSOR_USER_HEAT_INDEX],
+                )
 
 
-            if self.sensors_user_av[7]:
-                logger.info('Sensor SQM: %0.5f', self.sensors_user_av[7])
+            if self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM]:
+                logger.info('Sensor SQM: %0.5f', self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM])
 
 
             self.check_dew_heater_thresholds()
@@ -358,7 +363,7 @@ class SensorWorker(Process):
             self.dh_last_change_time = now_time
 
             with self.sensors_user_av.get_lock():
-                self.sensors_user_av[1] = float(self.dew_heater.state)
+                self.sensors_user_av[constants.SENSOR_USER_DEW_HEATER_LEVEL] = float(self.dew_heater.state)
 
 
     def init_fan(self):
@@ -420,7 +425,7 @@ class SensorWorker(Process):
             self.fan_last_change_time = now_time
 
             with self.sensors_user_av.get_lock():
-                self.sensors_user_av[4] = float(self.fan.state)
+                self.sensors_user_av[constants.SENSOR_USER_FAN_LEVEL] = float(self.fan.state)
 
 
     def init_sensors(self):
@@ -654,19 +659,19 @@ class SensorWorker(Process):
 
                 with self.sensors_user_av.get_lock():
                     if sensor_data.get('dew_point'):
-                        self.sensors_user_av[2] = float(sensor_data['dew_point'])
+                        self.sensors_user_av[constants.SENSOR_USER_DEW_POINT] = float(sensor_data['dew_point'])
 
                     if sensor_data.get('frost_point'):
-                        self.sensors_user_av[3] = float(sensor_data['frost_point'])
+                        self.sensors_user_av[constants.SENSOR_USER_FROST_POINT] = float(sensor_data['frost_point'])
 
                     if sensor_data.get('heat_index'):
-                        self.sensors_user_av[5] = float(sensor_data['heat_index'])
+                        self.sensors_user_av[constants.SENSOR_USER_HEAT_INDEX] = float(sensor_data['heat_index'])
 
                     if sensor_data.get('wind_degrees'):
-                        self.sensors_user_av[6] = float(sensor_data['wind_degrees'])
+                        self.sensors_user_av[constants.SENSOR_USER_WIND_DIR] = float(sensor_data['wind_degrees'])
 
                     if sensor_data.get('sqm_mag'):
-                        self.sensors_user_av[7] = float(sensor_data['sqm_mag'])
+                        self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM] = float(sensor_data['sqm_mag'])
 
 
                     for i, v in enumerate(sensor_data['data']):

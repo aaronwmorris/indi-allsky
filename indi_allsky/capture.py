@@ -1431,15 +1431,15 @@ class CaptureWorker(Process):
 
 
         with self.sensors_temp_av.get_lock():
-            self.sensors_temp_av[0] = temp_c_float
+            self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] = temp_c_float
 
         with self.sensors_user_av.get_lock():
             if self.config.get('TEMP_DISPLAY') == 'f':
-                self.sensors_user_av[0] = (temp_c_float * 9.0 / 5.0) + 32
+                self.sensors_user_av[constants.SENSOR_USER_CCD_TEMP] = (temp_c_float * 9.0 / 5.0) + 32
             elif self.config.get('TEMP_DISPLAY') == 'k':
-                self.sensors_user_av[0] = temp_c_float + 273.15
+                self.sensors_user_av[constants.SENSOR_USER_CCD_TEMP] = temp_c_float + 273.15
             else:
-                self.sensors_user_av[0] = temp_c_float
+                self.sensors_user_av[constants.SENSOR_USER_CCD_TEMP] = temp_c_float
 
 
         return temp_c_float

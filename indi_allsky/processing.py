@@ -486,7 +486,7 @@ class ImageProcessor(object):
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(gain)
-            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
             #hdulist[0].header['BITPIX'] = 8
 
@@ -549,7 +549,7 @@ class ImageProcessor(object):
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(gain)
-            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
             #hdulist[0].header['BITPIX'] = 8
 
@@ -602,7 +602,7 @@ class ImageProcessor(object):
             hdulist[0].header['XBINNING'] = 1
             hdulist[0].header['YBINNING'] = 1
             hdulist[0].header['GAIN'] = float(gain)
-            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
             #hdulist[0].header['BITPIX'] = 16
 
@@ -890,7 +890,7 @@ class ImageProcessor(object):
 
         if self.config.get('IMAGE_CALIBRATE_BPM'):
             # pick a bad pixel map that is closest to the exposure and temperature
-            logger.info('Searching for bad pixel map: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[0])
+            logger.info('Searching for bad pixel map: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
             bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
                 .filter(IndiAllSkyDbBadPixelMapTable.camera_id == i_ref.camera_id)\
                 .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
@@ -898,8 +898,8 @@ class ImageProcessor(object):
                 .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
                 .filter(IndiAllSkyDbBadPixelMapTable.gain >= i_ref.gain)\
                 .filter(IndiAllSkyDbBadPixelMapTable.exposure >= i_ref.exposure)\
-                .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensors_temp_av[0])\
-                .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
+                .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])\
+                .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] + self.dark_temperature_range))\
                 .order_by(
                     IndiAllSkyDbBadPixelMapTable.gain.asc(),
                     IndiAllSkyDbBadPixelMapTable.exposure.asc(),
@@ -909,7 +909,7 @@ class ImageProcessor(object):
                 .first()
 
             if not bpm_entry:
-                #logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensors_temp_av[0])
+                #logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
 
                 # pick a bad pixel map that matches the exposure at the hightest temperature found
                 bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
@@ -936,14 +936,14 @@ class ImageProcessor(object):
                         float(i_ref.exposure),
                         i_ref.gain,
                         self.bin_v.value,
-                        self.sensors_temp_av[0],
+                        self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
                     )
         else:
             bpm_entry = None
 
 
         # pick a dark frame that is closest to the exposure and temperature
-        logger.info('Searching for dark frame: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[0])
+        logger.info('Searching for dark frame: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
@@ -951,8 +951,8 @@ class ImageProcessor(object):
             .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
             .filter(IndiAllSkyDbDarkFrameTable.gain >= i_ref.gain)\
             .filter(IndiAllSkyDbDarkFrameTable.exposure >= i_ref.exposure)\
-            .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensors_temp_av[0])\
-            .filter(IndiAllSkyDbDarkFrameTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
+            .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])\
+            .filter(IndiAllSkyDbDarkFrameTable.temp <= (self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] + self.dark_temperature_range))\
             .order_by(
                 IndiAllSkyDbDarkFrameTable.gain.asc(),
                 IndiAllSkyDbDarkFrameTable.exposure.asc(),
@@ -962,7 +962,7 @@ class ImageProcessor(object):
             .first()
 
         if not dark_frame_entry:
-            #logger.warning('Temperature matched dark not found: %0.2fc', self.sensors_temp_av[0])
+            #logger.warning('Temperature matched dark not found: %0.2fc', self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
 
             # pick a dark frame that matches the exposure at the hightest temperature found
             dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
@@ -989,7 +989,7 @@ class ImageProcessor(object):
                     float(i_ref.exposure),
                     i_ref.gain,
                     self.bin_v.value,
-                    self.sensors_temp_av[0],
+                    self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
                 )
 
                 raise CalibrationNotFound('Dark not found')
@@ -2746,13 +2746,13 @@ class ImageProcessor(object):
 
 
         # dew heater
-        if self.sensors_user_av[1]:
+        if self.sensors_user_av[constants.SENSOR_USER_DEW_HEATER_LEVEL]:
             label_data['dew_heater_status'] = 'On'
         else:
             label_data['dew_heater_status'] = 'Off'
 
         # fan
-        if self.sensors_user_av[4]:
+        if self.sensors_user_av[constants.SENSOR_USER_FAN_LEVEL]:
             label_data['fan_status'] = 'On'
         else:
             label_data['fan_status'] = 'Off'
@@ -2760,7 +2760,7 @@ class ImageProcessor(object):
 
         # wind direction
         try:
-            label_data['wind_dir'] = self.cardinal_directions[round(self.sensors_user_av[6] / (360 / (len(self.cardinal_directions) - 1)))]
+            label_data['wind_dir'] = self.cardinal_directions[round(self.sensors_user_av[constants.SENSOR_USER_WIND_DIR] / (360 / (len(self.cardinal_directions) - 1)))]
         except IndexError:
             logger.error('Unable to calculate wind direction')
             label_data['wind_dir'] = 'Error'
