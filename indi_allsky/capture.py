@@ -265,6 +265,7 @@ class CaptureWorker(Process):
         self.periodic_tasks_time = now_time + self.periodic_tasks_offset
         #self.periodic_tasks_time = now_time  # testing
 
+        self.sqm_camera_enable = self.config.get('CAMERA_SQM', {}).get('ENABLE')
         self.sqm_tasks_offset = self.config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900)
         self.sqm_tasks_time = now_time + self.sqm_tasks_offset
 
@@ -653,17 +654,6 @@ class CaptureWorker(Process):
                         return
 
 
-                    # take SQM exposure
-                    if self.config.get('CAMERA_SQM', {}).get('ENABLE'):
-                        if now_time > self.sqm_tasks_time:
-                            self._sqm_exposure()
-
-                            camera_ready = False
-                            waiting_for_frame = True
-
-                            continue
-
-
                     # reconfigure if needed
                     if self.reconfigure_camera:
                         self.reconfigureCcd()
@@ -709,7 +699,22 @@ class CaptureWorker(Process):
 
                         frame_start_time = now_time
 
-                        self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], self.gain_av[constants.GAIN_NEXT], sync=False)
+
+                        if not self.camera_sqm_enable:
+                            # Normal exposure
+                            self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], self.gain_av[constants.GAIN_NEXT], sync=False)
+                        else:
+                            if now_time > self.sqm_tasks_time:
+                                # SQM exposure
+                                logger.warning('SQM exposure triggered')
+                                self.shoot(self.exposure_av[constants.EXPOSURE_SQM], self.gain_av[constants.GAIN_SQM], sync=False, sqm_exposure=True)
+
+                                # set next reconfigure time
+                                self.sqm_tasks_time = now_time + self.sqm_tasks_offset
+                            else:
+                                # Normal exposure
+                                self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], self.gain_av[constants.GAIN_NEXT], sync=False)
+
 
                         camera_ready = False
                         waiting_for_frame = True
@@ -1383,17 +1388,6 @@ class CaptureWorker(Process):
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
             self.shoot(7.0, self.gain_av[constants.GAIN_MIN], sync=True, timeout=20.0)
-
-
-    def _sqm_exposure(self):
-        now_time = time.time()
-
-        # set next reconfigure time
-        self.sqm_tasks_time = now_time + self.sqm_tasks_offset
-
-        logger.warning('SQM exposure triggered')
-
-        self.shoot(self.exposure_av[constants.EXPOSURE_SQM], self.gain_av[constants.GAIN_SQM], sync=False, timeout=300.0, sqm_exposure=True)
 
 
     def _periodic_tasks(self):
