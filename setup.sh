@@ -1860,6 +1860,7 @@ fi
 
 # pyindi-client setup
 SUPPORTED_INDI_VERSIONS=(
+    "2.1.8"
     "2.1.7"
     "2.1.6"
     "2.1.5"

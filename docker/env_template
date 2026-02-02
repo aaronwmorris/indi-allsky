@@ -36,8 +36,8 @@ INDIALLSKY_MOSQUITTO_PASS=%WEB_PASS%
 INDIALLSKY_WEB_GENERATE_APIKEY=false
 
 # Only used on the debian build
-INDIALLSKY_INDI_CORE_VERSION=v2.1.7
-INDIALLSKY_INDI_3RDPARTY_VERSION=v2.1.7.1
+INDIALLSKY_INDI_CORE_VERSION=v2.1.8
+INDIALLSKY_INDI_3RDPARTY_VERSION=v2.1.8
 
 # "supported" includes all supported camera drivers except libcamera
 # asi, qhy, playerone, sx, touptek, svbony, libcamera, gphoto, webcam

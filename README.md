@@ -217,7 +217,8 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## INDI support
 | Version         | Note |
 | --------------- | ---- |
-| v2.1.7          | **Recommended for new builds** |
+| v2.1.8          | **Recommended for new builds**<br>Minimum for rpicam-apps 1.10.1 (indi_libcamera_ccd) |
+| v2.1.7          |      |
 | v2.1.6          | Reports as 2.1.5 after build<br>Minimum for rpicam-apps 1.9.0 (indi_libcamera_ccd)<br>`indi_altair_ccd` renamed to `indi_altaircam_ccd` |
 | v2.1.5          |      |
 | v2.1.4          |      |
