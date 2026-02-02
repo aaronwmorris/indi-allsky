@@ -236,7 +236,7 @@ def CAMERA_SQM__PERIOD_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
 
-    if field.data < 120:
+    if field.data < 60:
         raise ValidationError('Value must be 120 or more')
 
 

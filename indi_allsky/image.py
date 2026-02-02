@@ -337,7 +337,7 @@ class ImageWorker(Process):
 
         ### Special function: image is for SQM calculations only
         if sqm_exposure:
-            self.process_sqm_exposure(filename_p, exposure, gain, exp_date, exp_elapsed, camera)
+            self.process_sqm_exposure(filename_p, exposure, gain, exp_date, exp_elapsed, camera, libcamera_black_level)
             return
 
 
@@ -2504,7 +2504,7 @@ class ImageWorker(Process):
         return False
 
 
-    def process_sqm_exposure(self, filename_p, exposure, gain, exp_date, exp_elapsed, camera):
+    def process_sqm_exposure(self, filename_p, exposure, gain, exp_date, exp_elapsed, camera, libcamera_black_level):
         logger.warning('Processing SQM exposure')
 
         try:
@@ -2544,9 +2544,6 @@ class ImageWorker(Process):
             img_gray = cv2.cvtColor(sqm_image, cv2.COLOR_BGR2GRAY)
 
 
-        sqm_avg = cv2.mean(src=img_gray, mask=self._sqm_mask)[0]
-        logger.warning('SQM 123456789: %d', int(sqm_avg))
-
-
-        return
+        sqm_avg = cv2.mean(src=img_gray)[0]
+        logger.warning('SQM : %d', int(sqm_avg))
 
