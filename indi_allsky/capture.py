@@ -700,7 +700,7 @@ class CaptureWorker(Process):
                         frame_start_time = now_time
 
 
-                        if not self.camera_sqm_enable:
+                        if not self.sqm_camera_enable:
                             # Normal exposure
                             self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], self.gain_av[constants.GAIN_NEXT], sync=False)
                         else:
