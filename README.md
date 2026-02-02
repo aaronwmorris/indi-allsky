@@ -192,12 +192,14 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## Distibution support
 | Distribution                   | Arch           | Note |
 | ------------------------------ | -------------- | ---- |
-| **Raspberry Pi OS 12 (bookworm)**  | **aarch64 (64-bit)** | **RECOMMENDED**<br>Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
+| **Raspberry Pi OS 13 (trixie)** | **aarch64 (64-bit)** | **RECOMMENDED**<br>Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
+| Raspberry Pi OS 13             | armhf (32-bit) | (NOT RECOMMENDED) Some python modules do not have armhf wheels and must be compiled from source.  This will take a few hours. |
+| Raspberry Pi OS 12 (bookworm)  | aarch64 (64-bit) | Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
 | Raspberry Pi OS 12             | armhf (32-bit) | (NOT RECOMMENDED) Some python modules do not have armhf wheels and must be compiled from source.  This will take a few hours. |
 | Raspberry Pi OS 11 (bullseye)  | aarch64/armhf  | Compile INDI with build_indi.sh |
 | Raspberry Pi OS 10 (buster)    | armhf          | (DO NOT USE) |
-| Debian 13 (trixie)             | x86_64         | Compile INDI with build_indi.sh |
-| **Debian 12 (bookworm)**       | **x86_64**     | **RECOMMENDED**<br>Compile INDI with build_indi.sh |
+| **Debian 13 (trixie)**         | **x86_64**     | **RECOMMENDED**<br>Compile INDI with build_indi.sh |
+| Debian 12 (bookworm)           | x86_64         | Compile INDI with build_indi.sh |
 | Debian 11 (bullseye)           | x86_64         | Compile INDI with build_indi.sh |
 | Debian 10 (buster)             | x86_64         | (DO NOT USE) |
 | Ubuntu 24.04 (noble)           |                | Requires INDI 2.0.8 or newer for pyindi-client<br>INDI installed from ppa:mutlaqja/ppa<br>Compile libcamera with build_libcamera.sh |
@@ -217,7 +219,8 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## INDI support
 | Version         | Note |
 | --------------- | ---- |
-| v2.1.7          | **Recommended for new builds** |
+| v2.1.8          | **Recommended for new builds**<br>Minimum for rpicam-apps 1.10.1 (indi_libcamera_ccd) |
+| v2.1.7          |      |
 | v2.1.6          | Reports as 2.1.5 after build<br>Minimum for rpicam-apps 1.9.0 (indi_libcamera_ccd)<br>`indi_altair_ccd` renamed to `indi_altaircam_ccd` |
 | v2.1.5          |      |
 | v2.1.4          |      |
