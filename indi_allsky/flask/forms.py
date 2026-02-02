@@ -232,7 +232,7 @@ def EXPOSURE_PERIOD_DAY_validator(form, field):
         raise ValidationError('Exposure period must be 1.0 or more')
 
 
-def CAMERA_SQM__PERIOD_validator(form, field):
+def CAMERA_SQM__EXPOSURE_PERIOD_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
 
@@ -4151,7 +4151,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CAMERA_SQM__ENABLE               = BooleanField('Enable Camera SQM')
     CAMERA_SQM__EXPOSURE             = FloatField('SQM Exposure', validators=[DataRequired(), CCD_EXPOSURE_validator])
     CAMERA_SQM__GAIN                 = FloatField('SQM Gain', validators=[DataRequired(), CCD_GAIN_validator])
-    CAMERA_SQM__PERIOD               = IntegerField('SQM Exposure Period', validators=[DataRequired(), CAMERA_SQM__PERIOD_validator])
+    CAMERA_SQM__EXPOSURE_PERIOD      = IntegerField('SQM Exposure Period', validators=[DataRequired(), CAMERA_SQM__EXPOSURE_PERIOD_validator])
     FOCUS_MODE                       = BooleanField('Focus Mode')
     FOCUS_DELAY                      = FloatField('Focus Delay', validators=[DataRequired(), FOCUS_DELAY_validator])
     CFA_PATTERN                      = SelectField('Bayer Pattern', choices=CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])

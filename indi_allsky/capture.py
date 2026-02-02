@@ -265,7 +265,7 @@ class CaptureWorker(Process):
         self.periodic_tasks_time = now_time + self.periodic_tasks_offset
         #self.periodic_tasks_time = now_time  # testing
 
-        self.sqm_tasks_offset = self.config.get('CAMERA_SQM', {}).get('PERIOD', 900)
+        self.sqm_tasks_offset = self.config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900)
         self.sqm_tasks_time = now_time + self.sqm_tasks_offset
 
         self.exposure_timeout = self.config.get('CCD_EXPOSURE_TIMEOUT', 330)

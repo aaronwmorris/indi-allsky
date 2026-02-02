@@ -367,11 +367,11 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__PERIOD.label(class='col-form-label') }}
+            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__PERIOD(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__PERIOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__EXPOSURE_PERIOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
             <div></div>
@@ -9316,7 +9316,7 @@ const field_names = [
     'EXPOSURE_PERIOD_DAY',
     'CAMERA_SQM__EXPOSURE',
     'CAMERA_SQM__GAIN',
-    'CAMERA_SQM__PERIOD',
+    'CAMERA_SQM__EXPOSURE_PERIOD',
     'FOCUS_DELAY',
     'WBR_FACTOR',
     'WBG_FACTOR',

@@ -2150,7 +2150,7 @@ class ConfigView(FormView):
             'CAMERA_SQM__ENABLE'             : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE', False),
             'CAMERA_SQM__EXPOSURE'           : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 15.0),
             'CAMERA_SQM__GAIN'               : self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 0.0),
-            'CAMERA_SQM__PERIOD'             : self.indi_allsky_config.get('CAMERA_SQM', {}).get('PERIOD', 900),
+            'CAMERA_SQM__EXPOSURE_PERIOD'    : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900),
             'FOCUS_MODE'                     : self.indi_allsky_config.get('FOCUS_MODE', False),
             'FOCUS_DELAY'                    : self.indi_allsky_config.get('FOCUS_DELAY', 4.0),
             'CFA_PATTERN'                    : self.indi_allsky_config.get('CFA_PATTERN', ''),
@@ -3132,7 +3132,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CAMERA_SQM']['ENABLE']                 = bool(request.json['CAMERA_SQM__ENABLE'])
         self.indi_allsky_config['CAMERA_SQM']['EXPOSURE']               = float(request.json['CAMERA_SQM__EXPOSURE'])
         self.indi_allsky_config['CAMERA_SQM']['GAIN']                   = round(float(request.json['CAMERA_SQM__GAIN']), 2)  # limit to 2 decimals
-        self.indi_allsky_config['CAMERA_SQM']['PERIOD']                 = int(request.json['CAMERA_SQM__PERIOD'])
+        self.indi_allsky_config['CAMERA_SQM']['EXPOSURE_PERIOD']        = int(request.json['CAMERA_SQM__EXPOSURE_PERIOD'])
         self.indi_allsky_config['FOCUS_MODE']                           = bool(request.json['FOCUS_MODE'])
         self.indi_allsky_config['FOCUS_DELAY']                          = float(request.json['FOCUS_DELAY'])
         self.indi_allsky_config['CFA_PATTERN']                          = str(request.json['CFA_PATTERN'])
