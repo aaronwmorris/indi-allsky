@@ -337,12 +337,7 @@ class ImageWorker(Process):
 
         ### Special function: image is for SQM calculations only
         if sqm_exposure:
-            self.image_processor.sqm_processing(
-                filename_p,
-                camera,
-            )
-
-            filename_p.unlink()
+            self.process_sqm_exposure(filename_p, exposure, gain, exp_date, exp_elapsed, camera)
             return
 
 
@@ -2507,4 +2502,51 @@ class ImageWorker(Process):
             return True
 
         return False
+
+
+    def process_sqm_exposure(self, filename_p, exposure, gain, exp_date, exp_elapsed, camera):
+        logger.warning('Processing SQM exposure')
+
+        try:
+            i_ref = self.image_processor._add(
+                filename_p,
+                exposure,
+                gain,
+                exp_date,
+                exp_elapsed,
+                camera,
+            )
+        except BadImage as e:
+            logger.error('Bad Image: %s', str(e))
+            filename_p.unlink()
+            #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
+            return
+
+
+        filename_p.unlink()
+
+
+        # use original value if not defined
+        if i_ref.libcamera_black_level:
+            libcamera_black_level = i_ref.libcamera_black_level
+
+
+        self.image_processor._calibrate(i_ref, libcamera_black_level=libcamera_black_level)
+
+        sqm_image = self.image_processor._debayer(i_ref)
+
+
+        if len(sqm_image.shape) == 2:
+            # mono
+            img_gray = sqm_image
+        else:
+            # color
+            img_gray = cv2.cvtColor(sqm_image, cv2.COLOR_BGR2GRAY)
+
+
+        sqm_avg = cv2.mean(src=img_gray, mask=self._sqm_mask)[0]
+        logger.warning('SQM 123456789: %d', int(sqm_avg))
+
+
+        return
 

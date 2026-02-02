@@ -366,10 +366,6 @@ class ImageProcessor(object):
         return self._astrometric_data
 
 
-    def sqm_processing(self, filename, camera):
-        pass
-
-
     def add(self, filename, exposure, gain, exp_date, exp_elapsed, camera):
         i_ref = self._add(filename, exposure, gain, exp_date, exp_elapsed, camera)
 
