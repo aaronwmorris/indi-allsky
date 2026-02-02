@@ -239,6 +239,7 @@ class IndiClientIndiAccumulator(IndiClient):
             'filename'    : str(tmpfile_p),
             'exposure'    : self.exposure,
             'gain'        : self.gain,
+            'sqm_exposure': self.sqm_exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
