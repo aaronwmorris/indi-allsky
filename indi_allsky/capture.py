@@ -1233,7 +1233,7 @@ class CaptureWorker(Process):
             logger.error('CCD sqm gain below minimum, changing to %0.2f', float(ccd_min_gain))
             gain_sqm = float(ccd_min_gain)
             time.sleep(3)
-        elif self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0)  > ccd_max_gain:
+        elif self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0) > ccd_max_gain:
             logger.error('CCD sqm gain above maximum, changing to %0.2f', float(ccd_max_gain))
             gain_sqm = float(ccd_max_gain)
             time.sleep(3)
@@ -1337,7 +1337,7 @@ class CaptureWorker(Process):
         logger.info('Maximum CCD gain: %0.2f (night)', self.gain_av[constants.GAIN_MAX_NIGHT])
         logger.info('Minimum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MIN_MOONMODE])
         logger.info('Maximum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MAX_MOONMODE])
-        logger.info('SQM CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_SQM])
+        logger.info('SQM CCD gain: %0.2f', self.gain_av[constants.GAIN_SQM])
         logger.info('Default CCD gain: %0.2f', ccd_gain_default)
 
 
