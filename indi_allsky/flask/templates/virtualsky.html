@@ -578,11 +578,9 @@ $( document ).ready(function() {
 
       if (document.fonts) await document.fonts.ready;
 
-      const SCALE_300_DPI = 300 / 96; // ≈ 3.125
-
       const canvas = await html2canvas(el, {
         backgroundColor: null,
-        scale: SCALE_300_DPI,
+        scale: 1,
         useCORS: true
       });
 
