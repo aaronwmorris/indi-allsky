@@ -12,7 +12,7 @@
 
 #latest-image {
     max-width: 100%;
-    max-height: 80vh;
+    max-height: 75vh;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -355,7 +355,6 @@ function loadJS(url, data, onDone, onError) {
 
         <div class="col-sm-1">
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/VirtualSky" class="text-decoration-none link-info" target="_blank">VirtualSky Wiki</a></div>
-                 <button id="download">Download</button>
         </div>
     </div>
 
@@ -422,13 +421,20 @@ function loadJS(url, data, onDone, onError) {
             Latitude / Longitude / Azimuth / Image Circle / Offsets must be correctly configured under Config -> Location [tab]
         </div>
     </div>
-    <div class="row h-75 align-items-center">
+    <div class="row align-items-center">
         <div class="col-12 text-center">
           <div id="wrapper">
             <img id="latest-image">
             <div id="starmap_container">
                 <div id="starmap"></div>
             </div>
+          </div>
+        </div>
+    </div>
+    <div class="row align-items-center">
+        <div class="col-12 text-center">
+          <div style="margin-top: 20px;">
+            <span id="download" class="badge pill bg-info text-dark" style="cursor: pointer;">Download</span>
           </div>
         </div>
     </div>
@@ -558,9 +564,7 @@ $( document ).ready(function() {
     init();
 });
 
-</script>
 
-<script>
 (() => {
   const btn = document.getElementById('download');
   let inProgress = false;
@@ -611,6 +615,6 @@ $( document ).ready(function() {
     }
   }, { capture: true, passive: false });
 })();
-</script>
 
+</script>
 {% endblock %}
