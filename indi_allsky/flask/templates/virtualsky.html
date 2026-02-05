@@ -12,7 +12,7 @@
 
 #latest-image {
     max-width: 100%;
-    max-height: 80vh;
+    max-height: 75vh;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -34,6 +34,7 @@
 </style>
 <script src="{{ url_for('indi_allsky.static', filename='virtualsky/stuquery.min.js') }}"></script>
 <script src="{{ url_for('indi_allsky.static', filename='virtualsky/virtualsky.min.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('indi_allsky.static', filename='html2canvas/html2canvas.min.js') }}" type="text/javascript"></script>
 <script type="text/javascript">
 var img;
 var json_data = {
@@ -420,13 +421,20 @@ function loadJS(url, data, onDone, onError) {
             Latitude / Longitude / Azimuth / Image Circle / Offsets must be correctly configured under Config -> Location [tab]
         </div>
     </div>
-    <div class="row h-75 align-items-center">
+    <div class="row align-items-center">
         <div class="col-12 text-center">
           <div id="wrapper">
             <img id="latest-image">
             <div id="starmap_container">
                 <div id="starmap"></div>
             </div>
+          </div>
+        </div>
+    </div>
+    <div class="row align-items-center">
+        <div class="col-12 text-center">
+          <div style="margin-top: 20px;">
+            <span id="download" class="badge pill bg-info text-dark" style="cursor: pointer;">Download</span>
           </div>
         </div>
     </div>
@@ -556,7 +564,57 @@ $( document ).ready(function() {
     init();
 });
 
+
+(() => {
+  const btn = document.getElementById('download');
+  let inProgress = false;
+
+  btn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (inProgress) return;
+    inProgress = true;
+    btn.disabled = true;
+
+    try {
+      const el = document.getElementById('wrapper');
+      if (!el) throw new Error('#wrapper not found');
+
+      if (document.fonts) await document.fonts.ready;
+
+      const canvas = await html2canvas(el, {
+        backgroundColor: null,
+        scale: 1,
+        useCORS: true
+      });
+
+      canvas.toBlob(blob => {
+        if (!blob) return;
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'virtualsky_' + Math.floor(Date.now() / 1000) + '.png';
+        a.target = '_self';
+
+        document.body.appendChild(a);
+        a.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+
+        setTimeout(() => {
+          a.remove();
+          URL.revokeObjectURL(url);
+        }, 1500);
+      }, 'image/png');
+
+    } finally {
+      setTimeout(() => {
+        inProgress = false;
+        btn.disabled = false;
+      }, 1000);
+    }
+  }, { capture: true, passive: false });
+})();
+
 </script>
-
-
 {% endblock %}
