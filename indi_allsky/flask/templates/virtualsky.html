@@ -595,7 +595,7 @@ $( document ).ready(function() {
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = 'virtualsky.png';
+        a.download = 'virtualsky_' + Math.floor(Date.now() / 1000) + '.png';
         a.target = '_self';
 
         document.body.appendChild(a);
