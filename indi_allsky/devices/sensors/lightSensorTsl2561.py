@@ -36,10 +36,11 @@ class LightSensorTsl2561(SensorBase):
 
 
         try:
-            sqm_mag = self.lux2mag(lux)
+            sqm_mag, raw_mag = self.lux2mag(lux)
         except ValueError as e:
             logger.error('SQM calculation error - ValueError: %s', str(e))
             sqm_mag = 0.0
+            raw_mag = 0.0
 
 
         data = {
@@ -49,6 +50,7 @@ class LightSensorTsl2561(SensorBase):
                 broadband,
                 infrared,
                 sqm_mag,
+                raw_mag,
             ),
         }
 
@@ -73,15 +75,17 @@ class LightSensorTsl2561_I2C(LightSensorTsl2561):
     METADATA = {
         'name' : 'TSL2561 (i2c)',
         'description' : 'TSL2561 i2c Light Sensor',
-        'count' : 4,
+        'count' : 5,
         'labels' : (
             'Lux',
             'Broadband',
             'Infrared',
             'SQM',
+            'Raw Magnitude',
         ),
         'types' : (
             constants.SENSOR_LIGHT_LUX,
+            constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,

@@ -3792,12 +3792,12 @@ class IndiAllskyConfigForm(FlaskForm):
             ('blinka_temp_sensor_mlx90640_i2c', 'MLX90640 i2c - SkyTemp (1 slot)'),
         ),
         'Light/Lux Sensors' : (
-            ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR/SQM (4 slots)'),
-            ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full/SQM (5 slots)'),
-            ('blinka_light_sensor_veml7700_i2c', 'VEML7700 i2c - Lux/Light/White/SQM (4 slots)'),
-            ('blinka_light_sensor_bh1750_i2c', 'BH1750 i2c - Lux/SQM (2 slots)'),
-            ('blinka_light_sensor_si1145_i2c', 'SI1145 i2c - Vis/IR/UV (3 slots)'),
-            ('blinka_light_sensor_ltr390_i2c', 'LTR390 i2c - UV/Vis/UVI/Lux/SQM (5 slots)'),
+            ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR/SQM/Mag (5 slots)'),
+            ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full/SQM/Mag (6 slots)'),
+            ('blinka_light_sensor_veml7700_i2c', 'VEML7700 i2c - Lux/Light/White/SQM/Mag (5 slots)'),
+            ('blinka_light_sensor_bh1750_i2c', 'BH1750 i2c - Lux/SQM/Mag (3 slots)'),
+            ('blinka_light_sensor_si1145_i2c', 'SI1145 i2c - Vis/IR/UV/SQM/Mag (5 slots)'),
+            ('blinka_light_sensor_ltr390_i2c', 'LTR390 i2c - UV/Vis/UVI/Lux/SQM/Mag (6 slots)'),
         ),
         'Magnetometer/Gauss Sensors' : (
             ('qwiic_mag_sensor_mmc5983ma_i2c', 'MMC5983MA i2c - X/Y/Z/Temp (4 slots)'),

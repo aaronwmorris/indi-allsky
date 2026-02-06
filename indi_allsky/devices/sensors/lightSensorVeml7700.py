@@ -36,10 +36,11 @@ class LightSensorVeml7700(SensorBase):
 
 
         try:
-            sqm_mag = self.lux2mag(lux)
+            sqm_mag, raw_mag = self.lux2mag(lux)
         except ValueError as e:
             logger.error('SQM calculation error - ValueError: %s', str(e))
             sqm_mag = 0.0
+            raw_mag = 0.0
 
 
         data = {
@@ -49,6 +50,7 @@ class LightSensorVeml7700(SensorBase):
                 light,
                 white,
                 sqm_mag,
+                raw_mag,
             ),
         }
 
@@ -73,15 +75,17 @@ class LightSensorVeml7700_I2C(LightSensorVeml7700):
     METADATA = {
         'name' : 'VEML770 (i2c)',
         'description' : 'VEML7700 i2c Light Sensor',
-        'count' : 4,
+        'count' : 5,
         'labels' : (
             'Lux',
             'Light',
             'White',
             'SQM',
+            'Raw Magnitude',
         ),
         'types' : (
             constants.SENSOR_LIGHT_LUX,
+            constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,

@@ -179,7 +179,7 @@ class SensorBase(object):
         raw_mag = (math.log10(lux) * 2.5) * -1
         logger.warning('Lux Raw Magnitude: %0.2f', raw_mag)
 
-        return self._lux_magnitude_offset + raw_mag  # raw_mag is negative
+        return self._lux_magnitude_offset + raw_mag, raw_mag  # array, raw_mag is negative
 
 
     ###
