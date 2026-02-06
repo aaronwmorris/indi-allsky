@@ -327,65 +327,6 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.CAMERA_SQM__ENABLE(class='form-check-input') }}
-                <div id="CAMERA_SQM__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__EXPOSURE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>
-            </div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__GAIN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__GAIN(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>
-                <div>Minimum Gain permitted: <b>{{ "%0.2f"|format(camera_minGain | float) }}</b></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__EXPOSURE_PERIOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>
-            </div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
             {{ form_config.IMAGE_QUEUE_MAX.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -3642,6 +3583,68 @@ var camera_id = {{ camera_id }};
     </div>
 
     <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CAMERA_SQM__ENABLE(class='form-check-input') }}
+                <div id="CAMERA_SQM__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__EXPOSURE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__GAIN(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+                <div>Minimum Gain permitted: <b>{{ "%0.2f"|format(camera_minGain | float) }}</b></div>
+                <div><span class="badge rounded-pill bg-info text-dark">Note</span> Unity gain is recommended for SQM measurements</div>
+                <div>Raspberry Pi HQ Camera [IMX477] Unity Gain is approximately 6.4</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__EXPOSURE_PERIOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
 
     <div class="form-group row">
         <div class="col-sm-2">
