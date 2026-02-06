@@ -444,9 +444,11 @@ class ImageWorker(Process):
                 self.write_fit(i_ref, camera)
 
 
+        self.image_processor.calculateSqm()
+
+
         self.image_processor.debayer()
 
-        self.image_processor.calculateSqm()
 
         self.image_processor.stack()  # this populates self.image
 

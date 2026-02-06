@@ -1249,7 +1249,7 @@ class ImageProcessor(object):
             i_ref.sqm_value = 0
             return
 
-        i_ref.sqm_value = self._sqm.calculate(i_ref.opencv_data, i_ref.exposure, i_ref.gain)
+        i_ref.sqm_value = self._sqm.jankySqm(i_ref)
 
 
     def stack(self):

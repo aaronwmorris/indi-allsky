@@ -26,26 +26,33 @@ class IndiAllskySqm(object):
         self._sqm_mask = None
 
 
-    def calculate(self, img, exposure, gain):
+    def averageAdu(self, i_ref):
+        fits_data = i_ref.hdulist[0].data
+
         #logger.info('Exposure: %0.6f, gain: %0.1f', exposure, gain)
+
+
+        if len(fits_data.shape) == 2:
+            # mono
+            sqm_img = fits_data
+        else:
+            # color
+            sqm_img = fits_data[1]  # green channel
+
 
         if isinstance(self._sqm_mask, type(None)):
             # This only needs to be done once if a mask is not provided
-            self._generateSqmMask(img)
+            self._generateSqmMask(sqm_img)
 
 
-        if len(img.shape) == 2:
-            # mono
-            img_gray = img
-        else:
-            # color
-            img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        return cv2.mean(src=sqm_img, mask=self._sqm_mask)[0]
 
 
-        sqm_avg = cv2.mean(src=img_gray, mask=self._sqm_mask)[0]
+    def jankySqm(self, i_ref):
+        sqm_avg = self.averageAdu(i_ref)
 
         # offset the sqm based on the exposure and gain
-        weighted_sqm_avg = (((self.config['CCD_EXPOSURE_MAX'] - exposure) / 10) + 1) * (sqm_avg * (((float(self.gain_av[constants.GAIN_MAX_NIGHT]) - gain) / 10) + 1))
+        weighted_sqm_avg = (((self.config['CCD_EXPOSURE_MAX'] - i_ref.exposure) / 10) + 1) * (sqm_avg * (((float(self.gain_av[constants.GAIN_MAX_NIGHT]) - i_ref.gain) / 10) + 1))
 
         logger.info('Raw SQM: %0.2f, Weighted SQM: %0.2f', sqm_avg, weighted_sqm_avg)
 
