@@ -51,7 +51,8 @@ class IndiAllskySqm(object):
         return cv2.mean(src=sqm_img, mask=self._sqm_mask)[0]
 
 
-    def jankySqm(self, i_ref):
+    def jSqm(self, i_ref):
+        ### Janky SQM
         sqm_avg = self.averageAdu(i_ref)
 
         # offset the sqm based on the exposure and gain

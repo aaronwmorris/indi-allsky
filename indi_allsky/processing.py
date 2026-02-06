@@ -175,6 +175,8 @@ class ImageProcessor(object):
         self._moon_overlay = IndiAllSkyMoonOverlay(self.config)
         self._lightgraph_overlay = IndiAllSkyLightgraphOverlay(self.config, self.position_av)
 
+        self._camera_sqm_raw_mag = 0.0
+
         self._wb_mtf_night = 1
         self._wbb_mtf_lut = None
         self._wbg_mtf_lut = None
@@ -364,6 +366,11 @@ class ImageProcessor(object):
     @property
     def astrometric_data(self):
         return self._astrometric_data
+
+
+    @property
+    def camera_sqm_raw_mag(self):
+        return self._camera_sqm_raw_mag
 
 
     def add(self, filename, exposure, gain, exp_date, exp_elapsed, camera):
@@ -1249,11 +1256,16 @@ class ImageProcessor(object):
             i_ref.sqm_value = 0
             return
 
-        i_ref.sqm_value = self._sqm.jankySqm(i_ref)
+        i_ref.sqm_value = self._sqm.jSqm(i_ref)
 
 
     def _calculateMagnitudeSqm(self, i_ref):
-        return self._sqm.magnitudeSqm(i_ref)
+        mag_sqm, raw_mag = self._sqm.magnitudeSqm(i_ref)
+
+        # cache value
+        self._camera_sqm_raw_mag = raw_mag
+
+        return mag_sqm, raw_mag
 
 
     def stack(self):

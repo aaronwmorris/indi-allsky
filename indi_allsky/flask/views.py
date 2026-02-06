@@ -1996,6 +1996,11 @@ class ConfigView(FormView):
                 dh_dewpoint = None
                 context['dh_dewpoint_str'] = 'Not available'
 
+            if self.latest_image_entry.data.get('camera_sqm_raw_mag'):
+                context['camera_sqm_raw_mag_str'] = '{0:0.2f}'.format(self.latest_image_entry.data.get('camera_sqm_raw_mag'))
+            else:
+                context['camera_sqm_raw_mag_str'] = 'Not available'
+
 
             dh_manual_target = self.indi_allsky_config.get('DEW_HEATER', {}).get('MANUAL_TARGET', 0.0)
             if not dh_manual_target:

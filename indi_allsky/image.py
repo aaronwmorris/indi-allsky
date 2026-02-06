@@ -789,6 +789,7 @@ class ImageWorker(Process):
                 'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
                 'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
                 'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
+                'camera_sqm_raw_mag' : self.image_processor.camera_sqm_raw_mag,
             }
 
 
