@@ -9,6 +9,10 @@ class SensorBase(object):
         self.name = args[1]
         self.night_v = args[2]
 
+
+        self._lux_magnitude_offset = self.config.get('TEMP_SENSOR', {}).get('LUX_MAGNITUDE_OFFSET', 26.0)
+
+
         self._slot = None  # var slot
         self._night = None  # None forces day/night change at startup
 
@@ -172,9 +176,7 @@ class SensorBase(object):
 
 
     def lux2mag(self, lux):
-        # lux to magnitude/arcsec^2
-        # http://unihedron.com/projects/darksky/magconv.php
-        return math.log10(lux / 108000) / -0.4
+        return self._lux_magnitude_offset - (math.log10(lux) * 2.5)
 
 
     ###
