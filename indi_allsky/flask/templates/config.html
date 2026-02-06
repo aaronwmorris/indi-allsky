@@ -3643,8 +3643,21 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
-    <hr>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__MAGNITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__MAGNITUDE_OFFSET(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__MAGNITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+            </div>
+        </div>
+    </div>
 
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -8127,6 +8140,20 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__LUX_MAGNITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__LUX_MAGNITUDE_OFFSET(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__LUX_MAGNITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__MQTT_HOST.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -9324,6 +9351,7 @@ const field_names = [
     'CAMERA_SQM__EXPOSURE',
     'CAMERA_SQM__GAIN',
     'CAMERA_SQM__EXPOSURE_PERIOD',
+    'CAMERA_SQM__MAGNITUDE_OFFSET',
     'FOCUS_DELAY',
     'WBR_FACTOR',
     'WBG_FACTOR',
@@ -9810,6 +9838,7 @@ const field_names = [
     'TEMP_SENSOR__LTR390_GAIN_DAY',
     'TEMP_SENSOR__AS3935_NOISE_LEVEL',
     'TEMP_SENSOR__AS3935_SPIKE_REJECTION',
+    'TEMP_SENSOR__LUX_MAGNITUDE_OFFSET',
     'ADSB__DUMP1090_URL',
     'ADSB__USERNAME',
     'ADSB__PASSWORD',

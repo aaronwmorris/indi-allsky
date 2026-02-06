@@ -240,6 +240,14 @@ def CAMERA_SQM__EXPOSURE_PERIOD_validator(form, field):
         raise ValidationError('Value must be 120 or more')
 
 
+def SQM_MAGNITUDE_OFFSET_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Value must be 0 or more')
+
+
 def CCD_CONFIG__AUTO_GAIN_LEVELS_validator(form, field):
     if field.data not in list(zip(*form.CCD_CONFIG__AUTO_GAIN_LEVELS_choices))[0]:
         raise ValidationError('Invalid number of levels')
@@ -4152,6 +4160,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CAMERA_SQM__EXPOSURE             = FloatField('SQM Exposure', validators=[DataRequired(), CCD_EXPOSURE_validator])
     CAMERA_SQM__GAIN                 = FloatField('SQM Gain', validators=[CCD_GAIN_validator])
     CAMERA_SQM__EXPOSURE_PERIOD      = IntegerField('SQM Exposure Period', validators=[DataRequired(), CAMERA_SQM__EXPOSURE_PERIOD_validator])
+    CAMERA_SQM__MAGNITUDE_OFFSET     = FloatField('Magnitude Offset', validators=[SQM_MAGNITUDE_OFFSET_validator])
     FOCUS_MODE                       = BooleanField('Focus Mode')
     FOCUS_DELAY                      = FloatField('Focus Delay', validators=[DataRequired(), FOCUS_DELAY_validator])
     CFA_PATTERN                      = SelectField('Bayer Pattern', choices=CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
@@ -4768,6 +4777,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__AS3935_MASK_DISTURBER  = BooleanField('AS3935 Mask Disturber')
     TEMP_SENSOR__AS3935_NOISE_LEVEL     = IntegerField('AS3935 Noise Level Threshold', validators=[DataRequired(), TEMP_SENSOR__AS3935_NOISE_LEVEL_validator])
     TEMP_SENSOR__AS3935_SPIKE_REJECTION = IntegerField('AS3935 Spike Rejection', validators=[DataRequired(), TEMP_SENSOR__AS3935_SPIKE_REJECTION_validator])
+    TEMP_SENSOR__LUX_MAGNITUDE_OFFSET   = FloatField('Lux Magnitude Offset', validators=[SQM_MAGNITUDE_OFFSET_validator])
     CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[CUSTOM_CHART_validator])
     CHARTS__CUSTOM_SLOT_1_MIN        = FloatField('Chart 1 Minimum', validators=[CUSTOM_CHART_MIN_validator])
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[CUSTOM_CHART_validator])

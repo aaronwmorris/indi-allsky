@@ -2151,6 +2151,7 @@ class ConfigView(FormView):
             'CAMERA_SQM__EXPOSURE'           : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 15.0),
             'CAMERA_SQM__GAIN'               : self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 0.0),
             'CAMERA_SQM__EXPOSURE_PERIOD'    : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900),
+            'CAMERA_SQM__MAGNITUDE_OFFSET'   : self.indi_allsky_config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 26.0),
             'FOCUS_MODE'                     : self.indi_allsky_config.get('FOCUS_MODE', False),
             'FOCUS_DELAY'                    : self.indi_allsky_config.get('FOCUS_DELAY', 4.0),
             'CFA_PATTERN'                    : self.indi_allsky_config.get('CFA_PATTERN', ''),
@@ -2727,6 +2728,7 @@ class ConfigView(FormView):
             'TEMP_SENSOR__AS3935_MASK_DISTURBER' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_MASK_DISTURBER', False),
             'TEMP_SENSOR__AS3935_NOISE_LEVEL'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_NOISE_LEVEL', 2),
             'TEMP_SENSOR__AS3935_SPIKE_REJECTION': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_SPIKE_REJECTION', 2),
+            'TEMP_SENSOR__LUX_MAGNITUDE_OFFSET'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('LUX_MAGNITUDE_OFFSET', 26.0),
             'CHARTS__CUSTOM_SLOT_1'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 'sensor_user_10'),
             'CHARTS__CUSTOM_SLOT_1_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1_MIN', 0.0),
             'CHARTS__CUSTOM_SLOT_2'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 'sensor_user_11'),
@@ -3133,6 +3135,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CAMERA_SQM']['EXPOSURE']               = float(request.json['CAMERA_SQM__EXPOSURE'])
         self.indi_allsky_config['CAMERA_SQM']['GAIN']                   = round(float(request.json['CAMERA_SQM__GAIN']), 2)  # limit to 2 decimals
         self.indi_allsky_config['CAMERA_SQM']['EXPOSURE_PERIOD']        = int(request.json['CAMERA_SQM__EXPOSURE_PERIOD'])
+        self.indi_allsky_config['CAMERA_SQM']['MAGNITUDE_OFFSET']       = float(request.json['CAMERA_SQM__MAGNITUDE_OFFSET'])
         self.indi_allsky_config['FOCUS_MODE']                           = bool(request.json['FOCUS_MODE'])
         self.indi_allsky_config['FOCUS_DELAY']                          = float(request.json['FOCUS_DELAY'])
         self.indi_allsky_config['CFA_PATTERN']                          = str(request.json['CFA_PATTERN'])
@@ -3721,6 +3724,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['AS3935_MASK_DISTURBER'] = bool(request.json['TEMP_SENSOR__AS3935_MASK_DISTURBER'])
         self.indi_allsky_config['TEMP_SENSOR']['AS3935_NOISE_LEVEL']    = int(request.json['TEMP_SENSOR__AS3935_NOISE_LEVEL'])
         self.indi_allsky_config['TEMP_SENSOR']['AS3935_SPIKE_REJECTION'] = int(request.json['TEMP_SENSOR__AS3935_SPIKE_REJECTION'])
+        self.indi_allsky_config['TEMP_SENSOR']['LUX_MAGNITUDE_OFFSET']  = float(request.json['TEMP_SENSOR__LUX_MAGNITUDE_OFFSET'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1']              = str(request.json['CHARTS__CUSTOM_SLOT_1'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_1_MIN'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2']              = str(request.json['CHARTS__CUSTOM_SLOT_2'])

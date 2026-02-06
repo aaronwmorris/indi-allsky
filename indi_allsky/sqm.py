@@ -22,6 +22,8 @@ class IndiAllskySqm(object):
         self.gain_av = gain_av
         self.bin_v = bin_v
 
+        self._magnitude_offset = self.config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 26.0)
+
         # both masks will be combined
         self._external_mask = mask
         self._sqm_mask = None
@@ -63,7 +65,7 @@ class IndiAllskySqm(object):
     def magnitudeSqm(self, i_ref):
         sqm_avg = self.averageAdu(i_ref)
 
-        mag_sqm = 32.0 - (math.log10(sqm_avg) * 2.5)
+        mag_sqm = self._magnitude_offset - (math.log10(sqm_avg) * 2.5)
 
         return mag_sqm
 

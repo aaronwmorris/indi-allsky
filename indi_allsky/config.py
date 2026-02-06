@@ -89,6 +89,7 @@ class IndiAllSkyConfigBase(object):
             "EXPOSURE"          : 15.00000,
             "GAIN"              : 0.0,
             "EXPOSURE_PERIOD"   : 900,
+            "MAGNITUDE_OFFSET"  : 26.0,
         },
         "FOCUS_MODE"           : False,
         "FOCUS_DELAY"          : 4.0,
@@ -779,6 +780,7 @@ class IndiAllSkyConfigBase(object):
             "AS3935_MASK_DISTURBER"  : False,
             "AS3935_NOISE_LEVEL"     : 2,
             "AS3935_SPIKE_REJECTION" : 2,
+            "LUX_MAGNITUDE_OFFSET"   : 26.0,
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : "sensor_user_10",
