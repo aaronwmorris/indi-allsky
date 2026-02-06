@@ -1982,6 +1982,17 @@ class ConfigView(FormView):
             fan_temp_slot_var = self.indi_allsky_config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 'sensor_user_10')
 
 
+            raw_mag = self.latest_image_entry.data.get('camera_sqm_raw_mag', 0.0)
+            if raw_mag:
+                mag_offset = self.indi_allsky_config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 26.0)
+
+                context['camera_sqm_raw_mag_str'] = '{0:0.2f}'.format(raw_mag)
+                context['camera_sqm_calc_sqm_str'] = '{0:0.2f}'.format(mag_offset + raw_mag)  # raw_mag is negative
+            else:
+                context['camera_sqm_raw_mag_str'] = 'Not available'
+                context['camera_sqm_calc_sqm_str'] = 'Not available'
+
+
             if self.latest_image_entry.data.get(dh_temp_slot_var):
                 dh_temp = self.latest_image_entry.data[dh_temp_slot_var]
                 context['dh_temp_str'] = '{0:0.1f}°'.format(dh_temp)
@@ -1995,11 +2006,6 @@ class ConfigView(FormView):
             else:
                 dh_dewpoint = None
                 context['dh_dewpoint_str'] = 'Not available'
-
-            if self.latest_image_entry.data.get('camera_sqm_raw_mag'):
-                context['camera_sqm_raw_mag_str'] = '{0:0.2f}'.format(self.latest_image_entry.data.get('camera_sqm_raw_mag'))
-            else:
-                context['camera_sqm_raw_mag_str'] = 'Not available'
 
 
             dh_manual_target = self.indi_allsky_config.get('DEW_HEATER', {}).get('MANUAL_TARGET', 0.0)
@@ -2105,6 +2111,9 @@ class ConfigView(FormView):
                 context['fan_target_high_str'] = 'n/a'
                 context['fan_status_str'] = 'n/a'
         else:
+            context['camera_sqm_raw_mag_str'] = 'Not available'
+            context['camera_sqm_calc_sqm_str'] = 'Not available'
+
             context['dh_temp_str'] = 'Not available'
             context['dh_dewpoint_str'] = 'Not available'
             context['dh_temp_delta_str'] = 'Not available'
