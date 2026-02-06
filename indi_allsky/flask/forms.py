@@ -796,6 +796,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'aurora_n_hemi_gw' : 0,
         'aurora_s_hemi_gw' : 0,
         'smoke_rating' : 'foobar',
+        'camera_sqm_raw_mag' : 0.0,
         'latitude'     : 0.0,
         'longitude'    : 0.0,
         'stack_method' : 'foo',
@@ -884,6 +885,7 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'aurora_plasma_temp' : 0,
         'aurora_n_hemi_gw' : 0,
         'aurora_s_hemi_gw' : 0,
+        'camera_sqm_raw_mag' : 0.0,
         'owner' : '',
         'location' : '',
         'lens_name' : '',
@@ -3886,6 +3888,9 @@ class IndiAllskyConfigForm(FlaskForm):
             ['aurora_plasma_temp', 'PSolar Wind lasma Temperature [K]'],
             ['aurora_n_hemi_gw', 'Hemispheric Power - Northern [GW]'],
             ['aurora_s_hemi_gw', 'Hemispheric Power - Southern [GW]'],
+        ),
+        'SQM' : (
+            ['camera_sqm_raw_mag', 'Camera SQM - Raw Magnitude'],
         ),
     }
 

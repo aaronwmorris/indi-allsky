@@ -187,6 +187,7 @@ class CaptureWorker(Process):
         ['aurora_plasma_temp', 'Solar Wind Plasma Temperature [K]'],
         ['aurora_n_hemi_gw', 'Hemispheric Power - Northern [GW]'],
         ['aurora_s_hemi_gw', 'Hemispheric Power - Southern [GW]'],
+        ['camera_sqm_raw_mag', 'Camera SQM Raw Magnitude'],
     )
 
 

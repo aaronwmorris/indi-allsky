@@ -887,6 +887,7 @@ class ImageWorker(Process):
                 'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
                 'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
                 'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
+                'camera_sqm_raw_mag' : self.image_processor.camera_sqm_raw_mag,
             }
 
 
@@ -1087,6 +1088,7 @@ class ImageWorker(Process):
             'ovation_max'         : i_ref.ovation_max,
             'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'aircraft'            : len(self.adsb_aircraft_list),
+            'camera_sqm_raw_mag'  : self.image_processor.camera_sqm_raw_mag,
         }
 
 
@@ -1273,8 +1275,9 @@ class ImageWorker(Process):
             'aurora_plasma_density' : i_ref.aurora_plasma_density,
             'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
             'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
-            'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
-            'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
+            'aurora_n_hemi_gw'      : i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
+            'camera_sqm_raw_mag'    : self.image_processor.camera_sqm_raw_mag,
         }
 
         fits_entry = self._miscDb.addFitsImage(
@@ -1456,8 +1459,9 @@ class ImageWorker(Process):
             'aurora_plasma_density' : i_ref.aurora_plasma_density,
             'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
             'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
-            'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
-            'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
+            'aurora_n_hemi_gw'      : i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
+            'camera_sqm_raw_mag'    : self.image_processor.camera_sqm_raw_mag,
         }
 
         try:
@@ -1640,7 +1644,7 @@ class ImageWorker(Process):
             'aurora_s_hemi_gw'    : i_ref.aurora_s_hemi_gw,
             'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'aircraft'            : len(self.adsb_aircraft_list),
-
+            'camera_sqm_raw_mag'  : self.image_processor.camera_sqm_raw_mag,
         }
 
 
@@ -1808,8 +1812,9 @@ class ImageWorker(Process):
             'aurora_plasma_density' : i_ref.aurora_plasma_density,
             'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
             'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
-            'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
-            'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
+            'aurora_n_hemi_gw'      : i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
+            'camera_sqm_raw_mag'    : self.image_processor.camera_sqm_raw_mag,
         }
 
 
