@@ -1263,13 +1263,13 @@ class CaptureWorker(Process):
                 ccd_gain_default = gain_day
 
         else:
-            # use last exposure value within 10 minutes
-            now_minus_10min = datetime.now() - timedelta(minutes=10)
+            # use last exposure value within 15 minutes
+            now_minus_15min = datetime.now() - timedelta(minutes=15)
 
             last_image = IndiAllSkyDbImageTable.query\
                 .join(IndiAllSkyDbImageTable.camera)\
                 .filter(IndiAllSkyDbCameraTable.id == self.camera_id)\
-                .filter(IndiAllSkyDbImageTable.createDate > now_minus_10min)\
+                .filter(IndiAllSkyDbImageTable.createDate > now_minus_15min)\
                 .order_by(IndiAllSkyDbImageTable.createDate.desc())\
                 .first()
 
@@ -1278,6 +1278,12 @@ class CaptureWorker(Process):
                 ccd_exposure_default = float(last_image.exposure)
                 ccd_gain_default = float(last_image.gain)
                 logger.warning('Reusing last stable exposure: %0.6f, gain %0.2f', ccd_exposure_default, ccd_gain_default)
+
+                # restore last sqm value
+                last_camera_sqm = last_image.data.get('sensor_user_8', 0.0)
+                with self.sensors_user_av.get_lock():
+                    self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM] = float(last_camera_sqm)
+
             else:
                 #ccd_exposure_default = self.exposure_av[constants.EXPOSURE_MIN_NIGHT]
                 ccd_exposure_default = 0.01  # this should give better results for many cameras
