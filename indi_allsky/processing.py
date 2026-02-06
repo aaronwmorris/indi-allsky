@@ -1241,7 +1241,7 @@ class ImageProcessor(object):
         return adu_8
 
 
-    def calculateSqm(self):
+    def calculateJankySqm(self):
         i_ref = self.getLatestImage()
 
         if self.focus_mode:
@@ -1250,6 +1250,10 @@ class ImageProcessor(object):
             return
 
         i_ref.sqm_value = self._sqm.jankySqm(i_ref)
+
+
+    def _calculateMagnitudeSqm(self, i_ref):
+        return self._sqm.magnitudeSqm(i_ref)
 
 
     def stack(self):

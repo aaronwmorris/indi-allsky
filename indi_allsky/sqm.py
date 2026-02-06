@@ -1,3 +1,4 @@
+import math
 import cv2
 import numpy
 import logging
@@ -57,6 +58,14 @@ class IndiAllskySqm(object):
         logger.info('Raw SQM: %0.2f, Weighted SQM: %0.2f', sqm_avg, weighted_sqm_avg)
 
         return weighted_sqm_avg
+
+
+    def magnitudeSqm(self, i_ref):
+        sqm_avg = self.averageAdu(i_ref)
+
+        mag_sqm = 32.0 - (math.log10(sqm_avg) * 2.5)
+
+        return mag_sqm
 
 
     def _generateSqmMask(self, img):

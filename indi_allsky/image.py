@@ -444,7 +444,7 @@ class ImageWorker(Process):
                 self.write_fit(i_ref, camera)
 
 
-        self.image_processor.calculateSqm()
+        self.image_processor.calculateJankySqm()
 
 
         self.image_processor.debayer()
@@ -2535,17 +2535,11 @@ class ImageWorker(Process):
 
         self.image_processor._calibrate(i_ref, libcamera_black_level=libcamera_black_level)
 
-        sqm_image = self.image_processor._debayer(i_ref)
+
+        mag_sqm = self.image_processor._calculateMagnitudeSqm(i_ref)
 
 
-        if len(sqm_image.shape) == 2:
-            # mono
-            img_gray = sqm_image
-        else:
-            # color
-            img_gray = cv2.cvtColor(sqm_image, cv2.COLOR_BGR2GRAY)
-
-
-        sqm_avg = cv2.mean(src=img_gray)[0]
-        logger.warning('SQM : %d', int(sqm_avg))
+        logger.warning('SQM : %0.1f', mag_sqm)
+        with self.sensors_user_av.get_lock():
+            self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM] = float(mag_sqm)
 
