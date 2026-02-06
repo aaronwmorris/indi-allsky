@@ -704,14 +704,25 @@ class CaptureWorker(Process):
                             # Normal exposure
                             self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], self.gain_av[constants.GAIN_NEXT], sync=False)
                         else:
+                            # SQM exposures enabled
+
                             if now_time > self.sqm_tasks_time:
                                 if self.night_v.value:
+                                    # Night
+
                                     # SQM exposure
                                     logger.warning('SQM exposure triggered')
                                     self.shoot(self.exposure_av[constants.EXPOSURE_SQM], self.gain_av[constants.GAIN_SQM], sync=False, sqm_exposure=True)
                                 else:
-                                    # Normal exposure during day
-                                    self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], self.gain_av[constants.GAIN_NEXT], sync=False)
+                                    # Day
+                                    if self.config.get('CAMERA_SQM', {}).get('ENABLE_DAY'):
+                                        # SQM exposure
+                                        logger.warning('SQM exposure triggered')
+                                        self.shoot(self.exposure_av[constants.EXPOSURE_SQM], self.gain_av[constants.GAIN_SQM], sync=False, sqm_exposure=True)
+                                    else:
+                                        # Normal exposure during day
+                                        self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], self.gain_av[constants.GAIN_NEXT], sync=False)
+
 
                                 # set next SQM exposure time
                                 self.sqm_tasks_time = now_time + self.sqm_tasks_offset

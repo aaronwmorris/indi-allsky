@@ -2148,6 +2148,7 @@ class ConfigView(FormView):
             'EXPOSURE_PERIOD'                : self.indi_allsky_config.get('EXPOSURE_PERIOD', 15.0),
             'EXPOSURE_PERIOD_DAY'            : self.indi_allsky_config.get('EXPOSURE_PERIOD_DAY', 15.0),
             'CAMERA_SQM__ENABLE'             : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE', False),
+            'CAMERA_SQM__ENABLE_DAY'         : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE_DAY', False),
             'CAMERA_SQM__EXPOSURE'           : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 15.0),
             'CAMERA_SQM__GAIN'               : self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 0.0),
             'CAMERA_SQM__EXPOSURE_PERIOD'    : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900),
@@ -3132,6 +3133,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['EXPOSURE_PERIOD']                      = float(request.json['EXPOSURE_PERIOD'])
         self.indi_allsky_config['EXPOSURE_PERIOD_DAY']                  = float(request.json['EXPOSURE_PERIOD_DAY'])
         self.indi_allsky_config['CAMERA_SQM']['ENABLE']                 = bool(request.json['CAMERA_SQM__ENABLE'])
+        self.indi_allsky_config['CAMERA_SQM']['ENABLE_DAY']             = bool(request.json['CAMERA_SQM__ENABLE_DAY'])
         self.indi_allsky_config['CAMERA_SQM']['EXPOSURE']               = float(request.json['CAMERA_SQM__EXPOSURE'])
         self.indi_allsky_config['CAMERA_SQM']['GAIN']                   = round(float(request.json['CAMERA_SQM__GAIN']), 2)  # limit to 2 decimals
         self.indi_allsky_config['CAMERA_SQM']['EXPOSURE_PERIOD']        = int(request.json['CAMERA_SQM__EXPOSURE_PERIOD'])

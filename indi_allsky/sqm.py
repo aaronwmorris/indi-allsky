@@ -65,9 +65,11 @@ class IndiAllskySqm(object):
     def magnitudeSqm(self, i_ref):
         sqm_avg = self.averageAdu(i_ref)
 
-        mag_sqm = self._magnitude_offset - (math.log10(sqm_avg) * 2.5)
+        raw_mag = (math.log10(sqm_avg) * 2.5) * -1
 
-        return mag_sqm
+        mag_sqm = self._magnitude_offset + raw_mag  # raw_mag is negative
+
+        return mag_sqm, raw_mag
 
 
     def _generateSqmMask(self, img):

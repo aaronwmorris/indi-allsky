@@ -2536,10 +2536,10 @@ class ImageWorker(Process):
         self.image_processor._calibrate(i_ref, libcamera_black_level=libcamera_black_level)
 
 
-        mag_sqm = self.image_processor._calculateMagnitudeSqm(i_ref)
+        mag_sqm, raw_mag = self.image_processor._calculateMagnitudeSqm(i_ref)
 
 
-        logger.warning('SQM: %0.2f', mag_sqm)
+        logger.warning('SQM: %0.2f, Raw Magnitude: %0.2f', mag_sqm, raw_mag)
         with self.sensors_user_av.get_lock():
             self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM] = float(mag_sqm)
 

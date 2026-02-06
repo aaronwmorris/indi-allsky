@@ -86,6 +86,7 @@ class IndiAllSkyConfigBase(object):
         "EXPOSURE_PERIOD_DAY"  : 15.00000,
         "CAMERA_SQM" : {
             "ENABLE"            : False,
+            "ENABLE_DAY"        : False,
             "EXPOSURE"          : 15.00000,
             "GAIN"              : 0.0,
             "EXPOSURE_PERIOD"   : 900,
