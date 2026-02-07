@@ -189,8 +189,8 @@ class IndiClientPycurl(IndiClient):
 
 
         # Update shared bin value
-        with self.bin_v.get_lock():
-            self.bin_v.value = int(bin_value)
+        with self.binning_av.get_lock():
+            self.binning_av[constants.BINNING_CURRENT] = int(bin_value)
 
 
     def setCcdExposure(self, exposure, gain, sync=False, timeout=None, sqm_exposure=False):

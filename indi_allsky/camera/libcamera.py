@@ -123,8 +123,8 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         # Update shared gin value
-        with self.bin_v.get_lock():
-            self.bin_v.value = int(bin_value)
+        with self.binning_av.get_lock():
+            self.binning_av[constants.BINNING_CURRENT] = int(bin_value)
 
 
     def _getBinModeOptions(self, bin_value):
@@ -174,7 +174,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         try:
-            binmode_option = self._getBinModeOptions(self.bin_v.value)
+            binmode_option = self._getBinModeOptions(self.binning_av[constants.BINNING_CURRENT])
         except BinModeException as e:
             logger.error('Invalid setting: %s', str(e))
             binmode_option = ''

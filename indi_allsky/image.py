@@ -78,7 +78,7 @@ class ImageWorker(Process):
         position_av,
         exposure_av,
         gain_av,
-        bin_v,
+        binning_av,
         sensors_temp_av,
         sensors_user_av,
         night_v,
@@ -97,7 +97,7 @@ class ImageWorker(Process):
         self.position_av = position_av
         self.exposure_av = exposure_av
         self.gain_av = gain_av
-        self.bin_v = bin_v
+        self.binning_av = binning_av
 
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av
@@ -126,7 +126,7 @@ class ImageWorker(Process):
             self.config,
             self.position_av,
             self.gain_av,
-            self.bin_v,
+            self.binning_av,
             self.sensors_temp_av,
             self.sensors_user_av,
             self.night_v,
@@ -289,6 +289,7 @@ class ImageWorker(Process):
         filename_p = Path(i_dict['filename'])
         exposure = i_dict['exposure']
         gain = i_dict['gain']
+        binning = i_dict['binning']
         exp_date = datetime.fromtimestamp(i_dict['exp_time'])
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
@@ -402,6 +403,7 @@ class ImageWorker(Process):
                 filename_p,
                 exposure,
                 gain,
+                binning,
                 exp_date,
                 exp_elapsed,
                 camera,
@@ -419,7 +421,7 @@ class ImageWorker(Process):
         self.image_count += 1
 
 
-        self.start_image_save_pre_hook(exposure, gain)
+        self.start_image_save_pre_hook(exposure, gain, binning)
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
@@ -745,7 +747,7 @@ class ImageWorker(Process):
         latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, jpeg_exif=jpeg_exif)
 
         if new_filename:
-            self.start_image_save_post_hook(new_filename, exposure, gain)
+            self.start_image_save_post_hook(new_filename, exposure, gain, binning)
 
             image_metadata = {
                 'type'            : constants.IMAGE,
@@ -755,7 +757,7 @@ class ImageWorker(Process):
                 'exposure'        : exposure,
                 'exp_elapsed'     : exp_elapsed,
                 'gain'            : float(gain),
-                'binmode'         : self.bin_v.value,
+                'binmode'         : int(binning),
                 'temp'            : self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
                 'adu'             : adu,
                 'stable'          : self.target_adu_found,
@@ -861,7 +863,7 @@ class ImageWorker(Process):
                 'exp_date' : exp_date.strftime('%Y-%m-%d %H:%M:%S'),
                 'exposure' : round(exposure, 6),
                 'gain'     : round(gain, 2),
-                'bin'      : self.bin_v.value,
+                'bin'      : int(binning),
                 'temp'     : round(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP], 1),
                 'sunalt'   : round(self.image_processor.astrometric_data['sun_alt'], 1),
                 'moonalt'  : round(self.image_processor.astrometric_data['moon_alt'], 1),
@@ -1254,7 +1256,7 @@ class ImageWorker(Process):
             'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref.exposure,
             'gain'       : i_ref.gain,
-            'binmode'    : self.bin_v.value,
+            'binmode'    : i_ref.binning,
             'night'      : bool(self.night_v.value),
             'height'     : image_height,
             'width'      : image_width,
@@ -1438,7 +1440,7 @@ class ImageWorker(Process):
             'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref.exposure,
             'gain'       : i_ref.gain,
-            'binmode'    : self.bin_v.value,
+            'binmode'    : i_ref.binning,
             'night'      : bool(self.night_v.value),
             'height'     : image_height,
             'width'      : image_width,
@@ -1791,7 +1793,7 @@ class ImageWorker(Process):
             'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref.exposure,
             'gain'       : i_ref.gain,
-            'binmode'    : self.bin_v.value,
+            'binmode'    : i_ref.binning,
             'night'      : bool(self.night_v.value),
             'height'     : panorama_height,
             'width'      : panorama_width,
@@ -2187,7 +2189,7 @@ class ImageWorker(Process):
         return rgb_pixel_list
 
 
-    def start_image_save_pre_hook(self, exposure, gain):
+    def start_image_save_pre_hook(self, exposure, gain, binning):
         if self.image_processor.focus_mode:
             return
 
@@ -2223,7 +2225,7 @@ class ImageWorker(Process):
             'DATA_JSON': str(self.pre_hook_datajson_name_p),  # the file used for the json data is communicated via environment variable
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
             'GAIN'     : '{0:0.2f}'.format(gain),
-            'BIN'      : '{0:d}'.format(self.bin_v.value),
+            'BIN'      : '{0:d}'.format(binning),
             'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
             'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),
             'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),
@@ -2274,7 +2276,7 @@ class ImageWorker(Process):
             logger.error('Image pre-save script failed to execute')
 
 
-    def start_image_save_post_hook(self, image_p, exposure, gain):
+    def start_image_save_post_hook(self, image_p, exposure, gain, binning):
         if self.image_processor.focus_mode:
             return
 
@@ -2302,7 +2304,7 @@ class ImageWorker(Process):
         hook_env = {
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
             'GAIN'     : '{0:0.3f}'.format(gain),
-            'BIN'      : '{0:d}'.format(self.bin_v.value),
+            'BIN'      : '{0:d}'.format(binning),
             'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
             'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),
             'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),

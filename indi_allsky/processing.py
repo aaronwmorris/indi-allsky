@@ -104,7 +104,7 @@ class ImageProcessor(object):
         config,
         position_av,
         gain_av,
-        bin_v,
+        binning_av,
         sensors_temp_av,
         sensors_user_av,
         night_v,
@@ -114,7 +114,7 @@ class ImageProcessor(object):
 
         self.position_av = position_av
         self.gain_av = gain_av  # only use index 0 in this class
-        self.bin_v = bin_v
+        self.binning_av = binning_av
 
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
@@ -127,8 +127,8 @@ class ImageProcessor(object):
 
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
 
-        self._detection_mask = self._load_detection_mask()
-        self._adu_mask = self._detection_mask  # reuse detection mask for ADU mask (if defined)
+        self._detection_masks_dict = self._load_detection_mask()
+        self._adu_masks_dict = self._detection_masks_dict  # reuse detection mask for ADU mask (if defined)
 
         self._image_circle_alpha_mask = None
 
@@ -373,15 +373,15 @@ class ImageProcessor(object):
         return self._camera_sqm_raw_mag
 
 
-    def add(self, filename, exposure, gain, exp_date, exp_elapsed, camera):
-        i_ref = self._add(filename, exposure, gain, exp_date, exp_elapsed, camera)
+    def add(self, filename, exposure, gain, binning, exp_date, exp_elapsed, camera):
+        i_ref = self._add(filename, exposure, gain, binning, exp_date, exp_elapsed, camera)
 
         self.image_list.insert(0, i_ref)  # new image is first in list
 
         return i_ref
 
 
-    def _add(self, filename, exposure, gain, exp_date, exp_elapsed, camera):
+    def _add(self, filename, exposure, gain, binning, exp_date, exp_elapsed, camera):
         from astropy.io import fits
 
         filename_p = Path(filename)
@@ -490,8 +490,8 @@ class ImageProcessor(object):
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'jpg'
             hdulist[0].header['EXPTIME'] = float(exposure)
-            hdulist[0].header['XBINNING'] = 1
-            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['XBINNING'] = int(binning)
+            hdulist[0].header['YBINNING'] = int(binning)
             hdulist[0].header['GAIN'] = float(gain)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
@@ -553,8 +553,8 @@ class ImageProcessor(object):
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'png'
             hdulist[0].header['EXPTIME'] = float(exposure)
-            hdulist[0].header['XBINNING'] = 1
-            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['XBINNING'] = int(binning)
+            hdulist[0].header['YBINNING'] = int(binning)
             hdulist[0].header['GAIN'] = float(gain)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
@@ -606,8 +606,8 @@ class ImageProcessor(object):
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'libcamera'
             hdulist[0].header['EXPTIME'] = float(exposure)
-            hdulist[0].header['XBINNING'] = 1
-            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['XBINNING'] = int(binning)
+            hdulist[0].header['YBINNING'] = int(binning)
             hdulist[0].header['GAIN'] = float(gain)
             hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
@@ -902,7 +902,7 @@ class ImageProcessor(object):
                 .filter(IndiAllSkyDbBadPixelMapTable.camera_id == i_ref.camera_id)\
                 .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
                 .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == i_ref.image_bitpix)\
-                .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
+                .filter(IndiAllSkyDbBadPixelMapTable.binmode == i_ref.binning)\
                 .filter(IndiAllSkyDbBadPixelMapTable.gain >= i_ref.gain)\
                 .filter(IndiAllSkyDbBadPixelMapTable.exposure >= i_ref.exposure)\
                 .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])\
@@ -923,7 +923,7 @@ class ImageProcessor(object):
                     .filter(IndiAllSkyDbBadPixelMapTable.camera_id == i_ref.camera_id)\
                     .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
                     .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == i_ref.image_bitpix)\
-                    .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
+                    .filter(IndiAllSkyDbBadPixelMapTable.binmode == i_ref.binning)\
                     .filter(IndiAllSkyDbBadPixelMapTable.gain >= i_ref.gain)\
                     .filter(IndiAllSkyDbBadPixelMapTable.exposure >= i_ref.exposure)\
                     .order_by(
@@ -942,7 +942,7 @@ class ImageProcessor(object):
                         i_ref.image_bitpix,
                         float(i_ref.exposure),
                         i_ref.gain,
-                        self.bin_v.value,
+                        i_ref.binning,
                         self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
                     )
         else:
@@ -955,7 +955,7 @@ class ImageProcessor(object):
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
             .filter(IndiAllSkyDbDarkFrameTable.bitdepth == i_ref.image_bitpix)\
-            .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
+            .filter(IndiAllSkyDbDarkFrameTable.binmode == i_ref.binning)\
             .filter(IndiAllSkyDbDarkFrameTable.gain >= i_ref.gain)\
             .filter(IndiAllSkyDbDarkFrameTable.exposure >= i_ref.exposure)\
             .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])\
@@ -976,7 +976,7 @@ class ImageProcessor(object):
                 .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
                 .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
                 .filter(IndiAllSkyDbDarkFrameTable.bitdepth == i_ref.image_bitpix)\
-                .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
+                .filter(IndiAllSkyDbDarkFrameTable.binmode == i_ref.binning)\
                 .filter(IndiAllSkyDbDarkFrameTable.gain >= i_ref.gain)\
                 .filter(IndiAllSkyDbDarkFrameTable.exposure >= i_ref.exposure)\
                 .order_by(
@@ -995,7 +995,7 @@ class ImageProcessor(object):
                     i_ref.image_bitpix,
                     float(i_ref.exposure),
                     i_ref.gain,
-                    self.bin_v.value,
+                    i_ref.binning,
                     self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
                 )
 
@@ -1204,12 +1204,12 @@ class ImageProcessor(object):
 
 
     def _calculate_8bit_adu(self, i_ref):
-        if isinstance(self._adu_mask, type(None)):
+        if isinstance(self._adu_masks_dict[i_ref.binning], type(None)):
             # This only needs to be done once if a mask is not provided
-            self._generateAduMask(self.image)
+            self._generateAduMask(self.image, i_ref.binning)
 
 
-        mask_dimensions = self._adu_mask.shape[:2]
+        mask_dimensions = self._adu_masks_dict[i_ref.binning].shape[:2]
         image_dimensions = self.image.shape[:2]
 
         if mask_dimensions != image_dimensions:
@@ -1226,10 +1226,10 @@ class ImageProcessor(object):
 
         if len(self.image.shape) == 2:
             # mono
-            adu = cv2.mean(src=self.image, mask=self._adu_mask)[0]
+            adu = cv2.mean(src=self.image, mask=self._adu_masks_dict[i_ref.binning])[0]
         else:
             data_mono = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
-            adu = cv2.mean(src=data_mono, mask=self._adu_mask)[0]
+            adu = cv2.mean(src=data_mono, mask=self._adu_masks_dict[i_ref.binning])[0]
 
 
         if i_ref.image_bitpix == 8:
@@ -1562,6 +1562,12 @@ class ImageProcessor(object):
 
 
     def crop_image(self):
+        i_ref = self.getLatestImage()
+
+        self.image = self._crop_image(i_ref)
+
+
+    def _crop_image(self, i_ref):
         if self.config.get('IMAGE_CROP_IMAGE_CIRCLE'):
             logger.info('Cropping to image circle')
             image_height, image_width = self.image.shape[:2]
@@ -1588,21 +1594,24 @@ class ImageProcessor(object):
                 y1 = max(0, (image_center_y - radius))
                 y2 = min(image_height, (image_center_y + radius) - (lens_offset_y * 2))  # offset is negative
 
-            self.image = self.image[
+            cropped_image = self.image[
                 y1:y2,
                 x1:x2,
             ]
 
 
-            new_height, new_width = self.image.shape[:2]
+            new_height, new_width = cropped_image.shape[:2]
             logger.info('New cropped size: %d x %d', new_width, new_height)
+
+            return cropped_image
+
 
         elif self.config.get('IMAGE_CROP_ROI'):
             # divide the coordinates by binning value
-            x1 = int(self.config['IMAGE_CROP_ROI'][0] / self.bin_v.value)
-            y1 = int(self.config['IMAGE_CROP_ROI'][1] / self.bin_v.value)
-            x2 = int(self.config['IMAGE_CROP_ROI'][2] / self.bin_v.value)
-            y2 = int(self.config['IMAGE_CROP_ROI'][3] / self.bin_v.value)
+            x1 = int(self.config['IMAGE_CROP_ROI'][0] / i_ref.binning)
+            y1 = int(self.config['IMAGE_CROP_ROI'][1] / i_ref.binning)
+            x2 = int(self.config['IMAGE_CROP_ROI'][2] / i_ref.binning)
+            y2 = int(self.config['IMAGE_CROP_ROI'][3] / i_ref.binning)
 
 
             self.image = self.image[
@@ -3704,7 +3713,7 @@ class ImageProcessor(object):
 
         if not detect_mask:
             logger.warning('No detection mask defined')
-            return
+            return {}
 
 
         detect_mask_p = Path(detect_mask)
@@ -3712,30 +3721,42 @@ class ImageProcessor(object):
         try:
             if not detect_mask_p.exists():
                 logger.error('%s does not exist', detect_mask_p)
-                return
+                return {}
 
 
             if not detect_mask_p.is_file():
                 logger.error('%s is not a file', detect_mask_p)
-                return
+                return {}
 
         except PermissionError as e:
             logger.error(str(e))
-            return
+            return {}
 
         mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)  # mono
         if isinstance(mask_data, type(None)):
             logger.error('%s is not a valid image', detect_mask_p)
-            return
+            return {}
 
 
-        ### any intermediate values will be set to 255
-        mask_data[mask_data > 0] = 255
+        # create mask for each binning setting
+        mask_data_dict = dict()
+        for binning in set(self.binning_av):
+            if binning == 1:
+                ### any intermediate values will be set to 255
+                mask_data_dict[binning] = mask_data.copy()
+                mask_data_dict[binning][mask_data_dict[binning] > 0] = 255
+            else:
+                mask_height, mask_width = mask_data.shape[:2]
+
+                new_mask_height = int(mask_height / binning)
+                new_mask_width = int(mask_width / binning)
+
+                mask_data_dict[binning] = cv2.resize(mask_data, (new_mask_width, new_mask_height), interpolation=cv2.INTER_AREA)
+
+                mask_data_dict[binning][mask_data_dict[binning] > 0] = 255
 
 
-        logger.info('Loaded detection mask: %s', detect_mask_p)
-
-        return mask_data
+        return mask_data_dict
 
 
     def _load_logo_overlay(self, image):
@@ -3815,10 +3836,10 @@ class ImageProcessor(object):
         adu_roi = self.config.get('ADU_ROI', [])
 
         try:
-            x1 = int(adu_roi[0] / self.bin_v.value)
-            y1 = int(adu_roi[1] / self.bin_v.value)
-            x2 = int(adu_roi[2] / self.bin_v.value)
-            y2 = int(adu_roi[3] / self.bin_v.value)
+            x1 = int(adu_roi[0] / self.binning_av[constants.BINNING_CURRENT])
+            y1 = int(adu_roi[1] / self.binning_av[constants.BINNING_CURRENT])
+            x2 = int(adu_roi[2] / self.binning_av[constants.BINNING_CURRENT])
+            y2 = int(adu_roi[3] / self.binning_av[constants.BINNING_CURRENT])
         except IndexError:
             logger.warning('Using central ROI for ADU calculations')
             adu_fov_div = self.config.get('ADU_FOV_DIV', 4)
@@ -3895,6 +3916,7 @@ class ImageData(object):
         hdulist,
         exposure,
         gain,
+        binning,
         exp_date,
         exp_elapsed,
         day_date,
@@ -3914,6 +3936,7 @@ class ImageData(object):
 
         self._exposure = float(exposure)
         self._gain = float(gain)
+        self._binning = int(binning)
         self._exp_date = exp_date
         self._exp_elapsed = exp_elapsed
         self._day_date = day_date
@@ -3971,6 +3994,10 @@ class ImageData(object):
     @property
     def gain(self):
         return self._gain
+
+    @property
+    def binning(self):
+        return self._binning
 
     @property
     def exp_date(self):

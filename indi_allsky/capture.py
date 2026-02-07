@@ -203,7 +203,7 @@ class CaptureWorker(Process):
         position_av,
         exposure_av,
         gain_av,
-        bin_v,
+        binning_av,
         sensors_temp_av,
         sensors_user_av,
         night_v,
@@ -224,7 +224,7 @@ class CaptureWorker(Process):
         self.position_av = position_av
         self.exposure_av = exposure_av
         self.gain_av = gain_av
-        self.bin_v = bin_v
+        self.binning_av = binning_av
 
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
@@ -789,7 +789,7 @@ class CaptureWorker(Process):
             self.position_av,
             self.exposure_av,
             self.gain_av,
-            self.bin_v,
+            self.binning_av,
             self.night_v,
             self.moonmode_v,
         )
@@ -1609,7 +1609,7 @@ class CaptureWorker(Process):
         # Communicate sensor values as environment variables
         cmd_env = {
             'GAIN'     : '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
-            'BIN'      : '{0:d}'.format(self.bin_v.value),
+            'BIN'      : '{0:d}'.format(self.binning_av[constants.BINNING_CURRENT]),
             'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
             'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
             'LATITUDE' : '{0:0.3f}'.format(self.position_av[constants.POSITION_LATITUDE]),

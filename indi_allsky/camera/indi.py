@@ -97,7 +97,7 @@ class IndiClient(PyIndi.BaseClient):
         position_av,
         exposure_av,
         gain_av,
-        bin_v,
+        binning_av,
         night_v,
         moonmode_v,
     ):
@@ -110,7 +110,7 @@ class IndiClient(PyIndi.BaseClient):
 
         self.exposure_av = exposure_av
         self.gain_av = gain_av
-        self.bin_v = bin_v
+        self.binning_v = binning_av
 
         self.night_v = night_v
         self.moonmode_v = moonmode_v
@@ -1382,8 +1382,8 @@ class IndiClient(PyIndi.BaseClient):
             self.configureDevice(self.ccd_device, binning_config)
 
             # Update shared bin value
-            with self.bin_v.get_lock():
-                self.bin_v.value = new_bin_value[0]
+            with self.binning_av.get_lock():
+                self.binning_av[constants.BINNING_CURRENT] = int(new_bin_value[0])
         except TimeOutException:
             logger.error('Failed to find CCD binning control, bypassing binning config')
 

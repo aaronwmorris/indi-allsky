@@ -90,7 +90,7 @@ class VideoWorker(Process):
         video_q,
         upload_q,
         night_v,
-        bin_v,
+        binning_av,
     ):
         super(VideoWorker, self).__init__()
 
@@ -105,7 +105,7 @@ class VideoWorker(Process):
         self.upload_q = upload_q
 
         self.night_v = night_v
-        self.bin_v = bin_v
+        self.binning_av = binning_av
 
         self._miscDb = miscDb(self.config)
         self._miscUpload = miscUpload(
@@ -2144,7 +2144,7 @@ class VideoWorker(Process):
 
         mask_processor = MaskProcessor(
             self.config,
-            self.bin_v,
+            self.binning_av,
         )
 
 

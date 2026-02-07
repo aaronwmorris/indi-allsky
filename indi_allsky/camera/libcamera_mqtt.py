@@ -147,7 +147,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         try:
-            binmode_option = self._getBinModeOptions(self.bin_v.value)
+            binmode_option = self._getBinModeOptions(self.binning_av[constants.BINNING_CURRENT])
         except BinModeException as e:
             logger.error('Invalid setting: %s', str(e))
             binmode_option = ''

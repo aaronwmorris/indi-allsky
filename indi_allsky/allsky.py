@@ -174,7 +174,14 @@ class IndiAllSky(object):
         ])
 
 
-        self.bin_v = Value('i', 1)  # set 1 for sane default
+        self.binning_av = Array('i', [
+            1,  # current bin
+            1,  # next bin
+            1,  # day bin
+            1,  # night bin
+            1,  # moonmode bin
+            1,  # sqm
+        ])
 
 
         # These shared values are to indicate when the camera is in night/moon modes
@@ -405,7 +412,7 @@ class IndiAllSky(object):
             self.position_av,
             self.exposure_av,
             self.gain_av,
-            self.bin_v,
+            self.binning_av,
             self.sensors_temp_av,
             self.sensors_user_av,
             self.night_v,
@@ -458,7 +465,7 @@ class IndiAllSky(object):
             self.position_av,
             self.exposure_av,
             self.gain_av,
-            self.bin_v,
+            self.binning_av,
             self.sensors_temp_av,
             self.sensors_user_av,
             self.night_v,
@@ -521,7 +528,7 @@ class IndiAllSky(object):
             self.video_q,
             self.upload_q,
             self.night_v,
-            self.bin_v,
+            self.binning_av,
         )
         self.video_worker.start()
 

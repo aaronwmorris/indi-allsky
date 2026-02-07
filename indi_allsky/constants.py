@@ -112,6 +112,15 @@ GAIN_MAX_MOONMODE   = 8
 GAIN_SQM            = 9
 
 
+# Binning indexes
+BINNING_CURRENT     = 0
+BINNING_NEXT        = 1
+BINNING_DAY         = 2
+BINNING_NIGHT       = 3
+BINNING_MOONMODE    = 4
+BINNING_SQM         = 5
+
+
 # Leaving gaps for addtional classifications
 SMOKE_RATING_NODATA  = -1
 SMOKE_RATING_CLEAR   = 1
