@@ -4420,7 +4420,7 @@ class Fits2JpegView(BaseView):
         gain = float(hdulist[0].header.get('GAIN', 0))
         gain_av = Array('f', [gain])
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
-        bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
+        binning_av = Array('i', [int(hdulist[0].header.get('XBINNING', 1))])
         sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         night_v = Value('i', 1)  # using night values for processing
@@ -4432,7 +4432,7 @@ class Fits2JpegView(BaseView):
             p_config,
             position_av,
             gain_av,
-            bin_v,
+            binning_av,
             sensors_temp_av,
             sensors_user_av,
             night_v,
@@ -6916,7 +6916,7 @@ class JsonFocusView(JsonView):
 
     def dispatch_request(self):
         import cv2
-        from multiprocessing import Value
+        from multiprocessing import Array
         from ..stars import IndiAllSkyStars
 
         zoom = int(request.args.get('zoom', 2))
@@ -6924,8 +6924,8 @@ class JsonFocusView(JsonView):
         y_offset = int(request.args.get('y_offset', 0))
 
 
-        bin_v = Value('i', 1)
-        stars_detect = IndiAllSkyStars(self.indi_allsky_config, bin_v, mask=None)
+        binning_av = Array('i', [1])
+        stars_detect = IndiAllSkyStars(self.indi_allsky_config, binning_av, mask=None)
 
 
         json_data = dict()
@@ -7707,7 +7707,7 @@ class JsonImageProcessingView(JsonView):
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
         gain = float(hdulist[0].header.get('GAIN', 0))
         gain_av = Array('f', [gain])
-        bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
+        binning_av = Array('i', [int(hdulist[0].header.get('XBINNING', 1))])
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
         #sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         #sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
@@ -7722,7 +7722,7 @@ class JsonImageProcessingView(JsonView):
             p_config,
             position_av,
             gain_av,
-            bin_v,
+            binning_av,
             sensors_temp_av,
             sensors_user_av,
             night_v,
