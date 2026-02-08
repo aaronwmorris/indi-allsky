@@ -1560,8 +1560,6 @@ class ImageProcessor(object):
 
         i_ref.stars = self._detectStars(i_ref)
 
-        logger.info('Image: %s', type(self.image))
-
 
     def _detectStars(self, i_ref):
         return self._stars_detect.detectObjects(self.image, i_ref.binning)
