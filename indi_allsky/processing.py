@@ -3396,21 +3396,6 @@ class ImageProcessor(object):
 
 
     def stretch(self):
-        i_ref = self.getLatestImage()
-
-
-        stretched_image = self._stretch(i_ref)
-
-
-        if self.config.get('IMAGE_STRETCH', {}).get('SPLIT'):
-            self.image = self.splitscreen(self.image, stretched_image)
-            return
-
-
-        self.image = stretched_image
-
-
-    def _stretch(self, i_ref):
         if self.focus_mode:
             # disable processing in focus mode
             return
@@ -3430,7 +3415,21 @@ class ImageProcessor(object):
                 return
 
 
+        i_ref = self.getLatestImage()
 
+
+        stretched_image = self._stretch(i_ref)
+
+
+        if self.config.get('IMAGE_STRETCH', {}).get('SPLIT'):
+            self.image = self.splitscreen(self.image, stretched_image)
+            return
+
+
+        self.image = stretched_image
+
+
+    def _stretch(self, i_ref):
         return self._stretch_o.stretch(self.image, self.max_bit_depth, i_ref.binning)
 
 
