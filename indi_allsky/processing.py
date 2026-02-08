@@ -127,9 +127,6 @@ class ImageProcessor(object):
 
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
 
-        self._detection_mask_dict = self._load_detection_mask()
-        self._adu_mask_dict = self._detection_mask_dict  # reuse detection mask for ADU mask (if defined)
-
         self._image_circle_alpha_mask = None
 
         self._overlay = None
@@ -166,10 +163,16 @@ class ImageProcessor(object):
             self._stretch_o = None
 
 
-        self._sqm = IndiAllskySqm(self.config, self.gain_av, mask=self._detection_mask_dict)
-        self._stars_detect = IndiAllSkyStars(self.config, mask=self._detection_mask_dict)
-        self._lineDetect = IndiAllskyDetectLines(self.config, mask=self._detection_mask_dict)
-        self._draw = IndiAllSkyDraw(self.config, mask=self._detection_mask_dict)
+        # These are setup in add() after binning_av is populated
+        self._detection_mask_dict = None
+        self._adu_mask_dict = None
+        self._sqm = None
+        self._stars_detect = None
+        self._lineDetect = None
+        self._draw = None
+        self._stacker = None
+
+
         self._ia_scnr = IndiAllskyScnr(self.config, self.night_v)
         self._cardinal_dirs_label = IndiAllskyCardinalDirsLabel(self.config)
         self._moon_overlay = IndiAllSkyMoonOverlay(self.config)
@@ -188,12 +191,6 @@ class ImageProcessor(object):
         self._orb.retrograde = self.config['ORB_PROPERTIES'].get('RETROGRADE', False)
         self._orb.sun_color_rgb = self.config['ORB_PROPERTIES']['SUN_COLOR']
         self._orb.moon_color_rgb = self.config['ORB_PROPERTIES']['MOON_COLOR']
-
-        self._stacker = IndiAllskyStacker(self.config, mask=self._detection_mask_dict)
-        self._stacker.detection_sigma = self.config.get('IMAGE_ALIGN_DETECTSIGMA', 5)
-        self._stacker.max_control_points = self.config.get('IMAGE_ALIGN_POINTS', 50)
-        self._stacker.min_area = self.config.get('IMAGE_ALIGN_SOURCEMINAREA', 10)
-
 
         self._keogram_gen = KeogramGenerator(
             self.config,
@@ -374,6 +371,22 @@ class ImageProcessor(object):
 
 
     def add(self, filename, exposure, gain, binning, exp_date, exp_elapsed, camera):
+        if isinstance(self._detection_mask_dict, type(None)):
+            # binning_av needs to be populated before running this
+            self._detection_mask_dict = self._load_detection_mask()
+            self._adu_mask_dict = self._detection_mask_dict  # reuse detection mask for ADU mask (if defined)
+
+            self._sqm = IndiAllskySqm(self.config, self.gain_av, mask=self._detection_mask_dict)
+            self._stars_detect = IndiAllSkyStars(self.config, mask=self._detection_mask_dict)
+            self._lineDetect = IndiAllskyDetectLines(self.config, mask=self._detection_mask_dict)
+            self._draw = IndiAllSkyDraw(self.config, mask=self._detection_mask_dict)
+
+            self._stacker = IndiAllskyStacker(self.config, mask=self._detection_mask_dict)
+            self._stacker.detection_sigma = self.config.get('IMAGE_ALIGN_DETECTSIGMA', 5)
+            self._stacker.max_control_points = self.config.get('IMAGE_ALIGN_POINTS', 50)
+            self._stacker.min_area = self.config.get('IMAGE_ALIGN_SOURCEMINAREA', 10)
+
+
         i_ref = self._add(filename, exposure, gain, binning, exp_date, exp_elapsed, camera)
 
         self.image_list.insert(0, i_ref)  # new image is first in list
