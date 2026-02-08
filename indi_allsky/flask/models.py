@@ -55,6 +55,9 @@ class IndiAllSkyDbCameraTable(db.Model):
     maxGain = db.Column(db.Float, nullable=True)
     minExposure = db.Column(db.Float, nullable=True)
     maxExposure = db.Column(db.Float, nullable=True)
+    #minBinning = db.Column(db.Integer, nullable=True)
+    #maxBinning = db.Column(db.Integer, nullable=True)
+
     width = db.Column(db.Integer, nullable=True)
     height = db.Column(db.Integer, nullable=True)
     bits = db.Column(db.Integer, nullable=True)
