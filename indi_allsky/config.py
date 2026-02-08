@@ -89,6 +89,7 @@ class IndiAllSkyConfigBase(object):
             "ENABLE_DAY"        : False,
             "EXPOSURE"          : 15.00000,
             "GAIN"              : 0.0,
+            "BINNING"           : 1,
             "EXPOSURE_PERIOD"   : 900,
             "MAGNITUDE_OFFSET"  : 26.0,
         },

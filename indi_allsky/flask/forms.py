@@ -4165,6 +4165,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CAMERA_SQM__ENABLE_DAY           = BooleanField('Enable Daytime SQM')
     CAMERA_SQM__EXPOSURE             = FloatField('SQM Exposure', validators=[DataRequired(), CCD_EXPOSURE_validator])
     CAMERA_SQM__GAIN                 = FloatField('SQM Gain', validators=[CCD_GAIN_validator])
+    CAMERA_SQM__BINNING              = IntegerField('SQM Binning', validators=[CCD_BINNING_validator])
     CAMERA_SQM__EXPOSURE_PERIOD      = IntegerField('SQM Exposure Period', validators=[DataRequired(), CAMERA_SQM__EXPOSURE_PERIOD_validator])
     CAMERA_SQM__MAGNITUDE_OFFSET     = FloatField('Magnitude Offset', validators=[SQM_MAGNITUDE_OFFSET_validator])
     FOCUS_MODE                       = BooleanField('Focus Mode')

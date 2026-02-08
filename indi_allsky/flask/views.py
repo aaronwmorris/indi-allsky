@@ -2165,6 +2165,7 @@ class ConfigView(FormView):
             'CAMERA_SQM__ENABLE_DAY'         : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE_DAY', False),
             'CAMERA_SQM__EXPOSURE'           : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 15.0),
             'CAMERA_SQM__GAIN'               : self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 0.0),
+            'CAMERA_SQM__BINNING'            : self.indi_allsky_config.get('CAMERA_SQM', {}).get('BINNING', 1),
             'CAMERA_SQM__EXPOSURE_PERIOD'    : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900),
             'CAMERA_SQM__MAGNITUDE_OFFSET'   : self.indi_allsky_config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 26.0),
             'FOCUS_MODE'                     : self.indi_allsky_config.get('FOCUS_MODE', False),
@@ -3150,6 +3151,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CAMERA_SQM']['ENABLE_DAY']             = bool(request.json['CAMERA_SQM__ENABLE_DAY'])
         self.indi_allsky_config['CAMERA_SQM']['EXPOSURE']               = float(request.json['CAMERA_SQM__EXPOSURE'])
         self.indi_allsky_config['CAMERA_SQM']['GAIN']                   = round(float(request.json['CAMERA_SQM__GAIN']), 2)  # limit to 2 decimals
+        self.indi_allsky_config['CAMERA_SQM']['BINNING']                = int(request.json['CAMERA_SQM__BINNING'])
         self.indi_allsky_config['CAMERA_SQM']['EXPOSURE_PERIOD']        = int(request.json['CAMERA_SQM__EXPOSURE_PERIOD'])
         self.indi_allsky_config['CAMERA_SQM']['MAGNITUDE_OFFSET']       = float(request.json['CAMERA_SQM__MAGNITUDE_OFFSET'])
         self.indi_allsky_config['FOCUS_MODE']                           = bool(request.json['FOCUS_MODE'])

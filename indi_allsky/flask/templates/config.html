@@ -3648,6 +3648,21 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__BINNING.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__BINNING(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+                <div class="col-sm-8">Min 1, Max 4 - Camera dependent</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -9370,6 +9385,7 @@ const field_names = [
     'EXPOSURE_PERIOD_DAY',
     'CAMERA_SQM__EXPOSURE',
     'CAMERA_SQM__GAIN',
+    'CAMERA_SQM__BINNING',
     'CAMERA_SQM__EXPOSURE_PERIOD',
     'CAMERA_SQM__MAGNITUDE_OFFSET',
     'FOCUS_DELAY',
