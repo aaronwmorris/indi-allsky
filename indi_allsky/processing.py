@@ -704,6 +704,7 @@ class ImageProcessor(object):
             hdulist,
             exposure,
             gain,
+            binning,
             exp_date,
             exp_elapsed,
             dayDate,
@@ -1408,18 +1409,19 @@ class ImageProcessor(object):
     def convert_16bit_to_8bit(self):
         i_ref = self.getLatestImage()
 
-        self._convert_16bit_to_8bit(i_ref.image_bitpix)
+        self.image = self._convert_16bit_to_8bit(i_ref)
 
 
-    def _convert_16bit_to_8bit(self, image_bitpix):
-        if image_bitpix == 8:
+    def _convert_16bit_to_8bit(self, i_ref):
+        if i_ref.image_bitpix == 8:
             return
 
         #logger.info('Resampling image from %d to 8 bits', image_bitpix)
 
         # shifting is 5x faster than division
         shift_factor = self.max_bit_depth - 8
-        self.image = numpy.right_shift(self.image, shift_factor).astype(numpy.uint8)
+
+        return numpy.right_shift(self.image, shift_factor).astype(numpy.uint8)
 
 
     def rotate_90(self):
@@ -3852,7 +3854,7 @@ class ImageProcessor(object):
         return overlay_bgr, alpha_mask
 
 
-    def _generateAduMask(self, img):
+    def _generateAduMask(self, img, binning):
         logger.info('Generating mask based on ADU_ROI')
 
         image_height, image_width = img.shape[:2]
@@ -3863,10 +3865,10 @@ class ImageProcessor(object):
         adu_roi = self.config.get('ADU_ROI', [])
 
         try:
-            x1 = int(adu_roi[0] / self.binning_av[constants.BINNING_CURRENT])
-            y1 = int(adu_roi[1] / self.binning_av[constants.BINNING_CURRENT])
-            x2 = int(adu_roi[2] / self.binning_av[constants.BINNING_CURRENT])
-            y2 = int(adu_roi[3] / self.binning_av[constants.BINNING_CURRENT])
+            x1 = int(adu_roi[0] / binning)
+            y1 = int(adu_roi[1] / binning)
+            x2 = int(adu_roi[2] / binning)
+            y2 = int(adu_roi[3] / binning)
         except IndexError:
             logger.warning('Using central ROI for ADU calculations')
             adu_fov_div = self.config.get('ADU_FOV_DIV', 4)
@@ -3884,7 +3886,7 @@ class ImageProcessor(object):
             thickness=cv2.FILLED,
         )
 
-        self._adu_mask = mask
+        self._adu_mask_dict[binning] = mask
 
 
     def _generate_image_circle_mask(self, image):
