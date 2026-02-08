@@ -9,11 +9,15 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllskyStacker(object):
 
-    def __init__(self, config, bin_v, mask=None):
+    def __init__(self, config, mask=None):
         self.config = config
-        self.bin_v = bin_v
 
-        self._sqm_mask = mask
+        self._sqm_mask_dict = mask
+
+        self._stack_mask_dict = dict()
+        for x in self._sqm_mask_dict.keys():
+            self._stack_mask_dict[x] = None
+
 
         self._detection_sigma = 5
         self._max_control_points = 50
@@ -101,6 +105,7 @@ class IndiAllskyStacker(object):
 
         return image_max.astype(numpy_type)
 
+
     def minimum(self, stack_data_list, numpy_type):
         image_min = stack_data_list[0]  # start with first image
 
@@ -111,20 +116,20 @@ class IndiAllskyStacker(object):
         return image_min.astype(numpy_type)
 
 
-    def register(self, stack_i_ref_list):
+    def register(self, stack_i_ref_list, binning):
         # first image is the reference
         reference_i_ref = stack_i_ref_list[0]
 
 
-        if isinstance(self._sqm_mask, type(None)):
+        if isinstance(self._stack_mask_dict[binning], type(None)):
             # This only needs to be done once if a mask is not provided
-            self._generateSqmMask(reference_i_ref.opencv_data)
+            self._generateMask(reference_i_ref.opencv_data, binning)
 
 
         reg_data_list = [reference_i_ref.opencv_data]  # add target to final list
 
         #reference_masked = self._crop(reference_i_ref.opencv_data)
-        reference_masked = cv2.bitwise_and(reference_i_ref.opencv_data, reference_i_ref.opencv_data, mask=self._sqm_mask)
+        reference_masked = cv2.bitwise_and(reference_i_ref.opencv_data, reference_i_ref.opencv_data, mask=self._stack_mask_dict[binning])
 
         reg_start = time.time()
 
@@ -133,7 +138,7 @@ class IndiAllskyStacker(object):
 
         for i_ref in stack_i_ref_list[1:]:
             #i_masked = self._crop(i_ref.opencv_data)
-            i_masked = cv2.bitwise_and(i_ref.opencv_data, i_ref.opencv_data, mask=self._sqm_mask)
+            i_masked = cv2.bitwise_and(i_ref.opencv_data, i_ref.opencv_data, mask=self._stack_mask_dict[binning])
 
             # detection_sigma default = 5
             # max_control_points default = 50
@@ -232,8 +237,12 @@ class IndiAllskyStacker(object):
         ]
 
 
-    def _generateSqmMask(self, img):
+    def _generateMask(self, img, binning):
         logger.info('Generating mask based on SQM_ROI')
+
+        if not isinstance(self._sqm_mask_dict[binning], type(None)):
+            self._stack_mask_dict[binning] = self._sqm_mask_dict[binning]
+            return
 
         image_height, image_width = img.shape[:2]
 
@@ -243,10 +252,10 @@ class IndiAllskyStacker(object):
         sqm_roi = self.config.get('SQM_ROI', [])
 
         try:
-            x1 = int(sqm_roi[0] / self.bin_v.value)
-            y1 = int(sqm_roi[1] / self.bin_v.value)
-            x2 = int(sqm_roi[2] / self.bin_v.value)
-            y2 = int(sqm_roi[3] / self.bin_v.value)
+            x1 = int(sqm_roi[0] / binning)
+            y1 = int(sqm_roi[1] / binning)
+            x2 = int(sqm_roi[2] / binning)
+            y2 = int(sqm_roi[3] / binning)
         except IndexError:
             logger.warning('Using central ROI for registration')
             sqm_fov_div = self.config.get('SQM_FOV_DIV', 4)
@@ -264,6 +273,5 @@ class IndiAllskyStacker(object):
             thickness=cv2.FILLED,
         )
 
-        self._sqm_mask = mask
-
+        self._stack_mask_dict[binning] = mask
 

@@ -189,7 +189,7 @@ class ImageProcessor(object):
         self._orb.sun_color_rgb = self.config['ORB_PROPERTIES']['SUN_COLOR']
         self._orb.moon_color_rgb = self.config['ORB_PROPERTIES']['MOON_COLOR']
 
-        self._stacker = IndiAllskyStacker(self.config, self.bin_v, mask=self._detection_mask)
+        self._stacker = IndiAllskyStacker(self.config, mask=self._detection_mask_dict)
         self._stacker.detection_sigma = self.config.get('IMAGE_ALIGN_DETECTSIGMA', 5)
         self._stacker.max_control_points = self.config.get('IMAGE_ALIGN_POINTS', 50)
         self._stacker.min_area = self.config.get('IMAGE_ALIGN_SOURCEMINAREA', 10)
@@ -1318,7 +1318,7 @@ class ImageProcessor(object):
             signal.alarm(int(self.config['EXPOSURE_PERIOD'] - 3))
 
             try:
-                stack_data_list = self._stacker.register(stack_i_ref_list)
+                stack_data_list = self._stacker.register(stack_i_ref_list, i_ref.binning)
             except TimeOutException:
                 # stack unaligned images
                 logger.error('Registration exceeded the exposure period, cancel alignment')
