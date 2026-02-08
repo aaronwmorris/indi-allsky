@@ -7,14 +7,17 @@ logger = logging.getLogger('indi_allsky')
 
 
 class IndiAllSkyDraw(object):
-    def __init__(self, config, bin_v, mask=None):
+    def __init__(self, config, mask=None):
         self.config = config
-        self.bin_v = bin_v
 
-        self._sqm_mask = mask
+        self._sqm_mask_dict = mask
+
+        self._draw_mask_dict = dict()
+        for x in self._sqm_mask_dict.keys():
+            self._draw_mask_dict[x] = None
 
 
-    def main(self, data):
+    def main(self, data, binning):
         if not self.config.get('DETECT_DRAW'):
             return data
 
@@ -45,8 +48,13 @@ class IndiAllSkyDraw(object):
             data = cv2.flip(data, 1)
 
 
+        if not isinstance(self._sqm_mask_dict[binning], type(None)):
+            self._draw_mask_dict[binning] = self._sqm_mask_dict[binning]
+
+
         ### ADU & SQM ROI ###
-        if isinstance(self._sqm_mask, type(None)):
+        if isinstance(self._draw_mask_dict, type(None)):
+
             ### Draw ADU ROI if detection mask is not defined
             ###  Make sure the box calculation matches image.py
             logger.info('Draw box around ADU_ROI and SQM_ROI')
@@ -55,10 +63,10 @@ class IndiAllSkyDraw(object):
             adu_roi = self.config.get('ADU_ROI', [])
 
             try:
-                adu_x1 = int(adu_roi[0] / self.bin_v.value)
-                adu_y1 = int(adu_roi[1] / self.bin_v.value)
-                adu_x2 = int(adu_roi[2] / self.bin_v.value)
-                adu_y2 = int(adu_roi[3] / self.bin_v.value)
+                adu_x1 = int(adu_roi[0] / binning)
+                adu_y1 = int(adu_roi[1] / binning)
+                adu_x2 = int(adu_roi[2] / binning)
+                adu_y2 = int(adu_roi[3] / binning)
             except IndexError:
                 adu_fov_div = self.config.get('ADU_FOV_DIV', 4)
                 adu_x1 = int((image_width / 2) - (image_width / adu_fov_div))
@@ -79,10 +87,10 @@ class IndiAllSkyDraw(object):
             sqm_roi = self.config.get('SQM_ROI', [])
 
             try:
-                sqm_x1 = int(sqm_roi[0] / self.bin_v.value)
-                sqm_y1 = int(sqm_roi[1] / self.bin_v.value)
-                sqm_x2 = int(sqm_roi[2] / self.bin_v.value)
-                sqm_y2 = int(sqm_roi[3] / self.bin_v.value)
+                sqm_x1 = int(sqm_roi[0] / binning)
+                sqm_y1 = int(sqm_roi[1] / binning)
+                sqm_x2 = int(sqm_roi[2] / binning)
+                sqm_y2 = int(sqm_roi[3] / binning)
             except IndexError:
                 sqm_fov_div = self.config.get('SQM_FOV_DIV', 4)
                 sqm_x1 = int((image_width / 2) - (image_width / sqm_fov_div))
@@ -101,7 +109,7 @@ class IndiAllSkyDraw(object):
 
         else:
             # apply mask to image
-            data = cv2.bitwise_and(data, data, mask=self._sqm_mask)
+            data = cv2.bitwise_and(data, data, mask=self._draw_mask_dict[binning])
 
 
         ### Keogram meridian ###
