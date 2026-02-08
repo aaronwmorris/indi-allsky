@@ -1536,11 +1536,12 @@ class ImageProcessor(object):
 
 
     def detectLines(self):
-        i_ref = self.getLatestImage()
-
         if self.focus_mode:
             # disable processing in focus mode
             return
+
+
+        i_ref = self.getLatestImage()
 
         i_ref.lines = self._detectLines(i_ref)
 
@@ -1550,14 +1551,16 @@ class ImageProcessor(object):
 
 
     def detectStars(self):
-        i_ref = self.getLatestImage()
-
         if self.focus_mode:
             # disable processing in focus mode
             return
 
 
+        i_ref = self.getLatestImage()
+
         i_ref.stars = self._detectStars(i_ref)
+
+        logger.info('Image: %s', type(self.image))
 
 
     def _detectStars(self, i_ref):
@@ -1565,11 +1568,12 @@ class ImageProcessor(object):
 
 
     def drawDetections(self):
-        i_ref = self.getLatestImage()
-
         if self.focus_mode:
             # disable processing in focus mode
             return
+
+
+        i_ref = self.getLatestImage()
 
         self.image = self._drawDetections(i_ref)
 
