@@ -175,12 +175,12 @@ class IndiAllSky(object):
 
 
         self.binning_av = Array('i', [
-            1,  # current bin
-            1,  # next bin
-            1,  # day bin
-            1,  # night bin
-            1,  # moonmode bin
-            1,  # sqm
+            -1,  # current bin
+            -1,  # next bin
+            -1,  # day bin
+            -1,  # night bin
+            -1,  # moonmode bin
+            -1,  # sqm
         ])
 
 
