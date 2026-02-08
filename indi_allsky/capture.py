@@ -1292,6 +1292,59 @@ class CaptureWorker(Process):
             gain_sqm = self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0)
 
 
+        # Validate binning settings
+        ccd_min_binning = int(ccd_info['BINNING_INFO']['min'])
+        ccd_max_binning = int(ccd_info['BINNING_INFO']['max'])
+
+
+        if self.config['CCD_CONFIG']['NIGHT']['BINNING'] < ccd_min_binning:
+            logger.error('CCD night binning below minimum, changing to %d', int(ccd_min_binning))
+            binning_night = int(ccd_min_binning)
+            time.sleep(3)
+        elif self.config['CCD_CONFIG']['NIGHT']['BINNING'] > ccd_max_binning:
+            logger.error('CCD night binning above maximum, changing to %d', int(ccd_max_binning))
+            binning_night = int(ccd_max_binning)
+            time.sleep(3)
+        else:
+            binning_night = int(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
+
+
+        if self.config['CCD_CONFIG']['MOONMODE']['BINNING'] < ccd_min_binning:
+            logger.error('CCD moonmode binning below minimum, changing to %d', int(ccd_min_binning))
+            binning_moonmode = int(ccd_min_binning)
+            time.sleep(3)
+        elif self.config['CCD_CONFIG']['MOONMODE']['BINNING'] > ccd_max_binning:
+            logger.error('CCD moonmode binning above maximum, changing to %d', int(ccd_max_binning))
+            binning_moonmode = int(ccd_max_binning)
+            time.sleep(3)
+        else:
+            binning_moonmode = int(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
+
+
+        if self.config['CCD_CONFIG']['DAY']['BINNING'] < ccd_min_binning:
+            logger.error('CCD day binning below minimum, changing to %d', int(ccd_min_binning))
+            binning_day = int(ccd_min_binning)
+            time.sleep(3)
+        elif self.config['CCD_CONFIG']['DAY']['BINNING'] > ccd_max_binning:
+            logger.error('CCD day binning above maximum, changing to %d', int(ccd_max_binning))
+            binning_day = int(ccd_max_binning)
+            time.sleep(3)
+        else:
+            binning_day = int(self.config['CCD_CONFIG']['DAY']['BINNING'])
+
+
+        if self.config.get('CAMERA_SQM', {}).get('BINNING', 1) < ccd_min_binning:
+            logger.error('CCD sqm binning below minimum, changing to %d', int(ccd_min_binning))
+            binning_sqm = int(ccd_min_binning)
+            time.sleep(3)
+        elif self.config.get('CAMERA_SQM', {}).get('BINNING', 1) > ccd_max_binning:
+            logger.error('CCD sqm binning above maximum, changing to %d', int(ccd_max_binning))
+            binning_sqm = int(ccd_max_binning)
+            time.sleep(3)
+        else:
+            binning_sqm = int(self.config.get('CAMERA_SQM', {}).get('BINNING', 1))
+
+
         # set default exposure, gain
         if self.config.get('CCD_EXPOSURE_DEF'):
             ccd_exposure_default = self.config['CCD_EXPOSURE_DEF']
@@ -1299,10 +1352,13 @@ class CaptureWorker(Process):
             if self.night_v.value:
                 if self.moonmode_v.value:
                     ccd_gain_default = gain_moonmode
+                    ccd_binning_default = binning_moonmode
                 else:
                     ccd_gain_default = gain_night
+                    ccd_binning_default = binning_night
             else:
                 ccd_gain_default = gain_day
+                ccd_binning_default = binning_day
 
         else:
             # use last exposure value within 15 minutes
@@ -1319,7 +1375,8 @@ class CaptureWorker(Process):
             if last_image:
                 ccd_exposure_default = float(last_image.exposure)
                 ccd_gain_default = float(last_image.gain)
-                logger.warning('Reusing last stable exposure: %0.6f, gain %0.2f', ccd_exposure_default, ccd_gain_default)
+                ccd_binning_default = float(last_image.binmode)
+                logger.warning('Reusing last stable exposure: %0.6f, gain %0.2f, bin %d', ccd_exposure_default, ccd_gain_default, ccd_binning_default)
 
                 # restore last sqm value
                 last_camera_sqm = last_image.data.get('sensor_user_8', 0.0)
@@ -1330,6 +1387,7 @@ class CaptureWorker(Process):
                 #ccd_exposure_default = self.exposure_av[constants.EXPOSURE_MIN_NIGHT]
                 ccd_exposure_default = 0.01  # this should give better results for many cameras
 
+                # gain
                 if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
                     ccd_gain_default = gain_day
                 else:
@@ -1340,6 +1398,16 @@ class CaptureWorker(Process):
                             ccd_gain_default = gain_night
                     else:
                         ccd_gain_default = gain_day
+
+
+                # binning
+                if self.night_v.value:
+                    if self.moonmode_v.value:
+                        ccd_binning_default = binning_moonmode
+                    else:
+                        ccd_binning_default = binning_night
+                else:
+                    ccd_binning_default = binning_day
 
 
         # sanity check
@@ -1396,6 +1464,21 @@ class CaptureWorker(Process):
         logger.info('Maximum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MAX_MOONMODE])
         logger.info('SQM CCD gain: %0.2f', self.gain_av[constants.GAIN_SQM])
         logger.info('Default CCD gain: %0.2f', ccd_gain_default)
+
+
+        with self.binning_av.get_lock():
+            self.binning_av[constants.BINNING_CURRENT] = int(ccd_binning_default)
+            self.binning_av[constants.BINNING_NEXT] = int(ccd_binning_default)
+            self.binning_av[constants.BINNING_DAY] = int(binning_day)
+            self.binning_av[constants.BINNING_NIGHT] = int(binning_night)
+            self.binning_av[constants.BINNING_MOONMODE] = int(binning_moonmode)
+            self.binning_av[constants.BINNING_SQM] = int(binning_sqm)
+
+
+        logger.info('CCD binning: %d (day)', self.binning_av[constants.BINNING_DAY])
+        logger.info('CCD binning: %d (night)', self.binning_av[constants.BINNING_NIGHT])
+        logger.info('CCD binning: %d (moonmode)', self.binning_av[constants.BINNING_MOONMODE])
+        logger.info('CCD binning: %d (SQM)', self.binning_av[constants.BINNING_SQM])
 
 
     def _sync_camera(self, camera, camera_metadata):

@@ -7,7 +7,7 @@ from datetime import datetime
 from dateutil import parser
 from pathlib import Path
 import logging
-#from pprint import pformat
+from pprint import pformat  # noqa: F401
 
 import PyIndi
 
@@ -110,7 +110,7 @@ class IndiClient(PyIndi.BaseClient):
 
         self.exposure_av = exposure_av
         self.gain_av = gain_av
-        self.binning_v = binning_av
+        self.binning_av = binning_av
 
         self.night_v = night_v
         self.moonmode_v = moonmode_v
@@ -660,6 +660,9 @@ class IndiClient(PyIndi.BaseClient):
 
         gain_info = self.getCcdGain()
         ccdinfo['GAIN_INFO'] = gain_info
+
+        binning_info = self.getCcdBinning()
+        ccdinfo['BINNING_INFO'] = binning_info
 
         #logger.info('CCD Info: %s', pformat(ccdinfo))
         return ccdinfo
@@ -1352,6 +1355,51 @@ class IndiClient(PyIndi.BaseClient):
             self.gain_av[constants.GAIN_CURRENT] = gain_f
 
         self.gain = gain_f
+
+
+    def getCcdBinning(self):
+        indi_exec = self.ccd_device.getDriverExec()
+
+
+        # for cameras that do not support gain
+        fake_binning_info = {
+            'current' : 1,
+            'min'     : 1,
+            'max'     : 1,
+            'step'    : 1,
+            'format'  : '',
+        }
+
+
+        if indi_exec in [
+            'indi_gphoto_ccd',
+            'indi_canon_ccd',
+            'indi_nikon_ccd',
+            'indi_pentax_ccd',
+            'indi_sony_ccd',
+        ]:
+            logger.warning('indi_gphoto_ccd does not support bin settings')
+            return fake_binning_info
+        elif indi_exec in ['indi_webcam_ccd']:
+            logger.warning('indi_webcam_ccd does not support bin settings')
+            return fake_binning_info
+
+
+        binning_ctl = self.get_control(self.ccd_device, 'CCD_BINNING', 'number')
+        binning_index_dict = self.__map_indexes(binning_ctl, ['HOR_BIN'])  # base binning on horizontal, ignore vertical
+        index = binning_index_dict['HOR_BIN']
+
+
+        binning_info = {
+            'current' : binning_ctl[index].getValue(),
+            'min'     : binning_ctl[index].min,
+            'max'     : binning_ctl[index].max,
+            'step'    : binning_ctl[index].step,
+            'format'  : binning_ctl[index].format,
+        }
+
+        #logger.info('Binning Info: %s', pformat(binning_info))
+        return binning_info
 
 
     def setCcdBinning(self, bin_value):
