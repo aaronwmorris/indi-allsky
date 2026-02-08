@@ -127,8 +127,8 @@ class ImageProcessor(object):
 
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
 
-        self._detection_masks_dict = self._load_detection_mask()
-        self._adu_masks_dict = self._detection_masks_dict  # reuse detection mask for ADU mask (if defined)
+        self._detection_mask_dict = self._load_detection_mask()
+        self._adu_mask_dict = self._detection_mask_dict  # reuse detection mask for ADU mask (if defined)
 
         self._image_circle_alpha_mask = None
 
@@ -161,9 +161,9 @@ class ImageProcessor(object):
 
         if self.config['IMAGE_STRETCH'].get('CLASSNAME'):
             stretch_class = getattr(stretch, self.config['IMAGE_STRETCH']['CLASSNAME'])
-            self._stretch = stretch_class(self.config, self.bin_v, mask=self._detection_mask)
+            self._stretch_o = stretch_class(self.config, self.binning_av, mask=self._detection_mask_dict)
         else:
-            self._stretch = None
+            self._stretch_o = None
 
 
         self._sqm = IndiAllskySqm(self.config, self.gain_av, self.bin_v, mask=None)
@@ -1204,12 +1204,12 @@ class ImageProcessor(object):
 
 
     def _calculate_8bit_adu(self, i_ref):
-        if isinstance(self._adu_masks_dict[i_ref.binning], type(None)):
+        if isinstance(self._adu_mask_dict[i_ref.binning], type(None)):
             # This only needs to be done once if a mask is not provided
             self._generateAduMask(self.image, i_ref.binning)
 
 
-        mask_dimensions = self._adu_masks_dict[i_ref.binning].shape[:2]
+        mask_dimensions = self._adu_mask_dict[i_ref.binning].shape[:2]
         image_dimensions = self.image.shape[:2]
 
         if mask_dimensions != image_dimensions:
@@ -1226,10 +1226,10 @@ class ImageProcessor(object):
 
         if len(self.image.shape) == 2:
             # mono
-            adu = cv2.mean(src=self.image, mask=self._adu_masks_dict[i_ref.binning])[0]
+            adu = cv2.mean(src=self.image, mask=self._adu_mask_dict[i_ref.binning])[0]
         else:
             data_mono = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
-            adu = cv2.mean(src=data_mono, mask=self._adu_masks_dict[i_ref.binning])[0]
+            adu = cv2.mean(src=data_mono, mask=self._adu_mask_dict[i_ref.binning])[0]
 
 
         if i_ref.image_bitpix == 8:
@@ -3379,12 +3379,27 @@ class ImageProcessor(object):
 
 
     def stretch(self):
+        i_ref = self.getLatestImage()
+
+
+        stretched_image = self._stretch(i_ref)
+
+
+        if self.config.get('IMAGE_STRETCH', {}).get('SPLIT'):
+            self.image = self.splitscreen(self.image, stretched_image)
+            return
+
+
+        self.image = stretched_image
+
+
+    def _stretch(self, i_ref):
         if self.focus_mode:
             # disable processing in focus mode
             return
 
 
-        if isinstance(self._stretch, type(None)):
+        if isinstance(self._stretch_o, type(None)):
             return
 
 
@@ -3399,15 +3414,7 @@ class ImageProcessor(object):
 
 
 
-        stretched_image = self._stretch.stretch(self.image, self.max_bit_depth)
-
-
-        if self.config.get('IMAGE_STRETCH', {}).get('SPLIT'):
-            self.image = self.splitscreen(self.image, stretched_image)
-            return
-
-
-        self.image = stretched_image
+        return self._stretch_o.stretch(self.image, self.max_bit_depth, i_ref.binning)
 
 
     def fish2pano_warpPolar(self):
@@ -3709,11 +3716,17 @@ class ImageProcessor(object):
 
 
     def _load_detection_mask(self):
+        mask_data_dict = dict()
+        for x in set(self.binning_av):
+            # populate initial values
+            mask_data_dict[x] = None
+
+
         detect_mask = self.config.get('DETECT_MASK', '')
 
         if not detect_mask:
             logger.warning('No detection mask defined')
-            return {}
+            return mask_data_dict
 
 
         detect_mask_p = Path(detect_mask)
@@ -3721,26 +3734,25 @@ class ImageProcessor(object):
         try:
             if not detect_mask_p.exists():
                 logger.error('%s does not exist', detect_mask_p)
-                return {}
+                return mask_data_dict
 
 
             if not detect_mask_p.is_file():
                 logger.error('%s is not a file', detect_mask_p)
-                return {}
+                return mask_data_dict
 
         except PermissionError as e:
             logger.error(str(e))
-            return {}
+            return mask_data_dict
 
         mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)  # mono
         if isinstance(mask_data, type(None)):
             logger.error('%s is not a valid image', detect_mask_p)
-            return {}
+            return mask_data_dict
 
 
         # create mask for each binning setting
-        mask_data_dict = dict()
-        for binning in set(self.binning_av):
+        for binning in mask_data_dict.keys():
             if binning == 1:
                 ### any intermediate values will be set to 255
                 mask_data_dict[binning] = mask_data.copy()
