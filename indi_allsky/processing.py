@@ -22,7 +22,7 @@ import ephem
 
 from . import constants
 
-from . import stretch
+from . import stretch as stretch_classes
 from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
@@ -156,13 +156,6 @@ class ImageProcessor(object):
         self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
 
 
-        if self.config['IMAGE_STRETCH'].get('CLASSNAME'):
-            stretch_class = getattr(stretch, self.config['IMAGE_STRETCH']['CLASSNAME'])
-            self._stretch_o = stretch_class(self.config, mask=self._detection_mask_dict)
-        else:
-            self._stretch_o = None
-
-
         # These are setup in add() after binning_av is populated
         self._detection_mask_dict = None
         self._adu_mask_dict = None
@@ -171,6 +164,7 @@ class ImageProcessor(object):
         self._lineDetect = None
         self._draw = None
         self._stacker = None
+        self._stretch_o = None
 
 
         self._ia_scnr = IndiAllskyScnr(self.config, self.night_v)
@@ -370,21 +364,33 @@ class ImageProcessor(object):
         return self._camera_sqm_raw_mag
 
 
+    def post_init(self):
+        # binning_av needs to be populated before running this
+
+        self._detection_mask_dict = self._load_detection_mask()
+        self._adu_mask_dict = self._detection_mask_dict  # reuse detection mask for ADU mask (if defined)
+
+        self._sqm = IndiAllskySqm(self.config, self.gain_av, mask=self._detection_mask_dict)
+        self._stars_detect = IndiAllSkyStars(self.config, mask=self._detection_mask_dict)
+        self._lineDetect = IndiAllskyDetectLines(self.config, mask=self._detection_mask_dict)
+        self._draw = IndiAllSkyDraw(self.config, mask=self._detection_mask_dict)
+
+        self._stacker = IndiAllskyStacker(self.config, mask=self._detection_mask_dict)
+        self._stacker.detection_sigma = self.config.get('IMAGE_ALIGN_DETECTSIGMA', 5)
+        self._stacker.max_control_points = self.config.get('IMAGE_ALIGN_POINTS', 50)
+        self._stacker.min_area = self.config.get('IMAGE_ALIGN_SOURCEMINAREA', 10)
+
+        if self.config['IMAGE_STRETCH'].get('CLASSNAME'):
+            stretch_class = getattr(stretch_classes, self.config['IMAGE_STRETCH']['CLASSNAME'])
+            self._stretch_o = stretch_class(self.config, mask=self._detection_mask_dict)
+        else:
+            self._stretch_o = None
+
+
     def add(self, filename, exposure, gain, binning, exp_date, exp_elapsed, camera):
         if isinstance(self._detection_mask_dict, type(None)):
             # binning_av needs to be populated before running this
-            self._detection_mask_dict = self._load_detection_mask()
-            self._adu_mask_dict = self._detection_mask_dict  # reuse detection mask for ADU mask (if defined)
-
-            self._sqm = IndiAllskySqm(self.config, self.gain_av, mask=self._detection_mask_dict)
-            self._stars_detect = IndiAllSkyStars(self.config, mask=self._detection_mask_dict)
-            self._lineDetect = IndiAllskyDetectLines(self.config, mask=self._detection_mask_dict)
-            self._draw = IndiAllSkyDraw(self.config, mask=self._detection_mask_dict)
-
-            self._stacker = IndiAllskyStacker(self.config, mask=self._detection_mask_dict)
-            self._stacker.detection_sigma = self.config.get('IMAGE_ALIGN_DETECTSIGMA', 5)
-            self._stacker.max_control_points = self.config.get('IMAGE_ALIGN_POINTS', 50)
-            self._stacker.min_area = self.config.get('IMAGE_ALIGN_SOURCEMINAREA', 10)
+            self.post_init()
 
 
         i_ref = self._add(filename, exposure, gain, binning, exp_date, exp_elapsed, camera)
