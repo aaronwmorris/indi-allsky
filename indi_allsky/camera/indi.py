@@ -129,6 +129,7 @@ class IndiClient(PyIndi.BaseClient):
 
         self._exposure = 0.0
         self._gain = -1.0  # individual exposure gain
+        self._binning = 1  # individual exposure binning
         self._sqm_exposure = False
 
         self.exposureStartTime = 0
@@ -231,6 +232,15 @@ class IndiClient(PyIndi.BaseClient):
     @gain.setter
     def gain(self, new_gain):
         self._gain = float(new_gain)  # gain need to be stored as float for inheritance
+
+
+    @property
+    def binning(self):
+        return self._binning
+
+    @binning.setter
+    def binning(self, new_binning):
+        self._binning = int(new_binning)
 
 
     @property
@@ -377,6 +387,7 @@ class IndiClient(PyIndi.BaseClient):
             'filename'    : str(f_tmpfile_p),
             'exposure'    : self.exposure,
             'gain'        : self.gain,
+            'binning'     : self.binning,
             'sqm_exposure': self.sqm_exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
@@ -1021,7 +1032,7 @@ class IndiClient(PyIndi.BaseClient):
         return temp_val
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None, sqm_exposure=False):
+    def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
         if not timeout:
             timeout = self.timeout
 
@@ -1031,6 +1042,9 @@ class IndiClient(PyIndi.BaseClient):
 
         if self.gain != round(float(gain), 2):
             self.setCcdGain(gain)
+
+        if self.binning != int(binning):
+            self.setCcdBinning(binning)
 
 
         self.exposureStartTime = time.time()
@@ -1346,8 +1360,7 @@ class IndiClient(PyIndi.BaseClient):
         elif type(bin_value) is str:
             new_bin_value = [int(bin_value), int(bin_value)]
         elif not bin_value:
-            # Assume default
-            return
+            raise Exception('Invalid binning mode')
 
         logger.warning('Setting CCD binning to (%d, %d)', new_bin_value[0], new_bin_value[1])
 
@@ -1361,9 +1374,23 @@ class IndiClient(PyIndi.BaseClient):
             'indi_sony_ccd',
         ]:
             logger.warning('indi_gphoto_ccd does not support bin settings')
+
+            # Update shared bin value
+            with self.binning_av.get_lock():
+                self.binning_av[constants.BINNING_CURRENT] = int(new_bin_value[0])
+
+            self.binning = int(new_bin_value[0])
+
             return
         elif indi_exec in ['indi_webcam_ccd']:
             logger.warning('indi_webcam_ccd does not support bin settings')
+
+            # Update shared bin value
+            with self.binning_av.get_lock():
+                self.binning_av[constants.BINNING_CURRENT] = int(new_bin_value[0])
+
+            self.binning = int(new_bin_value[0])
+
             return
 
 
@@ -1379,16 +1406,22 @@ class IndiClient(PyIndi.BaseClient):
                 },
             }
 
+
             self.configureDevice(self.ccd_device, binning_config)
+
 
             # Update shared bin value
             with self.binning_av.get_lock():
                 self.binning_av[constants.BINNING_CURRENT] = int(new_bin_value[0])
+
+            self.binning = int(new_bin_value[0])
+
         except TimeOutException:
             logger.error('Failed to find CCD binning control, bypassing binning config')
 
 
-    # Most of below was borrowed from https://github.com/GuLinux/indi-lite-tools/blob/master/pyindi_sequence/device.py
+
+    ### Most of below was borrowed from https://github.com/GuLinux/indi-lite-tools/blob/master/pyindi_sequence/device.py
 
 
     def get_control(self, device, name, ctl_type, timeout=None):

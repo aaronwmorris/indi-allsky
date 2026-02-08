@@ -703,33 +703,59 @@ class CaptureWorker(Process):
 
                         if not self.sqm_camera_enable:
                             # Normal exposure
-                            self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], self.gain_av[constants.GAIN_NEXT], sync=False)
+                            self.shoot(
+                                self.exposure_av[constants.EXPOSURE_NEXT],
+                                self.gain_av[constants.GAIN_NEXT],
+                                self.binning_av[constants.BINNING_NEXT],
+                                sync=False,
+                            )
                         else:
                             # SQM exposures enabled
-
                             if now_time > self.sqm_tasks_time:
                                 if self.night_v.value:
                                     # Night
 
                                     # SQM exposure
                                     logger.warning('SQM exposure triggered')
-                                    self.shoot(self.exposure_av[constants.EXPOSURE_SQM], self.gain_av[constants.GAIN_SQM], sync=False, sqm_exposure=True)
+                                    self.shoot(
+                                        self.exposure_av[constants.EXPOSURE_SQM],
+                                        self.gain_av[constants.GAIN_SQM],
+                                        self.binning_av[constants.BINNING_SQM],
+                                        sync=False,
+                                        sqm_exposure=True,
+                                    )
                                 else:
                                     # Day
                                     if self.config.get('CAMERA_SQM', {}).get('ENABLE_DAY'):
                                         # SQM exposure
                                         logger.warning('SQM exposure triggered')
-                                        self.shoot(self.exposure_av[constants.EXPOSURE_SQM], self.gain_av[constants.GAIN_SQM], sync=False, sqm_exposure=True)
+                                        self.shoot(
+                                            self.exposure_av[constants.EXPOSURE_SQM],
+                                            self.gain_av[constants.GAIN_SQM],
+                                            self.binning_av[constants.BINNING_SQM],
+                                            sync=False,
+                                            sqm_exposure=True,
+                                        )
                                     else:
                                         # Normal exposure during day
-                                        self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], self.gain_av[constants.GAIN_NEXT], sync=False)
+                                        self.shoot(
+                                            self.exposure_av[constants.EXPOSURE_NEXT],
+                                            self.gain_av[constants.GAIN_NEXT],
+                                            self.binning_av[constants.BINNING_NEXT],
+                                            sync=False,
+                                        )
 
 
                                 # set next SQM exposure time
                                 self.sqm_tasks_time = now_time + self.sqm_tasks_offset
                             else:
                                 # Normal exposure
-                                self.shoot(self.exposure_av[constants.EXPOSURE_NEXT], self.gain_av[constants.GAIN_NEXT], sync=False)
+                                self.shoot(
+                                    self.exposure_av[constants.EXPOSURE_NEXT],
+                                    self.gain_av[constants.GAIN_NEXT],
+                                    self.binning_av[constants.BINNING_NEXT],
+                                    sync=False,
+                                )
 
 
                         camera_ready = False
@@ -2099,11 +2125,11 @@ class CaptureWorker(Process):
         self.video_q.put({'task_id' : task.id})
 
 
-    def shoot(self, exposure, gain, sync=True, timeout=None, sqm_exposure=False):
+    def shoot(self, exposure, gain, binning, sync=True, timeout=None, sqm_exposure=False):
         # sqm used for an image taking at a specific exposure/gain for a controlled SQM measurement
-        logger.info('Taking %0.8fs exposure (gain %0.2f)', exposure, gain)
+        logger.info('Taking %0.8fs exposure (gain %0.2f / bin %d)', exposure, gain, binning)
 
-        self.indiclient.setCcdExposure(exposure, gain, sync=sync, timeout=timeout, sqm_exposure=sqm_exposure)
+        self.indiclient.setCcdExposure(exposure, gain, binning, sync=sync, timeout=timeout, sqm_exposure=sqm_exposure)
 
 
     def setTimeSystemd(self, new_datetime_utc):
