@@ -23,30 +23,33 @@ class IndiAllskyDetectLines(object):
     mask_blur_kernel_size = 75
 
 
-    def __init__(self, config, bin_v, mask=None):
+    def __init__(self, config, mask=None):
         self.config = config
-        self.bin_v = bin_v
+        self._sqm_mask_dict = mask
 
-        self._sqm_mask = mask
-        self._sqm_gradient_mask = None
+        self._line_mask_dict = dict()
+        self._gradient_mask_dict = dict()
+        for x in self._sqm_mask_dict.keys():
+            self._line_mask_dict[x] = None
+            self._gradient_mask_dict[x] = None
 
 
         # minimum number of votes (intersections in Hough grid cell)
         self.threshold = self.config.get('DETECT_METEORS_THOLD', 125)
 
 
-    def detectLines(self, original_img):
-        if isinstance(self._sqm_mask, type(None)):
+    def detectLines(self, original_img, binning):
+        if isinstance(self._line_mask_dict[binning], type(None)):
             # This only needs to be done once if a mask is not provided
-            self._generateSqmMask(original_img)
+            self._generateSqmMask(original_img, binning)
 
-        if isinstance(self._sqm_gradient_mask, type(None)):
+        if isinstance(self._gradient_mask_dict[binning], type(None)):
             # This only needs to be done once
-            self._generateSqmGradientMask(original_img)
+            self._generateSqmGradientMask(original_img, binning)
 
 
         # apply the gradient to the image
-        masked_img = (original_img * self._sqm_gradient_mask).astype(numpy.uint8)
+        masked_img = (original_img * self._gradient_mask_dict[binning]).astype(numpy.uint8)
 
         #cv2.imwrite('/tmp/masked.jpg', masked_img, [cv2.IMWRITE_JPEG_QUALITY, 90])  # debugging
 
@@ -92,8 +95,12 @@ class IndiAllskyDetectLines(object):
         return lines
 
 
-    def _generateSqmMask(self, img):
+    def _generateSqmMask(self, img, binning):
         logger.info('Generating mask based on SQM_ROI')
+
+        if not isinstance(self._sqm_mask_dict[binning], type(None)):
+            self._line_mask_dict[binning] = self._sqm_mask_dict[binning].copy()
+            return
 
         image_height, image_width = img.shape[:2]
 
@@ -103,10 +110,10 @@ class IndiAllskyDetectLines(object):
         sqm_roi = self.config.get('SQM_ROI', [])
 
         try:
-            x1 = int(sqm_roi[0] / self.bin_v.value)
-            y1 = int(sqm_roi[1] / self.bin_v.value)
-            x2 = int(sqm_roi[2] / self.bin_v.value)
-            y2 = int(sqm_roi[3] / self.bin_v.value)
+            x1 = int(sqm_roi[0] / binning)
+            y1 = int(sqm_roi[1] / binning)
+            x2 = int(sqm_roi[2] / binning)
+            y2 = int(sqm_roi[3] / binning)
         except IndexError:
             logger.warning('Using central ROI for blob calculations')
             sqm_fov_div = self.config.get('SQM_FOV_DIV', 4)
@@ -125,17 +132,17 @@ class IndiAllskyDetectLines(object):
         )
 
         # mask needs to be blurred so that we do not detect it as an edge
-        self._sqm_mask = mask
+        self._line_mask_dict[binning] = mask
 
 
-    def _generateSqmGradientMask(self, img):
+    def _generateSqmGradientMask(self, img, binning):
         image_height, image_width = img.shape[:2]
 
         if self.config.get('IMAGE_STACK_COUNT', 1) > 1 and self.config.get('IMAGE_STACK_SPLIT'):
             # mask center line split between panes
             half_width = int(image_width / 2)
             cv2.line(
-                img=self._sqm_mask,
+                img=self._line_mask_dict[binning],
                 pt1=(half_width, 0),
                 pt2=(half_width, image_height),
                 color=0,  # mono
@@ -143,7 +150,7 @@ class IndiAllskyDetectLines(object):
             )
 
         # blur the mask to prevent mask edges from being detected as lines
-        blur_mask = cv2.blur(self._sqm_mask, (self.mask_blur_kernel_size, self.mask_blur_kernel_size), cv2.BORDER_DEFAULT)
+        blur_mask = cv2.blur(self._line_mask_dict[binning], (self.mask_blur_kernel_size, self.mask_blur_kernel_size), cv2.BORDER_DEFAULT)
 
         if len(img.shape) == 2:
             # mono
@@ -152,7 +159,7 @@ class IndiAllskyDetectLines(object):
             # color
             mask = cv2.cvtColor(blur_mask, cv2.COLOR_GRAY2BGR)
 
-        self._sqm_gradient_mask = (mask / 255).astype(numpy.float32)
+        self._gradient_mask_dict[binning] = (mask / 255).astype(numpy.float32)
 
 
     def _drawLines(self, img, lines):

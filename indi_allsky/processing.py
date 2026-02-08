@@ -168,7 +168,7 @@ class ImageProcessor(object):
 
         self._sqm = IndiAllskySqm(self.config, self.gain_av, mask=self._detection_mask_dict)
         self._stars_detect = IndiAllSkyStars(self.config, mask=self._detection_mask_dict)
-        self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
+        self._lineDetect = IndiAllskyDetectLines(self.config, mask=self._detection_mask_dict)
         self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)
         self._ia_scnr = IndiAllskyScnr(self.config, self.night_v)
         self._cardinal_dirs_label = IndiAllskyCardinalDirsLabel(self.config)
@@ -1540,7 +1540,11 @@ class ImageProcessor(object):
             # disable processing in focus mode
             return
 
-        i_ref.lines = self._lineDetect.detectLines(self.image)
+        i_ref.lines = self._detectLines(i_ref)
+
+
+    def _detectLines(self, i_ref):
+        return self._lineDetect.detectLines(self.image, i_ref.binning)
 
 
     def detectStars(self):
