@@ -41,11 +41,11 @@ class IndiAllskyDetectLines(object):
     def detectLines(self, original_img, binning):
         if isinstance(self._line_mask_dict[binning], type(None)):
             # This only needs to be done once if a mask is not provided
-            self._generateSqmMask(original_img, binning)
+            self._generateLineMask(original_img, binning)
 
         if isinstance(self._gradient_mask_dict[binning], type(None)):
             # This only needs to be done once
-            self._generateSqmGradientMask(original_img, binning)
+            self._generateGradientMask(original_img, binning)
 
 
         # apply the gradient to the image
@@ -95,11 +95,11 @@ class IndiAllskyDetectLines(object):
         return lines
 
 
-    def _generateSqmMask(self, img, binning):
+    def _generateLineMask(self, img, binning):
         logger.info('Generating mask based on SQM_ROI')
 
         if not isinstance(self._sqm_mask_dict[binning], type(None)):
-            self._line_mask_dict[binning] = self._sqm_mask_dict[binning].copy()
+            self._line_mask_dict[binning] = self._sqm_mask_dict[binning].copy()  # setup copy because it might be modified
             return
 
         image_height, image_width = img.shape[:2]
@@ -135,7 +135,7 @@ class IndiAllskyDetectLines(object):
         self._line_mask_dict[binning] = mask
 
 
-    def _generateSqmGradientMask(self, img, binning):
+    def _generateGradientMask(self, img, binning):
         image_height, image_width = img.shape[:2]
 
         if self.config.get('IMAGE_STACK_COUNT', 1) > 1 and self.config.get('IMAGE_STACK_SPLIT'):

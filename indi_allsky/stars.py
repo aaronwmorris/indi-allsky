@@ -55,7 +55,7 @@ class IndiAllSkyStars(object):
     def detectObjects(self, original_data, binning):
         if isinstance(self._star_mask_dict[binning], type(None)):
             # This only needs to be done once if a mask is not provided
-            self._generateSqmMask(original_data, binning)
+            self._generateStarMask(original_data, binning)
 
         masked_img = cv2.bitwise_and(original_data, original_data, mask=self._star_mask_dict[binning])
 
@@ -92,7 +92,7 @@ class IndiAllSkyStars(object):
         return blobs
 
 
-    def _generateSqmMask(self, img, binning):
+    def _generateStarMask(self, img, binning):
         logger.info('Generating mask based on SQM_ROI')
 
 

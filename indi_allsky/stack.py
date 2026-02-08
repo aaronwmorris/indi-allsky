@@ -123,7 +123,7 @@ class IndiAllskyStacker(object):
 
         if isinstance(self._stack_mask_dict[binning], type(None)):
             # This only needs to be done once if a mask is not provided
-            self._generateMask(reference_i_ref.opencv_data, binning)
+            self._generateStackMask(reference_i_ref.opencv_data, binning)
 
 
         reg_data_list = [reference_i_ref.opencv_data]  # add target to final list
@@ -237,7 +237,7 @@ class IndiAllskyStacker(object):
         ]
 
 
-    def _generateMask(self, img, binning):
+    def _generateStackMask(self, img, binning):
         logger.info('Generating mask based on SQM_ROI')
 
         if not isinstance(self._sqm_mask_dict[binning], type(None)):
