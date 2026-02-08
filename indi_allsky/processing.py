@@ -1633,13 +1633,18 @@ class ImageProcessor(object):
             y2 = int(self.config['IMAGE_CROP_ROI'][3] / i_ref.binning)
 
 
-            self.image = self.image[
+            cropped_image = self.image[
                 y1:y2,
                 x1:x2,
             ]
 
-            new_height, new_width = self.image.shape[:2]
+            new_height, new_width = cropped_image.shape[:2]
             logger.info('New cropped size: %d x %d', new_width, new_height)
+
+            return cropped_image
+
+
+        return self.image
 
 
     def scnr(self):
