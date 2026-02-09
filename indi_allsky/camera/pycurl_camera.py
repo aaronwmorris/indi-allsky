@@ -161,6 +161,8 @@ class IndiClientPycurl(IndiClient):
             'pixel'         : 2.0,
             'min_gain'      : 0.0,
             'max_gain'      : 0.0,
+            'min_binning'   : 1,
+            'max_binning'   : 1,
             'min_exposure'  : 0.000032,
             'max_exposure'  : 60.0,
             'cfa'           : None,
@@ -299,6 +301,7 @@ class IndiClientPycurl(IndiClient):
             'filename'    : str(self.current_exposure_file_p),
             'exposure'    : self.exposure,
             'gain'        : self.gain,
+            'binning'     : self.binning,
             'sqm_exposure': self.sqm_exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
@@ -320,6 +323,9 @@ class IndiClientPycurl(IndiClient):
 
         new_ccd.min_gain = self.camera_info['min_gain']
         new_ccd.max_gain = self.camera_info['max_gain']
+
+        new_ccd.min_binning = self.camera_info['min_binning']
+        new_ccd.max_binning = self.camera_info['max_binning']
 
         new_ccd.min_exposure = self.camera_info['min_exposure']
         new_ccd.max_exposure = self.camera_info['max_exposure']
@@ -418,6 +424,15 @@ class IndiClientPycurl(IndiClient):
             'step'    : None,
             'format'  : None,
         }
+
+        ccdinfo['BINNING_INFO'] = {
+            'current' : self.ccd_device.min_binning,
+            'min'     : self.ccd_device.min_binning,
+            'max'     : self.ccd_device.max_binning,
+            'step'    : None,
+            'format'  : None,
+        }
+
 
         return ccdinfo
 
