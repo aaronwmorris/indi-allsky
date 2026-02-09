@@ -1281,6 +1281,8 @@ class FakeCamera(object):
     utc_offset = 0
     minGain = -1.0
     maxGain = -1.0
+    minBinning = -1
+    maxBinning = -1
     minExposure = -1.0
     maxExposure = -1.0
     data = {}

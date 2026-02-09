@@ -1925,6 +1925,8 @@ class ConfigView(FormView):
 
         context['camera_minGain'] = self.camera.minGain
         context['camera_maxGain'] = self.camera.maxGain
+        context['camera_minBinning'] = self.camera.minBinning
+        context['camera_maxBinning'] = self.camera.maxBinning
         context['camera_minExposure'] = self.camera.minExposure
 
         if self.camera.maxExposure > 120:

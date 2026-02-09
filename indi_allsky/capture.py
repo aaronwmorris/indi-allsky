@@ -1004,6 +1004,9 @@ class CaptureWorker(Process):
             'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
             'minGain'     : float(ccd_info.get('GAIN_INFO', {}).get('min')),
             'maxGain'     : float(ccd_info.get('GAIN_INFO', {}).get('max')),
+            'minBinning'  : int(ccd_info.get('BINNING_INFO', {}).get('min')),
+            'maxBinning'  : int(ccd_info.get('BINNING_INFO', {}).get('max')),
+
             'width'       : int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max')),
             'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
             'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
