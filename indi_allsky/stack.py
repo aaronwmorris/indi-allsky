@@ -15,8 +15,8 @@ class IndiAllskyStacker(object):
         self._sqm_mask_dict = mask
 
         self._stack_mask_dict = dict()
-        for x in self._sqm_mask_dict.keys():
-            self._stack_mask_dict[x] = None
+        for binning in self._sqm_mask_dict.keys():
+            self._stack_mask_dict[binning] = None
 
 
         self._detection_sigma = 5

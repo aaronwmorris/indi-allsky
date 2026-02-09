@@ -13,8 +13,8 @@ class IndiAllSkyDraw(object):
         self._sqm_mask_dict = mask
 
         self._draw_mask_dict = dict()
-        for x in self._sqm_mask_dict.keys():
-            self._draw_mask_dict[x] = None
+        for binning in self._sqm_mask_dict.keys():
+            self._draw_mask_dict[binning] = None
 
 
     def main(self, data, binning):

@@ -19,8 +19,8 @@ class IndiAllSkyStars(object):
         self._sqm_mask_dict = mask
 
         self._star_mask_dict = dict()
-        for x in self._sqm_mask_dict.keys():
-            self._star_mask_dict[x] = None
+        for binning in self._sqm_mask_dict.keys():
+            self._star_mask_dict[binning] = None
 
 
         self._detectionThreshold = self.config.get('DETECT_STARS_THOLD', 0.6)
