@@ -102,7 +102,10 @@ class IndiClientTestCameraBase(IndiClient):
             self.binning_av[constants.BINNING_CURRENT] = int(bin_value)
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None, sqm_exposure=False):
+        self.binning = int(bin_value)
+
+
+    def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
         if self.active_exposure:
             return
 
@@ -110,7 +113,12 @@ class IndiClientTestCameraBase(IndiClient):
         self.exposure = exposure
         self.sqm_exposure = sqm_exposure
 
-        self.setCcdGain(gain)  # gain does not do anything
+
+        if self.gain != float(round(gain, 2)):
+            self.setCcdGain(gain)  # gain does not do anything
+
+        if self.binning != int(binning):
+            self.setCcdBinning(binning)  # binning does not do anything
 
 
         self.active_exposure = True

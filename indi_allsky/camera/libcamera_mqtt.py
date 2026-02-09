@@ -109,7 +109,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.client.loop_stop()
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None, sqm_exposure=False):
+    def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
         import paho.mqtt.properties as mqtt_props
         from paho.mqtt.packettypes import PacketTypes
 
@@ -147,7 +147,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         try:
-            binmode_option = self._getBinModeOptions(self.binning_av[constants.BINNING_CURRENT])
+            binmode_option = self._getBinModeOptions(int(binning))
         except BinModeException as e:
             logger.error('Invalid setting: %s', str(e))
             binmode_option = ''
@@ -157,8 +157,11 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.current_metadata_file_p = metadata_tmp_p
 
 
-        if self.gain != round(float(gain), 2):
+        if self.gain != float(round(gain, 2)):
             self.setCcdGain(gain)
+
+        if self.binning != int(binning):
+            self.setCcdBinning(binning)
 
 
         exposure_us = int(exposure * 1000000)

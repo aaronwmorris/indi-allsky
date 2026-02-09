@@ -1043,7 +1043,7 @@ class IndiClient(PyIndi.BaseClient):
         self.sqm_exposure = sqm_exposure
 
 
-        if self.gain != round(float(gain), 2):
+        if self.gain != float(round(gain, 2)):
             self.setCcdGain(gain)
 
         if self.binning != int(binning):

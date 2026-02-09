@@ -127,6 +127,9 @@ class IndiClientLibCameraGeneric(IndiClient):
             self.binning_av[constants.BINNING_CURRENT] = int(bin_value)
 
 
+        self.binning = int(bin_value)
+
+
     def _getBinModeOptions(self, bin_value):
         try:
             option = self._binmode_options[int(bin_value)]
@@ -136,7 +139,7 @@ class IndiClientLibCameraGeneric(IndiClient):
         return option
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None, sqm_exposure=False):
+    def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
         if self.active_exposure:
             return
 
@@ -174,7 +177,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         try:
-            binmode_option = self._getBinModeOptions(self.binning_av[constants.BINNING_CURRENT])
+            binmode_option = self._getBinModeOptions(int(binning))
         except BinModeException as e:
             logger.error('Invalid setting: %s', str(e))
             binmode_option = ''
@@ -184,8 +187,11 @@ class IndiClientLibCameraGeneric(IndiClient):
         self.current_metadata_file_p = metadata_tmp_p
 
 
-        if self.gain != round(float(gain), 2):
+        if self.gain != float(round(gain, 2)):
             self.setCcdGain(gain)
+
+        if self.binning != int(binning):
+            self.setCcdBinning(binning)
 
 
         exposure_us = int(exposure * 1000000)

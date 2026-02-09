@@ -68,7 +68,7 @@ class IndiClientIndiAccumulator(IndiClient):
         return self._clamp_16bit
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None, sqm_exposure=False):
+    def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
         if not self.camera_ready:
             raise Exception('Camera is busy')
 
@@ -99,8 +99,11 @@ class IndiClientIndiAccumulator(IndiClient):
         self.exposure_remain = float(exposure)
 
 
-        if self.gain != float(int(gain)):
+        if self.gain != float(round(gain, 2)):
             self.setCcdGain(gain)
+
+        if self.binning != int(binning):
+            self.setCcdBinning(binning)
 
 
         self.exposureStartTime = time.time()
