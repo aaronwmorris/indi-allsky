@@ -112,6 +112,10 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown">
                             <li>
+                                <a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/camera-fill.svg') }}" width="16" height="16" alt="Camera Info"><span class="ms-1 d-none d-sm-inline">Camera Info</span></a>
+                            </li>
+                            <li>
                                 <a href="{{ url_for('indi_allsky.sqm_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/cloud-moon-fill.svg') }}" width="16" height="16" alt="SQM"><span class="ms-1 d-none d-sm-inline">SQM</span></a>
                             </li>
@@ -147,10 +151,6 @@
                             <span class="ms-1 d-none d-sm-inline">Tools</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown">
-                            <li>
-                                <a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="dropdown-item">
-                                    <img src="{{ url_for('indi_allsky.static', filename='svg/camera-fill.svg') }}" width="16" height="16" alt="Camera Info"><span class="ms-1 d-none d-sm-inline">Camera Info</span></a>
-                            </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.virtualsky_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/globe2.svg') }}" width="16" height="16" alt="VirtualSky"><span class="ms-1 d-none d-sm-inline">VirtualSky</span></a>
