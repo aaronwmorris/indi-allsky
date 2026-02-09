@@ -3793,6 +3793,9 @@ class ImageProcessor(object):
             return mask_data_dict
 
 
+        logger.warning('Loaded detection mask: %s', detect_mask_p)
+
+
         # create mask for each binning setting
         for binning in mask_data_dict.keys():
             if binning == 1:

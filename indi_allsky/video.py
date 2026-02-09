@@ -2145,6 +2145,9 @@ class VideoWorker(Process):
             return mask_dict
 
 
+        logger.warning('Loaded detection mask: %s', detect_mask_p)
+
+
         mask_height, mask_width = mask_data.shape[:2]
 
 
