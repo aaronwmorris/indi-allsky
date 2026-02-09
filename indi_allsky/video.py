@@ -116,7 +116,7 @@ class VideoWorker(Process):
 
         self.f_lock = None
 
-        self._detection_mask = self._load_detection_mask()
+        self._detection_mask_dict = self._load_detection_mask()
 
 
         if self.config.get('IMAGE_FOLDER'):
@@ -1377,9 +1377,8 @@ class VideoWorker(Process):
 
         stg = StarTrailGenerator(
             self.config,
-            self.bin_v,
             skip_frames=timelapse_skip_frames,
-            mask=self._detection_mask,
+            mask=self._detection_mask_dict,
         )
         stg.max_adu = self.config['STARTRAILS_MAX_ADU']
         stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
@@ -1464,7 +1463,7 @@ class VideoWorker(Process):
                 else:
                     adu, star_count = None, None
 
-                stg.processImage(image_file_p, image_data, adu=adu, star_count=star_count)
+                stg.processImage(image_file_p, image_data, entry.binmode, adu=adu, star_count=star_count)
 
 
         kg.finalize(keogram_file, camera)
@@ -2109,11 +2108,17 @@ class VideoWorker(Process):
 
 
     def _load_detection_mask(self):
+        # populate initial dict
+        mask_dict = dict()
+        for x in set(self.binning_av):
+            mask_dict[x] = None
+
+
         detect_mask = self.config.get('DETECT_MASK', '')
 
         if not detect_mask:
             logger.warning('No detection mask defined')
-            return
+            return mask_dict
 
 
         detect_mask_p = Path(detect_mask)
@@ -2121,66 +2126,80 @@ class VideoWorker(Process):
         try:
             if not detect_mask_p.exists():
                 logger.error('%s does not exist', detect_mask_p)
-                return
+                return mask_dict
 
 
             if not detect_mask_p.is_file():
                 logger.error('%s is not a file', detect_mask_p)
-                return
+                return mask_dict
 
         except PermissionError as e:
             logger.error(str(e))
-            return
+            return mask_dict
+
 
         mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)  # mono
         if isinstance(mask_data, type(None)):
             logger.error('%s is not a valid image', detect_mask_p)
-            return
+            return mask_dict
+
+
+        mask_height, mask_width = mask_data.shape[:2]
 
 
         ### any intermediate values will be set to 255
         mask_data[mask_data > 0] = 255
 
 
-        mask_processor = MaskProcessor(
-            self.config,
-            self.binning_av,
-        )
+        for binning in mask_dict.keys():
+            mask_processor = MaskProcessor(
+                self.config,
+                binning,
+            )
 
 
-        # masks need to be rotated, flipped, cropped for post-processed images
-        mask_processor.image = mask_data
+            # masks need to be rotated, flipped, cropped for post-processed images
+            if binning == 1:
+                mask_processor.image = mask_data
+            else:
+                new_mask_height = int(mask_height / binning)
+                new_mask_width = int(mask_width / binning)
+
+                mask_processor.image = cv2.resize(self.image, (new_mask_width, new_mask_height), interpolation=cv2.INTER_AREA)
 
 
-        if self.config.get('IMAGE_ROTATE'):
-            mask_processor.rotate_90()
+            if self.config.get('IMAGE_ROTATE'):
+                mask_processor.rotate_90()
 
 
-        # rotation
-        if self.config.get('IMAGE_ROTATE_ANGLE'):
-            mask_processor.rotate_angle()
+            # rotation
+            if self.config.get('IMAGE_ROTATE_ANGLE'):
+                mask_processor.rotate_angle()
 
 
-        # verticle flip
-        if self.config.get('IMAGE_FLIP_V'):
-            mask_processor.flip_v()
+            # verticle flip
+            if self.config.get('IMAGE_FLIP_V'):
+                mask_processor.flip_v()
 
 
-        # horizontal flip
-        if self.config.get('IMAGE_FLIP_H'):
-            mask_processor.flip_h()
+            # horizontal flip
+            if self.config.get('IMAGE_FLIP_H'):
+                mask_processor.flip_h()
 
 
-        # crop
-        if self.config.get('IMAGE_CROP_ROI'):
-            mask_processor.crop_image()
+            # crop
+            if self.config.get('IMAGE_CROP_ROI'):
+                mask_processor.crop_image()
 
 
-        # scale
-        if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
-            mask_processor.scale_image()
+            # scale
+            if self.config['IMAGE_SCALE'] and self.config['IMAGE_SCALE'] != 100:
+                mask_processor.scale_image()
 
 
-        return mask_processor.image
+            mask_dict[x] = mask_processor.image
+
+
+        return mask_dict
 
 
