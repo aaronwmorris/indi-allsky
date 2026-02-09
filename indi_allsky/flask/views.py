@@ -1105,11 +1105,16 @@ class JsonImageLoopView(JsonView):
         if history_seconds > 14400:
             history_seconds = 14400
 
+
+        jsqm_data, camera_sqm_mag_data, device_sqm_mag_data = self.getSqmData(camera_id, ts_dt)
+
         data = {
-            'image_list' : self.getLoopImages(camera_id, ts_dt, history_seconds),
-            'sqm_data'   : self.getjSqmData(camera_id, ts_dt),
-            'stars_data' : self.getStarsData(camera_id, ts_dt),
             'message'    : '',
+            'image_list' : self.getLoopImages(camera_id, ts_dt, history_seconds),
+            'sqm_data'   : jsqm_data,
+            'stars_data' : self.getStarsData(camera_id, ts_dt),
+            'camera_sqm_mag_data' : camera_sqm_mag_data,
+            'device_sqm_mag_data' : device_sqm_mag_data,
         }
 
         if len(data['image_list']) == 0:
@@ -1185,18 +1190,14 @@ class JsonImageLoopView(JsonView):
 
             image_list.append(data)
 
+
         return image_list
 
 
-    def getjSqmData(self, camera_id, ts_dt):
+    def getSqmData(self, camera_id, ts_dt):
         ts_minus_minutes = ts_dt - timedelta(minutes=self.sqm_history_minutes)
 
         sqm_images = self.model.query\
-            .add_columns(
-                func.max(self.model.sqm).label('image_max_sqm'),
-                func.min(self.model.sqm).label('image_min_sqm'),
-                func.avg(self.model.sqm).label('image_avg_sqm'),
-            )\
             .join(IndiAllSkyDbCameraTable)\
             .filter(
                 and_(
@@ -1205,17 +1206,77 @@ class JsonImageLoopView(JsonView):
                     self.model.createDate > ts_minus_minutes,
                     self.model.createDate < ts_dt,
                 )
-            )\
-            .first()
+            )
 
 
-        sqm_data = {
-            'max' : sqm_images.image_max_sqm,
-            'min' : sqm_images.image_min_sqm,
-            'avg' : sqm_images.image_avg_sqm,
-        }
+        jsqm_list = list()
+        camera_sqm_mag_list = list()
+        device_sqm_mag_list = list()
+        for i in sqm_images:
+            try:
+                jsqm = i.sqm
+            except AttributeError:
+                jsqm = 0
 
-        return sqm_data
+
+            jsqm_list.append(jsqm)
+            camera_sqm_mag_list.append(i.data.get('sensor_user_8', 0.0))
+            device_sqm_mag_list.append(i.data.get('sensor_user_7', 0.0))
+
+
+        try:
+            jsqm_data = {
+                'max'  : max(jsqm_list),
+                'min'  : min(jsqm_list),
+                'avg'  : sum(jsqm_list) / len(jsqm_list),
+                'last' : jsqm_list[0],
+            }
+
+        except (ValueError, IndexError):
+            # list is probably empty
+            jsqm_data = {
+                'max' : 0.0,
+                'min' : 0.0,
+                'avg' : 0.0,
+                'last' : 0.0,
+            }
+
+
+        try:
+            camera_sqm_mag_data = {
+                'max'  : max(camera_sqm_mag_list),
+                'min'  : min(camera_sqm_mag_list),
+                'avg'  : sum(camera_sqm_mag_list) / len(camera_sqm_mag_list),
+                'last' : camera_sqm_mag_list[0],
+            }
+        except (ValueError, IndexError):
+            # list is probably empty
+            camera_sqm_mag_data = {
+                'max' : 0.0,
+                'min' : 0.0,
+                'avg' : 0.0,
+                'last' : 0.0,
+            }
+
+
+        try:
+            device_sqm_mag_data = {
+                'max'  : max(device_sqm_mag_list),
+                'min'  : min(device_sqm_mag_list),
+                'avg'  : sum(device_sqm_mag_list) / len(device_sqm_mag_list),
+                'last' : device_sqm_mag_list[0],
+            }
+        except (ValueError, IndexError):
+            # list is probably empty
+            device_sqm_mag_data = {
+                'max' : 0.0,
+                'min' : 0.0,
+                'avg' : 0.0,
+                'last' : 0.0,
+            }
+
+
+        return jsqm_data, camera_sqm_mag_data, device_sqm_mag_data
 
 
     def getStarsData(self, camera_id, ts_dt):
@@ -1281,14 +1342,16 @@ class JsonPanoramaLoopView(JsonImageLoopView):
     model = IndiAllSkyDbPanoramaImageTable
 
 
-    def getjSqmData(self, *args):
+    def getSqmData(self, *args):
         sqm_data = {
-            'max' : 0,
-            'min' : 0,
-            'avg' : 0,
+            'max'  : 0,
+            'min'  : 0,
+            'avg'  : 0,
+            'last' : 0,
         }
 
-        return sqm_data
+        # jsqm, camera, device
+        return sqm_data, sqm_data, sqm_data
 
 
     def getStarsData(self, *args):
@@ -1315,14 +1378,16 @@ class JsonRawImageLoopView(JsonImageLoopView):
     model = IndiAllSkyDbRawImageTable
 
 
-    def getjSqmData(self, *args):
+    def getSqmData(self, *args):
         sqm_data = {
-            'max' : 0,
-            'min' : 0,
-            'avg' : 0,
+            'max'  : 0,
+            'min'  : 0,
+            'avg'  : 0,
+            'last' : 0,
         }
 
-        return sqm_data
+        # jsqm, camera, device
+        return sqm_data, sqm_data, sqm_data
 
 
     def getStarsData(self, *args):
