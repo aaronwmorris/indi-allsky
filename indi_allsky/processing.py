@@ -1349,6 +1349,7 @@ class ImageProcessor(object):
 
             signal.alarm(0)
         else:
+            logger.warning('Bypassing image registration due to low exposure')
             # stack unaligned images
             stack_data_list = [x.opencv_data for x in stack_i_ref_list]
 

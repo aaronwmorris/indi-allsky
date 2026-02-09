@@ -117,6 +117,9 @@ class IndiAllskyStacker(object):
 
 
     def register(self, stack_i_ref_list, binning):
+        logger.info('Starting image registration')
+
+
         # first image is the reference
         reference_i_ref = stack_i_ref_list[0]
 
