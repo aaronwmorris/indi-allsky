@@ -393,6 +393,15 @@ class ImageProcessor(object):
             self.post_init()
 
 
+        if self.night_v.value and not self.moonmode_v.value:
+            # just in case the array grows beyond the desired size
+            while len(self.image_list) >= self.stack_count:
+                self.image_list.pop()
+        else:
+            # disable stacking during daytime and moonmode
+            self.image_list.clear()
+
+
         i_ref = self._add(filename, exposure, gain, binning, exp_date, exp_elapsed, camera)
 
         self.image_list.insert(0, i_ref)  # new image is first in list
@@ -417,15 +426,6 @@ class ImageProcessor(object):
         if isinstance(self._keogram_store_p, type(None)):
             self._keogram_store_p = self.varlib_folder_p.joinpath(self._keogram_store_tmpl.format(camera.id))
             self._keogram_store_metadata_p = self.varlib_folder_p.joinpath(self._keogram_store_metadata_tmpl.format(camera.id))
-
-
-        if self.night_v.value and not self.moonmode_v.value:
-            # just in case the array grows beyond the desired size
-            while len(self.image_list) >= self.stack_count:
-                self.image_list.pop()
-        else:
-            # disable stacking during daytime and moonmode
-            self.image_list.clear()
 
 
         ### Open file
@@ -1290,6 +1290,9 @@ class ImageProcessor(object):
 
     def stack(self):
         # self.image is first populated by this method
+
+        ### stacking is disabled during the day and moonmode in the add() method
+
         i_ref = self.getLatestImage()
 
 
