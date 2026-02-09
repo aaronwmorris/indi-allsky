@@ -7830,6 +7830,7 @@ class JsonImageProcessingView(JsonView):
                 filename_p,
                 exposure,
                 gain,
+                binning,
                 datetime.now(),
                 0.0,
                 fits_entry.camera,
