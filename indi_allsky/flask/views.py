@@ -1206,7 +1206,8 @@ class JsonImageLoopView(JsonView):
                     self.model.createDate > ts_minus_minutes,
                     self.model.createDate < ts_dt,
                 )
-            )
+            )\
+            .order_by(self.model.createDate.desc())
 
 
         jsqm_list = list()
