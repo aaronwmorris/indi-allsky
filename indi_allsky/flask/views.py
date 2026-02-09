@@ -1107,7 +1107,7 @@ class JsonImageLoopView(JsonView):
 
         data = {
             'image_list' : self.getLoopImages(camera_id, ts_dt, history_seconds),
-            'sqm_data'   : self.getSqmData(camera_id, ts_dt),
+            'sqm_data'   : self.getjSqmData(camera_id, ts_dt),
             'stars_data' : self.getStarsData(camera_id, ts_dt),
             'message'    : '',
         }
@@ -1188,7 +1188,7 @@ class JsonImageLoopView(JsonView):
         return image_list
 
 
-    def getSqmData(self, camera_id, ts_dt):
+    def getjSqmData(self, camera_id, ts_dt):
         ts_minus_minutes = ts_dt - timedelta(minutes=self.sqm_history_minutes)
 
         sqm_images = self.model.query\
@@ -1281,7 +1281,7 @@ class JsonPanoramaLoopView(JsonImageLoopView):
     model = IndiAllSkyDbPanoramaImageTable
 
 
-    def getSqmData(self, *args):
+    def getjSqmData(self, *args):
         sqm_data = {
             'max' : 0,
             'min' : 0,
@@ -1315,7 +1315,7 @@ class JsonRawImageLoopView(JsonImageLoopView):
     model = IndiAllSkyDbRawImageTable
 
 
-    def getSqmData(self, *args):
+    def getjSqmData(self, *args):
         sqm_data = {
             'max' : 0,
             'min' : 0,
