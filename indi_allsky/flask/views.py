@@ -2163,8 +2163,8 @@ class ConfigView(FormView):
             'EXPOSURE_PERIOD_DAY'            : self.indi_allsky_config.get('EXPOSURE_PERIOD_DAY', 15.0),
             'CAMERA_SQM__ENABLE'             : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE', False),
             'CAMERA_SQM__ENABLE_DAY'         : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE_DAY', False),
-            'CAMERA_SQM__EXPOSURE'           : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 15.0),
-            'CAMERA_SQM__GAIN'               : self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 0.0),
+            'CAMERA_SQM__EXPOSURE'           : '{0:.6f}'.format(self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 15.0)),  # force 6 digits of precision
+            'CAMERA_SQM__GAIN'               : round(self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 0.0), 2),  # limit to 2 decimals
             'CAMERA_SQM__BINNING'            : self.indi_allsky_config.get('CAMERA_SQM', {}).get('BINNING', 1),
             'CAMERA_SQM__EXPOSURE_PERIOD'    : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900),
             'CAMERA_SQM__MAGNITUDE_OFFSET'   : self.indi_allsky_config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 26.0),
@@ -3139,17 +3139,17 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CCD_CONFIG']['DAY']['BINNING']         = int(request.json['CCD_CONFIG__DAY__BINNING'])
         self.indi_allsky_config['CCD_CONFIG']['AUTO_GAIN_ENABLE']       = bool(request.json['CCD_CONFIG__AUTO_GAIN_ENABLE'])
         self.indi_allsky_config['CCD_CONFIG']['AUTO_GAIN_LEVELS']       = int(request.json['CCD_CONFIG__AUTO_GAIN_LEVELS'])
-        self.indi_allsky_config['CCD_EXPOSURE_MAX']                     = float(request.json['CCD_EXPOSURE_MAX'])
-        self.indi_allsky_config['CCD_EXPOSURE_DEF']                     = float(request.json['CCD_EXPOSURE_DEF'])
-        self.indi_allsky_config['CCD_EXPOSURE_MIN']                     = float(request.json['CCD_EXPOSURE_MIN'])
-        self.indi_allsky_config['CCD_EXPOSURE_MIN_DAY']                 = float(request.json['CCD_EXPOSURE_MIN_DAY'])
+        self.indi_allsky_config['CCD_EXPOSURE_MAX']                     = round(float(request.json['CCD_EXPOSURE_MAX']), 6)
+        self.indi_allsky_config['CCD_EXPOSURE_DEF']                     = round(float(request.json['CCD_EXPOSURE_DEF']), 6)
+        self.indi_allsky_config['CCD_EXPOSURE_MIN']                     = round(float(request.json['CCD_EXPOSURE_MIN']), 6)
+        self.indi_allsky_config['CCD_EXPOSURE_MIN_DAY']                 = round(float(request.json['CCD_EXPOSURE_MIN_DAY']), 6)
         self.indi_allsky_config['CCD_EXPOSURE_TIMEOUT']                 = int(request.json['CCD_EXPOSURE_TIMEOUT'])
         self.indi_allsky_config['CCD_BIT_DEPTH']                        = int(request.json['CCD_BIT_DEPTH'])
         self.indi_allsky_config['EXPOSURE_PERIOD']                      = float(request.json['EXPOSURE_PERIOD'])
         self.indi_allsky_config['EXPOSURE_PERIOD_DAY']                  = float(request.json['EXPOSURE_PERIOD_DAY'])
         self.indi_allsky_config['CAMERA_SQM']['ENABLE']                 = bool(request.json['CAMERA_SQM__ENABLE'])
         self.indi_allsky_config['CAMERA_SQM']['ENABLE_DAY']             = bool(request.json['CAMERA_SQM__ENABLE_DAY'])
-        self.indi_allsky_config['CAMERA_SQM']['EXPOSURE']               = float(request.json['CAMERA_SQM__EXPOSURE'])
+        self.indi_allsky_config['CAMERA_SQM']['EXPOSURE']               = round(float(request.json['CAMERA_SQM__EXPOSURE']), 6)
         self.indi_allsky_config['CAMERA_SQM']['GAIN']                   = round(float(request.json['CAMERA_SQM__GAIN']), 2)  # limit to 2 decimals
         self.indi_allsky_config['CAMERA_SQM']['BINNING']                = int(request.json['CAMERA_SQM__BINNING'])
         self.indi_allsky_config['CAMERA_SQM']['EXPOSURE_PERIOD']        = int(request.json['CAMERA_SQM__EXPOSURE_PERIOD'])
