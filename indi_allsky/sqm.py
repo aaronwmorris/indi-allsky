@@ -60,7 +60,7 @@ class IndiAllskySqm(object):
         # offset the sqm based on the exposure and gain
         weighted_sqm_avg = (((self.config['CCD_EXPOSURE_MAX'] - i_ref.exposure) / 10) + 1) * (sqm_avg * (((float(self.gain_av[constants.GAIN_MAX_NIGHT]) - i_ref.gain) / 10) + 1))
 
-        logger.info('Raw SQM: %0.2f, Weighted SQM: %0.2f', sqm_avg, weighted_sqm_avg)
+        logger.info('Raw jSQM: %0.2f, Weighted jSQM: %0.2f', sqm_avg, weighted_sqm_avg)
 
         return weighted_sqm_avg
 
