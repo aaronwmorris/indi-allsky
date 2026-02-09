@@ -4422,7 +4422,8 @@ class Fits2JpegView(BaseView):
         gain = float(hdulist[0].header.get('GAIN', 0))
         gain_av = Array('f', [gain])
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
-        binning_av = Array('i', [int(hdulist[0].header.get('XBINNING', 1))])
+        binning = int(hdulist[0].header.get('XBINNING', 1))
+        binning_av = Array('i', [binning])
         sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         night_v = Value('i', 1)  # using night values for processing
@@ -4455,6 +4456,7 @@ class Fits2JpegView(BaseView):
             filename_p,
             exposure,
             gain,
+            binning,
             image_date,
             0.0,
             fits_entry.camera,
@@ -7709,7 +7711,8 @@ class JsonImageProcessingView(JsonView):
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
         gain = float(hdulist[0].header.get('GAIN', 0))
         gain_av = Array('f', [gain])
-        binning_av = Array('i', [int(hdulist[0].header.get('XBINNING', 1))])
+        binning = int(hdulist[0].header.get('XBINNING', 1))
+        binning_av = Array('i', [binning])
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
         #sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         #sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
@@ -7748,6 +7751,7 @@ class JsonImageProcessingView(JsonView):
                 filename_p,
                 exposure,
                 gain,
+                binning,
                 image_date,
                 0.0,
                 fits_entry.camera,
@@ -7795,12 +7799,14 @@ class JsonImageProcessingView(JsonView):
                     alt_hdulist = fits.open(f_image_p)
                     alt_exposure = float(alt_hdulist[0].header.get('EXPTIME', 0))
                     alt_gain = float(alt_hdulist[0].header.get('GAIN', 0))
+                    alt_binning = int(alt_hdulist[0].header.get('XBINNING', 1))
                     alt_hdulist.close()
 
                     i_ref = image_processor.add(
                         f_image_p,
                         alt_exposure,
                         alt_gain,
+                        alt_binning,
                         pre_image_date,
                         0.0,
                         f_image.camera,
