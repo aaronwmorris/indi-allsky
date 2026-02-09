@@ -1433,7 +1433,7 @@ class ImageProcessor(object):
 
     def _convert_16bit_to_8bit(self, i_ref):
         if i_ref.image_bitpix == 8:
-            return
+            return self.image
 
         #logger.info('Resampling image from %d to 8 bits', image_bitpix)
 
