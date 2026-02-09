@@ -116,8 +116,6 @@ class VideoWorker(Process):
 
         self.f_lock = None
 
-        self._detection_mask_dict = self._load_detection_mask()
-
 
         if self.config.get('IMAGE_FOLDER'):
             self.image_dir = Path(self.config['IMAGE_FOLDER']).absolute()
@@ -1046,6 +1044,9 @@ class VideoWorker(Process):
             .one()
 
 
+        detection_mask_dict = self._load_detection_mask()
+
+
         task.setRunning()
 
         now = datetime.now()
@@ -1378,7 +1379,7 @@ class VideoWorker(Process):
         stg = StarTrailGenerator(
             self.config,
             skip_frames=timelapse_skip_frames,
-            mask=self._detection_mask_dict,
+            mask=detection_mask_dict,
         )
         stg.max_adu = self.config['STARTRAILS_MAX_ADU']
         stg.mask_threshold = self.config['STARTRAILS_MASK_THOLD']
@@ -2165,7 +2166,7 @@ class VideoWorker(Process):
                 new_mask_height = int(mask_height / binning)
                 new_mask_width = int(mask_width / binning)
 
-                mask_processor.image = cv2.resize(self.image, (new_mask_width, new_mask_height), interpolation=cv2.INTER_AREA)
+                mask_processor.image = cv2.resize(mask_data, (new_mask_width, new_mask_height), interpolation=cv2.INTER_AREA)
 
 
             if self.config.get('IMAGE_ROTATE'):
