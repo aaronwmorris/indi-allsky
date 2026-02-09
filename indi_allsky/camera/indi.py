@@ -128,8 +128,10 @@ class IndiClient(PyIndi.BaseClient):
         self._timeout = 10.0
 
         self._exposure = 0.0
+
+        # these need to be bogus values
         self._gain = -1.0  # individual exposure gain
-        self._binning = 1  # individual exposure binning
+        self._binning = -1  # individual exposure binning
         self._sqm_exposure = False
 
         self.exposureStartTime = 0
