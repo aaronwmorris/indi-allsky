@@ -10609,6 +10609,21 @@ var group_checkbox_fields_image_circle_mask = [
 group_on_change('IMAGE_CIRCLE_MASK__ENABLE', group_fields_image_circle_mask, group_checkbox_fields_image_circle_mask);
 
 
+var group_fields_camera_sqm= [
+    'CAMERA_SQM__EXPOSURE',
+    'CAMERA_SQM__GAIN',
+    'CAMERA_SQM__BINNING',
+    'CAMERA_SQM__EXPOSURE_PERIOD',
+    'CAMERA_SQM__MAGNITUDE_OFFSET',
+];
+
+var group_checkbox_fields_camera_sqm= [
+    'CAMERA_SQM__ENABLE_DAY'
+];
+
+group_on_change('CAMERA_SQM__ENABLE', group_fields_camera_sqm, group_checkbox_fields_camera_sqm);
+
+
 var group_fields_st_timelapse = [
     'STARTRAILS_TIMELAPSE_MINFRAMES',
     'STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER',
@@ -10796,6 +10811,7 @@ $( document ).ready(function() {
 
     group_on_ready('IMAGE_SAVE_FITS', group_fields_fits, group_checkbox_fields_fits);
     group_on_ready('IMAGE_CIRCLE_MASK__ENABLE', group_fields_image_circle_mask, group_checkbox_fields_image_circle_mask);
+    group_on_ready('CAMERA_SQM__ENABLE', group_fields_camera_sqm, group_checkbox_fields_camera_sqm);
     group_on_ready('STARTRAILS_TIMELAPSE', group_fields_st_timelapse, group_checkbox_fields_st_timelapse);
     group_on_ready('FISH2PANO__ENABLE', group_fields_fish2pano, group_checkbox_fields_fish2pano);
 });
