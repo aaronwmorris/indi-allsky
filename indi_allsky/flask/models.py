@@ -272,7 +272,7 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     moonmode = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     moonphase = db.Column(db.Float, nullable=True)
     adu_roi = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
-    sqm = db.Column(db.Float, nullable=True)
+    sqm = db.Column(db.Float, nullable=True)  # jSQM
     stars = db.Column(db.Integer, nullable=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
