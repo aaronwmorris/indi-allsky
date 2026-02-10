@@ -762,6 +762,7 @@ class BaseView(View):
                 'detections'      : self.latest_image_entry.detections,
                 'process_elapsed' : self.latest_image_entry.process_elapsed,
                 'camera_sqm_raw_mag' : self.latest_image_entry.data.get('camera_sqm_raw_mag', 0.0),
+                'camera_sqm_raw_adu' : self.latest_image_entry.data.get('camera_sqm_raw_adu', 0),
             }
 
             image_metadata = self.latest_image_entry.data
@@ -778,6 +779,7 @@ class BaseView(View):
                 'detections'      : 0,
                 'process_elapsed' : 0.0,
                 'camera_sqm_raw_mag' : 0.0,
+                'camera_sqm_raw_adu' : 0.0,
             }
 
             image_metadata = dict()  # no metadata

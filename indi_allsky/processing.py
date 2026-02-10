@@ -173,6 +173,7 @@ class ImageProcessor(object):
         self._lightgraph_overlay = IndiAllSkyLightgraphOverlay(self.config, self.position_av)
 
         self._camera_sqm_raw_mag = 0.0
+        self._camera_sqm_raw_adu = 0
 
         self._wb_mtf_night = 1
         self._wbb_mtf_lut = None
@@ -362,6 +363,10 @@ class ImageProcessor(object):
     @property
     def camera_sqm_raw_mag(self):
         return self._camera_sqm_raw_mag
+
+    @property
+    def camera_sqm_raw_adu(self):
+        return self._camera_sqm_raw_adu
 
 
     def post_init(self):
@@ -1280,12 +1285,13 @@ class ImageProcessor(object):
 
 
     def _calculateMagnitudeSqm(self, i_ref):
-        mag_sqm, raw_mag = self._sqm.magnitudeSqm(i_ref)
+        mag_sqm, raw_mag, raw_adu = self._sqm.magnitudeSqm(i_ref)
 
         # cache value
         self._camera_sqm_raw_mag = raw_mag
+        self._camera_sqm_raw_adu = raw_adu
 
-        return mag_sqm, raw_mag
+        return mag_sqm, raw_mag, raw_adu
 
 
     def stack(self):
@@ -2704,6 +2710,7 @@ class ImageProcessor(object):
             'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
             'smoke_rating'          : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'camera_sqm_raw_mag'    : self.camera_sqm_raw_mag,
+            'camera_sqm_raw_adu'    : self.camera_sqm_raw_adu,
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'sun_up'       : self.astrometric_data['sun_up'],
             'sun_next_rise'     : self.astrometric_data['sun_next_rise'],

@@ -797,6 +797,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'aurora_s_hemi_gw' : 0,
         'smoke_rating' : 'foobar',
         'camera_sqm_raw_mag' : 0.0,
+        'camera_sqm_raw_adu' : 0,
         'latitude'     : 0.0,
         'longitude'    : 0.0,
         'stack_method' : 'foo',
@@ -886,6 +887,7 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'aurora_n_hemi_gw' : 0,
         'aurora_s_hemi_gw' : 0,
         'camera_sqm_raw_mag' : 0.0,
+        'camera_sqm_raw_adu' : 0,
         'owner' : '',
         'location' : '',
         'lens_name' : '',
@@ -3891,6 +3893,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ),
         'SQM' : (
             ['camera_sqm_raw_mag', 'Camera SQM - Raw Magnitude'],
+            ['camera_sqm_raw_adu', 'Camera SQM - Raw ADU'],
         ),
     }
 

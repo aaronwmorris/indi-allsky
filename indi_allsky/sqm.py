@@ -72,7 +72,7 @@ class IndiAllskySqm(object):
 
         mag_sqm = self._magnitude_offset + raw_mag  # raw_mag is negative
 
-        return mag_sqm, raw_mag
+        return mag_sqm, raw_mag, sqm_avg
 
 
     def _generateSqmMask(self, img, binning):
