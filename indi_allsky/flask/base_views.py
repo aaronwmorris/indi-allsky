@@ -916,7 +916,7 @@ class BaseView(View):
         detect_mask = self.indi_allsky_config.get('DETECT_MASK', '')
 
         if not detect_mask:
-            app.logger.warning('No detection mask defined')
+            #app.logger.warning('No detection mask defined')
             return
 
 
