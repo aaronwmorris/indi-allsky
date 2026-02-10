@@ -906,9 +906,8 @@ class BaseView(View):
         return extra_text
 
 
-    def _load_detection_mask(self):
+    def _load_detection_mask(self, binning):
         import cv2
-        from multiprocessing import Value
         from ..maskProcessing import MaskProcessor
 
 
@@ -941,17 +940,16 @@ class BaseView(View):
             return
 
 
+        app.logger.warning('Loaded detection mask: %s', detect_mask_p)
+
+
         ### any intermediate values will be set to 255
         mask_data[mask_data > 0] = 255
 
 
-        app.logger.info('Loaded detection mask: %s', detect_mask_p)
-
-
-        bin_v = Value('i', 1)  # always assume bin 1
         mask_processor = MaskProcessor(
             self.indi_allsky_config,
-            bin_v,
+            binning,
         )
 
 

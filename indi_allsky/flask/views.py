@@ -1920,16 +1920,17 @@ class JsonChartView(JsonView):
         numpy_mask = numpy.full(image_data.shape[:2], True, numpy.bool_)
 
 
-        _sqm_mask = self._load_detection_mask()
+        _sqm_mask = self._load_detection_mask(latest_image.binmode)
+
 
         if isinstance(_sqm_mask, type(None)):
             sqm_roi = self.indi_allsky_config.get('SQM_ROI', [])
 
             try:
-                x1 = sqm_roi[0]  # these values may be invalid due to binning
-                y1 = sqm_roi[1]
-                x2 = sqm_roi[2]
-                y2 = sqm_roi[3]
+                x1 = int(sqm_roi[0] / latest_image.binmode)
+                y1 = int(sqm_roi[1] / latest_image.binmode)
+                x2 = int(sqm_roi[2] / latest_image.binmode)
+                y2 = int(sqm_roi[3] / latest_image.binmode)
             except IndexError:
                 sqm_fov_div = self.indi_allsky_config.get('SQM_FOV_DIV', 4)
                 x1 = int((image_width / 2) - (image_width / sqm_fov_div))
