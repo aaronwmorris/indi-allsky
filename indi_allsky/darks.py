@@ -74,6 +74,7 @@ class IndiAllSkyDarks(object):
         self._daytime = True  # build daytime dark library
 
         self._gain_list = []
+        self._binning = 1
         self._count = 10
         self._temp_delta = 5.0
         self._time_delta = 5
@@ -191,6 +192,17 @@ class IndiAllSkyDarks(object):
 
         self._gain_list = sorted(gain_list, reverse=True)
         logger.warning('Using gain list: %s', ', '.join(['{0:0.2f}'.format(x) for x in self._gain_list]))
+
+
+    @property
+    def binning(self):
+        return self._binning
+
+    @binning.setter
+    def binning(self, new_binning):
+        self._binning = int(new_binning)
+        assert self._binning >= 1
+        assert self._binning <= 4
 
 
     @property
@@ -737,7 +749,6 @@ class IndiAllSkyDarks(object):
         return hdulist
 
 
-
     def average(self):
         self.checkAvailableSpace()
 
@@ -1029,7 +1040,7 @@ class IndiAllSkyDarks(object):
             for gain in self.gain_list:
                 night_darks_odict.update(
                     {
-                        (float(gain), int(self.binning_av[constants.BINNING_NIGHT])) : None,
+                        (float(gain), self.binning) : None,
                     }
                 )
 

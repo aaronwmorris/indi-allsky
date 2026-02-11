@@ -46,6 +46,13 @@ if __name__ == "__main__":
         required=False,
     )
     argparser.add_argument(
+        '--Binning',
+        '-B',
+        help='binning to use with gain list [default: 1]',
+        type=int,
+        default=1,
+    )
+    argparser.add_argument(
         '--temp_delta',
         '-t',
         help='temperature delta between dark frame sets [default: 5.0]',
@@ -119,6 +126,7 @@ if __name__ == "__main__":
     iad.reverse = args.reverse
     iad.flush_camera_id = args.flush_id
     iad.gain_list = args.gains
+    iad.binning = args.Binning
 
     action_func = getattr(iad, args.action)
     action_func()
