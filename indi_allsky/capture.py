@@ -269,7 +269,7 @@ class CaptureWorker(Process):
 
         self.sqm_camera_enable = self.config.get('CAMERA_SQM', {}).get('ENABLE')
         self.sqm_tasks_offset = self.config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900)
-        self.sqm_tasks_time = now_time + self.sqm_tasks_offset
+        self.sqm_tasks_time = now_time + 300  # take SQM exposure 5 minutes after starting
 
         self.exposure_timeout = self.config.get('CCD_EXPOSURE_TIMEOUT', 330)
 
