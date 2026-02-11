@@ -2555,7 +2555,7 @@ class ImageWorker(Process):
         mag_sqm, raw_mag, raw_adu = self.image_processor._calculateMagnitudeSqm(i_ref)
 
 
-        logger.warning('SQM: %0.2f, Raw Magnitude: %0.2f, ADU: %d', mag_sqm, raw_mag, raw_adu)
+        logger.warning('SQM: %0.2f, Raw Magnitude: %0.2f, ADU: %0.2f', mag_sqm, raw_mag, raw_adu)
         with self.sensors_user_av.get_lock():
             self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM] = float(mag_sqm)
 

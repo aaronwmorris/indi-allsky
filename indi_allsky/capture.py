@@ -269,7 +269,7 @@ class CaptureWorker(Process):
 
         self.sqm_camera_enable = self.config.get('CAMERA_SQM', {}).get('ENABLE')
         self.sqm_tasks_offset = self.config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900)
-        self.sqm_tasks_time = now_time + 300  # take SQM exposure 5 minutes after starting
+        self.sqm_tasks_time = now_time + min(300, self.sqm_tasks_offset)  # take SQM exposure 5 minutes (or less) after starting
 
         self.exposure_timeout = self.config.get('CCD_EXPOSURE_TIMEOUT', 330)
 
@@ -1218,7 +1218,7 @@ class CaptureWorker(Process):
 
 
         # set SQM exposure
-        sqm_exposure = float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 15.0))
+        sqm_exposure = float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 5.0))
         if sqm_exposure < ccd_min_exp:
             logger.warning(
                 'SQM exposure %0.8f too low, increasing to %0.8f',
@@ -1284,16 +1284,16 @@ class CaptureWorker(Process):
             gain_day = float(self.config['CCD_CONFIG']['DAY']['GAIN'])
 
 
-        if self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0) < ccd_min_gain:
+        if self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0) < ccd_min_gain:
             logger.error('CCD sqm gain below minimum, changing to %0.2f', float(ccd_min_gain))
             gain_sqm = float(ccd_min_gain)
             time.sleep(3)
-        elif self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0) > ccd_max_gain:
+        elif self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0) > ccd_max_gain:
             logger.error('CCD sqm gain above maximum, changing to %0.2f', float(ccd_max_gain))
             gain_sqm = float(ccd_max_gain)
             time.sleep(3)
         else:
-            gain_sqm = self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0)
+            gain_sqm = self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0)
 
 
         # Validate binning settings

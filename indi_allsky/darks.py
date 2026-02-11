@@ -405,7 +405,7 @@ class IndiAllSkyDarks(object):
 
 
         # set SQM exposure
-        sqm_exposure = float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 15.0))
+        sqm_exposure = float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 5.0))
         with self.exposure_av.get_lock():
             self.exposure_av[constants.EXPOSURE_SQM] = float(sqm_exposure)
 
@@ -453,16 +453,16 @@ class IndiAllSkyDarks(object):
             gain_day = float(self.config['CCD_CONFIG']['DAY']['GAIN'])
 
 
-        if self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0) < ccd_min_gain:
+        if self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0) < ccd_min_gain:
             logger.error('CCD sqm gain below minimum, changing to %0.2f', float(ccd_min_gain))
             gain_sqm = float(ccd_min_gain)
             time.sleep(3)
-        elif self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0) > ccd_max_gain:
+        elif self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0) > ccd_max_gain:
             logger.error('CCD sqm gain above maximum, changing to %0.2f', float(ccd_max_gain))
             gain_sqm = float(ccd_max_gain)
             time.sleep(3)
         else:
-            gain_sqm = self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0)
+            gain_sqm = self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0)
 
 
         with self.gain_av.get_lock():

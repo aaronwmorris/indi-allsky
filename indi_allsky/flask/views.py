@@ -2053,7 +2053,7 @@ class ConfigView(FormView):
 
             raw_mag = self.latest_image_entry.data.get('camera_sqm_raw_mag', 0.0)
             if raw_mag:
-                mag_offset = self.indi_allsky_config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 26.0)
+                mag_offset = self.indi_allsky_config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 25.0)
 
                 context['camera_sqm_raw_mag_str'] = '{0:0.2f}'.format(raw_mag)
                 context['camera_sqm_calc_sqm_str'] = '{0:0.2f}'.format(mag_offset + raw_mag)  # raw_mag is negative
@@ -2232,11 +2232,11 @@ class ConfigView(FormView):
             'EXPOSURE_PERIOD_DAY'            : self.indi_allsky_config.get('EXPOSURE_PERIOD_DAY', 15.0),
             'CAMERA_SQM__ENABLE'             : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE', False),
             'CAMERA_SQM__ENABLE_DAY'         : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE_DAY', False),
-            'CAMERA_SQM__EXPOSURE'           : '{0:.6f}'.format(self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 15.0)),  # force 6 digits of precision
-            'CAMERA_SQM__GAIN'               : round(self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 0.0), 2),  # limit to 2 decimals
+            'CAMERA_SQM__EXPOSURE'           : '{0:.6f}'.format(self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 5.0)),  # force 6 digits of precision
+            'CAMERA_SQM__GAIN'               : round(self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 10.0), 2),  # limit to 2 decimals
             'CAMERA_SQM__BINNING'            : self.indi_allsky_config.get('CAMERA_SQM', {}).get('BINNING', 1),
             'CAMERA_SQM__EXPOSURE_PERIOD'    : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900),
-            'CAMERA_SQM__MAGNITUDE_OFFSET'   : self.indi_allsky_config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 26.0),
+            'CAMERA_SQM__MAGNITUDE_OFFSET'   : self.indi_allsky_config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 25.0),
             'FOCUS_MODE'                     : self.indi_allsky_config.get('FOCUS_MODE', False),
             'FOCUS_DELAY'                    : self.indi_allsky_config.get('FOCUS_DELAY', 4.0),
             'CFA_PATTERN'                    : self.indi_allsky_config.get('CFA_PATTERN', ''),

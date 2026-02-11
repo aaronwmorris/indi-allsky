@@ -20,7 +20,7 @@ class IndiAllskySqm(object):
         self.config = config
         self.gain_av = gain_av
 
-        self._magnitude_offset = self.config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 26.0)
+        self._magnitude_offset = self.config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 25.0)
 
         # both masks will be combined
         self._external_mask_dict = mask
