@@ -118,8 +118,9 @@ class ImageProcessor(object):
 
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
-        self.night_v = night_v
         self.moonmode_v = moonmode_v
+        self.night_v = night_v
+        self.night = None  # None forces day/night change at startup
 
         self._miscDb = miscDb(self.config)
 
@@ -392,10 +393,32 @@ class ImageProcessor(object):
             self._stretch_o = None
 
 
+    def _night_day_change(self):
+        logger.warning('Day/Night change')
+
+        # changing modes here
+        if self.night:
+            # night
+            pass
+
+        else:
+            # day
+
+            if not self.config.get('CAMERA_SQM', {}).get('ENABLE_DAY'):
+                # Reset these value during the day
+                self._camera_sqm_raw_mag = 0.0
+                self._camera_sqm_raw_adu = 0.0
+
+
     def add(self, filename, exposure, gain, binning, exp_date, exp_elapsed, camera):
         if isinstance(self._detection_mask_dict, type(None)):
             # binning_av needs to be populated before running this
             self.post_init()
+
+
+        if self.night != bool(self.night_v.value):
+            self.night = bool(self.night_v.value)
+            self._night_day_change()
 
 
         if self.night_v.value and not self.moonmode_v.value:
