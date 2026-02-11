@@ -262,7 +262,7 @@ class StarTrailGenerator(object):
             self._generateStarMask(image, binning)
 
         if isinstance(self._stars_detect, type(None)):
-            self._stars_detect = IndiAllSkyStars(self.config, mask=self._star_mask_dict[binning])
+            self._stars_detect = IndiAllSkyStars(self.config, mask=self._star_mask_dict)
 
 
         # need grayscale image for mask generation
