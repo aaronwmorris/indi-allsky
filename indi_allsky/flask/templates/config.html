@@ -3648,9 +3648,9 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>
-                <div>Minimum Gain permitted: <b>{{ "%0.2f"|format(camera_minGain | float) }}</b></div>
                 <div><span class="badge rounded-pill bg-info text-dark">Note</span> Unity gain is recommended for SQM measurements</div>
-                <div>Raspberry Pi HQ Camera [IMX477] Unity Gain is approximately 6.4</div>
+                <div>Minimum Gain permitted: <b>{{ "%0.2f"|format(camera_minGain | float) }}</b></div>
+                <div>Maximum Gain permitted: <b>{{ "%0.2f"|format(camera_maxGain | float) }}</b></div>
             </div>
         </div>
     </div>
