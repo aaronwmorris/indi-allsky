@@ -1057,11 +1057,11 @@ class IndiAllSkyDarks(object):
                     (float(self.gain_av[constants.GAIN_MAX_MOONMODE]), int(self.binning_av[constants.BINNING_MOONMODE])) : None,
                 }
             )
-            #night_darks_odict.update(
-            #    {
-            #        (float(self.gain_av[constants.GAIN_SQM]), int(self.binning_av[constants.BINNING_SQM])) : None,
-            #    }
-            #)
+            night_darks_odict.update(
+                {
+                    (float(self.gain_av[constants.GAIN_SQM]), int(self.binning_av[constants.BINNING_SQM])) : None,
+                }
+            )
 
 
         ### take darks
