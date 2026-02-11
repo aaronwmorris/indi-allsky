@@ -35,10 +35,11 @@ class LightSensorLtr390(SensorBase):
 
 
         try:
-            sqm_mag = self.lux2mag(lux)
+            sqm_mag, raw_mag = self.lux2mag(lux)
         except ValueError as e:
             logger.error('SQM calculation error - ValueError: %s', str(e))
             sqm_mag = 0.0
+            raw_mag = 0.0
 
 
         data = {
@@ -49,6 +50,7 @@ class LightSensorLtr390(SensorBase):
                 uvi,
                 lux,
                 sqm_mag,
+                raw_mag,
             ),
         }
 
@@ -72,19 +74,21 @@ class LightSensorLtr390_I2C(LightSensorLtr390):
     METADATA = {
         'name' : 'LTR390 (i2c)',
         'description' : 'LTR390 i2c UV Light Sensor',
-        'count' : 5,
+        'count' : 6,
         'labels' : (
             'UV',
             'Light',
             'UV Index',
             'Lux',
             'SQM',
+            'Raw Magnitude',
         ),
         'types' : (
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_LUX,
+            constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
         ),
     }

@@ -84,6 +84,15 @@ class IndiAllSkyConfigBase(object):
         "CCD_BIT_DEPTH"        : 0,  # 0 is auto
         "EXPOSURE_PERIOD"      : 15.00000,
         "EXPOSURE_PERIOD_DAY"  : 15.00000,
+        "CAMERA_SQM" : {
+            "ENABLE"            : False,
+            "ENABLE_DAY"        : False,
+            "EXPOSURE"          : 15.00000,
+            "GAIN"              : 0.0,
+            "BINNING"           : 1,
+            "EXPOSURE_PERIOD"   : 900,
+            "MAGNITUDE_OFFSET"  : 26.0,
+        },
         "FOCUS_MODE"           : False,
         "FOCUS_DELAY"          : 4.0,
         "CFA_PATTERN"      : "",  # None, GRBG, RGGB, BGGR, GBRG
@@ -773,6 +782,7 @@ class IndiAllSkyConfigBase(object):
             "AS3935_MASK_DISTURBER"  : False,
             "AS3935_NOISE_LEVEL"     : 2,
             "AS3935_SPIKE_REJECTION" : 2,
+            "LUX_MAGNITUDE_OFFSET"   : 26.0,
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : "sensor_user_10",

@@ -24,7 +24,7 @@ GPIO_PYTHON_MODULES="${INDIALLSKY_GPIO_PYTHON_MODULES:-true}"
 
 
 function catch_error() {
-    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed' 1440 || true
+    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed' 60 || true
 
     echo
     echo
@@ -93,7 +93,7 @@ fi
 
 ROOT_FREE=$(df -Pk / | tail -n 1 | awk "{ print \$4 }")
 if [ "$ROOT_FREE" -lt 1000000 ]; then
-    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Not enough free space in / (root).' 1440 || true
+    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Not enough free space in / (root).' 60 || true
 
     echo
     echo "Not enough free space available in / (root) filesystem"
@@ -104,7 +104,7 @@ fi
 
 VAR_FREE=$(df -Pk /var | tail -n 1 | awk "{ print \$4 }")
 if [ "$VAR_FREE" -lt 1000000 ]; then
-    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Not enough free space in /var.' 1440 || true
+    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Not enough free space in /var.' 60 || true
 
     echo
     echo "Not enough free space available in /var filesystem"
@@ -224,7 +224,7 @@ cd "$ALLSKY_DIRECTORY" || catch_error
 
 
 if ! git diff --quiet --exit-code >/dev/null 2>&1; then
-    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Code modifications are active.' 1440 || true
+    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Code modifications are active.' 60 || true
 
     echo
     echo "Code modifications are active.  Exiting..."
@@ -237,7 +237,7 @@ fi
 
 ALLSKY_GIT_BRANCH=$(git branch --show-current)
 if [ "$ALLSKY_GIT_BRANCH" != "main" ]; then
-    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Not on main branch.' 1440 || true
+    "$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade failed.  Not on main branch.' 60 || true
 
     echo
     echo "Not currently on main branch.  Exiting..."
@@ -900,7 +900,7 @@ if [ "$ALLSKY_RUNNING" == "true" ]; then
 fi
 
 
-"$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade complete' 1440 || true
+"$ALLSKY_DIRECTORY/misc/add_notification.py" GENERAL unattended_upgrade 'Unattended upgrade complete' 60 || true
 
 
 END_TIME=$(date +%s)

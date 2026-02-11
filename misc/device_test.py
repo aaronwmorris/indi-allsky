@@ -262,7 +262,7 @@ if __name__ == "__main__":
 
 
     td = TestDevices()
-    td.sleep = 5
+    td.sleep = args.sleep
 
     td.main(args.device)
 

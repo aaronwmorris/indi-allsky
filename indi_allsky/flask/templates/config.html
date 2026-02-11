@@ -145,8 +145,12 @@ var camera_id = {{ camera_id }};
             {{ form_config.CCD_CONFIG__NIGHT__BINNING(class='form-control bg-secondary') }}
             <div id="CCD_CONFIG__NIGHT__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Min 1, Max 4 - Camera dependent</div>
+        <div class="col-sm-8">
+            <div>Min: <b>{{ camera_minBinning }}</b> - Max: <b>{{ camera_maxBinning }}</b></div>
+        </div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -168,6 +172,8 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8"></div>
     </div>
+
+    <hr>
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3470,7 +3476,10 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-5">
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Detection-Masks" class="text-decoration-none link-info" target="_blank">Detection Mask Wiki</a></div>
-            <div>Image mask file for star, meteor, and SQM detection area.  Must be a PNG</div>
+            <div>
+                <div>Image mask file for star, meteor, and SQM detection area.  Must be a PNG</div>
+                <div><span class="badge rounded-pill bg-info text-dark">Note</span> Mask must use the same diminsions as the camera bin 1 settings</div>
+            </div>
         </div>
     </div>
 
@@ -3580,6 +3589,113 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">Outline image circle.  Opacity will be set to 0%.</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CAMERA_SQM__ENABLE(class='form-check-input') }}
+                <div id="CAMERA_SQM__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Take periodic images at a fixed exposure/gain for brightness/SQM measurements</div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/SQM-Sky-Brightness-Measurement" class="text-decoration-none link-info" target="_blank">SQM Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__ENABLE_DAY.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CAMERA_SQM__ENABLE_DAY(class='form-check-input') }}
+                <div id="CAMERA_SQM__ENABLE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>DO NOT USE - Only for testing functionality</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__EXPOSURE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__GAIN(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+                <div><span class="badge rounded-pill bg-info text-dark">Note</span> Unity gain is recommended for SQM measurements</div>
+                <div>Minimum Gain permitted: <b>{{ "%0.2f"|format(camera_minGain | float) }}</b></div>
+                <div>Maximum Gain permitted: <b>{{ "%0.2f"|format(camera_maxGain | float) }}</b></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__BINNING.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__BINNING(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Min: <b>{{ camera_minBinning }}</b> - Max: <b>{{ camera_maxBinning }}</b></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__EXPOSURE_PERIOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__MAGNITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__MAGNITUDE_OFFSET(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__MAGNITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+                <div>Last Raw Magnitude measurement: <b>{{ camera_sqm_raw_mag_str }}</b></div>
+                <div>Expected SQM: <b>{{ camera_sqm_calc_sqm_str }}</b></div>
+            </div>
+        </div>
     </div>
 
     <hr>
@@ -8065,6 +8181,21 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__LUX_MAGNITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__LUX_MAGNITUDE_OFFSET(class='form-control bg-secondary') }}
+            <div id="TEMP_SENSOR__LUX_MAGNITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/SQM-Sky-Brightness-Measurement" class="text-decoration-none link-info" target="_blank">SQM Wiki</a></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__MQTT_HOST.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -9259,6 +9390,11 @@ const field_names = [
     'IMAGE_CALIBRATE_HOLE_THOLD',
     'EXPOSURE_PERIOD',
     'EXPOSURE_PERIOD_DAY',
+    'CAMERA_SQM__EXPOSURE',
+    'CAMERA_SQM__GAIN',
+    'CAMERA_SQM__BINNING',
+    'CAMERA_SQM__EXPOSURE_PERIOD',
+    'CAMERA_SQM__MAGNITUDE_OFFSET',
     'FOCUS_DELAY',
     'WBR_FACTOR',
     'WBG_FACTOR',
@@ -9745,6 +9881,7 @@ const field_names = [
     'TEMP_SENSOR__LTR390_GAIN_DAY',
     'TEMP_SENSOR__AS3935_NOISE_LEVEL',
     'TEMP_SENSOR__AS3935_SPIKE_REJECTION',
+    'TEMP_SENSOR__LUX_MAGNITUDE_OFFSET',
     'ADSB__DUMP1090_URL',
     'ADSB__USERNAME',
     'ADSB__PASSWORD',
@@ -9764,6 +9901,8 @@ const field_names = [
 const checkbox_field_names = [
     'ENCRYPT_PASSWORDS',
     'CCD_CONFIG__AUTO_GAIN_ENABLE',
+    'CAMERA_SQM__ENABLE',
+    'CAMERA_SQM__ENABLE_DAY',
     'FOCUS_MODE',
     'USE_NIGHT_COLOR',
     'AUTO_WB',
@@ -10470,6 +10609,21 @@ var group_checkbox_fields_image_circle_mask = [
 group_on_change('IMAGE_CIRCLE_MASK__ENABLE', group_fields_image_circle_mask, group_checkbox_fields_image_circle_mask);
 
 
+var group_fields_camera_sqm= [
+    'CAMERA_SQM__EXPOSURE',
+    'CAMERA_SQM__GAIN',
+    'CAMERA_SQM__BINNING',
+    'CAMERA_SQM__EXPOSURE_PERIOD',
+    'CAMERA_SQM__MAGNITUDE_OFFSET',
+];
+
+var group_checkbox_fields_camera_sqm= [
+    'CAMERA_SQM__ENABLE_DAY'
+];
+
+group_on_change('CAMERA_SQM__ENABLE', group_fields_camera_sqm, group_checkbox_fields_camera_sqm);
+
+
 var group_fields_st_timelapse = [
     'STARTRAILS_TIMELAPSE_MINFRAMES',
     'STARTRAILS__IMAGE_CIRCLE_MASK_DIAMETER',
@@ -10657,6 +10811,7 @@ $( document ).ready(function() {
 
     group_on_ready('IMAGE_SAVE_FITS', group_fields_fits, group_checkbox_fields_fits);
     group_on_ready('IMAGE_CIRCLE_MASK__ENABLE', group_fields_image_circle_mask, group_checkbox_fields_image_circle_mask);
+    group_on_ready('CAMERA_SQM__ENABLE', group_fields_camera_sqm, group_checkbox_fields_camera_sqm);
     group_on_ready('STARTRAILS_TIMELAPSE', group_fields_st_timelapse, group_checkbox_fields_st_timelapse);
     group_on_ready('FISH2PANO__ENABLE', group_fields_fish2pano, group_checkbox_fields_fish2pano);
 });

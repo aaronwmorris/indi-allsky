@@ -40,11 +40,21 @@ class LightSensorSi1145(SensorBase):
         logger.info('[%s] SI1145 - visible: %d, ir: %d, uv: %0.3f', self.name, vis, ir, uv_index)
 
 
+        try:
+            sqm_mag, raw_mag = self.lux2mag(vis)
+        except ValueError as e:
+            logger.error('SQM calculation error - ValueError: %s', str(e))
+            sqm_mag = 0.0
+            raw_mag = 0.0
+
+
         data = {
             'data' : (
                 vis,
                 ir,
                 uv_index,
+                sqm_mag,
+                raw_mag,
             ),
         }
 
@@ -69,13 +79,17 @@ class LightSensorSi1145_I2C(LightSensorSi1145):
     METADATA = {
         'name' : 'SI1145 (i2c)',
         'description' : 'SI1145 i2c UV Light Sensor',
-        'count' : 3,
+        'count' : 5,
         'labels' : (
             'Visible',
             'IR',
             'UV Index',
+            'SQM',
+            'Raw Magnitude',
         ),
         'types' : (
+            constants.SENSOR_LIGHT_MISC,
+            constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,

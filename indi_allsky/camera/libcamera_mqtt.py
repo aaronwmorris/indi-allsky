@@ -109,13 +109,17 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.client.loop_stop()
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
         import paho.mqtt.properties as mqtt_props
         from paho.mqtt.packettypes import PacketTypes
 
 
         if self.active_exposure:
             return
+
+
+        self.exposure = exposure
+        self.sqm_exposure = sqm_exposure
 
 
         libcamera_camera_id = self.config.get('LIBCAMERA', {}).get('CAMERA_ID', 0)
@@ -143,7 +147,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         try:
-            binmode_option = self._getBinModeOptions(self.bin_v.value)
+            binmode_option = self._getBinModeOptions(int(binning))
         except BinModeException as e:
             logger.error('Invalid setting: %s', str(e))
             binmode_option = ''
@@ -153,10 +157,11 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.current_metadata_file_p = metadata_tmp_p
 
 
-        self.exposure = exposure
-
-        if self.gain != round(float(gain), 2):
+        if self.gain != float(round(gain, 2)):
             self.setCcdGain(gain)
+
+        if self.binning != int(binning):
+            self.setCcdBinning(binning)
 
 
         exposure_us = int(exposure * 1000000)
@@ -463,6 +468,8 @@ class IndiClientLibCameraImx378Mqtt(IndiClientLibCameraMqttGeneric):
             'pixel'         : 1.55,
             'min_gain'      : 1.0,
             'max_gain'      : 22.26,
+            'min_binning'   : 1,
+            'max_binning'   : 4,
             'min_exposure'  : 0.000114,
             'max_exposure'  : 694.0,
             'cfa'           : 'BGGR',
@@ -490,6 +497,8 @@ class IndiClientLibCameraImx708Mqtt(IndiClientLibCameraMqttGeneric):
             'pixel'         : 1.4,
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,
+            'min_binning'   : 1,
+            'max_binning'   : 4,
             'min_exposure'  : 0.000026,
             'max_exposure'  : 220.0,
             'cfa'           : 'BGGR',
@@ -517,6 +526,8 @@ class IndiClientLibCameraOv64a40OwlSightMqtt(IndiClientLibCameraMqttGeneric):
             'pixel'         : 1.008,
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,
+            'min_binning'   : 1,
+            'max_binning'   : 4,
             'min_exposure'  : 0.000580,
             'max_exposure'  : 910.0,
             'cfa'           : 'RGGB',

@@ -80,6 +80,8 @@ class IndiClientLibCameraGeneric(IndiClient):
             'pixel'         : 0.0,
             'min_gain'      : 0.0,
             'max_gain'      : 0.0,
+            'min_binning'   : 0,
+            'max_binning'   : 0,
             'min_exposure'  : 0.0,
             'max_exposure'  : 0.0,
             'cfa'           : 'CHANGEME',
@@ -123,8 +125,11 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         # Update shared gin value
-        with self.bin_v.get_lock():
-            self.bin_v.value = int(bin_value)
+        with self.binning_av.get_lock():
+            self.binning_av[constants.BINNING_CURRENT] = int(bin_value)
+
+
+        self.binning = int(bin_value)
 
 
     def _getBinModeOptions(self, bin_value):
@@ -136,9 +141,13 @@ class IndiClientLibCameraGeneric(IndiClient):
         return option
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
         if self.active_exposure:
             return
+
+
+        self.exposure = exposure
+        self.sqm_exposure = sqm_exposure
 
 
         libcamera_camera_id = self.config.get('LIBCAMERA', {}).get('CAMERA_ID', 0)
@@ -170,7 +179,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         try:
-            binmode_option = self._getBinModeOptions(self.bin_v.value)
+            binmode_option = self._getBinModeOptions(int(binning))
         except BinModeException as e:
             logger.error('Invalid setting: %s', str(e))
             binmode_option = ''
@@ -180,10 +189,11 @@ class IndiClientLibCameraGeneric(IndiClient):
         self.current_metadata_file_p = metadata_tmp_p
 
 
-        self.exposure = exposure
-
-        if self.gain != round(float(gain), 2):
+        if self.gain != float(round(gain, 2)):
             self.setCcdGain(gain)
+
+        if self.binning != int(binning):
+            self.setCcdBinning(binning)
 
 
         exposure_us = int(exposure * 1000000)
@@ -546,6 +556,8 @@ class IndiClientLibCameraGeneric(IndiClient):
             'filename'    : str(self.current_exposure_file_p),
             'exposure'    : self.exposure,
             'gain'        : self.gain,
+            'binning'     : self.binning,
+            'sqm_exposure': self.sqm_exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
@@ -581,6 +593,9 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         new_ccd.min_gain = self.camera_info['min_gain']
         new_ccd.max_gain = self.camera_info['max_gain']
+
+        new_ccd.min_binning = self.camera_info['min_binning']
+        new_ccd.max_binning = self.camera_info['max_binning']
 
         new_ccd.min_exposure = self.camera_info['min_exposure']
         new_ccd.max_exposure = self.camera_info['max_exposure']
@@ -680,6 +695,15 @@ class IndiClientLibCameraGeneric(IndiClient):
             'format'  : None,
         }
 
+        ccdinfo['BINNING_INFO'] = {
+            'current' : self.ccd_device.min_binning,
+            'min'     : self.ccd_device.min_binning,
+            'max'     : self.ccd_device.max_binning,
+            'step'    : None,
+            'format'  : None,
+        }
+
+
         return ccdinfo
 
 
@@ -720,6 +744,8 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
             'pixel'         : 1.55,
             'min_gain'      : 1.0,
             'max_gain'      : 22.26,
+            'min_binning'   : 1,
+            'max_binning'   : 4,
             'min_exposure'  : 0.000114,
             'max_exposure'  : 694.0,
             'cfa'           : 'BGGR',
@@ -748,6 +774,8 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
             'pixel'         : 1.55,
             'min_gain'      : 1.0,
             'max_gain'      : 22.26,
+            'min_binning'   : 1,
+            'max_binning'   : 4,
             'min_exposure'  : 0.000114,
             'max_exposure'  : 694.0,
             'cfa'           : 'BGGR',
@@ -775,6 +803,8 @@ class IndiClientLibCameraOv5647(IndiClientLibCameraGeneric):
             'pixel'         : 1.4,
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,
+            'min_binning'   : 1,
+            'max_binning'   : 1,
             'min_exposure'  : 0.0001,
             'max_exposure'  : 6.0,
             'cfa'           : 'BGGR',  # unverified
@@ -799,6 +829,8 @@ class IndiClientLibCameraImx219(IndiClientLibCameraGeneric):
             'pixel'         : 1.12,
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,
+            'min_binning'   : 1,
+            'max_binning'   : 2,
             'min_exposure'  : 0.0001,
             'max_exposure'  : 11.76,
             'cfa'           : 'BGGR',
@@ -826,6 +858,8 @@ class IndiClientLibCameraImx519(IndiClientLibCameraGeneric):
             'pixel'         : 1.22,
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,
+            'min_binning'   : 1,
+            'max_binning'   : 4,
             'min_exposure'  : 0.000592,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',
@@ -854,6 +888,8 @@ class IndiClientLibCamera64mpHawkeye(IndiClientLibCameraGeneric):
             'pixel'         : 0.8,
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,  # unverified
+            'min_binning'   : 1,
+            'max_binning'   : 1,
             'min_exposure'  : 0.0001,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',
@@ -881,6 +917,8 @@ class IndiClientLibCameraOv64a40OwlSight(IndiClientLibCameraGeneric):
             'pixel'         : 1.008,
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,
+            'min_binning'   : 1,
+            'max_binning'   : 4,
             'min_exposure'  : 0.000580,
             'max_exposure'  : 910.0,
             'cfa'           : 'RGGB',
@@ -908,6 +946,8 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
             'pixel'         : 1.4,
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,
+            'min_binning'   : 1,
+            'max_binning'   : 4,
             'min_exposure'  : 0.000026,
             'max_exposure'  : 220.0,
             'cfa'           : 'BGGR',
@@ -935,6 +975,8 @@ class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
             'pixel'         : 3.45,
             'min_gain'      : 1.0,
             'max_gain'      : 251.18,
+            'min_binning'   : 1,
+            'max_binning'   : 1,
             'min_exposure'  : 0.016562,
             'max_exposure'  : 15.5,
             'cfa'           : None,  # mono
@@ -961,6 +1003,8 @@ class IndiClientLibCameraImx296Color(IndiClientLibCameraGeneric):
             'pixel'         : 3.45,
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,  # verified
+            'min_binning'   : 1,
+            'max_binning'   : 1,
             'min_exposure'  : 0.0001,
             'max_exposure'  : 15.5,
             'cfa'           : 'RGGB',  # unverified
@@ -987,6 +1031,8 @@ class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
             'pixel'         : 2.9,
             'min_gain'      : 1.0,
             'max_gain'      : 29.51,  # unverified
+            'min_binning'   : 1,
+            'max_binning'   : 2,
             'min_exposure'  : 0.000014,
             'max_exposure'  : 115.0,
             'cfa'           : 'GRBG',
@@ -1013,6 +1059,8 @@ class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
             'pixel'         : 2.9,
             'min_gain'      : 1.0,
             'max_gain'      : 29.51,
+            'min_binning'   : 1,
+            'max_binning'   : 2,
             'min_exposure'  : 0.000014,
             'max_exposure'  : 115.0,
             'cfa'           : 'RGGB',
@@ -1039,6 +1087,8 @@ class IndiClientLibCameraImx327(IndiClientLibCameraGeneric):
             'pixel'         : 2.9,
             'min_gain'      : 1.0,
             'max_gain'      : 29.51,
+            'min_binning'   : 1,
+            'max_binning'   : 1,
             'min_exposure'  : 0.000014,
             'max_exposure'  : 115.0,
             'cfa'           : 'RGGB',
@@ -1065,6 +1115,8 @@ class IndiClientLibCameraImx298(IndiClientLibCameraGeneric):
             'pixel'         : 1.12,
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,  # unverified
+            'min_binning'   : 1,
+            'max_binning'   : 1,
             'min_exposure'  : 0.0001,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',  # unverified
@@ -1089,6 +1141,8 @@ class IndiClientLibCameraImx500(IndiClientLibCameraGeneric):
             'pixel'         : 1.55,
             'min_gain'      : 1.0,
             'max_gain'      : 22.0,  # verified
+            'min_binning'   : 1,
+            'max_binning'   : 1,
             'min_exposure'  : 0.0002,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',  # verified
@@ -1113,6 +1167,8 @@ class IndiClientLibCameraImx283(IndiClientLibCameraGeneric):
             'pixel'         : 2.4,
             'min_gain'      : 1.0,
             'max_gain'      : 22.5,
+            'min_binning'   : 1,
+            'max_binning'   : 1,
             'min_exposure'  : 0.000058,
             'max_exposure'  : 129.0,
             'cfa'           : 'RGGB',  # verified
@@ -1137,6 +1193,8 @@ class IndiClientLibCameraImx678(IndiClientLibCameraGeneric):
             'pixel'         : 2.0,
             'min_gain'      : 1.0,
             'max_gain'      : 32.0,  # unverified
+            'min_binning'   : 1,
+            'max_binning'   : 1,
             'min_exposure'  : 0.000032,
             'max_exposure'  : 200.0,
             'cfa'           : 'RGGB',  # verified
@@ -1161,6 +1219,8 @@ class IndiClientLibCameraImx335(IndiClientLibCameraGeneric):
             'pixel'         : 2.0,
             'min_gain'      : 1.0,
             'max_gain'      : 1000.0,
+            'min_binning'   : 1,
+            'max_binning'   : 1,
             'min_exposure'  : 0.000007,
             'max_exposure'  : 1.0,
             'cfa'           : 'RGGB',

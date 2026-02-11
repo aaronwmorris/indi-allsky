@@ -1105,11 +1105,16 @@ class JsonImageLoopView(JsonView):
         if history_seconds > 14400:
             history_seconds = 14400
 
+
+        jsqm_data, camera_sqm_mag_data, device_sqm_mag_data = self.getSqmData(camera_id, ts_dt)
+
         data = {
-            'image_list' : self.getLoopImages(camera_id, ts_dt, history_seconds),
-            'sqm_data'   : self.getSqmData(camera_id, ts_dt),
-            'stars_data' : self.getStarsData(camera_id, ts_dt),
             'message'    : '',
+            'image_list' : self.getLoopImages(camera_id, ts_dt, history_seconds),
+            'sqm_data'   : jsqm_data,
+            'stars_data' : self.getStarsData(camera_id, ts_dt),
+            'camera_sqm_mag_data' : camera_sqm_mag_data,
+            'device_sqm_mag_data' : device_sqm_mag_data,
         }
 
         if len(data['image_list']) == 0:
@@ -1185,6 +1190,7 @@ class JsonImageLoopView(JsonView):
 
             image_list.append(data)
 
+
         return image_list
 
 
@@ -1192,11 +1198,6 @@ class JsonImageLoopView(JsonView):
         ts_minus_minutes = ts_dt - timedelta(minutes=self.sqm_history_minutes)
 
         sqm_images = self.model.query\
-            .add_columns(
-                func.max(self.model.sqm).label('image_max_sqm'),
-                func.min(self.model.sqm).label('image_min_sqm'),
-                func.avg(self.model.sqm).label('image_avg_sqm'),
-            )\
             .join(IndiAllSkyDbCameraTable)\
             .filter(
                 and_(
@@ -1206,16 +1207,77 @@ class JsonImageLoopView(JsonView):
                     self.model.createDate < ts_dt,
                 )
             )\
-            .first()
+            .order_by(self.model.createDate.desc())
 
 
-        sqm_data = {
-            'max' : sqm_images.image_max_sqm,
-            'min' : sqm_images.image_min_sqm,
-            'avg' : sqm_images.image_avg_sqm,
-        }
+        jsqm_list = list()
+        camera_sqm_mag_list = list()
+        device_sqm_mag_list = list()
+        for i in sqm_images:
+            try:
+                jsqm = i.sqm
+            except AttributeError:
+                jsqm = 0
 
-        return sqm_data
+
+            jsqm_list.append(jsqm)
+            camera_sqm_mag_list.append(i.data.get('sensor_user_8', 0.0))
+            device_sqm_mag_list.append(i.data.get('sensor_user_7', 0.0))
+
+
+        try:
+            jsqm_data = {
+                'max'  : max(jsqm_list),
+                'min'  : min(jsqm_list),
+                'avg'  : sum(jsqm_list) / len(jsqm_list),
+                'last' : jsqm_list[0],
+            }
+
+        except (ValueError, IndexError):
+            # list is probably empty
+            jsqm_data = {
+                'max' : 0.0,
+                'min' : 0.0,
+                'avg' : 0.0,
+                'last' : 0.0,
+            }
+
+
+        try:
+            camera_sqm_mag_data = {
+                'max'  : max(camera_sqm_mag_list),
+                'min'  : min(camera_sqm_mag_list),
+                'avg'  : sum(camera_sqm_mag_list) / len(camera_sqm_mag_list),
+                'last' : camera_sqm_mag_list[0],
+            }
+        except (ValueError, IndexError):
+            # list is probably empty
+            camera_sqm_mag_data = {
+                'max' : 0.0,
+                'min' : 0.0,
+                'avg' : 0.0,
+                'last' : 0.0,
+            }
+
+
+        try:
+            device_sqm_mag_data = {
+                'max'  : max(device_sqm_mag_list),
+                'min'  : min(device_sqm_mag_list),
+                'avg'  : sum(device_sqm_mag_list) / len(device_sqm_mag_list),
+                'last' : device_sqm_mag_list[0],
+            }
+        except (ValueError, IndexError):
+            # list is probably empty
+            device_sqm_mag_data = {
+                'max' : 0.0,
+                'min' : 0.0,
+                'avg' : 0.0,
+                'last' : 0.0,
+            }
+
+
+        return jsqm_data, camera_sqm_mag_data, device_sqm_mag_data
 
 
     def getStarsData(self, camera_id, ts_dt):
@@ -1283,12 +1345,14 @@ class JsonPanoramaLoopView(JsonImageLoopView):
 
     def getSqmData(self, *args):
         sqm_data = {
-            'max' : 0,
-            'min' : 0,
-            'avg' : 0,
+            'max'  : 0,
+            'min'  : 0,
+            'avg'  : 0,
+            'last' : 0,
         }
 
-        return sqm_data
+        # jsqm, camera, device
+        return sqm_data, sqm_data, sqm_data
 
 
     def getStarsData(self, *args):
@@ -1317,12 +1381,14 @@ class JsonRawImageLoopView(JsonImageLoopView):
 
     def getSqmData(self, *args):
         sqm_data = {
-            'max' : 0,
-            'min' : 0,
-            'avg' : 0,
+            'max'  : 0,
+            'min'  : 0,
+            'avg'  : 0,
+            'last' : 0,
         }
 
-        return sqm_data
+        # jsqm, camera, device
+        return sqm_data, sqm_data, sqm_data
 
 
     def getStarsData(self, *args):
@@ -1854,16 +1920,17 @@ class JsonChartView(JsonView):
         numpy_mask = numpy.full(image_data.shape[:2], True, numpy.bool_)
 
 
-        _sqm_mask = self._load_detection_mask()
+        _sqm_mask = self._load_detection_mask(latest_image.binmode)
+
 
         if isinstance(_sqm_mask, type(None)):
             sqm_roi = self.indi_allsky_config.get('SQM_ROI', [])
 
             try:
-                x1 = sqm_roi[0]  # these values may be invalid due to binning
-                y1 = sqm_roi[1]
-                x2 = sqm_roi[2]
-                y2 = sqm_roi[3]
+                x1 = int(sqm_roi[0] / latest_image.binmode)
+                y1 = int(sqm_roi[1] / latest_image.binmode)
+                x2 = int(sqm_roi[2] / latest_image.binmode)
+                y2 = int(sqm_roi[3] / latest_image.binmode)
             except IndexError:
                 sqm_fov_div = self.indi_allsky_config.get('SQM_FOV_DIV', 4)
                 x1 = int((image_width / 2) - (image_width / sqm_fov_div))
@@ -1925,6 +1992,8 @@ class ConfigView(FormView):
 
         context['camera_minGain'] = self.camera.minGain
         context['camera_maxGain'] = self.camera.maxGain
+        context['camera_minBinning'] = self.camera.minBinning
+        context['camera_maxBinning'] = self.camera.maxBinning
         context['camera_minExposure'] = self.camera.minExposure
 
         if self.camera.maxExposure > 120:
@@ -1980,6 +2049,17 @@ class ConfigView(FormView):
             dh_dewpoint_slot_var = self.indi_allsky_config.get('DEW_HEATER', {}).get('DEWPOINT_USER_VAR_SLOT', 'sensor_user_2')
 
             fan_temp_slot_var = self.indi_allsky_config.get('FAN', {}).get('TEMP_USER_VAR_SLOT', 'sensor_user_10')
+
+
+            raw_mag = self.latest_image_entry.data.get('camera_sqm_raw_mag', 0.0)
+            if raw_mag:
+                mag_offset = self.indi_allsky_config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 26.0)
+
+                context['camera_sqm_raw_mag_str'] = '{0:0.2f}'.format(raw_mag)
+                context['camera_sqm_calc_sqm_str'] = '{0:0.2f}'.format(mag_offset + raw_mag)  # raw_mag is negative
+            else:
+                context['camera_sqm_raw_mag_str'] = 'Not available'
+                context['camera_sqm_calc_sqm_str'] = 'Not available'
 
 
             if self.latest_image_entry.data.get(dh_temp_slot_var):
@@ -2100,6 +2180,9 @@ class ConfigView(FormView):
                 context['fan_target_high_str'] = 'n/a'
                 context['fan_status_str'] = 'n/a'
         else:
+            context['camera_sqm_raw_mag_str'] = 'Not available'
+            context['camera_sqm_calc_sqm_str'] = 'Not available'
+
             context['dh_temp_str'] = 'Not available'
             context['dh_dewpoint_str'] = 'Not available'
             context['dh_temp_delta_str'] = 'Not available'
@@ -2147,6 +2230,13 @@ class ConfigView(FormView):
             'CCD_BIT_DEPTH'                  : str(self.indi_allsky_config.get('CCD_BIT_DEPTH', 0)),  # string in form, int in config
             'EXPOSURE_PERIOD'                : self.indi_allsky_config.get('EXPOSURE_PERIOD', 15.0),
             'EXPOSURE_PERIOD_DAY'            : self.indi_allsky_config.get('EXPOSURE_PERIOD_DAY', 15.0),
+            'CAMERA_SQM__ENABLE'             : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE', False),
+            'CAMERA_SQM__ENABLE_DAY'         : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE_DAY', False),
+            'CAMERA_SQM__EXPOSURE'           : '{0:.6f}'.format(self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 15.0)),  # force 6 digits of precision
+            'CAMERA_SQM__GAIN'               : round(self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 0.0), 2),  # limit to 2 decimals
+            'CAMERA_SQM__BINNING'            : self.indi_allsky_config.get('CAMERA_SQM', {}).get('BINNING', 1),
+            'CAMERA_SQM__EXPOSURE_PERIOD'    : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900),
+            'CAMERA_SQM__MAGNITUDE_OFFSET'   : self.indi_allsky_config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 26.0),
             'FOCUS_MODE'                     : self.indi_allsky_config.get('FOCUS_MODE', False),
             'FOCUS_DELAY'                    : self.indi_allsky_config.get('FOCUS_DELAY', 4.0),
             'CFA_PATTERN'                    : self.indi_allsky_config.get('CFA_PATTERN', ''),
@@ -2723,6 +2813,7 @@ class ConfigView(FormView):
             'TEMP_SENSOR__AS3935_MASK_DISTURBER' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_MASK_DISTURBER', False),
             'TEMP_SENSOR__AS3935_NOISE_LEVEL'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_NOISE_LEVEL', 2),
             'TEMP_SENSOR__AS3935_SPIKE_REJECTION': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('AS3935_SPIKE_REJECTION', 2),
+            'TEMP_SENSOR__LUX_MAGNITUDE_OFFSET'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('LUX_MAGNITUDE_OFFSET', 26.0),
             'CHARTS__CUSTOM_SLOT_1'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1', 'sensor_user_10'),
             'CHARTS__CUSTOM_SLOT_1_MIN'      : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_1_MIN', 0.0),
             'CHARTS__CUSTOM_SLOT_2'          : self.indi_allsky_config.get('CHARTS', {}).get('CUSTOM_SLOT_2', 'sensor_user_11'),
@@ -3036,6 +3127,7 @@ class AjaxConfigView(BaseView):
         leaf_list = (
             'WEBSITE',
             'CCD_CONFIG',
+            'CAMERA_SQM',
             'IMAGE_FILE_COMPRESSION',
             'IMAGE_CIRCLE_MASK',
             'FISH2PANO',
@@ -3108,22 +3200,29 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LENS_OFFSET_Y']                        = int(request.json['LENS_OFFSET_Y'])
         self.indi_allsky_config['LENS_ALTITUDE']                        = float(request.json['LENS_ALTITUDE'])
         self.indi_allsky_config['LENS_AZIMUTH']                         = float(request.json['LENS_AZIMUTH'])
-        self.indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = round(float(request.json['CCD_CONFIG__NIGHT__GAIN']), 2)  # limit to 2 decimals
+        self.indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = float(round(float(request.json['CCD_CONFIG__NIGHT__GAIN']), 2))  # limit to 2 decimals
         self.indi_allsky_config['CCD_CONFIG']['NIGHT']['BINNING']       = int(request.json['CCD_CONFIG__NIGHT__BINNING'])
-        self.indi_allsky_config['CCD_CONFIG']['MOONMODE']['GAIN']       = round(float(request.json['CCD_CONFIG__MOONMODE__GAIN']), 2)  # limit to 2 decimals
+        self.indi_allsky_config['CCD_CONFIG']['MOONMODE']['GAIN']       = float(round(float(request.json['CCD_CONFIG__MOONMODE__GAIN']), 2))  # limit to 2 decimals
         self.indi_allsky_config['CCD_CONFIG']['MOONMODE']['BINNING']    = int(request.json['CCD_CONFIG__MOONMODE__BINNING'])
-        self.indi_allsky_config['CCD_CONFIG']['DAY']['GAIN']            = round(float(request.json['CCD_CONFIG__DAY__GAIN']), 2)  # limit to 2 decimals
+        self.indi_allsky_config['CCD_CONFIG']['DAY']['GAIN']            = float(round(float(request.json['CCD_CONFIG__DAY__GAIN']), 2))  # limit to 2 decimals
         self.indi_allsky_config['CCD_CONFIG']['DAY']['BINNING']         = int(request.json['CCD_CONFIG__DAY__BINNING'])
         self.indi_allsky_config['CCD_CONFIG']['AUTO_GAIN_ENABLE']       = bool(request.json['CCD_CONFIG__AUTO_GAIN_ENABLE'])
         self.indi_allsky_config['CCD_CONFIG']['AUTO_GAIN_LEVELS']       = int(request.json['CCD_CONFIG__AUTO_GAIN_LEVELS'])
-        self.indi_allsky_config['CCD_EXPOSURE_MAX']                     = float(request.json['CCD_EXPOSURE_MAX'])
-        self.indi_allsky_config['CCD_EXPOSURE_DEF']                     = float(request.json['CCD_EXPOSURE_DEF'])
-        self.indi_allsky_config['CCD_EXPOSURE_MIN']                     = float(request.json['CCD_EXPOSURE_MIN'])
-        self.indi_allsky_config['CCD_EXPOSURE_MIN_DAY']                 = float(request.json['CCD_EXPOSURE_MIN_DAY'])
+        self.indi_allsky_config['CCD_EXPOSURE_MAX']                     = float(round(float(request.json['CCD_EXPOSURE_MAX']), 6))
+        self.indi_allsky_config['CCD_EXPOSURE_DEF']                     = float(round(float(request.json['CCD_EXPOSURE_DEF']), 6))
+        self.indi_allsky_config['CCD_EXPOSURE_MIN']                     = float(round(float(request.json['CCD_EXPOSURE_MIN']), 6))
+        self.indi_allsky_config['CCD_EXPOSURE_MIN_DAY']                 = float(round(float(request.json['CCD_EXPOSURE_MIN_DAY']), 6))
         self.indi_allsky_config['CCD_EXPOSURE_TIMEOUT']                 = int(request.json['CCD_EXPOSURE_TIMEOUT'])
         self.indi_allsky_config['CCD_BIT_DEPTH']                        = int(request.json['CCD_BIT_DEPTH'])
         self.indi_allsky_config['EXPOSURE_PERIOD']                      = float(request.json['EXPOSURE_PERIOD'])
         self.indi_allsky_config['EXPOSURE_PERIOD_DAY']                  = float(request.json['EXPOSURE_PERIOD_DAY'])
+        self.indi_allsky_config['CAMERA_SQM']['ENABLE']                 = bool(request.json['CAMERA_SQM__ENABLE'])
+        self.indi_allsky_config['CAMERA_SQM']['ENABLE_DAY']             = bool(request.json['CAMERA_SQM__ENABLE_DAY'])
+        self.indi_allsky_config['CAMERA_SQM']['EXPOSURE']               = float(round(float(request.json['CAMERA_SQM__EXPOSURE']), 6))
+        self.indi_allsky_config['CAMERA_SQM']['GAIN']                   = float(round(float(request.json['CAMERA_SQM__GAIN']), 2))  # limit to 2 decimals
+        self.indi_allsky_config['CAMERA_SQM']['BINNING']                = int(request.json['CAMERA_SQM__BINNING'])
+        self.indi_allsky_config['CAMERA_SQM']['EXPOSURE_PERIOD']        = int(request.json['CAMERA_SQM__EXPOSURE_PERIOD'])
+        self.indi_allsky_config['CAMERA_SQM']['MAGNITUDE_OFFSET']       = float(request.json['CAMERA_SQM__MAGNITUDE_OFFSET'])
         self.indi_allsky_config['FOCUS_MODE']                           = bool(request.json['FOCUS_MODE'])
         self.indi_allsky_config['FOCUS_DELAY']                          = float(request.json['FOCUS_DELAY'])
         self.indi_allsky_config['CFA_PATTERN']                          = str(request.json['CFA_PATTERN'])
@@ -3712,6 +3811,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['AS3935_MASK_DISTURBER'] = bool(request.json['TEMP_SENSOR__AS3935_MASK_DISTURBER'])
         self.indi_allsky_config['TEMP_SENSOR']['AS3935_NOISE_LEVEL']    = int(request.json['TEMP_SENSOR__AS3935_NOISE_LEVEL'])
         self.indi_allsky_config['TEMP_SENSOR']['AS3935_SPIKE_REJECTION'] = int(request.json['TEMP_SENSOR__AS3935_SPIKE_REJECTION'])
+        self.indi_allsky_config['TEMP_SENSOR']['LUX_MAGNITUDE_OFFSET']  = float(request.json['TEMP_SENSOR__LUX_MAGNITUDE_OFFSET'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1']              = str(request.json['CHARTS__CUSTOM_SLOT_1'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_1_MIN']          = float(request.json['CHARTS__CUSTOM_SLOT_1_MIN'])
         self.indi_allsky_config['CHARTS']['CUSTOM_SLOT_2']              = str(request.json['CHARTS__CUSTOM_SLOT_2'])
@@ -4391,7 +4491,8 @@ class Fits2JpegView(BaseView):
         gain = float(hdulist[0].header.get('GAIN', 0))
         gain_av = Array('f', [gain])
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
-        bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
+        binning = int(hdulist[0].header.get('XBINNING', 1))
+        binning_av = Array('i', [binning])
         sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         night_v = Value('i', 1)  # using night values for processing
@@ -4403,7 +4504,7 @@ class Fits2JpegView(BaseView):
             p_config,
             position_av,
             gain_av,
-            bin_v,
+            binning_av,
             sensors_temp_av,
             sensors_user_av,
             night_v,
@@ -4424,6 +4525,7 @@ class Fits2JpegView(BaseView):
             filename_p,
             exposure,
             gain,
+            binning,
             image_date,
             0.0,
             fits_entry.camera,
@@ -6887,7 +6989,7 @@ class JsonFocusView(JsonView):
 
     def dispatch_request(self):
         import cv2
-        from multiprocessing import Value
+        from multiprocessing import Array
         from ..stars import IndiAllSkyStars
 
         zoom = int(request.args.get('zoom', 2))
@@ -6895,8 +6997,8 @@ class JsonFocusView(JsonView):
         y_offset = int(request.args.get('y_offset', 0))
 
 
-        bin_v = Value('i', 1)
-        stars_detect = IndiAllSkyStars(self.indi_allsky_config, bin_v, mask=None)
+        binning_av = Array('i', [1])
+        stars_detect = IndiAllSkyStars(self.indi_allsky_config, binning_av, mask=None)
 
 
         json_data = dict()
@@ -7678,7 +7780,8 @@ class JsonImageProcessingView(JsonView):
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
         gain = float(hdulist[0].header.get('GAIN', 0))
         gain_av = Array('f', [gain])
-        bin_v = Value('i', int(hdulist[0].header.get('XBINNING', 1)))
+        binning = int(hdulist[0].header.get('XBINNING', 1))
+        binning_av = Array('i', [binning])
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
         #sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         #sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
@@ -7693,7 +7796,7 @@ class JsonImageProcessingView(JsonView):
             p_config,
             position_av,
             gain_av,
-            bin_v,
+            binning_av,
             sensors_temp_av,
             sensors_user_av,
             night_v,
@@ -7717,6 +7820,7 @@ class JsonImageProcessingView(JsonView):
                 filename_p,
                 exposure,
                 gain,
+                binning,
                 image_date,
                 0.0,
                 fits_entry.camera,
@@ -7764,12 +7868,14 @@ class JsonImageProcessingView(JsonView):
                     alt_hdulist = fits.open(f_image_p)
                     alt_exposure = float(alt_hdulist[0].header.get('EXPTIME', 0))
                     alt_gain = float(alt_hdulist[0].header.get('GAIN', 0))
+                    alt_binning = int(alt_hdulist[0].header.get('XBINNING', 1))
                     alt_hdulist.close()
 
                     i_ref = image_processor.add(
                         f_image_p,
                         alt_exposure,
                         alt_gain,
+                        alt_binning,
                         pre_image_date,
                         0.0,
                         f_image.camera,
@@ -7793,6 +7899,7 @@ class JsonImageProcessingView(JsonView):
                 filename_p,
                 exposure,
                 gain,
+                binning,
                 datetime.now(),
                 0.0,
                 fits_entry.camera,

@@ -453,6 +453,9 @@ class FakeIndiCcd(FakeIndiDevice):
         self._min_gain = None
         self._max_gain = None
 
+        self._min_binning = None
+        self._max_binning = None
+
         self._min_exposure = None
         self._max_exposure = None
 
@@ -502,6 +505,24 @@ class FakeIndiCcd(FakeIndiDevice):
     @max_gain.setter
     def max_gain(self, new_max_gain):
         self._max_gain = float(new_max_gain)
+
+
+    @property
+    def min_binning(self):
+        return self._min_binning
+
+    @min_binning.setter
+    def min_binning(self, new_min_binning):
+        self._min_binning = int(new_min_binning)
+
+
+    @property
+    def max_binning(self):
+        return self._max_binning
+
+    @max_binning.setter
+    def max_binning(self, new_max_binning):
+        self._max_binning = int(new_max_binning)
 
 
     @property

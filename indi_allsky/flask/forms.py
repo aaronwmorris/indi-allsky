@@ -178,7 +178,7 @@ def LENS_AZIMUTH_validator(form, field):
         raise ValidationError('Azimuth must be 360 or less')
 
 
-def ccd_GAIN_validator(form, field):
+def CCD_GAIN_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
@@ -186,7 +186,10 @@ def ccd_GAIN_validator(form, field):
         raise ValidationError('Gain must be 0 or higher')
 
 
-def ccd_BINNING_validator(form, field):
+def CCD_BINNING_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
     if field.data <= 0:
         raise ValidationError('Bin mode must be more than 0')
 
@@ -194,15 +197,7 @@ def ccd_BINNING_validator(form, field):
         raise ValidationError('Bin mode must be less than 4')
 
 
-def CCD_EXPOSURE_MAX_validator(form, field):
-    if field.data <= 0.0:
-        raise ValidationError('Max Exposure must be more than 0')
-
-    if field.data > 120.0:
-        raise ValidationError('Max Exposure cannot be more than 120')
-
-
-def CCD_EXPOSURE_DEF_validator(form, field):
+def CCD_EXPOSURE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
@@ -211,17 +206,6 @@ def CCD_EXPOSURE_DEF_validator(form, field):
 
     if field.data > 120.0:
         raise ValidationError('Default Exposure cannot be more than 120')
-
-
-def CCD_EXPOSURE_MIN_validator(form, field):
-    if not isinstance(field.data, (int, float)):
-        raise ValidationError('Please enter valid number')
-
-    if field.data < 0.0:
-        raise ValidationError('Minimum Exposure must be 0 or more')
-
-    if field.data > 120.0:
-        raise ValidationError('Minimum Exposure cannot be more than 120')
 
 
 def CCD_EXPOSURE_TIMEOUT_validator(form, field):
@@ -246,6 +230,22 @@ def EXPOSURE_PERIOD_DAY_validator(form, field):
 
     if field.data < 1.0:
         raise ValidationError('Exposure period must be 1.0 or more')
+
+
+def CAMERA_SQM__EXPOSURE_PERIOD_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 60:
+        raise ValidationError('Value must be 120 or more')
+
+
+def SQM_MAGNITUDE_OFFSET_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0:
+        raise ValidationError('Value must be 0 or more')
 
 
 def CCD_CONFIG__AUTO_GAIN_LEVELS_validator(form, field):
@@ -796,6 +796,8 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'aurora_n_hemi_gw' : 0,
         'aurora_s_hemi_gw' : 0,
         'smoke_rating' : 'foobar',
+        'camera_sqm_raw_mag' : 0.0,
+        'camera_sqm_raw_adu' : 0,
         'latitude'     : 0.0,
         'longitude'    : 0.0,
         'stack_method' : 'foo',
@@ -884,6 +886,8 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'aurora_plasma_temp' : 0,
         'aurora_n_hemi_gw' : 0,
         'aurora_s_hemi_gw' : 0,
+        'camera_sqm_raw_mag' : 0.0,
+        'camera_sqm_raw_adu' : 0,
         'owner' : '',
         'location' : '',
         'lens_name' : '',
@@ -3790,12 +3794,12 @@ class IndiAllskyConfigForm(FlaskForm):
             ('blinka_temp_sensor_mlx90640_i2c', 'MLX90640 i2c - SkyTemp (1 slot)'),
         ),
         'Light/Lux Sensors' : (
-            ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR/SQM (4 slots)'),
-            ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full/SQM (5 slots)'),
-            ('blinka_light_sensor_veml7700_i2c', 'VEML7700 i2c - Lux/Light/White/SQM (4 slots)'),
-            ('blinka_light_sensor_bh1750_i2c', 'BH1750 i2c - Lux/SQM (2 slots)'),
-            ('blinka_light_sensor_si1145_i2c', 'SI1145 i2c - Vis/IR/UV (3 slots)'),
-            ('blinka_light_sensor_ltr390_i2c', 'LTR390 i2c - UV/Vis/UVI/Lux/SQM (5 slots)'),
+            ('blinka_light_sensor_tsl2561_i2c', 'TSL2561 i2c - Lux/Full/IR/SQM/Mag (5 slots)'),
+            ('blinka_light_sensor_tsl2591_i2c', 'TSL2591 i2c - Lux/Vis/IR/Full/SQM/Mag (6 slots)'),
+            ('blinka_light_sensor_veml7700_i2c', 'VEML7700 i2c - Lux/Light/White/SQM/Mag (5 slots)'),
+            ('blinka_light_sensor_bh1750_i2c', 'BH1750 i2c - Lux/SQM/Mag (3 slots)'),
+            ('blinka_light_sensor_si1145_i2c', 'SI1145 i2c - Vis/IR/UV/SQM/Mag (5 slots)'),
+            ('blinka_light_sensor_ltr390_i2c', 'LTR390 i2c - UV/Vis/UVI/Lux/SQM/Mag (6 slots)'),
         ),
         'Magnetometer/Gauss Sensors' : (
             ('qwiic_mag_sensor_mmc5983ma_i2c', 'MMC5983MA i2c - X/Y/Z/Temp (4 slots)'),
@@ -3887,6 +3891,10 @@ class IndiAllskyConfigForm(FlaskForm):
             ['aurora_n_hemi_gw', 'Hemispheric Power - Northern [GW]'],
             ['aurora_s_hemi_gw', 'Hemispheric Power - Southern [GW]'],
         ),
+        'SQM' : (
+            ['camera_sqm_raw_mag', 'Camera SQM - Raw Magnitude'],
+            ['camera_sqm_raw_adu', 'Camera SQM - Raw ADU'],
+        ),
     }
 
 
@@ -3899,8 +3907,8 @@ class IndiAllskyConfigForm(FlaskForm):
             ['sensor_user_4', '(4) User Slot - Fan Level'],
             ['sensor_user_5', '(5) User Slot - Heat Index'],
             ['sensor_user_6', '(6) User Slot - Wind Dir (Degrees)'],
-            ['sensor_user_7', '(7) User Slot - SQM'],
-            ['sensor_user_8', 'User Slot - Future'],
+            ['sensor_user_7', '(7) User Slot - Sensor SQM (mag/arcsec²)'],
+            ['sensor_user_8', '(8) User Slot - Camera SQM (mag/arcsec²)'],
             ['sensor_user_9', 'User Slot - Future'],
             ['sensor_user_10', 'User Slot 10'],
             ['sensor_user_11', 'User Slot 11'],
@@ -4140,22 +4148,29 @@ class IndiAllskyConfigForm(FlaskForm):
     LENS_OFFSET_Y                    = IntegerField('Y Offset', validators=[LENS_OFFSET_validator])
     LENS_ALTITUDE                    = FloatField('Altitude', validators=[LENS_ALTITUDE_validator])
     LENS_AZIMUTH                     = FloatField('Azimuth', validators=[LENS_AZIMUTH_validator])
-    CCD_CONFIG__NIGHT__GAIN          = FloatField('Night Gain', validators=[ccd_GAIN_validator], widget=NumberInput(step=1.0))
-    CCD_CONFIG__NIGHT__BINNING       = IntegerField('Night Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
-    CCD_CONFIG__MOONMODE__GAIN       = FloatField('Moon Mode Gain', validators=[ccd_GAIN_validator], widget=NumberInput(step=1.0))
-    CCD_CONFIG__MOONMODE__BINNING    = IntegerField('Moon Mode Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
-    CCD_CONFIG__DAY__GAIN            = FloatField('Daytime Gain', validators=[ccd_GAIN_validator], widget=NumberInput(step=1.0))
-    CCD_CONFIG__DAY__BINNING         = IntegerField('Daytime Bin Mode', validators=[DataRequired(), ccd_BINNING_validator])
+    CCD_CONFIG__NIGHT__GAIN          = FloatField('Night Gain', validators=[CCD_GAIN_validator])
+    CCD_CONFIG__NIGHT__BINNING       = IntegerField('Night Bin Mode', validators=[DataRequired(), CCD_BINNING_validator])
+    CCD_CONFIG__MOONMODE__GAIN       = FloatField('Moon Mode Gain', validators=[CCD_GAIN_validator])
+    CCD_CONFIG__MOONMODE__BINNING    = IntegerField('Moon Mode Bin Mode', validators=[DataRequired(), CCD_BINNING_validator])
+    CCD_CONFIG__DAY__GAIN            = FloatField('Daytime Gain', validators=[CCD_GAIN_validator])
+    CCD_CONFIG__DAY__BINNING         = IntegerField('Daytime Bin Mode', validators=[DataRequired(), CCD_BINNING_validator])
     CCD_CONFIG__AUTO_GAIN_ENABLE     = BooleanField('Enable Exposure Priority Gain Mode [Auto-Gain]')
     CCD_CONFIG__AUTO_GAIN_LEVELS     = SelectField('Auto-Gain Levels', choices=CCD_CONFIG__AUTO_GAIN_LEVELS_choices, validators=[CCD_CONFIG__AUTO_GAIN_LEVELS_validator])
-    CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_MAX_validator])
-    CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_DEF_validator])
-    CCD_EXPOSURE_MIN                 = FloatField('Min Exposure (Night)', validators=[CCD_EXPOSURE_MIN_validator])
-    CCD_EXPOSURE_MIN_DAY             = FloatField('Min Exposure (Day)', validators=[CCD_EXPOSURE_MIN_validator])
+    CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_validator])
+    CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_validator])
+    CCD_EXPOSURE_MIN                 = FloatField('Min Exposure (Night)', validators=[CCD_EXPOSURE_validator])
+    CCD_EXPOSURE_MIN_DAY             = FloatField('Min Exposure (Day)', validators=[CCD_EXPOSURE_validator])
     CCD_EXPOSURE_TIMEOUT             = IntegerField('Exposure Timeout', validators=[CCD_EXPOSURE_TIMEOUT_validator])
     CCD_BIT_DEPTH                    = SelectField('Camera Bit Depth', choices=CCD_BIT_DEPTH_choices, validators=[CCD_BIT_DEPTH_validator])
     EXPOSURE_PERIOD                  = FloatField('Exposure Period (Night)', validators=[DataRequired(), EXPOSURE_PERIOD_validator])
     EXPOSURE_PERIOD_DAY              = FloatField('Exposure Period (Day)', validators=[DataRequired(), EXPOSURE_PERIOD_DAY_validator])
+    CAMERA_SQM__ENABLE               = BooleanField('Enable Camera SQM')
+    CAMERA_SQM__ENABLE_DAY           = BooleanField('Enable Daytime SQM')
+    CAMERA_SQM__EXPOSURE             = FloatField('SQM Exposure', validators=[DataRequired(), CCD_EXPOSURE_validator])
+    CAMERA_SQM__GAIN                 = FloatField('SQM Gain', validators=[CCD_GAIN_validator])
+    CAMERA_SQM__BINNING              = IntegerField('SQM Binning', validators=[CCD_BINNING_validator])
+    CAMERA_SQM__EXPOSURE_PERIOD      = IntegerField('SQM Exposure Period', validators=[DataRequired(), CAMERA_SQM__EXPOSURE_PERIOD_validator])
+    CAMERA_SQM__MAGNITUDE_OFFSET     = FloatField('Magnitude Offset', validators=[SQM_MAGNITUDE_OFFSET_validator])
     FOCUS_MODE                       = BooleanField('Focus Mode')
     FOCUS_DELAY                      = FloatField('Focus Delay', validators=[DataRequired(), FOCUS_DELAY_validator])
     CFA_PATTERN                      = SelectField('Bayer Pattern', choices=CFA_PATTERN_choices, validators=[CFA_PATTERN_validator])
@@ -4772,6 +4787,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__AS3935_MASK_DISTURBER  = BooleanField('AS3935 Mask Disturber')
     TEMP_SENSOR__AS3935_NOISE_LEVEL     = IntegerField('AS3935 Noise Level Threshold', validators=[DataRequired(), TEMP_SENSOR__AS3935_NOISE_LEVEL_validator])
     TEMP_SENSOR__AS3935_SPIKE_REJECTION = IntegerField('AS3935 Spike Rejection', validators=[DataRequired(), TEMP_SENSOR__AS3935_SPIKE_REJECTION_validator])
+    TEMP_SENSOR__LUX_MAGNITUDE_OFFSET   = FloatField('Lux Magnitude Offset', validators=[SQM_MAGNITUDE_OFFSET_validator])
     CHARTS__CUSTOM_SLOT_1            = SelectField('Extra Chart Slot 1', choices=[], validators=[CUSTOM_CHART_validator])
     CHARTS__CUSTOM_SLOT_1_MIN        = FloatField('Chart 1 Minimum', validators=[CUSTOM_CHART_MIN_validator])
     CHARTS__CUSTOM_SLOT_2            = SelectField('Extra Chart Slot 2', choices=[], validators=[CUSTOM_CHART_validator])
