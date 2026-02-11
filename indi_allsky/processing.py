@@ -409,6 +409,9 @@ class ImageProcessor(object):
                 self._camera_sqm_raw_mag = 0.0
                 self._camera_sqm_raw_adu = 0.0
 
+                with self.sensors_user_av.get_lock():
+                    self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM] = 0.0
+
 
     def add(self, filename, exposure, gain, binning, exp_date, exp_elapsed, camera):
         if isinstance(self._detection_mask_dict, type(None)):
