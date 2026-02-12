@@ -70,8 +70,8 @@ function showImage(entry) {
         context.textAlign = 'left';
         context.lineWidth = 10;
         var maxWidth = 200;
-        var x = canvas.width-10-maxWidth;
-        var y = canvas.height-150;
+        var x_right = canvas.width - 10 - maxWidth;
+        var y = canvas.height - 150;
 
 
         // round the background strokes to prevent spikes
@@ -85,9 +85,9 @@ function showImage(entry) {
 
             var sqm_text = "*** Detection ***";
             context.strokeStyle = 'black';
-            context.strokeText(sqm_text, x-110, y-40, maxWidth);
+            context.strokeText(sqm_text, x_right - 110, y - 40, maxWidth);
             context.fillStyle = 'lightgrey';
-            context.fillText(sqm_text, x-110, y-40, maxWidth);
+            context.fillText(sqm_text, x_right - 110, y - 40, maxWidth);
         }
 
 
@@ -96,29 +96,29 @@ function showImage(entry) {
 
         var sqm_text = "Stars " + parseFloat(json_data['image_list'][0]["stars"]);
         context.strokeStyle = 'black';
-        context.strokeText(sqm_text, x-175, y, maxWidth);
+        context.strokeText(sqm_text, x_right - 175, y, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(sqm_text, x-175, y, maxWidth);
+        context.fillText(sqm_text, x_right - 175, y, maxWidth);
 
         context.font = '20px serif';
 
         var stars_max_text = "Max " + parseFloat(json_data['stars_data']['max']);
         context.strokeStyle = 'black';
-        context.strokeText(stars_max_text, x-175, y+40, maxWidth);
+        context.strokeText(stars_max_text, x_right - 175, y + 40, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(stars_max_text, x-175, y+40, maxWidth);
+        context.fillText(stars_max_text, x_right - 175, y + 40, maxWidth);
 
         var stars_avg_text = "Avg " + parseFloat(json_data['stars_data']['avg']).toFixed(1);
         context.strokeStyle = 'black';
-        context.strokeText(stars_avg_text, x-175, y+80, maxWidth);
+        context.strokeText(stars_avg_text, x_right - 175, y + 80, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(stars_avg_text, x-175, y+80, maxWidth);
+        context.fillText(stars_avg_text, x_right - 175, y + 80, maxWidth);
 
         var stars_min_text = "Min " + parseFloat(json_data['stars_data']['min']);
         context.strokeStyle = 'black';
-        context.strokeText(stars_min_text, x-175, y+120, maxWidth);
+        context.strokeText(stars_min_text, x_right - 175, y + 120, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(stars_min_text, x-175, y+120, maxWidth);
+        context.fillText(stars_min_text, x_right - 175, y + 120, maxWidth);
 
 
         // SQM
@@ -126,9 +126,9 @@ function showImage(entry) {
 
         var sqm_text = "jSQM " + parseFloat(json_data['image_list'][0]["sqm"]).toFixed(1);
         context.strokeStyle = 'black';
-        context.strokeText(sqm_text, x, y, maxWidth);
+        context.strokeText(sqm_text, x_right, y, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(sqm_text, x, y, maxWidth);
+        context.fillText(sqm_text, x_right, y, maxWidth);
 
 
 
@@ -136,21 +136,21 @@ function showImage(entry) {
 
         var sqm_max_text = "Max " + parseFloat(json_data['sqm_data']['max']).toFixed(1);
         context.strokeStyle = 'black';
-        context.strokeText(sqm_max_text, x, y+40, maxWidth);
+        context.strokeText(sqm_max_text, x_right, y + 40, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(sqm_max_text, x, y+40, maxWidth);
+        context.fillText(sqm_max_text, x_right, y + 40, maxWidth);
 
         var sqm_avg_text = "Avg " + parseFloat(json_data['sqm_data']['avg']).toFixed(1);
         context.strokeStyle = 'black';
-        context.strokeText(sqm_avg_text, x, y+80, maxWidth);
+        context.strokeText(sqm_avg_text, x_right, y + 80, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(sqm_avg_text, x, y+80, maxWidth);
+        context.fillText(sqm_avg_text, x_right, y + 80, maxWidth);
 
         var sqm_min_text = "Min " + parseFloat(json_data['sqm_data']['min']).toFixed(1);
         context.strokeStyle = 'black';
-        context.strokeText(sqm_min_text, x, y+120, maxWidth);
+        context.strokeText(sqm_min_text, x_right, y + 120, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(sqm_min_text, x, y+120, maxWidth);
+        context.fillText(sqm_min_text, x_right, y + 120, maxWidth);
     };
 
 
