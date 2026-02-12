@@ -91,14 +91,34 @@ function showImage(entry) {
         }
 
 
-        // Stars
         context.font = '32px serif';
 
-        var sqm_text = "Stars " + parseFloat(json_data['image_list'][0]["stars"]);
+        // SQM
+        if (json_data['camera_sqm_mag_data']['last'] > 0) {
+            var camera_sqm_text = "Camera SQM: " + parseFloat(json_data['camera_sqm_mag_data']['last']).toFixed(3);
+            context.strokeStyle = 'black';
+            context.strokeText(camera_sqm_text, 10, y, 300);
+            context.fillStyle = 'lightgrey';
+            context.fillText(camera_sqm_text, 10, y, 300);
+        }
+
+        if (json_data['device_sqm_mag_data']['last'] > 0) {
+            var device_sqm_text = "Device SQM: " + parseFloat(json_data['device_sqm_mag_data']['last']).toFixed(3);
+            context.strokeStyle = 'black';
+            context.strokeText(device_sqm_text, 10, y + 40, 300);
+            context.fillStyle = 'lightgrey';
+            context.fillText(device_sqm_text, 10, y + 40, 300);
+        }
+
+
+        context.font = '32px serif';
+
+        // Stars
+        var stars_text = "Stars " + parseFloat(json_data['image_list'][0]["stars"]);
         context.strokeStyle = 'black';
-        context.strokeText(sqm_text, x_right - 175, y, maxWidth);
+        context.strokeText(stars_text, x_right - 175, y, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(sqm_text, x_right - 175, y, maxWidth);
+        context.fillText(stars_text, x_right - 175, y, maxWidth);
 
         context.font = '20px serif';
 
