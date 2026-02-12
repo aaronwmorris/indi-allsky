@@ -71,7 +71,7 @@ function showImage(entry) {
         context.lineWidth = 10;
         var maxWidth = 200;
         var x_right = canvas.width - 10 - maxWidth;
-        var y = canvas.height - 150;
+        var y_bottom = canvas.height - 150;
 
 
         // round the background strokes to prevent spikes
@@ -85,9 +85,9 @@ function showImage(entry) {
 
             var sqm_text = "*** Detection ***";
             context.strokeStyle = 'black';
-            context.strokeText(sqm_text, x_right - 110, y - 40, maxWidth);
+            context.strokeText(sqm_text, x_right - 110, y_bottom - 40, maxWidth);
             context.fillStyle = 'lightgrey';
-            context.fillText(sqm_text, x_right - 110, y - 40, maxWidth);
+            context.fillText(sqm_text, x_right - 110, y_bottom - 40, maxWidth);
         }
 
 
@@ -97,17 +97,17 @@ function showImage(entry) {
         if (json_data['camera_sqm_mag_data']['last'] > 0) {
             var camera_sqm_text = "Camera SQM: " + parseFloat(json_data['camera_sqm_mag_data']['last']).toFixed(3);
             context.strokeStyle = 'black';
-            context.strokeText(camera_sqm_text, 10, y, 300);
+            context.strokeText(camera_sqm_text, 10, y_bottom, 300);
             context.fillStyle = 'lightgrey';
-            context.fillText(camera_sqm_text, 10, y, 300);
+            context.fillText(camera_sqm_text, 10, y_bottom, 300);
         }
 
         if (json_data['device_sqm_mag_data']['last'] > 0) {
             var device_sqm_text = "Device SQM: " + parseFloat(json_data['device_sqm_mag_data']['last']).toFixed(3);
             context.strokeStyle = 'black';
-            context.strokeText(device_sqm_text, 10, y + 40, 300);
+            context.strokeText(device_sqm_text, 10, y_bottom + 40, 300);
             context.fillStyle = 'lightgrey';
-            context.fillText(device_sqm_text, 10, y + 40, 300);
+            context.fillText(device_sqm_text, 10, y_bottom + 40, 300);
         }
 
 
@@ -116,29 +116,29 @@ function showImage(entry) {
         // Stars
         var stars_text = "Stars " + parseFloat(json_data['image_list'][0]["stars"]);
         context.strokeStyle = 'black';
-        context.strokeText(stars_text, x_right - 175, y, maxWidth);
+        context.strokeText(stars_text, x_right - 175, y_bottom, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(stars_text, x_right - 175, y, maxWidth);
+        context.fillText(stars_text, x_right - 175, y_bottom, maxWidth);
 
         context.font = '20px serif';
 
         var stars_max_text = "Max " + parseFloat(json_data['stars_data']['max']);
         context.strokeStyle = 'black';
-        context.strokeText(stars_max_text, x_right - 175, y + 40, maxWidth);
+        context.strokeText(stars_max_text, x_right - 175, y_bottom + 40, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(stars_max_text, x_right - 175, y + 40, maxWidth);
+        context.fillText(stars_max_text, x_right - 175, y_bottom + 40, maxWidth);
 
         var stars_avg_text = "Avg " + parseFloat(json_data['stars_data']['avg']).toFixed(1);
         context.strokeStyle = 'black';
-        context.strokeText(stars_avg_text, x_right - 175, y + 80, maxWidth);
+        context.strokeText(stars_avg_text, x_right - 175, y_bottom + 80, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(stars_avg_text, x_right - 175, y + 80, maxWidth);
+        context.fillText(stars_avg_text, x_right - 175, y_bottom + 80, maxWidth);
 
         var stars_min_text = "Min " + parseFloat(json_data['stars_data']['min']);
         context.strokeStyle = 'black';
-        context.strokeText(stars_min_text, x_right - 175, y + 120, maxWidth);
+        context.strokeText(stars_min_text, x_right - 175, y_bottom + 120, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(stars_min_text, x_right - 175, y + 120, maxWidth);
+        context.fillText(stars_min_text, x_right - 175, y_bottom + 120, maxWidth);
 
 
         // SQM
@@ -146,9 +146,9 @@ function showImage(entry) {
 
         var sqm_text = "jSQM " + parseFloat(json_data['image_list'][0]["sqm"]).toFixed(1);
         context.strokeStyle = 'black';
-        context.strokeText(sqm_text, x_right, y, maxWidth);
+        context.strokeText(sqm_text, x_right, y_bottom, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(sqm_text, x_right, y, maxWidth);
+        context.fillText(sqm_text, x_right, y_bottom, maxWidth);
 
 
 
@@ -156,21 +156,21 @@ function showImage(entry) {
 
         var sqm_max_text = "Max " + parseFloat(json_data['sqm_data']['max']).toFixed(1);
         context.strokeStyle = 'black';
-        context.strokeText(sqm_max_text, x_right, y + 40, maxWidth);
+        context.strokeText(sqm_max_text, x_right, y_bottom + 40, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(sqm_max_text, x_right, y + 40, maxWidth);
+        context.fillText(sqm_max_text, x_right, y_bottom + 40, maxWidth);
 
         var sqm_avg_text = "Avg " + parseFloat(json_data['sqm_data']['avg']).toFixed(1);
         context.strokeStyle = 'black';
-        context.strokeText(sqm_avg_text, x_right, y + 80, maxWidth);
+        context.strokeText(sqm_avg_text, x_right, y_bottom + 80, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(sqm_avg_text, x_right, y + 80, maxWidth);
+        context.fillText(sqm_avg_text, x_right, y_bottom + 80, maxWidth);
 
         var sqm_min_text = "Min " + parseFloat(json_data['sqm_data']['min']).toFixed(1);
         context.strokeStyle = 'black';
-        context.strokeText(sqm_min_text, x_right, y + 120, maxWidth);
+        context.strokeText(sqm_min_text, x_right, y_bottom + 120, maxWidth);
         context.fillStyle = 'lightgrey';
-        context.fillText(sqm_min_text, x_right, y + 120, maxWidth);
+        context.fillText(sqm_min_text, x_right, y_bottom + 120, maxWidth);
     };
 
 
