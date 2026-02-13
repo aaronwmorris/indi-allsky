@@ -408,7 +408,7 @@ class IndiAllSkyDarks(object):
 
 
         # set SQM exposure
-        sqm_exposure = float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 5.0))
+        sqm_exposure = float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 10.0))
         with self.exposure_av.get_lock():
             self.exposure_av[constants.EXPOSURE_SQM] = float(sqm_exposure)
 

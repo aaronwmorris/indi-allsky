@@ -2252,7 +2252,7 @@ class ConfigView(FormView):
             'EXPOSURE_PERIOD_DAY'            : self.indi_allsky_config.get('EXPOSURE_PERIOD_DAY', 15.0),
             'CAMERA_SQM__ENABLE'             : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE', False),
             'CAMERA_SQM__ENABLE_DAY'         : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE_DAY', False),
-            'CAMERA_SQM__EXPOSURE'           : '{0:.6f}'.format(self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 5.0)),  # force 6 digits of precision
+            'CAMERA_SQM__EXPOSURE'           : '{0:.6f}'.format(self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 10.0)),  # force 6 digits of precision
             'CAMERA_SQM__GAIN'               : round(self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 10.0), 2),  # limit to 2 decimals
             'CAMERA_SQM__BINNING'            : self.indi_allsky_config.get('CAMERA_SQM', {}).get('BINNING', 1),
             'CAMERA_SQM__EXPOSURE_PERIOD'    : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900),

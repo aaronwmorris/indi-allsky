@@ -1214,7 +1214,7 @@ class CaptureWorker(Process):
 
 
         # set SQM exposure
-        sqm_exposure = float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 5.0))
+        sqm_exposure = float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 10.0))
         if sqm_exposure < ccd_min_exp:
             logger.warning(
                 'SQM exposure %0.8f too low, increasing to %0.8f',
