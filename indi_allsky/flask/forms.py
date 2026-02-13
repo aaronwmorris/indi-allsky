@@ -1738,6 +1738,18 @@ def FFMPEG_EXTRA_OPTIONS_validator(form, field):
     if not re.search(options_regex, field.data):
         raise ValidationError('Invalid characters')
 
+    begin_space_regex = r'^\ '
+    if re.search(begin_space_regex, field.data):
+        raise ValidationError('Options cannot begin with a space')
+
+    end_space_regex = r'\ $'
+    if re.search(end_space_regex, field.data):
+        raise ValidationError('Options cannot end with a space')
+
+    multi_space_regex = r'\ \ '
+    if re.search(multi_space_regex, field.data):
+        raise ValidationError('Options cannot contain multiple concurrent space characters')
+
 
 def TEXT_PROPERTIES__FONT_FACE_validator(form, field):
     fonts = (
@@ -2711,6 +2723,18 @@ def LIBCAMERA__EXTRA_OPTIONS_validator(form, field):
     options_regex = r'^[a-zA-Z0-9_\.\,\-\:\/\ ]+$'
     if not re.search(options_regex, field.data):
         raise ValidationError('Invalid characters')
+
+    begin_space_regex = r'^\ '
+    if re.search(begin_space_regex, field.data):
+        raise ValidationError('Options cannot begin with a space')
+
+    end_space_regex = r'\ $'
+    if re.search(end_space_regex, field.data):
+        raise ValidationError('Options cannot end with a space')
+
+    multi_space_regex = r'\ \ '
+    if re.search(multi_space_regex, field.data):
+        raise ValidationError('Options cannot contain multiple concurrent space characters')
 
 
 def PYCURL_CAMERA__URL_validator(form, field):
