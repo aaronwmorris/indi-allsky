@@ -207,8 +207,7 @@ class CaptureWorker(Process):
         binning_av,
         sensors_temp_av,
         sensors_user_av,
-        night_v,
-        moonmode_v,
+        night_av,
     ):
 
         super(CaptureWorker, self).__init__()
@@ -229,8 +228,7 @@ class CaptureWorker(Process):
 
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
-        self.night_v = night_v
-        self.moonmode_v = moonmode_v
+        self.night_av = night_av
 
         self._miscDb = miscDb(self.config)
         self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
@@ -336,11 +334,9 @@ class CaptureWorker(Process):
         self.detectNight()
 
         ### Update shared values to match current state
-        with self.night_v.get_lock():
-            self.night_v.value = int(self.night)
-
-        with self.moonmode_v.get_lock():
-            self.moonmode_v.value = int(self.moonmode)
+        with self.night_av.get_lock():
+            self.night_av[constants.NIGHT_NIGHT] = int(self.night)
+            self.night_av[constants.NIGHT_MOONMODE] = int(self.moonmode)
 
 
         with app.app_context():
@@ -411,7 +407,7 @@ class CaptureWorker(Process):
 
 
             with app.app_context():
-                if bool(self.night_v.value) != self.night:
+                if bool(self.night_av[constants.NIGHT_NIGHT]) != self.night:
                     ### Change between day and night
 
                     self.reconfigure_camera = True
@@ -454,7 +450,7 @@ class CaptureWorker(Process):
                         # prevent duplicate generation until reconfigureCcd() is called
                         self.generate_timelapse_flag = False
 
-                elif self.night and bool(self.moonmode_v.value) != self.moonmode:
+                elif self.night and bool(self.night_av[constants.NIGHT_MOONMODE]) != self.moonmode:
                     # Switch between night non-moonmode and moonmode
                     self.reconfigure_camera = True
 
@@ -713,7 +709,7 @@ class CaptureWorker(Process):
                         else:
                             # SQM exposures enabled
                             if now_time > self.sqm_tasks_time:
-                                if self.night_v.value:
+                                if self.night_av[constants.NIGHT_NIGHT]:
                                     # Night
 
                                     # SQM exposure
@@ -817,8 +813,7 @@ class CaptureWorker(Process):
             self.exposure_av,
             self.gain_av,
             self.binning_av,
-            self.night_v,
-            self.moonmode_v,
+            self.night_av,
         )
 
 
@@ -1353,8 +1348,8 @@ class CaptureWorker(Process):
         if self.config.get('CCD_EXPOSURE_DEF'):
             ccd_exposure_default = self.config['CCD_EXPOSURE_DEF']
 
-            if self.night_v.value:
-                if self.moonmode_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
+                if self.night_av[constants.NIGHT_MOONMODE]:
                     ccd_gain_default = gain_moonmode
                     ccd_binning_default = binning_moonmode
                 else:
@@ -1395,8 +1390,8 @@ class CaptureWorker(Process):
                 if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
                     ccd_gain_default = gain_day
                 else:
-                    if self.night_v.value:
-                        if self.moonmode_v.value:
+                    if self.night_av[constants.NIGHT_NIGHT]:
+                        if self.night_av[constants.NIGHT_MOONMODE]:
                             ccd_gain_default = gain_moonmode
                         else:
                             ccd_gain_default = gain_night
@@ -1405,8 +1400,8 @@ class CaptureWorker(Process):
 
 
                 # binning
-                if self.night_v.value:
-                    if self.moonmode_v.value:
+                if self.night_av[constants.NIGHT_NIGHT]:
+                    if self.night_av[constants.NIGHT_MOONMODE]:
                         ccd_binning_default = binning_moonmode
                     else:
                         ccd_binning_default = binning_night
@@ -1723,8 +1718,8 @@ class CaptureWorker(Process):
         cmd_env = {
             'GAIN'     : '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
             'BIN'      : '{0:d}'.format(self.binning_av[constants.BINNING_CURRENT]),
-            'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
-            'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
+            'MOONMODE' : '{0:d}'.format(int(bool(self.night_av[constants.NIGHT_MOONMODE]))),
+            'NIGHT'    : '{0:d}'.format(int(self.night_av[constants.NIGHT_NIGHT])),
             'LATITUDE' : '{0:0.3f}'.format(self.position_av[constants.POSITION_LATITUDE]),
             'LONGITUDE': '{0:0.3f}'.format(self.position_av[constants.POSITION_LONGITUDE]),
             'ELEVATION': '{0:d}'.format(int(self.position_av[constants.POSITION_ELEVATION])),
@@ -1983,11 +1978,9 @@ class CaptureWorker(Process):
 
         ### Update shared values
         # These need to be updated in the capture process to indicate the real state of the camera
-        with self.night_v.get_lock():
-            self.night_v.value = int(self.night)
-
-        with self.moonmode_v.get_lock():
-            self.moonmode_v.value = int(self.moonmode)
+        with self.night_av.get_lock():
+            self.night_av[constants.NIGHT_NIGHT] = int(self.night)
+            self.night_av[constants.NIGHT_MOONMODE] = int(self.moonmode)
 
 
     def detectNight(self):

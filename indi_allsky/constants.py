@@ -81,6 +81,17 @@ CFA_MAP_STR = {
 }
 
 
+# Night indexes
+NIGHT_NIGHT         = 0
+NIGHT_MOONMODE      = 1
+
+
+# Astrometrics indexes
+ASTRO_SUN_ALT       = 0
+ASTRO_MOON_ALT      = 1
+ASTRO_MOON_PERCENT  = 2
+
+
 # Position indexes
 POSITION_LATITUDE   = 0
 POSITION_LONGITUDE  = 1

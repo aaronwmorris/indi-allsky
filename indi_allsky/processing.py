@@ -107,8 +107,7 @@ class ImageProcessor(object):
         binning_av,
         sensors_temp_av,
         sensors_user_av,
-        night_v,
-        moonmode_v,
+        night_av,
     ):
         self.config = config
 
@@ -118,8 +117,7 @@ class ImageProcessor(object):
 
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
-        self.moonmode_v = moonmode_v
-        self.night_v = night_v
+        self.night_av = night_av
         self.night = None  # None forces day/night change at startup
 
         self._miscDb = miscDb(self.config)
@@ -168,7 +166,7 @@ class ImageProcessor(object):
         self._stretch_o = None
 
 
-        self._ia_scnr = IndiAllskyScnr(self.config, self.night_v)
+        self._ia_scnr = IndiAllskyScnr(self.config, self.night_av)
         self._cardinal_dirs_label = IndiAllskyCardinalDirsLabel(self.config)
         self._moon_overlay = IndiAllSkyMoonOverlay(self.config)
         self._lightgraph_overlay = IndiAllSkyLightgraphOverlay(self.config, self.position_av)
@@ -419,12 +417,12 @@ class ImageProcessor(object):
             self.post_init()
 
 
-        if self.night != bool(self.night_v.value):
-            self.night = bool(self.night_v.value)
+        if self.night != bool(self.night_av[constants.NIGHT_NIGHT]):
+            self.night = bool(self.night_av[constants.NIGHT_NIGHT])
             self._night_day_change()
 
 
-        if self.night_v.value and not self.moonmode_v.value:
+        if self.night_av[constants.NIGHT_NIGHT] and not self.night_av[constants.NIGHT_MOONMODE]:
             # just in case the array grows beyond the desired size
             while len(self.image_list) >= self.stack_count:
                 self.image_list.pop()
@@ -743,7 +741,7 @@ class ImageProcessor(object):
         dayDate = self._dateCalcs.calcDayDate(exp_date)
 
 
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             target_adu = self.config['TARGET_ADU']
         else:
             target_adu = self.config['TARGET_ADU_DAY']
@@ -882,9 +880,9 @@ class ImageProcessor(object):
             return data
 
 
-        if self.config.get('NIGHT_GRAYSCALE') and self.night_v.value:
+        if self.config.get('NIGHT_GRAYSCALE') and self.night_av[constants.NIGHT_NIGHT]:
             debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
-        elif self.config.get('DAYTIME_GRAYSCALE') and not self.night_v.value:
+        elif self.config.get('DAYTIME_GRAYSCALE') and not self.night_av[constants.NIGHT_NIGHT]:
             debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
         else:
             debayer_algorithm = self.__cfa_bgr_map[image_bayerpat]
@@ -1711,7 +1709,7 @@ class ImageProcessor(object):
         if self.config.get('USE_NIGHT_COLOR', True):
             algo = self.config.get('SCNR_ALGORITHM')
         else:
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 algo = self.config.get('SCNR_ALGORITHM')
             else:
@@ -1752,7 +1750,7 @@ class ImageProcessor(object):
             WBG_FACTOR = float(self.config.get('WBG_FACTOR', 1.0))
             WBR_FACTOR = float(self.config.get('WBR_FACTOR', 1.0))
         else:
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 WBB_FACTOR = float(self.config.get('WBB_FACTOR', 1.0))
                 WBG_FACTOR = float(self.config.get('WBG_FACTOR', 1.0))
@@ -1848,7 +1846,7 @@ class ImageProcessor(object):
         if self.config.get('USE_NIGHT_COLOR', True):
             auto_wb = self.config.get('AUTO_WB')
         else:
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 auto_wb = self.config.get('AUTO_WB')
             else:
@@ -1912,7 +1910,7 @@ class ImageProcessor(object):
             WBG_MTF_MIDTONES = float(self.config.get('WBG_MTF_MIDTONES', 0.5))
             WBR_MTF_MIDTONES = float(self.config.get('WBR_MTF_MIDTONES', 0.5))
         else:
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 WBB_MTF_MIDTONES = float(self.config.get('WBB_MTF_MIDTONES', 0.5))
                 WBG_MTF_MIDTONES = float(self.config.get('WBG_MTF_MIDTONES', 0.5))
@@ -1934,8 +1932,8 @@ class ImageProcessor(object):
 
 
     def _white_balance_mtf(self, WBB_MTF_MIDTONES, WBG_MTF_MIDTONES, WBR_MTF_MIDTONES):
-        if self._wb_mtf_night != self.night_v.value:
-            self._wb_mtf_night = self.night_v.value
+        if self._wb_mtf_night != self.night_av[constants.NIGHT_NIGHT]:
+            self._wb_mtf_night = self.night_av[constants.NIGHT_NIGHT]
             self._wbb_mtf_lut = None  # recalculate LUT
             self._wbg_mtf_lut = None  # recalculate LUT
             self._wbr_mtf_lut = None  # recalculate LUT
@@ -2002,7 +2000,7 @@ class ImageProcessor(object):
         if self.config.get('USE_NIGHT_COLOR', True):
             SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR', 1.0))
         else:
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR', 1.0))
             else:
@@ -2118,7 +2116,7 @@ class ImageProcessor(object):
         if self.config.get('USE_NIGHT_COLOR', True):
             GAMMA_CORRECTION = float(self.config.get('GAMMA_CORRECTION', 1.0))
         else:
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 GAMMA_CORRECTION = float(self.config.get('GAMMA_CORRECTION', 1.0))
             else:
@@ -2795,7 +2793,7 @@ class ImageProcessor(object):
 
 
         # stacking data
-        if self.night_v.value and not self.moonmode_v.value:
+        if self.night_av[constants.NIGHT_NIGHT] and not self.night_av[constants.NIGHT_MOONMODE]:
             if self.config.get('IMAGE_STACK_COUNT', 1) > 1:
                 label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'average').capitalize()
                 label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
@@ -2810,11 +2808,11 @@ class ImageProcessor(object):
 
         # stretching data
         if self.config.get('IMAGE_STRETCH', {}).get('CLASSNAME'):
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 label_data['stretch'] = 'On'
 
-                if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
+                if self.night_av[constants.NIGHT_MOONMODE] and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
                     label_data['stretch'] = 'Off'
             else:
                 # daytime
@@ -2899,16 +2897,16 @@ class ImageProcessor(object):
 
 
         # Add moon mode indicator
-        if self.moonmode_v.value:
+        if self.night_av[constants.NIGHT_MOONMODE]:
             image_label += '\n* Moon Mode *'
 
 
         # Add eclipse indicator
-        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_v.value:
+        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_av[constants.NIGHT_NIGHT]:
             # Lunar eclipse (earth's penumbra is large)
             image_label += '\n* LUNAR ECLIPSE *'
 
-        if self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
+        if self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_av[constants.NIGHT_NIGHT]:
             # Solar eclipse
             image_label += '\n* SOLAR ECLIPSE *'
 
@@ -3303,7 +3301,7 @@ class ImageProcessor(object):
         if not self.config.get('SATELLITE_TRACK', {}).get('LABEL_ENABLE'):
             return list()
 
-        if not self.config.get('SATELLITE_TRACK', {}).get('DAYTIME_TRACK') and not self.night_v.value:
+        if not self.config.get('SATELLITE_TRACK', {}).get('DAYTIME_TRACK') and not self.night_av[constants.NIGHT_NIGHT]:
             return list()
 
 
@@ -3468,9 +3466,9 @@ class ImageProcessor(object):
             return
 
 
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             # night
-            if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
+            if self.night_av[constants.NIGHT_MOONMODE] and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
                 return
         else:
             # daytime

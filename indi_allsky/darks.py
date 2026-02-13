@@ -17,7 +17,6 @@ import numpy
 import cv2
 
 from multiprocessing import Queue
-from multiprocessing import Value
 from multiprocessing import Array
 
 from .exceptions import TimeOutException
@@ -136,8 +135,13 @@ class IndiAllSkyDarks(object):
 
         self.sensors_temp_av = Array('f', [0.0])  # 0 ccd_temp
 
-        self.night_v = Value('i', -1)  # bogus initial value
-        self.moonmode_v = Value('i', 0)
+
+        # These shared values are to indicate when the camera is in night/moon modes
+        self.night_av = Array('i', [
+            -1,  # night, bogus initial value
+            0,  # moonmode, never used
+        ])
+
 
         # not used, but required
         self.position_av = Array('f', [
@@ -286,8 +290,7 @@ class IndiAllSkyDarks(object):
             self.exposure_av,
             self.gain_av,
             self.binning_av,
-            self.night_v,
-            self.moonmode_v,
+            self.night_av,
         )
 
 
@@ -1079,8 +1082,9 @@ class IndiAllSkyDarks(object):
         # take day darks with cooling disabled
         if self.daytime:
             ### DAY
-            with self.night_v.get_lock():
-                self.night_v.value = 0
+            with self.night_av.get_lock():
+                self.night_av[constants.NIGHT_NIGHT] = 0
+                self.night_av[constants.NIGHT_MOONMODE] = 0
 
 
             # take day darks with cooling enabled
@@ -1152,8 +1156,8 @@ class IndiAllSkyDarks(object):
 
 
         ### NIGHT
-        with self.night_v.get_lock():
-            self.night_v.value = 1
+        with self.night_av.get_lock():
+            self.night_av[constants.NIGHT_NIGHT] = 1
 
 
 

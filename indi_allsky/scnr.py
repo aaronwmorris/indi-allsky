@@ -10,15 +10,17 @@ import cv2
 import numpy
 import logging
 
+from . import constants
+
 
 logger = logging.getLogger('indi_allsky')
 
 
 class IndiAllskyScnr(object):
 
-    def __init__(self, config, night_v):
+    def __init__(self, config, night_av):
         self.config = config
-        self.night_v = night_v
+        self.night_av = night_av
 
         self._night = None
 
@@ -116,8 +118,8 @@ class IndiAllskyScnr(object):
         #mtf_start = time.time()
 
 
-        if self.night != self.night_v.value:
-            self.night = self.night_v.value
+        if self.night != self.night_av[constants.NIGHT_NIGHT]:
+            self.night = self.night_av[constants.NIGHT_NIGHT]
             self._mtf_lut = None  # recalculate LUT
 
 
@@ -125,7 +127,7 @@ class IndiAllskyScnr(object):
             if self.config.get('USE_NIGHT_COLOR', True):
                 midtones = self.config.get('SCNR_MTF_MIDTONES', 0.55)
             else:
-                if self.night_v.value:
+                if self.night_av[constants.NIGHT_NIGHT]:
                     # night
                     midtones = self.config.get('SCNR_MTF_MIDTONES', 0.55)
                 else:

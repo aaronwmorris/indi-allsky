@@ -18,7 +18,6 @@ import logging
 
 import queue
 from multiprocessing import Queue
-from multiprocessing import Value
 from multiprocessing import Array
 
 from .version import __version__
@@ -185,8 +184,17 @@ class IndiAllSky(object):
 
 
         # These shared values are to indicate when the camera is in night/moon modes
-        self.night_v = Value('i', -1)  # bogus initial value
-        self.moonmode_v = Value('i', -1)  # bogus initial value
+        self.night_av = Array('i', [
+            -1,  # night, bogus initial value
+            -1,  # moonmode, bogus initial value
+        ])
+
+
+        self.astro_av = Array('f', [
+            0.0,  # sun alt
+            0.0,  # moon alt
+            0.0,  # moon percent
+        ])
 
 
         self.capture_q = Queue()
@@ -415,8 +423,7 @@ class IndiAllSky(object):
             self.binning_av,
             self.sensors_temp_av,
             self.sensors_user_av,
-            self.night_v,
-            self.moonmode_v,
+            self.night_av,
         )
         self.capture_worker.start()
 
@@ -468,8 +475,7 @@ class IndiAllSky(object):
             self.binning_av,
             self.sensors_temp_av,
             self.sensors_user_av,
-            self.night_v,
-            self.moonmode_v,
+            self.night_av,
         )
         self.image_worker.start()
 
@@ -527,7 +533,7 @@ class IndiAllSky(object):
             self.video_error_q,
             self.video_q,
             self.upload_q,
-            self.night_v,
+            self.night_av,
             self.binning_av,
         )
         self.video_worker.start()
@@ -587,7 +593,7 @@ class IndiAllSky(object):
             self.sensor_error_q,
             self.sensors_temp_av,
             self.sensors_user_av,
-            self.night_v,
+            self.night_av,
         )
         self.sensor_worker.start()
 
