@@ -659,7 +659,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         libzmq3-dev \
         libahp-gt-dev \
         libcamera-dev \
-        libboost-program-options1.74-dev \
+        libboost-program-options-dev \
         zlib1g-dev
 
 elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
