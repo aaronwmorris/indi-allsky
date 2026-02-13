@@ -424,6 +424,7 @@ class IndiAllSky(object):
             self.sensors_temp_av,
             self.sensors_user_av,
             self.night_av,
+            self.astro_av,
         )
         self.capture_worker.start()
 
@@ -476,6 +477,7 @@ class IndiAllSky(object):
             self.sensors_temp_av,
             self.sensors_user_av,
             self.night_av,
+            self.astro_av,
         )
         self.image_worker.start()
 

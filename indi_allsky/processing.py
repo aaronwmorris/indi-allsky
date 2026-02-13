@@ -108,6 +108,7 @@ class ImageProcessor(object):
         sensors_temp_av,
         sensors_user_av,
         night_av,
+        astro_av,
     ):
         self.config = config
 
@@ -117,6 +118,7 @@ class ImageProcessor(object):
 
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
+        self.astro_av = astro_av
         self.night_av = night_av
         self.night = None  # None forces day/night change at startup
 

@@ -4495,6 +4495,7 @@ class Fits2JpegView(BaseView):
         sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         night_av = Array('i', [1, 0])  # using night values for processing
+        astro_av = Array('f', [0.0, 0.0, 0.0])
 
         hdulist.close()
 
@@ -4506,7 +4507,9 @@ class Fits2JpegView(BaseView):
             sensors_temp_av,
             sensors_user_av,
             night_av,
+            astro_av,
         )
+
 
         processing_start = time.time()
 
@@ -7784,6 +7787,7 @@ class JsonImageProcessingView(JsonView):
         sensors_temp_av = Array('f', [0.0 for x in range(60)])
         sensors_user_av = Array('f', [0.0 for x in range(60)])
         night_av = Array('i', [1, 0])  # using night values for processing
+        astro_av = Array('f', [0.0, 0.0, 0.0])
 
         hdulist.close()
 
@@ -7795,8 +7799,8 @@ class JsonImageProcessingView(JsonView):
             sensors_temp_av,
             sensors_user_av,
             night_av,
+            astro_av,
         )
-
 
 
         processing_start = time.time()

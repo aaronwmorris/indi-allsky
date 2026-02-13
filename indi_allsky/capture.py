@@ -208,6 +208,7 @@ class CaptureWorker(Process):
         sensors_temp_av,
         sensors_user_av,
         night_av,
+        astro_av,
     ):
 
         super(CaptureWorker, self).__init__()
@@ -229,6 +230,7 @@ class CaptureWorker(Process):
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
         self.night_av = night_av
+        self.astro_av = astro_av
 
         self._miscDb = miscDb(self.config)
         self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
@@ -2000,17 +2002,27 @@ class CaptureWorker(Process):
         sun.compute(obs)
         moon.compute(obs)
 
+
+        with self.astro_av.get_lock():
+            self.astro_av[constants.ASTRO_SUN_ALT] = float(math.degrees(sun.alt))
+            self.astro_av[constants.ASTRO_MOON_ALT] = float(math.degrees(moon.alt))
+            self.astro_av[constants.ASTRO_MOON_PHASE] = float(moon.moon_phase * 100.0)
+
+
         # Night
         self.night = sun.alt < self.night_sun_radians  # boolean
 
-        # Moonmode
-        moon_phase = moon.moon_phase * 100.0
 
-        logger.info('Sun alt: %0.1f, Moon alt: %0.1f, phase %0.1f%%', math.degrees(sun.alt), math.degrees(moon.alt), moon_phase)
+        logger.info(
+            'Sun alt: %0.1f, Moon alt: %0.1f, phase %0.1f%%',
+            self.astro_av[constants.ASTRO_SUN_ALT],
+            self.astro_av[constants.ASTRO_MOON_ALT],
+            self.astro_av[constants.ASTRO_MOON_PHASE],
+        )
 
         if self.night:
             if moon.alt >= self.night_moonmode_radians:
-                if moon_phase >= self.config['NIGHT_MOONMODE_PHASE']:
+                if self.astro_av[constants.ASTRO_MOON_PHASE] >= self.config['NIGHT_MOONMODE_PHASE']:
                     #logger.info('Moon Mode conditions detected')
                     self.moonmode = True
                     return

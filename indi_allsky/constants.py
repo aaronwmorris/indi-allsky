@@ -89,7 +89,7 @@ NIGHT_MOONMODE      = 1
 # Astrometrics indexes
 ASTRO_SUN_ALT       = 0
 ASTRO_MOON_ALT      = 1
-ASTRO_MOON_PERCENT  = 2
+ASTRO_MOON_PHASE    = 2
 
 
 # Position indexes

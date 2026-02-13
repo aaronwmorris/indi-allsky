@@ -82,6 +82,7 @@ class ImageWorker(Process):
         sensors_temp_av,
         sensors_user_av,
         night_av,
+        astro_av,
     ):
         super(ImageWorker, self).__init__()
 
@@ -101,6 +102,7 @@ class ImageWorker(Process):
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av
         self.night_av = night_av
+        self.astro_av = astro_av
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
@@ -128,6 +130,7 @@ class ImageWorker(Process):
             self.sensors_temp_av,
             self.sensors_user_av,
             self.night_av,
+            self.astro_av,
         )
 
         self._miscDb = miscDb(self.config)
