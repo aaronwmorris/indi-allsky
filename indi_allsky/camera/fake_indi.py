@@ -16,8 +16,8 @@ class FakeIndiClient(object):
         ra_v,
         dec_v,
         gain_av,
-        bin_v,
-        night_v,
+        bin_av,
+        night_av,
     ):
         super(FakeIndiClient, self).__init__()
 
@@ -31,9 +31,9 @@ class FakeIndiClient(object):
         self.dec_v = dec_v
 
         self.gain_av = gain_av
-        self.bin_v = bin_v
+        self.bin_av = bin_av
 
-        self.night_v = night_v
+        self.night_av = night_av
 
         self._ccd_device = None
 

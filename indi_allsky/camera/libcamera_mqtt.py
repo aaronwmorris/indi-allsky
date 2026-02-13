@@ -125,7 +125,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         libcamera_camera_id = self.config.get('LIBCAMERA', {}).get('CAMERA_ID', 0)
 
 
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             # night
             image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'jpg')
         else:
@@ -196,7 +196,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
 
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             #  night
 
             if self.config.get('LIBCAMERA', {}).get('IMMEDIATE', True):
@@ -243,7 +243,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         # extra options get added last
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             #  night
             # Add extra config options
             extra_options = self.config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS')

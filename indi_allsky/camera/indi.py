@@ -98,8 +98,7 @@ class IndiClient(PyIndi.BaseClient):
         exposure_av,
         gain_av,
         binning_av,
-        night_v,
-        moonmode_v,
+        night_av,
     ):
         super(IndiClient, self).__init__()
 
@@ -112,8 +111,7 @@ class IndiClient(PyIndi.BaseClient):
         self.gain_av = gain_av
         self.binning_av = binning_av
 
-        self.night_v = night_v
-        self.moonmode_v = moonmode_v
+        self.night_av = night_av
 
         self._camera_id = None
 
