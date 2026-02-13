@@ -4460,7 +4460,6 @@ class Fits2JpegView(BaseView):
         import cv2
         from astropy.io import fits
         #from PIL import Image
-        from multiprocessing import Value
         from multiprocessing import Array
 
         fits_id = int(request.args['id'])
@@ -4495,11 +4494,10 @@ class Fits2JpegView(BaseView):
         binning_av = Array('i', [binning])
         sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
-        night_v = Value('i', 1)  # using night values for processing
+        night_av = Array('i', [1, 0])  # using night values for processing
 
         hdulist.close()
 
-        moonmode_v = Value('i', 0)
         image_processor = ImageProcessor(
             p_config,
             position_av,
@@ -4507,8 +4505,7 @@ class Fits2JpegView(BaseView):
             binning_av,
             sensors_temp_av,
             sensors_user_av,
-            night_v,
-            moonmode_v,
+            night_av,
         )
 
         processing_start = time.time()
@@ -7543,7 +7540,6 @@ class JsonImageProcessingView(JsonView):
         import cv2
         from astropy.io import fits
         #from PIL import Image
-        from multiprocessing import Value
         from multiprocessing import Array
 
 
@@ -7787,11 +7783,10 @@ class JsonImageProcessingView(JsonView):
         #sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         sensors_temp_av = Array('f', [0.0 for x in range(60)])
         sensors_user_av = Array('f', [0.0 for x in range(60)])
-        night_v = Value('i', 1)  # using night values for processing
+        night_av = Array('i', [1, 0])  # using night values for processing
 
         hdulist.close()
 
-        moonmode_v = Value('i', 0)
         image_processor = ImageProcessor(
             p_config,
             position_av,
@@ -7799,8 +7794,7 @@ class JsonImageProcessingView(JsonView):
             binning_av,
             sensors_temp_av,
             sensors_user_av,
-            night_v,
-            moonmode_v,
+            night_av,
         )
 
 
