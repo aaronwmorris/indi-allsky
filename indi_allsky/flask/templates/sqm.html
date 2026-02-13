@@ -123,17 +123,17 @@ function showImage(entry) {
 
             context.font = '20px serif';
 
-            var camera_sqm_adu_text = "ADU: " + parseFloat(json_data['camera_sqm_adu_data']['last']).toFixed(3);
-            context.strokeStyle = 'black';
-            context.strokeText(camera_sqm_adu_text, 10, y_bottom + 120, 400);
-            context.fillStyle = 'lightgrey';
-            context.fillText(camera_sqm_adu_text, 10, y_bottom + 120, 400);
-
             var camera_sqm_mag_text = "Mag: " + parseFloat(json_data['camera_sqm_mag_data']['last']).toFixed(3);
             context.strokeStyle = 'black';
-            context.strokeText(camera_sqm_mag_text, 10, y_bottom + 160, 400);
+            context.strokeText(camera_sqm_mag_text, 10, y_bottom + 120, 400);
             context.fillStyle = 'lightgrey';
-            context.fillText(camera_sqm_mag_text, 10, y_bottom + 160, 400);
+            context.fillText(camera_sqm_mag_text, 10, y_bottom + 120, 400);
+
+            var camera_sqm_adu_text = "ADU: " + parseFloat(json_data['camera_sqm_adu_data']['last']).toFixed(3);
+            context.strokeStyle = 'black';
+            context.strokeText(camera_sqm_adu_text, 10, y_bottom + 160, 400);
+            context.fillStyle = 'lightgrey';
+            context.fillText(camera_sqm_adu_text, 10, y_bottom + 160, 400);
         }
 
 
