@@ -711,8 +711,8 @@ class CaptureWorker(Process):
                         else:
                             # SQM exposures enabled
                             if now_time > self.sqm_tasks_time:
-                                if self.night_av[constants.NIGHT_NIGHT]:
-                                    # Night
+                                if self.astro_av[constants.ASTRO_SUN_ALT] <= -18.0:
+                                    # Only take SQM exposures when in astronomical darkness
 
                                     # SQM exposure
                                     logger.warning('SQM exposure triggered')

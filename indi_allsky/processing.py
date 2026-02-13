@@ -120,7 +120,8 @@ class ImageProcessor(object):
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
         self.astro_av = astro_av
         self.night_av = night_av
-        self.night = None  # None forces day/night change at startup
+
+        self.astro_darkness = None
 
         self._miscDb = miscDb(self.config)
 
@@ -393,24 +394,25 @@ class ImageProcessor(object):
             self._stretch_o = None
 
 
-    def _night_day_change(self):
-        logger.warning('Day/Night change')
+    def _check_astro_darkness(self):
+        astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= -18.0
 
-        # changing modes here
-        if self.night:
-            # night
-            pass
+        if astro_darkness != self.astro_darkness:
+            self.astro_darkness = astro_darkness
 
-        else:
-            # day
 
-            if not self.config.get('CAMERA_SQM', {}).get('ENABLE_DAY'):
-                # Reset these value during the day
-                self._camera_sqm_raw_mag = 0.0
-                self._camera_sqm_raw_adu = 0.0
+            if astro_darkness:
+                # Astronomical Darkness
+                pass
+            else:
+                # Day
+                if not self.config.get('CAMERA_SQM', {}).get('ENABLE_DAY'):
+                    # Reset these values when not in astronomical darkness
+                    self._camera_sqm_raw_mag = 0.0
+                    self._camera_sqm_raw_adu = 0.0
 
-                with self.sensors_user_av.get_lock():
-                    self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM] = 0.0
+                    with self.sensors_user_av.get_lock():
+                        self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM] = 0.0
 
 
     def add(self, filename, exposure, gain, binning, exp_date, exp_elapsed, camera):
@@ -419,9 +421,7 @@ class ImageProcessor(object):
             self.post_init()
 
 
-        if self.night != bool(self.night_av[constants.NIGHT_NIGHT]):
-            self.night = bool(self.night_av[constants.NIGHT_NIGHT])
-            self._night_day_change()
+        self._check_astro_darkness()
 
 
         if self.night_av[constants.NIGHT_NIGHT] and not self.night_av[constants.NIGHT_MOONMODE]:
