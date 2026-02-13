@@ -13,6 +13,7 @@ import queue
 import logging
 
 
+from multiprocessing import Array
 from multiprocessing import Queue
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -67,6 +68,14 @@ class TestUpload(object):
             'error_q' : Queue(),
         }]
 
+
+        # not actually used but needed to initilize miscUpload
+        self.night_av = Array('i', [
+            -1,  # night, bogus initial value
+            -1,  # moonmode, bogus initial value
+        ])
+
+
         self._miscUpload = None
 
 
@@ -87,7 +96,7 @@ class TestUpload(object):
         self._miscUpload = miscUpload(
             self.config,
             self.upload_q,
-            None,  # night_v not needed
+            self.night_av,  # not used
         )
 
 
@@ -131,7 +140,7 @@ class TestUpload(object):
         self._miscUpload = miscUpload(
             self.config,
             self.upload_q,
-            None,  # night_v not needed
+            self.night_av,  # not used
         )
 
 
@@ -207,7 +216,7 @@ class TestUpload(object):
         self._miscUpload = miscUpload(
             self.config,
             self.upload_q,
-            None,  # night_v not needed
+            self.night_av,  # not used
         )
 
 

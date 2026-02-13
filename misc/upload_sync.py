@@ -16,6 +16,8 @@ from prettytable import PrettyTable
 import signal
 import logging
 
+from multiprocessing import Array
+
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import true as sa_true
 from sqlalchemy.sql.expression import false as sa_false
@@ -97,10 +99,17 @@ class UploadSync(object):
             })
 
 
+        # not actually used but needed to initilize miscUpload
+        self.night_av = Array('i', [
+            -1,  # night, bogus initial value
+            -1,  # moonmode, bogus initial value
+        ])
+
+
         self._miscUpload = miscUpload(
             self.config,
             self.upload_q,
-            None,  # night_v not needed
+            self.night_av,  # not used
         )
 
 
