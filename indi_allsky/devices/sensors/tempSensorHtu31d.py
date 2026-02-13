@@ -12,8 +12,8 @@ logger = logging.getLogger('indi_allsky')
 class TempSensorHtu31d(SensorBase):
 
     def update(self):
-        if self.night != bool(self.night_v.value):
-            self.night = bool(self.night_v.value)
+        if self.night != bool(self.night_av[constants.NIGHT_NIGHT]):
+            self.night = bool(self.night_av[constants.NIGHT_NIGHT])
             self.update_sensor_settings()
 
 

@@ -1,4 +1,7 @@
 import math
+import logging
+
+logger = logging.getLogger('indi_allsky')
 
 
 class SensorBase(object):
@@ -7,7 +10,7 @@ class SensorBase(object):
     def __init__(self, *args, **kwargs):
         self.config = args[0]
         self.name = args[1]
-        self.night_v = args[2]
+        self.night_av = args[2]
 
 
         self._lux_magnitude_offset = self.config.get('TEMP_SENSOR', {}).get('LUX_MAGNITUDE_OFFSET', 26.0)
