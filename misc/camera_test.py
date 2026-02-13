@@ -15,7 +15,6 @@ import logging
 
 import queue
 from multiprocessing import Queue
-from multiprocessing import Value
 from multiprocessing import Array
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import NoResultFound
@@ -72,8 +71,11 @@ class CameraTest(object):
         self.night = False
         self.moonmode = False
 
-        self.night_v = Value('i', -1)  # bogus initial value
-        self.moonmode_v = Value('i', -1)  # bogus initial value
+        # These shared values are to indicate when the camera is in night/moon modes
+        self.night_av = Array('i', [
+            -1,  # night, bogus initial value
+            -1,  # moonmode, bogus initial value
+        ])
 
 
         self.exposure_av = Array('f', [
@@ -274,8 +276,7 @@ class CameraTest(object):
             self.exposure_av,
             self.gain_av,
             self.binning_av,
-            self.night_v,
-            self.moonmode_v,
+            self.night_av,
         )
 
 
@@ -620,11 +621,9 @@ class CameraTest(object):
 
 
         ### Update shared values
-        with self.night_v.get_lock():
-            self.night_v.value = int(self.night)
-
-        with self.moonmode_v.get_lock():
-            self.moonmode_v.value = int(self.moonmode)
+        with self.night_av.get_lock():
+            self.night_av[constants.NIGHT_NIGHT] = int(self.night)
+            self.night_av[constants.NIGHT_MOONMODE] = int(self.moonmode)
 
 
 if __name__ == "__main__":
