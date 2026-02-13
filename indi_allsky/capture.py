@@ -63,9 +63,9 @@ class CaptureWorker(Process):
         ['sensor_user_4', 'Fan Level'],
         ['sensor_user_5', 'Heat Index'],
         ['sensor_user_6', 'Wind Dir (Degrees)'],
-        ['sensor_user_7', 'Sensor SQM (mag/arcsec²)'],
-        ['sensor_user_8', 'Camera SQM (mag/arcsec²)'],
-        ['sensor_user_9', 'Future Use 9'],
+        ['sensor_user_7', 'Sensor SQM Magnitude (mag/arcsec²)'],
+        ['sensor_user_8', 'Camera SQM Magnitude (mag/arcsec²)'],
+        ['sensor_user_9', 'Camera SQM ADU'],
         ['sensor_user_10', 'User Slot 10'],
         ['sensor_user_11', 'User Slot 11'],
         ['sensor_user_12', 'User Slot 12'],
@@ -188,7 +188,6 @@ class CaptureWorker(Process):
         ['aurora_n_hemi_gw', 'Hemispheric Power - Northern [GW]'],
         ['aurora_s_hemi_gw', 'Hemispheric Power - Southern [GW]'],
         ['camera_sqm_raw_mag', 'Camera SQM Raw Magnitude'],
-        ['camera_sqm_raw_adu', 'Camera SQM Raw ADU'],
     )
 
 
@@ -1380,9 +1379,11 @@ class CaptureWorker(Process):
                 logger.warning('Reusing last stable exposure: %0.6f, gain %0.2f, bin %d', ccd_exposure_default, ccd_gain_default, ccd_binning_default)
 
                 # restore last sqm value
-                last_camera_sqm = last_image.data.get('sensor_user_8', 0.0)
+                last_camera_sqm_mag = last_image.data.get('sensor_user_8', 0.0)
+                last_camera_sqm_adu = last_image.data.get('sensor_user_9', 0.0)
                 with self.sensors_user_av.get_lock():
-                    self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM] = float(last_camera_sqm)
+                    self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_MAG] = float(last_camera_sqm_mag)
+                    self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_ADU] = float(last_camera_sqm_adu)
 
             else:
                 #ccd_exposure_default = self.exposure_av[constants.EXPOSURE_MIN_NIGHT]

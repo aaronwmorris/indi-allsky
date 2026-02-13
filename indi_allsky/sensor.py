@@ -209,8 +209,8 @@ class SensorWorker(Process):
                 )
 
 
-            if self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM]:
-                logger.info('Sensor SQM: %0.5f', self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM])
+            if self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM_MAG]:
+                logger.info('Sensor SQM Magnitude: %0.5f', self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM_MAG])
 
 
             self.check_dew_heater_thresholds()
@@ -691,7 +691,7 @@ class SensorWorker(Process):
                         self.sensors_user_av[constants.SENSOR_USER_WIND_DIR] = float(sensor_data['wind_degrees'])
 
                     if sensor_data.get('sqm_mag'):
-                        self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM] = float(sensor_data['sqm_mag'])
+                        self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM_MAG] = float(sensor_data['sqm_mag'])
 
 
                     for i, v in enumerate(sensor_data['data']):

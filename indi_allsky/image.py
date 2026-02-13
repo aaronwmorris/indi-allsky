@@ -792,7 +792,6 @@ class ImageWorker(Process):
                 'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
                 'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
                 'camera_sqm_raw_mag' : self.image_processor.camera_sqm_raw_mag,
-                'camera_sqm_raw_adu' : self.image_processor.camera_sqm_raw_adu,
             }
 
 
@@ -891,7 +890,6 @@ class ImageWorker(Process):
                 'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
                 'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
                 'camera_sqm_raw_mag' : self.image_processor.camera_sqm_raw_mag,
-                'camera_sqm_raw_adu' : self.image_processor.camera_sqm_raw_adu,
             }
 
 
@@ -1093,7 +1091,6 @@ class ImageWorker(Process):
             'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'aircraft'            : len(self.adsb_aircraft_list),
             'camera_sqm_raw_mag'  : self.image_processor.camera_sqm_raw_mag,
-            'camera_sqm_raw_adu'  : self.image_processor.camera_sqm_raw_adu,
         }
 
 
@@ -1283,7 +1280,6 @@ class ImageWorker(Process):
             'aurora_n_hemi_gw'      : i_ref.aurora_n_hemi_gw,
             'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
             'camera_sqm_raw_mag'    : self.image_processor.camera_sqm_raw_mag,
-            'camera_sqm_raw_adu'    : self.image_processor.camera_sqm_raw_adu,
         }
 
         fits_entry = self._miscDb.addFitsImage(
@@ -1468,7 +1464,6 @@ class ImageWorker(Process):
             'aurora_n_hemi_gw'      : i_ref.aurora_n_hemi_gw,
             'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
             'camera_sqm_raw_mag'    : self.image_processor.camera_sqm_raw_mag,
-            'camera_sqm_raw_adu'    : self.image_processor.camera_sqm_raw_adu,
         }
 
         try:
@@ -1652,7 +1647,6 @@ class ImageWorker(Process):
             'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'aircraft'            : len(self.adsb_aircraft_list),
             'camera_sqm_raw_mag'  : self.image_processor.camera_sqm_raw_mag,
-            'camera_sqm_raw_adu'  : self.image_processor.camera_sqm_raw_adu,
         }
 
 
@@ -1823,7 +1817,6 @@ class ImageWorker(Process):
             'aurora_n_hemi_gw'      : i_ref.aurora_n_hemi_gw,
             'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
             'camera_sqm_raw_mag'    : self.image_processor.camera_sqm_raw_mag,
-            'camera_sqm_raw_adu'    : self.image_processor.camera_sqm_raw_adu,
         }
 
 
@@ -2555,7 +2548,8 @@ class ImageWorker(Process):
         mag_sqm, raw_mag, raw_adu = self.image_processor._calculateMagnitudeSqm(i_ref)
 
 
-        logger.warning('SQM: %0.2f, Raw Magnitude: %0.2f, ADU: %0.2f', mag_sqm, raw_mag, raw_adu)
+        logger.warning('Camera SQM Magnitude: %0.2f, Raw Magnitude: %0.2f, ADU: %0.2f', mag_sqm, raw_mag, raw_adu)
         with self.sensors_user_av.get_lock():
-            self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM] = float(mag_sqm)
+            self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_MAG] = float(mag_sqm)
+            self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_ADU] = float(raw_adu)
 

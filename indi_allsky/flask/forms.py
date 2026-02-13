@@ -797,7 +797,6 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'aurora_s_hemi_gw' : 0,
         'smoke_rating' : 'foobar',
         'camera_sqm_raw_mag' : 0.0,
-        'camera_sqm_raw_adu' : 0,
         'latitude'     : 0.0,
         'longitude'    : 0.0,
         'stack_method' : 'foo',
@@ -887,7 +886,6 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'aurora_n_hemi_gw' : 0,
         'aurora_s_hemi_gw' : 0,
         'camera_sqm_raw_mag' : 0.0,
-        'camera_sqm_raw_adu' : 0,
         'owner' : '',
         'location' : '',
         'lens_name' : '',
@@ -3893,7 +3891,6 @@ class IndiAllskyConfigForm(FlaskForm):
         ),
         'SQM' : (
             ['camera_sqm_raw_mag', 'Camera SQM - Raw Magnitude'],
-            ['camera_sqm_raw_adu', 'Camera SQM - Raw ADU'],
         ),
     }
 
@@ -3907,9 +3904,9 @@ class IndiAllskyConfigForm(FlaskForm):
             ['sensor_user_4', '(4) User Slot - Fan Level'],
             ['sensor_user_5', '(5) User Slot - Heat Index'],
             ['sensor_user_6', '(6) User Slot - Wind Dir (Degrees)'],
-            ['sensor_user_7', '(7) User Slot - Sensor SQM (mag/arcsec²)'],
-            ['sensor_user_8', '(8) User Slot - Camera SQM (mag/arcsec²)'],
-            ['sensor_user_9', 'User Slot - Future'],
+            ['sensor_user_7', '(7) User Slot - Sensor SQM Magnitude (mag/arcsec²)'],
+            ['sensor_user_8', '(8) User Slot - Camera SQM Magnitude (mag/arcsec²)'],
+            ['sensor_user_9', '(9) User Slot - Camera SQM ADU'],
             ['sensor_user_10', 'User Slot 10'],
             ['sensor_user_11', 'User Slot 11'],
             ['sensor_user_12', 'User Slot 12'],

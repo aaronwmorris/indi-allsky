@@ -175,7 +175,6 @@ class ImageProcessor(object):
         self._lightgraph_overlay = IndiAllSkyLightgraphOverlay(self.config, self.position_av)
 
         self._camera_sqm_raw_mag = 0.0
-        self._camera_sqm_raw_adu = 0
 
         self._wb_mtf_night = 1
         self._wbb_mtf_lut = None
@@ -366,10 +365,6 @@ class ImageProcessor(object):
     def camera_sqm_raw_mag(self):
         return self._camera_sqm_raw_mag
 
-    @property
-    def camera_sqm_raw_adu(self):
-        return self._camera_sqm_raw_adu
-
 
     def post_init(self):
         # binning_av needs to be populated before running this
@@ -409,10 +404,10 @@ class ImageProcessor(object):
                 if not self.config.get('CAMERA_SQM', {}).get('ENABLE_DAY'):
                     # Reset these values when not in astronomical darkness
                     self._camera_sqm_raw_mag = 0.0
-                    self._camera_sqm_raw_adu = 0.0
 
                     with self.sensors_user_av.get_lock():
-                        self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM] = 0.0
+                        self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_MAG] = 0.0
+                        self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_ADU] = 0.0
 
 
     def add(self, filename, exposure, gain, binning, exp_date, exp_elapsed, camera):
@@ -2736,7 +2731,6 @@ class ImageProcessor(object):
             'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
             'smoke_rating'          : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'camera_sqm_raw_mag'    : self.camera_sqm_raw_mag,
-            'camera_sqm_raw_adu'    : self.camera_sqm_raw_adu,
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'sun_up'       : self.astrometric_data['sun_up'],
             'sun_next_rise'     : self.astrometric_data['sun_next_rise'],
