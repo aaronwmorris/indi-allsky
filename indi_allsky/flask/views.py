@@ -1106,7 +1106,7 @@ class JsonImageLoopView(JsonView):
             history_seconds = 14400
 
 
-        jsqm_data, camera_sqm_mag_data, device_sqm_mag_data = self.getSqmData(camera_id, ts_dt)
+        jsqm_data, camera_sqm_mag_data, camera_sqm_adu_data, device_sqm_mag_data = self.getSqmData(camera_id, ts_dt)
 
         data = {
             'message'    : '',
@@ -1114,6 +1114,7 @@ class JsonImageLoopView(JsonView):
             'sqm_data'   : jsqm_data,
             'stars_data' : self.getStarsData(camera_id, ts_dt),
             'camera_sqm_mag_data' : camera_sqm_mag_data,
+            'camera_sqm_adu_data' : camera_sqm_adu_data,
             'device_sqm_mag_data' : device_sqm_mag_data,
         }
 
@@ -1212,6 +1213,7 @@ class JsonImageLoopView(JsonView):
 
         jsqm_list = list()
         camera_sqm_mag_list = list()
+        camera_sqm_adu_list = list()
         device_sqm_mag_list = list()
         for i in sqm_images:
             try:
@@ -1222,6 +1224,7 @@ class JsonImageLoopView(JsonView):
 
             jsqm_list.append(jsqm)
             camera_sqm_mag_list.append(i.data.get('sensor_user_8', 0.0))
+            camera_sqm_adu_list.append(i.data.get('sensor_user_9', 0.0))
             device_sqm_mag_list.append(i.data.get('sensor_user_7', 0.0))
 
 
@@ -1261,6 +1264,23 @@ class JsonImageLoopView(JsonView):
 
 
         try:
+            camera_sqm_adu_data = {
+                'max'  : max(camera_sqm_adu_list),
+                'min'  : min(camera_sqm_adu_list),
+                'avg'  : sum(camera_sqm_adu_list) / len(camera_sqm_adu_list),
+                'last' : camera_sqm_adu_list[0],
+            }
+        except (ValueError, IndexError):
+            # list is probably empty
+            camera_sqm_adu_data = {
+                'max' : 0.0,
+                'min' : 0.0,
+                'avg' : 0.0,
+                'last' : 0.0,
+            }
+
+
+        try:
             device_sqm_mag_data = {
                 'max'  : max(device_sqm_mag_list),
                 'min'  : min(device_sqm_mag_list),
@@ -1277,7 +1297,7 @@ class JsonImageLoopView(JsonView):
             }
 
 
-        return jsqm_data, camera_sqm_mag_data, device_sqm_mag_data
+        return jsqm_data, camera_sqm_mag_data, camera_sqm_adu_data, device_sqm_mag_data
 
 
     def getStarsData(self, camera_id, ts_dt):
