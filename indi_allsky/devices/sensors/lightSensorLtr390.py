@@ -12,8 +12,9 @@ logger = logging.getLogger('indi_allsky')
 class LightSensorLtr390(SensorBase):
 
     def update(self):
-        if self.night != bool(self.night_av[constants.NIGHT_NIGHT]):
-            self.night = bool(self.night_av[constants.NIGHT_NIGHT])
+        astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= 18.0
+        if self.astro_darkness != astro_darkness:
+            self.astro_darkness = astro_darkness
             self.update_sensor_settings()
 
 
@@ -34,10 +35,15 @@ class LightSensorLtr390(SensorBase):
         logger.info('[%s] LTR390 - uv: %d, light: %d, uvi: %0.4f, lux: %0.4f', self.name, uvs, light, uvi, lux)
 
 
-        try:
-            sqm_mag, raw_mag = self.lux2mag(lux)
-        except ValueError as e:
-            logger.error('SQM calculation error - ValueError: %s', str(e))
+        if self.astro_darkness:
+            try:
+                sqm_mag, raw_mag = self.lux2mag(lux)
+            except ValueError as e:
+                logger.error('SQM calculation error - ValueError: %s', str(e))
+                sqm_mag = 0.0
+                raw_mag = 0.0
+        else:
+            # disabled outside astronomical darkness
             sqm_mag = 0.0
             raw_mag = 0.0
 
@@ -58,7 +64,7 @@ class LightSensorLtr390(SensorBase):
 
 
     def update_sensor_settings(self):
-        if self.night:
+        if self.astro_darkness:
             logger.info('[%s] Switching LTR390 to night mode - Gain %d', self.name, self.gain_night)
             self.ltr390.gain = self.gain_night
         else:

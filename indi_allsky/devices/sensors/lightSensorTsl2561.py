@@ -12,8 +12,9 @@ logger = logging.getLogger('indi_allsky')
 class LightSensorTsl2561(SensorBase):
 
     def update(self):
-        if self.night != bool(self.night_av[constants.NIGHT_NIGHT]):
-            self.night = bool(self.night_av[constants.NIGHT_NIGHT])
+        astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= 18.0
+        if self.astro_darkness != astro_darkness:
+            self.astro_darkness = astro_darkness
             self.update_sensor_settings()
 
 
@@ -35,10 +36,15 @@ class LightSensorTsl2561(SensorBase):
         logger.info('[%s] TSL2561 - lux: %0.4f, broadband: %d, ir: %d', self.name, lux, broadband, infrared)
 
 
-        try:
-            sqm_mag, raw_mag = self.lux2mag(lux)
-        except ValueError as e:
-            logger.error('SQM calculation error - ValueError: %s', str(e))
+        if self.astro_darkness:
+            try:
+                sqm_mag, raw_mag = self.lux2mag(lux)
+            except ValueError as e:
+                logger.error('SQM calculation error - ValueError: %s', str(e))
+                sqm_mag = 0.0
+                raw_mag = 0.0
+        else:
+            # disabled outside astronomical darkness
             sqm_mag = 0.0
             raw_mag = 0.0
 
@@ -58,7 +64,7 @@ class LightSensorTsl2561(SensorBase):
 
 
     def update_sensor_settings(self):
-        if self.night:
+        if self.astro_darkness:
             logger.info('[%s] Switching TSL2561 to night mode - Gain: %d, Integration: %d', self.name, self.gain_night, self.integration_night)
             self.tsl2561.gain = self.gain_night
             self.tsl2561.integration_time = self.integration_night

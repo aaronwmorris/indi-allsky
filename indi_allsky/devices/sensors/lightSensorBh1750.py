@@ -24,10 +24,15 @@ class LightSensorBh1750(SensorBase):
         logger.info('[%s] BH1750 - lux: %0.4f', self.name, lux)
 
 
-        try:
-            sqm_mag, raw_mag = self.lux2mag(lux)
-        except ValueError as e:
-            logger.error('SQM calculation error - ValueError: %s', str(e))
+        astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= 18.0
+        if astro_darkness:
+            try:
+                sqm_mag, raw_mag = self.lux2mag(lux)
+            except ValueError as e:
+                logger.error('SQM calculation error - ValueError: %s', str(e))
+                sqm_mag = 0.0
+                raw_mag = 0.0
+        else:
             sqm_mag = 0.0
             raw_mag = 0.0
 

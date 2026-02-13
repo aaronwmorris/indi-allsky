@@ -1,6 +1,8 @@
 import math
 import logging
 
+from ... import constants
+
 logger = logging.getLogger('indi_allsky')
 
 
@@ -11,13 +13,16 @@ class SensorBase(object):
         self.config = args[0]
         self.name = args[1]
         self.night_av = args[2]
+        self.astro_av = args[3]
 
 
         self._lux_magnitude_offset = self.config.get('TEMP_SENSOR', {}).get('LUX_MAGNITUDE_OFFSET', 26.0)
 
 
         self._slot = None  # var slot
+
         self._night = None  # None forces day/night change at startup
+        self._astro_darkness = None  # None forces change at startup
 
         self.heater_on = False  # Sensor Heater
         self.heater_available = False
@@ -39,6 +44,15 @@ class SensorBase(object):
     @night.setter
     def night(self, new_night):
         self._night = bool(new_night)
+
+
+    @property
+    def astro_darkness(self):
+        return self.astro_av[constants.ASTRO_SUN_ALT] <= 18.0
+
+    @astro_darkness.setter
+    def astro_darkness(self, new_astro_darkness):
+        self._astro_darkness = bool(new_astro_darkness)
 
 
     @property
