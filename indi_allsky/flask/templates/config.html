@@ -202,6 +202,35 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__GAIN(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+                <div><span class="badge rounded-pill bg-info text-dark">Note</span> Unity gain is recommended for SQM measurements</div>
+            </div>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__BINNING.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__BINNING(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <hr>
+
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CCD_CONFIG__AUTO_GAIN_ENABLE.label }}
         </div>
         <div class="col-sm-2">
@@ -330,6 +359,84 @@ var camera_id = {{ camera_id }};
     </div>
 
     <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CAMERA_SQM__ENABLE(class='form-check-input') }}
+                <div id="CAMERA_SQM__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Take periodic images at a fixed exposure/gain for brightness/SQM measurements</div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/SQM-Sky-Brightness-Measurement" class="text-decoration-none link-info" target="_blank">SQM Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__ENABLE_DAY.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CAMERA_SQM__ENABLE_DAY(class='form-check-input') }}
+                <div id="CAMERA_SQM__ENABLE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>DO NOT USE - Only for testing functionality</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__EXPOSURE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__EXPOSURE_PERIOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__MAGNITUDE_OFFSET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__MAGNITUDE_OFFSET(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__MAGNITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>
+                <div>Last Raw Magnitude measurement: <b>{{ camera_sqm_raw_mag_str }}</b></div>
+                <div>Expected SQM: <b>{{ camera_sqm_calc_sqm_str }}</b></div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -3589,113 +3696,6 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">Outline image circle.  Opacity will be set to 0%.</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.CAMERA_SQM__ENABLE(class='form-check-input') }}
-                <div id="CAMERA_SQM__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Take periodic images at a fixed exposure/gain for brightness/SQM measurements</div>
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/SQM-Sky-Brightness-Measurement" class="text-decoration-none link-info" target="_blank">SQM Wiki</a></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__ENABLE_DAY.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.CAMERA_SQM__ENABLE_DAY(class='form-check-input') }}
-                <div id="CAMERA_SQM__ENABLE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>DO NOT USE - Only for testing functionality</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__EXPOSURE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>
-            </div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__GAIN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__GAIN(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>
-                <div><span class="badge rounded-pill bg-info text-dark">Note</span> Unity gain is recommended for SQM measurements</div>
-                <div>Minimum Gain permitted: <b>{{ "%0.2f"|format(camera_minGain | float) }}</b></div>
-                <div>Maximum Gain permitted: <b>{{ "%0.2f"|format(camera_maxGain | float) }}</b></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__BINNING.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__BINNING(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Min: <b>{{ camera_minBinning }}</b> - Max: <b>{{ camera_maxBinning }}</b></div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE_PERIOD(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__EXPOSURE_PERIOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>
-            </div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__MAGNITUDE_OFFSET.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__MAGNITUDE_OFFSET(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__MAGNITUDE_OFFSET-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>
-                <div>Last Raw Magnitude measurement: <b>{{ camera_sqm_raw_mag_str }}</b></div>
-                <div>Expected SQM: <b>{{ camera_sqm_calc_sqm_str }}</b></div>
-            </div>
-        </div>
     </div>
 
     <hr>
