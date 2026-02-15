@@ -24,11 +24,17 @@ class LightSensorBh1750(SensorBase):
         logger.info('[%s] BH1750 - lux: %0.4f', self.name, lux)
 
 
-        try:
-            sqm_mag = self.lux2mag(lux)
-        except ValueError as e:
-            logger.error('SQM calculation error - ValueError: %s', str(e))
+        astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= 18.0
+        if astro_darkness:
+            try:
+                sqm_mag, raw_mag = self.lux2mag(lux)
+            except ValueError as e:
+                logger.error('SQM calculation error - ValueError: %s', str(e))
+                sqm_mag = 0.0
+                raw_mag = 0.0
+        else:
             sqm_mag = 0.0
+            raw_mag = 0.0
 
 
         data = {
@@ -36,6 +42,7 @@ class LightSensorBh1750(SensorBase):
             'data' : (
                 lux,
                 sqm_mag,
+                raw_mag,
             ),
         }
 
@@ -47,13 +54,15 @@ class LightSensorBh1750_I2C(LightSensorBh1750):
     METADATA = {
         'name' : 'BH1750 (i2c)',
         'description' : 'BH1750 i2c Light Sensor',
-        'count' : 2,
+        'count' : 3,
         'labels' : (
             'Lux',
             'SQM',
+            'Raw Magnitude',
         ),
         'types' : (
             constants.SENSOR_LIGHT_LUX,
+            constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
         ),
     }

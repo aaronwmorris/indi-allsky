@@ -1,4 +1,9 @@
 import math
+import logging
+
+from ... import constants
+
+logger = logging.getLogger('indi_allsky')
 
 
 class SensorBase(object):
@@ -7,10 +12,17 @@ class SensorBase(object):
     def __init__(self, *args, **kwargs):
         self.config = args[0]
         self.name = args[1]
-        self.night_v = args[2]
+        self.night_av = args[2]
+        self.astro_av = args[3]
+
+
+        self._lux_magnitude_offset = self.config.get('TEMP_SENSOR', {}).get('LUX_MAGNITUDE_OFFSET', 26.0)
+
 
         self._slot = None  # var slot
+
         self._night = None  # None forces day/night change at startup
+        self._astro_darkness = None  # None forces change at startup
 
         self.heater_on = False  # Sensor Heater
         self.heater_available = False
@@ -32,6 +44,15 @@ class SensorBase(object):
     @night.setter
     def night(self, new_night):
         self._night = bool(new_night)
+
+
+    @property
+    def astro_darkness(self):
+        return self.astro_av[constants.ASTRO_SUN_ALT] <= 18.0
+
+    @astro_darkness.setter
+    def astro_darkness(self, new_astro_darkness):
+        self._astro_darkness = bool(new_astro_darkness)
 
 
     @property
@@ -172,9 +193,10 @@ class SensorBase(object):
 
 
     def lux2mag(self, lux):
-        # lux to magnitude/arcsec^2
-        # http://unihedron.com/projects/darksky/magconv.php
-        return math.log10(lux / 108000) / -0.4
+        raw_mag = (math.log10(lux) * 2.5) * -1
+        logger.warning('Lux Raw Magnitude: %0.2f', raw_mag)
+
+        return self._lux_magnitude_offset + raw_mag, raw_mag  # array, raw_mag is negative
 
 
     ###

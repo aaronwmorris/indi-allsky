@@ -68,12 +68,16 @@ class IndiClientIndiAccumulator(IndiClient):
         return self._clamp_16bit
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
         if not self.camera_ready:
             raise Exception('Camera is busy')
 
         if not timeout:
             timeout = self.timeout
+
+
+        self.exposure = exposure
+        self.sqm_exposure = sqm_exposure
 
 
         self._total_sub_exposures = math.ceil(exposure / self.sub_exposure_max)
@@ -92,12 +96,14 @@ class IndiClientIndiAccumulator(IndiClient):
         self.header = None
         self.current_sub_exposure_count = 0  # reset
 
-        self.exposure = exposure
         self.exposure_remain = float(exposure)
 
 
-        if self.gain != float(int(gain)):
+        if self.gain != float(round(gain, 2)):
             self.setCcdGain(gain)
+
+        if self.binning != int(binning):
+            self.setCcdBinning(binning)
 
 
         self.exposureStartTime = time.time()
@@ -236,6 +242,8 @@ class IndiClientIndiAccumulator(IndiClient):
             'filename'    : str(tmpfile_p),
             'exposure'    : self.exposure,
             'gain'        : self.gain,
+            'binning'     : self.binning,
+            'sqm_exposure': self.sqm_exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,

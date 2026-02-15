@@ -17,7 +17,6 @@ import numpy
 import cv2
 
 from multiprocessing import Queue
-from multiprocessing import Value
 from multiprocessing import Array
 
 from .exceptions import TimeOutException
@@ -74,6 +73,7 @@ class IndiAllSkyDarks(object):
         self._daytime = True  # build daytime dark library
 
         self._gain_list = []
+        self._binning = 1
         self._count = 10
         self._temp_delta = 5.0
         self._time_delta = 5
@@ -105,6 +105,7 @@ class IndiAllSkyDarks(object):
             -1.0,  # night minimum
             -1.0,  # day minimum
             -1.0,  # maximum
+            -1.0,  # sqm
         ])
 
 
@@ -118,14 +119,29 @@ class IndiAllSkyDarks(object):
             -1.0,  # night maximum
             -1.0,  # moon mode minimum
             -1.0,  # moon mode maximum
+            -1.0,  # sqm
         ])
 
 
-        self.bin_v = Value('i', 1)  # set 1 for sane default
+        self.binning_av = Array('i', [
+            -1,  # current bin
+            -1,  # next bin
+            -1,  # day bin
+            -1,  # night bin
+            -1,  # moonmode bin
+            -1,  # sqm
+        ])
+
+
         self.sensors_temp_av = Array('f', [0.0])  # 0 ccd_temp
 
-        self.night_v = Value('i', -1)  # bogus initial value
-        self.moonmode_v = Value('i', 0)
+
+        # These shared values are to indicate when the camera is in night/moon modes
+        self.night_av = Array('i', [
+            -1,  # night, bogus initial value
+            0,  # moonmode, never used
+        ])
+
 
         # not used, but required
         self.position_av = Array('f', [
@@ -180,6 +196,17 @@ class IndiAllSkyDarks(object):
 
         self._gain_list = sorted(gain_list, reverse=True)
         logger.warning('Using gain list: %s', ', '.join(['{0:0.2f}'.format(x) for x in self._gain_list]))
+
+
+    @property
+    def binning(self):
+        return self._binning
+
+    @binning.setter
+    def binning(self, new_binning):
+        self._binning = int(new_binning)
+        assert self._binning >= 1
+        assert self._binning <= 4
 
 
     @property
@@ -262,9 +289,8 @@ class IndiAllSkyDarks(object):
             self.position_av,
             self.exposure_av,
             self.gain_av,
-            self.bin_v,
-            self.night_v,
-            self.moonmode_v,
+            self.binning_av,
+            self.night_av,
         )
 
 
@@ -331,6 +357,9 @@ class IndiAllSkyDarks(object):
             'maxExposure' : float(ccd_info.get('CCD_EXPOSURE', {}).get('CCD_EXPOSURE_VALUE', {}).get('max')),
             'minGain'     : float(ccd_info.get('GAIN_INFO', {}).get('min')),
             'maxGain'     : float(ccd_info.get('GAIN_INFO', {}).get('max')),
+            'minBinning'  : int(ccd_info.get('BINNING_INFO', {}).get('min')),
+            'maxBinning'  : int(ccd_info.get('BINNING_INFO', {}).get('max')),
+
             'width'       : int(ccd_info.get('CCD_FRAME', {}).get('WIDTH', {}).get('max')),
             'height'      : int(ccd_info.get('CCD_FRAME', {}).get('HEIGHT', {}).get('max')),
             'bits'        : int(ccd_info.get('CCD_INFO', {}).get('CCD_BITSPERPIXEL', {}).get('current')),
@@ -378,6 +407,15 @@ class IndiAllSkyDarks(object):
             logger.warning('Unable to set CCD_FRAME_TYPE to Dark')
 
 
+        # set SQM exposure
+        sqm_exposure = float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 10.0))
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_SQM] = float(sqm_exposure)
+
+
+        logger.info('SQM CCD exposure: %0.8f', self.exposure_av[constants.EXPOSURE_SQM])
+
+
         # Validate gain settings
         ccd_min_gain = float(ccd_info['GAIN_INFO']['min'])
         ccd_max_gain = float(ccd_info['GAIN_INFO']['max'])
@@ -418,6 +456,18 @@ class IndiAllSkyDarks(object):
             gain_day = float(self.config['CCD_CONFIG']['DAY']['GAIN'])
 
 
+        if self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0) < ccd_min_gain:
+            logger.error('CCD sqm gain below minimum, changing to %0.2f', float(ccd_min_gain))
+            gain_sqm = float(ccd_min_gain)
+            time.sleep(3)
+        elif self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0) > ccd_max_gain:
+            logger.error('CCD sqm gain above maximum, changing to %0.2f', float(ccd_max_gain))
+            gain_sqm = float(ccd_max_gain)
+            time.sleep(3)
+        else:
+            gain_sqm = self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0)
+
+
         with self.gain_av.get_lock():
             self.gain_av[constants.GAIN_CURRENT] = float(gain_day)  # just need a valid value
             self.gain_av[constants.GAIN_NEXT] = float(gain_day)
@@ -432,6 +482,8 @@ class IndiAllSkyDarks(object):
             self.gain_av[constants.GAIN_MIN_NIGHT] = float(gain_night)
             self.gain_av[constants.GAIN_MIN_MOONMODE] = float(gain_moonmode)
 
+            self.gain_av[constants.GAIN_SQM] = float(gain_sqm)
+
 
         logger.info('Minimum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MIN_DAY])
         logger.info('Maximum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MAX_DAY])
@@ -439,12 +491,80 @@ class IndiAllSkyDarks(object):
         logger.info('Maximum CCD gain: %0.2f (night)', self.gain_av[constants.GAIN_MAX_NIGHT])
         logger.info('Minimum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MIN_MOONMODE])
         logger.info('Maximum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MAX_MOONMODE])
+        logger.info('SQM CCD gain: %0.2f', self.gain_av[constants.GAIN_SQM])
 
 
-    def shoot(self, exposure, gain, sync=True, timeout=None):
-        logger.info('Taking %0.8fs exposure (gain %0.2f)', exposure, gain)
+        # Validate binning settings
+        ccd_min_binning = int(ccd_info['BINNING_INFO']['min'])
+        ccd_max_binning = int(ccd_info['BINNING_INFO']['max'])
 
-        self.indiclient.setCcdExposure(exposure, gain, sync=sync, timeout=timeout)
+
+        if self.config['CCD_CONFIG']['NIGHT']['BINNING'] < ccd_min_binning:
+            logger.error('CCD night binning below minimum, changing to %d', int(ccd_min_binning))
+            binning_night = int(ccd_min_binning)
+            time.sleep(3)
+        elif self.config['CCD_CONFIG']['NIGHT']['BINNING'] > ccd_max_binning:
+            logger.error('CCD night binning above maximum, changing to %d', int(ccd_max_binning))
+            binning_night = int(ccd_max_binning)
+            time.sleep(3)
+        else:
+            binning_night = int(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
+
+
+        if self.config['CCD_CONFIG']['MOONMODE']['BINNING'] < ccd_min_binning:
+            logger.error('CCD moonmode binning below minimum, changing to %d', int(ccd_min_binning))
+            binning_moonmode = int(ccd_min_binning)
+            time.sleep(3)
+        elif self.config['CCD_CONFIG']['MOONMODE']['BINNING'] > ccd_max_binning:
+            logger.error('CCD moonmode binning above maximum, changing to %d', int(ccd_max_binning))
+            binning_moonmode = int(ccd_max_binning)
+            time.sleep(3)
+        else:
+            binning_moonmode = int(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
+
+
+        if self.config['CCD_CONFIG']['DAY']['BINNING'] < ccd_min_binning:
+            logger.error('CCD day binning below minimum, changing to %d', int(ccd_min_binning))
+            binning_day = int(ccd_min_binning)
+            time.sleep(3)
+        elif self.config['CCD_CONFIG']['DAY']['BINNING'] > ccd_max_binning:
+            logger.error('CCD day binning above maximum, changing to %d', int(ccd_max_binning))
+            binning_day = int(ccd_max_binning)
+            time.sleep(3)
+        else:
+            binning_day = int(self.config['CCD_CONFIG']['DAY']['BINNING'])
+
+
+        if self.config.get('CAMERA_SQM', {}).get('BINNING', 1) < ccd_min_binning:
+            logger.error('CCD sqm binning below minimum, changing to %d', int(ccd_min_binning))
+            binning_sqm = int(ccd_min_binning)
+            time.sleep(3)
+        elif self.config.get('CAMERA_SQM', {}).get('BINNING', 1) > ccd_max_binning:
+            logger.error('CCD sqm binning above maximum, changing to %d', int(ccd_max_binning))
+            binning_sqm = int(ccd_max_binning)
+            time.sleep(3)
+        else:
+            binning_sqm = int(self.config.get('CAMERA_SQM', {}).get('BINNING', 1))
+
+
+
+        with self.binning_av.get_lock():
+            self.binning_av[constants.BINNING_DAY] = int(binning_day)
+            self.binning_av[constants.BINNING_NIGHT] = int(binning_night)
+            self.binning_av[constants.BINNING_MOONMODE] = int(binning_moonmode)
+            self.binning_av[constants.BINNING_SQM] = int(binning_sqm)
+
+
+        logger.info('CCD binning: %d (day)', self.binning_av[constants.BINNING_DAY])
+        logger.info('CCD binning: %d (night)', self.binning_av[constants.BINNING_NIGHT])
+        logger.info('CCD binning: %d (moonmode)', self.binning_av[constants.BINNING_MOONMODE])
+        logger.info('CCD binning: %d (SQM)', self.binning_av[constants.BINNING_SQM])
+
+
+    def shoot(self, exposure, gain, binning, sync=True, timeout=None):
+        logger.info('Taking %0.8fs exposure (gain %0.2f / bin %d)', exposure, gain, binning)
+
+        self.indiclient.setCcdExposure(exposure, gain, binning, sync=sync, timeout=timeout)
 
 
     def _wait_for_image(self, exposure):
@@ -542,10 +662,10 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['IMAGETYP'] = 'Dark Frame'
             hdulist[0].header['INSTRUME'] = 'jpeg'
             hdulist[0].header['EXPTIME'] = float(exposure)
-            hdulist[0].header['XBINNING'] = 1
-            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['XBINNING'] = int(self.binning_av[constants.BINNING_CURRENT])
+            hdulist[0].header['YBINNING'] = int(self.binning_av[constants.BINNING_CURRENT])
             hdulist[0].header['GAIN'] = float(self.gain_av[constants.GAIN_CURRENT])
-            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             #hdulist[0].header['BITPIX'] = 8
         elif filename_p.suffix in ['.png']:
             # PNGs may be 16-bit, use OpenCV
@@ -577,10 +697,10 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['IMAGETYP'] = 'Dark Frame'
             hdulist[0].header['INSTRUME'] = 'png'
             hdulist[0].header['EXPTIME'] = float(exposure)
-            hdulist[0].header['XBINNING'] = 1
-            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['XBINNING'] = int(self.binning_av[constants.BINNING_CURRENT])
+            hdulist[0].header['YBINNING'] = int(self.binning_av[constants.BINNING_CURRENT])
             hdulist[0].header['GAIN'] = float(self.gain_av[constants.GAIN_CURRENT])
-            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             #hdulist[0].header['BITPIX'] = 8
         elif filename_p.suffix in ['.dng']:
             if not rawpy:
@@ -605,10 +725,10 @@ class IndiAllSkyDarks(object):
             hdulist[0].header['IMAGETYP'] = 'Dark Frame'
             hdulist[0].header['INSTRUME'] = 'libcamera'
             hdulist[0].header['EXPTIME'] = float(exposure)
-            hdulist[0].header['XBINNING'] = 1
-            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['XBINNING'] = int(self.binning_av[constants.BINNING_CURRENT])
+            hdulist[0].header['YBINNING'] = int(self.binning_av[constants.BINNING_CURRENT])
             hdulist[0].header['GAIN'] = float(self.gain_av[constants.GAIN_CURRENT])
-            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             #hdulist[0].header['BITPIX'] = 16
 
             if self.config.get('CFA_PATTERN'):
@@ -630,7 +750,6 @@ class IndiAllSkyDarks(object):
 
 
         return hdulist
-
 
 
     def average(self):
@@ -676,10 +795,10 @@ class IndiAllSkyDarks(object):
 
         self._pre_temperature_action()
         self.getCcdTemperature()
-        logger.info('Camera temperature: %0.1f', self.sensors_temp_av[0])
+        logger.info('Camera temperature: %0.1f', self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
 
 
-        next_temp_thold = self.sensors_temp_av[0] - self.temp_delta
+        next_temp_thold = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] - self.temp_delta
 
         # get first set of images
         self._run(IndiAllSkyDarksAverage)
@@ -689,9 +808,9 @@ class IndiAllSkyDarks(object):
             self._pre_temperature_action()
             self.getCcdTemperature()
 
-            logger.info('Next temperature threshold: %0.1f (current: %0.1f)', next_temp_thold, self.sensors_temp_av[0])
+            logger.info('Next temperature threshold: %0.1f (current: %0.1f)', next_temp_thold, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
 
-            if self.sensors_temp_av[0] > next_temp_thold:
+            if self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] > next_temp_thold:
                 time.sleep(30.0)
                 continue
 
@@ -744,10 +863,10 @@ class IndiAllSkyDarks(object):
 
         self._pre_temperature_action()
         self.getCcdTemperature()
-        logger.info('Camera temperature: %0.1f', self.sensors_temp_av[0])
+        logger.info('Camera temperature: %0.1f', self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
 
 
-        next_temp_thold = self.sensors_temp_av[0] - self.temp_delta
+        next_temp_thold = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] - self.temp_delta
 
         # get first set of images
         self._run(IndiAllSkyDarksSigmaClip)
@@ -757,9 +876,9 @@ class IndiAllSkyDarks(object):
             self._pre_temperature_action()
             self.getCcdTemperature()
 
-            logger.info('Next temperature threshold: %0.1f (current: %0.1f)', next_temp_thold, self.sensors_temp_av[0])
+            logger.info('Next temperature threshold: %0.1f (current: %0.1f)', next_temp_thold, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
 
-            if self.sensors_temp_av[0] > next_temp_thold:
+            if self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] > next_temp_thold:
                 time.sleep(30.0)
                 continue
 
@@ -776,7 +895,7 @@ class IndiAllSkyDarks(object):
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
-            self.shoot(7.0, self.gain_av[constants.GAIN_MIN_DAY], sync=True, timeout=20.0)
+            self.shoot(7.0, self.gain_av[constants.GAIN_MIN_DAY], 1, sync=True, timeout=20.0)
 
 
             i_dict = self.image_q.get(timeout=10)
@@ -828,7 +947,7 @@ class IndiAllSkyDarks(object):
         if self.config['CAMERA_INTERFACE'].startswith('libcamera_') or self.config['CAMERA_INTERFACE'].startswith('mqtt_'):
             # libcamera only reports temperature changes when an exposure is taken
             logger.warning('TAKING THROW AWAY EXPOSURE TO UPDATE TEMPERATURE')
-            self.shoot(0.1, self.gain_av[constants.GAIN_MIN_DAY], sync=True, timeout=10.0)
+            self.shoot(0.1, self.gain_av[constants.GAIN_MIN_DAY], 1, sync=True, timeout=10.0)
             i_dict = self.image_q.get(timeout=10)
             filename = Path(i_dict['filename'])
 
@@ -839,7 +958,7 @@ class IndiAllSkyDarks(object):
         elif self.camera_server == 'indi_libcamera_ccd':
             # libcamera only reports temperature changes when an exposure is taken
             logger.warning('TAKING THROW AWAY EXPOSURE TO UPDATE TEMPERATURE')
-            self.shoot(0.1, self.gain_av[constants.GAIN_MIN_DAY], sync=True, timeout=10.0)
+            self.shoot(0.1, self.gain_av[constants.GAIN_MIN_DAY], 1, sync=True, timeout=10.0)
             i_dict = self.image_q.get(timeout=10)
             filename = Path(i_dict['filename'])
 
@@ -850,7 +969,7 @@ class IndiAllSkyDarks(object):
         elif 'indi_pylibcamera' in self.camera_server:  # SPECIAL CASE
             # libcamera only reports temperature changes when an exposure is taken
             logger.warning('TAKING THROW AWAY EXPOSURE TO UPDATE TEMPERATURE')
-            self.shoot(0.1, self.gain_av[constants.GAIN_MIN_DAY], sync=True, timeout=10.0)
+            self.shoot(0.1, self.gain_av[constants.GAIN_MIN_DAY], 1, sync=True, timeout=10.0)
             i_dict = self.image_q.get(timeout=10)
             filename = Path(i_dict['filename'])
 
@@ -924,20 +1043,26 @@ class IndiAllSkyDarks(object):
             for gain in self.gain_list:
                 night_darks_odict.update(
                     {
-                        (float(gain), self.config['CCD_CONFIG']['NIGHT']['BINNING']) : None,
+                        (float(gain), self.binning) : None,
                     }
                 )
+
         else:
             # use config values for gain
             # if NIGHT and MOONMODE have the same parameters, no need to double the work
             night_darks_odict.update(
                 {
-                    (float(self.gain_av[constants.GAIN_MAX_NIGHT]), self.config['CCD_CONFIG']['NIGHT']['BINNING']) : None,
+                    (float(self.gain_av[constants.GAIN_MAX_NIGHT]), int(self.binning_av[constants.BINNING_NIGHT])) : None,
                 }
             )
             night_darks_odict.update(
                 {
-                    (float(self.gain_av[constants.GAIN_MAX_MOONMODE]), self.config['CCD_CONFIG']['MOONMODE']['BINNING']) : None,
+                    (float(self.gain_av[constants.GAIN_MAX_MOONMODE]), int(self.binning_av[constants.BINNING_MOONMODE])) : None,
+                }
+            )
+            night_darks_odict.update(
+                {
+                    (float(self.gain_av[constants.GAIN_SQM]), int(self.binning_av[constants.BINNING_SQM])) : None,
                 }
             )
 
@@ -957,8 +1082,9 @@ class IndiAllSkyDarks(object):
         # take day darks with cooling disabled
         if self.daytime:
             ### DAY
-            with self.night_v.get_lock():
-                self.night_v.value = 0
+            with self.night_av.get_lock():
+                self.night_av[constants.NIGHT_NIGHT] = 0
+                self.night_av[constants.NIGHT_MOONMODE] = 0
 
 
             # take day darks with cooling enabled
@@ -991,14 +1117,12 @@ class IndiAllSkyDarks(object):
 
 
             ### DAY DARKS ###
-            day_params = (float(self.gain_av[constants.GAIN_MAX_DAY]), self.config['CCD_CONFIG']['DAY']['BINNING'])
+            day_params = (float(self.gain_av[constants.GAIN_MAX_DAY]), int(self.binning_av[constants.BINNING_DAY]))
             if day_params not in night_darks_odict.keys():
                 total_exposures = len(dark_exposures) * remaining_configs
                 estimated_time_left = self._estimate_runtime(dark_exposures, remaining_configs, overhead_per_exposure)
                 logger.info(f"Processing {total_exposures} darks, {self.count} exposures each. Estimated time left: {self._format_time(int(estimated_time_left))}")
 
-
-                self.indiclient.setCcdBinning(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
                 # day will rarely exceed 1 second (with good cameras and proper conditions)
                 for index, exposure in enumerate(dark_exposures):
@@ -1006,7 +1130,7 @@ class IndiAllSkyDarks(object):
                     remaining_exposures = dark_exposures[index + 1:]
 
                     start = time.time()
-                    self._take_exposures(exposure, self.gain_av[constants.GAIN_MAX_DAY], dark_filename_t, bpm_filename_t, stacking_class)
+                    self._take_exposures(exposure, self.gain_av[constants.GAIN_MAX_DAY], self.binning_av[constants.BINNING_DAY], dark_filename_t, bpm_filename_t, stacking_class)
                     elapsed_s = time.time()
                     exposure_time = elapsed_s - start
 
@@ -1032,8 +1156,8 @@ class IndiAllSkyDarks(object):
 
 
         ### NIGHT
-        with self.night_v.get_lock():
-            self.night_v.value = 1
+        with self.night_av.get_lock():
+            self.night_av[constants.NIGHT_NIGHT] = 1
 
 
 
@@ -1073,15 +1197,13 @@ class IndiAllSkyDarks(object):
 
 
         ### NIGHT DARKS ###
-        for gain, binmode in night_darks_odict.keys():
-            self.indiclient.setCcdBinning(binmode)
-
+        for gain, binning in night_darks_odict.keys():
             for index, exposure in enumerate(dark_exposures):
                 # Create a temporary list of remaining exposures
                 remaining_exposures = dark_exposures[index + 1:]
 
                 start = time.time()
-                self._take_exposures(exposure, gain, dark_filename_t, bpm_filename_t, stacking_class)
+                self._take_exposures(exposure, gain, binning, dark_filename_t, bpm_filename_t, stacking_class)
                 elapsed_s = time.time()
                 exposure_time = elapsed_s - start
 
@@ -1095,7 +1217,7 @@ class IndiAllSkyDarks(object):
             remaining_configs -= 1
 
 
-    def _take_exposures(self, exposure, gain, dark_filename_t, bpm_filename_t, stacking_class):
+    def _take_exposures(self, exposure, gain, binning, dark_filename_t, bpm_filename_t, stacking_class):
         exposure_f = float(exposure)
 
         tmp_fit_dir = tempfile.TemporaryDirectory()    # context manager automatically deletes files when finished
@@ -1113,7 +1235,7 @@ class IndiAllSkyDarks(object):
 
             self._pre_shoot_reconfigure()
 
-            self.shoot(exposure_f, gain, sync=True, timeout=180.0)  # flat 3 minute timeout
+            self.shoot(exposure_f, gain, binning, sync=True, timeout=180.0)  # flat 3 minute timeout
 
             frame_elapsed = time.time() - start
             frame_delta = frame_elapsed - exposure_f
@@ -1155,7 +1277,7 @@ class IndiAllSkyDarks(object):
             logger.info('Image average adu: %0.2f', m_avg)
 
             self.getCcdTemperature()
-            logger.info('Camera temperature: %0.1f', self.sensors_temp_av[0])
+            logger.info('Camera temperature: %0.1f', self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
 
             i += 1  # increment
 
@@ -1168,8 +1290,8 @@ class IndiAllSkyDarks(object):
             image_bitpix,
             int(exposure),
             int(self.gain_av[constants.GAIN_CURRENT]),  # filename gain as int
-            self.bin_v.value,
-            int(self.sensors_temp_av[0]),
+            int(self.binning_av[constants.BINNING_CURRENT]),
+            int(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]),
             date_str,
         )
         bpm_filename = bpm_filename_t.format(
@@ -1177,8 +1299,8 @@ class IndiAllSkyDarks(object):
             image_bitpix,
             int(exposure),
             int(self.gain_av[constants.GAIN_CURRENT]),  # filename gain as int
-            self.bin_v.value,
-            int(self.sensors_temp_av[0]),
+            int(self.binning_av[constants.BINNING_CURRENT]),
+            int(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]),
             date_str,
         )
 
@@ -1186,7 +1308,7 @@ class IndiAllSkyDarks(object):
         full_bpm_filename_p = self.darks_dir.joinpath(bpm_filename)
 
 
-        s = stacking_class(self.gain_av, self.bin_v)
+        s = stacking_class(self.gain_av, self.binning_av)
         s.bitmax = self.bitmax
         s.hotpixel_adu_percent = self.hotpixel_adu_percent
 
@@ -1202,8 +1324,8 @@ class IndiAllSkyDarks(object):
             'bitdepth'   : image_bitpix,
             'exposure'   : exposure_f,
             'gain'       : float(self.gain_av[constants.GAIN_CURRENT]),
-            'binmode'    : int(self.bin_v.value),
-            'temp'       : float(self.sensors_temp_av[0]),
+            'binmode'    : int(self.binning_av[constants.BINNING_CURRENT]),
+            'temp'       : float(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]),
             'adu'        : bpm_adu_avg,
             'height'     : image_height,
             'width'      : image_width,
@@ -1221,8 +1343,8 @@ class IndiAllSkyDarks(object):
             'bitdepth'   : image_bitpix,
             'exposure'   : exposure_f,
             'gain'       : float(self.gain_av[constants.GAIN_CURRENT]),
-            'binmode'    : int(self.bin_v.value),
-            'temp'       : float(self.sensors_temp_av[0]),
+            'binmode'    : int(self.binning_av[constants.BINNING_CURRENT]),
+            'temp'       : float(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]),
             'adu'        : dark_adu_avg,
             'height'     : image_height,
             'width'      : image_width,
@@ -1328,7 +1450,7 @@ class IndiAllSkyDarks(object):
         temp_val_f = float(temp_val)
 
         with self.sensors_temp_av.get_lock():
-            self.sensors_temp_av[0] = temp_val_f
+            self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] = temp_val_f
 
 
         return temp_val_f
@@ -1442,9 +1564,9 @@ class IndiAllSkyDarks(object):
 
 
 class IndiAllSkyDarksProcessor(object):
-    def __init__(self, gain_av, bin_v):
+    def __init__(self, gain_av, binning_av):
         self.gain_av = gain_av
-        self.bin_v = bin_v
+        self.binning_av = binning_av
 
         self._hotpixel_adu_percent = 90
 
@@ -1480,7 +1602,7 @@ class IndiAllSkyDarksProcessor(object):
     def buildBadPixelMap(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         from astropy.io import fits
 
-        logger.info('Building bad pixel map for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_av[constants.GAIN_CURRENT], self.bin_v.value)
+        logger.info('Building bad pixel map for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_av[constants.GAIN_CURRENT], self.binning_av[constants.BINNING_CURRENT])
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
@@ -1574,7 +1696,7 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
     def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         from astropy.io import fits
 
-        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_av[constants.GAIN_CURRENT], self.bin_v.value)
+        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_av[constants.GAIN_CURRENT], self.binning_av[constants.BINNING_CURRENT])
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
@@ -1663,7 +1785,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
         from astropy.stats import mad_std
         import ccdproc
 
-        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_av[constants.GAIN_CURRENT], self.bin_v.value)
+        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.2f, bin %d', exposure, self.gain_av[constants.GAIN_CURRENT], self.binning_av[constants.BINNING_CURRENT])
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16

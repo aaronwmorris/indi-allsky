@@ -1,3 +1,4 @@
+import math
 import cv2
 import numpy
 import logging
@@ -14,45 +15,67 @@ class IndiAllskySqm(object):
         self,
         config,
         gain_av,
-        bin_v,
         mask=None,
     ):
         self.config = config
         self.gain_av = gain_av
-        self.bin_v = bin_v
+
+        self._magnitude_offset = self.config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 25.0)
 
         # both masks will be combined
-        self._external_mask = mask
-        self._sqm_mask = None
+        self._external_mask_dict = mask
 
 
-    def calculate(self, img, exposure, gain):
+        self._sqm_mask_dict = dict()
+        for x in self._external_mask_dict.keys():
+            self._sqm_mask_dict[x] = None
+
+
+    def averageAdu(self, i_ref):
+        fits_data = i_ref.hdulist[0].data
+
         #logger.info('Exposure: %0.6f, gain: %0.1f', exposure, gain)
 
-        if isinstance(self._sqm_mask, type(None)):
-            # This only needs to be done once if a mask is not provided
-            self._generateSqmMask(img)
 
-
-        if len(img.shape) == 2:
+        if len(fits_data.shape) == 2:
             # mono
-            img_gray = img
+            sqm_img = fits_data
         else:
             # color
-            img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            sqm_img = fits_data[1]  # green channel
 
 
-        sqm_avg = cv2.mean(src=img_gray, mask=self._sqm_mask)[0]
+        if isinstance(self._sqm_mask_dict[i_ref.binning], type(None)):
+            # This only needs to be done once if a mask is not provided
+            self._generateSqmMask(sqm_img, i_ref.binning)
+
+
+        return cv2.mean(src=sqm_img, mask=self._sqm_mask_dict[i_ref.binning])[0]
+
+
+    def jSqm(self, i_ref):
+        ### Janky SQM
+        sqm_avg = self.averageAdu(i_ref)
 
         # offset the sqm based on the exposure and gain
-        weighted_sqm_avg = (((self.config['CCD_EXPOSURE_MAX'] - exposure) / 10) + 1) * (sqm_avg * (((float(self.gain_av[constants.GAIN_MAX_NIGHT]) - gain) / 10) + 1))
+        weighted_sqm_avg = (((self.config['CCD_EXPOSURE_MAX'] - i_ref.exposure) / 10) + 1) * (sqm_avg * (((float(self.gain_av[constants.GAIN_MAX_NIGHT]) - i_ref.gain) / 10) + 1))
 
-        logger.info('Raw SQM: %0.2f, Weighted SQM: %0.2f', sqm_avg, weighted_sqm_avg)
+        logger.info('Raw jSQM: %0.2f, Weighted jSQM: %0.2f', sqm_avg, weighted_sqm_avg)
 
         return weighted_sqm_avg
 
 
-    def _generateSqmMask(self, img):
+    def magnitudeSqm(self, i_ref):
+        sqm_avg = self.averageAdu(i_ref)
+
+        raw_mag = (math.log10(sqm_avg) * 2.5) * -1
+
+        mag_sqm = self._magnitude_offset + raw_mag  # raw_mag is negative
+
+        return mag_sqm, raw_mag, sqm_avg
+
+
+    def _generateSqmMask(self, img, binning):
         logger.info('Generating mask based on SQM_ROI')
 
         image_height, image_width = img.shape[:2]
@@ -63,10 +86,10 @@ class IndiAllskySqm(object):
         sqm_roi = self.config.get('SQM_ROI', [])
 
         try:
-            x1 = int(sqm_roi[0] / self.bin_v.value)
-            y1 = int(sqm_roi[1] / self.bin_v.value)
-            x2 = int(sqm_roi[2] / self.bin_v.value)
-            y2 = int(sqm_roi[3] / self.bin_v.value)
+            x1 = int(sqm_roi[0] / binning)
+            y1 = int(sqm_roi[1] / binning)
+            x2 = int(sqm_roi[2] / binning)
+            y2 = int(sqm_roi[3] / binning)
         except IndexError:
             logger.warning('Using central ROI for SQM calculations')
             sqm_fov_div = self.config.get('SQM_FOV_DIV', 4)
@@ -86,10 +109,10 @@ class IndiAllskySqm(object):
 
 
         # combine masks in case there is overlapping regions
-        if not isinstance(self._external_mask, type(None)):
-            self._sqm_mask = cv2.bitwise_and(mask, mask, mask=self._external_mask)
+        if not isinstance(self._external_mask_dict[binning], type(None)):
+            self._sqm_mask_dict[binning] = cv2.bitwise_and(mask, mask, mask=self._external_mask_dict[binning])
             return
 
 
-        self._sqm_mask = mask
+        self._sqm_mask_dict[binning] = mask
 

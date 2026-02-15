@@ -33,7 +33,8 @@ class SensorWorker(Process):
         error_q,
         sensors_temp_av,
         sensors_user_av,
-        night_v,
+        night_av,
+        astro_av,
     ):
         super(SensorWorker, self).__init__()
 
@@ -45,7 +46,8 @@ class SensorWorker(Process):
 
         self.sensors_temp_av = sensors_temp_av
         self.sensors_user_av = sensors_user_av
-        self.night_v = night_v
+        self.astro_av = astro_av
+        self.night_av = night_av
         self.night = None  # None forces day/night change at startup
 
         self.gpio = None
@@ -190,20 +192,25 @@ class SensorWorker(Process):
             #############################
 
 
-            if self.night != bool(self.night_v.value):
-                self.night = bool(self.night_v.value)
+            if self.night != bool(self.night_av[constants.NIGHT_NIGHT]):
+                self.night = bool(self.night_av[constants.NIGHT_NIGHT])
                 self.night_day_change()
 
 
             self.update_sensors()
 
 
-            if self.sensors_user_av[2]:
-                logger.info('Dew Point: %0.1f, Frost Point: %0.1f, Heat Index: %0.1f', self.sensors_user_av[2], self.sensors_user_av[3], self.sensors_user_av[5])
+            if self.sensors_user_av[constants.SENSOR_USER_DEW_POINT]:
+                logger.info(
+                    'Dew Point: %0.1f, Frost Point: %0.1f, Heat Index: %0.1f',
+                    self.sensors_user_av[constants.SENSOR_USER_DEW_POINT],
+                    self.sensors_user_av[constants.SENSOR_USER_FROST_POINT],
+                    self.sensors_user_av[constants.SENSOR_USER_HEAT_INDEX],
+                )
 
 
-            if self.sensors_user_av[7]:
-                logger.info('Sensor SQM: %0.5f', self.sensors_user_av[7])
+            if self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM_MAG]:
+                logger.info('Sensor SQM Magnitude: %0.5f', self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM_MAG])
 
 
             self.check_dew_heater_thresholds()
@@ -358,7 +365,7 @@ class SensorWorker(Process):
             self.dh_last_change_time = now_time
 
             with self.sensors_user_av.get_lock():
-                self.sensors_user_av[1] = float(self.dew_heater.state)
+                self.sensors_user_av[constants.SENSOR_USER_DEW_HEATER_LEVEL] = float(self.dew_heater.state)
 
 
     def init_fan(self):
@@ -420,7 +427,7 @@ class SensorWorker(Process):
             self.fan_last_change_time = now_time
 
             with self.sensors_user_av.get_lock():
-                self.sensors_user_av[4] = float(self.fan.state)
+                self.sensors_user_av[constants.SENSOR_USER_FAN_LEVEL] = float(self.fan.state)
 
 
     def init_sensors(self):
@@ -438,7 +445,8 @@ class SensorWorker(Process):
                 self.sensors[0] = a_sensor(
                     self.config,
                     a_sensor_label,
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                     pin_1_name=a_sensor_pin_1_name,
                     pin_2_name=a_sensor_pin_2_name,
                     i2c_address=a_sensor_i2c_address,
@@ -448,13 +456,15 @@ class SensorWorker(Process):
                 self.sensors[0] = indi_allsky_sensors.sensor_simulator(
                     self.config,
                     'Sensor A',
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                 )
         else:
             self.sensors[0] = indi_allsky_sensors.sensor_simulator(
                 self.config,
                 'Sensor A',
-                self.night_v,
+                self.night_av,
+                self.astro_av,
             )
 
         sensor_0_key = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 'sensor_user_10')
@@ -475,7 +485,8 @@ class SensorWorker(Process):
                 self.sensors[1] = b_sensor(
                     self.config,
                     b_sensor_label,
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                     pin_1_name=b_sensor_pin_1_name,
                     pin_2_name=b_sensor_pin_2_name,
                     i2c_address=b_sensor_i2c_address,
@@ -485,13 +496,15 @@ class SensorWorker(Process):
                 self.sensors[1] = indi_allsky_sensors.sensor_simulator(
                     self.config,
                     'Sensor B',
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                 )
         else:
             self.sensors[1] = indi_allsky_sensors.sensor_simulator(
                 self.config,
                 'Sensor B',
-                self.night_v,
+                self.night_av,
+                self.astro_av,
             )
 
         sensor_1_key = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_20')
@@ -512,7 +525,8 @@ class SensorWorker(Process):
                 self.sensors[2] = c_sensor(
                     self.config,
                     c_sensor_label,
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                     pin_1_name=c_sensor_pin_1_name,
                     pin_2_name=c_sensor_pin_2_name,
                     i2c_address=c_sensor_i2c_address,
@@ -522,13 +536,15 @@ class SensorWorker(Process):
                 self.sensors[2] = indi_allsky_sensors.sensor_simulator(
                     self.config,
                     'Sensor C',
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                 )
         else:
             self.sensors[2] = indi_allsky_sensors.sensor_simulator(
                 self.config,
                 'Sensor C',
-                self.night_v,
+                self.night_av,
+                self.astro_av,
             )
 
         sensor_2_key = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_30')
@@ -549,7 +565,8 @@ class SensorWorker(Process):
                 self.sensors[3] = d_sensor(
                     self.config,
                     d_sensor_label,
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                     pin_1_name=d_sensor_pin_1_name,
                     pin_2_name=d_sensor_pin_2_name,
                     i2c_address=d_sensor_i2c_address,
@@ -559,13 +576,15 @@ class SensorWorker(Process):
                 self.sensors[3] = indi_allsky_sensors.sensor_simulator(
                     self.config,
                     'Sensor D',
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                 )
         else:
             self.sensors[3] = indi_allsky_sensors.sensor_simulator(
                 self.config,
                 'Sensor D',
-                self.night_v,
+                self.night_av,
+                self.astro_av,
             )
 
         sensor_3_key = self.config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_40')
@@ -586,7 +605,8 @@ class SensorWorker(Process):
                 self.sensors[4] = e_sensor(
                     self.config,
                     e_sensor_label,
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                     pin_1_name=e_sensor_pin_1_name,
                     pin_2_name=e_sensor_pin_2_name,
                     i2c_address=e_sensor_i2c_address,
@@ -596,13 +616,15 @@ class SensorWorker(Process):
                 self.sensors[4] = indi_allsky_sensors.sensor_simulator(
                     self.config,
                     'Sensor E',
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                 )
         else:
             self.sensors[4] = indi_allsky_sensors.sensor_simulator(
                 self.config,
                 'Sensor E',
-                self.night_v,
+                self.night_av,
+                self.astro_av,
             )
 
         sensor_4_key = self.config.get('TEMP_SENSOR', {}).get('E_USER_VAR_SLOT', 'sensor_user_50')
@@ -623,7 +645,8 @@ class SensorWorker(Process):
                 self.sensors[5] = f_sensor(
                     self.config,
                     f_sensor_label,
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                     pin_1_name=f_sensor_pin_1_name,
                     pin_2_name=f_sensor_pin_2_name,
                     i2c_address=f_sensor_i2c_address,
@@ -633,13 +656,15 @@ class SensorWorker(Process):
                 self.sensors[5] = indi_allsky_sensors.sensor_simulator(
                     self.config,
                     'Sensor F',
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                 )
         else:
             self.sensors[5] = indi_allsky_sensors.sensor_simulator(
                 self.config,
                 'Sensor F',
-                self.night_v,
+                self.night_av,
+                self.astro_av,
             )
 
         sensor_5_key = self.config.get('TEMP_SENSOR', {}).get('F_USER_VAR_SLOT', 'sensor_user_55')
@@ -654,19 +679,19 @@ class SensorWorker(Process):
 
                 with self.sensors_user_av.get_lock():
                     if sensor_data.get('dew_point'):
-                        self.sensors_user_av[2] = float(sensor_data['dew_point'])
+                        self.sensors_user_av[constants.SENSOR_USER_DEW_POINT] = float(sensor_data['dew_point'])
 
                     if sensor_data.get('frost_point'):
-                        self.sensors_user_av[3] = float(sensor_data['frost_point'])
+                        self.sensors_user_av[constants.SENSOR_USER_FROST_POINT] = float(sensor_data['frost_point'])
 
                     if sensor_data.get('heat_index'):
-                        self.sensors_user_av[5] = float(sensor_data['heat_index'])
+                        self.sensors_user_av[constants.SENSOR_USER_HEAT_INDEX] = float(sensor_data['heat_index'])
 
                     if sensor_data.get('wind_degrees'):
-                        self.sensors_user_av[6] = float(sensor_data['wind_degrees'])
+                        self.sensors_user_av[constants.SENSOR_USER_WIND_DIR] = float(sensor_data['wind_degrees'])
 
                     if sensor_data.get('sqm_mag'):
-                        self.sensors_user_av[7] = float(sensor_data['sqm_mag'])
+                        self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM_MAG] = float(sensor_data['sqm_mag'])
 
 
                     for i, v in enumerate(sensor_data['data']):

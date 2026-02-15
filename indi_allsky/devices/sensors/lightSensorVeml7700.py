@@ -12,8 +12,9 @@ logger = logging.getLogger('indi_allsky')
 class LightSensorVeml7700(SensorBase):
 
     def update(self):
-        if self.night != bool(self.night_v.value):
-            self.night = bool(self.night_v.value)
+        astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= 18.0
+        if self.astro_darkness != astro_darkness:
+            self.astro_darkness = astro_darkness
             self.update_sensor_settings()
 
 
@@ -35,11 +36,17 @@ class LightSensorVeml7700(SensorBase):
         logger.info('[%s] VEML770 - lux: %0.4f, light: %d, white: %d', self.name, lux, light, white)
 
 
-        try:
-            sqm_mag = self.lux2mag(lux)
-        except ValueError as e:
-            logger.error('SQM calculation error - ValueError: %s', str(e))
+        if self.astro_darkness:
+            try:
+                sqm_mag, raw_mag = self.lux2mag(lux)
+            except ValueError as e:
+                logger.error('SQM calculation error - ValueError: %s', str(e))
+                sqm_mag = 0.0
+                raw_mag = 0.0
+        else:
+            # disabled outside astronomical darkness
             sqm_mag = 0.0
+            raw_mag = 0.0
 
 
         data = {
@@ -49,6 +56,7 @@ class LightSensorVeml7700(SensorBase):
                 light,
                 white,
                 sqm_mag,
+                raw_mag,
             ),
         }
 
@@ -56,7 +64,7 @@ class LightSensorVeml7700(SensorBase):
 
 
     def update_sensor_settings(self):
-        if self.night:
+        if self.astro_darkness:
             logger.info('[%s] Switching VEML7700 to night mode - Gain: %d, Integration: %d', self.name, self.gain_night, self.integration_night)
             self.veml7700.light_gain = self.gain_night
             self.veml7700.light_integration_time = self.integration_night
@@ -73,15 +81,17 @@ class LightSensorVeml7700_I2C(LightSensorVeml7700):
     METADATA = {
         'name' : 'VEML770 (i2c)',
         'description' : 'VEML7700 i2c Light Sensor',
-        'count' : 4,
+        'count' : 5,
         'labels' : (
             'Lux',
             'Light',
             'White',
             'SQM',
+            'Raw Magnitude',
         ),
         'types' : (
             constants.SENSOR_LIGHT_LUX,
+            constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,

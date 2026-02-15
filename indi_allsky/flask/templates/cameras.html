@@ -5,6 +5,8 @@
 {% block head %}
 <style>
 </style>
+<link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
 </script>
@@ -13,27 +15,63 @@ var camera_id = {{ camera_id }};
 
 {% block content %}
 <div class="container">
-<div class="row">
-    <div class="col-1 fw-bold">ID</div>
-    <div class="col-2 fw-bold">Camera</div>
-    <div class="col-2 fw-bold">Connect Date</div>
-    <div class="col-1 fw-bold">Size</div>
-    <div class="col-1 fw-bold">Pixels</div>
-    <div class="col-1 fw-bold">Bits</div>
-    <div class="col-1 fw-bold">Gain</div>
-    <div class="col-2 fw-bold">Exposure</div>
+  <div class="row">
+    <div class="col-sm-12">
+    <table id="cameras-table" class="table table-striped compact" data-bs-theme="dark">
+      <thead>
+        <tr>
+          <td>ID</td>
+          <td>Camera</td>
+          <td>Connect Date</td>
+          <td>Size</td>
+          <td>Pixels</td>
+          <td>Bits</td>
+          <td>Gain</td>
+          <td>Binning</td>
+          <td>Exposure</td>
+        </tr>
+      </thead>
+      <tbody>
+        {% for camera in camera_list %}
+        <tr>
+          <td>{{ camera.id }}</td>
+          <td>{{ camera.name }}</td>
+          <td>{{ camera.connectDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td>{{ camera.width | int }}x{{ camera.height | int}}</td>
+          <td>{{ "%0.2f"|format(camera.pixelSize | float)}}</td>
+          <td>{{ camera.bits | int }}</td>
+          <td>{{ "%0.2f"|format(camera.minGain | float) }} - {{ "%0.2f"|format(camera.maxGain | float) }}</td>
+          <td>{{ camera.minBinning }} - {{ camera.maxBinning }}</td>
+          <td>{{ "%0.6f"|format(camera.minExposure | float) }} - {{ "%0.1f"|format(camera.maxExposure | float) }}s</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
 </div>
-{% for camera in camera_list %}
-<div class="row">
-    <div class="col-1">{{ camera.id }}</div>
-    <div class="col-2">{{ camera.name }}</div>
-    <div class="col-2">{{ camera.connectDate.strftime('%Y-%m-%d %H:%M:%S') }}</div>
-    <div class="col-1">{{ camera.width | int }}x{{ camera.height | int}}</div>
-    <div class="col-1">{{ "%0.2f"|format(camera.pixelSize | float)}}</div>
-    <div class="col-1">{{ camera.bits | int }}</div>
-    <div class="col-1">{{ "%0.2f"|format(camera.minGain | float) }} - {{ "%0.2f"|format(camera.maxGain | float) }}</div>
-    <div class="col-2">{{ "%0.6f"|format(camera.minExposure | float) }} - {{ "%0.1f"|format(camera.maxExposure | float) }}s</div>
-</div>
-{% endfor %}
-</div>
+
+<script>
+function init() {
+    new DataTable('#cameras-table', {
+        searching: true,
+        order: [[0, 'desc']],
+        lengthMenu: [20, 50, 100, -1],
+        layout: {
+            topEnd: ['buttons', 'search'],
+        },
+        buttons: [
+            'copy',
+            'csv',
+            'excel',
+        ]
+    });
+}
+
+
+$( document ).ready(function() {
+    init();
+});
+
+</script>
 {% endblock %}

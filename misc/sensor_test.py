@@ -15,7 +15,7 @@ from datetime import timezone
 #from pprint import pformat
 import logging
 
-from multiprocessing import Value
+from multiprocessing import Array
 from sqlalchemy.orm.exc import NoResultFound
 
 
@@ -60,7 +60,20 @@ class TestSensors(object):
 
         self.config = self._config_obj.config
 
-        self.night_v = Value('i', -1)  # bogus initial value
+        # These shared values are to indicate when the camera is in night/moon modes
+        self.night_av = Array('i', [
+            -1,  # night, bogus initial value
+            0,  # moonmode, not used
+        ])
+
+
+        self.astro_av = Array('f', [
+            0.0,  # sun alt
+            0.0,  # moon alt
+            0.0,  # moon percent
+        ])
+
+
         self.night_sun_radians = math.radians(self.config['NIGHT_SUN_ALT_DEG'])
 
         self.sensors = [None, None, None, None, None, None]
@@ -97,13 +110,23 @@ class TestSensors(object):
         obs.pressure = 0
 
         sun = ephem.Sun()
+        moon = ephem.Moon()
 
         utcnow = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
         obs.date = utcnow
-        sun.compute(obs)
 
-        with self.night_v.get_lock():
-            self.night_v.value = int(sun.alt < self.night_sun_radians)
+        sun.compute(obs)
+        moon.compute(obs)
+
+
+        with self.night_av.get_lock():
+            self.night_av[constants.NIGHT_NIGHT] = int(sun.alt < self.night_sun_radians)
+
+
+        with self.astro_av.get_lock():
+            self.astro_av[constants.ASTRO_SUN_ALT] = float(math.degrees(sun.alt))
+            self.astro_av[constants.ASTRO_MOON_ALT] = float(math.degrees(moon.alt))
+            self.astro_av[constants.ASTRO_MOON_PHASE] = float(moon.moon_phase * 100.0)
 
 
         self.init_sensors()
@@ -153,7 +176,8 @@ class TestSensors(object):
                 self.sensors[0] = a_sensor(
                     self.config,
                     a_sensor_label,
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                     pin_1_name=a_sensor_pin_1_name,
                     pin_2_name=a_sensor_pin_2_name,
                     i2c_address=a_sensor_i2c_address,
@@ -163,14 +187,16 @@ class TestSensors(object):
                 self.sensors[0] = indi_allsky_sensors.sensor_simulator(
                     self.config,
                     'Sensor A',
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                 )
         else:
             logger.warning('No sensor A - Initializing sensor simulator')
             self.sensors[0] = indi_allsky_sensors.sensor_simulator(
                 self.config,
                 'Sensor A',
-                self.night_v,
+                self.night_av,
+                self.astro_av,
             )
 
         sensor_0_key = self.config.get('TEMP_SENSOR', {}).get('A_USER_VAR_SLOT', 'sensor_user_10')
@@ -191,7 +217,8 @@ class TestSensors(object):
                 self.sensors[1] = b_sensor(
                     self.config,
                     b_sensor_label,
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                     pin_1_name=b_sensor_pin_1_name,
                     pin_2_name=b_sensor_pin_2_name,
                     i2c_address=b_sensor_i2c_address,
@@ -201,14 +228,16 @@ class TestSensors(object):
                 self.sensors[1] = indi_allsky_sensors.sensor_simulator(
                     self.config,
                     'Sensor B',
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                 )
         else:
             logger.warning('No sensor B - Initializing sensor simulator')
             self.sensors[1] = indi_allsky_sensors.sensor_simulator(
                 self.config,
                 'Sensor B',
-                self.night_v,
+                self.night_av,
+                self.astro_av,
             )
 
         sensor_1_key = self.config.get('TEMP_SENSOR', {}).get('B_USER_VAR_SLOT', 'sensor_user_20')
@@ -229,7 +258,8 @@ class TestSensors(object):
                 self.sensors[2] = c_sensor(
                     self.config,
                     c_sensor_label,
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                     pin_1_name=c_sensor_pin_1_name,
                     pin_2_name=c_sensor_pin_2_name,
                     i2c_address=c_sensor_i2c_address,
@@ -239,14 +269,16 @@ class TestSensors(object):
                 self.sensors[2] = indi_allsky_sensors.sensor_simulator(
                     self.config,
                     'Sensor C',
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                 )
         else:
             logger.warning('No sensor C - Initializing sensor simulator')
             self.sensors[2] = indi_allsky_sensors.sensor_simulator(
                 self.config,
                 'Sensor C',
-                self.night_v,
+                self.night_av,
+                self.astro_av,
             )
 
         sensor_2_key = self.config.get('TEMP_SENSOR', {}).get('C_USER_VAR_SLOT', 'sensor_user_30')
@@ -267,7 +299,8 @@ class TestSensors(object):
                 self.sensors[3] = d_sensor(
                     self.config,
                     d_sensor_label,
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                     pin_1_name=d_sensor_pin_1_name,
                     pin_2_name=d_sensor_pin_2_name,
                     i2c_address=d_sensor_i2c_address,
@@ -277,14 +310,16 @@ class TestSensors(object):
                 self.sensors[3] = indi_allsky_sensors.sensor_simulator(
                     self.config,
                     'Sensor D',
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                 )
         else:
             logger.warning('No sensor D - Initializing sensor simulator')
             self.sensors[3] = indi_allsky_sensors.sensor_simulator(
                 self.config,
                 'Sensor D',
-                self.night_v,
+                self.night_av,
+                self.astro_av,
             )
 
         sensor_3_key = self.config.get('TEMP_SENSOR', {}).get('D_USER_VAR_SLOT', 'sensor_user_40')
@@ -305,7 +340,8 @@ class TestSensors(object):
                 self.sensors[4] = e_sensor(
                     self.config,
                     e_sensor_label,
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                     pin_1_name=e_sensor_pin_1_name,
                     pin_2_name=e_sensor_pin_2_name,
                     i2c_address=e_sensor_i2c_address,
@@ -315,14 +351,16 @@ class TestSensors(object):
                 self.sensors[4] = indi_allsky_sensors.sensor_simulator(
                     self.config,
                     'Sensor E',
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                 )
         else:
             logger.warning('No sensor E - Initializing sensor simulator')
             self.sensors[4] = indi_allsky_sensors.sensor_simulator(
                 self.config,
                 'Sensor E',
-                self.night_v,
+                self.night_av,
+                self.astro_av,
             )
 
         sensor_4_key = self.config.get('TEMP_SENSOR', {}).get('E_USER_VAR_SLOT', 'sensor_user_50')
@@ -343,7 +381,8 @@ class TestSensors(object):
                 self.sensors[5] = f_sensor(
                     self.config,
                     f_sensor_label,
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                     pin_1_name=f_sensor_pin_1_name,
                     pin_2_name=f_sensor_pin_2_name,
                     i2c_address=f_sensor_i2c_address,
@@ -353,14 +392,16 @@ class TestSensors(object):
                 self.sensors[5] = indi_allsky_sensors.sensor_simulator(
                     self.config,
                     'Sensor F',
-                    self.night_v,
+                    self.night_av,
+                    self.astro_av,
                 )
         else:
             logger.warning('No sensor F - Initializing sensor simulator')
             self.sensors[5] = indi_allsky_sensors.sensor_simulator(
                 self.config,
                 'Sensor F',
-                self.night_v,
+                self.night_av,
+                self.astro_av,
             )
 
         sensor_5_key = self.config.get('TEMP_SENSOR', {}).get('F_USER_VAR_SLOT', 'sensor_user_55')

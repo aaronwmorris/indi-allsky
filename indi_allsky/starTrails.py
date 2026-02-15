@@ -22,10 +22,11 @@ logger = logging.getLogger('indi_allsky')
 
 class StarTrailGenerator(object):
 
-    def __init__(self, config, bin_v, skip_frames=0, mask=None):
+    def __init__(self, config, skip_frames=0, mask=None):
         self.config = config
-        self.bin_v = bin_v
         self.skip_frames = skip_frames
+
+        self._star_mask_dict = mask
 
         self.process_count = 0
 
@@ -72,8 +73,6 @@ class StarTrailGenerator(object):
 
 
         self.image_processing_elapsed_s = 0
-
-        self._sqm_mask = mask
 
         # this is a default image that is used in case all images are excluded
         self.placeholder_image = None
@@ -227,7 +226,7 @@ class StarTrailGenerator(object):
         pass  # read only
 
 
-    def processImage(self, file_p, image, adu=None, star_count=None):
+    def processImage(self, file_p, image, binning, adu=None, star_count=None):
         self.process_count += 1
 
         if self.process_count <= self.skip_frames:
@@ -259,11 +258,11 @@ class StarTrailGenerator(object):
             return
 
 
-        if isinstance(self._sqm_mask, type(None)):
-            self._generateSqmMask(image)
+        if isinstance(self._star_mask_dict[binning], type(None)):
+            self._generateStarMask(image, binning)
 
         if isinstance(self._stars_detect, type(None)):
-            self._stars_detect = IndiAllSkyStars(self.config, self.bin_v, mask=self._sqm_mask)
+            self._stars_detect = IndiAllSkyStars(self.config, mask=self._star_mask_dict)
 
 
         # need grayscale image for mask generation
@@ -274,7 +273,7 @@ class StarTrailGenerator(object):
 
 
         if isinstance(adu, type(None)):
-            m_avg = cv2.mean(image_gray, mask=self._sqm_mask)[0]
+            m_avg = cv2.mean(image_gray, mask=self._star_mask_dict[binning])[0]
         else:
             m_avg = adu
 
@@ -524,7 +523,7 @@ class StarTrailGenerator(object):
         return degrees, minutes, seconds
 
 
-    def _generateSqmMask(self, img):
+    def _generateStarMask(self, img, binning):
         logger.info('Generating mask based on SQM_ROI')
 
         image_height, image_width = img.shape[:2]
@@ -536,10 +535,10 @@ class StarTrailGenerator(object):
         sqm_roi = self.config.get('SQM_ROI', [])
 
         try:
-            x1 = int(sqm_roi[0] / self.bin_v.value)
-            y1 = int(sqm_roi[1] / self.bin_v.value)
-            x2 = int(sqm_roi[2] / self.bin_v.value)
-            y2 = int(sqm_roi[3] / self.bin_v.value)
+            x1 = int(sqm_roi[0] / binning)
+            y1 = int(sqm_roi[1] / binning)
+            x2 = int(sqm_roi[2] / binning)
+            y2 = int(sqm_roi[3] / binning)
         except IndexError:
             logger.warning('Using central ROI for ADU mask')
             sqm_fov_div = self.config.get('SQM_FOV_DIV', 4)
@@ -557,7 +556,7 @@ class StarTrailGenerator(object):
             thickness=cv2.FILLED,
         )
 
-        self._sqm_mask = mask
+        self._star_mask_dict[binning] = mask
 
 
     def _generate_image_circle_mask(self, image):

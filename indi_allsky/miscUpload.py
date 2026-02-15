@@ -29,12 +29,12 @@ class miscUpload(object):
         self,
         config,
         upload_q,
-        night_v,
+        night_av,
     ):
 
         self.config = config
         self.upload_q = upload_q
-        self.night_v = night_v
+        self.night_av = night_av
 
 
         self._image_count = 0
@@ -708,7 +708,7 @@ class miscUpload(object):
         }
 
 
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             file_data_dict['timeofday'] = 'night'
             file_data_dict['tod'] = 'night'  # shortcut
         else:
@@ -891,7 +891,7 @@ class miscUpload(object):
         }
 
 
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             file_data_dict['timeofday'] = 'night'
             file_data_dict['tod'] = 'night'
         else:

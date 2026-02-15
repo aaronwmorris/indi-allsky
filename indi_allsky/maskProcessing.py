@@ -13,11 +13,11 @@ class MaskProcessor(object):
     def __init__(
         self,
         config,
-        bin_v,
+        binning
     ):
 
         self.config = config
-        self.bin_v = bin_v
+        self.binning = binning
 
         self._image = None
 
@@ -105,10 +105,10 @@ class MaskProcessor(object):
 
     def crop_image(self):
         # divide the coordinates by binning value
-        x1 = int(self.config['IMAGE_CROP_ROI'][0] / self.bin_v.value)
-        y1 = int(self.config['IMAGE_CROP_ROI'][1] / self.bin_v.value)
-        x2 = int(self.config['IMAGE_CROP_ROI'][2] / self.bin_v.value)
-        y2 = int(self.config['IMAGE_CROP_ROI'][3] / self.bin_v.value)
+        x1 = int(self.config['IMAGE_CROP_ROI'][0] / self.binning)
+        y1 = int(self.config['IMAGE_CROP_ROI'][1] / self.binning)
+        x2 = int(self.config['IMAGE_CROP_ROI'][2] / self.binning)
+        y2 = int(self.config['IMAGE_CROP_ROI'][3] / self.binning)
 
 
         self.image = self.image[

@@ -761,6 +761,7 @@ class BaseView(View):
                 'stars'           : self.latest_image_entry.stars,
                 'detections'      : self.latest_image_entry.detections,
                 'process_elapsed' : self.latest_image_entry.process_elapsed,
+                'camera_sqm_raw_mag' : self.latest_image_entry.data.get('camera_sqm_raw_mag', 0.0),
             }
 
             image_metadata = self.latest_image_entry.data
@@ -776,6 +777,7 @@ class BaseView(View):
                 'stars'           : 0,
                 'detections'      : 0,
                 'process_elapsed' : 0.0,
+                'camera_sqm_raw_mag' : 0.0,
             }
 
             image_metadata = dict()  # no metadata
@@ -904,16 +906,15 @@ class BaseView(View):
         return extra_text
 
 
-    def _load_detection_mask(self):
+    def _load_detection_mask(self, binning):
         import cv2
-        from multiprocessing import Value
         from ..maskProcessing import MaskProcessor
 
 
         detect_mask = self.indi_allsky_config.get('DETECT_MASK', '')
 
         if not detect_mask:
-            app.logger.warning('No detection mask defined')
+            #app.logger.warning('No detection mask defined')
             return
 
 
@@ -939,17 +940,16 @@ class BaseView(View):
             return
 
 
+        app.logger.warning('Loaded detection mask: %s', detect_mask_p)
+
+
         ### any intermediate values will be set to 255
         mask_data[mask_data > 0] = 255
 
 
-        app.logger.info('Loaded detection mask: %s', detect_mask_p)
-
-
-        bin_v = Value('i', 1)  # always assume bin 1
         mask_processor = MaskProcessor(
             self.indi_allsky_config,
-            bin_v,
+            binning,
         )
 
 
@@ -1279,6 +1279,8 @@ class FakeCamera(object):
     utc_offset = 0
     minGain = -1.0
     maxGain = -1.0
+    minBinning = -1
+    maxBinning = -1
     minExposure = -1.0
     maxExposure = -1.0
     data = {}

@@ -219,13 +219,12 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## INDI support
 | Version         | Note |
 | --------------- | ---- |
-| v2.1.8          | **Recommended for new builds**<br>Minimum for rpicam-apps 1.10.1 (indi_libcamera_ccd) |
+| v2.1.8          | **Recommended for new builds**<br>Minimum for rpicam-apps 1.10.1 (indi_libcamera_ccd)<br>Minimum for ASI676MM |
 | v2.1.7          |      |
 | v2.1.6          | Reports as 2.1.5 after build<br>Minimum for rpicam-apps 1.9.0 (indi_libcamera_ccd)<br>`indi_altair_ccd` renamed to `indi_altaircam_ccd` |
 | v2.1.5          |      |
 | v2.1.4          |      |
 | v2.1.3          |      |
-| v2.1.2.1        |      |
 | v2.1.2          |      |
 | v2.1.1          |      |
 | v2.1.0          |      |
@@ -243,11 +242,11 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## Single Board Computer support
 | Board                         | Note |
 | ----------------------------- | ---- |
-| Raspberry Pi 5                | Requires bookworm (12) |
-| Raspberry Pi 4                | Recommend 64-bit bookworm (12) |
-| Raspberry Pi 3                | Recommend 64-bit bookworm (12), recommend 1GB of swap |
-| Raspberry Pi Zero 2           | Recommend 64-bit bookworm (12), memory constrained |
-| Raspberry Pi Zero             | Recommend 32-bit bullseye, memory constrained |
+| Raspberry Pi 5                | Recommend 64-bit trixie (13) |
+| Raspberry Pi 4                | Recommend 64-bit trixie (13) |
+| Raspberry Pi 3                | Recommend 64-bit trixie (13), recommend 1GB of swap |
+| Raspberry Pi Zero 2           | Recommend 64-bit trixie (13), memory constrained |
+| Raspberry Pi Zero             | Recommend 32-bit bullseye (12), memory constrained |
 | Rock Pi                       |      |
 | Libre Computer (Le Potato)    |      |
 | Orange Pi                     |      |

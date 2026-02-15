@@ -81,6 +81,17 @@ CFA_MAP_STR = {
 }
 
 
+# Night indexes
+NIGHT_NIGHT         = 0
+NIGHT_MOONMODE      = 1
+
+
+# Astrometrics indexes
+ASTRO_SUN_ALT       = 0
+ASTRO_MOON_ALT      = 1
+ASTRO_MOON_PHASE    = 2
+
+
 # Position indexes
 POSITION_LATITUDE   = 0
 POSITION_LONGITUDE  = 1
@@ -96,6 +107,7 @@ EXPOSURE_DELTA      = 2
 EXPOSURE_MIN_NIGHT  = 3
 EXPOSURE_MIN_DAY    = 4
 EXPOSURE_MAX        = 5
+EXPOSURE_SQM        = 6
 
 
 # Gain indexes
@@ -108,6 +120,16 @@ GAIN_MIN_NIGHT      = 5
 GAIN_MAX_NIGHT      = 6
 GAIN_MIN_MOONMODE   = 7
 GAIN_MAX_MOONMODE   = 8
+GAIN_SQM            = 9
+
+
+# Binning indexes
+BINNING_CURRENT     = 0
+BINNING_NEXT        = 1
+BINNING_DAY         = 2
+BINNING_NIGHT       = 3
+BINNING_MOONMODE    = 4
+BINNING_SQM         = 5
 
 
 # Leaving gaps for addtional classifications
@@ -139,7 +161,6 @@ SATELLITE_STARLINK  = 801
 SATELLITE_STATIONS  = 802
 
 
-
 # Sensor types
 SENSOR_TEMPERATURE          = 600
 SENSOR_RELATIVE_HUMIDITY    = 601
@@ -155,6 +176,22 @@ SENSOR_PERCENTAGE           = 610
 SENSOR_DIRECTION_AZIMUTH    = 612
 SENSOR_STATE                = 613
 SENSOR_MISC                 = 620
+
+
+# System temp sensors
+SENSOR_TEMP_CCD_TEMP            = 0
+
+# User sensors
+SENSOR_USER_CCD_TEMP            = 0
+SENSOR_USER_DEW_HEATER_LEVEL    = 1
+SENSOR_USER_DEW_POINT           = 2
+SENSOR_USER_FROST_POINT         = 3
+SENSOR_USER_FAN_LEVEL           = 4
+SENSOR_USER_HEAT_INDEX          = 5
+SENSOR_USER_WIND_DIR            = 6
+SENSOR_USER_SENSOR_SQM_MAG      = 7
+SENSOR_USER_CAMERA_SQM_MAG      = 8
+SENSOR_USER_CAMERA_SQM_ADU      = 9
 
 
 SENSOR_INDEX_MAP = {

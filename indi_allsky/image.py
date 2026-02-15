@@ -78,11 +78,11 @@ class ImageWorker(Process):
         position_av,
         exposure_av,
         gain_av,
-        bin_v,
+        binning_av,
         sensors_temp_av,
         sensors_user_av,
-        night_v,
-        moonmode_v,
+        night_av,
+        astro_av,
     ):
         super(ImageWorker, self).__init__()
 
@@ -97,12 +97,12 @@ class ImageWorker(Process):
         self.position_av = position_av
         self.exposure_av = exposure_av
         self.gain_av = gain_av
-        self.bin_v = bin_v
+        self.binning_av = binning_av
 
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av
-        self.night_v = night_v
-        self.moonmode_v = moonmode_v
+        self.night_av = night_av
+        self.astro_av = astro_av
 
         self.filename_t = 'ccd{0:d}_{1:s}.{2:s}'
 
@@ -126,18 +126,18 @@ class ImageWorker(Process):
             self.config,
             self.position_av,
             self.gain_av,
-            self.bin_v,
+            self.binning_av,
             self.sensors_temp_av,
             self.sensors_user_av,
-            self.night_v,
-            self.moonmode_v,
+            self.night_av,
+            self.astro_av,
         )
 
         self._miscDb = miscDb(self.config)
         self._miscUpload = miscUpload(
             self.config,
             self.upload_q,
-            self.night_v,
+            self.night_av,
         )
 
 
@@ -289,10 +289,12 @@ class ImageWorker(Process):
         filename_p = Path(i_dict['filename'])
         exposure = i_dict['exposure']
         gain = i_dict['gain']
+        binning = i_dict['binning']
         exp_date = datetime.fromtimestamp(i_dict['exp_time'])
         exp_elapsed = i_dict['exp_elapsed']
         camera_id = i_dict['camera_id']
         filename_t = i_dict.get('filename_t')
+        sqm_exposure = i_dict.get('sqm_exposure')
 
 
         # libcamera
@@ -332,6 +334,12 @@ class ImageWorker(Process):
         camera = IndiAllSkyDbCameraTable.query\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .one()
+
+
+        ### Special function: image is for SQM calculations only
+        if sqm_exposure:
+            self.process_sqm_exposure(filename_p, exposure, gain, binning, exp_date, exp_elapsed, camera, libcamera_black_level)
+            return
 
 
         if isinstance(self.gain_step, type(None)):
@@ -391,7 +399,15 @@ class ImageWorker(Process):
 
 
         try:
-            i_ref = self.image_processor.add(filename_p, exposure, gain, exp_date, exp_elapsed, camera)
+            i_ref = self.image_processor.add(
+                filename_p,
+                exposure,
+                gain,
+                binning,
+                exp_date,
+                exp_elapsed,
+                camera,
+            )
         except BadImage as e:
             logger.error('Bad Image: %s', str(e))
             filename_p.unlink()
@@ -405,7 +421,7 @@ class ImageWorker(Process):
         self.image_count += 1
 
 
-        self.start_image_save_pre_hook(exposure, gain)
+        self.start_image_save_pre_hook(exposure, gain, binning)
 
 
         if self.config.get('IMAGE_SAVE_FITS'):
@@ -430,9 +446,11 @@ class ImageWorker(Process):
                 self.write_fit(i_ref, camera)
 
 
+        self.image_processor.calculateJankySqm()
+
+
         self.image_processor.debayer()
 
-        self.image_processor.calculateSqm()
 
         self.image_processor.stack()  # this populates self.image
 
@@ -472,9 +490,9 @@ class ImageWorker(Process):
         }
 
 
-        if self.sensors_temp_av[0] > -150:
+        if self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] > -150:
             # Add temperature data
-            temperature_frac = Fraction(self.sensors_temp_av[0]).limit_denominator()
+            temperature_frac = Fraction(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]).limit_denominator()
             exif_ifd[piexif.ExifIFD.Temperature] = (temperature_frac.numerator, temperature_frac.denominator)
 
 
@@ -558,10 +576,10 @@ class ImageWorker(Process):
 
 
         if self.config.get('CONTRAST_ENHANCE_16BIT'):
-            if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
+            if not self.night_av[constants.NIGHT_NIGHT] and self.config['DAYTIME_CONTRAST_ENHANCE']:
                 # Contrast enhancement during the day
                 self.image_processor.contrast_clahe_16bit()
-            elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
+            elif self.night_av[constants.NIGHT_NIGHT] and self.config['NIGHT_CONTRAST_ENHANCE']:
                 # Contrast enhancement during night
                 self.image_processor.contrast_clahe_16bit()
 
@@ -586,12 +604,12 @@ class ImageWorker(Process):
 
 
         # line detection
-        if self.night_v.value and self.config.get('DETECT_METEORS'):
+        if self.night_av[constants.NIGHT_NIGHT] and self.config.get('DETECT_METEORS'):
             self.image_processor.detectLines()
 
 
         # star detection
-        if self.night_v.value and self.config.get('DETECT_STARS', True):
+        if self.night_av[constants.NIGHT_NIGHT] and self.config.get('DETECT_STARS', True):
             self.image_processor.detectStars()
 
 
@@ -635,10 +653,10 @@ class ImageWorker(Process):
 
 
         if not self.config.get('CONTRAST_ENHANCE_16BIT'):
-            if not self.night_v.value and self.config['DAYTIME_CONTRAST_ENHANCE']:
+            if not self.night_av[constants.NIGHT_NIGHT] and self.config['DAYTIME_CONTRAST_ENHANCE']:
                 # Contrast enhancement during the day
                 self.image_processor.contrast_clahe()
-            elif self.night_v.value and self.config['NIGHT_CONTRAST_ENHANCE']:
+            elif self.night_av[constants.NIGHT_NIGHT] and self.config['NIGHT_CONTRAST_ENHANCE']:
                 # Contrast enhancement during night
                 self.image_processor.contrast_clahe()
 
@@ -729,7 +747,7 @@ class ImageWorker(Process):
         latest_file, new_filename = self.write_img(self.image_processor.image, i_ref, camera, jpeg_exif=jpeg_exif)
 
         if new_filename:
-            self.start_image_save_post_hook(new_filename, exposure, gain)
+            self.start_image_save_post_hook(new_filename, exposure, gain, binning)
 
             image_metadata = {
                 'type'            : constants.IMAGE,
@@ -739,13 +757,13 @@ class ImageWorker(Process):
                 'exposure'        : exposure,
                 'exp_elapsed'     : exp_elapsed,
                 'gain'            : float(gain),
-                'binmode'         : self.bin_v.value,
-                'temp'            : self.sensors_temp_av[0],
+                'binmode'         : int(binning),
+                'temp'            : self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
                 'adu'             : adu,
                 'stable'          : self.target_adu_found,
-                'moonmode'        : bool(self.moonmode_v.value),
+                'moonmode'        : bool(self.night_av[constants.NIGHT_MOONMODE]),
                 'moonphase'       : self.image_processor.astrometric_data['moon_phase'],
-                'night'           : bool(self.night_v.value),
+                'night'           : bool(self.night_av[constants.NIGHT_NIGHT]),
                 'adu_roi'         : self.config['ADU_ROI'],
                 'calibrated'      : i_ref.calibrated,
                 'sqm'             : i_ref.sqm_value,
@@ -773,6 +791,7 @@ class ImageWorker(Process):
                 'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
                 'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
                 'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
+                'camera_sqm_raw_mag' : self.image_processor.camera_sqm_raw_mag,
             }
 
 
@@ -813,7 +832,7 @@ class ImageWorker(Process):
                 'createDate' : int(exp_date.timestamp()),
                 'dayDate'    : i_ref.day_date.strftime('%Y%m%d'),
                 'utc_offset' : exp_date.astimezone().utcoffset().total_seconds(),
-                'night'      : bool(self.night_v.value),
+                'night'      : bool(self.night_av[constants.NIGHT_NIGHT]),
                 'camera_uuid': camera.uuid,
             }
 
@@ -844,14 +863,14 @@ class ImageWorker(Process):
                 'exp_date' : exp_date.strftime('%Y-%m-%d %H:%M:%S'),
                 'exposure' : round(exposure, 6),
                 'gain'     : round(gain, 2),
-                'bin'      : self.bin_v.value,
-                'temp'     : round(self.sensors_temp_av[0], 1),
+                'bin'      : int(binning),
+                'temp'     : round(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP], 1),
                 'sunalt'   : round(self.image_processor.astrometric_data['sun_alt'], 1),
                 'moonalt'  : round(self.image_processor.astrometric_data['moon_alt'], 1),
                 'moonphase': round(self.image_processor.astrometric_data['moon_phase'], 1),
                 'mooncycle': round(self.image_processor.astrometric_data['moon_cycle'], 1),
-                'moonmode' : bool(self.moonmode_v.value),
-                'night'    : bool(self.night_v.value),
+                'moonmode' : bool(self.night_av[constants.NIGHT_MOONMODE]),
+                'night'    : bool(self.night_av[constants.NIGHT_NIGHT]),
                 'sqm'      : round(i_ref.sqm_value, 1),
                 'stars'    : len(i_ref.stars),
                 'detections' : len(i_ref.lines),
@@ -870,6 +889,7 @@ class ImageWorker(Process):
                 'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
                 'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
                 'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
+                'camera_sqm_raw_mag' : self.image_processor.camera_sqm_raw_mag,
             }
 
 
@@ -1039,8 +1059,8 @@ class ImageWorker(Process):
         metadata = {
             'type'                : constants.METADATA,
             'device'              : i_ref.camera_name,
-            'night'               : self.night_v.value,
-            'temp'                : self.sensors_temp_av[0],
+            'night'               : self.night_av[constants.NIGHT_NIGHT],
+            'temp'                : self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
             'gain'                : i_ref.gain,
             'exposure'            : i_ref.exposure,
             'stable_exposure'     : int(self.target_adu_found),
@@ -1070,6 +1090,7 @@ class ImageWorker(Process):
             'ovation_max'         : i_ref.ovation_max,
             'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'aircraft'            : len(self.adsb_aircraft_list),
+            'camera_sqm_raw_mag'  : self.image_processor.camera_sqm_raw_mag,
         }
 
 
@@ -1117,7 +1138,7 @@ class ImageWorker(Process):
         }
 
 
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             file_data_dict['timeofday'] = 'night'
             file_data_dict['tod'] = 'night'
         else:
@@ -1235,15 +1256,15 @@ class ImageWorker(Process):
             'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref.exposure,
             'gain'       : i_ref.gain,
-            'binmode'    : self.bin_v.value,
-            'night'      : bool(self.night_v.value),
+            'binmode'    : i_ref.binning,
+            'night'      : bool(self.night_av[constants.NIGHT_NIGHT]),
             'height'     : image_height,
             'width'      : image_width,
             'camera_uuid': i_ref.camera_uuid,
         }
 
         fits_metadata['data'] = {
-            'moonmode'        : bool(self.moonmode_v.value),
+            'moonmode'        : bool(self.night_av[constants.NIGHT_MOONMODE]),
             'moonphase'       : self.image_processor.astrometric_data['moon_phase'],
             'sqm'             : i_ref.sqm_value,
             'stars'           : len(i_ref.stars),
@@ -1256,8 +1277,9 @@ class ImageWorker(Process):
             'aurora_plasma_density' : i_ref.aurora_plasma_density,
             'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
             'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
-            'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
-            'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
+            'aurora_n_hemi_gw'      : i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
+            'camera_sqm_raw_mag'    : self.image_processor.camera_sqm_raw_mag,
         }
 
         fits_entry = self._miscDb.addFitsImage(
@@ -1377,7 +1399,7 @@ class ImageWorker(Process):
 
         export_dir = Path(self.config['IMAGE_EXPORT_FOLDER'])
 
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             timeofday_str = 'night'
         else:
             # daytime
@@ -1418,15 +1440,15 @@ class ImageWorker(Process):
             'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref.exposure,
             'gain'       : i_ref.gain,
-            'binmode'    : self.bin_v.value,
-            'night'      : bool(self.night_v.value),
+            'binmode'    : i_ref.binning,
+            'night'      : bool(self.night_av[constants.NIGHT_NIGHT]),
             'height'     : image_height,
             'width'      : image_width,
             'camera_uuid': i_ref.camera_uuid,
         }
 
         raw_metadata['data'] = {
-            'moonmode'        : bool(self.moonmode_v.value),
+            'moonmode'        : bool(self.night_av[constants.NIGHT_MOONMODE]),
             'moonphase'       : self.image_processor.astrometric_data['moon_phase'],
             'sqm'             : i_ref.sqm_value,
             'stars'           : len(i_ref.stars),
@@ -1439,8 +1461,9 @@ class ImageWorker(Process):
             'aurora_plasma_density' : i_ref.aurora_plasma_density,
             'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
             'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
-            'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
-            'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
+            'aurora_n_hemi_gw'      : i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
+            'camera_sqm_raw_mag'    : self.image_processor.camera_sqm_raw_mag,
         }
 
         try:
@@ -1558,7 +1581,7 @@ class ImageWorker(Process):
 
 
         ### Do not write daytime image files if daytime capture is disabled
-        if not self.night_v.value and self.config['DAYTIME_CAPTURE'] and not self.config.get('DAYTIME_CAPTURE_SAVE', True):
+        if not self.night_av[constants.NIGHT_NIGHT] and self.config['DAYTIME_CAPTURE'] and not self.config.get('DAYTIME_CAPTURE_SAVE', True):
             logger.info('Daytime capture is disabled')
             tmpfile_name.unlink()
             return latest_file, None
@@ -1597,8 +1620,8 @@ class ImageWorker(Process):
             'name'                : 'indi_json',
             'class'               : 'ccd',
             'device'              : i_ref.camera_name,
-            'night'               : self.night_v.value,
-            'temp'                : self.sensors_temp_av[0],
+            'night'               : self.night_av[constants.NIGHT_NIGHT],
+            'temp'                : self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
             'gain'                : i_ref.gain,
             'exposure'            : i_ref.exposure,
             'stable_exposure'     : int(self.target_adu_found),
@@ -1623,7 +1646,7 @@ class ImageWorker(Process):
             'aurora_s_hemi_gw'    : i_ref.aurora_s_hemi_gw,
             'smoke_rating'        : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
             'aircraft'            : len(self.adsb_aircraft_list),
-
+            'camera_sqm_raw_mag'  : self.image_processor.camera_sqm_raw_mag,
         }
 
 
@@ -1662,7 +1685,7 @@ class ImageWorker(Process):
 
 
     def _getImageFolder(self, exp_date, day_date, camera, type_folder):
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             # images should be written to previous day's folder until noon
             timeofday_str = 'night'
         else:
@@ -1747,7 +1770,7 @@ class ImageWorker(Process):
 
 
         ### Do not write daytime image files if daytime capture is disabled
-        if not self.night_v.value and self.config['DAYTIME_CAPTURE'] and not self.config.get('DAYTIME_CAPTURE_SAVE', True):
+        if not self.night_av[constants.NIGHT_NIGHT] and self.config['DAYTIME_CAPTURE'] and not self.config.get('DAYTIME_CAPTURE_SAVE', True):
             tmpfile_name.unlink()
             return
 
@@ -1770,15 +1793,15 @@ class ImageWorker(Process):
             'utc_offset' : i_ref.exp_date.astimezone().utcoffset().total_seconds(),
             'exposure'   : i_ref.exposure,
             'gain'       : i_ref.gain,
-            'binmode'    : self.bin_v.value,
-            'night'      : bool(self.night_v.value),
+            'binmode'    : i_ref.binning,
+            'night'      : bool(self.night_av[constants.NIGHT_NIGHT]),
             'height'     : panorama_height,
             'width'      : panorama_width,
             'camera_uuid': i_ref.camera_uuid,
         }
 
         panorama_metadata['data'] = {
-            'moonmode'        : bool(self.moonmode_v.value),
+            'moonmode'        : bool(self.night_av[constants.NIGHT_MOONMODE]),
             'moonphase'       : self.image_processor.astrometric_data['moon_phase'],
             'sqm'             : i_ref.sqm_value,
             'stars'           : len(i_ref.stars),
@@ -1791,8 +1814,9 @@ class ImageWorker(Process):
             'aurora_plasma_density' : i_ref.aurora_plasma_density,
             'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
             'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
-            'aurora_n_hemi_gw'  : i_ref.aurora_n_hemi_gw,
-            'aurora_s_hemi_gw'  : i_ref.aurora_s_hemi_gw,
+            'aurora_n_hemi_gw'      : i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
+            'camera_sqm_raw_mag'    : self.image_processor.camera_sqm_raw_mag,
         }
 
 
@@ -1912,7 +1936,7 @@ class ImageWorker(Process):
             adu = 0.1
 
 
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             target_adu = self.config['TARGET_ADU']
         else:
             target_adu = self.config['TARGET_ADU_DAY']
@@ -1989,7 +2013,7 @@ class ImageWorker(Process):
         if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
             # moonmode settings are ignored with auto-gain
 
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
             else:
                 exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
@@ -1997,10 +2021,10 @@ class ImageWorker(Process):
             gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
             gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
         else:
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
 
-                if self.moonmode_v.value:
+                if self.night_av[constants.NIGHT_MOONMODE]:
                     gain_min = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
                     gain_max = float(self.gain_av[constants.GAIN_MAX_MOONMODE])
                 else:
@@ -2165,7 +2189,7 @@ class ImageWorker(Process):
         return rgb_pixel_list
 
 
-    def start_image_save_pre_hook(self, exposure, gain):
+    def start_image_save_pre_hook(self, exposure, gain, binning):
         if self.image_processor.focus_mode:
             return
 
@@ -2201,12 +2225,12 @@ class ImageWorker(Process):
             'DATA_JSON': str(self.pre_hook_datajson_name_p),  # the file used for the json data is communicated via environment variable
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
             'GAIN'     : '{0:0.2f}'.format(gain),
-            'BIN'      : '{0:d}'.format(self.bin_v.value),
+            'BIN'      : '{0:d}'.format(binning),
             'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
             'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),
             'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),
-            'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
-            'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
+            'MOONMODE' : '{0:d}'.format(int(bool(self.night_av[constants.NIGHT_MOONMODE]))),
+            'NIGHT'    : '{0:d}'.format(int(self.night_av[constants.NIGHT_NIGHT])),
             'LATITUDE' : '{0:0.3f}'.format(self.position_av[constants.POSITION_LATITUDE]),
             'LONGITUDE': '{0:0.3f}'.format(self.position_av[constants.POSITION_LONGITUDE]),
             'ELEVATION': '{0:d}'.format(int(self.position_av[constants.POSITION_ELEVATION])),
@@ -2252,7 +2276,7 @@ class ImageWorker(Process):
             logger.error('Image pre-save script failed to execute')
 
 
-    def start_image_save_post_hook(self, image_p, exposure, gain):
+    def start_image_save_post_hook(self, image_p, exposure, gain, binning):
         if self.image_processor.focus_mode:
             return
 
@@ -2280,12 +2304,12 @@ class ImageWorker(Process):
         hook_env = {
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
             'GAIN'     : '{0:0.3f}'.format(gain),
-            'BIN'      : '{0:d}'.format(self.bin_v.value),
+            'BIN'      : '{0:d}'.format(binning),
             'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
             'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),
             'MOONPHASE': '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_phase']),
-            'MOONMODE' : '{0:d}'.format(int(bool(self.moonmode_v.value))),
-            'NIGHT'    : '{0:d}'.format(int(self.night_v.value)),
+            'MOONMODE' : '{0:d}'.format(int(bool(self.night_av[constants.NIGHT_MOONMODE]))),
+            'NIGHT'    : '{0:d}'.format(int(self.night_av[constants.NIGHT_NIGHT])),
             'LATITUDE' : '{0:0.3f}'.format(self.position_av[constants.POSITION_LATITUDE]),
             'LONGITUDE': '{0:0.3f}'.format(self.position_av[constants.POSITION_LONGITUDE]),
             'ELEVATION': '{0:d}'.format(int(self.position_av[constants.POSITION_ELEVATION])),
@@ -2488,4 +2512,44 @@ class ImageWorker(Process):
             return True
 
         return False
+
+
+    def process_sqm_exposure(self, filename_p, exposure, gain, binning, exp_date, exp_elapsed, camera, libcamera_black_level):
+        logger.warning('Processing SQM exposure')
+
+        try:
+            i_ref = self.image_processor._add(
+                filename_p,
+                exposure,
+                gain,
+                binning,
+                exp_date,
+                exp_elapsed,
+                camera,
+            )
+        except BadImage as e:
+            logger.error('Bad Image: %s', str(e))
+            filename_p.unlink()
+            #task.setFailed('Bad Image: {0:s}'.format(str(filename_p)))
+            return
+
+
+        filename_p.unlink()
+
+
+        # use original value if not defined
+        if i_ref.libcamera_black_level:
+            libcamera_black_level = i_ref.libcamera_black_level
+
+
+        self.image_processor._calibrate(i_ref, libcamera_black_level=libcamera_black_level)
+
+
+        mag_sqm, raw_mag, raw_adu = self.image_processor._calculateMagnitudeSqm(i_ref)
+
+
+        logger.warning('Camera SQM Magnitude: %0.2f, Raw Magnitude: %0.2f, ADU: %0.2f', mag_sqm, raw_mag, raw_adu)
+        with self.sensors_user_av.get_lock():
+            self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_MAG] = float(mag_sqm)
+            self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_ADU] = float(raw_adu)
 

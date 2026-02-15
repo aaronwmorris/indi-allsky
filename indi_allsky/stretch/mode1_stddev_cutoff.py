@@ -14,27 +14,29 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
 
     def __init__(self, *args, **kwargs):
         super(IndiAllSky_Mode1_Stretch, self).__init__(*args, **kwargs)
-        self._sqm_mask = kwargs['mask']
+        self._sqm_mask_dict = kwargs['mask']
+
+
+        self._numpy_mask_dict = dict()
+        for x in self._sqm_mask_dict.keys():
+            self._numpy_mask_dict[x] = None
 
 
         self.gamma = self.config.get('IMAGE_STRETCH', {}).get('MODE1_GAMMA', 3.0)
         self.stddevs = self.config.get('IMAGE_STRETCH', {}).get('MODE1_STDDEVS', 3.0)
 
 
-        self._numpy_mask = None
-
-
-    def stretch(self, data, image_bit_depth):
-        if isinstance(self._numpy_mask, type(None)):
+    def stretch(self, data, image_bit_depth, binning):
+        if isinstance(self._numpy_mask_dict[binning], type(None)):
             # This only needs to be done once
-            self._generateNumpyMask(data)
+            self._generateNumpyMask(data, binning)
 
 
         stretch_start = time.time()
 
 
-        data = self.mode1_apply_gamma(data, image_bit_depth)
-        data = self.mode1_adjustImageLevels(data, image_bit_depth)
+        data = self.mode1_apply_gamma(data, image_bit_depth, binning)
+        data = self.mode1_adjustImageLevels(data, image_bit_depth, binning)
 
 
         stretch_elapsed_s = time.time() - stretch_start
@@ -43,7 +45,7 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
         return data
 
 
-    def mode1_apply_gamma(self, data, image_bit_depth):
+    def mode1_apply_gamma(self, data, image_bit_depth, binning):
         if not self.gamma:
             return data
 
@@ -72,8 +74,8 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
         return gamma_data
 
 
-    def mode1_adjustImageLevels(self, data, image_bit_depth):
-        mean, stddev = self._get_image_stddev(data)
+    def mode1_adjustImageLevels(self, data, image_bit_depth, binning):
+        mean, stddev = self._get_image_stddev(data, binning)
         #logger.info('Mean: %0.2f, StdDev: %0.2f', mean, stddev)
 
 
@@ -116,23 +118,23 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
         return stretched_image
 
 
-    def _get_image_stddev(self, data):
+    def _get_image_stddev(self, data, binning):
         #mean_std_start = time.time()
 
 
         # mask arrays allow using the detection mask to perform calculations on
         # arbitrary boundaries in the image
         if len(data.shape) == 2:
-            ma = numpy.ma.masked_array(data, mask=self._numpy_mask)
+            ma = numpy.ma.masked_array(data, mask=self._numpy_mask_dict[binning])
 
             # mono
             mean = numpy.ma.mean(ma)
             stddev = numpy.ma.std(ma)
         else:
             # color
-            b_ma = numpy.ma.masked_array(data[:, :, 0], mask=self._numpy_mask)
-            g_ma = numpy.ma.masked_array(data[:, :, 1], mask=self._numpy_mask)
-            r_ma = numpy.ma.masked_array(data[:, :, 2], mask=self._numpy_mask)
+            b_ma = numpy.ma.masked_array(data[:, :, 0], mask=self._numpy_mask_dict[binning])
+            g_ma = numpy.ma.masked_array(data[:, :, 1], mask=self._numpy_mask_dict[binning])
+            r_ma = numpy.ma.masked_array(data[:, :, 2], mask=self._numpy_mask_dict[binning])
 
             b_mean = numpy.ma.mean(b_ma)
             g_mean = numpy.ma.mean(g_ma)
@@ -152,8 +154,8 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
         return mean, stddev
 
 
-    def _generateNumpyMask(self, img):
-        if isinstance(self._sqm_mask, type(None)):
+    def _generateNumpyMask(self, img, binning):
+        if isinstance(self._sqm_mask_dict[binning], type(None)):
             logger.info('Generating mask based on SQM_ROI')
 
             image_height, image_width = img.shape[:2]
@@ -163,10 +165,10 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
             sqm_roi = self.config.get('SQM_ROI', [])
 
             try:
-                x1 = int(sqm_roi[0] / self.bin_v.value)
-                y1 = int(sqm_roi[1] / self.bin_v.value)
-                x2 = int(sqm_roi[2] / self.bin_v.value)
-                y2 = int(sqm_roi[3] / self.bin_v.value)
+                x1 = int(sqm_roi[0] / binning)
+                y1 = int(sqm_roi[1] / binning)
+                x2 = int(sqm_roi[2] / binning)
+                y2 = int(sqm_roi[3] / binning)
             except IndexError:
                 logger.warning('Using central ROI for blob calculations')
                 sqm_fov_div = self.config.get('SQM_FOV_DIV', 4)
@@ -181,8 +183,8 @@ class IndiAllSky_Mode1_Stretch(IndiAllSky_Stretch_Base):
 
         else:
             # True values will be masked
-            mask = self._sqm_mask == 0
+            mask = self._sqm_mask_dict[binning] == 0
 
 
-        self._numpy_mask = mask
+        self._numpy_mask_dict[binning] = mask
 

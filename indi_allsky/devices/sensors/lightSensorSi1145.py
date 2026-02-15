@@ -12,8 +12,9 @@ logger = logging.getLogger('indi_allsky')
 class LightSensorSi1145(SensorBase):
 
     def update(self):
-        if self.night != bool(self.night_v.value):
-            self.night = bool(self.night_v.value)
+        astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= 18.0
+        if self.astro_darkness != astro_darkness:
+            self.astro_darkness = astro_darkness
             self.update_sensor_settings()
 
 
@@ -40,11 +41,26 @@ class LightSensorSi1145(SensorBase):
         logger.info('[%s] SI1145 - visible: %d, ir: %d, uv: %0.3f', self.name, vis, ir, uv_index)
 
 
+        if self.astro_darkness:
+            try:
+                sqm_mag, raw_mag = self.lux2mag(vis)
+            except ValueError as e:
+                logger.error('SQM calculation error - ValueError: %s', str(e))
+                sqm_mag = 0.0
+                raw_mag = 0.0
+        else:
+            # disabled outside astronomical darkness
+            sqm_mag = 0.0
+            raw_mag = 0.0
+
+
         data = {
             'data' : (
                 vis,
                 ir,
                 uv_index,
+                sqm_mag,
+                raw_mag,
             ),
         }
 
@@ -52,7 +68,7 @@ class LightSensorSi1145(SensorBase):
 
 
     def update_sensor_settings(self):
-        if self.night:
+        if self.astro_darkness:
             logger.info('[%s] Switching SI1145 to night mode - Visible Gain: %d, IR Gain: %d', self.name, self.vis_gain_night, self.ir_gain_night)
             self.si1145.vis_gain = self.vis_gain_night
             self.si1145.ir_gain = self.ir_gain_night
@@ -69,13 +85,17 @@ class LightSensorSi1145_I2C(LightSensorSi1145):
     METADATA = {
         'name' : 'SI1145 (i2c)',
         'description' : 'SI1145 i2c UV Light Sensor',
-        'count' : 3,
+        'count' : 5,
         'labels' : (
             'Visible',
             'IR',
             'UV Index',
+            'SQM',
+            'Raw Magnitude',
         ),
         'types' : (
+            constants.SENSOR_LIGHT_MISC,
+            constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,
             constants.SENSOR_LIGHT_MISC,

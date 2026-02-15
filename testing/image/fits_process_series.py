@@ -15,7 +15,6 @@ import logging
 import cv2
 from PIL import Image
 
-from multiprocessing import Value
 from multiprocessing import Array
 from astropy.io import fits
 from sqlalchemy.orm.exc import NoResultFound
@@ -119,24 +118,38 @@ class ProcessFitsSeries(object):
         ])
 
 
-        gain_v = Value('i', 0)
-        bin_v = Value('i', 1)
+        gain_av = Array('f', [
+            -1.0,  # current gain
+        ])
+
+        binning_av = Array('i', [
+            -1,  # current bin
+        ])
+
         sensors_temp_av = Array('f', [0])
         sensors_user_av = Array('f', [0])
-        night_v = Value('i', 1)  # using night values for processing
-        moonmode_v = Value('i', 0)
+
+        night_av = Array('i', [
+            1,  # night
+            0,  # moonmode
+        ])
+
+        astro_av = Array('f', [
+            -20.0,  # sun alt, astronomical darkness
+            0.0,  # moon alt
+            0.0,  # moon percent
+        ])
 
 
         image_processor = ImageProcessor(
             self.config,
             position_av,
-            gain_v,
-            bin_v,
+            gain_av,
+            binning_av,
             sensors_temp_av,
             sensors_user_av,
-            night_v,
-            moonmode_v,
-            {},    # astrometric_data
+            night_av,
+            astro_av,
         )
 
 
@@ -157,11 +170,11 @@ class ProcessFitsSeries(object):
             exposure = float(hdulist[0].header['EXPTIME'])
 
 
-            with gain_v.get_lock():
-                gain_v.value = int(hdulist[0].header['GAIN'])
+            with gain_av.get_lock():
+                gain_av[0] = int(hdulist[0].header['GAIN'])
 
-            with bin_v.get_lock():
-                bin_v.value = int(hdulist[0].header.get('XBINNING', 1))
+            with binning_av.get_lock():
+                binning_av.value = int(hdulist[0].header.get('XBINNING', 1))
 
             with sensors_temp_av.get_lock():
                 sensors_temp_av[0] = float(hdulist[0].header.get('CCD-TEMP', 0))
@@ -169,14 +182,14 @@ class ProcessFitsSeries(object):
             with sensors_user_av.get_lock():
                 sensors_user_av[0] = float(hdulist[0].header.get('CCD-TEMP', 0))
 
-            with night_v.get_lock():
-                night_v.value = 1
+            #with night_av.get_lock():
+            #    night_av[0] = 1  # night
 
 
             hdulist.close()
 
 
-            image_processor.add(filename_p, exposure, exp_date, 0.0, camera)
+            image_processor.add(filename_p, exposure, gain_av[0], binning_av[0], exp_date, 0.0, camera)
 
             # Calibration is usually already applied to FITS
             #image_processor.calibrate()

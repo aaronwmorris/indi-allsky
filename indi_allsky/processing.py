@@ -22,7 +22,7 @@ import ephem
 
 from . import constants
 
-from . import stretch
+from . import stretch as stretch_classes
 from .orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
@@ -104,31 +104,30 @@ class ImageProcessor(object):
         config,
         position_av,
         gain_av,
-        bin_v,
+        binning_av,
         sensors_temp_av,
         sensors_user_av,
-        night_v,
-        moonmode_v,
+        night_av,
+        astro_av,
     ):
         self.config = config
 
         self.position_av = position_av
         self.gain_av = gain_av  # only use index 0 in this class
-        self.bin_v = bin_v
+        self.binning_av = binning_av
 
         self.sensors_temp_av = sensors_temp_av  # 0 ccd_temp
         self.sensors_user_av = sensors_user_av  # 0 ccd_temp
-        self.night_v = night_v
-        self.moonmode_v = moonmode_v
+        self.astro_av = astro_av
+        self.night_av = night_av
+
+        self.astro_darkness = None
 
         self._miscDb = miscDb(self.config)
 
         self._astrometric_data = dict()
 
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
-
-        self._detection_mask = self._load_detection_mask()
-        self._adu_mask = self._detection_mask  # reuse detection mask for ADU mask (if defined)
 
         self._image_circle_alpha_mask = None
 
@@ -159,21 +158,23 @@ class ImageProcessor(object):
         self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
 
 
-        if self.config['IMAGE_STRETCH'].get('CLASSNAME'):
-            stretch_class = getattr(stretch, self.config['IMAGE_STRETCH']['CLASSNAME'])
-            self._stretch = stretch_class(self.config, self.bin_v, mask=self._detection_mask)
-        else:
-            self._stretch = None
+        # These are setup in add() after binning_av is populated
+        self._detection_mask_dict = None
+        self._adu_mask_dict = None
+        self._sqm = None
+        self._stars_detect = None
+        self._lineDetect = None
+        self._draw = None
+        self._stacker = None
+        self._stretch_o = None
 
 
-        self._sqm = IndiAllskySqm(self.config, self.gain_av, self.bin_v, mask=None)
-        self._stars_detect = IndiAllSkyStars(self.config, self.bin_v, mask=self._detection_mask)
-        self._lineDetect = IndiAllskyDetectLines(self.config, self.bin_v, mask=self._detection_mask)
-        self._draw = IndiAllSkyDraw(self.config, self.bin_v, mask=self._detection_mask)
-        self._ia_scnr = IndiAllskyScnr(self.config, self.night_v)
+        self._ia_scnr = IndiAllskyScnr(self.config, self.night_av)
         self._cardinal_dirs_label = IndiAllskyCardinalDirsLabel(self.config)
         self._moon_overlay = IndiAllSkyMoonOverlay(self.config)
         self._lightgraph_overlay = IndiAllSkyLightgraphOverlay(self.config, self.position_av)
+
+        self._camera_sqm_raw_mag = 0.0
 
         self._wb_mtf_night = 1
         self._wbb_mtf_lut = None
@@ -186,12 +187,6 @@ class ImageProcessor(object):
         self._orb.retrograde = self.config['ORB_PROPERTIES'].get('RETROGRADE', False)
         self._orb.sun_color_rgb = self.config['ORB_PROPERTIES']['SUN_COLOR']
         self._orb.moon_color_rgb = self.config['ORB_PROPERTIES']['MOON_COLOR']
-
-        self._stacker = IndiAllskyStacker(self.config, self.bin_v, mask=self._detection_mask)
-        self._stacker.detection_sigma = self.config.get('IMAGE_ALIGN_DETECTSIGMA', 5)
-        self._stacker.max_control_points = self.config.get('IMAGE_ALIGN_POINTS', 50)
-        self._stacker.min_area = self.config.get('IMAGE_ALIGN_SOURCEMINAREA', 10)
-
 
         self._keogram_gen = KeogramGenerator(
             self.config,
@@ -366,7 +361,81 @@ class ImageProcessor(object):
         return self._astrometric_data
 
 
-    def add(self, filename, exposure, gain, exp_date, exp_elapsed, camera):
+    @property
+    def camera_sqm_raw_mag(self):
+        return self._camera_sqm_raw_mag
+
+
+    def post_init(self):
+        # binning_av needs to be populated before running this
+
+        self._detection_mask_dict = self._load_detection_mask()
+        self._adu_mask_dict = self._detection_mask_dict  # reuse detection mask for ADU mask (if defined)
+
+        self._sqm = IndiAllskySqm(self.config, self.gain_av, mask=self._detection_mask_dict)
+        self._stars_detect = IndiAllSkyStars(self.config, mask=self._detection_mask_dict)
+        self._lineDetect = IndiAllskyDetectLines(self.config, mask=self._detection_mask_dict)
+        self._draw = IndiAllSkyDraw(self.config, mask=self._detection_mask_dict)
+
+        self._stacker = IndiAllskyStacker(self.config, mask=self._detection_mask_dict)
+        self._stacker.detection_sigma = self.config.get('IMAGE_ALIGN_DETECTSIGMA', 5)
+        self._stacker.max_control_points = self.config.get('IMAGE_ALIGN_POINTS', 50)
+        self._stacker.min_area = self.config.get('IMAGE_ALIGN_SOURCEMINAREA', 10)
+
+        if self.config['IMAGE_STRETCH'].get('CLASSNAME'):
+            stretch_class = getattr(stretch_classes, self.config['IMAGE_STRETCH']['CLASSNAME'])
+            self._stretch_o = stretch_class(self.config, mask=self._detection_mask_dict)
+        else:
+            self._stretch_o = None
+
+
+    def _check_astro_darkness(self):
+        astro_darkness = self.astro_av[constants.ASTRO_SUN_ALT] <= -18.0
+
+        if astro_darkness != self.astro_darkness:
+            self.astro_darkness = astro_darkness
+
+
+            if astro_darkness:
+                # Astronomical Darkness
+                pass
+            else:
+                # Day
+                if not self.config.get('CAMERA_SQM', {}).get('ENABLE_DAY'):
+                    # Reset these values when not in astronomical darkness
+                    self._camera_sqm_raw_mag = 0.0
+
+                    with self.sensors_user_av.get_lock():
+                        self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_MAG] = 0.0
+                        self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_ADU] = 0.0
+
+
+    def add(self, filename, exposure, gain, binning, exp_date, exp_elapsed, camera):
+        if isinstance(self._detection_mask_dict, type(None)):
+            # binning_av needs to be populated before running this
+            self.post_init()
+
+
+        self._check_astro_darkness()
+
+
+        if self.night_av[constants.NIGHT_NIGHT] and not self.night_av[constants.NIGHT_MOONMODE]:
+            # just in case the array grows beyond the desired size
+            while len(self.image_list) >= self.stack_count:
+                self.image_list.pop()
+        else:
+            # disable stacking during daytime and moonmode
+            self.image_list.clear()
+
+
+        i_ref = self._add(filename, exposure, gain, binning, exp_date, exp_elapsed, camera)
+
+        self.image_list.insert(0, i_ref)  # new image is first in list
+
+        return i_ref
+
+
+    def _add(self, filename, exposure, gain, binning, exp_date, exp_elapsed, camera):
         from astropy.io import fits
 
         filename_p = Path(filename)
@@ -383,15 +452,6 @@ class ImageProcessor(object):
         if isinstance(self._keogram_store_p, type(None)):
             self._keogram_store_p = self.varlib_folder_p.joinpath(self._keogram_store_tmpl.format(camera.id))
             self._keogram_store_metadata_p = self.varlib_folder_p.joinpath(self._keogram_store_metadata_tmpl.format(camera.id))
-
-
-        if self.night_v.value and not self.moonmode_v.value:
-            # just in case the array grows beyond the desired size
-            while len(self.image_list) >= self.stack_count:
-                self.image_list.pop()
-        else:
-            # disable stacking during daytime and moonmode
-            self.image_list.clear()
 
 
         ### Open file
@@ -475,10 +535,10 @@ class ImageProcessor(object):
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'jpg'
             hdulist[0].header['EXPTIME'] = float(exposure)
-            hdulist[0].header['XBINNING'] = 1
-            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['XBINNING'] = int(binning)
+            hdulist[0].header['YBINNING'] = int(binning)
             hdulist[0].header['GAIN'] = float(gain)
-            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
             #hdulist[0].header['BITPIX'] = 8
 
@@ -538,10 +598,10 @@ class ImageProcessor(object):
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'png'
             hdulist[0].header['EXPTIME'] = float(exposure)
-            hdulist[0].header['XBINNING'] = 1
-            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['XBINNING'] = int(binning)
+            hdulist[0].header['YBINNING'] = int(binning)
             hdulist[0].header['GAIN'] = float(gain)
-            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
             #hdulist[0].header['BITPIX'] = 8
 
@@ -591,10 +651,10 @@ class ImageProcessor(object):
             hdulist[0].header['IMAGETYP'] = 'Light Frame'
             hdulist[0].header['INSTRUME'] = 'libcamera'
             hdulist[0].header['EXPTIME'] = float(exposure)
-            hdulist[0].header['XBINNING'] = 1
-            hdulist[0].header['YBINNING'] = 1
+            hdulist[0].header['XBINNING'] = int(binning)
+            hdulist[0].header['YBINNING'] = int(binning)
             hdulist[0].header['GAIN'] = float(gain)
-            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[0]
+            hdulist[0].header['CCD-TEMP'] = self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]
             hdulist[0].header['DATE-OBS'] = exp_date.isoformat()
             #hdulist[0].header['BITPIX'] = 16
 
@@ -678,17 +738,18 @@ class ImageProcessor(object):
         dayDate = self._dateCalcs.calcDayDate(exp_date)
 
 
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             target_adu = self.config['TARGET_ADU']
         else:
             target_adu = self.config['TARGET_ADU_DAY']
 
 
-        image_data = ImageData(
+        i_ref = ImageData(
             self.config,
             hdulist,
             exposure,
             gain,
+            binning,
             exp_date,
             exp_elapsed,
             dayDate,
@@ -703,7 +764,7 @@ class ImageProcessor(object):
         )
 
 
-        detected_bit_depth = image_data.detected_bit_depth
+        detected_bit_depth = i_ref.detected_bit_depth
 
         config_ccd_bit_depth = self.config.get('CCD_BIT_DEPTH', 0)
         if config_ccd_bit_depth:
@@ -724,24 +785,24 @@ class ImageProcessor(object):
         instrume_header = hdulist[0].header.get('INSTRUME', '')
         if instrume_header == 'indi_pylibcamera':
             # OFFSET_0, _1, _2, _3 are the SensorBlackLevels metadata from libcamera
-            image_data.libcamera_black_level = int(hdulist[0].header.get('OFFSET_0', 0))
+            i_ref.libcamera_black_level = int(hdulist[0].header.get('OFFSET_0', 0))
 
 
         # aurora and smoke data
         camera_data = camera.data
         if camera_data:
-            image_data.kpindex = float(camera_data.get('KPINDEX_CURRENT', 0.0))
-            image_data.ovation_max = int(camera_data.get('OVATION_MAX', 0))
-            image_data.aurora_mag_bt = float(camera_data.get('AURORA_MAG_BT', 0.0))
-            image_data.aurora_mag_gsm_bz = float(camera_data.get('AURORA_MAG_GSM_BZ', 0.0))
-            image_data.aurora_plasma_density = float(camera_data.get('AURORA_PLASMA_DENSITY', 0.0))
-            image_data.aurora_plasma_speed = float(camera_data.get('AURORA_PLASMA_SPEED', 0.0))
-            image_data.aurora_plasma_temp = int(camera_data.get('AURORA_PLASMA_TEMP', 0))
-            image_data.aurora_n_hemi_gw = int(camera_data.get('AURORA_N_HEMI_GW', 0))
-            image_data.aurora_s_hemi_gw = int(camera_data.get('AURORA_S_HEMI_GW', 0))
+            i_ref.kpindex = float(camera_data.get('KPINDEX_CURRENT', 0.0))
+            i_ref.ovation_max = int(camera_data.get('OVATION_MAX', 0))
+            i_ref.aurora_mag_bt = float(camera_data.get('AURORA_MAG_BT', 0.0))
+            i_ref.aurora_mag_gsm_bz = float(camera_data.get('AURORA_MAG_GSM_BZ', 0.0))
+            i_ref.aurora_plasma_density = float(camera_data.get('AURORA_PLASMA_DENSITY', 0.0))
+            i_ref.aurora_plasma_speed = float(camera_data.get('AURORA_PLASMA_SPEED', 0.0))
+            i_ref.aurora_plasma_temp = int(camera_data.get('AURORA_PLASMA_TEMP', 0))
+            i_ref.aurora_n_hemi_gw = int(camera_data.get('AURORA_N_HEMI_GW', 0))
+            i_ref.aurora_s_hemi_gw = int(camera_data.get('AURORA_S_HEMI_GW', 0))
 
             try:
-                image_data.smoke_rating = int(camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA))
+                i_ref.smoke_rating = int(camera_data.get('SMOKE_RATING', constants.SMOKE_RATING_NODATA))
             except ValueError:
                 # fix legacy values (str) until updated
                 pass
@@ -750,15 +811,13 @@ class ImageProcessor(object):
                 pass
 
 
-        self.image_list.insert(0, image_data)  # new image is first in list
-
-        return image_data
+        return i_ref
 
 
     def debayer(self):
         i_ref = self.getLatestImage()
 
-        self._debayer(i_ref)
+        i_ref.opencv_data = self._debayer(i_ref)
 
 
     def _debayer(self, i_ref):
@@ -800,8 +859,7 @@ class ImageProcessor(object):
             data = numpy.swapaxes(data, 0, 2)
             data = numpy.swapaxes(data, 0, 1)
 
-            i_ref.opencv_data = cv2.cvtColor(data, cv2.COLOR_RGB2BGR)
-            return
+            return cv2.cvtColor(data, cv2.COLOR_RGB2BGR)
 
 
         ### now we reach the debayer stage
@@ -816,19 +874,18 @@ class ImageProcessor(object):
         if not image_bayerpat:
             # assume mono data
             logger.error('No bayer pattern detected')
-            i_ref.opencv_data = data
-            return
+            return data
 
 
-        if self.config.get('NIGHT_GRAYSCALE') and self.night_v.value:
+        if self.config.get('NIGHT_GRAYSCALE') and self.night_av[constants.NIGHT_NIGHT]:
             debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
-        elif self.config.get('DAYTIME_GRAYSCALE') and not self.night_v.value:
+        elif self.config.get('DAYTIME_GRAYSCALE') and not self.night_av[constants.NIGHT_NIGHT]:
             debayer_algorithm = self.__cfa_gray_map[image_bayerpat]
         else:
             debayer_algorithm = self.__cfa_bgr_map[image_bayerpat]
 
 
-        i_ref.opencv_data = cv2.cvtColor(data, debayer_algorithm)
+        return cv2.cvtColor(data, debayer_algorithm)
 
 
     def getLatestImage(self):
@@ -886,16 +943,16 @@ class ImageProcessor(object):
 
         if self.config.get('IMAGE_CALIBRATE_BPM'):
             # pick a bad pixel map that is closest to the exposure and temperature
-            logger.info('Searching for bad pixel map: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[0])
+            logger.info('Searching for bad pixel map: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
             bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
                 .filter(IndiAllSkyDbBadPixelMapTable.camera_id == i_ref.camera_id)\
                 .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
                 .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == i_ref.image_bitpix)\
-                .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
+                .filter(IndiAllSkyDbBadPixelMapTable.binmode == i_ref.binning)\
                 .filter(IndiAllSkyDbBadPixelMapTable.gain >= i_ref.gain)\
                 .filter(IndiAllSkyDbBadPixelMapTable.exposure >= i_ref.exposure)\
-                .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensors_temp_av[0])\
-                .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
+                .filter(IndiAllSkyDbBadPixelMapTable.temp >= self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])\
+                .filter(IndiAllSkyDbBadPixelMapTable.temp <= (self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] + self.dark_temperature_range))\
                 .order_by(
                     IndiAllSkyDbBadPixelMapTable.gain.asc(),
                     IndiAllSkyDbBadPixelMapTable.exposure.asc(),
@@ -905,14 +962,14 @@ class ImageProcessor(object):
                 .first()
 
             if not bpm_entry:
-                #logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensors_temp_av[0])
+                #logger.warning('Temperature matched bad pixel map not found: %0.2fc', self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
 
                 # pick a bad pixel map that matches the exposure at the hightest temperature found
                 bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
                     .filter(IndiAllSkyDbBadPixelMapTable.camera_id == i_ref.camera_id)\
                     .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
                     .filter(IndiAllSkyDbBadPixelMapTable.bitdepth == i_ref.image_bitpix)\
-                    .filter(IndiAllSkyDbBadPixelMapTable.binmode == self.bin_v.value)\
+                    .filter(IndiAllSkyDbBadPixelMapTable.binmode == i_ref.binning)\
                     .filter(IndiAllSkyDbBadPixelMapTable.gain >= i_ref.gain)\
                     .filter(IndiAllSkyDbBadPixelMapTable.exposure >= i_ref.exposure)\
                     .order_by(
@@ -931,24 +988,24 @@ class ImageProcessor(object):
                         i_ref.image_bitpix,
                         float(i_ref.exposure),
                         i_ref.gain,
-                        self.bin_v.value,
-                        self.sensors_temp_av[0],
+                        i_ref.binning,
+                        self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
                     )
         else:
             bpm_entry = None
 
 
         # pick a dark frame that is closest to the exposure and temperature
-        logger.info('Searching for dark frame: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[0])
+        logger.info('Searching for dark frame: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
             .filter(IndiAllSkyDbDarkFrameTable.bitdepth == i_ref.image_bitpix)\
-            .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
+            .filter(IndiAllSkyDbDarkFrameTable.binmode == i_ref.binning)\
             .filter(IndiAllSkyDbDarkFrameTable.gain >= i_ref.gain)\
             .filter(IndiAllSkyDbDarkFrameTable.exposure >= i_ref.exposure)\
-            .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensors_temp_av[0])\
-            .filter(IndiAllSkyDbDarkFrameTable.temp <= (self.sensors_temp_av[0] + self.dark_temperature_range))\
+            .filter(IndiAllSkyDbDarkFrameTable.temp >= self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])\
+            .filter(IndiAllSkyDbDarkFrameTable.temp <= (self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP] + self.dark_temperature_range))\
             .order_by(
                 IndiAllSkyDbDarkFrameTable.gain.asc(),
                 IndiAllSkyDbDarkFrameTable.exposure.asc(),
@@ -958,14 +1015,14 @@ class ImageProcessor(object):
             .first()
 
         if not dark_frame_entry:
-            #logger.warning('Temperature matched dark not found: %0.2fc', self.sensors_temp_av[0])
+            #logger.warning('Temperature matched dark not found: %0.2fc', self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
 
             # pick a dark frame that matches the exposure at the hightest temperature found
             dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
                 .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
                 .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
                 .filter(IndiAllSkyDbDarkFrameTable.bitdepth == i_ref.image_bitpix)\
-                .filter(IndiAllSkyDbDarkFrameTable.binmode == self.bin_v.value)\
+                .filter(IndiAllSkyDbDarkFrameTable.binmode == i_ref.binning)\
                 .filter(IndiAllSkyDbDarkFrameTable.gain >= i_ref.gain)\
                 .filter(IndiAllSkyDbDarkFrameTable.exposure >= i_ref.exposure)\
                 .order_by(
@@ -984,8 +1041,8 @@ class ImageProcessor(object):
                     i_ref.image_bitpix,
                     float(i_ref.exposure),
                     i_ref.gain,
-                    self.bin_v.value,
-                    self.sensors_temp_av[0],
+                    i_ref.binning,
+                    self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
                 )
 
                 raise CalibrationNotFound('Dark not found')
@@ -1193,12 +1250,12 @@ class ImageProcessor(object):
 
 
     def _calculate_8bit_adu(self, i_ref):
-        if isinstance(self._adu_mask, type(None)):
+        if isinstance(self._adu_mask_dict[i_ref.binning], type(None)):
             # This only needs to be done once if a mask is not provided
-            self._generateAduMask(self.image)
+            self._generateAduMask(self.image, i_ref.binning)
 
 
-        mask_dimensions = self._adu_mask.shape[:2]
+        mask_dimensions = self._adu_mask_dict[i_ref.binning].shape[:2]
         image_dimensions = self.image.shape[:2]
 
         if mask_dimensions != image_dimensions:
@@ -1215,10 +1272,10 @@ class ImageProcessor(object):
 
         if len(self.image.shape) == 2:
             # mono
-            adu = cv2.mean(src=self.image, mask=self._adu_mask)[0]
+            adu = cv2.mean(src=self.image, mask=self._adu_mask_dict[i_ref.binning])[0]
         else:
             data_mono = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
-            adu = cv2.mean(src=data_mono, mask=self._adu_mask)[0]
+            adu = cv2.mean(src=data_mono, mask=self._adu_mask_dict[i_ref.binning])[0]
 
 
         if i_ref.image_bitpix == 8:
@@ -1237,7 +1294,7 @@ class ImageProcessor(object):
         return adu_8
 
 
-    def calculateSqm(self):
+    def calculateJankySqm(self):
         i_ref = self.getLatestImage()
 
         if self.focus_mode:
@@ -1245,11 +1302,24 @@ class ImageProcessor(object):
             i_ref.sqm_value = 0
             return
 
-        i_ref.sqm_value = self._sqm.calculate(i_ref.opencv_data, i_ref.exposure, i_ref.gain)
+        i_ref.sqm_value = self._sqm.jSqm(i_ref)
+
+
+    def _calculateMagnitudeSqm(self, i_ref):
+        mag_sqm, raw_mag, raw_adu = self._sqm.magnitudeSqm(i_ref)
+
+        # cache value
+        self._camera_sqm_raw_mag = raw_mag
+        self._camera_sqm_raw_adu = raw_adu
+
+        return mag_sqm, raw_mag, raw_adu
 
 
     def stack(self):
         # self.image is first populated by this method
+
+        ### stacking is disabled during the day and moonmode in the add() method
+
         i_ref = self.getLatestImage()
 
 
@@ -1298,7 +1368,7 @@ class ImageProcessor(object):
             signal.alarm(int(self.config['EXPOSURE_PERIOD'] - 3))
 
             try:
-                stack_data_list = self._stacker.register(stack_i_ref_list)
+                stack_data_list = self._stacker.register(stack_i_ref_list, i_ref.binning)
             except TimeOutException:
                 # stack unaligned images
                 logger.error('Registration exceeded the exposure period, cancel alignment')
@@ -1306,6 +1376,7 @@ class ImageProcessor(object):
 
             signal.alarm(0)
         else:
+            logger.warning('Bypassing image registration due to low exposure')
             # stack unaligned images
             stack_data_list = [x.opencv_data for x in stack_i_ref_list]
 
@@ -1388,18 +1459,19 @@ class ImageProcessor(object):
     def convert_16bit_to_8bit(self):
         i_ref = self.getLatestImage()
 
-        self._convert_16bit_to_8bit(i_ref.image_bitpix)
+        self.image = self._convert_16bit_to_8bit(i_ref)
 
 
-    def _convert_16bit_to_8bit(self, image_bitpix):
-        if image_bitpix == 8:
-            return
+    def _convert_16bit_to_8bit(self, i_ref):
+        if i_ref.image_bitpix == 8:
+            return self.image
 
         #logger.info('Resampling image from %d to 8 bits', image_bitpix)
 
         # shifting is 5x faster than division
         shift_factor = self.max_bit_depth - 8
-        self.image = numpy.right_shift(self.image, shift_factor).astype(numpy.uint8)
+
+        return numpy.right_shift(self.image, shift_factor).astype(numpy.uint8)
 
 
     def rotate_90(self):
@@ -1514,23 +1586,33 @@ class ImageProcessor(object):
 
 
     def detectLines(self):
-        i_ref = self.getLatestImage()
-
         if self.focus_mode:
             # disable processing in focus mode
             return
 
-        i_ref.lines = self._lineDetect.detectLines(self.image)
+
+        i_ref = self.getLatestImage()
+
+        i_ref.lines = self._detectLines(i_ref)
+
+
+    def _detectLines(self, i_ref):
+        return self._lineDetect.detectLines(self.image, i_ref.binning)
 
 
     def detectStars(self):
-        i_ref = self.getLatestImage()
-
         if self.focus_mode:
             # disable processing in focus mode
             return
 
-        i_ref.stars = self._stars_detect.detectObjects(self.image)
+
+        i_ref = self.getLatestImage()
+
+        i_ref.stars = self._detectStars(i_ref)
+
+
+    def _detectStars(self, i_ref):
+        return self._stars_detect.detectObjects(self.image, i_ref.binning)
 
 
     def drawDetections(self):
@@ -1538,10 +1620,23 @@ class ImageProcessor(object):
             # disable processing in focus mode
             return
 
-        self.image = self._draw.main(self.image)
+
+        i_ref = self.getLatestImage()
+
+        self.image = self._drawDetections(i_ref)
+
+
+    def _drawDetections(self, i_ref):
+        return self._draw.main(self.image, i_ref.binning)
 
 
     def crop_image(self):
+        i_ref = self.getLatestImage()
+
+        self.image = self._crop_image(i_ref)
+
+
+    def _crop_image(self, i_ref):
         if self.config.get('IMAGE_CROP_IMAGE_CIRCLE'):
             logger.info('Cropping to image circle')
             image_height, image_width = self.image.shape[:2]
@@ -1568,30 +1663,38 @@ class ImageProcessor(object):
                 y1 = max(0, (image_center_y - radius))
                 y2 = min(image_height, (image_center_y + radius) - (lens_offset_y * 2))  # offset is negative
 
-            self.image = self.image[
+            cropped_image = self.image[
                 y1:y2,
                 x1:x2,
             ]
 
 
-            new_height, new_width = self.image.shape[:2]
+            new_height, new_width = cropped_image.shape[:2]
             logger.info('New cropped size: %d x %d', new_width, new_height)
+
+            return cropped_image
+
 
         elif self.config.get('IMAGE_CROP_ROI'):
             # divide the coordinates by binning value
-            x1 = int(self.config['IMAGE_CROP_ROI'][0] / self.bin_v.value)
-            y1 = int(self.config['IMAGE_CROP_ROI'][1] / self.bin_v.value)
-            x2 = int(self.config['IMAGE_CROP_ROI'][2] / self.bin_v.value)
-            y2 = int(self.config['IMAGE_CROP_ROI'][3] / self.bin_v.value)
+            x1 = int(self.config['IMAGE_CROP_ROI'][0] / i_ref.binning)
+            y1 = int(self.config['IMAGE_CROP_ROI'][1] / i_ref.binning)
+            x2 = int(self.config['IMAGE_CROP_ROI'][2] / i_ref.binning)
+            y2 = int(self.config['IMAGE_CROP_ROI'][3] / i_ref.binning)
 
 
-            self.image = self.image[
+            cropped_image = self.image[
                 y1:y2,
                 x1:x2,
             ]
 
-            new_height, new_width = self.image.shape[:2]
+            new_height, new_width = cropped_image.shape[:2]
             logger.info('New cropped size: %d x %d', new_width, new_height)
+
+            return cropped_image
+
+
+        return self.image
 
 
     def scnr(self):
@@ -1603,7 +1706,7 @@ class ImageProcessor(object):
         if self.config.get('USE_NIGHT_COLOR', True):
             algo = self.config.get('SCNR_ALGORITHM')
         else:
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 algo = self.config.get('SCNR_ALGORITHM')
             else:
@@ -1644,7 +1747,7 @@ class ImageProcessor(object):
             WBG_FACTOR = float(self.config.get('WBG_FACTOR', 1.0))
             WBR_FACTOR = float(self.config.get('WBR_FACTOR', 1.0))
         else:
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 WBB_FACTOR = float(self.config.get('WBB_FACTOR', 1.0))
                 WBG_FACTOR = float(self.config.get('WBG_FACTOR', 1.0))
@@ -1740,7 +1843,7 @@ class ImageProcessor(object):
         if self.config.get('USE_NIGHT_COLOR', True):
             auto_wb = self.config.get('AUTO_WB')
         else:
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 auto_wb = self.config.get('AUTO_WB')
             else:
@@ -1804,7 +1907,7 @@ class ImageProcessor(object):
             WBG_MTF_MIDTONES = float(self.config.get('WBG_MTF_MIDTONES', 0.5))
             WBR_MTF_MIDTONES = float(self.config.get('WBR_MTF_MIDTONES', 0.5))
         else:
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 WBB_MTF_MIDTONES = float(self.config.get('WBB_MTF_MIDTONES', 0.5))
                 WBG_MTF_MIDTONES = float(self.config.get('WBG_MTF_MIDTONES', 0.5))
@@ -1826,8 +1929,8 @@ class ImageProcessor(object):
 
 
     def _white_balance_mtf(self, WBB_MTF_MIDTONES, WBG_MTF_MIDTONES, WBR_MTF_MIDTONES):
-        if self._wb_mtf_night != self.night_v.value:
-            self._wb_mtf_night = self.night_v.value
+        if self._wb_mtf_night != self.night_av[constants.NIGHT_NIGHT]:
+            self._wb_mtf_night = self.night_av[constants.NIGHT_NIGHT]
             self._wbb_mtf_lut = None  # recalculate LUT
             self._wbg_mtf_lut = None  # recalculate LUT
             self._wbr_mtf_lut = None  # recalculate LUT
@@ -1894,7 +1997,7 @@ class ImageProcessor(object):
         if self.config.get('USE_NIGHT_COLOR', True):
             SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR', 1.0))
         else:
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 SATURATION_FACTOR = float(self.config.get('SATURATION_FACTOR', 1.0))
             else:
@@ -2010,7 +2113,7 @@ class ImageProcessor(object):
         if self.config.get('USE_NIGHT_COLOR', True):
             GAMMA_CORRECTION = float(self.config.get('GAMMA_CORRECTION', 1.0))
         else:
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 GAMMA_CORRECTION = float(self.config.get('GAMMA_CORRECTION', 1.0))
             else:
@@ -2624,9 +2727,10 @@ class ImageProcessor(object):
             'aurora_plasma_density' : i_ref.aurora_plasma_density,
             'aurora_plasma_speed'   : i_ref.aurora_plasma_speed,
             'aurora_plasma_temp'    : i_ref.aurora_plasma_temp,
-            'aurora_n_hemi_gw' : i_ref.aurora_n_hemi_gw,
-            'aurora_s_hemi_gw' : i_ref.aurora_s_hemi_gw,
-            'smoke_rating' : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
+            'aurora_n_hemi_gw'      : i_ref.aurora_n_hemi_gw,
+            'aurora_s_hemi_gw'      : i_ref.aurora_s_hemi_gw,
+            'smoke_rating'          : constants.SMOKE_RATING_MAP_STR[i_ref.smoke_rating],
+            'camera_sqm_raw_mag'    : self.camera_sqm_raw_mag,
             'sun_alt'      : self.astrometric_data['sun_alt'],
             'sun_up'       : self.astrometric_data['sun_up'],
             'sun_next_rise'     : self.astrometric_data['sun_next_rise'],
@@ -2685,7 +2789,7 @@ class ImageProcessor(object):
 
 
         # stacking data
-        if self.night_v.value and not self.moonmode_v.value:
+        if self.night_av[constants.NIGHT_NIGHT] and not self.night_av[constants.NIGHT_MOONMODE]:
             if self.config.get('IMAGE_STACK_COUNT', 1) > 1:
                 label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'average').capitalize()
                 label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
@@ -2700,11 +2804,11 @@ class ImageProcessor(object):
 
         # stretching data
         if self.config.get('IMAGE_STRETCH', {}).get('CLASSNAME'):
-            if self.night_v.value:
+            if self.night_av[constants.NIGHT_NIGHT]:
                 # night
                 label_data['stretch'] = 'On'
 
-                if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
+                if self.night_av[constants.NIGHT_MOONMODE] and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
                     label_data['stretch'] = 'Off'
             else:
                 # daytime
@@ -2742,13 +2846,13 @@ class ImageProcessor(object):
 
 
         # dew heater
-        if self.sensors_user_av[1]:
+        if self.sensors_user_av[constants.SENSOR_USER_DEW_HEATER_LEVEL]:
             label_data['dew_heater_status'] = 'On'
         else:
             label_data['dew_heater_status'] = 'Off'
 
         # fan
-        if self.sensors_user_av[4]:
+        if self.sensors_user_av[constants.SENSOR_USER_FAN_LEVEL]:
             label_data['fan_status'] = 'On'
         else:
             label_data['fan_status'] = 'Off'
@@ -2756,7 +2860,7 @@ class ImageProcessor(object):
 
         # wind direction
         try:
-            label_data['wind_dir'] = self.cardinal_directions[round(self.sensors_user_av[6] / (360 / (len(self.cardinal_directions) - 1)))]
+            label_data['wind_dir'] = self.cardinal_directions[round(self.sensors_user_av[constants.SENSOR_USER_WIND_DIR] / (360 / (len(self.cardinal_directions) - 1)))]
         except IndexError:
             logger.error('Unable to calculate wind direction')
             label_data['wind_dir'] = 'Error'
@@ -2789,16 +2893,16 @@ class ImageProcessor(object):
 
 
         # Add moon mode indicator
-        if self.moonmode_v.value:
+        if self.night_av[constants.NIGHT_MOONMODE]:
             image_label += '\n* Moon Mode *'
 
 
         # Add eclipse indicator
-        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_v.value:
+        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_av[constants.NIGHT_NIGHT]:
             # Lunar eclipse (earth's penumbra is large)
             image_label += '\n* LUNAR ECLIPSE *'
 
-        if self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_v.value:
+        if self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_av[constants.NIGHT_NIGHT]:
             # Solar eclipse
             image_label += '\n* SOLAR ECLIPSE *'
 
@@ -3193,7 +3297,7 @@ class ImageProcessor(object):
         if not self.config.get('SATELLITE_TRACK', {}).get('LABEL_ENABLE'):
             return list()
 
-        if not self.config.get('SATELLITE_TRACK', {}).get('DAYTIME_TRACK') and not self.night_v.value:
+        if not self.config.get('SATELLITE_TRACK', {}).get('DAYTIME_TRACK') and not self.night_av[constants.NIGHT_NIGHT]:
             return list()
 
 
@@ -3354,13 +3458,13 @@ class ImageProcessor(object):
             return
 
 
-        if isinstance(self._stretch, type(None)):
+        if isinstance(self._stretch_o, type(None)):
             return
 
 
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             # night
-            if self.moonmode_v.value and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
+            if self.night_av[constants.NIGHT_MOONMODE] and not self.config.get('IMAGE_STRETCH', {}).get('MOONMODE'):
                 return
         else:
             # daytime
@@ -3368,8 +3472,10 @@ class ImageProcessor(object):
                 return
 
 
+        i_ref = self.getLatestImage()
 
-        stretched_image = self._stretch.stretch(self.image, self.max_bit_depth)
+
+        stretched_image = self._stretch(i_ref)
 
 
         if self.config.get('IMAGE_STRETCH', {}).get('SPLIT'):
@@ -3378,6 +3484,10 @@ class ImageProcessor(object):
 
 
         self.image = stretched_image
+
+
+    def _stretch(self, i_ref):
+        return self._stretch_o.stretch(self.image, self.max_bit_depth, i_ref.binning)
 
 
     def fish2pano_warpPolar(self):
@@ -3679,11 +3789,17 @@ class ImageProcessor(object):
 
 
     def _load_detection_mask(self):
+        mask_data_dict = dict()
+        for x in set(self.binning_av):
+            # populate initial values
+            mask_data_dict[x] = None
+
+
         detect_mask = self.config.get('DETECT_MASK', '')
 
         if not detect_mask:
             logger.warning('No detection mask defined')
-            return
+            return mask_data_dict
 
 
         detect_mask_p = Path(detect_mask)
@@ -3691,30 +3807,44 @@ class ImageProcessor(object):
         try:
             if not detect_mask_p.exists():
                 logger.error('%s does not exist', detect_mask_p)
-                return
+                return mask_data_dict
 
 
             if not detect_mask_p.is_file():
                 logger.error('%s is not a file', detect_mask_p)
-                return
+                return mask_data_dict
 
         except PermissionError as e:
             logger.error(str(e))
-            return
+            return mask_data_dict
 
         mask_data = cv2.imread(str(detect_mask_p), cv2.IMREAD_GRAYSCALE)  # mono
         if isinstance(mask_data, type(None)):
             logger.error('%s is not a valid image', detect_mask_p)
-            return
+            return mask_data_dict
 
 
-        ### any intermediate values will be set to 255
-        mask_data[mask_data > 0] = 255
+        logger.warning('Loaded detection mask: %s', detect_mask_p)
 
 
-        logger.info('Loaded detection mask: %s', detect_mask_p)
+        # create mask for each binning setting
+        for binning in mask_data_dict.keys():
+            if binning == 1:
+                ### any intermediate values will be set to 255
+                mask_data_dict[binning] = mask_data.copy()
+                mask_data_dict[binning][mask_data_dict[binning] > 0] = 255
+            else:
+                mask_height, mask_width = mask_data.shape[:2]
 
-        return mask_data
+                new_mask_height = int(mask_height / binning)
+                new_mask_width = int(mask_width / binning)
+
+                mask_data_dict[binning] = cv2.resize(mask_data, (new_mask_width, new_mask_height), interpolation=cv2.INTER_AREA)
+
+                mask_data_dict[binning][mask_data_dict[binning] > 0] = 255
+
+
+        return mask_data_dict
 
 
     def _load_logo_overlay(self, image):
@@ -3783,7 +3913,7 @@ class ImageProcessor(object):
         return overlay_bgr, alpha_mask
 
 
-    def _generateAduMask(self, img):
+    def _generateAduMask(self, img, binning):
         logger.info('Generating mask based on ADU_ROI')
 
         image_height, image_width = img.shape[:2]
@@ -3794,10 +3924,10 @@ class ImageProcessor(object):
         adu_roi = self.config.get('ADU_ROI', [])
 
         try:
-            x1 = int(adu_roi[0] / self.bin_v.value)
-            y1 = int(adu_roi[1] / self.bin_v.value)
-            x2 = int(adu_roi[2] / self.bin_v.value)
-            y2 = int(adu_roi[3] / self.bin_v.value)
+            x1 = int(adu_roi[0] / binning)
+            y1 = int(adu_roi[1] / binning)
+            x2 = int(adu_roi[2] / binning)
+            y2 = int(adu_roi[3] / binning)
         except IndexError:
             logger.warning('Using central ROI for ADU calculations')
             adu_fov_div = self.config.get('ADU_FOV_DIV', 4)
@@ -3815,7 +3945,7 @@ class ImageProcessor(object):
             thickness=cv2.FILLED,
         )
 
-        self._adu_mask = mask
+        self._adu_mask_dict[binning] = mask
 
 
     def _generate_image_circle_mask(self, image):
@@ -3874,6 +4004,7 @@ class ImageData(object):
         hdulist,
         exposure,
         gain,
+        binning,
         exp_date,
         exp_elapsed,
         day_date,
@@ -3893,6 +4024,7 @@ class ImageData(object):
 
         self._exposure = float(exposure)
         self._gain = float(gain)
+        self._binning = int(binning)
         self._exp_date = exp_date
         self._exp_elapsed = exp_elapsed
         self._day_date = day_date
@@ -3950,6 +4082,10 @@ class ImageData(object):
     @property
     def gain(self):
         return self._gain
+
+    @property
+    def binning(self):
+        return self._binning
 
     @property
     def exp_date(self):

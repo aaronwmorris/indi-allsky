@@ -4,6 +4,8 @@ astropy >= 6.1.0
 pyerfa >= 2.0.1.4
 # https://www.wheelodex.org/projects/numpy/
 numpy >= 2.1.0
+# Use the following if you have trouble installing numpy (x86_64-v2)
+#numpy >= 2.1.0, < 2.4.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
 opencv-python-headless >= 4.10.0.84
 # https://www.wheelodex.org/projects/scipy/

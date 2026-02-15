@@ -50,6 +50,8 @@ class IndiClientTestCameraBase(IndiClient):
             'max_gain'      : 0.0,
             'min_exposure'  : 0.000032,
             'max_exposure'  : 60.0,
+            'min_binning'   : 1,
+            'max_binning'   : 1,
             'cfa'           : None,
             'bit_depth'     : 8,
         }
@@ -98,17 +100,27 @@ class IndiClientTestCameraBase(IndiClient):
 
 
         # Update shared bin value
-        with self.bin_v.get_lock():
-            self.bin_v.value = int(bin_value)
+        with self.binning_av.get_lock():
+            self.binning_av[constants.BINNING_CURRENT] = int(bin_value)
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
+        self.binning = int(bin_value)
+
+
+    def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
         if self.active_exposure:
             return
 
 
         self.exposure = exposure
-        self.setCcdGain(gain)  # gain does not do anything
+        self.sqm_exposure = sqm_exposure
+
+
+        if self.gain != float(round(gain, 2)):
+            self.setCcdGain(gain)  # gain does not do anything
+
+        if self.binning != int(binning):
+            self.setCcdBinning(binning)  # binning does not do anything
 
 
         self.active_exposure = True
@@ -188,6 +200,8 @@ class IndiClientTestCameraBase(IndiClient):
             'filename'    : str(self.current_exposure_file_p),
             'exposure'    : self.exposure,
             'gain'        : self.gain,
+            'binning'     : self.binning,
+            'sqm_exposure': self.sqm_exposure,
             'exp_time'    : datetime.timestamp(exp_date),  # datetime objects are not json serializable
             'exp_elapsed' : exposure_elapsed_s,
             'camera_id'   : self.camera_id,
@@ -208,6 +222,9 @@ class IndiClientTestCameraBase(IndiClient):
 
         new_ccd.min_gain = self.camera_info['min_gain']
         new_ccd.max_gain = self.camera_info['max_gain']
+
+        new_ccd.min_binning = self.camera_info['min_binning']
+        new_ccd.max_binning = self.camera_info['max_binning']
 
         new_ccd.min_exposure = self.camera_info['min_exposure']
         new_ccd.max_exposure = self.camera_info['max_exposure']
@@ -303,6 +320,14 @@ class IndiClientTestCameraBase(IndiClient):
             'current' : self.ccd_device.min_gain,
             'min'     : self.ccd_device.min_gain,
             'max'     : self.ccd_device.max_gain,
+            'step'    : None,
+            'format'  : None,
+        }
+
+        ccdinfo['BINNING_INFO'] = {
+            'current' : self.ccd_device.min_binning,
+            'min'     : self.ccd_device.min_binning,
+            'max'     : self.ccd_device.max_binning,
             'step'    : None,
             'format'  : None,
         }

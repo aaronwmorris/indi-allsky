@@ -109,7 +109,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.client.loop_stop()
 
 
-    def setCcdExposure(self, exposure, gain, sync=False, timeout=None):
+    def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
         import paho.mqtt.properties as mqtt_props
         from paho.mqtt.packettypes import PacketTypes
 
@@ -118,10 +118,14 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
             return
 
 
+        self.exposure = exposure
+        self.sqm_exposure = sqm_exposure
+
+
         libcamera_camera_id = self.config.get('LIBCAMERA', {}).get('CAMERA_ID', 0)
 
 
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             # night
             image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'jpg')
         else:
@@ -143,7 +147,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         try:
-            binmode_option = self._getBinModeOptions(self.bin_v.value)
+            binmode_option = self._getBinModeOptions(int(binning))
         except BinModeException as e:
             logger.error('Invalid setting: %s', str(e))
             binmode_option = ''
@@ -153,10 +157,11 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.current_metadata_file_p = metadata_tmp_p
 
 
-        self.exposure = exposure
-
-        if self.gain != round(float(gain), 2):
+        if self.gain != float(round(gain, 2)):
             self.setCcdGain(gain)
+
+        if self.binning != int(binning):
+            self.setCcdBinning(binning)
 
 
         exposure_us = int(exposure * 1000000)
@@ -191,7 +196,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
 
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             #  night
 
             if self.config.get('LIBCAMERA', {}).get('IMMEDIATE', True):
@@ -238,7 +243,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         # extra options get added last
-        if self.night_v.value:
+        if self.night_av[constants.NIGHT_NIGHT]:
             #  night
             # Add extra config options
             extra_options = self.config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS')
@@ -279,6 +284,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
             'kwargs'   : {
                 'exposure'  : exposure,
                 'gain'      : gain,
+                'binning'   : binning,
                 'cmd'       : cmd,
                 'files'     : {
                     'image' : image_tmp_p.name,  # file name is needed for the suffix
@@ -463,6 +469,8 @@ class IndiClientLibCameraImx378Mqtt(IndiClientLibCameraMqttGeneric):
             'pixel'         : 1.55,
             'min_gain'      : 1.0,
             'max_gain'      : 22.26,
+            'min_binning'   : 1,
+            'max_binning'   : 4,
             'min_exposure'  : 0.000114,
             'max_exposure'  : 694.0,
             'cfa'           : 'BGGR',
@@ -490,6 +498,8 @@ class IndiClientLibCameraImx708Mqtt(IndiClientLibCameraMqttGeneric):
             'pixel'         : 1.4,
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,
+            'min_binning'   : 1,
+            'max_binning'   : 4,
             'min_exposure'  : 0.000026,
             'max_exposure'  : 220.0,
             'cfa'           : 'BGGR',
@@ -517,6 +527,8 @@ class IndiClientLibCameraOv64a40OwlSightMqtt(IndiClientLibCameraMqttGeneric):
             'pixel'         : 1.008,
             'min_gain'      : 1.0,
             'max_gain'      : 16.0,
+            'min_binning'   : 1,
+            'max_binning'   : 4,
             'min_exposure'  : 0.000580,
             'max_exposure'  : 910.0,
             'cfa'           : 'RGGB',
