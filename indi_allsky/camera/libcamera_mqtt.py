@@ -284,6 +284,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
             'kwargs'   : {
                 'exposure'  : exposure,
                 'gain'      : gain,
+                'binning'   : binning,
                 'cmd'       : cmd,
                 'files'     : {
                     'image' : image_tmp_p.name,  # file name is needed for the suffix
