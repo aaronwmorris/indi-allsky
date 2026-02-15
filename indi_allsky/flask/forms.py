@@ -4187,7 +4187,7 @@ class IndiAllskyConfigForm(FlaskForm):
     EXPOSURE_PERIOD_DAY              = FloatField('Exposure Period (Day)', validators=[DataRequired(), EXPOSURE_PERIOD_DAY_validator])
     CAMERA_SQM__ENABLE               = BooleanField('Enable Camera SQM')
     CAMERA_SQM__ENABLE_DAY           = BooleanField('Enable Daytime SQM')
-    CAMERA_SQM__EXPOSURE             = FloatField('SQM Exposure', validators=[DataRequired(), CCD_EXPOSURE_validator])
+    CAMERA_SQM__EXPOSURE             = FloatField('Camera SQM Exposure', validators=[DataRequired(), CCD_EXPOSURE_validator])
     CAMERA_SQM__GAIN                 = FloatField('Camera SQM Gain', validators=[CCD_GAIN_validator])
     CAMERA_SQM__BINNING              = IntegerField('Camera SQM Binning', validators=[CCD_BINNING_validator])
     CAMERA_SQM__EXPOSURE_PERIOD      = IntegerField('SQM Exposure Period', validators=[DataRequired(), CAMERA_SQM__EXPOSURE_PERIOD_validator])

@@ -120,148 +120,6 @@ var camera_id = {{ camera_id }};
 
     <hr>
 
-    <div><span class="badge rounded-pill bg-info text-dark">Note</span> A full service restart (not reload) is recommended when changing gain controls</div>
-    <div><span class="badge rounded-pill bg-info text-dark">Note </span> Many cameras will switch from analog to digital gain once the gain exceeds a certain value. For example, with ZWO cameras, you usually do not want to exceed gain 300</div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__NIGHT__GAIN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__NIGHT__GAIN(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Maximum Gain permitted: <b>{{ "%0.2f"|format(camera_maxGain | float) }}</b></div>
-        </div>
-    </div>
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__NIGHT__BINNING.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__NIGHT__BINNING(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__NIGHT__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Min: <b>{{ camera_minBinning }}</b> - Max: <b>{{ camera_maxBinning }}</b></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__MOONMODE__GAIN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__MOONMODE__GAIN(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__MOONMODE__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__MOONMODE__BINNING.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__MOONMODE__BINNING(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__MOONMODE__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__DAY__GAIN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__DAY__GAIN(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__DAY__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Minimum Gain permitted: <b>{{ "%0.2f"|format(camera_minGain | float) }}</b></div>
-        </div>
-    </div>
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__DAY__BINNING.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__DAY__BINNING(class='form-control bg-secondary') }}
-            <div id="CCD_CONFIG__DAY__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8"></div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__GAIN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__GAIN(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>
-                <div><span class="badge rounded-pill bg-info text-dark">Note</span> Unity gain is recommended for SQM measurements</div>
-            </div>
-        </div>
-    </div>
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__BINNING.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__BINNING(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-        </div>
-    </div>
-
-    <hr>
-
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__AUTO_GAIN_ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.CCD_CONFIG__AUTO_GAIN_ENABLE(class='form-check-input') }}
-                <div id="CCD_CONFIG__AUTO_GAIN_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Exposure Priority Gain Mode dynamically adjusts the gain to maximize exposure times</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Maximum gain will be night gain, minimum will be daytime gain (Moon mode is ignored)</div>
-        </div>
-
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS(class='form-select bg-secondary') }}
-            <div id="CCD_CONFIG__AUTO_GAIN_LEVELS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Gain will be divided into even levels between min and max</div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Setting this value too low will cause exposure/gain flapping</div>
-        </div>
-    </div>
-
-    <hr>
-
     <div><span class="badge rounded-pill bg-info text-dark">Info</span> A full service restart (not reload) is recommended when changing exposure controls</div>
 
     <hr>
@@ -358,6 +216,159 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+
+    <hr>
+
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> A full service restart (not reload) is recommended when changing gain controls</div>
+    <div><span class="badge rounded-pill bg-info text-dark">Note </span> Many cameras will switch from analog to digital gain once the gain exceeds a certain value. For example, with ZWO cameras, you usually do not want to exceed gain 300</div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__NIGHT__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__NIGHT__GAIN(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Maximum Gain permitted: <b>{{ "%0.2f"|format(camera_maxGain | float) }}</b></div>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__NIGHT__BINNING.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__NIGHT__BINNING(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__NIGHT__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Min: <b>{{ camera_minBinning }}</b> - Max: <b>{{ camera_maxBinning }}</b></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__MOONMODE__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__MOONMODE__GAIN(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__MOONMODE__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__MOONMODE__BINNING.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__MOONMODE__BINNING(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__MOONMODE__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__DAY__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__DAY__GAIN(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__DAY__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Minimum Gain permitted: <b>{{ "%0.2f"|format(camera_minGain | float) }}</b></div>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__DAY__BINNING.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__DAY__BINNING(class='form-control bg-secondary') }}
+            <div id="CCD_CONFIG__DAY__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__EXPOSURE(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__EXPOSURE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Camera SQM settings are below</div>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__GAIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__GAIN(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Unity gain is recommended for SQM measurements</div>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__BINNING.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CAMERA_SQM__BINNING(class='form-control bg-secondary') }}
+            <div id="CAMERA_SQM__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <hr>
+
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__AUTO_GAIN_ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CCD_CONFIG__AUTO_GAIN_ENABLE(class='form-check-input') }}
+                <div id="CCD_CONFIG__AUTO_GAIN_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Exposure Priority Gain Mode dynamically adjusts the gain to maximize exposure times</div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Maximum gain will be night gain, minimum will be daytime gain (Moon mode is ignored)</div>
+        </div>
+
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS(class='form-select bg-secondary') }}
+            <div id="CCD_CONFIG__AUTO_GAIN_LEVELS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Gain will be divided into even levels between min and max</div>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Setting this value too low will cause exposure/gain flapping</div>
+        </div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -388,20 +399,6 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-8">
             <div>DO NOT USE - Only for testing functionality</div>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CAMERA_SQM__EXPOSURE(class='form-control bg-secondary') }}
-            <div id="CAMERA_SQM__EXPOSURE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>
-            </div>
         </div>
     </div>
 
