@@ -124,9 +124,9 @@ class HADiscovery(object):
         ('Fan Level', None),
         ('Heat Index', None),
         ('Wind Dir Degrees', None),
-        ('SQM', None),
-        ('Future Use 8', None),
-        ('Future Use 9', None),
+        ('Device SQM Magnitude', None),
+        ('Camera SQM Magnitude', None),
+        ('Camera SQM ADU', None),
         ('User Slot 10', None),
         ('User Slot 11', None),
         ('User Slot 12', None),
@@ -1066,7 +1066,7 @@ class HADiscovery(object):
             },
         })
 
-        # SQM
+        # Device SQM Magnitude
         extended_sensor_list.append({
             'component' : 'sensor',
             'object_id' : 'indi_allsky_sensor_user_7',
@@ -1084,13 +1084,13 @@ class HADiscovery(object):
             },
         })
 
-        # Future
+        # Camera SQM Magnitude
         extended_sensor_list.append({
             'component' : 'sensor',
             'object_id' : 'indi_allsky_sensor_user_8',
             'config' : {
                 'name' : self.SENSOR_SLOT_choices[8][0],
-                'unit_of_measurement' : '',
+                'unit_of_measurement' : 'mag/arcsec²',
                 'unique_id' : 'indi_allsky_sensor_user_8_{0}'.format(self.unique_id_base),
                 'state_topic' : '/'.join((indi_allsky_base_topic, 'sensor_user_8')),
                 'device'   : {
@@ -1102,7 +1102,7 @@ class HADiscovery(object):
             },
         })
 
-        # Future
+        # Camera SQM ADU
         extended_sensor_list.append({
             'component' : 'sensor',
             'object_id' : 'indi_allsky_sensor_user_9',
