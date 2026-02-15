@@ -30,7 +30,7 @@ werkzeug
 is-safe-url
 certifi >= 2023.7.22
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 44.0.1
+cryptography >= 46.0.5
 dbus-python
 setuptools-rust
 # https://www.wheelodex.org/projects/bcrypt/

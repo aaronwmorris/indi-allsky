@@ -46,7 +46,7 @@ werkzeug
 is-safe-url
 certifi >= 2024.7.4
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 44.0.1
+cryptography >= 46.0.5
 dbus-python
 paho-mqtt >= 2.0.0
 setuptools-rust
