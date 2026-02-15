@@ -1475,116 +1475,6 @@ class ChartView(TemplateView):
         return context
 
 
-class JsonSensorPanelView(JsonView):
-    def __init__(self, **kwargs):
-        super(JsonSensorPanelView, self).__init__(**kwargs)
-        self.history_seconds = 900
-
-    def get_objects(self):
-        camera_id = int(request.args['camera_id'])
-
-        # Setup camera context (needed for camera_now, db, etc.)
-        self.cameraSetup(camera_id=camera_id)
-
-        # Query latest image entry (same logic as TemplateView: last 15 min)
-        camera_now_minus_15m = self.camera_now - timedelta(minutes=15)
-        self.latest_image_entry = db.session.query(
-            IndiAllSkyDbImageTable,
-        )\
-            .join(IndiAllSkyDbImageTable.camera)\
-            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
-            .filter(IndiAllSkyDbImageTable.createDate > camera_now_minus_15m)\
-            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
-            .first()
-
-        data = self.get_image_data()
-
-        # Pack values as arrays (index = slot number)
-        sensor_user = [data.get(f'sensor_user_{i}', 0.0) for i in range(60)]
-        sensor_temp = [data.get(f'sensor_temp_{i}', 0.0) for i in range(60)]
-
-        if self.latest_image_entry:
-            last_update = str(self.latest_image_entry.createDate)
-            last_update_age_s = int((self.camera_now - self.latest_image_entry.createDate).total_seconds())
-        else:
-            last_update = None
-            last_update_age_s = None
-
-        return {
-            'last_update': last_update,
-            'last_update_age_s': last_update_age_s,
-            'sensor_user': sensor_user,
-            'sensor_temp': sensor_temp,
-        }
-
-
-class SensorPanelView(TemplateView):
-    page_title = 'Sensor Panel'
-
-    def get_context(self):
-        context = super(SensorPanelView, self).get_context()
-
-        # Use the latest image metadata as the "current" sensor values.
-        # This updates at your exposure cadence, which is typically good enough for a live panel.
-        image_data = self.get_image_data()
-
-        if self.camera.data:
-            camera_data = dict(self.camera.data)
-        else:
-            camera_data = dict()
-
-        show_all = int(request.args.get('all', 0))
-
-        # Build tables for user and temp sensor slots.
-        user_rows = []
-        temp_rows = []
-
-        for i in range(60):
-            key = f'sensor_user_{i}'
-            label = camera_data.get(key, key)
-            value = image_data.get(key, 0.0)
-
-            default_label = f'User Slot {i}'
-            if show_all or i < 10 or label != default_label or abs(value) > 0.0:
-                user_rows.append({
-                    'slot': key,
-                    'index': i,
-                    'label': label,
-                    'value': value,
-                })
-
-        for i in range(60):
-            key = f'sensor_temp_{i}'
-            label = camera_data.get(key, key)
-            value = image_data.get(key, 0.0)
-
-            # Default naming in capture.py uses "Future Use" for 1..9.
-            is_future_use = label.startswith('Future Use')
-
-            if show_all or i == 0 or (not is_future_use) or abs(value) > 0.0:
-                temp_rows.append({
-                    'slot': key,
-                    'index': i,
-                    'label': label,
-                    'value': value,
-                })
-
-        # Age of the "current" values
-        if self.latest_image_entry:
-            context['last_update'] = self.latest_image_entry.createDate
-            context['last_update_age_s'] = int((self.camera_now - self.latest_image_entry.createDate).total_seconds())
-        else:
-            context['last_update'] = None
-            context['last_update_age_s'] = None
-
-        context['show_all'] = bool(show_all)
-        context['refreshInterval'] = 5000  # ms
-        context['user_rows'] = user_rows
-        context['temp_rows'] = temp_rows
-
-        return context
-
-
 class JsonChartView(JsonView):
     def __init__(self, **kwargs):
         super(JsonChartView, self).__init__(**kwargs)
@@ -2001,6 +1891,116 @@ class JsonChartView(JsonView):
 
 
         return chart_data
+
+
+class JsonSensorPanelView(JsonView):
+    def __init__(self, **kwargs):
+        super(JsonSensorPanelView, self).__init__(**kwargs)
+        self.history_seconds = 900
+
+    def get_objects(self):
+        camera_id = int(request.args['camera_id'])
+
+        # Setup camera context (needed for camera_now, db, etc.)
+        self.cameraSetup(camera_id=camera_id)
+
+        # Query latest image entry (same logic as TemplateView: last 15 min)
+        camera_now_minus_15m = self.camera_now - timedelta(minutes=15)
+        self.latest_image_entry = db.session.query(
+            IndiAllSkyDbImageTable,
+        )\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
+            .filter(IndiAllSkyDbImageTable.createDate > camera_now_minus_15m)\
+            .order_by(IndiAllSkyDbImageTable.createDate.desc())\
+            .first()
+
+        data = self.get_image_data()
+
+        # Pack values as arrays (index = slot number)
+        sensor_user = [data.get(f'sensor_user_{i}', 0.0) for i in range(60)]
+        sensor_temp = [data.get(f'sensor_temp_{i}', 0.0) for i in range(60)]
+
+        if self.latest_image_entry:
+            last_update = str(self.latest_image_entry.createDate)
+            last_update_age_s = int((self.camera_now - self.latest_image_entry.createDate).total_seconds())
+        else:
+            last_update = None
+            last_update_age_s = None
+
+        return {
+            'last_update': last_update,
+            'last_update_age_s': last_update_age_s,
+            'sensor_user': sensor_user,
+            'sensor_temp': sensor_temp,
+        }
+
+
+class SensorPanelView(TemplateView):
+    page_title = 'Sensor Panel'
+
+    def get_context(self):
+        context = super(SensorPanelView, self).get_context()
+
+        # Use the latest image metadata as the "current" sensor values.
+        # This updates at your exposure cadence, which is typically good enough for a live panel.
+        image_data = self.get_image_data()
+
+        if self.camera.data:
+            camera_data = dict(self.camera.data)
+        else:
+            camera_data = dict()
+
+        show_all = int(request.args.get('all', 0))
+
+        # Build tables for user and temp sensor slots.
+        user_rows = []
+        temp_rows = []
+
+        for i in range(60):
+            key = f'sensor_user_{i}'
+            label = camera_data.get(key, key)
+            value = image_data.get(key, 0.0)
+
+            default_label = f'User Slot {i}'
+            if show_all or i < 10 or label != default_label or abs(value) > 0.0:
+                user_rows.append({
+                    'slot': key,
+                    'index': i,
+                    'label': label,
+                    'value': value,
+                })
+
+        for i in range(60):
+            key = f'sensor_temp_{i}'
+            label = camera_data.get(key, key)
+            value = image_data.get(key, 0.0)
+
+            # Default naming in capture.py uses "Future Use" for 1..9.
+            is_future_use = label.startswith('Future Use')
+
+            if show_all or i == 0 or (not is_future_use) or abs(value) > 0.0:
+                temp_rows.append({
+                    'slot': key,
+                    'index': i,
+                    'label': label,
+                    'value': value,
+                })
+
+        # Age of the "current" values
+        if self.latest_image_entry:
+            context['last_update'] = self.latest_image_entry.createDate
+            context['last_update_age_s'] = int((self.camera_now - self.latest_image_entry.createDate).total_seconds())
+        else:
+            context['last_update'] = None
+            context['last_update_age_s'] = None
+
+        context['show_all'] = bool(show_all)
+        context['refreshInterval'] = 5000  # ms
+        context['user_rows'] = user_rows
+        context['temp_rows'] = temp_rows
+
+        return context
 
 
 class ConfigView(FormView):
