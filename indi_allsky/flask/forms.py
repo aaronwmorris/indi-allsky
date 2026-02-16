@@ -2443,6 +2443,19 @@ def S3UPLOAD__SECRET_KEY_validator(form, field):
         raise ValidationError('Invalid secret key')
 
 
+def S3UPLOAD__ENDPOINT_URL_validator(form, field):
+    if not field.data:
+        return
+
+    try:
+        r = urlparse(field.data)
+    except AttributeError:
+        raise ValidationError('Invalid URL')
+
+    if not r.scheme:
+        raise ValidationError('Invalid URL')
+
+
 def S3UPLOAD__HOST_validator(form, field):
     host_regex = r'^[a-zA-Z0-9_\.\-]+$'  # include _ for docker
 
@@ -4545,6 +4558,7 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__BUCKET                 = StringField('Bucket', validators=[DataRequired(), S3UPLOAD__BUCKET_validator])
     S3UPLOAD__REGION                 = StringField('Region', validators=[S3UPLOAD__REGION_validator])
     S3UPLOAD__NAMESPACE              = StringField('Namespace', validators=[S3UPLOAD__NAMESPACE_validator])
+    S3UPLOAD__ENDPOINT_URL           = StringField('Endpoint URL', validators=[S3UPLOAD__NAMESPACE_validator])
     S3UPLOAD__HOST                   = StringField('Host', validators=[DataRequired(), S3UPLOAD__HOST_validator])
     S3UPLOAD__PORT                   = IntegerField('Port', validators=[S3UPLOAD__PORT_validator])
     S3UPLOAD__CONNECT_TIMEOUT        = FloatField('Connect Timeout', validators=[DataRequired(), S3UPLOAD__TIMEOUT_validator])

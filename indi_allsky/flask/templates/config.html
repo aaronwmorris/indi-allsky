@@ -6644,6 +6644,21 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.S3UPLOAD__ENDPOINT_URL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.S3UPLOAD__ENDPOINT_URL(class='form-control bg-secondary') }}
+            <div id="S3UPLOAD__ENDPOINT_URL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div>Only used for generic boto3 clients</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.S3UPLOAD__REGION.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -9671,6 +9686,7 @@ const field_names = [
     'S3UPLOAD__CREDS_FILE',
     'S3UPLOAD__BUCKET',
     'S3UPLOAD__REGION',
+    'S3UPLOAD__ENDPOINT_URL',
     'S3UPLOAD__NAMESPACE',
     'S3UPLOAD__HOST',
     'S3UPLOAD__PORT',

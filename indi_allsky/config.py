@@ -486,6 +486,7 @@ class IndiAllSkyConfigBase(object):
             "BUCKET"                 : "change-me",
             "REGION"                 : "us-east-2",
             "NAMESPACE"              : "",
+            "ENDPOINT_URL"           : "",
             "HOST"                   : "amazonaws.com",
             "PORT"                   : 0,
             "CONNECT_TIMEOUT"        : 10.0,
