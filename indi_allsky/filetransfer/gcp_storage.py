@@ -31,7 +31,6 @@ class gcp_storage(GenericFileTransfer):
 
         creds_file = kwargs['creds_file']
         #region = kwargs['region']
-        #host = kwargs['hostname']  # endpoint_url
         #tls = kwargs['tls']
         #cert_bypass = kwargs['cert_bypass']
 

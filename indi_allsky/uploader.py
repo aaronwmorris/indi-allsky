@@ -256,7 +256,8 @@ class FileUploader(Thread):
                 'secret_key'   : self.config['S3UPLOAD']['SECRET_KEY'],
                 'creds_file'   : self.config['S3UPLOAD'].get('CREDS_FILE'),
                 'region'       : self.config['S3UPLOAD']['REGION'],
-                'hostname'     : self.config['S3UPLOAD']['HOST'],  # endpoint_url
+                'endpoint_url' : self.config.get('S3UPLOAD', {}).get('ENDPOINT_URL', ''),
+                'hostname'     : self.config['S3UPLOAD']['HOST'],
                 'bucket'       : self.config['S3UPLOAD']['BUCKET'],
                 'url_template' : self.config['S3UPLOAD']['URL_TEMPLATE'],
                 'namespace'    : self.config['S3UPLOAD'].get('NAMESPACE', ''),  # oci

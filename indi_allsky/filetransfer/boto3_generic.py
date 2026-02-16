@@ -11,21 +11,20 @@ import socket
 import ssl
 import time
 import urllib3.exceptions
-from urllib.parse import urlparse
 import logging
 
 logger = logging.getLogger('indi_allsky')
 
 
-class boto3_minio(GenericFileTransfer):
+class boto3_generic(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
-        super(boto3_minio, self).__init__(*args, **kwargs)
+        super(boto3_generic, self).__init__(*args, **kwargs)
 
         self._port = 443
 
 
     def connect(self, *args, **kwargs):
-        super(boto3_minio, self).connect(*args, **kwargs)
+        super(boto3_generic, self).connect(*args, **kwargs)
 
         from botocore.client import Config
         import boto3
@@ -34,25 +33,7 @@ class boto3_minio(GenericFileTransfer):
         access_key = kwargs['access_key']
         secret_key = kwargs['secret_key']
         region = kwargs['region']
-        host = kwargs['hostname']
-        #endpoint_url = kwargs['endpoint_url']  # eventually switch to this
-        bucket = kwargs['bucket']
-        namespace = kwargs['namespace']
-        template = kwargs['url_template']
-
-        endpoint = template.format(
-            host=host,
-            bucket=bucket,
-            region=region,
-            namespace=namespace,
-        )
-        # Boto3 does not support having the bucket in the endpoint URL, it needs to be a base URL
-        # However, the capture process sets s3_prefix with the bucket name included, so that the frontend
-        # can use the same URL to access the files.
-        # Therefore we must remove the path from the final templated url for boto3 to work
-        parsed = urlparse(endpoint)
-        endpoint = f'{parsed.scheme}://{parsed.netloc}'
-
+        endpoint_url = kwargs['endpoint_url']
         tls = kwargs['tls']
         cert_bypass = kwargs['cert_bypass']
 
@@ -74,7 +55,7 @@ class boto3_minio(GenericFileTransfer):
             region,
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key,
-            endpoint_url=endpoint,
+            endpoint_url=endpoint_url,
             use_ssl=tls,
             verify=verify,
             config=boto_config,
@@ -82,13 +63,13 @@ class boto3_minio(GenericFileTransfer):
 
 
     def close(self):
-        super(boto3_minio, self).close()
+        super(boto3_generic, self).close()
 
         self.client.close()
 
 
     def put(self, *args, **kwargs):
-        super(boto3_minio, self).put(*args, **kwargs)
+        super(boto3_generic, self).put(*args, **kwargs)
 
         import botocore.exceptions
         import boto3.exceptions
@@ -179,7 +160,7 @@ class boto3_minio(GenericFileTransfer):
 
 
     def delete(self, *args, **kwargs):
-        super(boto3_minio, self).delete(*args, **kwargs)
+        super(boto3_generic, self).delete(*args, **kwargs)
 
         import botocore.exceptions
         import boto3.exceptions

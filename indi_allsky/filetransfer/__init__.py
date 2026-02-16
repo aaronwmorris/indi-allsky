@@ -16,6 +16,7 @@ from .paho_mqtt import paho_mqtt
 
 from .boto3_s3 import boto3_s3
 from .boto3_minio import boto3_minio
+from .boto3_generic import boto3_generic
 from .libcloud_s3 import libcloud_s3
 from .gcp_storage import gcp_storage
 from .oci_storage import oci_storage
@@ -44,6 +45,7 @@ __all__ = (
 
     'boto3_s3',
     'boto3_minio',
+    'boto3_generic',
     'libcloud_s3',
     'gcp_storage',
     'oci_storage',
