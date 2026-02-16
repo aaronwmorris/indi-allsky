@@ -5,6 +5,7 @@ import logging
 from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorReadException
+#from ..exceptions import DeviceControlException
 
 
 logger = logging.getLogger('indi_allsky')

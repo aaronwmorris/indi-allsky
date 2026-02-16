@@ -4,6 +4,7 @@ import logging
 from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorReadException
+from ..exceptions import DeviceControlException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -73,10 +74,17 @@ class TempSensorLm35_Ads1015_I2C(TempSensorLm35_Ads1x15):
 
         pin1 = getattr(ADS, pin_1_name)
 
-        i2c = board.I2C()
-        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        ads = ADS.ADS1015(i2c, address=i2c_address)
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            ads = ADS.ADS1015(i2c, address=i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
+
         self.sensor = AnalogIn(ads, pin1)
 
 
@@ -112,10 +120,15 @@ class TempSensorLm35_Ads1115_I2C(TempSensorLm35_Ads1x15):
 
         pin1 = getattr(ADS, pin_1_name)
 
-        i2c = board.I2C()
-        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        ads = ADS.ADS1115(i2c, address=i2c_address)
-        self.sensor = AnalogIn(ads, pin1)
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            ads = ADS.ADS1115(i2c, address=i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
 
+
+        self.sensor = AnalogIn(ads, pin1)
 

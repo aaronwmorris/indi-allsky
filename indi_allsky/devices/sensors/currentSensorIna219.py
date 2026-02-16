@@ -4,6 +4,7 @@ import logging
 from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorReadException
+from ..exceptions import DeviceControlException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -82,10 +83,15 @@ class CurrentSensorIna219_I2C(CurrentSensorIna219):
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] INA219 I2C current sensor device @ %s', self.name, hex(i2c_address))
-        i2c = board.I2C()
-        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        self.ina219 = INA219(i2c, addr=i2c_address)
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.ina219 = INA219(i2c, addr=i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
 
 
         # change configuration to use 32 samples averaging for both bus voltage and shunt voltage

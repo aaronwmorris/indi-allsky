@@ -28,6 +28,7 @@ from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.devices import sensors as indi_allsky_sensors
 from indi_allsky.devices.exceptions import SensorException
 from indi_allsky.devices.exceptions import SensorReadException
+from indi_allsky.devices.exceptions import DeviceControlException
 
 
 # setup flask context for db access
@@ -182,7 +183,7 @@ class TestSensors(object):
                     pin_2_name=a_sensor_pin_2_name,
                     i2c_address=a_sensor_i2c_address,
                 )
-            except (OSError, ValueError, SensorException) as e:
+            except (DeviceControlException, SensorException) as e:
                 logger.error('Error initializing sensor: %s', str(e))
                 self.sensors[0] = indi_allsky_sensors.sensor_simulator(
                     self.config,
@@ -223,7 +224,7 @@ class TestSensors(object):
                     pin_2_name=b_sensor_pin_2_name,
                     i2c_address=b_sensor_i2c_address,
                 )
-            except (OSError, ValueError) as e:
+            except (DeviceControlException, SensorException) as e:
                 logger.error('Error initializing sensor: %s', str(e))
                 self.sensors[1] = indi_allsky_sensors.sensor_simulator(
                     self.config,
@@ -264,7 +265,7 @@ class TestSensors(object):
                     pin_2_name=c_sensor_pin_2_name,
                     i2c_address=c_sensor_i2c_address,
                 )
-            except (OSError, ValueError) as e:
+            except (DeviceControlException, SensorException) as e:
                 logger.error('Error initializing sensor: %s', str(e))
                 self.sensors[2] = indi_allsky_sensors.sensor_simulator(
                     self.config,
@@ -305,7 +306,7 @@ class TestSensors(object):
                     pin_2_name=d_sensor_pin_2_name,
                     i2c_address=d_sensor_i2c_address,
                 )
-            except (OSError, ValueError) as e:
+            except (DeviceControlException, SensorException) as e:
                 logger.error('Error initializing sensor: %s', str(e))
                 self.sensors[3] = indi_allsky_sensors.sensor_simulator(
                     self.config,
@@ -346,7 +347,7 @@ class TestSensors(object):
                     pin_2_name=e_sensor_pin_2_name,
                     i2c_address=e_sensor_i2c_address,
                 )
-            except (OSError, ValueError) as e:
+            except (DeviceControlException, SensorException) as e:
                 logger.error('Error initializing sensor: %s', str(e))
                 self.sensors[4] = indi_allsky_sensors.sensor_simulator(
                     self.config,
@@ -387,7 +388,7 @@ class TestSensors(object):
                     pin_2_name=f_sensor_pin_2_name,
                     i2c_address=f_sensor_i2c_address,
                 )
-            except (OSError, ValueError) as e:
+            except (DeviceControlException, SensorException) as e:
                 logger.error('Error initializing sensor: %s', str(e))
                 self.sensors[5] = indi_allsky_sensors.sensor_simulator(
                     self.config,

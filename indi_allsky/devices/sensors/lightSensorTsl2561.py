@@ -4,6 +4,7 @@ import logging
 from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorReadException
+from ..exceptions import DeviceControlException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -111,10 +112,16 @@ class LightSensorTsl2561_I2C(LightSensorTsl2561):
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] TSL2561 I2C light sensor device @ %s', self.name, hex(i2c_address))
-        i2c = board.I2C()
-        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        self.tsl2561 = adafruit_tsl2561.TSL2561(i2c, address=i2c_address)
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.tsl2561 = adafruit_tsl2561.TSL2561(i2c, address=i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
 
         self.gain_night = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_NIGHT', 1))
         self.gain_day = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_DAY', 0))

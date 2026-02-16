@@ -5,6 +5,7 @@ import logging
 from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorReadException
+from ..exceptions import DeviceControlException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -123,8 +124,12 @@ class CurrentSensorIna3221_I2C(CurrentSensorIna3221):
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] INA3221 I2C current sensor device @ %s', self.name, hex(i2c_address))
-        i2c = board.I2C()
-        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        self.ina3221 = INA3221(i2c, address=i2c_address, enable=self.ina3221_channels)
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.ina3221 = INA3221(i2c, address=i2c_address, enable=self.ina3221_channels)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
 

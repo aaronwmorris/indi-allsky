@@ -6,6 +6,7 @@ from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorException
 #from ..exceptions import SensorReadException
+from ..exceptions import DeviceControlException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -194,10 +195,15 @@ class LightningSensorAs3935_SparkFun_I2C(LightningSensorAs3935_SparkFun):
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] AS3935 I2C lightning sensor @ %s', self.name, hex(i2c_address))
-        i2c = board.I2C()
-        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        self.as3935 = sparkfun_qwiicas3935.Sparkfun_QwiicAS3935_I2C(i2c, address=i2c_address)
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.as3935 = sparkfun_qwiicas3935.Sparkfun_QwiicAS3935_I2C(i2c, address=i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
 
 
         time.sleep(1)  # allow things to settle
@@ -294,9 +300,14 @@ class LightningSensorAs3935_SparkFun_SPI(LightningSensorAs3935_SparkFun):
         cs.direction = digitalio.Direction.OUTPUT
 
         logger.warning('Initializing [%s] AS3935 SPI lightning sensor', self.name)
-        spi = board.SPI()
-        #spi = busio.SPI(board.SCLK, board.MOSI, board.MISO)
-        self.as3935 = sparkfun_qwiicas3935.Sparkfun_QwiicAS3935_SPI(spi, cs)
+
+        try:
+            spi = board.SPI()
+            #spi = busio.SPI(board.SCLK, board.MOSI, board.MISO)
+            self.as3935 = sparkfun_qwiicas3935.Sparkfun_QwiicAS3935_SPI(spi, cs)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
 
 
         time.sleep(1)  # allow things to settle

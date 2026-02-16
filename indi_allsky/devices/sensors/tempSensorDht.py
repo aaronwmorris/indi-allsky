@@ -3,6 +3,7 @@ import logging
 from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorReadException
+from ..exceptions import DeviceControlException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -99,7 +100,12 @@ class TempSensorDht22(TempSensorDht2x):
         use_pulseio = self.config.get('TEMP_SENSOR', {}).get('DHT_USE_PULSEIO', False)
 
         logger.warning('Initializing [%s] DHT22 temperature device', self.name)
-        self.dht = adafruit_dht.DHT22(pin1, use_pulseio=use_pulseio)
+
+        try:
+            self.dht = adafruit_dht.DHT22(pin1, use_pulseio=use_pulseio)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
 
 
 class TempSensorDht21(TempSensorDht2x):
@@ -134,7 +140,12 @@ class TempSensorDht21(TempSensorDht2x):
         use_pulseio = self.config.get('TEMP_SENSOR', {}).get('DHT_USE_PULSEIO', False)
 
         logger.warning('Initializing [%s] DHT21 temperature device', self.name)
-        self.dht = adafruit_dht.DHT21(pin1, use_pulseio=use_pulseio)
+
+        try:
+            self.dht = adafruit_dht.DHT21(pin1, use_pulseio=use_pulseio)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
 
 
 class TempSensorDht11(TempSensorDht2x):
@@ -169,5 +180,10 @@ class TempSensorDht11(TempSensorDht2x):
         use_pulseio = self.config.get('TEMP_SENSOR', {}).get('DHT_USE_PULSEIO', False)
 
         logger.warning('Initializing [%s] DHT11 temperature device', self.name)
-        self.dht = adafruit_dht.DHT11(pin1, use_pulseio=use_pulseio)
+
+        try:
+            self.dht = adafruit_dht.DHT11(pin1, use_pulseio=use_pulseio)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
 

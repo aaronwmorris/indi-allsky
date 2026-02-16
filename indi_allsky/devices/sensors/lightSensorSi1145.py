@@ -4,6 +4,7 @@ import logging
 from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorReadException
+from ..exceptions import DeviceControlException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -115,10 +116,16 @@ class LightSensorSi1145_I2C(LightSensorSi1145):
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] SI1145 I2C light sensor device @ %s', self.name, hex(i2c_address))
-        i2c = board.I2C()
-        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        self.si1145 = adafruit_si1145.SI1145(i2c, address=i2c_address)
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.si1145 = adafruit_si1145.SI1145(i2c, address=i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
 
         # enable UV index
         self.si1145.uv_index_enabled = True

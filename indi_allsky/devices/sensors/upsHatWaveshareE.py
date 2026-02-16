@@ -3,6 +3,7 @@ import logging
 from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorReadException
+from ..exceptions import DeviceControlException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -69,18 +70,24 @@ class UpsHatWaveshareE_MCU_I2C(SensorBase):
         super(UpsHatWaveshareE_MCU_I2C, self).__init__(*args, **kwargs)
 
         i2c_address_str = kwargs.get('i2c_address', '0x2d')
-        self.i2c_address = int(i2c_address_str, 16)  # config liefert string
+        i2c_address = int(i2c_address_str, 16)  # config liefert string
 
         # Defer imports so environments without Blinka don't break module import.
         import board
         import adafruit_bus_device.i2c_device as i2cdevice
 
-        logger.warning('Initializing [%s] Waveshare UPS HAT (E) MCU @ %s', self.name, hex(self.i2c_address))
+        logger.warning('Initializing [%s] Waveshare UPS HAT (E) MCU @ %s', self.name, hex(i2c_address))
 
-        # board.I2C() is shared/singleton-like under Blinka and supports locking.
-        self._i2c = board.I2C()
-        # i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)  # optional alternative
-        self._device = i2cdevice.I2CDevice(self._i2c, self.i2c_address)
+
+        try:
+            # board.I2C() is shared/singleton-like under Blinka and supports locking.
+            i2c = board.I2C()
+            # i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)  # optional alternative
+            self._device = i2cdevice.I2CDevice(i2c, i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
 
         # Reusable buffers to avoid allocations on each update()
         self._reg_buf = bytearray(1)
