@@ -4,6 +4,7 @@ import logging
 from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorReadException
+from ..exceptions import DeviceControlException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -78,7 +79,12 @@ class MagSensorMmc5983maSF_I2C(MagSensorMmc5983maSF):
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] MMC5983MA I2C magnetometer sensor device @ %s', self.name, hex(i2c_address))
-        self.mag = qwiic_mmc5983ma.QwiicMMC5983MA(address=i2c_address)
+
+        try:
+            self.mag = qwiic_mmc5983ma.QwiicMMC5983MA(address=i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
 
 
         if self.mag.is_connected() is False:

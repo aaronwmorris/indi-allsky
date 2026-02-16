@@ -4,6 +4,7 @@ import logging
 from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorReadException
+from ..exceptions import DeviceControlException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -115,10 +116,15 @@ class TempSensorBme680_I2C(TempSensorBme680):
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] BME680 I2C temperature device @ %s', self.name, hex(i2c_address))
-        i2c = board.I2C()
-        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        self.bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c, address=i2c_address)
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c, address=i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
 
 
         self.bme680.humidity_oversample = 2
@@ -173,9 +179,14 @@ class TempSensorBme680_SPI(TempSensorBme680):
         cs = digitalio.DigitalInOut(pin1)
 
         logger.warning('Initializing [%s] BME680 SPI temperature device', self.name)
-        spi = board.SPI()
-        #spi = busio.SPI(board.SCLK, board.MOSI, board.MISO)
-        self.bme680 = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
+
+        try:
+            spi = board.SPI()
+            #spi = busio.SPI(board.SCLK, board.MOSI, board.MISO)
+            self.bme680 = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
 
 
         self.bme680.humidity_oversample = 2

@@ -4,6 +4,7 @@ import logging
 from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorReadException
+from ..exceptions import DeviceControlException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -108,10 +109,16 @@ class TempSensorScd30_I2C(TempSensorScd30):
         logger.warning('Initializing [%s] SCD-30 I2C temperature device @ %s', self.name, hex(i2c_address))
         # SCD-30 has tempremental I2C with clock stretching, datasheet recommends
         # starting at 50KHz
-        i2c = board.I2C()
-        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        self.scd30 = adafruit_scd30.SCD30(i2c, address=i2c_address)
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.scd30 = adafruit_scd30.SCD30(i2c, address=i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
 
         time.sleep(1)  # allow things to settle
 

@@ -4,6 +4,7 @@ import logging
 from .sensorBase import SensorBase
 from ... import constants
 from ..exceptions import SensorReadException
+from ..exceptions import DeviceControlException
 
 
 logger = logging.getLogger('indi_allsky')
@@ -111,10 +112,15 @@ class TempSensorBme280_I2C(TempSensorBme280):
         i2c_address = int(i2c_address_str, 16)  # string in config
 
         logger.warning('Initializing [%s] BME280 I2C temperature device @ %s', self.name, hex(i2c_address))
-        i2c = board.I2C()
-        #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-        #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
-        self.bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c, address=i2c_address)
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.bme280 = adafruit_bme280.Adafruit_BME280_I2C(i2c, address=i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
 
 
         self.bme280.overscan_humidity = adafruit_bme280.OVERSCAN_X1
@@ -165,9 +171,14 @@ class TempSensorBme280_SPI(TempSensorBme280):
         cs = digitalio.DigitalInOut(pin1)
 
         logger.warning('Initializing [%s] BME280 SPI temperature device', self.name)
-        spi = board.SPI()
-        #spi = busio.SPI(board.SCLK, board.MOSI, board.MISO)
-        self.bme280 = adafruit_bme280.Adafruit_BME280_SPI(spi, cs)
+
+        try:
+            spi = board.SPI()
+            #spi = busio.SPI(board.SCLK, board.MOSI, board.MISO)
+            self.bme280 = adafruit_bme280.Adafruit_BME280_SPI(spi, cs)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
 
 
         self.bme280.overscan_humidity = adafruit_bme280.OVERSCAN_X1
