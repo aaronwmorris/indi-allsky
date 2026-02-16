@@ -9864,6 +9864,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         ),
         'Medium' : (
             ('fe185c046ha_f1.4_1.4mm_1-2', 'Fujinon 1.4mm ƒ/1.4 [C/CS] - 185° - 1/2" ∅4.6mm'),
+            ('sunex_dsl215_m12_f2.0_1.55mm_1-2', 'Sunex DSL215 1.55mm ƒ/2.0 [M12] - 185° - 1/2" ∅4.7mm'),
             ('arecont_f2.0_1.55mm_1-2', 'Arecont 1.55mm ƒ/2.0 [C/CS] - 180° - 1/2" ∅4.8mm'),
             ('stardot_f1.5_1.55mm_1-2', 'Stardot 1.55mm ƒ/1.5 [C/CS] - 180° - 1/2" ∅4.8mm'),
             ('m12_f2.4_1.8mm_1-4', 'M12 1.8mm ƒ/2.4 [M12] - 125° - 1/4" ∅4.8mm'),
