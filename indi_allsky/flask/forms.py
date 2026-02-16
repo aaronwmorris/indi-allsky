@@ -3678,6 +3678,7 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__CLASSNAME_choices = (
         ('boto3_s3', 'AWS S3 (boto3)'),
         ('boto3_minio', 'Minio (boto3)'),
+        ('boto3_generic', 'Generic (boto3)'),
         ('libcloud_s3', 'Apache Libcloud (AWS)'),
         ('gcp_storage', 'Google Cloud Storage'),
         ('oci_storage', 'Oracle OCI Storage'),
@@ -5244,6 +5245,14 @@ class IndiAllskyConfigForm(FlaskForm):
                 self.FILETRANSFER__UPLOAD_DB_BACKUP.errors.append('No file transfer host is configured')
                 self.FILETRANSFER__HOST.errors.append('No file transfer host is configured')
                 result = False
+
+
+        # S3
+        if self.S3UPLOAD__ENABLE.data:
+            if self.S3UPLOAD__CLASSNAME.data == 'boto3_generic':
+                if not self.S3UPLOAD__ENDPOINT_URL.data:
+                    self.S3UPLOAD__ENDPOINT_URL.errors.append('Endpoint URL is required')
+                    result = False
 
 
         # focuser

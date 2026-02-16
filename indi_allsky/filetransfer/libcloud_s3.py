@@ -30,7 +30,7 @@ class libcloud_s3(GenericFileTransfer):
         access_key = kwargs['access_key']
         secret_key = kwargs['secret_key']
         region = kwargs['region']
-        #host = kwargs['hostname']  # endpoint_url
+        #endpoint_url = kwargs['endpoint_url']
         tls = kwargs['tls']
         #cert_bypass = kwargs['cert_bypass']
 
