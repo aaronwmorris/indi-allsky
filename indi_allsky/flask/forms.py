@@ -4559,7 +4559,7 @@ class IndiAllskyConfigForm(FlaskForm):
     S3UPLOAD__BUCKET                 = StringField('Bucket', validators=[DataRequired(), S3UPLOAD__BUCKET_validator])
     S3UPLOAD__REGION                 = StringField('Region', validators=[S3UPLOAD__REGION_validator])
     S3UPLOAD__NAMESPACE              = StringField('Namespace', validators=[S3UPLOAD__NAMESPACE_validator])
-    S3UPLOAD__ENDPOINT_URL           = StringField('Endpoint URL', validators=[S3UPLOAD__NAMESPACE_validator])
+    S3UPLOAD__ENDPOINT_URL           = StringField('Endpoint URL', validators=[S3UPLOAD__ENDPOINT_URL_validator])
     S3UPLOAD__HOST                   = StringField('Host', validators=[DataRequired(), S3UPLOAD__HOST_validator])
     S3UPLOAD__PORT                   = IntegerField('Port', validators=[S3UPLOAD__PORT_validator])
     S3UPLOAD__CONNECT_TIMEOUT        = FloatField('Connect Timeout', validators=[DataRequired(), S3UPLOAD__TIMEOUT_validator])
