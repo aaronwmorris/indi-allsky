@@ -2449,10 +2449,13 @@ class ConfigView(FormView):
             'IMAGE_OVERLAY__ENABLE'          : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('ENABLE', False),
             'IMAGE_OVERLAY__LOAD_INTERVAL'   : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('LOAD_INTERVAL', True),
             'IMAGE_OVERLAY__A_URL'           : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_URL', ''),
+            'IMAGE_OVERLAY__A_IMAGE_FILE_TYPE' : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('IMAGE_FILE_TYPE', 'jpg'),
             'IMAGE_OVERLAY__A_WIDTH'         : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_WIDTH', 250),
             'IMAGE_OVERLAY__A_HEIGHT'        : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_HEIGHT', 250),
             'IMAGE_OVERLAY__A_X'             : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_X', 300),
             'IMAGE_OVERLAY__A_Y'             : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_Y', -300),
+            'IMAGE_OVERLAY__A_USERNAME'      : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_USERNAME', ''),
+            'IMAGE_OVERLAY__A_PASSWORD'      : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_PASSWORD', ''),
             'IMAGE_EXPORT_RAW'               : self.indi_allsky_config.get('IMAGE_EXPORT_RAW', ''),
             'IMAGE_EXPORT_FOLDER'            : self.indi_allsky_config.get('IMAGE_EXPORT_FOLDER', '/var/www/html/allsky/images/export'),
             'IMAGE_EXPORT_FLIP_V'            : self.indi_allsky_config.get('IMAGE_EXPORT_FLIP_V', False),
@@ -3446,10 +3449,13 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_OVERLAY']['ENABLE']              = bool(request.json['IMAGE_OVERLAY__ENABLE'])
         self.indi_allsky_config['IMAGE_OVERLAY']['LOAD_INTERVAL']       = int(request.json['IMAGE_OVERLAY__LOAD_INTERVAL'])
         self.indi_allsky_config['IMAGE_OVERLAY']['A_URL']               = str(request.json['IMAGE_OVERLAY__A_URL'])
+        self.indi_allsky_config['IMAGE_OVERLAY']['A_IMAGE_FILE_TYPE']   = str(request.json['IMAGE_OVERLAY__A_IMAGE_FILE_TYPE'])
         self.indi_allsky_config['IMAGE_OVERLAY']['A_WIDTH']             = int(request.json['IMAGE_OVERLAY__A_WIDTH'])
         self.indi_allsky_config['IMAGE_OVERLAY']['A_HEIGHT']            = int(request.json['IMAGE_OVERLAY__A_HEIGHT'])
         self.indi_allsky_config['IMAGE_OVERLAY']['A_X']                 = int(request.json['IMAGE_OVERLAY__A_X'])
         self.indi_allsky_config['IMAGE_OVERLAY']['A_Y']                 = int(request.json['IMAGE_OVERLAY__A_Y'])
+        self.indi_allsky_config['IMAGE_OVERLAY']['A_USERNAME']          = str(request.json['IMAGE_OVERLAY__A_USERNAME'])
+        self.indi_allsky_config['IMAGE_OVERLAY']['A_PASSWORD']          = str(request.json['IMAGE_OVERLAY__A_PASSWORD'])
         self.indi_allsky_config['IMAGE_EXPORT_RAW']                     = str(request.json['IMAGE_EXPORT_RAW'])
         self.indi_allsky_config['IMAGE_EXPORT_FOLDER']                  = str(request.json['IMAGE_EXPORT_FOLDER'])
         self.indi_allsky_config['IMAGE_EXPORT_FLIP_V']                  = bool(request.json['IMAGE_EXPORT_FLIP_V'])

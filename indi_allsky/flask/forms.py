@@ -1971,6 +1971,11 @@ def IMAGE_OVERLAY__X_Y_validator(form, field):
         raise ValidationError('Please enter valid number')
 
 
+def IMAGE_OVERLAY__IMAGE_FILE_TYPE_validator(form, field):
+    if field.data not in list(zip(*form.IMAGE_OVERLAY__IMAGE_FILE_TYPE_choices))[0]:
+        raise ValidationError('Please select a valid file type')
+
+
 def CARDINAL_DIRS__CHAR_validator(form, field):
     if not field.data:
         return
@@ -3763,6 +3768,11 @@ class IndiAllskyConfigForm(FlaskForm):
         ('png', 'PNG'),
     )
 
+    IMAGE_OVERLAY__IMAGE_FILE_TYPE_choices = (
+        ('jpg', 'JPEG'),
+        ('png', 'PNG'),
+    )
+
     YOUTUBE__PRIVACY_STATUS_choices = (
         ('private', 'Private'),
         ('public', 'Public'),
@@ -4466,10 +4476,13 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_OVERLAY__ENABLE            = BooleanField('Enable Image Overlay')
     IMAGE_OVERLAY__LOAD_INTERVAL     = IntegerField('Load Interval', validators=[IMAGE_OVERLAY__LOAD_INTERVAL_validator])
     IMAGE_OVERLAY__A_URL             = StringField('Source URL', validators=[IMAGE_OVERLAY__URL_validator])
-    IMAGE_OVERLAY__A_WIDTH           = FloatField('Image Width', validators=[IMAGE_OVERLAY__W_H_validator])
-    IMAGE_OVERLAY__A_HEIGHT          = FloatField('Image Height', validators=[IMAGE_OVERLAY__W_H_validator])
+    IMAGE_OVERLAY__A_IMAGE_FILE_TYPE = SelectField('File Type', choices=IMAGE_OVERLAY__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_OVERLAY__IMAGE_FILE_TYPE_validator])
+    IMAGE_OVERLAY__A_WIDTH           = IntegerField('Image Width', validators=[IMAGE_OVERLAY__W_H_validator])
+    IMAGE_OVERLAY__A_HEIGHT          = IntegerField('Image Height', validators=[IMAGE_OVERLAY__W_H_validator])
     IMAGE_OVERLAY__A_X               = IntegerField('X', validators=[IMAGE_OVERLAY__X_Y_validator])
     IMAGE_OVERLAY__A_Y               = IntegerField('Y', validators=[IMAGE_OVERLAY__X_Y_validator])
+    IMAGE_OVERLAY__A_USERNAME        = StringField('Username', validators=[PYCURL_CAMERA__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
+    IMAGE_OVERLAY__A_PASSWORD        = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[PYCURL_CAMERA__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
     IMAGE_EXPORT_RAW                 = SelectField('Export RAW image type', choices=IMAGE_EXPORT_RAW_choices, validators=[IMAGE_EXPORT_RAW_validator])
     IMAGE_EXPORT_FOLDER              = StringField('Export RAW folder', validators=[DataRequired(), IMAGE_EXPORT_FOLDER_validator])
     IMAGE_EXPORT_FLIP_V              = BooleanField('Flip RAW Vertically')
