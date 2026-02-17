@@ -1913,6 +1913,12 @@ def LIGHTGRAPH_OVERLAY__SCALE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
+    if field.data <= 0.0:
+        raise ValidationError('Must be greater than 0')
+
+    if field.data > 1.0:
+        raise ValidationError('Must be 1.0 or less')
+
 
 def LIGHTGRAPH_OVERLAY__RGB_COLOR_validator(form, field):
     color_regex = r'^\d+\,\d+\,\d+$'
@@ -1929,6 +1935,40 @@ def LIGHTGRAPH_OVERLAY__RGB_COLOR_validator(form, field):
 
     if sum([int(c) for c in rgb]) == 0:
         raise ValidationError('Color cannot be (0, 0, 0)')
+
+
+def IMAGE_OVERLAY__URL_validator(form, field):
+    if not field.data:
+        return
+
+    try:
+        r = urlparse(field.data)
+    except AttributeError:
+        raise ValidationError('Invalid URL')
+
+    if not r.scheme:
+        raise ValidationError('Invalid URL')
+
+
+def IMAGE_OVERLAY__LOAD_INTERVAL_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 60:
+        raise ValidationError('Must be 60 or more')
+
+
+def IMAGE_OVERLAY__W_H_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 10:
+        raise ValidationError('Must be 10 or more')
+
+
+def IMAGE_OVERLAY__X_Y_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
 
 
 def CARDINAL_DIRS__CHAR_validator(form, field):
@@ -4423,6 +4463,13 @@ class IndiAllskyConfigForm(FlaskForm):
     LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE = FloatField('Font Scale (opencv)', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
     LIGHTGRAPH_OVERLAY__LABEL        = BooleanField('Lightgraph Label')
     LIGHTGRAPH_OVERLAY__HOUR_LINES   = BooleanField('Lightgraph Hour Lines')
+    IMAGE_OVERLAY__ENABLE            = BooleanField('Enable Image Overlay')
+    IMAGE_OVERLAY__LOAD_INTERVAL     = IntegerField('Load Interval', validators=[IMAGE_OVERLAY__LOAD_INTERVAL_validator])
+    IMAGE_OVERLAY__A_URL             = StringField('Source URL', validators=[IMAGE_OVERLAY__URL_validator])
+    IMAGE_OVERLAY__A_WIDTH           = FloatField('Image Width', validators=[IMAGE_OVERLAY__W_H_validator])
+    IMAGE_OVERLAY__A_HEIGHT          = FloatField('Image Height', validators=[IMAGE_OVERLAY__W_H_validator])
+    IMAGE_OVERLAY__A_X               = IntegerField('X', validators=[IMAGE_OVERLAY__X_Y_validator])
+    IMAGE_OVERLAY__A_Y               = IntegerField('Y', validators=[IMAGE_OVERLAY__X_Y_validator])
     IMAGE_EXPORT_RAW                 = SelectField('Export RAW image type', choices=IMAGE_EXPORT_RAW_choices, validators=[IMAGE_EXPORT_RAW_validator])
     IMAGE_EXPORT_FOLDER              = StringField('Export RAW folder', validators=[DataRequired(), IMAGE_EXPORT_FOLDER_validator])
     IMAGE_EXPORT_FLIP_V              = BooleanField('Flip RAW Vertically')

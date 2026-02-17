@@ -2946,6 +2946,99 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_OVERLAY__ENABLE(class='form-check-input') }}
+                <div id="IMAGE_OVERLAY__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__LOAD_INTERVAL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_OVERLAY__LOAD_INTERVAL(class='form-control bg-secondary') }}
+                <div id="IMAGE_OVERLAY__LOAD_INTERVAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_URL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            <div class="form-switch">
+                {{ form_config.IMAGE_OVERLAY__A_URL(class='form-control bg-secondary') }}
+                <div id="IMAGE_OVERLAY__A_URL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-5"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_WIDTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_OVERLAY__A_WIDTH(class='form-control bg-secondary') }}
+                <div id="IMAGE_OVERLAY__A_WIDTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_HEIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_OVERLAY__A_HEIGHT(class='form-control bg-secondary') }}
+                <div id="IMAGE_OVERLAY__A_HEIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_OVERLAY__A_X(class='form-control bg-secondary') }}
+                <div id="IMAGE_OVERLAY__A_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_OVERLAY__A_Y(class='form-control bg-secondary') }}
+                <div id="IMAGE_OVERLAY__A_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CARDINAL_DIRS__ENABLE.label }}
         </div>
         <div class="col-sm-2">
@@ -9560,6 +9653,12 @@ const field_names = [
     'LIGHTGRAPH_OVERLAY__OPACITY',
     'LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE',
     'LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE',
+    'IMAGE_OVERLAY__LOAD_INTERVAL',
+    'IMAGE_OVERLAY__A_URL',
+    'IMAGE_OVERLAY__A_WIDTH',
+    'IMAGE_OVERLAY__A_HEIGHT',
+    'IMAGE_OVERLAY__A_X',
+    'IMAGE_OVERLAY__A_Y',
     'FISH2PANO__DIAMETER',
     'FISH2PANO__OFFSET_X',
     'FISH2PANO__OFFSET_Y',
@@ -9976,6 +10075,7 @@ const checkbox_field_names = [
     'LIGHTGRAPH_OVERLAY__ENABLE',
     'LIGHTGRAPH_OVERLAY__LABEL',
     'LIGHTGRAPH_OVERLAY__HOUR_LINES',
+    'IMAGE_OVERLAY__ENABLE',
     'TEXT_PROPERTIES__FONT_OUTLINE',
     'CARDINAL_DIRS__ENABLE',
     'CARDINAL_DIRS__SWAP_NS',

@@ -290,6 +290,15 @@ class IndiAllSkyConfigBase(object):
             "PIL_FONT_SIZE" : 20,
             "OPENCV_FONT_SCALE" : 0.5,
         },
+        "IMAGE_OVERLAY" : {
+            "ENABLE"          : False,
+            "LOAD_INTERVAL"   : 300,
+            "A_URL"           : "",
+            "A_WIDTH"         : 250,
+            "A_HEIGHT"        : 250,
+            "A_X"             : 300,
+            "A_Y"             : -300,
+        },
         "IMAGE_CIRCLE_MASK" : {
             "ENABLE"   : False,
             "DIAMETER" : 3000,
