@@ -10777,7 +10777,7 @@ var group_checkbox_fields_st_timelapse = [
 group_on_change('STARTRAILS_TIMELAPSE', group_fields_st_timelapse, group_checkbox_fields_st_timelapse);
 
 
-var group_fields_fish2pano= [
+var group_fields_fish2pano = [
     'FISH2PANO__DIAMETER',
     'FISH2PANO__ROTATE_ANGLE',
     'FISH2PANO__SCALE',
@@ -10794,6 +10794,22 @@ var group_checkbox_fields_fish2pano = [
 
 group_on_change('FISH2PANO__ENABLE', group_fields_fish2pano, group_checkbox_fields_fish2pano);
 
+
+var group_fields_image_overlay = [
+    'IMAGE_OVERLAY__LOAD_INTERVAL',
+    'IMAGE_OVERLAY__A_URL',
+    'IMAGE_OVERLAY__A_IMAGE_FILE_TYPE',
+    'IMAGE_OVERLAY__A_USERNAME',
+    'IMAGE_OVERLAY__A_PASSWORD',
+    'IMAGE_OVERLAY__A_WIDTH',
+    'IMAGE_OVERLAY__A_HEIGHT',
+    'IMAGE_OVERLAY__A_X',
+    'IMAGE_OVERLAY__A_Y',
+];
+
+var group_checkbox_fields_image_overlay = [];
+
+group_on_change('IMAGE_OVERLAY__ENABLE', group_fields_image_overlay, group_checkbox_fields_image_overlay);
 
 
 $( document ).ready(function() {
@@ -10952,6 +10968,7 @@ $( document ).ready(function() {
     group_on_ready('CAMERA_SQM__ENABLE', group_fields_camera_sqm, group_checkbox_fields_camera_sqm);
     group_on_ready('STARTRAILS_TIMELAPSE', group_fields_st_timelapse, group_checkbox_fields_st_timelapse);
     group_on_ready('FISH2PANO__ENABLE', group_fields_fish2pano, group_checkbox_fields_fish2pano);
+    group_on_ready('IMAGE_OVERLAY__ENABLE', group_fields_image_overlay, group_checkbox_fields_image_overlay);
 });
 
 </script>
