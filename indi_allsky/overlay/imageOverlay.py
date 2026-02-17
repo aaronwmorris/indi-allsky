@@ -52,7 +52,7 @@ class IndiAllSkyImageOverlay(object):
             overlay_height, overlay_width = image_dict['data'].shape[:2]
 
             # calculate coordinates
-            if image_dict['y'] < 0:
+            if image_dict['x'] < 0:
                 x = image_width + image_dict['x']
             else:
                 x = image_dict['x']
@@ -64,11 +64,11 @@ class IndiAllSkyImageOverlay(object):
 
 
             # sanity check coordinates
-            if y + overlay_height > image_height:
-                y = image_height - overlay_height
-
             if x + overlay_width > image_width:
                 x = image_width - overlay_width
+
+            if y + overlay_height > image_height:
+                y = image_height - overlay_height
 
 
             if image_dict['data'].shape[2] == 4:
