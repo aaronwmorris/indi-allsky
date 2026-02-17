@@ -71,11 +71,39 @@ class IndiAllSkyImageOverlay(object):
                 x = image_width - overlay_width
 
 
-            # add image overlay
-            image_data[
-                y:y + overlay_height,
-                x:x + overlay_width,
-            ] = image_dict['data']
+            if image_dict['data'].shape[2] == 4:
+                # data is PNG with alpha mask
+                import numpy
+
+                # extract are where overlay is to be applied
+                image_crop = image_data[
+                    y:y + overlay_height,
+                    x:x + overlay_width,
+                ]
+
+
+                overlay_bgr = image_dict['data'][:, :, :3]
+                overlay_alpha = (image_dict['data'][:, :, 3] / 255).astype(numpy.float32)
+
+                alpha_mask = numpy.dstack((overlay_alpha, overlay_alpha, overlay_alpha))
+
+                # apply alpha mask
+                image_crop = (image_crop * (1 - alpha_mask) + overlay_bgr * alpha_mask).astype(numpy.uint8)
+
+
+                # add overlayed area back to image
+                image_data[
+                    y:y + overlay_height,
+                    x:x + overlay_width,
+                ] = image_crop
+            else:
+                # normal 3 channel image
+
+                # add image overlay
+                image_data[
+                    y:y + overlay_height,
+                    x:x + overlay_width,
+                ] = image_dict['data']
 
 
     def load_image(self):
