@@ -226,6 +226,8 @@ class IndiAllSkyImageOverlay(object):
             f_image.close()
 
 
+            # we want to set a specific size instead of scaling to
+            # ensure an image suddenly does not change sizes in the overlay
             image_data = cv2.resize(image_data, (image_dict['width'], image_dict['height']), interpolation=cv2.INTER_AREA)
 
 
