@@ -2446,6 +2446,16 @@ class ConfigView(FormView):
             'LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('OPENCV_FONT_SCALE', 0.5),
             'LIGHTGRAPH_OVERLAY__LABEL'      : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('LABEL', True),
             'LIGHTGRAPH_OVERLAY__HOUR_LINES' : self.indi_allsky_config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_LINES', True),
+            'IMAGE_OVERLAY__ENABLE'          : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('ENABLE', False),
+            'IMAGE_OVERLAY__LOAD_INTERVAL'   : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('LOAD_INTERVAL', 600),
+            'IMAGE_OVERLAY__A_URL'           : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_URL', ''),
+            'IMAGE_OVERLAY__A_IMAGE_FILE_TYPE' : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_IMAGE_FILE_TYPE', 'jpg'),
+            'IMAGE_OVERLAY__A_WIDTH'         : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_WIDTH', 250),
+            'IMAGE_OVERLAY__A_HEIGHT'        : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_HEIGHT', 250),
+            'IMAGE_OVERLAY__A_X'             : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_X', 300),
+            'IMAGE_OVERLAY__A_Y'             : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_Y', -300),
+            'IMAGE_OVERLAY__A_USERNAME'      : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_USERNAME', ''),
+            'IMAGE_OVERLAY__A_PASSWORD'      : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_PASSWORD', ''),
             'IMAGE_EXPORT_RAW'               : self.indi_allsky_config.get('IMAGE_EXPORT_RAW', ''),
             'IMAGE_EXPORT_FOLDER'            : self.indi_allsky_config.get('IMAGE_EXPORT_FOLDER', '/var/www/html/allsky/images/export'),
             'IMAGE_EXPORT_FLIP_V'            : self.indi_allsky_config.get('IMAGE_EXPORT_FLIP_V', False),
@@ -3180,6 +3190,7 @@ class AjaxConfigView(BaseView):
             'TIMELAPSE',
             'MOON_OVERLAY',
             'LIGHTGRAPH_OVERLAY',
+            'IMAGE_OVERLAY',
             'ADSB',
             'SATELLITE_TRACK',
             'LONGTERM_KEOGRAM',
@@ -3435,6 +3446,16 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['OPENCV_FONT_SCALE'] = float(request.json['LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE'])
         self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['LABEL']          = bool(request.json['LIGHTGRAPH_OVERLAY__LABEL'])
         self.indi_allsky_config['LIGHTGRAPH_OVERLAY']['HOUR_LINES']     = bool(request.json['LIGHTGRAPH_OVERLAY__HOUR_LINES'])
+        self.indi_allsky_config['IMAGE_OVERLAY']['ENABLE']              = bool(request.json['IMAGE_OVERLAY__ENABLE'])
+        self.indi_allsky_config['IMAGE_OVERLAY']['LOAD_INTERVAL']       = int(request.json['IMAGE_OVERLAY__LOAD_INTERVAL'])
+        self.indi_allsky_config['IMAGE_OVERLAY']['A_URL']               = str(request.json['IMAGE_OVERLAY__A_URL'])
+        self.indi_allsky_config['IMAGE_OVERLAY']['A_IMAGE_FILE_TYPE']   = str(request.json['IMAGE_OVERLAY__A_IMAGE_FILE_TYPE'])
+        self.indi_allsky_config['IMAGE_OVERLAY']['A_WIDTH']             = int(request.json['IMAGE_OVERLAY__A_WIDTH'])
+        self.indi_allsky_config['IMAGE_OVERLAY']['A_HEIGHT']            = int(request.json['IMAGE_OVERLAY__A_HEIGHT'])
+        self.indi_allsky_config['IMAGE_OVERLAY']['A_X']                 = int(request.json['IMAGE_OVERLAY__A_X'])
+        self.indi_allsky_config['IMAGE_OVERLAY']['A_Y']                 = int(request.json['IMAGE_OVERLAY__A_Y'])
+        self.indi_allsky_config['IMAGE_OVERLAY']['A_USERNAME']          = str(request.json['IMAGE_OVERLAY__A_USERNAME'])
+        self.indi_allsky_config['IMAGE_OVERLAY']['A_PASSWORD']          = str(request.json['IMAGE_OVERLAY__A_PASSWORD'])
         self.indi_allsky_config['IMAGE_EXPORT_RAW']                     = str(request.json['IMAGE_EXPORT_RAW'])
         self.indi_allsky_config['IMAGE_EXPORT_FOLDER']                  = str(request.json['IMAGE_EXPORT_FOLDER'])
         self.indi_allsky_config['IMAGE_EXPORT_FLIP_V']                  = bool(request.json['IMAGE_EXPORT_FLIP_V'])
@@ -8724,6 +8745,10 @@ class ConfigDownloadView(BaseView):
         'ADSB' : {
             'PASSWORD' : 'REDACTED',
             'PASSWORD_E' : '',
+        },
+        'IMAGE_OVERLAY' : {
+            'A_PASSWORD' : 'REDACTED',
+            'A_PASSWORD_E' : '',
         },
     }
 

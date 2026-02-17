@@ -1913,6 +1913,12 @@ def LIGHTGRAPH_OVERLAY__SCALE_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
+    if field.data <= 0.0:
+        raise ValidationError('Must be greater than 0')
+
+    if field.data > 1.0:
+        raise ValidationError('Must be 1.0 or less')
+
 
 def LIGHTGRAPH_OVERLAY__RGB_COLOR_validator(form, field):
     color_regex = r'^\d+\,\d+\,\d+$'
@@ -1929,6 +1935,45 @@ def LIGHTGRAPH_OVERLAY__RGB_COLOR_validator(form, field):
 
     if sum([int(c) for c in rgb]) == 0:
         raise ValidationError('Color cannot be (0, 0, 0)')
+
+
+def IMAGE_OVERLAY__URL_validator(form, field):
+    if not field.data:
+        return
+
+    try:
+        r = urlparse(field.data)
+    except AttributeError:
+        raise ValidationError('Invalid URL')
+
+    if not r.scheme:
+        raise ValidationError('Invalid URL')
+
+
+def IMAGE_OVERLAY__LOAD_INTERVAL_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 60:
+        raise ValidationError('Must be 60 or more')
+
+
+def IMAGE_OVERLAY__W_H_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 10:
+        raise ValidationError('Must be 10 or more')
+
+
+def IMAGE_OVERLAY__X_Y_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter valid number')
+
+
+def IMAGE_OVERLAY__IMAGE_FILE_TYPE_validator(form, field):
+    if field.data not in list(zip(*form.IMAGE_OVERLAY__IMAGE_FILE_TYPE_choices))[0]:
+        raise ValidationError('Please select a valid file type')
 
 
 def CARDINAL_DIRS__CHAR_validator(form, field):
@@ -3723,6 +3768,11 @@ class IndiAllskyConfigForm(FlaskForm):
         ('png', 'PNG'),
     )
 
+    IMAGE_OVERLAY__IMAGE_FILE_TYPE_choices = (
+        ('jpg', 'JPEG'),
+        ('png', 'PNG'),
+    )
+
     YOUTUBE__PRIVACY_STATUS_choices = (
         ('private', 'Private'),
         ('public', 'Public'),
@@ -4423,6 +4473,16 @@ class IndiAllskyConfigForm(FlaskForm):
     LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE = FloatField('Font Scale (opencv)', validators=[DataRequired(), TEXT_PROPERTIES__FONT_SCALE_validator])
     LIGHTGRAPH_OVERLAY__LABEL        = BooleanField('Lightgraph Label')
     LIGHTGRAPH_OVERLAY__HOUR_LINES   = BooleanField('Lightgraph Hour Lines')
+    IMAGE_OVERLAY__ENABLE            = BooleanField('Enable Image Overlay')
+    IMAGE_OVERLAY__LOAD_INTERVAL     = IntegerField('Download Interval', validators=[IMAGE_OVERLAY__LOAD_INTERVAL_validator])
+    IMAGE_OVERLAY__A_URL             = StringField('Source URL', validators=[IMAGE_OVERLAY__URL_validator])
+    IMAGE_OVERLAY__A_IMAGE_FILE_TYPE = SelectField('File Type', choices=IMAGE_OVERLAY__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_OVERLAY__IMAGE_FILE_TYPE_validator])
+    IMAGE_OVERLAY__A_WIDTH           = IntegerField('Image Width', validators=[IMAGE_OVERLAY__W_H_validator])
+    IMAGE_OVERLAY__A_HEIGHT          = IntegerField('Image Height', validators=[IMAGE_OVERLAY__W_H_validator])
+    IMAGE_OVERLAY__A_X               = IntegerField('X', validators=[IMAGE_OVERLAY__X_Y_validator])
+    IMAGE_OVERLAY__A_Y               = IntegerField('Y', validators=[IMAGE_OVERLAY__X_Y_validator])
+    IMAGE_OVERLAY__A_USERNAME        = StringField('Username', validators=[PYCURL_CAMERA__USERNAME_validator], render_kw={'autocomplete' : 'new-password'})
+    IMAGE_OVERLAY__A_PASSWORD        = PasswordField('Password', widget=PasswordInput(hide_value=False), validators=[PYCURL_CAMERA__PASSWORD_validator], render_kw={'autocomplete' : 'new-password'})
     IMAGE_EXPORT_RAW                 = SelectField('Export RAW image type', choices=IMAGE_EXPORT_RAW_choices, validators=[IMAGE_EXPORT_RAW_validator])
     IMAGE_EXPORT_FOLDER              = StringField('Export RAW folder', validators=[DataRequired(), IMAGE_EXPORT_FOLDER_validator])
     IMAGE_EXPORT_FLIP_V              = BooleanField('Flip RAW Vertically')
@@ -9864,6 +9924,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
         ),
         'Medium' : (
             ('fe185c046ha_f1.4_1.4mm_1-2', 'Fujinon 1.4mm ƒ/1.4 [C/CS] - 185° - 1/2" ∅4.6mm'),
+            ('sunex_dsl215_m12_f2.0_1.55mm_1-2', 'Sunex DSL215 1.55mm ƒ/2.0 [M12] - 185° - 1/2" ∅4.7mm'),
             ('arecont_f2.0_1.55mm_1-2', 'Arecont 1.55mm ƒ/2.0 [C/CS] - 180° - 1/2" ∅4.8mm'),
             ('stardot_f1.5_1.55mm_1-2', 'Stardot 1.55mm ƒ/1.5 [C/CS] - 180° - 1/2" ∅4.8mm'),
             ('m12_f2.4_1.8mm_1-4', 'M12 1.8mm ƒ/2.4 [M12] - 125° - 1/4" ∅4.8mm'),
@@ -9871,6 +9932,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
             ('m12_f2.0_1.7mm_1-2.5', 'M12 1.7mm ƒ/2.0 [M12] - 180° - 1/2.5" ∅5.6mm'),
             ('fe185c057ha_f1.4_1.8mm_2-3', 'Fujinon 1.8mm ƒ/1.4 [C/CS] - 185° - 2/3" ∅5.7mm'),
             ('m12_f2.0_1.85mm_1-1.8', 'M12 1.85mm ƒ/2.0 [M12] - 180° - 1/1.8" ∅5.8mm'),
+            ('wgwk-3130-a1_m12_f1.8_1.91mm_1-2.3', 'WGWK-3130 M12 1.91mm ƒ/1.8 [M12] - 185° - 1/2.3" ∅6.4mm'),
             ('cs-2.5ir_8mp_-f_f1.6_2.5mm_2-3', 'CS-2.5IR(8MP)-F 2.5mm ƒ/1.6 [C/CS] - 190° - 2/3 ∅6.4mm'),
             ('zwo_f2.0_2.1mm_1-3', 'ZWO 2.1mm ƒ/2.0 [C/CS] - 150° - 1/3" ∅6.7mm'),
             ('zwo_f1.2_2.5mm_1-2', 'ZWO 2.5mm ƒ/1.2 [C/CS] - 170° - 1/2" ∅6.7mm'),

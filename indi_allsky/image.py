@@ -700,6 +700,8 @@ class ImageWorker(Process):
 
         self.image_processor.lightgraph_overlay()
 
+        self.image_processor.image_overlay()
+
         self.image_processor.orb_image()
 
         self.image_processor.cardinal_dirs_label()

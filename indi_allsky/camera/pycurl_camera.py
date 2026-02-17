@@ -124,7 +124,7 @@ class PycurlCameraWorker(Thread):
 
         http_error = client.getinfo(pycurl.RESPONSE_CODE)
         if http_error >= 400:
-            logger.info('HTTP return code: %d', http_error)
+            logger.error('HTTP return code: %d', http_error)
             self.dl_file_p.unlink()
 
 

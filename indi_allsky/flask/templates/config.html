@@ -2946,6 +2946,128 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.IMAGE_OVERLAY__ENABLE(class='form-check-input') }}
+                <div id="IMAGE_OVERLAY__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Use a remote image as an overlay (weather maps, etc)</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__LOAD_INTERVAL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__LOAD_INTERVAL(class='form-control bg-secondary') }}
+            <div id="IMAGE_OVERLAY__LOAD_INTERVAL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_URL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-5">
+            {{ form_config.IMAGE_OVERLAY__A_URL(class='form-control bg-secondary') }}
+            <div id="IMAGE_OVERLAY__A_URL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-5"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_IMAGE_FILE_TYPE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_IMAGE_FILE_TYPE(class='form-select bg-secondary') }}
+            <div id="IMAGE_OVERLAY__A_IMAGE_FILE_TYPE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_USERNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_USERNAME(class='form-control bg-secondary') }}
+            <div id="IMAGE_OVERLAY__A_USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_PASSWORD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_PASSWORD(class='form-control bg-secondary') }}
+            <div id="IMAGE_OVERLAY__A_PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_WIDTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_WIDTH(class='form-control bg-secondary') }}
+            <div id="IMAGE_OVERLAY__A_WIDTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Image will be resized to this specification</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_HEIGHT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_HEIGHT(class='form-control bg-secondary') }}
+            <div id="IMAGE_OVERLAY__A_HEIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8"></div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_X(class='form-control bg-secondary') }}
+            <div id="IMAGE_OVERLAY__A_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Negative is offset from the right side of image</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_OVERLAY__A_Y(class='form-control bg-secondary') }}
+            <div id="IMAGE_OVERLAY__A_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Negative is offset from the bottom of image</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CARDINAL_DIRS__ENABLE.label }}
         </div>
         <div class="col-sm-2">
@@ -9560,6 +9682,15 @@ const field_names = [
     'LIGHTGRAPH_OVERLAY__OPACITY',
     'LIGHTGRAPH_OVERLAY__PIL_FONT_SIZE',
     'LIGHTGRAPH_OVERLAY__OPENCV_FONT_SCALE',
+    'IMAGE_OVERLAY__LOAD_INTERVAL',
+    'IMAGE_OVERLAY__A_URL',
+    'IMAGE_OVERLAY__A_IMAGE_FILE_TYPE',
+    'IMAGE_OVERLAY__A_USERNAME',
+    'IMAGE_OVERLAY__A_PASSWORD',
+    'IMAGE_OVERLAY__A_WIDTH',
+    'IMAGE_OVERLAY__A_HEIGHT',
+    'IMAGE_OVERLAY__A_X',
+    'IMAGE_OVERLAY__A_Y',
     'FISH2PANO__DIAMETER',
     'FISH2PANO__OFFSET_X',
     'FISH2PANO__OFFSET_Y',
@@ -9976,6 +10107,7 @@ const checkbox_field_names = [
     'LIGHTGRAPH_OVERLAY__ENABLE',
     'LIGHTGRAPH_OVERLAY__LABEL',
     'LIGHTGRAPH_OVERLAY__HOUR_LINES',
+    'IMAGE_OVERLAY__ENABLE',
     'TEXT_PROPERTIES__FONT_OUTLINE',
     'CARDINAL_DIRS__ENABLE',
     'CARDINAL_DIRS__SWAP_NS',
@@ -10653,7 +10785,7 @@ var group_checkbox_fields_st_timelapse = [
 group_on_change('STARTRAILS_TIMELAPSE', group_fields_st_timelapse, group_checkbox_fields_st_timelapse);
 
 
-var group_fields_fish2pano= [
+var group_fields_fish2pano = [
     'FISH2PANO__DIAMETER',
     'FISH2PANO__ROTATE_ANGLE',
     'FISH2PANO__SCALE',
@@ -10670,6 +10802,22 @@ var group_checkbox_fields_fish2pano = [
 
 group_on_change('FISH2PANO__ENABLE', group_fields_fish2pano, group_checkbox_fields_fish2pano);
 
+
+var group_fields_image_overlay = [
+    'IMAGE_OVERLAY__LOAD_INTERVAL',
+    'IMAGE_OVERLAY__A_URL',
+    'IMAGE_OVERLAY__A_IMAGE_FILE_TYPE',
+    'IMAGE_OVERLAY__A_USERNAME',
+    'IMAGE_OVERLAY__A_PASSWORD',
+    'IMAGE_OVERLAY__A_WIDTH',
+    'IMAGE_OVERLAY__A_HEIGHT',
+    'IMAGE_OVERLAY__A_X',
+    'IMAGE_OVERLAY__A_Y',
+];
+
+var group_checkbox_fields_image_overlay = [];
+
+group_on_change('IMAGE_OVERLAY__ENABLE', group_fields_image_overlay, group_checkbox_fields_image_overlay);
 
 
 $( document ).ready(function() {
@@ -10828,6 +10976,7 @@ $( document ).ready(function() {
     group_on_ready('CAMERA_SQM__ENABLE', group_fields_camera_sqm, group_checkbox_fields_camera_sqm);
     group_on_ready('STARTRAILS_TIMELAPSE', group_fields_st_timelapse, group_checkbox_fields_st_timelapse);
     group_on_ready('FISH2PANO__ENABLE', group_fields_fish2pano, group_checkbox_fields_fish2pano);
+    group_on_ready('IMAGE_OVERLAY__ENABLE', group_fields_image_overlay, group_checkbox_fields_image_overlay);
 });
 
 </script>

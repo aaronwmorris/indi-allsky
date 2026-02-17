@@ -290,6 +290,19 @@ class IndiAllSkyConfigBase(object):
             "PIL_FONT_SIZE" : 20,
             "OPENCV_FONT_SCALE" : 0.5,
         },
+        "IMAGE_OVERLAY" : {
+            "ENABLE"          : False,
+            "LOAD_INTERVAL"   : 600,
+            "A_URL"           : "",
+            "A_IMAGE_FILE_TYPE" : "jpg",
+            "A_WIDTH"         : 250,
+            "A_HEIGHT"        : 250,
+            "A_X"             : 300,
+            "A_Y"             : -300,
+            "A_USERNAME"      : "",
+            "A_PASSWORD"      : "",
+            "A_PASSWORD_E"    : "",
+        },
         "IMAGE_CIRCLE_MASK" : {
             "ENABLE"   : False,
             "DIAMETER" : 3000,
@@ -1026,6 +1039,14 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             else:
                 adsb__password = config.get('ADSB', {}).get('PASSWORD', '')
 
+
+            image_overlay__a_password_e = config.get('IMAGE_OVERLAY', {}).get('A_PASSWORD_E', '')
+            if image_overlay__a_password_e:
+                # not catching InvalidToken
+                image_overlay__a_password = f_key.decrypt(image_overlay__a_password_e.encode()).decode()
+            else:
+                image_overlay__a_password = config.get('IMAGE_OVERLAY', {}).get('APASSWORD', '')
+
         else:
             # passwords should not be encrypted
             filetransfer__password = config.get('FILETRANSFER', {}).get('PASSWORD', '')
@@ -1040,6 +1061,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             device__mqtt_password = config.get('DEVICE', {}).get('MQTT_PASSWORD', '')
             libcamera__mqtt_password = config.get('LIBCAMERA', {}).get('MQTT_PASSWORD', '')
             adsb__password = config.get('ADSB', {}).get('PASSWORD', '')
+            image_overlay__a_password = config.get('IMAGE_OVERLAY', {}).get('A_PASSWORD', '')
 
 
         # sanity check
@@ -1053,6 +1075,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             'DEVICE',
             'LIBCAMERA',
             'ADSB',
+            'IMAGE_OVERLAY',
         )
 
         for leaf in leaf_list:
@@ -1084,6 +1107,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['LIBCAMERA']['MQTT_PASSWORD_E'] = ''
         config['ADSB']['PASSWORD'] = adsb__password
         config['ADSB']['PASSWORD_E'] = ''
+        config['IMAGE_OVERLAY']['A_PASSWORD'] = image_overlay__a_password
+        config['IMAGE_OVERLAY']['A_PASSWORD_E'] = ''
 
         return config
 
@@ -1278,6 +1303,15 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 adsb__password_e = ''
                 adsb__password = ''
 
+
+            image_overlay__a_password = str(config.get('IMAGE_OVERLAY', {}).get('A_PASSWORD', ''))
+            if image_overlay__a_password:
+                image_overlay__a_password_e = f_key.encrypt(image_overlay__a_password.encode()).decode()
+                image_overlay__a_password = ''
+            else:
+                image_overlay__a_password_e = ''
+                image_overlay__a_password = ''
+
         else:
             # passwords should not be encrypted
             encrypted = False
@@ -1306,6 +1340,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             libcamera__mqtt_password_e = ''
             adsb__password = str(config.get('ADSB', {}).get('PASSWORD', ''))
             adsb__password_e = ''
+            image_overlay__a_password = str(config.get('IMAGE_OVERLAY', {}).get('A_PASSWORD', ''))
+            image_overlay__a_password_e = ''
 
 
         # sanity check
@@ -1319,6 +1355,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             'DEVICE',
             'LIBCAMERA',
             'ADSB',
+            'IMAGE_OVERLAY',
         )
 
         for leaf in leaf_list:
@@ -1350,6 +1387,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['LIBCAMERA']['MQTT_PASSWORD_E'] = libcamera__mqtt_password_e
         config['ADSB']['PASSWORD'] = adsb__password
         config['ADSB']['PASSWORD_E'] = adsb__password_e
+        config['IMAGE_OVERLAY']['A_PASSWORD'] = image_overlay__a_password
+        config['IMAGE_OVERLAY']['A_PASSWORD_E'] = image_overlay__a_password_e
 
 
         return config, encrypted
