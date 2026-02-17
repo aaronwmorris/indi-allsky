@@ -41,6 +41,43 @@ class IndiAllSkyImageOverlay(object):
             self.load_image()
 
 
+        image_height, image_width = image_data.shape[:2]
+
+        for image_dict in self.images_dict.values():
+            if isinstance(image_dict['data'], type(None)):
+                logger.warning('No image data for image overlay')
+                return
+
+
+            overlay_height, overlay_width = image_dict['data'].shape[:2]
+
+            # calculate coordinates
+            if image_dict['y'] < 0:
+                x = image_width + image_dict['x']
+            else:
+                x = image_dict['x']
+
+            if image_dict['y'] < 0:
+                y = image_height + image_dict['y']
+            else:
+                y = image_dict['y']
+
+
+            # sanity check coordinates
+            if y + overlay_height > image_height:
+                y = image_height - overlay_height
+
+            if x + overlay_width > image_width:
+                x = image_width - overlay_width
+
+
+            # add image overlay
+            image_data[
+                y:y + overlay_height,
+                x:x + overlay_width,
+            ] = image_dict['data']
+
+
     def load_image(self):
         import pycurl
 
