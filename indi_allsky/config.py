@@ -292,7 +292,7 @@ class IndiAllSkyConfigBase(object):
         },
         "IMAGE_OVERLAY" : {
             "ENABLE"          : False,
-            "LOAD_INTERVAL"   : 300,
+            "LOAD_INTERVAL"   : 600,
             "A_URL"           : "",
             "A_IMAGE_FILE_TYPE" : "jpg",
             "A_WIDTH"         : 250,

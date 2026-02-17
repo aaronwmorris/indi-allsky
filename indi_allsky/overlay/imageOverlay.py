@@ -11,7 +11,7 @@ class IndiAllSkyImageOverlay(object):
     def __init__(self, config):
         self.config = config
 
-        self.load_interval = self.config.get('IMAGE_OVERLAY', {}).get('LOAD_INTERVAL', 300)
+        self.load_interval = self.config.get('IMAGE_OVERLAY', {}).get('LOAD_INTERVAL', 600)
 
         self.images_dict = {
             'a' : {
