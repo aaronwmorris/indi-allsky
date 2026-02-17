@@ -2449,7 +2449,7 @@ class ConfigView(FormView):
             'IMAGE_OVERLAY__ENABLE'          : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('ENABLE', False),
             'IMAGE_OVERLAY__LOAD_INTERVAL'   : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('LOAD_INTERVAL', True),
             'IMAGE_OVERLAY__A_URL'           : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_URL', ''),
-            'IMAGE_OVERLAY__A_IMAGE_FILE_TYPE' : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('IMAGE_FILE_TYPE', 'jpg'),
+            'IMAGE_OVERLAY__A_IMAGE_FILE_TYPE' : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_IMAGE_FILE_TYPE', 'jpg'),
             'IMAGE_OVERLAY__A_WIDTH'         : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_WIDTH', 250),
             'IMAGE_OVERLAY__A_HEIGHT'        : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_HEIGHT', 250),
             'IMAGE_OVERLAY__A_X'             : self.indi_allsky_config.get('IMAGE_OVERLAY', {}).get('A_X', 300),
