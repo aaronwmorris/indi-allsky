@@ -183,8 +183,11 @@ class IndiAllSkyImageOverlay(object):
                     f_image.close()
                     return
             else:
+                import numpy
+
                 # use opencv for everything else
-                image_data = cv2.imdecode(f_image, cv2.IMREAD_UNCHANGED)
+                image_numpy = numpy.asarray(bytearray(f_image.read()), dtype=numpy.uint8)
+                image_data = cv2.imdecode(image_numpy, cv2.IMREAD_UNCHANGED)
 
                 if isinstance(image_data, type(None)):
                     logger.error('Failed to decode image file')
