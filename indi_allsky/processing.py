@@ -35,6 +35,7 @@ from .cardinalDirsLabel import IndiAllskyCardinalDirsLabel
 from .utils import IndiAllSkyDateCalcs
 from .moonOverlay import IndiAllSkyMoonOverlay
 from .lightgraphOverlay import IndiAllSkyLightgraphOverlay
+from .overlay.imageOverlay import IndiAllSkyImageOverlay
 
 from .flask.miscDb import miscDb
 from .flask.models import IndiAllSkyDbBadPixelMapTable
@@ -167,6 +168,7 @@ class ImageProcessor(object):
         self._draw = None
         self._stacker = None
         self._stretch_o = None
+        self._image_overlay_o = IndiAllSkyImageOverlay(self.config)
 
 
         self._ia_scnr = IndiAllskyScnr(self.config, self.night_av)
@@ -3613,6 +3615,17 @@ class ImageProcessor(object):
             return
 
         self._lightgraph_overlay.apply(self.image)
+
+
+    def image_overlay(self):
+        if self.focus_mode:
+            return
+
+
+        if not self.config.get('IMAGE_OVERLAY', {}).get('ENABLE', True):
+            return
+
+        self._image_overlay_o.apply(self.image)
 
 
     def add_border(self):
