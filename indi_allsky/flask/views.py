@@ -8746,6 +8746,10 @@ class ConfigDownloadView(BaseView):
             'PASSWORD' : 'REDACTED',
             'PASSWORD_E' : '',
         },
+        'IMAGE_OVERLAY' : {
+            'A_PASSWORD' : 'REDACTED',
+            'A_PASSWORD_E' : '',
+        },
     }
 
 
