@@ -4474,7 +4474,7 @@ class IndiAllskyConfigForm(FlaskForm):
     LIGHTGRAPH_OVERLAY__LABEL        = BooleanField('Lightgraph Label')
     LIGHTGRAPH_OVERLAY__HOUR_LINES   = BooleanField('Lightgraph Hour Lines')
     IMAGE_OVERLAY__ENABLE            = BooleanField('Enable Image Overlay')
-    IMAGE_OVERLAY__LOAD_INTERVAL     = IntegerField('Load Interval', validators=[IMAGE_OVERLAY__LOAD_INTERVAL_validator])
+    IMAGE_OVERLAY__LOAD_INTERVAL     = IntegerField('Download Interval', validators=[IMAGE_OVERLAY__LOAD_INTERVAL_validator])
     IMAGE_OVERLAY__A_URL             = StringField('Source URL', validators=[IMAGE_OVERLAY__URL_validator])
     IMAGE_OVERLAY__A_IMAGE_FILE_TYPE = SelectField('File Type', choices=IMAGE_OVERLAY__IMAGE_FILE_TYPE_choices, validators=[DataRequired(), IMAGE_OVERLAY__IMAGE_FILE_TYPE_validator])
     IMAGE_OVERLAY__A_WIDTH           = IntegerField('Image Width', validators=[IMAGE_OVERLAY__W_H_validator])
