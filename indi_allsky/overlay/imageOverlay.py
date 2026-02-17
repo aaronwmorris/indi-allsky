@@ -13,6 +13,7 @@ class IndiAllSkyImageOverlay(object):
 
         self.load_interval = self.config.get('IMAGE_OVERLAY', {}).get('LOAD_INTERVAL', 600)
 
+        # can support multiple image overlays
         self.images_dict = {
             'a' : {
                 'data'     : None,
@@ -36,7 +37,7 @@ class IndiAllSkyImageOverlay(object):
     def apply(self, image_data):
         now_time = time.time()
 
-        if now_time > self.next_load_time:
+        if now_time >= self.next_load_time:
             self.next_load_time = now_time + self.load_interval
             self.load_image()
 
@@ -53,12 +54,12 @@ class IndiAllSkyImageOverlay(object):
 
             # calculate coordinates
             if image_dict['x'] < 0:
-                x = image_width + image_dict['x']
+                x = image_width + image_dict['x']  # negative
             else:
                 x = image_dict['x']
 
             if image_dict['y'] < 0:
-                y = image_height + image_dict['y']
+                y = image_height + image_dict['y']  # negative
             else:
                 y = image_dict['y']
 
@@ -187,14 +188,13 @@ class IndiAllSkyImageOverlay(object):
                 client.close()
 
                 f_image.close()
-                self.dl_file_p.unlink()
                 return
 
 
             http_error = client.getinfo(pycurl.RESPONSE_CODE)
             if http_error >= 400:
-                logger.info('HTTP return code: %d', http_error)
-                self.dl_file_p.unlink()
+                logger.error('HTTP return code: %d', http_error)
+                return
 
 
             client.close()
