@@ -7032,7 +7032,6 @@ class JsonFocusView(JsonView):
 
     def dispatch_request(self):
         import cv2
-        from multiprocessing import Array
         from ..stars import IndiAllSkyStars
 
         zoom = int(request.args.get('zoom', 2))
@@ -7040,8 +7039,11 @@ class JsonFocusView(JsonView):
         y_offset = int(request.args.get('y_offset', 0))
 
 
-        binning_av = Array('i', [1])
-        stars_detect = IndiAllSkyStars(self.indi_allsky_config, binning_av, mask=None)
+        sqm_mask = {
+            1 : None,  # assume bin 1
+        }
+
+        stars_detect_o = IndiAllSkyStars(self.indi_allsky_config, mask=sqm_mask)
 
 
         json_data = dict()
@@ -7084,7 +7086,7 @@ class JsonFocusView(JsonView):
                 return jsonify({}), 400
 
 
-        stars = stars_detect.detectObjects(image_data)
+        stars = stars_detect_o.detectObjects(image_data, 1)  # assume bin 1
 
 
         image_height, image_width = image_data.shape[:2]
