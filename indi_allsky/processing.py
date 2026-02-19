@@ -210,6 +210,7 @@ class ImageProcessor(object):
         varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
         self.varlib_folder_p = Path(varlib_folder)
 
+
         self._keogram_store_tmpl = 'realtime_keogram_store_ccd{0:d}.npy'
         self._keogram_store_p = None
         self._keogram_store_metadata_tmpl = 'realtime_keogram_store_ccd{0:d}_metadata.npy'
@@ -3593,6 +3594,52 @@ class ImageProcessor(object):
             return pano_data
 
         return self._cardinal_dirs_label.panorama_label(pano_data)
+
+
+    def circular_display(self):
+        return self._circular_display()
+
+
+    def _circular_display(self):
+        logger.info('Cropping to image circle for circular display')
+        image_height, image_width = self.image.shape[:2]
+
+        lens_offset_x = self.config.get('LENS_OFFSET_X', 0)
+        lens_offset_y = self.config.get('LENS_OFFSET_Y', 0)
+        image_center_x = int(image_width / 2)
+        image_center_y = int(image_height / 2)
+        radius = int(self.config.get('LENS_IMAGE_CIRCLE', 3000) / 2)
+
+        # need to maintain same offset of image circle
+        # offsets have to be doubled since they are added to the radius
+        if lens_offset_x >= 0:
+            x1 = max(0, (image_center_x - radius))
+            x2 = min(image_width, (image_center_x + radius) + (lens_offset_x * 2))
+        else:
+            x1 = max(0, (image_center_x - radius) + (lens_offset_x * 2))  # offset is negative
+            x2 = min(image_width, (image_center_x + radius))
+
+        if lens_offset_y >= 0:
+            y1 = max(0, (image_center_y - radius) - (lens_offset_y * 2))
+            y2 = min(image_height, (image_center_y + radius))
+        else:
+            y1 = max(0, (image_center_y - radius))
+            y2 = min(image_height, (image_center_y + radius) - (lens_offset_y * 2))  # offset is negative
+
+
+        cropped_image = self.image[
+            y1:y2,
+            x1:x2,
+        ]
+
+
+        new_height, new_width = cropped_image.shape[:2]
+        logger.info('New cropped size: %d x %d', new_width, new_height)
+
+
+        resolution_xy = self.config.get('CIRCULAR_DISPLAY', {}).get('RESOLUTION', 800)
+
+        return cv2.resize(cropped_image, (resolution_xy, resolution_xy), interpolation=cv2.INTER_AREA)
 
 
     def moon_overlay(self):
