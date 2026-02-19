@@ -130,10 +130,10 @@ class ImageProcessor(object):
 
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
 
-        self._image_circle_alpha_mask = None
+        self._image_circle_alpha_mask_dict = dict()  # index for every bin mode
 
-        self._overlay = None
-        self._alpha_mask = None
+        self._overlay_dict = dict()  # index for every bin mode
+        self._alpha_mask_dict = dict()  # index for every bin mode
 
         self._gamma_lut = None
 
@@ -2166,25 +2166,25 @@ class ImageProcessor(object):
             )
 
 
-    def apply_image_circle_mask(self):
+    def apply_image_circle_mask(self, binning):
         if not self.config.get('IMAGE_CIRCLE_MASK', {}).get('ENABLE'):
             return
 
-        if isinstance(self._image_circle_alpha_mask, type(None)):
-            self._image_circle_alpha_mask = self._generate_image_circle_mask(self.image)
+        if isinstance(self._image_circle_alpha_mask_dict.get(binning), type(None)):
+            self._image_circle_alpha_mask_dict[binning] = self._generate_image_circle_mask(self.image, binning)
 
 
         #alpha_start = time.time()
 
-        self.image = (self.image * self._image_circle_alpha_mask).astype(numpy.uint8)
+        self.image = (self.image * self._image_circle_alpha_mask_dict[binning]).astype(numpy.uint8)
 
 
         if self.config.get('IMAGE_CIRCLE_MASK', {}).get('OUTLINE'):
             image_height, image_width = self.image.shape[:2]
 
-            center_x = int(image_width / 2) + self.config.get('LENS_OFFSET_X', 0)
-            center_y = int(image_height / 2) - self.config.get('LENS_OFFSET_Y', 0)  # minus
-            radius = int(self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2)
+            center_x = int(image_width / 2) + int(self.config.get('LENS_OFFSET_X', 0) / binning)
+            center_y = int(image_height / 2) - int(self.config.get('LENS_OFFSET_Y', 0) / binning)  # minus
+            radius = int((self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2) / binning)
 
             cv2.circle(
                 img=self.image,
@@ -2199,26 +2199,28 @@ class ImageProcessor(object):
         #logger.info('Image circle mask in %0.4f s', alpha_elapsed_s)
 
 
-    def apply_logo_overlay(self):
+    def apply_logo_overlay(self, binning):
         logo_overlay = self.config.get('LOGO_OVERLAY', '')
         if not logo_overlay:
             return
 
 
-        if isinstance(self._overlay, type(None)):
-            self._overlay, self._alpha_mask = self._load_logo_overlay(self.image)
-
-            if isinstance(self._overlay, bool):
-                return
-
-        elif isinstance(self._overlay, bool):
+        if isinstance(self._overlay_dict.get(binning), bool):
+            # already failed to load
             logger.error('Logo overlay failed to load')
             return
+
+        elif isinstance(self._overlay_dict.get(binning), type(None)):
+            self._overlay_dict[binning], self._alpha_mask_dict[binning] = self._load_logo_overlay(self.image, binning)
+
+            if isinstance(self._overlay_dict.get(binning), bool):
+                logger.error('Logo overlay failed to load')
+                return
 
 
         #alpha_start = time.time()
 
-        self.image = (self.image * (1 - self._alpha_mask) + self._overlay * self._alpha_mask).astype(numpy.uint8)
+        self.image = (self.image * (1 - self._alpha_mask_dict[binning]) + self._overlay_dict[binning] * self._alpha_mask_dict[binning]).astype(numpy.uint8)
 
         #alpha_elapsed_s = time.time() - alpha_start
         #logger.info('Alpha transparency in %0.4f s', alpha_elapsed_s)
@@ -3923,7 +3925,7 @@ class ImageProcessor(object):
         return mask_data_dict
 
 
-    def _load_logo_overlay(self, image):
+    def _load_logo_overlay(self, image, binning):
         logo_overlay = self.config.get('LOGO_OVERLAY', '')
 
         if not logo_overlay:
@@ -3951,6 +3953,14 @@ class ImageProcessor(object):
         if isinstance(overlay_img, type(None)):
             logger.error('%s is not a valid image', logo_overlay_p)
             return False, None  # False so the image is not retried
+
+
+        if binning > 1:
+            height, width = overlay_img.shape[:2]
+            new_height = int(height / binning)
+            new_width = int(width / binning)
+
+            overlay_img = cv2.resize(overlay_img, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
         overlay_height, overlay_width = overlay_img.shape[:2]
@@ -4024,7 +4034,7 @@ class ImageProcessor(object):
         self._adu_mask_dict[binning] = mask
 
 
-    def _generate_image_circle_mask(self, image):
+    def _generate_image_circle_mask(self, image, binning):
         image_height, image_width = image.shape[:2]
 
 
@@ -4039,9 +4049,9 @@ class ImageProcessor(object):
 
         channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint8)
 
-        center_x = int(image_width / 2) + self.config.get('LENS_OFFSET_X', 0)
-        center_y = int(image_height / 2) - self.config.get('LENS_OFFSET_Y', 0)  # minus
-        radius = int(self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2)
+        center_x = int(image_width / 2) + int(self.config.get('LENS_OFFSET_X', 0) / binning)
+        center_y = int(image_height / 2) - int(self.config.get('LENS_OFFSET_Y', 0) / binning)  # minus
+        radius = int((self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2) / binning)
         blur = self.config['IMAGE_CIRCLE_MASK']['BLUR']
 
 
@@ -4069,7 +4079,6 @@ class ImageProcessor(object):
         alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
 
         return alpha_mask
-
 
 
 class ImageData(object):
