@@ -10865,6 +10865,17 @@ var group_checkbox_fields_image_overlay = [];
 group_on_change('IMAGE_OVERLAY__ENABLE', group_fields_image_overlay, group_checkbox_fields_image_overlay);
 
 
+var group_fields_circular_display= [
+    'CIRCULAR_DISPLAY__RESOLUTION',
+    'CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER',
+];
+
+var group_checkbox_fields_circular_display = [];
+
+
+group_on_change('CIRCULAR_DISPLAY__ENABLE', group_fields_circular_display, group_checkbox_fields_circular_display);
+
+
 $( document ).ready(function() {
     // Global timelapse
     if (!$('#TIMELAPSE_ENABLE').prop('checked')) {
@@ -11022,6 +11033,7 @@ $( document ).ready(function() {
     group_on_ready('STARTRAILS_TIMELAPSE', group_fields_st_timelapse, group_checkbox_fields_st_timelapse);
     group_on_ready('FISH2PANO__ENABLE', group_fields_fish2pano, group_checkbox_fields_fish2pano);
     group_on_ready('IMAGE_OVERLAY__ENABLE', group_fields_image_overlay, group_checkbox_fields_image_overlay);
+    group_on_ready('CIRCULAR_DISPLAY__ENABLE', group_fields_circular_display, group_checkbox_fields_circular_display);
 });
 
 </script>
