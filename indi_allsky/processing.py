@@ -3606,21 +3606,21 @@ class ImageProcessor(object):
 
         lens_offset_x = self.config.get('LENS_OFFSET_X', 0)
         lens_offset_y = self.config.get('LENS_OFFSET_Y', 0)
-        lens_image_circle = self.config.get('LENS_IMAGE_CIRCLE', 3000)
+        image_circle_diameter = self.config.get('CIRCULAR_DISPLAY', {}).get('IMAGE_CIRCLE_DIAMETER', 3500)
 
 
         border_color_bgr = [0, 0, 0]  # rgb
         #border_color_bgr.reverse()
 
 
-        if image_height < lens_image_circle + abs(lens_offset_y):
-            new_height = lens_image_circle + abs(lens_offset_y)
+        if image_height < (image_circle_diameter + abs(lens_offset_y)):
+            new_height = (image_circle_diameter + abs(lens_offset_y))
         else:
-            new_height = image_height + abs(lens_offset_y)
+            new_height = image_height + abs(lens_offset_y * 2)
 
 
-        if image_width < lens_image_circle + abs(lens_offset_x):
-            new_width = lens_image_circle + abs(lens_offset_x)
+        if image_width < (image_circle_diameter + abs(lens_offset_x)):
+            new_width = (image_circle_diameter + abs(lens_offset_x))
         else:
             new_width = image_width + abs(lens_offset_x)
 
@@ -3632,20 +3632,22 @@ class ImageProcessor(object):
         x = int((new_width / 2) - (image_width / 2) + (lens_offset_x * -1))
         y = int((new_height / 2) - (image_height / 2) + (lens_offset_y * -1))
 
+        #logger.info('X: %d - Y: %d', x, y)
+
         new_image[
             y:y + image_height,
             x:x + image_width,
         ] = self.image
 
 
-        radius = int(lens_image_circle / 2)
-        image_center_x = int(new_width / 2)
-        image_center_y = int(new_height / 2)
+        radius = int(image_circle_diameter / 2)
+        new_image_center_x = int(new_width / 2)
+        new_image_center_y = int(new_height / 2)
 
 
         circular_image = new_image[
-            image_center_y - radius:image_center_y + radius,
-            image_center_x - radius:image_center_x + radius,
+            new_image_center_y - radius:new_image_center_y + radius,
+            new_image_center_x - radius:new_image_center_x + radius,
         ]
 
 

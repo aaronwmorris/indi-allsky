@@ -622,6 +622,7 @@ class IndiAllSkyConfigBase(object):
         "CIRCULAR_DISPLAY" : {
             "ENABLE"                 : False,
             "RESOLUTION"             : 800,
+            "IMAGE_CIRCLE_DIAMETER"  : 3500,
         },
         "FOCUSER" : {
             "CLASSNAME"              : "",
