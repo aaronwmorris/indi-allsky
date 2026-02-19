@@ -3604,8 +3604,8 @@ class ImageProcessor(object):
         logger.info('Cropping to image circle for circular display')
         image_height, image_width = self.image.shape[:2]
 
-        lens_offset_x = self.config.get('LENS_OFFSET_X', 0)
-        lens_offset_y = self.config.get('LENS_OFFSET_Y', 0)
+        x_offset = self.config.get('LENS_OFFSET_X', 0)
+        y_offset = self.config.get('LENS_OFFSET_Y', 0)
         image_circle_diameter = self.config.get('CIRCULAR_DISPLAY', {}).get('IMAGE_CIRCLE_DIAMETER', 3500)
 
 
@@ -3613,26 +3613,26 @@ class ImageProcessor(object):
         #border_color_bgr.reverse()
 
 
-        if image_height < (image_circle_diameter + abs(lens_offset_y)):
-            new_height = (image_circle_diameter + abs(lens_offset_y))
+        if image_height < (image_circle_diameter + abs(y_offset)):
+            new_height = (image_circle_diameter + abs(y_offset))
         else:
-            new_height = image_height + abs(lens_offset_y * 2)
+            new_height = image_height + abs(y_offset)
 
 
-        if image_width < (image_circle_diameter + abs(lens_offset_x)):
-            new_width = (image_circle_diameter + abs(lens_offset_x))
+        if image_width < (image_circle_diameter + abs(x_offset)):
+            new_width = (image_circle_diameter + abs(x_offset))
         else:
-            new_width = image_width + abs(lens_offset_x)
+            new_width = image_width + abs(x_offset)
 
 
         new_image = numpy.full([new_height, new_width, 3], border_color_bgr, dtype=numpy.uint8)
 
 
         # recenter the image using the offsets
-        x = int((new_width / 2) - (image_width / 2) + (lens_offset_x * -1))
-        y = int((new_height / 2) - (image_height / 2) + (lens_offset_y * -1))
+        x = int((new_width / 2) - (image_width / 2) + (x_offset * -1))
+        y = int((new_height / 2) - (image_height / 2) + (y_offset * -1))
 
-        #logger.info('X: %d - Y: %d', x, y)
+        logger.info('X: %d - Y: %d', x, y)
 
         new_image[
             y:y + image_height,
