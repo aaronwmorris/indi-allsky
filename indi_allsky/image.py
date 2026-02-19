@@ -670,7 +670,7 @@ class ImageWorker(Process):
         self.image_processor.colormap()
 
 
-        self.image_processor.apply_image_circle_mask()
+        self.image_processor.apply_image_circle_mask(i_ref.binning)
 
 
         self.image_processor.realtimeKeogramUpdate()

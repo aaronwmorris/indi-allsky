@@ -130,7 +130,7 @@ class ImageProcessor(object):
 
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
 
-        self._image_circle_alpha_mask = None
+        self._image_circle_alpha_mask = dict()  # index for every bin mode
 
         self._overlay = None
         self._alpha_mask = None
@@ -2166,25 +2166,25 @@ class ImageProcessor(object):
             )
 
 
-    def apply_image_circle_mask(self):
+    def apply_image_circle_mask(self, binning):
         if not self.config.get('IMAGE_CIRCLE_MASK', {}).get('ENABLE'):
             return
 
-        if isinstance(self._image_circle_alpha_mask, type(None)):
-            self._image_circle_alpha_mask = self._generate_image_circle_mask(self.image)
+        if isinstance(self._image_circle_alpha_mask.get(binning), type(None)):
+            self._image_circle_alpha_mask[binning] = self._generate_image_circle_mask(self.image, binning)
 
 
         #alpha_start = time.time()
 
-        self.image = (self.image * self._image_circle_alpha_mask).astype(numpy.uint8)
+        self.image = (self.image * self._image_circle_alpha_mask[binning]).astype(numpy.uint8)
 
 
         if self.config.get('IMAGE_CIRCLE_MASK', {}).get('OUTLINE'):
             image_height, image_width = self.image.shape[:2]
 
-            center_x = int(image_width / 2) + self.config.get('LENS_OFFSET_X', 0)
-            center_y = int(image_height / 2) - self.config.get('LENS_OFFSET_Y', 0)  # minus
-            radius = int(self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2)
+            center_x = int(image_width / 2) + int(self.config.get('LENS_OFFSET_X', 0) / binning)
+            center_y = int(image_height / 2) - int(self.config.get('LENS_OFFSET_Y', 0) / binning)  # minus
+            radius = int((self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2) / binning)
 
             cv2.circle(
                 img=self.image,
@@ -4024,7 +4024,7 @@ class ImageProcessor(object):
         self._adu_mask_dict[binning] = mask
 
 
-    def _generate_image_circle_mask(self, image):
+    def _generate_image_circle_mask(self, image, binning):
         image_height, image_width = image.shape[:2]
 
 
@@ -4039,9 +4039,9 @@ class ImageProcessor(object):
 
         channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint8)
 
-        center_x = int(image_width / 2) + self.config.get('LENS_OFFSET_X', 0)
-        center_y = int(image_height / 2) - self.config.get('LENS_OFFSET_Y', 0)  # minus
-        radius = int(self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2)
+        center_x = int(image_width / 2) + int(self.config.get('LENS_OFFSET_X', 0) / binning)
+        center_y = int(image_height / 2) - int(self.config.get('LENS_OFFSET_Y', 0) / binning)  # minus
+        radius = int((self.config['IMAGE_CIRCLE_MASK']['DIAMETER'] / 2) / binning)
         blur = self.config['IMAGE_CIRCLE_MASK']['BLUR']
 
 
@@ -4069,7 +4069,6 @@ class ImageProcessor(object):
         alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
 
         return alpha_mask
-
 
 
 class ImageData(object):
