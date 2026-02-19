@@ -4504,6 +4504,48 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.CIRCULAR_DISPLAY__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.CIRCULAR_DISPLAY__ENABLE(class='form-check-input') }}
+                <div id="CIRCULAR_DISPLAY__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Generate an image for a circular display</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CIRCULAR_DISPLAY__RESOLUTION.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CIRCULAR_DISPLAY__RESOLUTION(class='form-select bg-secondary') }}
+            <div id="CIRCULAR_DISPLAY__RESOLUTION-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER(class='form-control bg-secondary') }}
+            <div id="CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Uses image circle offsets on the Location tab</div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CAPTURE_HOOK_PRE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-5">
@@ -9700,6 +9742,8 @@ const field_names = [
     'FISH2PANO__DIRS_OFFSET_BOTTOM',
     'FISH2PANO__OPENCV_FONT_SCALE',
     'FISH2PANO__PIL_FONT_SIZE',
+    'CIRCULAR_DISPLAY__RESOLUTION',
+    'CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER',
     'IMAGE_EXPORT_RAW',
     'IMAGE_EXPORT_FOLDER',
     'IMAGE_STACK_METHOD',
@@ -10089,6 +10133,7 @@ const checkbox_field_names = [
     'FISH2PANO__ENABLE',
     'FISH2PANO__FLIP_H',
     'FISH2PANO__ENABLE_CARDINAL_DIRS',
+    'CIRCULAR_DISPLAY__ENABLE',
     'IMAGE_ROTATE_KEEP_SIZE',
     'IMAGE_EXPORT_FLIP_V',
     'IMAGE_EXPORT_FLIP_H',
@@ -10820,6 +10865,17 @@ var group_checkbox_fields_image_overlay = [];
 group_on_change('IMAGE_OVERLAY__ENABLE', group_fields_image_overlay, group_checkbox_fields_image_overlay);
 
 
+var group_fields_circular_display= [
+    'CIRCULAR_DISPLAY__RESOLUTION',
+    'CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER',
+];
+
+var group_checkbox_fields_circular_display = [];
+
+
+group_on_change('CIRCULAR_DISPLAY__ENABLE', group_fields_circular_display, group_checkbox_fields_circular_display);
+
+
 $( document ).ready(function() {
     // Global timelapse
     if (!$('#TIMELAPSE_ENABLE').prop('checked')) {
@@ -10977,6 +11033,7 @@ $( document ).ready(function() {
     group_on_ready('STARTRAILS_TIMELAPSE', group_fields_st_timelapse, group_checkbox_fields_st_timelapse);
     group_on_ready('FISH2PANO__ENABLE', group_fields_fish2pano, group_checkbox_fields_fish2pano);
     group_on_ready('IMAGE_OVERLAY__ENABLE', group_fields_image_overlay, group_checkbox_fields_image_overlay);
+    group_on_ready('CIRCULAR_DISPLAY__ENABLE', group_fields_circular_display, group_checkbox_fields_circular_display);
 });
 
 </script>

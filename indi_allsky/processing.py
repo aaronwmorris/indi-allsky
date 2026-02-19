@@ -210,6 +210,7 @@ class ImageProcessor(object):
         varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
         self.varlib_folder_p = Path(varlib_folder)
 
+
         self._keogram_store_tmpl = 'realtime_keogram_store_ccd{0:d}.npy'
         self._keogram_store_p = None
         self._keogram_store_metadata_tmpl = 'realtime_keogram_store_ccd{0:d}_metadata.npy'
@@ -3593,6 +3594,70 @@ class ImageProcessor(object):
             return pano_data
 
         return self._cardinal_dirs_label.panorama_label(pano_data)
+
+
+    def circular_display(self, binning):
+        return self._circular_display(binning)
+
+
+    def _circular_display(self, binning):
+        logger.info('Cropping to image circle for circular display')
+        image_height, image_width = self.image.shape[:2]
+
+        x_offset = int(self.config.get('LENS_OFFSET_X', 0) / binning)
+        y_offset = int(self.config.get('LENS_OFFSET_Y', 0) / binning)
+        image_circle_diameter = int(self.config.get('CIRCULAR_DISPLAY', {}).get('IMAGE_CIRCLE_DIAMETER', 3500) / binning)
+
+
+        border_color_bgr = [0, 0, 0]  # rgb
+        #border_color_bgr.reverse()
+
+
+        if image_height < (image_circle_diameter + (abs(y_offset) * 2)):
+            new_height = (image_circle_diameter + (abs(y_offset) * 2))
+        else:
+            new_height = image_height + (abs(y_offset) * 2)
+
+
+        if image_width < (image_circle_diameter + (abs(x_offset) * 2)):
+            new_width = (image_circle_diameter + (abs(x_offset) * 2))
+        else:
+            new_width = image_width + (abs(x_offset) * 2)
+
+
+        new_image = numpy.full([new_height, new_width, 3], border_color_bgr, dtype=numpy.uint8)
+
+
+        # recenter the image using the offsets
+        x = int((new_width / 2) - (image_width / 2) + (x_offset * -1))
+        y = int((new_height / 2) - (image_height / 2) + (y_offset * -1))
+
+        logger.info('X: %d - Y: %d', x, y)
+
+        new_image[
+            y:y + image_height,
+            x:x + image_width,
+        ] = self.image
+
+
+        radius = int(image_circle_diameter / 2)
+        new_image_center_x = int(new_width / 2)
+        new_image_center_y = int(new_height / 2)
+
+
+        circular_image = new_image[
+            new_image_center_y - radius:new_image_center_y + radius,
+            new_image_center_x - radius:new_image_center_x + radius,
+        ]
+
+
+        new_height, new_width = circular_image.shape[:2]
+        #logger.info('New circular image size: %d x %d', new_width, new_height)
+
+
+        resolution_xy = self.config.get('CIRCULAR_DISPLAY', {}).get('RESOLUTION', 800)
+
+        return cv2.resize(circular_image, (resolution_xy, resolution_xy), interpolation=cv2.INTER_AREA)
 
 
     def moon_overlay(self):

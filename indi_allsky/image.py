@@ -688,6 +688,12 @@ class ImageWorker(Process):
                 self.write_panorama_img(pano_data, i_ref, camera, jpeg_exif=jpeg_exif)
 
 
+        if self.config.get('CIRCULAR_DISPLAY', {}).get('ENABLE'):
+            if not self.config.get('FOCUS_MODE', False):
+                circular_display_image = self.image_processor.circular_display(i_ref.binning)
+                self.write_circular_display_img(circular_display_image, jpeg_exif=jpeg_exif)
+
+
         self.image_processor.apply_logo_overlay()
 
 
@@ -1848,6 +1854,59 @@ class ImageWorker(Process):
         self._miscUpload.s3_upload_panorama(panorama_entry, panorama_metadata)
         self._miscUpload.mqtt_publish_image(filename, 'panorama', {})
         self._miscUpload.upload_panorama(panorama_entry)
+
+
+    def write_circular_display_img(self, circular_image_data, jpeg_exif=None):
+        height, width = circular_image_data.shape[:2]
+
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
+        f_tmpfile.close()
+
+        tmpfile_name = Path(f_tmpfile.name)
+
+
+        #write_img_start = time.time()
+
+        # write to temporary file
+        if self.config['IMAGE_FILE_TYPE'] in ('jpg', 'jpeg'):
+            img_rgb = Image.fromarray(cv2.cvtColor(circular_image_data, cv2.COLOR_BGR2RGB))
+            img_rgb.save(str(tmpfile_name), quality=self.config['IMAGE_FILE_COMPRESSION']['jpg'], exif=jpeg_exif)
+        elif self.config['IMAGE_FILE_TYPE'] in ('png',):
+            # exif does not appear to work with png
+            #img_rgb = Image.fromarray(cv2.cvtColor(data, cv2.COLOR_BGR2RGB))
+            #img_rgb.save(str(tmpfile_name), compress_level=self.config['IMAGE_FILE_COMPRESSION']['png'])
+
+            # opencv is faster than Pillow with PNG
+            cv2.imwrite(str(tmpfile_name), circular_image_data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+        elif self.config['IMAGE_FILE_TYPE'] in ('webp',):
+            img_rgb = Image.fromarray(cv2.cvtColor(circular_image_data, cv2.COLOR_BGR2RGB))
+            img_rgb.save(str(tmpfile_name), quality=90, lossless=False, exif=jpeg_exif)
+        elif self.config['IMAGE_FILE_TYPE'] in ('tif', 'tiff'):
+            # exif does not appear to work with tiff
+            img_rgb = Image.fromarray(cv2.cvtColor(circular_image_data, cv2.COLOR_BGR2RGB))
+            img_rgb.save(str(tmpfile_name), compression='tiff_lzw')
+        else:
+            tmpfile_name.unlink()
+            raise Exception('Unknown file type: %s', self.config['IMAGE_FILE_TYPE'])
+
+        #write_img_elapsed_s = time.time() - write_img_start
+        #logger.info('Panorama image compressed in %0.4f s', write_img_elapsed_s)
+
+
+        ### Always write the latest file for web access
+        latest_circular_image_file = self.image_dir.joinpath('circular_display.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
+
+        try:
+            latest_circular_image_file.unlink()
+        except FileNotFoundError:
+            pass
+
+
+        shutil.copy2(str(tmpfile_name), str(latest_circular_image_file))
+        latest_circular_image_file.chmod(0o644)
+
+        # cleanup
+        tmpfile_name.unlink()
 
 
     def write_realtime_keogram(self, data, camera):

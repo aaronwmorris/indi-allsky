@@ -40,6 +40,8 @@ __all__ = (
 class IndiAllSkyDbCameraTable(db.Model):
     __tablename__ = 'camera'
 
+    # most items needs to be nullable
+    # when the camera entry is first created, nothing is populated
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(length=36), unique=True, index=True)
     name = db.Column(db.String(length=100), unique=True, nullable=False, index=True)
@@ -53,8 +55,8 @@ class IndiAllSkyDbCameraTable(db.Model):
 
     minGain = db.Column(db.Float, nullable=True)
     maxGain = db.Column(db.Float, nullable=True)
-    minBinning = db.Column(db.Integer, server_default='1', nullable=False)
-    maxBinning = db.Column(db.Integer, server_default='1', nullable=False)
+    minBinning = db.Column(db.Integer, nullable=True)
+    maxBinning = db.Column(db.Integer, nullable=True)
     minExposure = db.Column(db.Float, nullable=True)
     maxExposure = db.Column(db.Float, nullable=True)
 

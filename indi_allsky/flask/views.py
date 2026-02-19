@@ -2691,6 +2691,9 @@ class ConfigView(FormView):
             'VIRTUALSKY__OFFSET_Y'           : self.indi_allsky_config.get('VIRTUALSKY', {}).get('OFFSET_Y', 0),
             #'VIRTUALSKY__FLIP_NS'            : self.indi_allsky_config.get('VIRTUALSKY', {}).get('FLIP_NS', False),
             #'VIRTUALSKY__FLIP_EW'            : self.indi_allsky_config.get('VIRTUALSKY', {}).get('FLIP_EW', False),
+            'CIRCULAR_DISPLAY__ENABLE'       : self.indi_allsky_config.get('CIRCULAR_DISPLAY', {}).get('ENABLE', False),
+            'CIRCULAR_DISPLAY__RESOLUTION'   : str(self.indi_allsky_config.get('CIRCULAR_DISPLAY', {}).get('RESOLUTION', 800)),  # string in form, int in config
+            'CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER' : self.indi_allsky_config.get('CIRCULAR_DISPLAY', {}).get('IMAGE_CIRCLE_DIAMETER', 3500),
             'FOCUSER__CLASSNAME'             : self.indi_allsky_config.get('FOCUSER', {}).get('CLASSNAME', ''),
             'FOCUSER__GPIO_PIN_1'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_1', 'D17'),
             'FOCUSER__GPIO_PIN_2'            : self.indi_allsky_config.get('FOCUSER', {}).get('GPIO_PIN_2', 'D18'),
@@ -3177,6 +3180,7 @@ class AjaxConfigView(BaseView):
             'ACCUM_CAMERA',
             'TEST_CAMERA',
             'VIRTUALSKY',
+            'CIRCULAR_DISPLAY',
             'FOCUSER',
             'DEW_HEATER',
             'FAN',
@@ -3701,6 +3705,9 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['VIRTUALSKY']['OFFSET_Y']               = int(request.json['VIRTUALSKY__OFFSET_Y'])
         #self.indi_allsky_config['VIRTUALSKY']['FLIP_NS']                = bool(request.json['VIRTUALSKY__FLIP_NS'])
         #self.indi_allsky_config['VIRTUALSKY']['FLIP_EW']                = bool(request.json['VIRTUALSKY__FLIP_EW'])
+        self.indi_allsky_config['CIRCULAR_DISPLAY']['ENABLE']           = bool(request.json['CIRCULAR_DISPLAY__ENABLE'])
+        self.indi_allsky_config['CIRCULAR_DISPLAY']['RESOLUTION']       = int(request.json['CIRCULAR_DISPLAY__RESOLUTION'])
+        self.indi_allsky_config['CIRCULAR_DISPLAY']['IMAGE_CIRCLE_DIAMETER'] = int(request.json['CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER'])
         self.indi_allsky_config['FOCUSER']['CLASSNAME']                 = str(request.json['FOCUSER__CLASSNAME'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_1']                = str(request.json['FOCUSER__GPIO_PIN_1'])
         self.indi_allsky_config['FOCUSER']['GPIO_PIN_2']                = str(request.json['FOCUSER__GPIO_PIN_2'])

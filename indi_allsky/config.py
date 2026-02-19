@@ -619,6 +619,11 @@ class IndiAllSkyConfigBase(object):
             #"FLIP_NS"                : False,
             #"FLIP_EW"                : False,
         },
+        "CIRCULAR_DISPLAY" : {
+            "ENABLE"                 : False,
+            "RESOLUTION"             : 800,
+            "IMAGE_CIRCLE_DIAMETER"  : 3500,
+        },
         "FOCUSER" : {
             "CLASSNAME"              : "",
             "GPIO_PIN_1"             : "D17",
