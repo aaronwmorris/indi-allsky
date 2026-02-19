@@ -2186,6 +2186,16 @@ class ImageWorker(Process):
             next_gain = gain_min
 
 
+        # Binning
+        if self.night_av[constants.NIGHT_NIGHT]:
+            if self.night_av[constants.NIGHT_MOONMODE]:
+                next_binning = self.binning_av[constants.BINNING_MOONMODE]
+            else:
+                next_binning = self.binning_av[constants.BINNING_NIGHT]
+        else:
+            next_binning = self.binning_av[constants.BINNING_DAY]
+
+
         ### Check for exposure flapping
         # Flapping is defined when the exposure increases then immediately decreases (or the opposite)
         # and cannot find a stable value.  The result is the image brightness will flash
@@ -2205,14 +2215,17 @@ class ImageWorker(Process):
             logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.6fs', exposure_offset * -1)
 
 
-        logger.warning('New calculated exposure: %0.6fs (%+0.6f) @ gain %0.2f (%+0.2f)', next_exposure, exposure_delta, next_gain, gain_delta)
+        logger.warning('New calculated exposure: %0.6fs (%+0.6f) @ gain %0.2f (%+0.2f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
         with self.exposure_av.get_lock():
             self.exposure_av[constants.EXPOSURE_NEXT] = float(next_exposure)
             self.exposure_av[constants.EXPOSURE_DELTA] = float(exposure_delta)
 
         with self.gain_av.get_lock():
             self.gain_av[constants.GAIN_NEXT] = float(next_gain)
-            self.exposure_av[constants.GAIN_DELTA] = float(gain_delta)
+            self.gain_av[constants.GAIN_DELTA] = float(gain_delta)
+
+        with self.binning_av.get_lock():
+            self.binning_av[constants.BINNING_NEXT] = int(next_binning)
 
 
     def save_longterm_keogram_data(self, exp_date, camera_id):
