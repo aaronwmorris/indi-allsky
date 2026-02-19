@@ -3613,16 +3613,16 @@ class ImageProcessor(object):
         #border_color_bgr.reverse()
 
 
-        if image_height < (image_circle_diameter + abs(y_offset)):
-            new_height = (image_circle_diameter + abs(y_offset))
+        if image_height < (image_circle_diameter + (abs(y_offset) * 2)):
+            new_height = (image_circle_diameter + (abs(y_offset) * 2))
         else:
-            new_height = image_height + abs(y_offset)
+            new_height = image_height + (abs(y_offset) * 2)
 
 
-        if image_width < (image_circle_diameter + abs(x_offset)):
-            new_width = (image_circle_diameter + abs(x_offset))
+        if image_width < (image_circle_diameter + (abs(x_offset) * 2)):
+            new_width = (image_circle_diameter + (abs(x_offset) * 2))
         else:
-            new_width = image_width + abs(x_offset)
+            new_width = image_width + (abs(x_offset) * 2)
 
 
         new_image = numpy.full([new_height, new_width, 3], border_color_bgr, dtype=numpy.uint8)
