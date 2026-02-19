@@ -3632,8 +3632,6 @@ class ImageProcessor(object):
         x = int((new_width / 2) - (image_width / 2) + (x_offset * -1))
         y = int((new_height / 2) - (image_height / 2) + (y_offset * -1))
 
-        logger.info('X: %d - Y: %d', x, y)
-
         new_image[
             y:y + image_height,
             x:x + image_width,
