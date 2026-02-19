@@ -130,10 +130,10 @@ class ImageProcessor(object):
 
         self._max_bit_depth = 8  # this will be scaled up (never down) as detected
 
-        self._image_circle_alpha_mask = dict()  # index for every bin mode
+        self._image_circle_alpha_mask_dict = dict()  # index for every bin mode
 
-        self._overlay = None
-        self._alpha_mask = None
+        self._overlay_dict = dict()  # index for every bin mode
+        self._alpha_mask_dict = dict()  # index for every bin mode
 
         self._gamma_lut = None
 
@@ -2170,13 +2170,13 @@ class ImageProcessor(object):
         if not self.config.get('IMAGE_CIRCLE_MASK', {}).get('ENABLE'):
             return
 
-        if isinstance(self._image_circle_alpha_mask.get(binning), type(None)):
-            self._image_circle_alpha_mask[binning] = self._generate_image_circle_mask(self.image, binning)
+        if isinstance(self._image_circle_alpha_mask_dict.get(binning), type(None)):
+            self._image_circle_alpha_mask_dict[binning] = self._generate_image_circle_mask(self.image, binning)
 
 
         #alpha_start = time.time()
 
-        self.image = (self.image * self._image_circle_alpha_mask[binning]).astype(numpy.uint8)
+        self.image = (self.image * self._image_circle_alpha_mask_dict[binning]).astype(numpy.uint8)
 
 
         if self.config.get('IMAGE_CIRCLE_MASK', {}).get('OUTLINE'):
@@ -2199,26 +2199,28 @@ class ImageProcessor(object):
         #logger.info('Image circle mask in %0.4f s', alpha_elapsed_s)
 
 
-    def apply_logo_overlay(self):
+    def apply_logo_overlay(self, binning):
         logo_overlay = self.config.get('LOGO_OVERLAY', '')
         if not logo_overlay:
             return
 
 
-        if isinstance(self._overlay, type(None)):
-            self._overlay, self._alpha_mask = self._load_logo_overlay(self.image)
-
-            if isinstance(self._overlay, bool):
-                return
-
-        elif isinstance(self._overlay, bool):
+        if isinstance(self._overlay_dict.get(binning), bool):
+            # already failed to load
             logger.error('Logo overlay failed to load')
             return
+
+        elif isinstance(self._overlay_dict.get(binning), type(None)):
+            self._overlay_dict[binning], self._alpha_mask_dict[binning] = self._load_logo_overlay(self.image, binning)
+
+            if isinstance(self._overlay_dict.get(binning), bool):
+                logger.error('Logo overlay failed to load')
+                return
 
 
         #alpha_start = time.time()
 
-        self.image = (self.image * (1 - self._alpha_mask) + self._overlay * self._alpha_mask).astype(numpy.uint8)
+        self.image = (self.image * (1 - self._alpha_mask_dict[binning]) + self._overlay_dict[binning] * self._alpha_mask_dict[binning]).astype(numpy.uint8)
 
         #alpha_elapsed_s = time.time() - alpha_start
         #logger.info('Alpha transparency in %0.4f s', alpha_elapsed_s)
@@ -3923,7 +3925,7 @@ class ImageProcessor(object):
         return mask_data_dict
 
 
-    def _load_logo_overlay(self, image):
+    def _load_logo_overlay(self, image, binning):
         logo_overlay = self.config.get('LOGO_OVERLAY', '')
 
         if not logo_overlay:
@@ -3951,6 +3953,14 @@ class ImageProcessor(object):
         if isinstance(overlay_img, type(None)):
             logger.error('%s is not a valid image', logo_overlay_p)
             return False, None  # False so the image is not retried
+
+
+        if binning > 1:
+            height, width = overlay_img.shape[:2]
+            new_height = int(height / binning)
+            new_width = int(width / binning)
+
+            overlay_img = cv2.resize(overlay_img, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
 
         overlay_height, overlay_width = overlay_img.shape[:2]

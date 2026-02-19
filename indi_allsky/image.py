@@ -694,7 +694,7 @@ class ImageWorker(Process):
                 self.write_circular_display_img(circular_display_image, jpeg_exif=jpeg_exif)
 
 
-        self.image_processor.apply_logo_overlay()
+        self.image_processor.apply_logo_overlay(i_ref.binning)
 
 
         self.image_processor.scale_image()
