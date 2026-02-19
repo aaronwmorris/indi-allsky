@@ -690,7 +690,7 @@ class ImageWorker(Process):
 
         if self.config.get('CIRCULAR_DISPLAY', {}).get('ENABLE'):
             if not self.config.get('FOCUS_MODE', False):
-                circular_display_image = self.image_processor.circular_display()
+                circular_display_image = self.image_processor.circular_display(i_ref.binning)
                 self.write_circular_display_img(circular_display_image, jpeg_exif=jpeg_exif)
 
 

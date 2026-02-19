@@ -3596,17 +3596,17 @@ class ImageProcessor(object):
         return self._cardinal_dirs_label.panorama_label(pano_data)
 
 
-    def circular_display(self):
-        return self._circular_display()
+    def circular_display(self, binning):
+        return self._circular_display(binning)
 
 
-    def _circular_display(self):
+    def _circular_display(self, binning):
         logger.info('Cropping to image circle for circular display')
         image_height, image_width = self.image.shape[:2]
 
-        x_offset = self.config.get('LENS_OFFSET_X', 0)
-        y_offset = self.config.get('LENS_OFFSET_Y', 0)
-        image_circle_diameter = self.config.get('CIRCULAR_DISPLAY', {}).get('IMAGE_CIRCLE_DIAMETER', 3500)
+        x_offset = int(self.config.get('LENS_OFFSET_X', 0) / binning)
+        y_offset = int(self.config.get('LENS_OFFSET_Y', 0) / binning)
+        image_circle_diameter = int(self.config.get('CIRCULAR_DISPLAY', {}).get('IMAGE_CIRCLE_DIAMETER', 3500) / binning)
 
 
         border_color_bgr = [0, 0, 0]  # rgb
