@@ -2062,6 +2062,8 @@ class ImageWorker(Process):
 
 
     def recalculate_exposure(self, exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor):
+        # There might be a race condition here if there is a day/night change but self.target_adu_found == True
+
         # Until we reach a good starting point, do not calculate a moving average
         if adu <= target_adu_max and adu >= target_adu_min:
             logger.warning('Found target value for exposure')
