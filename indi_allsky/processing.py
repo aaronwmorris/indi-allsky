@@ -3606,40 +3606,56 @@ class ImageProcessor(object):
 
         lens_offset_x = self.config.get('LENS_OFFSET_X', 0)
         lens_offset_y = self.config.get('LENS_OFFSET_Y', 0)
-        image_center_x = int(image_width / 2)
-        image_center_y = int(image_height / 2)
-        radius = int(self.config.get('LENS_IMAGE_CIRCLE', 3000) / 2)
+        lens_image_circle = self.config.get('LENS_IMAGE_CIRCLE', 3000)
 
-        # need to maintain same offset of image circle
-        # offsets have to be doubled since they are added to the radius
-        if lens_offset_x >= 0:
-            x1 = max(0, (image_center_x - radius))
-            x2 = min(image_width, (image_center_x + radius) + (lens_offset_x * 2))
+
+        border_color_bgr = [0, 0, 0]  # rgb
+        #border_color_bgr.reverse()
+
+
+        if image_height < lens_image_circle + abs(lens_offset_y):
+            new_height = lens_image_circle + abs(lens_offset_y)
         else:
-            x1 = max(0, (image_center_x - radius) + (lens_offset_x * 2))  # offset is negative
-            x2 = min(image_width, (image_center_x + radius))
+            new_height = image_height + abs(lens_offset_y)
 
-        if lens_offset_y >= 0:
-            y1 = max(0, (image_center_y - radius) - (lens_offset_y * 2))
-            y2 = min(image_height, (image_center_y + radius))
+
+        if image_width < lens_image_circle + abs(lens_offset_x):
+            new_width = lens_image_circle + abs(lens_offset_x)
         else:
-            y1 = max(0, (image_center_y - radius))
-            y2 = min(image_height, (image_center_y + radius) - (lens_offset_y * 2))  # offset is negative
+            new_width = image_width + abs(lens_offset_x)
 
 
-        cropped_image = self.image[
-            y1:y2,
-            x1:x2,
+        new_image = numpy.full([new_height, new_width, 3], border_color_bgr, dtype=numpy.uint8)
+
+
+        # recenter the image using the offsets
+        x = int((new_width / 2) - (image_width / 2) + (lens_offset_x * -1))
+        y = int((new_height / 2) - (image_height / 2) + (lens_offset_y * -1))
+
+        new_image[
+            y:y + image_height,
+            x:x + image_width,
+        ] = self.image
+
+
+        radius = int(lens_image_circle / 2)
+        image_center_x = int(new_width / 2)
+        image_center_y = int(new_height / 2)
+
+
+        circular_image = new_image[
+            image_center_y - radius:image_center_y + radius,
+            image_center_x - radius:image_center_x + radius,
         ]
 
 
-        new_height, new_width = cropped_image.shape[:2]
-        logger.info('New cropped size: %d x %d', new_width, new_height)
+        new_height, new_width = circular_image.shape[:2]
+        #logger.info('New circular image size: %d x %d', new_width, new_height)
 
 
         resolution_xy = self.config.get('CIRCULAR_DISPLAY', {}).get('RESOLUTION', 800)
 
-        return cv2.resize(cropped_image, (resolution_xy, resolution_xy), interpolation=cv2.INTER_AREA)
+        return cv2.resize(circular_image, (resolution_xy, resolution_xy), interpolation=cv2.INTER_AREA)
 
 
     def moon_overlay(self):
