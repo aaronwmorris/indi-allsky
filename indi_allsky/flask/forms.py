@@ -2894,6 +2894,11 @@ def VIRTUALSKY__OFFSET_Y_validator(form, field):
         raise ValidationError('Please enter a valid number')
 
 
+def CIRCULAR_DISPLAY__RESOLUTION_validator(form, field):
+    if field.data not in list(zip(*form.CIRCULAR_DISPLAY__RESOLUTION_choices))[0]:
+        raise ValidationError('Invalid selection')
+
+
 def FOCUSER__CLASSNAME_validator(form, field):
     if field.data not in list(zip(*form.FOCUSER__CLASSNAME_choices))[0]:
         raise ValidationError('Invalid selection')
@@ -3766,6 +3771,11 @@ class IndiAllskyConfigForm(FlaskForm):
     PYCURL_CAMERA__IMAGE_FILE_TYPE_choices = (
         ('jpg', 'JPEG'),
         ('png', 'PNG'),
+    )
+
+    CIRCULAR_DISPLAY__RESOLUTION_choices = (
+        ('800', '800x800'),
+        ('720', '720x720'),
     )
 
     IMAGE_OVERLAY__IMAGE_FILE_TYPE_choices = (
@@ -4730,6 +4740,8 @@ class IndiAllskyConfigForm(FlaskForm):
     VIRTUALSKY__OFFSET_Y                = IntegerField('Y Offset', validators=[VIRTUALSKY__OFFSET_Y_validator])
     #VIRTUALSKY__FLIP_NS              = BooleanField('Flip North/South')
     #VIRTUALSKY__FLIP_EW              = BooleanField('Flip East/West')
+    CIRCULAR_DISPLAY__ENABLE         = BooleanField('Enable Circular Display Output')
+    CIRCULAR_DISPLAY__RESOLUTION     = SelectField('Resolution', choices=CIRCULAR_DISPLAY__RESOLUTION_choices, validators=[DataRequired(), CIRCULAR_DISPLAY__RESOLUTION_validator])
     FOCUSER__CLASSNAME               = SelectField('Focuser', choices=FOCUSER__CLASSNAME_choices, validators=[FOCUSER__CLASSNAME_validator])
     FOCUSER__GPIO_PIN_1              = StringField('GPIO Pin 1', validators=[DEVICE_PIN_NAME_validator])
     FOCUSER__GPIO_PIN_2              = StringField('GPIO Pin 2', validators=[DEVICE_PIN_NAME_validator])
