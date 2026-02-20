@@ -7921,7 +7921,7 @@ class JsonImageProcessingView(JsonView):
                     alt_binning = int(alt_hdulist[0].header.get('XBINNING', 1))
                     alt_hdulist.close()
 
-                    i_ref = image_processor.add(
+                    i_ref_2 = image_processor.add(
                         f_image_p,
                         alt_exposure,
                         alt_gain,
@@ -7931,8 +7931,8 @@ class JsonImageProcessingView(JsonView):
                         f_image.camera,
                     )
 
-                    image_processor._calibrate(i_ref)
-                    image_processor._debayer(i_ref)
+                    image_processor._calibrate(i_ref_2)
+                    image_processor._debayer(i_ref_2)
 
                 message_list.append('Stacked {0:d} images'.format(p_config['IMAGE_STACK_COUNT']))
 
@@ -7945,7 +7945,7 @@ class JsonImageProcessingView(JsonView):
 
 
             # add image after preloading other images
-            image_processor.add(
+            i_ref = image_processor.add(
                 filename_p,
                 exposure,
                 gain,
@@ -8027,7 +8027,7 @@ class JsonImageProcessingView(JsonView):
             image_processor.colormap()
 
 
-            image_processor.apply_image_circle_mask()
+            image_processor.apply_image_circle_mask(i_ref.binning)
 
 
             if not p_config.get('FISH2PANO', {}).get('ENABLE'):
