@@ -1568,6 +1568,13 @@ class ImageWorker(Process):
         #logger.info('Image compressed in %0.4f s', write_img_elapsed_s)
 
 
+        file_size_bytes = tmpfile_name.stat().st_size
+        if file_size_bytes < 1024000:
+            logger.info('Compressed image file size: %0.2f KB', file_size_bytes / 1024)
+        else:
+            logger.info('Compressed image file size: %0.2f MB', file_size_bytes / 1024 / 1024)
+
+
         ### Always write the latest file for web access
         latest_file = self.image_dir.joinpath('latest.{0:s}'.format(self.config['IMAGE_FILE_TYPE']))
 
