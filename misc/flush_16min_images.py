@@ -44,7 +44,7 @@ logger.addHandler(LOG_HANDLER_STREAM)
 
 
 
-class FlushImages16Minutes(object):
+class Flush16MinutesImages(object):
 
     flush_minutes = 16
 
@@ -174,7 +174,7 @@ if __name__ == "__main__":
 
     args = argparser.parse_args()
 
-    fi16 = FlushImages16Minutes()
+    fi16 = Flush16MinutesImages()
     fi16.camera_id = args.camera_id
 
     fi16.main()
