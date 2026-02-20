@@ -927,7 +927,7 @@ $('#form_timezone').on('submit', function() {
         <input class="form-check-input" id="FLUSH_IMAGES_CONFIRM1" name="FLUSH_IMAGES_CONFIRM1" type="checkbox" value="y"> Confirm 1
     </div>
     <div class="col-sm-2">
-        <button class="btn btn-danger" id="button_flush_images">Flush Images</button>
+        <button class="btn btn-danger" id="button_flush_images_16min">Flush Images</button>
     </div>
     <div class="col-sm-2">
         <input class="form-check-input" id="FLUSH_IMAGES_CONFIRM2" name="FLUSH_IMAGES_CONFIRM2" type="checkbox" value="y"> Confirm 2
@@ -968,6 +968,21 @@ $('#form_timezone').on('submit', function() {
 
 <hr>
 
+<div class="row">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-2">Flush 16 Minutes of Images<br><div style="font-size:10px">CLI: ./misc/flush_16min_images.py</div></div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="FLUSH_16MIN_IMAGES_CONFIRM1" name="FLUSH_16MIN_IMAGES_CONFIRM1" type="checkbox" value="y"> Confirm 1
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-danger" id="button_flush_16min_images">Flush 16 Minutes</button>
+    </div>
+    <div class="col-sm-2">
+        <input class="form-check-input" id="FLUSH_16MIN_IMAGES_CONFIRM2" name="FLUSH_16MIN_IMAGES_CONFIRM2" type="checkbox" value="y"> Confirm 2
+    </div>
+</div>
+
+<hr>
 
 </div><!-- end tab -->
 </div>
@@ -1236,6 +1251,28 @@ $("#button_flush_images").on("click", function() {
     button_click('system', 'flush_images');
 });
 
+
+$("#button_flush_16min_images").on("click", function() {
+    if (! $("#FLUSH_16MIN_IMAGES_CONFIRM1").prop('checked')) {
+        console.log('Flush checkbox not checked');
+        return;
+    }
+
+    if (! $("#FLUSH_16MIN_IMAGES_CONFIRM2").prop('checked')) {
+        console.log('Flush checkbox not checked');
+        return;
+    }
+
+    $("#loader_shutdown").css({'display' : 'block'});
+    $("#button_flush_16min_images").prop('disabled', true);
+
+    $("#FLUSH_16MIN_IMAGES_CONFIRM1").prop('checked', false);
+    $("#FLUSH_16MIN_IMAGES_CONFIRM2").prop('checked', false);
+
+    button_click('system', 'flush_16min_images');
+});
+
+
 $("#button_flush_timelapses").on("click", function() {
     if (! $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked')) {
         console.log('Flush checkbox not checked');
@@ -1404,6 +1441,8 @@ $( document ).ready(function() {
     $("#EXPIRE_DATA_CONFIRM1").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM1").prop('checked', false);
     $("#FLUSH_IMAGES_CONFIRM2").prop('checked', false);
+    $("#FLUSH_16MIN_IMAGES_CONFIRM1").prop('checked', false);
+    $("#FLUSH_16MIN_IMAGES_CONFIRM2").prop('checked', false);
     $("#FLUSH_TIMELAPSES_CONFIRM1").prop('checked', false);
     $("#FLUSH_TIMELAPSES_CONFIRM2").prop('checked', false);
     $("#FLUSH_DAYTIME_CONFIRM1").prop('checked', false);
