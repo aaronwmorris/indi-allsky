@@ -104,20 +104,20 @@ class FlushImages16Minutes(object):
         now  = datetime.now()
         now_minus_x_minutes = now - timedelta(minutes=self.flush_minutes)
 
-        image_query = IndiAllSkyDbImageTable.query\
+        image_query_16 = IndiAllSkyDbImageTable.query\
             .join(IndiAllSkyDbImageTable.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
             .filter(IndiAllSkyDbImageTable.createDate >= now_minus_x_minutes)\
             .order_by(IndiAllSkyDbImageTable.createDate.asc())
 
 
-        logger.warning('Found %d images to delete', image_query.count())
+        logger.warning('Found %d images to delete', image_query_16.count())
 
         time.sleep(10)
 
 
         asset_lists = [
-            (image_query, IndiAllSkyDbImageTable),
+            (image_query_16, IndiAllSkyDbImageTable),
         ]
 
 

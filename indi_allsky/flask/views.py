@@ -5697,6 +5697,19 @@ class AjaxSystemInfoView(BaseView):
                     'success-message' : '{0:d} Images Deleted'.format(image_count),
                 }
                 return jsonify(json_data)
+            elif command == 'flush_16min_images':
+                if not self.verify_admin_network():
+                    json_data = {
+                        'form_global' : ['Request not from admin network (flask.json)'],
+                    }
+                    return jsonify(json_data), 400
+
+                image_count = self.flush16MinutesImages(camera_id)
+
+                json_data = {
+                    'success-message' : '{0:d} Images Deleted'.format(image_count),
+                }
+                return jsonify(json_data)
             elif command == 'flush_timelapses':
                 if not self.verify_admin_network():
                     json_data = {
@@ -5806,6 +5819,42 @@ class AjaxSystemInfoView(BaseView):
             (fits_image_query, IndiAllSkyDbFitsImageTable),
             (raw_image_query, IndiAllSkyDbRawImageTable),
             (panorama_image_query, IndiAllSkyDbPanoramaImageTable),
+        ]
+
+
+        delete_count = 0
+        for asset_list, asset_table in asset_lists:
+            while True:
+                id_list = [entry.id for entry in asset_list.limit(500)]
+
+                if not id_list:
+                    break
+
+                delete_count += self._deleteAssets(asset_table, id_list)
+
+
+        return delete_count
+
+
+    def flush16MinutesImages(self, camera_id):
+        now = datetime.now()
+        now_minus_x_minutes = now - timedelta(minutes=16)
+
+        ### Images
+        image_query_16 = IndiAllSkyDbImageTable.query\
+            .join(IndiAllSkyDbImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbImageTable.createDate >= now_minus_x_minutes)\
+            .order_by(IndiAllSkyDbImageTable.createDate.asc())
+
+
+        ### Getting IDs first then deleting each file is faster than deleting all files with
+        ### thumbnails with a single query.  Deleting associated thumbnails causes sqlalchemy
+        ### to recache after every delete which cause a 1-5 second lag for each delete
+
+
+        asset_lists = [
+            (image_query_16, IndiAllSkyDbImageTable),
         ]
 
 
