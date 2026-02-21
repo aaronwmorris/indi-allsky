@@ -8093,7 +8093,7 @@ class JsonImageProcessingView(JsonView):
 
             else:
                 # no labels if converting to panorama
-                pano_data = image_processor.fish2pano()
+                pano_data = image_processor.fish2pano(i_ref.binning)
 
 
                 if p_config.get('FISH2PANO', {}).get('FLIP_H'):
