@@ -23,7 +23,7 @@ import ephem
 from . import constants
 
 from . import stretch as stretch_classes
-from .orb import IndiAllskyOrbGenerator
+from .overlay.orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
 from .detectLines import IndiAllskyDetectLines
