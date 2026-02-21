@@ -124,7 +124,8 @@ class ConvertDb(object):
                         # columns named data are all json mapped
 
                         ### sqlite to mysql
-                        json_data = json.dumps(getattr(row, col_name))
+                        data = getattr(row, col_name)
+                        json_data = json.dumps(data)
                         dst_entry[col_name] = json_data
 
                         ### mysql to sqlite
