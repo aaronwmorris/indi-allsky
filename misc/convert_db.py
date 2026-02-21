@@ -129,7 +129,7 @@ class ConvertDb(object):
 
                         ### mysql to sqlite
                         #data = getattr(row, col_name)
-                        #if isinstance(data, type(None)):
+                        #if not isinstance(data, type(None)):
                         #    json_data = json.loads(data)
                         #    dst_entry[col_name] = json_data
                     else:
