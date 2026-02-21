@@ -31,7 +31,7 @@ from .keogram import KeogramGenerator
 from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
 from .stack import IndiAllskyStacker
-from .cardinalDirsLabel import IndiAllskyCardinalDirsLabel
+from .overlay.cardinalDirsLabel import IndiAllskyCardinalDirsLabel
 from .utils import IndiAllSkyDateCalcs
 from .overlay.moonOverlay import IndiAllSkyMoonOverlay
 from .overlay.lightgraphOverlay import IndiAllSkyLightgraphOverlay
