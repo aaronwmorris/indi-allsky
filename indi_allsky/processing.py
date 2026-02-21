@@ -3495,13 +3495,14 @@ class ImageProcessor(object):
         return self._stretch_o.stretch(self.image, self.max_bit_depth, i_ref.binning)
 
 
-    def fish2pano_warpPolar(self):
+    def fish2pano_warpPolar(self, binning):
         #fish2pano_start = time.time()
 
         image_height, image_width = self.image.shape[:2]
 
-        x_offset = self.config.get('LENS_OFFSET_X', 0)
-        y_offset = self.config.get('LENS_OFFSET_Y', 0)
+        x_offset = int(self.config.get('LENS_OFFSET_X', 0) / binning)
+        y_offset = int(self.config.get('LENS_OFFSET_Y', 0) / binning)
+        image_circle = int(self.config.get('FISH2PANO', {}).get('DIAMETER', 3000) / binning)
 
         recenter_width = image_width + (abs(x_offset) * 2)
         recenter_height = image_height + (abs(y_offset) * 2)
@@ -3545,7 +3546,7 @@ class ImageProcessor(object):
         center_x = int(rot_width / 2)
         center_y = int(rot_height / 2)
 
-        radius = int(self.config.get('FISH2PANO', {}).get('DIAMETER', 3000) / 2)
+        radius = int(image_circle / 2)
         scale = self.config.get('FISH2PANO', {}).get('SCALE', 0.3)
 
 
@@ -3587,8 +3588,8 @@ class ImageProcessor(object):
         return img_pano
 
 
-    def fish2pano(self):
-        return self.fish2pano_warpPolar()
+    def fish2pano(self, binning):
+        return self.fish2pano_warpPolar(binning)
 
 
     def fish2pano_cardinal_dirs_label(self, pano_data):

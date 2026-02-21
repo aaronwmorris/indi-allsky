@@ -678,7 +678,7 @@ class ImageWorker(Process):
 
         if self.config.get('FISH2PANO', {}).get('ENABLE'):
             if not self.image_count % self.config.get('FISH2PANO', {}).get('MODULUS', 2):
-                pano_data = self.image_processor.fish2pano()
+                pano_data = self.image_processor.fish2pano(i_ref.binning)
 
 
                 if self.config.get('FISH2PANO', {}).get('ENABLE_CARDINAL_DIRS'):
