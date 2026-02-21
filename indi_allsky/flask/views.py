@@ -1372,7 +1372,7 @@ class JsonPanoramaLoopView(JsonImageLoopView):
         }
 
         # jsqm, camera, device
-        return sqm_data, sqm_data, sqm_data
+        return sqm_data, sqm_data, sqm_data, sqm_data
 
 
     def getStarsData(self, *args):
