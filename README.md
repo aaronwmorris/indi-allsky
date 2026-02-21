@@ -240,6 +240,10 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | v2.0.1          |      |
 
 
+### Camera SDK & Firmware
+https://github.com/aaronwmorris/indi-allsky/wiki/indilib-3rdparty-firmware-versions
+
+
 ## Single Board Computer support
 | Board                         | Note |
 | ----------------------------- | ---- |
