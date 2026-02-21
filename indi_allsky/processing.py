@@ -23,7 +23,7 @@ import ephem
 from . import constants
 
 from . import stretch as stretch_classes
-from .orb import IndiAllskyOrbGenerator
+from .overlay.orb import IndiAllskyOrbGenerator
 from .sqm import IndiAllskySqm
 from .stars import IndiAllSkyStars
 from .detectLines import IndiAllskyDetectLines
@@ -31,10 +31,10 @@ from .keogram import KeogramGenerator
 from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
 from .stack import IndiAllskyStacker
-from .cardinalDirsLabel import IndiAllskyCardinalDirsLabel
+from .overlay.cardinalDirsLabel import IndiAllskyCardinalDirsLabel
 from .utils import IndiAllSkyDateCalcs
-from .moonOverlay import IndiAllSkyMoonOverlay
-from .lightgraphOverlay import IndiAllSkyLightgraphOverlay
+from .overlay.moonOverlay import IndiAllSkyMoonOverlay
+from .overlay.lightgraphOverlay import IndiAllSkyLightgraphOverlay
 from .overlay.imageOverlay import IndiAllSkyImageOverlay
 
 from .flask.miscDb import miscDb
