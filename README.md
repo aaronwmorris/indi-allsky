@@ -112,10 +112,12 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
     * ZWO
     * Svbony
     * QHY
-    * Altair
-    * ToupTek
-    * Starlight Xpress
     * Player One Astronomy
+    * ToupTek
+    * Altair
+    * Omegon Pro
+    * OGMA
+    * Starlight Xpress
     * Raspberry Pi Camera Modules
         * HQ Camera (IMX477)
         * IMX378
