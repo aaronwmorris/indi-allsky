@@ -22,7 +22,7 @@ class IndiAllSkyMoonOverlay(object):
     def __init__(self, config):
         self.config = config
 
-        self.moon_file = Path(__file__).parent.joinpath('flask', 'static', 'astropanel', 'img', 'moon_rot.png')
+        self.moon_file = Path(__file__).parent.parent.joinpath('flask', 'static', 'astropanel', 'img', 'moon_rot.png')
         self.moon_orig = None
 
 

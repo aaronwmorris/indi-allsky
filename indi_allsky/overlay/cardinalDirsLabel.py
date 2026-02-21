@@ -64,7 +64,7 @@ class IndiAllskyCardinalDirsLabel(object):
             self.EAST_CHAR, self.WEST_CHAR = self.WEST_CHAR, self.EAST_CHAR
 
 
-        base_path  = Path(__file__).parent
+        base_path  = Path(__file__).parent.parent
         self.font_path  = base_path.joinpath('fonts')
 
 

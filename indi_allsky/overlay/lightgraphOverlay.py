@@ -43,7 +43,7 @@ class IndiAllSkyLightgraphOverlay(object):
         self.label = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('LABEL', False)
         self.hour_lines = self.config.get('LIGHTGRAPH_OVERLAY', {}).get('HOUR_LINES', True)
 
-        base_path  = Path(__file__).parent
+        base_path  = Path(__file__).parent.parent
         self.font_path  = base_path.joinpath('fonts')
 
 
