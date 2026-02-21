@@ -11,7 +11,7 @@ from PIL import ImageFont
 from PIL import ImageDraw
 import logging
 
-from . import constants
+from .. import constants
 
 logger = logging.getLogger('indi_allsky')
 
