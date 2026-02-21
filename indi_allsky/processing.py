@@ -33,8 +33,8 @@ from .scnr import IndiAllskyScnr
 from .stack import IndiAllskyStacker
 from .cardinalDirsLabel import IndiAllskyCardinalDirsLabel
 from .utils import IndiAllSkyDateCalcs
-from .moonOverlay import IndiAllSkyMoonOverlay
-from .lightgraphOverlay import IndiAllSkyLightgraphOverlay
+from .overlay.moonOverlay import IndiAllSkyMoonOverlay
+from .overlay.lightgraphOverlay import IndiAllSkyLightgraphOverlay
 from .overlay.imageOverlay import IndiAllSkyImageOverlay
 
 from .flask.miscDb import miscDb
