@@ -371,6 +371,17 @@ def GAMMA_CORRECTION_validator(form, field):
         raise ValidationError('Gamma must be less than 3.0')
 
 
+def SHARPEN_AMOUNT_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 0.0:
+        raise ValidationError('Sharpen amount must be 0 or greater')
+
+    if field.data > 2.0:
+        raise ValidationError('Sharpen amount must be 2.0 or less')
+
+
 def SCNR_ALGORITHM_validator(form, field):
     if field.data not in list(zip(*form.SCNR_ALGORITHM_choices))[0]:
         raise ValidationError('Please select a valid algorithm')
@@ -4300,6 +4311,8 @@ class IndiAllskyConfigForm(FlaskForm):
     SATURATION_FACTOR_DAY            = FloatField('Saturation Factor (Day)', validators=[SATURATION_FACTOR_validator], widget=NumberInput(step=0.1))
     GAMMA_CORRECTION                 = FloatField('Gamma Correction (Night)', validators=[GAMMA_CORRECTION_validator], widget=NumberInput(step=0.1))
     GAMMA_CORRECTION_DAY             = FloatField('Gamma Correction (Day)', validators=[GAMMA_CORRECTION_validator], widget=NumberInput(step=0.1))
+    SHARPEN_AMOUNT                   = FloatField('Sharpen Amount (Night)', validators=[SHARPEN_AMOUNT_validator], widget=NumberInput(step=0.1))
+    SHARPEN_AMOUNT_DAY               = FloatField('Sharpen Amount (Day)', validators=[SHARPEN_AMOUNT_validator], widget=NumberInput(step=0.1))
     CCD_COOLING                      = BooleanField('CCD Cooling (Night)')
     CCD_COOLING_DAY                  = BooleanField('CCD Cooling (Day)')
     CCD_TEMP                         = FloatField('Target CCD Temp (Night)', validators=[CCD_TEMP_validator])

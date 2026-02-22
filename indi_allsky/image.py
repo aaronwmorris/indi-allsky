@@ -652,6 +652,10 @@ class ImageWorker(Process):
         self.image_processor.apply_gamma_correction()
 
 
+        # sharpening (unsharp mask)
+        self.image_processor.sharpen()
+
+
         if not self.config.get('CONTRAST_ENHANCE_16BIT'):
             if not self.night_av[constants.NIGHT_NIGHT] and self.config['DAYTIME_CONTRAST_ENHANCE']:
                 # Contrast enhancement during the day

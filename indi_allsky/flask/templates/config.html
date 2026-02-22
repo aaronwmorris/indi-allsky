@@ -1824,6 +1824,17 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">1.0 is disabled.</div>
     </div>
 
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SHARPEN_AMOUNT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.SHARPEN_AMOUNT(class='form-control bg-secondary') }}
+            <div id="SHARPEN_AMOUNT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">0.0 is disabled.  Unsharp mask highpass filter.  0.5 is a good starting point, max 2.0</div>
+    </div>
+
     <hr>
 
     <div class="form-group row">
@@ -1980,6 +1991,17 @@ var camera_id = {{ camera_id }};
             <div id="GAMMA_CORRECTION_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">1.0 is disabled.</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.SHARPEN_AMOUNT_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.SHARPEN_AMOUNT_DAY(class='form-control bg-secondary') }}
+            <div id="SHARPEN_AMOUNT_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">0.0 is disabled.  Unsharp mask highpass filter.  0.5 is a good starting point, max 2.0</div>
     </div>
 
     <hr>
@@ -9589,6 +9611,8 @@ const field_names = [
     'SATURATION_FACTOR_DAY',
     'GAMMA_CORRECTION',
     'GAMMA_CORRECTION_DAY',
+    'SHARPEN_AMOUNT',
+    'SHARPEN_AMOUNT_DAY',
     'CFA_PATTERN',
     'SCNR_ALGORITHM',
     'SCNR_ALGORITHM_DAY',
@@ -10590,6 +10614,8 @@ $('#USE_NIGHT_COLOR').on('change', function() {
         $('#SATURATION_FACTOR_DAY').addClass('bg-dark text-secondary');
         $('#GAMMA_CORRECTION_DAY').attr({'readonly': true, 'disabled': true});
         $('#GAMMA_CORRECTION_DAY').addClass('bg-dark text-secondary');
+        $('#SHARPEN_AMOUNT_DAY').attr({'readonly': true, 'disabled': true});
+        $('#SHARPEN_AMOUNT_DAY').addClass('bg-dark text-secondary');
     } else {
         $('#SCNR_ALGORITHM_DAY').removeAttr('readonly disabled');
         $('#SCNR_ALGORITHM_DAY').removeClass('bg-dark text-secondary');
@@ -10612,6 +10638,8 @@ $('#USE_NIGHT_COLOR').on('change', function() {
         $('#SATURATION_FACTOR_DAY').removeClass('bg-dark text-secondary');
         $('#GAMMA_CORRECTION_DAY').removeAttr('readonly disabled');
         $('#GAMMA_CORRECTION_DAY').removeClass('bg-dark text-secondary');
+        $('#SHARPEN_AMOUNT_DAY').removeAttr('readonly disabled');
+        $('#SHARPEN_AMOUNT_DAY').removeClass('bg-dark text-secondary');
     }
 });
 
@@ -10955,6 +10983,8 @@ $( document ).ready(function() {
         $('#SATURATION_FACTOR_DAY').addClass('bg-dark text-secondary');
         $('#GAMMA_CORRECTION_DAY').attr({'readonly': true, 'disabled': true});
         $('#GAMMA_CORRECTION_DAY').addClass('bg-dark text-secondary');
+        $('#SHARPEN_AMOUNT_DAY').attr({'readonly': true, 'disabled': true});
+        $('#SHARPEN_AMOUNT_DAY').addClass('bg-dark text-secondary');
     }
 
     // Night timelapse settings
