@@ -190,12 +190,16 @@ class ImageProcessor(object):
         self._orb.sun_color_rgb = self.config['ORB_PROPERTIES']['SUN_COLOR']
         self._orb.moon_color_rgb = self.config['ORB_PROPERTIES']['MOON_COLOR']
 
+
+        # Realtime keogram
         self._keogram_gen = KeogramGenerator(
             self.config,
         )
         self._keogram_gen.angle = self.config.get('KEOGRAM_ANGLE', 0.0)
         self._keogram_gen.h_scale_factor = self.config.get('KEOGRAM_H_SCALE', 100)
         self._keogram_gen.v_scale_factor = self.config.get('KEOGRAM_V_SCALE', 33)
+        # realtime keogram cropping does not currently work because this function is performed in
+        # finalize() which is not utilized for the realtime keogram
         self._keogram_gen.crop_top = self.config.get('KEOGRAM_CROP_TOP', 0)
         self._keogram_gen.crop_bottom = self.config.get('KEOGRAM_CROP_BOTTOM', 0)
         self._keogram_gen.x_offset = 0  # reset
