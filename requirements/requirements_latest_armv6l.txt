@@ -39,7 +39,7 @@ Flask-SQLAlchemy >= 3.1.1
 Flask-Migrate >= 4.0.5
 Flask-WTF >= 1.2.1
 Flask-Login >= 0.6.3
-werkzeug
+werkzeug >= 3.1.6
 is-safe-url
 certifi >= 2023.5.7
 # https://www.piwheels.org/project/cryptography/
