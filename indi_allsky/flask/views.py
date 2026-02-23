@@ -1504,7 +1504,7 @@ class JsonChartView(JsonView):
         }
 
 
-        if len(data['chart_data']['sqm']) == 0:
+        if len(data['chart_data']['jsqm']) == 0:
             data['message'] = 'No chart data in history range'
 
 
@@ -1519,12 +1519,12 @@ class JsonChartView(JsonView):
         chart_query = IndiAllSkyDbImageTable.query\
             .add_columns(
                 IndiAllSkyDbImageTable.createDate,
-                IndiAllSkyDbImageTable.sqm,
+                IndiAllSkyDbImageTable.sqm.label('jsqm'),
                 func.avg(IndiAllSkyDbImageTable.stars).over(order_by=IndiAllSkyDbImageTable.createDate, rows=(-5, 0)).label('stars_rolling'),
                 IndiAllSkyDbImageTable.temp,
                 IndiAllSkyDbImageTable.exposure,
                 IndiAllSkyDbImageTable.detections,
-                (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('sqm_diff'),
+                (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('jsqm_diff'),
                 IndiAllSkyDbImageTable.data,
             )\
             .join(IndiAllSkyDbCameraTable)\
@@ -1541,8 +1541,8 @@ class JsonChartView(JsonView):
         #app.logger.info('Chart SQL: %s', str(chart_query))
 
         chart_data = {
-            'sqm'   : [],
-            'sqm_d' : [],
+            'jsqm'   : [],
+            'jsqm_d' : [],
             'stars' : [],
             'temp'  : [],
             'exp'   : [],
@@ -1585,11 +1585,11 @@ class JsonChartView(JsonView):
         for i in chart_query:
             x = i.createDate.strftime('%H:%M:%S')
 
-            sqm_data = {
+            jsqm_data = {
                 'x' : x,
-                'y' : i.sqm,
+                'y' : i.jsqm,
             }
-            chart_data['sqm'].append(sqm_data)
+            chart_data['jsqm'].append(jsqm_data)
 
             star_data = {
                 'x' : x,
@@ -1617,11 +1617,11 @@ class JsonChartView(JsonView):
             }
             chart_data['exp'].append(exp_data)
 
-            sqm_d_data = {
+            jsqm_d_data = {
                 'x' : x,
-                'y' : i.sqm_diff,
+                'y' : i.jsqm_diff,
             }
-            chart_data['sqm_d'].append(sqm_d_data)
+            chart_data['jsqm_d'].append(jsqm_d_data)
 
 
             if i.detections > 0:
