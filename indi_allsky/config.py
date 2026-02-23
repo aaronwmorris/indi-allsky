@@ -601,6 +601,8 @@ class IndiAllSkyConfigBase(object):
             "WIDTH"                  : 4056,
             "HEIGHT"                 : 3040,
             "IMAGE_CIRCLE_DIAMETER"  : 3500,
+            "IMAGE_CIRCLE_OFFSET_X"  : 0,
+            "IMAGE_CIRCLE_OFFSET_Y"  : 0,
             "ROTATING_STAR_COUNT"    : 30000,
             "ROTATING_STAR_FACTOR"   : 1.0,
             "BUBBLE_COUNT"           : 1000,

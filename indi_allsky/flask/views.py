@@ -2676,6 +2676,8 @@ class ConfigView(FormView):
             'TEST_CAMERA__WIDTH'             : self.indi_allsky_config.get('TEST_CAMERA', {}).get('WIDTH', 4056),
             'TEST_CAMERA__HEIGHT'            : self.indi_allsky_config.get('TEST_CAMERA', {}).get('HEIGHT', 3040),
             'TEST_CAMERA__IMAGE_CIRCLE_DIAMETER': self.indi_allsky_config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_DIAMETER', 3500),
+            'TEST_CAMERA__IMAGE_CIRCLE_OFFSET_X': self.indi_allsky_config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_OFFSET_X', 0),
+            'TEST_CAMERA__IMAGE_CIRCLE_OFFSET_Y': self.indi_allsky_config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_OFFSET_Y', 0),
             'TEST_CAMERA__ROTATING_STAR_COUNT'  : self.indi_allsky_config.get('TEST_CAMERA', {}).get('ROTATING_STAR_COUNT', 30000),
             'TEST_CAMERA__ROTATING_STAR_FACTOR' : self.indi_allsky_config.get('TEST_CAMERA', {}).get('ROTATING_STAR_FACTOR', 1.0),
             'TEST_CAMERA__BUBBLE_COUNT'      : self.indi_allsky_config.get('TEST_CAMERA', {}).get('BUBBLE_COUNT', 1000),
@@ -3692,6 +3694,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEST_CAMERA']['WIDTH']                 = int(request.json['TEST_CAMERA__WIDTH'])
         self.indi_allsky_config['TEST_CAMERA']['HEIGHT']                = int(request.json['TEST_CAMERA__HEIGHT'])
         self.indi_allsky_config['TEST_CAMERA']['IMAGE_CIRCLE_DIAMETER'] = int(request.json['TEST_CAMERA__IMAGE_CIRCLE_DIAMETER'])
+        self.indi_allsky_config['TEST_CAMERA']['IMAGE_CIRCLE_OFFSET_X'] = int(request.json['TEST_CAMERA__IMAGE_CIRCLE_OFFSET_X'])
+        self.indi_allsky_config['TEST_CAMERA']['IMAGE_CIRCLE_OFFSET_Y'] = int(request.json['TEST_CAMERA__IMAGE_CIRCLE_OFFSET_Y'])
         self.indi_allsky_config['TEST_CAMERA']['ROTATING_STAR_COUNT']   = int(request.json['TEST_CAMERA__ROTATING_STAR_COUNT'])
         self.indi_allsky_config['TEST_CAMERA']['ROTATING_STAR_FACTOR']  = float(request.json['TEST_CAMERA__ROTATING_STAR_FACTOR'])
         self.indi_allsky_config['TEST_CAMERA']['BUBBLE_COUNT']          = int(request.json['TEST_CAMERA__BUBBLE_COUNT'])

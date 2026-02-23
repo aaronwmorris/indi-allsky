@@ -1079,6 +1079,31 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_OFFSET_X.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_OFFSET_X(class='form-control bg-secondary') }}
+            <div id="TEST_CAMERA__IMAGE_CIRCLE_OFFSET_X-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Simulate an offset image circle</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_OFFSET_Y.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.TEST_CAMERA__IMAGE_CIRCLE_OFFSET_Y(class='form-control bg-secondary') }}
+            <div id="TEST_CAMERA__IMAGE_CIRCLE_OFFSET_Y-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEST_CAMERA__ROTATING_STAR_COUNT.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -9953,6 +9978,8 @@ const field_names = [
     'TEST_CAMERA__WIDTH',
     'TEST_CAMERA__HEIGHT',
     'TEST_CAMERA__IMAGE_CIRCLE_DIAMETER',
+    'TEST_CAMERA__IMAGE_CIRCLE_OFFSET_X',
+    'TEST_CAMERA__IMAGE_CIRCLE_OFFSET_Y',
     'TEST_CAMERA__ROTATING_STAR_COUNT',
     'TEST_CAMERA__ROTATING_STAR_FACTOR',
     'TEST_CAMERA__BUBBLE_COUNT',

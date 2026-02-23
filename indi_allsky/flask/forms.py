@@ -2859,6 +2859,11 @@ def TEST_CAMERA__IMAGE_CIRCLE_DIAMETER_validator(form, field):
         raise ValidationError('Image Circle must be 0 or greater')
 
 
+def TEST_CAMERA__IMAGE_CIRCLE_OFFSET_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid number')
+
+
 def TEST_CAMERA__ROTATING_STAR_COUNT_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter a valid number')
@@ -4754,7 +4759,9 @@ class IndiAllskyConfigForm(FlaskForm):
     ACCUM_CAMERA__CLAMP_16BIT        = BooleanField('Accumulator Clamp 16-bit')
     TEST_CAMERA__WIDTH                  = IntegerField('Test Camera - Width', validators=[DataRequired(), TEST_CAMERA__WIDTH_validator])
     TEST_CAMERA__HEIGHT                 = IntegerField('Test Camera - Height', validators=[DataRequired(), TEST_CAMERA__HEIGHT_validator])
-    TEST_CAMERA__IMAGE_CIRCLE_DIAMETER  = IntegerField('Test Camera - Image Circle', validators=[TEST_CAMERA__IMAGE_CIRCLE_DIAMETER_validator])
+    TEST_CAMERA__IMAGE_CIRCLE_DIAMETER  = IntegerField('Test Camera - Image Circle Diameter', validators=[TEST_CAMERA__IMAGE_CIRCLE_DIAMETER_validator])
+    TEST_CAMERA__IMAGE_CIRCLE_OFFSET_X  = IntegerField('Test Camera - Image Circle X Offset', validators=[TEST_CAMERA__IMAGE_CIRCLE_OFFSET_validator])
+    TEST_CAMERA__IMAGE_CIRCLE_OFFSET_Y  = IntegerField('Test Camera - Image Circle Y Offset', validators=[TEST_CAMERA__IMAGE_CIRCLE_OFFSET_validator])
     TEST_CAMERA__ROTATING_STAR_COUNT    = IntegerField('Test Camera - Rotating Star Count', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_COUNT_validator])
     TEST_CAMERA__ROTATING_STAR_FACTOR   = FloatField('Test Camera - Rotating Star Rotation Factor', validators=[DataRequired(), TEST_CAMERA__ROTATING_STAR_FACTOR_validator])
     TEST_CAMERA__BUBBLE_COUNT           = IntegerField('Test Camera - Bubble Count', validators=[DataRequired(), TEST_CAMERA__BUBBLE_COUNT_validator])
