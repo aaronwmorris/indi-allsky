@@ -607,7 +607,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
     # This is basically a flat-earth sky simulator :-)
 
     star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
-    background_color = (24, 24, 24)
+    background_color = (6144, 6144, 6144)  # 24 in 8-bit rgb
 
 
     def __init__(self, *args, **kwargs):
@@ -727,28 +727,6 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         )
 
 
-        ### test circles
-        ## center
-        #cv2.circle(
-        #    base_image,
-        #    center=(int(base_image_width / 2), int(base_image_height / 2)),
-        #    radius=15,
-        #    color=(32767, 32767, 32767),  # 128
-        #    thickness=cv2.FILLED,
-        #    lineType=cv2.LINE_AA,
-        #)
-
-        ## ring
-        #cv2.circle(
-        #    base_image,
-        #    center=(int(base_image_width / 2), int(base_image_height / 2)),
-        #    radius=int(base_image_height / 4),
-        #    color=(16383, 16383, 16383),  # 64
-        #    thickness=3,
-        #    lineType=cv2.LINE_AA,
-        #)
-
-
         center_x = int(base_image_width / 2)
         center_y = int(base_image_height / 2)
 
@@ -793,6 +771,28 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
 
         image_width = int(self.camera_info['width'] / binning)
         image_height = int(self.camera_info['height'] / binning)
+
+
+        ### test circles
+        ## center
+        #cv2.circle(
+        #    base_image,
+        #    center=(int(base_image_width / 2), int(base_image_height / 2)),
+        #    radius=15,
+        #    color=(32767, 32767, 32767),  # 128
+        #    thickness=cv2.FILLED,
+        #    lineType=cv2.LINE_AA,
+        #)
+
+        ## ring
+        #cv2.circle(
+        #    base_image,
+        #    center=(int(base_image_width / 2), int(base_image_height / 2)),
+        #    radius=int(image_height / 2),
+        #    color=(16383, 16383, 16383),  # 64
+        #    thickness=10,
+        #    lineType=cv2.LINE_AA,
+        #)
 
 
         # slice the image
