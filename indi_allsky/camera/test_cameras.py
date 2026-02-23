@@ -55,7 +55,7 @@ class IndiClientTestCameraBase(IndiClient):
             'min_exposure'  : 0.000032,
             'max_exposure'  : 60.0,
             'min_binning'   : 1,
-            'max_binning'   : 1,
+            'max_binning'   : 4,
             'cfa'           : None,
             'bit_depth'     : 16,
         }
@@ -63,7 +63,7 @@ class IndiClientTestCameraBase(IndiClient):
 
         self._last_exposure_time = time.time()
 
-        self._image_circle_alpha_mask = None
+        self._image_circle_alpha_mask_dict = dict()  # each key is binning mode
 
 
         varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
@@ -145,7 +145,7 @@ class IndiClientTestCameraBase(IndiClient):
 
 
         # update the synthetic image
-        self.updateImage()
+        self.updateImage(self.binning)
 
 
         # update reference
@@ -403,7 +403,7 @@ class IndiClientTestCameraBase(IndiClient):
             hdulist.writeto(f_image)
 
 
-    def _generate_image_circle_mask(self, image):
+    def _generate_image_circle_mask(self, image, binning):
         import numpy
         import cv2
 
@@ -418,7 +418,7 @@ class IndiClientTestCameraBase(IndiClient):
 
         center_x = int(image_width / 2)
         center_y = int(image_height / 2)
-        radius = int(self.image_circle_diameter / 2)
+        radius = int((self.image_circle_diameter / binning) / 2)
         blur = 75
 
 
@@ -626,10 +626,6 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         #}
 
 
-        self._base_image = None
-        self.base_image_width = self.camera_info['width'] * 3
-        self.base_image_height = self.camera_info['height'] * 3
-
         self.star_count = self.config.get('TEST_CAMERA', {}).get('ROTATING_STAR_COUNT', 30000)
         self.rotation_factor = self.config.get('TEST_CAMERA', {}).get('ROTATING_STAR_FACTOR', 1.0)
 
@@ -650,7 +646,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         super(IndiClientTestCameraRotatingStars, self).disconnectServer(*args, **kwargs)
 
 
-    def updateImage(self):
+    def updateImage(self, binning):
         import numpy
         import cv2
 
@@ -694,8 +690,10 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
 
                 radius = random.choice(self.star_sizes)
 
-                x = random.randrange(self.base_image_width)
-                y = random.randrange(self.base_image_height)
+
+                # stars will be drawn out of bounds in a higher binning mode
+                x = random.randrange(self.camera_info['width'] * 3)
+                y = random.randrange(self.camera_info['height'] * 3)
 
 
                 self.stars_array[0][i] = x
@@ -708,11 +706,15 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
                 #logger.info('XY: %d x %d', x, y)
 
 
+        base_image_width = int(self.camera_info['width'] / binning) * 3
+        base_image_height = int(self.camera_info['height'] / binning) * 3
+
+
         # create blank image
-        self._base_image = numpy.full(
+        base_image = numpy.full(
             [
-                self.base_image_height,
-                self.base_image_width,
+                base_image_height,
+                base_image_width,
                 3
             ],
             self.background_color,
@@ -720,8 +722,8 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         )
 
 
-        center_x = int(self.base_image_width / 2)
-        center_y = int(self.base_image_height / 2)
+        center_x = int(base_image_width / 2)
+        center_y = int(base_image_height / 2)
 
 
         #rot_start = time.time()
@@ -753,7 +755,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
             #logger.info('Center: %s', center)
 
             cv2.circle(
-                self._base_image,
+                base_image,
                 center=center,
                 radius=radius,
                 color=color,
@@ -768,18 +770,18 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
 
         #logger.info('Center: %d x %d - Start: %d x %d', center_x, center_y, start_width, start_height)
 
-        self._image = self._base_image[
-            start_height:start_height + self.camera_info['height'],
-            start_width:start_width + self.camera_info['width'],
+        self._image = base_image[
+            start_height:start_height + int(self.camera_info['height'] / binning),
+            start_width:start_width + int(self.camera_info['width'] / binning),
         ]
 
 
         if self.image_circle_diameter:
-            if isinstance(self._image_circle_alpha_mask, type(None)):
-                self._image_circle_alpha_mask = self._generate_image_circle_mask(self._image)
+            if isinstance(self._image_circle_alpha_mask_dict.get(binning), type(None)):
+                self._image_circle_alpha_mask_dict[binning] = self._generate_image_circle_mask(self._image, binning)
 
 
             # simulate an image circle
-            self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint16)
+            self._image = (self._image * self._image_circle_alpha_mask_dict[binning]).astype(numpy.uint16)
 
 
