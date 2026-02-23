@@ -419,7 +419,7 @@ class IndiClientTestCameraBase(IndiClient):
         center_x = int(image_width / 2)
         center_y = int(image_height / 2)
         radius = int((self.image_circle_diameter / binning) / 2)
-        blur = 75
+        blur = int(75 / binning)
 
 
         # draw a white circle
