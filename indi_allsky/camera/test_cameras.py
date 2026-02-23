@@ -496,7 +496,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
         super(IndiClientTestCameraBubbles, self).disconnectServer(*args, **kwargs)
 
 
-    def updateImage(self):
+    def updateImage(self, binning):
         import numpy
         import cv2
 
@@ -508,7 +508,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
             try:
                 logger.info('Loading stored bubbles data')
                 with io.open(str(self._bubbles_store_p), 'r+b') as f_numpy:
-                    self.bubbles_array = numpy.load(f_numpy)
+                    self.bubbles_array = numpy.load(f_numpy).astype(numpy.int32)
 
                 if self.bubbles_array.shape[1] != self.bubble_count:
                     # if bubble count changes, create new array
@@ -528,7 +528,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
         if isinstance(self.bubbles_array, type(None)):
             # create new set of random bubbles
-            self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
+            self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int32)  # x, y, radius, r, g, b
 
 
             max_value = (2 ** self.image_bit_depth) - 1
@@ -540,6 +540,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
                 radius = random.randrange(self.bubble_radius_min, self.bubble_radius_max)
 
+                # circles will be drawn out of bounds in a higher binning mode
                 x = random.randrange(self.camera_info['width'])
                 y = random.randrange(self.camera_info['height'] * 2)
 
@@ -552,11 +553,15 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
                 self.bubbles_array[5][i] = b
 
 
+        width = int(self.camera_info['width'] / binning)
+        height = int(self.camera_info['height'] / binning)
+
+
         # create blank image
         self._image = numpy.full(
             [
-                self.camera_info['height'],
-                self.camera_info['width'],
+                height,
+                width,
                 3
             ],
             self.background_color,
@@ -590,12 +595,12 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
 
         if self.image_circle_diameter:
-            if isinstance(self._image_circle_alpha_mask, type(None)):
-                self._image_circle_alpha_mask = self._generate_image_circle_mask(self._image)
+            if isinstance(self._image_circle_alpha_mask_dict.get(binning), type(None)):
+                self._image_circle_alpha_mask_dict[binning] = self._generate_image_circle_mask(self._image, binning)
 
 
             # simulate an image circle
-            self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint16)
+            self._image = (self._image * self._image_circle_alpha_mask_dict[binning]).astype(numpy.uint16)
 
 
 class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
