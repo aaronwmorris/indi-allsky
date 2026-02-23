@@ -646,7 +646,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         if not isinstance(self._stars_store_p, type(None)):
             logger.info('Storing stars test data')
             with io.open(str(self._stars_store_p), 'w+b') as f_numpy:
-                numpy.save(f_numpy, self.stars_array.astype(numpy.float16))  # reduce precision to reduce space
+                numpy.save(f_numpy, self.stars_array)
 
         super(IndiClientTestCameraRotatingStars, self).disconnectServer(*args, **kwargs)
 
