@@ -5,6 +5,12 @@
 TZ=America/New_York
 
 INDIALLSKY_INDI_CCD_DRIVER=indi_simulator_ccd
+#INDIALLSKY_INDI_CCD_DRIVER=indi_asi_ccd
+#INDIALLSKY_INDI_CCD_DRIVER=indi_toupcam_ccd
+#INDIALLSKY_INDI_CCD_DRIVER=indi_altaircam_ccd
+#INDIALLSKY_INDI_CCD_DRIVER=indi_ogmacam_ccd_ccd
+#INDIALLSKY_INDI_CCD_DRIVER=indi_omegonprocam_ccd
+#INDIALLSKY_INDI_CCD_DRIVER=indi_playerone_ccd
 INDIALLSKY_INDI_GPS_DRIVER=
 
 # This folder needs to be shared to the capture, gunicorn, and nginx containers
