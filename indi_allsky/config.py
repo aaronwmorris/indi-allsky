@@ -119,6 +119,8 @@ class IndiAllSkyConfigBase(object):
         "SATURATION_FACTOR_DAY" : 1.0,
         "GAMMA_CORRECTION"      : 1.0,
         "GAMMA_CORRECTION_DAY"  : 1.0,
+        "SHARPEN_AMOUNT"       : 0.0,
+        "SHARPEN_AMOUNT_DAY"   : 0.0,
         "CCD_COOLING"      : False,
         "CCD_COOLING_DAY"  : False,
         "CCD_TEMP"         : 15.0,
