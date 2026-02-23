@@ -1,0 +1,45 @@
+# This file is for GitHub Dependabot to find security vulnerabilities
+astropy == 6.1.0
+pyerfa == 2.0.1.4
+numpy == 2.1.0
+opencv-python-headless == 4.10.0.84
+scipy == 1.11.3
+ccdproc == 2.4.2
+scikit-image == 0.25.0
+astroalign == 2.6.0
+bottleneck == 1.4.0
+ephem == 4.2
+skyfield == 1.54
+paramiko == 4.0.0
+pycurl == 7.45.7
+Pillow == 12.1.1
+piexif
+imageio
+imageio-ffmpeg
+simplejpeg == 1.9.0
+cython == 3.2.4
+rawpy == 0.23.0
+pygifsicle
+gunicorn[gthread] == 23.0.0
+inotify == 0.2.12
+psutil == 7.2.2
+Flask == 3.1.3
+Flask-SQLAlchemy == 3.1.1
+Flask-Migrate == 4.0.5
+Flask-WTF == 1.2.1
+Flask-Login == 0.6.3
+werkzeug == 3.1.5
+is-safe-url
+certifi == 2024.7.4
+cryptography == 46.0.5
+dbus-python == 1.4.0
+paho-mqtt == 2.0.0
+setuptools-rust
+bcrypt == 5.0.0
+passlib[argon2] == 1.7.4
+prettytable
+lxml == 6.0.2
+shapely == 2.0.6
+requests-toolbelt
+pytz
+mysql-connector-python == 9.6.0

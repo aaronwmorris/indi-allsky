@@ -208,6 +208,17 @@ def CCD_EXPOSURE_validator(form, field):
         raise ValidationError('Default Exposure cannot be more than 120')
 
 
+def CAMERA_SQM__EXPOSURE_validator(form, field):
+    if not isinstance(field.data, (int, float)):
+        raise ValidationError('Please enter valid number')
+
+    if field.data < 1.0:
+        raise ValidationError('SQM Exposure must be 1.0 or greater')
+
+    if field.data > 60.0:
+        raise ValidationError('SQM Exposure must be 60.0 or less')
+
+
 def CCD_EXPOSURE_TIMEOUT_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -4280,7 +4291,7 @@ class IndiAllskyConfigForm(FlaskForm):
     EXPOSURE_PERIOD_DAY              = FloatField('Exposure Period (Day)', validators=[DataRequired(), EXPOSURE_PERIOD_DAY_validator])
     CAMERA_SQM__ENABLE               = BooleanField('Enable Camera SQM')
     CAMERA_SQM__ENABLE_DAY           = BooleanField('Enable Daytime SQM')
-    CAMERA_SQM__EXPOSURE             = FloatField('Camera SQM Exposure', validators=[DataRequired(), CCD_EXPOSURE_validator])
+    CAMERA_SQM__EXPOSURE             = FloatField('Camera SQM Exposure', validators=[DataRequired(), CAMERA_SQM__EXPOSURE_validator])
     CAMERA_SQM__GAIN                 = FloatField('Camera SQM Gain', validators=[CCD_GAIN_validator])
     CAMERA_SQM__BINNING              = IntegerField('Camera SQM Binning', validators=[CCD_BINNING_validator])
     CAMERA_SQM__EXPOSURE_PERIOD      = IntegerField('SQM Exposure Period', validators=[DataRequired(), CAMERA_SQM__EXPOSURE_PERIOD_validator])

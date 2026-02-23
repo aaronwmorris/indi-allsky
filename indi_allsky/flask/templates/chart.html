@@ -37,8 +37,8 @@ var page_settings;  // set later
 var history_seconds;  // set later
 var json_data = {
     'chart_data' : {
-        'sqm'   : [],
-        'sqm_d' : [],
+        'jsqm'  : [],
+        'jsqm_d': [],
         'stars' : [],
         'temp'  : [],
         'exp'   : [],
@@ -70,8 +70,8 @@ function init() {
         $('#chart_note').css({'display' : 'none'});
     }, 10000);
 
-    ctx_sqm = $('#sqm-chart')[0].getContext('2d');
-    sqm_chart = new Chart(ctx_sqm, {
+    ctx_jsqm = $('#jsqm-chart')[0].getContext('2d');
+    jsqm_chart = new Chart(ctx_jsqm, {
         type: "line",
         data: {
             datasets: [{
@@ -116,12 +116,12 @@ function init() {
     });
 
 
-    ctx_sqm_d = $('#sqm_d-chart')[0].getContext('2d');
-    sqm_d_chart = new Chart(ctx_sqm_d, {
+    ctx_jsqm_d = $('#jsqm_d-chart')[0].getContext('2d');
+    jsqm_d_chart = new Chart(ctx_jsqm_d, {
         type: "bar",
         data: {
             datasets: [{
-                label: 'SQM delta',
+                label: 'jSQM delta',
                 backgroundColor: "rgba(128, 0, 0, 1)",
                 //borderColor: "rgba(92, 0, 0, 1)",
                 tension: 0.1,
@@ -857,8 +857,8 @@ function loadChartData() {
 
 
 function drawChart() {
-    sqm_chart.data.datasets[0].data = json_data['chart_data']['sqm'];
-    sqm_d_chart.data.datasets[0].data = json_data['chart_data']['sqm_d'];
+    jsqm_chart.data.datasets[0].data = json_data['chart_data']['jsqm'];
+    jsqm_d_chart.data.datasets[0].data = json_data['chart_data']['jsqm_d'];
     stars_chart.data.datasets[0].data = json_data['chart_data']['stars'];
     temp_chart.data.datasets[0].data = json_data['chart_data']['temp'];
     exposure_chart.data.datasets[0].data = json_data['chart_data']['exp'];
@@ -878,8 +878,8 @@ function drawChart() {
     histogram_chart.data.datasets[2].data = json_data['chart_data']['histogram']['blue'];
     histogram_chart.data.datasets[3].data = json_data['chart_data']['histogram']['gray'];
 
-    sqm_chart.update();
-    sqm_d_chart.update();
+    jsqm_chart.update();
+    jsqm_d_chart.update();
     stars_chart.update();
     temp_chart.update();
     exposure_chart.update();
@@ -984,27 +984,13 @@ $( document ).ready(function() {
 <div class="row">
     <div class="col-sm-6">
         <div class="bg-dark" style="margin:3px">
-            <canvas id="sqm-chart"></canvas>
+            <canvas id="exposure-chart"></canvas>
         </div>
     </div>
 
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="sqm_d-chart"></canvas>
-        </div>
-    </div>
-</div>
-
-<div class="row">
     <div class="col-sm-6">
         <div class="bg-dark" style="margin:3px">
             <canvas id="stars-chart"></canvas>
-        </div>
-    </div>
-
-    <div class="col-sm-6">
-        <div class="bg-dark" style="margin:3px">
-            <canvas id="exposure-chart"></canvas>
         </div>
     </div>
 </div>
@@ -1019,6 +1005,20 @@ $( document ).ready(function() {
     <div class="col-sm-6">
         <div class="bg-dark" style="margin:3px">
             <canvas id="detection-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="bg-dark" style="margin:3px">
+            <canvas id="jsqm-chart"></canvas>
+        </div>
+    </div>
+
+    <div class="col-sm-6">
+        <div class="bg-dark" style="margin:3px">
+            <canvas id="jsqm_d-chart"></canvas>
         </div>
     </div>
 </div>
