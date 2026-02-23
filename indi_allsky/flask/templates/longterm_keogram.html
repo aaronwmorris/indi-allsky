@@ -349,6 +349,14 @@ $('#form_longterm_keogram').on('submit', function() {
             setTimeout(function() {
                 $('#success_message').css({'display' : 'none'});
             }, 15000);
+
+            // Also show errors
+            $('#failure_message').html(json_data['failure-message']);
+            $('#failure_message').css({'display' : 'block'});
+
+            setTimeout(function() {
+                $('#failure_message').css({'display' : 'none'});
+            }, 30000);
         },
         error: function(rdata){
             $("#generate-button").attr("class", "btn btn-success");
