@@ -618,13 +618,13 @@ class KeogramGenerator(object):
 
 
             draw.text(
-                (line_x + 5, height - (pillow_font_size + 3)),
+                (line_x + 5, height - 3),
                 hour_str,
                 fill=tuple(color_rgb),
                 font=font,
                 stroke_width=stroke_width,
                 stroke_fill=(0, 0, 0),
-                anchor='la',  # left-ascender
+                anchor='ld',  # left-descender
             )
 
 

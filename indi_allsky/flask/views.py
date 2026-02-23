@@ -9718,6 +9718,11 @@ class JsonLongTermKeogramView(JsonView):
         #image_buffer = io.BytesIO(image_a.tobytes())
 
 
+        json_data = {
+            'failure-message' : '',
+        }
+
+
         ### pillow
         image_buffer = io.BytesIO()
         img = Image.fromarray(cv2.cvtColor(keogram_data, cv2.COLOR_BGR2RGB))
@@ -9729,9 +9734,14 @@ class JsonLongTermKeogramView(JsonView):
         #  waiting for the image and drop the connection.  The flask process will usually continue
         #  and should save the image to the filesystem
         longterm_keogram_image_p = Path(app.config['INDI_ALLSKY_IMAGE_FOLDER']).joinpath('ccd_{0:s}'.format(self.camera.uuid), 'longterm_keogram.jpg')
-        with io.open(str(longterm_keogram_image_p), 'wb') as lt_image_f:
-            app.logger.info('Writing keogram: %s', longterm_keogram_image_p)
-            lt_image_f.write(image_buffer.getbuffer())
+
+        try:
+            with io.open(str(longterm_keogram_image_p), 'wb') as lt_image_f:
+                app.logger.info('Writing keogram: %s', longterm_keogram_image_p)
+                lt_image_f.write(image_buffer.getbuffer())
+        except (PermissionError, FileNotFoundError) as e:
+            app.logger.error('Creating keogram failed: %s', str(e))
+            json_data['failure-message'] = 'Exception: {0:s}'.format(str(e))
 
 
         json_image_b64 = base64.b64encode(image_buffer.getvalue())
@@ -9741,11 +9751,9 @@ class JsonLongTermKeogramView(JsonView):
         app.logger.warning('Long Term Keogram in %0.4f s', keogram_elapsed_s)
 
 
-        json_data = {
-            'image_b64' : json_image_b64.decode('utf-8'),
-            'processing_time' : round(keogram_elapsed_s, 3),
-            'success-message' : '',
-        }
+        json_data['image_b64'] = json_image_b64.decode('utf-8'),
+        json_data['processing_time'] = round(keogram_elapsed_s, 3)
+        json_data['success-message'] = ''
 
 
         return jsonify(json_data)
