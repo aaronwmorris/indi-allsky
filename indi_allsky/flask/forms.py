@@ -8972,6 +8972,7 @@ class IndiAllskyImageProcessingForm(FlaskForm):
     WBB_MTF_MIDTONES                 = FloatField('Blue Balance MTF Midtones', validators=[WB_MTF_MIDTONES_validator], widget=NumberInput(step=0.05))
     SATURATION_FACTOR                = FloatField('Saturation Factor', validators=[SATURATION_FACTOR_validator], widget=NumberInput(step=0.1))
     GAMMA_CORRECTION                 = FloatField('Gamma Correction', validators=[GAMMA_CORRECTION_validator], widget=NumberInput(step=0.1))
+    SHARPEN_AMOUNT                   = FloatField('Sharpen Amount', validators=[SHARPEN_AMOUNT_validator], widget=NumberInput(step=0.1))
     IMAGE_ROTATE                     = SelectField('Rotate Image', choices=IndiAllskyConfigForm.IMAGE_ROTATE_choices, validators=[IMAGE_ROTATE_validator])
     IMAGE_ROTATE_ANGLE               = IntegerField('Rotation Angle', validators=[IMAGE_ROTATE_ANGLE_validator])
     IMAGE_FLIP_V                     = BooleanField('Flip Image Vertically')
