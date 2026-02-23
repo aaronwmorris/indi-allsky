@@ -19,6 +19,10 @@ logger = logging.getLogger('indi_allsky')
 
 
 class IndiClientTestCameraBase(IndiClient):
+
+    image_bit_depth = 16
+
+
     def __init__(self, *args, **kwargs):
         super(IndiClientTestCameraBase, self).__init__(*args, **kwargs)
 
@@ -53,7 +57,7 @@ class IndiClientTestCameraBase(IndiClient):
             'min_binning'   : 1,
             'max_binning'   : 1,
             'cfa'           : None,
-            'bit_depth'     : 8,
+            'bit_depth'     : 16,
         }
 
 
@@ -405,11 +409,12 @@ class IndiClientTestCameraBase(IndiClient):
 
         image_height, image_width = image.shape[:2]
 
+        max_value = (2 ** self.image_bit_depth) - 1
 
         opacity = 100
-        background = int(255 * (100 - opacity) / 100)
+        background = int(max_value * (100 - opacity) / 100)
 
-        channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint8)
+        channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint16)
 
         center_x = int(image_width / 2)
         center_y = int(image_height / 2)
@@ -422,7 +427,7 @@ class IndiClientTestCameraBase(IndiClient):
             img=channel_mask,
             center=(center_x, center_y),
             radius=radius,
-            color=(255),
+            color=max_value,  # mono
             thickness=cv2.FILLED,
         )
 
@@ -436,7 +441,7 @@ class IndiClientTestCameraBase(IndiClient):
             )
 
 
-        channel_alpha = (channel_mask / 255).astype(numpy.float32)
+        channel_alpha = (channel_mask / max_value).astype(numpy.float32)
 
         alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
 
@@ -526,10 +531,12 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
             self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
 
 
+            max_value = (2 ** self.image_bit_depth) - 1
+
             for i in range(self.bubbles_array.shape[1]):
-                r = random.randrange(255)
-                g = random.randrange(255)
-                b = random.randrange(255)
+                r = random.randrange(max_value)
+                g = random.randrange(max_value)
+                b = random.randrange(max_value)
 
                 radius = random.randrange(self.bubble_radius_min, self.bubble_radius_max)
 
@@ -553,7 +560,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
                 3
             ],
             self.background_color,
-            dtype=numpy.uint8,
+            dtype=numpy.uint16,
         )
 
 
@@ -568,7 +575,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
                 self.bubbles_array[1][i] = (self.bubble_radius_max * -1) + ((self.camera_info['height'] * 2) % self.bubble_speed)
 
 
-            center = (int(self.bubbles_array[0][i]), int(self.bubbles_array[1][i]))
+            center = (round(self.bubbles_array[0][i]), round(self.bubbles_array[1][i]))
             radius = int(self.bubbles_array[2][i])
             color = (int(self.bubbles_array[3][i]), int(self.bubbles_array[4][i]), int(self.bubbles_array[5][i]))
 
@@ -588,7 +595,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
 
             # simulate an image circle
-            self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
+            self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint16)
 
 
 class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
@@ -678,11 +685,12 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
             # create new set of random stars
             self.stars_array = numpy.zeros([6, self.star_count], dtype=numpy.float32)  # x, y, radius, r, g, b
 
+            max_value = (2 ** self.image_bit_depth) - 1  # 16-bit RGB
 
             for i in range(self.stars_array.shape[1]):
-                r = random.randrange(255)
-                g = random.randrange(255)
-                b = random.randrange(255)
+                r = random.randrange(max_value)
+                g = random.randrange(max_value)
+                b = random.randrange(max_value)
 
                 radius = random.choice(self.star_sizes)
 
@@ -708,29 +716,8 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
                 3
             ],
             self.background_color,
-            dtype=numpy.uint8,
+            dtype=numpy.uint16,
         )
-
-
-        ### test circles
-        #cv2.circle(
-        #    self._base_image,
-        #    center=(int(self.base_image_width / 2), int(self.base_image_height / 2)),
-        #    radius=15,
-        #    color=(128, 128, 128),
-        #    thickness=cv2.FILLED,
-        #    lineType=cv2.LINE_AA,
-        #)
-
-        #cv2.circle(
-        #    self._base_image,
-        #    center=(int(self.base_image_width / 2), int(self.base_image_height / 2)),
-        #    radius=int(self.base_image_height / 4),
-        #    color=(64, 64, 64),
-        #    thickness=3,
-        #    lineType=cv2.LINE_AA,
-        #)
-
 
 
         center_x = int(self.base_image_width / 2)
@@ -793,6 +780,6 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
 
 
             # simulate an image circle
-            self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
+            self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint16)
 
 
