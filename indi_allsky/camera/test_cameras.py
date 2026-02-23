@@ -43,6 +43,8 @@ class IndiClientTestCameraBase(IndiClient):
         self._width = self.config.get('TEST_CAMERA', {}).get('WIDTH', 4056)
         self._height = self.config.get('TEST_CAMERA', {}).get('HEIGHT', 3040)
         self._image_circle_diameter = self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_DIAMETER', 3500)
+        self._image_circle_offset_x = self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_OFFSET_X', 0)
+        self._image_circle_offset_y = self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_OFFSET_Y', 0)
 
 
         # bogus info for now
@@ -81,6 +83,14 @@ class IndiClientTestCameraBase(IndiClient):
     @property
     def image_circle_diameter(self):
         return self._image_circle_diameter
+
+    @property
+    def image_circle_offset_x(self):
+        return self._image_circle_offset_x
+
+    @property
+    def image_circle_offset_y(self):
+        return self._image_circle_offset_y
 
 
     def getCcdGain(self):
@@ -416,8 +426,8 @@ class IndiClientTestCameraBase(IndiClient):
 
         channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint16)
 
-        center_x = int(image_width / 2)
-        center_y = int(image_height / 2)
+        center_x = int((image_width / 2) + (self.image_circle_offset_x / binning))
+        center_y = int((image_height / 2) - (self.image_circle_offset_y / binning))  # minus
         radius = int((self.image_circle_diameter / binning) / 2)
         blur = int(75 / binning)
 
