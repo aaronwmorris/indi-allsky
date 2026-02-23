@@ -988,7 +988,7 @@ class RollingAduView(TemplateView):
                     func.count(IndiAllSkyDbImageTable.id).label('i_count'),
                     func.avg(IndiAllSkyDbImageTable.exposure).label('exposure_avg'),
                     func.avg(IndiAllSkyDbImageTable.adu).label('adu_avg'),
-                    func.avg(IndiAllSkyDbImageTable.sqm).label('sqm_avg'),
+                    func.avg(IndiAllSkyDbImageTable.sqm).label('jsqm_avg'),
                     func.avg(IndiAllSkyDbImageTable.stars).label('stars_avg'),
                 )\
                 .join(IndiAllSkyDbImageTable.camera)\
@@ -1020,7 +1020,7 @@ class RollingAduView(TemplateView):
                     func.count(IndiAllSkyDbImageTable.id).label('i_count'),
                     func.avg(IndiAllSkyDbImageTable.exposure).label('exposure_avg'),
                     func.avg(IndiAllSkyDbImageTable.adu).label('adu_avg'),
-                    func.avg(IndiAllSkyDbImageTable.sqm).label('sqm_avg'),
+                    func.avg(IndiAllSkyDbImageTable.sqm).label('jsqm_avg'),
                     func.avg(IndiAllSkyDbImageTable.stars).label('stars_avg'),
                 )\
                 .join(IndiAllSkyDbImageTable.camera)\
@@ -1111,7 +1111,7 @@ class JsonImageLoopView(JsonView):
         data = {
             'message'    : '',
             'image_list' : self.getLoopImages(camera_id, ts_dt, history_seconds),
-            'sqm_data'   : jsqm_data,
+            'jsqm_data'  : jsqm_data,
             'stars_data' : self.getStarsData(camera_id, ts_dt),
             'camera_sqm_mag_data' : camera_sqm_mag_data,
             'camera_sqm_adu_data' : camera_sqm_adu_data,
@@ -1179,12 +1179,12 @@ class JsonImageLoopView(JsonView):
 
 
             try:
-                data['sqm'] = i.sqm
+                data['jsqm'] = i.sqm
                 data['stars'] = i.stars
                 data['detections'] = i.detections
             except AttributeError:
                 # view is reused for panoramas
-                data['sqm'] = 0
+                data['jsqm'] = 0
                 data['stars'] = 0
                 data['detections'] = 0
 

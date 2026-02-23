@@ -30,7 +30,7 @@ var camera_id = {{ camera_id }};
           <th>Count</th>
           <th>Exposure Avg</th>
           <th>ADU Avg</th>
-          <th>SQM Avg</th>
+          <th>jSQM Avg</th>
           <th>Stars Avg</th>
         </tr>
       </thead>
@@ -41,7 +41,7 @@ var camera_id = {{ camera_id }};
           <td>{{ row.i_count }}
           <td>{{ "%0.4f"|format(row.exposure_avg) }}
           <td>{{ "%0.2f"|format(row.adu_avg) }}
-          <td>{{ "%0.2f"|format(row.sqm_avg) }}
+          <td>{{ "%0.2f"|format(row.jsqm_avg) }}
           <td>{{ "%0.1f"|format(row.stars_avg) }}
         </tr>
         {% endfor %}
