@@ -2168,7 +2168,8 @@ class ImageProcessor(object):
             return
 
 
-        self._sharpen(SHARPEN_AMOUNT)
+        self.image = self._sharpen(SHARPEN_AMOUNT)
+
         return True
 
 
@@ -2176,8 +2177,8 @@ class ImageProcessor(object):
         # Unsharp mask: sharpened = original + amount * (original - blurred)
         # GaussianBlur with small kernel extracts low-frequency component;
         # subtracting it amplifies high-frequency detail (edges/stars).
-        blurred = cv2.GaussianBlur(self.image, (0, 0), sigmaX=2)
-        self.image = cv2.addWeighted(self.image, 1.0 + amount, blurred, -amount, 0)
+        blurred_image = cv2.GaussianBlur(self.image, (0, 0), sigmaX=2)
+        return cv2.addWeighted(self.image, 1.0 + amount, blurred_image, -amount, 0)
 
 
     def colorize(self):
