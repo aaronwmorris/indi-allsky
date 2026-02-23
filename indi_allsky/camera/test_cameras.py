@@ -453,7 +453,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
     bubble_speed = 100
     bubble_radius_min = 5
     bubble_radius_max = 100
-    background_color = (24, 24, 24)
+    background_color = (6144, 6144, 6144)  # 24 in 8-bit rgb
 
 
     def __init__(self, *args, **kwargs):
