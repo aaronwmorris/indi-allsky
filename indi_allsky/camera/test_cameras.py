@@ -553,15 +553,15 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
                 self.bubbles_array[5][i] = b
 
 
-        width = int(self.camera_info['width'] / binning)
-        height = int(self.camera_info['height'] / binning)
+        image_width = int(self.camera_info['width'] / binning)
+        image_height = int(self.camera_info['height'] / binning)
 
 
         # create blank image
         self._image = numpy.full(
             [
-                height,
-                width,
+                image_height,
+                image_width,
                 3
             ],
             self.background_color,
@@ -727,6 +727,28 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         )
 
 
+        ### test circles
+        ## center
+        #cv2.circle(
+        #    base_image,
+        #    center=(int(base_image_width / 2), int(base_image_height / 2)),
+        #    radius=15,
+        #    color=(32767, 32767, 32767),  # 128
+        #    thickness=cv2.FILLED,
+        #    lineType=cv2.LINE_AA,
+        #)
+
+        ## ring
+        #cv2.circle(
+        #    base_image,
+        #    center=(int(base_image_width / 2), int(base_image_height / 2)),
+        #    radius=int(base_image_height / 4),
+        #    color=(16383, 16383, 16383),  # 64
+        #    thickness=3,
+        #    lineType=cv2.LINE_AA,
+        #)
+
+
         center_x = int(base_image_width / 2)
         center_y = int(base_image_height / 2)
 
@@ -769,15 +791,19 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
             )
 
 
+        image_width = int(self.camera_info['width'] / binning)
+        image_height = int(self.camera_info['height'] / binning)
+
+
         # slice the image
-        start_width = int(center_x - (self.camera_info['width'] / 2))  # center width
-        start_height = int(self.camera_info['height'] * .7)  # offset height
+        start_width = int(center_x - (image_width / 2))  # center width
+        start_height = int(center_y - (image_height * 0.7))  # offset height
 
         #logger.info('Center: %d x %d - Start: %d x %d', center_x, center_y, start_width, start_height)
 
         self._image = base_image[
-            start_height:start_height + int(self.camera_info['height'] / binning),
-            start_width:start_width + int(self.camera_info['width'] / binning),
+            start_height:start_height + image_height,
+            start_width:start_width + image_width,
         ]
 
 
