@@ -2146,6 +2146,41 @@ class ImageProcessor(object):
         self.image = self._gamma_lut.take(self.image, mode='raise')
 
 
+    def sharpen(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
+
+        if self.config.get('USE_NIGHT_COLOR', True):
+            SHARPEN_AMOUNT = float(self.config.get('SHARPEN_AMOUNT', 0.0))
+        else:
+            if self.night_av[constants.NIGHT_NIGHT]:
+                # night
+                SHARPEN_AMOUNT = float(self.config.get('SHARPEN_AMOUNT', 0.0))
+            else:
+                # day
+                SHARPEN_AMOUNT = float(self.config.get('SHARPEN_AMOUNT_DAY', 0.0))
+
+
+        if SHARPEN_AMOUNT == 0.0:
+            # no action
+            return
+
+
+        self.image = self._sharpen(SHARPEN_AMOUNT)
+
+        return True
+
+
+    def _sharpen(self, amount):
+        # Unsharp mask: sharpened = original + amount * (original - blurred)
+        # GaussianBlur with small kernel extracts low-frequency component;
+        # subtracting it amplifies high-frequency detail (edges/stars).
+        blurred_image = cv2.GaussianBlur(self.image, (0, 0), sigmaX=2)
+        return cv2.addWeighted(self.image, 1.0 + amount, blurred_image, -amount, 0)
+
+
     def colorize(self):
         if len(self.image.shape) == 3:
             # already color

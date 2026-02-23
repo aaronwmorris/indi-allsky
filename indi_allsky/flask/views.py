@@ -2283,6 +2283,8 @@ class ConfigView(FormView):
             'SATURATION_FACTOR_DAY'          : self.indi_allsky_config.get('SATURATION_FACTOR_DAY', 1.0),
             'GAMMA_CORRECTION'               : self.indi_allsky_config.get('GAMMA_CORRECTION', 1.0),
             'GAMMA_CORRECTION_DAY'           : self.indi_allsky_config.get('GAMMA_CORRECTION_DAY', 1.0),
+            'SHARPEN_AMOUNT'                 : self.indi_allsky_config.get('SHARPEN_AMOUNT', 0.0),
+            'SHARPEN_AMOUNT_DAY'             : self.indi_allsky_config.get('SHARPEN_AMOUNT_DAY', 0.0),
             'CCD_COOLING'                    : self.indi_allsky_config.get('CCD_COOLING', False),
             'CCD_COOLING_DAY'                : self.indi_allsky_config.get('CCD_COOLING_DAY', False),
             'CCD_TEMP'                       : self.indi_allsky_config.get('CCD_TEMP', 15.0),
@@ -3283,6 +3285,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['SATURATION_FACTOR_DAY']                = float(request.json['SATURATION_FACTOR_DAY'])
         self.indi_allsky_config['GAMMA_CORRECTION']                     = float(request.json['GAMMA_CORRECTION'])
         self.indi_allsky_config['GAMMA_CORRECTION_DAY']                 = float(request.json['GAMMA_CORRECTION_DAY'])
+        self.indi_allsky_config['SHARPEN_AMOUNT']                       = float(request.json['SHARPEN_AMOUNT'])
+        self.indi_allsky_config['SHARPEN_AMOUNT_DAY']                   = float(request.json['SHARPEN_AMOUNT_DAY'])
         self.indi_allsky_config['CCD_COOLING']                          = bool(request.json['CCD_COOLING'])
         self.indi_allsky_config['CCD_COOLING_DAY']                      = bool(request.json['CCD_COOLING_DAY'])
         self.indi_allsky_config['CCD_TEMP']                             = float(request.json['CCD_TEMP'])
@@ -7469,6 +7473,7 @@ class ImageProcessingView(TemplateView):
             'WBB_MTF_MIDTONES'               : self.indi_allsky_config.get('WBB_MTF_MIDTONES', 0.5),
             'SATURATION_FACTOR'              : self.indi_allsky_config.get('SATURATION_FACTOR', 1.0),
             'GAMMA_CORRECTION'               : self.indi_allsky_config.get('GAMMA_CORRECTION', 1.0),
+            'SHARPEN_AMOUNT'                 : self.indi_allsky_config.get('SHARPEN_AMOUNT', 0.0),
             'IMAGE_ROTATE'                   : self.indi_allsky_config.get('IMAGE_ROTATE', ''),
             'IMAGE_ROTATE_ANGLE'             : self.indi_allsky_config.get('IMAGE_ROTATE_ANGLE', 0),
             'IMAGE_FLIP_V'                   : self.indi_allsky_config.get('IMAGE_FLIP_V', True),
@@ -7734,6 +7739,7 @@ class JsonImageProcessingView(JsonView):
         p_config['AUTO_WB']                              = bool(request.json['AUTO_WB'])
         p_config['SATURATION_FACTOR']                    = float(request.json['SATURATION_FACTOR'])
         p_config['GAMMA_CORRECTION']                     = float(request.json['GAMMA_CORRECTION'])
+        p_config['SHARPEN_AMOUNT']                       = float(request.json['SHARPEN_AMOUNT'])
         p_config['IMAGE_ROTATE']                         = str(request.json['IMAGE_ROTATE'])
         p_config['IMAGE_ROTATE_ANGLE']                   = int(request.json['IMAGE_ROTATE_ANGLE'])
         p_config['IMAGE_FLIP_V']                         = bool(request.json['IMAGE_FLIP_V'])
