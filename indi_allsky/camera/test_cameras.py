@@ -43,8 +43,8 @@ class IndiClientTestCameraBase(IndiClient):
         self._width = self.config.get('TEST_CAMERA', {}).get('WIDTH', 4056)
         self._height = self.config.get('TEST_CAMERA', {}).get('HEIGHT', 3040)
         self._image_circle_diameter = self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_DIAMETER', 3500)
-        self._image_circle_offset_x = self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_OFFSET_X', 0)
-        self._image_circle_offset_y = self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_OFFSET_Y', 0)
+        self._image_circle_offset_x = (self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_OFFSET_X', 0) * -1)  # reverse offsets because image will be flipped
+        self._image_circle_offset_y = (self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_OFFSET_Y', 0) * -1)
 
 
         # bogus info for now
