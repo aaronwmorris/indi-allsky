@@ -737,16 +737,16 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         )
 
 
-        center_x = int(base_image_width / 2)
-        center_y = int(base_image_height / 2)
+        base_center_x = int(base_image_width / 2)
+        base_center_y = int(base_image_height / 2)
 
 
         #rot_start = time.time()
 
 
         # calculate new coordinates based on rotation (vectorized)
-        Ax = self.stars_array[0] - center_x
-        Ay = self.stars_array[1] - center_y
+        Ax = self.stars_array[0] - base_center_x
+        Ay = self.stars_array[1] - base_center_y
 
         rotation_degrees = (360.0 / 86400) * (time.time() - self._last_exposure_time)  # sidereal day
         #logger.info('Rotation: %0.3f - Factor: %0.1f', rotation_degrees, self.rotation_factor)
@@ -754,8 +754,8 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         rot_radians = math.radians(rotation_degrees * self.rotation_factor)
 
 
-        self.stars_array[0] = (center_x + (math.cos(rot_radians) * Ax + math.sin(rot_radians) * Ay)).astype(numpy.float32)
-        self.stars_array[1] = (center_y + ((math.sin(rot_radians) * -1) * Ax + math.cos(rot_radians) * Ay)).astype(numpy.float32)
+        self.stars_array[0] = (base_center_x + (math.cos(rot_radians) * Ax + math.sin(rot_radians) * Ay)).astype(numpy.float32)
+        self.stars_array[1] = (base_center_y + ((math.sin(rot_radians) * -1) * Ax + math.cos(rot_radians) * Ay)).astype(numpy.float32)
 
 
         #rot_elapsed_s = time.time() - rot_start
@@ -806,8 +806,8 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
 
 
         # slice the image
-        start_width = int(center_x - (image_width / 2))  # center width
-        start_height = int(center_y - (image_height * 0.7))  # offset height
+        start_width = int(base_center_x - (image_width / 2))  # center width
+        start_height = int(base_center_y - (image_height * 0.7))  # offset height
 
         #logger.info('Center: %d x %d - Start: %d x %d', center_x, center_y, start_width, start_height)
 
