@@ -19,6 +19,10 @@ logger = logging.getLogger('indi_allsky')
 
 
 class IndiClientTestCameraBase(IndiClient):
+
+    image_bit_depth = 16
+
+
     def __init__(self, *args, **kwargs):
         super(IndiClientTestCameraBase, self).__init__(*args, **kwargs)
 
@@ -39,6 +43,8 @@ class IndiClientTestCameraBase(IndiClient):
         self._width = self.config.get('TEST_CAMERA', {}).get('WIDTH', 4056)
         self._height = self.config.get('TEST_CAMERA', {}).get('HEIGHT', 3040)
         self._image_circle_diameter = self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_DIAMETER', 3500)
+        self._image_circle_offset_x = (self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_OFFSET_X', 0) * -1)  # reverse offsets because image will be flipped
+        self._image_circle_offset_y = (self.config.get('TEST_CAMERA', {}).get('IMAGE_CIRCLE_OFFSET_Y', 0) * -1)
 
 
         # bogus info for now
@@ -51,15 +57,15 @@ class IndiClientTestCameraBase(IndiClient):
             'min_exposure'  : 0.000032,
             'max_exposure'  : 60.0,
             'min_binning'   : 1,
-            'max_binning'   : 1,
+            'max_binning'   : 4,
             'cfa'           : None,
-            'bit_depth'     : 8,
+            'bit_depth'     : 16,
         }
 
 
         self._last_exposure_time = time.time()
 
-        self._image_circle_alpha_mask = None
+        self._image_circle_alpha_mask_dict = dict()  # each key is binning mode
 
 
         varlib_folder = self.config.get('VARLIB_FOLDER', '/var/lib/indi-allsky')
@@ -77,6 +83,14 @@ class IndiClientTestCameraBase(IndiClient):
     @property
     def image_circle_diameter(self):
         return self._image_circle_diameter
+
+    @property
+    def image_circle_offset_x(self):
+        return self._image_circle_offset_x
+
+    @property
+    def image_circle_offset_y(self):
+        return self._image_circle_offset_y
 
 
     def getCcdGain(self):
@@ -141,7 +155,7 @@ class IndiClientTestCameraBase(IndiClient):
 
 
         # update the synthetic image
-        self.updateImage()
+        self.updateImage(self.binning)
 
 
         # update reference
@@ -399,22 +413,23 @@ class IndiClientTestCameraBase(IndiClient):
             hdulist.writeto(f_image)
 
 
-    def _generate_image_circle_mask(self, image):
+    def _generate_image_circle_mask(self, image, binning):
         import numpy
         import cv2
 
         image_height, image_width = image.shape[:2]
 
+        max_value = (2 ** self.image_bit_depth) - 1
 
         opacity = 100
-        background = int(255 * (100 - opacity) / 100)
+        background = int(max_value * (100 - opacity) / 100)
 
-        channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint8)
+        channel_mask = numpy.full([image_height, image_width], background, dtype=numpy.uint16)
 
-        center_x = int(image_width / 2)
-        center_y = int(image_height / 2)
-        radius = int(self.image_circle_diameter / 2)
-        blur = 75
+        center_x = int((image_width / 2) + (self.image_circle_offset_x / binning))
+        center_y = int((image_height / 2) - (self.image_circle_offset_y / binning))  # minus
+        radius = int((self.image_circle_diameter / binning) / 2)
+        blur = int(75 / binning)
 
 
         # draw a white circle
@@ -422,7 +437,7 @@ class IndiClientTestCameraBase(IndiClient):
             img=channel_mask,
             center=(center_x, center_y),
             radius=radius,
-            color=(255),
+            color=max_value,  # mono
             thickness=cv2.FILLED,
         )
 
@@ -436,7 +451,7 @@ class IndiClientTestCameraBase(IndiClient):
             )
 
 
-        channel_alpha = (channel_mask / 255).astype(numpy.float32)
+        channel_alpha = (channel_mask / max_value).astype(numpy.float32)
 
         alpha_mask = numpy.dstack((channel_alpha, channel_alpha, channel_alpha))
 
@@ -448,7 +463,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
     bubble_speed = 100
     bubble_radius_min = 5
     bubble_radius_max = 100
-    background_color = (24, 24, 24)
+    background_color = (6144, 6144, 6144)  # 24 in 8-bit rgb
 
 
     def __init__(self, *args, **kwargs):
@@ -491,7 +506,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
         super(IndiClientTestCameraBubbles, self).disconnectServer(*args, **kwargs)
 
 
-    def updateImage(self):
+    def updateImage(self, binning):
         import numpy
         import cv2
 
@@ -503,7 +518,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
             try:
                 logger.info('Loading stored bubbles data')
                 with io.open(str(self._bubbles_store_p), 'r+b') as f_numpy:
-                    self.bubbles_array = numpy.load(f_numpy)
+                    self.bubbles_array = numpy.load(f_numpy).astype(numpy.int32)
 
                 if self.bubbles_array.shape[1] != self.bubble_count:
                     # if bubble count changes, create new array
@@ -523,16 +538,19 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
         if isinstance(self.bubbles_array, type(None)):
             # create new set of random bubbles
-            self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int16)  # x, y, radius, r, g, b
+            self.bubbles_array = numpy.zeros([6, self.bubble_count], dtype=numpy.int32)  # x, y, radius, r, g, b
 
+
+            max_value = (2 ** self.image_bit_depth) - 1
 
             for i in range(self.bubbles_array.shape[1]):
-                r = random.randrange(255)
-                g = random.randrange(255)
-                b = random.randrange(255)
+                r = random.randrange(max_value)
+                g = random.randrange(max_value)
+                b = random.randrange(max_value)
 
                 radius = random.randrange(self.bubble_radius_min, self.bubble_radius_max)
 
+                # circles will be drawn out of bounds in a higher binning mode
                 x = random.randrange(self.camera_info['width'])
                 y = random.randrange(self.camera_info['height'] * 2)
 
@@ -545,15 +563,19 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
                 self.bubbles_array[5][i] = b
 
 
+        image_width = int(self.camera_info['width'] / binning)
+        image_height = int(self.camera_info['height'] / binning)
+
+
         # create blank image
         self._image = numpy.full(
             [
-                self.camera_info['height'],
-                self.camera_info['width'],
+                image_height,
+                image_width,
                 3
             ],
             self.background_color,
-            dtype=numpy.uint8,
+            dtype=numpy.uint16,
         )
 
 
@@ -568,7 +590,7 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
                 self.bubbles_array[1][i] = (self.bubble_radius_max * -1) + ((self.camera_info['height'] * 2) % self.bubble_speed)
 
 
-            center = (int(self.bubbles_array[0][i]), int(self.bubbles_array[1][i]))
+            center = (round(self.bubbles_array[0][i]), round(self.bubbles_array[1][i]))
             radius = int(self.bubbles_array[2][i])
             color = (int(self.bubbles_array[3][i]), int(self.bubbles_array[4][i]), int(self.bubbles_array[5][i]))
 
@@ -583,19 +605,19 @@ class IndiClientTestCameraBubbles(IndiClientTestCameraBase):
 
 
         if self.image_circle_diameter:
-            if isinstance(self._image_circle_alpha_mask, type(None)):
-                self._image_circle_alpha_mask = self._generate_image_circle_mask(self._image)
+            if isinstance(self._image_circle_alpha_mask_dict.get(binning), type(None)):
+                self._image_circle_alpha_mask_dict[binning] = self._generate_image_circle_mask(self._image, binning)
 
 
             # simulate an image circle
-            self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
+            self._image = (self._image * self._image_circle_alpha_mask_dict[binning]).astype(numpy.uint16)
 
 
 class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
     # This is basically a flat-earth sky simulator :-)
 
     star_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
-    background_color = (24, 24, 24)
+    background_color = (6144, 6144, 6144)  # 24 in 8-bit rgb
 
 
     def __init__(self, *args, **kwargs):
@@ -619,10 +641,6 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         #}
 
 
-        self._base_image = None
-        self.base_image_width = self.camera_info['width'] * 3
-        self.base_image_height = self.camera_info['height'] * 3
-
         self.star_count = self.config.get('TEST_CAMERA', {}).get('ROTATING_STAR_COUNT', 30000)
         self.rotation_factor = self.config.get('TEST_CAMERA', {}).get('ROTATING_STAR_FACTOR', 1.0)
 
@@ -638,12 +656,12 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         if not isinstance(self._stars_store_p, type(None)):
             logger.info('Storing stars test data')
             with io.open(str(self._stars_store_p), 'w+b') as f_numpy:
-                numpy.save(f_numpy, self.stars_array.astype(numpy.float16))  # reduce precision to reduce space
+                numpy.save(f_numpy, self.stars_array)
 
         super(IndiClientTestCameraRotatingStars, self).disconnectServer(*args, **kwargs)
 
 
-    def updateImage(self):
+    def updateImage(self, binning):
         import numpy
         import cv2
 
@@ -678,16 +696,19 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
             # create new set of random stars
             self.stars_array = numpy.zeros([6, self.star_count], dtype=numpy.float32)  # x, y, radius, r, g, b
 
+            max_value = (2 ** self.image_bit_depth) - 1  # 16-bit RGB
 
             for i in range(self.stars_array.shape[1]):
-                r = random.randrange(255)
-                g = random.randrange(255)
-                b = random.randrange(255)
+                r = random.randrange(max_value)
+                g = random.randrange(max_value)
+                b = random.randrange(max_value)
 
                 radius = random.choice(self.star_sizes)
 
-                x = random.randrange(self.base_image_width)
-                y = random.randrange(self.base_image_height)
+
+                # stars will be drawn out of bounds in a higher binning mode
+                x = random.randrange(self.camera_info['width'] * 3)
+                y = random.randrange(self.camera_info['height'] * 3)
 
 
                 self.stars_array[0][i] = x
@@ -700,49 +721,32 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
                 #logger.info('XY: %d x %d', x, y)
 
 
+        base_image_width = self.camera_info['width'] * 3
+        base_image_height = self.camera_info['height'] * 3
+
+
         # create blank image
-        self._base_image = numpy.full(
+        base_image = numpy.full(
             [
-                self.base_image_height,
-                self.base_image_width,
+                base_image_height,
+                base_image_width,
                 3
             ],
             self.background_color,
-            dtype=numpy.uint8,
+            dtype=numpy.uint16,
         )
 
 
-        ### test circles
-        #cv2.circle(
-        #    self._base_image,
-        #    center=(int(self.base_image_width / 2), int(self.base_image_height / 2)),
-        #    radius=15,
-        #    color=(128, 128, 128),
-        #    thickness=cv2.FILLED,
-        #    lineType=cv2.LINE_AA,
-        #)
-
-        #cv2.circle(
-        #    self._base_image,
-        #    center=(int(self.base_image_width / 2), int(self.base_image_height / 2)),
-        #    radius=int(self.base_image_height / 4),
-        #    color=(64, 64, 64),
-        #    thickness=3,
-        #    lineType=cv2.LINE_AA,
-        #)
-
-
-
-        center_x = int(self.base_image_width / 2)
-        center_y = int(self.base_image_height / 2)
+        base_center_x = int(base_image_width / 2)
+        base_center_y = int(base_image_height / 2)
 
 
         #rot_start = time.time()
 
 
         # calculate new coordinates based on rotation (vectorized)
-        Ax = self.stars_array[0] - center_x
-        Ay = self.stars_array[1] - center_y
+        Ax = self.stars_array[0] - base_center_x
+        Ay = self.stars_array[1] - base_center_y
 
         rotation_degrees = (360.0 / 86400) * (time.time() - self._last_exposure_time)  # sidereal day
         #logger.info('Rotation: %0.3f - Factor: %0.1f', rotation_degrees, self.rotation_factor)
@@ -750,8 +754,8 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
         rot_radians = math.radians(rotation_degrees * self.rotation_factor)
 
 
-        self.stars_array[0] = (center_x + (math.cos(rot_radians) * Ax + math.sin(rot_radians) * Ay)).astype(numpy.float32)
-        self.stars_array[1] = (center_y + ((math.sin(rot_radians) * -1) * Ax + math.cos(rot_radians) * Ay)).astype(numpy.float32)
+        self.stars_array[0] = (base_center_x + (math.cos(rot_radians) * Ax + math.sin(rot_radians) * Ay)).astype(numpy.float32)
+        self.stars_array[1] = (base_center_y + ((math.sin(rot_radians) * -1) * Ax + math.cos(rot_radians) * Ay)).astype(numpy.float32)
 
 
         #rot_elapsed_s = time.time() - rot_start
@@ -766,7 +770,7 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
             #logger.info('Center: %s', center)
 
             cv2.circle(
-                self._base_image,
+                base_image,
                 center=center,
                 radius=radius,
                 color=color,
@@ -775,24 +779,50 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
             )
 
 
+        image_width = int(self.camera_info['width'] / binning)
+        image_height = int(self.camera_info['height'] / binning)
+
+
+        ### test circles
+        ## center
+        #cv2.circle(
+        #    base_image,
+        #    center=(int(base_image_width / 2), int(base_image_height / 2)),
+        #    radius=15,
+        #    color=(32767, 32767, 32767),  # 128
+        #    thickness=cv2.FILLED,
+        #    lineType=cv2.LINE_AA,
+        #)
+
+        ## ring
+        #cv2.circle(
+        #    base_image,
+        #    center=(int(base_image_width / 2), int(base_image_height / 2)),
+        #    radius=int(image_height / 2),
+        #    color=(16383, 16383, 16383),  # 64
+        #    thickness=10,
+        #    lineType=cv2.LINE_AA,
+        #)
+
+
         # slice the image
-        start_width = int(center_x - (self.camera_info['width'] / 2))  # center width
-        start_height = int(self.camera_info['height'] * .7)  # offset height
+        start_width = int(base_center_x - (image_width / 2))  # center width
+        start_height = int(base_center_y - (image_height * 0.7))  # offset height
 
         #logger.info('Center: %d x %d - Start: %d x %d', center_x, center_y, start_width, start_height)
 
-        self._image = self._base_image[
-            start_height:start_height + self.camera_info['height'],
-            start_width:start_width + self.camera_info['width'],
+        self._image = base_image[
+            start_height:start_height + image_height,
+            start_width:start_width + image_width,
         ]
 
 
         if self.image_circle_diameter:
-            if isinstance(self._image_circle_alpha_mask, type(None)):
-                self._image_circle_alpha_mask = self._generate_image_circle_mask(self._image)
+            if isinstance(self._image_circle_alpha_mask_dict.get(binning), type(None)):
+                self._image_circle_alpha_mask_dict[binning] = self._generate_image_circle_mask(self._image, binning)
 
 
             # simulate an image circle
-            self._image = (self._image * self._image_circle_alpha_mask).astype(numpy.uint8)
+            self._image = (self._image * self._image_circle_alpha_mask_dict[binning]).astype(numpy.uint16)
 
 
