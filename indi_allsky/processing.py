@@ -3655,13 +3655,13 @@ class ImageProcessor(object):
         #border_color_bgr.reverse()
 
 
-        if image_width < image_circle_diameter + (abs(x_offset) * 2):
+        if image_width + (abs(x_offset) * 2) < image_circle_diameter + (abs(x_offset) * 2):
             new_width = image_circle_diameter + (abs(x_offset) * 2)
         else:
             new_width = image_width + (abs(x_offset) * 2)
 
 
-        if image_height < image_circle_diameter + (abs(y_offset) * 2):
+        if image_height + (abs(y_offset) * 2) < image_circle_diameter + (abs(y_offset) * 2):
             new_height = image_circle_diameter + (abs(y_offset) * 2)
         else:
             new_height = image_height + (abs(y_offset) * 2)
@@ -3671,9 +3671,12 @@ class ImageProcessor(object):
         new_image = numpy.full([new_height, new_width, 3], border_color_bgr, dtype=numpy.uint8)
 
 
+        new_center_x = int(new_width / 2)
+        new_center_y = int(new_height / 2)
+
         # recenter the image using the offsets
-        x = int(((new_width / 2) - (image_width / 2)) - x_offset)  # reversed operations
-        y = int(((new_height / 2) - (image_height / 2)) + y_offset)
+        x = int((new_center_x - (image_width / 2)) - x_offset)  # reversed operations
+        y = int((new_center_y - (image_height / 2)) + y_offset)
         #logger.info('X: %d, Y: %d', x, y)
 
         new_image[
