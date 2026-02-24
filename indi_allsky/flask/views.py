@@ -8073,6 +8073,10 @@ class JsonImageProcessingView(JsonView):
             image_processor.apply_gamma_correction()
 
 
+            # sharpening (unsharp mask)
+            image_processor.sharpen()
+
+
             if p_config['NIGHT_CONTRAST_ENHANCE']:
                 if not p_config.get('CONTRAST_ENHANCE_16BIT'):
                     image_processor.contrast_clahe()
