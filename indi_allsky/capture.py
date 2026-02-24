@@ -267,6 +267,7 @@ class CaptureWorker(Process):
         #self.periodic_tasks_time = now_time  # testing
 
         self.sqm_camera_enable = self.config.get('CAMERA_SQM', {}).get('ENABLE')
+        self.sqm_camera_enable_day = self.config.get('CAMERA_SQM', {}).get('ENABLE_DAY')
         self.sqm_tasks_offset = self.config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900)
         self.sqm_tasks_time = now_time + min(300, self.sqm_tasks_offset)  # take SQM exposure 5 minutes (or less) after starting
 
@@ -349,6 +350,7 @@ class CaptureWorker(Process):
         next_frame_time = time.time()  # start immediately
         frame_start_time = time.time()
         waiting_for_frame = False
+        waiting_for_sqm_frame = False
 
         camera_ready_time = time.time()
         camera_ready = False
@@ -597,6 +599,7 @@ class CaptureWorker(Process):
                         camera_ready = True
                         exposure_state = 'Aborted'
                         waiting_for_frame = False
+                        waiting_for_sqm_frame = False
 
 
                     if not camera_ready:
@@ -614,6 +617,7 @@ class CaptureWorker(Process):
                         frame_delta = frame_elapsed - self.exposure_av[constants.EXPOSURE_CURRENT]
 
                         waiting_for_frame = False
+                        waiting_for_sqm_frame = False
 
                         logger.info('Exposure received in %0.4fs (%+0.4fs)', frame_elapsed, frame_delta)
 
@@ -699,7 +703,7 @@ class CaptureWorker(Process):
                         frame_start_time = now_time
 
 
-                        if not self.sqm_camera_enable:
+                        if not self.sqm_camera_enable or self.focus_mode:
                             # Normal exposure
                             self.shoot(
                                 self.exposure_av[constants.EXPOSURE_NEXT],
@@ -722,9 +726,11 @@ class CaptureWorker(Process):
                                         sync=False,
                                         sqm_exposure=True,
                                     )
+
+                                    waiting_for_sqm_frame = True
                                 else:
                                     # Day
-                                    if self.config.get('CAMERA_SQM', {}).get('ENABLE_DAY'):
+                                    if self.sqm_camera_enable_day:
                                         # SQM exposure
                                         logger.warning('SQM exposure triggered')
                                         self.shoot(
@@ -734,6 +740,8 @@ class CaptureWorker(Process):
                                             sync=False,
                                             sqm_exposure=True,
                                         )
+
+                                        waiting_for_sqm_frame = True
                                     else:
                                         # Normal exposure during day
                                         self.shoot(
@@ -790,6 +798,9 @@ class CaptureWorker(Process):
                             # Start frame immediately in focus mode
                             logger.warning('*** FOCUS MODE ENABLED ***')
                             next_frame_time = now_time + self.config.get('FOCUS_DELAY', 4.0) + self.add_period_delay
+                        elif waiting_for_sqm_frame:
+                            # take next exposure as quickly as possible
+                            pass
                         elif self.night:
                             next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD'] + self.add_period_delay
                         else:
