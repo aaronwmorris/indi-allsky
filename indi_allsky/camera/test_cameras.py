@@ -721,8 +721,8 @@ class IndiClientTestCameraRotatingStars(IndiClientTestCameraBase):
                 #logger.info('XY: %d x %d', x, y)
 
 
-        base_image_width = int(self.camera_info['width'] / binning) * 3
-        base_image_height = int(self.camera_info['height'] / binning) * 3
+        base_image_width = self.camera_info['width'] * 3
+        base_image_height = self.camera_info['height'] * 3
 
 
         # create blank image
