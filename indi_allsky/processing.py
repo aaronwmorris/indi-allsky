@@ -3675,8 +3675,8 @@ class ImageProcessor(object):
         new_center_y = int(new_height / 2)
 
         # recenter the image using the offsets
-        x = int((new_center_x - (image_width / 2)) - x_offset)  # reversed operations
-        y = int((new_center_y - (image_height / 2)) + y_offset)
+        x = int((new_center_x - (image_width / 2)) - (x_offset * -1))  # reversed operations
+        y = int((new_center_y - (image_height / 2)) + (y_offset * -1))
         #logger.info('X: %d, Y: %d', x, y)
 
         new_image[
