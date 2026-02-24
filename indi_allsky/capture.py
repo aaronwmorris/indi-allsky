@@ -800,7 +800,7 @@ class CaptureWorker(Process):
                             next_frame_time = now_time + self.config.get('FOCUS_DELAY', 4.0) + self.add_period_delay
                         elif waiting_for_sqm_frame:
                             # take next exposure as quickly as possible
-                            pass
+                            next_frame_time = frame_start_time
                         elif self.night:
                             next_frame_time = frame_start_time + self.config['EXPOSURE_PERIOD'] + self.add_period_delay
                         else:
