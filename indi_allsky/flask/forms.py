@@ -3811,6 +3811,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CIRCULAR_DISPLAY__RESOLUTION_choices = (
         ('800', '800x800'),
         ('720', '720x720'),
+        ('1080', '1080x1080'),
     )
 
     IMAGE_OVERLAY__IMAGE_FILE_TYPE_choices = (

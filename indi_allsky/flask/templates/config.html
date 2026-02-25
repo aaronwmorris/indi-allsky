@@ -4560,8 +4560,7 @@ var camera_id = {{ camera_id }};
             </div>
         </div>
         <div class="col-sm-8">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Round-Displays" class="text-decoration-none link-info" target="_blank">Round Display Wiki</a></div>
-            <div>Generate an image for a circular display - <a href="images/circular_display.jpg" class="text-decoration-none link-info" target="_blank">Link</a> </div>
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Round-Displays" class="text-decoration-none link-info" target="_blank">Round Display Wiki</a> - Generate an image for a circular display - <a href="images/circular_display.jpg" class="text-decoration-none link-info" target="_blank">Link</a> </div>
         </div>
     </div>
 
@@ -4574,6 +4573,7 @@ var camera_id = {{ camera_id }};
             <div id="CIRCULAR_DISPLAY__RESOLUTION-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
+            <div></div>
         </div>
     </div>
 
@@ -4586,7 +4586,8 @@ var camera_id = {{ camera_id }};
             <div id="CIRCULAR_DISPLAY__IMAGE_CIRCLE_DIAMETER-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Uses image circle offsets on the Location tab</div>
+            <div><a href="{{ url_for('indi_allsky.image_circle_helper_view') }}" class="text-decoration-none link-info" target="_blank">Image Circle Helper</a></div>
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Uses image circle offsets on the Location tab</div>
         </div>
     </div>
 
