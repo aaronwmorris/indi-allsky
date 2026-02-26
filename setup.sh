@@ -82,7 +82,8 @@ PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyind
 
 WEBSERVER="${INDIALLSKY_WEBSERVER:-apache}"
 STELLARMATE="${INDIALLSKY_STELLARMATE:-false}"
-ASTROBERRY="${INDIALLSKY_ASTROBERRY:-false}"
+ASTROBERRY3="${INDIALLSKY_ASTROBERRY3:-false}"
+ASTROBERRY2="${INDIALLSKY_ASTROBERRY2:-false}"
 
 INSTALL_MOSQUITTO="${INDIALLSKY_INSTALL_MOSQUITTO:-}"
 #### end config ####
@@ -258,14 +259,27 @@ if [[ -d "/etc/stellarmate" ]]; then
     echo
     sleep 3
 
+elif [[ -f "/etc/astroberry/version" ]]; then
+    echo
+    echo
+    echo "Detected Astroberry"
+    echo
+
+    ASTROBERRY3="true"
+    WEBSERVER="caddy"
+
+    echo
+    echo
+    sleep 3
+
 elif [[ -f "/etc/astroberry.version" ]]; then
     echo
     echo
-    echo "Detected Astroberry server"
+    echo "Detected Astroberry Server 2.0"
     echo
 
     if [ -n "${WHIPTAIL_BIN:-}" ]; then
-        if ! "$WHIPTAIL_BIN" --title "WARNING" --yesno "Astroberry is no longer supported.  Please use Raspbian or Ubuntu.\n\nDo you want to proceed anyway?" 0 0 --defaultno; then
+        if ! "$WHIPTAIL_BIN" --title "WARNING" --yesno "Astroberry Server 2.0 is no longer supported.  Please use Raspbian or Ubuntu.\n\nDo you want to proceed anyway?" 0 0 --defaultno; then
             exit 1
         fi
     else
@@ -276,7 +290,7 @@ elif [[ -f "/etc/astroberry.version" ]]; then
     fi
 
 
-    ASTROBERRY="true"
+    ASTROBERRY2="true"
     WEBSERVER="nginx"
 
 
@@ -1720,7 +1734,10 @@ if [[ "$STELLARMATE" == "true" ]]; then
         sudo apt-get -y install \
             libindi-dev
     fi
-elif [[ "$ASTROBERRY" == "true" ]]; then
+elif [[ "$ASTROBERRY3" == "true" ]]; then
+    # uses caddy
+    :
+elif [[ "$ASTROBERRY2" == "true" ]]; then
     # nginx already installed
     :
 else
@@ -2598,7 +2615,10 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 [[ -f "$TMP_GUNICORN" ]] && rm -f "$TMP_GUNICORN"
 
 
-if [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY" == "true" ]]; then
+if [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY3" == "true" ]]; then
+     echo "**** Setup astroberry caddy ****"
+
+elif [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY2" == "true" ]]; then
     #echo "**** Disabling apache web server (Astroberry) ****"
     #sudo systemctl stop apache2 || true
     #sudo systemctl disable apache2 || true
