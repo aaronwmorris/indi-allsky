@@ -262,7 +262,7 @@ if [[ -d "/etc/stellarmate" ]]; then
 elif [[ -f "/etc/astroberry/version" ]]; then
     echo
     echo
-    echo "Detected Astroberry"
+    echo "Detected Astroberry 3"
     echo
 
     ASTROBERRY3="true"
@@ -1748,6 +1748,9 @@ else
         elif [ "$WEBSERVER" == "apache" ]; then
             sudo apt-get -y install \
                 apache2
+        elif [ "$WEBSERVER" == "caddy" ]; then
+            sudo apt-get -y install \
+                caddy
         else
             echo
             echo "Unknown webserver: $WEBSERVER"
