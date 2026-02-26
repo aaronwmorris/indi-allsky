@@ -1483,7 +1483,7 @@ fi
 
 
 echo "**** Setup HTDOCS folder ****"
-[[ ! -d "$HTDOCS_FOLDER" ]] && sudo mkdir "$HTDOCS_FOLDER"
+[[ ! -d "$HTDOCS_FOLDER" ]] && sudo mkdir -p -m 755 "$HTDOCS_FOLDER"
 sudo chmod 755 "$HTDOCS_FOLDER"
 sudo chown -R "$USER":"$PGRP" "$HTDOCS_FOLDER"
 [[ ! -d "$HTDOCS_FOLDER/js" ]] && mkdir "$HTDOCS_FOLDER/js"
