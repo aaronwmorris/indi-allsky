@@ -2618,8 +2618,34 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 [[ -f "$TMP_GUNICORN" ]] && rm -f "$TMP_GUNICORN"
 
 
-if [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY3" == "true" ]]; then
-     echo "**** Setup astroberry caddy ****"
+if [[ "$WEBSERVER" == "caddy" && "$ASTROBERRY3" == "true" ]]; then
+    echo "**** Setup astroberry caddy ****"
+
+    TMP_HTTP=$(mktemp)
+    sed \
+     -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+     -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+     -e "s|%UPSTREAM_SERVER%|unix/$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
+     "${ALLSKY_DIRECTORY}/service/astroberry_caddy_indi-allsky_https.inc" > "$TMP_HTTP"
+
+
+    sudo cp -f "$TMP_HTTP" /etc/caddy/indi-allsky_https.inc
+    sudo chown root:root /etc/caddy/indi-allsky_https.inc
+    sudo chmod 644 /etc/caddy/indi-allsky_https.inc
+
+
+    if ! grep "indi-allsky" /etc/caddy/Caddyfile >/dev/null 2>&1; then
+        sudo cp -f /etc/caddy/Caddyfile /etc/caddy/Caddyfile.pre_indi-allsky
+
+        # insert include
+        sudo sed -i \
+          '/https:\/\/astroberry.local\ {/a\ \ \ \ \ \ \ \ import /etc/caddy/indi-allsky_https.inc\n' \
+          /etc/caddy/Caddyfile
+    fi
+
+
+    sudo systemctl enable caddy
+    sudo systemctl restart caddy
 
 elif [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY2" == "true" ]]; then
     #echo "**** Disabling apache web server (Astroberry) ****"
