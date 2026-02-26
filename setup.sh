@@ -1745,12 +1745,12 @@ else
         if [ "$WEBSERVER" == "nginx" ]; then
             sudo apt-get -y install \
                 nginx
-        elif [ "$WEBSERVER" == "apache" ]; then
-            sudo apt-get -y install \
-                apache2
         elif [ "$WEBSERVER" == "caddy" ]; then
             sudo apt-get -y install \
                 caddy
+        elif [ "$WEBSERVER" == "apache" ]; then
+            sudo apt-get -y install \
+                apache2
         else
             echo
             echo "Unknown webserver: $WEBSERVER"
@@ -2935,6 +2935,8 @@ elif [[ "$WEBSERVER" == "caddy" ]]; then
         echo "!!! WARNING - lighttpd is active - This might interfere with nginx !!!"
         sleep 3
     fi
+
+    # FUTURE - setup caddy here
 
 else
     echo
