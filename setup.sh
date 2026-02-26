@@ -2783,7 +2783,6 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
     fi
 
 
-
     if [ "$WEBSERVER_CONFIG" == "true" ]; then
         echo "**** Start apache2 service ****"
         TMP_HTTP=$(mktemp)
@@ -2893,6 +2892,22 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
         # Always do this
         sudo systemctl enable apache2
         sudo systemctl restart apache2
+    fi
+
+elif [[ "$WEBSERVER" == "caddy" ]]; then
+    if systemctl --quiet is-active nginx.service; then
+        echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
+        sleep 3
+    fi
+
+    if systemctl --quiet is-active apache2.service; then
+        echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
+        sleep 3
+    fi
+
+    if systemctl --quiet is-active lighttpd.service; then
+        echo "!!! WARNING - lighttpd is active - This might interfere with nginx !!!"
+        sleep 3
     fi
 
 else
