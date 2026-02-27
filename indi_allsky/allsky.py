@@ -17,6 +17,7 @@ import signal
 import logging
 
 import queue
+import multiprocessing
 from multiprocessing import Queue
 from multiprocessing import Array
 
@@ -74,6 +75,8 @@ class IndiAllSky(object):
 
         # should be inherited by all of the sub-processes
         locale.setlocale(locale.LC_ALL, '')
+
+        multiprocessing.set_start_method('fork')
 
         self.pid_lock = None
 
