@@ -76,6 +76,7 @@ class IndiAllSky(object):
         # should be inherited by all of the sub-processes
         locale.setlocale(locale.LC_ALL, '')
 
+        # https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
         multiprocessing.set_start_method('fork')
 
         self.pid_lock = None
