@@ -2621,31 +2621,51 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 if [[ "$WEBSERVER" == "caddy" && "$ASTROBERRY3" == "true" ]]; then
     echo "**** Setup astroberry caddy ****"
 
-    TMP_HTTP=$(mktemp)
-    sed \
-     -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
-     -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
-     -e "s|%UPSTREAM_SERVER%|unix/$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
-     "${ALLSKY_DIRECTORY}/service/astroberry_caddy_indi-allsky_https.inc" > "$TMP_HTTP"
 
-
-    sudo cp -f "$TMP_HTTP" /etc/caddy/indi-allsky_https.inc
-    sudo chown root:root /etc/caddy/indi-allsky_https.inc
-    sudo chmod 644 /etc/caddy/indi-allsky_https.inc
-
-
-    if ! grep "indi-allsky" /etc/caddy/Caddyfile >/dev/null 2>&1; then
-        sudo cp -f /etc/caddy/Caddyfile /etc/caddy/Caddyfile.pre_indi-allsky
-
-        # insert include
-        sudo sed -i \
-          '/https:\/\/astroberry.local\ {/a\ \ \ \ \ \ \ \ import /etc/caddy/indi-allsky_https.inc\n' \
-          /etc/caddy/Caddyfile
+    if [ -e "/etc/caddy/indi-allsky_https.inc" ]; then
+        while [ -z "${WEBSERVER_CONFIG:-}" ]; do
+            if whiptail --title "Web Server Configuration" --yesno "Do you want to update the web server configuration?\n\nIf you have performed customizations to the caddy config, you should choose \"no\"\n\n(Hint: Most people should pick \"yes\")" 0 0; then
+                WEBSERVER_CONFIG="true"
+            else
+                WEBSERVER_CONFIG="false"
+            fi
+        done
+    else
+        WEBSERVER_CONFIG="true"
     fi
 
 
-    sudo systemctl enable caddy
-    sudo systemctl restart caddy
+    if [ "$WEBSERVER_CONFIG" == "true" ]; then
+        if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+
+            TMP_HTTP=$(mktemp)
+            sed \
+             -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+             -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+             -e "s|%UPSTREAM_SERVER%|unix/$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
+             "${ALLSKY_DIRECTORY}/service/astroberry_caddy_indi-allsky_https.inc" > "$TMP_HTTP"
+
+
+            sudo cp -f "$TMP_HTTP" /etc/caddy/indi-allsky_https.inc
+            sudo chown root:root /etc/caddy/indi-allsky_https.inc
+            sudo chmod 644 /etc/caddy/indi-allsky_https.inc
+
+
+            if ! grep "indi-allsky" /etc/caddy/Caddyfile >/dev/null 2>&1; then
+                sudo cp -f /etc/caddy/Caddyfile /etc/caddy/Caddyfile.pre_indi-allsky
+
+                # insert include
+                sudo sed -i \
+                  '/https:\/\/astroberry.local\ {/a\ \ \ \ \ \ \ \ import /etc/caddy/indi-allsky_https.inc\n' \
+                  /etc/caddy/Caddyfile
+            fi
+        fi
+
+
+        # Always do this
+        sudo systemctl enable caddy
+        sudo systemctl restart caddy
+    fi
 
 elif [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY2" == "true" ]]; then
     #echo "**** Disabling apache web server (Astroberry) ****"
