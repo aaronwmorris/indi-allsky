@@ -253,7 +253,8 @@ https://github.com/aaronwmorris/indi-allsky/wiki/indilib-3rdparty-SDK-versions
 | Raspberry Pi 4                | Recommend 64-bit trixie (13) |
 | Raspberry Pi 3                | Recommend 64-bit trixie (13), recommend 1GB of swap |
 | Raspberry Pi Zero 2           | Recommend 64-bit trixie (13), memory constrained |
-| Raspberry Pi Zero             | Recommend 32-bit bullseye (12), memory constrained |
+| Raspberry Pi Zero             | Recommend 32-bit bullseye (11), memory constrained |
+| Raspberry Pi Zero W           | Recommend 32-bit bullseye (11), memory constrained, WiFi gets disabled so build from the console |
 | Rock Pi                       |      |
 | Libre Computer (Le Potato)    |      |
 | Orange Pi                     |      |
