@@ -215,7 +215,8 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Linux Mint 21                  | x86_64         | INDI installed from ppa:mutlaqja/ppa |
 | LMDE 6 (Linux Mint)            | x86_64         | Compile INDI with build_indi.sh |
 | Stellarmate 1.8.x              | x86_64/aarch64 | INDI pre-installed |
-| ~~Astroberry Server 2.0~~      | armhf          | (DO NOT USE) The Astroberry appears to be abandoned and is no longer supported with indi-allsky |
+| Astroberry 3.0                 | aarch64        | |
+| ~~Astroberry Server 2.0~~      | armhf          | (DO NOT USE) |
 
 
 ## INDI support

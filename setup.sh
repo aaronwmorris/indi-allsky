@@ -82,7 +82,8 @@ PYINDI_1_9_8="git+https://github.com/indilib/pyindi-client.git@ffd939b#egg=pyind
 
 WEBSERVER="${INDIALLSKY_WEBSERVER:-apache}"
 STELLARMATE="${INDIALLSKY_STELLARMATE:-false}"
-ASTROBERRY="${INDIALLSKY_ASTROBERRY:-false}"
+ASTROBERRY3="${INDIALLSKY_ASTROBERRY3:-false}"
+ASTROBERRY2="${INDIALLSKY_ASTROBERRY2:-false}"
 
 INSTALL_MOSQUITTO="${INDIALLSKY_INSTALL_MOSQUITTO:-}"
 #### end config ####
@@ -258,14 +259,27 @@ if [[ -d "/etc/stellarmate" ]]; then
     echo
     sleep 3
 
+elif [[ -f "/etc/astroberry/version" ]]; then
+    echo
+    echo
+    echo "Detected Astroberry 3"
+    echo
+
+    ASTROBERRY3="true"
+    WEBSERVER="caddy"
+
+    echo
+    echo
+    sleep 3
+
 elif [[ -f "/etc/astroberry.version" ]]; then
     echo
     echo
-    echo "Detected Astroberry server"
+    echo "Detected Astroberry Server 2.0"
     echo
 
     if [ -n "${WHIPTAIL_BIN:-}" ]; then
-        if ! "$WHIPTAIL_BIN" --title "WARNING" --yesno "Astroberry is no longer supported.  Please use Raspbian or Ubuntu.\n\nDo you want to proceed anyway?" 0 0 --defaultno; then
+        if ! "$WHIPTAIL_BIN" --title "WARNING" --yesno "Astroberry Server 2.0 is no longer supported.  Please use Raspbian or Ubuntu.\n\nDo you want to proceed anyway?" 0 0 --defaultno; then
             exit 1
         fi
     else
@@ -276,7 +290,7 @@ elif [[ -f "/etc/astroberry.version" ]]; then
     fi
 
 
-    ASTROBERRY="true"
+    ASTROBERRY2="true"
     WEBSERVER="nginx"
 
 
@@ -1720,7 +1734,10 @@ if [[ "$STELLARMATE" == "true" ]]; then
         sudo apt-get -y install \
             libindi-dev
     fi
-elif [[ "$ASTROBERRY" == "true" ]]; then
+elif [[ "$ASTROBERRY3" == "true" ]]; then
+    # uses caddy
+    :
+elif [[ "$ASTROBERRY2" == "true" ]]; then
     # nginx already installed
     :
 else
@@ -1728,6 +1745,9 @@ else
         if [ "$WEBSERVER" == "nginx" ]; then
             sudo apt-get -y install \
                 nginx
+        elif [ "$WEBSERVER" == "caddy" ]; then
+            sudo apt-get -y install \
+                caddy
         elif [ "$WEBSERVER" == "apache" ]; then
             sudo apt-get -y install \
                 apache2
@@ -2598,7 +2618,56 @@ chmod 644 "${ALLSKY_ETC}/gunicorn.conf.py"
 [[ -f "$TMP_GUNICORN" ]] && rm -f "$TMP_GUNICORN"
 
 
-if [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY" == "true" ]]; then
+if [[ "$WEBSERVER" == "caddy" && "$ASTROBERRY3" == "true" ]]; then
+    echo "**** Setup astroberry caddy ****"
+
+
+    if [ -e "/etc/caddy/indi-allsky_https.inc" ]; then
+        while [ -z "${WEBSERVER_CONFIG:-}" ]; do
+            if whiptail --title "Web Server Configuration" --yesno "Do you want to update the web server configuration?\n\nIf you have performed customizations to the caddy config, you should choose \"no\"\n\n(Hint: Most people should pick \"yes\")" 0 0; then
+                WEBSERVER_CONFIG="true"
+            else
+                WEBSERVER_CONFIG="false"
+            fi
+        done
+    else
+        WEBSERVER_CONFIG="true"
+    fi
+
+
+    if [ "$WEBSERVER_CONFIG" == "true" ]; then
+        if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+
+            TMP_HTTP=$(mktemp)
+            sed \
+             -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+             -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+             -e "s|%UPSTREAM_SERVER%|unix/$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
+             "${ALLSKY_DIRECTORY}/service/astroberry_caddy_indi-allsky_https.inc" > "$TMP_HTTP"
+
+
+            sudo cp -f "$TMP_HTTP" /etc/caddy/indi-allsky_https.inc
+            sudo chown root:root /etc/caddy/indi-allsky_https.inc
+            sudo chmod 644 /etc/caddy/indi-allsky_https.inc
+
+
+            if ! grep "indi-allsky" /etc/caddy/Caddyfile >/dev/null 2>&1; then
+                sudo cp -f /etc/caddy/Caddyfile /etc/caddy/Caddyfile.pre_indi-allsky
+
+                # insert include
+                sudo sed -i \
+                  '/https:\/\/astroberry.local\ {/a\ \ \ \ \ \ \ \ import /etc/caddy/indi-allsky_https.inc\n' \
+                  /etc/caddy/Caddyfile
+            fi
+        fi
+
+
+        # Always do this
+        sudo systemctl enable caddy
+        sudo systemctl restart caddy
+    fi
+
+elif [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY2" == "true" ]]; then
     #echo "**** Disabling apache web server (Astroberry) ****"
     #sudo systemctl stop apache2 || true
     #sudo systemctl disable apache2 || true
@@ -2760,7 +2829,6 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
     fi
 
 
-
     if [ "$WEBSERVER_CONFIG" == "true" ]; then
         echo "**** Start apache2 service ****"
         TMP_HTTP=$(mktemp)
@@ -2872,6 +2940,24 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
         sudo systemctl restart apache2
     fi
 
+elif [[ "$WEBSERVER" == "caddy" ]]; then
+    if systemctl --quiet is-active nginx.service; then
+        echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
+        sleep 3
+    fi
+
+    if systemctl --quiet is-active apache2.service; then
+        echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
+        sleep 3
+    fi
+
+    if systemctl --quiet is-active lighttpd.service; then
+        echo "!!! WARNING - lighttpd is active - This might interfere with nginx !!!"
+        sleep 3
+    fi
+
+    # FUTURE - setup caddy here
+
 else
     echo
     echo "Unknown web server: $WEBSERVER"
@@ -2890,7 +2976,7 @@ fi
 
 
 echo "**** Setup HTDOCS folder ****"
-[[ ! -d "$HTDOCS_FOLDER" ]] && sudo mkdir "$HTDOCS_FOLDER"
+[[ ! -d "$HTDOCS_FOLDER" ]] && sudo mkdir -p -m 755 "$HTDOCS_FOLDER"
 sudo chmod 755 "$HTDOCS_FOLDER"
 sudo chown -R "$USER":"$PGRP" "$HTDOCS_FOLDER"
 [[ ! -d "$HTDOCS_FOLDER/js" ]] && mkdir "$HTDOCS_FOLDER/js"

@@ -850,6 +850,9 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "r
     if [ "$WEBSERVER" == "nginx" ]; then
         sudo apt-get -y install \
             nginx
+    elif [ "$WEBSERVER" == "caddy" ]; then
+        sudo apt-get -y install \
+            caddy
     elif [ "$WEBSERVER" == "apache" ]; then
         sudo apt-get -y install \
             apache2
@@ -1336,6 +1339,24 @@ if [[ "$WEBSERVER" == "nginx" ]]; then
         sudo systemctl restart nginx
     fi
 
+elif [[ "$WEBSERVER" == "caddy" ]]; then
+    if systemctl --quiet is-active nginx.service; then
+        echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
+        sleep 3
+    fi
+
+    if systemctl --quiet is-active apache2.service; then
+        echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
+        sleep 3
+    fi
+
+    if systemctl --quiet is-active lighttpd.service; then
+        echo "!!! WARNING - lighttpd is active - This might interfere with nginx !!!"
+        sleep 3
+    fi
+
+    # FUTURE - setup caddy here
+
 elif [[ "$WEBSERVER" == "apache" ]]; then
     if systemctl --quiet is-active nginx; then
         echo "!!! WARNING - nginx is active - This might interfere with apache !!!"
@@ -1483,7 +1504,7 @@ fi
 
 
 echo "**** Setup HTDOCS folder ****"
-[[ ! -d "$HTDOCS_FOLDER" ]] && sudo mkdir "$HTDOCS_FOLDER"
+[[ ! -d "$HTDOCS_FOLDER" ]] && sudo mkdir -p -m 755 "$HTDOCS_FOLDER"
 sudo chmod 755 "$HTDOCS_FOLDER"
 sudo chown -R "$USER":"$PGRP" "$HTDOCS_FOLDER"
 [[ ! -d "$HTDOCS_FOLDER/js" ]] && mkdir "$HTDOCS_FOLDER/js"
