@@ -1522,9 +1522,10 @@ class JsonChartView(JsonView):
                 IndiAllSkyDbImageTable.sqm.label('jsqm'),
                 func.avg(IndiAllSkyDbImageTable.stars).over(order_by=IndiAllSkyDbImageTable.createDate, rows=(-5, 0)).label('stars_rolling'),
                 IndiAllSkyDbImageTable.temp,
+                IndiAllSkyDbImageTable.gain,
                 IndiAllSkyDbImageTable.exposure,
                 IndiAllSkyDbImageTable.detections,
-                (IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('jsqm_diff'),
+                #(IndiAllSkyDbImageTable.sqm - func.lag(IndiAllSkyDbImageTable.sqm).over(order_by=IndiAllSkyDbImageTable.createDate)).label('jsqm_diff'),
                 IndiAllSkyDbImageTable.data,
             )\
             .join(IndiAllSkyDbCameraTable)\
@@ -1545,6 +1546,7 @@ class JsonChartView(JsonView):
             'jsqm_d' : [],
             'stars' : [],
             'temp'  : [],
+            'gain'  : [],
             'exp'   : [],
             'detection' : [],
             'custom_1'  : [],
@@ -1617,11 +1619,17 @@ class JsonChartView(JsonView):
             }
             chart_data['exp'].append(exp_data)
 
-            jsqm_d_data = {
+            gain_data = {
                 'x' : x,
-                'y' : i.jsqm_diff,
+                'y' : i.gain,
             }
-            chart_data['jsqm_d'].append(jsqm_d_data)
+            chart_data['gain'].append(gain_data)
+
+            #jsqm_d_data = {
+            #    'x' : x,
+            #    'y' : i.jsqm_diff,
+            #}
+            #chart_data['jsqm_d'].append(jsqm_d_data)
 
 
             if i.detections > 0:

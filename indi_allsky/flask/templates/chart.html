@@ -41,6 +41,7 @@ var json_data = {
         'jsqm_d': [],
         'stars' : [],
         'temp'  : [],
+        'gain'  : [],
         'exp'   : [],
         'detection' : [],
         'custom_1'  : [],
@@ -116,6 +117,7 @@ function init() {
     });
 
 
+    /*
     ctx_jsqm_d = $('#jsqm_d-chart')[0].getContext('2d');
     jsqm_d_chart = new Chart(ctx_jsqm_d, {
         type: "bar",
@@ -161,6 +163,7 @@ function init() {
             }
         }
     });
+    */
 
 
     ctx_stars = $('#stars-chart')[0].getContext('2d');
@@ -298,6 +301,51 @@ function init() {
         }
     });
 
+    ctx_gain = $('#gain-chart')[0].getContext('2d');
+    gain_chart = new Chart(ctx_gain, {
+        type: "line",
+        data: {
+            datasets: [{
+                label: 'Gain',
+                pointRadius: 3,
+                backgroundColor: "rgba(192, 0, 0, 1)",
+                borderColor: "rgba(127, 0, 0, 1)",
+                tension: 0.1,
+                data: []
+            }],
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        color: "rgba(127, 127, 127, 1)",
+                    }
+                },
+            },
+            animation : false,
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        drawTicks: false,
+                        color: 'rgba(75, 75, 75, 1)',
+                    },
+                },
+                y: {
+                    beginAtZero:true,
+                    grid: {
+                        display: true,
+                        drawTicks: false,
+                        color: 'rgba(75, 75, 75, 1)',
+                        stacked: true,
+                    },
+                },
+            }
+        }
+    });
+
 
     ctx_detection = $('#detection-chart')[0].getContext('2d');
     detection_chart = new Chart(ctx_detection, {
@@ -344,7 +392,6 @@ function init() {
             }
         }
     });
-
 
     ctx_custom_1 = $('#custom-1-chart')[0].getContext('2d');
     custom_1_chart = new Chart(ctx_custom_1, {
@@ -858,10 +905,11 @@ function loadChartData() {
 
 function drawChart() {
     jsqm_chart.data.datasets[0].data = json_data['chart_data']['jsqm'];
-    jsqm_d_chart.data.datasets[0].data = json_data['chart_data']['jsqm_d'];
+    //jsqm_d_chart.data.datasets[0].data = json_data['chart_data']['jsqm_d'];
     stars_chart.data.datasets[0].data = json_data['chart_data']['stars'];
     temp_chart.data.datasets[0].data = json_data['chart_data']['temp'];
     exposure_chart.data.datasets[0].data = json_data['chart_data']['exp'];
+    gain_chart.data.datasets[0].data = json_data['chart_data']['gain'];
     detection_chart.data.datasets[0].data = json_data['chart_data']['detection'];
     custom_1_chart.data.datasets[0].data = json_data['chart_data']['custom_1'];
     custom_2_chart.data.datasets[0].data = json_data['chart_data']['custom_2'];
@@ -879,10 +927,11 @@ function drawChart() {
     histogram_chart.data.datasets[3].data = json_data['chart_data']['histogram']['gray'];
 
     jsqm_chart.update();
-    jsqm_d_chart.update();
+    //jsqm_d_chart.update();
     stars_chart.update();
     temp_chart.update();
     exposure_chart.update();
+    gain_chart.update();
     detection_chart.update();
     custom_1_chart.update();
     custom_2_chart.update();
@@ -990,7 +1039,7 @@ $( document ).ready(function() {
 
     <div class="col-sm-6">
         <div class="bg-dark" style="margin:3px">
-            <canvas id="stars-chart"></canvas>
+            <canvas id="gain-chart"></canvas>
         </div>
     </div>
 </div>
@@ -998,13 +1047,13 @@ $( document ).ready(function() {
 <div class="row">
     <div class="col-sm-6">
         <div class="bg-dark" style="margin:3px">
-            <canvas id="temp-chart"></canvas>
+            <canvas id="stars-chart"></canvas>
         </div>
     </div>
 
     <div class="col-sm-6">
         <div class="bg-dark" style="margin:3px">
-            <canvas id="detection-chart"></canvas>
+            <canvas id="temp-chart"></canvas>
         </div>
     </div>
 </div>
@@ -1018,7 +1067,7 @@ $( document ).ready(function() {
 
     <div class="col-sm-6">
         <div class="bg-dark" style="margin:3px">
-            <canvas id="jsqm_d-chart"></canvas>
+            <canvas id="detection-chart"></canvas>
         </div>
     </div>
 </div>
