@@ -26,7 +26,9 @@ OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 
 ### config ###
 INDISERVER_SERVICE_NAME="indiserver"
+INDI_CORE_REPO="https://github.com/indilib/indi.git"
 INDI_CORE_AUTO_TAG="v2.1.9"
+INDI_3RDPARTY_REPO="https://github.com/indilib/indi-3rdparty.git"
 INDI_3RDPARTY_AUTO_TAG="v2.1.9"
 INDI_AUTO_DRIVERS="supported"
 MAKE_BUILD_TYPE="${BUILD_INDI_MAKE_BUILD_TYPE:-Debug}"
@@ -1021,9 +1023,9 @@ if [ "${BUILD_INDI_CORE:-ask}" == "true" ]; then
     echo
 
     if [ "$INDI_CORE_TAG" == "HEAD" ]; then
-        git clone --depth 1 "https://github.com/indilib/indi.git" "${PROJECTS_FOLDER}/src/indi_core"
+        git clone --depth 1 "$INDI_CORE_REPO" "${PROJECTS_FOLDER}/src/indi_core"
     else
-        git clone --depth 1 --branch "$INDI_CORE_TAG" "https://github.com/indilib/indi.git" "${PROJECTS_FOLDER}/src/indi_core"
+        git clone --depth 1 --branch "$INDI_CORE_TAG" "$INDI_CORE_REPO" "${PROJECTS_FOLDER}/src/indi_core"
     fi
 
 
@@ -1065,9 +1067,9 @@ if [ "${BUILD_INDI_3RDPARTY:-ask}" == "true" ]; then
     echo
 
     if [ "$INDI_3RDPARTY_TAG" == "HEAD" ]; then
-        git clone --depth 1 "https://github.com/indilib/indi-3rdparty.git" "${PROJECTS_FOLDER}/src/indi_3rdparty"
+        git clone --depth 1 "$INDI_3RDPARTY_REPO" "${PROJECTS_FOLDER}/src/indi_3rdparty"
     else
-        git clone --depth 1 --branch "$INDI_3RDPARTY_TAG" "https://github.com/indilib/indi-3rdparty.git" "${PROJECTS_FOLDER}/src/indi_3rdparty"
+        git clone --depth 1 --branch "$INDI_3RDPARTY_TAG" "$INDI_3RDPARTY_REPO" "${PROJECTS_FOLDER}/src/indi_3rdparty"
     fi
 
 
