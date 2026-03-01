@@ -7124,6 +7124,7 @@ class JsonFocusView(JsonView):
         image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
         latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
         #latest_image_p = image_dir.joinpath('focus.fit')
+        latest_image_p = image_dir.joinpath('focus.png')
 
 
         if not latest_image_p.exists():

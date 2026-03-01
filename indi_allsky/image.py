@@ -1579,6 +1579,34 @@ class ImageWorker(Process):
         tmpfile_p.unlink()
 
 
+    def write_focus_png(self, data):
+
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.png')
+        f_tmpfile.close()
+
+        tmpfile_p = Path(f_tmpfile.name)
+
+        cv2.imwrite(str(tmpfile_p), data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+
+
+        focus_png_p = self.image_dir.joinpath('focus.png')
+
+
+        try:
+            focus_png_p.unlink()
+        except FileNotFoundError:
+            pass
+
+
+        shutil.copy2(str(tmpfile_p), str(focus_png_p))
+        focus_png_p.chmod(0o644)
+
+
+        # cleanup
+        tmpfile_p.unlink()
+
+
+
     def write_img(self, data, i_ref, camera, jpeg_exif=None):
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
@@ -1638,7 +1666,8 @@ class ImageWorker(Process):
         ### disable timelapse images in focus mode
         if self.config.get('FOCUS_MODE', False):
             logger.warning('Focus mode enabled, not saving timelapse image')
-            self.write_focus_fit(data)
+            #self.write_focus_fit(data)
+            self.write_focus_png(data)
             tmpfile_name.unlink()
             return None, None
 
