@@ -7122,7 +7122,7 @@ class JsonFocusView(JsonView):
         json_data['focus_mode'] = self.indi_allsky_config.get('FOCUS_MODE', False)
 
         image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-        latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
+        #latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
         #latest_image_p = image_dir.joinpath('focus.fit')
         latest_image_p = image_dir.joinpath('focus.png')
 
@@ -7198,8 +7198,8 @@ class JsonFocusView(JsonView):
 
 
         ### OpenCV
-        _, json_image = cv2.imencode('.jpg', image_roi, [cv2.IMWRITE_JPEG_QUALITY, 90])
-        #_, json_image = cv2.imencode('.png', image_roi, [cv2.IMWRITE_PNG_COMPRESSION, 5])
+        #_, json_image = cv2.imencode('.jpg', image_roi, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        _, json_image = cv2.imencode('.png', image_roi, [cv2.IMWRITE_PNG_COMPRESSION, 5])
         json_image_buffer = io.BytesIO(json_image.tobytes())
 
 
