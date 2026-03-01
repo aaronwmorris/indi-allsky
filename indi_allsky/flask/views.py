@@ -7122,14 +7122,16 @@ class JsonFocusView(JsonView):
         json_data['focus_mode'] = self.indi_allsky_config.get('FOCUS_MODE', False)
 
         image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-        #latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
-        latest_image_p = image_dir.joinpath('focus.fit')
+        latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
+        #latest_image_p = image_dir.joinpath('focus.fit')
 
 
         if not latest_image_p.exists():
             app.logger.error('Latest image does not exist')
             return jsonify({}), 400
 
+
+        focus_start = time.time()
 
         if latest_image_p.suffix in ('.jpg', '.jpeg'):
             import simplejpeg
@@ -7196,6 +7198,7 @@ class JsonFocusView(JsonView):
 
         ### OpenCV
         _, json_image = cv2.imencode('.jpg', image_roi, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #_, json_image = cv2.imencode('.png', image_roi, [cv2.IMWRITE_PNG_COMPRESSION, 5])
         json_image_buffer = io.BytesIO(json_image.tobytes())
 
 
@@ -7212,16 +7215,18 @@ class JsonFocusView(JsonView):
 
 
         ### Blur detection
-        vl_start = time.time()
+        #vl_start = time.time()
 
         ### determine variance of laplacian
         blur_score = cv2.Laplacian(image_roi, cv2.CV_32F).var()
         json_data['blur_score'] = float(blur_score)
         json_data['star_count'] = len(stars)
 
-        vl_elapsed_s = time.time() - vl_start
-        app.logger.info('Variance of laplacien in %0.4f s', vl_elapsed_s)
+        #vl_elapsed_s = time.time() - vl_start
+        #app.logger.info('Variance of laplacien in %0.4f s', vl_elapsed_s)
 
+        focus_elapsed_s = time.time() - focus_start
+        app.logger.info('Focus processing in %0.4f s', focus_elapsed_s)
 
         return jsonify(json_data)
 
