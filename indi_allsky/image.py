@@ -1562,10 +1562,13 @@ class ImageWorker(Process):
         tmpfile_p = Path(f_tmpfile.name)
 
 
-        focus_fit_p = Path('/tmp/indi_allsky_focus.fit')
+        focus_fit_p = self.image_dir.joinpath('focus.fit')
 
-        if focus_fit_p.exists():
+
+        try:
             focus_fit_p.unlink()
+        except FileNotFoundError:
+            pass
 
 
         shutil.copy2(str(tmpfile_p), str(focus_fit_p))

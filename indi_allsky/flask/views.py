@@ -7122,8 +7122,13 @@ class JsonFocusView(JsonView):
         json_data['focus_mode'] = self.indi_allsky_config.get('FOCUS_MODE', False)
 
         image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
-        latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
+        #latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
+        latest_image_p = image_dir.joinpath('focus.fit')
 
+
+        if not latest_image_p.exists():
+            app.logger.error('Latest image does not exist')
+            return jsonify({}), 400
 
 
         if latest_image_p.suffix in ('.jpg', '.jpeg'):
@@ -7143,6 +7148,20 @@ class JsonFocusView(JsonView):
             if isinstance(image_data, type(None)):
                 app.logger.error('Unable to read %s', latest_image_p)
                 return jsonify({}), 400
+        elif latest_image_p.suffix in ('.fit', '.fits'):
+            import numpy
+            from astropy.io import fits
+
+            try:
+                hdulist = fits.open(latest_image_p)
+            except OSError:
+                app.logger.error('Unable to read %s', latest_image_p)
+                return jsonify({}), 400
+
+            # data should be RGB
+            image_data = numpy.swapaxes(hdulist[0].data, 0, 2)
+            image_data = numpy.swapaxes(image_data, 0, 1)
+            image_data = cv2.cvtColor(image_data, cv2.COLOR_RGB2BGR)
 
         else:
             # Pillow supports remaining image types
