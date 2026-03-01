@@ -1536,6 +1536,46 @@ class ImageWorker(Process):
         tmpfile_name.unlink()
 
 
+    def write_focus_fit(self, data):
+        from astropy.io import fits
+
+        if len(data.shape) == 3:
+            # swap axes for FITS
+            data = numpy.swapaxes(data, 1, 0)
+            data = numpy.swapaxes(data, 2, 0)
+
+
+        # create a new fits container
+        hdu = fits.PrimaryHDU(data)
+        hdulist = fits.HDUList([hdu])
+
+        hdu.update_header()  # populates BITPIX, NAXIS, etc
+
+        hdulist[0].header['IMAGETYP'] = 'Light Frame'
+        hdulist[0].header['INSTRUME'] = 'focus'
+
+
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
+        hdulist.writeto(f_tmpfile)
+        f_tmpfile.close()
+
+        tmpfile_p = Path(f_tmpfile.name)
+
+
+        focus_fit_p = Path('/tmp/indi_allsky_focus.fit')
+
+        if focus_fit_p.exists():
+            focus_fit_p.unlink()
+
+
+        shutil.copy2(str(tmpfile_p), str(focus_fit_p))
+        focus_fit_p.chmod(0o644)
+
+
+        # cleanup
+        tmpfile_p.unlink()
+
+
     def write_img(self, data, i_ref, camera, jpeg_exif=None):
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
@@ -1595,6 +1635,7 @@ class ImageWorker(Process):
         ### disable timelapse images in focus mode
         if self.config.get('FOCUS_MODE', False):
             logger.warning('Focus mode enabled, not saving timelapse image')
+            self.write_focus_fit(data)
             tmpfile_name.unlink()
             return None, None
 
