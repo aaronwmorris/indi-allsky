@@ -205,6 +205,49 @@ iio.imwrite("<bytes>", img, extension=".jpeg")
 '''
 
 
+        setup_pywuffs_read = '''
+from pywuffs import ImageDecoderType, PixelFormat
+from pywuffs.aux import (
+    ImageDecoder,
+    ImageDecoderConfig,
+    ImageDecoderFlags
+)
+
+config = ImageDecoderConfig()
+
+# All decoders are enabled by default
+config.enabled_decoders = [ImageDecoderType.JPEG]
+
+config.pixel_format = PixelFormat.BGR
+
+decoder = ImageDecoder(config)
+
+
+import io
+with io.open("/dev/shm/image_bench.jpg", 'rb') as f_image:
+    img = f_image.read()
+'''
+
+        s_pywuffs_read = '''
+decoding_result = decoder.decode(img)
+'''
+
+
+#        setup_turbojpeg_read = '''
+#import io
+#from turbojpeg import TurboJPEG, TJPF_GRAY, TJFLAG_FASTUPSAMPLE, TJFLAG_FASTDCT
+#
+#jpeg = TurboJPEG()
+#
+#with io.open("/dev/shm/image_bench.jpg", 'rb') as f_image:
+#    img = f_image.read()
+#'''
+#
+#        s_turbojpeg_read = '''
+#jpeg.decode(img)
+##jpeg.decode(img, flags=TJFLAG_FASTUPSAMPLE|TJFLAG_FASTDCT)
+#'''
+
 
         # pillow
         t_pillow_read = timeit.timeit(stmt=s_pillow_read, setup=setup_pillow_read, number=self.rounds)
@@ -237,6 +280,15 @@ iio.imwrite("<bytes>", img, extension=".jpeg")
         t_imageio_write = timeit.timeit(stmt=s_imageio_write, setup=setup_imageio_write, number=self.rounds)
         logger.info('imageio encode: %0.3fms', t_imageio_write * 1000 / self.rounds)
 
+
+        #  pywuffs
+        t_pywuffs_read = timeit.timeit(stmt=s_pywuffs_read, setup=setup_pywuffs_read, number=self.rounds)
+        logger.info('pywuffs decode: %0.3fms', t_pywuffs_read * 1000 / self.rounds)
+
+
+        # turbojpeg (needs turbojpeg 3
+        #t_turbojpeg_read = timeit.timeit(stmt=s_turbojpeg_read, setup=setup_turbojpeg_read, number=self.rounds)
+        #logger.info('turbojpeg decode: %0.3fms', t_turbojpeg_read * 1000 / self.rounds)
 
 
 if __name__ == "__main__":
