@@ -256,7 +256,7 @@ sudo update-ca-certificates
 
 echo "**** Setup mosquitto config ****"
 TMP1=$(mktemp)
-cat "${ALLSKY_DIRECTORY}/misc/mosquitto_indi-allsky.conf" > "$TMP1"
+cat "${ALLSKY_DIRECTORY}/mqtt/mosquitto_indi-allsky.conf" > "$TMP1"
 
 sudo cp -f "$TMP1" "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"
 sudo chown root:root "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"

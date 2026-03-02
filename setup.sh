@@ -3182,7 +3182,7 @@ while [ -z "${INSTALL_MOSQUITTO:-}" ]; do
 done
 
 if [ "$INSTALL_MOSQUITTO" == "true" ]; then
-    "$ALLSKY_DIRECTORY/misc/setup_mosquitto_mqtt.sh"
+    "$ALLSKY_DIRECTORY/mqtt/setup_mosquitto_mqtt.sh"
 fi
 
 
