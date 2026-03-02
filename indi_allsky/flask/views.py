@@ -7123,8 +7123,16 @@ class JsonFocusView(JsonView):
 
         image_dir = Path(self.indi_allsky_config['IMAGE_FOLDER']).absolute()
         latest_image_p = image_dir.joinpath('latest.{0:s}'.format(self.indi_allsky_config['IMAGE_FILE_TYPE']))
+        #latest_image_p = image_dir.joinpath('focus.fit')
+        #latest_image_p = image_dir.joinpath('focus.png')
 
 
+        if not latest_image_p.exists():
+            app.logger.error('Latest image does not exist')
+            return jsonify({}), 400
+
+
+        #focus_start = time.time()
 
         if latest_image_p.suffix in ('.jpg', '.jpeg'):
             import simplejpeg
@@ -7143,6 +7151,20 @@ class JsonFocusView(JsonView):
             if isinstance(image_data, type(None)):
                 app.logger.error('Unable to read %s', latest_image_p)
                 return jsonify({}), 400
+        elif latest_image_p.suffix in ('.fit', '.fits'):
+            import numpy
+            from astropy.io import fits
+
+            try:
+                hdulist = fits.open(latest_image_p)
+            except OSError:
+                app.logger.error('Unable to read %s', latest_image_p)
+                return jsonify({}), 400
+
+            # data should be RGB
+            image_data = numpy.swapaxes(hdulist[0].data, 0, 2)
+            image_data = numpy.swapaxes(image_data, 0, 1)
+            image_data = cv2.cvtColor(image_data, cv2.COLOR_RGB2BGR)
 
         else:
             # Pillow supports remaining image types
@@ -7177,10 +7199,12 @@ class JsonFocusView(JsonView):
 
         ### OpenCV
         _, json_image = cv2.imencode('.jpg', image_roi, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #_, json_image = cv2.imencode('.png', image_roi, [cv2.IMWRITE_PNG_COMPRESSION, 5])
         json_image_buffer = io.BytesIO(json_image.tobytes())
 
 
         ### pillow
+        #from PIL import Image
         #json_image_buffer = io.BytesIO()
         #img = Image.fromarray(cv2.cvtColor(image_roi, cv2.COLOR_BGR2RGB))
         #img.save(json_image_buffer, format='JPEG', quality=90)
@@ -7193,16 +7217,18 @@ class JsonFocusView(JsonView):
 
 
         ### Blur detection
-        vl_start = time.time()
+        #vl_start = time.time()
 
         ### determine variance of laplacian
         blur_score = cv2.Laplacian(image_roi, cv2.CV_32F).var()
         json_data['blur_score'] = float(blur_score)
         json_data['star_count'] = len(stars)
 
-        vl_elapsed_s = time.time() - vl_start
-        app.logger.info('Variance of laplacien in %0.4f s', vl_elapsed_s)
+        #vl_elapsed_s = time.time() - vl_start
+        #app.logger.info('Variance of laplacien in %0.4f s', vl_elapsed_s)
 
+        #focus_elapsed_s = time.time() - focus_start
+        #app.logger.info('Focus processing in %0.4f s', focus_elapsed_s)
 
         return jsonify(json_data)
 

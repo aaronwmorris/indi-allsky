@@ -182,24 +182,113 @@ simplejpeg.encode_jpeg(img, colorspace='BGR', quality=90)
 '''
 
 
+        setup_imageio_read = '''
+import io
+import imageio.v3 as iio
 
+with io.open("/dev/shm/image_bench.jpg", 'rb') as f_image:
+    buf = io.BytesIO(f_image.read())
+'''
+
+        s_imageio_read = '''
+img = iio.imread(buf, index=None)
+'''
+
+        setup_imageio_write = '''
+import imageio.v3 as iio
+
+img = iio.imread("/dev/shm/image_bench.jpg")
+'''
+
+        s_imageio_write = '''
+iio.imwrite("<bytes>", img, extension=".jpeg")
+'''
+
+
+        setup_pywuffs_read = '''
+from pywuffs import ImageDecoderType, PixelFormat
+from pywuffs.aux import (
+    ImageDecoder,
+    ImageDecoderConfig,
+    ImageDecoderFlags
+)
+
+config = ImageDecoderConfig()
+
+# All decoders are enabled by default
+config.enabled_decoders = [ImageDecoderType.JPEG]
+
+config.pixel_format = PixelFormat.BGR
+
+decoder = ImageDecoder(config)
+
+
+import io
+with io.open("/dev/shm/image_bench.jpg", 'rb') as f_image:
+    img = f_image.read()
+'''
+
+        s_pywuffs_read = '''
+decoding_result = decoder.decode(img)
+'''
+
+
+#        setup_turbojpeg_read = '''
+#import io
+#from turbojpeg import TurboJPEG, TJPF_GRAY, TJFLAG_FASTUPSAMPLE, TJFLAG_FASTDCT
+#
+#jpeg = TurboJPEG()
+#
+#with io.open("/dev/shm/image_bench.jpg", 'rb') as f_image:
+#    img = f_image.read()
+#'''
+#
+#        s_turbojpeg_read = '''
+#jpeg.decode(img)
+##jpeg.decode(img, flags=TJFLAG_FASTUPSAMPLE|TJFLAG_FASTDCT)
+#'''
+
+
+        # pillow
         t_pillow_read = timeit.timeit(stmt=s_pillow_read, setup=setup_pillow_read, number=self.rounds)
         logger.info('Pillow decode: %0.3fms', t_pillow_read * 1000 / self.rounds)
 
         t_pillow_write = timeit.timeit(stmt=s_pillow_write, setup=setup_pillow_write, number=self.rounds)
         logger.info('Pillow encode: %0.3fms', t_pillow_write * 1000 / self.rounds)
 
+
+        # opencv
         t_opencv2_read = timeit.timeit(stmt=s_opencv_read, setup=setup_opencv_read, number=self.rounds)
         logger.info('OpenCV decode: %0.3fms', t_opencv2_read * 1000 / self.rounds)
 
         t_opencv2_write = timeit.timeit(stmt=s_opencv_write, setup=setup_opencv_write, number=self.rounds)
         logger.info('OpenCV encode: %0.3fms', t_opencv2_write * 1000 / self.rounds)
 
+
+        # simplejpeg
         t_simplejpeg_read = timeit.timeit(stmt=s_simplejpeg_read, setup=setup_simplejpeg_read, number=self.rounds)
         logger.info('simplejpeg decode: %0.3fms', t_simplejpeg_read * 1000 / self.rounds)
 
         t_simplejpeg_write = timeit.timeit(stmt=s_simplejpeg_write, setup=setup_simplejpeg_write, number=self.rounds)
         logger.info('simplejpeg encode: %0.3fms', t_simplejpeg_write * 1000 / self.rounds)
+
+
+        # imageio
+        t_imageio_read = timeit.timeit(stmt=s_imageio_read, setup=setup_imageio_read, number=self.rounds)
+        logger.info('imageio decode: %0.3fms', t_imageio_read * 1000 / self.rounds)
+
+        t_imageio_write = timeit.timeit(stmt=s_imageio_write, setup=setup_imageio_write, number=self.rounds)
+        logger.info('imageio encode: %0.3fms', t_imageio_write * 1000 / self.rounds)
+
+
+        #  pywuffs
+        t_pywuffs_read = timeit.timeit(stmt=s_pywuffs_read, setup=setup_pywuffs_read, number=self.rounds)
+        logger.info('pywuffs decode: %0.3fms', t_pywuffs_read * 1000 / self.rounds)
+
+
+        # turbojpeg (needs turbojpeg 3
+        #t_turbojpeg_read = timeit.timeit(stmt=s_turbojpeg_read, setup=setup_turbojpeg_read, number=self.rounds)
+        #logger.info('turbojpeg decode: %0.3fms', t_turbojpeg_read * 1000 / self.rounds)
 
 
 if __name__ == "__main__":

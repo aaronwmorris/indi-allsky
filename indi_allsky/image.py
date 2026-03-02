@@ -1536,6 +1536,76 @@ class ImageWorker(Process):
         tmpfile_name.unlink()
 
 
+    def write_focus_fit(self, data):
+        from astropy.io import fits
+
+        if len(data.shape) == 3:
+            # swap axes for FITS
+            data = numpy.swapaxes(data, 1, 0)
+            data = numpy.swapaxes(data, 2, 0)
+
+
+        # create a new fits container
+        hdu = fits.PrimaryHDU(data)
+        hdulist = fits.HDUList([hdu])
+
+        hdu.update_header()  # populates BITPIX, NAXIS, etc
+
+        hdulist[0].header['IMAGETYP'] = 'Light Frame'
+        hdulist[0].header['INSTRUME'] = 'focus'
+
+
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
+        hdulist.writeto(f_tmpfile)
+        f_tmpfile.close()
+
+        tmpfile_p = Path(f_tmpfile.name)
+
+
+        focus_fit_p = self.image_dir.joinpath('focus.fit')
+
+
+        try:
+            focus_fit_p.unlink()
+        except FileNotFoundError:
+            pass
+
+
+        shutil.copy2(str(tmpfile_p), str(focus_fit_p))
+        focus_fit_p.chmod(0o644)
+
+
+        # cleanup
+        tmpfile_p.unlink()
+
+
+    def write_focus_png(self, data):
+
+        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.png')
+        f_tmpfile.close()
+
+        tmpfile_p = Path(f_tmpfile.name)
+
+        cv2.imwrite(str(tmpfile_p), data, [cv2.IMWRITE_PNG_COMPRESSION, self.config['IMAGE_FILE_COMPRESSION']['png']])
+
+
+        focus_png_p = self.image_dir.joinpath('focus.png')
+
+
+        try:
+            focus_png_p.unlink()
+        except FileNotFoundError:
+            pass
+
+
+        shutil.copy2(str(tmpfile_p), str(focus_png_p))
+        focus_png_p.chmod(0o644)
+
+
+        # cleanup
+        tmpfile_p.unlink()
+
+
     def write_img(self, data, i_ref, camera, jpeg_exif=None):
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
@@ -1595,6 +1665,8 @@ class ImageWorker(Process):
         ### disable timelapse images in focus mode
         if self.config.get('FOCUS_MODE', False):
             logger.warning('Focus mode enabled, not saving timelapse image')
+            #self.write_focus_fit(data)
+            #self.write_focus_png(data)
             tmpfile_name.unlink()
             return None, None
 
