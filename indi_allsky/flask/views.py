@@ -7146,6 +7146,7 @@ class JsonFocusView(JsonView):
 
         elif latest_image_p.suffix in ('.png',):
             # opencv is faster than Pillow with PNG
+            # PNG encoding is very slow on Raspberry Pi
             image_data = cv2.imread(str(latest_image_p), cv2.IMREAD_COLOR)
 
             if isinstance(image_data, type(None)):
