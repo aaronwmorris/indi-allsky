@@ -34,6 +34,7 @@ adafruit-circuitpython-pca9685
 adafruit-circuitpython-motorkit
 sparkfun-circuitpython-qwiicas3935
 adafruit-circuitpython-icm20x
+adafruit-circuitpython-sgp40
 sparkfun-qwiic-mmc5983ma
 git+https://github.com/aaronwmorris/CircuitPython_MLX90615.git@ab15707
 
