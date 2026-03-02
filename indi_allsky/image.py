@@ -1606,7 +1606,6 @@ class ImageWorker(Process):
         tmpfile_p.unlink()
 
 
-
     def write_img(self, data, i_ref, camera, jpeg_exif=None):
         f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.{0}'.format(self.config['IMAGE_FILE_TYPE']))
         f_tmpfile.close()
@@ -1667,7 +1666,7 @@ class ImageWorker(Process):
         if self.config.get('FOCUS_MODE', False):
             logger.warning('Focus mode enabled, not saving timelapse image')
             #self.write_focus_fit(data)
-            self.write_focus_png(data)
+            #self.write_focus_png(data)
             tmpfile_name.unlink()
             return None, None
 
