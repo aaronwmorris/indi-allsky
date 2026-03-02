@@ -64,6 +64,8 @@ from .currentSensorIna23x import CurrentSensorIna23x_I2C as blinka_current_senso
 from .currentSensorIna228 import CurrentSensorIna228_I2C as blinka_current_sensor_ina228_i2c
 from .currentSensorIna260 import CurrentSensorIna260_I2C as blinka_current_sensor_ina260_i2c
 
+from .imuSensorIcm20x import ImuSensorIcm20x_I2C as blinka_imu_sensor_icm20x_i2c
+
 from .tempApiOpenWeatherMap import TempApiOpenWeatherMap as temp_api_openweathermap
 from .tempApiWeatherUnderground import TempApiWeatherUnderground as temp_api_weatherunderground
 from .tempApiAstrospheric import TempApiAstrospheric as temp_api_astrospheric
@@ -117,6 +119,7 @@ __all__ = (
     'blinka_current_sensor_ina23x_i2c',
     'blinka_current_sensor_ina228_i2c',
     'blinka_current_sensor_ina260_i2c',
+    'blinka_imu_sensor_icm20x_i2c',
     'cpads_temp_sensor_tmp36_ads1015_i2c',
     'cpads_temp_sensor_tmp36_ads1115_i2c',
     'cpads_temp_sensor_lm35_ads1015_i2c',

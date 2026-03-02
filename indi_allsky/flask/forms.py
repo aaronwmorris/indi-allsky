@@ -3936,6 +3936,9 @@ class IndiAllskyConfigForm(FlaskForm):
         'Magnetometer/Gauss Sensors' : (
             ('qwiic_mag_sensor_mmc5983ma_i2c', 'MMC5983MA i2c - X/Y/Z/Temp (4 slots)'),
         ),
+        'IMU Sensors' : (
+            ('blinka_imu_sensor_icm20x_i2c', 'ICM20X i2c - X/Y/Z (3 slots)'),
+        ),
         'Current Sensors' : (
             ('blinka_ups_hat_waveshare_e_mcu_i2c', 'Waveshare UPS HAT (E) MCU @0x2D - Battery/VBUS/Cells (12 slots)'),
             ('blinka_current_sensor_ina219_i2c', 'INA219 i2c - V/A/W (3 slots)'),
