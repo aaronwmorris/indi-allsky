@@ -630,6 +630,112 @@ class MqttRemoteSensorBme280_I2C(MqttRemoteSensorBase):
         return data
 
 
+class MqttRemoteSensorBme680_I2C(MqttRemoteSensorBase):
+    base_topic = 'bme680'
+
+    def __init__(self, *args, **kwargs):
+        super(MqttRemoteSensorBme680_I2C, self).__init__(*args, **kwargs)
+
+        self.bme680 = None
+
+
+    def init_sensor(self):
+        import board
+        #import busio
+        import adafruit_bme680
+
+        logger.warning('Initializing BME680 I2C temperature device @ %s', hex(self.i2c_address))
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c, address=self.i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
+
+        self.bme680.humidity_oversample = 2
+        self.bme680.pressure_oversample = 4
+        self.bme680.temperature_oversample = 8
+        self.bme680.filter_size = 3
+
+
+        # throw away, initial humidity reading is always 100%
+        self.bme680.temperature
+        self.bme680.humidity
+        self.bme680.pressure
+        self.bme680.gas
+
+        time.sleep(1)  # allow things to settle
+
+
+    def update_sensor(self):
+        try:
+            temp_c = float(self.bme680.temperature)
+            rel_h = float(self.bme680.humidity)
+            pressure_hpa = float(self.bme680.pressure)  # hPa
+            gas_ohm = float(self.bme680.gas)  # ohm
+            #altitude = float(self.bme680.altitude)  # meters
+        except RuntimeError as e:
+            raise SensorReadException(str(e)) from e
+
+
+        logger.info('BME680 - temp: %0.1fc, humidity: %0.1f%%, pressure: %0.1fhPa, gas: %0.1f', temp_c, rel_h, pressure_hpa, gas_ohm)
+
+        try:
+            dew_point_c = self.get_dew_point_c(temp_c, rel_h)
+            frost_point_c = self.get_frost_point_c(temp_c, dew_point_c)
+        except ValueError as e:
+            logger.error('Dew Point calculation error - ValueError: %s', str(e))
+            dew_point_c = 0.0
+            frost_point_c = 0.0
+
+
+        heat_index_c = self.get_heat_index_c(temp_c, rel_h)
+
+
+        if self.config.get('TEMP_DISPLAY') == 'f':
+            current_temp = self.c2f(temp_c)
+            current_dp = self.c2f(dew_point_c)
+            current_fp = self.c2f(frost_point_c)
+            current_hi = self.c2f(heat_index_c)
+        elif self.config.get('TEMP_DISPLAY') == 'k':
+            current_temp = self.c2k(temp_c)
+            current_dp = self.c2k(dew_point_c)
+            current_fp = self.c2k(frost_point_c)
+            current_hi = self.c2k(heat_index_c)
+        else:
+            current_temp = temp_c
+            current_dp = dew_point_c
+            current_fp = frost_point_c
+            current_hi = heat_index_c
+
+
+        if self.config.get('PRESSURE_DISPLAY') == 'psi':
+            current_pressure = self.hPa2psi(pressure_hpa)
+        elif self.config.get('PRESSURE_DISPLAY') == 'inHg':
+            current_pressure = self.hPa2inHg(pressure_hpa)
+        elif self.config.get('PRESSURE_DISPLAY') == 'mmHg':
+            current_pressure = self.hPa2mmHg(pressure_hpa)
+        else:
+            current_pressure = pressure_hpa
+
+
+        data = {
+            'temperature'       : current_temp,
+            'relative_humdity'  : rel_h,
+            'pressure'          : current_pressure,
+            'gas_ohm'           : gas_ohm,
+            'dew_point'         : current_dp,
+            'frost_point'       : current_fp,
+            'heat_index'        : current_hi,
+        }
+
+        return data
+
+
 ### exceptions
 class DeviceControlException(Exception):
     pass
@@ -647,6 +753,7 @@ if __name__ == "__main__":
         choices=(
             'bmp280_i2c',
             'bme280_i2c',
+            'bme680_i2c',
         ),
     )
     argparser.add_argument(
@@ -660,10 +767,12 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
 
-    if args.sensor == 'bme280_i2c':
-        mqs_class = MqttRemoteSensorBme280_I2C
-    elif args.sensor == 'bmp280_i2c':
+    if args.sensor == 'bmp280_i2c':
         mqs_class = MqttRemoteSensorBmp280_I2C
+    elif args.sensor == 'bme280_i2c':
+        mqs_class = MqttRemoteSensorBme280_I2C
+    elif args.sensor == 'bme680_i2c':
+        mqs_class = MqttRemoteSensorBme680_I2C
 
 
     mqs = mqs_class()
