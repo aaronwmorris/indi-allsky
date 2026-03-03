@@ -803,6 +803,83 @@ class MqttRemoteSensorBme680_I2C(MqttRemoteSensorBase):
         return data
 
 
+class MqttRemoteSensorAhtx0_I2C(MqttRemoteSensorBase):
+    base_topic = 'ahtx0'
+
+    def __init__(self, *args, **kwargs):
+        super(MqttRemoteSensorAhtx0_I2C, self).__init__(*args, **kwargs)
+
+        self.aht = None
+
+
+    def init_sensor(self):
+        import board
+        #import busio
+        import adafruit_ahtx0
+
+        logger.warning('Initializing AHTx0 I2C temperature device @ %s', hex(self.i2c_address))
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.aht = adafruit_ahtx0.AHTx0(i2c, address=self.i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
+
+    def update_sensor(self):
+        try:
+            temp_c = float(self.aht.temperature)
+            rel_h = float(self.aht.relative_humidity)
+        except RuntimeError as e:
+            raise SensorReadException(str(e)) from e
+
+
+        logger.info('AHTx0 - temp: %0.1fc, humidity: %0.1f%%', temp_c, rel_h)
+
+
+        try:
+            dew_point_c = self.get_dew_point_c(temp_c, rel_h)
+            frost_point_c = self.get_frost_point_c(temp_c, dew_point_c)
+        except ValueError as e:
+            logger.error('Dew Point calculation error - ValueError: %s', str(e))
+            dew_point_c = 0.0
+            frost_point_c = 0.0
+
+
+        heat_index_c = self.get_heat_index_c(temp_c, rel_h)
+
+
+        if TEMP_DISPLAY == 'f':
+            current_temp = self.c2f(temp_c)
+            current_dp = self.c2f(dew_point_c)
+            current_fp = self.c2f(frost_point_c)
+            current_hi = self.c2f(heat_index_c)
+        elif TEMP_DISPLAY == 'k':
+            current_temp = self.c2k(temp_c)
+            current_dp = self.c2k(dew_point_c)
+            current_fp = self.c2k(frost_point_c)
+            current_hi = self.c2k(heat_index_c)
+        else:
+            current_temp = temp_c
+            current_dp = dew_point_c
+            current_fp = frost_point_c
+            current_hi = heat_index_c
+
+
+        data = {
+            'temperature'       : current_temp,
+            'relative_humdity'  : rel_h,
+            'dew_point'         : current_dp,
+            'frost_point'       : current_fp,
+            'heat_index'        : current_hi,
+        }
+
+        return data
+
+
 ### exceptions
 class DeviceControlException(Exception):
     pass
@@ -822,6 +899,7 @@ if __name__ == "__main__":
             'bmp280_i2c',
             'bme280_i2c',
             'bme680_i2c',
+            'ahtx0_i2c',
         ),
     )
     argparser.add_argument(
@@ -843,6 +921,8 @@ if __name__ == "__main__":
         mqs_class = MqttRemoteSensorBme280_I2C
     elif args.sensor == 'bme680_i2c':
         mqs_class = MqttRemoteSensorBme680_I2C
+    elif args.sensor == 'ahtx0_i2c':
+        mqs_class = MqttRemoteSensorAhtx0_I2C
 
 
     mqs = mqs_class()
