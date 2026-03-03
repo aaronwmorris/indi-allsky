@@ -88,14 +88,15 @@ class MqttRemoteDewHeaterFan(object):
 
 
     def main(self):
-        logger.info('MQTT Transport:   %s', MQTT_TRANSPORT)
-        logger.info('MQTT Protocol:    %s', MQTT_PROTOCOL)
-        logger.info('MQTT Hostname:    %s', MQTT_HOSTNAME)
-        logger.info('MQTT Port:        %d', MQTT_PORT)
-        logger.info('MQTT Username:    %s', MQTT_USERNAME)
-        logger.info('MQTT TLS:         %s', str(bool(MQTT_TLS)))
-        logger.info('Dew Heater Topic: %s', MQTT_DEW_HEATER_TOPIC)
-        logger.info('Fan Topic:        %s', MQTT_FAN_TOPIC)
+        logger.info('MQTT_TRANSPORT:   %s', MQTT_TRANSPORT)
+        logger.info('MQTT_PROTOCOL:    %s', MQTT_PROTOCOL)
+        logger.info('MQTT_HOSTNAME:    %s', MQTT_HOSTNAME)
+        logger.info('MQTT_PORT:        %d', MQTT_PORT)
+        logger.info('MQTT_USERNAME:    %s', MQTT_USERNAME)
+        logger.info('MQTT_PASSWORD:    %s', '********')
+        logger.info('MQTT_TLS:         %s', str(bool(MQTT_TLS)))
+        logger.info('MQTT_DEW_HEATER_TOPIC: %s', MQTT_DEW_HEATER_TOPIC)
+        logger.info('MQTT_FAN_TOPIC:        %s', MQTT_FAN_TOPIC)
         time.sleep(3.0)
 
 

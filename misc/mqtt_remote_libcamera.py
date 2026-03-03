@@ -84,15 +84,16 @@ class MqttRemoteLibcamera(object):
 
 
     def run(self):
-        logger.info('MQTT Transport:   %s', MQTT_TRANSPORT)
-        logger.info('MQTT Protocol:    %s', MQTT_PROTOCOL)
-        logger.info('MQTT Hostname:    %s', MQTT_HOSTNAME)
-        logger.info('MQTT Port:        %d', MQTT_PORT)
-        logger.info('MQTT Username:    %s', MQTT_USERNAME)
-        logger.info('MQTT TLS:         %s', str(bool(MQTT_TLS)))
-        logger.info('Exposure Topic:   %s', MQTT_EXPOSURE_TOPIC)
-        logger.info('Image Topic:      %s', MQTT_IMAGE_TOPIC)
-        logger.info('Metadata Topic:   %s', MQTT_METADATA_TOPIC)
+        logger.info('MQTT_TRANSPORT:   %s', MQTT_TRANSPORT)
+        logger.info('MQTT_PROTOCOL:    %s', MQTT_PROTOCOL)
+        logger.info('MQTT_HOSTNAME:    %s', MQTT_HOSTNAME)
+        logger.info('MQTT_PORT:        %d', MQTT_PORT)
+        logger.info('MQTT_USERNAME:    %s', MQTT_USERNAME)
+        logger.info('MQTT_PASSWORD:    %s', '********')
+        logger.info('MQTT_TLS:         %s', str(bool(MQTT_TLS)))
+        logger.info('MQTT_EXPOSURE_TOPIC:   %s', MQTT_EXPOSURE_TOPIC)
+        logger.info('MQTT_IMAGE_TOPIC:      %s', MQTT_IMAGE_TOPIC)
+        logger.info('MQTT_METADATA_TOPIC:   %s', MQTT_METADATA_TOPIC)
         time.sleep(3.0)
 
 
