@@ -3,7 +3,6 @@
 # Publishes sensor data to MQTT            #
 ############################################
 
-
 ### Requirements
 #paho-mqtt >= 2.0.0
 
@@ -24,16 +23,20 @@ MQTT_CERT_BYPASS = int(os.environ.get('MQTT_CERT_BYPASS', 1))
 TEMP_DISPLAY = os.environ.get('TEMP_DISPLAY', 'c')  # c, f, or k
 PRESSURE_DISPLAY = os.environ.get('PRESSURE_DISPLAY', 'hPa')  # hPa, psi, inHg, or mmHg
 
+LATITUDE = os.environ.get('LATITUDE', 33.0)
+LONGITUDE = os.environ.get('LONGITUDE', -84.0)
+
 
 import sys
 import argparse
 import time
+from datetime import datetime
+from datetime import timezone
 import math
+import ephem
 import socket
 import ssl
 import paho.mqtt.client as mqtt
-import paho.mqtt.properties as mqtt_props
-from paho.mqtt.packettypes import PacketTypes
 import signal
 import logging
 
@@ -49,6 +52,7 @@ logger.addHandler(LOG_HANDLER_STREAM)
 
 class MqttRemoteSensorBase(object):
     base_topic = None
+    name = ''  # just to fix copy/paste errors
 
 
     def __init__(self):
@@ -59,6 +63,18 @@ class MqttRemoteSensorBase(object):
 
         self.next_update_time = time.time()  # immediately
         self.update_offset = 15  # seconds
+
+
+        self.astro_darkness = None  # force update immediately
+
+        self.obs = ephem.Observer()
+        self.obs.lon = math.radians(LONGITUDE)
+        self.obs.lat = math.radians(LATITUDE)
+
+        # disable atmospheric refraction calcs
+        self.obs.pressure = 0
+
+        self.sun = ephem.Sun()
 
 
         self._shutdown = False
@@ -73,6 +89,13 @@ class MqttRemoteSensorBase(object):
         self._i2c_address = int(new_i2c_address, 16)
 
 
+    @property
+    def sun_alt(self):
+        self.obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
+        self.sun.compute(self.obs)
+        return math.degrees(self.sun.alt)
+
+
     def sigint_handler(self, signum, frame):
         logger.warning('Caught INT signal, shutting down')
         self._shutdown = True
@@ -84,13 +107,18 @@ class MqttRemoteSensorBase(object):
 
 
     def run(self):
-        logger.info('MQTT Transport:   %s', MQTT_TRANSPORT)
-        logger.info('MQTT Protocol:    %s', MQTT_PROTOCOL)
-        logger.info('MQTT Hostname:    %s', MQTT_HOSTNAME)
-        logger.info('MQTT Port:        %d', MQTT_PORT)
-        logger.info('MQTT Username:    %s', MQTT_USERNAME)
-        logger.info('MQTT TLS:         %s', str(bool(MQTT_TLS)))
-        logger.info('Base Topic:       %s', self.base_topic)
+        logger.info('MQTT_TRANSPORT:   %s', MQTT_TRANSPORT)
+        logger.info('MQTT_PROTOCOL:    %s', MQTT_PROTOCOL)
+        logger.info('MQTT_HOSTNAME:    %s', MQTT_HOSTNAME)
+        logger.info('MQTT_PORT:        %d', MQTT_PORT)
+        logger.info('MQTT_USERNAME:    %s', MQTT_USERNAME)
+        logger.info('MQTT_PASSWORD:    %s', '********')
+        logger.info('MQTT_TLS:         %s', str(bool(MQTT_TLS)))
+        logger.info('BASE_TOPIC:       %s', self.base_topic)
+        logger.info('TEMP_DISPLAY:     %s', TEMP_DISPLAY)
+        logger.info('PRESSURE_DISPLAY: %s', PRESSURE_DISPLAY)
+        logger.info('LATITUDE:         %s', LATITUDE)
+        logger.info('LONGITUDE:        %s', LONGITUDE)
         time.sleep(3.0)
 
 
@@ -124,8 +152,6 @@ class MqttRemoteSensorBase(object):
         #self.client.on_message = self.on_message
         #self.client.on_subscribe = self.on_subscribe
         #self.client.on_unsubscribe = self.on_unsubscribe
-
-        self.client.user_data_set(self.user_data)
 
 
         if MQTT_USERNAME:
@@ -202,15 +228,11 @@ class MqttRemoteSensorBase(object):
                 topic = '/'.join([self.base_topic, entry])
                 logger.info('Publishing: %s', topic)
 
-                metadata_user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
-
-                logger.info('Publishing metadata')
                 self.client.publish(
                     topic,
                     payload=float(v),
                     qos=MQTT_QOS,
                     retain=False,
-                    properties=metadata_user_properties,
                 )
 
 
@@ -460,6 +482,148 @@ class MqttRemoteSensorBase(object):
         return (B * alpha) / (A - alpha)
 
 
+class MqttRemoteSensorBmp180_I2C(MqttRemoteSensorBase):
+    base_topic = 'bmp180'
+
+    def __init__(self, *args, **kwargs):
+        super(MqttRemoteSensorBmp180_I2C, self).__init__(*args, **kwargs)
+
+        self.bmp180 = None
+
+
+    def init_sensor(self):
+        import board
+        #import busio
+        import bmp180
+
+        logger.warning('Initializing BMP180 I2C temperature device @ %s', hex(self.i2c_address))
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.bmp180 = bmp180.BMP180(i2c, address=self.i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
+
+    def update_sensor(self):
+        try:
+            temp_c = float(self.bmp180.temperature)
+            pressure_hpa = float(self.bmp180.pressure)  # hPa
+            #altitude = float(self.bmp180.altitude)  # meters
+        except RuntimeError as e:
+            raise SensorReadException(str(e)) from e
+
+
+        logger.info('BMP180 - temp: %0.1fc, pressure: %0.1fhPa', temp_c, pressure_hpa)
+
+        # no humidity sensor
+
+
+        if TEMP_DISPLAY == 'f':
+            current_temp = self.c2f(temp_c)
+        elif TEMP_DISPLAY == 'k':
+            current_temp = self.c2k(temp_c)
+        else:
+            current_temp = temp_c
+
+
+        if PRESSURE_DISPLAY == 'psi':
+            current_pressure = self.hPa2psi(pressure_hpa)
+        elif PRESSURE_DISPLAY == 'inHg':
+            current_pressure = self.hPa2inHg(pressure_hpa)
+        elif PRESSURE_DISPLAY == 'mmHg':
+            current_pressure = self.hPa2mmHg(pressure_hpa)
+        else:
+            current_pressure = pressure_hpa
+
+
+        data = {
+            'temperature'       : current_temp,
+            'pressure'          : current_pressure,
+        }
+
+        return data
+
+
+class MqttRemoteSensorBmp280_I2C(MqttRemoteSensorBase):
+    base_topic = 'bmp280'
+
+    def __init__(self, *args, **kwargs):
+        super(MqttRemoteSensorBmp280_I2C, self).__init__(*args, **kwargs)
+
+        self.bmp280 = None
+
+
+    def init_sensor(self):
+        import board
+        #import busio
+        import adafruit_bmp280
+
+        logger.warning('Initializing BMP280 I2C temperature device @ %s', hex(self.i2c_address))
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.bmp280 = adafruit_bmp280.Adafruit_BMP280_I2C(i2c, address=self.i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
+
+        self.bmp280.overscan_temperature = adafruit_bmp280.OVERSCAN_X1
+        self.bmp280.overscan_pressure = adafruit_bmp280.OVERSCAN_X16
+        self.bmp280.iir_filter = adafruit_bmp280.IIR_FILTER_DISABLE
+
+
+        # throw away
+        self.bmp280.temperature
+        self.bmp280.pressure
+
+        time.sleep(1)  # allow things to settle
+
+
+    def update_sensor(self):
+        try:
+            temp_c = float(self.bmp280.temperature)
+            pressure_hpa = float(self.bmp280.pressure)  # hPa
+            #altitude = float(self.bmp280.altitude)  # meters
+        except RuntimeError as e:
+            raise SensorReadException(str(e)) from e
+
+
+        logger.info('BMP280 - temp: %0.1fc, pressure: %0.1fhPa', temp_c, pressure_hpa)
+
+
+        if TEMP_DISPLAY == 'f':
+            current_temp = self.c2f(temp_c)
+        elif TEMP_DISPLAY == 'k':
+            current_temp = self.c2k(temp_c)
+        else:
+            current_temp = temp_c
+
+
+        if PRESSURE_DISPLAY == 'psi':
+            current_pressure = self.hPa2psi(pressure_hpa)
+        elif PRESSURE_DISPLAY == 'inHg':
+            current_pressure = self.hPa2inHg(pressure_hpa)
+        elif PRESSURE_DISPLAY == 'mmHg':
+            current_pressure = self.hPa2mmHg(pressure_hpa)
+        else:
+            current_pressure = pressure_hpa
+
+
+        data = {
+            'temperature'       : current_temp,
+            'pressure'          : current_pressure,
+        }
+
+        return data
+
+
 class MqttRemoteSensorBme280_I2C(MqttRemoteSensorBase):
     base_topic = 'bme280'
 
@@ -541,11 +705,11 @@ class MqttRemoteSensorBme280_I2C(MqttRemoteSensorBase):
             current_hi = heat_index_c
 
 
-        if self.config.get('PRESSURE_DISPLAY') == 'psi':
+        if PRESSURE_DISPLAY == 'psi':
             current_pressure = self.hPa2psi(pressure_hpa)
-        elif self.config.get('PRESSURE_DISPLAY') == 'inHg':
+        elif PRESSURE_DISPLAY == 'inHg':
             current_pressure = self.hPa2inHg(pressure_hpa)
-        elif self.config.get('PRESSURE_DISPLAY') == 'mmHg':
+        elif PRESSURE_DISPLAY == 'mmHg':
             current_pressure = self.hPa2mmHg(pressure_hpa)
         else:
             current_pressure = pressure_hpa
@@ -563,6 +727,302 @@ class MqttRemoteSensorBme280_I2C(MqttRemoteSensorBase):
         return data
 
 
+class MqttRemoteSensorBme680_I2C(MqttRemoteSensorBase):
+    base_topic = 'bme680'
+
+    def __init__(self, *args, **kwargs):
+        super(MqttRemoteSensorBme680_I2C, self).__init__(*args, **kwargs)
+
+        self.bme680 = None
+
+
+    def init_sensor(self):
+        import board
+        #import busio
+        import adafruit_bme680
+
+        logger.warning('Initializing BME680 I2C temperature device @ %s', hex(self.i2c_address))
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c, address=self.i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
+
+        self.bme680.humidity_oversample = 2
+        self.bme680.pressure_oversample = 4
+        self.bme680.temperature_oversample = 8
+        self.bme680.filter_size = 3
+
+
+        # throw away, initial humidity reading is always 100%
+        self.bme680.temperature
+        self.bme680.humidity
+        self.bme680.pressure
+        self.bme680.gas
+
+        time.sleep(1)  # allow things to settle
+
+
+    def update_sensor(self):
+        try:
+            temp_c = float(self.bme680.temperature)
+            rel_h = float(self.bme680.humidity)
+            pressure_hpa = float(self.bme680.pressure)  # hPa
+            gas_ohm = float(self.bme680.gas)  # ohm
+            #altitude = float(self.bme680.altitude)  # meters
+        except RuntimeError as e:
+            raise SensorReadException(str(e)) from e
+
+
+        logger.info('BME680 - temp: %0.1fc, humidity: %0.1f%%, pressure: %0.1fhPa, gas: %0.1f', temp_c, rel_h, pressure_hpa, gas_ohm)
+
+        try:
+            dew_point_c = self.get_dew_point_c(temp_c, rel_h)
+            frost_point_c = self.get_frost_point_c(temp_c, dew_point_c)
+        except ValueError as e:
+            logger.error('Dew Point calculation error - ValueError: %s', str(e))
+            dew_point_c = 0.0
+            frost_point_c = 0.0
+
+
+        heat_index_c = self.get_heat_index_c(temp_c, rel_h)
+
+
+        if TEMP_DISPLAY == 'f':
+            current_temp = self.c2f(temp_c)
+            current_dp = self.c2f(dew_point_c)
+            current_fp = self.c2f(frost_point_c)
+            current_hi = self.c2f(heat_index_c)
+        elif TEMP_DISPLAY == 'k':
+            current_temp = self.c2k(temp_c)
+            current_dp = self.c2k(dew_point_c)
+            current_fp = self.c2k(frost_point_c)
+            current_hi = self.c2k(heat_index_c)
+        else:
+            current_temp = temp_c
+            current_dp = dew_point_c
+            current_fp = frost_point_c
+            current_hi = heat_index_c
+
+
+        if PRESSURE_DISPLAY == 'psi':
+            current_pressure = self.hPa2psi(pressure_hpa)
+        elif PRESSURE_DISPLAY == 'inHg':
+            current_pressure = self.hPa2inHg(pressure_hpa)
+        elif PRESSURE_DISPLAY == 'mmHg':
+            current_pressure = self.hPa2mmHg(pressure_hpa)
+        else:
+            current_pressure = pressure_hpa
+
+
+        data = {
+            'temperature'       : current_temp,
+            'relative_humdity'  : rel_h,
+            'pressure'          : current_pressure,
+            'gas_ohm'           : gas_ohm,
+            'dew_point'         : current_dp,
+            'frost_point'       : current_fp,
+            'heat_index'        : current_hi,
+        }
+
+        return data
+
+
+class MqttRemoteSensorAhtx0_I2C(MqttRemoteSensorBase):
+    base_topic = 'ahtx0'
+
+    def __init__(self, *args, **kwargs):
+        super(MqttRemoteSensorAhtx0_I2C, self).__init__(*args, **kwargs)
+
+        self.aht = None
+
+
+    def init_sensor(self):
+        import board
+        #import busio
+        import adafruit_ahtx0
+
+        logger.warning('Initializing AHTx0 I2C temperature device @ %s', hex(self.i2c_address))
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.aht = adafruit_ahtx0.AHTx0(i2c, address=self.i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
+
+    def update_sensor(self):
+        try:
+            temp_c = float(self.aht.temperature)
+            rel_h = float(self.aht.relative_humidity)
+        except RuntimeError as e:
+            raise SensorReadException(str(e)) from e
+
+
+        logger.info('AHTx0 - temp: %0.1fc, humidity: %0.1f%%', temp_c, rel_h)
+
+
+        try:
+            dew_point_c = self.get_dew_point_c(temp_c, rel_h)
+            frost_point_c = self.get_frost_point_c(temp_c, dew_point_c)
+        except ValueError as e:
+            logger.error('Dew Point calculation error - ValueError: %s', str(e))
+            dew_point_c = 0.0
+            frost_point_c = 0.0
+
+
+        heat_index_c = self.get_heat_index_c(temp_c, rel_h)
+
+
+        if TEMP_DISPLAY == 'f':
+            current_temp = self.c2f(temp_c)
+            current_dp = self.c2f(dew_point_c)
+            current_fp = self.c2f(frost_point_c)
+            current_hi = self.c2f(heat_index_c)
+        elif TEMP_DISPLAY == 'k':
+            current_temp = self.c2k(temp_c)
+            current_dp = self.c2k(dew_point_c)
+            current_fp = self.c2k(frost_point_c)
+            current_hi = self.c2k(heat_index_c)
+        else:
+            current_temp = temp_c
+            current_dp = dew_point_c
+            current_fp = frost_point_c
+            current_hi = heat_index_c
+
+
+        data = {
+            'temperature'       : current_temp,
+            'relative_humdity'  : rel_h,
+            'dew_point'         : current_dp,
+            'frost_point'       : current_fp,
+            'heat_index'        : current_hi,
+        }
+
+        return data
+
+
+class MqttRemoteSensorTsl2591_I2C(MqttRemoteSensorBase):
+    base_topic = 'tsl2591'
+
+    def __init__(self, *args, **kwargs):
+        super(MqttRemoteSensorTsl2591_I2C, self).__init__(*args, **kwargs)
+
+        self.tsl2591 = None
+
+
+    def init_sensor(self):
+        import board
+        #import busio
+        import adafruit_tsl2591
+
+        logger.warning('Initializing TSL2591 I2C light sensor device @ %s', hex(self.i2c_address))
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.tsl2591 = adafruit_tsl2591.TSL2591(i2c, address=self.i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
+
+        self.gain_night = getattr(adafruit_tsl2591, 'GAIN_MED')
+        self.gain_day = getattr(adafruit_tsl2591, 'GAIN_LOW')
+        self.integration_night = getattr(adafruit_tsl2591, 'INTEGRATIONTIME_100MS')
+        self.integration_day = getattr(adafruit_tsl2591, 'INTEGRATIONTIME_100MS')
+
+
+        ### You can optionally change the gain and integration time:
+        #self.tsl2591.gain = adafruit_tsl2591.GAIN_LOW   # (1x gain)
+        #self.tsl2591.gain = adafruit_tsl2591.GAIN_MED   # (25x gain, the default)
+        #self.tsl2591.gain = adafruit_tsl2591.GAIN_HIGH  # (428x gain)
+        #self.tsl2591.gain = adafruit_tsl2591.GAIN_MAX   # (9876x gain)
+
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS  # (100ms, default)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_200MS  # (200ms)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_300MS  # (300ms)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_400MS  # (400ms)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_500MS  # (500ms)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_600MS  # (600ms)
+
+
+        time.sleep(1)
+
+
+    def update_sensor(self):
+        astro_darkness = self.sun_alt <= 18.0
+        if self.astro_darkness != astro_darkness:
+            self.astro_darkness = astro_darkness
+            self.update_sensor_settings()
+
+
+        #gain = self.tsl2591.gain
+        #integration = self.tsl2591.integration_time
+        #logger.info('[%s] TSL2591 settings - Gain: %d, Integration: %d', gain, integration)
+
+
+        try:
+            lux = float(self.tsl2591.lux)
+            infrared = int(self.tsl2591.infrared)
+            visible = int(self.tsl2591.visible)
+            full_spectrum = int(self.tsl2591.full_spectrum)
+        except RuntimeError as e:
+            raise SensorReadException(str(e)) from e
+
+
+        logger.info('TSL2591 - lux: %0.4f, visible: %d, ir: %d, full: %d', lux, visible, infrared, full_spectrum)
+
+
+        if self.astro_darkness:
+            try:
+                sqm_mag, raw_mag = self.lux2mag(lux)
+            except ValueError as e:
+                logger.error('SQM calculation error - ValueError: %s', str(e))
+                sqm_mag = 0.0
+                raw_mag = 0.0
+        else:
+            # disabled outside astronomical darkness
+            sqm_mag = 0.0
+            raw_mag = 0.0
+
+
+        data = {
+            'lux'           : lux,
+            'visible'       : visible,
+            'infrared'      : infrared,
+            'full_spectrum' : full_spectrum,
+            'sqm_magnitude' : sqm_mag,
+            'raw_magnitude' : raw_mag,
+        }
+
+
+        return data
+
+
+
+    def update_sensor_settings(self):
+        if self.astro_darkness:
+            logger.info('Switching TSL2591 to night mode - Gain %d, Integration: %d', self.gain_night, self.integration_night)
+            self.tsl2591.gain = self.gain_night
+            self.tsl2591.integration_time = self.integration_night
+        else:
+            logger.info('Switching TSL2591 to day mode - Gain %d, Integration: %d', self.gain_day, self.integration_day)
+            self.tsl2591.gain = self.gain_day
+            self.tsl2591.integration_time = self.integration_day
+
+        time.sleep(1.0)
+
+
 ### exceptions
 class DeviceControlException(Exception):
     pass
@@ -578,7 +1038,12 @@ if __name__ == "__main__":
         'sensor',
         help='sensor',
         choices=(
+            'bmp180_i2c',
+            'bmp280_i2c',
             'bme280_i2c',
+            'bme680_i2c',
+            'ahtx0_i2c',
+            'tsl2591_i2c',
         ),
     )
     argparser.add_argument(
@@ -592,8 +1057,18 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
 
-    if args.sensor == 'bme280_i2c':
+    if args.sensor == 'bmp180_i2c':
+        mqs_class = MqttRemoteSensorBmp180_I2C
+    elif args.sensor == 'bmp280_i2c':
+        mqs_class = MqttRemoteSensorBmp280_I2C
+    elif args.sensor == 'bme280_i2c':
         mqs_class = MqttRemoteSensorBme280_I2C
+    elif args.sensor == 'bme680_i2c':
+        mqs_class = MqttRemoteSensorBme680_I2C
+    elif args.sensor == 'ahtx0_i2c':
+        mqs_class = MqttRemoteSensorAhtx0_I2C
+    elif args.sensor == 'tsl2591_i2c':
+        mqs_class = MqttRemoteSensorTsl2591_I2C
 
 
     mqs = mqs_class()
