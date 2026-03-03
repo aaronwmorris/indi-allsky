@@ -3,7 +3,6 @@
 # Publishes sensor data to MQTT            #
 ############################################
 
-
 ### Requirements
 #paho-mqtt >= 2.0.0
 
@@ -460,6 +459,82 @@ class MqttRemoteSensorBase(object):
         return (B * alpha) / (A - alpha)
 
 
+class MqttRemoteSensorBmp280_I2C(MqttRemoteSensorBase):
+    base_topic = 'bmp280'
+
+    def __init__(self, *args, **kwargs):
+        super(MqttRemoteSensorBmp280_I2C, self).__init__(*args, **kwargs)
+
+        self.bme280 = None
+
+
+    def init_sensor(self):
+        import board
+        #import busio
+        import adafruit_bmp280
+
+        logger.warning('Initializing BMP280 I2C temperature device @ %s', hex(self.i2c_address))
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.bmp280 = adafruit_bmp280.Adafruit_BMP280_I2C(i2c, address=self.i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
+
+        self.bmp280.overscan_temperature = adafruit_bmp280.OVERSCAN_X1
+        self.bmp280.overscan_pressure = adafruit_bmp280.OVERSCAN_X16
+        self.bmp280.iir_filter = adafruit_bmp280.IIR_FILTER_DISABLE
+
+
+        # throw away
+        self.bmp280.temperature
+        self.bmp280.pressure
+
+        time.sleep(1)  # allow things to settle
+
+
+    def update_sensor(self):
+        try:
+            temp_c = float(self.bmp280.temperature)
+            pressure_hpa = float(self.bmp280.pressure)  # hPa
+            #altitude = float(self.bmp280.altitude)  # meters
+        except RuntimeError as e:
+            raise SensorReadException(str(e)) from e
+
+
+        logger.info('[%s] BMP280 - temp: %0.1fc, pressure: %0.1fhPa', self.name, temp_c, pressure_hpa)
+
+
+        if TEMP_DISPLAY == 'f':
+            current_temp = self.c2f(temp_c)
+        elif TEMP_DISPLAY == 'k':
+            current_temp = self.c2k(temp_c)
+        else:
+            current_temp = temp_c
+
+
+        if PRESSURE_DISPLAY == 'psi':
+            current_pressure = self.hPa2psi(pressure_hpa)
+        elif PRESSURE_DISPLAY == 'inHg':
+            current_pressure = self.hPa2inHg(pressure_hpa)
+        elif PRESSURE_DISPLAY == 'mmHg':
+            current_pressure = self.hPa2mmHg(pressure_hpa)
+        else:
+            current_pressure = pressure_hpa
+
+
+        data = {
+            'temperature'       : current_temp,
+            'pressure'          : current_pressure,
+        }
+
+        return data
+
+
 class MqttRemoteSensorBme280_I2C(MqttRemoteSensorBase):
     base_topic = 'bme280'
 
@@ -578,6 +653,7 @@ if __name__ == "__main__":
         'sensor',
         help='sensor',
         choices=(
+            'bmp280_i2c',
             'bme280_i2c',
         ),
     )
@@ -594,6 +670,8 @@ if __name__ == "__main__":
 
     if args.sensor == 'bme280_i2c':
         mqs_class = MqttRemoteSensorBme280_I2C
+    elif args.sensor == 'bmp280_i2c':
+        mqs_class = MqttRemoteSensorBmp280_I2C
 
 
     mqs = mqs_class()
