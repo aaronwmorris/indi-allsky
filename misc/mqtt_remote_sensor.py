@@ -31,8 +31,6 @@ import math
 import socket
 import ssl
 import paho.mqtt.client as mqtt
-import paho.mqtt.properties as mqtt_props
-from paho.mqtt.packettypes import PacketTypes
 import signal
 import logging
 
@@ -124,8 +122,6 @@ class MqttRemoteSensorBase(object):
         #self.client.on_subscribe = self.on_subscribe
         #self.client.on_unsubscribe = self.on_unsubscribe
 
-        self.client.user_data_set(self.user_data)
-
 
         if MQTT_USERNAME:
             self.client.username_pw_set(username=MQTT_USERNAME, password=MQTT_PASSWORD)
@@ -201,15 +197,11 @@ class MqttRemoteSensorBase(object):
                 topic = '/'.join([self.base_topic, entry])
                 logger.info('Publishing: %s', topic)
 
-                metadata_user_properties = mqtt_props.Properties(PacketTypes.PUBLISH)
-
-                logger.info('Publishing metadata')
                 self.client.publish(
                     topic,
                     payload=float(v),
                     qos=MQTT_QOS,
                     retain=False,
-                    properties=metadata_user_properties,
                 )
 
 
@@ -506,7 +498,7 @@ class MqttRemoteSensorBmp280_I2C(MqttRemoteSensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('[%s] BMP280 - temp: %0.1fc, pressure: %0.1fhPa', self.name, temp_c, pressure_hpa)
+        logger.info('BMP280 - temp: %0.1fc, pressure: %0.1fhPa', temp_c, pressure_hpa)
 
 
         if TEMP_DISPLAY == 'f':
