@@ -23,11 +23,17 @@ MQTT_CERT_BYPASS = int(os.environ.get('MQTT_CERT_BYPASS', 1))
 TEMP_DISPLAY = os.environ.get('TEMP_DISPLAY', 'c')  # c, f, or k
 PRESSURE_DISPLAY = os.environ.get('PRESSURE_DISPLAY', 'hPa')  # hPa, psi, inHg, or mmHg
 
+LATITUDE = os.environ.get('LATITUDE', 33.0)
+LONGITUDE = os.environ.get('LONGITUDE', -84.0)
+
 
 import sys
 import argparse
 import time
+from datetime import datetime
+from datetime import timezone
 import math
+import ephem
 import socket
 import ssl
 import paho.mqtt.client as mqtt
@@ -59,6 +65,18 @@ class MqttRemoteSensorBase(object):
         self.update_offset = 15  # seconds
 
 
+        self.astro_darkness = None  # force update immediately
+
+        self.obs = ephem.Observer()
+        self.obs.lon = math.radians(LONGITUDE)
+        self.obs.lat = math.radians(LATITUDE)
+
+        # disable atmospheric refraction calcs
+        self.obs.pressure = 0
+
+        self.sun = ephem.Sun()
+
+
         self._shutdown = False
 
 
@@ -69,6 +87,13 @@ class MqttRemoteSensorBase(object):
     @i2c_address.setter
     def i2c_address(self, new_i2c_address):
         self._i2c_address = int(new_i2c_address, 16)
+
+
+    @property
+    def sun_alt(self):
+        self.obs.date = datetime.now(tz=timezone.utc)  # ephem expects UTC dates
+        self.sun.compute(self.obs)
+        return math.degrees(self.sun.alt)
 
 
     def sigint_handler(self, signum, frame):
@@ -82,13 +107,18 @@ class MqttRemoteSensorBase(object):
 
 
     def run(self):
-        logger.info('MQTT Transport:   %s', MQTT_TRANSPORT)
-        logger.info('MQTT Protocol:    %s', MQTT_PROTOCOL)
-        logger.info('MQTT Hostname:    %s', MQTT_HOSTNAME)
-        logger.info('MQTT Port:        %d', MQTT_PORT)
-        logger.info('MQTT Username:    %s', MQTT_USERNAME)
-        logger.info('MQTT TLS:         %s', str(bool(MQTT_TLS)))
-        logger.info('Base Topic:       %s', self.base_topic)
+        logger.info('MQTT_TRANSPORT:   %s', MQTT_TRANSPORT)
+        logger.info('MQTT_PROTOCOL:    %s', MQTT_PROTOCOL)
+        logger.info('MQTT_HOSTNAME:    %s', MQTT_HOSTNAME)
+        logger.info('MQTT_PORT:        %d', MQTT_PORT)
+        logger.info('MQTT_USERNAME:    %s', MQTT_USERNAME)
+        logger.info('MQTT_PASSWORD:    %s', '********')
+        logger.info('MQTT_TLS:         %s', str(bool(MQTT_TLS)))
+        logger.info('BASE_TOPIC:       %s', self.base_topic)
+        logger.info('TEMP_DISPLAY:     %s', TEMP_DISPLAY)
+        logger.info('PRESSURE_DISPLAY: %s', PRESSURE_DISPLAY)
+        logger.info('LATITUDE:         %s', LATITUDE)
+        logger.info('LONGITUDE:        %s', LONGITUDE)
         time.sleep(3.0)
 
 
@@ -880,6 +910,119 @@ class MqttRemoteSensorAhtx0_I2C(MqttRemoteSensorBase):
         return data
 
 
+class MqttRemoteSensorTsl2591_I2C(MqttRemoteSensorBase):
+    base_topic = 'tsl2591'
+
+    def __init__(self, *args, **kwargs):
+        super(MqttRemoteSensorTsl2591_I2C, self).__init__(*args, **kwargs)
+
+        self.tsl2591 = None
+
+
+    def init_sensor(self):
+        import board
+        #import busio
+        import adafruit_tsl2591
+
+        logger.warning('Initializing TSL2591 I2C light sensor device @ %s', hex(self.i2c_address))
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.tsl2591 = adafruit_tsl2591.TSL2591(i2c, address=self.i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
+
+        self.gain_night = getattr(adafruit_tsl2591, 'GAIN_MED')
+        self.gain_day = getattr(adafruit_tsl2591, 'GAIN_LOW')
+        self.integration_night = getattr(adafruit_tsl2591, 'INTEGRATIONTIME_100MS')
+        self.integration_day = getattr(adafruit_tsl2591, 'INTEGRATIONTIME_100MS')
+
+
+        ### You can optionally change the gain and integration time:
+        #self.tsl2591.gain = adafruit_tsl2591.GAIN_LOW   # (1x gain)
+        #self.tsl2591.gain = adafruit_tsl2591.GAIN_MED   # (25x gain, the default)
+        #self.tsl2591.gain = adafruit_tsl2591.GAIN_HIGH  # (428x gain)
+        #self.tsl2591.gain = adafruit_tsl2591.GAIN_MAX   # (9876x gain)
+
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_100MS  # (100ms, default)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_200MS  # (200ms)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_300MS  # (300ms)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_400MS  # (400ms)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_500MS  # (500ms)
+        #self.tsl2591.integration_time = adafruit_tsl2591.INTEGRATIONTIME_600MS  # (600ms)
+
+
+        time.sleep(1)
+
+
+    def update_sensor(self):
+        astro_darkness = self.sun_alt <= 18.0
+        if self.astro_darkness != astro_darkness:
+            self.astro_darkness = astro_darkness
+            self.update_sensor_settings()
+
+
+        #gain = self.tsl2591.gain
+        #integration = self.tsl2591.integration_time
+        #logger.info('[%s] TSL2591 settings - Gain: %d, Integration: %d', gain, integration)
+
+
+        try:
+            lux = float(self.tsl2591.lux)
+            infrared = int(self.tsl2591.infrared)
+            visible = int(self.tsl2591.visible)
+            full_spectrum = int(self.tsl2591.full_spectrum)
+        except RuntimeError as e:
+            raise SensorReadException(str(e)) from e
+
+
+        logger.info('TSL2591 - lux: %0.4f, visible: %d, ir: %d, full: %d', lux, visible, infrared, full_spectrum)
+
+
+        if self.astro_darkness:
+            try:
+                sqm_mag, raw_mag = self.lux2mag(lux)
+            except ValueError as e:
+                logger.error('SQM calculation error - ValueError: %s', str(e))
+                sqm_mag = 0.0
+                raw_mag = 0.0
+        else:
+            # disabled outside astronomical darkness
+            sqm_mag = 0.0
+            raw_mag = 0.0
+
+
+        data = {
+            'lux'           : lux,
+            'visible'       : visible,
+            'infrared'      : infrared,
+            'full_spectrum' : full_spectrum,
+            'sqm_magnitude' : sqm_mag,
+            'raw_magnitude' : raw_mag,
+        }
+
+
+        return data
+
+
+
+    def update_sensor_settings(self):
+        if self.astro_darkness:
+            logger.info('Switching TSL2591 to night mode - Gain %d, Integration: %d', self.gain_night, self.integration_night)
+            self.tsl2591.gain = self.gain_night
+            self.tsl2591.integration_time = self.integration_night
+        else:
+            logger.info('Switching TSL2591 to day mode - Gain %d, Integration: %d', self.gain_day, self.integration_day)
+            self.tsl2591.gain = self.gain_day
+            self.tsl2591.integration_time = self.integration_day
+
+        time.sleep(1.0)
+
+
 ### exceptions
 class DeviceControlException(Exception):
     pass
@@ -900,6 +1043,7 @@ if __name__ == "__main__":
             'bme280_i2c',
             'bme680_i2c',
             'ahtx0_i2c',
+            'tsl2591_i2c',
         ),
     )
     argparser.add_argument(
@@ -923,6 +1067,8 @@ if __name__ == "__main__":
         mqs_class = MqttRemoteSensorBme680_I2C
     elif args.sensor == 'ahtx0_i2c':
         mqs_class = MqttRemoteSensorAhtx0_I2C
+    elif args.sensor == 'tsl2591_i2c':
+        mqs_class = MqttRemoteSensorTsl2591_I2C
 
 
     mqs = mqs_class()
