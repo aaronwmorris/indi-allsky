@@ -1722,6 +1722,7 @@ class ImageWorker(Process):
             'adu_average'         : adu_average,
             'sqm'                 : i_ref.sqm_value,
             'stars'               : len(i_ref.stars),
+            'detections'          : len(i_ref.lines),
             'time'                : i_ref.exp_date.strftime('%s'),
             'latitude'            : self.position_av[constants.POSITION_LATITUDE],
             'longitude'           : self.position_av[constants.POSITION_LONGITUDE],

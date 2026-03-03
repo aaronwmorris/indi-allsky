@@ -1768,6 +1768,10 @@ if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
 
     echo
     echo
+    echo "#####################################"
+    echo "####  SETUP IS **NOT** COMPLETE  ####"
+    echo "#####################################"
+    echo
     echo "The DBUS user session is not defined"
     echo
     echo "Now that the dbus package has been installed..."

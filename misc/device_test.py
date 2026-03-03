@@ -23,7 +23,7 @@ from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.devices import generic as indi_allsky_gpios
 from indi_allsky.devices import dew_heaters
 from indi_allsky.devices import fans
-#from indi_allsky.devices.exceptions import DeviceControlException
+from indi_allsky.devices.exceptions import DeviceControlException
 
 
 # setup flask context for db access
@@ -96,13 +96,22 @@ class TestDevices(object):
                 dh_invert_output = self.config.get('DEW_HEATER', {}).get('INVERT_OUTPUT', False)
                 dh_pwm_frequency = self.config.get('DEW_HEATER', {}).get('PWM_FREQUENCY', 500)
 
-                self.device = dh_class(
-                    self.config,
-                    i2c_address=dh_i2c_address,
-                    pin_1_name=dh_pin_1,
-                    invert_output=dh_invert_output,
-                    pwm_frequency=dh_pwm_frequency,
-                )
+
+                try:
+                    self.device = dh_class(
+                        self.config,
+                        i2c_address=dh_i2c_address,
+                        pin_1_name=dh_pin_1,
+                        invert_output=dh_invert_output,
+                        pwm_frequency=dh_pwm_frequency,
+                    )
+                except (OSError, ValueError) as e:
+                    logger.error('Error initializing dew heater controller: %s', str(e))
+                    sys.exit(1)
+                except DeviceControlException as e:
+                    logger.error('Error initializing dew heater controller: %s', str(e))
+                    sys.exit(1)
+
 
                 # set initial state
                 self.device.state = 0
@@ -129,13 +138,22 @@ class TestDevices(object):
                 fan_invert_output = self.config.get('FAN', {}).get('INVERT_OUTPUT', False)
                 fan_pwm_frequency = self.config.get('FAN', {}).get('PWM_FREQUENCY', 500)
 
-                self.device = fan_class(
-                    self.config,
-                    i2c_address=fan_i2c_address,
-                    pin_1_name=fan_pin_1,
-                    invert_output=fan_invert_output,
-                    pwm_frequency=fan_pwm_frequency,
-                )
+
+                try:
+                    self.device = fan_class(
+                        self.config,
+                        i2c_address=fan_i2c_address,
+                        pin_1_name=fan_pin_1,
+                        invert_output=fan_invert_output,
+                        pwm_frequency=fan_pwm_frequency,
+                    )
+                except (OSError, ValueError) as e:
+                    logger.error('Error initializing fan controller: %s', str(e))
+                    sys.exit(1)
+                except DeviceControlException as e:
+                    logger.error('Error initializing fan controller: %s', str(e))
+                    sys.exit(1)
+
 
                 # set initial state
                 self.device.state = 0
@@ -161,12 +179,21 @@ class TestDevices(object):
                 a_gpio_pin_1 = self.config.get('GENERIC_GPIO', {}).get('A_PIN_1', 'notdefined')
                 a_gpio_invert_output = self.config.get('GENERIC_GPIO', {}).get('A_INVERT_OUTPUT', False)
 
-                self.device = a_gpio_class(
-                    self.config,
-                    i2c_address=a_gpio_i2c_address,
-                    pin_1_name=a_gpio_pin_1,
-                    invert_output=a_gpio_invert_output,
-                )
+
+                try:
+                    self.device = a_gpio_class(
+                        self.config,
+                        i2c_address=a_gpio_i2c_address,
+                        pin_1_name=a_gpio_pin_1,
+                        invert_output=a_gpio_invert_output,
+                    )
+                except (OSError, ValueError) as e:
+                    logger.error('Error initializing gpio controller: %s', str(e))
+                    sys.exit(1)
+                except DeviceControlException as e:
+                    logger.error('Error initializing gpio controller: %s', str(e))
+                    sys.exit(1)
+
 
                 # set initial state
                 self.device.state = 0
