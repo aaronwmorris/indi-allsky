@@ -46,6 +46,7 @@ logger.addHandler(LOG_HANDLER_STREAM)
 
 class MqttRemoteSensorBase(object):
     base_topic = None
+    name = ''  # just to fix copy/paste errors
 
 
     def __init__(self):
@@ -451,13 +452,79 @@ class MqttRemoteSensorBase(object):
         return (B * alpha) / (A - alpha)
 
 
+class MqttRemoteSensorBmp180_I2C(MqttRemoteSensorBase):
+    base_topic = 'bmp180'
+
+    def __init__(self, *args, **kwargs):
+        super(MqttRemoteSensorBmp180_I2C, self).__init__(*args, **kwargs)
+
+        self.bmp180 = None
+
+
+    def init_sensor(self):
+        import board
+        #import busio
+        import bmp180
+
+        logger.warning('Initializing BMP180 I2C temperature device @ %s', hex(self.i2c_address))
+
+        try:
+            i2c = board.I2C()
+            #i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            #i2c = busio.I2C(board.D1, board.D0, frequency=100000)  # Raspberry Pi i2c bus 0 (pins 28/27)
+            self.bmp180 = bmp180.BMP180(i2c, address=self.i2c_address)
+        except Exception as e:
+            logger.error('Device init exception: %s', str(e))
+            raise DeviceControlException from e
+
+
+    def update_sensor(self):
+        try:
+            temp_c = float(self.bmp180.temperature)
+            pressure_hpa = float(self.bmp180.pressure)  # hPa
+            #altitude = float(self.bmp180.altitude)  # meters
+        except RuntimeError as e:
+            raise SensorReadException(str(e)) from e
+
+
+        logger.info('BMP180 - temp: %0.1fc, pressure: %0.1fhPa', temp_c, pressure_hpa)
+
+        # no humidity sensor
+
+
+        if TEMP_DISPLAY == 'f':
+            current_temp = self.c2f(temp_c)
+        elif TEMP_DISPLAY == 'k':
+            current_temp = self.c2k(temp_c)
+        else:
+            current_temp = temp_c
+
+
+        if PRESSURE_DISPLAY == 'psi':
+            current_pressure = self.hPa2psi(pressure_hpa)
+        elif PRESSURE_DISPLAY == 'inHg':
+            current_pressure = self.hPa2inHg(pressure_hpa)
+        elif PRESSURE_DISPLAY == 'mmHg':
+            current_pressure = self.hPa2mmHg(pressure_hpa)
+        else:
+            current_pressure = pressure_hpa
+
+
+        data = {
+            'temperature'       : current_temp,
+            'pressure'          : current_pressure,
+        }
+
+        return data
+
+
 class MqttRemoteSensorBmp280_I2C(MqttRemoteSensorBase):
     base_topic = 'bmp280'
 
     def __init__(self, *args, **kwargs):
         super(MqttRemoteSensorBmp280_I2C, self).__init__(*args, **kwargs)
 
-        self.bme280 = None
+        self.bmp280 = None
 
 
     def init_sensor(self):
@@ -608,11 +675,11 @@ class MqttRemoteSensorBme280_I2C(MqttRemoteSensorBase):
             current_hi = heat_index_c
 
 
-        if self.config.get('PRESSURE_DISPLAY') == 'psi':
+        if PRESSURE_DISPLAY == 'psi':
             current_pressure = self.hPa2psi(pressure_hpa)
-        elif self.config.get('PRESSURE_DISPLAY') == 'inHg':
+        elif PRESSURE_DISPLAY == 'inHg':
             current_pressure = self.hPa2inHg(pressure_hpa)
-        elif self.config.get('PRESSURE_DISPLAY') == 'mmHg':
+        elif PRESSURE_DISPLAY == 'mmHg':
             current_pressure = self.hPa2mmHg(pressure_hpa)
         else:
             current_pressure = pressure_hpa
@@ -696,12 +763,12 @@ class MqttRemoteSensorBme680_I2C(MqttRemoteSensorBase):
         heat_index_c = self.get_heat_index_c(temp_c, rel_h)
 
 
-        if self.config.get('TEMP_DISPLAY') == 'f':
+        if TEMP_DISPLAY == 'f':
             current_temp = self.c2f(temp_c)
             current_dp = self.c2f(dew_point_c)
             current_fp = self.c2f(frost_point_c)
             current_hi = self.c2f(heat_index_c)
-        elif self.config.get('TEMP_DISPLAY') == 'k':
+        elif TEMP_DISPLAY == 'k':
             current_temp = self.c2k(temp_c)
             current_dp = self.c2k(dew_point_c)
             current_fp = self.c2k(frost_point_c)
@@ -713,11 +780,11 @@ class MqttRemoteSensorBme680_I2C(MqttRemoteSensorBase):
             current_hi = heat_index_c
 
 
-        if self.config.get('PRESSURE_DISPLAY') == 'psi':
+        if PRESSURE_DISPLAY == 'psi':
             current_pressure = self.hPa2psi(pressure_hpa)
-        elif self.config.get('PRESSURE_DISPLAY') == 'inHg':
+        elif PRESSURE_DISPLAY == 'inHg':
             current_pressure = self.hPa2inHg(pressure_hpa)
-        elif self.config.get('PRESSURE_DISPLAY') == 'mmHg':
+        elif PRESSURE_DISPLAY == 'mmHg':
             current_pressure = self.hPa2mmHg(pressure_hpa)
         else:
             current_pressure = pressure_hpa
@@ -751,6 +818,7 @@ if __name__ == "__main__":
         'sensor',
         help='sensor',
         choices=(
+            'bmp180_i2c',
             'bmp280_i2c',
             'bme280_i2c',
             'bme680_i2c',
@@ -767,7 +835,9 @@ if __name__ == "__main__":
     args = argparser.parse_args()
 
 
-    if args.sensor == 'bmp280_i2c':
+    if args.sensor == 'bmp180_i2c':
+        mqs_class = MqttRemoteSensorBmp180_I2C
+    elif args.sensor == 'bmp280_i2c':
         mqs_class = MqttRemoteSensorBmp280_I2C
     elif args.sensor == 'bme280_i2c':
         mqs_class = MqttRemoteSensorBme280_I2C
