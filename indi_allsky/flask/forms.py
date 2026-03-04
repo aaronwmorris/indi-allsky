@@ -3938,6 +3938,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ),
         'IMU Sensors' : (
             ('blinka_imu_sensor_icm20x_i2c', 'ICM20X i2c - Mag X/Y/Z (3 slots)'),
+            ('blinka_imu_sensor_mpu6050_i2c', 'MPU6050 i2c - Temp (1 slot)'),
         ),
         'VOC/Air Quality Sensors' : (
             ('blinka_voc_sensor_sgp40_i2c', 'SGP40 i2c - Gas (1 slot)'),
