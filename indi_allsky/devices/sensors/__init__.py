@@ -65,6 +65,7 @@ from .currentSensorIna228 import CurrentSensorIna228_I2C as blinka_current_senso
 from .currentSensorIna260 import CurrentSensorIna260_I2C as blinka_current_sensor_ina260_i2c
 
 from .imuSensorIcm20x import ImuSensorIcm20x_I2C as blinka_imu_sensor_icm20x_i2c
+from .imuSensorMpu6050 import ImuSensorMpu6050_I2C as blinka_imu_sensor_mpu6050_i2c
 
 from .vocSensorSgp40 import VocSensorSgp40_I2C as blinka_voc_sensor_sgp40_i2c
 
@@ -122,6 +123,7 @@ __all__ = (
     'blinka_current_sensor_ina228_i2c',
     'blinka_current_sensor_ina260_i2c',
     'blinka_imu_sensor_icm20x_i2c',
+    'blinka_imu_sensor_mpu6050_i2c',
     'blinka_voc_sensor_sgp40_i2c',
     'cpads_temp_sensor_tmp36_ads1015_i2c',
     'cpads_temp_sensor_tmp36_ads1115_i2c',

@@ -79,7 +79,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 * Magnetometers
     * MMC5983MA 3-axis
 * IMU Sensors
-    * ICM20X
+    * ICM20X (Magnetometer only)
+    * MPU6050 (Temp only)
 * VOC/Air Quality Sensors
     * SGP40
 * Current Sensors
