@@ -22,7 +22,7 @@ class ImuSensorIcm20x(SensorBase):
             raise SensorReadException(str(e)) from e
 
 
-        logger.info('[%s] ICM20X - Magnetometer X:%0.2f, Y:%0.2f, Z:%0.2f uTf', self.name, mag_x, mag_y, mag_z)
+        logger.info('[%s] ICM20X - Magnetometer X:%0.2f, Y:%0.2f, Z:%0.2f μT', self.name, mag_x, mag_y, mag_z)
 
 
         data = {
