@@ -944,7 +944,7 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
             'width'         : 4608,
             'height'        : 2592,
             'pixel'         : 1.4,
-            'min_gain'      : 1.0,
+            'min_gain'      : 1.13,
             'max_gain'      : 16.0,
             'min_binning'   : 1,
             'max_binning'   : 4,
