@@ -1251,7 +1251,7 @@ class CaptureWorker(Process):
         logger.info('SQM CCD exposure: %0.8f', self.exposure_av[constants.EXPOSURE_SQM])
 
 
-        # Validate gain settings
+        ### Validate gain settings
         ccd_min_gain = math.ceil(float(ccd_info['GAIN_INFO']['min']) * 100) / 100  # round up the hundredths spot
         ccd_max_gain = math.floor(float(ccd_info['GAIN_INFO']['max']) * 100) / 100  # round down
 

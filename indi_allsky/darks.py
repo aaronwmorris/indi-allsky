@@ -417,8 +417,8 @@ class IndiAllSkyDarks(object):
 
 
         # Validate gain settings
-        ccd_min_gain = float(ccd_info['GAIN_INFO']['min'])
-        ccd_max_gain = float(ccd_info['GAIN_INFO']['max'])
+        ccd_min_gain = math.ceil(float(ccd_info['GAIN_INFO']['min']) * 100) / 100  # round up the hundredths spot
+        ccd_max_gain = math.floor(float(ccd_info['GAIN_INFO']['max']) * 100) / 100  # round down
 
         if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
             logger.error('CCD night gain below minimum, changing to %0.2f', float(ccd_min_gain))
