@@ -16,6 +16,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
         iproute2 \
         apt-utils \
         i2c-tools \
+        usbutils \
         locales \
         tzdata \
         procps \
