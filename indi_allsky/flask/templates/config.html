@@ -1740,6 +1740,64 @@ var camera_id = {{ camera_id }};
 
     <hr>
 
+        <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_DENOISE.label(class='col-form-label') }}
+        </div>
+
+        <div class="col-sm-3">
+            {{ form_config.IMAGE_DENOISE(class='form-select bg-secondary') }}
+            <div id="IMAGE_DENOISE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-7">
+           <div>Warning: Denoising adds processing time - concern if only a short time limit set between exposures.<br>
+                Algorithm to reduce image noise (applied before stretch). Methods respect stars. Default for all: 3<br>
+                Methods operate at similar speed. Except for Wavelet Filter- slowest, but best quality.</div>
+            <ul>
+            <li>Gaussian Blur &mdash; Targets noise with gentle, uniform smoothing.</li>
+            <li>Median Blur &mdash; Best for removing salt-and-pepper noise. Replaces outlier pixels with median of neighbors.</li>
+            <li>Bilateral Filter &mdash; Edge-aware filter. Smooths sky noise while preserving star edges.</li>
+            <li>Wavelet Filter &mdash; Removes noise at all scales. Best for read noise and faint sky noise. Slowest, best quality.</li>
+            </ul>
+        </div>
+        </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_DENOISE_STRENGTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_DENOISE_STRENGTH(class='form-control bg-secondary') }}
+            <div id="IMAGE_DENOISE_STRENGTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Range: 1-5. Higher = stronger noise reduction but may come at a cost of loss of fine detail.</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.BILATERAL_SIGMA_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.BILATERAL_SIGMA_COLOR(class='form-control bg-secondary') }}
+            <div id="BILATERAL_SIGMA_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Brightness difference to blend across (1-50). Low (10-20) preserves star edges tightly. High (40+) smooths more aggressively. Default: 10</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.BILATERAL_SIGMA_SPACE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.BILATERAL_SIGMA_SPACE(class='form-control bg-secondary') }}
+            <div id="BILATERAL_SIGMA_SPACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">How far away pixels can influence each other (1-50). Low (15-35) for fine detail. High (40+) for broad smooth gradients. Default: 15</div>
+    </div>
+
+    <hr>
+
     <div class="form-group row">
         <div class="col-sm-2">
             {{ form_config.WBR_FACTOR.label(class='col-form-label') }}
@@ -1903,6 +1961,57 @@ var camera_id = {{ camera_id }};
             <div id="SCNR_MTF_MIDTONES_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">Range: 0.5-1.0. 0.5 = No change</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_DENOISE_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_config.IMAGE_DENOISE_DAY(class='form-select bg-secondary') }}
+            <div id="IMAGE_DENOISE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div>
+              Denoise algorithm to reduce image noise (applied before stretch). Methods aim to respect stars. Default for all: 3<br>
+              Methods are similar processing time except for Wavelet, which is slower.
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_DENOISE_STRENGTH_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.IMAGE_DENOISE_STRENGTH_DAY(class='form-control bg-secondary') }}
+            <div id="IMAGE_DENOISE_STRENGTH_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Range: 1-5. Higher = stronger noise reduction but may come at a cost of loss of fine detail.</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.BILATERAL_SIGMA_COLOR_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.BILATERAL_SIGMA_COLOR_DAY(class='form-control bg-secondary') }}
+            <div id="BILATERAL_SIGMA_COLOR_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">How much brightness difference to blend across (1-50). Low (10-20) preserves star edges tightly. High (40+) smooths more aggressively. Default: 20</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.BILATERAL_SIGMA_SPACE_DAY.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.BILATERAL_SIGMA_SPACE_DAY(class='form-control bg-secondary') }}
+            <div id="BILATERAL_SIGMA_SPACE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">How far away pixels can influence each other (1-50). Low (15-35) for fine detail. High (40+) for broad smooth gradients. Default: 35</div>
     </div>
 
     <hr>
@@ -9645,6 +9754,14 @@ const field_names = [
     'SCNR_ALGORITHM_DAY',
     'SCNR_MTF_MIDTONES',
     'SCNR_MTF_MIDTONES_DAY',
+    'IMAGE_DENOISE',
+    'IMAGE_DENOISE_DAY',
+    'IMAGE_DENOISE_STRENGTH',
+    'IMAGE_DENOISE_STRENGTH_DAY',
+    'BILATERAL_SIGMA_COLOR',
+    'BILATERAL_SIGMA_COLOR_DAY',
+    'BILATERAL_SIGMA_SPACE',
+    'BILATERAL_SIGMA_SPACE_DAY',
     'CCD_TEMP',
     'CCD_TEMP_DAY',
     'TEMP_DISPLAY',
@@ -10626,6 +10743,14 @@ $('#USE_NIGHT_COLOR').on('change', function() {
         $('#SCNR_ALGORITHM_DAY').addClass('bg-dark text-secondary');
         $('#SCNR_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
         $('#SCNR_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
+        $('#IMAGE_DENOISE_DAY').attr({'readonly': true, 'disabled': true});
+        $('#IMAGE_DENOISE_DAY').addClass('bg-dark text-secondary');
+        $('#IMAGE_DENOISE_STRENGTH_DAY').attr({'readonly': true, 'disabled': true});
+        $('#IMAGE_DENOISE_STRENGTH_DAY').addClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_COLOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_COLOR_DAY').addClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_SPACE_DAY').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_SPACE_DAY').addClass('bg-dark text-secondary');
         $('#WBR_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#WBR_FACTOR_DAY').addClass('bg-dark text-secondary');
         $('#WBG_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
@@ -10650,6 +10775,27 @@ $('#USE_NIGHT_COLOR').on('change', function() {
         $('#SCNR_ALGORITHM_DAY').removeClass('bg-dark text-secondary');
         $('#SCNR_MTF_MIDTONES_DAY').removeAttr('readonly disabled');
         $('#SCNR_MTF_MIDTONES_DAY').removeClass('bg-dark text-secondary');
+        $('#IMAGE_DENOISE_DAY').removeAttr('readonly disabled');
+        $('#IMAGE_DENOISE_DAY').removeClass('bg-dark text-secondary');
+        // re-evaluate denoise day dependent fields based on day dropdown
+        if ($('#IMAGE_DENOISE_DAY').val()) {
+            $('#IMAGE_DENOISE_STRENGTH_DAY').removeAttr('readonly disabled');
+            $('#IMAGE_DENOISE_STRENGTH_DAY').removeClass('bg-dark text-secondary');
+        } else {
+            $('#IMAGE_DENOISE_STRENGTH_DAY').attr({'readonly': true, 'disabled': true});
+            $('#IMAGE_DENOISE_STRENGTH_DAY').addClass('bg-dark text-secondary');
+        }
+        if ($('#IMAGE_DENOISE_DAY').val() === 'bilateral') {
+            $('#BILATERAL_SIGMA_COLOR_DAY').removeAttr('readonly disabled');
+            $('#BILATERAL_SIGMA_COLOR_DAY').removeClass('bg-dark text-secondary');
+            $('#BILATERAL_SIGMA_SPACE_DAY').removeAttr('readonly disabled');
+            $('#BILATERAL_SIGMA_SPACE_DAY').removeClass('bg-dark text-secondary');
+        } else {
+            $('#BILATERAL_SIGMA_COLOR_DAY').attr({'readonly': true, 'disabled': true});
+            $('#BILATERAL_SIGMA_COLOR_DAY').addClass('bg-dark text-secondary');
+            $('#BILATERAL_SIGMA_SPACE_DAY').attr({'readonly': true, 'disabled': true});
+            $('#BILATERAL_SIGMA_SPACE_DAY').addClass('bg-dark text-secondary');
+        }
         $('#WBR_FACTOR_DAY').removeAttr('readonly disabled');
         $('#WBR_FACTOR_DAY').removeClass('bg-dark text-secondary');
         $('#WBG_FACTOR_DAY').removeAttr('readonly disabled');
@@ -10669,6 +10815,56 @@ $('#USE_NIGHT_COLOR').on('change', function() {
         $('#GAMMA_CORRECTION_DAY').removeClass('bg-dark text-secondary');
         $('#SHARPEN_AMOUNT_DAY').removeAttr('readonly disabled');
         $('#SHARPEN_AMOUNT_DAY').removeClass('bg-dark text-secondary');
+    }
+});
+
+// Denoise dependent fields - night
+$('#IMAGE_DENOISE').on('change', function() {
+    var val = $(this).val();
+    if (val) {
+        $('#IMAGE_DENOISE_STRENGTH').removeAttr('readonly disabled');
+        $('#IMAGE_DENOISE_STRENGTH').removeClass('bg-dark text-secondary');
+        // Set default to 3 for all methods
+        $('#IMAGE_DENOISE_STRENGTH').val(3);
+    } else {
+        $('#IMAGE_DENOISE_STRENGTH').attr({'readonly': true, 'disabled': true});
+        $('#IMAGE_DENOISE_STRENGTH').addClass('bg-dark text-secondary');
+    }
+    if (val === 'bilateral') {
+        $('#BILATERAL_SIGMA_COLOR').removeAttr('readonly disabled');
+        $('#BILATERAL_SIGMA_COLOR').removeClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_SPACE').removeAttr('readonly disabled');
+        $('#BILATERAL_SIGMA_SPACE').removeClass('bg-dark text-secondary');
+    } else {
+        $('#BILATERAL_SIGMA_COLOR').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_COLOR').addClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_SPACE').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_SPACE').addClass('bg-dark text-secondary');
+    }
+});
+
+// Denoise dependent fields - day
+$('#IMAGE_DENOISE_DAY').on('change', function() {
+    var val = $(this).val();
+    if (val) {
+        $('#IMAGE_DENOISE_STRENGTH_DAY').removeAttr('readonly disabled');
+        $('#IMAGE_DENOISE_STRENGTH_DAY').removeClass('bg-dark text-secondary');
+        // Set default to 3 for all methods
+        $('#IMAGE_DENOISE_STRENGTH_DAY').val(3);
+    } else {
+        $('#IMAGE_DENOISE_STRENGTH_DAY').attr({'readonly': true, 'disabled': true});
+        $('#IMAGE_DENOISE_STRENGTH_DAY').addClass('bg-dark text-secondary');
+    }
+    if (val === 'bilateral') {
+        $('#BILATERAL_SIGMA_COLOR_DAY').removeAttr('readonly disabled');
+        $('#BILATERAL_SIGMA_COLOR_DAY').removeClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_SPACE_DAY').removeAttr('readonly disabled');
+        $('#BILATERAL_SIGMA_SPACE_DAY').removeClass('bg-dark text-secondary');
+    } else {
+        $('#BILATERAL_SIGMA_COLOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_COLOR_DAY').addClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_SPACE_DAY').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_SPACE_DAY').addClass('bg-dark text-secondary');
     }
 });
 
@@ -10995,6 +11191,14 @@ $( document ).ready(function() {
         $('#SCNR_ALGORITHM_DAY').addClass('bg-dark text-secondary');
         $('#SCNR_MTF_MIDTONES_DAY').attr({'readonly': true, 'disabled': true});
         $('#SCNR_MTF_MIDTONES_DAY').addClass('bg-dark text-secondary');
+        $('#IMAGE_DENOISE_DAY').attr({'readonly': true, 'disabled': true});
+        $('#IMAGE_DENOISE_DAY').addClass('bg-dark text-secondary');
+        $('#IMAGE_DENOISE_STRENGTH_DAY').attr({'readonly': true, 'disabled': true});
+        $('#IMAGE_DENOISE_STRENGTH_DAY').addClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_COLOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_COLOR_DAY').addClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_SPACE_DAY').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_SPACE_DAY').addClass('bg-dark text-secondary');
         $('#WBR_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
         $('#WBR_FACTOR_DAY').addClass('bg-dark text-secondary');
         $('#WBG_FACTOR_DAY').attr({'readonly': true, 'disabled': true});
@@ -11014,6 +11218,30 @@ $( document ).ready(function() {
         $('#GAMMA_CORRECTION_DAY').addClass('bg-dark text-secondary');
         $('#SHARPEN_AMOUNT_DAY').attr({'readonly': true, 'disabled': true});
         $('#SHARPEN_AMOUNT_DAY').addClass('bg-dark text-secondary');
+    }
+
+    // Denoise dependent fields - grey out on page load (night)
+    if (!$('#IMAGE_DENOISE').val()) {
+        $('#IMAGE_DENOISE_STRENGTH').attr({'readonly': true, 'disabled': true});
+        $('#IMAGE_DENOISE_STRENGTH').addClass('bg-dark text-secondary');
+    }
+    if ($('#IMAGE_DENOISE').val() !== 'bilateral') {
+        $('#BILATERAL_SIGMA_COLOR').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_COLOR').addClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_SPACE').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_SPACE').addClass('bg-dark text-secondary');
+    }
+
+    // Denoise dependent fields - grey out on page load (day)
+    if (!$('#IMAGE_DENOISE_DAY').val() || $('#USE_NIGHT_COLOR').prop('checked')) {
+        $('#IMAGE_DENOISE_STRENGTH_DAY').attr({'readonly': true, 'disabled': true});
+        $('#IMAGE_DENOISE_STRENGTH_DAY').addClass('bg-dark text-secondary');
+    }
+    if ($('#IMAGE_DENOISE_DAY').val() !== 'bilateral' || $('#USE_NIGHT_COLOR').prop('checked')) {
+        $('#BILATERAL_SIGMA_COLOR_DAY').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_COLOR_DAY').addClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_SPACE_DAY').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_SPACE_DAY').addClass('bg-dark text-secondary');
     }
 
     // Night timelapse settings
