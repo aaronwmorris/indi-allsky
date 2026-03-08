@@ -529,6 +529,60 @@ var fullscreen = false;  //initial state
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_DENOISE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_image_processing.IMAGE_DENOISE(class='form-select bg-secondary') }}
+            <div id="IMAGE_DENOISE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-7">
+            <div>Denoise algorithm to reduce image noise (applied before stretch). Stars are preserved.<br>
+            <small class="text-muted">
+            <b>Gaussian</b> — Fastest - Smooths background glow, stars masked out. High strength can soften faint detail.<br>
+            <b>Median</b> — Fast - Removes salt and pepper noise, everything else untouched. Poorer at backgrounds<br>
+            <b>Bilateral</b> — Medium - Smooths read noise but keeps edges sharp. Could introduce "patchiness"<br>
+            <b>Wavelet</b> — Slow - All-round best quality, handles any noise type.
+            </small></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_DENOISE_STRENGTH.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.IMAGE_DENOISE_STRENGTH(class='form-control bg-secondary') }}
+            <div id="IMAGE_DENOISE_STRENGTH-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Range: 1-5. Higher = stronger smoothing. High values increase broader effect. Low values preserve fine details.</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.BILATERAL_SIGMA_COLOR.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.BILATERAL_SIGMA_COLOR(class='form-control bg-secondary') }}
+            <div id="BILATERAL_SIGMA_COLOR-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">How much brightness difference to blend across (1-150). Low (10-20) preserves star edges tightly. High (50+) smooths more aggressively. Default: 20</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.BILATERAL_SIGMA_SPACE.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.BILATERAL_SIGMA_SPACE(class='form-control bg-secondary') }}
+            <div id="BILATERAL_SIGMA_SPACE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">How far away pixels can influence each other (1-150). Low (15-35) for fine detail. High (50+) for broad smooth gradients. Default: 35</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_image_processing.WBR_FACTOR.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -1993,6 +2047,10 @@ const field_names = [
     'CFA_PATTERN',
     'SCNR_ALGORITHM',
     'SCNR_MTF_MIDTONES',
+    'IMAGE_DENOISE',
+    'IMAGE_DENOISE_STRENGTH',
+    'BILATERAL_SIGMA_COLOR',
+    'BILATERAL_SIGMA_SPACE',
     'WBR_FACTOR',
     'WBG_FACTOR',
     'WBB_FACTOR',
@@ -2230,11 +2288,46 @@ function init() {
     $('#DISABLE_PROCESSING').prop('checked', false);
 }
 
+// Denoise dependent fields
+$('#IMAGE_DENOISE').on('change', function() {
+    var val = $(this).val();
+    if (val) {
+        $('#IMAGE_DENOISE_STRENGTH').removeAttr('readonly disabled');
+        $('#IMAGE_DENOISE_STRENGTH').removeClass('bg-dark text-secondary');
+    } else {
+        $('#IMAGE_DENOISE_STRENGTH').attr({'readonly': true, 'disabled': true});
+        $('#IMAGE_DENOISE_STRENGTH').addClass('bg-dark text-secondary');
+    }
+    if (val === 'bilateral') {
+        $('#BILATERAL_SIGMA_COLOR').removeAttr('readonly disabled');
+        $('#BILATERAL_SIGMA_COLOR').removeClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_SPACE').removeAttr('readonly disabled');
+        $('#BILATERAL_SIGMA_SPACE').removeClass('bg-dark text-secondary');
+    } else {
+        $('#BILATERAL_SIGMA_COLOR').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_COLOR').addClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_SPACE').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_SPACE').addClass('bg-dark text-secondary');
+    }
+});
+
 
 $( document ).ready(function() {
     $('#fits-image').on("click", function() {
         goFullscreen(this);
     });
+
+    // Denoise dependent fields - grey out on page load
+    if (!$('#IMAGE_DENOISE').val()) {
+        $('#IMAGE_DENOISE_STRENGTH').attr({'readonly': true, 'disabled': true});
+        $('#IMAGE_DENOISE_STRENGTH').addClass('bg-dark text-secondary');
+    }
+    if ($('#IMAGE_DENOISE').val() !== 'bilateral') {
+        $('#BILATERAL_SIGMA_COLOR').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_COLOR').addClass('bg-dark text-secondary');
+        $('#BILATERAL_SIGMA_SPACE').attr({'readonly': true, 'disabled': true});
+        $('#BILATERAL_SIGMA_SPACE').addClass('bg-dark text-secondary');
+    }
 
     init();
 });

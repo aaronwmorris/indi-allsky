@@ -13,6 +13,7 @@
 ### This file is targeted to Raspbian/Debian 10 and Python 3.7
 # https://www.piwheels.org/project/astropy/
 astropy
+photutils
 # https://www.piwheels.org/project/numpy/
 numpy <= 1.21.4
 # https://www.piwheels.org/project/opencv-python-headless/
