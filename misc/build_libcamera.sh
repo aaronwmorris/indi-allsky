@@ -30,7 +30,7 @@ if [ -n "${1:-}" ]; then
     LIBCAMERA_TAG="$1"
 else
     #LIBCAMERA_TAG="HEAD"
-    LIBCAMERA_TAG="v0.7.0+rpt20260202"
+    LIBCAMERA_TAG="v0.7.0+rpt20260205"
 fi
 
 if [ -n "${2:-}" ]; then
