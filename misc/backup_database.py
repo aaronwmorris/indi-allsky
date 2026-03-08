@@ -11,6 +11,7 @@ from sqlalchemy.orm.exc import NoResultFound
 sys.path.insert(0, str(Path(__file__).parent.absolute().parent))
 
 
+from indi_allsky.flask import db
 from indi_allsky.flask import create_app
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky.backup import IndiAllskyDatabaseBackup
@@ -49,7 +50,7 @@ class BackupDatabase(object):
 
 
     def main(self):
-        if not app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite'):
+        if db.engine.dialect.name != 'sqlite':
             logger.error('Only sqlite backups are supported')
             sys.exit(1)
 
