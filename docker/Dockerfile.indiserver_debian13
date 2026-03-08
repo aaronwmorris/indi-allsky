@@ -16,14 +16,6 @@ RUN apt-get clean
 #RUN rm -f /etc/sudoers.d/allsky
 
 
-COPY docker/start_indiserver.sh /home/allsky
-RUN chown allsky:allsky /home/allsky/start_indiserver.sh
-RUN chmod 755 /home/allsky/start_indiserver.sh
-
-
-COPY --chown=allsky:allsky misc/build_indi.sh /home/allsky
-RUN chmod 755 /home/allsky/build_indi.sh
-
 USER allsky
 WORKDIR /home/allsky
 
@@ -36,6 +28,23 @@ ENV BUILD_INDI_OS_PACKAGE_UPGRADE=false
 RUN bash build_indi.sh null $INDI_3RDPARTY_VERSION \
     && rm -fR /home/allsky/Projects \
     && sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+
+USER root
+WORKDIR /home/allsky
+
+
+COPY docker/start_indiserver.sh /home/allsky
+RUN chown allsky:allsky /home/allsky/start_indiserver.sh
+RUN chmod 755 /home/allsky/start_indiserver.sh
+
+
+COPY --chown=allsky:allsky misc/build_indi.sh /home/allsky
+RUN chmod 755 /home/allsky/build_indi.sh
+
+
+USER allsky
+WORKDIR /home/allsky
 
 
 ENTRYPOINT ["./start_indiserver.sh"]
