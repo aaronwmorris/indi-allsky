@@ -8188,7 +8188,7 @@ class IndiAllskyTimelapseGeneratorForm_old(FlaskForm):
         day_list = list()
         for entry in days_query:
             # cannot query from inside a query
-            if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+            if db.engine.dialect.name == 'mysql':
                 # mysql returns a date object
                 day_list.append(entry.day)
             else:
@@ -8479,7 +8479,7 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
         day_dict = OrderedDict()
         for entry in days_query_images:
-            if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+            if db.engine.dialect.name == 'mysql':
                 # mysql returns a date object
                 dayDate = entry.dayDate_distinct
             else:
@@ -8523,7 +8523,7 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
         for entry in days_query_panorama_images:
-            if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+            if db.engine.dialect.name == 'mysql':
                 # mysql returns a date object
                 dayDate = entry.dayDate_distinct
             else:

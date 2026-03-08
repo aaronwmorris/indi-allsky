@@ -124,7 +124,7 @@ def create_app():
     with app.app_context():
         from sqlalchemy import event
 
-        if app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite'):
+        if db.engine.dialect.name == 'sqlite':
             event.listen(db.engine, 'connect', _sqlite_pragma_on_connect)
 
         #from . import views  # noqa: F401
