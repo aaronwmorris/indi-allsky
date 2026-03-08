@@ -8189,9 +8189,10 @@ class IndiAllskyTimelapseGeneratorForm_old(FlaskForm):
         for entry in days_query:
             # cannot query from inside a query
             if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+                # mysql returns a date object
                 day_list.append(entry.day)
             else:
-                # assume sqlite
+                # sqlite returns a string
                 day_list.append(datetime.strptime(entry.day, '%Y-%m-%d').date())
 
 
@@ -8522,7 +8523,13 @@ class IndiAllskyTimelapseGeneratorForm(FlaskForm):
 
 
         for entry in days_query_panorama_images:
-            dayDate = datetime.strptime(entry.dayDate_distinct, '%Y-%m-%d').date()
+            if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+                # mysql returns a date object
+                dayDate = entry.dayDate_distinct
+            else:
+                # sqlite returns a string
+                dayDate = datetime.strptime(entry.dayDate_distinct, '%Y-%m-%d').date()
+
 
             if not day_dict.get(dayDate):
                 day_dict[dayDate] = OrderedDict({

@@ -16,6 +16,7 @@ RUN apt-get -y install \
     apt-utils \
     iproute2 \
     i2c-tools \
+    usbutils \
     locales \
     tzdata \
     procps \
