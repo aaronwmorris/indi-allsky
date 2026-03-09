@@ -173,7 +173,7 @@ class LongTermKeogramGenerator(object):
         #logger.info('Rows: %d', q.count())
 
 
-        if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+        if db.engine.dialect.name == 'mysql':
             query_limit = 300000  # limit memory impact on database
         else:
             # assume sqlite

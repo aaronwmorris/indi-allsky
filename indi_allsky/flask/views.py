@@ -923,9 +923,9 @@ class ImageLagView(TemplateView):
         ts_dt_minus_3h = ts_dt - timedelta(hours=3)
 
 
-        if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+        if db.engine.dialect.name == 'mysql':
             createDate_s = func.date_format('%s', IndiAllSkyDbImageTable.createDate)  # mysql
-        elif app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgresql'):
+        elif db.engine.dialect.name == 'postgresql':
             createDate_s = func.to_char(IndiAllSkyDbImageTable.createDate, '%s')  # postgres
         else:
             # assume sqlite
@@ -977,7 +977,7 @@ class RollingAduView(TemplateView):
         ts_dt_minus_7d = self.camera_now - timedelta(days=7)
 
 
-        if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+        if db.engine.dialect.name == 'mysql':
             createDate_s = func.unix_timestamp(IndiAllSkyDbImageTable.createDate)  # mysql
 
             # this should give us average exposure, adu in 15 minute sets, during the night
@@ -1006,7 +1006,7 @@ class RollingAduView(TemplateView):
                 .group_by('interval')\
                 .order_by(desc('interval'))
 
-        elif app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgresql'):
+        elif db.engine.dialect.name == 'postgresql':
             createDate_s = func.to_char(IndiAllSkyDbImageTable.createDate, '%s')  # postgres
             # fixme
         else:

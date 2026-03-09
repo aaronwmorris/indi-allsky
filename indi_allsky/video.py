@@ -1871,7 +1871,7 @@ class VideoWorker(Process):
 
 
     def backupDatabase(self, task, **kwargs):
-        if not app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite'):
+        if db.engine.dialect.name != 'sqlite':
             logger.error('Only sqlite backups are supported')
             task.setFailed('Only sqlite backups are supported')
             return
