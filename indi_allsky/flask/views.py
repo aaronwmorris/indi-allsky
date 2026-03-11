@@ -4575,7 +4575,7 @@ class Fits2JpegView(BaseView):
         binning = int(hdulist[0].header.get('XBINNING', 1))
         binning_av = Array('i', [binning])
         sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
-        sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
+        sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0)), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         night_av = Array('i', [1, 0])  # using night values for processing
         astro_av = Array('f', [0.0, 0.0, 0.0])
 
