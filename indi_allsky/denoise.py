@@ -20,8 +20,8 @@ from .protection_masks import star_mask
 
 # caches to avoid rebuilding small objects repeatedly
 _db4_wavelet = None  # will hold a pywt.Wavelet('db4') instance
-_wavelet_level_cache: dict[int,int] = {}  # min_dim -> max_level
-_hotpixel_kernel_cache: dict[int,numpy.ndarray] = {}  # radius -> kernel
+_wavelet_level_cache: dict[int, int] = {}  # min_dim -> max_level
+_hotpixel_kernel_cache: dict[int, numpy.ndarray] = {}  # radius -> kernel
 
 # Shared thread pool to avoid creating executors on every call.  The
 # pool size is deliberately kept small (4 workers) to match the cores on a
@@ -42,19 +42,19 @@ WAVELET_SCALE_ADJUST = 1.10  # 10% boost to the base scale value
 
 # gaussian modifications (sigma & blend) applied as cumulative multipliers.
 # combining them once gives a single constant that is easier to read and reason about.
-GAUSSIAN_SIGMA_ADJUST = 0.707625   
+GAUSSIAN_SIGMA_ADJUST = 0.707625
 GAUSSIAN_BLEND_ADJUST = GAUSSIAN_SIGMA_ADJUST
 
 # median strength adjustments for kernel size and blend.
-MEDIAN_KSIZE_ADJUST = 0.851       
-MEDIAN_BLEND_ADJUST = MEDIAN_KSIZE_ADJUST    
+MEDIAN_KSIZE_ADJUST = 0.851
+MEDIAN_BLEND_ADJUST = MEDIAN_KSIZE_ADJUST
 
 # bilateral strength adjustments tuning
 BILATERAL_BLEND_BUMP = 1.20
 BILATERAL_SIGMA_BUMP = 1.20
 
 # use Astropy for robust statistics
-from astropy.stats import sigma_clipped_stats
+from astropy.stats import sigma_clipped_stats  # noqa: F401
 
 
 logger = logging.getLogger('indi_allsky')
@@ -289,7 +289,7 @@ class IndiAllskyDenoise(object):
 
     def _compute_adaptive_blend(self, base_blend, original_image):
         """Compute an adaptive blend map based on local image variance.
-        
+
         Returns a blend array (or scalar) where high-variance regions
         get reduced blend (variance-based fade), while smooth background
         areas use the full nominal blend. Stars are masked completely
@@ -314,18 +314,18 @@ class IndiAllskyDenoise(object):
 
     def _blend_with_original(self, original, processed, blend_map, dtype_max):
         """Blend processed image with original using blend_map.
-        
+
         Args:
             original: Original image
             processed: Processed/denoised image
             blend_map: Blend factor(s) in [0, 1]
             dtype_max: Maximum value for output dtype
-        
+
         Returns:
             Blended result in original dtype
         """
         result_f32 = (blend_map * processed.astype(numpy.float32) +
-                     (1.0 - blend_map) * original.astype(numpy.float32))
+                      (1.0 - blend_map) * original.astype(numpy.float32))
         return numpy.clip(result_f32, 0, dtype_max).astype(original.dtype)
 
     def _finalize_denoise(self, original, processed, blend_map, dtype_max):
@@ -456,13 +456,13 @@ class IndiAllskyDenoise(object):
         # Log diagnostics
         avg_blend = float(numpy.mean(adaptive_blend)) if isinstance(adaptive_blend, numpy.ndarray) else adaptive_blend
         logger.info('Applying median denoise, ksize=%d base_blend=%.2f avg_blend=%.2f',
-                   ksize, blend, avg_blend)
+                    ksize, blend, avg_blend)
 
         return result
 
     def _compute_median_ksize(self, strength):
         """Compute median blur kernel size from strength (1-5).
-        
+
         Returns an odd integer >= 3, adjusted by MEDIAN_KSIZE_ADJUST constant.
         """
         base_ksize = strength * 2 + 1  # Always odd: 3, 5, 7, 9, 11
@@ -472,7 +472,7 @@ class IndiAllskyDenoise(object):
 
     def _compute_gaussian_sigma(self, strength):
         """Compute Gaussian blur sigma from strength (1-5).
-        
+
         Returns adjusted sigma value, configurable per strength level
         or globally via config keys.
         """
@@ -483,7 +483,7 @@ class IndiAllskyDenoise(object):
 
     def _apply_gaussian_blur(self, img, sigma):
         """Apply Gaussian blur to single or multi-channel image.
-        
+
         Uses threading for multi-channel images to distribute work.
         """
         if img.ndim == 2 or img.shape[2] < 2:
@@ -491,13 +491,13 @@ class IndiAllskyDenoise(object):
 
         # Multi-channel: blur each channel on thread pool
         futures = [_thread_pool.submit(cv2.GaussianBlur, img[:, :, c], (0, 0), sigma)
-                  for c in range(img.shape[2])]
+                   for c in range(img.shape[2])]
         channels = [f.result() for f in futures]
         return numpy.stack(channels, axis=2)
 
     def _apply_bilateral_filter(self, img, diameter, sigma_color, sigma_space, dtype_max):
         """Apply bilateral filter, handling dtype conversion if needed.
-        
+
         Returns:
             (filtered_image, needs_conversion_flag)
         """
@@ -512,9 +512,9 @@ class IndiAllskyDenoise(object):
             sigma_color_norm = float(sigma_color) / 255.0
             img_f32 = img.astype(numpy.float32) / dtype_max
             filtered_f32 = cv2.bilateralFilter(img_f32, diameter, sigma_color_norm,
-                                              float(sigma_space))
+                                               float(sigma_space))
             filtered = numpy.clip(numpy.rint(filtered_f32 * dtype_max),
-                                 0, float(dtype_max)).astype(img.dtype)
+                                  0, float(dtype_max)).astype(img.dtype)
         else:
             filtered = cv2.bilateralFilter(img, diameter, sigma_color, sigma_space)
 
@@ -524,6 +524,8 @@ class IndiAllskyDenoise(object):
     # ------------------------------------------------------------------
     # Algorithm: Gaussian Blur (direct — simple and effective)
     # ------------------------------------------------------------------
+
+
     def gaussian_blur(self, scidata):
         # NOTE: any future improvements to gauss/median/bilateral should keep
         # compute cost comparable to the existing implementation.  We try to
@@ -570,7 +572,7 @@ class IndiAllskyDenoise(object):
         # Log diagnostics
         avg_blend = float(numpy.mean(adaptive_blend)) if isinstance(adaptive_blend, numpy.ndarray) else adaptive_blend
         logger.info('Applying gaussian denoise, sigma=%.1f base_blend=%.2f avg_blend=%.2f',
-                   sigma, blend, avg_blend)
+                    sigma, blend, avg_blend)
 
         return result
 
@@ -578,6 +580,8 @@ class IndiAllskyDenoise(object):
     # ------------------------------------------------------------------
     # Algorithm: Bilateral Filter (edge-aware, high quality)
     # ------------------------------------------------------------------
+
+
     def bilateral(self, scidata):
         """Apply an edge-aware bilateral filter.
 
@@ -621,7 +625,7 @@ class IndiAllskyDenoise(object):
         # Log diagnostics
         avg_blend = float(numpy.mean(adaptive_blend)) if isinstance(adaptive_blend, numpy.ndarray) else adaptive_blend
         log_msg = ('Applying bilateral denoise, d=%d sigmaColor=%d sigmaSpace=%d '
-                  'base_blend=%.2f avg_blend=%.2f')
+                   'base_blend=%.2f avg_blend=%.2f')
         if needs_conversion:
             log_msg += ' (float32 converted)'
         logger.info(log_msg, diameter, sigma_color, sigma_space, blend, avg_blend)
@@ -640,6 +644,8 @@ class IndiAllskyDenoise(object):
     # ------------------------------------------------------------------
     # Algorithm: Wavelet Denoise (BayesShrink — frequency-domain, best quality)
     # ------------------------------------------------------------------
+
+
     def wavelet(self, scidata):
         """Apply wavelet-based denoising with BayesShrink adaptive thresholding.
 
@@ -773,6 +779,6 @@ class IndiAllskyDenoise(object):
 
         elapsed = time.time() - start_t
         logger.info('Applied wavelet denoise (BayesShrink) levels=%d scale=%.2f blend=%.2f time=%.3fs',
-                levels, scale, blend, elapsed)
+                    levels, scale, blend, elapsed)
 
         return blended
