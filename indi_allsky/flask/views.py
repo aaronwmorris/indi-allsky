@@ -2273,6 +2273,14 @@ class ConfigView(FormView):
             'SCNR_ALGORITHM_DAY'             : self.indi_allsky_config.get('SCNR_ALGORITHM_DAY', ''),
             'SCNR_MTF_MIDTONES'              : self.indi_allsky_config.get('SCNR_MTF_MIDTONES', 0.55),
             'SCNR_MTF_MIDTONES_DAY'          : self.indi_allsky_config.get('SCNR_MTF_MIDTONES_DAY', 0.55),
+            'IMAGE_DENOISE'                  : self.indi_allsky_config.get('IMAGE_DENOISE', ''),
+            'IMAGE_DENOISE_DAY'              : self.indi_allsky_config.get('IMAGE_DENOISE_DAY', ''),
+            'IMAGE_DENOISE_STRENGTH'         : self.indi_allsky_config.get('IMAGE_DENOISE_STRENGTH', 3),
+            'IMAGE_DENOISE_STRENGTH_DAY'     : self.indi_allsky_config.get('IMAGE_DENOISE_STRENGTH_DAY', 3),
+            'BILATERAL_SIGMA_COLOR'          : self.indi_allsky_config.get('BILATERAL_SIGMA_COLOR', 20),
+            'BILATERAL_SIGMA_COLOR_DAY'      : self.indi_allsky_config.get('BILATERAL_SIGMA_COLOR_DAY', 20),
+            'BILATERAL_SIGMA_SPACE'          : self.indi_allsky_config.get('BILATERAL_SIGMA_SPACE', 35),
+            'BILATERAL_SIGMA_SPACE_DAY'      : self.indi_allsky_config.get('BILATERAL_SIGMA_SPACE_DAY', 35),
             'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
             'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
             'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
@@ -3279,6 +3287,14 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['SCNR_ALGORITHM_DAY']                   = str(request.json['SCNR_ALGORITHM_DAY'])
         self.indi_allsky_config['SCNR_MTF_MIDTONES']                    = float(request.json['SCNR_MTF_MIDTONES'])
         self.indi_allsky_config['SCNR_MTF_MIDTONES_DAY']                = float(request.json['SCNR_MTF_MIDTONES_DAY'])
+        self.indi_allsky_config['IMAGE_DENOISE']                        = str(request.json['IMAGE_DENOISE'])
+        self.indi_allsky_config['IMAGE_DENOISE_DAY']                    = str(request.json['IMAGE_DENOISE_DAY'])
+        self.indi_allsky_config['IMAGE_DENOISE_STRENGTH']               = int(request.json['IMAGE_DENOISE_STRENGTH'])
+        self.indi_allsky_config['IMAGE_DENOISE_STRENGTH_DAY']           = int(request.json['IMAGE_DENOISE_STRENGTH_DAY'])
+        self.indi_allsky_config['BILATERAL_SIGMA_COLOR']                = int(request.json['BILATERAL_SIGMA_COLOR'])
+        self.indi_allsky_config['BILATERAL_SIGMA_COLOR_DAY']            = int(request.json['BILATERAL_SIGMA_COLOR_DAY'])
+        self.indi_allsky_config['BILATERAL_SIGMA_SPACE']                = int(request.json['BILATERAL_SIGMA_SPACE'])
+        self.indi_allsky_config['BILATERAL_SIGMA_SPACE_DAY']            = int(request.json['BILATERAL_SIGMA_SPACE_DAY'])
         self.indi_allsky_config['WBR_FACTOR']                           = float(request.json['WBR_FACTOR'])
         self.indi_allsky_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
         self.indi_allsky_config['WBB_FACTOR']                           = float(request.json['WBB_FACTOR'])
@@ -7503,6 +7519,10 @@ class ImageProcessingView(TemplateView):
             'CFA_PATTERN'                    : self.indi_allsky_config.get('CFA_PATTERN', ''),
             'SCNR_ALGORITHM'                 : self.indi_allsky_config.get('SCNR_ALGORITHM', ''),
             'SCNR_MTF_MIDTONES'              : self.indi_allsky_config.get('SCNR_MTF_MIDTONES', 0.65),
+            'IMAGE_DENOISE'                  : self.indi_allsky_config.get('IMAGE_DENOISE', ''),
+            'IMAGE_DENOISE_STRENGTH'         : self.indi_allsky_config.get('IMAGE_DENOISE_STRENGTH', 3),
+            'BILATERAL_SIGMA_COLOR'          : self.indi_allsky_config.get('BILATERAL_SIGMA_COLOR', 20),
+            'BILATERAL_SIGMA_SPACE'          : self.indi_allsky_config.get('BILATERAL_SIGMA_SPACE', 35),
             'WBR_FACTOR'                     : self.indi_allsky_config.get('WBR_FACTOR', 1.0),
             'WBG_FACTOR'                     : self.indi_allsky_config.get('WBG_FACTOR', 1.0),
             'WBB_FACTOR'                     : self.indi_allsky_config.get('WBB_FACTOR', 1.0),
@@ -7769,6 +7789,10 @@ class JsonImageProcessingView(JsonView):
         p_config['CFA_PATTERN']                          = str(request.json['CFA_PATTERN'])
         p_config['SCNR_ALGORITHM']                       = str(request.json['SCNR_ALGORITHM'])
         p_config['SCNR_MTF_MIDTONES']                    = float(request.json['SCNR_MTF_MIDTONES'])
+        p_config['IMAGE_DENOISE']                        = str(request.json['IMAGE_DENOISE'])
+        p_config['IMAGE_DENOISE_STRENGTH']               = int(request.json['IMAGE_DENOISE_STRENGTH'])
+        p_config['BILATERAL_SIGMA_COLOR']                = int(request.json['BILATERAL_SIGMA_COLOR'])
+        p_config['BILATERAL_SIGMA_SPACE']                = int(request.json['BILATERAL_SIGMA_SPACE'])
         p_config['WBR_FACTOR']                           = float(request.json['WBR_FACTOR'])
         p_config['WBG_FACTOR']                           = float(request.json['WBG_FACTOR'])
         p_config['WBB_FACTOR']                           = float(request.json['WBB_FACTOR'])
