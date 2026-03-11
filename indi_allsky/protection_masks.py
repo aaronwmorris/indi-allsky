@@ -24,7 +24,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 # photutils imports; this package must be installed.
-from photutils.detection import DAOStarFinder
 from astropy.convolution import Gaussian2DKernel
 
 # ``protect_denoiser`` lives in :mod:`denoise`; we expose a thin wrapper
@@ -130,6 +129,8 @@ def _paint_stars_from_table(tbl, shape: tuple, fwhm: float) -> np.ndarray:
 # LRU cache of star masks keyed by image bytes plus parameters
 @functools.lru_cache(maxsize=_cache_max_entries)
 def _cached_star(key: bytes, percentile: float, threshold_sigma: float, fwhm: float, expand_radius: int | None, shape):
+    from photutils.detection import DAOStarFinder
+
     # key is raw bytes; shape is needed to reshape back
     data = np.frombuffer(key, dtype=np.float32).reshape(shape)
     # profiling timers
@@ -256,6 +257,8 @@ def fast_star_mask(img: np.ndarray, downsample: int = 4, patch_size: int = 32,
     Returns the same mask semantics as `star_mask` (float32 in [0,1],
     1.0 = sky/unprotected, 0.0 = protected).
     """
+    from photutils.detection import DAOStarFinder
+
     # Ensure grayscale float32
     data = img.astype(np.float32) if img.dtype != np.float32 else img
     if data.ndim == 3 and data.shape[2] >= 3:
