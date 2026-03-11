@@ -18,7 +18,7 @@ Example usage::
 
 import cv2
 import numpy as np
-import os
+#import os
 import functools
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -55,9 +55,10 @@ __all__ = [
     "fast_star_mask",
     "set_cache_size",
     "async_star_mask",
-    ]
+]
 
 _cache_max_entries = 8
+
 
 def _estimate_background_std(data: np.ndarray) -> float:
     """Estimate background std using sigma clipping, with fallback to np.std."""
@@ -71,11 +72,11 @@ def _estimate_background_std(data: np.ndarray) -> float:
 
 def _apply_star_dilation(mask: np.ndarray, expand_radius: int | None) -> np.ndarray:
     """Expand star protection circles by distance transform.
-    
+
     Args:
         mask: float32 array with 1.0=sky, 0.0=protected
         expand_radius: pixels to expand protection zone
-    
+
     Returns:
         Modified mask with expanded protected regions
     """
@@ -102,12 +103,12 @@ def _apply_star_dilation(mask: np.ndarray, expand_radius: int | None) -> np.ndar
 
 def _paint_stars_from_table(tbl, shape: tuple, fwhm: float) -> np.ndarray:
     """Paint detected stars as convolved impulses.
-    
+
     Args:
         tbl: Astropy table with xcentroid, ycentroid columns
         shape: (height, width) of output mask
         fwhm: full-width half-max of stars for stamp generation
-    
+
     Returns:
         float32 mask with painted stars (values 0-1+)
     """
@@ -171,11 +172,13 @@ def _cached_star(key: bytes, percentile: float, threshold_sigma: float, fwhm: fl
 
     return out
 
+
 _executor = ThreadPoolExecutor(max_workers=2)
 
 # Cache Gaussian stamp kernels by FWHM to avoid rebuilding per-star
 _kernel_cache: dict[float, np.ndarray] = {}
 _last_profile: dict = {}
+
 
 def get_last_star_profile() -> dict:
     """Return profiling info from the last `_cached_star` invocation.
@@ -195,11 +198,12 @@ def set_cache_size(size: int):
     _cached_star.cache_clear()
     _cached_star = functools.lru_cache(maxsize=size)(_cached_star)
 
+
 # Async helper to compute star mask without blocking caller; returns a Future. FWHM and other parameters can be passed via kwargs. See `star_mask` for details.
 def async_star_mask(img: np.ndarray, percentile: float = DEFAULT_PERCENTILE, threshold_sigma: float = DEFAULT_THRESHOLD_SIGMA, fwhm: float = DEFAULT_FWHM, expand_radius: int = 0):
     """Return a future computing ``star_mask(img,...)``."""
     return _executor.submit(star_mask, img, percentile=percentile,
-                             threshold_sigma=threshold_sigma, fwhm=fwhm, expand_radius=expand_radius)
+                            threshold_sigma=threshold_sigma, fwhm=fwhm, expand_radius=expand_radius)
 
 
 def star_mask(img: np.ndarray, percentile: float = DEFAULT_PERCENTILE, expand_radius: int | None = None, **pu_kwargs) -> np.ndarray:
