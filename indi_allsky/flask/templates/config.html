@@ -1973,11 +1973,17 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_DENOISE_DAY(class='form-select bg-secondary') }}
             <div id="IMAGE_DENOISE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
+        
         <div class="col-sm-7">
-            <div>
-              Denoise algorithm to reduce image noise (applied before stretch). Methods aim to respect stars. Default for all: 3<br>
-              Methods are similar processing time except for Wavelet, which is slower.
-            </div>
+           <div>Warning: Denoising adds processing time - concern if only a short time limit set between exposures.<br>
+                Algorithm to reduce image noise (applied before stretch). Methods respect stars. Default for all: 3<br>
+                Methods operate at similar speed. Except for Wavelet Filter- slowest, but best quality.</div>
+            <ul>
+            <li>Gaussian Blur &mdash; Targets noise with gentle, uniform smoothing.</li>
+            <li>Median Blur &mdash; Best for removing salt-and-pepper noise. Replaces outlier pixels with median of neighbors.</li>
+            <li>Bilateral Filter &mdash; Edge-aware filter. Smooths sky noise while preserving star edges.</li>
+            <li>Wavelet Filter &mdash; Removes noise at all scales. Best for read noise and faint sky noise. Slowest, best quality.</li>
+            </ul>
         </div>
     </div>
 
