@@ -3,8 +3,9 @@
 # Publishes sensor data to MQTT            #
 ############################################
 
+
 ### Requirements
-#paho-mqtt >= 2.0.0
+#pip3 install paho-mqtt ephem circuitpython-bmp180 adafruit-circuitpython-bmp280 adafruit-circuitpython-bme280 adafruit-circuitpython-bme680 adafruit-circuitpython-ahtx0 adafruit-circuitpython-tsl2591
 
 
 import os
