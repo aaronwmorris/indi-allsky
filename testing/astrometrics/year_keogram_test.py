@@ -177,10 +177,10 @@ class YearKeogramTest(object):
         logger.info('Rows: %d', q.count())
 
 
-        numpy_start = time.time()
+        array_start = time.time()
 
-        numpy_data = numpy.zeros(((self.periods_per_day * total_days) * self.period_pixels, 1, 3), dtype=numpy.uint8)
-        logger.info(numpy_data.shape)
+        # modifying a native array is faster than a numpy array
+        data = [[0, 0, 0]] * ((self.periods_per_day * total_days) * self.period_pixels)
 
 
         query_limit = 300000  # limit memory impact on database
@@ -212,34 +212,34 @@ class YearKeogramTest(object):
 
                 try:
                     if self.period_pixels == 5:
-                        numpy_data[index + (self.periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
-                        numpy_data[index + (self.periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
-                        numpy_data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                        numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+                        data[index + (self.periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
+                        data[index + (self.periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
+                        data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                        data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
 
                     elif self.period_pixels == 4:
-                        numpy_data[index + (self.periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
-                        numpy_data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                        numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+                        data[index + (self.periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
+                        data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                        data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
 
                     elif self.period_pixels == 3:
-                        numpy_data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                        numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+                        data[index + (self.periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                        data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
 
                     elif self.period_pixels == 2:
-                        numpy_data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+                        data[index + (self.periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
 
 
                     # always add 1 row
-                    numpy_data[index] = row.b1_avg, row.g1_avg, row.r1_avg
+                    data[index] = row.b1_avg, row.g1_avg, row.r1_avg
 
 
                     ### database math
-                    #numpy_data[row.index]   = row.b1_avg, row.g1_avg, row.r1_avg
-                    #numpy_data[row.index_2] = row.b2_avg, row.g2_avg, row.r2_avg
-                    #numpy_data[row.index_3] = row.b3_avg, row.g3_avg, row.r3_avg
-                    #numpy_data[row.index_4] = row.b4_avg, row.g4_avg, row.r4_avg
-                    #numpy_data[row.index_5] = row.b5_avg, row.g5_avg, row.r5_avg
+                    #data[row.index]   = row.b1_avg, row.g1_avg, row.r1_avg
+                    #data[row.index_2] = row.b2_avg, row.g2_avg, row.r2_avg
+                    #data[row.index_3] = row.b3_avg, row.g3_avg, row.r3_avg
+                    #data[row.index_4] = row.b4_avg, row.g4_avg, row.r4_avg
+                    #data[row.index_5] = row.b5_avg, row.g5_avg, row.r5_avg
                 except IndexError:
                     logger.error('Row: %d', i)
                     raise
@@ -248,10 +248,13 @@ class YearKeogramTest(object):
                 i += 1
 
 
-        numpy_elapsed_s = time.time() - numpy_start
-        logger.warning('Total numpy in %0.4f s', numpy_elapsed_s)
+        array_elapsed_s = time.time() - array_start
+        logger.warning('Total array processing in %0.4f s', array_elapsed_s)
 
-        #logger.info(numpy_data[0:3])
+
+        # convert to numpy array
+        numpy_data = numpy.array(data, dtype=numpy.uint8)
+        logger.info(numpy_data.shape)
 
         keogram_data = numpy.reshape(numpy_data, ((total_days * self.period_pixels), self.periods_per_day, 3))
 

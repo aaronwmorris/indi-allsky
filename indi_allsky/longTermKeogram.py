@@ -168,9 +168,11 @@ class LongTermKeogramGenerator(object):
         ### order is proably unnecessary
         #    .order_by(ltk_interval.asc())
 
-
-        numpy_data = numpy.zeros(((periods_per_day * total_days) * self.period_pixels, 1, 3), dtype=numpy.uint8)
         #logger.info('Rows: %d', q.count())
+
+
+        # modifying a native array is faster than a numpy array
+        data = [[0, 0, 0]] * ((periods_per_day * total_days) * self.period_pixels)
 
 
         if db.engine.dialect.name == 'mysql':
@@ -202,28 +204,32 @@ class LongTermKeogramGenerator(object):
 
 
                 if self.period_pixels == 5:
-                    numpy_data[index + (periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
-                    numpy_data[index + (periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
-                    numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                    numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+                    data[index + (periods_per_day * 4)] = row.b5_avg, row.g5_avg, row.r5_avg
+                    data[index + (periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
+                    data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                    data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
 
                 elif self.period_pixels == 4:
-                    numpy_data[index + (periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
-                    numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                    numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+                    data[index + (periods_per_day * 3)] = row.b4_avg, row.g4_avg, row.r4_avg
+                    data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                    data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
 
                 elif self.period_pixels == 3:
-                    numpy_data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
-                    numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+                    data[index + (periods_per_day * 2)] = row.b3_avg, row.g3_avg, row.r3_avg
+                    data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
 
                 elif self.period_pixels == 2:
-                    numpy_data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
+                    data[index + (periods_per_day * 1)] = row.b2_avg, row.g2_avg, row.r2_avg
 
 
                 # always add 1 row
-                numpy_data[index] = row.b1_avg, row.g1_avg, row.r1_avg
+                data[index] = row.b1_avg, row.g1_avg, row.r1_avg
 
                 i += 1
+
+
+        # convert to numpy array
+        numpy_data = numpy.array(data, dtype=numpy.uint8)
 
 
         keogram_data = numpy.reshape(numpy_data, ((total_days * self.period_pixels), periods_per_day, 3))
