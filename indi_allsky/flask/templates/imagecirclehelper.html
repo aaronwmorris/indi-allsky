@@ -125,7 +125,7 @@ function updateKeogramAngle() {
     var azimuth_angle = parseFloat($("#AZIMUTH_ANGLE").val());
 
     if (azimuth_angle > 180) {
-        var keogram_angle = 360 - azimuth_angle;
+        var keogram_angle = azimuth_angle - 360;
     } else {
         var keogram_angle = azimuth_angle;
     }
