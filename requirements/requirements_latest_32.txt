@@ -57,3 +57,4 @@ shapely >= 2.0.6
 requests-toolbelt
 pytz
 mysql-connector-python
+PyWavelets >= 1.4.0
