@@ -1,6 +1,7 @@
 ### This file is targeted to Raspbian/Debian 12 and Python 3.10+
 # https://www.wheelodex.org/projects/astropy/
 astropy >= 6.1.0
+photutils >= 1.5.0
 pyerfa >= 2.0.1.4
 # https://www.wheelodex.org/projects/numpy/
 numpy >= 2.1.0

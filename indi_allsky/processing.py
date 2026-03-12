@@ -30,6 +30,7 @@ from .detectLines import IndiAllskyDetectLines
 from .keogram import KeogramGenerator
 from .draw import IndiAllSkyDraw
 from .scnr import IndiAllskyScnr
+from .denoise import IndiAllskyDenoise
 from .stack import IndiAllskyStacker
 from .overlay.cardinalDirsLabel import IndiAllskyCardinalDirsLabel
 from .utils import IndiAllSkyDateCalcs
@@ -172,6 +173,7 @@ class ImageProcessor(object):
 
 
         self._ia_scnr = IndiAllskyScnr(self.config, self.night_av)
+        self._ia_denoise = IndiAllskyDenoise(self.config, self.night_av)
         self._cardinal_dirs_label = IndiAllskyCardinalDirsLabel(self.config)
         self._moon_overlay = IndiAllSkyMoonOverlay(self.config)
         self._lightgraph_overlay = IndiAllSkyLightgraphOverlay(self.config, self.position_av)
@@ -1702,6 +1704,40 @@ class ImageProcessor(object):
 
 
         return self.image
+
+
+    def denoise(self):
+        if self.focus_mode:
+            # disable processing in focus mode
+            return
+
+
+        if self.config.get('USE_NIGHT_COLOR', True):
+            algo = self.config.get('IMAGE_DENOISE')
+        else:
+            if self.night_av[constants.NIGHT_NIGHT]:
+                # night
+                algo = self.config.get('IMAGE_DENOISE')
+            else:
+                # day
+                algo = self.config.get('IMAGE_DENOISE_DAY')
+
+
+        if not algo:
+            return
+
+
+        self._denoise(algo)
+        return True
+
+
+    def _denoise(self, algo):
+
+        try:
+            denoise_function = getattr(self._ia_denoise, algo)
+            self.image = denoise_function(self.image)
+        except AttributeError:
+            logger.error('Unknown denoise algorithm: %s', algo)
 
 
     def scnr(self):

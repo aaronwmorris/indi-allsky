@@ -1,5 +1,6 @@
 # This file is for GitHub Dependabot to find security vulnerabilities
 astropy == 6.1.0
+photutils == 1.5.0
 pyerfa == 2.0.1.4
 numpy == 2.1.0
 opencv-python-headless == 4.10.0.84
@@ -43,3 +44,4 @@ shapely == 2.0.6
 requests-toolbelt
 pytz
 mysql-connector-python == 9.6.0
+PyWavelets == 1.4.0

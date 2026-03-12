@@ -101,6 +101,30 @@ class IndiAllSkyConfigBase(object):
         "SCNR_ALGORITHM_DAY"    : "",
         "SCNR_MTF_MIDTONES"     : 0.55,
         "SCNR_MTF_MIDTONES_DAY" : 0.55,
+        "IMAGE_DENOISE"              : "",
+        "IMAGE_DENOISE_DAY"          : "",
+        "IMAGE_DENOISE_STRENGTH"     : 3,
+        "IMAGE_DENOISE_STRENGTH_DAY" : 3,
+        # Denoise tuning knobs (advanced): scale & exponent reshape the
+        # mapping from user-facing `strength` (1-5) to algorithm parameters.
+        # These defaults are autotuned for typical Pi all-sky images but can
+        # be adjusted for your camera. These are baked-in runtime defaults used by `indi_allsky.denoise`.
+        "MEDIAN_SCALE_FACTOR" : 2.4,
+        "MEDIAN_SCALE_EXP"    : 2.0,
+        "GAUSSIAN_SCALE_FACTOR" : 0.2,
+        "GAUSSIAN_SCALE_EXP"    : 0.5,
+        "BILATERAL_SCALE_FACTOR" : 0.4,
+        "BILATERAL_SCALE_EXP"    : 1.0,
+        "WAVELET_SCALE_FACTOR"   : 0.1,
+        "WAVELET_SCALE_EXP"      : 0.5,
+        # Maximum blend fraction for wavelet denoise. Controls how much of the
+        # wavelet-denoised image is mixed with the original to avoid
+        # over-aggressive frequency-domain removal. Range: 0.0-1.0
+        "WAVELET_MAX_BLEND"      : 0.25,
+        "BILATERAL_SIGMA_COLOR"      : 10,
+        "BILATERAL_SIGMA_COLOR_DAY"  : 10,
+        "BILATERAL_SIGMA_SPACE"      : 15,
+        "BILATERAL_SIGMA_SPACE_DAY"  : 15,
         "WBR_FACTOR"       : 1.0,
         "WBG_FACTOR"       : 1.0,
         "WBB_FACTOR"       : 1.0,
