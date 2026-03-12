@@ -421,6 +421,11 @@ class ImageWorker(Process):
         self.image_count += 1
 
 
+        #############################################################################################
+        ### Image data at this stage may be uint16 (grayscale or BGR) or uint8 (grayscale or BGR) ###
+        #############################################################################################
+
+
         self.start_image_save_pre_hook(exposure, gain, binning)
 
 
@@ -588,6 +593,10 @@ class ImageWorker(Process):
 
         self.image_processor.convert_16bit_to_8bit()
 
+        #################################################################
+        ### Image data at this stage will be uint8 (grayscale or BGR) ###
+        #################################################################
+
 
         #with io.open('/tmp/indi_allsky_numpy.npy', 'w+b') as f_numpy:
         #    numpy.save(f_numpy, self.image_processor.image)
@@ -668,6 +677,10 @@ class ImageWorker(Process):
 
 
         self.image_processor.colorize()
+
+        ##################################################
+        ### Image data at this stage will be uint8 BGR ###
+        ##################################################
 
 
         longterm_keogram_pixels = self.save_longterm_keogram_data(exp_date, camera_id)
