@@ -1727,17 +1727,18 @@ class ImageProcessor(object):
             return
 
 
-        self._denoise(algo)
-        return True
-
-
-    def _denoise(self, algo):
-
         try:
             denoise_function = getattr(self._ia_denoise, algo)
-            self.image = denoise_function(self.image)
         except AttributeError:
             logger.error('Unknown denoise algorithm: %s', algo)
+            return
+
+
+        self.image = self._denoise(denoise_function)
+
+
+    def _denoise(self, denoise_function):
+        return denoise_function(self.image)
 
 
     def scnr(self):
@@ -4452,8 +4453,7 @@ class ImageData(object):
 
 
     def detectBitDepth(self):
-        max_val = numpy.amax(self.hdulist[0].data)
-        logger.info('Image max value: %d', int(max_val))
+        max_val = int(numpy.amax(self.hdulist[0].data))
 
         # This method of detecting bit depth can cause the 16->8 bit conversion
         # to stretch too much.  This most commonly happens with very low gains
@@ -4471,10 +4471,8 @@ class ImageData(object):
             detected_bit_depth = 8
 
 
-        logger.info('Detected bit depth: %d', detected_bit_depth)
+        logger.info('Image max value: %d - Detected bit depth: %d', max_val, detected_bit_depth)
 
 
         self.detected_bit_depth = detected_bit_depth
-
-
 
