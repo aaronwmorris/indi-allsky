@@ -1727,17 +1727,16 @@ class ImageProcessor(object):
             return
 
 
-        self._denoise(algo)
-        return True
-
-
-    def _denoise(self, algo):
-
         try:
             denoise_function = getattr(self._ia_denoise, algo)
-            self.image = denoise_function(self.image)
+            self.image = self._denoise(denoise_function)
         except AttributeError:
             logger.error('Unknown denoise algorithm: %s', algo)
+            return
+
+
+    def _denoise(self, denoise_function):
+        return denoise_function(self.image)
 
 
     def scnr(self):
