@@ -15,8 +15,6 @@ import datetime
 
 from . import constants
 
-from .protection_masks import star_mask
-
 # caches to avoid rebuilding small objects repeatedly
 _db4_wavelet = None  # will hold a pywt.Wavelet('db4') instance
 _wavelet_level_cache: dict[int, int] = {}  # min_dim -> max_level
@@ -183,6 +181,10 @@ class IndiAllskyDenoise(object):
         format.  Exceptions are caught and a blank mask returned, preserving
         the previous fault-tolerant behaviour.
         """
+
+        # debian11 and ubuntu 20.04 (<numpy 2.0) do not support some of the numpy syntax of this module
+        from .protection_masks import star_mask
+
         try:
             # the protection_masks.star_mask call expects a grayscale float32 image
             if img.ndim == 3 and img.shape[2] >= 3:

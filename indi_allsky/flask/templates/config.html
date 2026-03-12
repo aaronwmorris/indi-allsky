@@ -1751,7 +1751,7 @@ var camera_id = {{ camera_id }};
         </div>
 
         <div class="col-sm-7">
-           <div>Warning: Denoising adds processing time - concern if only a short time limit set between exposures.<br>
+           <div><span class="badge rounded-pill bg-info text-dark">Note</span> Denoising adds processing time - concern if only a short time limit set between exposures.<br>
                 Algorithm to reduce image noise (applied before stretch). Methods respect stars. Default for all: 3<br>
                 Methods operate at similar speed. Except for Wavelet Filter- slowest, but best quality.</div>
             <ul>
@@ -1760,6 +1760,7 @@ var camera_id = {{ camera_id }};
             <li>Bilateral Filter &mdash; Edge-aware filter. Smooths sky noise while preserving star edges.</li>
             <li>Wavelet Filter &mdash; Removes noise at all scales. Best for read noise and faint sky noise. Slowest, best quality.</li>
             </ul>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not supported on Debian 11 (bullseye) or Ubuntu 20.04 (focal) and older</div>
         </div>
         </div>
 
@@ -1975,7 +1976,7 @@ var camera_id = {{ camera_id }};
         </div>
         
         <div class="col-sm-7">
-           <div>Warning: Denoising adds processing time - concern if only a short time limit set between exposures.<br>
+           <div><span class="badge rounded-pill bg-info text-dark">Note</span> Denoising adds processing time - concern if only a short time limit set between exposures.<br>
                 Algorithm to reduce image noise (applied before stretch). Methods respect stars. Default for all: 3<br>
                 Methods operate at similar speed. Except for Wavelet Filter- slowest, but best quality.</div>
             <ul>
@@ -1984,6 +1985,7 @@ var camera_id = {{ camera_id }};
             <li>Bilateral Filter &mdash; Edge-aware filter. Smooths sky noise while preserving star edges.</li>
             <li>Wavelet Filter &mdash; Removes noise at all scales. Best for read noise and faint sky noise. Slowest, best quality.</li>
             </ul>
+            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Not supported on Debian 11 (bullseye) or Ubuntu 20.04 (focal) and older</div>
         </div>
     </div>
 
