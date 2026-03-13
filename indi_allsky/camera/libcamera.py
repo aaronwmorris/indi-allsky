@@ -439,6 +439,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 try:
                     awb_gains = metadata_dict[self._awb_gains_metadata_key]
                     self._awb_gains = [awb_gains[0], awb_gains[1]]
+                    logger.info('libcamera color gains: Red: %0.2f, Blue: %0.2f', *self._awb_gains)
                 except KeyError:
                     logger.error('libcamera sensor AWB key not found')
                     self._awb_gains = None
@@ -472,6 +473,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 try:
                     awb_gains = metadata_dict[self._awb_gains_metadata_key]
                     self._awb_gains = [awb_gains[0], awb_gains[1]]
+                    logger.info('libcamera color gains: Red: %0.2f, Blue: %0.2f', *self._awb_gains)
                 except KeyError:
                     logger.error('libcamera sensor AWB key not found')
                     self._awb_gains = None
