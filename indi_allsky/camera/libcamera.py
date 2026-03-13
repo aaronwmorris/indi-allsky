@@ -439,6 +439,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 try:
                     awb_gains = metadata_dict[self._awb_gains_metadata_key]
                     self._awb_gains = [awb_gains[0], awb_gains[1]]
+                    logger.info('libcamera color gains: Red: %0.2f, Blue: %0.2f', *self._awb_gains)
                 except KeyError:
                     logger.error('libcamera sensor AWB key not found')
                     self._awb_gains = None
@@ -472,6 +473,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 try:
                     awb_gains = metadata_dict[self._awb_gains_metadata_key]
                     self._awb_gains = [awb_gains[0], awb_gains[1]]
+                    logger.info('libcamera color gains: Red: %0.2f, Blue: %0.2f', *self._awb_gains)
                 except KeyError:
                     logger.error('libcamera sensor AWB key not found')
                     self._awb_gains = None
@@ -504,6 +506,7 @@ class IndiClientLibCameraGeneric(IndiClient):
         try:
             black_level = metadata_dict[self._black_level_metadata_key]
             self._black_level = black_level[0]  # Only going to use the first key for now
+            logger.info('libcamera black level: %d', self._black_level)
         except KeyError:
             logger.error('libcamera sensor black level key not found')
             self._black_level = None
