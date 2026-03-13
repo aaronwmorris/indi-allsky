@@ -51,7 +51,7 @@ BILATERAL_BLEND_BUMP = 1.20
 BILATERAL_SIGMA_BUMP = 1.20
 
 # use Astropy for robust statistics
-from astropy.stats import sigma_clipped_stats  # noqa: F401
+#from astropy.stats import sigma_clipped_stats  # noqa: F401
 
 
 logger = logging.getLogger('indi_allsky')
