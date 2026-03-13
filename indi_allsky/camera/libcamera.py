@@ -506,6 +506,7 @@ class IndiClientLibCameraGeneric(IndiClient):
         try:
             black_level = metadata_dict[self._black_level_metadata_key]
             self._black_level = black_level[0]  # Only going to use the first key for now
+            logger.info('libcamera black level: %d', self._black_level)
         except KeyError:
             logger.error('libcamera sensor black level key not found')
             self._black_level = None
