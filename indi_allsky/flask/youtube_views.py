@@ -60,6 +60,7 @@ class YoutubeCallbackView(BaseView):
 
     def dispatch_request(self):
         import google_auth_oauthlib.flow
+        from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 
         client_secrets_file = self.indi_allsky_config.get('YOUTUBE', {}).get('SECRETS_FILE')
 
@@ -74,7 +75,14 @@ class YoutubeCallbackView(BaseView):
         flow.redirect_uri = url_for('indi_allsky.youtube_oauth2callback_view', _external=True)
 
         authorization_response = request.url
-        flow.fetch_token(authorization_response=authorization_response)
+
+
+        try:
+            flow.fetch_token(authorization_response=authorization_response)
+        except InvalidGrantError as e:
+            app.logger.error('InvalidGrantError: %s', str(e))
+            abort(400, 'InvalidGrantError: {0:s}'.format(str(e)))
+
 
         credentials_dict = self.credentials_to_dict(flow.credentials)
 
