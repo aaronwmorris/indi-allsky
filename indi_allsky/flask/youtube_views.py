@@ -35,6 +35,7 @@ class YoutubeAuthorizeView(BaseView):
         flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             client_secrets_file,
             scopes=SCOPES,
+            autogenerate_code_verifier=True,
         )
 
         redirect_uri = url_for('indi_allsky.youtube_oauth2callback_view', _external=True)
@@ -49,6 +50,7 @@ class YoutubeAuthorizeView(BaseView):
         )
 
         session['youtube_state'] = youtube_state
+        session['youtube_code_verifier'] = flow.code_verifier
 
 
         return redirect(authorization_url)
@@ -65,11 +67,13 @@ class YoutubeCallbackView(BaseView):
         client_secrets_file = self.indi_allsky_config.get('YOUTUBE', {}).get('SECRETS_FILE')
 
         youtube_state = session['youtube_state']
+        youtube_code_verifier = session['youtube_code_verifier']
 
         flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             client_secrets_file,
             scopes=SCOPES,
             state=youtube_state,
+            code_verifier=youtube_code_verifier,
         )
 
         flow.redirect_uri = url_for('indi_allsky.youtube_oauth2callback_view', _external=True)
