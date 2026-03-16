@@ -788,6 +788,8 @@ class IndiAllSkyDarks(object):
 
         # do *NOT* start workers inside of a flask context
         # doing so will cause TLS/SSL problems connecting to databases
+
+        # sensor worker only need to stop the fan and dew heater
         self._startSensorWorker()
 
 
@@ -813,6 +815,8 @@ class IndiAllSkyDarks(object):
 
         # do *NOT* start workers inside of a flask context
         # doing so will cause TLS/SSL problems connecting to databases
+
+        # sensor worker only need to stop the fan and dew heater
         self._startSensorWorker()
 
 
@@ -866,6 +870,8 @@ class IndiAllSkyDarks(object):
 
         # do *NOT* start workers inside of a flask context
         # doing so will cause TLS/SSL problems connecting to databases
+
+        # sensor worker only need to stop the fan and dew heater
         self._startSensorWorker()
 
 
@@ -891,6 +897,8 @@ class IndiAllSkyDarks(object):
 
         # do *NOT* start workers inside of a flask context
         # doing so will cause TLS/SSL problems connecting to databases
+
+        # sensor worker only need to stop the fan and dew heater
         self._startSensorWorker()
 
 
