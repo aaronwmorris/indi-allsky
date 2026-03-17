@@ -11,11 +11,13 @@ import subprocess
 from datetime import datetime
 from collections import OrderedDict
 from pathlib import Path
+#import signal
 import logging
 
 import numpy
 import cv2
 
+import queue
 from multiprocessing import Queue
 from multiprocessing import Array
 
@@ -95,6 +97,13 @@ class IndiAllSkyDarks(object):
         self.camera_server = None
         self.ccd_info = None
 
+
+        self.sensor_q = Queue()
+        self.sensor_error_q = Queue()
+        self.sensor_worker = None
+        self.sensor_worker_idx = 0
+
+
         self.indi_config = self.config.get('INDI_CONFIG_DEFAULTS', {})
 
 
@@ -133,7 +142,8 @@ class IndiAllSkyDarks(object):
         ])
 
 
-        self.sensors_temp_av = Array('f', [0.0])  # 0 ccd_temp
+        self.sensors_temp_av = Array('f', [0.0 for x in range(60)])
+        self.sensors_user_av = Array('f', [0.0 for x in range(60)])
 
 
         # These shared values are to indicate when the camera is in night/moon modes
@@ -152,7 +162,21 @@ class IndiAllSkyDarks(object):
             0.0,  # Dec
         ])
 
+
+        # not used, but required
+        self.astro_av = Array('f', [
+            0.0,  # sun alt
+            0.0,  # moon alt
+            0.0,  # moon percent
+        ])
+
+
         self._miscDb = miscDb(self.config)
+
+
+        self._shutdown = False
+
+        #signal.signal(signal.SIGINT, self.sigint_handler_main)
 
 
         if self.config['IMAGE_FOLDER']:
@@ -276,6 +300,13 @@ class IndiAllSkyDarks(object):
     @reverse.setter
     def reverse(self, new_reverse):
         self._reverse = bool(new_reverse)
+
+
+    def sigint_handler_main(self, signum, frame):
+        logger.warning('Caught INT signal, shutting down')
+
+        # set flag for program to stop processes
+        self._shutdown = True
 
 
     def _initialize(self):
@@ -755,12 +786,19 @@ class IndiAllSkyDarks(object):
     def average(self):
         self.checkAvailableSpace()
 
+        # do *NOT* start workers inside of a flask context
+        # doing so will cause TLS/SSL problems connecting to databases
+
+        # sensor worker only need to stop the fan and dew heater
+        self._startSensorWorker()
+
 
         with app.app_context():
             self._average()
 
 
         # shutdown
+        self._stopSensorWorker()
         self.indiclient.disableCcdCooler()
         self.indiclient.disconnectServer()
 
@@ -775,12 +813,19 @@ class IndiAllSkyDarks(object):
     def tempaverage(self):
         self.checkAvailableSpace()
 
+        # do *NOT* start workers inside of a flask context
+        # doing so will cause TLS/SSL problems connecting to databases
+
+        # sensor worker only need to stop the fan and dew heater
+        self._startSensorWorker()
+
 
         with app.app_context():
             self._tempaverage()
 
 
         # shutdown
+        self._stopSensorWorker()
         self.indiclient.disableCcdCooler()
         self.indiclient.disconnectServer()
 
@@ -823,12 +868,19 @@ class IndiAllSkyDarks(object):
     def sigmaclip(self):
         self.checkAvailableSpace()
 
+        # do *NOT* start workers inside of a flask context
+        # doing so will cause TLS/SSL problems connecting to databases
+
+        # sensor worker only need to stop the fan and dew heater
+        self._startSensorWorker()
+
 
         with app.app_context():
             self._sigmaclip()
 
 
         # shutdown
+        self._stopSensorWorker()
         self.indiclient.disableCcdCooler()
         self.indiclient.disconnectServer()
 
@@ -843,12 +895,19 @@ class IndiAllSkyDarks(object):
     def tempsigmaclip(self):
         self.checkAvailableSpace()
 
+        # do *NOT* start workers inside of a flask context
+        # doing so will cause TLS/SSL problems connecting to databases
+
+        # sensor worker only need to stop the fan and dew heater
+        self._startSensorWorker()
+
 
         with app.app_context():
             self._tempsigmaclip()
 
 
         # shutdown
+        self._stopSensorWorker()
         self.indiclient.disableCcdCooler()
         self.indiclient.disconnectServer()
 
@@ -1373,7 +1432,6 @@ class IndiAllSkyDarks(object):
         tmp_fit_dir.cleanup()
 
 
-
     def flush(self):
         with app.app_context():
             self._flush()
@@ -1561,6 +1619,73 @@ class IndiAllSkyDarks(object):
             if fs_free_mb < 600:
                 logger.warning('%s filesystem has less than 600MB of available space', fs.mountpoint)
                 time.sleep(10)
+
+
+    def _startSensorWorker(self):
+        from .sensor import SensorWorker
+
+        if self.sensor_worker:
+            if self.sensor_worker.is_alive():
+                return
+
+
+            try:
+                sensor_error, sensor_traceback = self.sensor_error_q.get_nowait()
+                for line in sensor_traceback.split('\n'):
+                    logger.error('Sensor worker exception: %s', line)
+            except queue.Empty:
+                pass
+
+
+        # disable gpio
+        self.config['GENERIC_GPIO']['A_CLASSNAME'] = ''
+
+
+        # turn off fan
+        if self.config['FAN']['CLASSNAME']:
+            logger.warning('Disabling FAN')
+
+        self.config['FAN']['LEVEL_DEF'] = 0
+        self.config['FAN']['THOLD_ENABLE'] = False
+
+
+        # turn off dew heater
+        # an inverted dew heater will be ACTIVE by default, initilize dew heater and then turn it off
+        if self.config['DEW_HEATER']['CLASSNAME']:
+            logger.warning('Disabling DEW HEATER')
+
+        self.config['DEW_HEATER']['LEVEL_DEF'] = 0
+        self.config['DEW_HEATER']['THOLD_ENABLE'] = False
+
+
+        self.sensor_worker_idx += 1
+
+        logger.info('Starting Sensor-%d worker', self.sensor_worker_idx)
+        self.sensor_worker = SensorWorker(
+            self.sensor_worker_idx,
+            self.config,
+            self.sensor_q,
+            self.sensor_error_q,
+            self.sensors_temp_av,
+            self.sensors_user_av,
+            self.night_av,
+            self.astro_av,
+        )
+        self.sensor_worker.start()
+
+
+    def _stopSensorWorker(self):
+        if not self.sensor_worker:
+            return
+
+        if not self.sensor_worker.is_alive():
+            return
+
+        logger.info('Stopping Sensor worker')
+
+        self.sensor_q.put({'stop' : True})
+        self.sensor_worker.join()
+
 
 
 class IndiAllSkyDarksProcessor(object):
