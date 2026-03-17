@@ -743,18 +743,18 @@ class VideoWorker(Process):
 
 
         try:
-            tg = TimelapseGenerator(
+            mini_tg = TimelapseGenerator(
                 self.config,
                 skip_frames=0,
             )
 
-            tg.codec = self.config['FFMPEG_CODEC']
-            tg.framerate = framerate
-            tg.bitrate = bitrate
-            tg.vf_scale = vf_scale
-            tg.ffmpeg_extra_options = ffmpeg_extra_options
+            mini_tg.codec = self.config['FFMPEG_CODEC']
+            mini_tg.framerate = framerate
+            mini_tg.bitrate = bitrate
+            mini_tg.vf_scale = vf_scale
+            mini_tg.ffmpeg_extra_options = ffmpeg_extra_options
 
-            tg.generate(video_file, timelapse_files)
+            mini_tg.generate(video_file, timelapse_files)
 
             mini_video_entry.success = True
             db.session.commit()
@@ -998,18 +998,18 @@ class VideoWorker(Process):
 
 
         try:
-            tg = TimelapseGenerator(
+            panorama_tg = TimelapseGenerator(
                 self.config,
                 skip_frames=timelapse_skip_frames,
             )
 
-            tg.codec = codec
-            tg.framerate = framerate
-            tg.bitrate = bitrate
-            #tg.vf_scale = vf_scale  # no vfscale for panorama timelapse
-            tg.ffmpeg_extra_options = ffmpeg_extra_options
+            panorama_tg.codec = codec
+            panorama_tg.framerate = framerate
+            panorama_tg.bitrate = bitrate
+            #panorama_tg.vf_scale = vf_scale  # no vfscale for panorama timelapse
+            panorama_tg.ffmpeg_extra_options = ffmpeg_extra_options
 
-            tg.generate(video_file, timelapse_files)
+            panorama_tg.generate(video_file, timelapse_files)
 
             video_entry.success = True
             db.session.commit()
@@ -1553,22 +1553,11 @@ class VideoWorker(Process):
                 )
 
 
-                if self.config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True):
-                    framerate = self.config.get('FFMPEG_FRAMERATE', 25)
-                    bitrate = self.config.get('FFMPEG_BITRATE', '5000k')
-                    vf_scale = self.config.get('FFMPEG_VFSCALE', '')
-                    ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
-                else:
-                    if night:
-                        framerate = self.config.get('FFMPEG_FRAMERATE', 25)
-                        bitrate = self.config.get('FFMPEG_BITRATE', '5000k')
-                        vf_scale = self.config.get('FFMPEG_VFSCALE', '')
-                        ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
-                    else:
-                        framerate = self.config.get('FFMPEG_FRAMERATE_DAY', '25')
-                        bitrate = self.config.get('FFMPEG_BITRATE_DAY', '5000k')
-                        vf_scale = self.config.get('FFMPEG_VFSCALE_DAY', '')
-                        ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS_DAY', '')
+                # Star Trails only generated at night
+                framerate = self.config.get('FFMPEG_FRAMERATE', 25)
+                bitrate = self.config.get('FFMPEG_BITRATE', '5000k')
+                vf_scale = self.config.get('FFMPEG_VFSCALE_STARTRAIL', '')
+                ffmpeg_extra_options = self.config.get('FFMPEG_EXTRA_OPTIONS', '')
 
 
                 try:
@@ -1599,7 +1588,6 @@ class VideoWorker(Process):
             else:
                 logger.error('Not enough frames to generate star trails timelapse: %d', st_frame_count)
                 startrail_video_entry = None
-
 
 
         processing_elapsed_s = time.time() - processing_start

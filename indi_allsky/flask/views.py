@@ -2505,6 +2505,7 @@ class ConfigView(FormView):
             'FFMPEG_BITRATE_DAY'             : self.indi_allsky_config.get('FFMPEG_BITRATE_DAY', '5000k'),
             'FFMPEG_VFSCALE'                 : self.indi_allsky_config.get('FFMPEG_VFSCALE', ''),
             'FFMPEG_VFSCALE_DAY'             : self.indi_allsky_config.get('FFMPEG_VFSCALE_DAY', ''),
+            'FFMPEG_VFSCALE_STARTRAIL'       : self.indi_allsky_config.get('FFMPEG_VFSCALE_STARTRAIL', ''),
             'FFMPEG_CODEC'                   : self.indi_allsky_config.get('FFMPEG_CODEC', 'libx264'),
             'FFMPEG_EXTRA_OPTIONS'           : self.indi_allsky_config.get('FFMPEG_EXTRA_OPTIONS', '-level 3.1'),
             'FFMPEG_EXTRA_OPTIONS_DAY'       : self.indi_allsky_config.get('FFMPEG_EXTRA_OPTIONS_DAY', '-level 3.1'),
@@ -3521,6 +3522,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FFMPEG_BITRATE_DAY']                   = str(request.json['FFMPEG_BITRATE_DAY'])
         self.indi_allsky_config['FFMPEG_VFSCALE']                       = str(request.json['FFMPEG_VFSCALE'])
         self.indi_allsky_config['FFMPEG_VFSCALE_DAY']                   = str(request.json['FFMPEG_VFSCALE_DAY'])
+        self.indi_allsky_config['FFMPEG_VFSCALE_STARTRAIL']             = str(request.json['FFMPEG_VFSCALE_STARTRAIL'])
         self.indi_allsky_config['FFMPEG_CODEC']                         = str(request.json['FFMPEG_CODEC'])
         self.indi_allsky_config['FFMPEG_EXTRA_OPTIONS']                 = str(request.json['FFMPEG_EXTRA_OPTIONS'])
         self.indi_allsky_config['FFMPEG_EXTRA_OPTIONS_DAY']             = str(request.json['FFMPEG_EXTRA_OPTIONS_DAY'])
