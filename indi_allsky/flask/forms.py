@@ -4604,6 +4604,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FFMPEG_BITRATE_DAY               = StringField('FFMPEG Bitrate (Day)', validators=[DataRequired(), FFMPEG_BITRATE_validator])
     FFMPEG_VFSCALE                   = SelectField('FFMPEG Scaling (Night)', choices=FFMPEG_VFSCALE_choices, validators=[FFMPEG_VFSCALE_validator])
     FFMPEG_VFSCALE_DAY               = SelectField('FFMPEG Scaling (Day)', choices=FFMPEG_VFSCALE_choices, validators=[FFMPEG_VFSCALE_validator])
+    FFMPEG_VFSCALE_STARTRAIL         = SelectField('FFMPEG Scaling (Star Trails)', choices=FFMPEG_VFSCALE_choices, validators=[FFMPEG_VFSCALE_validator])
     FFMPEG_CODEC                     = SelectField('FFMPEG Codec', choices=FFMPEG_CODEC_choices, validators=[FFMPEG_CODEC_validator])
     FFMPEG_EXTRA_OPTIONS             = StringField('FFMPEG Extra Options (Night)', validators=[FFMPEG_EXTRA_OPTIONS_validator])
     FFMPEG_EXTRA_OPTIONS_DAY         = StringField('FFMPEG Extra Options (Day)', validators=[FFMPEG_EXTRA_OPTIONS_validator])

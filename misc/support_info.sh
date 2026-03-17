@@ -198,6 +198,11 @@ echo "Process info"
 ps auxwww | grep indi | grep -v grep || true
 
 echo
+echo "Check for TJs allsky"
+# shellcheck disable=SC2009
+ps auxwww | grep capture | grep -v grep || true
+
+echo
 echo "Mosquitto processes"
 # shellcheck disable=SC2009
 ps auxwww | grep mosquitto | grep -v grep || true
