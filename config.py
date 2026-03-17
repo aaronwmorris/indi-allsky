@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import locale
 import logging
 
 from indi_allsky.config import IndiAllSkyConfigUtil
@@ -18,6 +19,10 @@ logger.addHandler(LOG_HANDLER_STREAM)
 
 
 if __name__ == "__main__":
+    # should be inherited by all of the sub-processes
+    locale.setlocale(locale.LC_ALL, '')
+
+
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         'action',

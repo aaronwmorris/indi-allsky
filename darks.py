@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import argparse
+import locale
+import multiprocessing
 import logging
 
 from indi_allsky.darks import IndiAllSkyDarks
@@ -18,6 +20,13 @@ logger.addHandler(LOG_HANDLER_STREAM)
 
 
 if __name__ == "__main__":
+    # should be inherited by all of the sub-processes
+    locale.setlocale(locale.LC_ALL, '')
+
+    # https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
+    multiprocessing.set_start_method('fork')
+
+
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         'action',
