@@ -239,7 +239,7 @@ class AdsbAircraftHttpWorker(Thread):
 
             if aircraft_alt < alt_min_deg:
                 logger.info(
-                    'Aircraft below minimum visual altitude: %s - lat %+0.3f - long %+0.3f - %0.1f alt / %0.1f az (%0.1fkm)',
+                    'Aircraft below minimum visual altitude: %s - lat %+0.3f/long %+0.3f - %0.1f alt / %0.1f az (%0.1fkm)',
                     aircraft_id,
                     aircraft_lat,
                     aircraft_lon,
@@ -251,8 +251,10 @@ class AdsbAircraftHttpWorker(Thread):
 
 
             logger.info(
-                'Aircraft: %s, elevation: %0.1fkm, distance: %0.1fkm, alt: %0.1f, az: %0.1f',
+                'Aircraft: %s, lat %+0.3f/long %+0.3f, elevation: %0.1fkm, distance: %0.1fkm, alt: %0.1f, az: %0.1f',
                 aircraft_id,
+                aircraft_lat,
+                aircraft_lon,
                 aircraft_elevation_km,
                 aircraft_distance_km,
                 aircraft_alt,
