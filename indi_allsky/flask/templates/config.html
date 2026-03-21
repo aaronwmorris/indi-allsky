@@ -2626,7 +2626,7 @@ var camera_id = {{ camera_id }};
             <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
             <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" class="text-decoration-none link-info" target="_blank">Python datetime format codes</a></div>
             <div>Available variables:</div>
-            <div><pre>timestamp, ts, day_date, exposure, rational_exp, gain_f, temp, temp_unit,<br>sidereal_time, sqm, stars, detections, stack_method, stack_count, stretch<br>location, owner, latitude, longitude, kpindex, ovation_max,<br>sun_alt, moon_alt, moon_phase, sun_moon_sep, moon_up, sun_moon_sep,<br>mercury_alt, mercury_up, venus_alt, venus_up, venus_phase,<br>mars_alt, mars_up, jupiter_alt, jupiter_up, saturn_alt, saturn_up,<br>iss_alt, iss_up, iss_next_h, iss_next_alt, hst_alt, hst_up, hst_next_h,<br>hst_next_alt, tiangong_alt, tiangong_up, tiangong_next_h, tiangong_next_alt</pre></div>
+            <div><pre>timestamp, ts, day_date, exposure, rational_exp, gain_f, temp, temp_unit,<br>sidereal_time, sqm, stars, detections, stack_method, stack_count, stretch<br>location, owner, latitude, longitude, kpindex, ovation_max,<br>sun_alt, moon_alt, moon_phase, sun_moon_sep, moon_up, sun_moon_sep,<br>mercury_alt, mercury_up, venus_alt, venus_up, venus_phase,<br>mars_alt, mars_up, jupiter_alt, jupiter_up, saturn_alt, saturn_up,<br>iss_alt, iss_up, iss_next_h, iss_next_alt, hst_alt, hst_up, hst_next_h,<br>hst_next_alt, tiangong_alt, tiangong_up, tiangong_next_h, tiangong_next_alt,<br>rain_sensor</pre></div>
             <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Image-Labels" class="text-decoration-none link-info" target="_blank">Image Labels Wiki</a></div>
         </div>
     </div>
@@ -7349,8 +7349,7 @@ var camera_id = {{ camera_id }};
     <hr>
 
     <div><span class="badge rounded-pill bg-info text-dark">Note</span> Sensor units may be adjusted using the Temperature Display option on the Camera Tab</div>
-
-    <hr>
+    
 
     <div class="form-group row">
         <div class="col-sm-2">
@@ -8037,6 +8036,25 @@ var camera_id = {{ camera_id }};
         </div>
         <div class="col-sm-6">
             <div></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.RAIN_SENSOR__FC37_ACTIVE_LOW.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.RAIN_SENSOR__FC37_ACTIVE_LOW(id='RAIN_SENSOR__FC37_ACTIVE_LOW', class='form-check-input') }}
+                <div id="RAIN_SENSOR__FC37_ACTIVE_LOW-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Invert the FC-37 sensor Digital Output logic. Signal default is 0 = No rain, 1 = Rain </div>
+            <div>*Note* In Overlay Template use rain_sensor:s which gives string display</div>
+            </div>
         </div>
     </div>
 
@@ -10409,6 +10427,7 @@ const checkbox_field_names = [
     'VIRTUALSKY__SHOWPLANETS',
     'VIRTUALSKY__SHOWPLANETLABELS',
     'TEMP_SENSOR__DHT_USE_PULSEIO',
+    'RAIN_SENSOR__FC37_ACTIVE_LOW',
     'TEMP_SENSOR__SHT3X_HEATER_NIGHT',
     'TEMP_SENSOR__SHT3X_HEATER_DAY',
     'TEMP_SENSOR__HTU31D_HEATER_NIGHT',
@@ -11347,6 +11366,29 @@ $( document ).ready(function() {
     group_on_ready('FISH2PANO__ENABLE', group_fields_fish2pano, group_checkbox_fields_fish2pano);
     group_on_ready('IMAGE_OVERLAY__ENABLE', group_fields_image_overlay, group_checkbox_fields_image_overlay);
     group_on_ready('CIRCULAR_DISPLAY__ENABLE', group_fields_circular_display, group_checkbox_fields_circular_display);
+
+    // Enable/disable FC-37 Active Low toggle when any sensor slot has FC-37 selected
+    function updateFc37ActiveLowState() {
+        const sensorSlotIds = [
+            'TEMP_SENSOR__A_CLASSNAME',
+            'TEMP_SENSOR__B_CLASSNAME',
+            'TEMP_SENSOR__C_CLASSNAME',
+            'TEMP_SENSOR__D_CLASSNAME',
+            'TEMP_SENSOR__E_CLASSNAME',
+            'TEMP_SENSOR__F_CLASSNAME',
+        ];
+        const fc37Selected = sensorSlotIds.some(function(id) {
+            return $('#' + id).val() === 'blinka_rain_sensor_fc37';
+        });
+        const $toggle = $('#RAIN_SENSOR__FC37_ACTIVE_LOW');
+        $toggle.prop('disabled', !fc37Selected);
+        $toggle.closest('.form-group.row').toggleClass('text-muted', !fc37Selected).css('opacity', fc37Selected ? '' : '0.5');
+    }
+
+    $('#TEMP_SENSOR__A_CLASSNAME, #TEMP_SENSOR__B_CLASSNAME, #TEMP_SENSOR__C_CLASSNAME, #TEMP_SENSOR__D_CLASSNAME, #TEMP_SENSOR__E_CLASSNAME, #TEMP_SENSOR__F_CLASSNAME').on('change', updateFc37ActiveLowState);
+
+    updateFc37ActiveLowState();
+
 });
 
 </script>
