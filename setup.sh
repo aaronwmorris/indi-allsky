@@ -706,7 +706,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         ca-certificates \
         avahi-daemon \
         swig \
-        libatlas-ecmwf-dev \
+         \
         libimath-dev \
         libopenexr-dev \
         libgtk-3-0t64 \
