@@ -12,6 +12,7 @@ import json
 from pprint import pformat  # noqa: F401
 import logging
 
+#from ..flask.miscDb import miscDb
 
 logger = logging.getLogger('indi_allsky')
 
@@ -27,6 +28,8 @@ class youtube_oauth2(GenericFileTransfer):
     def __init__(self, *args, **kwargs):
         super(youtube_oauth2, self).__init__(*args, **kwargs)
 
+        #self._miscDb = miscDb(self.config)
+
         self.client = None
 
 
@@ -38,6 +41,7 @@ class youtube_oauth2(GenericFileTransfer):
             raise ConnectionFailure('Youtube uploads are not enabled')
 
 
+        #import google.auth.transport.requests
         import google.oauth2.credentials
         import googleapiclient.discovery
 
@@ -47,7 +51,33 @@ class youtube_oauth2(GenericFileTransfer):
         credentials_dict = json.loads(credentials_json)
         credentials = google.oauth2.credentials.Credentials(**credentials_dict)
 
+        logger.info('Credentials expired: %s', str(credentials.expired))
+        #if credentials.expired and credentials.refresh_token:
+        #    # refresh the credentials
+        #    request = google.auth.transport.requests.Request()
+        #    credentials.refresh(request)
+
+        #    credentials_dict = self.credentials_to_dict(credentials)
+        #    credentials_json = json.dumps(credentials_dict)
+
+        #    # resave credentials
+        #    self._miscDb.setEncryptedState('YOUTUBE_CREDENTIALS', credentials_json)
+
+
         self.client = googleapiclient.discovery.build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
+
+
+    #def credentials_to_dict(self, credentials):
+    #    credentials = {
+    #        'token'         : credentials.token,
+    #        'refresh_token' : credentials.refresh_token,
+    #        'token_uri'     : credentials.token_uri,
+    #        'client_id'     : credentials.client_id,
+    #        'client_secret' : credentials.client_secret,
+    #        'scopes'        : credentials.scopes,
+    #    }
+
+    #    return credentials
 
 
     def close(self):

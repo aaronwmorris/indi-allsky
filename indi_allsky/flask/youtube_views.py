@@ -122,6 +122,55 @@ class YoutubeCallbackView(BaseView):
         return credentials
 
 
+class YoutubeRefreshAuthView(BaseView):
+    decorators = [login_required]
+
+
+    def dispatch_request(self):
+        import google.oauth2.credentials
+        import google.auth.transport.requests
+
+        try:
+            credentials_json = self._miscDb.getState('YOUTUBE_CREDENTIALS')
+        except NoResultFound:
+            abort(400, 'Youtube credentials not configured')
+
+
+        credentials_dict = json.loads(credentials_json)
+
+        credentials = google.oauth2.credentials.Credentials(**credentials_dict)
+
+        app.logger.info('Credentials expired: %s', str(credentials.expired))
+        if credentials.expired and credentials.refresh_token:
+            # refresh the credentials
+            request = google.auth.transport.requests.Request()
+            credentials.refresh(request)
+
+            credentials_dict = self.credentials_to_dict(credentials)
+            credentials_json = json.dumps(credentials_dict)
+
+            # resave credentials
+            self._miscDb.setEncryptedState('YOUTUBE_CREDENTIALS', credentials_json)
+        else:
+            abort(400, 'Youtube credentials not expired')
+
+
+        return redirect(url_for('indi_allsky.config_view'))
+
+
+    def credentials_to_dict(self, credentials):
+        credentials = {
+            'token'         : credentials.token,
+            'refresh_token' : credentials.refresh_token,
+            'token_uri'     : credentials.token_uri,
+            'client_id'     : credentials.client_id,
+            'client_secret' : credentials.client_secret,
+            'scopes'        : credentials.scopes,
+        }
+
+        return credentials
+
+
 class YoutubeRevokeAuthView(BaseView):
     decorators = [login_required]
 
