@@ -1,3 +1,5 @@
+#from datetime import datetime
+#from datetime import timezone
 import json
 import requests
 
@@ -86,6 +88,15 @@ class YoutubeCallbackView(BaseView):
         except InvalidGrantError as e:
             app.logger.error('InvalidGrantError: %s', str(e))
             abort(400, 'InvalidGrantError: {0:s}'.format(str(e)))
+
+
+        ### Not sure if the token expiration is the same as the refresh_token expiration
+        #now_utc = datetime.now(tz=timezone.utc)
+        #expire_delta = flow.credentials.expiry - now_utc.replace(tzinfo=None)
+        #expire_days = int(expire_delta.total_seconds() / 86400)
+        #expire_hours = int((expire_delta.total_seconds() % 86400) / 3600)
+        #expire_minutes = int(((expire_delta.total_seconds() % 86400) % 3600) / 60)
+        #app.logger.info('Token expires at %s UTC in %d days, %d hours, %d minutes', str(flow.credentials.expiry), expire_days, expire_hours, expire_minutes)
 
 
         credentials_dict = self.credentials_to_dict(flow.credentials)
