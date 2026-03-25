@@ -1,3 +1,5 @@
+#from datetime import datetime
+#from datetime import timezone
 import json
 import requests
 
@@ -88,11 +90,69 @@ class YoutubeCallbackView(BaseView):
             abort(400, 'InvalidGrantError: {0:s}'.format(str(e)))
 
 
+        ### Not sure if the token expiration is the same as the refresh_token expiration
+        #now_utc = datetime.now(tz=timezone.utc)
+        #expire_delta = flow.credentials.expiry - now_utc.replace(tzinfo=None)
+        #expire_days = int(expire_delta.total_seconds() / 86400)
+        #expire_hours = int((expire_delta.total_seconds() % 86400) / 3600)
+        #expire_minutes = int(((expire_delta.total_seconds() % 86400) % 3600) / 60)
+        #app.logger.info('Token expires at %s UTC in %d days, %d hours, %d minutes', str(flow.credentials.expiry), expire_days, expire_hours, expire_minutes)
+
+
         credentials_dict = self.credentials_to_dict(flow.credentials)
 
         credentials_json = json.dumps(credentials_dict)
 
         self._miscDb.setEncryptedState('YOUTUBE_CREDENTIALS', credentials_json)
+
+
+        return redirect(url_for('indi_allsky.config_view'))
+
+
+    def credentials_to_dict(self, credentials):
+        credentials = {
+            'token'         : credentials.token,
+            'refresh_token' : credentials.refresh_token,
+            'token_uri'     : credentials.token_uri,
+            'client_id'     : credentials.client_id,
+            'client_secret' : credentials.client_secret,
+            'scopes'        : credentials.scopes,
+        }
+
+        return credentials
+
+
+class YoutubeRefreshAuthView(BaseView):
+    decorators = [login_required]
+
+
+    def dispatch_request(self):
+        import google.oauth2.credentials
+        import google.auth.transport.requests
+
+        try:
+            credentials_json = self._miscDb.getState('YOUTUBE_CREDENTIALS')
+        except NoResultFound:
+            abort(400, 'Youtube credentials not configured')
+
+
+        credentials_dict = json.loads(credentials_json)
+
+        credentials = google.oauth2.credentials.Credentials(**credentials_dict)
+
+        app.logger.info('Credentials expired: %s', str(credentials.expired))
+        if credentials.expired and credentials.refresh_token:
+            # refresh the credentials
+            request = google.auth.transport.requests.Request()
+            credentials.refresh(request)
+
+            credentials_dict = self.credentials_to_dict(credentials)
+            credentials_json = json.dumps(credentials_dict)
+
+            # resave credentials
+            self._miscDb.setEncryptedState('YOUTUBE_CREDENTIALS', credentials_json)
+        else:
+            abort(400, 'Youtube credentials not expired')
 
 
         return redirect(url_for('indi_allsky.config_view'))

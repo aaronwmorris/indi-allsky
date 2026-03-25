@@ -120,6 +120,7 @@ from .base_views import JsonView
 
 from .youtube_views import YoutubeAuthorizeView
 from .youtube_views import YoutubeCallbackView
+from .youtube_views import YoutubeRefreshAuthView
 from .youtube_views import YoutubeRevokeAuthView
 
 from ..exceptions import ConfigSaveException
@@ -11772,6 +11773,7 @@ bp_allsky.add_url_rule('/ajax/uploadyoutube', view_func=AjaxUploadYoutubeView.as
 # youtube
 bp_allsky.add_url_rule('/youtube/authorize', view_func=YoutubeAuthorizeView.as_view('youtube_authorize_view'))
 bp_allsky.add_url_rule('/youtube/oauth2callback', view_func=YoutubeCallbackView.as_view('youtube_oauth2callback_view'))
+bp_allsky.add_url_rule('/youtube/oauth2refresh', view_func=YoutubeRefreshAuthView.as_view('youtube_oauth2refresh_view'))
 bp_allsky.add_url_rule('/youtube/oauth2revoke', view_func=YoutubeRevokeAuthView.as_view('youtube_oauth2revoke_view'))
 
 # redirects
