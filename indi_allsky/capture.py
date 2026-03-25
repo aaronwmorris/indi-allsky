@@ -625,10 +625,14 @@ class CaptureWorker(Process):
                         if frame_delta < -1:
 
                             if self.config['CAMERA_INTERFACE'].startswith('pycurl'):
-                                ### camera does not obey expsoure values
+                                ### camera does not obey exposure values
                                 pass
                             elif self.config['CAMERA_INTERFACE'] == 'indi_passive':
-                                ### camera does not obey expsoure values
+                                ### camera does not obey exposure values
+                                pass
+                            elif self.config.get('LIBCAMERA', {}).get('BACKEND', 'auto') == 'libcamera-still':
+                                ### subprocess backend: daemon manages exposure timing,
+                                ### capture_still may return a pre-buffered stream frame
                                 pass
                             else:
                                 logger.error('%0.4fs EXPOSURE RECEIVED IN %0.4fs.  POSSIBLE CAMERA PROBLEM.', self.exposure_av[constants.EXPOSURE_CURRENT], frame_elapsed)

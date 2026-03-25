@@ -2128,6 +2128,11 @@ class ImageWorker(Process):
 
 
     def calculate_exposure(self, adu, exposure, gain):
+        if self.config.get('TARGET_ADU_DISABLE', False):
+            # Manual exposure mode — skip auto-exposure recalculation
+            self.target_adu_found = True
+            return adu, 0.0
+
         if adu <= 0.0:
             # ensure we do not divide by zero
             logger.warning('Zero average, setting a default of 0.1')

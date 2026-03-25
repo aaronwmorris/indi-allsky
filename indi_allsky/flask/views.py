@@ -2674,6 +2674,7 @@ class ConfigView(FormView):
             'LIBCAMERA__CCM_DISABLE'         : self.indi_allsky_config.get('LIBCAMERA', {}).get('CCM_DISABLE', False),
             'LIBCAMERA__CCM_DISABLE_DAY'     : self.indi_allsky_config.get('LIBCAMERA', {}).get('CCM_DISABLE_DAY', False),
             'LIBCAMERA__CAMERA_ID'           : str(self.indi_allsky_config.get('LIBCAMERA', {}).get('CAMERA_ID', 0)),  # string in form, int in config
+            'LIBCAMERA__BACKEND'             : self.indi_allsky_config.get('LIBCAMERA', {}).get('BACKEND', 'auto'),
             'LIBCAMERA__EXTRA_OPTIONS'       : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS', ''),
             'LIBCAMERA__EXTRA_OPTIONS_DAY'   : self.indi_allsky_config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS_DAY', ''),
             'LIBCAMERA__MQTT_TRANSPORT'      : self.indi_allsky_config.get('LIBCAMERA', {}).get('MQTT_TRANSPORT', 'tcp'),
@@ -3706,6 +3707,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LIBCAMERA']['CCM_DISABLE']             = bool(request.json['LIBCAMERA__CCM_DISABLE'])
         self.indi_allsky_config['LIBCAMERA']['CCM_DISABLE_DAY']         = bool(request.json['LIBCAMERA__CCM_DISABLE_DAY'])
         self.indi_allsky_config['LIBCAMERA']['CAMERA_ID']               = int(request.json['LIBCAMERA__CAMERA_ID'])
+        self.indi_allsky_config['LIBCAMERA']['BACKEND']                = str(request.json['LIBCAMERA__BACKEND'])
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS']           = str(request.json['LIBCAMERA__EXTRA_OPTIONS'])
         self.indi_allsky_config['LIBCAMERA']['EXTRA_OPTIONS_DAY']       = str(request.json['LIBCAMERA__EXTRA_OPTIONS_DAY'])
         self.indi_allsky_config['LIBCAMERA']['MQTT_TRANSPORT']          = str(request.json['LIBCAMERA__MQTT_TRANSPORT'])
@@ -4074,6 +4076,9 @@ class AjaxConfigView(BaseView):
             return jsonify(error_data), 400
 
 
+        # Pipeline config changes to picamera2 daemon via IPC
+        self._sync_daemon_controls(request.json)
+
         if reload_on_save:
             self._miscDb.setState('STATUS', constants.STATUS_RELOADING)
 
@@ -4097,6 +4102,93 @@ class AjaxConfigView(BaseView):
 
 
         return jsonify(message)
+
+
+    def _send_daemon_cmd(self, cmd_dict, timeout=10.0):
+        """Send a JSON command to the picamera2 daemon and return the response."""
+        import socket as _sock
+        try:
+            s = _sock.socket(_sock.AF_UNIX, _sock.SOCK_STREAM)
+            s.settimeout(timeout)
+            s.connect('/run/indi-allsky/picamera2.sock')
+            s.sendall(json.dumps(cmd_dict).encode() + b'\n')
+            buf = b''
+            while b'\n' not in buf:
+                chunk = s.recv(4096)
+                if not chunk:
+                    break
+                buf += chunk
+            s.close()
+            return json.loads(buf.decode().strip())
+        except Exception as e:
+            app.logger.warning('Daemon IPC failed: %s', e)
+            return {'ok': False, 'error': str(e)}
+
+    def _sync_daemon_controls(self, form_data):
+        """Pipeline all camera-related config changes to the daemon via IPC.
+
+        Sends backend switch, exposure/gain, AWB, and stream settings
+        so the live stream reflects config page changes immediately.
+        """
+        # 1. Backend switch (if changed)
+        new_backend = form_data.get('LIBCAMERA__BACKEND', '')
+        if new_backend:
+            resp = self._send_daemon_cmd({'cmd': 'set_backend', 'backend': new_backend})
+            if resp.get('ok'):
+                app.logger.info('Camera backend switched to: %s', new_backend)
+            else:
+                app.logger.warning('Backend switch failed: %s', resp.get('error'))
+
+        # 2. Camera controls — determine current mode's gain + exposure
+        controls = {}
+
+        # Gain: pick from the active mode (night/moon/day)
+        night_gain = form_data.get('CCD_CONFIG__NIGHT__GAIN')
+        moon_gain = form_data.get('CCD_CONFIG__MOONMODE__GAIN')
+        day_gain = form_data.get('CCD_CONFIG__DAY__GAIN')
+        exposure_max = form_data.get('CCD_EXPOSURE_MAX')
+        exposure_def = form_data.get('CCD_EXPOSURE_DEF')
+
+        # Use night gain/exposure by default (the capture worker will
+        # override based on actual sun altitude, but this gives immediate
+        # feedback in the stream)
+        if night_gain is not None:
+            controls['gain'] = float(night_gain)
+        if exposure_max is not None:
+            controls['exposure'] = float(exposure_max)
+        elif exposure_def is not None:
+            controls['exposure'] = float(exposure_def)
+
+        # AWB
+        awb_night = form_data.get('LIBCAMERA__AWB_ENABLE')
+        if awb_night is not None:
+            controls['awb'] = bool(awb_night)
+
+        if controls:
+            resp = self._send_daemon_cmd({'cmd': 'set_controls', **controls})
+            if resp.get('ok'):
+                app.logger.info('Daemon controls applied: %s', controls)
+            else:
+                app.logger.warning('Daemon controls failed: %s', resp.get('error'))
+
+        # 3. Stream settings
+        stream_cmd = {}
+        stream_width = form_data.get('STREAM_WIDTH')
+        stream_height = form_data.get('STREAM_HEIGHT')
+        stream_quality = form_data.get('STREAM_QUALITY')
+        stream_osd = form_data.get('STREAM_OSD')
+        if stream_width is not None:
+            stream_cmd['width'] = int(stream_width)
+        if stream_height is not None:
+            stream_cmd['height'] = int(stream_height)
+        if stream_quality is not None:
+            stream_cmd['quality'] = int(stream_quality)
+        if stream_osd is not None:
+            stream_cmd['osd'] = bool(stream_osd)
+
+        if stream_cmd:
+            stream_cmd['cmd'] = 'set_stream'
+            self._send_daemon_cmd(stream_cmd)
 
 
 class AjaxSetTimeView(BaseView):
