@@ -396,9 +396,10 @@ else
 fi
 
 
-echo
-echo "python packages"
-dpkg -l | grep python || true
+# this is almost never useful
+#echo
+#echo "python packages"
+#dpkg -l | grep python || true
 
 
 if [ -d "${ALLSKY_DIRECTORY}/virtualenv/indi-allsky" ]; then
