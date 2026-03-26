@@ -15,7 +15,7 @@ class MqttBrokerSensor(SensorBase):
     METADATA = {
         'name' : 'MQTT Broker',
         'description' : 'MQTT Broker Sensor',
-        'count' : 5,
+        'count' : 10,
         'labels' : (
             'Topic 1',
             'Topic 2',
