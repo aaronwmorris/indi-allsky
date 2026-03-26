@@ -1192,13 +1192,19 @@ class IndiClient(PyIndi.BaseClient):
             return fake_gain_info
         elif indi_exec in ['indi_v4l2_ccd']:
             try:
+                # some v4l2 devices do not have adjustments
                 gain_ctl = self.get_control(self.ccd_device, 'Image Adjustments', 'number', timeout=2.0)
+
+                gain_index_dict = self.__map_indexes(gain_ctl, ['Gain'])
+
+                # some that have adjustments, do not have gain
+                index = gain_index_dict['Gain']
             except TimeOutException:
                 logger.warning('Timeout: indi_v4l2_ccd does not support gain settings')
                 return fake_gain_info
-
-            gain_index_dict = self.__map_indexes(gain_ctl, ['Gain'])
-            index = gain_index_dict['Gain']
+            except KeyError:
+                logger.warning('KeyError: indi_v4l2_ccd does not support gain settings')
+                return fake_gain_info
         elif indi_exec in ['rpicam-still', 'libcamera-still', 'indi_fake_ccd']:
             return self.ccd_device.getCcdGain()
         elif 'indi_pylibcamera' in indi_exec:  # SPECIAL CASE
@@ -1320,7 +1326,13 @@ class IndiClient(PyIndi.BaseClient):
             gain_config = {}
         elif indi_exec in ['indi_v4l2_ccd']:
             try:
-                self.get_control(self.ccd_device, 'Image Adjustments', 'number', timeout=2.0)
+                # some v4l2 devices do not have adjustments
+                gain_ctl = self.get_control(self.ccd_device, 'Image Adjustments', 'number', timeout=2.0)
+
+                gain_index_dict = self.__map_indexes(gain_ctl, ['Gain'])
+
+                # some that have adjustments, do not have gain
+                gain_index_dict['Gain']
 
                 gain_config = {
                     "PROPERTIES" : {
@@ -1331,6 +1343,9 @@ class IndiClient(PyIndi.BaseClient):
                 }
             except TimeOutException:
                 logger.warning('Timeout: indi_v4l2_ccd does not support gain settings')
+                gain_config = {}
+            except KeyError:
+                logger.warning('KeyError: indi_v4l2_ccd does not support gain settings')
                 gain_config = {}
         elif indi_exec in ['rpicam-still', 'libcamera-still', 'indi_fake_ccd']:
             return self.ccd_device.setCcdGain(gain_f)
