@@ -128,6 +128,8 @@ class paho_mqtt(GenericFileTransfer):
             raise ConnectionFailure(str(e)) from e
         except ConnectionRefusedError as e:
             raise ConnectionFailure(str(e)) from e
+        except OSError as e:
+            raise ConnectionFailure(str(e)) from e
         except MQTTException as e:
             raise AuthenticationFailure(str(e)) from e
         except ValueError as e:
