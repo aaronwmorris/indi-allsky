@@ -2486,6 +2486,8 @@ class ConfigView(FormView):
             'IMAGE_ALIGN_POINTS'             : self.indi_allsky_config.get('IMAGE_ALIGN_POINTS', 50),
             'IMAGE_ALIGN_SOURCEMINAREA'      : self.indi_allsky_config.get('IMAGE_ALIGN_SOURCEMINAREA', 10),
             'IMAGE_STACK_SPLIT'              : self.indi_allsky_config.get('IMAGE_STACK_SPLIT', False),
+            'IMAGE_STACK_MOONMODE'           : self.indi_allsky_config.get('IMAGE_STACK_MOONMODE', False),
+            'IMAGE_STACK_DAY'                : self.indi_allsky_config.get('IMAGE_STACK_DAY', False),
             'IMAGE_QUEUE_MAX'                : self.indi_allsky_config.get('IMAGE_QUEUE_MAX', 3),
             'IMAGE_QUEUE_MIN'                : self.indi_allsky_config.get('IMAGE_QUEUE_MIN', 1),
             'IMAGE_QUEUE_BACKOFF'            : self.indi_allsky_config.get('IMAGE_QUEUE_BACKOFF', 0.5),
@@ -3503,6 +3505,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_ALIGN_POINTS']                   = int(request.json['IMAGE_ALIGN_POINTS'])
         self.indi_allsky_config['IMAGE_ALIGN_SOURCEMINAREA']            = int(request.json['IMAGE_ALIGN_SOURCEMINAREA'])
         self.indi_allsky_config['IMAGE_STACK_SPLIT']                    = bool(request.json['IMAGE_STACK_SPLIT'])
+        self.indi_allsky_config['IMAGE_STACK_MOONMODE']                 = bool(request.json['IMAGE_STACK_MOONMODE'])
+        self.indi_allsky_config['IMAGE_STACK_DAY']                      = bool(request.json['IMAGE_STACK_DAY'])
         self.indi_allsky_config['IMAGE_QUEUE_MAX']                      = int(request.json['IMAGE_QUEUE_MAX'])
         self.indi_allsky_config['IMAGE_QUEUE_MIN']                      = int(request.json['IMAGE_QUEUE_MIN'])
         self.indi_allsky_config['IMAGE_QUEUE_BACKOFF']                  = float(request.json['IMAGE_QUEUE_BACKOFF'])
