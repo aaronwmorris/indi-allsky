@@ -454,10 +454,10 @@ class ImageWorker(Process):
         self.image_processor.calculateJankySqm()
 
 
-        self.image_processor.debayer()
+        self.image_processor.debayer()  # populates self.opencv_data
 
 
-        self.image_processor.stack()  # this populates self.image
+        self.image_processor.stack()  # populates self.image
 
 
         image_height, image_width = self.image_processor.image.shape[:2]

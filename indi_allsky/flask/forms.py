@@ -4592,6 +4592,8 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_ALIGN_POINTS               = IntegerField('Alignment points', validators=[DataRequired(), IMAGE_ALIGN_POINTS_validator])
     IMAGE_ALIGN_SOURCEMINAREA        = IntegerField('Minimum point area', validators=[DataRequired(), IMAGE_ALIGN_SOURCEMINAREA_validator])
     IMAGE_STACK_SPLIT                = BooleanField('Stack split screen')
+    IMAGE_STACK_MOONMODE             = BooleanField('Moonmode stacking')
+    IMAGE_STACK_DAY                  = BooleanField('Day stacking [debug]')
     BACKUP_DB_PERIOD_DAYS            = IntegerField('DB Backup Frequency (days)', validators=[BACKUP_DB_PERIOD_DAYS_validator])
     IMAGE_EXPIRE_DAYS                = IntegerField('Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])
     IMAGE_RAW_EXPIRE_DAYS            = IntegerField('RAW Image expiration (days)', validators=[DataRequired(), IMAGE_EXPIRE_DAYS_validator])

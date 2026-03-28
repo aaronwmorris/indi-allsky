@@ -352,20 +352,22 @@ class IndiAllSkyConfigBase(object):
             "OPENCV_FONT_SCALE"    : 0.8,
             "PIL_FONT_SIZE"        : 30,
         },
-        "IMAGE_SAVE_FITS"     : True,
-        "IMAGE_SAVE_FITS_PRE_DARK" : False,
-        "IMAGE_SAVE_FITS_PERIOD" : 7200,
-        "IMAGE_EXPORT_RAW"    : "",  # png or tif (or empty)
-        "IMAGE_EXPORT_FOLDER" : "/var/www/html/allsky/images/export",
-        "IMAGE_EXPORT_FLIP_V" : False,
-        "IMAGE_EXPORT_FLIP_H" : False,
-        "IMAGE_STACK_METHOD"  : "maximum",  # maximum, average, or minimum
-        "IMAGE_STACK_COUNT"   : 1,
-        "IMAGE_STACK_ALIGN"   : False,
-        "IMAGE_ALIGN_DETECTSIGMA" : 5,
-        "IMAGE_ALIGN_POINTS" : 50,
+        "IMAGE_SAVE_FITS"           : True,
+        "IMAGE_SAVE_FITS_PRE_DARK"  : False,
+        "IMAGE_SAVE_FITS_PERIOD"    : 7200,
+        "IMAGE_EXPORT_RAW"          : "",  # png or tif (or empty)
+        "IMAGE_EXPORT_FOLDER"       : "/var/www/html/allsky/images/export",
+        "IMAGE_EXPORT_FLIP_V"       : False,
+        "IMAGE_EXPORT_FLIP_H"       : False,
+        "IMAGE_STACK_METHOD"        : "maximum",  # maximum, average, or minimum
+        "IMAGE_STACK_COUNT"         : 1,
+        "IMAGE_STACK_ALIGN"         : False,
+        "IMAGE_ALIGN_DETECTSIGMA"   : 5,
+        "IMAGE_ALIGN_POINTS"        : 50,
         "IMAGE_ALIGN_SOURCEMINAREA" : 10,
-        "IMAGE_STACK_SPLIT"   : False,
+        "IMAGE_STACK_SPLIT"         : False,
+        "IMAGE_STACK_MOONMODE"      : False,
+        "IMAGE_STACK_DAY"           : False,
         "THUMBNAILS" : {
             #"IMAGES_AUTO" : True,  # not used
         },
