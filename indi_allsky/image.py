@@ -1254,6 +1254,11 @@ class ImageWorker(Process):
         self.next_save_fits_time = time.time() + self.next_save_fits_offset
 
 
+        ### Do not write daytime image files if daytime capture is disabled
+        if not self.night_av[constants.NIGHT_NIGHT] and not self.config.get('DAYTIME_CAPTURE_SAVE', True):
+            return
+
+
         data = i_ref.hdulist[0].data
         image_height, image_width = data.shape[:2]
 
@@ -1347,6 +1352,11 @@ class ImageWorker(Process):
 
         if not self.config.get('IMAGE_EXPORT_FOLDER'):
             logger.error('IMAGE_EXPORT_FOLDER not defined')
+            return
+
+
+        ### Do not write daytime image files if daytime capture is disabled
+        if not self.night_av[constants.NIGHT_NIGHT] and not self.config.get('DAYTIME_CAPTURE_SAVE', True):
             return
 
 
