@@ -215,6 +215,11 @@ class IndiAllskyStacker(object):
             except ValueError as e:
                 logger.error('Image registration failure: %s', str(e))
                 continue
+            except TypeError as e:
+                # Not sure why this happens
+                # https://github.com/aaronwmorris/indi-allsky/issues/2815
+                logger.error('Image registration failure: %s', str(e))
+                continue
 
             reg_data_list.append(reg_data)
 
