@@ -7895,6 +7895,8 @@ class JsonImageProcessingView(JsonView):
         p_config['LIGHTGRAPH_OVERLAY']['LABEL']          = bool(request.json['LIGHTGRAPH_OVERLAY__LABEL'])
         p_config['LIGHTGRAPH_OVERLAY']['HOUR_LINES']     = bool(request.json['LIGHTGRAPH_OVERLAY__HOUR_LINES'])
 
+        # allow extended time for stacking/registration
+        p_config['EXPOSURE_PERIOD'] = 120
 
         # disable these
         p_config['ADSB']['ENABLE']                       = False
