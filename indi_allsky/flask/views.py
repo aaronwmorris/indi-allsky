@@ -4621,9 +4621,9 @@ class Fits2JpegView(BaseView):
         )
 
 
-        image_processor.debayer()
+        image_processor.debayer()  # populates self.opencv_data
 
-        image_processor.stack()  # this populates self.image
+        image_processor.stack()  # populates self.image
 
         image_processor.convert_16bit_to_8bit()
 
@@ -8001,9 +8001,9 @@ class JsonImageProcessingView(JsonView):
                 fits_entry.camera,
             )
 
-            image_processor.debayer()
+            image_processor.debayer()  # populates self.opencv_data
 
-            image_processor.stack()  # this populates self.image
+            image_processor.stack()  # populates self.image
 
             image_processor.convert_16bit_to_8bit()
 
@@ -8057,7 +8057,7 @@ class JsonImageProcessingView(JsonView):
                     )
 
                     image_processor._calibrate(i_ref_2)
-                    image_processor._debayer(i_ref_2)
+                    i_ref_2.opencv_data = image_processor._debayer(i_ref_2)  # update opencv_data
 
                 message_list.append('Stacked {0:d} images'.format(p_config['IMAGE_STACK_COUNT']))
 
@@ -8085,9 +8085,9 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.fix_holes_early()
 
-            image_processor.debayer()
+            image_processor.debayer()  # populates self.opencv_data
 
-            image_processor.stack()  # this populates self.image
+            image_processor.stack()  # populates self.image
 
             image_processor.denoise()
 
