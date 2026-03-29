@@ -2876,17 +2876,15 @@ class ImageProcessor(object):
 
 
         # stacking data
-        if self.night_av[constants.NIGHT_NIGHT] and not self.night_av[constants.NIGHT_MOONMODE]:
-            if self.config.get('IMAGE_STACK_COUNT', 1) > 1:
-                label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'average').capitalize()
-                label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
-            else:
-                label_data['stack_method'] = 'Off'
-                label_data['stack_count'] = 0
-        else:
-            # stacking disabled during the day and moonmode
+        if self.night_av[constants.NIGHT_MOONMODE] and not self.config.get('IMAGE_STACK_MOONMODE'):
             label_data['stack_method'] = 'Off'
             label_data['stack_count'] = 0
+        elif not self.night_av[constants.NIGHT_NIGHT] and not self.config.get('IMAGE_STACK_DAY'):
+            label_data['stack_method'] = 'Off'
+            label_data['stack_count'] = 0
+        else:
+            label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'maximum').capitalize()
+            label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
 
 
         # stretching data
