@@ -120,6 +120,7 @@ from .base_views import JsonView
 
 from .youtube_views import YoutubeAuthorizeView
 from .youtube_views import YoutubeCallbackView
+from .youtube_views import YoutubeRefreshAuthView
 from .youtube_views import YoutubeRevokeAuthView
 
 from ..exceptions import ConfigSaveException
@@ -2485,6 +2486,8 @@ class ConfigView(FormView):
             'IMAGE_ALIGN_POINTS'             : self.indi_allsky_config.get('IMAGE_ALIGN_POINTS', 50),
             'IMAGE_ALIGN_SOURCEMINAREA'      : self.indi_allsky_config.get('IMAGE_ALIGN_SOURCEMINAREA', 10),
             'IMAGE_STACK_SPLIT'              : self.indi_allsky_config.get('IMAGE_STACK_SPLIT', False),
+            'IMAGE_STACK_MOONMODE'           : self.indi_allsky_config.get('IMAGE_STACK_MOONMODE', False),
+            'IMAGE_STACK_DAY'                : self.indi_allsky_config.get('IMAGE_STACK_DAY', False),
             'IMAGE_QUEUE_MAX'                : self.indi_allsky_config.get('IMAGE_QUEUE_MAX', 3),
             'IMAGE_QUEUE_MIN'                : self.indi_allsky_config.get('IMAGE_QUEUE_MIN', 1),
             'IMAGE_QUEUE_BACKOFF'            : self.indi_allsky_config.get('IMAGE_QUEUE_BACKOFF', 0.5),
@@ -3504,6 +3507,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['IMAGE_ALIGN_POINTS']                   = int(request.json['IMAGE_ALIGN_POINTS'])
         self.indi_allsky_config['IMAGE_ALIGN_SOURCEMINAREA']            = int(request.json['IMAGE_ALIGN_SOURCEMINAREA'])
         self.indi_allsky_config['IMAGE_STACK_SPLIT']                    = bool(request.json['IMAGE_STACK_SPLIT'])
+        self.indi_allsky_config['IMAGE_STACK_MOONMODE']                 = bool(request.json['IMAGE_STACK_MOONMODE'])
+        self.indi_allsky_config['IMAGE_STACK_DAY']                      = bool(request.json['IMAGE_STACK_DAY'])
         self.indi_allsky_config['IMAGE_QUEUE_MAX']                      = int(request.json['IMAGE_QUEUE_MAX'])
         self.indi_allsky_config['IMAGE_QUEUE_MIN']                      = int(request.json['IMAGE_QUEUE_MIN'])
         self.indi_allsky_config['IMAGE_QUEUE_BACKOFF']                  = float(request.json['IMAGE_QUEUE_BACKOFF'])
@@ -4619,9 +4624,9 @@ class Fits2JpegView(BaseView):
         )
 
 
-        image_processor.debayer()
+        image_processor.debayer()  # populates self.opencv_data
 
-        image_processor.stack()  # this populates self.image
+        image_processor.stack()  # populates self.image
 
         image_processor.convert_16bit_to_8bit()
 
@@ -7893,6 +7898,8 @@ class JsonImageProcessingView(JsonView):
         p_config['LIGHTGRAPH_OVERLAY']['LABEL']          = bool(request.json['LIGHTGRAPH_OVERLAY__LABEL'])
         p_config['LIGHTGRAPH_OVERLAY']['HOUR_LINES']     = bool(request.json['LIGHTGRAPH_OVERLAY__HOUR_LINES'])
 
+        # allow extended time for stacking/registration
+        p_config['EXPOSURE_PERIOD'] = 120
 
         # disable these
         p_config['ADSB']['ENABLE']                       = False
@@ -7999,9 +8006,9 @@ class JsonImageProcessingView(JsonView):
                 fits_entry.camera,
             )
 
-            image_processor.debayer()
+            image_processor.debayer()  # populates self.opencv_data
 
-            image_processor.stack()  # this populates self.image
+            image_processor.stack()  # populates self.image
 
             image_processor.convert_16bit_to_8bit()
 
@@ -8055,7 +8062,7 @@ class JsonImageProcessingView(JsonView):
                     )
 
                     image_processor._calibrate(i_ref_2)
-                    image_processor._debayer(i_ref_2)
+                    i_ref_2.opencv_data = image_processor._debayer(i_ref_2)  # update opencv_data
 
                 message_list.append('Stacked {0:d} images'.format(p_config['IMAGE_STACK_COUNT']))
 
@@ -8083,9 +8090,9 @@ class JsonImageProcessingView(JsonView):
 
             image_processor.fix_holes_early()
 
-            image_processor.debayer()
+            image_processor.debayer()  # populates self.opencv_data
 
-            image_processor.stack()  # this populates self.image
+            image_processor.stack()  # populates self.image
 
             image_processor.denoise()
 
@@ -11775,6 +11782,7 @@ bp_allsky.add_url_rule('/ajax/uploadyoutube', view_func=AjaxUploadYoutubeView.as
 # youtube
 bp_allsky.add_url_rule('/youtube/authorize', view_func=YoutubeAuthorizeView.as_view('youtube_authorize_view'))
 bp_allsky.add_url_rule('/youtube/oauth2callback', view_func=YoutubeCallbackView.as_view('youtube_oauth2callback_view'))
+bp_allsky.add_url_rule('/youtube/oauth2refresh', view_func=YoutubeRefreshAuthView.as_view('youtube_oauth2refresh_view'))
 bp_allsky.add_url_rule('/youtube/oauth2revoke', view_func=YoutubeRevokeAuthView.as_view('youtube_oauth2revoke_view'))
 
 # redirects

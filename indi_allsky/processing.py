@@ -140,7 +140,7 @@ class ImageProcessor(object):
 
         self.focus_mode = self.config.get('FOCUS_MODE', False)
 
-        self.stack_method = self.config.get('IMAGE_STACK_METHOD', 'average')
+        self.stack_method = self.config.get('IMAGE_STACK_METHOD', 'maximum')
         self.stack_count = self.config.get('IMAGE_STACK_COUNT', 1)
 
         self._text_color_rgb = [0, 0, 0]
@@ -428,13 +428,19 @@ class ImageProcessor(object):
         self._check_astro_darkness()
 
 
-        if self.night_av[constants.NIGHT_NIGHT] and not self.night_av[constants.NIGHT_MOONMODE]:
+        if self.night_av[constants.NIGHT_MOONMODE] and not self.config.get('IMAGE_STACK_MOONMODE'):
+            # disable stacking during moonmode
+            self.image_list.clear()
+        elif not self.night_av[constants.NIGHT_NIGHT] and not self.config.get('IMAGE_STACK_DAY'):
+            # disable stacking during daytime
+            self.image_list.clear()
+        else:
+            if not self.night_av[constants.NIGHT_NIGHT] and self.config.get('IMAGE_STACK_DAY'):
+                logger.warning('DAYTIME STACKING IS ENABLED')
+
             # just in case the array grows beyond the desired size
             while len(self.image_list) >= self.stack_count:
                 self.image_list.pop()
-        else:
-            # disable stacking during daytime and moonmode
-            self.image_list.clear()
 
 
         i_ref = self._add(filename, exposure, gain, binning, exp_date, exp_elapsed, camera)
@@ -2869,17 +2875,15 @@ class ImageProcessor(object):
 
 
         # stacking data
-        if self.night_av[constants.NIGHT_NIGHT] and not self.night_av[constants.NIGHT_MOONMODE]:
-            if self.config.get('IMAGE_STACK_COUNT', 1) > 1:
-                label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'average').capitalize()
-                label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
-            else:
-                label_data['stack_method'] = 'Off'
-                label_data['stack_count'] = 0
-        else:
-            # stacking disabled during the day and moonmode
+        if self.night_av[constants.NIGHT_MOONMODE] and not self.config.get('IMAGE_STACK_MOONMODE'):
             label_data['stack_method'] = 'Off'
             label_data['stack_count'] = 0
+        elif not self.night_av[constants.NIGHT_NIGHT] and not self.config.get('IMAGE_STACK_DAY'):
+            label_data['stack_method'] = 'Off'
+            label_data['stack_count'] = 0
+        else:
+            label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'maximum').capitalize()
+            label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
 
 
         # stretching data
