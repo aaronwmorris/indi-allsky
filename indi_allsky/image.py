@@ -1263,10 +1263,25 @@ class ImageWorker(Process):
         image_height, image_width = data.shape[:2]
 
 
-        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
+        if self.config.get('IMAGE_SAVE_FITS_COMPRESSED'):
+            import gzip
 
-        i_ref.hdulist.writeto(f_tmpfile)
+            fits_image_buffer = io.BytesIO()
+            i_ref.hdulist.writeto(fits_image_buffer)
+
+            f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit.gz')
+            f_tmpfile.write(gzip.compress(fits_image_buffer.getbuffer()))
+
+            fits_ext = 'fit.gz'
+        else:
+            f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
+            i_ref.hdulist.writeto(f_tmpfile)
+
+            fits_ext = 'fit'
+
+
         f_tmpfile.close()
+
 
         tmpfile_p = Path(f_tmpfile.name)
 
@@ -1277,7 +1292,7 @@ class ImageWorker(Process):
         filename = folder.joinpath(self.filename_t.format(
             i_ref.camera_id,
             date_str,
-            'fit',
+            fits_ext,  # defined above
         ))
 
 

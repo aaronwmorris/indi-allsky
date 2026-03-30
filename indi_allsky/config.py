@@ -353,6 +353,7 @@ class IndiAllSkyConfigBase(object):
             "PIL_FONT_SIZE"        : 30,
         },
         "IMAGE_SAVE_FITS"           : True,
+        "IMAGE_SAVE_FITS_COMPRESSED": False,
         "IMAGE_SAVE_FITS_PRE_DARK"  : False,
         "IMAGE_SAVE_FITS_PERIOD"    : 7200,
         "IMAGE_EXPORT_RAW"          : "",  # png or tif (or empty)
