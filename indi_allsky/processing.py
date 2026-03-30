@@ -435,7 +435,7 @@ class ImageProcessor(object):
             # disable stacking during daytime
             self.image_list.clear()
         else:
-            if not self.night_av[constants.NIGHT_NIGHT] and self.config.get('IMAGE_STACK_DAY'):
+            if self.stack_count > 1 and not self.night_av[constants.NIGHT_NIGHT] and self.config.get('IMAGE_STACK_DAY'):
                 logger.warning('DAYTIME STACKING IS ENABLED')
 
             # just in case the array grows beyond the desired size
@@ -2899,8 +2899,12 @@ class ImageProcessor(object):
             label_data['stack_method'] = 'Off'
             label_data['stack_count'] = 0
         else:
-            label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'maximum').capitalize()
-            label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
+            if self.stack_count > 1:
+                label_data['stack_method'] = self.config.get('IMAGE_STACK_METHOD', 'maximum').capitalize()
+                label_data['stack_count'] = self.config.get('IMAGE_STACK_COUNT', 1)
+            else:
+                label_data['stack_method'] = 'Off'
+                label_data['stack_count'] = 0
 
 
         # stretching data
