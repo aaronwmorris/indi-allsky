@@ -4,6 +4,7 @@
 
 {% block head %}
 <meta charset="UTF-8">
+<link rel="stylesheet" href="{{ url_for('indi_allsky.static', filename='css/allsky_player.css', v='1') }}">
 <style>
 .fit {
     max-width: 100%;
@@ -28,6 +29,7 @@ var camera_id = {{ camera_id }};
 var refreshInterval = {{ refreshInterval | int }};
 var night = {{ night }};
 var fullscreen = false;  //initial state
+var player = null;  // AllskyPlayer instance
 
 function init() {
     loadNextImage();
@@ -43,9 +45,12 @@ async function loop() {
 
     img = new Image();
     img.onload = function() {
-        $('#latest-image').attr({
-            'src': this.src,
-        });
+        // Only update the static image if player is not in live mode
+        if (!liveLoopActive) {
+            $('#latest-image').attr({
+                'src': this.src,
+            });
+        }
     };
 
 
@@ -56,14 +61,18 @@ async function loop() {
 
 
 function showImage(entry) {
-    console.log('Showing image ' + entry["url"]);
-    img.src = entry["url"];
+    if (!liveLoopActive) {
+        console.log('Showing image ' + entry["url"]);
+        img.src = entry["url"];
+    }
 }
 
 
 function loadNextImage() {
-    console.log('Loading next image');
-    loadJS("{{ url_for(latest_image_view) }}", {'camera_id' : camera_id, 'limit_s' : max_age, 'night' : night}, function() {});
+    if (!liveLoopActive) {
+        console.log('Loading next image');
+        loadJS("{{ url_for(latest_image_view) }}", {'camera_id' : camera_id, 'limit_s' : max_age, 'night' : night}, function() {});
+    }
     setTimeout(loadNextImage, refreshInterval);
 }
 
@@ -150,14 +159,42 @@ function closeFullscreen() {
 
 
 $( document ).ready(function() {
+    // Initialize AllskyPlayer on the player container
+    var playerContainer = document.getElementById('allsky-player-container');
+    if (playerContainer) {
+        player = new AllskyPlayer({
+            container: playerContainer,
+            wsUrl: '/indi-allsky/api/stream/ws',
+            feedUrl: '/indi-allsky/api/stream/feed.mjpeg',
+            metadataUrl: '/indi-allsky/api/stream/metadata',
+            preferWs: true,
+            onstatuschange: function(online) {
+                if (!online && liveLoopActive) {
+                    $('#live-status').text('Stream disconnected');
+                }
+            },
+            onmetadata: function(meta) {
+                // Could update dashboard elements here
+            },
+        });
+        // Auto-connect the live stream on page load
+        player.connect();
+        liveLoopActive = true;
+    }
+
+    // Click on static image for fullscreen (when not in live mode)
     $('#latest-image').on("click", function() {
-        goFullscreen(this);
+        if (!liveLoopActive) {
+            goFullscreen(this);
+        }
     });
 
     init();
 });
 
 </script>
+<script src="{{ url_for('indi_allsky.static', filename='js/allsky_player.js', v='1') }}"></script>
+<script src="{{ url_for('indi_allsky.static', filename='js/capture_buttons.js', v='8') }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -165,9 +202,25 @@ $( document ).ready(function() {
     <div class="row">
         <div class="text-muted text-center" id="message">Loading...</div>
     </div>
+    <div class="row mb-2">
+        <div class="col-12 text-center">
+            <button id="btn-capture-one" class="btn btn-outline-info btn-sm me-2" onclick="captureOne()">Capture One</button>
+            <button id="btn-live-loop" class="btn btn-outline-success btn-sm me-2" onclick="toggleLiveLoop()">Live View</button>
+            <button class="btn btn-outline-secondary btn-sm me-2" data-bs-toggle="collapse" data-bs-target="#slider-panel-wrap">Camera Settings</button>
+            <span id="live-status" class="text-muted small"></span>
+        </div>
+    </div>
+    <div class="collapse" id="slider-panel-wrap">
+        <div class="card card-body bg-dark border-success p-2 mb-2">
+            <div id="slider-panel"></div>
+        </div>
+    </div>
     <div class="row h-75 align-items-center">
         <div class="col-12 text-center">
-            <img id="latest-image" class="fit">
+            <!-- AllskyPlayer container (live stream) -->
+            <div id="allsky-player-container"></div>
+            <!-- Static latest image (hidden when live stream is active) -->
+            <img id="latest-image" class="fit" style="display:none">
         </div>
     </div>
 </div>
