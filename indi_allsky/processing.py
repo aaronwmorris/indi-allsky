@@ -469,8 +469,21 @@ class ImageProcessor(object):
             self._keogram_store_metadata_p = self.varlib_folder_p.joinpath(self._keogram_store_metadata_tmpl.format(camera.id))
 
 
+        filename_str = str(filename_p)
+        if filename_str.endswith(('.fit', '.fits', '.fit.gz', 'fits.gz')):
+            image_type = 'FITS'
+        elif filename_str.endswith('.dng'):
+            image_type = 'DNG'
+        elif filename_str.endswith(('.jpg', '.jpeg')):
+            image_type = 'JPEG'
+        elif filename_str.endswith('.png'):
+            image_type = 'PNG'
+        else:
+            raise Exception('Unsupported image format: {0:s}'.format(filename_str))
+
+
         ### Open file
-        if filename_p.suffix in ['.fit', '.fits']:
+        if image_type == 'FITS':
             try:
                 hdulist = fits.open(filename_p)
             except OSError as e:
@@ -498,7 +511,7 @@ class ImageProcessor(object):
             if isinstance(hdulist[0].header.get('GAIN'), type(None)):
                 logger.warning('FITS gain is not populated')
                 hdulist[0].header['GAIN'] = float(gain)
-        elif filename_p.suffix in ['.jpg', '.jpeg']:
+        elif image_type == 'JPEG':
             ### OpenCV
             #data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
@@ -578,7 +591,7 @@ class ImageProcessor(object):
             if camera.owner:
                 hdulist[0].header['ORIGIN'] = camera.owner
 
-        elif filename_p.suffix in ['.png']:
+        elif image_type == 'PNG':
             # PNGs may be 16-bit, use OpenCV
             data = cv2.imread(str(filename_p), cv2.IMREAD_UNCHANGED)
 
@@ -641,7 +654,7 @@ class ImageProcessor(object):
             if camera.owner:
                 hdulist[0].header['ORIGIN'] = camera.owner
 
-        elif filename_p.suffix in ['.dng']:
+        elif image_type == 'DNG':
             if not rawpy:
                 raise Exception('*** rawpy module not available ***')
 
@@ -708,6 +721,9 @@ class ImageProcessor(object):
             image_xbayroff = 0
             image_ybayroff = 0
             image_roworder = 'na'
+
+        else:
+            raise Exception('Unsupported image type: {0:s}'.format(image_type))
 
 
         # Override these
