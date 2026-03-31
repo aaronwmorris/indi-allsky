@@ -244,7 +244,7 @@ class miscDb(object):
         try:
             fileSize = filename_p.stat().st_size
         except FileNotFoundError:
-            fileSize = 0
+            fileSize = None
 
 
         if isinstance(metadata['createDate'], (int, float)):
@@ -336,7 +336,7 @@ class miscDb(object):
         try:
             fileSize = filename_p.stat().st_size
         except FileNotFoundError:
-            fileSize = 0
+            fileSize = None
 
 
         if isinstance(metadata['createDate'], (int, float)):
@@ -407,7 +407,7 @@ class miscDb(object):
         try:
             fileSize = filename_p.stat().st_size
         except FileNotFoundError:
-            fileSize = 0
+            fileSize = None
 
 
         if isinstance(metadata['createDate'], (int, float)):
@@ -845,7 +845,7 @@ class miscDb(object):
         try:
             fileSize = filename_p.stat().st_size
         except FileNotFoundError:
-            fileSize = 0
+            fileSize = None
 
 
         if isinstance(metadata['createDate'], (int, float)):
@@ -914,7 +914,7 @@ class miscDb(object):
         try:
             fileSize = filename_p.stat().st_size
         except FileNotFoundError:
-            fileSize = 0
+            fileSize = None
 
 
         if isinstance(metadata['createDate'], (int, float)):
@@ -983,7 +983,7 @@ class miscDb(object):
         try:
             fileSize = filename_p.stat().st_size
         except FileNotFoundError:
-            fileSize = 0
+            fileSize = None
 
 
         if isinstance(metadata['createDate'], (int, float)):
@@ -1343,7 +1343,7 @@ class miscDb(object):
         try:
             fileSize = thumbnail_filename_p.stat().st_size
         except FileNotFoundError:
-            fileSize = 0
+            fileSize = None
 
 
         thumbnail_entry = IndiAllSkyDbThumbnailTable(
@@ -1395,7 +1395,7 @@ class miscDb(object):
         try:
             fileSize = filename_p.stat().st_size
         except FileNotFoundError:
-            fileSize = 0
+            fileSize = None
 
 
         if isinstance(thumbnail_metadata['createDate'], (int, float)):

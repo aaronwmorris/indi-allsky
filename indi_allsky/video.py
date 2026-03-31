@@ -478,7 +478,7 @@ class VideoWorker(Process):
             try:
                 fileSize = video_file.stat().st_size
             except FileNotFoundError:
-                fileSize = 0
+                fileSize = None
 
 
             video_entry.fileSize = fileSize
@@ -768,7 +768,7 @@ class VideoWorker(Process):
             try:
                 fileSize = video_file.stat().st_size
             except FileNotFoundError:
-                fileSize = 0
+                fileSize = None
 
 
             mini_video_entry.fileSize = fileSize
@@ -1031,7 +1031,7 @@ class VideoWorker(Process):
             try:
                 fileSize = video_file.stat().st_size
             except FileNotFoundError:
-                fileSize = 0
+                fileSize = None
 
 
             video_entry.fileSize = fileSize
@@ -1508,7 +1508,7 @@ class VideoWorker(Process):
         try:
             k_fileSize = keogram_file.stat().st_size
         except FileNotFoundError:
-            k_fileSize = 0
+            k_fileSize = None
 
 
         keogram_entry.fileSize = k_fileSize
@@ -1554,7 +1554,7 @@ class VideoWorker(Process):
             try:
                 st_fileSize = startrail_file.stat().st_size
             except FileNotFoundError:
-                st_fileSize = 0
+                st_fileSize = None
 
 
             startrail_entry.fileSize = st_fileSize
@@ -1618,7 +1618,7 @@ class VideoWorker(Process):
                     try:
                         stv_fileSize = startrail_video_file.stat().st_size
                     except FileNotFoundError:
-                        stv_fileSize = 0
+                        stv_fileSize = None
 
 
                     startrail_video_entry.fileSize = stv_fileSize
