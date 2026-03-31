@@ -9746,9 +9746,13 @@ class FileStorageView(TemplateView):
             func.sum(table.fileSize).label('dayDate_sum'),
             table.night,
             func.count(table.id).label('file_count'),
+            func.sum(IndiAllSkyDbThumbnailTable.fileSize).label('thumbnail_sum'),
+            func.count(IndiAllSkyDbThumbnailTable.id).label('thumbnail_count'),
         )\
             .join(table.camera)\
+            .join(IndiAllSkyDbThumbnailTable)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbThumbnailTable.uuid == table.thumbnail_uuid)\
             .filter(table.fileSize != sa_null())\
             .group_by(table.dayDate, table.night)\
             .order_by(table.dayDate.desc())
@@ -9795,7 +9799,7 @@ class FileStorageView(TemplateView):
 
 
             # ensure initial 0 values for all types
-            for x in ['Images', 'Panoramas', 'Timelapses', 'Panorama Timelapses', 'Keograms', 'Star Trails', 'Star Trail Timelapses']:
+            for x in ['Images', 'Panoramas', 'Timelapses', 'Panorama Timelapses', 'Keograms', 'Star Trails', 'Star Trail Timelapses', 'Thumbnails']:
                 if not file_dict[dayDate_str][tod].get(x):
                     file_dict[dayDate_str][tod][x] = {
                         'fileSize' : 0,
@@ -9809,11 +9813,20 @@ class FileStorageView(TemplateView):
             }
 
 
-            day_size += file_data['fileSize']
-            day_count += file_data['count']
+            thumbnail_sum = day.thumbnail_sum if day.thumbnail_sum else 0
+            thumbnail_count = day.thumbnail_count
 
 
             file_dict[dayDate_str][tod][label] = file_data
+            file_dict[dayDate_str][tod]['Thumbnails']['fileSize'] += thumbnail_sum
+            file_dict[dayDate_str][tod]['Thumbnails']['count'] += thumbnail_count
+
+
+            day_size += file_data['fileSize']
+            day_size += thumbnail_sum
+
+            day_count += file_data['count']
+            day_count += thumbnail_count
 
 
             # totals for time of day
