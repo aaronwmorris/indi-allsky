@@ -4542,6 +4542,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FISH2PANO__PIL_FONT_SIZE         = IntegerField('Font Size (pillow)', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
     IMAGE_SAVE_FITS                  = BooleanField('Save FITS data')
     IMAGE_SAVE_FITS_PERIOD           = SelectField('Periodically save FITS', choices=IMAGE_SAVE_FITS_PERIOD_choices, validators=[IMAGE_SAVE_FITS_PERIOD_validator])
+    IMAGE_SAVE_FITS_COMPRESSED       = BooleanField('Compress FITS')
     NIGHT_GRAYSCALE                  = BooleanField('Save in Grayscale at Night')
     DAYTIME_GRAYSCALE                = BooleanField('Save in Grayscale during Day')
     MOON_OVERLAY__ENABLE             = BooleanField('Enable Moon Overlay')

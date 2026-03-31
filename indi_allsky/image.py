@@ -1263,12 +1263,31 @@ class ImageWorker(Process):
         image_height, image_width = data.shape[:2]
 
 
-        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
+        if self.config.get('IMAGE_SAVE_FITS_COMPRESSED'):
+            import gzip
 
-        i_ref.hdulist.writeto(f_tmpfile)
+            fits_image_buffer = io.BytesIO()
+            i_ref.hdulist.writeto(fits_image_buffer)
+
+            f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit.gz')
+            f_tmpfile.write(gzip.compress(fits_image_buffer.getbuffer()))
+
+            fits_ext = 'fit.gz'
+        else:
+            f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
+            i_ref.hdulist.writeto(f_tmpfile)
+
+            fits_ext = 'fit'
+
+
         f_tmpfile.close()
 
+
         tmpfile_p = Path(f_tmpfile.name)
+
+
+        fits_size_bytes = tmpfile_p.stat().st_size
+        logger.info('FITS image file size: %0.1f MB', fits_size_bytes / 1024 / 1024)
 
 
         date_str = i_ref.exp_date.strftime('%Y%m%d_%H%M%S')
@@ -1277,7 +1296,7 @@ class ImageWorker(Process):
         filename = folder.joinpath(self.filename_t.format(
             i_ref.camera_id,
             date_str,
-            'fit',
+            fits_ext,  # defined above
         ))
 
 
@@ -1341,6 +1360,7 @@ class ImageWorker(Process):
         #os.utime(str(filename), (i_ref.exp_date.timestamp(), i_ref.exp_date.timestamp()))
 
         tmpfile_p.unlink()
+
 
         self._miscUpload.s3_upload_fits(fits_entry, fits_metadata)
         self._miscUpload.upload_fits_image(fits_entry)

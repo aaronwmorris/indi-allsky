@@ -2443,6 +2443,7 @@ class ConfigView(FormView):
             'FISH2PANO__OPENCV_FONT_SCALE'   : self.indi_allsky_config.get('FISH2PANO', {}).get('OPENCV_FONT_SCALE', 0.8),
             'FISH2PANO__PIL_FONT_SIZE'       : self.indi_allsky_config.get('FISH2PANO', {}).get('PIL_FONT_SIZE', 30),
             'IMAGE_SAVE_FITS'                : self.indi_allsky_config.get('IMAGE_SAVE_FITS', False),
+            'IMAGE_SAVE_FITS_COMPRESSED'     : self.indi_allsky_config.get('IMAGE_SAVE_FITS_COMPRESSED', False),
             'IMAGE_SAVE_FITS_PERIOD'         : str(self.indi_allsky_config.get('IMAGE_SAVE_FITS_PERIOD', 7200)),  # string in form, int in config
             'NIGHT_GRAYSCALE'                : self.indi_allsky_config.get('NIGHT_GRAYSCALE', False),
             'DAYTIME_GRAYSCALE'              : self.indi_allsky_config.get('DAYTIME_GRAYSCALE', False),
@@ -3462,6 +3463,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FISH2PANO']['OPENCV_FONT_SCALE']       = float(request.json['FISH2PANO__OPENCV_FONT_SCALE'])
         self.indi_allsky_config['FISH2PANO']['PIL_FONT_SIZE']           = int(request.json['FISH2PANO__PIL_FONT_SIZE'])
         self.indi_allsky_config['IMAGE_SAVE_FITS']                      = bool(request.json['IMAGE_SAVE_FITS'])
+        self.indi_allsky_config['IMAGE_SAVE_FITS_COMPRESSED']           = bool(request.json['IMAGE_SAVE_FITS_COMPRESSED'])
         self.indi_allsky_config['IMAGE_SAVE_FITS_PERIOD']               = int(request.json['IMAGE_SAVE_FITS_PERIOD'])
         self.indi_allsky_config['NIGHT_GRAYSCALE']                      = bool(request.json['NIGHT_GRAYSCALE'])
         self.indi_allsky_config['DAYTIME_GRAYSCALE']                    = bool(request.json['DAYTIME_GRAYSCALE'])

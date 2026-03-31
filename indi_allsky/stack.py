@@ -185,7 +185,7 @@ class IndiAllskyStacker(object):
                     if rotation > (rotation_mean + rotation_stddev_limit)\
                             or rotation < (rotation_mean - rotation_stddev_limit):
 
-                        logger.error('Rotation exceeded limit of +/- %0.8f', rotation_stddev_limit)
+                        logger.error('Rotation %0.8f exceeded limit of +/- %0.8f', rotation, rotation_stddev_limit)
                         last_rotation += rotation_mean  # skipping a frame, need to account for rotation difference
                         continue
 

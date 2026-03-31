@@ -193,8 +193,12 @@ class SensorBase(object):
 
 
     def lux2mag(self, lux):
-        raw_mag = (math.log10(lux) * 2.5) * -1
-        logger.warning('Lux Raw Magnitude: %0.2f', raw_mag)
+        try:
+            raw_mag = (math.log10(lux) * 2.5) * -1
+            logger.warning('Lux Raw Magnitude: %0.2f', raw_mag)
+        except ValueError as e:
+            logger.error('ValueError: %s', str(e))
+            raw_mag = 0.0
 
         return self._lux_magnitude_offset + raw_mag, raw_mag  # array, raw_mag is negative
 

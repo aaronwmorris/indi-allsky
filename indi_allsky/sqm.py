@@ -68,7 +68,11 @@ class IndiAllskySqm(object):
     def magnitudeSqm(self, i_ref):
         sqm_avg = self.averageAdu(i_ref)
 
-        raw_mag = (math.log10(sqm_avg) * 2.5) * -1
+        try:
+            raw_mag = (math.log10(sqm_avg) * 2.5) * -1
+        except ValueError as e:
+            logger.error('ValueError: %s', str(e))
+            raw_mag = 0.0
 
         mag_sqm = self._magnitude_offset + raw_mag  # raw_mag is negative
 
