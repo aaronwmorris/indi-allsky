@@ -9676,13 +9676,13 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
         return jsonify(message)
 
 
-class FileStorageView(TemplateView):
+class FileSpaceUsageView(TemplateView):
     decorators = [login_required]
 
-    page_title = 'File Storage'
+    page_title = 'File Space Usage'
 
     def get_context(self):
-        context = super(FileStorageView, self).get_context()
+        context = super(FileSpaceUsageView, self).get_context()
 
 
         total_size = 0
@@ -11931,6 +11931,7 @@ bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', 
 bp_allsky.add_url_rule('/mask', view_func=MaskView.as_view('mask_view', template_name='mask.html'))
 bp_allsky.add_url_rule('/camerasimulator', view_func=CameraSimulatorView.as_view('camera_simulator_view', template_name='camera_simulator.html'))
 bp_allsky.add_url_rule('/imagecirclehelper', view_func=ImageCircleHelperView.as_view('image_circle_helper_view', template_name='imagecirclehelper.html'))
+bp_allsky.add_url_rule('/filespaceusage', view_func=FileSpaceUsageView.as_view('filespaceusage_view', template_name='filespaceusage.html'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 
@@ -11977,4 +11978,3 @@ bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view',
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
-bp_allsky.add_url_rule('/filestorage', view_func=FileStorageView.as_view('filestorage_view', template_name='filestorage.html'))

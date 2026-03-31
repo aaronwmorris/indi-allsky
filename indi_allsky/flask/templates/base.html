@@ -137,6 +137,10 @@
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/stopwatch.svg') }}" width="16" height="16" alt="Image Lag"><span class="ms-1 d-none d-sm-inline">Image Lag</span></a>
                             </li>
                             <li>
+                                <a href="{{ url_for('indi_allsky.filespaceusage_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/flag.svg') }}" width="16" height="16" alt="File Space Usage"><span class="ms-1 d-none d-sm-inline">File Space Usage</span></a>
+                            </li>
+                            <li>
                                 <a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/camera-fill.svg') }}" width="16" height="16" alt="Camera Info"><span class="ms-1 d-none d-sm-inline">Camera Info</span></a>
                             </li>
