@@ -482,6 +482,9 @@ class VideoWorker(Process):
 
 
             video_entry.fileSize = fileSize
+            video_metadata['fileSize'] = fileSize
+
+
             video_entry.success = True
             db.session.commit()
         except TimelapseException:
@@ -735,6 +738,10 @@ class VideoWorker(Process):
         )
 
 
+        # populate fileSize
+        mini_video_thumbnail_metadata['fileSize'] = mini_video_thumbnail_entry.fileSize
+
+
         if self.config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True):
             bitrate = self.config.get('FFMPEG_BITRATE', '5000k')
             vf_scale = self.config.get('FFMPEG_VFSCALE', '')
@@ -772,6 +779,9 @@ class VideoWorker(Process):
 
 
             mini_video_entry.fileSize = fileSize
+            mini_video_metadata['fileSize'] = fileSize
+
+
             mini_video_entry.success = True
             db.session.commit()
         except TimelapseException:
@@ -1035,6 +1045,9 @@ class VideoWorker(Process):
 
 
             video_entry.fileSize = fileSize
+            video_metadata['fileSize'] = fileSize
+
+
             video_entry.success = True
             db.session.commit()
         except TimelapseException:
@@ -1512,6 +1525,9 @@ class VideoWorker(Process):
 
 
         keogram_entry.fileSize = k_fileSize
+        keogram_metadata['fileSize'] = k_fileSize
+
+
         keogram_entry.success = True
         db.session.commit()
 
@@ -1536,6 +1552,10 @@ class VideoWorker(Process):
         )
 
 
+        # populate fileSize
+        keogram_thumbnail_metadata['fileSize'] = keogram_thumbnail_entry.fileSize
+
+
         if night:
             stg.finalize(startrail_file, camera)
 
@@ -1558,6 +1578,9 @@ class VideoWorker(Process):
 
 
             startrail_entry.fileSize = st_fileSize
+            startrail_metadata['fileSize'] = st_fileSize
+
+
             startrail_entry.success = True
             db.session.commit()
 
@@ -1580,6 +1603,10 @@ class VideoWorker(Process):
                 new_width=self.thumbnail_startrail_width,
                 opt_height=self.thumbnail_startrail_height_opt,
             )
+
+
+            # populate fileSize
+            startrail_thumbnail_metadata['fileSize'] = startrail_thumbnail_entry.fileSize
 
 
             st_frame_count = stg.timelapse_frame_count
@@ -1622,6 +1649,9 @@ class VideoWorker(Process):
 
 
                     startrail_video_entry.fileSize = stv_fileSize
+                    startrail_video_metadata['fileSize'] = stv_fileSize
+
+
                     startrail_video_entry.success = True
                     db.session.commit()
                 except TimelapseException:
