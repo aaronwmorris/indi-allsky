@@ -9714,16 +9714,18 @@ class FileStorageView(TemplateView):
         total_count += panorama_videos_total_count
 
 
-        days_fileSize_keograms = self.get_table_fileSize(IndiAllSkyDbKeogramTable, self.camera.id)
-        keograms_total_size, keograms_total_count = self.update_dict(file_data_dict, days_fileSize_keograms, 'Keograms')
-        total_size += keograms_total_size
-        total_count += keograms_total_count
+        # keograms are not a significant usage of sapce
+        #days_fileSize_keograms = self.get_table_fileSize(IndiAllSkyDbKeogramTable, self.camera.id)
+        #keograms_total_size, keograms_total_count = self.update_dict(file_data_dict, days_fileSize_keograms, 'Keograms')
+        #total_size += keograms_total_size
+        #total_count += keograms_total_count
 
 
-        days_fileSize_startrails = self.get_table_fileSize(IndiAllSkyDbStarTrailsTable, self.camera.id)
-        startrails_total_size, startrails_total_count = self.update_dict(file_data_dict, days_fileSize_startrails, 'Star Trails')
-        total_size += startrails_total_size
-        total_count += startrails_total_count
+        # startrails are not a significant usage of sapce
+        #days_fileSize_startrails = self.get_table_fileSize(IndiAllSkyDbStarTrailsTable, self.camera.id)
+        #startrails_total_size, startrails_total_count = self.update_dict(file_data_dict, days_fileSize_startrails, 'Star Trails')
+        #total_size += startrails_total_size
+        #total_count += startrails_total_count
 
 
         days_fileSize_startrail_videos = self.get_table_fileSize(IndiAllSkyDbStarTrailsVideoTable, self.camera.id)

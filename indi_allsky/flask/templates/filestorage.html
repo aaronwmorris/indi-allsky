@@ -25,8 +25,6 @@ var camera_id = {{ camera_id }};
         <th>Panoramas</th>
         <th>Timelapses</th>
         <th>Panorama Timelapses</th>
-        <th>Keograms</th>
-        <th>Star Trails</th>
         <th>Star Trail Timelapses</th>
         <th>Thumbnails</th>
         <th>Total</th>
@@ -38,7 +36,7 @@ var camera_id = {{ camera_id }};
           <tr>
             <td>{{ day }}</td>
               <td>{{ tod }}</td>
-                  {% for asset in ['Images', 'Panoramas', 'Timelapses', 'Panorama Timelapses', 'Keograms', 'Star Trails', 'Star Trail Timelapses', 'Thumbnails'] %}
+                  {% for asset in ['Images', 'Panoramas', 'Timelapses', 'Panorama Timelapses', 'Star Trail Timelapses', 'Thumbnails'] %}
                   <td>{{ "%0.1f" | format(tod_data[asset]['fileSize'] / 1024 / 1024 / 1024) }} GB [{{ tod_data[asset]['count'] }}]</td>
                   {% endfor %}
               <td>{{ "%0.1f" | format(tod_data['tod_fileSize'] / 1024 / 1024 / 1024) }} GB</td>
