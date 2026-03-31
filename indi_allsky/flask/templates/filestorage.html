@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ website_title }}: {{ page_title }}{% endblock %}
+
+{% block head %}
+<style>
+</style>
+<link href="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('indi_allsky.static', filename='DataTables/datatables.min.js') }}"></script>
+<script type="text/javascript">
+var camera_id = {{ camera_id }};
+</script>
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+<div class="row">
+  <table id="images-table" class="table table-striped compact" data-bs-theme="dark">
+    <thead>
+      <tr>
+        <th>Day</th>
+        <th>ToD</th>
+        <th>Images</th>
+        <th>Panoramas</th>
+        <th>Timelapses</th>
+        <th>Panorama Timelapses</th>
+        <th>Keograms</th>
+        <th>Star Trails</th>
+        <th>Star Trail Timelapses</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for day, day_data in days_fileSize_dict.items() %}
+      <tr>
+        <td>{{ day }}</td>
+          {% for tod, tod_data in day_data.items() %}
+          <td>{{ tod }}</td>
+              {% for asset in ['Images', 'Panoramas', 'Timelapses', 'Panorama Timelapses', 'Keograms', 'Star Trails', 'Star Trail Timelapses'] %}
+              <td>{{ "%0.2f" | format(tod_data[asset]['fileSize'] / 1024 / 1024 / 1024) }} GB [{{ tod_data[asset]['count'] }}]</td>
+              {% endfor %}
+          <td>{{ "%0.2f" | format(tod_data['tod_fileSize'] / 1024 / 1024 / 1024) }} GB</td>
+          {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+function init() {
+    new DataTable('#images-table', {
+        searching: true,
+        order: [[0, 'desc']],
+        lengthMenu: [20, 50, 100, -1],
+        layout: {
+            topEnd: ['buttons', 'search'],
+        },
+        buttons: [
+            'copy',
+            'csv',
+            'excel',
+        ]
+    });
+}
+
+
+$( document ).ready(function() {
+    init();
+});
+</script>
+
+
+{% endblock %}

@@ -9676,6 +9676,158 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
         return jsonify(message)
 
 
+class FileStorageView(TemplateView):
+    decorators = [login_required]
+
+    page_title = 'File Storage'
+
+    def get_context(self):
+        context = super(FileStorageView, self).get_context()
+
+
+        total_size = 0
+        total_count = 0
+        file_data_dict = dict()
+
+
+        days_fileSize_images = self.get_table_fileSize(IndiAllSkyDbImageTable, self.camera.id)
+        image_total_size, image_total_count = self.update_dict(file_data_dict, days_fileSize_images, 'Images')
+        total_size += image_total_size
+        total_count += image_total_count
+
+
+        days_fileSize_panorama_images = self.get_table_fileSize(IndiAllSkyDbPanoramaImageTable, self.camera.id)
+        panorama_image_total_size, panorama_image_total_count = self.update_dict(file_data_dict, days_fileSize_panorama_images, 'Panoramas')
+        total_size += panorama_image_total_size
+        total_count += panorama_image_total_count
+
+
+        days_fileSize_videos = self.get_table_fileSize(IndiAllSkyDbVideoTable, self.camera.id)
+        videos_total_size, videos_total_count = self.update_dict(file_data_dict, days_fileSize_videos, 'Timelapses')
+        total_size += videos_total_size
+        total_count += videos_total_count
+
+
+        days_fileSize_panorama_videos = self.get_table_fileSize(IndiAllSkyDbPanoramaVideoTable, self.camera.id)
+        panorama_videos_total_size, panorama_videos_total_count = self.update_dict(file_data_dict, days_fileSize_panorama_videos, 'Panorama Timelapses')
+        total_size += panorama_videos_total_size
+        total_count += panorama_videos_total_count
+
+
+        days_fileSize_keograms = self.get_table_fileSize(IndiAllSkyDbKeogramTable, self.camera.id)
+        keograms_total_size, keograms_total_count = self.update_dict(file_data_dict, days_fileSize_keograms, 'Keograms')
+        total_size += keograms_total_size
+        total_count += keograms_total_count
+
+
+        days_fileSize_startrails = self.get_table_fileSize(IndiAllSkyDbStarTrailsTable, self.camera.id)
+        startrails_total_size, startrails_total_count = self.update_dict(file_data_dict, days_fileSize_startrails, 'Star Trails')
+        total_size += startrails_total_size
+        total_count += startrails_total_count
+
+
+        days_fileSize_startrail_videos = self.get_table_fileSize(IndiAllSkyDbStarTrailsVideoTable, self.camera.id)
+        startrail_videos_total_size, startrail_videos_total_count = self.update_dict(file_data_dict, days_fileSize_startrail_videos, 'Star Trail Timelapses')
+        total_size += startrail_videos_total_size
+        total_count += startrail_videos_total_count
+
+
+        #app.logger.info('Data: %s', str(file_data_dict))
+
+        context['days_fileSize_dict'] = file_data_dict
+
+
+        return context
+
+
+    def get_table_fileSize(self, table, camera_id):
+        days_fileSize = db.session.query(
+            func.distinct(table.dayDate).label('dayDate_distinct'),
+            func.sum(table.fileSize).label('dayDate_sum'),
+            table.night,
+            func.count(table.id).label('file_count'),
+        )\
+            .join(table.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .group_by(table.dayDate, table.night)\
+            .order_by(table.dayDate.desc())
+
+
+        return days_fileSize
+
+
+    def update_dict(self, file_dict, fileSize_query, label):
+        total_size = 0
+        total_count = 0
+
+
+        for day in fileSize_query:
+            day_size = 0
+            day_count = 0
+
+            if db.engine.dialect.name == 'mysql':
+                # mysql returns a date object
+                dayDate = day.dayDate_distinct
+            else:
+                # sqlite returns a string
+                dayDate = datetime.strptime(day.dayDate_distinct, '%Y-%m-%d').date()
+
+
+            dayDate_str = dayDate.strftime('%Y-%m-%d')
+
+
+            if not file_dict.get(dayDate_str):
+                file_dict[dayDate_str] = dict()
+
+
+            if day.night:
+                tod = 'Night'
+            else:
+                tod = 'Day'
+
+
+            if not file_dict[dayDate_str].get(tod):
+                file_dict[dayDate_str][tod] = {
+                    'tod_fileSize' : 0,
+                    'tod_count'    : 0,
+                }
+
+
+            # ensure initial 0 values for all types
+            for x in ['Images', 'Panoramas', 'Timelapses', 'Panorama Timelapses', 'Keograms', 'Star Trails', 'Star Trail Timelapses']:
+                if not file_dict[dayDate_str][tod].get(x):
+                    file_dict[dayDate_str][tod][x] = {
+                        'fileSize' : 0,
+                        'count'    : 0,
+                    }
+
+
+            file_data = {
+                'fileSize' : day.dayDate_sum if day.dayDate_sum else 0,
+                'count'    : day.file_count,
+            }
+
+
+            day_size += file_data['fileSize']
+            day_count += file_data['count']
+
+
+            file_dict[dayDate_str][tod][label] = file_data
+
+
+            # totals for time of day
+            file_dict[dayDate_str][tod]['tod_fileSize'] += day_size
+            file_dict[dayDate_str][tod]['tod_count'] += day_count
+
+
+            # add to total
+            total_size += file_dict[dayDate_str][tod]['tod_fileSize']
+            total_count += file_dict[dayDate_str][tod]['tod_count']
+
+
+        return total_size, total_count
+
+
 class LongTermKeogramView(TemplateView):
     page_title = 'Long Term Keogram'
 
@@ -11809,3 +11961,4 @@ bp_allsky.add_url_rule('/cameras', view_func=CamerasView.as_view('cameras_view',
 bp_allsky.add_url_rule('/tasks', view_func=TaskQueueView.as_view('taskqueue_view', template_name='taskqueue.html'))
 bp_allsky.add_url_rule('/notifications', view_func=NotificationsView.as_view('notifications_view', template_name='notifications.html'))
 bp_allsky.add_url_rule('/users', view_func=UsersView.as_view('users_view', template_name='users.html'))
+bp_allsky.add_url_rule('/filestorage', view_func=FileStorageView.as_view('filestorage_view', template_name='filestorage.html'))
