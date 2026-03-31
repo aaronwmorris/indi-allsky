@@ -1725,7 +1725,7 @@ class ImageWorker(Process):
 
         ### Do not write daytime image files if daytime capture is disabled
         if not self.night_av[constants.NIGHT_NIGHT] and self.config['DAYTIME_CAPTURE'] and not self.config.get('DAYTIME_CAPTURE_SAVE', True):
-            logger.info('Daytime capture is disabled')
+            logger.info('Daytime image save is disabled')
             tmpfile_name.unlink()
             return latest_file, None
 
