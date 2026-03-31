@@ -474,6 +474,14 @@ class VideoWorker(Process):
 
             tg.generate(video_file, timelapse_files)
 
+
+            try:
+                fileSize = video_file.stat().st_size
+            except FileNotFoundError:
+                fileSize = 0
+
+
+            video_entry.fileSize = fileSize
             video_entry.success = True
             db.session.commit()
         except TimelapseException:
@@ -756,6 +764,14 @@ class VideoWorker(Process):
 
             mini_tg.generate(video_file, timelapse_files)
 
+
+            try:
+                fileSize = video_file.stat().st_size
+            except FileNotFoundError:
+                fileSize = 0
+
+
+            mini_video_entry.fileSize = fileSize
             mini_video_entry.success = True
             db.session.commit()
         except TimelapseException:
@@ -1011,6 +1027,14 @@ class VideoWorker(Process):
 
             panorama_tg.generate(video_file, timelapse_files)
 
+
+            try:
+                fileSize = video_file.stat().st_size
+            except FileNotFoundError:
+                fileSize = 0
+
+
+            video_entry.fileSize = fileSize
             video_entry.success = True
             db.session.commit()
         except TimelapseException:
@@ -1480,6 +1504,14 @@ class VideoWorker(Process):
         keogram_entry.width = keogram_width
         keogram_entry.frames = keogram_width  # one frame per line
 
+
+        try:
+            k_fileSize = keogram_file.stat().st_size
+        except FileNotFoundError:
+            k_fileSize = 0
+
+
+        keogram_entry.fileSize = k_fileSize
         keogram_entry.success = True
         db.session.commit()
 
@@ -1518,6 +1550,14 @@ class VideoWorker(Process):
             startrail_entry.width = st_width
             startrail_entry.frames = stg.trail_count
 
+
+            try:
+                st_fileSize = startrail_file.stat().st_size
+            except FileNotFoundError:
+                st_fileSize = 0
+
+
+            startrail_entry.fileSize = st_fileSize
             startrail_entry.success = True
             db.session.commit()
 
@@ -1574,6 +1614,14 @@ class VideoWorker(Process):
 
                     st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
 
+
+                    try:
+                        stv_fileSize = startrail_video_file.stat().st_size
+                    except FileNotFoundError:
+                        stv_fileSize = 0
+
+
+                    startrail_video_entry.fileSize = stv_fileSize
                     startrail_video_entry.success = True
                     db.session.commit()
                 except TimelapseException:

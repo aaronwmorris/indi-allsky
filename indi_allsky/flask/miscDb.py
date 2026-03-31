@@ -240,6 +240,13 @@ class miscDb(object):
 
         logger.info('Adding image %s to DB', filename_p)
 
+
+        try:
+            fileSize = filename_p.stat().st_size
+        except FileNotFoundError:
+            fileSize = 0
+
+
         if isinstance(metadata['createDate'], (int, float)):
             createDate = datetime.fromtimestamp(metadata['createDate'])
         else:
@@ -282,6 +289,7 @@ class miscDb(object):
             stars=metadata['stars'],
             detections=metadata['detections'],
             process_elapsed=metadata['process_elapsed'],
+            fileSize=fileSize,
             height=metadata['height'],
             width=metadata['width'],
             kpindex=metadata.get('kpindex'),
@@ -325,6 +333,12 @@ class miscDb(object):
         logger.info('Adding dark frame %s to DB', filename_p)
 
 
+        try:
+            fileSize = filename_p.stat().st_size
+        except FileNotFoundError:
+            fileSize = 0
+
+
         if isinstance(metadata['createDate'], (int, float)):
             createDate = datetime.fromtimestamp(metadata['createDate'])
         else:
@@ -352,6 +366,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             temp=temp_val,
             adu=metadata.get('adu'),
+            fileSize=fileSize,
             height=metadata['height'],
             width=metadata['width'],
             thumbnail_uuid=metadata.get('thumbnail_uuid'),
@@ -388,6 +403,13 @@ class miscDb(object):
 
         logger.info('Adding bad pixel map %s to DB', filename_p)
 
+
+        try:
+            fileSize = filename_p.stat().st_size
+        except FileNotFoundError:
+            fileSize = 0
+
+
         if isinstance(metadata['createDate'], (int, float)):
             createDate = datetime.fromtimestamp(metadata['createDate'])
         else:
@@ -415,6 +437,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             temp=temp_val,
             adu=metadata.get('adu'),
+            fileSize=fileSize,
             height=metadata['height'],
             width=metadata['width'],
             thumbnail_uuid=metadata.get('thumbnail_uuid'),
@@ -819,6 +842,12 @@ class miscDb(object):
         filename_p = Path(filename)
 
 
+        try:
+            fileSize = filename_p.stat().st_size
+        except FileNotFoundError:
+            fileSize = 0
+
+
         if isinstance(metadata['createDate'], (int, float)):
             createDate = datetime.fromtimestamp(metadata['createDate'])
         else:
@@ -847,6 +876,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             dayDate=dayDate,
             night=metadata['night'],
+            fileSize=fileSize,
             height=metadata['height'],
             width=metadata['width'],
             data=metadata.get('data', {}),
@@ -881,6 +911,12 @@ class miscDb(object):
         filename_p = Path(filename)
 
 
+        try:
+            fileSize = filename_p.stat().st_size
+        except FileNotFoundError:
+            fileSize = 0
+
+
         if isinstance(metadata['createDate'], (int, float)):
             createDate = datetime.fromtimestamp(metadata['createDate'])
         else:
@@ -909,6 +945,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             dayDate=dayDate,
             night=metadata['night'],
+            fileSize=fileSize,
             height=metadata['height'],
             width=metadata['width'],
             data=metadata.get('data', {}),
@@ -943,6 +980,12 @@ class miscDb(object):
         filename_p = Path(filename)
 
 
+        try:
+            fileSize = filename_p.stat().st_size
+        except FileNotFoundError:
+            fileSize = 0
+
+
         if isinstance(metadata['createDate'], (int, float)):
             createDate = datetime.fromtimestamp(metadata['createDate'])
         else:
@@ -971,6 +1014,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             dayDate=dayDate,
             night=metadata['night'],
+            fileSize=fileSize,
             height=metadata['height'],
             width=metadata['width'],
             data=metadata.get('data', {}),
