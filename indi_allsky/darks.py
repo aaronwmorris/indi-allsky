@@ -1386,6 +1386,7 @@ class IndiAllSkyDarks(object):
             'binmode'    : int(self.binning_av[constants.BINNING_CURRENT]),
             'temp'       : float(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]),
             'adu'        : bpm_adu_avg,
+            'fileSize'   : full_bpm_filename_p.stat().st_size,
             'height'     : image_height,
             'width'      : image_width,
         }
@@ -1405,6 +1406,7 @@ class IndiAllSkyDarks(object):
             'binmode'    : int(self.binning_av[constants.BINNING_CURRENT]),
             'temp'       : float(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]),
             'adu'        : dark_adu_avg,
+            'fileSize'   : full_dark_filename_p.stat().st_size,
             'height'     : image_height,
             'width'      : image_width,
         }

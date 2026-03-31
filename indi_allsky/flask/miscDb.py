@@ -314,6 +314,7 @@ class miscDb(object):
         #    'binmode'
         #    'temp'
         #    'adu'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -326,12 +327,6 @@ class miscDb(object):
 
 
         logger.info('Adding dark frame %s to DB', filename_p)
-
-
-        try:
-            fileSize = filename_p.stat().st_size
-        except FileNotFoundError:
-            fileSize = None
 
 
         if isinstance(metadata['createDate'], (int, float)):
@@ -361,7 +356,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             temp=temp_val,
             adu=metadata.get('adu'),
-            fileSize=fileSize,
+            fileSize=metadata.get('fileSize'),
             height=metadata['height'],
             width=metadata['width'],
             thumbnail_uuid=metadata.get('thumbnail_uuid'),
@@ -385,6 +380,7 @@ class miscDb(object):
         #    'binmode'
         #    'temp'
         #    'adu'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -397,12 +393,6 @@ class miscDb(object):
 
 
         logger.info('Adding bad pixel map %s to DB', filename_p)
-
-
-        try:
-            fileSize = filename_p.stat().st_size
-        except FileNotFoundError:
-            fileSize = None
 
 
         if isinstance(metadata['createDate'], (int, float)):
@@ -432,7 +422,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             temp=temp_val,
             adu=metadata.get('adu'),
-            fileSize=fileSize,
+            fileSize=metadata.get('fileSize'),
             height=metadata['height'],
             width=metadata['width'],
             thumbnail_uuid=metadata.get('thumbnail_uuid'),
