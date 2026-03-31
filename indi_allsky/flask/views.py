@@ -9690,24 +9690,28 @@ class FileSpaceUsageView(TemplateView):
         file_data_dict = dict()
 
 
+        ### images
         days_fileSize_images = self.get_table_fileSize(IndiAllSkyDbImageTable, self.camera.id)
         image_total_size, image_total_count = self.update_dict(file_data_dict, days_fileSize_images, 'Images')
         total_size += image_total_size
         total_count += image_total_count
 
 
+        ### panorama images
         days_fileSize_panorama_images = self.get_table_fileSize(IndiAllSkyDbPanoramaImageTable, self.camera.id)
         panorama_image_total_size, panorama_image_total_count = self.update_dict(file_data_dict, days_fileSize_panorama_images, 'Panoramas')
         total_size += panorama_image_total_size
         total_count += panorama_image_total_count
 
 
+        ### timelapse videos
         days_fileSize_videos = self.get_table_fileSize(IndiAllSkyDbVideoTable, self.camera.id)
         videos_total_size, videos_total_count = self.update_dict(file_data_dict, days_fileSize_videos, 'Timelapses')
         total_size += videos_total_size
         total_count += videos_total_count
 
 
+        ### panorama timelapses
         days_fileSize_panorama_videos = self.get_table_fileSize(IndiAllSkyDbPanoramaVideoTable, self.camera.id)
         panorama_videos_total_size, panorama_videos_total_count = self.update_dict(file_data_dict, days_fileSize_panorama_videos, 'Panorama Timelapses')
         total_size += panorama_videos_total_size
@@ -9715,6 +9719,7 @@ class FileSpaceUsageView(TemplateView):
 
 
         # keograms are not a significant usage of sapce
+        ### keograms
         #days_fileSize_keograms = self.get_table_fileSize(IndiAllSkyDbKeogramTable, self.camera.id)
         #keograms_total_size, keograms_total_count = self.update_dict(file_data_dict, days_fileSize_keograms, 'Keograms')
         #total_size += keograms_total_size
@@ -9722,16 +9727,32 @@ class FileSpaceUsageView(TemplateView):
 
 
         # startrails are not a significant usage of sapce
+        ### star trails
         #days_fileSize_startrails = self.get_table_fileSize(IndiAllSkyDbStarTrailsTable, self.camera.id)
         #startrails_total_size, startrails_total_count = self.update_dict(file_data_dict, days_fileSize_startrails, 'Star Trails')
         #total_size += startrails_total_size
         #total_count += startrails_total_count
 
 
+        ### star trail timelapses
         days_fileSize_startrail_videos = self.get_table_fileSize(IndiAllSkyDbStarTrailsVideoTable, self.camera.id)
         startrail_videos_total_size, startrail_videos_total_count = self.update_dict(file_data_dict, days_fileSize_startrail_videos, 'Star Trail Timelapses')
         total_size += startrail_videos_total_size
         total_count += startrail_videos_total_count
+
+
+        ### fits
+        days_fileSize_fits = self.get_table_fileSize(IndiAllSkyDbFitsImageTable, self.camera.id)
+        fits_total_size, fits_total_count = self.update_dict(file_data_dict, days_fileSize_fits, 'FITS')
+        total_size += fits_total_size
+        total_count += fits_total_count
+
+
+        ### raw images
+        days_fileSize_raw = self.get_table_fileSize(IndiAllSkyDbRawImageTable, self.camera.id)
+        raw_total_size, raw_total_count = self.update_dict(file_data_dict, days_fileSize_raw, 'Raw Images')
+        total_size += raw_total_size
+        total_count += raw_total_count
 
 
         #app.logger.info('Data: %s', str(file_data_dict))
@@ -9801,7 +9822,7 @@ class FileSpaceUsageView(TemplateView):
 
 
             # ensure initial 0 values for all types
-            for x in ['Images', 'Panoramas', 'Timelapses', 'Panorama Timelapses', 'Keograms', 'Star Trails', 'Star Trail Timelapses', 'Thumbnails']:
+            for x in ['Images', 'Panoramas', 'Timelapses', 'Panorama Timelapses', 'Keograms', 'Star Trails', 'Star Trail Timelapses', 'FITS', 'Raw Images', 'Thumbnails']:
                 if not file_dict[dayDate_str][tod].get(x):
                     file_dict[dayDate_str][tod][x] = {
                         'fileSize' : 0,
