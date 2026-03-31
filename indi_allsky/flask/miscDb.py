@@ -1340,11 +1340,18 @@ class miscDb(object):
         cv2.imwrite(str(thumbnail_filename_p), thumbnail_data, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
 
 
+        try:
+            fileSize = thumbnail_filename_p.stat().st_size
+        except FileNotFoundError:
+            fileSize = 0
+
+
         thumbnail_entry = IndiAllSkyDbThumbnailTable(
             uuid=thumbnail_uuid_str,
             filename=str(thumbnail_filename_p.relative_to(self.image_dir)),
             createDate=createDate,
             origin=thumbnail_metadata['origin'],
+            fileSize=fileSize,
             width=thumb_width,
             height=thumb_height,
             camera_id=camera_id,
@@ -1385,6 +1392,12 @@ class miscDb(object):
         filename_p = Path(filename)
 
 
+        try:
+            fileSize = filename_p.stat().st_size
+        except FileNotFoundError:
+            fileSize = 0
+
+
         if isinstance(thumbnail_metadata['createDate'], (int, float)):
             createDate = datetime.fromtimestamp(thumbnail_metadata['createDate'])
         else:
@@ -1399,6 +1412,7 @@ class miscDb(object):
             filename=str(filename_p),
             createDate=createDate,
             origin=thumbnail_metadata.get('origin', -1),  # remote might not send data
+            fileSize=fileSize,
             width=thumbnail_metadata['width'],
             height=thumbnail_metadata['height'],
             camera_id=camera_id,
