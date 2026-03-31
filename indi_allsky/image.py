@@ -873,6 +873,10 @@ class ImageWorker(Process):
             )
 
 
+            # add fileSize to metadata
+            image_thumbnail_metadata['fileSize'] = image_thumbnail_entry.fileSize
+
+
             # wait on the post-hook to finish
             self.wait_image_save_post_hook()
         else:
