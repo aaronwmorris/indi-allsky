@@ -228,6 +228,7 @@ class miscDb(object):
         #    'detections'
         #    'process_elapsed'
         #    'data'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -239,12 +240,6 @@ class miscDb(object):
 
 
         logger.info('Adding image %s to DB', filename_p)
-
-
-        try:
-            fileSize = filename_p.stat().st_size
-        except FileNotFoundError:
-            fileSize = None
 
 
         if isinstance(metadata['createDate'], (int, float)):
@@ -289,7 +284,7 @@ class miscDb(object):
             stars=metadata['stars'],
             detections=metadata['detections'],
             process_elapsed=metadata['process_elapsed'],
-            fileSize=fileSize,
+            fileSize=metadata.get('fileSize'),
             height=metadata['height'],
             width=metadata['width'],
             kpindex=metadata.get('kpindex'),
@@ -832,6 +827,7 @@ class miscDb(object):
         #    'gain'
         #    'binmode'
         #    'night'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -840,12 +836,6 @@ class miscDb(object):
             return
 
         filename_p = Path(filename)
-
-
-        try:
-            fileSize = filename_p.stat().st_size
-        except FileNotFoundError:
-            fileSize = None
 
 
         if isinstance(metadata['createDate'], (int, float)):
@@ -876,7 +866,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             dayDate=dayDate,
             night=metadata['night'],
-            fileSize=fileSize,
+            fileSize=metadata.get('fileSize'),
             height=metadata['height'],
             width=metadata['width'],
             data=metadata.get('data', {}),
@@ -901,6 +891,7 @@ class miscDb(object):
         #    'gain'
         #    'binmode'
         #    'night'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -909,12 +900,6 @@ class miscDb(object):
             return
 
         filename_p = Path(filename)
-
-
-        try:
-            fileSize = filename_p.stat().st_size
-        except FileNotFoundError:
-            fileSize = None
 
 
         if isinstance(metadata['createDate'], (int, float)):
@@ -945,7 +930,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             dayDate=dayDate,
             night=metadata['night'],
-            fileSize=fileSize,
+            fileSize=metadata.get('fileSize'),
             height=metadata['height'],
             width=metadata['width'],
             data=metadata.get('data', {}),
@@ -970,6 +955,7 @@ class miscDb(object):
         #    'gain'
         #    'binmode'
         #    'night'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -978,12 +964,6 @@ class miscDb(object):
             return
 
         filename_p = Path(filename)
-
-
-        try:
-            fileSize = filename_p.stat().st_size
-        except FileNotFoundError:
-            fileSize = None
 
 
         if isinstance(metadata['createDate'], (int, float)):
@@ -1014,7 +994,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             dayDate=dayDate,
             night=metadata['night'],
-            fileSize=fileSize,
+            fileSize=metadata.get('fileSize'),
             height=metadata['height'],
             width=metadata['width'],
             data=metadata.get('data', {}),
@@ -1382,6 +1362,7 @@ class miscDb(object):
         #    'createDate'
         #    'uuid'
         #    'night'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -1390,12 +1371,6 @@ class miscDb(object):
             return
 
         filename_p = Path(filename)
-
-
-        try:
-            fileSize = filename_p.stat().st_size
-        except FileNotFoundError:
-            fileSize = None
 
 
         if isinstance(thumbnail_metadata['createDate'], (int, float)):
@@ -1412,7 +1387,7 @@ class miscDb(object):
             filename=str(filename_p),
             createDate=createDate,
             origin=thumbnail_metadata.get('origin', -1),  # remote might not send data
-            fileSize=fileSize,
+            fileSize=thumbnail_metadata.get('fileSize'),
             width=thumbnail_metadata['width'],
             height=thumbnail_metadata['height'],
             camera_id=camera_id,
