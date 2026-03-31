@@ -9749,6 +9749,7 @@ class FileStorageView(TemplateView):
         )\
             .join(table.camera)\
             .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(table.fileSize != sa_null())\
             .group_by(table.dayDate, table.night)\
             .order_by(table.dayDate.desc())
 
