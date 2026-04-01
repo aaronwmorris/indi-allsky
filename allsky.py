@@ -25,7 +25,7 @@ LOG_HANDLER_STREAM = logging.StreamHandler()
 LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
 
 LOG_FORMATTER_SYSLOG = logging.Formatter('[%(levelname)s] %(processName)s-%(process)d/%(threadName)s %(module)s.%(funcName)s() [%(lineno)d]: %(message)s')
-LOG_HANDLER_SYSLOG = logging.handlers.SysLogHandler(address='/dev/log', facility='local6')
+LOG_HANDLER_SYSLOG = logging.handlers.SysLogHandler(address='/dev/log', facility=logging.handlers.SysLogHandler.LOG_LOCAL6)
 LOG_HANDLER_SYSLOG.setFormatter(LOG_FORMATTER_SYSLOG)
 
 
