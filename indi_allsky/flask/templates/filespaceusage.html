@@ -46,7 +46,11 @@ var camera_id = {{ camera_id }};
                   <td>{{ "%0.1f" | format(tod_data[asset]['fileSize'] / 1024 / 1024 / 1024) }} GB [{{ tod_data[asset]['count'] }}]</td>
                   {% endif %}
                   {% endfor %}
+              {% if tod_data['tod_fileSize'] < 805306368 %}
+              <td>{{ "%0.1f" | format(tod_data['tod_fileSize'] / 1024 / 1024) }} MB</td>
+              {% else %}
               <td>{{ "%0.1f" | format(tod_data['tod_fileSize'] / 1024 / 1024 / 1024) }} GB</td>
+              {% endif %}
           </tr>
           {% endfor %}
       {% endfor %}
