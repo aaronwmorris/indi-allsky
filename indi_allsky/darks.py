@@ -416,7 +416,11 @@ class IndiAllSkyDarks(object):
         }
 
         db_camera = self._miscDb.addCamera(camera_metadata)
+
+
         self.camera_id = db_camera.id
+        self.indiclient.camera_id = db_camera.id
+
 
         try:
             # Disable debugging
