@@ -15,6 +15,7 @@ var camera_id = {{ camera_id }};
 
 {% block content %}
 <div class="container">
+
 <div class="row">
   <table id="images-table" class="table table-striped compact" data-bs-theme="dark">
     <thead>
@@ -51,6 +52,10 @@ var camera_id = {{ camera_id }};
       {% endfor %}
     </tbody>
   </table>
+</div>
+
+<div style="font-size:10px">
+    Note: Reported space is the sum of individual file sizes, but files may use additional disk space due to the way filesystems and drives function
 </div>
 
 <script>
