@@ -800,6 +800,7 @@ class ImageWorker(Process):
                 'kpindex'         : i_ref.kpindex,
                 'ovation_max'     : i_ref.ovation_max,
                 'smoke_rating'    : i_ref.smoke_rating,
+                'fileSize'        : new_filename.stat().st_size,
                 'height'          : final_height,
                 'width'           : final_width,
                 'keogram_pixels'  : longterm_keogram_pixels,
@@ -870,6 +871,10 @@ class ImageWorker(Process):
                 image_thumbnail_metadata,
                 numpy_data=self.image_processor.image,
             )
+
+
+            # add fileSize to metadata
+            image_thumbnail_metadata['fileSize'] = image_thumbnail_entry.fileSize
 
 
             # wait on the post-hook to finish
@@ -1309,6 +1314,7 @@ class ImageWorker(Process):
             'gain'       : i_ref.gain,
             'binmode'    : i_ref.binning,
             'night'      : bool(self.night_av[constants.NIGHT_NIGHT]),
+            'fileSize'   : fits_size_bytes,
             'height'     : image_height,
             'width'      : image_width,
             'camera_uuid': i_ref.camera_uuid,
@@ -1499,6 +1505,7 @@ class ImageWorker(Process):
             'gain'       : i_ref.gain,
             'binmode'    : i_ref.binning,
             'night'      : bool(self.night_av[constants.NIGHT_NIGHT]),
+            'fileSize'   : tmpfile_name.stat().st_size,
             'height'     : image_height,
             'width'      : image_width,
             'camera_uuid': i_ref.camera_uuid,
@@ -1718,7 +1725,7 @@ class ImageWorker(Process):
 
         ### Do not write daytime image files if daytime capture is disabled
         if not self.night_av[constants.NIGHT_NIGHT] and self.config['DAYTIME_CAPTURE'] and not self.config.get('DAYTIME_CAPTURE_SAVE', True):
-            logger.info('Daytime capture is disabled')
+            logger.info('Daytime image save is disabled')
             tmpfile_name.unlink()
             return latest_file, None
 
@@ -1932,6 +1939,7 @@ class ImageWorker(Process):
             'gain'       : i_ref.gain,
             'binmode'    : i_ref.binning,
             'night'      : bool(self.night_av[constants.NIGHT_NIGHT]),
+            'fileSize'   : latest_pano_file.stat().st_size,
             'height'     : panorama_height,
             'width'      : panorama_width,
             'camera_uuid': i_ref.camera_uuid,

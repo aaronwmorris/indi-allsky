@@ -228,6 +228,7 @@ class miscDb(object):
         #    'detections'
         #    'process_elapsed'
         #    'data'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -239,6 +240,7 @@ class miscDb(object):
 
 
         logger.info('Adding image %s to DB', filename_p)
+
 
         if isinstance(metadata['createDate'], (int, float)):
             createDate = datetime.fromtimestamp(metadata['createDate'])
@@ -282,6 +284,7 @@ class miscDb(object):
             stars=metadata['stars'],
             detections=metadata['detections'],
             process_elapsed=metadata['process_elapsed'],
+            fileSize=metadata.get('fileSize'),
             height=metadata['height'],
             width=metadata['width'],
             kpindex=metadata.get('kpindex'),
@@ -311,6 +314,7 @@ class miscDb(object):
         #    'binmode'
         #    'temp'
         #    'adu'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -352,6 +356,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             temp=temp_val,
             adu=metadata.get('adu'),
+            fileSize=metadata.get('fileSize'),
             height=metadata['height'],
             width=metadata['width'],
             thumbnail_uuid=metadata.get('thumbnail_uuid'),
@@ -375,6 +380,7 @@ class miscDb(object):
         #    'binmode'
         #    'temp'
         #    'adu'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -387,6 +393,7 @@ class miscDb(object):
 
 
         logger.info('Adding bad pixel map %s to DB', filename_p)
+
 
         if isinstance(metadata['createDate'], (int, float)):
             createDate = datetime.fromtimestamp(metadata['createDate'])
@@ -415,6 +422,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             temp=temp_val,
             adu=metadata.get('adu'),
+            fileSize=metadata.get('fileSize'),
             height=metadata['height'],
             width=metadata['width'],
             thumbnail_uuid=metadata.get('thumbnail_uuid'),
@@ -809,6 +817,7 @@ class miscDb(object):
         #    'gain'
         #    'binmode'
         #    'night'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -847,6 +856,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             dayDate=dayDate,
             night=metadata['night'],
+            fileSize=metadata.get('fileSize'),
             height=metadata['height'],
             width=metadata['width'],
             data=metadata.get('data', {}),
@@ -871,6 +881,7 @@ class miscDb(object):
         #    'gain'
         #    'binmode'
         #    'night'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -909,6 +920,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             dayDate=dayDate,
             night=metadata['night'],
+            fileSize=metadata.get('fileSize'),
             height=metadata['height'],
             width=metadata['width'],
             data=metadata.get('data', {}),
@@ -933,6 +945,7 @@ class miscDb(object):
         #    'gain'
         #    'binmode'
         #    'night'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -971,6 +984,7 @@ class miscDb(object):
             binmode=metadata['binmode'],
             dayDate=dayDate,
             night=metadata['night'],
+            fileSize=metadata.get('fileSize'),
             height=metadata['height'],
             width=metadata['width'],
             data=metadata.get('data', {}),
@@ -1296,11 +1310,18 @@ class miscDb(object):
         cv2.imwrite(str(thumbnail_filename_p), thumbnail_data, [cv2.IMWRITE_JPEG_QUALITY, self.config['IMAGE_FILE_COMPRESSION']['jpg']])
 
 
+        try:
+            fileSize = thumbnail_filename_p.stat().st_size
+        except FileNotFoundError:
+            fileSize = None
+
+
         thumbnail_entry = IndiAllSkyDbThumbnailTable(
             uuid=thumbnail_uuid_str,
             filename=str(thumbnail_filename_p.relative_to(self.image_dir)),
             createDate=createDate,
             origin=thumbnail_metadata['origin'],
+            fileSize=fileSize,
             width=thumb_width,
             height=thumb_height,
             camera_id=camera_id,
@@ -1331,6 +1352,7 @@ class miscDb(object):
         #    'createDate'
         #    'uuid'
         #    'night'
+        #    'fileSize'
         #    'width'
         #    'height'
         #}
@@ -1355,6 +1377,7 @@ class miscDb(object):
             filename=str(filename_p),
             createDate=createDate,
             origin=thumbnail_metadata.get('origin', -1),  # remote might not send data
+            fileSize=thumbnail_metadata.get('fileSize'),
             width=thumbnail_metadata['width'],
             height=thumbnail_metadata['height'],
             camera_id=camera_id,
