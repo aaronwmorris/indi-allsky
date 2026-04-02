@@ -428,6 +428,8 @@ class ImageProcessor(object):
         self._check_astro_darkness()
 
 
+        #logger.info('Processing %s, exposure: %0.6f, gain, %0.2f, binning: %d', str(filename), exposure, gain, binning)
+
         if self.night_av[constants.NIGHT_MOONMODE] and not self.config.get('IMAGE_STACK_MOONMODE'):
             # disable stacking during moonmode
             self.image_list.clear()
