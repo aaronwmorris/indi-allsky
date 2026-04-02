@@ -1390,27 +1390,31 @@ class ImageProcessor(object):
             raise Exception('Unknown bits per pixel')
 
 
-        if self.config.get('IMAGE_STACK_ALIGN') and i_ref.exposure > self.registration_exposure_thresh:
-            # only perform registration once the exposure exceeds 5 seconds
+        if self.config.get('IMAGE_STACK_ALIGN'):
+            if i_ref.exposure > self.registration_exposure_thresh:
+                # only perform registration once the exposure exceeds 5 seconds
 
-            stack_i_ref_list = list(filter(lambda x: x.exposure > self.registration_exposure_thresh, stack_i_ref_list))
+                stack_i_ref_list = list(filter(lambda x: x.exposure > self.registration_exposure_thresh, stack_i_ref_list))
 
 
-            # if the registration takes longer than the exposure period, kill it
-            # 3 seconds is the assumed time it normally takes to process an image
-            signal.alarm(int(self.config['EXPOSURE_PERIOD'] - 3))
+                # if the registration takes longer than the exposure period, kill it
+                # 3 seconds is the assumed time it normally takes to process an image
+                signal.alarm(int(self.config['EXPOSURE_PERIOD'] - 3))
 
-            try:
-                stack_data_list = self._stacker.register(stack_i_ref_list, i_ref.binning)
-            except TimeOutException:
+                try:
+                    stack_data_list = self._stacker.register(stack_i_ref_list, i_ref.binning)
+                except TimeOutException:
+                    # stack unaligned images
+                    logger.error('Registration exceeded the exposure period, cancel alignment')
+                    stack_data_list = [x.opencv_data for x in stack_i_ref_list]
+
+                signal.alarm(0)
+            else:
+                logger.warning('Bypassing image registration due to low exposure')
                 # stack unaligned images
-                logger.error('Registration exceeded the exposure period, cancel alignment')
                 stack_data_list = [x.opencv_data for x in stack_i_ref_list]
-
-            signal.alarm(0)
         else:
-            logger.warning('Bypassing image registration due to low exposure')
-            # stack unaligned images
+            # no registration
             stack_data_list = [x.opencv_data for x in stack_i_ref_list]
 
 
