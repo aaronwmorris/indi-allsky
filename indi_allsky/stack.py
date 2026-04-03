@@ -246,11 +246,13 @@ class IndiAllskyStacker(object):
 
 
     def _generateStackMask(self, img, binning):
-        logger.info('Generating mask based on SQM_ROI')
-
         if not isinstance(self._sqm_mask_dict[binning], type(None)):
+            logger.info('Generating stacking mask based on existing mask')
             self._stack_mask_dict[binning] = self._sqm_mask_dict[binning]
             return
+
+
+        logger.info('Generating new stacking mask')
 
         image_height, image_width = img.shape[:2]
 

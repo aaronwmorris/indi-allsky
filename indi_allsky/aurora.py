@@ -234,17 +234,14 @@ class IndiAllskyAuroraUpdate(object):
 
 
     def processKpindexPoly(self, json_data):
-        kp_last = float(json_data[-1][1])
-
-        json_iter = iter(json_data)
-        next(json_iter)  # skip first index
+        kp_last = float(json_data[-1]['Kp'])
 
         kp_list = list()
-        for k in json_iter:
+        for k in json_data:
             try:
-                kp_list.append(float(k[1]))
+                kp_list.append(float(k['Kp']))
             except ValueError:
-                logger.error('Invalid float: %s', str(k[1]))
+                logger.error('Invalid float: %s', str(k['Kp']))
                 continue
 
 
