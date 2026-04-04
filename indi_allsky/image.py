@@ -2265,7 +2265,7 @@ class ImageWorker(Process):
 
             if next_exposure == exposure:
                 # no change
-                logger.warning('Auto-Gain - no changes')
+                #logger.warning('Auto-Gain - no changes')
                 next_gain = gain
                 exposure_delta = 0.0
                 gain_delta = 0.0
