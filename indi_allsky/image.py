@@ -2276,7 +2276,7 @@ class ImageWorker(Process):
                     next_gain = gain
                     exposure_delta = next_exposure - exposure
                     gain_delta = 0.0
-                    logger.info('Auto-Gain increasing exposure to %0.6f (%+0.6f) [max gain]', next_exposure, exposure_delta)
+                    logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [max gain]', next_exposure, exposure_delta)
                 else:
                     if exposure < self.auto_gain_exposure_cutoff_high:
                         # maintain gain, increase exposure
@@ -2284,7 +2284,7 @@ class ImageWorker(Process):
                         next_exposure = min(next_exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
                         exposure_delta = next_exposure - exposure
                         gain_delta = 0.0
-                        logger.info('Auto-Gain increasing exposure to %0.6f (%+0.6f) [maintain gain]', next_exposure, exposure_delta)
+                        logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
                     else:
                         # increase gain, maintain exposure
                         next_gain = self.auto_gain_step_list[auto_gain_idx + 1]
@@ -2300,7 +2300,7 @@ class ImageWorker(Process):
                     next_gain = gain
                     exposure_delta = next_exposure - exposure
                     gain_delta = 0.0
-                    logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.6f) [minimum gain]', next_exposure, exposure_delta)
+                    logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [minimum gain]', next_exposure, exposure_delta)
                 else:
                     if exposure > self.auto_gain_exposure_cutoff_low:
                         # maintain gain, decrease exposure
@@ -2308,7 +2308,7 @@ class ImageWorker(Process):
                         next_exposure = max(next_exposure, self.auto_gain_exposure_cutoff_low)
                         exposure_delta = next_exposure - exposure
                         gain_delta = 0.0
-                        logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.6f) [maintain gain]', next_exposure, exposure_delta)
+                        logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
                     else:
                         # decrease gain, maintain exposure
                         next_gain = self.auto_gain_step_list[auto_gain_idx - 1]
@@ -2351,17 +2351,17 @@ class ImageWorker(Process):
             next_exposure -= exposure_offset  # offset will be negative
             exposure_delta -= exposure_offset
 
-            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.6fs', exposure_offset * -1)
+            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
         elif self.exposure_av[constants.EXPOSURE_DELTA] < 0 and exposure_delta > 0:
             # exposure is increasing
             exposure_offset = exposure_delta / 2
             next_exposure -= exposure_offset
             exposure_delta -= exposure_offset
 
-            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.6fs', exposure_offset * -1)
+            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
 
 
-        logger.warning('New calculated exposure: %0.6fs (%+0.6f) @ gain %0.2f (%+0.2f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
+        logger.warning('New calculated exposure: %0.6fs (%+0.8f) @ gain %0.2f (%+0.2f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
         with self.exposure_av.get_lock():
             self.exposure_av[constants.EXPOSURE_NEXT] = float(next_exposure)
             self.exposure_av[constants.EXPOSURE_DELTA] = float(exposure_delta)
