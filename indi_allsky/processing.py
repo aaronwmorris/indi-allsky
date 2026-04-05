@@ -1402,7 +1402,7 @@ class ImageProcessor(object):
                 signal.alarm(int(self.config['EXPOSURE_PERIOD'] - 3))
 
                 try:
-                    stack_data_list = self._stacker.register(stack_i_ref_list, i_ref.binning)
+                    stack_data_list = self._stacker.register(stack_i_ref_list, i_ref.binning, self.max_bit_depth)
                 except TimeOutException:
                     # stack unaligned images
                     logger.error('Registration exceeded the exposure period, cancel alignment')

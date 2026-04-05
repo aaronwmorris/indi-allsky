@@ -116,7 +116,7 @@ class IndiAllskyStacker(object):
         return image_min.astype(numpy_type)
 
 
-    def register(self, stack_i_ref_list, binning):
+    def register(self, stack_i_ref_list, binning, max_bit_depth):
         logger.info('Starting image registration')
 
 
@@ -133,6 +133,20 @@ class IndiAllskyStacker(object):
 
         #reference_masked = self._crop(reference_i_ref.opencv_data)
         reference_masked = cv2.bitwise_and(reference_i_ref.opencv_data, reference_i_ref.opencv_data, mask=self._stack_mask_dict[binning])
+
+
+        ### Debugging
+        #if reference_i_ref.image_bitpix == 8:
+        #    # nothing to scale
+        #    scaled_data_8 = reference_masked
+        #elif reference_i_ref.image_bitpix == 16:
+        #    shift_factor = max_bit_depth - 8
+        #    scaled_data_8 = numpy.right_shift(reference_masked, shift_factor).astype(numpy.uint8)
+        #else:
+        #    raise Exception('Unsupported bit depth')
+
+        #cv2.imwrite('/tmp/reference_masked.jpg', scaled_data_8, [cv2.IMWRITE_JPEG_QUALITY, 90])
+
 
         reg_start = time.time()
 
@@ -246,15 +260,18 @@ class IndiAllskyStacker(object):
 
 
     def _generateStackMask(self, img, binning):
+        image_height, image_width = img.shape[:2]
+
+
         if not isinstance(self._sqm_mask_dict[binning], type(None)):
+            # combine existing mask with a central ROI
             logger.info('Generating stacking mask based on existing mask')
-            self._stack_mask_dict[binning] = self._sqm_mask_dict[binning]
-            return
+            mask = self._sqm_mask_dict[binning]
+        else:
+            mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
 
 
         logger.info('Generating new stacking mask')
-
-        image_height, image_width = img.shape[:2]
 
         # create a black background
         mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
