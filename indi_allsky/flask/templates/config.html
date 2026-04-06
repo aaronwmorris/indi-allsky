@@ -5,14 +5,14 @@
 {% block head %}
 <style>
 #nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab, #nav-sat_track-tab, #nav-timelapse-tab, #nav-overlays-tab {
-	width: 150px;
-	margin-top: 10px;
-	margin-right: 5px;
-	height: 50px;
+    width: 150px;
+    margin-top: 10px;
+    margin-right: 5px;
+    height: 50px;
 }
 
 .strikethrough{
-  text-decoration: line-through;
+    text-decoration: line-through;
 }
 </style>
 <script type="text/javascript">
@@ -826,144 +826,151 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
-    <hr>
+    <div id="libcamera-mqtt-fields">
+        <hr>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__MQTT_HOST.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.LIBCAMERA__MQTT_HOST(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__MQTT_HOST-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">MQTT hostname</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__MQTT_TRANSPORT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.LIBCAMERA__MQTT_TRANSPORT(class='form-select bg-secondary') }}
-            <div id="LIBCAMERA__MQTT_TRANSPORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">MQTT Transport</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__MQTT_PROTOCOL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.LIBCAMERA__MQTT_PROTOCOL(class='form-select bg-secondary') }}
-            <div id="LIBCAMERA__MQTT_PROTOCOL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">MQTT Protocol</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__MQTT_PORT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.LIBCAMERA__MQTT_PORT(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__MQTT_PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">MQTT port - 8883 = TLS, 1883 = standard</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__MQTT_USERNAME.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.LIBCAMERA__MQTT_USERNAME(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__MQTT_USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">MQTT Username</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__MQTT_PASSWORD.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.LIBCAMERA__MQTT_PASSWORD(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__MQTT_PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">MQTT Password</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__MQTT_QOS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-4">
-            {{ form_config.LIBCAMERA__MQTT_QOS(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__MQTT_QOS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6">MQTT QoS - 0 (default), 1, or 2</div>
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__MQTT_TLS.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.LIBCAMERA__MQTT_TLS(class='form-check-input') }}
-                <div id="LIBCAMERA__MQTT_TLS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        <div class="form-group row">
+            <div class="col-sm-12">
+                <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Interfaces#mqtt---libcamera" class="text-decoration-none link-info" target="_blank">MQTT libcamera Wiki</a></div>
             </div>
         </div>
-        <div class="col-sm-8">Use TLS/SSL for MQTT connections</div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__MQTT_CERT_BYPASS.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.LIBCAMERA__MQTT_CERT_BYPASS(class='form-check-input') }}
-                <div id="LIBCAMERA__MQTT_CERT_BYPASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_config.LIBCAMERA__MQTT_HOST.label(class='col-form-label') }}
             </div>
+            <div class="col-sm-4">
+                {{ form_config.LIBCAMERA__MQTT_HOST(class='form-control bg-secondary') }}
+                <div id="LIBCAMERA__MQTT_HOST-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+            <div class="col-sm-6">MQTT hostname</div>
         </div>
-        <div class="col-sm-8">Bypass certificate validation</div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__MQTT_EXPOSURE_TOPIC.label(class='col-form-label') }}
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_config.LIBCAMERA__MQTT_TRANSPORT.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-4">
+                {{ form_config.LIBCAMERA__MQTT_TRANSPORT(class='form-select bg-secondary') }}
+                <div id="LIBCAMERA__MQTT_TRANSPORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+            <div class="col-sm-6">MQTT Transport</div>
         </div>
-        <div class="col-sm-4">
-            {{ form_config.LIBCAMERA__MQTT_EXPOSURE_TOPIC(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__MQTT_EXPOSURE_TOPIC-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6"></div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__MQTT_IMAGE_TOPIC.label(class='col-form-label') }}
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_config.LIBCAMERA__MQTT_PROTOCOL.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-4">
+                {{ form_config.LIBCAMERA__MQTT_PROTOCOL(class='form-select bg-secondary') }}
+                <div id="LIBCAMERA__MQTT_PROTOCOL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+            <div class="col-sm-6">MQTT Protocol</div>
         </div>
-        <div class="col-sm-4">
-            {{ form_config.LIBCAMERA__MQTT_IMAGE_TOPIC(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__MQTT_IMAGE_TOPIC-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6"></div>
-    </div>
 
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.LIBCAMERA__MQTT_METADATA_TOPIC.label(class='col-form-label') }}
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_config.LIBCAMERA__MQTT_PORT.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-4">
+                {{ form_config.LIBCAMERA__MQTT_PORT(class='form-control bg-secondary') }}
+                <div id="LIBCAMERA__MQTT_PORT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+            <div class="col-sm-6">MQTT port - 8883 = TLS, 1883 = standard</div>
         </div>
-        <div class="col-sm-4">
-            {{ form_config.LIBCAMERA__MQTT_METADATA_TOPIC(class='form-control bg-secondary') }}
-            <div id="LIBCAMERA__MQTT_METADATA_TOPIC-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-6"></div>
-    </div>
 
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_config.LIBCAMERA__MQTT_USERNAME.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-4">
+                {{ form_config.LIBCAMERA__MQTT_USERNAME(class='form-control bg-secondary') }}
+                <div id="LIBCAMERA__MQTT_USERNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+            <div class="col-sm-6">MQTT Username</div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_config.LIBCAMERA__MQTT_PASSWORD.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-4">
+                {{ form_config.LIBCAMERA__MQTT_PASSWORD(class='form-control bg-secondary') }}
+                <div id="LIBCAMERA__MQTT_PASSWORD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+            <div class="col-sm-6">MQTT Password</div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_config.LIBCAMERA__MQTT_QOS.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-4">
+                {{ form_config.LIBCAMERA__MQTT_QOS(class='form-control bg-secondary') }}
+                <div id="LIBCAMERA__MQTT_QOS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+            <div class="col-sm-6">MQTT QoS - 0 (default), 1, or 2</div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_config.LIBCAMERA__MQTT_TLS.label }}
+            </div>
+            <div class="col-sm-2">
+                <div class="form-switch">
+                    {{ form_config.LIBCAMERA__MQTT_TLS(class='form-check-input') }}
+                    <div id="LIBCAMERA__MQTT_TLS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                </div>
+            </div>
+            <div class="col-sm-8">Use TLS/SSL for MQTT connections</div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_config.LIBCAMERA__MQTT_CERT_BYPASS.label }}
+            </div>
+            <div class="col-sm-2">
+                <div class="form-switch">
+                    {{ form_config.LIBCAMERA__MQTT_CERT_BYPASS(class='form-check-input') }}
+                    <div id="LIBCAMERA__MQTT_CERT_BYPASS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+                </div>
+            </div>
+            <div class="col-sm-8">Bypass certificate validation</div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_config.LIBCAMERA__MQTT_EXPOSURE_TOPIC.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-4">
+                {{ form_config.LIBCAMERA__MQTT_EXPOSURE_TOPIC(class='form-control bg-secondary') }}
+                <div id="LIBCAMERA__MQTT_EXPOSURE_TOPIC-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+            <div class="col-sm-6"></div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_config.LIBCAMERA__MQTT_IMAGE_TOPIC.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-4">
+                {{ form_config.LIBCAMERA__MQTT_IMAGE_TOPIC(class='form-control bg-secondary') }}
+                <div id="LIBCAMERA__MQTT_IMAGE_TOPIC-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+            <div class="col-sm-6"></div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-sm-2">
+                {{ form_config.LIBCAMERA__MQTT_METADATA_TOPIC.label(class='col-form-label') }}
+            </div>
+            <div class="col-sm-4">
+                {{ form_config.LIBCAMERA__MQTT_METADATA_TOPIC(class='form-control bg-secondary') }}
+                <div id="LIBCAMERA__MQTT_METADATA_TOPIC-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+            <div class="col-sm-6"></div>
+        </div>
+    </div><!-- end libcamera-mqtt-fields -->
 
       </div>
     </div>
@@ -1147,11 +1154,11 @@ var camera_id = {{ camera_id }};
   </div>
   <div class="accordion-item">
     <h2 class="accordion-header">
-      <button class="accordion-button bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIndi" aria-expanded="true" aria-controls="collapseIndi">
+      <button class="accordion-button collapsed bg-secondary text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIndi" aria-expanded="false" aria-controls="collapseIndi">
         INDI Camera Settings
       </button>
     </h2>
-    <div id="collapseIndi" class="accordion-collapse collapse show" data-bs-parent="#accordionCameraSettings">
+    <div id="collapseIndi" class="accordion-collapse collapse" data-bs-parent="#accordionCameraSettings">
       <div class="accordion-body bg-dark bg-opacity-50">
 
 
@@ -1974,7 +1981,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_DENOISE_DAY(class='form-select bg-secondary') }}
             <div id="IMAGE_DENOISE_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        
+
         <div class="col-sm-7">
            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Denoising adds processing time - concern if only a short time limit set between exposures.<br>
                 Algorithm to reduce image noise (applied before stretch). Methods respect stars. Default for all: 3<br>
@@ -11392,6 +11399,41 @@ $( document ).ready(function() {
     group_on_ready('FISH2PANO__ENABLE', group_fields_fish2pano, group_checkbox_fields_fish2pano);
     group_on_ready('IMAGE_OVERLAY__ENABLE', group_fields_image_overlay, group_checkbox_fields_image_overlay);
     group_on_ready('CIRCULAR_DISPLAY__ENABLE', group_fields_circular_display, group_checkbox_fields_circular_display);
+
+
+    // Open the camera settings accordion section that matches the selected
+    // CAMERA_INTERFACE value, both on page load and when the selection changes.
+    // Also shows/hides the MQTT sub-section inside libcamera Settings, which is
+    // only relevant when an mqtt_* interface is selected.
+    function cameraInterfaceAccordion(interfaceValue) {
+        let panelId;
+        if (interfaceValue.startsWith('libcamera_') || interfaceValue.startsWith('mqtt_')) {
+            panelId = 'collapseLibcamera';
+        } else if (interfaceValue === 'pycurl_camera') {
+            panelId = 'collapsePycurl';
+        } else if (interfaceValue.startsWith('test_')) {
+            panelId = 'collapseTestCamera';
+        } else {
+            panelId = 'collapseIndi';
+        }
+        const el = document.getElementById(panelId);
+        if (el) {
+            bootstrap.Collapse.getOrCreateInstance(el).show();
+        }
+
+        const mqttFields = document.getElementById('libcamera-mqtt-fields');
+        if (mqttFields) {
+            mqttFields.style.display = interfaceValue.startsWith('mqtt_') ? '' : 'none';
+        }
+    }
+
+    const cameraInterfaceSelect = document.getElementById('CAMERA_INTERFACE');
+    if (cameraInterfaceSelect) {
+        cameraInterfaceAccordion(cameraInterfaceSelect.value);
+        cameraInterfaceSelect.addEventListener('change', function() {
+            cameraInterfaceAccordion(this.value);
+        });
+    }
 });
 
 </script>
