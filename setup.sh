@@ -223,16 +223,17 @@ if [ -f "/usr/local/bin/indiserver" ]; then
 fi
 
 
-if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
-    echo
-    echo
-    echo "Detected 64-bit kernel (aarch64) on 32-bit system image"
-    echo "You must add the following parameter to /boot/firmware/config.txt and reboot:"
-    echo
-    echo "  arm_64bit=0"
-    echo
-    exit 1
-fi
+### No longer necessary (April 2026)
+#if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+#    echo
+#    echo
+#    echo "Detected 64-bit kernel (aarch64) on 32-bit system image"
+#    echo "You must add the following parameter to /boot/firmware/config.txt and reboot:"
+#    echo
+#    echo "  arm_64bit=0"
+#    echo
+#    exit 1
+#fi
 
 
 if [[ -d "/etc/stellarmate" ]]; then
