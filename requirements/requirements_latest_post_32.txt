@@ -1,2 +1,2 @@
 #rawpy  # not available on armv7l
-git+https://github.com/letmaik/rawpy.git@v0.24.0#egg=rawpy
+git+https://github.com/letmaik/rawpy.git@v0.26.1#egg=rawpy
