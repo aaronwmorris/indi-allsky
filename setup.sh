@@ -223,16 +223,17 @@ if [ -f "/usr/local/bin/indiserver" ]; then
 fi
 
 
-if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
-    echo
-    echo
-    echo "Detected 64-bit kernel (aarch64) on 32-bit system image"
-    echo "You must add the following parameter to /boot/firmware/config.txt and reboot:"
-    echo
-    echo "  arm_64bit=0"
-    echo
-    exit 1
-fi
+### No longer necessary (April 2026)
+#if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+#    echo
+#    echo
+#    echo "Detected 64-bit kernel (aarch64) on 32-bit system image"
+#    echo "You must add the following parameter to /boot/firmware/config.txt and reboot:"
+#    echo
+#    echo "  arm_64bit=0"
+#    echo
+#    exit 1
+#fi
 
 
 if [[ -d "/etc/stellarmate" ]]; then
@@ -660,6 +661,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
@@ -706,7 +708,6 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         ca-certificates \
         avahi-daemon \
         swig \
-        libatlas-ecmwf-dev \
         libimath-dev \
         libopenexr-dev \
         libgtk-3-0t64 \
@@ -754,6 +755,13 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         dnsmasq-base \
         polkitd \
         dbus-user-session
+
+
+    if [ "$CPU_BITS" != "32" ]; then
+        # not available on 32-bit platforms
+        sudo apt-get -y install \
+            libatlas-ecmwf-dev
+    fi
 
 
     # this can fail on non-raspberry pi OS repos
@@ -816,6 +824,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
@@ -1251,6 +1260,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
@@ -1414,6 +1424,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 

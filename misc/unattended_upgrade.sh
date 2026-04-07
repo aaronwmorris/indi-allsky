@@ -272,6 +272,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
@@ -298,7 +299,6 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         ca-certificates \
         avahi-daemon \
         swig \
-        libatlas-ecmwf-dev \
         libimath-dev \
         libopenexr-dev \
         libgtk-3-0t64 \
@@ -348,6 +348,13 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         dbus-user-session
 
 
+    if [ "$CPU_BITS" != "32" ]; then
+        # not available on 32-bit platforms
+        sudo --non-interactive apt-get -y install \
+            libatlas-ecmwf-dev
+    fi
+
+
     # this can fail on non-raspberry pi OS repos
     sudo apt-get -y install \
         liblgpio-dev || true
@@ -357,6 +364,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
@@ -518,6 +526,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 
@@ -599,6 +608,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         VIRTUALENV_REQ=requirements/requirements_latest_armv6l.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     elif [ "$CPU_BITS" == "32" ]; then
+        VIRTUALENV_REQ=requirements/requirements_latest_32.txt
         VIRTUALENV_REQ_POST=requirements/requirements_latest_post_32.txt
     fi
 

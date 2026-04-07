@@ -190,31 +190,36 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 
 
 ## Distibution support
-| Distribution                   | Arch           | Note |
-| ------------------------------ | -------------- | ---- |
-| **Raspberry Pi OS 13 (trixie)** | **aarch64 (64-bit)** | **RECOMMENDED**<br>Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
-| Raspberry Pi OS 13             | armhf (32-bit) | (NOT RECOMMENDED) Some python modules do not have armhf wheels and must be compiled from source.  This will take a few hours. |
-| Raspberry Pi OS 12 (bookworm)  | aarch64 (64-bit) | Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
-| Raspberry Pi OS 12             | armhf (32-bit) | (NOT RECOMMENDED) Some python modules do not have armhf wheels and must be compiled from source.  This will take a few hours. |
-| Raspberry Pi OS 11 (bullseye)  | aarch64/armhf  | Compile INDI with build_indi.sh |
-| Raspberry Pi OS 10 (buster)    | armhf          | (DO NOT USE) |
-| **Debian 13 (trixie)**         | **x86_64**     | **RECOMMENDED**<br>Compile INDI with build_indi.sh |
-| Debian 12 (bookworm)           | x86_64         | Compile INDI with build_indi.sh |
-| Debian 11 (bullseye)           | x86_64         | Compile INDI with build_indi.sh |
-| Debian 10 (buster)             | x86_64         | (DO NOT USE) |
-| Ubuntu 24.04 (noble)           |                | Requires INDI 2.0.8 or newer for pyindi-client<br>INDI installed from ppa:mutlaqja/ppa<br>Compile libcamera with build_libcamera.sh |
-| Ubuntu 22.04 (focal)           | aarch64        | INDI installed from ppa:mutlaqja/ppa |
-| Ubuntu 22.04                   | armhf          | Compile INDI with build_indi.sh |
-| Ubuntu 22.04                   | x86_64         | INDI installed from ppa:mutlaqja/ppa |
-| Ubuntu 20.04 (bionic)          | x86_64         | (NOT RECOMMENDED) INDI installed from ppa:mutlaqja/ppa |
-| Ubuntu 20.04                   | aarch64        | (NOT RECOMMENDED) Compile INDI with build_indi.sh |
-| Armbian                        | aarch64/armhf  | Compile INDI with build_indi.sh<br>https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
-| Linux Mint 22                  | x86_64         | INDI installed from ppa:mutlaqja/ppa |
-| Linux Mint 21                  | x86_64         | INDI installed from ppa:mutlaqja/ppa |
-| LMDE 6 (Linux Mint)            | x86_64         | Compile INDI with build_indi.sh |
-| Stellarmate 1.8.x              | x86_64/aarch64 | INDI pre-installed |
-| Astroberry 3.0                 | aarch64        | |
-| ~~Astroberry Server 2.0~~      | armhf          | (DO NOT USE) |
+| Distribution                    | Note |
+| ------------------------------- | ---- |
+| **Raspberry Pi OS 13 (trixie)** | **RECOMMENDED**<br>Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
+| Raspberry Pi OS 12 (bookworm)   | Compile INDI with build_indi.sh<br>Use libcamera or [indi_pylibcamera](https://github.com/scriptorron/indi_pylibcamera) for Raspberry PI HQ camera |
+| Raspberry Pi OS 11 (bullseye)   | Compile INDI with build_indi.sh |
+| Raspberry Pi OS 10 (buster)     | (DO NOT USE) |
+| **Debian 13 (trixie)**          | **RECOMMENDED**<br>Compile INDI with build_indi.sh |
+| Debian 12 (bookworm)            | Compile INDI with build_indi.sh |
+| Debian 11 (bullseye)            | Compile INDI with build_indi.sh |
+| Debian 10 (buster)              | (DO NOT USE) |
+| Ubuntu 24.04 (noble)            | **RECOMMENDED**<br>Requires INDI 2.0.8 or newer for pyindi-client<br>INDI installed from ppa:mutlaqja/ppa<br>Compile libcamera with build_libcamera.sh |
+| Ubuntu 22.04 (focal)            | INDI installed from ppa:mutlaqja/ppa |
+| Ubuntu 20.04 (bionic)           | (NOT RECOMMENDED) INDI installed from ppa:mutlaqja/ppa |
+| Armbian                         | Compile INDI with build_indi.sh<br>https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
+| Linux Mint 22                   | INDI installed from ppa:mutlaqja/ppa |
+| Linux Mint 21                   | INDI installed from ppa:mutlaqja/ppa |
+| LMDE 6 (Linux Mint)             | Compile INDI with build_indi.sh |
+| Stellarmate 1.8.x               | INDI pre-installed |
+| Astroberry 3.0                  | |
+| ~~Astroberry Server 2.0~~       | (DO NOT USE) |
+
+
+## Platform support
+| Platform        | Support         | Note |
+| --------------- | --------------- | ---- |
+| x86_64 (amd64)  | Excellent       |      |
+| aarch64 (arm64) | Excellent       |      |
+| armv7l (armhf)  | Not working (Apr 2026) | Current not working due to having to compile python module `dask-image` which requires `dask[array,dataframe]` which requires `pyarrow`.  pyarrow will not compile without Apache Arrow libs (not available on 32-bit platforms)<br>Many python packages do not distribute armhf python wheels which have to be compiled from source |
+| armv6l (armhf)  | Not Recommended | Raspberry Pi [v1] and Raspberry Pi Zero [v1] - In addition, some python modules will install armv7l versions which can contain CPU instructions not compatible with armv6l resulting in segfaults<br>Restricted memory environments (<= 512MB) make compiling python modules difficult |
+| x86 (32-bit)    | Problematic     | Many python packages do not distribute x86 python wheels which have to be compiled from source |
 
 
 ## INDI support
