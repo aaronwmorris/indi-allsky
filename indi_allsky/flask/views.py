@@ -2852,10 +2852,12 @@ class ConfigView(FormView):
             'TEMP_SENSOR__TSL2561_GAIN_DAY'  : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_DAY', 0)),  # string in form, int in config
             'TEMP_SENSOR__TSL2561_INT_NIGHT' : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_INT_NIGHT', 1)),  # string in form, int in config
             'TEMP_SENSOR__TSL2561_INT_DAY'   : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_INT_DAY', 1)),  # string in form, int in config
+            'TEMP_SENSOR__TSL2561_DISABLE_DAY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_DISABLE_DAY', False),
             'TEMP_SENSOR__TSL2591_GAIN_NIGHT': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2591_GAIN_NIGHT', 'GAIN_MED'),
             'TEMP_SENSOR__TSL2591_GAIN_DAY'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2591_GAIN_DAY', 'GAIN_LOW'),
             'TEMP_SENSOR__TSL2591_INT_NIGHT' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2591_INT_NIGHT', 'INTEGRATIONTIME_100MS'),
             'TEMP_SENSOR__TSL2591_INT_DAY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2591_INT_DAY', 'INTEGRATIONTIME_100MS'),
+            'TEMP_SENSOR__TSL2591_DISABLE_DAY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2591_DISABLE_DAY', False),
             'TEMP_SENSOR__VEML7700_GAIN_NIGHT': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('VEML7700_GAIN_NIGHT', 'ALS_GAIN_1'),
             'TEMP_SENSOR__VEML7700_GAIN_DAY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('VEML7700_GAIN_DAY', 'ALS_GAIN_1_8'),
             'TEMP_SENSOR__VEML7700_INT_NIGHT': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('VEML7700_INT_NIGHT', 'ALS_100MS'),
@@ -3882,10 +3884,12 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['TSL2561_GAIN_DAY']      = int(request.json['TEMP_SENSOR__TSL2561_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2561_INT_NIGHT']     = int(request.json['TEMP_SENSOR__TSL2561_INT_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2561_INT_DAY']       = int(request.json['TEMP_SENSOR__TSL2561_INT_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['TSL2561_DISABLE_DAY']   = bool(request.json['TEMP_SENSOR__TSL2561_DISABLE_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2591_GAIN_NIGHT']    = str(request.json['TEMP_SENSOR__TSL2591_GAIN_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2591_GAIN_DAY']      = str(request.json['TEMP_SENSOR__TSL2591_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2591_INT_NIGHT']     = str(request.json['TEMP_SENSOR__TSL2591_INT_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2591_INT_DAY']       = str(request.json['TEMP_SENSOR__TSL2591_INT_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['TSL2591_DISABLE_DAY']   = bool(request.json['TEMP_SENSOR__TSL2591_DISABLE_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['VEML7700_GAIN_NIGHT']   = str(request.json['TEMP_SENSOR__VEML7700_GAIN_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['VEML7700_GAIN_DAY']     = str(request.json['TEMP_SENSOR__VEML7700_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['VEML7700_INT_NIGHT']    = str(request.json['TEMP_SENSOR__VEML7700_INT_NIGHT'])
