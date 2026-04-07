@@ -24,6 +24,14 @@ class LightSensorTsl2591(SensorBase):
         #logger.info('[%s] TSL2591 settings - Gain: %d, Integration: %d', gain, integration)
 
 
+        if self.disable_day:
+            data = {
+                'data' : (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+            }
+
+            return data
+
+
         try:
             lux = float(self.tsl2591.lux)
             infrared = int(self.tsl2591.infrared)
@@ -130,6 +138,7 @@ class LightSensorTsl2591_I2C(LightSensorTsl2591):
         self.gain_day = getattr(adafruit_tsl2591, self.config.get('TEMP_SENSOR', {}).get('TSL2591_GAIN_DAY', 'GAIN_LOW'))
         self.integration_night = getattr(adafruit_tsl2591, self.config.get('TEMP_SENSOR', {}).get('TSL2591_INT_NIGHT', 'INTEGRATIONTIME_100MS'))
         self.integration_day = getattr(adafruit_tsl2591, self.config.get('TEMP_SENSOR', {}).get('TSL2591_INT_DAY', 'INTEGRATIONTIME_100MS'))
+        self.disable_day = bool(self.config.get('TEMP_SENSOR', {}).get('TSL2591_DISABLE_DAY', False))
 
 
         ### You can optionally change the gain and integration time:
