@@ -15,11 +15,6 @@
     text-decoration: line-through;
 }
 
-.field-highlight {
-  background-color: rgba(255, 193, 7, 0.15);
-  outline: 1px solid rgba(255, 193, 7, 0.5);
-  border-radius: 4px;
-}
 </style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
@@ -11440,126 +11435,7 @@ $( document ).ready(function() {
             cameraInterfaceAccordion(this.value);
         });
     }
-
-
-    // Tab deep-linking with URL hash.
-    //
-    // Supported hash formats:
-    //   #camera                          -> open the Camera tab
-    //   #nav-camera                      -> same, full panel ID form
-    //   #processing-SOME_FIELD__NAME     -> open Processing tab and highlight field
-    //   #doesnotexist-SOME_FIELD__NAME   -> bad tab name: fall back to finding the field
-    //   #camera-DETECT_MASK              -> good tab name but field not in that tab: field wins
-    //   #SOME_FIELD__NAME                -> no tab given: find the field, open its tab
-    //
-    // Tab names are the panel IDs without the 'nav-' prefix (e.g. camera, image,
-    // processing, location ...).  Field names match the HTML input IDs
-    (function() {
-        function parseHash(hash) {
-            // Returns { tab: 'camera', field: 'SOME_FIELD' | null }
-            let raw = hash.replace(/^#/, '');
-            if (raw.startsWith('nav-')) raw = raw.slice(4);
-            const sep = raw.indexOf('-');
-            if (sep === -1) return { tab: raw, field: null };
-            return { tab: raw.slice(0, sep), field: raw.slice(sep + 1) };
-        }
-
-        function highlightField(fieldId) {
-            const el = document.getElementById(fieldId);
-            if (!el) return;
-
-            // Open accordion section with the field
-            const collapse = el.closest('.accordion-collapse');
-            if (collapse && !collapse.classList.contains('show')) {
-                bootstrap.Collapse.getOrCreateInstance(collapse).show();
-            }
-
-            // Highlight the form-group
-            const row = el.closest('.form-group') || el;
-            row.classList.add('field-highlight');
-
-            // Scroll to the field with small delay
-            setTimeout(function() {
-                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 350);
-        }
-
-        function showTabThenHighlight(btn, fieldId) {
-            const panel = document.querySelector(btn.getAttribute('data-bs-target'));
-            if (panel && panel.classList.contains('active')) {
-                if (fieldId) highlightField(fieldId);
-            } else {
-                if (fieldId) {
-                    btn.addEventListener('shown.bs.tab', function() {
-                        highlightField(fieldId);
-                    }, { once: true });
-                }
-                bootstrap.Tab.getOrCreateInstance(btn).show();
-            }
-        }
-
-        function findFieldTab(fieldId) {
-            // Return the tab short-name that contains this field, or null
-            const el = document.getElementById(fieldId);
-            if (!el) return null;
-            const panel = el.closest('.tab-pane');
-            if (!panel) return null;
-            return panel.id.replace(/^nav-/, '');
-        }
-
-        function clearHighlights() {
-            document.querySelectorAll('.field-highlight').forEach(function(el) {
-                el.classList.remove('field-highlight');
-            });
-        }
-
-        function activateTabFromHash(hash) {
-            if (!hash) return;
-            clearHighlights();
-            const { tab, field } = parseHash(hash);
-
-            let btn = document.querySelector('[data-bs-target="#nav-' + tab + '"]');
-
-            if (btn && field) {
-                // Tab found and field requested. Double check that the tab is the correct one
-                // field wins here
-                const actualTab = findFieldTab(field);
-                if (actualTab && actualTab !== tab) {
-                    btn = document.querySelector('[data-bs-target="#nav-' + actualTab + '"]');
-                    history.replaceState(null, '', '#' + actualTab + '-' + field);
-                }
-                showTabThenHighlight(btn, field);
-            } else if (btn) {
-                // Tab found, no field
-                showTabThenHighlight(btn, null);
-            } else {
-                // Tab not found — treat field (or whole token) as the field ID
-                const fieldId = field || tab;
-                const foundTab = findFieldTab(fieldId);
-                if (foundTab) {
-                    btn = document.querySelector('[data-bs-target="#nav-' + foundTab + '"]');
-                    showTabThenHighlight(btn, fieldId);
-                    // Update hash to canonical form now that we know the tab
-                    history.replaceState(null, '', '#' + foundTab + '-' + fieldId);
-                }
-            }
-        }
-
-        // Activate tab and highlight fields with url hash
-        activateTabFromHash(window.location.hash);
-        window.addEventListener('hashchange', function() {
-            activateTabFromHash(window.location.hash);
-        });
-
-        // Update hash when the user switches tabs (without adding a history entry)
-        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(btn) {
-            btn.addEventListener('shown.bs.tab', function(e) {
-                const panelId = e.target.getAttribute('data-bs-target').replace(/^#nav-/, '');
-                history.replaceState(null, '', '#' + panelId);
-            });
-        });
-    })();
-});
+});  // end $(document).ready
 
 </script>
 
