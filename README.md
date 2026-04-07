@@ -217,7 +217,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | --------------- | --------------- | ---- |
 | x86_64 (amd64)  | A               |      |
 | aarch64 (arm64) | A               |      |
-| armv7l (armhf)  | Problematic     | Many python packages do not distribute armhf python wheels which have to be compiled from source |
+| armv7l (armhf)  | Not working (Apr 2026) | Current not working due to having to compile python module `dask-image` which requires `dask[array,dataframe]` which requires `pyarrow`.  pyarrow will not compile without Apache Arrow libs (not available on 32-bit platforms)<br>Many python packages do not distribute armhf python wheels which have to be compiled from source |
 | armv6l (armhf)  | Not Recommended | Raspberry Pi [v1] and Raspberry Pi Zero [v1] - In addition, some python modules will install armv7l versions which can contain CPU instructions not compatible with armv6l resulting in segfaults<br>Restricted memory environments (<= 512MB) make compiling python modules difficult |
 | x86 (32-bit)    | Problematic     | Many python packages do not distribute x86 python wheels which have to be compiled from source |
 
