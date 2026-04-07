@@ -140,6 +140,9 @@ class LightSensorTsl2591_I2C(LightSensorTsl2591):
         self.integration_day = getattr(adafruit_tsl2591, self.config.get('TEMP_SENSOR', {}).get('TSL2591_INT_DAY', 'INTEGRATIONTIME_100MS'))
         self.disable_day = bool(self.config.get('TEMP_SENSOR', {}).get('TSL2591_DISABLE_DAY', False))
 
+        if self.disable_day:
+            logger.warning('TSL2591 daytime operation disabled')
+
 
         ### You can optionally change the gain and integration time:
         #self.tsl2591.gain = adafruit_tsl2591.GAIN_LOW   # (1x gain)

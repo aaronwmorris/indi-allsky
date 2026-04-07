@@ -137,6 +137,9 @@ class LightSensorTsl2561_I2C(LightSensorTsl2561):
         self.integration_day = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_INT_DAY', 1))
         self.disable_day = bool(self.config.get('TEMP_SENSOR', {}).get('TSL2561_DISABLE_DAY', False))
 
+        if self.disable_day:
+            logger.warning('TSL2561 daytime operation disabled')
+
 
         # Enable the light sensor
         self.tsl2561.enabled = True
