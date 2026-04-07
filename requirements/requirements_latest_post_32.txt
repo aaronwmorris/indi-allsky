@@ -1,2 +1,4 @@
 #rawpy  # not available on armv7l
-git+https://github.com/letmaik/rawpy.git@v0.26.1#egg=rawpy
+#git+https://github.com/letmaik/rawpy.git@v0.26.1#egg=rawpy
+### Install from HEAD for now.  Updates after release 0.26.1 actually compile
+git+https://github.com/letmaik/rawpy.git
