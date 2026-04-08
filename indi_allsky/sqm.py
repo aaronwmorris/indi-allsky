@@ -115,6 +115,8 @@ class IndiAllskySqm(object):
 
         # combine masks in case there is overlapping regions
         if not isinstance(self._external_mask_dict[binning], type(None)):
+            # combine existing mask with a central ROI
+            logger.info('Merging SQM mask with central ROI')
             self._sqm_mask_dict[binning] = cv2.bitwise_and(mask, self._external_mask_dict[binning])
             return
 
