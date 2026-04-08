@@ -260,21 +260,13 @@ class IndiAllskyStacker(object):
 
 
     def _generateStackMask(self, img, binning):
-        image_height, image_width = img.shape[:2]
-
-
-        if not isinstance(self._sqm_mask_dict[binning], type(None)):
-            # combine existing mask with a central ROI
-            logger.info('Generating stacking mask based on existing mask')
-            mask = self._sqm_mask_dict[binning]
-        else:
-            mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
-
-
         logger.info('Generating new stacking mask')
 
+        image_height, image_width = img.shape[:2]
+
         # create a black background
-        mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+        stack_mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+
 
         sqm_roi = self.config.get('SQM_ROI', [])
 
@@ -291,14 +283,23 @@ class IndiAllskyStacker(object):
             x2 = int((image_width / 2) + (image_width / sqm_fov_div))
             y2 = int((image_height / 2) + (image_height / sqm_fov_div))
 
+
         # The white area is what we keep
         cv2.rectangle(
-            img=mask,
+            img=stack_mask,
             pt1=(x1, y1),
             pt2=(x2, y2),
             color=255,  # mono
             thickness=cv2.FILLED,
         )
 
-        self._stack_mask_dict[binning] = mask
+
+        if not isinstance(self._sqm_mask_dict[binning], type(None)):
+            # combine existing mask with a central ROI
+            logger.info('Merging SQM mask with central ROI')
+            self._sqm_mask_dict[binning] = cv2.bitwise_and(stack_mask, self._sqm_mask_dict[binning])
+            return
+
+
+        self._stack_mask_dict[binning] = stack_mask
 

@@ -87,6 +87,7 @@ class IndiAllskySqm(object):
         # create a black background
         mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
 
+
         sqm_roi = self.config.get('SQM_ROI', [])
 
         try:
@@ -114,7 +115,9 @@ class IndiAllskySqm(object):
 
         # combine masks in case there is overlapping regions
         if not isinstance(self._external_mask_dict[binning], type(None)):
-            self._sqm_mask_dict[binning] = cv2.bitwise_and(mask, mask, mask=self._external_mask_dict[binning])
+            # combine existing mask with a central ROI
+            logger.info('Merging SQM mask with central ROI')
+            self._sqm_mask_dict[binning] = cv2.bitwise_and(mask, self._external_mask_dict[binning])
             return
 
 
