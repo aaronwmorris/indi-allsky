@@ -87,6 +87,7 @@ class IndiAllskySqm(object):
         # create a black background
         mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
 
+
         sqm_roi = self.config.get('SQM_ROI', [])
 
         try:

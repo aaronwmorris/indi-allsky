@@ -265,7 +265,7 @@ class IndiAllskyStacker(object):
         image_height, image_width = img.shape[:2]
 
         # create a black background
-        mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+        stack_mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
 
 
         sqm_roi = self.config.get('SQM_ROI', [])
@@ -286,7 +286,7 @@ class IndiAllskyStacker(object):
 
         # The white area is what we keep
         cv2.rectangle(
-            img=mask,
+            img=stack_mask,
             pt1=(x1, y1),
             pt2=(x2, y2),
             color=255,  # mono
@@ -298,10 +298,9 @@ class IndiAllskyStacker(object):
             # combine existing mask with a central ROI
             logger.info('Merging SQM mask with stacking mask')
 
-            # Ensure excluded (black) areas in SQM mask are excluded in stacking mask
-            mask[self._sqm_mask_dict[binning] == 255] == 255
-            mask[self._sqm_mask_dict[binning] == 0] == 0
+            self._sqm_mask_dict[binning] = cv2.bitwise_and(stack_mask, self._sqm_mask_dict[binning])
+            return
 
 
-        self._stack_mask_dict[binning] = mask
+        self._stack_mask_dict[binning] = stack_mask
 
