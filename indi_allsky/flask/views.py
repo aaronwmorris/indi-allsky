@@ -5047,10 +5047,10 @@ class SystemInfoView(TemplateView):
         except ImportError:
             paho_mqtt = None
 
-        try:
-            import PyIndi
-        except ImportError:
-            PyIndi = None
+        #try:
+        #    import PyIndi
+        #except ImportError:
+        #    PyIndi = None
 
         try:
             import skyfield
@@ -5128,14 +5128,15 @@ class SystemInfoView(TemplateView):
         else:
             context['pahomqtt_version'] = 'Not installed'
 
-        if PyIndi:
-            context['pyindi_version'] = '.'.join((
-                str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
-                str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
-                str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
-            ))
-        else:
-            context['pyindi_version'] = 'Not installed'
+        ### PyIndi no longer reports a version
+        #if PyIndi:
+        #    context['pyindi_version'] = '.'.join((
+        #        str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
+        #        str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
+        #        str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
+        #    ))
+        #else:
+        #    context['pyindi_version'] = 'Not installed'
 
         if skyfield:
             context['skyfield_version'] = str(getattr(skyfield, '__version__', -1))
