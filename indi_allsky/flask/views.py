@@ -5028,6 +5028,7 @@ class SystemInfoView(TemplateView):
     decorators = [login_required]
 
     def get_context(self):
+        import sys
         import platform
         import astropy
         import flask
@@ -5101,6 +5102,11 @@ class SystemInfoView(TemplateView):
 
         context['python_version'] = platform.python_version()
         context['python_platform'] = platform.machine()
+
+        if sys.maxsize > 2147483648:
+            context['cpu_bits'] = 64
+        else:
+            context['cpu_bits'] = 32
 
         context['gunicorn_version'] = str(getattr(gunicorn, '__version__', -1))
         context['cryptography_version'] = str(getattr(cryptography, '__version__', -1))
