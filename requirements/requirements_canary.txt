@@ -32,7 +32,7 @@ Flask-Login == 0.6.3
 werkzeug == 3.1.6
 is-safe-url
 certifi == 2024.7.4
-cryptography == 46.0.6
+cryptography == 46.0.7
 dbus-python == 1.4.0
 paho-mqtt == 2.0.0
 setuptools-rust
