@@ -343,6 +343,14 @@ class IndiAllSky(object):
 
         logger.info('Python version: %s', platform.python_version())
         logger.info('Platform: %s', platform.machine())
+
+
+        if sys.maxsize > 2147483648:
+            logger.info('Bits: 64')
+        else:
+            logger.info('Bits: 32')
+
+
         logger.info('System Type: %s', self._getSystemType())
 
         logger.info('System CPUs: %d', psutil.cpu_count())

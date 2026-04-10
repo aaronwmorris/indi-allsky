@@ -77,7 +77,7 @@ var camera_id = {{ camera_id }};
 <div class="row">
     <div class="col-sm-2"><h4>CPUs</h4></div>
     <div class="col-sm-1">{{cpu_count}}</div>
-    <div class="col-sm-2">{{python_platform}}</div>
+    <div class="col-sm-2">{{python_platform}} [{{cpu_bits}}-bit]</div>
 </div>
 
 <div class="row">
@@ -248,12 +248,6 @@ var camera_id = {{ camera_id }};
     <div class="col-sm-2"></div>
     <div class="col-sm-1">cryptography</div>
     <div class="col-sm-1">{{cryptography_version}}</div>
-</div>
-
-<div class="row">
-    <div class="col-sm-2"></div>
-    <div class="col-sm-1">pyindi</div>
-    <div class="col-sm-1">{{pyindi_version}}</div>
 </div>
 
 <div class="row">
