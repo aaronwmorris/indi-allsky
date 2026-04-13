@@ -2111,7 +2111,7 @@ class ConfigView(FormView):
             if not dh_manual_target:
                 if not isinstance(dh_temp, type(None)) and not isinstance(dh_dewpoint, type(None)):
                     dh_temp_delta = dh_temp - dh_dewpoint
-                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}°'.format(dh_temp_delta)
+                    context['dh_temp_delta_str'] = 'Δ{0:+0.1f}°'.format(dh_temp_delta)
 
                     dh_target_low = dh_dewpoint + dh_thold_diff_low
                     dh_target_med = dh_dewpoint + dh_thold_diff_med
@@ -2142,7 +2142,7 @@ class ConfigView(FormView):
             else:
                 if not isinstance(dh_temp, type(None)):
                     dh_temp_delta = dh_temp - dh_manual_target
-                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}° (manual target)'.format(dh_temp_delta)
+                    context['dh_temp_delta_str'] = 'Δ{0:+0.1f}° (manual target)'.format(dh_temp_delta)
 
                     dh_target_low = dh_manual_target + dh_thold_diff_low
                     dh_target_med = dh_manual_target + dh_thold_diff_med
@@ -2181,7 +2181,7 @@ class ConfigView(FormView):
             fan_target = self.indi_allsky_config.get('FAN', {}).get('TARGET', 30.0)
             if not isinstance(fan_temp, type(None)):
                 fan_temp_delta = fan_temp - fan_target
-                context['fan_temp_delta_str'] = 'Δ{0:0.1f}°'.format(fan_temp_delta)
+                context['fan_temp_delta_str'] = 'Δ{0:+0.1f}°'.format(fan_temp_delta)
 
                 fan_target_low = fan_target + fan_thold_diff_low
                 fan_target_med = fan_target + fan_thold_diff_med
