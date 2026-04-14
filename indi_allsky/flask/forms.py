@@ -9995,6 +9995,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
             ('imx385', 'IMX385 - 1/1.9"'),
             ('imx477', 'IMX477 - 1/2.3" - HQ Camera'),
             ('icx205al', 'ICX205AL - 1/2" - SX Superstar'),
+            ('icx267al', 'ICX267AL - 1/2" - SX Oculus'),
             ('mt9t001', 'MT9T001 - 1/2"'),
         ),
         'Medium - 9mm Class' : (
