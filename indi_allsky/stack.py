@@ -25,6 +25,7 @@ class IndiAllskyStacker(object):
 
         self.hist_rotation = list()
         self._rotation_dev = 3  # rotation may not exceed this deviation
+        self._scale_limit = 0.97  # scale may not exceed this value (+/-)
         self._history_min_vals = 15
 
 
@@ -207,6 +208,12 @@ class IndiAllskyStacker(object):
                 self.hist_rotation.append(rotation)  # only add known good rotation values
                 last_rotation = transform.rotation
 
+
+                # if the new scale exceeds the limit, do not apply the transform
+                # scale should almost always be +/- 0.99
+                if abs(transform.scale) < self._scale_limit:
+                    logger.error('Scale %0.6f exceeded limit of +/- %0.2f', transform.scale, self._scale_limit)
+                    continue
 
 
                 reg_data, footprint = astroalign.apply_transform(
