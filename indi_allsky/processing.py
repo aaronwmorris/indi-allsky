@@ -3041,31 +3041,15 @@ class ImageProcessor(object):
             elif solar_eclipse:
                 image_label += '\n* SOLAR ECLIPSE *'
 
-
-        # add extra text to image
-        extra_text_lines = self.get_extra_text()
-        if extra_text_lines:
-            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
-
-            for line in extra_text_lines:
-                image_label += '\n{0:s}'.format(line)
-
-
-        # aircraft lines
-        adsb_aircraft_lines = self.get_adsb_aircraft_text(adsb_aircraft_list)
-        if adsb_aircraft_lines:
-            #logger.info('Adding aircraft text')
-
-            for line in adsb_aircraft_lines:
-                image_label += '\n{0:s}'.format(line)
-
-
-        # satellite tracking lines
-        satellite_tracking_lines = self.get_satellite_tracking_text()
-        if satellite_tracking_lines:
-            #logger.info('Adding satellite text')
-
-            for line in satellite_tracking_lines:
+        # add extra_text and adsb and satellites
+        # these are "partials" that have their own xy specifications
+        # so these are just appended to the end of the label
+        for lines in (
+            self.get_extra_text(),
+            self.get_adsb_aircraft_text(adsb_aircraft_list),
+            self.get_satellite_tracking_text(),
+        ):
+            for line in lines:
                 image_label += '\n{0:s}'.format(line)
 
 
