@@ -2679,7 +2679,7 @@ var camera_id = {{ camera_id }};
             <div id="IMAGE_EXTRA_TEXT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-5">
-            <div>File containing extra text for image</div>
+            <div>Absolute path to a file with extra lines to append to the image label. Supports the same directives as the label template above, but has no access to template variables. Relative paths are not recommended as they resolve from the process working directory.</div>
         </div>
     </div>
 
@@ -2715,7 +2715,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.TEXT_PROPERTIES__PIL_FONT_CUSTOM(class='form-control bg-secondary') }}
             <div id="TEXT_PROPERTIES__PIL_FONT_CUSTOM-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-5">Custom TrueType font</div>
+        <div class="col-sm-5">Absolute path to a custom TrueType (.ttf) or OpenType (.otf) font file. Only used when the font selector above is set to "Custom".</div>
     </div>
 
     <hr>
@@ -3566,7 +3566,7 @@ var camera_id = {{ camera_id }};
             <div id="LOGO_OVERLAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-5">
-            <div>Logo overlay image.  Must have an alpha channel.</div>
+            <div>Absolute path to a logo image to overlay on every frame. Must be the exact same dimensions as the camera image and must have an alpha channel for transparency. PNG is the recommended format — SVG and other vector formats are not supported. The image is read by OpenCV so JPEG, BMP, TIFF, and WebP also work but cannot carry an alpha channel.</div>
         </div>
     </div>
 
@@ -5469,7 +5469,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.WEB_EXTRA_TEXT(class='form-control bg-secondary') }}
             <div id="WEB_EXTRA_TEXT-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-6">File containing extra text to be included in info box</div>
+        <div class="col-sm-6">Absolute path to a file with extra text for the web info box. Relative paths are not recommended as they resolve from the process working directory.</div>
     </div>
 
     <hr>
