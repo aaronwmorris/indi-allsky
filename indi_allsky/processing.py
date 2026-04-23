@@ -2985,8 +2985,15 @@ class ImageProcessor(object):
         label_data['moonmode_label'] = '* Moon Mode *' if moonmode_active else ''
         label_data['moonmode_none']  = ''
 
-        label_data['eclipse']       = 'On' if (lunar_eclipse or solar_eclipse) else 'Off'
-        label_data['eclipse_label'] = '* LUNAR ECLIPSE *' if lunar_eclipse else ('* SOLAR ECLIPSE *' if solar_eclipse else '')
+        if lunar_eclipse:
+            label_data['eclipse']       = 'Lunar'
+            label_data['eclipse_label'] = '* LUNAR ECLIPSE *'
+        elif solar_eclipse:
+            label_data['eclipse']       = 'Solar'
+            label_data['eclipse_label'] = '* SOLAR ECLIPSE *'
+        else:
+            label_data['eclipse']       = 'No'
+            label_data['eclipse_label'] = ''
         label_data['eclipse_none']  = ''
 
         modes_parts = []
