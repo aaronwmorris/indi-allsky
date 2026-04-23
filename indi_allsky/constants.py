@@ -91,6 +91,10 @@ ASTRO_SUN_ALT       = 0
 ASTRO_MOON_ALT      = 1
 ASTRO_MOON_PHASE    = 2
 
+# Eclipse detection thresholds (degrees of sun-moon separation)
+LUNAR_ECLIPSE_MAX_SUN_MOON_SEP  = 1.25    # lunar eclipse when separation is below this
+SOLAR_ECLIPSE_MIN_SUN_MOON_SEP  = 179.0   # solar eclipse when separation is above this
+
 
 # Position indexes
 POSITION_LATITUDE   = 0

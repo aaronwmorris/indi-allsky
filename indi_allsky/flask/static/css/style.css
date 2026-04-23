@@ -5,6 +5,11 @@
     }
 }
 
+/* Override Bootstrap's default pink code color for dark theme */
+code {
+    color: #e0e0e0;
+}
+
 /* Highlight applied to a form-group row when deep-linked via URL hash */
 .field-highlight {
     background-color: rgba(255, 193, 7, 0.15);

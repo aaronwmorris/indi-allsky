@@ -2977,6 +2977,28 @@ class ImageProcessor(object):
             label_data['wind_dir'] = 'Error'
 
 
+        moonmode_active = bool(self.night_av[constants.NIGHT_MOONMODE])
+        lunar_eclipse   = self.astrometric_data['sun_moon_sep'] < constants.LUNAR_ECLIPSE_MAX_SUN_MOON_SEP and bool(self.night_av[constants.NIGHT_NIGHT])
+        solar_eclipse   = self.astrometric_data['sun_moon_sep'] > constants.SOLAR_ECLIPSE_MIN_SUN_MOON_SEP and not bool(self.night_av[constants.NIGHT_NIGHT])
+
+        label_data['moonmode']       = 'On' if moonmode_active else 'Off'
+        label_data['moonmode_label'] = '* Moon Mode *' if moonmode_active else ''
+        label_data['moonmode_none']  = ''
+
+        label_data['eclipse']       = 'On' if (lunar_eclipse or solar_eclipse) else 'Off'
+        label_data['eclipse_label'] = '* LUNAR ECLIPSE *' if lunar_eclipse else ('* SOLAR ECLIPSE *' if solar_eclipse else '')
+        label_data['eclipse_none']  = ''
+
+        modes_parts = []
+        if moonmode_active:
+            modes_parts.append('* Moon Mode *')
+        if lunar_eclipse:
+            modes_parts.append('* LUNAR ECLIPSE *')
+        elif solar_eclipse:
+            modes_parts.append('* SOLAR ECLIPSE *')
+        label_data['modes']      = '\n'.join(modes_parts)
+        label_data['modes_none'] = ''
+
         label_data['custom_1'] = str(custom_hook_data.get('custom_1', ''))
         label_data['custom_2'] = str(custom_hook_data.get('custom_2', ''))
         label_data['custom_3'] = str(custom_hook_data.get('custom_3', ''))
@@ -3003,19 +3025,21 @@ class ImageProcessor(object):
         image_label = image_label_tmpl.format(**label_data)  # fill in the data
 
 
-        # Add moon mode indicator
-        if self.night_av[constants.NIGHT_MOONMODE]:
+        # Hardcoded appends for backward compatatiblity. skipped if the template handles them with placeholders
+        modes_in_tmpl   = '{modes' in image_label_tmpl
+        moonmode_in_tmpl = '{moonmode' in image_label_tmpl
+        eclipse_in_tmpl  = '{eclipse' in image_label_tmpl
+
+        # no modes and no moonmode placeholder in tempalte but moon is active add the original extra label
+        if not modes_in_tmpl and not moonmode_in_tmpl and moonmode_active:
             image_label += '\n* Moon Mode *'
 
-
-        # Add eclipse indicator
-        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_av[constants.NIGHT_NIGHT]:
-            # Lunar eclipse (earth's penumbra is large)
-            image_label += '\n* LUNAR ECLIPSE *'
-
-        if self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_av[constants.NIGHT_NIGHT]:
-            # Solar eclipse
-            image_label += '\n* SOLAR ECLIPSE *'
+        # no modes and no eclipse placeholder in template but eclipse is active add the original extra label
+        if not modes_in_tmpl and not eclipse_in_tmpl:
+            if lunar_eclipse:
+                image_label += '\n* LUNAR ECLIPSE *'
+            elif solar_eclipse:
+                image_label += '\n* SOLAR ECLIPSE *'
 
 
         # add extra text to image
@@ -4505,4 +4529,3 @@ class ImageData(object):
 
 
         self.detected_bit_depth = detected_bit_depth
-

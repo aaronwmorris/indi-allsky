@@ -2642,15 +2642,31 @@ var camera_id = {{ camera_id }};
             {{ form_config.IMAGE_LABEL_TEMPLATE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
-            {{ form_config.IMAGE_LABEL_TEMPLATE(class='form-control bg-secondary', rows='12') }}
+            {{ form_config.IMAGE_LABEL_TEMPLATE(class='form-control bg-secondary', rows='30') }}
             <div id="IMAGE_LABEL_TEMPLATE-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-6">
-            <div><a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a></div>
-            <div><a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" class="text-decoration-none link-info" target="_blank">Python datetime format codes</a></div>
-            <div>Available variables:</div>
-            <div><pre>timestamp, ts, day_date, exposure, rational_exp, gain_f, temp, temp_unit,<br>sidereal_time, sqm, stars, detections, stack_method, stack_count, stretch<br>location, owner, latitude, longitude, kpindex, ovation_max,<br>sun_alt, moon_alt, moon_phase, sun_moon_sep, moon_up, sun_moon_sep,<br>mercury_alt, mercury_up, venus_alt, venus_up, venus_phase,<br>mars_alt, mars_up, jupiter_alt, jupiter_up, saturn_alt, saturn_up,<br>iss_alt, iss_up, iss_next_h, iss_next_alt, hst_alt, hst_up, hst_next_h,<br>hst_next_alt, tiangong_alt, tiangong_up, tiangong_next_h, tiangong_next_alt</pre></div>
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Image-Labels" class="text-decoration-none link-info" target="_blank">Image Labels Wiki</a></div>
+            <div class="mt-1"><strong>Available variables:</strong><br>
+            <code>timestamp, ts, day_date, exposure, rational_exp, gain_f, temp, temp_unit,<br>sidereal_time, sqm, stars, detections, stack_method, stack_count, stretch<br>location, owner, latitude, longitude, kpindex, ovation_max,<br>sun_alt, moon_alt, moon_phase, sun_moon_sep, moon_up, sun_moon_sep,<br>mercury_alt, mercury_up, venus_alt, venus_up, venus_phase,<br>mars_alt, mars_up, jupiter_alt, jupiter_up, saturn_alt, saturn_up,<br>iss_alt, iss_up, iss_next_h, iss_next_alt, hst_alt, hst_up, hst_next_h,<br>hst_next_alt, tiangong_alt, tiangong_up, tiangong_next_h, tiangong_next_alt</code></div>
+            <div class="mt-1"><strong>Moon mode:</strong><br>
+            <code>{moonmode}</code> - On/Off (like stretch and stack_method)<br>
+            <code>{moonmode_label}</code> - shows "* Moon Mode *" when active, empty otherwise<br>
+            <code>{moonmode_none}</code> - always empty, suppresses the indicator entirely<br>
+            <span class="badge rounded-pill bg-info text-dark">Note</span> If none of the moonmode variables are in the template, "* Moon Mode *" is appended automatically when moon mode is active.</div>
+            <div class="mt-1"><strong>Eclipse:</strong><br>
+            <code>{eclipse}</code> - On/Off<br>
+            <code>{eclipse_label}</code> - shows "* LUNAR ECLIPSE *" or "* SOLAR ECLIPSE *" when active, empty otherwise<br>
+            <code>{eclipse_none}</code> - always empty, suppresses the indicator entirely<br>
+            <span class="badge rounded-pill bg-info text-dark">Note</span> If none of the eclipse variables are in the template, the eclipse label is appended automatically when an eclipse is detected.</div>
+            <div class="mt-1"><strong>Combined modes:</strong><br>
+            <code>{modes}</code> - all active mode labels combined (moon mode, eclipse), empty when nothing is active<br>
+            <code>{modes_none}</code> - always empty, suppresses all mode indicators entirely<br>
+            <span class="badge rounded-pill bg-info text-dark">Note</span> {modes} suppresses both the moon mode and eclipse hardcoded appends.</div>
+            <div class="mt-1"><strong>More information:</strong></div>
+            <a href="https://github.com/aaronwmorris/indi-allsky/wiki/Image-Labels" class="text-decoration-none link-info" target="_blank">Indi-Allsky Image Labels Wiki</a><br>
+            <a href="https://docs.python.org/3/library/string.html#formatspec" class="text-decoration-none link-info" target="_blank">Python format syntax</a><br>
+            <a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes" class="text-decoration-none link-info" target="_blank">Python datetime format codes</a><br>
+            <a href="https://pillow.readthedocs.io/en/stable/handbook/text-anchors.html" class="text-decoration-none link-info" target="_blank">Pillow text anchors (for # anchor: directive)</a>
         </div>
     </div>
 
