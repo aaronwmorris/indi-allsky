@@ -7714,6 +7714,17 @@ class ImageProcessingView(TemplateView):
 
         context['form_image_processing'] = IndiAllskyImageProcessingForm(data=form_data)
 
+        fits_list = IndiAllSkyDbFitsImageTable.query\
+            .join(IndiAllSkyDbFitsImageTable.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == self.camera.id)\
+            .order_by(IndiAllSkyDbFitsImageTable.createDate.desc())\
+            .limit(200)\
+            .all()
+        context['fits_image_list'] = [
+            {'id': f.id, 'label': f.createDate.strftime('%Y-%m-%d %H:%M:%S')}
+            for f in fits_list
+        ]
+
         return context
 
 

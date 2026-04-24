@@ -79,6 +79,16 @@ var fullscreen = false;  //initial state
             {{ form_image_processing.FITS_ID(class='form-control bg-secondary') }}
             <div id="FITS_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
+        <div class="col-sm-4">
+            <label class="col-form-label">FITS Image</label>
+            <select id="fits_selector" class="form-select bg-secondary">
+                {% for f in fits_image_list %}
+                <option value="{{ f.id }}" {% if f.id == form_image_processing.FITS_ID.data %}selected{% endif %}>{{ f.label }}</option>
+                {% else %}
+                <option value="0">No FITS images available</option>
+                {% endfor %}
+            </select>
+        </div>
     </div>
 
     <hr>
@@ -2274,6 +2284,11 @@ function submitProcessingData() {
 
 
 $('#form_image_processing').on('submit', function() {
+    submitProcessingData();
+});
+
+$('#fits_selector').on('change', function() {
+    fields['FITS_ID'].input.val($(this).val());
     submitProcessingData();
 });
 
