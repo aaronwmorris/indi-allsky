@@ -676,6 +676,17 @@ def DETECT_STARS_SEP_THOLD_validator(form, field):
         raise ValidationError('Sigma must be 50.0 or less')
 
 
+def DETECT_STARS_SEP_MAX_RADIUS_validator(form, field):
+    if not isinstance(field.data, int):
+        raise ValidationError('Please enter a valid integer')
+
+    if field.data < 1:
+        raise ValidationError('Max radius must be 1 or greater')
+
+    if field.data > 500:
+        raise ValidationError('Max radius must be 500 or less')
+
+
 def DETECT_METEORS_THOLD_validator(form, field):
     if not isinstance(field.data, int):
         raise ValidationError('Please enter valid number')
@@ -4418,6 +4429,7 @@ class IndiAllskyConfigForm(FlaskForm):
     DETECT_STARS_THOLD               = FloatField('Star Detection Threshold', validators=[DataRequired(), DETECT_STARS_THOLD_validator])
     DETECT_STARS_METHOD              = SelectField('Star Detection Method', choices=DETECT_STARS_METHOD_choices, validators=[DataRequired()])
     DETECT_STARS_SEP_THOLD           = FloatField('SEP Sigma Threshold', validators=[DataRequired(), DETECT_STARS_SEP_THOLD_validator], widget=NumberInput(step=0.5))
+    DETECT_STARS_SEP_MAX_RADIUS      = IntegerField('SEP Max Star Radius', validators=[DataRequired(), DETECT_STARS_SEP_MAX_RADIUS_validator])
     DETECT_METEORS                   = BooleanField('Meteor Detection')
     DETECT_METEORS_THOLD             = IntegerField('Meteor Detection Threshold', validators=[DataRequired(), DETECT_METEORS_THOLD_validator])
     DETECT_MASK                      = StringField('Detection Mask', validators=[DETECT_MASK_validator])

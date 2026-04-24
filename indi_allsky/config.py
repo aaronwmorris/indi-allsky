@@ -164,6 +164,7 @@ class IndiAllSkyConfigBase(object):
         "DETECT_STARS_THOLD" : 0.6,
         "DETECT_STARS_METHOD" : "template",
         "DETECT_STARS_SEP_THOLD" : 5.0,
+        "DETECT_STARS_SEP_MAX_RADIUS" : 20,
         "DETECT_METEORS" : False,
         "DETECT_METEORS_THOLD" : 125,
         "DETECT_MASK" : "",

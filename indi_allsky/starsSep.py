@@ -65,6 +65,12 @@ class IndiAllSkyStarsSEP(object):
             objects = []
 
         sep_elapsed_s = time.time() - sep_start
+
+        # reject bloomed/saturated sources — their semi-major axis is much
+        # larger than a real point-source star on this sensor
+        max_star_radius = self.config.get('DETECT_STARS_SEP_MAX_RADIUS', 20)
+        objects = [obj for obj in objects if obj['a'] <= max_star_radius]
+
         logger.info('Detected %d stars in %0.4f s', len(objects), sep_elapsed_s)
 
         blobs = [(float(obj['x']), float(obj['y'])) for obj in objects]
