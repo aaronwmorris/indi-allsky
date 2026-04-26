@@ -382,7 +382,11 @@ class ImageProcessor(object):
         self._adu_mask_dict = self._detection_mask_dict  # reuse detection mask for ADU mask (if defined)
 
         self._sqm = IndiAllskySqm(self.config, self.gain_av, mask=self._detection_mask_dict)
-        self._stars_detect = IndiAllSkyStars(self.config, mask=self._detection_mask_dict)
+        if self.config.get('DETECT_STARS_METHOD', 'template') == 'sep':
+            from .starsSep import IndiAllSkyStarsSEP
+            self._stars_detect = IndiAllSkyStarsSEP(self.config, mask=self._detection_mask_dict)
+        else:
+            self._stars_detect = IndiAllSkyStars(self.config, mask=self._detection_mask_dict)
         self._lineDetect = IndiAllskyDetectLines(self.config, mask=self._detection_mask_dict)
         self._draw = IndiAllSkyDraw(self.config, mask=self._detection_mask_dict)
 

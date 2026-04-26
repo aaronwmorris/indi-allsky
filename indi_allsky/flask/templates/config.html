@@ -3863,7 +3863,40 @@ var camera_id = {{ camera_id }};
             {{ form_config.DETECT_STARS_THOLD(class='form-control bg-secondary') }}
             <div id="DETECT_STARS_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">0.5 - 0.6 is a good value to start</div>
+        <div class="col-sm-8">0.5 - 0.6 is a good value to start (template method only)</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.DETECT_STARS_METHOD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DETECT_STARS_METHOD(class='form-select bg-secondary') }}
+            <div id="DETECT_STARS_METHOD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Template match uses a synthetic star pattern; SEP (Source Extractor) estimates the sky background and detects real sources</div>
+    </div>
+
+    <div class="form-group row" id="DETECT_STARS_SEP_THOLD_row">
+        <div class="col-sm-2">
+            {{ form_config.DETECT_STARS_SEP_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DETECT_STARS_SEP_THOLD(class='form-control bg-secondary') }}
+            <div id="DETECT_STARS_SEP_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Sigma above background noise: 3 (faint stars) &rarr; 10 (bright stars only). Default: 5.0 (SEP method only)</div>
+    </div>
+
+    <div class="form-group row" id="DETECT_STARS_SEP_MAX_RADIUS_row">
+        <div class="col-sm-2">
+            {{ form_config.DETECT_STARS_SEP_MAX_RADIUS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.DETECT_STARS_SEP_MAX_RADIUS(class='form-control bg-secondary') }}
+            <div id="DETECT_STARS_SEP_MAX_RADIUS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Maximum semi-major axis (pixels) for a valid star detection — larger sources are rejected as bloomed stars or artifacts. Default: 20 (SEP method only)</div>
     </div>
 
     <hr>
@@ -9884,6 +9917,9 @@ const field_names = [
     'SQM_ROI_Y2',
     'SQM_FOV_DIV',
     'DETECT_STARS_THOLD',
+    'DETECT_STARS_METHOD',
+    'DETECT_STARS_SEP_THOLD',
+    'DETECT_STARS_SEP_MAX_RADIUS',
     'DETECT_METEORS_THOLD',
     'DETECT_MASK',
     'LOGO_OVERLAY',
@@ -10976,6 +11012,30 @@ $('#IMAGE_DENOISE_DAY').on('change', function() {
 });
 
 
+// Star detection method
+function applyDetectStarsMethod(val) {
+    if (val === 'sep') {
+        $('#DETECT_STARS_THOLD').attr({'readonly': true, 'disabled': true});
+        $('#DETECT_STARS_THOLD').addClass('bg-dark text-secondary');
+        $('#DETECT_STARS_SEP_THOLD').removeAttr('readonly disabled');
+        $('#DETECT_STARS_SEP_THOLD').removeClass('bg-dark text-secondary');
+        $('#DETECT_STARS_SEP_MAX_RADIUS').removeAttr('readonly disabled');
+        $('#DETECT_STARS_SEP_MAX_RADIUS').removeClass('bg-dark text-secondary');
+    } else {
+        $('#DETECT_STARS_THOLD').removeAttr('readonly disabled');
+        $('#DETECT_STARS_THOLD').removeClass('bg-dark text-secondary');
+        $('#DETECT_STARS_SEP_THOLD').attr({'readonly': true, 'disabled': true});
+        $('#DETECT_STARS_SEP_THOLD').addClass('bg-dark text-secondary');
+        $('#DETECT_STARS_SEP_MAX_RADIUS').attr({'readonly': true, 'disabled': true});
+        $('#DETECT_STARS_SEP_MAX_RADIUS').addClass('bg-dark text-secondary');
+    }
+}
+
+$('#DETECT_STARS_METHOD').on('change', function() {
+    applyDetectStarsMethod($(this).val());
+});
+
+
 // Night timelapse settings
 $('#TIMELAPSE__USE_NIGHT_CONFIG').on('change', function() {
     if ($('#TIMELAPSE__USE_NIGHT_CONFIG').prop('checked')) {
@@ -11326,6 +11386,9 @@ $( document ).ready(function() {
         $('#SHARPEN_AMOUNT_DAY').attr({'readonly': true, 'disabled': true});
         $('#SHARPEN_AMOUNT_DAY').addClass('bg-dark text-secondary');
     }
+
+    // Star detection method - apply initial state
+    applyDetectStarsMethod($('#DETECT_STARS_METHOD').val());
 
     // Denoise dependent fields - grey out on page load (night)
     if (!$('#IMAGE_DENOISE').val()) {
