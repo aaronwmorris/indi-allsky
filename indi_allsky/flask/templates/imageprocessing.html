@@ -5,7 +5,7 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
-#nav-image-tab, #nav-processing-tab, #nav-overlays-tab, #nav-location-tab {
+#nav-image-tab, #nav-processing-tab, #nav-overlays-tab, #nav-location-tab, #nav-detection-tab {
 	width: 150px;
 	margin-top: 10px;
 	margin-right: 5px;
@@ -124,6 +124,7 @@ var fullscreen = false;  //initial state
     <button class="nav-link link-success bg-dark" id="nav-processing-tab" data-bs-toggle="tab" data-bs-target="#nav-processing" type="button" role="tab" aria-controls="nav-processing" aria-selected="false">Processing</button>
     <button class="nav-link link-secondary bg-dark" id="nav-overlays-tab" data-bs-toggle="tab" data-bs-target="#nav-overlays" type="button" role="tab" aria-controls="nav-overlays" aria-selected="false">Overlays</button>
     <button class="nav-link link-info bg-dark" id="nav-location-tab" data-bs-toggle="tab" data-bs-target="#nav-location" type="button" role="tab" aria-controls="nav-location" aria-selected="false">Location</button>
+    <button class="nav-link link-warning bg-dark" id="nav-detection-tab" data-bs-toggle="tab" data-bs-target="#nav-detection" type="button" role="tab" aria-controls="nav-detection" aria-selected="false">Detection</button>
   </div>
 </nav>
 
@@ -1927,6 +1928,69 @@ var fullscreen = false;  //initial state
     </div>
 
   </div><!-- end location tab -->
+
+  <div class="tab-pane fade" id="nav-detection" role="tabpanel" aria-labelledby="nav-detection-tab">
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.RUN_DETECTION.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_image_processing.RUN_DETECTION(class='form-check-input') }}
+                <div id="RUN_DETECTION-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Enable star and meteor detection on the preview image</div>
+    </div>
+
+    <div class="form-group row" id="DETECT_STARS_THOLD_row">
+        <div class="col-sm-2">
+            {{ form_image_processing.DETECT_STARS_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.DETECT_STARS_THOLD(class='form-control bg-secondary') }}
+            <div id="DETECT_STARS_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Template match sensitivity: 0.5 (faint) &rarr; 0.9 (bright only). Default: 0.6</div>
+    </div>
+
+    <div class="form-group row" id="DETECT_STARS_SEP_THOLD_detection_row">
+        <div class="col-sm-2">
+            {{ form_image_processing.DETECT_STARS_SEP_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.DETECT_STARS_SEP_THOLD(class='form-control bg-secondary') }}
+            <div id="DETECT_STARS_SEP_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Sigma above background: 3 (faint) &rarr; 10 (bright only). Default: 5.0</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_image_processing.DETECT_METEORS_THOLD.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_image_processing.DETECT_METEORS_THOLD(class='form-control bg-secondary') }}
+            <div id="DETECT_METEORS_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Hough line votes required for meteor detection. Lower = more sensitive. Default: 125</div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-sm-4">
+            Stars detected: <span id="stars_count_badge" class="badge bg-success" style="display: none;">0</span>
+        </div>
+        <div class="col-sm-4">
+            Meteors detected: <span id="detections_count_badge" class="badge bg-danger" style="display: none;">0</span>
+        </div>
+    </div>
+
+  </div><!-- end detection tab -->
 </div>
 
     </form>
@@ -2064,6 +2128,9 @@ const field_names = [
     'IMAGE_ROTATE',
     'IMAGE_ROTATE_ANGLE',
     'DETECT_MASK',
+    'DETECT_STARS_THOLD',
+    'DETECT_STARS_SEP_THOLD',
+    'DETECT_METEORS_THOLD',
     'SQM_FOV_DIV',
     'SQM_ROI_X1',
     'SQM_ROI_Y1',
@@ -2169,6 +2236,7 @@ const checkbox_field_names = [
     'CARDINAL_DIRS__SWAP_NS',
     'CARDINAL_DIRS__SWAP_EW',
     'CARDINAL_DIRS__OUTLINE_CIRCLE',
+    'RUN_DETECTION',
 ];
 
 var fields = {};
@@ -2259,6 +2327,21 @@ function submitProcessingData() {
 
             $('#processing_time').text('Processed in ' + json_data['processing_elapsed_s'] + 's');
             $('#processing_message').text(json_data['message']);
+
+            // Detection results
+            if (json_data['stars_count'] !== undefined) {
+                $('#stars_count_badge').text(json_data['stars_count']).css({'display' : 'inline'});
+                $('#detections_count_badge').text(json_data['detections_count']).css({'display' : 'inline'});
+            }
+
+            // Show/hide threshold rows based on method returned from server
+            if (json_data['DETECT_STARS_METHOD'] === 'sep') {
+                $('#DETECT_STARS_THOLD_row').hide();
+                $('#DETECT_STARS_SEP_THOLD_detection_row').show();
+            } else {
+                $('#DETECT_STARS_THOLD_row').show();
+                $('#DETECT_STARS_SEP_THOLD_detection_row').hide();
+            }
         },
         error: function(rdata){
             var errors = JSON.parse(rdata.responseText);
@@ -2316,6 +2399,9 @@ $( document ).ready(function() {
     $('#fits-image').on("click", function() {
         goFullscreen(this);
     });
+
+    // Detection tab: hide SEP threshold by default (updated after first request)
+    $('#DETECT_STARS_SEP_THOLD_detection_row').hide();
 
     // Denoise dependent fields - grey out on page load
     if (!$('#IMAGE_DENOISE').val()) {
