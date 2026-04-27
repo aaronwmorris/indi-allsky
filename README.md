@@ -225,6 +225,7 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## INDI support
 | Version         | Note |
 | --------------- | ---- |
+| v2.2.1          |      |
 | v2.2.0          | **Recommended for new builds** |
 | v2.1.9          | indi_libcamera_ccd is stable |
 | v2.1.8          | Minimum for rpicam-apps 1.10.1 (indi_libcamera_ccd)<br>Minimum for ASI676MM |

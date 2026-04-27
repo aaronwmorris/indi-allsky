@@ -848,6 +848,7 @@ if [ "$BUILD_INDI_CORE" == "true" ]; then
             --nocancel \
             --notags \
             --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
+                "v2.2.1.1" "v2.2.1.1" "OFF" \
                 "v2.2.0" "v2.2.0 - Recommended" "ON" \
                 "v2.1.9" "v2.1.9" "OFF" \
                 "v2.1.8" "v2.1.8" "OFF" \
@@ -879,6 +880,7 @@ if [ "$BUILD_INDI_3RDPARTY" == "true" ]; then
             --nocancel \
             --notags \
             --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
+                "v2.2.1.1" "v2.2.1.1" "OFF" \
                 "v2.2.0" "v2.2.0 - Recommended" "ON" \
                 "v2.1.9" "v2.1.9" "OFF" \
                 "v2.1.8.2" "v2.1.8.2" "OFF" \
