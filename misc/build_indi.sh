@@ -27,9 +27,9 @@ OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 ### config ###
 INDISERVER_SERVICE_NAME="indiserver"
 INDI_CORE_REPO="https://github.com/indilib/indi.git"
-INDI_CORE_AUTO_TAG="v2.2.0"
+INDI_CORE_AUTO_TAG="v2.2.1.1"
 INDI_3RDPARTY_REPO="https://github.com/indilib/indi-3rdparty.git"
-INDI_3RDPARTY_AUTO_TAG="v2.2.0"
+INDI_3RDPARTY_AUTO_TAG="v2.2.1.1"
 INDI_AUTO_DRIVERS="supported"
 MAKE_BUILD_TYPE="${BUILD_INDI_MAKE_BUILD_TYPE:-Debug}"
 ### end config ###
