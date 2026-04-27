@@ -7714,6 +7714,17 @@ class ImageProcessingView(TemplateView):
 
         context['form_image_processing'] = IndiAllskyImageProcessingForm(data=form_data)
 
+        context['form_fits_viewer'] = IndiAllskyFitsImageViewerPreload(
+            data={
+                'CAMERA_ID'    : self.camera.id,
+                'YEAR_SELECT'  : None,
+                'MONTH_SELECT' : None,
+                'DAY_SELECT'   : None,
+                'HOUR_SELECT'  : None,
+            },
+            camera_id=self.camera.id,
+        )
+
         return context
 
 

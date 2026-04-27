@@ -79,6 +79,51 @@ var fullscreen = false;  //initial state
             {{ form_image_processing.FITS_ID(class='form-control bg-secondary') }}
             <div id="FITS_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
+        <div class="col-sm-1">
+            {{ form_fits_viewer.YEAR_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_fits_viewer.YEAR_SELECT(class='form-control bg-secondary') }}
+            <div id="YEAR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_fits_viewer.MONTH_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_fits_viewer.MONTH_SELECT(class='form-select bg-secondary') }}
+            <div id="MONTH_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_fits_viewer.DAY_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_fits_viewer.DAY_SELECT(class='form-select bg-secondary') }}
+            <div id="DAY_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-1">
+            {{ form_fits_viewer.HOUR_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-1">
+            {{ form_fits_viewer.HOUR_SELECT(class='form-select bg-secondary') }}
+            <div id="HOUR_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+
+        <div class="col-sm-1">
+            {{ form_fits_viewer.IMG_SELECT.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-3">
+            {{ form_fits_viewer.IMG_SELECT(class='form-select bg-secondary') }}
+            <div id="IMG_SELECT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-1">
+            <div class="loader" id="loader_filter" style="display: none;"></div>
+        </div>
     </div>
 
     <hr>
@@ -2025,6 +2070,11 @@ const field_names = [
     'FRAME_TYPE',
     'OUTPUT_IMAGE_TYPE',
     'FITS_ID',
+    'YEAR_SELECT',
+    'MONTH_SELECT',
+    'DAY_SELECT',
+    'HOUR_SELECT',
+    'IMG_SELECT',
     'LENS_IMAGE_CIRCLE',
     'LENS_OFFSET_X',
     'LENS_OFFSET_Y',
@@ -2277,15 +2327,250 @@ $('#form_image_processing').on('submit', function() {
     submitProcessingData();
 });
 
+function hour_change(json_data) {
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_fitsimageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#IMG_SELECT").empty();
+            rdata['IMAGE_DATA'].forEach(item => {
+                $("#IMG_SELECT").append($('<option />', {'value' : item['id']}).text(item['date']));
+            });
+
+            fields['FITS_ID'].input.val(fields['IMG_SELECT'].input.val());
+
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
+                if (fields[key]) {
+                    fields[key].input.addClass('is-invalid');
+                    fields[key].error.html(rdata[key][0]);
+                    fields[key].error.css({'display' : 'block'});
+                }
+            });
+        },
+    });
+}
+
+
+$("#HOUR_SELECT").on("change", function() {
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
+        'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
+        'HOUR_SELECT'       : fields["HOUR_SELECT"].input.val(),
+    };
+
+    hour_change(json_data);
+});
+
+
+function day_change(json_data) {
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_fitsimageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#HOUR_SELECT").empty();
+            rdata['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#IMG_SELECT").empty();
+            rdata['IMAGE_DATA'].forEach(item => {
+                $("#IMG_SELECT").append($('<option />', {'value' : item['id']}).text(item['date']));
+            });
+
+            fields['FITS_ID'].input.val(fields['IMG_SELECT'].input.val());
+
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
+                if (fields[key]) {
+                    fields[key].input.addClass('is-invalid');
+                    fields[key].error.html(rdata[key][0]);
+                    fields[key].error.css({'display' : 'block'});
+                }
+            });
+        },
+    });
+}
+
+
+$("#DAY_SELECT").on("change", function() {
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
+        'DAY_SELECT'        : fields["DAY_SELECT"].input.val(),
+    };
+
+    day_change(json_data);
+});
+
+
+function month_change(json_data) {
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_fitsimageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#DAY_SELECT").empty();
+            rdata['DAY_SELECT'].forEach(item => {
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#HOUR_SELECT").empty();
+            rdata['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#IMG_SELECT").empty();
+            rdata['IMAGE_DATA'].forEach(item => {
+                $("#IMG_SELECT").append($('<option />', {'value' : item['id']}).text(item['date']));
+            });
+
+            fields['FITS_ID'].input.val(fields['IMG_SELECT'].input.val());
+
+            $("#loader_filter").css({'display' : 'none'});
+        },
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
+                if (fields[key]) {
+                    fields[key].input.addClass('is-invalid');
+                    fields[key].error.html(rdata[key][0]);
+                    fields[key].error.css({'display' : 'block'});
+                }
+            });
+        },
+    });
+}
+
+
+$("#MONTH_SELECT").on("change", function() {
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+        'MONTH_SELECT'      : fields["MONTH_SELECT"].input.val(),
+    };
+
+    month_change(json_data);
+});
+
+
+function year_change(json_data, on_complete) {
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('indi_allsky.ajax_fitsimageviewer_view') }}",
+        contentType: "application/json",
+        data: JSON.stringify(json_data),
+        success: function(rdata){
+            $("#MONTH_SELECT").empty();
+            rdata['MONTH_SELECT'].forEach(item => {
+                $("#MONTH_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#DAY_SELECT").empty();
+            rdata['DAY_SELECT'].forEach(item => {
+                $("#DAY_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#HOUR_SELECT").empty();
+            rdata['HOUR_SELECT'].forEach(item => {
+                $("#HOUR_SELECT").append($('<option />', {'value' : item[0]}).text(item[1]));
+            });
+
+            $("#IMG_SELECT").empty();
+            rdata['IMAGE_DATA'].forEach(item => {
+                $("#IMG_SELECT").append($('<option />', {'value' : item['id']}).text(item['date']));
+            });
+
+            fields['FITS_ID'].input.val(fields['IMG_SELECT'].input.val());
+
+            $("#loader_filter").css({'display' : 'none'});
+
+            if (on_complete) { on_complete(); }
+        },
+        error: function(rdata){
+            Object.keys(rdata).forEach((key) => {
+                if (fields[key]) {
+                    fields[key].input.addClass('is-invalid');
+                    fields[key].error.html(rdata[key][0]);
+                    fields[key].error.css({'display' : 'block'});
+                }
+            });
+        },
+    });
+}
+
+
+$("#YEAR_SELECT").on("change", function() {
+    successMessage.css({'display' : 'none'});
+    Object.keys(fields).forEach((key) => {
+        fields[key].error.css({'display' : 'none'});
+    });
+
+    $("#loader_filter").css({'display' : 'block'});
+
+    var json_data = {
+        'CAMERA_ID'         : fields["CAMERA_ID"].input.val(),
+        'YEAR_SELECT'       : fields["YEAR_SELECT"].input.val(),
+    };
+
+    year_change(json_data);
+});
+
+
+$("#IMG_SELECT").on("change", function() {
+    fields['FITS_ID'].input.val($(this).val());
+    submitProcessingData();
+});
+
 
 function init() {
-    // disable processing for initial image
-    $('#DISABLE_PROCESSING').prop('checked', true);
+    $("#loader_filter").css({'display' : 'block'});
 
-    submitProcessingData();
-    $('#processing_time').text('Unprocessed image');
+    var json_data = {
+        'CAMERA_ID'   : fields["CAMERA_ID"].input.val(),
+        'YEAR_SELECT' : fields["YEAR_SELECT"].input.val(),
+    };
 
-    $('#DISABLE_PROCESSING').prop('checked', false);
+    year_change(json_data, function() {
+        if (fields['FITS_ID'].input.val()) {
+            $('#DISABLE_PROCESSING').prop('checked', true);
+            submitProcessingData();
+            $('#processing_time').text('Unprocessed image');
+            $('#DISABLE_PROCESSING').prop('checked', false);
+        }
+    });
 }
 
 // Denoise dependent fields
