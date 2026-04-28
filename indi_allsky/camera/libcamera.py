@@ -10,8 +10,16 @@ import psutil
 from pathlib import Path
 import logging
 
+import numpy as np
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+
 from .indi import IndiClient
 from .fake_indi import FakeIndiCcd
+from .picamera2_client import Picamera2Client
 
 from .. import constants
 
@@ -38,7 +46,7 @@ class IndiClientLibCameraGeneric(IndiClient):
     def __init__(self, *args, **kwargs):
         super(IndiClientLibCameraGeneric, self).__init__(*args, **kwargs)
 
-        self.libcamera_process = None
+        self.libcamera_process = None  # kept for compat; unused with daemon
 
         self._temp_val = -273.15  # absolute zero  :-)
 
@@ -52,6 +60,9 @@ class IndiClientLibCameraGeneric(IndiClient):
         self.current_exposure_file_p = None
         self.current_metadata_file_p = None
 
+        # Picamera2 daemon client — replaces rpicam-still subprocess
+        self._picam2_client = Picamera2Client()
+
         memory_info = psutil.virtual_memory()
         self.memory_total_mb = memory_info[0] / 1024.0 / 1024.0
 
@@ -59,18 +70,16 @@ class IndiClientLibCameraGeneric(IndiClient):
         self.ccd_device_name = 'CHANGEME'
 
 
-        # pick correct executable
+        # pick correct executable (kept as fallback identifier)
         if shutil.which('rpicam-still'):
             self.ccd_driver_exec = 'rpicam-still'
         elif shutil.which('libcamera-still'):
             self.ccd_driver_exec = 'libcamera-still'
         else:
-            logger.warning('rpicam-still command not found')
-            self.ccd_driver_exec = self.libcamera_exec  # fallback
+            self.ccd_driver_exec = 'picamera2-daemon'
 
 
-        # this will fallback to the original self.ccd_driver_exec
-        logger.info('libcamera executable: %s', self.ccd_driver_exec)
+        logger.info('libcamera backend: picamera2 daemon')
 
 
         # override in subclass
@@ -145,49 +154,13 @@ class IndiClientLibCameraGeneric(IndiClient):
         if self.active_exposure:
             return
 
-
         self.exposure = exposure
         self.sqm_exposure = sqm_exposure
 
-
-        libcamera_camera_id = self.config.get('LIBCAMERA', {}).get('CAMERA_ID', 0)
-
-
         if self.night_av[constants.NIGHT_NIGHT]:
-            # night
             image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE', 'jpg')
         else:
-            # day
             image_type = self.config.get('LIBCAMERA', {}).get('IMAGE_FILE_TYPE_DAY', 'jpg')
-
-
-        if image_type == 'dng' and self.memory_total_mb <= 768:
-            logger.warning('*** Capturing raw images (dng) with libcamera and less than 1gb of memory can result in out-of-memory errors ***')
-
-
-        try:
-            image_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.{0:s}'.format(image_type), delete=True)
-            image_tmp_f.close()
-            image_tmp_p = Path(image_tmp_f.name)
-
-            metadata_tmp_f = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=True)
-            metadata_tmp_f.close()
-            metadata_tmp_p = Path(metadata_tmp_f.name)
-        except OSError as e:
-            logger.error('OSError: %s', str(e))
-            return
-
-
-        try:
-            binmode_option = self._getBinModeOptions(int(binning))
-        except BinModeException as e:
-            logger.error('Invalid setting: %s', str(e))
-            binmode_option = ''
-
-
-        self.current_exposure_file_p = image_tmp_p
-        self.current_metadata_file_p = metadata_tmp_p
-
 
         if self.gain != float(round(gain, 2)):
             self.setCcdGain(gain)
@@ -195,356 +168,219 @@ class IndiClientLibCameraGeneric(IndiClient):
         if self.binning != int(binning):
             self.setCcdBinning(binning)
 
-
-        exposure_us = int(exposure * 1000000)
-
-        if image_type in ['dng']:
-            cmd = [
-                self.ccd_device.driver_exec,
-                '--nopreview',
-                '--camera', '{0:d}'.format(libcamera_camera_id),
-                '--raw',
-                '--denoise', 'off',
-                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
-                '--shutter', '{0:d}'.format(exposure_us),
-                '--metadata', str(metadata_tmp_p),
-                '--metadata-format', 'json',
-            ]
-        elif image_type in ['jpg', 'png']:
-            #logger.warning('RAW frame mode disabled due to low memory resources')
-            cmd = [
-                self.ccd_device.driver_exec,
-                '--nopreview',
-                '--camera', '{0:d}'.format(libcamera_camera_id),
-                '--encoding', '{0:s}'.format(image_type),
-                '--quality', '95',
-                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
-                '--shutter', '{0:d}'.format(exposure_us),
-                '--metadata', str(metadata_tmp_p),
-                '--metadata-format', 'json',
-            ]
+        # Determine AWB setting
+        is_night = bool(self.night_av[constants.NIGHT_NIGHT])
+        if is_night:
+            awb_enable = bool(self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'))
         else:
-            raise Exception('Invalid image type')
+            awb_enable = bool(self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'))
 
-
-
-        if self.night_av[constants.NIGHT_NIGHT]:
-            #  night
-
-            if self.config.get('LIBCAMERA', {}).get('IMMEDIATE', True):
-                cmd.insert(1, '--immediate')
-
-
-            # Auto white balance, AWB causes long exposure times at night
-            if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'):
-                awb = self.config.get('LIBCAMERA', {}).get('AWB', 'auto')
-                cmd.extend(['--awb', awb])
-            else:
-                # awb enabled by default, the following disables
-                cmd.extend(['--awbgains', '1,1'])
-
-
-            # CCM
-            if self.config.get('LIBCAMERA', {}).get('CCM_DISABLE'):
-                cmd.extend(['--ccm', '1,0,0,0,1,0,0,0,1'])
-
-        else:
-            # daytime
-
-            if self.config.get('LIBCAMERA', {}).get('IMMEDIATE_DAY', True):
-                cmd.insert(1, '--immediate')
-
-
-            # Auto white balance, AWB causes long exposure times at night
-            if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'):
-                awb = self.config.get('LIBCAMERA', {}).get('AWB_DAY', 'auto')
-                cmd.extend(['--awb', awb])
-            else:
-                # awb enabled by default, the following disables
-                cmd.extend(['--awbgains', '1,1'])
-
-
-            # CCM
-            if self.config.get('LIBCAMERA', {}).get('CCM_DISABLE_DAY'):
-                cmd.extend(['--ccm', '1,0,0,0,1,0,0,0,1'])
-
-
-        # add --mode flags for binning
-        if binmode_option:
-            cmd.extend(binmode_option.split(' '))
-
-
-        # extra options get added last
-        if self.night_av[constants.NIGHT_NIGHT]:
-            #  night
-            # Add extra config options
-            extra_options = self.config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS')
-            if extra_options:
-                cmd.extend(extra_options.split(' '))
-
-        else:
-            # daytime
-
-            # Add extra config options
-            extra_options = self.config.get('LIBCAMERA', {}).get('EXTRA_OPTIONS_DAY')
-            if extra_options:
-                cmd.extend(extra_options.split(' '))
-
-
-        # Finally add output file
-        cmd.extend(['--output', str(image_tmp_p)])
-
-
-        ### testing an expoure that times out
-        #cmd = [
-        #    'sleep', '600',
-        #]
-
-
-        logger.info('image command: %s', ' '.join(cmd))
-
-
-        self.exposureStartTime = time.time()
-
-        self.libcamera_process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+        # Send controls to the picamera2 daemon
+        self._picam2_client.set_controls(
+            exposure=exposure,
+            gain=float(self.gain_av[constants.GAIN_CURRENT]),
+            awb=awb_enable,
         )
 
-        self.active_exposure = True
+        logger.info(
+            'Capturing via picamera2 daemon: %.4fs exposure, gain %.2f, bin %d, type %s',
+            exposure, self.gain_av[constants.GAIN_CURRENT], binning, image_type,
+        )
 
+        self.exposureStartTime = time.time()
+        self.active_exposure = True
+        self._pending_image_type = image_type
 
         # Update shared exposure value
         with self.exposure_av.get_lock():
             self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
 
-
         if sync:
-            try:
-                self.libcamera_process.wait(timeout=timeout)
-            except subprocess.TimeoutExpired:
-                logger.error('Exposure timeout')
-                raise TimeOutException('Timeout waiting for exposure')
+            capture_timeout = timeout if timeout else max(exposure * 3, 30)
 
+            if image_type == 'dng':
+                # DNG: daemon captures directly to file
+                try:
+                    dng_tmp = tempfile.NamedTemporaryFile(
+                        mode='w', suffix='.dng', delete=False,
+                    )
+                    dng_tmp.close()
+                    result = self._picam2_client.capture_dng(
+                        dng_tmp.name, timeout=capture_timeout,
+                    )
+                    if not result.get('ok'):
+                        logger.error('DNG capture failed: %s', result.get('error'))
+                except Exception as e:
+                    logger.error('DNG capture error: %s', str(e))
 
-            if self.libcamera_process.returncode != 0:
-                # log errors
-                stdout = self.libcamera_process.stdout
-                for line in stdout.readlines():
-                    logger.error('rpicam-still error: %s', line)
+                self.current_exposure_file_p = Path(dng_tmp.name)
+            else:
+                # JPG/PNG: grab frame from daemon, encode locally
+                try:
+                    result = self._picam2_client.capture_still(
+                        exposure=exposure,
+                        gain=float(self.gain_av[constants.GAIN_CURRENT]),
+                        timeout=capture_timeout,
+                    )
+                except Exception as e:
+                    logger.error('Capture error: %s', str(e))
+                    self.active_exposure = False
+                    return
 
-                # not returning, just log the error
+                if not result.get('ok'):
+                    logger.error('Capture failed: %s', result.get('error'))
+                    self.active_exposure = False
+                    return
+
+                # Load numpy frame and encode to image file
+                frame_path = result.get('frame_path', '')
+                self._last_daemon_metadata = result.get('metadata', {})
+
+                try:
+                    frame = np.load(frame_path)
+                except Exception as e:
+                    logger.error('Failed to load frame from %s: %s', frame_path, str(e))
+                    self.active_exposure = False
+                    return
+
+                # Save as JPG or PNG
+                image_tmp_f = tempfile.NamedTemporaryFile(
+                    mode='w', suffix='.{0:s}'.format(image_type), delete=False,
+                )
+                image_tmp_f.close()
+                self.current_exposure_file_p = Path(image_tmp_f.name)
+
+                if cv2 is not None:
+                    # Frame is RGB from picamera2, convert to BGR for cv2
+                    # picamera2 RGB888 is already BGR (OpenCV convention)
+                    bgr = frame
+                    if image_type == 'jpg':
+                        cv2.imwrite(str(self.current_exposure_file_p), bgr,
+                                    [cv2.IMWRITE_JPEG_QUALITY, 95])
+                    else:
+                        cv2.imwrite(str(self.current_exposure_file_p), bgr)
 
             self.active_exposure = False
-
             self._processMetadata()
-
             self._queueImage()
+
+        else:
+            # Async mode: start capture in background thread
+            import threading
+            self._async_thread = threading.Thread(
+                target=self._async_capture,
+                args=(exposure, gain, image_type),
+                daemon=True,
+            )
+            self._async_thread.start()
+
+
+    def _async_capture(self, exposure, gain, image_type):
+        """Background capture for async (non-sync) mode."""
+        try:
+            capture_timeout = max(exposure * 3, 30)
+            result = self._picam2_client.capture_still(
+                exposure=exposure, gain=gain, timeout=capture_timeout,
+            )
+            if not result.get('ok'):
+                logger.error('Async capture failed: %s', result.get('error'))
+                self.active_exposure = False
+                return
+
+            frame_path = result.get('frame_path', '')
+            self._last_daemon_metadata = result.get('metadata', {})
+
+            frame = np.load(frame_path)
+
+            image_tmp_f = tempfile.NamedTemporaryFile(
+                mode='w', suffix='.{0:s}'.format(image_type), delete=False,
+            )
+            image_tmp_f.close()
+            self.current_exposure_file_p = Path(image_tmp_f.name)
+
+            if cv2 is not None:
+                # picamera2 RGB888 is already BGR (OpenCV convention)
+                bgr = frame
+                if image_type == 'jpg':
+                    cv2.imwrite(str(self.current_exposure_file_p), bgr,
+                                [cv2.IMWRITE_JPEG_QUALITY, 95])
+                else:
+                    cv2.imwrite(str(self.current_exposure_file_p), bgr)
+
+            # Mark as ready for getCcdExposureStatus to pick up
+            # active_exposure stays True until getCcdExposureStatus processes it
+        except Exception:
+            logger.exception('Async capture error')
+            self.active_exposure = False
 
 
     def getCcdExposureStatus(self):
         # returns camera_ready, exposure_state
-        if self._libCameraProcessRunning():
-            return False, 'BUSY'
-
 
         if self.active_exposure:
-            # if we get here, that means the camera is finished with the exposure
+            # Check if async capture thread is still running
+            if hasattr(self, '_async_thread') and self._async_thread is not None:
+                if self._async_thread.is_alive():
+                    return False, 'BUSY'
+
+            # Async capture finished — process the result
             self.active_exposure = False
-
-
-            if self.libcamera_process.returncode != 0:
-                # log errors
-                stdout = self.libcamera_process.stdout
-                for line in stdout.readlines():
-                    logger.error('rpicam-still error: %s', line)
-
-                # not returning, just log the error
-
+            self._async_thread = None
 
             self._processMetadata()
-
             self._queueImage()
-
 
         return True, 'READY'
 
 
     def _processMetadata(self):
-        # read metadata to get sensor temperature
-        if self.current_metadata_file_p:
-            try:
-                with io.open(self.current_metadata_file_p, 'r', encoding='utf-8') as f_metadata:
-                    metadata_dict = json.load(f_metadata, object_pairs_hook=OrderedDict)
-            except FileNotFoundError as e:
-                logger.error('Metadata file not found: %s', str(e))
-                metadata_dict = dict()
-            except PermissionError as e:
-                logger.error('Permission erro: %s', str(e))
-                metadata_dict = dict()
-            except json.JSONDecodeError as e:
-                logger.error('Error decoding json: %s', str(e))
-                metadata_dict = dict()
-
-
-        #logger.info('Metadata: %s', metadata_dict)
-
-
-        try:
-            self.current_metadata_file_p.unlink()
-        except FileNotFoundError:
-            pass
-
+        """Extract ISP metadata from the picamera2 daemon response."""
+        metadata_dict = getattr(self, '_last_daemon_metadata', {})
 
         ### Gain
-        try:
-            analogue_gain = float(metadata_dict[self._analogue_gain_metadata_key])
-        except KeyError:
-            #logger.error('libcamera camera analogue gain key not found')
-            analogue_gain = 0.0
-        except ValueError:
-            #logger.error('Unable to parse libcamera analogue gain')
-            analogue_gain = 0.0
-
-
-        try:
-            digital_gain = float(metadata_dict[self._digital_gain_metadata_key])
-        except KeyError:
-            #logger.error('libcamera camera digital gain key not found')
-            digital_gain = 0.0
-        except ValueError:
-            #logger.error('Unable to parse libcamera digital gain')
-            digital_gain = 0.0
-
+        analogue_gain = float(metadata_dict.get(self._analogue_gain_metadata_key, 0.0))
+        digital_gain = float(metadata_dict.get(self._digital_gain_metadata_key, 0.0))
 
         if analogue_gain:
             logger.info('libcamera reported gain: %0.2f/%0.2f', analogue_gain, digital_gain)
 
-
         ### Temperature
-        try:
-            self._temp_val = float(metadata_dict[self._sensor_temp_metadata_key])
-        except KeyError:
-            logger.error('libcamera camera temperature key not found')
-        except ValueError:
-            logger.error('Unable to parse libcamera camera temperature')
-
+        temp = metadata_dict.get(self._sensor_temp_metadata_key)
+        if temp is not None:
+            self._temp_val = float(temp)
 
         ### Auto white balance
-        # Only return these values when libcamera AWB is enabled
-        if self.night_av[constants.NIGHT_NIGHT]:
-            # night
-            if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE'):
-                try:
-                    awb_gains = metadata_dict[self._awb_gains_metadata_key]
-                    self._awb_gains = [awb_gains[0], awb_gains[1]]
-                    logger.info('libcamera color gains: Red: %0.2f, Blue: %0.2f', *self._awb_gains)
-                except KeyError:
-                    logger.error('libcamera sensor AWB key not found')
-                    self._awb_gains = None
-                except IndexError:
-                    logger.error('Invalid color gain values')
-                    self._awb_gains = None
-
-
-                ### Color correction matrix
-                #try:
-                #    ccm = metadata_dict[self._ccm_metadata_key]
-                #    self._ccm = [
-                #        [ccm[8], ccm[7], ccm[6]],
-                #        [ccm[5], ccm[4], ccm[3]],
-                #        [ccm[2], ccm[1], ccm[0]],
-                #    ]
-                #except KeyError:
-                #    logger.error('libcamera CCM key not found')
-                #    self._ccm = None
-                #except IndexError:
-                #    logger.error('Invalid CCM values')
-                #    self._ccm = None
-
-            else:
-                self._awb_gains = None
-                #self._ccm = None
-
+        is_night = bool(self.night_av[constants.NIGHT_NIGHT])
+        if is_night:
+            awb_enabled = self.config.get('LIBCAMERA', {}).get('AWB_ENABLE')
         else:
-            # day
-            if self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY'):
-                try:
-                    awb_gains = metadata_dict[self._awb_gains_metadata_key]
-                    self._awb_gains = [awb_gains[0], awb_gains[1]]
-                    logger.info('libcamera color gains: Red: %0.2f, Blue: %0.2f', *self._awb_gains)
-                except KeyError:
-                    logger.error('libcamera sensor AWB key not found')
-                    self._awb_gains = None
-                except IndexError:
-                    logger.error('Invalid color gain values')
-                    self._awb_gains = None
+            awb_enabled = self.config.get('LIBCAMERA', {}).get('AWB_ENABLE_DAY')
 
-
-                ### Color correction matrix
-                #try:
-                #    ccm = metadata_dict[self._ccm_metadata_key]
-                #    self._ccm = [
-                #        [ccm[8], ccm[7], ccm[6]],
-                #        [ccm[5], ccm[4], ccm[3]],
-                #        [ccm[2], ccm[1], ccm[0]],
-                #    ]
-                #except KeyError:
-                #    logger.error('libcamera CCM key not found')
-                #    self._ccm = None
-                #except IndexError:
-                #    logger.error('Invalid CCM values')
-                #    self._ccm = None
-
+        if awb_enabled:
+            awb_gains = metadata_dict.get(self._awb_gains_metadata_key)
+            if awb_gains and isinstance(awb_gains, (list, tuple)) and len(awb_gains) >= 2:
+                self._awb_gains = [awb_gains[0], awb_gains[1]]
             else:
                 self._awb_gains = None
-                #self._ccm = None
-
+        else:
+            self._awb_gains = None
 
         ### Black Level
-        try:
-            black_level = metadata_dict[self._black_level_metadata_key]
-            self._black_level = black_level[0]  # Only going to use the first key for now
-            logger.info('libcamera black level: %d', self._black_level)
-        except KeyError:
-            logger.error('libcamera sensor black level key not found')
-            self._black_level = None
-        except IndexError:
-            logger.error('Invalid black level values')
+        black_level = metadata_dict.get(self._black_level_metadata_key)
+        if black_level and isinstance(black_level, (list, tuple)) and len(black_level) > 0:
+            self._black_level = black_level[0]
+        else:
             self._black_level = None
 
 
 
     def abortCcdExposure(self):
         logger.warning('Aborting exposure')
-
         self.active_exposure = False
-
-        for _ in range(5):
-            if not self._libCameraProcessRunning():
-                break
-
-            self.libcamera_process.terminate()
-            time.sleep(0.5)
-            continue
-
-
-        if self._libCameraProcessRunning():
-            self.libcamera_process.kill()
-            self.libcamera_process.poll()  # close out the process
-
 
         try:
             if self.current_exposure_file_p:
                 self.current_exposure_file_p.unlink()
-        except FileNotFoundError:
-            pass
-
-
-        try:
-            if self.current_metadata_file_p:
-                self.current_metadata_file_p.unlink()
         except FileNotFoundError:
             pass
 
@@ -574,18 +410,37 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
     def _libCameraProcessRunning(self):
-        if not self.libcamera_process:
-            return False
-
-        # poll returns None when process is active, rc (normally 0) when finished
-        poll = self.libcamera_process.poll()
-        if isinstance(poll, type(None)):
-            return True
-
+        # No longer uses subprocess — check async thread instead
+        if hasattr(self, '_async_thread') and self._async_thread is not None:
+            return self._async_thread.is_alive()
         return False
 
 
     def findCcd(self, *args, **kwargs):
+        # Try to get live sensor info from daemon, fall back to subclass camera_info
+        try:
+            info = self._picam2_client.get_sensor_info()
+            if info.get('ok'):
+                if info.get('width'):
+                    self.camera_info['width'] = info['width']
+                if info.get('height'):
+                    self.camera_info['height'] = info['height']
+                if info.get('pixel'):
+                    self.camera_info['pixel'] = info['pixel']
+                if info.get('min_gain'):
+                    self.camera_info['min_gain'] = info['min_gain']
+                if info.get('max_gain'):
+                    self.camera_info['max_gain'] = info['max_gain']
+                if info.get('min_exposure'):
+                    self.camera_info['min_exposure'] = info['min_exposure']
+                if info.get('max_exposure'):
+                    self.camera_info['max_exposure'] = info['max_exposure']
+                if info.get('cfa'):
+                    self.camera_info['cfa'] = info['cfa']
+                logger.info('Camera info from daemon: %s', info.get('sensor_name', 'unknown'))
+        except Exception as e:
+            logger.warning('Could not get sensor info from daemon, using defaults: %s', str(e))
+
         new_ccd = FakeIndiCcd()
         new_ccd.device_name = self.ccd_device_name
         new_ccd.driver_exec = self.ccd_driver_exec

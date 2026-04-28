@@ -3838,6 +3838,13 @@ class IndiAllskyConfigForm(FlaskForm):
         ('3', '3'),
     )
 
+    LIBCAMERA__BACKEND_choices = (
+        ('auto', 'Auto (prefer picamera2)'),
+        ('picamera2', 'Picamera2 (Python API)'),
+        ('libcamera', 'libcamera (Python bindings)'),
+        ('libcamera-still', 'libcamera-still (subprocess)'),
+    )
+
     PYCURL_CAMERA__IMAGE_FILE_TYPE_choices = (
         ('jpg', 'JPEG'),
         ('png', 'PNG'),
@@ -4791,6 +4798,7 @@ class IndiAllskyConfigForm(FlaskForm):
     LIBCAMERA__CCM_DISABLE           = BooleanField('Disable Color Correction Matrix (Night)')
     LIBCAMERA__CCM_DISABLE_DAY       = BooleanField('Disable Color Correction Matrix (Day)')
     LIBCAMERA__CAMERA_ID             = SelectField('Camera ID', choices=LIBCAMERA__CAMERA_ID_choices, validators=[LIBCAMERA__CAMERA_ID_validator])
+    LIBCAMERA__BACKEND               = SelectField('Camera Backend', choices=LIBCAMERA__BACKEND_choices, validators=[DataRequired()])
     LIBCAMERA__EXTRA_OPTIONS         = StringField('Night libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     LIBCAMERA__EXTRA_OPTIONS_DAY     = StringField('Day libcamera extra options', validators=[LIBCAMERA__EXTRA_OPTIONS_validator])
     LIBCAMERA__MQTT_TRANSPORT        = SelectField('MQTT Transport', choices=MQTTPUBLISH__TRANSPORT_choices, validators=[DataRequired(), MQTTPUBLISH__TRANSPORT_validator])
