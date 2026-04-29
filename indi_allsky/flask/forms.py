@@ -375,11 +375,8 @@ def GAMMA_CORRECTION_validator(form, field):
     if not isinstance(field.data, (int, float)):
         raise ValidationError('Please enter valid number')
 
-    if field.data < 0.0:
-        raise ValidationError('Gamma must be 0 or greater')
-
-    if field.data > 3.0:
-        raise ValidationError('Gamma must be less than 3.0')
+    if field.data <= 0.0:
+        raise ValidationError('Gamma most be greater than 0')
 
 
 def SHARPEN_AMOUNT_validator(form, field):
