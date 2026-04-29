@@ -4474,7 +4474,7 @@ class IndiAllskyConfigForm(FlaskForm):
     REALTIME_KEOGRAM__SAVE_INTERVAL  = IntegerField('Save Interval', validators=[REALTIME_KEOGRAM__SAVE_INTERVAL_validator])
     REALTIME_KEOGRAM__LABEL          = BooleanField('Label Realtime Keogram')
     STARTRAILS_SUN_ALT_THOLD         = FloatField('Star Trails Max Sun Altitude', validators=[DataRequired(), STARTRAILS_SUN_ALT_THOLD_validator])
-    STARTRAILS_MOONMODE_THOLD        = BooleanField('Star Trails Exclude Moon Mode')
+    STARTRAILS_MOONMODE_THOLD        = BooleanField('Star Trails Custom Moon Mode')
     STARTRAILS_MOON_ALT_THOLD        = FloatField('Custom Max Moon Altitude', validators=[DataRequired(), STARTRAILS_MOON_ALT_THOLD_validator])
     STARTRAILS_MOON_PHASE_THOLD      = FloatField('Custom Max Moon Phase', validators=[DataRequired(), STARTRAILS_MOON_PHASE_THOLD_validator])
     STARTRAILS_MAX_ADU               = IntegerField('Star Trails Max ADU', validators=[DataRequired(), STARTRAILS_MAX_ADU_validator])
@@ -4546,6 +4546,7 @@ class IndiAllskyConfigForm(FlaskForm):
     FISH2PANO__PIL_FONT_SIZE         = IntegerField('Font Size (pillow)', validators=[DataRequired(), TEXT_PROPERTIES__PIL_FONT_SIZE_validator])
     IMAGE_SAVE_FITS                  = BooleanField('Save FITS data')
     IMAGE_SAVE_FITS_PERIOD           = SelectField('Periodically save FITS', choices=IMAGE_SAVE_FITS_PERIOD_choices, validators=[IMAGE_SAVE_FITS_PERIOD_validator])
+    IMAGE_SAVE_FITS_COMPRESSED       = BooleanField('Compress FITS')
     NIGHT_GRAYSCALE                  = BooleanField('Save in Grayscale at Night')
     DAYTIME_GRAYSCALE                = BooleanField('Save in Grayscale during Day')
     MOON_OVERLAY__ENABLE             = BooleanField('Enable Moon Overlay')
@@ -4973,10 +4974,12 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__TSL2561_GAIN_DAY    = SelectField('TSL2561 Gain (Day)', choices=TEMP_SENSOR__TSL2561_GAIN_choices, validators=[TEMP_SENSOR__TSL2561_GAIN_validator])
     TEMP_SENSOR__TSL2561_INT_NIGHT   = SelectField('TSL2561 Integration (Night)', choices=TEMP_SENSOR__TSL2561_INT_choices, validators=[TEMP_SENSOR__TSL2561_INT_validator])
     TEMP_SENSOR__TSL2561_INT_DAY     = SelectField('TSL2561 Integration (Day)', choices=TEMP_SENSOR__TSL2561_INT_choices, validators=[TEMP_SENSOR__TSL2561_INT_validator])
+    TEMP_SENSOR__TSL2561_DISABLE_DAY = BooleanField('TSL2561 Disable Daytime')
     TEMP_SENSOR__TSL2591_GAIN_NIGHT  = SelectField('TSL2591 Gain (Night)', choices=TEMP_SENSOR__TSL2591_GAIN_choices, validators=[TEMP_SENSOR__TSL2591_GAIN_validator])
     TEMP_SENSOR__TSL2591_GAIN_DAY    = SelectField('TSL2591 Gain (Day)', choices=TEMP_SENSOR__TSL2591_GAIN_choices, validators=[TEMP_SENSOR__TSL2591_GAIN_validator])
     TEMP_SENSOR__TSL2591_INT_NIGHT   = SelectField('TSL2591 Integration (Night)', choices=TEMP_SENSOR__TSL2591_INT_choices, validators=[TEMP_SENSOR__TSL2591_INT_validator])
     TEMP_SENSOR__TSL2591_INT_DAY     = SelectField('TSL2591 Integration (Day)', choices=TEMP_SENSOR__TSL2591_INT_choices, validators=[TEMP_SENSOR__TSL2591_INT_validator])
+    TEMP_SENSOR__TSL2591_DISABLE_DAY = BooleanField('TSL2591 Disable Daytime')
     TEMP_SENSOR__VEML7700_GAIN_NIGHT = SelectField('VEML7700 Gain (Night)', choices=TEMP_SENSOR__VEML7700_GAIN_choices, validators=[TEMP_SENSOR__VEML7700_GAIN_validator])
     TEMP_SENSOR__VEML7700_GAIN_DAY   = SelectField('VEML7700 Gain (Day)', choices=TEMP_SENSOR__VEML7700_GAIN_choices, validators=[TEMP_SENSOR__VEML7700_GAIN_validator])
     TEMP_SENSOR__VEML7700_INT_NIGHT  = SelectField('VEML7700 Integration (Night)', choices=TEMP_SENSOR__VEML7700_INT_choices, validators=[TEMP_SENSOR__VEML7700_INT_validator])
@@ -9998,6 +10001,7 @@ class IndiAllskyCameraSimulatorForm(FlaskForm):
             ('imx385', 'IMX385 - 1/1.9"'),
             ('imx477', 'IMX477 - 1/2.3" - HQ Camera'),
             ('icx205al', 'ICX205AL - 1/2" - SX Superstar'),
+            ('icx267al', 'ICX267AL - 1/2" - SX Oculus'),
             ('mt9t001', 'MT9T001 - 1/2"'),
         ),
         'Medium - 9mm Class' : (

@@ -5,6 +5,8 @@ photutils >= 1.5.0
 pyerfa >= 2.0.1.4
 # https://www.wheelodex.org/projects/numpy/
 numpy >= 2.1.0
+# Use the following if you have trouble installing numpy (x86_64-v2)
+#numpy >= 2.1.0, < 2.4.0
 # https://www.wheelodex.org/projects/opencv-python-headless/
 opencv-python-headless >= 4.10.0.84
 # https://www.wheelodex.org/projects/scipy/
@@ -22,7 +24,7 @@ paramiko
 # https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
 pycurl
 # https://www.wheelodex.org/projects/pillow/ or https://www.piwheels.org/project/Pillow/
-Pillow
+Pillow >= 12.2.0
 piexif
 imageio
 imageio-ffmpeg
@@ -44,7 +46,7 @@ werkzeug >= 3.1.6
 is-safe-url
 certifi >= 2024.7.4
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 46.0.5
+cryptography >= 46.0.7
 dbus-python
 paho-mqtt >= 2.0.0
 setuptools-rust
@@ -52,7 +54,7 @@ setuptools-rust
 bcrypt
 passlib[argon2] >= 1.7.4
 prettytable
-lxml
+lxml >= 6.1.0
 shapely >= 2.0.6
 requests-toolbelt
 pytz

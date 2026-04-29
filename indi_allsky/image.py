@@ -800,6 +800,7 @@ class ImageWorker(Process):
                 'kpindex'         : i_ref.kpindex,
                 'ovation_max'     : i_ref.ovation_max,
                 'smoke_rating'    : i_ref.smoke_rating,
+                'fileSize'        : new_filename.stat().st_size,
                 'height'          : final_height,
                 'width'           : final_width,
                 'keogram_pixels'  : longterm_keogram_pixels,
@@ -870,6 +871,10 @@ class ImageWorker(Process):
                 image_thumbnail_metadata,
                 numpy_data=self.image_processor.image,
             )
+
+
+            # add fileSize to metadata
+            image_thumbnail_metadata['fileSize'] = image_thumbnail_entry.fileSize
 
 
             # wait on the post-hook to finish
@@ -1263,12 +1268,31 @@ class ImageWorker(Process):
         image_height, image_width = data.shape[:2]
 
 
-        f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
+        if self.config.get('IMAGE_SAVE_FITS_COMPRESSED'):
+            import gzip
 
-        i_ref.hdulist.writeto(f_tmpfile)
+            fits_image_buffer = io.BytesIO()
+            i_ref.hdulist.writeto(fits_image_buffer)
+
+            f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit.gz')
+            f_tmpfile.write(gzip.compress(fits_image_buffer.getbuffer()))
+
+            fits_ext = 'fit.gz'
+        else:
+            f_tmpfile = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.fit')
+            i_ref.hdulist.writeto(f_tmpfile)
+
+            fits_ext = 'fit'
+
+
         f_tmpfile.close()
 
+
         tmpfile_p = Path(f_tmpfile.name)
+
+
+        fits_size_bytes = tmpfile_p.stat().st_size
+        logger.info('FITS image file size: %0.1f MB', fits_size_bytes / 1024 / 1024)
 
 
         date_str = i_ref.exp_date.strftime('%Y%m%d_%H%M%S')
@@ -1277,7 +1301,7 @@ class ImageWorker(Process):
         filename = folder.joinpath(self.filename_t.format(
             i_ref.camera_id,
             date_str,
-            'fit',
+            fits_ext,  # defined above
         ))
 
 
@@ -1290,6 +1314,7 @@ class ImageWorker(Process):
             'gain'       : i_ref.gain,
             'binmode'    : i_ref.binning,
             'night'      : bool(self.night_av[constants.NIGHT_NIGHT]),
+            'fileSize'   : fits_size_bytes,
             'height'     : image_height,
             'width'      : image_width,
             'camera_uuid': i_ref.camera_uuid,
@@ -1341,6 +1366,7 @@ class ImageWorker(Process):
         #os.utime(str(filename), (i_ref.exp_date.timestamp(), i_ref.exp_date.timestamp()))
 
         tmpfile_p.unlink()
+
 
         self._miscUpload.s3_upload_fits(fits_entry, fits_metadata)
         self._miscUpload.upload_fits_image(fits_entry)
@@ -1479,6 +1505,7 @@ class ImageWorker(Process):
             'gain'       : i_ref.gain,
             'binmode'    : i_ref.binning,
             'night'      : bool(self.night_av[constants.NIGHT_NIGHT]),
+            'fileSize'   : tmpfile_name.stat().st_size,
             'height'     : image_height,
             'width'      : image_width,
             'camera_uuid': i_ref.camera_uuid,
@@ -1698,7 +1725,7 @@ class ImageWorker(Process):
 
         ### Do not write daytime image files if daytime capture is disabled
         if not self.night_av[constants.NIGHT_NIGHT] and self.config['DAYTIME_CAPTURE'] and not self.config.get('DAYTIME_CAPTURE_SAVE', True):
-            logger.info('Daytime capture is disabled')
+            logger.info('Daytime image save is disabled')
             tmpfile_name.unlink()
             return latest_file, None
 
@@ -1912,6 +1939,7 @@ class ImageWorker(Process):
             'gain'       : i_ref.gain,
             'binmode'    : i_ref.binning,
             'night'      : bool(self.night_av[constants.NIGHT_NIGHT]),
+            'fileSize'   : latest_pano_file.stat().st_size,
             'height'     : panorama_height,
             'width'      : panorama_width,
             'camera_uuid': i_ref.camera_uuid,
@@ -2237,6 +2265,7 @@ class ImageWorker(Process):
 
             if next_exposure == exposure:
                 # no change
+                #logger.warning('Auto-Gain - no changes')
                 next_gain = gain
                 exposure_delta = 0.0
                 gain_delta = 0.0
@@ -2247,6 +2276,7 @@ class ImageWorker(Process):
                     next_gain = gain
                     exposure_delta = next_exposure - exposure
                     gain_delta = 0.0
+                    logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [max gain]', next_exposure, exposure_delta)
                 else:
                     if exposure < self.auto_gain_exposure_cutoff_high:
                         # maintain gain, increase exposure
@@ -2254,12 +2284,14 @@ class ImageWorker(Process):
                         next_exposure = min(next_exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
                         exposure_delta = next_exposure - exposure
                         gain_delta = 0.0
+                        logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
                     else:
                         # increase gain, maintain exposure
                         next_gain = self.auto_gain_step_list[auto_gain_idx + 1]
                         next_exposure = min(exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
                         exposure_delta = 0.0
                         gain_delta = next_gain - gain
+                        logger.info('Auto-Gain increasing gain to %0.2f (%+0.2f) [maintain exposure]', next_gain, gain_delta)
 
             else:
                 # exposure/gain needs to decrease
@@ -2268,6 +2300,7 @@ class ImageWorker(Process):
                     next_gain = gain
                     exposure_delta = next_exposure - exposure
                     gain_delta = 0.0
+                    logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [minimum gain]', next_exposure, exposure_delta)
                 else:
                     if exposure > self.auto_gain_exposure_cutoff_low:
                         # maintain gain, decrease exposure
@@ -2275,6 +2308,7 @@ class ImageWorker(Process):
                         next_exposure = max(next_exposure, self.auto_gain_exposure_cutoff_low)
                         exposure_delta = next_exposure - exposure
                         gain_delta = 0.0
+                        logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
                     else:
                         # decrease gain, maintain exposure
                         next_gain = self.auto_gain_step_list[auto_gain_idx - 1]
@@ -2282,6 +2316,7 @@ class ImageWorker(Process):
                         next_exposure = max(exposure, self.auto_gain_exposure_cutoff_mid)
                         exposure_delta = 0.0
                         gain_delta = next_gain - gain
+                        logger.info('Auto-Gain decreasing gain to %0.2f (%+0.2f) [maintain exposure)', next_gain, gain_delta)
 
         else:
             # just set the gain to the max for the current mode
@@ -2316,17 +2351,17 @@ class ImageWorker(Process):
             next_exposure -= exposure_offset  # offset will be negative
             exposure_delta -= exposure_offset
 
-            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.6fs', exposure_offset * -1)
+            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
         elif self.exposure_av[constants.EXPOSURE_DELTA] < 0 and exposure_delta > 0:
             # exposure is increasing
             exposure_offset = exposure_delta / 2
             next_exposure -= exposure_offset
             exposure_delta -= exposure_offset
 
-            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.6fs', exposure_offset * -1)
+            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
 
 
-        logger.warning('New calculated exposure: %0.6fs (%+0.6f) @ gain %0.2f (%+0.2f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
+        logger.warning('New calculated exposure: %0.6fs (%+0.8f) @ gain %0.2f (%+0.2f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
         with self.exposure_av.get_lock():
             self.exposure_av[constants.EXPOSURE_NEXT] = float(next_exposure)
             self.exposure_av[constants.EXPOSURE_DELTA] = float(exposure_delta)

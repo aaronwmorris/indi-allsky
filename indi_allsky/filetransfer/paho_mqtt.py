@@ -105,6 +105,11 @@ class paho_mqtt(GenericFileTransfer):
                 'retain'   : True,
             })
 
+        # message list can be empty when panorama publish happens and publish_image is off
+        if not message_list:
+            logger.warning('MQTT: no messages to publish for topic: %s', image_topic)
+            return
+
 
         start = time.time()
 
@@ -133,7 +138,6 @@ class paho_mqtt(GenericFileTransfer):
         except MQTTException as e:
             raise AuthenticationFailure(str(e)) from e
         except ValueError as e:
-            # this can happen if msgs is empty
             raise TransferFailure(str(e)) from e
 
         upload_elapsed_s = time.time() - start

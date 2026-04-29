@@ -229,6 +229,7 @@ class IndiAllSkyDbThumbnailTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     data = db.Column(db.JSON, index=True)
+    fileSize = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
@@ -286,6 +287,7 @@ class IndiAllSkyDbImageTable(IndiAllSkyDbFileBase):
     data = db.Column(db.JSON, index=True)
     #tags = db.Column(db.JSON, index=True)
     exclude = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
+    fileSize = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
@@ -329,6 +331,7 @@ class IndiAllSkyDbDarkFrameTable(IndiAllSkyDbFileBase):
     binmode = db.Column(db.Integer, server_default='1', nullable=False, index=True)
     temp = db.Column(db.Float, nullable=True, index=True)
     adu = db.Column(db.Float, nullable=True)
+    fileSize = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
     active = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
@@ -380,6 +383,7 @@ class IndiAllSkyDbBadPixelMapTable(IndiAllSkyDbFileBase):
     binmode = db.Column(db.Integer, server_default='1', nullable=False, index=True)
     temp = db.Column(db.Float, nullable=True, index=True)
     adu = db.Column(db.Float, nullable=True)
+    fileSize = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
     active = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
@@ -442,6 +446,7 @@ class IndiAllSkyDbVideoTable(IndiAllSkyDbFileBase):
     #smoke_rating = db.Column(db.Integer, nullable=True, index=True)
     data = db.Column(db.JSON, index=True)
     #tags = db.Column(db.JSON, index=True)
+    fileSize = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
@@ -485,6 +490,7 @@ class IndiAllSkyDbMiniVideoTable(IndiAllSkyDbFileBase):
     frames = db.Column(db.Integer, server_default='0', nullable=False)
     note = db.Column(db.String(length=255), nullable=False)
     data = db.Column(db.JSON, index=True)
+    fileSize = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     camera_id = db.Column(db.Integer, db.ForeignKey('camera.id'), nullable=False)
@@ -519,6 +525,7 @@ class IndiAllSkyDbKeogramTable(IndiAllSkyDbFileBase):
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
     frames = db.Column(db.Integer, server_default='0', nullable=False)
+    fileSize = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
     data = db.Column(db.JSON, index=True)
@@ -554,6 +561,7 @@ class IndiAllSkyDbStarTrailsTable(IndiAllSkyDbFileBase):
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     success = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
     frames = db.Column(db.Integer, server_default='0', nullable=False)
+    fileSize = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
     data = db.Column(db.JSON, index=True)
@@ -590,6 +598,7 @@ class IndiAllSkyDbStarTrailsVideoTable(IndiAllSkyDbFileBase):
     success = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
     framerate = db.Column(db.Float, server_default='0', nullable=False)
     frames = db.Column(db.Integer, server_default='0', nullable=False)
+    fileSize = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     data = db.Column(db.JSON, index=True)
@@ -630,6 +639,7 @@ class IndiAllSkyDbFitsImageTable(IndiAllSkyDbFileBase):
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
+    fileSize = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
     data = db.Column(db.JSON, index=True)
@@ -672,6 +682,7 @@ class IndiAllSkyDbRawImageTable(IndiAllSkyDbFileBase):
     night = db.Column(db.Boolean, default=expression.true(), nullable=False, index=True)
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
+    fileSize = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
     data = db.Column(db.JSON, index=True)
@@ -715,6 +726,7 @@ class IndiAllSkyDbPanoramaImageTable(IndiAllSkyDbFileBase):
     uploaded = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
     sync_id = db.Column(db.Integer, nullable=True, index=True)
     exclude = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
+    fileSize = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)
     height = db.Column(db.Integer, nullable=True, index=True)
     data = db.Column(db.JSON, index=True)
@@ -763,6 +775,7 @@ class IndiAllSkyDbPanoramaVideoTable(IndiAllSkyDbFileBase):
     success = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
     framerate = db.Column(db.Float, server_default='0', nullable=False)
     frames = db.Column(db.Integer, server_default='0', nullable=False)
+    fileSize = db.Column(db.Integer, nullable=True, index=True)
     width = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     height = db.Column(db.Integer, nullable=True, index=True)  # this may never be populated
     data = db.Column(db.JSON, index=True)

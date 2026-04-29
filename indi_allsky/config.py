@@ -353,6 +353,7 @@ class IndiAllSkyConfigBase(object):
             "PIL_FONT_SIZE"        : 30,
         },
         "IMAGE_SAVE_FITS"           : True,
+        "IMAGE_SAVE_FITS_COMPRESSED": False,
         "IMAGE_SAVE_FITS_PRE_DARK"  : False,
         "IMAGE_SAVE_FITS_PERIOD"    : 7200,
         "IMAGE_EXPORT_RAW"          : "",  # png or tif (or empty)
@@ -812,10 +813,12 @@ class IndiAllSkyConfigBase(object):
             "TSL2561_GAIN_DAY"       : 0,
             "TSL2561_INT_NIGHT"      : 1,  # 0=13.7ms, 1=101ms, 2=402ms, or 3=manual
             "TSL2561_INT_DAY"        : 1,
+            "TSL2561_DISABLE_DAY"    : False,
             "TSL2591_GAIN_NIGHT"     : "GAIN_MED",
             "TSL2591_GAIN_DAY"       : "GAIN_LOW",
             "TSL2591_INT_NIGHT"      : "INTEGRATIONTIME_100MS",
             "TSL2591_INT_DAY"        : "INTEGRATIONTIME_100MS",
+            "TSL2591_DISABLE_DAY"    : False,
             "VEML7700_GAIN_NIGHT"    : "ALS_GAIN_1",
             "VEML7700_GAIN_DAY"      : "ALS_GAIN_1_8",
             "VEML7700_INT_NIGHT"     : "ALS_100MS",

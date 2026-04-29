@@ -52,7 +52,7 @@ setuptools-rust
 bcrypt
 passlib[argon2] >= 1.7.4
 prettytable
-lxml
+lxml >= 6.1.0
 shapely
 requests-toolbelt
 pytz

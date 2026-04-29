@@ -37,7 +37,7 @@ passlib[argon2] >= 1.7.4
 prettytable
 astroalign
 requests[security]
-lxml
+lxml >= 6.1.0
 shapely
 pytz
 mysql-connector-python

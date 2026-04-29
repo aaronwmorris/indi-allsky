@@ -339,7 +339,6 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         ca-certificates \
         avahi-daemon \
         swig \
-        libatlas-ecmwf-dev \
         libimath-dev \
         libopenexr-dev \
         libgtk-3-0t64 \
@@ -382,6 +381,13 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         sqlite3 \
         polkitd \
         dbus-user-session
+
+
+    if [ "$CPU_BITS" != "32" ]; then
+        # not available on 32-bit platforms
+        sudo apt-get -y install \
+            libatlas-ecmwf-dev
+    fi
 
 
     if [[ "$USE_MYSQL_DATABASE" == "true" ]]; then

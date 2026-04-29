@@ -12,7 +12,7 @@ ccdproc >= 2.4.2
 # https://www.wheelodex.org/projects/scikit-image/
 scikit-image >= 0.25.0
 # https://www.wheelodex.org/projects/Pillow/
-Pillow
+Pillow >= 12.2.0
 simplejpeg
 bottleneck >= 1.4.0
 ephem
@@ -31,7 +31,7 @@ werkzeug >= 3.1.6
 is-safe-url
 certifi >= 2023.7.22
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 46.0.5
+cryptography >= 46.0.7
 dbus-python
 setuptools-rust
 # https://www.wheelodex.org/projects/bcrypt/
@@ -40,7 +40,7 @@ passlib[argon2] >= 1.7.4
 prettytable
 astroalign >= 2.6.0
 requests[security]
-lxml
+lxml >= 6.1.0
 shapely >= 2.0.6
 pytz
 mysql-connector-python

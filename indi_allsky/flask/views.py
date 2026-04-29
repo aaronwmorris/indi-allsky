@@ -68,6 +68,7 @@ from .models import TaskQueueQueue
 from .models import TaskQueueState
 
 from sqlalchemy import func
+from sqlalchemy import literal_column
 #from sqlalchemy import extract
 from sqlalchemy import desc
 from sqlalchemy import cast
@@ -2110,7 +2111,7 @@ class ConfigView(FormView):
             if not dh_manual_target:
                 if not isinstance(dh_temp, type(None)) and not isinstance(dh_dewpoint, type(None)):
                     dh_temp_delta = dh_temp - dh_dewpoint
-                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}°'.format(dh_temp_delta)
+                    context['dh_temp_delta_str'] = 'Δ{0:+0.1f}°'.format(dh_temp_delta)
 
                     dh_target_low = dh_dewpoint + dh_thold_diff_low
                     dh_target_med = dh_dewpoint + dh_thold_diff_med
@@ -2141,7 +2142,7 @@ class ConfigView(FormView):
             else:
                 if not isinstance(dh_temp, type(None)):
                     dh_temp_delta = dh_temp - dh_manual_target
-                    context['dh_temp_delta_str'] = 'Δ{0:0.1f}° (manual target)'.format(dh_temp_delta)
+                    context['dh_temp_delta_str'] = 'Δ{0:+0.1f}° (manual target)'.format(dh_temp_delta)
 
                     dh_target_low = dh_manual_target + dh_thold_diff_low
                     dh_target_med = dh_manual_target + dh_thold_diff_med
@@ -2180,7 +2181,7 @@ class ConfigView(FormView):
             fan_target = self.indi_allsky_config.get('FAN', {}).get('TARGET', 30.0)
             if not isinstance(fan_temp, type(None)):
                 fan_temp_delta = fan_temp - fan_target
-                context['fan_temp_delta_str'] = 'Δ{0:0.1f}°'.format(fan_temp_delta)
+                context['fan_temp_delta_str'] = 'Δ{0:+0.1f}°'.format(fan_temp_delta)
 
                 fan_target_low = fan_target + fan_thold_diff_low
                 fan_target_med = fan_target + fan_thold_diff_med
@@ -2443,6 +2444,7 @@ class ConfigView(FormView):
             'FISH2PANO__OPENCV_FONT_SCALE'   : self.indi_allsky_config.get('FISH2PANO', {}).get('OPENCV_FONT_SCALE', 0.8),
             'FISH2PANO__PIL_FONT_SIZE'       : self.indi_allsky_config.get('FISH2PANO', {}).get('PIL_FONT_SIZE', 30),
             'IMAGE_SAVE_FITS'                : self.indi_allsky_config.get('IMAGE_SAVE_FITS', False),
+            'IMAGE_SAVE_FITS_COMPRESSED'     : self.indi_allsky_config.get('IMAGE_SAVE_FITS_COMPRESSED', False),
             'IMAGE_SAVE_FITS_PERIOD'         : str(self.indi_allsky_config.get('IMAGE_SAVE_FITS_PERIOD', 7200)),  # string in form, int in config
             'NIGHT_GRAYSCALE'                : self.indi_allsky_config.get('NIGHT_GRAYSCALE', False),
             'DAYTIME_GRAYSCALE'              : self.indi_allsky_config.get('DAYTIME_GRAYSCALE', False),
@@ -2851,10 +2853,12 @@ class ConfigView(FormView):
             'TEMP_SENSOR__TSL2561_GAIN_DAY'  : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_DAY', 0)),  # string in form, int in config
             'TEMP_SENSOR__TSL2561_INT_NIGHT' : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_INT_NIGHT', 1)),  # string in form, int in config
             'TEMP_SENSOR__TSL2561_INT_DAY'   : str(self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_INT_DAY', 1)),  # string in form, int in config
+            'TEMP_SENSOR__TSL2561_DISABLE_DAY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2561_DISABLE_DAY', False),
             'TEMP_SENSOR__TSL2591_GAIN_NIGHT': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2591_GAIN_NIGHT', 'GAIN_MED'),
             'TEMP_SENSOR__TSL2591_GAIN_DAY'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2591_GAIN_DAY', 'GAIN_LOW'),
             'TEMP_SENSOR__TSL2591_INT_NIGHT' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2591_INT_NIGHT', 'INTEGRATIONTIME_100MS'),
             'TEMP_SENSOR__TSL2591_INT_DAY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2591_INT_DAY', 'INTEGRATIONTIME_100MS'),
+            'TEMP_SENSOR__TSL2591_DISABLE_DAY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('TSL2591_DISABLE_DAY', False),
             'TEMP_SENSOR__VEML7700_GAIN_NIGHT': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('VEML7700_GAIN_NIGHT', 'ALS_GAIN_1'),
             'TEMP_SENSOR__VEML7700_GAIN_DAY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('VEML7700_GAIN_DAY', 'ALS_GAIN_1_8'),
             'TEMP_SENSOR__VEML7700_INT_NIGHT': self.indi_allsky_config.get('TEMP_SENSOR', {}).get('VEML7700_INT_NIGHT', 'ALS_100MS'),
@@ -3464,6 +3468,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FISH2PANO']['OPENCV_FONT_SCALE']       = float(request.json['FISH2PANO__OPENCV_FONT_SCALE'])
         self.indi_allsky_config['FISH2PANO']['PIL_FONT_SIZE']           = int(request.json['FISH2PANO__PIL_FONT_SIZE'])
         self.indi_allsky_config['IMAGE_SAVE_FITS']                      = bool(request.json['IMAGE_SAVE_FITS'])
+        self.indi_allsky_config['IMAGE_SAVE_FITS_COMPRESSED']           = bool(request.json['IMAGE_SAVE_FITS_COMPRESSED'])
         self.indi_allsky_config['IMAGE_SAVE_FITS_PERIOD']               = int(request.json['IMAGE_SAVE_FITS_PERIOD'])
         self.indi_allsky_config['NIGHT_GRAYSCALE']                      = bool(request.json['NIGHT_GRAYSCALE'])
         self.indi_allsky_config['DAYTIME_GRAYSCALE']                    = bool(request.json['DAYTIME_GRAYSCALE'])
@@ -3882,10 +3887,12 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['TSL2561_GAIN_DAY']      = int(request.json['TEMP_SENSOR__TSL2561_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2561_INT_NIGHT']     = int(request.json['TEMP_SENSOR__TSL2561_INT_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2561_INT_DAY']       = int(request.json['TEMP_SENSOR__TSL2561_INT_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['TSL2561_DISABLE_DAY']   = bool(request.json['TEMP_SENSOR__TSL2561_DISABLE_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2591_GAIN_NIGHT']    = str(request.json['TEMP_SENSOR__TSL2591_GAIN_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2591_GAIN_DAY']      = str(request.json['TEMP_SENSOR__TSL2591_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2591_INT_NIGHT']     = str(request.json['TEMP_SENSOR__TSL2591_INT_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['TSL2591_INT_DAY']       = str(request.json['TEMP_SENSOR__TSL2591_INT_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['TSL2591_DISABLE_DAY']   = bool(request.json['TEMP_SENSOR__TSL2591_DISABLE_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['VEML7700_GAIN_NIGHT']   = str(request.json['TEMP_SENSOR__VEML7700_GAIN_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['VEML7700_GAIN_DAY']     = str(request.json['TEMP_SENSOR__VEML7700_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['VEML7700_INT_NIGHT']    = str(request.json['TEMP_SENSOR__VEML7700_INT_NIGHT'])
@@ -5024,6 +5031,7 @@ class SystemInfoView(TemplateView):
     decorators = [login_required]
 
     def get_context(self):
+        import sys
         import platform
         import astropy
         import flask
@@ -5042,10 +5050,10 @@ class SystemInfoView(TemplateView):
         except ImportError:
             paho_mqtt = None
 
-        try:
-            import PyIndi
-        except ImportError:
-            PyIndi = None
+        #try:
+        #    import PyIndi
+        #except ImportError:
+        #    PyIndi = None
 
         try:
             import skyfield
@@ -5098,6 +5106,11 @@ class SystemInfoView(TemplateView):
         context['python_version'] = platform.python_version()
         context['python_platform'] = platform.machine()
 
+        if sys.maxsize > 2147483648:
+            context['cpu_bits'] = 64
+        else:
+            context['cpu_bits'] = 32
+
         context['gunicorn_version'] = str(getattr(gunicorn, '__version__', -1))
         context['cryptography_version'] = str(getattr(cryptography, '__version__', -1))
         context['cv2_version'] = str(getattr(cv2, '__version__', -1))
@@ -5118,14 +5131,15 @@ class SystemInfoView(TemplateView):
         else:
             context['pahomqtt_version'] = 'Not installed'
 
-        if PyIndi:
-            context['pyindi_version'] = '.'.join((
-                str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
-                str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
-                str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
-            ))
-        else:
-            context['pyindi_version'] = 'Not installed'
+        ### PyIndi no longer reports a version
+        #if PyIndi:
+        #    context['pyindi_version'] = '.'.join((
+        #        str(getattr(PyIndi, 'INDI_VERSION_MAJOR', -1)),
+        #        str(getattr(PyIndi, 'INDI_VERSION_MINOR', -1)),
+        #        str(getattr(PyIndi, 'INDI_VERSION_RELEASE', -1)),
+        #    ))
+        #else:
+        #    context['pyindi_version'] = 'Not installed'
 
         if skyfield:
             context['skyfield_version'] = str(getattr(skyfield, '__version__', -1))
@@ -9677,6 +9691,213 @@ class AjaxMiniTimelapseGeneratorView(BaseView):
         return jsonify(message)
 
 
+class FileSpaceUsageView(TemplateView):
+    decorators = [login_required]
+
+    page_title = 'File Space Usage'
+
+    def get_context(self):
+        context = super(FileSpaceUsageView, self).get_context()
+
+
+        total_size = 0
+        total_count = 0
+        file_data_dict = dict()
+
+
+        ### images
+        days_fileSize_images = self.get_table_fileSize(IndiAllSkyDbImageTable, self.camera.id)
+        image_total_size, image_total_count = self.update_dict(file_data_dict, days_fileSize_images, 'Images')
+        total_size += image_total_size
+        total_count += image_total_count
+
+
+        ### panorama images
+        days_fileSize_panorama_images = self.get_table_fileSize_nothumbs(IndiAllSkyDbPanoramaImageTable, self.camera.id)
+        panorama_image_total_size, panorama_image_total_count = self.update_dict(file_data_dict, days_fileSize_panorama_images, 'Panoramas')
+        total_size += panorama_image_total_size
+        total_count += panorama_image_total_count
+
+
+        ### timelapse videos
+        days_fileSize_videos = self.get_table_fileSize_nothumbs(IndiAllSkyDbVideoTable, self.camera.id)
+        videos_total_size, videos_total_count = self.update_dict(file_data_dict, days_fileSize_videos, 'Timelapses')
+        total_size += videos_total_size
+        total_count += videos_total_count
+
+
+        ### panorama timelapses
+        days_fileSize_panorama_videos = self.get_table_fileSize_nothumbs(IndiAllSkyDbPanoramaVideoTable, self.camera.id)
+        panorama_videos_total_size, panorama_videos_total_count = self.update_dict(file_data_dict, days_fileSize_panorama_videos, 'Panorama Timelapses')
+        total_size += panorama_videos_total_size
+        total_count += panorama_videos_total_count
+
+
+        # keograms are not a significant usage of sapce
+        ### keograms
+        #days_fileSize_keograms = self.get_table_fileSize_nothumbs(IndiAllSkyDbKeogramTable, self.camera.id)
+        #keograms_total_size, keograms_total_count = self.update_dict(file_data_dict, days_fileSize_keograms, 'Keograms')
+        #total_size += keograms_total_size
+        #total_count += keograms_total_count
+
+
+        # startrails are not a significant usage of sapce
+        ### star trails
+        #days_fileSize_startrails = self.get_table_fileSize_nothumbs(IndiAllSkyDbStarTrailsTable, self.camera.id)
+        #startrails_total_size, startrails_total_count = self.update_dict(file_data_dict, days_fileSize_startrails, 'Star Trails')
+        #total_size += startrails_total_size
+        #total_count += startrails_total_count
+
+
+        ### star trail timelapses
+        days_fileSize_startrail_videos = self.get_table_fileSize_nothumbs(IndiAllSkyDbStarTrailsVideoTable, self.camera.id)
+        startrail_videos_total_size, startrail_videos_total_count = self.update_dict(file_data_dict, days_fileSize_startrail_videos, 'Star Trail Timelapses')
+        total_size += startrail_videos_total_size
+        total_count += startrail_videos_total_count
+
+
+        ### fits
+        days_fileSize_fits = self.get_table_fileSize_nothumbs(IndiAllSkyDbFitsImageTable, self.camera.id)
+        fits_total_size, fits_total_count = self.update_dict(file_data_dict, days_fileSize_fits, 'FITS')
+        total_size += fits_total_size
+        total_count += fits_total_count
+
+
+        ### raw images
+        days_fileSize_raw = self.get_table_fileSize_nothumbs(IndiAllSkyDbRawImageTable, self.camera.id)
+        raw_total_size, raw_total_count = self.update_dict(file_data_dict, days_fileSize_raw, 'Raw Images')
+        total_size += raw_total_size
+        total_count += raw_total_count
+
+
+        #app.logger.info('Data: %s', str(file_data_dict))
+
+        context['days_fileSize_dict'] = file_data_dict
+
+
+        return context
+
+
+    def get_table_fileSize(self, table, camera_id):
+        days_fileSize = db.session.query(
+            func.distinct(table.dayDate).label('dayDate_distinct'),
+            func.sum(table.fileSize).label('dayDate_sum'),
+            table.night,
+            func.count(table.id).label('file_count'),
+            func.sum(IndiAllSkyDbThumbnailTable.fileSize).label('thumbnail_sum'),
+            func.count(IndiAllSkyDbThumbnailTable.id).label('thumbnail_count'),
+        )\
+            .join(table.camera)\
+            .join(IndiAllSkyDbThumbnailTable)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(IndiAllSkyDbThumbnailTable.uuid == table.thumbnail_uuid)\
+            .filter(table.fileSize != sa_null())\
+            .group_by(table.dayDate, table.night)\
+            .order_by(table.dayDate.desc())
+
+        return days_fileSize
+
+
+    def get_table_fileSize_nothumbs(self, table, camera_id):
+        days_fileSize = db.session.query(
+            func.distinct(table.dayDate).label('dayDate_distinct'),
+            func.sum(table.fileSize).label('dayDate_sum'),
+            table.night,
+            func.count(table.id).label('file_count'),
+            literal_column('0').label('thumbnail_sum'),  # simulate data
+            literal_column('0').label('thumbnail_count'),  # simulate data
+        )\
+            .join(table.camera)\
+            .filter(IndiAllSkyDbCameraTable.id == camera_id)\
+            .filter(table.fileSize != sa_null())\
+            .group_by(table.dayDate, table.night)\
+            .order_by(table.dayDate.desc())
+
+
+        return days_fileSize
+
+
+    def update_dict(self, file_dict, fileSize_query, label):
+        total_size = 0
+        total_count = 0
+
+
+        for day in fileSize_query:
+            day_size = 0
+            day_count = 0
+
+            if db.engine.dialect.name == 'mysql':
+                # mysql returns a date object
+                dayDate = day.dayDate_distinct
+            else:
+                # sqlite returns a string
+                dayDate = datetime.strptime(day.dayDate_distinct, '%Y-%m-%d').date()
+
+
+            dayDate_str = dayDate.strftime('%Y-%m-%d')
+
+
+            if not file_dict.get(dayDate_str):
+                file_dict[dayDate_str] = dict()
+
+
+            if day.night:
+                tod = 'Night'
+            else:
+                tod = 'Day'
+
+
+            if not file_dict[dayDate_str].get(tod):
+                file_dict[dayDate_str][tod] = {
+                    'tod_fileSize' : 0,
+                    'tod_count'    : 0,
+                }
+
+
+            # ensure initial 0 values for all types
+            for x in ['Images', 'Panoramas', 'Timelapses', 'Panorama Timelapses', 'Keograms', 'Star Trails', 'Star Trail Timelapses', 'FITS', 'Raw Images', 'Thumbnails']:
+                if not file_dict[dayDate_str][tod].get(x):
+                    file_dict[dayDate_str][tod][x] = {
+                        'fileSize' : 0,
+                        'count'    : 0,
+                    }
+
+
+            file_data = {
+                'fileSize' : day.dayDate_sum if day.dayDate_sum else 0,
+                'count'    : day.file_count,
+            }
+
+
+            thumbnail_sum = day.thumbnail_sum if day.thumbnail_sum else 0
+            thumbnail_count = day.thumbnail_count
+
+
+            file_dict[dayDate_str][tod][label] = file_data
+            file_dict[dayDate_str][tod]['Thumbnails']['fileSize'] += thumbnail_sum
+            file_dict[dayDate_str][tod]['Thumbnails']['count'] += thumbnail_count
+
+
+            day_size += file_data['fileSize']
+            day_size += thumbnail_sum
+
+            day_count += file_data['count']
+            day_count += thumbnail_count
+
+
+            # totals for time of day
+            file_dict[dayDate_str][tod]['tod_fileSize'] += day_size
+            file_dict[dayDate_str][tod]['tod_count'] += day_count
+
+
+            # add to total
+            total_size += file_dict[dayDate_str][tod]['tod_fileSize']
+            total_count += file_dict[dayDate_str][tod]['tod_count']
+
+
+        return total_size, total_count
+
+
 class LongTermKeogramView(TemplateView):
     page_title = 'Long Term Keogram'
 
@@ -11764,6 +11985,7 @@ bp_allsky.add_url_rule('/darks', view_func=DarkFramesView.as_view('darks_view', 
 bp_allsky.add_url_rule('/mask', view_func=MaskView.as_view('mask_view', template_name='mask.html'))
 bp_allsky.add_url_rule('/camerasimulator', view_func=CameraSimulatorView.as_view('camera_simulator_view', template_name='camera_simulator.html'))
 bp_allsky.add_url_rule('/imagecirclehelper', view_func=ImageCircleHelperView.as_view('image_circle_helper_view', template_name='imagecirclehelper.html'))
+bp_allsky.add_url_rule('/filespaceusage', view_func=FileSpaceUsageView.as_view('filespaceusage_view', template_name='filespaceusage.html'))
 
 bp_allsky.add_url_rule('/public', view_func=PublicIndexView.as_view('public_index_view'))  # redirect
 

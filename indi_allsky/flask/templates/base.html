@@ -8,6 +8,7 @@
 <link href="{{ url_for('indi_allsky.static', filename='css/style.css') }}" rel="stylesheet">
 <script src="{{ url_for('indi_allsky.static', filename='js/jquery-3.7.1.min.js') }}"></script>
 <script src="{{ url_for('indi_allsky.static', filename='bootstrap/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('indi_allsky.static', filename='js/indi-allsky-tabs.js') }}"></script>
 <style>
 .container{
     max-width: 2000px;
@@ -135,6 +136,10 @@
                             <li>
                                 <a href="{{ url_for('indi_allsky.image_lag_view') }}" class="dropdown-item">
                                     <img src="{{ url_for('indi_allsky.static', filename='svg/stopwatch.svg') }}" width="16" height="16" alt="Image Lag"><span class="ms-1 d-none d-sm-inline">Image Lag</span></a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('indi_allsky.filespaceusage_view') }}" class="dropdown-item">
+                                    <img src="{{ url_for('indi_allsky.static', filename='svg/flag.svg') }}" width="16" height="16" alt="File Space Usage"><span class="ms-1 d-none d-sm-inline">File Space Usage</span></a>
                             </li>
                             <li>
                                 <a href="{{ url_for('indi_allsky.camera_lens_view') }}" class="dropdown-item">

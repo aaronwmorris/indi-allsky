@@ -68,7 +68,11 @@ class IndiAllskySqm(object):
     def magnitudeSqm(self, i_ref):
         sqm_avg = self.averageAdu(i_ref)
 
-        raw_mag = (math.log10(sqm_avg) * 2.5) * -1
+        try:
+            raw_mag = (math.log10(sqm_avg) * 2.5) * -1
+        except ValueError as e:
+            logger.error('ValueError: %s', str(e))
+            raw_mag = 0.0
 
         mag_sqm = self._magnitude_offset + raw_mag  # raw_mag is negative
 
@@ -82,6 +86,7 @@ class IndiAllskySqm(object):
 
         # create a black background
         mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+
 
         sqm_roi = self.config.get('SQM_ROI', [])
 
@@ -110,7 +115,9 @@ class IndiAllskySqm(object):
 
         # combine masks in case there is overlapping regions
         if not isinstance(self._external_mask_dict[binning], type(None)):
-            self._sqm_mask_dict[binning] = cv2.bitwise_and(mask, mask, mask=self._external_mask_dict[binning])
+            # combine existing mask with a central ROI
+            logger.info('Merging SQM mask with central ROI')
+            self._sqm_mask_dict[binning] = cv2.bitwise_and(mask, self._external_mask_dict[binning])
             return
 
 

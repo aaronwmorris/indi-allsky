@@ -474,6 +474,17 @@ class VideoWorker(Process):
 
             tg.generate(video_file, timelapse_files)
 
+
+            try:
+                fileSize = video_file.stat().st_size
+            except FileNotFoundError:
+                fileSize = None
+
+
+            video_entry.fileSize = fileSize
+            video_metadata['fileSize'] = fileSize
+
+
             video_entry.success = True
             db.session.commit()
         except TimelapseException:
@@ -727,6 +738,10 @@ class VideoWorker(Process):
         )
 
 
+        # populate fileSize
+        mini_video_thumbnail_metadata['fileSize'] = mini_video_thumbnail_entry.fileSize
+
+
         if self.config.get('TIMELAPSE', {}).get('USE_NIGHT_CONFIG', True):
             bitrate = self.config.get('FFMPEG_BITRATE', '5000k')
             vf_scale = self.config.get('FFMPEG_VFSCALE', '')
@@ -755,6 +770,17 @@ class VideoWorker(Process):
             mini_tg.ffmpeg_extra_options = ffmpeg_extra_options
 
             mini_tg.generate(video_file, timelapse_files)
+
+
+            try:
+                fileSize = video_file.stat().st_size
+            except FileNotFoundError:
+                fileSize = None
+
+
+            mini_video_entry.fileSize = fileSize
+            mini_video_metadata['fileSize'] = fileSize
+
 
             mini_video_entry.success = True
             db.session.commit()
@@ -1010,6 +1036,17 @@ class VideoWorker(Process):
             panorama_tg.ffmpeg_extra_options = ffmpeg_extra_options
 
             panorama_tg.generate(video_file, timelapse_files)
+
+
+            try:
+                fileSize = video_file.stat().st_size
+            except FileNotFoundError:
+                fileSize = None
+
+
+            video_entry.fileSize = fileSize
+            video_metadata['fileSize'] = fileSize
+
 
             video_entry.success = True
             db.session.commit()
@@ -1480,6 +1517,17 @@ class VideoWorker(Process):
         keogram_entry.width = keogram_width
         keogram_entry.frames = keogram_width  # one frame per line
 
+
+        try:
+            k_fileSize = keogram_file.stat().st_size
+        except FileNotFoundError:
+            k_fileSize = None
+
+
+        keogram_entry.fileSize = k_fileSize
+        keogram_metadata['fileSize'] = k_fileSize
+
+
         keogram_entry.success = True
         db.session.commit()
 
@@ -1504,6 +1552,10 @@ class VideoWorker(Process):
         )
 
 
+        # populate fileSize
+        keogram_thumbnail_metadata['fileSize'] = keogram_thumbnail_entry.fileSize
+
+
         if night:
             stg.finalize(startrail_file, camera)
 
@@ -1517,6 +1569,17 @@ class VideoWorker(Process):
             startrail_entry.height = st_height
             startrail_entry.width = st_width
             startrail_entry.frames = stg.trail_count
+
+
+            try:
+                st_fileSize = startrail_file.stat().st_size
+            except FileNotFoundError:
+                st_fileSize = None
+
+
+            startrail_entry.fileSize = st_fileSize
+            startrail_metadata['fileSize'] = st_fileSize
+
 
             startrail_entry.success = True
             db.session.commit()
@@ -1540,6 +1603,10 @@ class VideoWorker(Process):
                 new_width=self.thumbnail_startrail_width,
                 opt_height=self.thumbnail_startrail_height_opt,
             )
+
+
+            # populate fileSize
+            startrail_thumbnail_metadata['fileSize'] = startrail_thumbnail_entry.fileSize
 
 
             st_frame_count = stg.timelapse_frame_count
@@ -1573,6 +1640,17 @@ class VideoWorker(Process):
                     st_tg.ffmpeg_extra_options = ffmpeg_extra_options
 
                     st_tg.generate(startrail_video_file, stg.timelapse_frame_list)
+
+
+                    try:
+                        stv_fileSize = startrail_video_file.stat().st_size
+                    except FileNotFoundError:
+                        stv_fileSize = None
+
+
+                    startrail_video_entry.fileSize = stv_fileSize
+                    startrail_video_metadata['fileSize'] = stv_fileSize
+
 
                     startrail_video_entry.success = True
                     db.session.commit()

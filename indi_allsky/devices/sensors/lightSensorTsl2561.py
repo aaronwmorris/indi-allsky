@@ -24,6 +24,14 @@ class LightSensorTsl2561(SensorBase):
         #logger.info('[%s] TSL2561 settings - Gain: %d, Integration: %d', gain, integration)
 
 
+        if self.disable_day:
+            data = {
+                'data' : (0.0, 0.0, 0.0, 0.0, 0.0),
+            }
+
+            return data
+
+
         try:
             lux = float(self.tsl2561.lux)  # can be None
             broadband = int(self.tsl2561.broadband)
@@ -127,6 +135,11 @@ class LightSensorTsl2561_I2C(LightSensorTsl2561):
         self.gain_day = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_GAIN_DAY', 0))
         self.integration_night = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_INT_NIGHT', 1))
         self.integration_day = int(self.config.get('TEMP_SENSOR', {}).get('TSL2561_INT_DAY', 1))
+        self.disable_day = bool(self.config.get('TEMP_SENSOR', {}).get('TSL2561_DISABLE_DAY', False))
+
+        if self.disable_day:
+            logger.warning('TSL2561 daytime operation disabled')
+
 
         # Enable the light sensor
         self.tsl2561.enabled = True

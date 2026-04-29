@@ -12,7 +12,7 @@ class IndiAllskyStacker(object):
     def __init__(self, config, mask=None):
         self.config = config
 
-        self._sqm_mask_dict = mask
+        self._sqm_mask_dict = mask  # sqm mask is not used
 
         self._stack_mask_dict = dict()
         for binning in self._sqm_mask_dict.keys():
@@ -25,6 +25,7 @@ class IndiAllskyStacker(object):
 
         self.hist_rotation = list()
         self._rotation_dev = 3  # rotation may not exceed this deviation
+        self._scale_limit = 0.97  # scale may not exceed this value (+/-)
         self._history_min_vals = 15
 
 
@@ -116,7 +117,7 @@ class IndiAllskyStacker(object):
         return image_min.astype(numpy_type)
 
 
-    def register(self, stack_i_ref_list, binning):
+    def register(self, stack_i_ref_list, binning, max_bit_depth):
         logger.info('Starting image registration')
 
 
@@ -133,6 +134,20 @@ class IndiAllskyStacker(object):
 
         #reference_masked = self._crop(reference_i_ref.opencv_data)
         reference_masked = cv2.bitwise_and(reference_i_ref.opencv_data, reference_i_ref.opencv_data, mask=self._stack_mask_dict[binning])
+
+
+        ### Debugging
+        #if reference_i_ref.image_bitpix == 8:
+        #    # nothing to scale
+        #    scaled_data_8 = reference_masked
+        #elif reference_i_ref.image_bitpix == 16:
+        #    shift_factor = max_bit_depth - 8
+        #    scaled_data_8 = numpy.right_shift(reference_masked, shift_factor).astype(numpy.uint8)
+        #else:
+        #    raise Exception('Unsupported bit depth')
+
+        #cv2.imwrite('/tmp/reference_masked.jpg', scaled_data_8, [cv2.IMWRITE_JPEG_QUALITY, 90])
+
 
         reg_start = time.time()
 
@@ -185,7 +200,7 @@ class IndiAllskyStacker(object):
                     if rotation > (rotation_mean + rotation_stddev_limit)\
                             or rotation < (rotation_mean - rotation_stddev_limit):
 
-                        logger.error('Rotation exceeded limit of +/- %0.8f', rotation_stddev_limit)
+                        logger.error('Rotation %0.8f exceeded limit of +/- %0.8f', rotation, rotation_stddev_limit)
                         last_rotation += rotation_mean  # skipping a frame, need to account for rotation difference
                         continue
 
@@ -193,6 +208,12 @@ class IndiAllskyStacker(object):
                 self.hist_rotation.append(rotation)  # only add known good rotation values
                 last_rotation = transform.rotation
 
+
+                # if the new scale exceeds the limit, do not apply the transform
+                # scale should almost always be +/- 0.99
+                if abs(transform.scale) < self._scale_limit:
+                    logger.error('Scale %0.6f exceeded limit of +/- %0.2f', transform.scale, self._scale_limit)
+                    continue
 
 
                 reg_data, footprint = astroalign.apply_transform(
@@ -246,16 +267,13 @@ class IndiAllskyStacker(object):
 
 
     def _generateStackMask(self, img, binning):
-        logger.info('Generating mask based on SQM_ROI')
-
-        if not isinstance(self._sqm_mask_dict[binning], type(None)):
-            self._stack_mask_dict[binning] = self._sqm_mask_dict[binning]
-            return
+        logger.info('Generating new stacking mask')
 
         image_height, image_width = img.shape[:2]
 
         # create a black background
-        mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+        stack_mask = numpy.zeros((image_height, image_width), dtype=numpy.uint8)
+
 
         sqm_roi = self.config.get('SQM_ROI', [])
 
@@ -272,14 +290,24 @@ class IndiAllskyStacker(object):
             x2 = int((image_width / 2) + (image_width / sqm_fov_div))
             y2 = int((image_height / 2) + (image_height / sqm_fov_div))
 
+
         # The white area is what we keep
         cv2.rectangle(
-            img=mask,
+            img=stack_mask,
             pt1=(x1, y1),
             pt2=(x2, y2),
             color=255,  # mono
             thickness=cv2.FILLED,
         )
 
-        self._stack_mask_dict[binning] = mask
+
+        ### Integrating the detection mask appears to cause registration to fail
+        #if not isinstance(self._sqm_mask_dict[binning], type(None)):
+        #    # combine existing mask with a central ROI
+        #    logger.info('Merging SQM mask with central ROI')
+        #    self._sqm_mask_dict[binning] = cv2.bitwise_and(stack_mask, self._sqm_mask_dict[binning])
+        #    return
+
+
+        self._stack_mask_dict[binning] = stack_mask
 

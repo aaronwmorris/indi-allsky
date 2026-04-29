@@ -27,9 +27,9 @@ OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 ### config ###
 INDISERVER_SERVICE_NAME="indiserver"
 INDI_CORE_REPO="https://github.com/indilib/indi.git"
-INDI_CORE_AUTO_TAG="v2.1.9"
+INDI_CORE_AUTO_TAG="v2.2.0"
 INDI_3RDPARTY_REPO="https://github.com/indilib/indi-3rdparty.git"
-INDI_3RDPARTY_AUTO_TAG="v2.1.9"
+INDI_3RDPARTY_AUTO_TAG="v2.2.0"
 INDI_AUTO_DRIVERS="supported"
 MAKE_BUILD_TYPE="${BUILD_INDI_MAKE_BUILD_TYPE:-Debug}"
 ### end config ###
@@ -151,16 +151,17 @@ if [ -f "/usr/bin/indiserver" ]; then
 fi
 
 
-if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
-    echo
-    echo
-    echo "INDI 3rd party drivers will not build properly on Raspbian 32-bit running a 64-bit kernel"
-    echo "You must add the following parameter to /boot/firmware/config.txt and reboot:"
-    echo
-    echo "  arm_64bit=0"
-    echo
-    exit 1
-fi
+### No longer necessary (April 2026)
+#if [[ "$CPU_ARCH" == "aarch64" && "$CPU_BITS" == "32" ]]; then
+#    echo
+#    echo
+#    echo "INDI 3rd party drivers will not build properly on Raspbian 32-bit running a 64-bit kernel"
+#    echo "You must add the following parameter to /boot/firmware/config.txt and reboot:"
+#    echo
+#    echo "  arm_64bit=0"
+#    echo
+#    exit 1
+#fi
 
 
 if [ -z "${BUILD_INDI_SETTINGS:-}" ]; then
@@ -847,7 +848,8 @@ if [ "$BUILD_INDI_CORE" == "true" ]; then
             --nocancel \
             --notags \
             --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-                "v2.1.9" "v2.1.9 - Recommended" "ON" \
+                "v2.2.0" "v2.2.0 - Recommended" "ON" \
+                "v2.1.9" "v2.1.9" "OFF" \
                 "v2.1.8" "v2.1.8" "OFF" \
                 "v2.1.7" "v2.1.7" "OFF" \
                 "v2.1.6" "v2.1.6" "OFF" \
@@ -877,7 +879,8 @@ if [ "$BUILD_INDI_3RDPARTY" == "true" ]; then
             --nocancel \
             --notags \
             --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
-                "v2.1.9" "v2.1.9 - Recommended" "ON" \
+                "v2.2.0" "v2.2.0 - Recommended" "ON" \
+                "v2.1.9" "v2.1.9" "OFF" \
                 "v2.1.8.2" "v2.1.8.2" "OFF" \
                 "v2.1.7.1" "v2.1.7.1" "OFF" \
                 "v2.1.6" "v2.1.6" "OFF" \
