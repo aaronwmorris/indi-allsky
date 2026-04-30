@@ -2977,6 +2977,35 @@ class ImageProcessor(object):
             label_data['wind_dir'] = 'Error'
 
 
+        moonmode_active = bool(self.night_av[constants.NIGHT_MOONMODE])
+        lunar_eclipse   = self.astrometric_data['sun_moon_sep'] < constants.LUNAR_ECLIPSE_MAX_SUN_MOON_SEP and bool(self.night_av[constants.NIGHT_NIGHT])
+        solar_eclipse   = self.astrometric_data['sun_moon_sep'] > constants.SOLAR_ECLIPSE_MIN_SUN_MOON_SEP and not bool(self.night_av[constants.NIGHT_NIGHT])
+
+        label_data['moonmode']       = 'On' if moonmode_active else 'Off'
+        label_data['moonmode_label'] = '* Moon Mode *' if moonmode_active else ''
+        label_data['moonmode_none']  = ''
+
+        if lunar_eclipse:
+            label_data['eclipse']       = 'Lunar'
+            label_data['eclipse_label'] = '* LUNAR ECLIPSE *'
+        elif solar_eclipse:
+            label_data['eclipse']       = 'Solar'
+            label_data['eclipse_label'] = '* SOLAR ECLIPSE *'
+        else:
+            label_data['eclipse']       = 'No'
+            label_data['eclipse_label'] = ''
+        label_data['eclipse_none']  = ''
+
+        modes_parts = []
+        if moonmode_active:
+            modes_parts.append('* Moon Mode *')
+        if lunar_eclipse:
+            modes_parts.append('* LUNAR ECLIPSE *')
+        elif solar_eclipse:
+            modes_parts.append('* SOLAR ECLIPSE *')
+        label_data['modes']      = '\n'.join(modes_parts)
+        label_data['modes_none'] = ''
+
         label_data['custom_1'] = str(custom_hook_data.get('custom_1', ''))
         label_data['custom_2'] = str(custom_hook_data.get('custom_2', ''))
         label_data['custom_3'] = str(custom_hook_data.get('custom_3', ''))
@@ -3003,45 +3032,31 @@ class ImageProcessor(object):
         image_label = image_label_tmpl.format(**label_data)  # fill in the data
 
 
-        # Add moon mode indicator
-        if self.night_av[constants.NIGHT_MOONMODE]:
+        # Hardcoded appends for backward compatatiblity. skipped if the template handles them with placeholders
+        modes_in_tmpl   = '{modes' in image_label_tmpl
+        moonmode_in_tmpl = '{moonmode' in image_label_tmpl
+        eclipse_in_tmpl  = '{eclipse' in image_label_tmpl
+
+        # no modes and no moonmode placeholder in tempalte but moon is active add the original extra label
+        if not modes_in_tmpl and not moonmode_in_tmpl and moonmode_active:
             image_label += '\n* Moon Mode *'
 
+        # no modes and no eclipse placeholder in template but eclipse is active add the original extra label
+        if not modes_in_tmpl and not eclipse_in_tmpl:
+            if lunar_eclipse:
+                image_label += '\n* LUNAR ECLIPSE *'
+            elif solar_eclipse:
+                image_label += '\n* SOLAR ECLIPSE *'
 
-        # Add eclipse indicator
-        if self.astrometric_data['sun_moon_sep'] < 1.25 and self.night_av[constants.NIGHT_NIGHT]:
-            # Lunar eclipse (earth's penumbra is large)
-            image_label += '\n* LUNAR ECLIPSE *'
-
-        if self.astrometric_data['sun_moon_sep'] > 179.0 and not self.night_av[constants.NIGHT_NIGHT]:
-            # Solar eclipse
-            image_label += '\n* SOLAR ECLIPSE *'
-
-
-        # add extra text to image
-        extra_text_lines = self.get_extra_text()
-        if extra_text_lines:
-            logger.info('Adding extra text from %s', self.config['IMAGE_EXTRA_TEXT'])
-
-            for line in extra_text_lines:
-                image_label += '\n{0:s}'.format(line)
-
-
-        # aircraft lines
-        adsb_aircraft_lines = self.get_adsb_aircraft_text(adsb_aircraft_list)
-        if adsb_aircraft_lines:
-            #logger.info('Adding aircraft text')
-
-            for line in adsb_aircraft_lines:
-                image_label += '\n{0:s}'.format(line)
-
-
-        # satellite tracking lines
-        satellite_tracking_lines = self.get_satellite_tracking_text()
-        if satellite_tracking_lines:
-            #logger.info('Adding satellite text')
-
-            for line in satellite_tracking_lines:
+        # add extra_text and adsb and satellites
+        # these are "partials" that have their own xy specifications
+        # so these are just appended to the end of the label
+        for lines in (
+            self.get_extra_text(),
+            self.get_adsb_aircraft_text(adsb_aircraft_list),
+            self.get_satellite_tracking_text(),
+        ):
+            for line in lines:
                 image_label += '\n{0:s}'.format(line)
 
 
@@ -4505,4 +4520,3 @@ class ImageData(object):
 
 
         self.detected_bit_depth = detected_bit_depth
-
