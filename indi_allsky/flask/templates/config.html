@@ -4404,7 +4404,7 @@ var camera_id = {{ camera_id }};
                 <div id="STARTRAILS_MOONMODE_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
             </div>
         </div>
-        <div class="col-sm-8">Exclude images during moonmode</div>
+        <div class="col-sm-8">When enabled, use the camera moon mode thresholds to exclude images. When disabled, use the custom thresholds below.</div>
     </div>
 
     <div class="form-group row">
@@ -4415,7 +4415,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.STARTRAILS_MOON_ALT_THOLD(class='form-control bg-secondary') }}
             <div id="STARTRAILS_MOON_ALT_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Custom moon altitude threshold (91 is disabled)</div>
+        <div class="col-sm-8">Exclude images when moon altitude exceeds this value in degrees. Both altitude and phase must be exceeded to exclude (AND logic). 91 disables the check (moon can never reach 91°). A reasonable starting point is 30°.</div>
     </div>
 
     <div class="form-group row">
@@ -4426,7 +4426,7 @@ var camera_id = {{ camera_id }};
             {{ form_config.STARTRAILS_MOON_PHASE_THOLD(class='form-control bg-secondary') }}
             <div id="STARTRAILS_MOON_PHASE_THOLD-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">Custom moon phase threshold (101 is disabled)</div>
+        <div class="col-sm-8">Exclude images when moon phase exceeds this percentage. Both altitude and phase must be exceeded to exclude (AND logic). 101 disables the check (moon phase can never exceed 100%). A reasonable starting point is 50%.</div>
     </div>
 
     <div class="form-group row">
@@ -10683,10 +10683,12 @@ function setLocationFromBrowser() {
     );
 }
 
-function group_on_change(trigger_checkbox_field, group_fields, group_checkbox_fields) {
+function group_on_change(trigger_checkbox_field, group_fields, group_checkbox_fields, inverted=false) {
     $('#' + trigger_checkbox_field).on('change', function() {
-        // logic is reversed
-        if (!$('#' + trigger_checkbox_field).prop('checked')) {
+        var checked = $('#' + trigger_checkbox_field).prop('checked');
+        var enable = inverted ? !checked : checked;
+
+        if (!enable) {
             group_fields.forEach(item => {
                 $('#' + item).attr({'readonly': true, 'disabled': true});
                 $('#' + item).addClass('bg-dark text-secondary');
@@ -10709,8 +10711,11 @@ function group_on_change(trigger_checkbox_field, group_fields, group_checkbox_fi
 }
 
 
-function group_on_ready(trigger_checkbox_field, group_fields, group_checkbox_fields) {
-    if (!$('#' + trigger_checkbox_field).prop('checked')) {
+function group_on_ready(trigger_checkbox_field, group_fields, group_checkbox_fields, inverted=false) {
+    var checked = $('#' + trigger_checkbox_field).prop('checked');
+    var enable = inverted ? !checked : checked;
+
+    if (!enable) {
         group_fields.forEach(item => {
             $('#' + item).attr({'readonly': true, 'disabled': true});
             $('#' + item).addClass('bg-dark text-secondary');
@@ -10818,8 +10823,8 @@ var group_fields_st_moonmode = [
     'STARTRAILS_MOON_PHASE_THOLD',
 ];
 
-// startrails moonmode
-group_on_change('STARTRAILS_MOONMODE_THOLD', group_fields_st_moonmode, []);
+// startrails moonmode - custom thresholds are used when moon mode exclusion is OFF
+group_on_change('STARTRAILS_MOONMODE_THOLD', group_fields_st_moonmode, [], true);
 
 
 // nonlocal assets
@@ -11279,7 +11284,7 @@ $( document ).ready(function() {
 
 
     // startrails moonmode
-    group_on_ready('STARTRAILS_MOONMODE_THOLD', group_fields_st_moonmode, []);
+    group_on_ready('STARTRAILS_MOONMODE_THOLD', group_fields_st_moonmode, [], true);
 
 
     // nonlocal assets
