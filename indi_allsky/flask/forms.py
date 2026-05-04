@@ -4451,7 +4451,7 @@ class IndiAllskyConfigForm(FlaskForm):
     IMAGE_STRETCH__SPLIT             = BooleanField('Stretching split screen')
     IMAGE_STRETCH__MOONMODE          = BooleanField('Moon Mode Stretching')
     IMAGE_STRETCH__DAYTIME           = BooleanField('Daytime Stretching')
-    KEOGRAM_ANGLE                    = FloatField('Keogram Rotation Angle', validators=[KEOGRAM_ANGLE_validator], widget=NumberInput(step=0.5))
+    KEOGRAM_ANGLE                    = FloatField('Keogram Rotation Angle', validators=[KEOGRAM_ANGLE_validator], widget=NumberInput(step=0.1))
     KEOGRAM_H_SCALE                  = IntegerField('Keogram Horizontal Scaling', validators=[DataRequired(), KEOGRAM_H_SCALE_validator])
     KEOGRAM_V_SCALE                  = IntegerField('Keogram Vertical Scaling', validators=[DataRequired(), KEOGRAM_V_SCALE_validator])
     KEOGRAM_CROP_TOP                 = IntegerField('Keogram Crop Top (%)', validators=[KEOGRAM_CROP_TOP_validator])
@@ -9934,12 +9934,12 @@ class IndiAllskyImageCircleHelperForm(FlaskForm):
     LINE_WIDTH              = IntegerField('Line Width', default=5)
     LINE_COLOR              = SelectField('Line Color', choices=LINE_COLOR_choices)
     KEOGRAM_LINE            = BooleanField('Keogram Line')
-    KEOGRAM_ANGLE           = FloatField('Keogram Angle', widget=NumberInput(min=-180, max=180, step=0.5))
-    AZIMUTH_ANGLE           = FloatField('Azimuth Angle', widget=NumberInput(min=0, max=359.5, step=0.5))
+    KEOGRAM_ANGLE           = FloatField('Keogram Angle', widget=NumberInput(min=-180, max=180, step=0.1))
+    AZIMUTH_ANGLE           = FloatField('Azimuth Angle', widget=NumberInput(min=0, max=359.9, step=0.1))
 
 
 class IndiAllskyVirtualSkyHelperForm(FlaskForm):
-    AZIMUTH_ANGLE           = FloatField('Azimuth Angle', widget=NumberInput(min=0.0, max=359.99, step=0.5))
+    AZIMUTH_ANGLE           = FloatField('Azimuth Angle', widget=NumberInput(min=0.0, max=359.9, step=0.1))
     LATITUDE_OFFSET         = FloatField('Latitude Offset', widget=NumberInput(step=0.25))
     LONGITUDE_OFFSET        = FloatField('Longitude Offset', widget=NumberInput(step=0.25))
     IMAGE_CIRCLE_DIAMETER   = IntegerField('Diameter', widget=NumberInput(step=5))
