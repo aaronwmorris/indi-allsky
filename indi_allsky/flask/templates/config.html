@@ -656,6 +656,20 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__BACKEND.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.LIBCAMERA__BACKEND(class='form-select bg-secondary') }}
+            <div id="LIBCAMERA__BACKEND-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div>Camera driver: Auto detects the best available. Picamera2 is preferred on Raspberry Pi. libcamera uses python3-libcamera bindings. libcamera-still uses subprocess (slowest, no Python bindings needed).</div>
+            <div>Requires daemon restart to take effect.</div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.LIBCAMERA__IMAGE_FILE_TYPE.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -10175,6 +10189,7 @@ const field_names = [
     'FITSHEADERS__4__VAL',
     'ADMIN_NETWORKS_FLASK',
     'LIBCAMERA__CAMERA_ID',
+    'LIBCAMERA__BACKEND',
     'LIBCAMERA__IMAGE_FILE_TYPE',
     'LIBCAMERA__IMAGE_FILE_TYPE_DAY',
     'LIBCAMERA__AWB',

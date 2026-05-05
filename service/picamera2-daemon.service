@@ -1,0 +1,19 @@
+[Unit]
+Description=Picamera2 Daemon for indi-allsky
+Before=indi-allsky.service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=video
+RuntimeDirectory=indi-allsky
+WorkingDirectory=/home/pi/indi-allsky
+ExecStart=${VENV}/bin/python3 ${INDI_DIR}/indi_allsky/camera/picamera2_daemon.py --camera 0
+Restart=on-failure
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

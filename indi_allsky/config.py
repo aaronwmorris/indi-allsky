@@ -158,6 +158,7 @@ class IndiAllSkyConfigBase(object):
         "TARGET_ADU_DAY"     : 75,
         "TARGET_ADU_DEV"     : 10,
         "TARGET_ADU_DEV_DAY" : 20,
+        "TARGET_ADU_DISABLE" : False,
         "ADU_ROI" : [],
         "ADU_FOV_DIV" : 4,
         "DETECT_STARS" : True,
@@ -597,6 +598,7 @@ class IndiAllSkyConfigBase(object):
             "CCM_DISABLE"            : False,
             "CCM_DISABLE_DAY"        : False,
             "CAMERA_ID"              : 0,
+            "BACKEND"                : "auto",  # auto | picamera2 | libcamera | libcamera-still
             "EXTRA_OPTIONS"          : "",
             "EXTRA_OPTIONS_DAY"      : "",
             "MQTT_TRANSPORT"         : "tcp",  # tcp or websockets
