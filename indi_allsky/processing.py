@@ -707,7 +707,7 @@ class ImageProcessor(object):
                 hdulist[0].header['ORIGIN'] = camera.owner
 
 
-            if raw.raw_pattern:
+            if not isinstance(raw.raw_pattern, type(None)):
                 # Automatically detect bayer pattern
                 dng_cfa_pattern = ''.join([chr(raw.color_desc[i]) for i in raw.raw_pattern.flatten()])
             else:
@@ -719,7 +719,7 @@ class ImageProcessor(object):
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
             elif dng_cfa_pattern:
-                hdulist[0].header['BAYERPAT'] = constants.CFA_MAP_STR[dng_cfa_pattern]
+                hdulist[0].header['BAYERPAT'] = dng_cfa_pattern
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
             elif camera.cfa:
@@ -916,7 +916,7 @@ class ImageProcessor(object):
 
         if not image_bayerpat:
             # assume mono data
-            logger.error('No bayer pattern detected')
+            logger.warning('No bayer pattern detected')
             return data
 
 
