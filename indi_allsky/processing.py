@@ -668,9 +668,6 @@ class ImageProcessor(object):
 
             data = raw.raw_image
 
-            ### testing
-            #data = numpy.left_shift(data, 4)  # upscale to full 16-bits
-            #data = data + 15  # increase max value
 
             # create a new fits container
             hdu = fits.PrimaryHDU(data)
@@ -709,14 +706,27 @@ class ImageProcessor(object):
             if camera.owner:
                 hdulist[0].header['ORIGIN'] = camera.owner
 
+
+            if raw.raw_pattern:
+                # Automatically detect bayer pattern
+                dng_cfa_pattern = ''.join([chr(raw.color_desc[i]) for i in raw.raw_pattern.flatten()])
+            else:
+                dng_cfa_pattern = None
+
+
             if self.config.get('CFA_PATTERN'):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
+                hdulist[0].header['XBAYROFF'] = 0
+                hdulist[0].header['YBAYROFF'] = 0
+            elif dng_cfa_pattern:
+                hdulist[0].header['BAYERPAT'] = constants.CFA_MAP_STR[dng_cfa_pattern]
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
             elif camera.cfa:
                 hdulist[0].header['BAYERPAT'] = constants.CFA_MAP_STR[camera.cfa]
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
+
 
             image_bitpix = hdulist[0].header['BITPIX']
             image_bayerpat = hdulist[0].header.get('BAYERPAT')
