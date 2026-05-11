@@ -709,17 +709,27 @@ class ImageProcessor(object):
 
             if not isinstance(raw.raw_pattern, type(None)):
                 # Automatically detect bayer pattern
-                dng_cfa_pattern = ''.join([chr(raw.color_desc[i]) for i in raw.raw_pattern.flatten()])
+
+                #logger.info('Pattern: %s', str(raw.raw_pattern))
+                #logger.info('Desc: %s', str(raw.color_desc))
+
+                try:
+                    dng_cfa_pattern = ''.join([chr(raw.color_desc[i]) for i in raw.raw_pattern.flatten()])
+                    dng_cfa = constants.CFA_STR_MAP[dng_cfa_pattern]  # map to cv2 constant
+                except IndexError:
+                    # this can happen on monochrome cameras
+                    # raw_pattern GMYC - color_desc [6]
+                    dng_cfa = None
             else:
-                dng_cfa_pattern = None
+                dng_cfa = None
 
 
             if self.config.get('CFA_PATTERN'):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
-            elif dng_cfa_pattern:
-                hdulist[0].header['BAYERPAT'] = dng_cfa_pattern
+            elif dng_cfa:
+                hdulist[0].header['BAYERPAT'] = constants.CFA_MAP_STR[dng_cfa]
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
             elif camera.cfa:
