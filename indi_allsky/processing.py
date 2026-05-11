@@ -668,9 +668,6 @@ class ImageProcessor(object):
 
             data = raw.raw_image
 
-            ### testing
-            #data = numpy.left_shift(data, 4)  # upscale to full 16-bits
-            #data = data + 15  # increase max value
 
             # create a new fits container
             hdu = fits.PrimaryHDU(data)
@@ -709,14 +706,37 @@ class ImageProcessor(object):
             if camera.owner:
                 hdulist[0].header['ORIGIN'] = camera.owner
 
+
+            if not isinstance(raw.raw_pattern, type(None)):
+                # Automatically detect bayer pattern
+
+                #logger.info('Pattern: %s', str(raw.raw_pattern))
+                #logger.info('Desc: %s', str(raw.color_desc))
+
+                try:
+                    dng_cfa_pattern = ''.join([chr(raw.color_desc[i]) for i in raw.raw_pattern.flatten()])
+                    dng_cfa = constants.CFA_STR_MAP[dng_cfa_pattern]  # map to cv2 constant
+                except IndexError:
+                    # this can happen on monochrome cameras
+                    # raw_pattern GMYC - color_desc [6]
+                    dng_cfa = None
+            else:
+                dng_cfa = None
+
+
             if self.config.get('CFA_PATTERN'):
                 hdulist[0].header['BAYERPAT'] = self.config['CFA_PATTERN']
+                hdulist[0].header['XBAYROFF'] = 0
+                hdulist[0].header['YBAYROFF'] = 0
+            elif dng_cfa:
+                hdulist[0].header['BAYERPAT'] = constants.CFA_MAP_STR[dng_cfa]
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
             elif camera.cfa:
                 hdulist[0].header['BAYERPAT'] = constants.CFA_MAP_STR[camera.cfa]
                 hdulist[0].header['XBAYROFF'] = 0
                 hdulist[0].header['YBAYROFF'] = 0
+
 
             image_bitpix = hdulist[0].header['BITPIX']
             image_bayerpat = hdulist[0].header.get('BAYERPAT')
@@ -906,7 +926,7 @@ class ImageProcessor(object):
 
         if not image_bayerpat:
             # assume mono data
-            logger.error('No bayer pattern detected')
+            logger.warning('No bayer pattern detected')
             return data
 
 
