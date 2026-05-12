@@ -783,7 +783,8 @@ if [[ "$DISTRO" == "debian_13" ]]; then
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
         sudo apt-get -y install \
-            indi-full \
+            indi-bin \
+            libindi-data \
             libindi-dev \
             indi-webcam \
             indi-asi \
@@ -792,9 +793,11 @@ if [[ "$DISTRO" == "debian_13" ]]; then
             libqhy \
             indi-playerone \
             libplayerone \
-            indi-sv305 \
-            libsv305 \
+            indi-svbony \
+            libsvbony \
+            libsvbonycam \
             libaltaircam \
+            libmeadecam \
             libmallincam \
             libmicam \
             libnncam \
@@ -802,6 +805,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
             libtoupcam \
             indi-gphoto \
             indi-sx \
+            indi-dsi \
             indi-gpsd \
             indi-gpsnmea
     fi
@@ -1381,7 +1385,8 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
 
     if [[ "$INSTALL_INDI" == "true" ]]; then
         sudo apt-get -y install \
-            indi-full \
+            indi-bin \
+            libindi-data \
             libindi-dev \
             indi-webcam \
             indi-asi \
@@ -1392,7 +1397,9 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
             libplayerone \
             indi-svbony \
             libsvbony \
+            libsvbonycam \
             libaltaircam \
+            libmeadecam \
             libmallincam \
             libmicam \
             libnncam \
@@ -1400,6 +1407,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
             libtoupcam \
             indi-gphoto \
             indi-sx \
+            indi-dsi \
             indi-gpsd \
             indi-gpsnmea
     fi
