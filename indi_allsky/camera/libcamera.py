@@ -40,8 +40,6 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         self.libcamera_process = None
 
-        self._temp_val = -273.15  # absolute zero  :-)
-
         self._ccm = None
 
         self._awb_gains = None
@@ -424,7 +422,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
         ### Temperature
         try:
-            self._temp_val = float(metadata_dict[self._sensor_temp_metadata_key])
+            self.ccd_temp = float(metadata_dict[self._sensor_temp_metadata_key])
         except KeyError:
             logger.error('libcamera camera temperature key not found')
         except ValueError:
@@ -721,7 +719,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
     def getCcdTemperature(self):
-        return self._temp_val
+        return self.ccd_temp
 
 
     def setCcdTemperature(self, *args, **kwargs):

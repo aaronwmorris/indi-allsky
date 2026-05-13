@@ -118,6 +118,8 @@ class IndiClient(PyIndi.BaseClient):
         self._ccd_device = None
         self._ctl_ccd_exposure = None
 
+        self._ccd_temp = -273.15  # absolute zero  :-)
+
         self._telescope_device = None
         self._gps_device = None
 
@@ -261,6 +263,17 @@ class IndiClient(PyIndi.BaseClient):
     def libcamera_bit_depth(self, new_libcamera_bit_depth):
         # Not needed here
         pass
+
+
+    @property
+    def ccd_temp(self):
+        return self._ccd_temp
+
+    @ccd_temp.setter
+    def ccd_temp(self, new_ccd_temp):
+        # some cameras only read temperature after taking an exposure
+        # this permits inserting a previous temperature before an exposure is taken
+        self._ccd_temp = float(new_ccd_temp)
 
 
     def updateConfig(self, new_config):
@@ -953,7 +966,6 @@ class IndiClient(PyIndi.BaseClient):
 
 
     def getCcdTemperature(self):
-
         try:
             ccd_temperature = self.get_control(self.ccd_device, 'CCD_TEMPERATURE', 'number', timeout=0.2)
         except TimeOutException:
@@ -961,10 +973,11 @@ class IndiClient(PyIndi.BaseClient):
             return -273.15  # absolute zero  :-)
 
 
-        temp_val = float(ccd_temperature[0].getValue())  # CCD_TEMPERATURE_VALUE
-        logger.info("Camera temperature: %0.1f", temp_val)
+        self.ccd_temp = float(ccd_temperature[0].getValue())  # CCD_TEMPERATURE_VALUE
+        logger.info("Camera temperature: %0.1f", self.ccd_temp)
 
-        return temp_val
+
+        return self.ccd_temp
 
 
     def enableCcdCooler(self):
