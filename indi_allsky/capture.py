@@ -1392,6 +1392,14 @@ class CaptureWorker(Process):
                 # restore last sqm value
                 last_camera_sqm_mag = last_image.data.get('sensor_user_8', 0.0)
                 last_camera_sqm_adu = last_image.data.get('sensor_user_9', 0.0)
+
+
+                if not isinstance(last_image.temp, type(None)):
+                    # some cameras only report temperature after taking an exposure
+                    # seed the temperature before an exposure is taken
+                    self.indiclient.ccd_temp = last_image.temp
+
+
                 with self.sensors_user_av.get_lock():
                     self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_MAG] = float(last_camera_sqm_mag)
                     self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_ADU] = float(last_camera_sqm_adu)

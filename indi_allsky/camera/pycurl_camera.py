@@ -140,8 +140,6 @@ class IndiClientPycurl(IndiClient):
         self.pycurl_worker = None
         self.pycurl_worker_idx = 0
 
-        self._temp_val = -273.15  # absolute zero  :-)
-
 
         self.active_exposure = False
         self.current_exposure_file_p = None
@@ -448,7 +446,7 @@ class IndiClientPycurl(IndiClient):
 
 
     def getCcdTemperature(self):
-        return self._temp_val
+        return self.ccd_temp
 
 
     def setCcdTemperature(self, *args, **kwargs):

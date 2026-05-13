@@ -34,8 +34,6 @@ class IndiClientTestCameraBase(IndiClient):
         self.active_exposure = False
 
 
-        self._temp_val = -273.15  # absolute zero  :-)
-
         self.ccd_device_name = 'OVERRIDE'
         self.ccd_driver_exec = 'OVERRIDE'
 
@@ -360,7 +358,7 @@ class IndiClientTestCameraBase(IndiClient):
 
 
     def getCcdTemperature(self):
-        return self._temp_val
+        return self.ccd_temp
 
 
     def setCcdTemperature(self, *args, **kwargs):
@@ -400,7 +398,7 @@ class IndiClientTestCameraBase(IndiClient):
         hdulist[0].header['XBINNING'] = 1
         hdulist[0].header['YBINNING'] = 1
         hdulist[0].header['GAIN'] = float(self.gain)
-        hdulist[0].header['CCD-TEMP'] = self._temp_val
+        hdulist[0].header['CCD-TEMP'] = self.ccd_temp
         #hdulist[0].header['SITELAT'] =
         #hdulist[0].header['SITELONG'] =
         #hdulist[0].header['RA'] =
