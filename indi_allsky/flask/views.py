@@ -2320,6 +2320,8 @@ class ConfigView(FormView):
             'SQM_FOV_DIV'                    : str(self.indi_allsky_config.get('SQM_FOV_DIV', 4)),  # string in form, int in config
             'DETECT_STARS'                   : self.indi_allsky_config.get('DETECT_STARS', True),
             'DETECT_STARS_THOLD'             : self.indi_allsky_config.get('DETECT_STARS_THOLD', 0.6),
+            'DETECT_STARS_METHOD'            : self.indi_allsky_config.get('DETECT_STARS_METHOD', 'template'),
+            'DETECT_STARS_SEP_THOLD'         : self.indi_allsky_config.get('DETECT_STARS_SEP_THOLD', 5.0),
             'DETECT_METEORS'                 : self.indi_allsky_config.get('DETECT_METEORS', False),
             'DETECT_METEORS_THOLD'           : self.indi_allsky_config.get('DETECT_METEORS_THOLD', 125),
             'DETECT_MASK'                    : self.indi_allsky_config.get('DETECT_MASK', ''),
@@ -3340,6 +3342,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['SQM_FOV_DIV']                          = int(request.json['SQM_FOV_DIV'])
         self.indi_allsky_config['DETECT_STARS']                         = bool(request.json['DETECT_STARS'])
         self.indi_allsky_config['DETECT_STARS_THOLD']                   = float(request.json['DETECT_STARS_THOLD'])
+        self.indi_allsky_config['DETECT_STARS_METHOD']                  = str(request.json['DETECT_STARS_METHOD'])
+        self.indi_allsky_config['DETECT_STARS_SEP_THOLD']               = float(request.json['DETECT_STARS_SEP_THOLD'])
         self.indi_allsky_config['DETECT_METEORS']                       = bool(request.json['DETECT_METEORS'])
         self.indi_allsky_config['DETECT_METEORS_THOLD']                 = int(request.json['DETECT_METEORS_THOLD'])
         self.indi_allsky_config['DETECT_MASK']                          = str(request.json['DETECT_MASK'])
@@ -7643,6 +7647,10 @@ class ImageProcessingView(TemplateView):
             'IMAGE_BORDER__LEFT'             : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('LEFT', 0),
             'IMAGE_BORDER__RIGHT'            : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('RIGHT', 0),
             'IMAGE_BORDER__BOTTOM'           : self.indi_allsky_config.get('IMAGE_BORDER', {}).get('BOTTOM', 0),
+            'RUN_DETECTION'                  : False,
+            'DETECT_STARS_THOLD'             : self.indi_allsky_config.get('DETECT_STARS_THOLD', 0.6),
+            'DETECT_STARS_SEP_THOLD'         : self.indi_allsky_config.get('DETECT_STARS_SEP_THOLD', 5.0),
+            'DETECT_METEORS_THOLD'           : self.indi_allsky_config.get('DETECT_METEORS_THOLD', 125),
         }
 
 
@@ -8205,6 +8213,44 @@ class JsonImageProcessingView(JsonView):
                 image_processor.image = pano_data
 
 
+        # Interactive detection: draw stars/meteors on the preview image
+        run_detection = bool(request.json.get('RUN_DETECTION', False))
+        stars_count = 0
+        detections_count = 0
+
+        if run_detection:
+            import numpy
+            from ..stars import IndiAllSkyStars
+            from ..starsSep import IndiAllSkyStarsSEP
+            from ..detectLines import IndiAllskyDetectLines
+
+            p_config['DETECT_STARS_THOLD']     = float(request.json['DETECT_STARS_THOLD'])
+            p_config['DETECT_STARS_SEP_THOLD'] = float(request.json['DETECT_STARS_SEP_THOLD'])
+            p_config['DETECT_METEORS_THOLD']   = int(request.json['DETECT_METEORS_THOLD'])
+            p_config['DETECT_DRAW'] = True
+
+            detect_mask_path = Path(p_config.get('DETECT_MASK', ''))
+            if detect_mask_path.is_file():
+                indi_mask = cv2.imread(str(detect_mask_path), cv2.IMREAD_GRAYSCALE)
+            else:
+                indi_mask = None
+
+            mask_dict = {binning: indi_mask}
+
+            detect_method = p_config.get('DETECT_STARS_METHOD', 'template')
+            if detect_method == 'sep':
+                stars_detect_o = IndiAllSkyStarsSEP(p_config, mask=mask_dict)
+            else:
+                stars_detect_o = IndiAllSkyStars(p_config, mask=mask_dict)
+
+            blobs = stars_detect_o.detectObjects(image_processor.image, binning)
+            stars_count = len(blobs)
+
+            lines_detect_o = IndiAllskyDetectLines(p_config, mask=mask_dict)
+            lines = lines_detect_o.detectLines(image_processor.image, binning)
+            detections_count = len(lines) if lines is not None else 0
+
+
         processing_elapsed_s = time.time() - processing_start
         app.logger.info('Image processed in %0.4f s', processing_elapsed_s)
 
@@ -8244,6 +8290,9 @@ class JsonImageProcessingView(JsonView):
         json_data['processing_elapsed_s'] = round(processing_elapsed_s, 3)
         #json_data['message'] = ', '.join(message_list)
         json_data['message'] = ''  # Blank until I can get messages from all processing actions
+        json_data['stars_count'] = stars_count
+        json_data['detections_count'] = detections_count
+        json_data['DETECT_STARS_METHOD'] = p_config.get('DETECT_STARS_METHOD', 'template')
 
         return jsonify(json_data)
 
