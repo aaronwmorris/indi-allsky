@@ -17,7 +17,7 @@ bottleneck
 python-dateutil
 ephem
 skyfield
-paramiko
+paramiko >= 5.0.0
 # https://www.wheelodex.org/projects/pycurl/ or https://www.piwheels.org/project/pycurl/
 pycurl
 # https://www.wheelodex.org/projects/pillow/ or https://www.piwheels.org/project/Pillow/
