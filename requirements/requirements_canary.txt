@@ -11,7 +11,7 @@ astroalign == 2.6.0
 bottleneck == 1.4.0
 ephem == 4.2
 skyfield == 1.54
-paramiko == 4.0.0
+paramiko == 5.0.0
 pycurl == 7.45.7
 Pillow == 12.2.0
 piexif
