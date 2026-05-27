@@ -227,6 +227,10 @@ echo "DMA Heap Permissions"
 find /dev/dma_heap -ls || true
 
 echo
+echo "Memory Fragmentation"
+cat /proc/buddyinfo || true
+
+echo
 echo "video device Permissions"
 find /dev -type c -name "video*" -ls || true
 
