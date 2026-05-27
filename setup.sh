@@ -2305,6 +2305,39 @@ chmod 600 "${ALLSKY_ETC}/indi-allsky.env"
 
 
 echo "**** Flask config ****"
+TMP_FLASK=$(mktemp --suffix=.json)
+jq \
+ --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" \
+ --arg indi_allsky_docroot "$HTDOCS_FOLDER" \
+ --arg migration_folder "$MIGRATION_FOLDER" \
+ --arg allsky_service_name "${ALLSKY_SERVICE_NAME}.service" \
+ --arg allsky_timer_name "${ALLSKY_SERVICE_NAME}.timer" \
+ --arg indiserver_service_name "${INDISERVER_SERVICE_NAME}.service" \
+ --arg indiserver_timer_name "${INDISERVER_SERVICE_NAME}.timer" \
+ --arg gunicorn_service_name "${GUNICORN_SERVICE_NAME}.service" \
+ '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .ALLSKY_TIMER_NAME = $allsky_timer_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .INDISERVER_TIMER_NAME = $indiserver_timer_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
+ "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
+
+
+if [[ -f "${ALLSKY_ETC}/flask.json" ]]; then
+    TMP_FLASK_MERGE=$(mktemp --suffix=.json)
+
+    # make a backup
+    cp -f "${ALLSKY_ETC}/flask.json" "${ALLSKY_ETC}/flask.json_old"
+    chmod 640 "${ALLSKY_ETC}/flask.json_old"
+
+    # attempt to merge configs giving preference to the original config (listed 2nd)
+    jq -s '.[0] * .[1]' "$TMP_FLASK" "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_MERGE"
+    cp -f "$TMP_FLASK_MERGE" "${ALLSKY_ETC}/flask.json"
+    [[ -f "$TMP_FLASK_MERGE" ]] && rm -f "$TMP_FLASK_MERGE"
+else
+    # new config
+    cp -f "$TMP_FLASK" "${ALLSKY_ETC}/flask.json"
+fi
+
+[[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
+
+
 
 while [ -z "${FLASK_AUTH_ALL_VIEWS:-}" ]; do
     if whiptail --title "Web Authentication" --yesno "Do you want to require authentication for all web site views?\n\nIf \"no\", privileged actions are still protected by authentication.\n\n(Hint: Most people should pick \"no\")" 0 0 --defaultno; then
@@ -2315,36 +2348,13 @@ while [ -z "${FLASK_AUTH_ALL_VIEWS:-}" ]; do
 done
 
 
-TMP_FLASK=$(mktemp --suffix=.json)
-TMP_FLASK_MERGE=$(mktemp --suffix=.json)
-
-
+TMP_FLASK_AUTH=$(mktemp --suffix=.json)
 jq \
- --arg sqlalchemy_database_uri "$SQLALCHEMY_DATABASE_URI" \
- --arg indi_allsky_docroot "$HTDOCS_FOLDER" \
  --argjson indi_allsky_auth_all_views "$FLASK_AUTH_ALL_VIEWS" \
- --arg migration_folder "$MIGRATION_FOLDER" \
- --arg allsky_service_name "${ALLSKY_SERVICE_NAME}.service" \
- --arg allsky_timer_name "${ALLSKY_SERVICE_NAME}.timer" \
- --arg indiserver_service_name "${INDISERVER_SERVICE_NAME}.service" \
- --arg indiserver_timer_name "${INDISERVER_SERVICE_NAME}.timer" \
- --arg gunicorn_service_name "${GUNICORN_SERVICE_NAME}.service" \
- '.SQLALCHEMY_DATABASE_URI = $sqlalchemy_database_uri | .INDI_ALLSKY_DOCROOT = $indi_allsky_docroot | .INDI_ALLSKY_AUTH_ALL_VIEWS = $indi_allsky_auth_all_views | .MIGRATION_FOLDER = $migration_folder | .ALLSKY_SERVICE_NAME = $allsky_service_name | .ALLSKY_TIMER_NAME = $allsky_timer_name | .INDISERVER_SERVICE_NAME = $indiserver_service_name | .INDISERVER_TIMER_NAME = $indiserver_timer_name | .GUNICORN_SERVICE_NAME = $gunicorn_service_name' \
- "${ALLSKY_DIRECTORY}/flask.json_template" > "$TMP_FLASK"
-
-
-if [[ -f "${ALLSKY_ETC}/flask.json" ]]; then
-    # make a backup
-    cp -f "${ALLSKY_ETC}/flask.json" "${ALLSKY_ETC}/flask.json_old"
-    chmod 640 "${ALLSKY_ETC}/flask.json_old"
-
-    # attempt to merge configs giving preference to the original config (listed 2nd)
-    jq -s '.[0] * .[1]' "$TMP_FLASK" "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_MERGE"
-    cp -f "$TMP_FLASK_MERGE" "${ALLSKY_ETC}/flask.json"
-else
-    # new config
-    cp -f "$TMP_FLASK" "${ALLSKY_ETC}/flask.json"
-fi
+ '.INDI_ALLSKY_AUTH_ALL_VIEWS = $indi_allsky_auth_all_views' \
+ "${ALLSKY_ETC}/flask.json" > "$TMP_FLASK_AUTH"
+cp -f "$TMP_FLASK_AUTH" "${ALLSKY_ETC}/flask.json"
+[[ -f "$TMP_FLASK_AUTH" ]] && rm -f "$TMP_FLASK_AUTH"
 
 
 INDIALLSKY_FLASK_SECRET_KEY=$(jq -r '.SECRET_KEY' "${ALLSKY_ETC}/flask.json")
@@ -2373,10 +2383,6 @@ fi
 
 sudo chown "$USER":"$PGRP" "${ALLSKY_ETC}/flask.json"
 sudo chmod 660 "${ALLSKY_ETC}/flask.json"
-
-[[ -f "$TMP_FLASK" ]] && rm -f "$TMP_FLASK"
-[[ -f "$TMP_FLASK_MERGE" ]] && rm -f "$TMP_FLASK_MERGE"
-
 
 
 # create a backup of the key
