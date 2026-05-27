@@ -177,7 +177,7 @@ class SensorBase(object):
         return mph * 0.8689762419
 
 
-    def mph2kph(self, mph):
+    def mph2kmph(self, mph):
         # miles/hour to kilometers/hour
         return mph * 1.609344
 
