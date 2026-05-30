@@ -69,7 +69,9 @@ class RainSensorFc37(SensorBase):
 
         return {
             'rain' : rain_value,
-            'data': (),
+            'data': (
+                rain_value,
+            ),
         }
 
 
