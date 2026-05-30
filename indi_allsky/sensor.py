@@ -694,7 +694,7 @@ class SensorWorker(Process):
                         self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM_MAG] = float(sensor_data['sqm_mag'])
 
                     if not isinstance(sensor_data.get('rain'), type(None)):
-                        self.sensors_user_av[constants.SENSOR_USER_SENSOR_RAIN] = float(sensor_data['rain'])
+                        self.sensors_user_av[constants.SENSOR_USER_RAIN] = float(sensor_data['rain'])
 
 
                     for i, v in enumerate(sensor_data['data']):
