@@ -180,6 +180,16 @@ SENSOR_MISC                 = 620
 
 # System temp sensors
 SENSOR_TEMP_CCD_TEMP            = 0
+#SENSOR_TEMP_                    = 1
+#SENSOR_TEMP_                    = 2
+#SENSOR_TEMP_                    = 3
+#SENSOR_TEMP_                    = 4
+#SENSOR_TEMP_                    = 5
+#SENSOR_TEMP_                    = 6
+#SENSOR_TEMP_                    = 7
+#SENSOR_TEMP_                    = 8
+#SENSOR_TEMP_                    = 9
+# 10-60 system sensors
 
 # User sensors
 SENSOR_USER_CCD_TEMP            = 0
@@ -192,7 +202,18 @@ SENSOR_USER_WIND_DIR            = 6
 SENSOR_USER_SENSOR_SQM_MAG      = 7
 SENSOR_USER_CAMERA_SQM_MAG      = 8
 SENSOR_USER_CAMERA_SQM_ADU      = 9
+# 10-60 user sensors
+# 61-99 possible future expansion
 SENSOR_USER_RAIN                = 100
+#SENSOR_USER_                    = 101
+#SENSOR_USER_                    = 102
+#SENSOR_USER_                    = 103
+#SENSOR_USER_                    = 104
+#SENSOR_USER_                    = 105
+#SENSOR_USER_                    = 106
+#SENSOR_USER_                    = 107
+#SENSOR_USER_                    = 108
+#SENSOR_USER_                    = 109
 
 
 RAIN_MAP_STR = {

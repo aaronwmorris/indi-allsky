@@ -142,7 +142,7 @@ class IndiAllSky(object):
         # 7 sensor sqm
         # 8 camera sqm
         # 9 reserved for future use
-        self.sensors_user_av = Array('f', [0.0 for x in range(60)])
+        self.sensors_user_av = Array('f', [0.0 for x in range(110)])
 
 
         self.exposure_av = Array('f', [

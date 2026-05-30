@@ -7980,7 +7980,7 @@ class JsonImageProcessingView(JsonView):
         #sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         #sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         sensors_temp_av = Array('f', [0.0 for x in range(60)])
-        sensors_user_av = Array('f', [0.0 for x in range(60)])
+        sensors_user_av = Array('f', [0.0 for x in range(110)])
         night_av = Array('i', [1, 0])  # using night values for processing
         astro_av = Array('f', [0.0, 0.0, 0.0])
 

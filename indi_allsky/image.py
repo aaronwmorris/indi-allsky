@@ -823,7 +823,9 @@ class ImageWorker(Process):
             }
 
 
-            for i, v in enumerate(self.sensors_temp_av):
+            for i in range(60):
+                v = self.sensors_temp_av[i]
+
                 if self.config.get('TEMP_DISPLAY') == 'f':
                     v_temp = (v * 9.0 / 5.0) + 32
                 elif self.config.get('TEMP_DISPLAY') == 'k':
@@ -834,8 +836,9 @@ class ImageWorker(Process):
                 image_add_data['sensor_temp_{0:d}'.format(i)] = v_temp
 
 
-            for i, v in enumerate(self.sensors_user_av):
-                image_add_data['sensor_user_{0:d}'.format(i)] = v
+            for i in range(60):
+                image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
+
 
             if self.adsb_aircraft_list:
                 image_add_data['aircraft'] = list()
@@ -1020,7 +1023,9 @@ class ImageWorker(Process):
 
 
             # system temp sensors
-            for i, v in enumerate(self.sensors_temp_av):
+            for i in range(60):
+                v = self.sensors_temp_av[i]
+
                 if self.config.get('TEMP_DISPLAY') == 'f':
                     v_temp = (v * 9.0 / 5.0) + 32
                 elif self.config.get('TEMP_DISPLAY') == 'k':
@@ -1034,9 +1039,9 @@ class ImageWorker(Process):
 
 
             # user sensors
-            for i, v in enumerate(self.sensors_user_av):
+            for i in range(60):
                 sensor_topic = 'sensor_user_{0:d}'.format(i)
-                mqtt_data[sensor_topic] = round(v, 3)
+                mqtt_data[sensor_topic] = round(self.sensors_user_av[i], 3)
 
 
             if new_filename:
@@ -1127,7 +1132,9 @@ class ImageWorker(Process):
 
 
         # system temp sensors
-        for i, v in enumerate(self.sensors_temp_av):
+        for i in range(60):
+            v = self.sensors_temp_av[i]
+
             if self.config.get('TEMP_DISPLAY') == 'f':
                 v_temp = (v * 9.0 / 5.0) + 32
             elif self.config.get('TEMP_DISPLAY') == 'k':
@@ -1141,9 +1148,9 @@ class ImageWorker(Process):
 
 
         # user sensors
-        for i, v in enumerate(self.sensors_user_av):
+        for i in range(60):
             sensor_topic = 'sensor_user_{0:d}'.format(i)
-            metadata[sensor_topic] = v
+            metadata[sensor_topic] = self.sensors_user_av[i]
 
 
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json', encoding='utf-8') as f_tmp_metadata:
@@ -1795,7 +1802,9 @@ class ImageWorker(Process):
 
 
         # system temp sensors
-        for i, v in enumerate(self.sensors_temp_av):
+        for i in range(60):
+            v = self.sensors_temp_av[i]
+
             if self.config.get('TEMP_DISPLAY') == 'f':
                 v_temp = (v * 9.0 / 5.0) + 32
             elif self.config.get('TEMP_DISPLAY') == 'k':
@@ -1809,10 +1818,9 @@ class ImageWorker(Process):
 
 
         # user sensors
-        for i, v in enumerate(self.sensors_user_av):
+        for i in range(60):
             sensor_topic = 'sensor_user_{0:d}'.format(i)
-            status[sensor_topic] = v
-
+            status[sensor_topic] = self.sensors_user_av[i]
 
 
         indi_allsky_status_p = self.varlib_folder_p.joinpath('indi_allsky_status.json')
@@ -2458,7 +2466,9 @@ class ImageWorker(Process):
 
 
         # system temp sensors
-        for i, v in enumerate(self.sensors_temp_av):
+        for i in range(60):
+            v = self.sensors_temp_av[i]
+
             if self.config.get('TEMP_DISPLAY') == 'f':
                 v_temp = (v * 9.0 / 5.0) + 32
             elif self.config.get('TEMP_DISPLAY') == 'k':
@@ -2472,9 +2482,9 @@ class ImageWorker(Process):
 
 
         # user sensors
-        for i, v in enumerate(self.sensors_user_av):
+        for i in range(60):
             sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
-            cmd_env[sensor_env_var] = '{0:0.3f}'.format(v)
+            cmd_env[sensor_env_var] = '{0:0.3f}'.format(self.sensors_user_av[i])
 
 
         cmd = [
@@ -2537,7 +2547,9 @@ class ImageWorker(Process):
 
 
         # system temp sensors
-        for i, v in enumerate(self.sensors_temp_av):
+        for i in range(60):
+            v = self.sensors_temp_av[i]
+
             if self.config.get('TEMP_DISPLAY') == 'f':
                 v_temp = (v * 9.0 / 5.0) + 32
             elif self.config.get('TEMP_DISPLAY') == 'k':
@@ -2551,9 +2563,9 @@ class ImageWorker(Process):
 
 
         # user sensors
-        for i, v in enumerate(self.sensors_user_av):
+        for i in range(60):
             sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
-            hook_env[sensor_env_var] = '{0:0.3f}'.format(v)
+            hook_env[sensor_env_var] = '{0:0.3f}'.format(self.sensors_user_av[i])
 
 
         cmd = [

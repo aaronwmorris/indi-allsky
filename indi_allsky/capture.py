@@ -1749,15 +1749,15 @@ class CaptureWorker(Process):
 
 
         # system temp sensors
-        for i, v in enumerate(self.sensors_temp_av):
-            sensor_env_var = 'SENSOR_TEMP_{0:d}'.format(i)
-            cmd_env[sensor_env_var] = '{0:0.3f}'.format(v)
+        for i in range(60):
+            sensor_temp_env_var = 'SENSOR_TEMP_{0:d}'.format(i)
+            cmd_env[sensor_temp_env_var] = '{0:0.3f}'.format(self.sensors_temp_av[i])
 
 
         # user sensors
-        for i, v in enumerate(self.sensors_user_av):
-            sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
-            cmd_env[sensor_env_var] = '{0:0.3f}'.format(v)
+        for i in range(60):
+            sensor_user_env_var = 'SENSOR_USER_{0:d}'.format(i)
+            cmd_env[sensor_user_env_var] = '{0:0.3f}'.format(self.sensors_user_av[i])
 
 
         cmd = [

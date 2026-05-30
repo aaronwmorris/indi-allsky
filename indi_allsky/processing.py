@@ -2970,8 +2970,8 @@ class ImageProcessor(object):
         # 0 == ccd_temp
         label_data['temp'] = label_data['sensor_temp_0']
 
-        for x, sensor_data in enumerate(self.sensors_user_av):
-            label_data['sensor_user_{0:d}'.format(x)] = sensor_data
+        for i in range(60):
+            label_data['sensor_user_{0:d}'.format(x)] = self.sensors_user_av[i]
 
 
         # rain sensor state - scan TEMP_SENSOR A-F slots for FC-37 classname

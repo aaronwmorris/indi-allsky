@@ -874,6 +874,8 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         test_data['sensor_temp_{0:d}_c'.format(x)] = 0.0
         test_data['sensor_temp_{0:d}_k'.format(x)] = 0.0
 
+
+    for x in range(60):
         # other sensors
         test_data['sensor_user_{0:d}'.format(x)] = 0.0
 
@@ -956,6 +958,7 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'dew_heater_status' : '',
         'fan_status'        : '',
         'wind_dir'          : '',
+        'rain_status'       : '',
     }
 
 
@@ -963,6 +966,8 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         # temperature sensors
         test_data['sensor_temp_{0:d}'.format(x)] = 0.0
 
+
+    for x in range(60):
         # other sensors
         test_data['sensor_user_{0:d}'.format(x)] = 0.0
 
