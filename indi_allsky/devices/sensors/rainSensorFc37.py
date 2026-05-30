@@ -58,9 +58,14 @@ class RainSensorFc37(SensorBase):
         # FC-37 TFT digital output is typically low when water is detected.
         detected = (not raw_value) if self.active_low else raw_value
 
-        rain_value = 1.0 if detected else 0.0
-        rain_state = constants.RAIN_MAP_STR.get(int(rain_value), 'Unknown')
 
+        # 0 = No data (value not changed)
+        # 1 = No Rain
+        # 2 = Raining
+        rain_value = 2 if detected else 1
+
+
+        rain_state = constants.RAIN_MAP_STR[rain_value]
         logger.info('[%s] FC-37 rain sensor: %s (%s)', self.name, rain_state, rain_value)
 
         return {

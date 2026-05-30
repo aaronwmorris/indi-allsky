@@ -217,8 +217,9 @@ SENSOR_USER_RAIN                = 100
 
 
 RAIN_MAP_STR = {
-    0 : 'No Rain',
-    1 : 'Raining',
+    0 : 'No Data',
+    1 : 'No Rain',
+    2 : 'Raining',
 }
 
 
