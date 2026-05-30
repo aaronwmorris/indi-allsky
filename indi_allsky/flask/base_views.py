@@ -783,8 +783,16 @@ class BaseView(View):
             image_metadata = dict()  # no metadata
 
 
+        # system temps
         for x in range(60):
             data['sensor_temp_{0:d}'.format(x)] = image_metadata.get('sensor_temp_{0:d}'.format(x), 0.0)
+
+
+        # user sensors
+        for x in range(60):
+            data['sensor_user_{0:d}'.format(x)] = image_metadata.get('sensor_user_{0:d}'.format(x), 0.0)
+
+        for x in range(100, 110):
             data['sensor_user_{0:d}'.format(x)] = image_metadata.get('sensor_user_{0:d}'.format(x), 0.0)
 
 
@@ -807,10 +815,18 @@ class BaseView(View):
                 data['wind_dir'] = self.cardinal_directions[round(data['sensor_user_6'] / (360 / (len(self.cardinal_directions) - 1)))]
             except IndexError:
                 data['wind_dir'] = 'Error'
+
+
+            try:
+                data['rain_status'] = constants.RAIN_MAP_STR[data['sensor_user_100']]
+            except KeyError:
+                data['rain_status'] = 'Error'
+
         else:
             data['dew_heater_status'] = 'No data'
             data['fan_status'] = 'No data'
             data['wind_dir'] = 'No data'
+            data['rain_status'] = 'No data'
 
 
         return data

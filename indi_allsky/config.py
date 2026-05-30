@@ -836,6 +836,7 @@ class IndiAllSkyConfigBase(object):
             "AS3935_NOISE_LEVEL"     : 2,
             "AS3935_SPIKE_REJECTION" : 2,
             "LUX_MAGNITUDE_OFFSET"   : 26.0,
+            "FC37_ACTIVE_LOW"        : True,
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : "sensor_user_10",

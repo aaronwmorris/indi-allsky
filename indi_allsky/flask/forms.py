@@ -854,6 +854,7 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
         'dew_heater_status' : '',
         'fan_status' : '',
         'wind_dir' : '',
+        'rain_status' : '',
         'custom_1' : '',
         'custom_2' : '',
         'custom_3' : '',
@@ -866,14 +867,19 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
     }
 
 
+    # system temperature sensors
     for x in range(60):
-        # temperature sensors
         test_data['sensor_temp_{0:d}'.format(x)] = 0.0
         test_data['sensor_temp_{0:d}_f'.format(x)] = 0.0
         test_data['sensor_temp_{0:d}_c'.format(x)] = 0.0
         test_data['sensor_temp_{0:d}_k'.format(x)] = 0.0
 
-        # other sensors
+
+    # user sensors
+    for x in range(60):
+        test_data['sensor_user_{0:d}'.format(x)] = 0.0
+
+    for x in range(100, 110):
         test_data['sensor_user_{0:d}'.format(x)] = 0.0
 
 
@@ -955,14 +961,20 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
         'dew_heater_status' : '',
         'fan_status'        : '',
         'wind_dir'          : '',
+        'rain_status'       : '',
     }
 
 
+    # system temperature sensors
     for x in range(60):
-        # temperature sensors
         test_data['sensor_temp_{0:d}'.format(x)] = 0.0
 
-        # other sensors
+
+    # user sensors
+    for x in range(60):
+        test_data['sensor_user_{0:d}'.format(x)] = 0.0
+
+    for x in range(100, 110):
         test_data['sensor_user_{0:d}'.format(x)] = 0.0
 
 
@@ -3987,6 +3999,9 @@ class IndiAllskyConfigForm(FlaskForm):
             ('blinka_sparkfun_lightning_sensor_as3935_spi', 'AS3935 SPI - (6 slots) [BETA]'),
             ('blinka_sparkfun_lightning_sensor_as3935_i2c', 'AS3935 i2c - (6 slots) [BETA]'),
         ),
+        'Rain Sensors' : (
+            ('blinka_rain_sensor_fc37', 'FC-37 Rain Sensor - digital (1 slot)'),
+        ),
         'Remote' : (
             ('mqtt_broker_sensor', 'MQTT Broker Sensor - (10 slots)'),
         ),
@@ -4130,6 +4145,7 @@ class IndiAllskyConfigForm(FlaskForm):
             ['sensor_user_57', 'User Slot 57'],
             ['sensor_user_58', 'User Slot 58'],
             ['sensor_user_59', 'User Slot 59'],
+            ['sensor_user_100', '(100) User Slot - Rain Value'],
         ),
         'System Sensors' : (
             ['sensor_temp_0', '(0) System Temp - Camera Temp'],
@@ -4934,6 +4950,7 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__F_USER_VAR_SLOT     = SelectField('Sensor F Initial Slot', choices=SENSOR_USER_VAR_SLOT_choices, validators=[SENSOR_USER_VAR_SLOT_validator])
     TEMP_SENSOR__F_I2C_ADDRESS       = StringField('I2C Address', validators=[DataRequired(), I2C_ADDRESS_validator])
     TEMP_SENSOR__F_TITLE_TEMPLATE    = StringField('Chart Title Template', validators=[DataRequired(), TEMP_SENSOR__TITLE_TEMPLATE_validator])
+    TEMP_SENSOR__FC37_ACTIVE_LOW     = BooleanField('Rain Sensor FC-37 - Invert logic')
     TEMP_SENSOR__OPENWEATHERMAP_APIKEY = PasswordField('OpenWeatherMap API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__OPENWEATHERMAP_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__WUNDERGROUND_APIKEY = PasswordField('Weather Underground API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__WUNDERGROUND_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
     TEMP_SENSOR__ASTROSPHERIC_APIKEY = PasswordField('Astrospheric API Key', widget=PasswordInput(hide_value=False), validators=[TEMP_SENSOR__ASTROSPHERIC_APIKEY_validator], render_kw={'autocomplete' : 'new-password'})
@@ -5216,7 +5233,7 @@ class IndiAllskyConfigForm(FlaskForm):
                 temp_label_list.append(topic)
 
 
-        for x, label in enumerate(temp_label_list[:20]):  # limit to 20
+        for x, label in enumerate(temp_label_list[:50]):  # limit to 50
             self.SENSOR_SLOT_choices['System Sensors'][x + 10][1] = '({0:d}) {1:s}'.format(x + 10, label)
 
 
@@ -5274,6 +5291,7 @@ class IndiAllskyConfigForm(FlaskForm):
             if self.ADU_ROI_Y2.data <= self.ADU_ROI_Y1.data:
                 self.ADU_ROI_Y2.errors.append('Y2 must be greater than Y1')
                 result = False
+
 
 
         if self.IMAGE_CROP_ROI_X1.data and self.IMAGE_CROP_ROI_Y1.data and self.IMAGE_CROP_ROI_X2.data and self.IMAGE_CROP_ROI_Y2.data:
@@ -6050,7 +6068,6 @@ class IndiAllskyConfigForm(FlaskForm):
                     self.TEMP_SENSOR__A_PIN_1.errors.append('Topics must be defined')
                     result = False
 
-
         # sensor B
         if self.TEMP_SENSOR__B_CLASSNAME.data:
             if self.TEMP_SENSOR__B_CLASSNAME.data.startswith('blinka_'):
@@ -6601,6 +6618,7 @@ class IndiAllskyConfigForm(FlaskForm):
                 'slot'  : self.TEMP_SENSOR__F_USER_VAR_SLOT,
                 'set'   : set(range(temp_sensor__f_slot_int, temp_sensor__f_slot_int + temp_sensor__f_class.METADATA['count'])),
             })
+
 
 
         for slot1, slot2 in itertools.combinations(check_sensor_slots, 2):

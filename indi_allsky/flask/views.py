@@ -2820,6 +2820,7 @@ class ConfigView(FormView):
             'TEMP_SENSOR__F_I2C_ADDRESS'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('F_I2C_ADDRESS', '0x52'),
             'TEMP_SENSOR__F_USER_VAR_SLOT'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('F_USER_VAR_SLOT', 'sensor_user_55'),
             'TEMP_SENSOR__F_TITLE_TEMPLATE'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('F_TITLE_TEMPLATE', '{name:s} - {label:s} - {probe:s}'),
+            'TEMP_SENSOR__FC37_ACTIVE_LOW'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('FC37_ACTIVE_LOW', True),
             'TEMP_SENSOR__OPENWEATHERMAP_APIKEY' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('OPENWEATHERMAP_APIKEY', ''),
             'TEMP_SENSOR__WUNDERGROUND_APIKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('WUNDERGROUND_APIKEY', ''),
             'TEMP_SENSOR__ASTROSPHERIC_APIKEY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('ASTROSPHERIC_APIKEY', ''),
@@ -3852,6 +3853,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['F_USER_VAR_SLOT']       = str(request.json['TEMP_SENSOR__F_USER_VAR_SLOT'])
         self.indi_allsky_config['TEMP_SENSOR']['F_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__F_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['F_TITLE_TEMPLATE']      = str(request.json['TEMP_SENSOR__F_TITLE_TEMPLATE'])
+        self.indi_allsky_config['TEMP_SENSOR']['FC37_ACTIVE_LOW']       = bool(request.json['TEMP_SENSOR__FC37_ACTIVE_LOW'])
         self.indi_allsky_config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = str(request.json['TEMP_SENSOR__OPENWEATHERMAP_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['WUNDERGROUND_APIKEY']   = str(request.json['TEMP_SENSOR__WUNDERGROUND_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY']   = str(request.json['TEMP_SENSOR__ASTROSPHERIC_APIKEY'])
@@ -7978,7 +7980,7 @@ class JsonImageProcessingView(JsonView):
         #sensors_temp_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         #sensors_user_av = Array('f', [float(hdulist[0].header.get('CCD-TEMP', 0))])
         sensors_temp_av = Array('f', [0.0 for x in range(60)])
-        sensors_user_av = Array('f', [0.0 for x in range(60)])
+        sensors_user_av = Array('f', [0.0 for x in range(110)])
         night_av = Array('i', [1, 0])  # using night values for processing
         astro_av = Array('f', [0.0, 0.0, 0.0])
 

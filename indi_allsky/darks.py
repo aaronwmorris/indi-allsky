@@ -143,7 +143,7 @@ class IndiAllSkyDarks(object):
 
 
         self.sensors_temp_av = Array('f', [0.0 for x in range(60)])
-        self.sensors_user_av = Array('f', [0.0 for x in range(60)])
+        self.sensors_user_av = Array('f', [0.0 for x in range(110)])
 
 
         # These shared values are to indicate when the camera is in night/moon modes

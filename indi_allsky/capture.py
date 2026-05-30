@@ -116,6 +116,16 @@ class CaptureWorker(Process):
         ['sensor_user_57', 'User Slot 57'],
         ['sensor_user_58', 'User Slot 58'],
         ['sensor_user_59', 'User Slot 59'],
+        ['sensor_user_100', 'Rain Value'],
+        ['sensor_user_101', 'User Slot 101'],
+        ['sensor_user_102', 'User Slot 102'],
+        ['sensor_user_103', 'User Slot 103'],
+        ['sensor_user_104', 'User Slot 104'],
+        ['sensor_user_105', 'User Slot 105'],
+        ['sensor_user_106', 'User Slot 106'],
+        ['sensor_user_107', 'User Slot 107'],
+        ['sensor_user_108', 'User Slot 108'],
+        ['sensor_user_109', 'User Slot 109'],
 
         ['sensor_temp_0', 'Camera Temp'],
         ['sensor_temp_1', 'Future Use 1'],
@@ -1749,15 +1759,19 @@ class CaptureWorker(Process):
 
 
         # system temp sensors
-        for i, v in enumerate(self.sensors_temp_av):
-            sensor_env_var = 'SENSOR_TEMP_{0:d}'.format(i)
-            cmd_env[sensor_env_var] = '{0:0.3f}'.format(v)
+        for i in range(60):
+            sensor_temp_env_var = 'SENSOR_TEMP_{0:d}'.format(i)
+            cmd_env[sensor_temp_env_var] = '{0:0.3f}'.format(self.sensors_temp_av[i])
 
 
         # user sensors
-        for i, v in enumerate(self.sensors_user_av):
-            sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
-            cmd_env[sensor_env_var] = '{0:0.3f}'.format(v)
+        for i in range(60):
+            sensor_user_env_var = 'SENSOR_USER_{0:d}'.format(i)
+            cmd_env[sensor_user_env_var] = '{0:0.3f}'.format(self.sensors_user_av[i])
+
+        for i in range(100, 110):
+            sensor_user_env_var = 'SENSOR_USER_{0:d}'.format(i)
+            cmd_env[sensor_user_env_var] = '{0:0.3f}'.format(self.sensors_user_av[i])
 
 
         cmd = [
@@ -2495,5 +2509,5 @@ class CaptureWorker(Process):
 
 
         for x, label in enumerate(temp_label_list[:50]):  # limit to 50
-            self.SENSOR_SLOTS[x + 70][1] = '{0:s}'.format(label)
+            self.SENSOR_SLOTS[x + 80][1] = '{0:s}'.format(label)
 

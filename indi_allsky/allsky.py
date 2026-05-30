@@ -139,10 +139,20 @@ class IndiAllSky(object):
         # 4 fan level
         # 5 heat index
         # 6 wind direction in degrees
-        # 7 sensor sqm
-        # 8 camera sqm
-        # 9 reserved for future use
-        self.sensors_user_av = Array('f', [0.0 for x in range(60)])
+        # 7 sensor sqm mag
+        # 8 camera sqm mag
+        # 9 camera sqm adu
+        # 100 rain value
+        # 101 reserved for future use
+        # 102 reserved for future use
+        # 103 reserved for future use
+        # 104 reserved for future use
+        # 105 reserved for future use
+        # 106 reserved for future use
+        # 107 reserved for future use
+        # 108 reserved for future use
+        # 109 reserved for future use
+        self.sensors_user_av = Array('f', [0.0 for x in range(110)])
 
 
         self.exposure_av = Array('f', [

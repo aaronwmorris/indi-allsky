@@ -678,20 +678,23 @@ class SensorWorker(Process):
                 sensor_data = sensor.update()
 
                 with self.sensors_user_av.get_lock():
-                    if sensor_data.get('dew_point'):
+                    if not isinstance(sensor_data.get('dew_point'), type(None)):
                         self.sensors_user_av[constants.SENSOR_USER_DEW_POINT] = float(sensor_data['dew_point'])
 
-                    if sensor_data.get('frost_point'):
+                    if not isinstance(sensor_data.get('frost_point'), type(None)):
                         self.sensors_user_av[constants.SENSOR_USER_FROST_POINT] = float(sensor_data['frost_point'])
 
-                    if sensor_data.get('heat_index'):
+                    if not isinstance(sensor_data.get('heat_index'), type(None)):
                         self.sensors_user_av[constants.SENSOR_USER_HEAT_INDEX] = float(sensor_data['heat_index'])
 
-                    if sensor_data.get('wind_degrees'):
+                    if not isinstance(sensor_data.get('wind_degrees'), type(None)):
                         self.sensors_user_av[constants.SENSOR_USER_WIND_DIR] = float(sensor_data['wind_degrees'])
 
-                    if sensor_data.get('sqm_mag'):
+                    if not isinstance(sensor_data.get('sqm_mag'), type(None)):
                         self.sensors_user_av[constants.SENSOR_USER_SENSOR_SQM_MAG] = float(sensor_data['sqm_mag'])
+
+                    if not isinstance(sensor_data.get('rain'), type(None)):
+                        self.sensors_user_av[constants.SENSOR_USER_RAIN] = float(sensor_data['rain'])
 
 
                     for i, v in enumerate(sensor_data['data']):

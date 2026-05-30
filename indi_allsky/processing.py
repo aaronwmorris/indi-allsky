@@ -2809,7 +2809,6 @@ class ImageProcessor(object):
         # gain is int, gain_f is float
         image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain_f:0.2f}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
 
-
         if self.config.get('TEMP_DISPLAY') == 'f':
             temp_unit = 'F'
         elif self.config.get('TEMP_DISPLAY') == 'k':
@@ -2951,7 +2950,9 @@ class ImageProcessor(object):
             label_data['stretch'] = 'Off'
 
 
-        for x, temp_c in enumerate(self.sensors_temp_av):
+        # system temps
+        for i in range(60):
+            temp_c = self.sensors_temp_av[i]
             temp_f = (temp_c * 9.0 / 5.0) + 32
             temp_k = temp_c + 273.15
 
@@ -2962,18 +2963,34 @@ class ImageProcessor(object):
             else:
                 sensor_temp = temp_c
 
-            label_data['sensor_temp_{0:d}'.format(x)] = sensor_temp
-            label_data['sensor_temp_{0:d}_f'.format(x)] = temp_f
-            label_data['sensor_temp_{0:d}_c'.format(x)] = temp_c
-            label_data['sensor_temp_{0:d}_k'.format(x)] = temp_k
+            label_data['sensor_temp_{0:d}'.format(i)] = sensor_temp
+            label_data['sensor_temp_{0:d}_f'.format(i)] = temp_f
+            label_data['sensor_temp_{0:d}_c'.format(i)] = temp_c
+            label_data['sensor_temp_{0:d}_k'.format(i)] = temp_k
 
 
         # 0 == ccd_temp
         label_data['temp'] = label_data['sensor_temp_0']
 
 
-        for x, sensor_data in enumerate(self.sensors_user_av):
-            label_data['sensor_user_{0:d}'.format(x)] = sensor_data
+        # user sensors
+        for i in range(60):
+            label_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
+
+        for i in range(100, 110):
+            label_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
+
+
+        # rain sensor state - scan TEMP_SENSOR A-F slots for FC-37 classname
+        rain_int = round(self.sensors_user_av[constants.SENSOR_USER_RAIN])
+
+        try:
+            rain_sensor_status = constants.RAIN_MAP_STR[rain_int]
+        except KeyError:
+            logger.error('Rain value lookup error')
+            rain_sensor_status = 'Error'
+
+        label_data['rain_status'] = rain_sensor_status
 
 
         # dew heater
