@@ -43,6 +43,34 @@ class MqttBrokerSensor(SensorBase):
     }
 
 
+    @classmethod
+    def get_labels(cls, pin_1_name):
+        """Derive per-slot labels from the configured topic list.
+
+        Used by capture.py:update_sensor_slot_labels() so chart and overlay
+        titles read the actual topic name instead of the static "Topic N"
+        placeholders in METADATA['labels'].
+
+        Pure function over config; safe to call from any process.
+        Always returns METADATA['count'] entries, padding with "Topic N"
+        for unfilled slots.
+        """
+        topics = (pin_1_name or '').split(',')
+        labels = []
+        for t in topics[:cls.METADATA['count']]:
+            parts = t.strip().rstrip('/').split('/')
+            # ESPHome / Home Assistant convention: <prefix>/sensor/<name>/state
+            if len(parts) >= 2 and parts[-1] == 'state':
+                slug = parts[-2]
+            else:
+                slug = parts[-1] if parts else ''
+            slug = slug.replace('_', ' ').replace('-', ' ').strip()
+            labels.append('{0}'.format(slug) if slug else 'Topic {0}'.format(len(labels) + 1))
+        while len(labels) < cls.METADATA['count']:
+            labels.append('Topic {0}'.format(len(labels) + 1))
+        return tuple(labels)
+
+
     def __init__(self, *args, **kwargs):
         super(MqttBrokerSensor, self).__init__(*args, **kwargs)
 

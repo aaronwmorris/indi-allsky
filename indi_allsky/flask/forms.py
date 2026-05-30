@@ -5062,32 +5062,39 @@ class IndiAllskyConfigForm(FlaskForm):
         temp_sensor__a_classname = str(data['TEMP_SENSOR__A_CLASSNAME'])
         temp_sensor__a_label = str(data['TEMP_SENSOR__A_LABEL'])
         temp_sensor__a_user_var_slot = str(data['TEMP_SENSOR__A_USER_VAR_SLOT'])
+        temp_sensor__a_pin_1_name = str(data['TEMP_SENSOR__A_PIN_1'])
 
         temp_sensor__b_classname = str(data['TEMP_SENSOR__B_CLASSNAME'])
         temp_sensor__b_label = str(data['TEMP_SENSOR__B_LABEL'])
         temp_sensor__b_user_var_slot = str(data['TEMP_SENSOR__B_USER_VAR_SLOT'])
+        temp_sensor__b_pin_1_name = str(data['TEMP_SENSOR__B_PIN_1'])
 
         temp_sensor__c_classname = str(data['TEMP_SENSOR__C_CLASSNAME'])
         temp_sensor__c_label = str(data['TEMP_SENSOR__C_LABEL'])
         temp_sensor__c_user_var_slot = str(data['TEMP_SENSOR__C_USER_VAR_SLOT'])
+        temp_sensor__c_pin_1_name = str(data['TEMP_SENSOR__C_PIN_1'])
 
         temp_sensor__d_classname = str(data['TEMP_SENSOR__D_CLASSNAME'])
         temp_sensor__d_label = str(data['TEMP_SENSOR__D_LABEL'])
         temp_sensor__d_user_var_slot = str(data['TEMP_SENSOR__D_USER_VAR_SLOT'])
+        temp_sensor__d_pin_1_name = str(data['TEMP_SENSOR__D_PIN_1'])
 
         temp_sensor__e_classname = str(data['TEMP_SENSOR__E_CLASSNAME'])
         temp_sensor__e_label = str(data['TEMP_SENSOR__E_LABEL'])
         temp_sensor__e_user_var_slot = str(data['TEMP_SENSOR__E_USER_VAR_SLOT'])
+        temp_sensor__e_pin_1_name = str(data['TEMP_SENSOR__E_PIN_1'])
 
         temp_sensor__f_classname = str(data['TEMP_SENSOR__F_CLASSNAME'])
         temp_sensor__f_label = str(data['TEMP_SENSOR__F_LABEL'])
         temp_sensor__f_user_var_slot = str(data['TEMP_SENSOR__F_USER_VAR_SLOT'])
+        temp_sensor__f_pin_1_name = str(data['TEMP_SENSOR__F_PIN_1'])
 
 
         if temp_sensor__a_classname:
             try:
                 temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
                 slot_a_index = constants.SENSOR_INDEX_MAP[temp_sensor__a_user_var_slot]
+                temp_sensor__a_labels = temp_sensor__a_class.get_labels(temp_sensor__a_pin_1_name)
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
                     try:
@@ -5095,7 +5102,7 @@ class IndiAllskyConfigForm(FlaskForm):
                             'index' : slot_a_index + x,
                             'name'  : temp_sensor__a_class.METADATA['name'],
                             'label' : temp_sensor__a_label,
-                            'probe' : temp_sensor__a_class.METADATA['labels'][x],
+                            'probe' : temp_sensor__a_labels[x],
                         }
 
                         self.SENSOR_SLOT_choices['User Sensors'][slot_a_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
@@ -5110,6 +5117,7 @@ class IndiAllskyConfigForm(FlaskForm):
             try:
                 temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
                 slot_b_index = constants.SENSOR_INDEX_MAP[temp_sensor__b_user_var_slot]
+                temp_sensor__b_labels = temp_sensor__b_class.get_labels(temp_sensor__b_pin_1_name)
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
                     try:
@@ -5117,7 +5125,7 @@ class IndiAllskyConfigForm(FlaskForm):
                             'index' : slot_b_index + x,
                             'name'  : temp_sensor__b_class.METADATA['name'],
                             'label' : temp_sensor__b_label,
-                            'probe' : temp_sensor__b_class.METADATA['labels'][x],
+                            'probe' : temp_sensor__b_labels[x],
                         }
 
                         self.SENSOR_SLOT_choices['User Sensors'][slot_b_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
@@ -5132,6 +5140,7 @@ class IndiAllskyConfigForm(FlaskForm):
             try:
                 temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
                 slot_c_index = constants.SENSOR_INDEX_MAP[temp_sensor__c_user_var_slot]
+                temp_sensor__c_labels = temp_sensor__c_class.get_labels(temp_sensor__c_pin_1_name)
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
                     try:
@@ -5139,7 +5148,7 @@ class IndiAllskyConfigForm(FlaskForm):
                             'index' : slot_c_index + x,
                             'name'  : temp_sensor__c_class.METADATA['name'],
                             'label' : temp_sensor__c_label,
-                            'probe' : temp_sensor__c_class.METADATA['labels'][x],
+                            'probe' : temp_sensor__c_labels[x],
                         }
 
                         self.SENSOR_SLOT_choices['User Sensors'][slot_c_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
@@ -5154,6 +5163,7 @@ class IndiAllskyConfigForm(FlaskForm):
             try:
                 temp_sensor__d_class = getattr(indi_allsky_sensors, temp_sensor__d_classname)
                 slot_d_index = constants.SENSOR_INDEX_MAP[temp_sensor__d_user_var_slot]
+                temp_sensor__d_labels = temp_sensor__d_class.get_labels(temp_sensor__d_pin_1_name)
 
                 for x in range(temp_sensor__d_class.METADATA['count']):
                     try:
@@ -5161,7 +5171,7 @@ class IndiAllskyConfigForm(FlaskForm):
                             'index' : slot_d_index + x,
                             'name'  : temp_sensor__d_class.METADATA['name'],
                             'label' : temp_sensor__d_label,
-                            'probe' : temp_sensor__d_class.METADATA['labels'][x],
+                            'probe' : temp_sensor__d_labels[x],
                         }
 
                         self.SENSOR_SLOT_choices['User Sensors'][slot_d_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
@@ -5176,6 +5186,7 @@ class IndiAllskyConfigForm(FlaskForm):
             try:
                 temp_sensor__e_class = getattr(indi_allsky_sensors, temp_sensor__e_classname)
                 slot_e_index = constants.SENSOR_INDEX_MAP[temp_sensor__e_user_var_slot]
+                temp_sensor__e_labels = temp_sensor__e_class.get_labels(temp_sensor__e_pin_1_name)
 
                 for x in range(temp_sensor__e_class.METADATA['count']):
                     try:
@@ -5183,7 +5194,7 @@ class IndiAllskyConfigForm(FlaskForm):
                             'index' : slot_e_index + x,
                             'name'  : temp_sensor__e_class.METADATA['name'],
                             'label' : temp_sensor__e_label,
-                            'probe' : temp_sensor__e_class.METADATA['labels'][x],
+                            'probe' : temp_sensor__e_labels[x],
                         }
 
                         self.SENSOR_SLOT_choices['User Sensors'][slot_e_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
@@ -5198,6 +5209,7 @@ class IndiAllskyConfigForm(FlaskForm):
             try:
                 temp_sensor__f_class = getattr(indi_allsky_sensors, temp_sensor__f_classname)
                 slot_f_index = constants.SENSOR_INDEX_MAP[temp_sensor__f_user_var_slot]
+                temp_sensor__f_labels = temp_sensor__f_class.get_labels(temp_sensor__f_pin_1_name)
 
                 for x in range(temp_sensor__f_class.METADATA['count']):
                     try:
@@ -5205,7 +5217,7 @@ class IndiAllskyConfigForm(FlaskForm):
                             'index' : slot_f_index + x,
                             'name'  : temp_sensor__f_class.METADATA['name'],
                             'label' : temp_sensor__f_label,
-                            'probe' : temp_sensor__f_class.METADATA['labels'][x],
+                            'probe' : temp_sensor__f_labels[x],
                         }
 
                         self.SENSOR_SLOT_choices['User Sensors'][slot_f_index + x][1] = '({index:d}) {name:s} - {label:s} - {probe:s}'.format(**sensor_label_data)
