@@ -116,7 +116,7 @@ class CaptureWorker(Process):
         ['sensor_user_57', 'User Slot 57'],
         ['sensor_user_58', 'User Slot 58'],
         ['sensor_user_59', 'User Slot 59'],
-        ['sensor_user_100', 'User Slot 100'],
+        ['sensor_user_100', 'Rain Value'],
         ['sensor_user_101', 'User Slot 101'],
         ['sensor_user_102', 'User Slot 102'],
         ['sensor_user_103', 'User Slot 103'],

@@ -4145,6 +4145,7 @@ class IndiAllskyConfigForm(FlaskForm):
             ['sensor_user_57', 'User Slot 57'],
             ['sensor_user_58', 'User Slot 58'],
             ['sensor_user_59', 'User Slot 59'],
+            ['sensor_user_100', '(100) User Slot - Rain Value'],
         ),
         'System Sensors' : (
             ['sensor_temp_0', '(0) System Temp - Camera Temp'],
