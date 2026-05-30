@@ -5232,7 +5232,7 @@ class IndiAllskyConfigForm(FlaskForm):
                 temp_label_list.append(topic)
 
 
-        for x, label in enumerate(temp_label_list[:20]):  # limit to 20
+        for x, label in enumerate(temp_label_list[:50]):  # limit to 50
             self.SENSOR_SLOT_choices['System Sensors'][x + 10][1] = '({0:d}) {1:s}'.format(x + 10, label)
 
 
