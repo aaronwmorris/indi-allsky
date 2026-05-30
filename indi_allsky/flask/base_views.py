@@ -785,6 +785,8 @@ class BaseView(View):
 
         for x in range(60):
             data['sensor_temp_{0:d}'.format(x)] = image_metadata.get('sensor_temp_{0:d}'.format(x), 0.0)
+
+        for x in range(60):
             data['sensor_user_{0:d}'.format(x)] = image_metadata.get('sensor_user_{0:d}'.format(x), 0.0)
 
 
