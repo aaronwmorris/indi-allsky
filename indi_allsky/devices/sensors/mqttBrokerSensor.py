@@ -65,7 +65,7 @@ class MqttBrokerSensor(SensorBase):
             else:
                 slug = parts[-1] if parts else ''
             slug = slug.replace('_', ' ').replace('-', ' ').strip()
-            labels.append(slug.title() if slug else 'Topic {0}'.format(len(labels) + 1))
+            labels.append('{0}'.format(slug) if slug else 'Topic {0}'.format(len(labels) + 1))
         while len(labels) < cls.METADATA['count']:
             labels.append('Topic {0}'.format(len(labels) + 1))
         return tuple(labels)
