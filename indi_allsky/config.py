@@ -770,7 +770,6 @@ class IndiAllSkyConfigBase(object):
             "F_USER_VAR_SLOT"        : "sensor_user_55",
             "F_I2C_ADDRESS"          : "0x52",
             "F_TITLE_TEMPLATE"       : "{name:s} - {label:s} - {probe:s}",
-            "FC37_ACTIVE_LOW"        : True,
             "OPENWEATHERMAP_APIKEY"  : "",
             "OPENWEATHERMAP_APIKEY_E": "",
             "WUNDERGROUND_APIKEY"    : "",
@@ -837,6 +836,7 @@ class IndiAllSkyConfigBase(object):
             "AS3935_NOISE_LEVEL"     : 2,
             "AS3935_SPIKE_REJECTION" : 2,
             "LUX_MAGNITUDE_OFFSET"   : 26.0,
+            "FC37_ACTIVE_LOW"        : True,
         },
         "CHARTS" : {
             "CUSTOM_SLOT_1"          : "sensor_user_10",
@@ -857,9 +857,6 @@ class IndiAllSkyConfigBase(object):
             "CUSTOM_SLOT_8_MIN"      : 0.0,
             "CUSTOM_SLOT_9"          : "sensor_user_18",
             "CUSTOM_SLOT_9_MIN"      : 0.0,
-        },
-        "RAIN_SENSOR" : {
-            "FC37_ACTIVE_LOW"        : True,
         },
         "ADSB" : {
             "ENABLE"                 : False,

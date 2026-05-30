@@ -26,7 +26,7 @@ class RainSensorFc37(SensorBase):
 
         pin_1_name = kwargs.get('pin_1_name')
         if not pin_1_name:
-            raise SensorException('FC-37 sensor pin not configured (RAIN_SENSOR.__*_PIN_1 or TEMP_SENSOR.__*_PIN_1)')
+            raise SensorException('FC-37 sensor pin not configured (TEMP_SENSOR.__*_PIN_1)')
 
         try:
             import board
@@ -42,7 +42,7 @@ class RainSensorFc37(SensorBase):
         self.sensor_pin.pull = digitalio.Pull.UP
 
         self.active_low = bool(
-            self.config.get('RAIN_SENSOR', {}).get('FC37_ACTIVE_LOW', True)
+            self.config.get('TEMP_SENSOR', {}).get('FC37_ACTIVE_LOW', True)
         )
 
         logger.warning('[%s] Initialized FC-37 rain sensor on pin %s, active_low=%s', self.name, pin_1_name, self.active_low)
@@ -61,7 +61,10 @@ class RainSensorFc37(SensorBase):
 
         logger.info('[%s] FC-37 rain sensor: %s (%s)', self.name, rain_state, rain_value)
 
-        return {'data': (rain_value,), 'state': rain_state}
+        return {
+            'rain' : rain_value,
+            'data': (),
+        }
 
     def deinit(self):
         try:

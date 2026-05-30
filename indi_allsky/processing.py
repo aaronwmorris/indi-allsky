@@ -2807,7 +2807,7 @@ class ImageProcessor(object):
 
     def get_image_label(self, i_ref, adsb_aircraft_list, custom_hook_data):
         # gain is int, gain_f is float
-        image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain_f:0.2f}\nTemp {temp:0.1f}{temp_unit:s}\nRain {rain_sensor}\nStars {stars:d}')
+        image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain_f:0.2f}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
 
         if self.config.get('TEMP_DISPLAY') == 'f':
             temp_unit = 'F'
@@ -2975,17 +2975,16 @@ class ImageProcessor(object):
 
 
         # rain sensor state - scan TEMP_SENSOR A-F slots for FC-37 classname
-        rain_sensor_label = 'No Rain'
-        for _slot_letter in ('A', 'B', 'C', 'D', 'E', 'F'):
-            if self.config.get('TEMP_SENSOR', {}).get('{0:s}_CLASSNAME'.format(_slot_letter)) == 'blinka_rain_sensor_fc37':
-                _rain_slot_key = self.config.get('TEMP_SENSOR', {}).get('{0:s}_USER_VAR_SLOT'.format(_slot_letter), 'sensor_user_10')
-                _rain_slot_idx = constants.SENSOR_INDEX_MAP.get(_rain_slot_key)
-                if _rain_slot_idx is not None:
-                    _rain_state = int(round(self.sensors_user_av[_rain_slot_idx]))
-                    rain_sensor_label = constants.RAIN_MAP_STR.get(_rain_state, 'No Rain')
-                break
+        rain_int = round(self.sensors_user_av[constants.SENSOR_USER_RAIN])
 
-        label_data['rain_sensor'] = rain_sensor_label
+        try:
+            rain_sensor_status = constants.RAIN_MAP_STR[rain_int]
+        except KeyError:
+            logger.error('Rain value lookup error')
+            rain_sensor_status = 'Error'
+
+        label_data['rain_status'] = rain_sensor_status
+
 
         # dew heater
         if self.sensors_user_av[constants.SENSOR_USER_DEW_HEATER_LEVEL]:
@@ -3031,7 +3030,7 @@ class ImageProcessor(object):
         #label_data['custom_9'] = ''
 
 
-        image_label = image_label_tmpl.format(**label_data)
+        image_label = image_label_tmpl.format(**label_data)  # fill in the data
 
 
         # Add moon mode indicator
