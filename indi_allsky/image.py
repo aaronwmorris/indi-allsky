@@ -839,6 +839,9 @@ class ImageWorker(Process):
             for i in range(60):
                 image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
 
+            for i in range(100, 110):
+                image_add_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
+
 
             if self.adsb_aircraft_list:
                 image_add_data['aircraft'] = list()
@@ -1043,6 +1046,10 @@ class ImageWorker(Process):
                 sensor_topic = 'sensor_user_{0:d}'.format(i)
                 mqtt_data[sensor_topic] = round(self.sensors_user_av[i], 3)
 
+            for i in range(100, 110):
+                sensor_topic = 'sensor_user_{0:d}'.format(i)
+                mqtt_data[sensor_topic] = round(self.sensors_user_av[i], 3)
+
 
             if new_filename:
                 upload_filename = new_filename
@@ -1149,6 +1156,10 @@ class ImageWorker(Process):
 
         # user sensors
         for i in range(60):
+            sensor_topic = 'sensor_user_{0:d}'.format(i)
+            metadata[sensor_topic] = self.sensors_user_av[i]
+
+        for i in range(100, 110):
             sensor_topic = 'sensor_user_{0:d}'.format(i)
             metadata[sensor_topic] = self.sensors_user_av[i]
 
@@ -1822,6 +1833,10 @@ class ImageWorker(Process):
             sensor_topic = 'sensor_user_{0:d}'.format(i)
             status[sensor_topic] = self.sensors_user_av[i]
 
+        for i in range(100, 110):
+            sensor_topic = 'sensor_user_{0:d}'.format(i)
+            status[sensor_topic] = self.sensors_user_av[i]
+
 
         indi_allsky_status_p = self.varlib_folder_p.joinpath('indi_allsky_status.json')
 
@@ -2486,6 +2501,10 @@ class ImageWorker(Process):
             sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
             cmd_env[sensor_env_var] = '{0:0.3f}'.format(self.sensors_user_av[i])
 
+        for i in range(100, 110):
+            sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
+            cmd_env[sensor_env_var] = '{0:0.3f}'.format(self.sensors_user_av[i])
+
 
         cmd = [
             str(pre_save_hook_p),
@@ -2564,6 +2583,10 @@ class ImageWorker(Process):
 
         # user sensors
         for i in range(60):
+            sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
+            hook_env[sensor_env_var] = '{0:0.3f}'.format(self.sensors_user_av[i])
+
+        for i in range(100, 110):
             sensor_env_var = 'SENSOR_USER_{0:d}'.format(i)
             hook_env[sensor_env_var] = '{0:0.3f}'.format(self.sensors_user_av[i])
 

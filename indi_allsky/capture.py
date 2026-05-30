@@ -1759,6 +1759,10 @@ class CaptureWorker(Process):
             sensor_user_env_var = 'SENSOR_USER_{0:d}'.format(i)
             cmd_env[sensor_user_env_var] = '{0:0.3f}'.format(self.sensors_user_av[i])
 
+        for i in range(100, 110):
+            sensor_user_env_var = 'SENSOR_USER_{0:d}'.format(i)
+            cmd_env[sensor_user_env_var] = '{0:0.3f}'.format(self.sensors_user_av[i])
+
 
         cmd = [
             str(pre_capture_hook_p),

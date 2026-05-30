@@ -867,16 +867,19 @@ def IMAGE_LABEL_TEMPLATE_validator(form, field):
     }
 
 
+    # system temperature sensors
     for x in range(60):
-        # temperature sensors
         test_data['sensor_temp_{0:d}'.format(x)] = 0.0
         test_data['sensor_temp_{0:d}_f'.format(x)] = 0.0
         test_data['sensor_temp_{0:d}_c'.format(x)] = 0.0
         test_data['sensor_temp_{0:d}_k'.format(x)] = 0.0
 
 
+    # user sensors
     for x in range(60):
-        # other sensors
+        test_data['sensor_user_{0:d}'.format(x)] = 0.0
+
+    for x in range(100, 110):
         test_data['sensor_user_{0:d}'.format(x)] = 0.0
 
 
@@ -962,13 +965,16 @@ def WEB_STATUS_TEMPLATE_validator(form, field):
     }
 
 
+    # system temperature sensors
     for x in range(60):
-        # temperature sensors
         test_data['sensor_temp_{0:d}'.format(x)] = 0.0
 
 
+    # user sensors
     for x in range(60):
-        # other sensors
+        test_data['sensor_user_{0:d}'.format(x)] = 0.0
+
+    for x in range(100, 110):
         test_data['sensor_user_{0:d}'.format(x)] = 0.0
 
 
