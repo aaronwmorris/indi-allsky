@@ -2370,10 +2370,7 @@ class CaptureWorker(Process):
             try:
                 temp_sensor__a_class = getattr(indi_allsky_sensors, temp_sensor__a_classname)
                 sensor_a_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__a_user_var_slot)]
-
-                temp_sensor__a_labels = temp_sensor__a_class.METADATA['labels']
-                if hasattr(temp_sensor__a_class, 'get_dynamic_labels'):
-                    temp_sensor__a_labels = temp_sensor__a_class.get_dynamic_labels(temp_sensor__a_pin_1_name)
+                temp_sensor__a_labels = temp_sensor__a_class.get_labels(temp_sensor__a_pin_1_name)
 
                 for x in range(temp_sensor__a_class.METADATA['count']):
                     try:
@@ -2396,10 +2393,7 @@ class CaptureWorker(Process):
             try:
                 temp_sensor__b_class = getattr(indi_allsky_sensors, temp_sensor__b_classname)
                 sensor_b_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__b_user_var_slot)]
-
-                temp_sensor__b_labels = temp_sensor__b_class.METADATA['labels']
-                if hasattr(temp_sensor__b_class, 'get_dynamic_labels'):
-                    temp_sensor__b_labels = temp_sensor__b_class.get_dynamic_labels(temp_sensor__b_pin_1_name)
+                temp_sensor__b_labels = temp_sensor__b_class.get_labels(temp_sensor__b_pin_1_name)
 
                 for x in range(temp_sensor__b_class.METADATA['count']):
                     try:
@@ -2422,10 +2416,7 @@ class CaptureWorker(Process):
             try:
                 temp_sensor__c_class = getattr(indi_allsky_sensors, temp_sensor__c_classname)
                 sensor_c_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__c_user_var_slot)]
-
-                temp_sensor__c_labels = temp_sensor__c_class.METADATA['labels']
-                if hasattr(temp_sensor__c_class, 'get_dynamic_labels'):
-                    temp_sensor__c_labels = temp_sensor__c_class.get_dynamic_labels(temp_sensor__c_pin_1_name)
+                temp_sensor__c_labels = temp_sensor__c_class.get_labels(temp_sensor__c_pin_1_name)
 
                 for x in range(temp_sensor__c_class.METADATA['count']):
                     try:
@@ -2448,10 +2439,7 @@ class CaptureWorker(Process):
             try:
                 temp_sensor__d_class = getattr(indi_allsky_sensors, temp_sensor__d_classname)
                 sensor_d_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__d_user_var_slot)]
-
-                temp_sensor__d_labels = temp_sensor__d_class.METADATA['labels']
-                if hasattr(temp_sensor__d_class, 'get_dynamic_labels'):
-                    temp_sensor__d_labels = temp_sensor__d_class.get_dynamic_labels(temp_sensor__d_pin_1_name)
+                temp_sensor__d_labels = temp_sensor__d_class.get_labels(temp_sensor__d_pin_1_name)
 
                 for x in range(temp_sensor__d_class.METADATA['count']):
                     try:
@@ -2474,10 +2462,7 @@ class CaptureWorker(Process):
             try:
                 temp_sensor__e_class = getattr(indi_allsky_sensors, temp_sensor__e_classname)
                 sensor_e_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__e_user_var_slot)]
-
-                temp_sensor__e_labels = temp_sensor__e_class.METADATA['labels']
-                if hasattr(temp_sensor__e_class, 'get_dynamic_labels'):
-                    temp_sensor__e_labels = temp_sensor__e_class.get_dynamic_labels(temp_sensor__e_pin_1_name)
+                temp_sensor__e_labels = temp_sensor__e_class.get_labels(temp_sensor__e_pin_1_name)
 
                 for x in range(temp_sensor__e_class.METADATA['count']):
                     try:
@@ -2500,10 +2485,7 @@ class CaptureWorker(Process):
             try:
                 temp_sensor__f_class = getattr(indi_allsky_sensors, temp_sensor__f_classname)
                 sensor_f_index = constants.SENSOR_INDEX_MAP[str(temp_sensor__f_user_var_slot)]
-
-                temp_sensor__f_labels = temp_sensor__f_class.METADATA['labels']
-                if hasattr(temp_sensor__f_class, 'get_dynamic_labels'):
-                    temp_sensor__f_labels = temp_sensor__f_class.get_dynamic_labels(temp_sensor__f_pin_1_name)
+                temp_sensor__f_labels = temp_sensor__f_class.get_labels(temp_sensor__f_pin_1_name)
 
                 for x in range(temp_sensor__f_class.METADATA['count']):
                     try:

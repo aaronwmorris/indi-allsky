@@ -44,7 +44,7 @@ class MqttBrokerSensor(SensorBase):
 
 
     @classmethod
-    def get_dynamic_labels(cls, pin_1_name):
+    def get_labels(cls, pin_1_name):
         """Derive per-slot labels from the configured topic list.
 
         Used by capture.py:update_sensor_slot_labels() so chart and overlay

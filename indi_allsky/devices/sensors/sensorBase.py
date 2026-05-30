@@ -8,6 +8,14 @@ logger = logging.getLogger('indi_allsky')
 
 class SensorBase(object):
 
+    METADATA = {
+        'name' : 'CHANGE',
+        'description' : 'CHANGE',
+        'count' : 0,
+        'labels' : (),
+        'types' : (),
+    }
+
 
     def __init__(self, *args, **kwargs):
         self.config = args[0]
@@ -30,6 +38,11 @@ class SensorBase(object):
         # basic hysteresis settings
         self.rh_heater_on_level = 80.0
         self.rh_heater_off_level = 75.0
+
+
+    @classmethod
+    def get_labels(cls, pin_1_name):
+        return tuple(cls.METADATA.labels)
 
 
     def update(self):
