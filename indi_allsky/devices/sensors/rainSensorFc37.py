@@ -14,12 +14,13 @@ class RainSensorFc37(SensorBase):
         'description': 'FC-37 Rain Detection Sensor (digital output)',
         'count': 1,
         'labels': (
-            'Rain Detected',
+            'Rain Detection',
         ),
         'types': (
             constants.SENSOR_PRECIPITATION,
         ),
     }
+
 
     def __init__(self, *args, **kwargs):
         super(RainSensorFc37, self).__init__(*args, **kwargs)
@@ -47,6 +48,7 @@ class RainSensorFc37(SensorBase):
 
         logger.warning('[%s] Initialized FC-37 rain sensor on pin %s, active_low=%s', self.name, pin_1_name, self.active_low)
 
+
     def update(self):
         try:
             raw_value = self.sensor_pin.value
@@ -65,6 +67,7 @@ class RainSensorFc37(SensorBase):
             'rain' : rain_value,
             'data': (),
         }
+
 
     def deinit(self):
         try:
