@@ -3853,7 +3853,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['F_USER_VAR_SLOT']       = str(request.json['TEMP_SENSOR__F_USER_VAR_SLOT'])
         self.indi_allsky_config['TEMP_SENSOR']['F_I2C_ADDRESS']         = str(request.json['TEMP_SENSOR__F_I2C_ADDRESS'])
         self.indi_allsky_config['TEMP_SENSOR']['F_TITLE_TEMPLATE']      = str(request.json['TEMP_SENSOR__F_TITLE_TEMPLATE'])
-        self.indi_allsky_config['TEMP_SENSOR']['FC37_ACTIVE_LOW']       = bool(request.json.get('TEMP_SENSOR__FC37_ACTIVE_LOW', True))
+        self.indi_allsky_config['TEMP_SENSOR']['FC37_ACTIVE_LOW']       = bool(request.json['TEMP_SENSOR__FC37_ACTIVE_LOW'])
         self.indi_allsky_config['TEMP_SENSOR']['OPENWEATHERMAP_APIKEY'] = str(request.json['TEMP_SENSOR__OPENWEATHERMAP_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['WUNDERGROUND_APIKEY']   = str(request.json['TEMP_SENSOR__WUNDERGROUND_APIKEY'])
         self.indi_allsky_config['TEMP_SENSOR']['ASTROSPHERIC_APIKEY']   = str(request.json['TEMP_SENSOR__ASTROSPHERIC_APIKEY'])
