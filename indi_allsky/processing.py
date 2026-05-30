@@ -2950,7 +2950,9 @@ class ImageProcessor(object):
             label_data['stretch'] = 'Off'
 
 
-        for x, temp_c in enumerate(self.sensors_temp_av):
+        # system temps
+        for i in range(60):
+            temp_c = self.sensors_temp_av[i]
             temp_f = (temp_c * 9.0 / 5.0) + 32
             temp_k = temp_c + 273.15
 
@@ -2961,17 +2963,22 @@ class ImageProcessor(object):
             else:
                 sensor_temp = temp_c
 
-            label_data['sensor_temp_{0:d}'.format(x)] = sensor_temp
-            label_data['sensor_temp_{0:d}_f'.format(x)] = temp_f
-            label_data['sensor_temp_{0:d}_c'.format(x)] = temp_c
-            label_data['sensor_temp_{0:d}_k'.format(x)] = temp_k
+            label_data['sensor_temp_{0:d}'.format(i)] = sensor_temp
+            label_data['sensor_temp_{0:d}_f'.format(i)] = temp_f
+            label_data['sensor_temp_{0:d}_c'.format(i)] = temp_c
+            label_data['sensor_temp_{0:d}_k'.format(i)] = temp_k
 
 
         # 0 == ccd_temp
         label_data['temp'] = label_data['sensor_temp_0']
 
+
+        # user sensors
         for i in range(60):
-            label_data['sensor_user_{0:d}'.format(x)] = self.sensors_user_av[i]
+            label_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
+
+        for i in range(100, 110):
+            label_data['sensor_user_{0:d}'.format(i)] = self.sensors_user_av[i]
 
 
         # rain sensor state - scan TEMP_SENSOR A-F slots for FC-37 classname
