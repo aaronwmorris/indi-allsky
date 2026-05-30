@@ -59,10 +59,9 @@ class RainSensorFc37(SensorBase):
         detected = (not raw_value) if self.active_low else raw_value
 
 
-        # 0 = No data (value not changed)
-        # 1 = No Rain
-        # 2 = Raining
-        rain_value = 2 if detected else 1
+        # 0 = No Rain
+        # 1 = Raining
+        rain_value = 1 if detected else 0
 
 
         rain_state = constants.RAIN_MAP_STR[rain_value]
