@@ -193,6 +193,11 @@ SENSOR_USER_SENSOR_SQM_MAG      = 7
 SENSOR_USER_CAMERA_SQM_MAG      = 8
 SENSOR_USER_CAMERA_SQM_ADU      = 9
 
+RAIN_MAP_STR = {
+    0 : 'No Rain',
+    1 : 'Raining',
+}
+
 
 SENSOR_INDEX_MAP = {
     'sensor_user_0'     : 0,
