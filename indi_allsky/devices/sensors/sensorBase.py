@@ -42,7 +42,7 @@ class SensorBase(object):
 
     @classmethod
     def get_labels(cls, pin_1_name):
-        return tuple(cls.METADATA.labels)
+        return tuple(cls.METADATA['labels'])
 
 
     def update(self):
