@@ -1088,6 +1088,14 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 adsb__password = config.get('ADSB', {}).get('PASSWORD', '')
 
 
+            oidc__client_secret_e = config.get('OIDC', {}).get('CLIENT_SECRET_E', '')
+            if oidc__client_secret_e:
+                # not catching InvalidToken
+                oidc__client_secret = f_key.decrypt(oidc__client_secret_e.encode()).decode()
+            else:
+                oidc__client_secret = config.get('OIDC', {}).get('CLIENT_SECRET', '')
+
+
             image_overlay__a_password_e = config.get('IMAGE_OVERLAY', {}).get('A_PASSWORD_E', '')
             if image_overlay__a_password_e:
                 # not catching InvalidToken
@@ -1109,6 +1117,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             device__mqtt_password = config.get('DEVICE', {}).get('MQTT_PASSWORD', '')
             libcamera__mqtt_password = config.get('LIBCAMERA', {}).get('MQTT_PASSWORD', '')
             adsb__password = config.get('ADSB', {}).get('PASSWORD', '')
+            oidc__client_secret = config.get('OIDC', {}).get('CLIENT_SECRET', '')
             image_overlay__a_password = config.get('IMAGE_OVERLAY', {}).get('A_PASSWORD', '')
 
 
@@ -1123,6 +1132,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             'DEVICE',
             'LIBCAMERA',
             'ADSB',
+            'OIDC',
             'IMAGE_OVERLAY',
         )
 
@@ -1155,6 +1165,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['LIBCAMERA']['MQTT_PASSWORD_E'] = ''
         config['ADSB']['PASSWORD'] = adsb__password
         config['ADSB']['PASSWORD_E'] = ''
+        config['OIDC']['CLIENT_SECRET'] = oidc__client_secret
+        config['OIDC']['CLIENT_SECRET_E'] = ''
         config['IMAGE_OVERLAY']['A_PASSWORD'] = image_overlay__a_password
         config['IMAGE_OVERLAY']['A_PASSWORD_E'] = ''
 
@@ -1352,6 +1364,15 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
                 adsb__password = ''
 
 
+            oidc__client_secret = str(config.get('OIDC', {}).get('CLIENT_SECRET', ''))
+            if oidc__client_secret:
+                oidc__client_secret_e = f_key.encrypt(oidc__client_secret.encode()).decode()
+                oidc__client_secret = ''
+            else:
+                oidc__client_secret_e = ''
+                oidc__client_secret = ''
+
+
             image_overlay__a_password = str(config.get('IMAGE_OVERLAY', {}).get('A_PASSWORD', ''))
             if image_overlay__a_password:
                 image_overlay__a_password_e = f_key.encrypt(image_overlay__a_password.encode()).decode()
@@ -1388,6 +1409,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             libcamera__mqtt_password_e = ''
             adsb__password = str(config.get('ADSB', {}).get('PASSWORD', ''))
             adsb__password_e = ''
+            oidc__client_secret = str(config.get('OIDC', {}).get('CLIENT_SECRET', ''))
+            oidc__client_secret_e = ''
             image_overlay__a_password = str(config.get('IMAGE_OVERLAY', {}).get('A_PASSWORD', ''))
             image_overlay__a_password_e = ''
 
@@ -1403,6 +1426,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             'DEVICE',
             'LIBCAMERA',
             'ADSB',
+            'OIDC',
             'IMAGE_OVERLAY',
         )
 
@@ -1435,6 +1459,8 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         config['LIBCAMERA']['MQTT_PASSWORD_E'] = libcamera__mqtt_password_e
         config['ADSB']['PASSWORD'] = adsb__password
         config['ADSB']['PASSWORD_E'] = adsb__password_e
+        config['OIDC']['CLIENT_SECRET'] = oidc__client_secret
+        config['OIDC']['CLIENT_SECRET_E'] = oidc__client_secret_e
         config['IMAGE_OVERLAY']['A_PASSWORD'] = image_overlay__a_password
         config['IMAGE_OVERLAY']['A_PASSWORD_E'] = image_overlay__a_password_e
 

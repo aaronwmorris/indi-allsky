@@ -3440,19 +3440,31 @@ def SATELLITE_TRACK__LABEL_LIMIT_validator(form, field):
         raise ValidationError('Limit must be 20 or less')
 
 def OIDC__CLIENT_ID_validator(form, field):
-    pass
+    if form.OIDC__ENABLE.data and not field.data:
+        raise ValidationError('Client ID is required when OIDC is enabled')
 
 def OIDC__CLIENT_SECRET_validator(form, field):
-    pass
+    if form.OIDC__ENABLE.data and not field.data:
+        raise ValidationError('Client Secret is required when OIDC is enabled')
 
 def OIDC__DISCOVERY_URL_validator(form, field):
-    pass
+    if form.OIDC__ENABLE.data:
+        if not field.data:
+            raise ValidationError('Discovery URL is required when OIDC is enabled')
+        try:
+            r = urlparse(field.data)
+            if not r.scheme or not r.netloc:
+                raise ValidationError('Invalid URL')
+        except Exception:
+            raise ValidationError('Invalid URL')
 
 def OIDC__SCOPES_validator(form, field):
-    pass
+    if form.OIDC__ENABLE.data and not field.data:
+        raise ValidationError('Scopes are required when OIDC is enabled')
 
 def OIDC__GROUP_ADMIN_validator(form, field):
-    pass
+    if form.OIDC__ENABLE.data and not field.data:
+        raise ValidationError('Admin Group is required when OIDC is enabled')
 
 def INDI_CONFIG_DEFAULTS_validator(form, field):
     try:
