@@ -2912,6 +2912,12 @@ class ConfigView(FormView):
             'SATELLITE_TRACK__LABEL_LIMIT'         : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('LABEL_LIMIT', 10),
             'SATELLITE_TRACK__SAT_LABEL_TEMPLATE'  : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('SAT_LABEL_TEMPLATE', '{label:s} {alt:0.1f}\u00b0 {dir:s}'),
             'SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX' : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '# xy:-15,200 (Right)\n# anchor:ra (Right Justified)\n# color:200,200,200\nSatellites'),
+            'OIDC__ENABLE'              : self.indi_allsky_config.get('OIDC', {}).get('ENABLE', False),
+            'OIDC__CLIENT_ID'           : self.indi_allsky_config.get('OIDC', {}).get('CLIENT_ID', ''),
+            'OIDC__CLIENT_SECRET'       : self.indi_allsky_config.get('OIDC', {}).get('CLIENT_SECRET', ''),
+            'OIDC__DISCOVERY_URL'       : self.indi_allsky_config.get('OIDC', {}).get('DISCOVERY_URL', ''),
+            'OIDC__SCOPES'              : self.indi_allsky_config.get('OIDC', {}).get('SCOPES', 'openid email profile'),
+            'OIDC__GROUP_ADMIN'         : self.indi_allsky_config.get('OIDC', {}).get('GROUP_ADMIN', 'allsky_admins'),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -3226,6 +3232,7 @@ class AjaxConfigView(BaseView):
             'IMAGE_OVERLAY',
             'ADSB',
             'SATELLITE_TRACK',
+            'OIDC',
             'LONGTERM_KEOGRAM',
             'REALTIME_KEOGRAM',
             'STARTRAILS',
@@ -3945,7 +3952,12 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['SATELLITE_TRACK']['LABEL_LIMIT']       = int(request.json['SATELLITE_TRACK__LABEL_LIMIT'])
         self.indi_allsky_config['SATELLITE_TRACK']['SAT_LABEL_TEMPLATE'] = str(request.json['SATELLITE_TRACK__SAT_LABEL_TEMPLATE'])
         self.indi_allsky_config['SATELLITE_TRACK']['IMAGE_LABEL_TEMPLATE_PREFIX']  = str(request.json['SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX'])
-
+        self.indi_allsky_config['OIDC']['ENABLE']                      = bool(request.json['OIDC__ENABLE'])
+        self.indi_allsky_config['OIDC']['CLIENT_ID']                   = str(request.json['OIDC__CLIENT_ID'])
+        self.indi_allsky_config['OIDC']['CLIENT_SECRET']               = str(request.json['OIDC__CLIENT_SECRET'])
+        self.indi_allsky_config['OIDC']['DISCOVERY_URL']               = str(request.json['OIDC__DISCOVERY_URL'])
+        self.indi_allsky_config['OIDC']['SCOPES']                      = str(request.json['OIDC__SCOPES'])
+        self.indi_allsky_config['OIDC']['GROUP_ADMIN']                 = str(request.json['OIDC__GROUP_ADMIN'])
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
         self.indi_allsky_config['INDI_CONFIG_DAY']                      = json.loads(str(request.json['INDI_CONFIG_DAY']))
@@ -7917,6 +7929,7 @@ class JsonImageProcessingView(JsonView):
         # disable these
         p_config['ADSB']['ENABLE']                       = False
         p_config['SATELLITE_TRACK']['ENABLE']            = False
+        p_config['OIDC']['ENABLE']                       = False
 
         # SQM_ROI
         sqm_roi_x1 = int(request.json['SQM_ROI_X1'])

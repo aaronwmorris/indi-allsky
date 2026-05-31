@@ -880,6 +880,14 @@ class IndiAllSkyConfigBase(object):
             "SAT_LABEL_TEMPLATE"     : "{title:s} {alt:0.1f}\u00b0 {dir:s}",
             "IMAGE_LABEL_TEMPLATE_PREFIX" : "# xy:-15,200 (Right)\n# anchor:ra (Right Justified)\n# color:200,200,200\nSatellites",
         },
+        "OIDC" : {
+            "ENABLE"                 : False,
+            "CLIENT_ID"              : "",
+            "CLIENT_SECRET"          : "",
+            "DISCOVERY_URL"          : "",
+            "SCOPES"                 : "openid email profile",
+            "GROUP_ADMIN"            : "allsky_admins",
+        },
     })
 
 

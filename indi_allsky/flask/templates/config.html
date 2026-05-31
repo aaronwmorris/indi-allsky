@@ -45,7 +45,8 @@ var camera_id = {{ camera_id }};
     <button class="nav-link link-danger bg-dark" id="nav-devices-tab" data-bs-toggle="tab" data-bs-target="#nav-devices" type="button" role="tab" aria-controls="nav-devices" aria-selected="false">Devices</button>
     <button class="nav-link link-secondary bg-dark" id="nav-adsb-tab" data-bs-toggle="tab" data-bs-target="#nav-adsb" type="button" role="tab" aria-controls="nav-adsb" aria-selected="false">ADS-B</button>
     <button class="nav-link link-light bg-dark" id="nav-sat_track-tab" data-bs-toggle="tab" data-bs-target="#nav-sat_track" type="button" role="tab" aria-controls="nav-sat_track" aria-selected="false" style="font-size:14px">Satellite Tracking</button>
-  </div>
+    <button class="nav-link link-light bg-dark" id="nav-oidc-tab" data-bs-toggle="tab" data-bs-target="#nav-oidc" type="button" role="tab" aria-controls="nav-oidc" aria-selected="false" style="font-size:14px">OIDC</button>
+</div>
 </nav>
 
 
@@ -9761,6 +9762,90 @@ var camera_id = {{ camera_id }};
 
 </div><!-- end sat_track tab -->
 
+<div class="tab-pane fade" id="nav-oidc" role="tabpanel" aria-labelledby="nav-oidc-tab">
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.OIDC__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.OIDC__ENABLE(class='form-check-input') }}
+                <div id="OIDC__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/OIDC" class="text-decoration-none link-info" target="_blank">OIDC Wiki</a></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.OIDC__CLIENT_ID.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.OIDC__CLIENT_ID(class='form-control bg-secondary') }}
+            <div id="OIDC__CLIENT_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Client ID of IdP</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.OIDC__CLIENT_SECRET.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.OIDC__CLIENT_SECRET(class='form-control bg-secondary') }}
+            <div id="OIDC__CLIENT_SECRET-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Client Secret of IdP</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.OIDC__DISCOVERY_URL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.OIDC__DISCOVERY_URL(class='form-control bg-secondary') }}
+            <div id="OIDC__DISCOVERY_URL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Discovery URL of IdP</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.OIDC__SCOPES.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.OIDC__SCOPES(class='form-control bg-secondary') }}
+            <div id="OIDC__SCOPES-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Scopes for IdP</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.OIDC__GROUP_ADMIN.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.OIDC__GROUP_ADMIN(class='form-control bg-secondary') }}
+            <div id="OIDC__GROUP_ADMIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">Admin group for IdP</div>
+    </div>
+
+
+</div><!-- end OIDC tab -->
 
 </div>
 
@@ -10372,6 +10457,11 @@ const field_names = [
     'SATELLITE_TRACK__LABEL_LIMIT',
     'SATELLITE_TRACK__SAT_LABEL_TEMPLATE',
     'SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX',
+    'OIDC__CLIENT_ID',
+    'OIDC__CLIENT_SECRET',
+    'OIDC__DISCOVERY_URL',
+    'OIDC__SCOPES',
+    'OIDC__GROUP_ADMIN',
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
     'CONFIG_NOTE',
@@ -10537,6 +10627,7 @@ const checkbox_field_names = [
     'SATELLITE_TRACK__ENABLE',
     'SATELLITE_TRACK__DAYTIME_TRACK',
     'SATELLITE_TRACK__LABEL_ENABLE',
+    'OIDC__ENABLE',
     'WEB_NONLOCAL_IMAGES',
     'WEB_LOCAL_IMAGES_ADMIN',
     'RELOAD_ON_SAVE',

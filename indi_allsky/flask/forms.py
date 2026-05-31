@@ -3439,6 +3439,20 @@ def SATELLITE_TRACK__LABEL_LIMIT_validator(form, field):
     if field.data > 20:
         raise ValidationError('Limit must be 20 or less')
 
+def OIDC__CLIENT_ID_validator(form, field):
+    pass
+
+def OIDC__CLIENT_SECRET_validator(form, field):
+    pass
+
+def OIDC__DISCOVERY_URL_validator(form, field):
+    pass
+
+def OIDC__SCOPES_validator(form, field):
+    pass
+
+def OIDC__GROUP_ADMIN_validator(form, field):
+    pass
 
 def INDI_CONFIG_DEFAULTS_validator(form, field):
     try:
@@ -5042,6 +5056,12 @@ class IndiAllskyConfigForm(FlaskForm):
     SATELLITE_TRACK__LABEL_LIMIT     = IntegerField('Label Limit', validators=[DataRequired(), SATELLITE_TRACK__LABEL_LIMIT_validator])
     SATELLITE_TRACK__SAT_LABEL_TEMPLATE = StringField('Satellite Label Template', validators=[DataRequired(), SATELLITE_TRACK__SAT_LABEL_TEMPLATE_validator])
     SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX = TextAreaField('Image Template Prefix', validators=[DataRequired(), SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX_validator])
+    OIDC__ENABLE                     = BooleanField('Enable OIDC Authentication')
+    OIDC__CLIENT_ID                  = StringField('OIDC Client ID', validators=[OIDC__CLIENT_ID_validator])
+    OIDC__CLIENT_SECRET              = PasswordField('OIDC Client Secret', widget=PasswordInput(hide_value=False), validators=[OIDC__CLIENT_SECRET_validator], render_kw={' autocomplete' : 'new-password'})
+    OIDC__DISCOVERY_URL              = StringField('OIDC Discovery URL', validators=[OIDC__DISCOVERY_URL_validator])
+    OIDC__SCOPES                     = StringField('OIDC Scopes (space separated)', validators=[OIDC__SCOPES_validator])
+    OIDC__GROUP_ADMIN                = StringField('OIDC Admin Group', validators=[OIDC__GROUP_ADMIN_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
