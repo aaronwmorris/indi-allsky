@@ -4,12 +4,16 @@ from pathlib import Path
 from logging.config import dictConfig
 
 #from sqlalchemy.pool import NullPool
-from flask import Flask
+from flask import Flask, app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 
 from flask_login import LoginManager
+from authlib.integrations.flask_client import OAuth
+from cryptography.fernet import Fernet
+
+oauth = OAuth()
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -113,8 +117,38 @@ def create_app():
     login_manager.login_view = 'auth_indi_allsky.login_view'
     login_manager.init_app(app)
 
-    from .models import IndiAllSkyDbUserTable
+    oauth.init_app(app)
 
+    with app.app_context():
+        from .models import IndiAllSkyDbConfigTable
+        from sqlalchemy.exc import OperationalError, ProgrammingError
+
+        try:
+            config_record = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.createDate.desc()).first()
+            if config_record and config_record.data:
+                oidc_data = config_record.data.get('OIDC', {})
+
+                if oidc_data.get('ENABLE', False):
+                    client_secret = oidc_data.get('CLIENT_SECRET')
+                    if not client_secret:
+                        encrypted_secret = oidc_data.get('CLIENT_SECRET_E')
+                        if encrypted_secret:
+                            f_key = Fernet(app.config['PASSWORD_KEY'].encode())
+                            client_secret = f_key.decrypt(encrypted_secret.encode()).decode()
+
+                    oauth.register(
+                        name='oidc',
+                        client_id=oidc_data.get('CLIENT_ID', ''),
+                        client_secret=client_secret,
+                        server_metadata_url=oidc_data.get('DISCOVERY_URL', ''),
+                        client_kwargs={'scope': oidc_data.get('SCOPES', 'openid email profile')},
+                    )
+
+        except (OperationalError, ProgrammingError):
+            # This happens during first-run or migrations when tables don't exist yet
+            app.logger.warning("Database not initialized; skipping OIDC registration.")    
+            
+    from .models import IndiAllSkyDbUserTable
 
     @login_manager.user_loader
     def load_user(user_id):
