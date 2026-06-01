@@ -1,5 +1,6 @@
 import time
 import random
+import string
 from datetime import datetime
 
 from passlib.hash import argon2
@@ -25,6 +26,7 @@ from .base_views import BaseView
 from .base_views import TemplateView
 
 from . import db
+from . import oauth
 
 from .models import IndiAllSkyDbUserTable
 
@@ -50,6 +52,7 @@ class LoginView(TemplateView):
         context = super(LoginView, self).get_context()
 
         context['form_login'] = IndiAllskyLoginForm(NEXT=request.args.get('next', ''))
+        context['oidc_enabled'] = self.indi_allsky_config.get('OIDC', {}).get('ENABLE', False)
 
         return context
 
@@ -144,6 +147,104 @@ class LoginView(TemplateView):
         return jsonify(data)
 
 
+class OIDCLoginView(BaseView):
+    decorators = []
+
+    def dispatch_request(self):
+        if not hasattr(oauth, 'oidc'):
+            app.logger.error('OIDC login attempted but oidc client is not registered')
+            return redirect(url_for('auth_indi_allsky.login_view'))
+
+        redirect_uri = url_for('auth_indi_allsky.oidc_callback_view', _external=True)
+
+        # Store 'next' URL in session for the callback
+        next_url = request.args.get('next')
+        if next_url and is_safe_url(next_url, {'*'}):
+            session['oidc_next'] = next_url
+
+        try:
+            return oauth.oidc.authorize_redirect(redirect_uri)
+        except Exception as e:
+            app.logger.error('Error during OIDC redirect: %s', str(e))
+            return redirect(url_for('auth_indi_allsky.login_view'))
+
+
+class OIDCCallbackView(BaseView):
+    decorators = []
+
+    def dispatch_request(self):
+        if not hasattr(oauth, 'oidc'):
+            return abort(404)
+
+        try:
+            token = oauth.oidc.authorize_access_token()
+            user_info = token.get('userinfo')
+            if not user_info:
+                user_info = oauth.oidc.userinfo()
+        except Exception as e:
+            error_msg = str(e)
+            if hasattr(e, 'error'):
+                error_msg = f"{e.error}: {getattr(e, 'description', 'No description')}"
+
+            app.logger.error('OIDC callback failed to exchange token: %s', error_msg)
+            return redirect(url_for('auth_indi_allsky.login_view'))
+
+        email = user_info.get('email')
+        if not email:
+            app.logger.error('OIDC login failed: No email provided by identity provider')
+            return redirect(url_for('auth_indi_allsky.login_view'))
+
+        # Find or Create User
+        user = IndiAllSkyDbUserTable.query.filter_by(email=email).first()
+
+        if not user:
+            username = user_info.get('preferred_username') or email.split('@')[0]
+            base_username = username
+            counter = 1
+            while IndiAllSkyDbUserTable.query.filter_by(username=username).first():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+            user = IndiAllSkyDbUserTable(
+                username=username,
+                email=email,
+                password=argon2.hash(''.join(random.choices(string.ascii_letters + string.digits, k=32))),
+                name=user_info.get('name', ''),
+                active=True,
+                staff=True
+            )
+            db.session.add(user)
+            app.logger.info('Created new OIDC user: %s', username)
+
+        admin_group = self.indi_allsky_config.get('OIDC', {}).get('GROUP_ADMIN')
+        if admin_group:
+            user_groups = user_info.get('groups', [])
+            if isinstance(user_groups, list):
+                user.admin = admin_group in user_groups
+            elif isinstance(user_groups, str):
+                # Sometimes groups come as a space-separated string
+                user.admin = admin_group in user_groups.split()
+
+        if request.headers.get('X-Forwarded-For'):
+            remote_addr = request.headers.get('X-Forwarded-For')
+        else:
+            remote_addr = request.remote_addr
+
+        now = datetime.now()
+        user.loginDate = now
+        user.loginIp = remote_addr
+
+        db.session.commit()
+        session.permanent = True
+        login_user(user, remember=True)
+
+        # Redirect to original destination
+        next_url = session.pop('oidc_next', None)
+        if not next_url or not is_safe_url(next_url, {'*'}):
+            next_url = url_for('indi_allsky.index_view')
+
+        return redirect(next_url)
+
 
 class LogoutView(BaseView):
     decorators = []  # manually handle if user is logged in
@@ -158,4 +259,6 @@ class LogoutView(BaseView):
 
 
 bp_auth_allsky.add_url_rule('/login', view_func=LoginView.as_view('login_view', template_name='login.html'))
+bp_auth_allsky.add_url_rule('/login/oidc', view_func=OIDCLoginView.as_view('oidc_login_view'))
+bp_auth_allsky.add_url_rule('/login/oidc/callback', view_func=OIDCCallbackView.as_view('oidc_callback_view'))
 bp_auth_allsky.add_url_rule('/logout', view_func=LogoutView.as_view('logout_view'))

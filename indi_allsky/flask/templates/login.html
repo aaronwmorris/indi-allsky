@@ -54,6 +54,15 @@ html, body {
             </div>
         </div>
 
+        {% if oidc_enabled %}
+        <div class="form-group mt-3">
+            <div class="text-center">
+                <hr class="text-white mx-5">
+                <a href="{{ url_for('auth_indi_allsky.oidc_login_view', next=request.args.get('next', '')) }}" class="btn btn-info text-dark">Login with OIDC</a>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="form-group">
             <div class="text-center">
                 <div id="success-message" class="text-success" style="display: none;"></div>
