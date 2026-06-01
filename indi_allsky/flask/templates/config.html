@@ -4,7 +4,7 @@
 
 {% block head %}
 <style>
-#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab, #nav-sat_track-tab, #nav-timelapse-tab, #nav-overlays-tab {
+#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab, #nav-sat_track-tab, #nav-timelapse-tab, #nav-overlays-tab, #nav-oidc-tab {
     width: 150px;
     margin-top: 10px;
     margin-right: 5px;
@@ -45,7 +45,7 @@ var camera_id = {{ camera_id }};
     <button class="nav-link link-danger bg-dark" id="nav-devices-tab" data-bs-toggle="tab" data-bs-target="#nav-devices" type="button" role="tab" aria-controls="nav-devices" aria-selected="false">Devices</button>
     <button class="nav-link link-secondary bg-dark" id="nav-adsb-tab" data-bs-toggle="tab" data-bs-target="#nav-adsb" type="button" role="tab" aria-controls="nav-adsb" aria-selected="false">ADS-B</button>
     <button class="nav-link link-light bg-dark" id="nav-sat_track-tab" data-bs-toggle="tab" data-bs-target="#nav-sat_track" type="button" role="tab" aria-controls="nav-sat_track" aria-selected="false" style="font-size:14px">Satellite Tracking</button>
-    <button class="nav-link link-light bg-dark" id="nav-oidc-tab" data-bs-toggle="tab" data-bs-target="#nav-oidc" type="button" role="tab" aria-controls="nav-oidc" aria-selected="false" style="font-size:14px">OIDC</button>
+    <button class="nav-link link-warning bg-dark" id="nav-oidc-tab" data-bs-toggle="tab" data-bs-target="#nav-oidc" type="button" role="tab" aria-controls="nav-oidc" aria-selected="false" style="font-size:14px">OIDC</button>
 </div>
 </nav>
 
