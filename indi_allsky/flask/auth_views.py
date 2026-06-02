@@ -176,8 +176,20 @@ class OIDCCallbackView(BaseView):
         if not hasattr(oauth, 'oidc'):
             return abort(404)
 
+        # Check if this is a logout callback (no code but has state or just returning from IdP)
+        if 'code' not in request.args:
+            try:
+                oauth.oidc.validate_logout_response()
+            except Exception as e:
+                # If validation fails, it might just be a direct redirect without state,
+                # we still want to land on the index page.
+                app.logger.debug('OIDC logout callback validation: %s', str(e))
+
+            return redirect(url_for('indi_allsky.index_view'))
+
         try:
             token = oauth.oidc.authorize_access_token()
+            session['oidc_id_token'] = token.get('id_token')  # Store for logout hint
             user_info = token.get('userinfo')
             if not user_info:
                 user_info = oauth.oidc.userinfo()
@@ -250,10 +262,23 @@ class LogoutView(BaseView):
     decorators = []  # manually handle if user is logged in
 
     def dispatch_request(self):
+        id_token = session.pop('oidc_id_token', None)
+
         if not current_user.is_authenticated:
             return redirect(url_for('indi_allsky.index_view'))
 
         logout_user()
+
+        # Check if OIDC logout should be initiated
+        oidc_config = self.indi_allsky_config.get('OIDC', {})
+        if oidc_config.get('ENABLE') and id_token and hasattr(oauth, 'oidc'):
+            try:
+                return oauth.oidc.logout_redirect(
+                    post_logout_redirect_uri=url_for('auth_indi_allsky.oidc_callback_view', _external=True),
+                    id_token_hint=id_token
+                )
+            except Exception as e:
+                app.logger.error('OIDC logout redirect failed: %s', str(e))
 
         return redirect(url_for('indi_allsky.index_view'))
 
