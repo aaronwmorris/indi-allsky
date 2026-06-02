@@ -163,17 +163,23 @@ def create_app():
     @app.before_request
     def refresh_oidc_token():
         from flask_login import current_user, logout_user
-        from flask import redirect, url_for, request
+        from flask import redirect, url_for, request, session
         import time
 
         # Skip for static files and common public assets to save DB hits
         if request.path.startswith('/static') or request.path.endswith(('.png', '.jpg', '.jpeg', '.gif', '.ico', '.css', '.js')):
             return
 
+        # Check session cache first to avoid DB hits
+        if current_user.is_authenticated and 'oidc_expires_at' in session:
+            if time.time() + 60 < session['oidc_expires_at']:
+                return
+
         if current_user.is_authenticated and hasattr(current_user, 'oidc_token') and current_user.oidc_token:
             token = current_user.oidc_token
             # check expiration (with 60s buffer)
-            if token.get('expires_at') and token['expires_at'] < (time.time() + 60):
+            expires_at = token.get('expires_at')
+            if expires_at and expires_at < (time.time() + 60):
                 if 'refresh_token' in token and hasattr(oauth, 'oidc'):
                     try:
                         # Attempt refresh
@@ -183,8 +189,12 @@ def create_app():
                         # Merge new token data into existing token to preserve id_token
                         # as many IdPs do not return a new id_token on refresh
                         token.update(new_token)
-                        current_user.oidc_token = token
+                        
+                        # Use a copy to ensure SQLAlchemy detects the change
+                        current_user.oidc_token = dict(token)
                         db.session.commit()
+                        
+                        session['oidc_expires_at'] = token.get('expires_at')
                         app.logger.debug('OIDC token refreshed for user %s', current_user.username)
                     except Exception as e:
                         app.logger.error('OIDC token refresh failed for user %s: %s', current_user.username, str(e))
@@ -195,6 +205,9 @@ def create_app():
                     app.logger.warning('OIDC token expired and no refresh token available for user %s', current_user.username)
                     logout_user()
                     return redirect(url_for('auth_indi_allsky.login_view'))
+            elif expires_at:
+                # Cache it if it was missing from session but present in DB
+                session['oidc_expires_at'] = expires_at
 
 
     with app.app_context():

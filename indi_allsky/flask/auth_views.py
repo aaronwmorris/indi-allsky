@@ -196,6 +196,7 @@ class OIDCCallbackView(BaseView):
         try:
             token = oauth.oidc.authorize_access_token()
             session['oidc_id_token'] = token.get('id_token')  # Store for logout hint
+            session['oidc_expires_at'] = token.get('expires_at')
             user_info = token.get('userinfo')
             if not user_info:
                 user_info = oauth.oidc.userinfo()
