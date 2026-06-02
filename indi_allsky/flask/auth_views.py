@@ -165,7 +165,7 @@ class OIDCLoginView(BaseView):
 
         # Store 'next' URL in session for the callback
         next_url = request.args.get('next')
-        if next_url and is_safe_url(next_url, {'*'}):
+        if next_url and is_safe_url(next_url, {request.host}):
             session['oidc_next'] = next_url
 
         try:
