@@ -156,6 +156,43 @@ def create_app():
         return IndiAllSkyDbUserTable.query.get(int(user_id))
 
 
+    @app.before_request
+    def refresh_oidc_token():
+        from flask_login import current_user, logout_user
+        from flask import redirect, url_for, request
+        import time
+
+        # Skip for static files and common public assets to save DB hits
+        if request.path.startswith('/static') or request.path.endswith(('.png', '.jpg', '.jpeg', '.gif', '.ico', '.css', '.js')):
+            return
+
+        if current_user.is_authenticated and hasattr(current_user, 'oidc_token') and current_user.oidc_token:
+            token = current_user.oidc_token
+            # check expiration (with 60s buffer)
+            if token.get('expires_at') and token['expires_at'] < (time.time() + 60):
+                if 'refresh_token' in token and hasattr(oauth, 'oidc'):
+                    try:
+                        # Attempt refresh
+                        new_token = oauth.oidc.refresh_token(
+                            refresh_token=token['refresh_token']
+                        )
+                        # Merge new token data into existing token to preserve id_token
+                        # as many IdPs do not return a new id_token on refresh
+                        token.update(new_token)
+                        current_user.oidc_token = token
+                        db.session.commit()
+                        app.logger.debug('OIDC token refreshed for user %s', current_user.username)
+                    except Exception as e:
+                        app.logger.error('OIDC token refresh failed for user %s: %s', current_user.username, str(e))
+                        logout_user()
+                        return redirect(url_for('auth_indi_allsky.login_view'))
+                else:
+                    # No refresh token, and token is expired. Force logout.
+                    app.logger.warning('OIDC token expired and no refresh token available for user %s', current_user.username)
+                    logout_user()
+                    return redirect(url_for('auth_indi_allsky.login_view'))
+
+
     with app.app_context():
         from sqlalchemy import event
 

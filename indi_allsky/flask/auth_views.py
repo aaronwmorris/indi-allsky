@@ -254,6 +254,8 @@ class OIDCCallbackView(BaseView):
 
         db.session.commit()
         session.permanent = True
+        user.oidc_token = token
+        db.session.commit()
         login_user(user, remember=True)
 
         # Redirect to original destination
@@ -272,6 +274,15 @@ class LogoutView(BaseView):
 
         if not current_user.is_authenticated:
             return redirect(url_for('indi_allsky.index_view'))
+
+        # If session hint is missing, try to get it from the user record
+        if not id_token and hasattr(current_user, 'oidc_token') and current_user.oidc_token:
+            id_token = current_user.oidc_token.get('id_token')
+
+        # Clear token from DB on logout for security
+        if hasattr(current_user, 'oidc_token'):
+            current_user.oidc_token = None
+            db.session.commit()
 
         logout_user()
 
