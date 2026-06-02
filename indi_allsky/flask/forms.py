@@ -5088,6 +5088,7 @@ class IndiAllskyConfigForm(FlaskForm):
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
     RELOAD_ON_SAVE                   = BooleanField('Reload on Save')
+    LOCAL_AUTH_ENABLE                = BooleanField('Enable Local Authentication')
     CONFIG_NOTE                      = StringField('Config Note')
 
     ADMIN_NETWORKS_FLASK             = TextAreaField('Admin Networks', render_kw={'readonly' : True, 'disabled' : 'disabled'})

@@ -54,6 +54,7 @@ class LoginView(TemplateView):
         context['form_login'] = IndiAllskyLoginForm(NEXT=request.args.get('next', ''))
         context['oidc_enabled'] = self.indi_allsky_config.get('OIDC', {}).get('ENABLE', False)
         context['oidc_logo_url'] = self.indi_allsky_config.get('OIDC', {}).get('LOGO_URL', '')
+        context['local_auth_enable'] = self.indi_allsky_config.get('LOCAL_AUTH_ENABLE', True)
 
         return context
 

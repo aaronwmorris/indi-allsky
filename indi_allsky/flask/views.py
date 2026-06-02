@@ -2920,6 +2920,7 @@ class ConfigView(FormView):
             'OIDC__GROUP_ADMIN'         : self.indi_allsky_config.get('OIDC', {}).get('GROUP_ADMIN', 'allsky_admins'),
             'OIDC__LOGO_URL'            : self.indi_allsky_config.get('OIDC', {}).get('LOGO_URL', ''),
             'RELOAD_ON_SAVE'                 : False,
+            'LOCAL_AUTH_ENABLE'              : self.indi_allsky_config.get('LOCAL_AUTH_ENABLE', True),
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
         }
@@ -3963,6 +3964,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
         self.indi_allsky_config['INDI_CONFIG_DAY']                      = json.loads(str(request.json['INDI_CONFIG_DAY']))
+        self.indi_allsky_config['LOCAL_AUTH_ENABLE']                    = bool(request.json['LOCAL_AUTH_ENABLE'])
         self.indi_allsky_config['ENCRYPT_PASSWORDS']                    = bool(request.json['ENCRYPT_PASSWORDS'])
 
 
