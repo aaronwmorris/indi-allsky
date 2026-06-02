@@ -72,6 +72,10 @@ class LoginView(TemplateView):
         if current_user.is_authenticated:
             return redirect(url_for('indi_allsky.index_view'))
 
+        oidc_config = self.indi_allsky_config.get('OIDC', {})
+        if oidc_config.get('ENABLE') and oidc_config.get('AUTO_LOGIN'):
+            return redirect(url_for('auth_indi_allsky.oidc_login_view', next=request.args.get('next', '')))
+
         return super(LoginView, self).dispatch_request()
 
 

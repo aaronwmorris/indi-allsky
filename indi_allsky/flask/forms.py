@@ -5084,6 +5084,7 @@ class IndiAllskyConfigForm(FlaskForm):
     OIDC__SCOPES                     = StringField('OIDC Scopes (space separated)', validators=[OIDC__SCOPES_validator])
     OIDC__GROUP_ADMIN                = StringField('OIDC Admin Group', validators=[OIDC__GROUP_ADMIN_validator])
     OIDC__LOGO_URL                   = StringField('OIDC Logo URL', validators=[OIDC__LOGO_URL_validator])
+    OIDC__AUTO_LOGIN                 = BooleanField('OIDC Auto Login')
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 

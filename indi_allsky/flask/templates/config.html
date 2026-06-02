@@ -9860,6 +9860,21 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-8">URL of image to display next to login button</div>
     </div>
 
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.OIDC__AUTO_LOGIN.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.OIDC__AUTO_LOGIN(class='form-check-input') }}
+                <div id="OIDC__AUTO_LOGIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Automatically redirect to OIDC login when not authenticated</div>
+    </div>
+
 
 </div><!-- end OIDC tab -->
 
@@ -10505,6 +10520,7 @@ const field_names = [
 const checkbox_field_names = [
     'ENCRYPT_PASSWORDS',
     'LOCAL_AUTH_ENABLE',
+    'OIDC__AUTO_LOGIN',
     'CCD_CONFIG__AUTO_GAIN_ENABLE',
     'CAMERA_SQM__ENABLE',
     'CAMERA_SQM__ENABLE_DAY',

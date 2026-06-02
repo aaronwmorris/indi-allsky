@@ -889,6 +889,7 @@ class IndiAllSkyConfigBase(object):
             "SCOPES"                 : "openid email profile",
             "GROUP_ADMIN"            : "allsky_admins",
             "LOGO_URL"               : "",
+            "AUTO_LOGIN"             : False,
         },
     })
 
