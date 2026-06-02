@@ -890,6 +890,7 @@ class IndiAllSkyConfigBase(object):
             "GROUP_ADMIN"            : "allsky_admins",
             "LOGO_URL"               : "",
             "AUTO_LOGIN"             : False,
+            "PKCE"                   : True,
         },
     })
 

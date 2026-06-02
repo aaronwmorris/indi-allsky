@@ -2920,6 +2920,7 @@ class ConfigView(FormView):
             'OIDC__GROUP_ADMIN'         : self.indi_allsky_config.get('OIDC', {}).get('GROUP_ADMIN', 'allsky_admins'),
             'OIDC__LOGO_URL'            : self.indi_allsky_config.get('OIDC', {}).get('LOGO_URL', ''),
             'OIDC__AUTO_LOGIN'          : self.indi_allsky_config.get('OIDC', {}).get('AUTO_LOGIN', False),
+            'OIDC__PKCE'                : self.indi_allsky_config.get('OIDC', {}).get('PKCE', True),
             'RELOAD_ON_SAVE'                 : False,
             'LOCAL_AUTH_ENABLE'              : self.indi_allsky_config.get('LOCAL_AUTH_ENABLE', True),
             'CONFIG_NOTE'                    : '',
@@ -3963,6 +3964,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['OIDC']['GROUP_ADMIN']                 = str(request.json['OIDC__GROUP_ADMIN'])
         self.indi_allsky_config['OIDC']['LOGO_URL']                    = str(request.json['OIDC__LOGO_URL'])
         self.indi_allsky_config['OIDC']['AUTO_LOGIN']                  = bool(request.json['OIDC__AUTO_LOGIN'])
+        self.indi_allsky_config['OIDC']['PKCE']                        = bool(request.json['OIDC__PKCE'])
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
         self.indi_allsky_config['INDI_CONFIG_DAY']                      = json.loads(str(request.json['INDI_CONFIG_DAY']))

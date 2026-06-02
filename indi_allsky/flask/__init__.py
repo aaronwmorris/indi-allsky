@@ -136,12 +136,16 @@ def create_app():
                             f_key = Fernet(app.config['PASSWORD_KEY'].encode())
                             client_secret = f_key.decrypt(encrypted_secret.encode()).decode()
 
+                    client_kwargs = {'scope': oidc_data.get('SCOPES', 'openid email profile')}
+                    if oidc_data.get('PKCE', True):
+                        client_kwargs['code_challenge_method'] = 'S256'
+
                     oauth.register(
                         name='oidc',
                         client_id=oidc_data.get('CLIENT_ID', ''),
                         client_secret=client_secret,
                         server_metadata_url=oidc_data.get('DISCOVERY_URL', ''),
-                        client_kwargs={'scope': oidc_data.get('SCOPES', 'openid email profile')},
+                        client_kwargs=client_kwargs,
                     )
 
         except (OperationalError, ProgrammingError):
