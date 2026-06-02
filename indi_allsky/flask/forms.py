@@ -3466,6 +3466,15 @@ def OIDC__GROUP_ADMIN_validator(form, field):
     if form.OIDC__ENABLE.data and not field.data:
         raise ValidationError('Admin Group is required when OIDC is enabled')
 
+def OIDC__LOGO_URL_validator(form, field):
+    if field.data:
+        try:
+            r = urlparse(field.data)
+            if not r.scheme or not r.netloc:
+                raise ValidationError('Invalid URL')
+        except Exception:
+            raise ValidationError('Invalid URL')
+
 def INDI_CONFIG_DEFAULTS_validator(form, field):
     try:
         json_data = json.loads(field.data)
@@ -5074,6 +5083,7 @@ class IndiAllskyConfigForm(FlaskForm):
     OIDC__DISCOVERY_URL              = StringField('OIDC Discovery URL', validators=[OIDC__DISCOVERY_URL_validator])
     OIDC__SCOPES                     = StringField('OIDC Scopes (space separated)', validators=[OIDC__SCOPES_validator])
     OIDC__GROUP_ADMIN                = StringField('OIDC Admin Group', validators=[OIDC__GROUP_ADMIN_validator])
+    OIDC__LOGO_URL                   = StringField('OIDC Logo URL', validators=[OIDC__LOGO_URL_validator])
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 

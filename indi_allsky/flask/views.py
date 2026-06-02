@@ -2918,6 +2918,7 @@ class ConfigView(FormView):
             'OIDC__DISCOVERY_URL'       : self.indi_allsky_config.get('OIDC', {}).get('DISCOVERY_URL', ''),
             'OIDC__SCOPES'              : self.indi_allsky_config.get('OIDC', {}).get('SCOPES', 'openid email profile'),
             'OIDC__GROUP_ADMIN'         : self.indi_allsky_config.get('OIDC', {}).get('GROUP_ADMIN', 'allsky_admins'),
+            'OIDC__LOGO_URL'            : self.indi_allsky_config.get('OIDC', {}).get('LOGO_URL', ''),
             'RELOAD_ON_SAVE'                 : False,
             'CONFIG_NOTE'                    : '',
             'ENCRYPT_PASSWORDS'              : self.indi_allsky_config.get('ENCRYPT_PASSWORDS', False),  # do not adjust
@@ -3958,6 +3959,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['OIDC']['DISCOVERY_URL']               = str(request.json['OIDC__DISCOVERY_URL'])
         self.indi_allsky_config['OIDC']['SCOPES']                      = str(request.json['OIDC__SCOPES'])
         self.indi_allsky_config['OIDC']['GROUP_ADMIN']                 = str(request.json['OIDC__GROUP_ADMIN'])
+        self.indi_allsky_config['OIDC']['LOGO_URL']                    = str(request.json['OIDC__LOGO_URL'])
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
         self.indi_allsky_config['INDI_CONFIG_DAY']                      = json.loads(str(request.json['INDI_CONFIG_DAY']))

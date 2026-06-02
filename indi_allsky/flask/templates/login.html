@@ -58,7 +58,12 @@ html, body {
         <div class="form-group mt-3">
             <div class="text-center">
                 <hr class="text-white mx-5">
-                <a href="{{ url_for('auth_indi_allsky.oidc_login_view', next=request.args.get('next', '')) }}" class="btn btn-info text-dark">Login with OIDC</a>
+                <a href="{{ url_for('auth_indi_allsky.oidc_login_view', next=request.args.get('next', '')) }}" class="btn btn-info text-dark">
+                    {% if oidc_logo_url %}
+                    <img src="{{ oidc_logo_url }}" height="24" class="me-2" alt="OIDC Logo">
+                    {% endif %}
+                    Login with OIDC
+                </a>
             </div>
         </div>
         {% endif %}
