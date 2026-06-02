@@ -3455,12 +3455,19 @@ def OIDC__DISCOVERY_URL_validator(form, field):
             r = urlparse(field.data)
             if not r.scheme or not r.netloc:
                 raise ValidationError('Invalid URL')
+            if not field.data.startswith('https://'):
+                raise ValidationError('Discovery URL must use HTTPS')
+            if not r.path.endswith('.well-known/openid-configuration'):
+                raise ValidationError('Discovery URL must end with .well-known/openid-configuration')
         except Exception:
             raise ValidationError('Invalid URL')
 
 def OIDC__SCOPES_validator(form, field):
-    if form.OIDC__ENABLE.data and not field.data:
-        raise ValidationError('Scopes are required when OIDC is enabled')
+    if form.OIDC__ENABLE.data:
+        if not field.data:
+            raise ValidationError('Scopes are required when OIDC is enabled')
+        if 'openid' not in field.data.lower().split():
+            raise ValidationError('The "openid" scope is required for OIDC')
 
 def OIDC__GROUP_ADMIN_validator(form, field):
     if form.OIDC__ENABLE.data and not field.data:
@@ -3472,6 +3479,10 @@ def OIDC__LOGO_URL_validator(form, field):
             r = urlparse(field.data)
             if not r.scheme or not r.netloc:
                 raise ValidationError('Invalid URL')
+            
+            valid_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp')
+            if not any(r.path.lower().endswith(ext) for ext in valid_extensions):
+                raise ValidationError('Logo URL must point to an image (png, jpg, jpeg, gif, svg, webp)')
         except Exception:
             raise ValidationError('Invalid URL')
 
@@ -5078,12 +5089,12 @@ class IndiAllskyConfigForm(FlaskForm):
     SATELLITE_TRACK__SAT_LABEL_TEMPLATE = StringField('Satellite Label Template', validators=[DataRequired(), SATELLITE_TRACK__SAT_LABEL_TEMPLATE_validator])
     SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX = TextAreaField('Image Template Prefix', validators=[DataRequired(), SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX_validator])
     OIDC__ENABLE                     = BooleanField('Enable OIDC Authentication')
-    OIDC__CLIENT_ID                  = StringField('OIDC Client ID', validators=[OIDC__CLIENT_ID_validator])
-    OIDC__CLIENT_SECRET              = PasswordField('OIDC Client Secret', widget=PasswordInput(hide_value=False), validators=[OIDC__CLIENT_SECRET_validator], render_kw={' autocomplete' : 'new-password'})
-    OIDC__DISCOVERY_URL              = StringField('OIDC Discovery URL', validators=[OIDC__DISCOVERY_URL_validator])
-    OIDC__SCOPES                     = StringField('OIDC Scopes (space separated)', validators=[OIDC__SCOPES_validator])
-    OIDC__GROUP_ADMIN                = StringField('OIDC Admin Group', validators=[OIDC__GROUP_ADMIN_validator])
-    OIDC__LOGO_URL                   = StringField('OIDC Logo URL', validators=[OIDC__LOGO_URL_validator])
+    OIDC__CLIENT_ID                  = StringField('OIDC Client ID', validators=[OIDC__CLIENT_ID_validator], filters=[lambda x: x.strip() if x else x])
+    OIDC__CLIENT_SECRET              = PasswordField('OIDC Client Secret', widget=PasswordInput(hide_value=False), validators=[OIDC__CLIENT_SECRET_validator], render_kw={' autocomplete' : 'new-password'}, filters=[lambda x: x.strip() if x else x])
+    OIDC__DISCOVERY_URL              = StringField('OIDC Discovery URL', validators=[OIDC__DISCOVERY_URL_validator], filters=[lambda x: x.strip() if x else x])
+    OIDC__SCOPES                     = StringField('OIDC Scopes (space separated)', validators=[OIDC__SCOPES_validator], filters=[lambda x: x.strip() if x else x])
+    OIDC__GROUP_ADMIN                = StringField('OIDC Admin Group', validators=[OIDC__GROUP_ADMIN_validator], filters=[lambda x: x.strip() if x else x])
+    OIDC__LOGO_URL                   = StringField('OIDC Logo URL', validators=[OIDC__LOGO_URL_validator], filters=[lambda x: x.strip() if x else x])
     OIDC__AUTO_LOGIN                 = BooleanField('OIDC Auto Login')
     OIDC__PKCE                       = BooleanField('OIDC PKCE')
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])

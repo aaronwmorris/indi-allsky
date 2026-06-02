@@ -142,9 +142,9 @@ def create_app():
 
                     oauth.register(
                         name='oidc',
-                        client_id=oidc_data.get('CLIENT_ID', ''),
-                        client_secret=client_secret,
-                        server_metadata_url=oidc_data.get('DISCOVERY_URL', ''),
+                        client_id=oidc_data.get('CLIENT_ID', '').strip(),
+                        client_secret=client_secret.strip() if client_secret else None,
+                        server_metadata_url=oidc_data.get('DISCOVERY_URL', '').strip(),
                         client_kwargs=client_kwargs,
                     )
 
