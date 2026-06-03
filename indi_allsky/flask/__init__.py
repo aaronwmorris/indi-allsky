@@ -136,7 +136,7 @@ def create_app():
                             f_key = Fernet(app.config['PASSWORD_KEY'].encode())
                             client_secret = f_key.decrypt(encrypted_secret.encode()).decode()
 
-                    client_kwargs = {'scope': oidc_data.get('SCOPES', 'openid email profile')}
+                    client_kwargs = {'scope': oidc_data.get('SCOPES', 'openid email profile offline_access')}
                     if oidc_data.get('PKCE', True):
                         client_kwargs['code_challenge_method'] = 'S256'
 
@@ -171,7 +171,7 @@ def create_app():
             return
 
         # Check session cache first to avoid DB hits
-        if current_user.is_authenticated and 'oidc_expires_at' in session:
+        if current_user.is_authenticated and session.get('oidc_expires_at'):
             if time.time() + 60 < session['oidc_expires_at']:
                 return
 
@@ -182,10 +182,20 @@ def create_app():
             if expires_at and expires_at < (time.time() + 60):
                 if 'refresh_token' in token and hasattr(oauth, 'oidc'):
                     try:
-                        # Attempt refresh
-                        new_token = oauth.oidc.refresh_token(
-                            refresh_token=token['refresh_token']
-                        )
+                        # Attempt refresh using the most compatible method
+                        if hasattr(oauth.oidc, 'refresh_token'):
+                            # Authlib 1.0+
+                            new_token = oauth.oidc.refresh_token(
+                                refresh_token=token['refresh_token']
+                            )
+                        else:
+                            # Fallback for older Authlib or when method is missing
+                            # We can use the internal session or fetch_access_token
+                            new_token = oauth.oidc.fetch_access_token(
+                                grant_type='refresh_token',
+                                refresh_token=token['refresh_token']
+                            )
+                        
                         # Merge new token data into existing token to preserve id_token
                         # as many IdPs do not return a new id_token on refresh
                         token.update(new_token)

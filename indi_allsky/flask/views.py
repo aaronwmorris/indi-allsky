@@ -2916,7 +2916,7 @@ class ConfigView(FormView):
             'OIDC__CLIENT_ID'           : self.indi_allsky_config.get('OIDC', {}).get('CLIENT_ID', ''),
             'OIDC__CLIENT_SECRET'       : self.indi_allsky_config.get('OIDC', {}).get('CLIENT_SECRET', ''),
             'OIDC__DISCOVERY_URL'       : self.indi_allsky_config.get('OIDC', {}).get('DISCOVERY_URL', ''),
-            'OIDC__SCOPES'              : self.indi_allsky_config.get('OIDC', {}).get('SCOPES', 'openid email profile'),
+            'OIDC__SCOPES'              : self.indi_allsky_config.get('OIDC', {}).get('SCOPES', 'openid email profile offline_access'),
             'OIDC__GROUP_ADMIN'         : self.indi_allsky_config.get('OIDC', {}).get('GROUP_ADMIN', 'allsky_admins'),
             'OIDC__LOGO_URL'            : self.indi_allsky_config.get('OIDC', {}).get('LOGO_URL', ''),
             'OIDC__AUTO_LOGIN'          : self.indi_allsky_config.get('OIDC', {}).get('AUTO_LOGIN', False),

@@ -886,7 +886,7 @@ class IndiAllSkyConfigBase(object):
             "CLIENT_ID"              : "",
             "CLIENT_SECRET"          : "",
             "DISCOVERY_URL"          : "",
-            "SCOPES"                 : "openid email profile",
+            "SCOPES"                 : "openid email profile offline_access",
             "GROUP_ADMIN"            : "allsky_admins",
             "LOGO_URL"               : "",
             "AUTO_LOGIN"             : False,
