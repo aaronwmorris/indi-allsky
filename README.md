@@ -4,7 +4,6 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 ![](./content/20210930_224951.jpg)
 *Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
 
-
 ## New Features
 * Real-Time Keogram
     * A keogram is generated in realtime with every image that is taken
@@ -736,6 +735,15 @@ Please let me know if you want to make an addition or correction.
 * Alcor System
     * https://www.alcor-system.com/new/AllSky/Alphea_camera.html
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=aaronwmorris%2Findi-allsky&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=aaronwmorris/indi-allsky&type=date&theme=dark&legend=bottom-right" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=aaronwmorris/indi-allsky&type=date&legend=bottom-right" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=aaronwmorris/indi-allsky&type=date&legend=bottom-right" />
+ </picture>
+</a>
 
 ## Acknowledgements
 
