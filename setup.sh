@@ -2702,7 +2702,13 @@ if [[ "$WEBSERVER" == "caddy" && "$ASTROBERRY3" == "true" ]]; then
             if ! grep "indi-allsky" /etc/caddy/Caddyfile >/dev/null 2>&1; then
                 sudo cp -f /etc/caddy/Caddyfile /etc/caddy/Caddyfile.pre_indi-allsky
 
-                # insert include
+                ### insert include
+                # current
+                sudo sed -i \
+                  '/http:\/\/,\ https:\/\/\ {/a\ \ \ \ \ \ \ \ import /etc/caddy/indi-allsky_https.inc\n' \
+                  /etc/caddy/Caddyfile
+
+                # legacy
                 sudo sed -i \
                   '/https:\/\/astroberry.local\ {/a\ \ \ \ \ \ \ \ import /etc/caddy/indi-allsky_https.inc\n' \
                   /etc/caddy/Caddyfile
