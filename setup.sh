@@ -2397,7 +2397,7 @@ if [ -n "${WHIPTAIL_BIN:-}" ]; then
         OIDC_SCOPES=$("$WHIPTAIL_BIN" --title "OIDC Scopes" --inputbox "Enter OIDC Scopes (space separated)" 10 60 "$OIDC_SCOPES" 3>&1 1>&2 2>&3)
 
         if [[ "$OIDC_PKCE" == "true" ]]; then
-            PKCE_DEFAULT="--defaultyes"
+            PKCE_DEFAULT=""
         else
             PKCE_DEFAULT="--defaultno"
         fi
