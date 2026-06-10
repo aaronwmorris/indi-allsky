@@ -3439,40 +3439,6 @@ def SATELLITE_TRACK__LABEL_LIMIT_validator(form, field):
     if field.data > 20:
         raise ValidationError('Limit must be 20 or less')
 
-def OIDC__CLIENT_ID_validator(form, field):
-    if form.OIDC__ENABLE.data and not field.data:
-        raise ValidationError('Client ID is required when OIDC is enabled')
-
-def OIDC__CLIENT_SECRET_validator(form, field):
-    if form.OIDC__ENABLE.data and not field.data:
-        raise ValidationError('Client Secret is required when OIDC is enabled')
-
-def OIDC__DISCOVERY_URL_validator(form, field):
-    if form.OIDC__ENABLE.data:
-        if not field.data:
-            raise ValidationError('Discovery URL is required when OIDC is enabled')
-        try:
-            r = urlparse(field.data)
-            if not r.scheme or not r.netloc:
-                raise ValidationError('Invalid URL')
-            if not field.data.startswith('https://'):
-                raise ValidationError('Discovery URL must use HTTPS')
-            if not r.path.endswith('.well-known/openid-configuration'):
-                raise ValidationError('Discovery URL must end with .well-known/openid-configuration')
-        except Exception:
-            raise ValidationError('Invalid URL')
-
-def OIDC__SCOPES_validator(form, field):
-    if form.OIDC__ENABLE.data:
-        if not field.data:
-            raise ValidationError('Scopes are required when OIDC is enabled')
-        if 'openid' not in field.data.lower().split():
-            raise ValidationError('The "openid" scope is required for OIDC')
-
-def OIDC__GROUP_ADMIN_validator(form, field):
-    if form.OIDC__ENABLE.data and not field.data:
-        raise ValidationError('Admin Group is required when OIDC is enabled')
-
 def OIDC__LOGO_URL_validator(form, field):
     if field.data:
         try:
