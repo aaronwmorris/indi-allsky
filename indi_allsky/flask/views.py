@@ -2913,14 +2913,8 @@ class ConfigView(FormView):
             'SATELLITE_TRACK__SAT_LABEL_TEMPLATE'  : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('SAT_LABEL_TEMPLATE', '{label:s} {alt:0.1f}\u00b0 {dir:s}'),
             'SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX' : self.indi_allsky_config.get('SATELLITE_TRACK', {}).get('IMAGE_LABEL_TEMPLATE_PREFIX', '# xy:-15,200 (Right)\n# anchor:ra (Right Justified)\n# color:200,200,200\nSatellites'),
             'OIDC__ENABLE'              : self.indi_allsky_config.get('OIDC', {}).get('ENABLE', False),
-            'OIDC__CLIENT_ID'           : self.indi_allsky_config.get('OIDC', {}).get('CLIENT_ID', ''),
-            'OIDC__CLIENT_SECRET'       : self.indi_allsky_config.get('OIDC', {}).get('CLIENT_SECRET', ''),
-            'OIDC__DISCOVERY_URL'       : self.indi_allsky_config.get('OIDC', {}).get('DISCOVERY_URL', ''),
-            'OIDC__SCOPES'              : self.indi_allsky_config.get('OIDC', {}).get('SCOPES', 'openid email profile offline_access'),
-            'OIDC__GROUP_ADMIN'         : self.indi_allsky_config.get('OIDC', {}).get('GROUP_ADMIN', 'allsky_admins'),
             'OIDC__LOGO_URL'            : self.indi_allsky_config.get('OIDC', {}).get('LOGO_URL', ''),
             'OIDC__AUTO_LOGIN'          : self.indi_allsky_config.get('OIDC', {}).get('AUTO_LOGIN', False),
-            'OIDC__PKCE'                : self.indi_allsky_config.get('OIDC', {}).get('PKCE', True),
             'RELOAD_ON_SAVE'                 : False,
             'LOCAL_AUTH_ENABLE'              : self.indi_allsky_config.get('LOCAL_AUTH_ENABLE', True),
             'CONFIG_NOTE'                    : '',
@@ -3957,14 +3951,8 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['SATELLITE_TRACK']['SAT_LABEL_TEMPLATE'] = str(request.json['SATELLITE_TRACK__SAT_LABEL_TEMPLATE'])
         self.indi_allsky_config['SATELLITE_TRACK']['IMAGE_LABEL_TEMPLATE_PREFIX']  = str(request.json['SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX'])
         self.indi_allsky_config['OIDC']['ENABLE']                      = bool(request.json['OIDC__ENABLE'])
-        self.indi_allsky_config['OIDC']['CLIENT_ID']                   = str(request.json['OIDC__CLIENT_ID'])
-        self.indi_allsky_config['OIDC']['CLIENT_SECRET']               = str(request.json['OIDC__CLIENT_SECRET'])
-        self.indi_allsky_config['OIDC']['DISCOVERY_URL']               = str(request.json['OIDC__DISCOVERY_URL'])
-        self.indi_allsky_config['OIDC']['SCOPES']                      = str(request.json['OIDC__SCOPES'])
-        self.indi_allsky_config['OIDC']['GROUP_ADMIN']                 = str(request.json['OIDC__GROUP_ADMIN'])
         self.indi_allsky_config['OIDC']['LOGO_URL']                    = str(request.json['OIDC__LOGO_URL'])
         self.indi_allsky_config['OIDC']['AUTO_LOGIN']                  = bool(request.json['OIDC__AUTO_LOGIN'])
-        self.indi_allsky_config['OIDC']['PKCE']                        = bool(request.json['OIDC__PKCE'])
         self.indi_allsky_config['FILETRANSFER']['LIBCURL_OPTIONS']      = json.loads(str(request.json['FILETRANSFER__LIBCURL_OPTIONS']))
         self.indi_allsky_config['INDI_CONFIG_DEFAULTS']                 = json.loads(str(request.json['INDI_CONFIG_DEFAULTS']))
         self.indi_allsky_config['INDI_CONFIG_DAY']                      = json.loads(str(request.json['INDI_CONFIG_DAY']))

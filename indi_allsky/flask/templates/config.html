@@ -4,7 +4,7 @@
 
 {% block head %}
 <style>
-#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab, #nav-sat_track-tab, #nav-timelapse-tab, #nav-overlays-tab, #nav-oidc-tab {
+#nav-camera-tab, #nav-image-tab, #nav-processing-tab, #nav-location-tab, #nav-admin-tab, #nav-filetransfer-tab, #nav-s3-tab, #nav-syncapi-tab, #nav-youtube-tab, #nav-mqtt-tab, #nav-devices-tab, #nav-sensors-tab, #nav-adsb-tab, #nav-sat_track-tab, #nav-timelapse-tab, #nav-overlays-tab, #nav-auth-tab {
     width: 150px;
     margin-top: 10px;
     margin-right: 5px;
@@ -45,7 +45,7 @@ var camera_id = {{ camera_id }};
     <button class="nav-link link-danger bg-dark" id="nav-devices-tab" data-bs-toggle="tab" data-bs-target="#nav-devices" type="button" role="tab" aria-controls="nav-devices" aria-selected="false">Devices</button>
     <button class="nav-link link-secondary bg-dark" id="nav-adsb-tab" data-bs-toggle="tab" data-bs-target="#nav-adsb" type="button" role="tab" aria-controls="nav-adsb" aria-selected="false">ADS-B</button>
     <button class="nav-link link-light bg-dark" id="nav-sat_track-tab" data-bs-toggle="tab" data-bs-target="#nav-sat_track" type="button" role="tab" aria-controls="nav-sat_track" aria-selected="false" style="font-size:14px">Satellite Tracking</button>
-    <button class="nav-link link-warning bg-dark" id="nav-oidc-tab" data-bs-toggle="tab" data-bs-target="#nav-oidc" type="button" role="tab" aria-controls="nav-oidc" aria-selected="false" style="font-size:14px">OIDC</button>
+    <button class="nav-link link-warning bg-dark" id="nav-auth-tab" data-bs-toggle="tab" data-bs-target="#nav-auth" type="button" role="tab" aria-controls="nav-auth" aria-selected="false" style="font-size:14px">Authentication</button>
 </div>
 </nav>
 
@@ -9762,134 +9762,8 @@ var camera_id = {{ camera_id }};
 
 </div><!-- end sat_track tab -->
 
-<div class="tab-pane fade" id="nav-oidc" role="tabpanel" aria-labelledby="nav-oidc-tab">
-    <div><span class="badge rounded-pill bg-info text-dark">Note</span> OIDC is an advanced feature and requires careful configuration</div>
-    <div><span class="badge rounded-pill bg-info text-dark">Note</span> A full server restart is required after enabling OIDC</div>
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.OIDC__ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.OIDC__ENABLE(class='form-check-input') }}
-                <div id="OIDC__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/OIDC" class="text-decoration-none link-info" target="_blank">OIDC Wiki</a></div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.OIDC__CLIENT_ID.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.OIDC__CLIENT_ID(class='form-control bg-secondary') }}
-            <div id="OIDC__CLIENT_ID-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Client ID of IdP</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.OIDC__CLIENT_SECRET.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.OIDC__CLIENT_SECRET(class='form-control bg-secondary') }}
-            <div id="OIDC__CLIENT_SECRET-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Client Secret of IdP</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.OIDC__DISCOVERY_URL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.OIDC__DISCOVERY_URL(class='form-control bg-secondary') }}
-            <div id="OIDC__DISCOVERY_URL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Discovery URL of IdP</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.OIDC__SCOPES.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.OIDC__SCOPES(class='form-control bg-secondary') }}
-            <div id="OIDC__SCOPES-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Scopes for IdP</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.OIDC__GROUP_ADMIN.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.OIDC__GROUP_ADMIN(class='form-control bg-secondary') }}
-            <div id="OIDC__GROUP_ADMIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">Admin group for IdP</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.OIDC__LOGO_URL.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.OIDC__LOGO_URL(class='form-control bg-secondary') }}
-            <div id="OIDC__LOGO_URL-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">URL of image to display next to login button</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.OIDC__AUTO_LOGIN.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.OIDC__AUTO_LOGIN(class='form-check-input') }}
-                <div id="OIDC__AUTO_LOGIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Automatically redirect to OIDC login when not authenticated</div>
-    </div>
-
-    <hr>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.OIDC__PKCE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.OIDC__PKCE(class='form-check-input') }}
-                <div id="OIDC__PKCE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">Use PKCE (S256). Recommended for modern Identity Providers to prevent authorization code injection.</div>
-    </div>
-
+<div class="tab-pane fade" id="nav-auth" role="tabpanel" aria-labelledby="nav-auth-tab">
+    <div><span class="badge rounded-pill bg-info text-dark">Note</span> Infrastructure settings (Client ID, Secret, etc) are managed via /etc/indi-allsky/flask.json</div>
     <hr>
 
     <div class="form-group row">
@@ -9908,8 +9782,52 @@ var camera_id = {{ camera_id }};
         </div>
     </div>
 
+    <hr>
 
-</div><!-- end OIDC tab -->
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.OIDC__ENABLE.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.OIDC__ENABLE(class='form-check-input') }}
+                <div id="OIDC__ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div>Enable OIDC (OpenID Connect) authentication. <a href="https://github.com/aaronwmorris/indi-allsky/wiki/OIDC" class="text-decoration-none link-info" target="_blank">OIDC Wiki</a></div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.OIDC__LOGO_URL.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.OIDC__LOGO_URL(class='form-control bg-secondary') }}
+            <div id="OIDC__LOGO_URL-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">URL of image to display next to login button</div>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.OIDC__AUTO_LOGIN.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.OIDC__AUTO_LOGIN(class='form-check-input') }}
+                <div id="OIDC__AUTO_LOGIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Automatically redirect to OIDC login when not authenticated</div>
+    </div>
+
+</div><!-- end Auth tab -->
 
 </div>
 
@@ -10521,11 +10439,6 @@ const field_names = [
     'SATELLITE_TRACK__LABEL_LIMIT',
     'SATELLITE_TRACK__SAT_LABEL_TEMPLATE',
     'SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX',
-    'OIDC__CLIENT_ID',
-    'OIDC__CLIENT_SECRET',
-    'OIDC__DISCOVERY_URL',
-    'OIDC__SCOPES',
-    'OIDC__GROUP_ADMIN',
     'OIDC__LOGO_URL',
     'INDI_CONFIG_DEFAULTS',
     'INDI_CONFIG_DAY',
@@ -10536,7 +10449,6 @@ const checkbox_field_names = [
     'ENCRYPT_PASSWORDS',
     'LOCAL_AUTH_ENABLE',
     'OIDC__AUTO_LOGIN',
-    'OIDC__PKCE',
     'CCD_CONFIG__AUTO_GAIN_ENABLE',
     'CAMERA_SQM__ENABLE',
     'CAMERA_SQM__ENABLE_DAY',
