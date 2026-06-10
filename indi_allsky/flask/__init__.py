@@ -120,38 +120,18 @@ def create_app():
     oauth.init_app(app)
 
     with app.app_context():
-        from .models import IndiAllSkyDbConfigTable
-        from sqlalchemy.exc import OperationalError, ProgrammingError
+        if app.config.get('OIDC_CLIENT_ID'):
+            client_kwargs = {'scope': app.config.get('OIDC_SCOPES', 'openid email profile offline_access')}
+            if app.config.get('OIDC_PKCE', True):
+                client_kwargs['code_challenge_method'] = 'S256'
 
-        try:
-            config_record = IndiAllSkyDbConfigTable.query.order_by(IndiAllSkyDbConfigTable.createDate.desc()).first()
-            if config_record and config_record.data:
-                oidc_data = config_record.data.get('OIDC', {})
-
-                if oidc_data.get('ENABLE', False):
-                    client_secret = oidc_data.get('CLIENT_SECRET')
-                    if not client_secret:
-                        encrypted_secret = oidc_data.get('CLIENT_SECRET_E')
-                        if encrypted_secret:
-                            f_key = Fernet(app.config['PASSWORD_KEY'].encode())
-                            client_secret = f_key.decrypt(encrypted_secret.encode()).decode()
-
-                    client_kwargs = {'scope': oidc_data.get('SCOPES', 'openid email profile offline_access')}
-                    if oidc_data.get('PKCE', True):
-                        client_kwargs['code_challenge_method'] = 'S256'
-
-                    oauth.register(
-                        name='oidc',
-                        client_id=oidc_data.get('CLIENT_ID', '').strip(),
-                        client_secret=client_secret.strip() if client_secret else None,
-                        server_metadata_url=oidc_data.get('DISCOVERY_URL', '').strip(),
-                        client_kwargs=client_kwargs,
-                    )
-
-        except (OperationalError, ProgrammingError):
-            # This happens during first-run or migrations when tables don't exist yet
-            app.logger.warning("Database not initialized; skipping OIDC registration.")    
-            
+            oauth.register(
+                name='oidc',
+                client_id=app.config.get('OIDC_CLIENT_ID').strip(),
+                client_secret=app.config.get('OIDC_CLIENT_SECRET', '').strip() if app.config.get('OIDC_CLIENT_SECRET') else None,
+                server_metadata_url=app.config.get('OIDC_DISCOVERY_URL', '').strip(),
+                client_kwargs=client_kwargs,
+            )
     from .models import IndiAllSkyDbUserTable
 
     @login_manager.user_loader

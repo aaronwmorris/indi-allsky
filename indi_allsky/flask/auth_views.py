@@ -235,7 +235,7 @@ class OIDCCallbackView(BaseView):
             db.session.add(user)
             app.logger.info('Created new OIDC user: %s', username)
 
-        admin_group = self.indi_allsky_config.get('OIDC', {}).get('GROUP_ADMIN')
+        admin_group = app.config.get('OIDC_GROUP_ADMIN')
         if admin_group:
             user_groups = user_info.get('groups', [])
             if isinstance(user_groups, list):
