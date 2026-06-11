@@ -1781,6 +1781,21 @@ else
 fi
 
 
+echo "Testing system locales"
+if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+    if ! python3 -c "import locale; locale.setlocale(locale.LC_ALL, '');" >/dev/null 2>&1; then
+        "$WHIPTAIL_BIN" \
+            --title "System locales" \
+            --msgbox "*** Configure system locales ***\n\nThe system locales have not yet been configured.  It will be necessary to configure the appropriate localization settings for proper data processing\n\nCommon selections: en_US.UTF8 or en_GB.UTF8\n\nNote: Multiple selections are allowed" 0 0
+
+        sudo dpkg-reconfigure locales
+    fi
+else
+    echo "Unable to configure locales for distribution"
+    exit 1
+fi
+
+
 if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
     #sudo systemctl start "user@${UID}.service"
     #export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${UID}/bus"
@@ -2687,7 +2702,13 @@ if [[ "$WEBSERVER" == "caddy" && "$ASTROBERRY3" == "true" ]]; then
             if ! grep "indi-allsky" /etc/caddy/Caddyfile >/dev/null 2>&1; then
                 sudo cp -f /etc/caddy/Caddyfile /etc/caddy/Caddyfile.pre_indi-allsky
 
-                # insert include
+                ### insert include
+                # current
+                sudo sed -i \
+                  '/http:\/\/,\ https:\/\/\ {/a\ \ \ \ \ \ \ \ import /etc/caddy/indi-allsky_https.inc\n' \
+                  /etc/caddy/Caddyfile
+
+                # legacy
                 sudo sed -i \
                   '/https:\/\/astroberry.local\ {/a\ \ \ \ \ \ \ \ import /etc/caddy/indi-allsky_https.inc\n' \
                   /etc/caddy/Caddyfile
