@@ -52,6 +52,7 @@ Flask-SQLAlchemy
 Flask-Migrate
 Flask-WTF
 Flask-Login
+Authlib
 werkzeug
 is-safe-url
 certifi

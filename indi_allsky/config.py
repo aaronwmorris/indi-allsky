@@ -46,6 +46,7 @@ class IndiAllSkyConfigBase(object):
         "WEBSITE" : {
             "TITLE" : "indi-allsky",
         },
+        "LOCAL_AUTH_ENABLE" : True,
         "LENS_NAME" : "AllSky Lens",
         "LENS_FOCAL_LENGTH" : 2.5,
         "LENS_FOCAL_RATIO"  : 2.0,
@@ -880,6 +881,11 @@ class IndiAllSkyConfigBase(object):
             "SAT_LABEL_TEMPLATE"     : "{title:s} {alt:0.1f}\u00b0 {dir:s}",
             "IMAGE_LABEL_TEMPLATE_PREFIX" : "# xy:-15,200 (Right)\n# anchor:ra (Right Justified)\n# color:200,200,200\nSatellites",
         },
+        "OIDC" : {
+            "ENABLE"                 : False,
+            "LOGO_URL"               : "",
+            "AUTO_LOGIN"             : False,
+        },
     })
 
 
@@ -1115,6 +1121,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             'DEVICE',
             'LIBCAMERA',
             'ADSB',
+            'OIDC',
             'IMAGE_OVERLAY',
         )
 
@@ -1395,6 +1402,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
             'DEVICE',
             'LIBCAMERA',
             'ADSB',
+            'OIDC',
             'IMAGE_OVERLAY',
         )
 
