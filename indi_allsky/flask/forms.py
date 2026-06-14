@@ -3542,7 +3542,7 @@ class IndiAllskyConfigForm(FlaskForm):
     }
 
     CCD_CONFIG__EXPOSURE_CLASSNAME_choices = (
-        ('', 'Basic'),
+        ('', 'Basic - Fixed Gain'),
         ('exposure_legacy_auto_gain', 'Legacy Auto-Gain Exposure Priority'),
     )
 

@@ -342,11 +342,11 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-2">
             {{ form_config.CCD_CONFIG__EXPOSURE_CLASSNAME.label(class='col-form-label') }}
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-4">
             {{ form_config.CCD_CONFIG__EXPOSURE_CLASSNAME(class='form-select bg-secondary') }}
             <div id="CCD_CONFIG__EXPOSURE_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
-        <div class="col-sm-8">
+        <div class="col-sm-6">
             <div>Exposure Priority Gain Mode dynamically adjusts the gain to maximize exposure times</div>
             <div><span class="badge rounded-pill bg-info text-dark">Note</span> Maximum gain will be night gain, minimum will be daytime gain (Moon mode is ignored)</div>
         </div>
