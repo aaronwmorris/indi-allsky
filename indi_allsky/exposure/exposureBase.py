@@ -144,7 +144,7 @@ class IndiAllSky_Exposure_Base(object):
             next_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
 
 
-        next_exposure, next_gain, exposure_delta, gain_delta = self.recalculate(current_exposure, current_gain, next_exposure)
+        next_exposure, next_gain, exposure_delta, gain_delta = self.adjust_exposure_gain(current_exposure, current_gain, next_exposure)
 
 
         # Do not exceed the gain limits
@@ -197,6 +197,6 @@ class IndiAllSky_Exposure_Base(object):
 
 
 
-    def recalculate(self, *args):
+    def adjust_exposure_gain(self, *args):
         raise Exception('Not implemented')
 

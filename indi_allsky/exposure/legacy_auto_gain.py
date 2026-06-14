@@ -39,7 +39,7 @@ class IndiAllSky_Exposure_Legacy_Auto_Gain(IndiAllSky_Exposure_Base):
         return self._gain_step
 
 
-    def recalculate(self, current_exposure, current_gain, next_exposure):
+    def adjust_exposure_gain(self, current_exposure, current_gain, next_exposure):
         if isinstance(self.gain_step, type(None)):
             self.post_init()
 
