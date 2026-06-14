@@ -1,4 +1,4 @@
-from .legacy_exposure_priority import IndiAllSky_AutoGain_Legacy_Exposure_Priority as legacy_exposure_priority
+from .legacy_exposure_priority import IndiAllSky_Exposure_Legacy_Exposure_Priority as legacy_exposure_priority
 
 
 __all__ = (

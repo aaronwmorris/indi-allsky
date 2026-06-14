@@ -1,14 +1,14 @@
 from .. import constants
 import logging
 
-from .autogainBase import IndiAllSky_AutoGain_Base
+from .exposureBase import IndiAllSky_Exposure_Base
 
 logger = logging.getLogger('indi_allsky')
 
 
-class IndiAllSky_AutoGain_Legacy_Exposure_Priority(IndiAllSky_AutoGain_Base):
+class IndiAllSky_Exposure_Legacy_Exposure_Priority(IndiAllSky_Exposure_Base):
     def __init__(self, *args, **kwargs):
-        super(IndiAllSky_AutoGain_Legacy_Exposure_Priority, self).__init__(*args, **kwargs)
+        super(IndiAllSky_Exposure_Legacy_Exposure_Priority, self).__init__(*args, **kwargs)
 
 
         self._gain_step = None  # calculate on first image
