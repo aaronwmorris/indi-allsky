@@ -36,6 +36,8 @@ from .processing import ImageProcessor
 from .miscUpload import miscUpload
 from .adsb import AdsbAircraftHttpWorker
 
+from . import autogain as autogain_module
+
 from .flask import create_app
 from .flask import db
 from .flask.miscDb import miscDb
@@ -64,8 +66,6 @@ class ImageWorker(Process):
 
     sqm_history_minutes = 30
     stars_history_minutes = 30
-
-    auto_gain_exposure_cutoff_level_low = 80  # percent of max exposure
 
 
     def __init__(
@@ -133,19 +133,30 @@ class ImageWorker(Process):
             self.astro_av,
         )
 
+
+        autogain_class_str = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_CLASSNAME')
+        if autogain_class_str:
+            try:
+                autogain_class = getattr(autogain_module, autogain_class_str)
+                self.autogain = autogain_class(
+                    self.config,
+                    self.exposure_av,
+                    self.gain_av,
+                    self.night_av,
+                )
+            except AttributeError as e:
+                logger.error('Unable to initialize auto-gain class: %s', str(e))
+                self.autogain = None
+        else:
+            self.autogain = None
+
+
         self._miscDb = miscDb(self.config)
         self._miscUpload = miscUpload(
             self.config,
             self.upload_q,
             self.night_av,
         )
-
-
-        self._gain_step = None  # calculate on first image
-        self.auto_gain_step_list = None  # list of fixed gain values
-        self.auto_gain_exposure_cutoff_low = None
-        self.auto_gain_exposure_cutoff_mid = None
-        self.auto_gain_exposure_cutoff_high = None
 
 
         self.image_save_hook_process = None  # used for both pre- and post-hooks
@@ -178,11 +189,6 @@ class ImageWorker(Process):
     @libcamera_raw.setter
     def libcamera_raw(self, new_libcamera_raw):
         self._libcamera_raw = bool(new_libcamera_raw)
-
-
-    @property
-    def gain_step(self):
-        return self._gain_step
 
 
     def sighup_handler_worker(self, signum, frame):
@@ -340,38 +346,6 @@ class ImageWorker(Process):
         if sqm_exposure:
             self.process_sqm_exposure(filename_p, exposure, gain, binning, exp_date, exp_elapsed, camera, libcamera_black_level)
             return
-
-
-        if isinstance(self.gain_step, type(None)):
-            # the gain steps cannot be calculated until the gain_av variable is populated
-            gain_range = self.gain_av[constants.GAIN_MAX_NIGHT] - self.gain_av[constants.GAIN_MIN_NIGHT]
-            auto_gain_levels = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_LEVELS', 5)
-
-
-            self._gain_step = gain_range / (auto_gain_levels - 1)  # need divisions
-
-            self.auto_gain_step_list = [float(round((self.gain_step * x) + self.gain_av[constants.GAIN_MIN_NIGHT], 2)) for x in range(auto_gain_levels)]
-            self.auto_gain_step_list[-1] = float(round(self.gain_av[constants.GAIN_MAX_NIGHT], 2))  # replace last value, round is necessary
-
-
-            self.auto_gain_exposure_cutoff_high = self.exposure_av[constants.EXPOSURE_MAX] - 0.5
-
-            self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] * (self.auto_gain_exposure_cutoff_level_low / 100)
-            if self.exposure_av[constants.EXPOSURE_MAX] - self.auto_gain_exposure_cutoff_low > 10.0:
-                self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] - 10.0
-
-            self.auto_gain_exposure_cutoff_mid = self.auto_gain_exposure_cutoff_high - ((self.auto_gain_exposure_cutoff_high - self.auto_gain_exposure_cutoff_low) / 2)
-
-
-            if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
-                logger.info('Gain Steps: %d @ %0.2f', auto_gain_levels, self.gain_step)
-                logger.info('Gain Step list: %s', str(self.auto_gain_step_list))
-                logger.info(
-                    'Auto-Gain Exposure cutoff: Low: %0.2fs - Mid: %0.2fs - High: %0.2fs',
-                    self.auto_gain_exposure_cutoff_low,
-                    self.auto_gain_exposure_cutoff_mid,
-                    self.auto_gain_exposure_cutoff_high,
-                )
 
 
         processing_start = time.time()
@@ -2233,18 +2207,21 @@ class ImageWorker(Process):
             return
 
 
-        if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
+        if not self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_CLASSNAME'):
             # moonmode settings are ignored with auto-gain
 
             if self.night_av[constants.NIGHT_NIGHT]:
+                # night
                 exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
             else:
+                # day
                 exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
 
             gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
             gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
         else:
             if self.night_av[constants.NIGHT_NIGHT]:
+                # night
                 exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
 
                 if self.night_av[constants.NIGHT_MOONMODE]:
@@ -2255,6 +2232,7 @@ class ImageWorker(Process):
                     gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
 
             else:
+                # day
                 exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
 
                 gain_min = float(self.gain_av[constants.GAIN_MIN_DAY])
@@ -2277,70 +2255,8 @@ class ImageWorker(Process):
             next_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
 
 
-        if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
-            try:
-                auto_gain_idx = self.auto_gain_step_list.index(gain)
-            except ValueError:
-                # fallback to min if gain does not match
-                logger.error('Current gain not found in list, reset to minimum gain')
-                auto_gain_idx = 0
-
-
-            if next_exposure == exposure:
-                # no change
-                #logger.warning('Auto-Gain - no changes')
-                next_gain = gain
-                exposure_delta = 0.0
-                gain_delta = 0.0
-            elif next_exposure > exposure:
-                # exposure/gain needs to increase
-                if gain == self.auto_gain_step_list[-1]:
-                    # already at max gain, increase exposure
-                    next_gain = gain
-                    exposure_delta = next_exposure - exposure
-                    gain_delta = 0.0
-                    logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [max gain]', next_exposure, exposure_delta)
-                else:
-                    if exposure < self.auto_gain_exposure_cutoff_high:
-                        # maintain gain, increase exposure
-                        next_gain = gain
-                        next_exposure = min(next_exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
-                        exposure_delta = next_exposure - exposure
-                        gain_delta = 0.0
-                        logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
-                    else:
-                        # increase gain, maintain exposure
-                        next_gain = self.auto_gain_step_list[auto_gain_idx + 1]
-                        next_exposure = min(exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
-                        exposure_delta = 0.0
-                        gain_delta = next_gain - gain
-                        logger.info('Auto-Gain increasing gain to %0.2f (%+0.2f) [maintain exposure]', next_gain, gain_delta)
-
-            else:
-                # exposure/gain needs to decrease
-                if gain == self.auto_gain_step_list[0]:
-                    # already at minimum gain, decrease exposure
-                    next_gain = gain
-                    exposure_delta = next_exposure - exposure
-                    gain_delta = 0.0
-                    logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [minimum gain]', next_exposure, exposure_delta)
-                else:
-                    if exposure > self.auto_gain_exposure_cutoff_low:
-                        # maintain gain, decrease exposure
-                        next_gain = gain
-                        next_exposure = max(next_exposure, self.auto_gain_exposure_cutoff_low)
-                        exposure_delta = next_exposure - exposure
-                        gain_delta = 0.0
-                        logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
-                    else:
-                        # decrease gain, maintain exposure
-                        next_gain = self.auto_gain_step_list[auto_gain_idx - 1]
-                        #next_exposure = max(exposure, self.auto_gain_exposure_cutoff_low)
-                        next_exposure = max(exposure, self.auto_gain_exposure_cutoff_mid)
-                        exposure_delta = 0.0
-                        gain_delta = next_gain - gain
-                        logger.info('Auto-Gain decreasing gain to %0.2f (%+0.2f) [maintain exposure)', next_gain, gain_delta)
-
+        if not isinstance(self.autogain, type(None)):
+            next_exposure, next_gain, exposure_delta, gain_delta = self.autogain.recalculate(exposure, gain, next_exposure)
         else:
             # just set the gain to the max for the current mode
             next_gain = gain_max
