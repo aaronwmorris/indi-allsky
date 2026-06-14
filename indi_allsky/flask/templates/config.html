@@ -340,11 +340,11 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__AUTO_GAIN_CLASSNAME.label(class='col-form-label') }}
+            {{ form_config.CCD_CONFIG__EXPOSURE_CLASSNAME.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__AUTO_GAIN_CLASSNAME(class='form-select bg-secondary') }}
-            <div id="CCD_CONFIG__AUTO_GAIN_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            {{ form_config.CCD_CONFIG__EXPOSURE_CLASSNAME(class='form-select bg-secondary') }}
+            <div id="CCD_CONFIG__EXPOSURE_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
             <div>Exposure Priority Gain Mode dynamically adjusts the gain to maximize exposure times</div>
@@ -9829,7 +9829,7 @@ const field_names = [
     'CCD_CONFIG__MOONMODE__BINNING',
     'CCD_CONFIG__DAY__GAIN',
     'CCD_CONFIG__DAY__BINNING',
-    'CCD_CONFIG__AUTO_GAIN_CLASSNAME',
+    'CCD_CONFIG__EXPOSURE_CLASSNAME',
     'CCD_CONFIG__AUTO_GAIN_LEVELS',
     'CCD_EXPOSURE_MAX',
     'CCD_EXPOSURE_DEF',

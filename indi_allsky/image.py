@@ -36,7 +36,7 @@ from .processing import ImageProcessor
 from .miscUpload import miscUpload
 from .adsb import AdsbAircraftHttpWorker
 
-from . import autogain as autogain_module
+from . import exposure as exposure_module
 
 from .flask import create_app
 from .flask import db
@@ -134,11 +134,11 @@ class ImageWorker(Process):
         )
 
 
-        autogain_class_str = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_CLASSNAME')
-        if autogain_class_str:
+        exposure_class_str = self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME')
+        if exposure_class_str:
             try:
-                autogain_class = getattr(autogain_module, autogain_class_str)
-                self.autogain = autogain_class(
+                exposure_class = getattr(exposure_module, exposure_class_str)
+                self.exposure_o = exposure_class(
                     self.config,
                     self.exposure_av,
                     self.gain_av,
@@ -146,9 +146,9 @@ class ImageWorker(Process):
                 )
             except AttributeError as e:
                 logger.error('Unable to initialize auto-gain class: %s', str(e))
-                self.autogain = None
+                self.exposure_o = None
         else:
-            self.autogain = None
+            self.exposure_o = None
 
 
         self._miscDb = miscDb(self.config)
@@ -2195,7 +2195,7 @@ class ImageWorker(Process):
         return adu, adu_average
 
 
-    def recalculate_exposure(self, exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor):
+    def recalculate_exposure(self, current_exposure, current_gain, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor):
         # There might be a race condition here if there is a day/night change but self.target_adu_found == True
 
         # Until we reach a good starting point, do not calculate a moving average
@@ -2207,7 +2207,7 @@ class ImageWorker(Process):
             return
 
 
-        if not self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_CLASSNAME'):
+        if not self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME'):
             # moonmode settings are ignored with auto-gain
 
             if self.night_av[constants.NIGHT_NIGHT]:
@@ -2241,11 +2241,11 @@ class ImageWorker(Process):
 
         # Scale the exposure up and down based on targets
         if adu > target_adu_max:
-            next_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
+            next_exposure = current_exposure - ((current_exposure - (current_exposure * (target_adu / adu))) * exp_scale_factor)
         elif adu < target_adu_min:
-            next_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
+            next_exposure = current_exposure - ((current_exposure - (current_exposure * (target_adu / adu))) * exp_scale_factor)
         else:
-            next_exposure = exposure
+            next_exposure = current_exposure
 
 
         # Do not exceed the exposure limits
@@ -2255,12 +2255,12 @@ class ImageWorker(Process):
             next_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
 
 
-        if not isinstance(self.autogain, type(None)):
-            next_exposure, next_gain, exposure_delta, gain_delta = self.autogain.recalculate(exposure, gain, next_exposure)
+        if not isinstance(self.exposure_o, type(None)):
+            next_exposure, next_gain, exposure_delta, gain_delta = self.exposure_o.recalculate(current_exposure, current_gain, next_exposure)
         else:
             # just set the gain to the max for the current mode
             next_gain = gain_max
-            exposure_delta = next_exposure - exposure
+            exposure_delta = next_exposure - current_exposure
             gain_delta = 0.0
 
 

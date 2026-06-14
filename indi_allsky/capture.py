@@ -1419,7 +1419,7 @@ class CaptureWorker(Process):
                 ccd_exposure_default = 0.01  # this should give better results for many cameras
 
                 # gain
-                if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_CLASSNAME'):
+                if self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME'):
                     ccd_gain_default = gain_day
                 else:
                     if self.night_av[constants.NIGHT_NIGHT]:
@@ -1479,7 +1479,7 @@ class CaptureWorker(Process):
 
             self.gain_av[constants.GAIN_SQM] = float(gain_sqm)
 
-            if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_CLASSNAME'):
+            if self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME'):
                 self.gain_av[constants.GAIN_MIN_NIGHT] = float(gain_day)
                 self.gain_av[constants.GAIN_MIN_MOONMODE] = float(gain_day)
             else:
