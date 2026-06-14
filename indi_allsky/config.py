@@ -67,8 +67,8 @@ class IndiAllSkyConfigBase(object):
                 "GAIN"    : 0.0,
                 "BINNING" : 1,
             },
-            "AUTO_GAIN_ENABLE"  : False,
-            "AUTO_GAIN_LEVELS"  : 8,
+            "AUTO_GAIN_CLASSNAME" : "",
+            "AUTO_GAIN_LEVELS"    : 8,  # legacy setting
         },
         "INDI_CONFIG_DEFAULTS" : {
             "SWITCHES" : {},

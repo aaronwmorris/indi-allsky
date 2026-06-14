@@ -259,6 +259,11 @@ def SQM_MAGNITUDE_OFFSET_validator(form, field):
         raise ValidationError('Value must be 0 or more')
 
 
+def CCD_CONFIG__AUTO_GAIN_CLASSNAME_validator(form, field):
+    if field.data not in list(zip(*form.CCD_CONFIG__AUTO_GAIN_CLASSNAME_choices))[0]:
+        raise ValidationError('Invalid selection')
+
+
 def CCD_CONFIG__AUTO_GAIN_LEVELS_validator(form, field):
     if field.data not in list(zip(*form.CCD_CONFIG__AUTO_GAIN_LEVELS_choices))[0]:
         raise ValidationError('Invalid number of levels')
@@ -3536,6 +3541,9 @@ class IndiAllskyConfigForm(FlaskForm):
         ),
     }
 
+    CCD_CONFIG__AUTO_GAIN_CLASSNAME_choices = (
+        ('', 'Disabled'),
+    )
 
     CCD_CONFIG__AUTO_GAIN_LEVELS_choices = (
         ('12', '12'),
@@ -4340,7 +4348,7 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_CONFIG__MOONMODE__BINNING    = IntegerField('Moon Mode Bin Mode', validators=[DataRequired(), CCD_BINNING_validator])
     CCD_CONFIG__DAY__GAIN            = FloatField('Daytime Gain', validators=[CCD_GAIN_validator])
     CCD_CONFIG__DAY__BINNING         = IntegerField('Daytime Bin Mode', validators=[DataRequired(), CCD_BINNING_validator])
-    CCD_CONFIG__AUTO_GAIN_ENABLE     = BooleanField('Enable Exposure Priority Gain Mode [Auto-Gain]')
+    CCD_CONFIG__AUTO_GAIN_CLASSNAME  = SelectField('Enable Auto-Gain Gain Mode', choices=CCD_CONFIG__AUTO_GAIN_CLASSNAME_choices, validators=[CCD_CONFIG__AUTO_GAIN_CLASSNAME_validator])
     CCD_CONFIG__AUTO_GAIN_LEVELS     = SelectField('Auto-Gain Levels', choices=CCD_CONFIG__AUTO_GAIN_LEVELS_choices, validators=[CCD_CONFIG__AUTO_GAIN_LEVELS_validator])
     CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_validator])
     CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_validator])
