@@ -136,19 +136,16 @@ class ImageWorker(Process):
 
         exposure_class_str = self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME')
         if exposure_class_str:
-            try:
-                exposure_class = getattr(exposure_module, exposure_class_str)
-                self.exposure_o = exposure_class(
-                    self.config,
-                    self.exposure_av,
-                    self.gain_av,
-                    self.night_av,
-                )
-            except AttributeError as e:
-                logger.error('Unable to initialize auto-gain class: %s', str(e))
-                self.exposure_o = None
+            exposure_class = getattr(exposure_module, exposure_class_str)
         else:
-            self.exposure_o = None
+            exposure_class = getattr(exposure_module, 'exposure_basic')
+
+        self.exposure_o = exposure_class(
+            self.config,
+            self.exposure_av,
+            self.gain_av,
+            self.night_av,
+        )
 
 
         self._miscDb = miscDb(self.config)
@@ -2207,36 +2204,9 @@ class ImageWorker(Process):
             return
 
 
-        if not self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME'):
-            # moonmode settings are ignored with auto-gain
-
-            if self.night_av[constants.NIGHT_NIGHT]:
-                # night
-                exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
-            else:
-                # day
-                exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
-
-            gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
-            gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
-        else:
-            if self.night_av[constants.NIGHT_NIGHT]:
-                # night
-                exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
-
-                if self.night_av[constants.NIGHT_MOONMODE]:
-                    gain_min = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
-                    gain_max = float(self.gain_av[constants.GAIN_MAX_MOONMODE])
-                else:
-                    gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
-                    gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
-
-            else:
-                # day
-                exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
-
-                gain_min = float(self.gain_av[constants.GAIN_MIN_DAY])
-                gain_max = float(self.gain_av[constants.GAIN_MAX_DAY])
+        exposure_min = self.exposure_o.exposure_min
+        gain_min = self.exposure_o.gain_min
+        gain_max = self.exposure_o.gain_min
 
 
         # Scale the exposure up and down based on targets
@@ -2255,13 +2225,7 @@ class ImageWorker(Process):
             next_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
 
 
-        if not isinstance(self.exposure_o, type(None)):
-            next_exposure, next_gain, exposure_delta, gain_delta = self.exposure_o.recalculate(current_exposure, current_gain, next_exposure)
-        else:
-            # just set the gain to the max for the current mode
-            next_gain = gain_max
-            exposure_delta = next_exposure - current_exposure
-            gain_delta = 0.0
+        next_exposure, next_gain, exposure_delta, gain_delta = self.exposure_o.recalculate_exposure(current_exposure, current_gain, next_exposure)
 
 
         # Do not exceed the gain limits

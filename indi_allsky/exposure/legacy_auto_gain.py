@@ -19,11 +19,27 @@ class IndiAllSky_Exposure_Legacy_Auto_Gain(IndiAllSky_Exposure_Base):
 
 
     @property
+    def exposure_min(self):
+        if self.night_av[constants.NIGHT_NIGHT]:
+            return float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
+        else:
+            return float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
+
+    @property
+    def gain_min(self):
+        return float(self.gain_av[constants.GAIN_MIN_NIGHT])
+
+    @property
+    def gain_max(self):
+        return float(self.gain_av[constants.GAIN_MAX_NIGHT])
+
+
+    @property
     def gain_step(self):
         return self._gain_step
 
 
-    def recalculate(self, current_exposure, current_gain, next_exposure):
+    def recalculate_exposure(self, current_exposure, current_gain, next_exposure):
         if isinstance(self.gain_step, type(None)):
             self.post_init()
 
