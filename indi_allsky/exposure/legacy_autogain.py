@@ -39,7 +39,7 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
         return self._gain_step
 
 
-    def adjust_exposure_gain(self, current_exposure, current_gain, next_exposure) -> tuple(float, float, float, float):
+    def adjust_exposure_gain(self, current_exposure, current_gain, next_exposure) -> tuple[float, float, float, float]:
         if isinstance(self.gain_step, type(None)):
             self.post_init()
 

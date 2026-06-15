@@ -48,7 +48,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         raise Exception('Not Implemented')
 
 
-    def adjust_exposure_gain(self, current_exposure, current_gain, next_exposure) -> tuple(float, float, float, float):
+    def adjust_exposure_gain(self, current_exposure, current_gain, next_exposure) -> tuple[float, float, float, float]:
         if isinstance(self.auto_gain_exposure_cutoff_low, type(None)):
             self.post_init()
 
