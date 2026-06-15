@@ -6,9 +6,9 @@ from .exposureBase import IndiAllSky_Exposure_Base
 logger = logging.getLogger('indi_allsky')
 
 
-class IndiAllSky_Exposure_Legacy_Auto_Gain(IndiAllSky_Exposure_Base):
+class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
     def __init__(self, *args, **kwargs):
-        super(IndiAllSky_Exposure_Legacy_Auto_Gain, self).__init__(*args, **kwargs)
+        super(IndiAllSky_Exposure_Legacy_AutoGain, self).__init__(*args, **kwargs)
 
 
         self._gain_step = None  # calculate on first image
