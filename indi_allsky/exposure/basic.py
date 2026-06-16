@@ -20,6 +20,10 @@ class IndiAllSky_Exposure_Basic(IndiAllSky_Exposure_Base):
             # day
             return float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
 
+    @property
+    def exposure_max(self):
+        return float(self.exposure_av[constants.EXPOSURE_MAX])
+
 
     @property
     def gain_min(self):

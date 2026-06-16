@@ -24,6 +24,11 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             return float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
 
     @property
+    def exposure_max(self):
+        return float(self.exposure_av[constants.EXPOSURE_MAX])
+
+
+    @property
     def gain_min(self):
         return float(self.gain_av[constants.GAIN_MIN_NIGHT])
 
