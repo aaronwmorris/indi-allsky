@@ -60,6 +60,9 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         maintain_brightness_gain_dB = current_gain_dB + (20 * math.log10(current_exposure / next_exposure))
         maintain_brightness_gain_dB_offset = current_gain_dB - maintain_brightness_gain_dB
 
+        # if you want to maintain the exposure, but increase gain, use this value
+        maintain_exposure_new_gain_dB = current_gain_dB + maintain_brightness_gain_dB_offset
+
 
         #original_exposure = current_exposure * (10 ** ((current_gain_dB - new_gain_dB) / 20))
         #original_next_exposure = current_exposure * (10 ** (((current_gain_dB + new_gain_dB_offset) - current_gain_dB) / 20))
@@ -75,25 +78,56 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             # exposure/gain needs to increase
             if current_gain == self.gain_max:
                 # already at max gain, increase exposure
-                pass
+                next_gain_dB = current_gain_dB
+                exposure_delta = next_exposure - current_exposure
+                gain_delta = 0.0
+                logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [max gain]', next_exposure, exposure_delta)
             else:
-                if current_exposure < self.auto_gain_exposure_cutoff_high:
+                if current_exposure < self.exposure_max:
                     # maintain gain, increase exposure
-                    pass
+                    if next_exposure > self.exposure_av[constants.EXPOSURE_MAX]:
+                        next_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
+
+                    next_gain_dB = current_gain_dB
+                    exposure_delta = next_exposure - current_exposure
+                    gain_delta = 0.0
+                    logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
                 else:
                     # increase gain, maintain exposure
-                    pass
+                    if self.dB2gain(maintain_exposure_new_gain_dB) >= self.gain_max:
+                        next_gain_dB = self.gain2dB(self.gain_max)
+                    else:
+                        next_gain_dB = maintain_exposure_new_gain_dB
+
+                    next_exposure = current_exposure
+                    exposure_delta = 0.0
+                    gain_delta = self.dB2gain(next_gain_dB) - current_gain
+                    logger.info('Auto-Gain increasing gain to %0.2f dB (%+0.2f) [maintain exposure]', self.dB2gain(next_gain_dB))
         else:
             # exposure/gain needs to decrease
             if current_gain == self.gain_min:
-                pass
+                next_gain_dB = current_gain_dB
+                exposure_delta = next_exposure - current_exposure
+                gain_delta = 0.0
+                logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [minimum gain]', next_exposure, exposure_delta)
             else:
                 if current_exposure > self.auto_gain_exposure_cutoff_low:
                     # maintain gain, decrease exposure
-                    pass
+                    exposure_delta = next_exposure - current_exposure
+                    next_gain_dB = current_gain_dB
+                    gain_delta = 0.0
+                    logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
                 else:
                     # decrease gain, maintain exposure
-                    pass
+                    if self.dB2gain(maintain_exposure_new_gain_dB) <= self.gain_min:
+                        next_gain_dB = self.gain2dB(self.gain_min)
+                    else:
+                        next_gain_dB = maintain_exposure_new_gain_dB
+
+                    next_exposure = current_exposure
+                    exposure_delta = 0.0
+                    gain_delta = self.dB2gain(next_gain_dB) - current_gain
+                    logger.info('Auto-Gain decreasing gain to %0.2f dB (%+0.2f) [maintain exposure]', self.dB2gain(next_gain_dB), gain_delta)
 
 
         next_gain = self.dB2gain(next_gain_dB)
@@ -102,20 +136,14 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
 
 
     def post_init(self):
-        self.auto_gain_exposure_cutoff_high = self.exposure_av[constants.EXPOSURE_MAX] - 0.5
-
         self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] * (self.auto_gain_exposure_cutoff_level_low / 100)
         if self.exposure_av[constants.EXPOSURE_MAX] - self.auto_gain_exposure_cutoff_low > 10.0:
             self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] - 10.0
 
-        self.auto_gain_exposure_cutoff_mid = self.auto_gain_exposure_cutoff_high - ((self.auto_gain_exposure_cutoff_high - self.auto_gain_exposure_cutoff_low) / 2)
-
 
         logger.info(
-            'Auto-Gain Exposure cutoff: Low: %0.2fs - Mid: %0.2fs - High: %0.2fs',
+            'Auto-Gain Exposure cutoff: %0.2fs',
             self.auto_gain_exposure_cutoff_low,
-            self.auto_gain_exposure_cutoff_mid,
-            self.auto_gain_exposure_cutoff_high,
         )
 
 
