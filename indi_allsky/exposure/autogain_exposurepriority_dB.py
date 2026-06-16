@@ -98,7 +98,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             #    next_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
 
 
-            if current_gain == self.gain_max:
+            if current_gain >= self.gain_max:
                 # already at max gain, increase exposure
 
                 if next_exposure > self.exposure_max:
@@ -110,7 +110,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
                 logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [max gain]', next_exposure, exposure_delta)
             else:
                 if current_exposure < self.exposure_max:
-                    # maintain gain, increase exposure
+                    # try to maintain gain, increase exposure
 
                     if next_exposure > self.exposure_max:
                         # next exposure above max, need to increase gain to compensate
@@ -133,12 +133,13 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
                         gain_delta = self.dB2gain(next_gain_dB) - current_gain
                         logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f), gain to %0.2f (%+0.2f)', next_exposure, exposure_delta, self.dB2gain(next_gain_dB), gain_delta)
                     else:
+                        # maintain gain, increase exposure only
                         next_gain_dB = current_gain_dB
                         exposure_delta = next_exposure - current_exposure
                         gain_delta = 0.0
                         logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
                 else:
-                    # increase gain, maintain exposure
+                    # increase gain, exposure already maximum
                     if self.dB2gain(maintain_exposure_new_gain_dB) >= self.gain_max:
                         next_gain_dB = self.gain2dB(self.gain_max)
                     else:
