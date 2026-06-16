@@ -123,11 +123,6 @@ class IndiAllSky_Exposure_Base(object):
             return
 
 
-        exposure_min = self.exposure_min
-        gain_min = self.gain_min
-        gain_max = self.gain_min
-
-
         # Scale the exposure up and down based on targets
         if adu > target_adu_max:
             next_exposure = current_exposure - ((current_exposure - (current_exposure * (target_adu / adu))) * exp_scale_factor)
@@ -137,21 +132,14 @@ class IndiAllSky_Exposure_Base(object):
             next_exposure = current_exposure
 
 
-        # Do not exceed the exposure limits
-        if next_exposure < exposure_min:
-            next_exposure = float(exposure_min)
-        elif next_exposure > self.exposure_av[constants.EXPOSURE_MAX]:
-            next_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
-
-
         next_exposure, next_gain, exposure_delta, gain_delta = self.adjust_exposure_gain(current_exposure, current_gain, next_exposure)
 
 
         # Do not exceed the gain limits
-        if next_gain > gain_max:
-            next_gain = gain_max
-        elif next_gain < gain_min:
-            next_gain = gain_min
+        if next_gain > self.gain_max:
+            next_gain = self.gain_max
+        elif next_gain < self.gain_min:
+            next_gain = self.gain_min
 
 
         # Binning

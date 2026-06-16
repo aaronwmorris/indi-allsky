@@ -55,6 +55,15 @@ class IndiAllSky_Exposure_Basic(IndiAllSky_Exposure_Base):
 
     def adjust_exposure_gain(self, current_exposure, current_gain, next_exposure) -> tuple[float, float, float, float]:
         # just set the gain to the max for the current mode
+
+
+        # Do not exceed the exposure limits
+        if next_exposure < self.exposure_min:
+            next_exposure = float(self.exposure_min)
+        elif next_exposure > self.exposure_av[constants.EXPOSURE_MAX]:
+            next_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
+
+
         next_gain = self.gain_max
         exposure_delta = next_exposure - current_exposure
         gain_delta = 0.0

@@ -49,6 +49,13 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
             self.post_init()
 
 
+        # Do not exceed the exposure limits
+        if next_exposure < self.exposure_min:
+            next_exposure = float(self.exposure_min)
+        elif next_exposure > self.exposure_av[constants.EXPOSURE_MAX]:
+            next_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
+
+
         try:
             auto_gain_idx = self.auto_gain_step_list.index(current_gain)
         except ValueError:
