@@ -3544,7 +3544,10 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_CONFIG__EXPOSURE_CLASSNAME_choices = (
         ('', 'Basic - Fixed Gain'),
         ('exposure_legacy_autogain', 'Legacy Auto-Gain Exposure Priority'),
-        ('exposure_autogain_exp_prio_zwoasi', 'Auto-Gain - Exposure Priority - ZWO ASI [1/10 dB]'),
+        ('exposure_autogain_exp_prio_db_1_10', 'Auto-Gain - Exposure Priority - 0.1 dB [ZWO ASI]'),
+        ('exposure_autogain_exp_prio_db', 'Auto-Gain - Exposure Priority - 1 dB [QHY]'),
+        ('exposure_autogain_exp_prio_iso', 'Auto-Gain - Exposure Priority - ISO [ToupTek, Altair, etc]'),
+        ('exposure_autogain_exp_prio_iso_1_100', 'Auto-Gain - Exposure Priority - 0.01 ISO [libcamera]'),
     )
 
     CCD_CONFIG__AUTO_GAIN_LEVELS_choices = (

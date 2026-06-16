@@ -164,10 +164,13 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         )
 
 
-
-class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_ZWOASI(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
+class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_1_10(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
     def __init__(self, *args, **kwargs):
-        super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_ZWOASI, self).__init__(*args, **kwargs)
+        super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_1_10, self).__init__(*args, **kwargs)
+
+
+    ### 1 gain = 0.1 dB (/10)
+    ### QHY
 
 
     def gain2dB(self, gain):
@@ -175,3 +178,52 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_ZWOASI(IndiAllSky_Exposur
 
     def dB2gain(self, dB):
         return dB * 10.0
+
+
+class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
+    def __init__(self, *args, **kwargs):
+        super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB, self).__init__(*args, **kwargs)
+
+    ### 1 gain = 1 dB (1:1)
+    ### QHY
+
+
+    def gain2dB(self, gain):
+        return gain
+
+    def dB2gain(self, dB):
+        return dB
+
+
+class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
+    def __init__(self, *args, **kwargs):
+        super(IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO, self).__init__(*args, **kwargs)
+
+    ### 100 gain = ISO 100 (1:1)
+    ### ToupTek, Altair, etc
+
+
+    def gain2dB(self, gain):
+        return 20 * math.log10(gain / 100)
+
+    def dB2gain(self, dB):
+        return 100 * (10 ** (dB / 20))
+
+
+class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
+    def __init__(self, *args, **kwargs):
+        super(IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100, self).__init__(*args, **kwargs)
+
+
+    ### 1 gain = ISO 100 (*100)
+    ### libcamera
+
+    # Treat the gain like ISO
+    # gain 1 is the baseline of 0 dB
+
+
+    def gain2dB(self, gain):
+        return 20 * math.log10(gain)
+
+    def dB2gain(self, dB):
+        return 10 ** (dB / 20)
