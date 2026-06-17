@@ -3439,6 +3439,18 @@ def SATELLITE_TRACK__LABEL_LIMIT_validator(form, field):
     if field.data > 20:
         raise ValidationError('Limit must be 20 or less')
 
+def OIDC__LOGO_URL_validator(form, field):
+    if field.data:
+        try:
+            r = urlparse(field.data)
+            if not r.scheme or not r.netloc:
+                raise ValidationError('Invalid URL')
+            
+            valid_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp')
+            if not any(r.path.lower().endswith(ext) for ext in valid_extensions):
+                raise ValidationError('Logo URL must point to an image (png, jpg, jpeg, gif, svg, webp)')
+        except Exception:
+            raise ValidationError('Invalid URL')
 
 def INDI_CONFIG_DEFAULTS_validator(form, field):
     try:
@@ -5046,10 +5058,14 @@ class IndiAllskyConfigForm(FlaskForm):
     SATELLITE_TRACK__LABEL_LIMIT     = IntegerField('Label Limit', validators=[DataRequired(), SATELLITE_TRACK__LABEL_LIMIT_validator])
     SATELLITE_TRACK__SAT_LABEL_TEMPLATE = StringField('Satellite Label Template', validators=[DataRequired(), SATELLITE_TRACK__SAT_LABEL_TEMPLATE_validator])
     SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX = TextAreaField('Image Template Prefix', validators=[DataRequired(), SATELLITE_TRACK__IMAGE_LABEL_TEMPLATE_PREFIX_validator])
+    OIDC__ENABLE                     = BooleanField('Enable OIDC Authentication')
+    OIDC__LOGO_URL                   = StringField('OIDC Logo URL', validators=[OIDC__LOGO_URL_validator], filters=[lambda x: x.strip() if x else x])
+    OIDC__AUTO_LOGIN                 = BooleanField('OIDC Auto Login')
     INDI_CONFIG_DEFAULTS             = TextAreaField('INDI Camera Config (Default)', validators=[DataRequired(), INDI_CONFIG_DEFAULTS_validator])
     INDI_CONFIG_DAY                  = TextAreaField('INDI Camera Config (Day)', validators=[DataRequired(), INDI_CONFIG_DAY_validator])
 
     RELOAD_ON_SAVE                   = BooleanField('Reload on Save')
+    LOCAL_AUTH_ENABLE                = BooleanField('Enable Local Authentication')
     CONFIG_NOTE                      = StringField('Config Note')
 
     ADMIN_NETWORKS_FLASK             = TextAreaField('Admin Networks', render_kw={'readonly' : True, 'disabled' : 'disabled'})
