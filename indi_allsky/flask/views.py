@@ -2867,6 +2867,10 @@ class ConfigView(FormView):
             'TEMP_SENSOR__SI1145_VIS_GAIN_DAY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_VIS_GAIN_DAY', 'GAIN_ADC_CLOCK_DIV_1'),
             'TEMP_SENSOR__SI1145_IR_GAIN_NIGHT'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_IR_GAIN_NIGHT', 'GAIN_ADC_CLOCK_DIV_32'),
             'TEMP_SENSOR__SI1145_IR_GAIN_DAY'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_IR_GAIN_DAY', 'GAIN_ADC_CLOCK_DIV_1'),
+            'TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_VIS_RANGE_HIGH_NIGHT', False),
+            'TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_IR_RANGE_HIGH_NIGHT', False),
+            'TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_VIS_RANGE_HIGH_DAY', True),
+            'TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_IR_RANGE_HIGH_DAY', True),
             'TEMP_SENSOR__LTR390_GAIN_NIGHT'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('LTR390_GAIN_NIGHT', 'GAIN_9X'),
             'TEMP_SENSOR__LTR390_GAIN_DAY'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('LTR390_GAIN_DAY', 'GAIN_1X'),
             'TEMP_SENSOR__INA3221_CH1_ENABLE'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('INA3221_CH1_ENABLE', True),
@@ -3900,6 +3904,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['SI1145_VIS_GAIN_DAY']   = str(request.json['TEMP_SENSOR__SI1145_VIS_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['SI1145_IR_GAIN_NIGHT']  = str(request.json['TEMP_SENSOR__SI1145_IR_GAIN_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['SI1145_IR_GAIN_DAY']    = str(request.json['TEMP_SENSOR__SI1145_IR_GAIN_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['SI1145_VIS_RANGE_HIGH_NIGHT'] = bool(request.json['TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT'])
+        self.indi_allsky_config['TEMP_SENSOR']['SI1145_IR_RANGE_HIGH_NIGHT']  = bool(request.json['TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT'])
+        self.indi_allsky_config['TEMP_SENSOR']['SI1145_VIS_RANGE_HIGH_DAY']   = bool(request.json['TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['SI1145_IR_RANGE_HIGH_DAY']    = bool(request.json['TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['LTR390_GAIN_NIGHT']     = str(request.json['TEMP_SENSOR__LTR390_GAIN_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['LTR390_GAIN_DAY']       = str(request.json['TEMP_SENSOR__LTR390_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['INA3221_CH1_ENABLE']    = bool(request.json['TEMP_SENSOR__INA3221_CH1_ENABLE'])
