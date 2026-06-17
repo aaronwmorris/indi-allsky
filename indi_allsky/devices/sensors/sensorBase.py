@@ -1,7 +1,7 @@
 import math
 import logging
 
-from ... import constants
+#from ... import constants
 
 logger = logging.getLogger('indi_allsky')
 
@@ -61,7 +61,7 @@ class SensorBase(object):
 
     @property
     def astro_darkness(self):
-        return self.astro_av[constants.ASTRO_SUN_ALT] <= 18.0
+        return self._astro_darkness
 
     @astro_darkness.setter
     def astro_darkness(self, new_astro_darkness):
