@@ -165,7 +165,9 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
                 if current_exposure > self.auto_gain_exposure_cutoff_low:
                     # try to maintain gain, decrease exposure
 
-                    if next_exposure < self.auto_gain_exposure_cutoff_low:
+                    if current_exposure < self.auto_gain_exposure_cutoff_low:
+                        # decrease gain before decreasing exposure
+                    elif next_exposure < self.auto_gain_exposure_cutoff_low:
                         # next exposure below low cutoff, adjust gain to compensate
                         low_exposure_delta = next_exposure - self.auto_gain_exposure_cutoff_low
                         next_exposure = float(self.auto_gain_exposure_cutoff_low)
