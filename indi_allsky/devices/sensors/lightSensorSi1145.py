@@ -70,13 +70,31 @@ class LightSensorSi1145(SensorBase):
 
     def update_sensor_settings(self):
         if self.astro_darkness:
-            logger.info('[%s] Switching SI1145 to night mode - Visible Gain: %d, IR Gain: %d', self.name, self.vis_gain_night, self.ir_gain_night)
+            logger.info(
+                '[%s] Switching SI1145 to night mode - Visible Gain: %d - Range High: %s, IR Gain: %d - Range High: %s',
+                self.name,
+                self.vis_gain_night,
+                str(self.vis_range_high_night),
+                self.ir_gain_night,
+                str(self.ir_range_high_night),
+            )
             self.si1145.vis_gain = self.vis_gain_night
             self.si1145.ir_gain = self.ir_gain_night
+            self.si1145.als_vis_range_high = self.vis_range_high_night
+            self.si1145.als_ir_range_high = self.ir_range_high_night
         else:
-            logger.info('[%s] Switching SI1145 to day mode - Gain: %d, Integration: %d', self.name, self.vis_gain_day, self.ir_gain_day)
+            logger.info(
+                '[%s] Switching SI1145 to day mode - Visible Gain: %d - Range High: %s, IR Gain: %d - Range High: %s',
+                self.name,
+                self.vis_gain_day,
+                str(self.vis_range_high_day),
+                self.ir_gain_day,
+                str(self.ir_range_high_night),
+            )
             self.si1145.vis_gain = self.vis_gain_day
             self.si1145.ir_gain = self.ir_gain_day
+            self.si1145.als_vis_range_high = self.vis_range_high_day
+            self.si1145.als_ir_range_high = self.ir_range_high_day
 
         time.sleep(1.0)
 
@@ -135,6 +153,11 @@ class LightSensorSi1145_I2C(LightSensorSi1145):
         self.vis_gain_day = getattr(adafruit_si1145, self.config.get('TEMP_SENSOR', {}).get('SI1145_VIS_GAIN_DAY', 'GAIN_ADC_CLOCK_DIV_1'))
         self.ir_gain_night = getattr(adafruit_si1145, self.config.get('TEMP_SENSOR', {}).get('SI1145_IR_GAIN_NIGHT', 'GAIN_ADC_CLOCK_DIV_32'))
         self.ir_gain_day = getattr(adafruit_si1145, self.config.get('TEMP_SENSOR', {}).get('SI1145_IR_GAIN_DAY', 'GAIN_ADC_CLOCK_DIV_1'))
+
+        self.vis_range_high_night = self.config.get('TEMP_SENSOR', {}).get('SI1145_VIS_RANGE_HIGH_NIGHT', False)
+        self.vis_range_high_day = self.config.get('TEMP_SENSOR', {}).get('SI1145_VIS_RANGE_HIGH_DAY', True)
+        self.ir_range_high_night = self.config.get('TEMP_SENSOR', {}).get('SI1145_IR_RANGE_HIGH_NIGHT', False)
+        self.ir_range_high_day = self.config.get('TEMP_SENSOR', {}).get('SI1145_IR_RANGE_HIGH_DAY', True)
 
         time.sleep(1.0)
 
