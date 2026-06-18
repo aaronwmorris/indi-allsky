@@ -145,8 +145,41 @@ if __name__ == "__main__":
     ag = AutoGain_Test()
 
     ag.exposure_class = 'exposure_autogain_exp_prio_db_1_10'
+
+    logger.warning('Test increasing exposure only')
+    ag.adu = 60
+    ag.exposure = 10.0
+    ag.gain = 10.0
+    ag.main()
+
+    logger.warning('Test increasing gain only')
     ag.adu = 60
     ag.exposure = 15.0
     ag.gain = 10.0
-
     ag.main()
+
+    logger.warning('Test increasing exposure and gain')
+    ag.adu = 60
+    ag.exposure = 14.0
+    ag.gain = 10.0
+    ag.main()
+
+    logger.warning('Test decreasing exposure only')
+    ag.adu = 90
+    ag.exposure = 15.0
+    ag.gain = 60.0
+    ag.main()
+
+    logger.warning('Test decreasing gain only')
+    ag.adu = 90
+    ag.exposure = 10.0
+    ag.gain = 60.0
+    ag.main()
+
+    logger.warning('Test decreasing exposure and gain')
+    ag.adu = 90
+    ag.exposure = 14.0
+    ag.gain = 60.0
+    ag.main()
+
+
