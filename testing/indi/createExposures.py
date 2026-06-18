@@ -17,8 +17,9 @@ import cv2
 
 EXPOSURES = [
     # exposure, gain, binmode
-    (5, 100, 1),
-    (15, 150, 1),
+    (0.1, 200, 1),
+    (0.5, 60.206, 1),
+    (1, 0, 1),
 ]
 
 INDI_CONFIG = OrderedDict({
