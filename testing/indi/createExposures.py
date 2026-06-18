@@ -17,8 +17,8 @@ import cv2
 
 EXPOSURES = [
     # exposure, gain, binmode
-    (1, 100, 1),
-    (2, 200, 1),
+    (5, 100, 1),
+    (15, 150, 1),
 ]
 
 INDI_CONFIG = OrderedDict({
@@ -28,6 +28,37 @@ INDI_CONFIG = OrderedDict({
 })
 
 
+### CCD Simulator
+#INDI_CONFIG = OrderedDict({
+#    "PROPERTIES": {
+#        "SCOPE_INFO": {
+#            "FOCAL_LENGTH": 45,
+#            "APERTURE": 45
+#        },
+#        "CCD_OFFSET": {
+#            "OFFSET": 10
+#        },
+#        "SIMULATOR_SETTINGS": {
+#            "SIM_XRES": 1920,
+#            "SIM_YRES": 1080,
+#            "SIM_XSIZE": 2.4,
+#            "SIM_YSIZE": 2.4,
+#            "SIM_SATURATION": 9.0,
+#            "SIM_SKYGLOW": 11.0,
+#            "SIM_ROTATION": 90.0
+#        }
+#    },
+#    "SWITCHES": {
+#        "SIMULATE_BAYER": {
+#            "on": [
+#                "INDI_DISABLED"
+#            ],
+#            "off": [
+#                "INDI_ENABLED"
+#            ]
+#        }
+#    }
+#})
 
 
 logger = logging.getLogger(__name__)
@@ -199,7 +230,26 @@ class IndiClient(PyIndi.BaseClient):
         detected_bit_depth = self.detectBitDepth(data)
 
 
-        #logger.info('Shape: %s', str(data.shape))
+        # detect ADU
+        if len(data.shape) == 2:
+            # mono
+            adu = cv2.mean(src=data)[0]
+        else:
+            adu = cv2.mean(src=cv2.cvtColor(data, cv2.COLOR_BGR2GRAY))[0]
+
+
+        if detected_bit_depth == 8:
+            adu_8 = int(adu)
+        else:
+            shift_factor = detected_bit_depth - 8
+            adu_8 = int(adu) >> shift_factor
+
+
+        logger.info('ADU average: %0.1f (%d)', adu, adu_8)
+
+
+
+        # debayer
         if not len(data.shape) == 2:
             # data is already RGB(fits)
             data_rgb = numpy.swapaxes(data, 0, 2)
@@ -218,6 +268,7 @@ class IndiClient(PyIndi.BaseClient):
                 data_rgb = cv2.cvtColor(data, debayer_algorithm)
 
 
+        # scale to 8 bits
         if detected_bit_depth == 8:
             data_rgb_8 = data_rgb
         else:
