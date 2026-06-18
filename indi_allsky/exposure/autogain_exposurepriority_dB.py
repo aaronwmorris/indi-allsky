@@ -177,7 +177,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
                         low_exposure_new_gain_dB = current_gain_dB + maintain_brightness_gain_dB_offset
 
 
-                        next_gain_dB = low_exposure_new_gain_dB + (20 * math.log10(self.auto_gain_exposure_cutoff_low / (self.auto_gain_exposure_cutoff_low + low_exposure_delta)))
+                        next_gain_dB = low_exposure_new_gain_dB + (20 * math.log10(self.auto_gain_exposure_cutoff_low / (self.auto_gain_exposure_cutoff_low - low_exposure_delta)))
 
                         if self.dB2gain(next_gain_dB) <= self.gain_min:
                             next_gain_dB = self.gain2dB(self.gain_min)
