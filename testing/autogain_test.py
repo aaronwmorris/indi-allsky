@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.absolute().parent))
 
 
 from indi_allsky.config import IndiAllSkyConfig
-from indi_allsky import constants
+#from indi_allsky import constants
 from indi_allsky import exposure as exposure_module
 
 from indi_allsky.flask import create_app
@@ -42,7 +42,7 @@ class AutoGain_Test(object):
 
 
         self.exposure_av = Array('f', [
-            15.0,  # current exposure
+            -1.0,  # current exposure
             -1.0,  # next exposure
             1.0,   # exposure delta
             0.0,   # night minimum
@@ -53,7 +53,7 @@ class AutoGain_Test(object):
 
 
         self.gain_av = Array('f', [
-            10.0,   # current gain
+            -1.0,   # current gain
             -1.0,   # next gain
             -1.0,   # gain delta
             0.0,    # day minimum
@@ -83,16 +83,51 @@ class AutoGain_Test(object):
         ])
 
 
+        self._exposure_class = None
+        self._adu = None
+        self._exposure = None
+        self._gain = None
+
+
+    @property
+    def exposure_class(self):
+        return self._exposure_class
+
+    @exposure_class.setter
+    def exposure_class(self, exposure_class_str):
+        self._exposure_class = getattr(exposure_module, str(exposure_class_str))
+
+
+    @property
+    def adu(self):
+        return self._adu
+
+    @adu.setter
+    def adu(self, new_adu):
+        self._adu = int(new_adu)
+
+
+    @property
+    def exposure(self):
+        return self._exposure
+
+    @exposure.setter
+    def exposure(self, new_exposure):
+        self._exposure = float(new_exposure)
+
+
+    @property
+    def gain(self):
+        return self._gain
+
+    @gain.setter
+    def gain(self, new_gain):
+        self._gain = float(new_gain)
+
+
 
     def main(self):
-        exposure_class_str = self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME')
-        if exposure_class_str:
-            exposure_class = getattr(exposure_module, exposure_class_str)
-        else:
-            exposure_class = getattr(exposure_module, 'exposure_basic')
-
-
-        self.exposure_o = exposure_class(
+        exposure_o = self.exposure_class(
             self.config,
             self.exposure_av,
             self.gain_av,
@@ -101,16 +136,17 @@ class AutoGain_Test(object):
         )
 
 
-        adu = 60
-        exposure = float(self.exposure_av[constants.EXPOSURE_CURRENT])
-        gain = float(self.gain_av[constants.GAIN_CURRENT])
+        logger.warning('Current exposure: %0.6f', self.exposure)
 
-
-        logger.warning('Current exposure: %0.6f', exposure)
-
-        adu, adu_average = self.exposure_o.calculate_exposure(adu, exposure, gain)
+        exposure_o.calculate_exposure(self.adu, self.exposure, self.gain)
 
 
 if __name__ == "__main__":
     ag = AutoGain_Test()
+
+    ag.exposure_class = 'exposure_autogain_exp_prio_db_1_10'
+    ag.adu = 60
+    ag.exposure = 15.0
+    ag.gain = 10.0
+
     ag.main()
