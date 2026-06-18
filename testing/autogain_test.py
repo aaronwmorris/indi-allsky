@@ -27,6 +27,11 @@ app.app_context().push()
 logger = logging.getLogger('indi_allsky')
 logger.setLevel(logging.INFO)
 
+LOG_FORMATTER_STREAM = logging.Formatter('[%(levelname)s] %(module)s.%(funcName)s() [%(lineno)d]: %(message)s')
+LOG_HANDLER_STREAM = logging.StreamHandler()
+LOG_HANDLER_STREAM.setFormatter(LOG_FORMATTER_STREAM)
+logger.addHandler(LOG_HANDLER_STREAM)
+
 
 class AutoGain_Test(object):
 
@@ -184,9 +189,9 @@ if __name__ == "__main__":
 
 
     logger.warning('Test test test')
-    ag.adu = 90
+    ag.adu = 150
     ag.exposure = 1.0
-    ag.gain = 60.0
+    ag.gain = 0.0
     ag.main()
 
 
