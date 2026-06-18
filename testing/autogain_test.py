@@ -24,8 +24,8 @@ app = create_app()
 app.app_context().push()
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging
+logger = logging.getLogger('indi_allsky')
+logger.setLevel(logging.INFO)
 
 
 class AutoGain_Test(object):
@@ -42,9 +42,9 @@ class AutoGain_Test(object):
 
 
         self.exposure_av = Array('f', [
-            1.0,   # current exposure
+            15.0,  # current exposure
             -1.0,  # next exposure
-            -1.0,  # exposure delta
+            1.0,   # exposure delta
             0.0,   # night minimum
             0.0,   # day minimum
             15.0,  # maximum
@@ -101,9 +101,12 @@ class AutoGain_Test(object):
         )
 
 
-        adu = 3000
-        exposure = float(self.gain_av[constants.EXPOSURE_CURRENT])
+        adu = 60
+        exposure = float(self.exposure_av[constants.EXPOSURE_CURRENT])
         gain = float(self.gain_av[constants.GAIN_CURRENT])
+
+
+        logger.warning('Current exposure: %0.6f', exposure)
 
         adu, adu_average = self.exposure_o.calculate_exposure(adu, exposure, gain)
 
