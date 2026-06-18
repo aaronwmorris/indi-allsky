@@ -24,13 +24,23 @@ EXPOSURES = [
 ]
 
 
-### libcamera
+### libcamera imx477
 #EXPOSURES = [
 #    # exposure, gain, binmode
 #    (0.1, 10, 1),      # 20 dB
 #    (0.5, 2, 1),       # 6.02 dB
-#    (1, 0, 1),         # 0 dB
+#    (1, 1, 1),         # 0 dB
 #]
+
+
+### libcamera imx708
+#EXPOSURES = [
+#    # exposure, gain, binmode
+#    (0.112, 10, 1),    # 20 dB
+#    (0.565, 2, 1),     # 6.02 dB
+#    (1, 1.13, 1),      # 1.06 dB
+#]
+
 
 
 INDI_CONFIG = OrderedDict({
