@@ -183,3 +183,10 @@ if __name__ == "__main__":
     ag.main()
 
 
+    logger.warning('Test test test')
+    ag.adu = 90
+    ag.exposure = 1.0
+    ag.gain = 60.0
+    ag.main()
+
+
