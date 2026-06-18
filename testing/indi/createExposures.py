@@ -15,12 +15,23 @@ import cv2
 
 
 
+### ZWO
 EXPOSURES = [
     # exposure, gain, binmode
-    (0.1, 200, 1),
-    (0.5, 60.206, 1),
-    (1, 0, 1),
+    (0.1, 200, 1),     # 20 dB
+    (0.5, 60.206, 1),  # 6.02 dB
+    (1, 0, 1),         # 0 dB
 ]
+
+
+### libcamera
+#EXPOSURES = [
+#    # exposure, gain, binmode
+#    (0.1, 10, 1),      # 20 dB
+#    (0.5, 2, 1),       # 6.02 dB
+#    (1, 0, 1),         # 0 dB
+#]
+
 
 INDI_CONFIG = OrderedDict({
     "SWITCHES" : {},
