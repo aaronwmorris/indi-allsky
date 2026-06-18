@@ -150,6 +150,9 @@ if __name__ == "__main__":
     ag = AutoGain_Test()
 
     ag.exposure_class = 'exposure_autogain_exp_prio_db_1_10'
+    #ag.exposure_class = 'exposure_autogain_exp_prio_db'
+    #ag.exposure_class = 'exposure_autogain_exp_prio_iso'
+    #ag.exposure_class = 'exposure_autogain_exp_prio_iso_1_100'
 
     logger.warning('Test increasing exposure only')
     ag.adu = 60
