@@ -1,6 +1,7 @@
-from .. import constants
+import math
 import logging
 
+from .. import constants
 from .exposureBase import IndiAllSky_Exposure_Base
 
 logger = logging.getLogger('indi_allsky')
@@ -32,11 +33,13 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
 
     @property
     def gain_min(self):
-        return float(self.gain_av[constants.GAIN_MIN_NIGHT])
+        # prevent python/C float conversion errors
+        return math.ceil(float(self.gain_av[constants.GAIN_MIN_NIGHT]) * 100) / 100  # round up the hundredths spot
 
     @property
     def gain_max(self):
-        return float(self.gain_av[constants.GAIN_MAX_NIGHT])
+        # prevent python/C float conversion errors
+        return math.floor(float(self.gain_av[constants.GAIN_MAX_NIGHT]) * 100) / 100  # round down
 
 
     @property
