@@ -55,8 +55,100 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         if isinstance(self.auto_gain_exposure_cutoff_low, type(None)):
             self.post_init()
 
+        logger.warning('Next calculated exposure: %0.8f', next_exposure)
 
-        #logger.warning('Next exposure: %0.8f', next_exposure)
+        # the next exposure may be higher than the maximum exposure
+        # this exposure will be used to calulate a gain adjustment instead
+
+        current_gain_dB = self.gain2dB(current_gain)
+
+
+        if next_exposure == current_exposure:
+            # no change
+            #logger.warning('Auto-Gain - no changes')
+            next_gain_dB = current_gain_dB
+            gain_delta = 0.0
+            #next_exposure = next_exposure
+            exposure_delta = 0.0
+        elif next_exposure > current_exposure:
+            # exposure/gain needs to increase
+
+            if current_exposure < self.exposure_max:
+                # increase exposure
+
+                if next_exposure >= self.exposure_max:
+                    next_exposure = self.exposure_max
+                    exposure_delta = next_exposure - current_exposure
+                    next_gain_dB = current_gain_dB
+                    gain_delta = 0.0
+                    logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
+                else:
+                    #next_exposure = next_exposure
+                    exposure_delta = next_exposure - current_exposure
+                    next_gain_dB = current_gain_dB
+                    gain_delta = 0.0
+                    logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
+            else:
+                # increase gain, exposure already at max
+                maintain_brightness_gain_dB = current_gain_dB + (20 * math.log10(current_exposure / next_exposure))
+                maintain_brightness_gain_dB_offset = current_gain_dB - maintain_brightness_gain_dB
+
+                next_gain_dB = current_gain_dB + maintain_brightness_gain_dB_offset
+
+
+                if self.dB2gain(next_gain_dB) >= self.gain_max:
+                    next_gain_dB = self.gain2dB(self.gain_max)
+
+
+                gain_delta = self.dB2gain(next_gain_dB) - current_gain
+                next_exposure = self.exposure_max
+                exposure_delta = 0.0
+                logger.info('Auto-Gain increasing gain to %0.2f dB (%+0.2f) [maintain exposure]', self.dB2gain(next_gain_dB), gain_delta)
+
+        else:
+            # exposure/gain needs to decrease
+
+            if current_gain > self.gain_min:
+                # decrease gain
+                maintain_brightness_gain_dB = current_gain_dB + (20 * math.log10(current_exposure / next_exposure))
+                maintain_brightness_gain_dB_offset = current_gain_dB - maintain_brightness_gain_dB
+
+                next_gain_dB = current_gain_dB + maintain_brightness_gain_dB_offset
+
+                if self.dB2gain(next_gain_dB) <= self.gain_min:
+                    next_gain_dB = self.gain2dB(self.gain_min)
+
+
+                gain_delta = self.dB2gain(next_gain_dB) - current_gain
+                next_exposure = current_exposure
+                exposure_delta = 0.0
+                logger.info('Auto-Gain decreasing gain to %0.2f dB (%+0.2f) [maintain exposure]', self.dB2gain(next_gain_dB), gain_delta)
+
+            else:
+                # decrease exposure, gain already at minimum
+
+                #next_exposure = next_exposure
+
+                if next_exposure <= self.exposure_min:
+                    next_exposure = self.exposure_min
+
+                exposure_delta = next_exposure - current_exposure
+                next_gain_dB = current_gain_dB
+                gain_delta = 0.0
+                logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
+
+
+        next_gain = self.dB2gain(next_gain_dB)
+
+        return next_exposure, next_gain, exposure_delta, gain_delta
+
+
+    def adjust_exposure_gain2(self, current_exposure, current_gain, next_exposure) -> tuple[float, float, float, float]:
+        if isinstance(self.auto_gain_exposure_cutoff_low, type(None)):
+            self.post_init()
+
+
+        logger.warning('Next calculated exposure: %0.8f', next_exposure)
 
         # the next exposure may be higher than the maximum exposure
         # this exposure will be used to calulate a gain adjustment instead
