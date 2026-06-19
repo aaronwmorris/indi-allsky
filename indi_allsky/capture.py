@@ -1262,6 +1262,7 @@ class CaptureWorker(Process):
 
 
         ### Validate gain settings
+        # prevent python/C float conversion errors
         ccd_min_gain = math.ceil(float(ccd_info['GAIN_INFO']['min']) * 100) / 100  # round up the hundredths spot
         ccd_max_gain = math.floor(float(ccd_info['GAIN_INFO']['max']) * 100) / 100  # round down
 
