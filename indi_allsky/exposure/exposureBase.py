@@ -155,20 +155,20 @@ class IndiAllSky_Exposure_Base(object):
         ### Check for exposure flapping
         # Flapping is defined when the exposure increases then immediately decreases (or the opposite)
         # and cannot find a stable value.  The result is the image brightness will flash
-        if self.exposure_av[constants.EXPOSURE_DELTA] > 0 and exposure_delta < 0:
-            # exposure is decreasing
-            exposure_offset = exposure_delta / 2
-            next_exposure -= exposure_offset  # offset will be negative
-            exposure_delta -= exposure_offset
+        #if self.exposure_av[constants.EXPOSURE_DELTA] > 0 and exposure_delta < 0:
+        #    # exposure is decreasing
+        #    exposure_offset = exposure_delta / 2
+        #    next_exposure -= exposure_offset  # offset will be negative
+        #    exposure_delta -= exposure_offset
 
-            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
-        elif self.exposure_av[constants.EXPOSURE_DELTA] < 0 and exposure_delta > 0:
-            # exposure is increasing
-            exposure_offset = exposure_delta / 2
-            next_exposure -= exposure_offset
-            exposure_delta -= exposure_offset
+        #    logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
+        #elif self.exposure_av[constants.EXPOSURE_DELTA] < 0 and exposure_delta > 0:
+        #    # exposure is increasing
+        #    exposure_offset = exposure_delta / 2
+        #    next_exposure -= exposure_offset
+        #    exposure_delta -= exposure_offset
 
-            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
+        #    logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
 
 
         logger.warning('New calculated exposure: %0.6fs (%+0.8f) @ gain %0.2f (%+0.2f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
