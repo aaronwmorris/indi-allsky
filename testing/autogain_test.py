@@ -50,8 +50,8 @@ class AutoGain_Test(object):
             -1.0,  # current exposure
             -1.0,  # next exposure
             1.0,   # exposure delta
-            0.0,   # night minimum
-            0.0,   # day minimum
+            0.01,  # night minimum
+            0.01,  # day minimum
             15.0,  # maximum
             -1.0,  # sqm
         ])
@@ -191,11 +191,16 @@ if __name__ == "__main__":
     ag.gain = 60.0
     ag.main()
 
-
-    logger.warning('Test test test')
-    ag.adu = 190
+    logger.warning('*** Test maximum exposure/gain')
+    ag.adu = 50
     ag.exposure = 15.0
     ag.gain = 300.0
+    ag.main()
+
+    logger.warning('*** Test minimum exposure/gain')
+    ag.adu = 190
+    ag.exposure = 0.01
+    ag.gain = 0.0
     ag.main()
 
 
