@@ -267,7 +267,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             # increase gain, then increase exposure
             next_exposure = current_exposure * (10 ** ((self.gain2dB(self.gain2dB(self.gain_max)) - next_gain_dB) / 20))
 
-            if next_exposure > self.exosure_max:
+            if next_exposure > self.exposure_max:
                 next_exposure = self.exposure_max
 
             exposure_delta = next_exposure - current_exposure
