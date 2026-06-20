@@ -176,7 +176,7 @@ if __name__ == "__main__":
     logger.warning('*** Test decreasing exposure only ***')
     ag.adu = 90
     ag.exposure = 15.0
-    ag.gain = 60.0
+    ag.gain = 0.0
     ag.main()
 
     logger.warning('*** Test decreasing gain only ***')
@@ -186,8 +186,8 @@ if __name__ == "__main__":
     ag.main()
 
     logger.warning('*** Test decreasing exposure and gain ***')
-    ag.adu = 90
-    ag.exposure = 14.0
+    ag.adu = 200
+    ag.exposure = 5.0
     ag.gain = 60.0
     ag.main()
 
