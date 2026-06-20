@@ -198,6 +198,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             if next_gain_dB > self.gain2dB(self.gain_max):
                 next_gain_dB = self.gain2dB(self.gain_max)
 
+
             gain_delta = self.dB2gain(next_gain_dB) - current_gain
 
             next_exposure = self.exposure_max
@@ -227,16 +228,18 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             #next_exposure = next_exposure
             exposure_delta = next_exposure - current_exposure
             gain_delta = 0.0
-            next_gain_dB = current_gain
+            next_gain_dB = current_gain_dB
             logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
 
         else:
             # reduce exposure, then reduce gain
 
             next_gain_dB = current_gain_dB + (20 * math.log10(next_exposure / exposure_low_cutoff))
+            #logger.info('Next Gain dB: %0.4f', next_gain_dB)
 
             if next_gain_dB < self.gain2dB(self.gain_min):
                 next_gain_dB = self.gain2dB(self.gain_min)
+
 
             gain_delta = self.dB2gain(next_gain_dB) - current_gain
 
@@ -252,6 +255,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         current_gain_dB = self.gain2dB(current_gain)
 
         next_gain_dB = current_gain_dB + (20 * math.log10(next_exposure / current_exposure))
+        #logger.info('Next Gain dB: %0.4f', next_gain_dB)
 
 
         if next_gain_dB > self.gain2dB(self.gain_max):
