@@ -242,7 +242,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_1_10(IndiAllSky_Exposure_
 
 
     ### 1 gain = 0.1 dB (/10)
-    ### QHY
+    ### ZWO, PlayerOne
 
 
     def gain2dB(self, gain) -> float:
@@ -272,7 +272,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_Auto
         super(IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO, self).__init__(*args, **kwargs)
 
     ### 100 gain = ISO 100 (1:1)
-    ### ToupTek, Altair, etc
+    ### ToupTek, Altair, QHY, etc
 
 
     def gain2dB(self, gain) -> float:
