@@ -34,6 +34,7 @@ from wtforms.widgets import NumberInput
 from wtforms.validators import DataRequired
 #from wtforms.validators import regexp as validator_regexp
 from wtforms.validators import ValidationError
+from markupsafe import Markup
 
 #from sqlalchemy import extract
 #from sqlalchemy import asc
@@ -3543,11 +3544,11 @@ class IndiAllskyConfigForm(FlaskForm):
 
     CCD_CONFIG__EXPOSURE_CLASSNAME_choices = (
         ('', 'Basic - Fixed Gain'),
+        ('exposure_autogain_exp_prio_db_1_10', Markup('Auto-Gain - Exposure Priority - <sup>1</sup>&frasl;<sub>10</sub> dB [ZWO ASI, PlayerOne]')),
+        ('exposure_autogain_exp_prio_iso_1_100', Markup('Auto-Gain - Exposure Priority - <sup>1</sup>&frasl;<sub>100</sub> ISO [libcamera]')),
+        ('exposure_autogain_exp_prio_iso', 'Auto-Gain - Exposure Priority - Native ISO [ToupTek, Altair, QHY, etc]'),
+        ('exposure_autogain_exp_prio_db', 'Auto-Gain - Exposure Priority - Native dB [QHY]'),
         ('exposure_legacy_autogain', 'Legacy Auto-Gain Exposure Priority'),
-        ('exposure_autogain_exp_prio_db_1_10', 'Auto-Gain - Exposure Priority - 0.1 dB [ZWO ASI, PlayerOne]'),
-        ('exposure_autogain_exp_prio_db', 'Auto-Gain - Exposure Priority - 1 dB [QHY]'),
-        ('exposure_autogain_exp_prio_iso', 'Auto-Gain - Exposure Priority - ISO [ToupTek, Altair, QHY, etc]'),
-        ('exposure_autogain_exp_prio_iso_1_100', 'Auto-Gain - Exposure Priority - 0.01 ISO [libcamera]'),
     )
 
     CCD_CONFIG__AUTO_GAIN_LEVELS_choices = (
