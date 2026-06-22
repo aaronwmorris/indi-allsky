@@ -51,6 +51,15 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         raise Exception('Not Implemented')
 
 
+    def calculate_exposure(self, *args):
+        super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base, self).calculate_exposure(*args)
+
+
+    def recalculate_exposure(self, *args):
+        super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base, self).recalculate_exposure(*args)
+
+
+
     def adjust_exposure_gain(self, current_exposure, current_gain, next_exposure) -> tuple[float, float, float, float]:
         #if isinstance(self.auto_gain_exposure_cutoff_low, type(None)):
         #    self.post_init()
@@ -227,10 +236,6 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_1_10(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
-    def __init__(self, *args, **kwargs):
-        super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_1_10, self).__init__(*args, **kwargs)
-
-
     ### 1 gain = 0.1 dB (/10)
     ### ZWO, PlayerOne
 
@@ -243,9 +248,6 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_1_10(IndiAllSky_Exposure_
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
-    def __init__(self, *args, **kwargs):
-        super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB, self).__init__(*args, **kwargs)
-
     ### 1 gain = 1 dB (1:1)
     ### QHY
 
@@ -258,9 +260,6 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB(IndiAllSky_Exposure_AutoG
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
-    def __init__(self, *args, **kwargs):
-        super(IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO, self).__init__(*args, **kwargs)
-
     ### 100 gain = ISO 100 (1:1)
     ### ToupTek, Altair, QHY, etc
 
@@ -273,15 +272,8 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_Auto
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
-    def __init__(self, *args, **kwargs):
-        super(IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100, self).__init__(*args, **kwargs)
-
-
     ### 1 gain = ISO 100 (*100)
     ### libcamera
-
-    # Treat the gain like ISO
-    # gain 1 is the baseline of 0 dB
 
 
     def gain2dB(self, gain) -> float:
