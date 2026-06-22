@@ -11,8 +11,6 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
     def __init__(self, *args, **kwargs):
         super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base, self).__init__(*args, **kwargs)
 
-        self.auto_gain_exposure_cutoff_low = None
-
 
     @property
     def exposure_min(self):
@@ -54,8 +52,8 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
 
 
     def adjust_exposure_gain(self, current_exposure, current_gain, next_exposure) -> tuple[float, float, float, float]:
-        if isinstance(self.auto_gain_exposure_cutoff_low, type(None)):
-            self.post_init()
+        #if isinstance(self.auto_gain_exposure_cutoff_low, type(None)):
+        #    self.post_init()
 
         logger.warning('Next calculated exposure: %0.8f', next_exposure)
 
@@ -225,15 +223,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
 
 
     def post_init(self):
-        self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] * (self.auto_gain_exposure_cutoff_level_low / 100)
-        if self.exposure_av[constants.EXPOSURE_MAX] - self.auto_gain_exposure_cutoff_low > 10.0:
-            self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] - 10.0
-
-
-        logger.info(
-            'Auto-Gain Exposure cutoff: %0.2fs',
-            self.auto_gain_exposure_cutoff_low,
-        )
+        pass
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_1_10(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
