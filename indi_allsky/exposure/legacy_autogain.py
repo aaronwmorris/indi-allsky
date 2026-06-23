@@ -51,8 +51,8 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
         return self._gain_step
 
 
-    def calculate_exposure(self, *args):
-        return super(IndiAllSky_Exposure_Legacy_AutoGain, self).calculate_exposure(*args)
+    def compare_exposure(self, *args):
+        return super(IndiAllSky_Exposure_Legacy_AutoGain, self).compare_exposure(*args)
 
 
     def recalculate_exposure(self, *args):

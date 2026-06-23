@@ -574,7 +574,7 @@ class ImageWorker(Process):
 
 
         # adu calculate (before processing)
-        adu, adu_average = self.exposure_o.calculate_exposure(adu, exposure, gain)
+        adu, adu_average = self.exposure_o.compare_exposure(adu, exposure, gain)
 
 
         # generate a new mask base once the target ADU is found

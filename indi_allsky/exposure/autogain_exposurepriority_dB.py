@@ -51,8 +51,8 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         raise Exception('Not Implemented')
 
 
-    def calculate_exposure(self, *args):
-        return super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base, self).calculate_exposure(*args)
+    def compare_exposure(self, *args):
+        return super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base, self).compare_exposure(*args)
 
 
     def recalculate_exposure(self, *args):

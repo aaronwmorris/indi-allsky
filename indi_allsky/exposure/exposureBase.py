@@ -37,7 +37,7 @@ class IndiAllSky_Exposure_Base(object):
         return self._current_adu_target
 
 
-    def calculate_exposure(self, adu, exposure, gain):
+    def compare_exposure(self, adu, exposure, gain):
         if adu <= 0.0:
             # ensure we do not divide by zero
             logger.warning('Zero average, setting a default of 0.1')

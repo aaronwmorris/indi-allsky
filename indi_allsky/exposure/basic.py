@@ -53,8 +53,8 @@ class IndiAllSky_Exposure_Basic(IndiAllSky_Exposure_Base):
             return float(self.gain_av[constants.GAIN_MAX_DAY])
 
 
-    def calculate_exposure(self, *args):
-        return super(IndiAllSky_Exposure_Basic, self).calculate_exposure(*args)
+    def compare_exposure(self, *args):
+        return super(IndiAllSky_Exposure_Basic, self).compare_exposure(*args)
 
 
     def recalculate_exposure(self, *args):
