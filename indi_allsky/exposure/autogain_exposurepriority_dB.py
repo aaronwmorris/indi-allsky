@@ -52,11 +52,11 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
 
 
     def calculate_exposure(self, *args):
-        super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base, self).calculate_exposure(*args)
+        return super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base, self).calculate_exposure(*args)
 
 
     def recalculate_exposure(self, *args):
-        super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base, self).recalculate_exposure(*args)
+        return super(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base, self).recalculate_exposure(*args)
 
 
 

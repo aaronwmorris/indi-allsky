@@ -48,11 +48,11 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
 
 
     def calculate_exposure(self, *args):
-        super(IndiAllSky_Exposure_Legacy_AutoGain, self).calculate_exposure(*args)
+        return super(IndiAllSky_Exposure_Legacy_AutoGain, self).calculate_exposure(*args)
 
 
     def recalculate_exposure(self, *args):
-        super(IndiAllSky_Exposure_Legacy_AutoGain, self).recalculate_exposure(*args)
+        return super(IndiAllSky_Exposure_Legacy_AutoGain, self).recalculate_exposure(*args)
 
 
     def adjust_exposure_gain(self, current_exposure, current_gain, next_exposure) -> tuple[float, float, float, float]:

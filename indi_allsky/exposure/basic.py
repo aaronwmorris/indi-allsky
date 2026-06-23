@@ -54,11 +54,11 @@ class IndiAllSky_Exposure_Basic(IndiAllSky_Exposure_Base):
 
 
     def calculate_exposure(self, *args):
-        super(IndiAllSky_Exposure_Basic, self).calculate_exposure(*args)
+        return super(IndiAllSky_Exposure_Basic, self).calculate_exposure(*args)
 
 
     def recalculate_exposure(self, *args):
-        super(IndiAllSky_Exposure_Basic, self).recalculate_exposure(*args)
+        return super(IndiAllSky_Exposure_Basic, self).recalculate_exposure(*args)
 
 
     def adjust_exposure_gain(self, current_exposure, current_gain, next_exposure) -> tuple[float, float, float, float]:
