@@ -10,8 +10,6 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky_Exposure_Base(object):
 
-    auto_gain_exposure_cutoff_level_low = 80  # percent of max exposure
-
 
     def __init__(self, *args, **kwargs):
         self.config = args[0]
