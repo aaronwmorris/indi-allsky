@@ -1367,6 +1367,10 @@ class CaptureWorker(Process):
             binning_sqm = int(self.config.get('CAMERA_SQM', {}).get('BINNING', 1))
 
 
+
+        exposure_class_str = self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME', 'exposure_basic')
+
+
         # set default exposure, gain
         if self.config.get('CCD_EXPOSURE_DEF'):
             ccd_exposure_default = self.config['CCD_EXPOSURE_DEF']
@@ -1419,10 +1423,9 @@ class CaptureWorker(Process):
                 #ccd_exposure_default = self.exposure_av[constants.EXPOSURE_MIN_NIGHT]
                 ccd_exposure_default = 0.01  # this should give better results for many cameras
 
+
                 # gain
-                if self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME'):
-                    ccd_gain_default = gain_day
-                else:
+                if exposure_class_str == 'exposure_basic':
                     if self.night_av[constants.NIGHT_NIGHT]:
                         if self.night_av[constants.NIGHT_MOONMODE]:
                             ccd_gain_default = gain_moonmode
@@ -1430,6 +1433,9 @@ class CaptureWorker(Process):
                             ccd_gain_default = gain_night
                     else:
                         ccd_gain_default = gain_day
+                else:
+                    # auto-gain
+                    ccd_gain_default = gain_day
 
 
                 # binning
@@ -1480,7 +1486,7 @@ class CaptureWorker(Process):
 
             self.gain_av[constants.GAIN_SQM] = float(gain_sqm)
 
-            if self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME'):
+            if exposure_class_str == 'exposure_basic':
                 self.gain_av[constants.GAIN_MIN_NIGHT] = float(gain_day)
                 self.gain_av[constants.GAIN_MIN_MOONMODE] = float(gain_day)
             else:

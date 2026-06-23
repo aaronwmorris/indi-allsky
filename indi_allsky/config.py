@@ -67,7 +67,7 @@ class IndiAllSkyConfigBase(object):
                 "GAIN"    : 0.0,
                 "BINNING" : 1,
             },
-            "EXPOSURE_CLASSNAME"  : "",
+            "EXPOSURE_CLASSNAME"  : "exposure_basic",
             "AUTO_GAIN_LEVELS"    : 8,  # legacy setting
         },
         "INDI_CONFIG_DEFAULTS" : {

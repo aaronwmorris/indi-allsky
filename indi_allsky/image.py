@@ -128,11 +128,13 @@ class ImageWorker(Process):
         )
 
 
-        exposure_class_str = self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME')
-        if exposure_class_str:
+        try:
+            exposure_class_str = self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME', 'exposure_basic')
             exposure_class = getattr(exposure_module, exposure_class_str)
-        else:
+        except AttributeError:
+            logger.error('Unknown exposure class: %s', exposure_class_str)
             exposure_class = getattr(exposure_module, 'exposure_basic')
+
 
         self.exposure_o = exposure_class(
             self.config,

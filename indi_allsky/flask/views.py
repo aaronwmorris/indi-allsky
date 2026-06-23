@@ -2250,7 +2250,7 @@ class ConfigView(FormView):
             'CCD_CONFIG__MOONMODE__BINNING'  : self.indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('BINNING', 1),
             'CCD_CONFIG__DAY__GAIN'          : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('GAIN', 0.0), 2),  # limit to 2 decimals
             'CCD_CONFIG__DAY__BINNING'       : self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('BINNING', 1),
-            'CCD_CONFIG__EXPOSURE_CLASSNAME' : self.indi_allsky_config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME', ''),
+            'CCD_CONFIG__EXPOSURE_CLASSNAME' : self.indi_allsky_config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME', 'exposure_basic'),
             'CCD_CONFIG__AUTO_GAIN_LEVELS'   : str(self.indi_allsky_config.get('CCD_CONFIG', {}).get('AUTO_GAIN_LEVELS', 8)),  # string in form, int in config
             'CCD_EXPOSURE_MAX'               : self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0),
             'CCD_EXPOSURE_DEF'               : '{0:.6f}'.format(self.indi_allsky_config.get('CCD_EXPOSURE_DEF', 0.0)),  # force 6 digits of precision
