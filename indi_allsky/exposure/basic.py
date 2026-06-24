@@ -1,6 +1,7 @@
-from .. import constants
+import math
 import logging
 
+from .. import constants
 from .exposureBase import IndiAllSky_Exposure_Base
 
 logger = logging.getLogger('indi_allsky')
@@ -30,27 +31,27 @@ class IndiAllSky_Exposure_Basic(IndiAllSky_Exposure_Base):
         if self.night_av[constants.NIGHT_NIGHT]:
             if self.night_av[constants.NIGHT_MOONMODE]:
                 # moon mode
-                return float(self.gain_av[constants.GAIN_MIN_MOONMODE])
+                return math.ceil(float(self.gain_av[constants.GAIN_MIN_MOONMODE]) * 100) / 100  # round up the hundredths spot
             else:
                 # night
-                return float(self.gain_av[constants.GAIN_MIN_NIGHT])
+                return math.ceil(float(self.gain_av[constants.GAIN_MIN_NIGHT]) * 100) / 100
 
         else:
             # day
-            return float(self.gain_av[constants.GAIN_MIN_DAY])
+            return math.ceil(float(self.gain_av[constants.GAIN_MIN_DAY]) * 100) / 100
 
     @property
     def gain_max(self):
         if self.night_av[constants.NIGHT_NIGHT]:
             if self.night_av[constants.NIGHT_MOONMODE]:
                 # moon mode
-                return float(self.gain_av[constants.GAIN_MAX_MOONMODE])
+                return math.floor(float(self.gain_av[constants.GAIN_MAX_MOONMODE]) * 100) / 100  # round down
             else:
                 # night
-                return float(self.gain_av[constants.GAIN_MAX_NIGHT])
+                return math.floor(float(self.gain_av[constants.GAIN_MAX_NIGHT]) * 100) / 100
 
         else:
-            return float(self.gain_av[constants.GAIN_MAX_DAY])
+            return math.floor(float(self.gain_av[constants.GAIN_MAX_DAY]) * 100) / 100
 
 
     def compare_exposure(self, *args):

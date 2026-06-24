@@ -64,7 +64,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         #if isinstance(self.auto_gain_exposure_cutoff_low, type(None)):
         #    self.post_init()
 
-        logger.warning('Next calculated exposure: %0.8f', next_exposure)
+        #logger.warning('Next calculated exposure: %0.8f', next_exposure)
 
         # the next exposure may be higher than the maximum exposure
         # this exposure will be used to calulate a gain adjustment instead
