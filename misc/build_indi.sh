@@ -809,7 +809,8 @@ elif [[ "$DISTRO" == "arch" ]]; then
         libtiff \
         libusb \
         zeromq \
-        zlib
+        zlib \
+        jack2
 
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
