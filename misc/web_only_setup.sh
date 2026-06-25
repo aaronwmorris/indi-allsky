@@ -887,6 +887,8 @@ elif [[ "$DISTRO" == "arch" ]]; then
         base-devel \
         git \
         python3 \
+        ca-certificates \
+        ca-certificates-utils \
         cmake \
         inetutils \
         libnewt \

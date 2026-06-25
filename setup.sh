@@ -1798,6 +1798,8 @@ elif [[ "$DISTRO" == "arch" ]]; then
         base-devel \
         git \
         python3 \
+        ca-certificates \
+        ca-certificates-utils \
         cmake \
         inetutils \
         libnewt \
@@ -2059,6 +2061,8 @@ if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
 
             pip3 install rpi.lgpio
         fi
+    elif [[ "$DISTRO" == "arch" ]]; then
+        :
     fi
 fi
 
