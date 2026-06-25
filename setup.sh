@@ -3246,6 +3246,20 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
     fi
 
 
+    # Ensure home directories are readable
+    TMP_SYSTEMD=$(mktemp)
+    sed \
+     -e 's|#\?ProtectHome=.*|ProtectHome=read-only|i' \
+     /etc/systemd/system/httpd.service.d/hardening.conf > "$TMP_SYSTEMD"
+
+    sudo cp -f "$TMP_SYSTEMD" /etc/systemd/system/httpd.service.d/hardening.conf
+    sudo chown root:root /etc/systemd/system/httpd.service.d/hardening.conf
+    sudo chmod 644 /etc/systemd/system/httpd.service.d/hardening.conf
+    [[ -f "$TMP_SYSTEMD" ]] && rm -f "$TMP_SYSTEMD"
+
+    sudo systemctl daemon-reload
+
+
     # Always do this
     sudo systemctl enable "$APACHE_SERVICE_NAME"
     sudo systemctl restart "$APACHE_SERVICE_NAME"
