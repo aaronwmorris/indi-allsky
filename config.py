@@ -68,10 +68,20 @@ if __name__ == "__main__":
     )
     argparser.set_defaults(force=False)
 
+    argparser.add_argument(
+        '--image_folder',
+        help='image folder for bootstrap',
+        type=str,
+        default='/var/www/html/allsky/images',
+    )
+
+
     args = argparser.parse_args()
 
 
     iacu = IndiAllSkyConfigUtil()
+    iacu.image_folder = args.image_folder
+
     action_func = getattr(iacu, args.action)
     action_func(
         config=args.config,

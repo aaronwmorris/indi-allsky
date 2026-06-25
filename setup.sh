@@ -8,6 +8,9 @@ shopt -s nullglob
 PATH=/usr/bin:/bin
 export PATH
 
+PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
+export PKG_CONFIG_PATH
+
 
 ### Non-interactive options example ###
 #export INDIALLSKY_CAMERA_INTERFACE=indi
@@ -38,8 +41,10 @@ GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 UPGRADE_ALLSKY_SERVICE_NAME="upgrade-indi-allsky"
 
 ALLSKY_ETC="/etc/indi-allsky"
+
 DOCROOT_FOLDER="/var/www/html"
 HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
+BOOTSTRAP_IMAGE_FOLDER="${HTDOCS_FOLDER}/images"
 
 DB_FOLDER="/var/lib/indi-allsky"
 DB_FILE="${DB_FOLDER}/indi-allsky.sqlite"
@@ -634,6 +639,9 @@ elif [[ "$DISTRO_ID" == "linuxmint" ]]; then
         exit 1
     fi
 
+elif [[ "$DISTRO_ID" == "arch" ]]; then
+    DISTRO="arch"
+
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
@@ -651,6 +659,9 @@ echo "**** Installing packages... ****"
 if [[ "$DISTRO" == "debian_13" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+
+    APACHE_ETC="/etc/apache2"
+    APACHE_SERVICE_NAME="apache2.service"
 
     MYSQL_ETC="/etc/mysql"
 
@@ -819,6 +830,9 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
+    APACHE_ETC="/etc/apache2"
+    APACHE_SERVICE_NAME="apache2.service"
+
     MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3.11
@@ -970,6 +984,9 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
 elif [[ "$DISTRO" == "debian_11" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+
+    APACHE_ETC="/etc/apache2"
+    APACHE_SERVICE_NAME="apache2.service"
 
     MYSQL_ETC="/etc/mysql"
 
@@ -1124,6 +1141,9 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
+    APACHE_ETC="/etc/apache2"
+    APACHE_SERVICE_NAME="apache2.service"
+
     MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3.7
@@ -1254,6 +1274,9 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
 elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
+
+    APACHE_ETC="/etc/apache2"
+    APACHE_SERVICE_NAME="apache2.service"
 
     MYSQL_ETC="/etc/mysql"
 
@@ -1423,6 +1446,9 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
+    APACHE_ETC="/etc/apache2"
+    APACHE_SERVICE_NAME="apache2.service"
+
     MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3.11
@@ -1583,6 +1609,9 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
+    APACHE_ETC="/etc/apache2"
+    APACHE_SERVICE_NAME="apache2.service"
+
     MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3.9
@@ -1737,6 +1766,108 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
             indi-gpsnmea
     fi
 
+elif [[ "$DISTRO" == "arch" ]]; then
+    DOCROOT_FOLDER="/srv/html"
+    HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
+    BOOTSTRAP_IMAGE_FOLDER="${HTDOCS_FOLDER}/images"
+
+    RSYSLOG_USER=na
+    RSYSLOG_GROUP=na
+
+    APACHE_ETC="/etc/httpd"
+    APACHE_SERVICE_NAME="httpd.service"
+
+    MYSQL_ETC="/etc/mysql"
+
+    PYTHON_BIN=python3
+
+
+    INSTALL_INDI="false"
+
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
+    fi
+
+    sudo pacman -Syu --noconfirm --needed \
+        base-devel \
+        git \
+        python3 \
+        ca-certificates \
+        ca-certificates-utils \
+        cmake \
+        inetutils \
+        libnewt \
+        pkg-config \
+        ffmpeg \
+        gcc-fortran \
+        bc \
+        procps-ng \
+        cronie \
+        cpio \
+        tzdata \
+        avahi \
+        nss-mdns \
+        swig \
+        gnutls \
+        libcurl-gnutls \
+        libnova \
+        cfitsio \
+        imath \
+        openexr \
+        gtk3 \
+        openssl \
+        libxml2 \
+        libxslt \
+        dbus \
+        glib2-devel \
+        libffi \
+        opencv \
+        blas \
+        libraw \
+        geos \
+        libtiff \
+        libjpeg-turbo \
+        openjpeg2 \
+        libpng \
+        zlib \
+        freetype2 \
+        lcms2 \
+        libwebp \
+        libcap \
+        tcl \
+        tk \
+        harfbuzz \
+        fribidi \
+        libxcb \
+        xcb-util-keysyms \
+        xcb-util-wm \
+        xorgproto \
+        mariadb-libs \
+        rust \
+        gifsicle \
+        jq \
+        sqlite3 \
+        libgpiod \
+        i2c-tools \
+        networkmanager \
+        dnsmasq \
+        udisks2 \
+        polkit \
+        dbus-broker
+
+
+    # enable avahi
+    sudo systemctl enable --now avahi-daemon.service
+
+    # enable dbus user session
+    systemctl --user enable --now dbus.socket
+
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
@@ -1777,6 +1908,17 @@ else
 
             exit 1
         fi
+    elif [[ "$DISTRO_ID" == "arch" ]]; then
+        if [ "$WEBSERVER" == "apache" ]; then
+            sudo pacman -Syu --noconfirm --needed \
+                apache
+        else
+            echo
+            echo "Unknown webserver: $WEBSERVER"
+            echo
+
+            exit 1
+        fi
     fi
 fi
 
@@ -1789,6 +1931,13 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "r
             --msgbox "*** Configure system locales ***\n\nThe system locales have not yet been configured.  It will be necessary to configure the appropriate localization settings for proper data processing\n\nCommon selections: en_US.UTF8 or en_GB.UTF8\n\nNote: Multiple selections are allowed" 0 0
 
         sudo dpkg-reconfigure locales
+    fi
+elif [[ "$DISTRO_ID" == "arch"  ]]; then
+    if ! python3 -c "import locale; locale.setlocale(locale.LC_ALL, '');" >/dev/null 2>&1; then
+        echo
+        echo
+        echo "System locales not configured"
+        sleep 5
     fi
 else
     echo "Unable to configure locales for distribution"
@@ -1912,6 +2061,8 @@ if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
 
             pip3 install rpi.lgpio
         fi
+    elif [[ "$DISTRO" == "arch" ]]; then
+        :
     fi
 fi
 
@@ -2282,30 +2433,35 @@ echo "**** Ensure user is a member of the systemd-journal group ****"
 sudo usermod -a -G systemd-journal "$USER"
 
 
-echo "**** Setup rsyslog logging ****"
-[[ ! -d "/var/log/indi-allsky" ]] && sudo mkdir /var/log/indi-allsky
-sudo chmod 755 /var/log/indi-allsky
-sudo touch /var/log/indi-allsky/indi-allsky.log
-sudo chmod 644 /var/log/indi-allsky/indi-allsky.log
-sudo touch /var/log/indi-allsky/webapp-indi-allsky.log
-sudo chmod 644 /var/log/indi-allsky/webapp-indi-allsky.log
-sudo chown -R "$RSYSLOG_USER":"$RSYSLOG_GROUP" /var/log/indi-allsky
+if [[ "$DISTRO" == "arch" ]]; then
+    # no rsyslog for arch
+    :
+else
+    echo "**** Setup rsyslog logging ****"
+    [[ ! -d "/var/log/indi-allsky" ]] && sudo mkdir /var/log/indi-allsky
+    sudo chmod 755 /var/log/indi-allsky
+    sudo touch /var/log/indi-allsky/indi-allsky.log
+    sudo chmod 644 /var/log/indi-allsky/indi-allsky.log
+    sudo touch /var/log/indi-allsky/webapp-indi-allsky.log
+    sudo chmod 644 /var/log/indi-allsky/webapp-indi-allsky.log
+    sudo chown -R "$RSYSLOG_USER":"$RSYSLOG_GROUP" /var/log/indi-allsky
 
 
-# 10 prefix so they are process before the defaults in 50
-sudo cp -f "${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf" /etc/rsyslog.d/10-indi-allsky.conf
-sudo chown root:root /etc/rsyslog.d/10-indi-allsky.conf
-sudo chmod 644 /etc/rsyslog.d/10-indi-allsky.conf
+    # 10 prefix so they are process before the defaults in 50
+    sudo cp -f "${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf" /etc/rsyslog.d/10-indi-allsky.conf
+    sudo chown root:root /etc/rsyslog.d/10-indi-allsky.conf
+    sudo chmod 644 /etc/rsyslog.d/10-indi-allsky.conf
 
-# remove old version
-[[ -f "/etc/rsyslog.d/indi-allsky.conf" ]] && sudo rm -f /etc/rsyslog.d/indi-allsky.conf
+    # remove old version
+    [[ -f "/etc/rsyslog.d/indi-allsky.conf" ]] && sudo rm -f /etc/rsyslog.d/indi-allsky.conf
 
-sudo systemctl restart rsyslog
+    sudo systemctl restart rsyslog
 
 
-sudo cp -f "${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky" /etc/logrotate.d/indi-allsky
-sudo chown root:root /etc/logrotate.d/indi-allsky
-sudo chmod 644 /etc/logrotate.d/indi-allsky
+    sudo cp -f "${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky" /etc/logrotate.d/indi-allsky
+    sudo chown root:root /etc/logrotate.d/indi-allsky
+    sudo chmod 644 /etc/logrotate.d/indi-allsky
+fi
 
 
 echo "**** Indi-allsky config ****"
@@ -2546,7 +2702,7 @@ fi
 
 
 # bootstrap initial config
-"${ALLSKY_DIRECTORY}/config.py" bootstrap || true
+"${ALLSKY_DIRECTORY}/config.py" bootstrap --image_folder "$BOOTSTRAP_IMAGE_FOLDER" || true
 
 
 # dump config for processing
@@ -2627,6 +2783,8 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "r
     else
         sudo dpkg-reconfigure tzdata
     fi
+elif [[ "$DISTRO" == "arch" ]]; then
+    sudo tzselect
 else
     echo "Unable to set timezone for distribution"
     exit 1
@@ -2684,9 +2842,8 @@ if [[ "$WEBSERVER" == "caddy" && "$ASTROBERRY3" == "true" ]]; then
     fi
 
 
-    if [ "$WEBSERVER_CONFIG" == "true" ]; then
-        if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
-
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+        if [ "$WEBSERVER_CONFIG" == "true" ]; then
             TMP_HTTP=$(mktemp)
             sed \
              -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
@@ -2716,16 +2873,23 @@ if [[ "$WEBSERVER" == "caddy" && "$ASTROBERRY3" == "true" ]]; then
             fi
         fi
 
+    elif [[ "$DISTRO" == "arch" ]]; then
+        echo
+        echo
+        echo "caddy not supported on Arch"
+        exit 1
 
-        # Always do this
-        sudo systemctl enable caddy
-        sudo systemctl restart caddy
     fi
+
+
+    # Always do this
+    sudo systemctl enable caddy
+    sudo systemctl restart caddy
 
 elif [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY2" == "true" ]]; then
     #echo "**** Disabling apache web server (Astroberry) ****"
-    #sudo systemctl stop apache2 || true
-    #sudo systemctl disable apache2 || true
+    #sudo systemctl stop "$APACHE_SERVICE_NAME" || true
+    #sudo systemctl disable "$APACHE_SERVICE_NAME" || true
 
 
     echo "**** Setup nginx ****"
@@ -2750,7 +2914,7 @@ elif [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY2" == "true" ]]; then
     sudo systemctl restart nginx
 
 elif [[ "$WEBSERVER" == "nginx" ]]; then
-    if systemctl --quiet is-active apache2.service; then
+    if systemctl --quiet is-active "$APACHE_SERVICE_NAME"; then
         echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
         sleep 3
     fi
@@ -2774,21 +2938,21 @@ elif [[ "$WEBSERVER" == "nginx" ]]; then
     fi
 
 
-    if [ "$WEBSERVER_CONFIG" == "true" ]; then
-        echo "**** Setup nginx ****"
-        TMP_HTTP=$(mktemp)
-        sed \
-         -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
-         -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
-         -e "s|%DOCROOT_FOLDER%|$DOCROOT_FOLDER|g" \
-         -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
-         -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
-         -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
-         -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
-         "${ALLSKY_DIRECTORY}/service/nginx_indi-allsky.conf" > "$TMP_HTTP"
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+        if [ "$WEBSERVER_CONFIG" == "true" ]; then
+            echo "**** Setup nginx ****"
+            TMP_HTTP=$(mktemp)
+            sed \
+             -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+             -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+             -e "s|%DOCROOT_FOLDER%|$DOCROOT_FOLDER|g" \
+             -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+             -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
+             -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
+             -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
+             "${ALLSKY_DIRECTORY}/service/nginx_indi-allsky.conf" > "$TMP_HTTP"
 
 
-        if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
             if [ -f "/etc/nginx/sites-available/indi-allsky.conf" ]; then
                 # backup existing config
                 sudo cp -f "/etc/nginx/sites-available/indi-allsky.conf" "/etc/nginx/sites-available/indi-allsky.conf_backup_$(date +%Y%m%d_%H%M%S)"
@@ -2853,11 +3017,18 @@ elif [[ "$WEBSERVER" == "nginx" ]]; then
             sudo update-ca-certificates
         fi
 
+    elif [[ "$DISTRO" == "arch" ]]; then
+        echo
+        echo
+        echo "nginx not supported on Arch"
+        exit 1
 
-        # Always do this
-        sudo systemctl enable nginx
-        sudo systemctl restart nginx
     fi
+
+
+    # Always do this
+    sudo systemctl enable nginx
+    sudo systemctl restart nginx
 
 elif [[ "$WEBSERVER" == "apache" ]]; then
     if systemctl --quiet is-active nginx.service; then
@@ -2871,33 +3042,34 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
     fi
 
 
-    if [ -e "/etc/apache2/sites-enabled/indi-allsky.conf" ]; then
-        while [ -z "${WEBSERVER_CONFIG:-}" ]; do
-            if whiptail --title "Web Server Configuration" --yesno "Do you want to update the web server configuration?\n\nIf you have performed customizations to the apache config, you should choose \"no\"\n\n(Hint: Most people should pick \"yes\")" 0 0; then
-                WEBSERVER_CONFIG="true"
-            else
-                WEBSERVER_CONFIG="false"
-            fi
-        done
-    else
-        WEBSERVER_CONFIG="true"
-    fi
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+        if [ -e "/etc/apache2/sites-enabled/indi-allsky.conf" ]; then
+            while [ -z "${WEBSERVER_CONFIG:-}" ]; do
+                if whiptail --title "Web Server Configuration" --yesno "Do you want to update the web server configuration?\n\nIf you have performed customizations to the apache config, you should choose \"no\"\n\n(Hint: Most people should pick \"yes\")" 0 0; then
+                    WEBSERVER_CONFIG="true"
+                else
+                    WEBSERVER_CONFIG="false"
+                fi
+            done
+        else
+            WEBSERVER_CONFIG="true"
+        fi
 
 
-    if [ "$WEBSERVER_CONFIG" == "true" ]; then
-        echo "**** Start apache2 service ****"
-        TMP_HTTP=$(mktemp)
-        sed \
-         -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
-         -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
-         -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
-         -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
-         -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
-         -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock\|http://localhost/indi-allsky|g" \
-         "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP_HTTP"
+        if [ "$WEBSERVER_CONFIG" == "true" ]; then
+            echo "**** Setup apache2 service ****"
+            TMP_HTTP=$(mktemp)
+            sed \
+             -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+             -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+             -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+             -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
+             -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
+             -e "s|%APACHE_ETC%|$APACHE_ETC|g" \
+             -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock\|http://localhost/indi-allsky|g" \
+             "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP_HTTP"
 
 
-        if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
             if [ -f "/etc/apache2/sites-available/indi-allsky.conf" ]; then
                 # backup existing config
                 sudo cp -f "/etc/apache2/sites-available/indi-allsky.conf" "/etc/apache2/sites-available/indi-allsky.backup_$(date +%Y%m%d_%H%M%S)"
@@ -2977,23 +3149,149 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
                 sudo cp /etc/apache2/ports.conf /etc/apache2/ports.conf_pre_indiallsky
 
                 # Comment out the Listen directives
-                TMP9=$(mktemp)
+                TMP_LISTEN=$(mktemp)
                 sed \
                  -e 's|^\(.*\)[^#]\?\(listen.*\)|\1#\2|i' \
-                 /etc/apache2/ports.conf_pre_indiallsky > "$TMP9"
+                 /etc/apache2/ports.conf_pre_indiallsky > "$TMP_LISTEN"
 
-                sudo cp -f "$TMP9" /etc/apache2/ports.conf
+                sudo cp -f "$TMP_LISTEN" /etc/apache2/ports.conf
                 sudo chown root:root /etc/apache2/ports.conf
                 sudo chmod 644 /etc/apache2/ports.conf
-                [[ -f "$TMP9" ]] && rm -f "$TMP9"
+                [[ -f "$TMP_LISTEN" ]] && rm -f "$TMP_LISTEN"
             fi
         fi
 
+    elif [[ "$DISTRO" == "arch" ]]; then
 
-        # Always do this
-        sudo systemctl enable apache2
-        sudo systemctl restart apache2
+        if [ -e "/etc/httpd/conf/conf.d/indi-allsky.conf" ]; then
+            while [ -z "${WEBSERVER_CONFIG:-}" ]; do
+                if whiptail --title "Web Server Configuration" --yesno "Do you want to update the web server configuration?\n\nIf you have performed customizations to the apache config, you should choose \"no\"\n\n(Hint: Most people should pick \"yes\")" 0 0; then
+                    WEBSERVER_CONFIG="true"
+                else
+                    WEBSERVER_CONFIG="false"
+                fi
+            done
+        else
+            WEBSERVER_CONFIG="true"
+        fi
+
+
+        if [ "$WEBSERVER_CONFIG" == "true" ]; then
+            echo "**** Setup apache service ****"
+            TMP_HTTP=$(mktemp)
+            sed \
+             -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+             -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+             -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+             -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
+             -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
+             -e "s|%APACHE_ETC%|$APACHE_ETC|g" \
+             -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock\|http://localhost/indi-allsky|g" \
+             "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP_HTTP"
+
+
+            if [ -f "/etc/httpd/conf/conf.d/indi-allsky.conf" ]; then
+                # backup existing config
+                sudo cp -f "/etc/httpd/conf/conf.d/indi-allsky.conf" "/etc/httpd/conf/conf.d/indi-allsky.backup_$(date +%Y%m%d_%H%M%S)"
+            fi
+
+            if [ -f "/etc/httpd/conf/conf.d/base_indi-allsky.conf" ]; then
+                # backup existing config
+                sudo cp -f "/etc/httpd/conf/conf.d/base_indi-allsky.conf" "/etc/httpd/conf/conf.d/base_indi-allsky.backup_$(date +%Y%m%d_%H%M%S)"
+            fi
+
+
+            sudo cp -f "$TMP_HTTP" /etc/httpd/conf/conf.d/indi-allsky.conf
+            sudo chown root:root /etc/httpd/conf/conf.d/indi-allsky.conf
+            sudo chmod 644 /etc/httpd/conf/conf.d/indi-allsky.conf
+
+            sudo cp -f "${ALLSKY_DIRECTORY}/service/apache_arch_base.conf" "/etc/httpd/conf/conf.d/base_indi-allsky.conf"
+
+
+            if [[ ! -d "/etc/httpd/ssl" ]]; then
+                sudo mkdir /etc/httpd/ssl
+            fi
+
+            sudo chown root:root /etc/httpd/ssl
+            sudo chmod 755 /etc/httpd/ssl
+
+
+            if [[ ! -e "/etc/httpd/ssl/indi-allsky_apache.key" || ! -e "/etc/httpd/ssl/indi-allsky_apache.pem" ]]; then
+                sudo rm -f /etc/httpd/ssl/indi-allsky_apache.key
+                sudo rm -f /etc/httpd/ssl/indi-allsky_apache.pem
+
+                SHORT_HOSTNAME=$(hostname -s)
+                HTTP_KEY_TMP=$(mktemp --suffix=.key)
+                HTTP_CRT_TMP=$(mktemp --suffix=.pem)
+
+                # sudo has problems with process substitution <()
+                openssl req \
+                    -new \
+                    -newkey rsa:4096 \
+                    -sha512 \
+                    -days 3650 \
+                    -nodes \
+                    -x509 \
+                    -subj "/CN=${SHORT_HOSTNAME}.local" \
+                    -keyout "$HTTP_KEY_TMP" \
+                    -out "$HTTP_CRT_TMP" \
+                    -extensions san \
+                    -config <(cat /etc/ssl/openssl.cnf <(printf "\n[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:%s.local,DNS:%s,DNS:localhost" "$SHORT_HOSTNAME" "$SHORT_HOSTNAME"))
+
+                sudo cp -f "$HTTP_KEY_TMP" /etc/httpd/ssl/indi-allsky_apache.key
+                sudo cp -f "$HTTP_CRT_TMP" /etc/httpd/ssl/indi-allsky_apache.pem
+
+                rm -f "$HTTP_KEY_TMP"
+                rm -f "$HTTP_CRT_TMP"
+            fi
+
+
+            sudo chown root:root /etc/httpd/ssl/indi-allsky_apache.key
+            sudo chmod 600 /etc/httpd/ssl/indi-allsky_apache.key
+            sudo chown root:root /etc/httpd/ssl/indi-allsky_apache.pem
+            sudo chmod 644 /etc/httpd/ssl/indi-allsky_apache.pem
+
+            # system certificate store
+            sudo cp -f /etc/httpd/ssl/indi-allsky_apache.pem /etc/ca-certificates/trust-source/anchors/indi-allsky_apache.crt
+            sudo chown root:root /etc/ca-certificates/trust-source/anchors/indi-allsky_apache.crt
+            sudo chmod 644 /etc/ca-certificates/trust-source/anchors/indi-allsky_apache.crt
+            sudo update-ca-trust extract
+
+
+            # Comment out the Listen 80 directives
+            TMP_LISTEN=$(mktemp)
+            sed \
+             -e 's|^\(.*\)[^#]\?\(listen.*80\)|\1#\2|i' \
+             -e 's|^\(.*\)[^#]\?\(listen.*\[\:\:\]\:80\)|\1#\2|i' \
+             /etc/httpd/conf/conf.d/indi-allsky.conf > "$TMP_LISTEN"
+
+            sudo cp -f "$TMP_LISTEN" /etc/httpd/conf/conf.d/indi-allsky.conf
+            sudo chown root:root /etc/httpd/conf/conf.d/indi-allsky.conf
+            sudo chmod 644 /etc/httpd/conf/conf.d/indi-allsky.conf
+            [[ -f "$TMP_LISTEN" ]] && rm -f "$TMP_LISTEN"
+
+        fi
+
+
+        # Ensure home directories are readable
+        TMP_SYSTEMD=$(mktemp)
+        sed \
+         -e 's|#\?ProtectHome=.*|ProtectHome=read-only|i' \
+         /etc/systemd/system/httpd.service.d/hardening.conf > "$TMP_SYSTEMD"
+
+        sudo cp -f "$TMP_SYSTEMD" /etc/systemd/system/httpd.service.d/hardening.conf
+        sudo chown root:root /etc/systemd/system/httpd.service.d/hardening.conf
+        sudo chmod 644 /etc/systemd/system/httpd.service.d/hardening.conf
+        [[ -f "$TMP_SYSTEMD" ]] && rm -f "$TMP_SYSTEMD"
+
+        sudo systemctl daemon-reload
+
     fi
+
+
+    # Always do this
+    sudo systemctl enable "$APACHE_SERVICE_NAME"
+    sudo systemctl restart "$APACHE_SERVICE_NAME"
 
 elif [[ "$WEBSERVER" == "caddy" ]]; then
     if systemctl --quiet is-active nginx.service; then
@@ -3001,7 +3299,7 @@ elif [[ "$WEBSERVER" == "caddy" ]]; then
         sleep 3
     fi
 
-    if systemctl --quiet is-active apache2.service; then
+    if systemctl --quiet is-active "$APACHE_SERVICE_NAME"; then
         echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
         sleep 3
     fi
@@ -3122,7 +3420,7 @@ cat "$TMP_INDI_PORT" > "$TMP_CONFIG_DUMP"
 
 
 # final config syntax check
-json_pp < "$TMP_CONFIG_DUMP" > /dev/null
+jq < "$TMP_CONFIG_DUMP" > /dev/null
 
 
 # load all changes
@@ -3131,7 +3429,7 @@ json_pp < "$TMP_CONFIG_DUMP" > /dev/null
 
 
 # final config syntax check
-json_pp < "${ALLSKY_ETC}/flask.json" > /dev/null
+jq < "${ALLSKY_ETC}/flask.json" > /dev/null
 
 
 USER_COUNT=$("${ALLSKY_DIRECTORY}/config.py" user_count)
