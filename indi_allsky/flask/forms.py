@@ -3546,7 +3546,7 @@ class IndiAllskyConfigForm(FlaskForm):
         ('exposure_basic', 'Basic - Fixed Gains [Day, Night, & Moon Mode]'),
         ('exposure_autogain_exp_prio_db_1_10', Markup('Auto-Gain - Exposure Priority - <sup>1</sup>&frasl;<sub>10</sub> dB [ZWO ASI, PlayerOne]')),
         ('exposure_autogain_exp_prio_iso_1_100', Markup('Auto-Gain - Exposure Priority - <sup>1</sup>&frasl;<sub>100</sub> ISO [libcamera]')),
-        ('exposure_autogain_exp_prio_iso', 'Auto-Gain - Exposure Priority - Native ISO [ToupTek, Altair, QHY, etc]'),
+        ('exposure_autogain_exp_prio_iso', 'Auto-Gain - Exposure Priority - Native ISO [ToupTek, Altair, Omegon, etc]'),
         ('exposure_autogain_exp_prio_db', 'Auto-Gain - Exposure Priority - Native dB [QHY]'),
         ('exposure_legacy_autogain', '[Legacy] - Auto-Gain'),
     )
