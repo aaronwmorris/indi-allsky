@@ -45,3 +45,4 @@ requests-toolbelt
 pytz
 mysql-connector-python == 9.6.0
 PyWavelets == 1.4.0
+systemd-python == 235
