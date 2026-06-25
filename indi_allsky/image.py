@@ -7,12 +7,10 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 import time
-import functools
 import tempfile
 import shutil
 import psutil
 import subprocess
-import copy
 import signal
 import logging
 import traceback
@@ -35,6 +33,8 @@ from . import constants
 from .processing import ImageProcessor
 from .miscUpload import miscUpload
 from .adsb import AdsbAircraftHttpWorker
+
+from . import exposure as exposure_module
 
 from .flask import create_app
 from .flask import db
@@ -64,8 +64,6 @@ class ImageWorker(Process):
 
     sqm_history_minutes = 30
     stars_history_minutes = 30
-
-    auto_gain_exposure_cutoff_level_low = 80  # percent of max exposure
 
 
     def __init__(
@@ -113,10 +111,6 @@ class ImageWorker(Process):
 
         self.generate_mask_base = True
 
-        self.target_adu_found = False
-        self.current_adu_target = 0
-        self.hist_adu = []
-
         self.sqm_value = 0
 
         self.image_count = 0
@@ -133,19 +127,32 @@ class ImageWorker(Process):
             self.astro_av,
         )
 
+
+        exposure_class_str = self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME', 'exposure_basic')
+        logger.warning('Exposure Class: %s', exposure_class_str)
+
+        try:
+            exposure_class = getattr(exposure_module, exposure_class_str)
+        except AttributeError:
+            logger.error('Unknown exposure class: %s', exposure_class_str)
+            exposure_class = getattr(exposure_module, 'exposure_basic')
+
+
+        self.exposure_o = exposure_class(
+            self.config,
+            self.exposure_av,
+            self.gain_av,
+            self.binning_av,
+            self.night_av,
+        )
+
+
         self._miscDb = miscDb(self.config)
         self._miscUpload = miscUpload(
             self.config,
             self.upload_q,
             self.night_av,
         )
-
-
-        self._gain_step = None  # calculate on first image
-        self.auto_gain_step_list = None  # list of fixed gain values
-        self.auto_gain_exposure_cutoff_low = None
-        self.auto_gain_exposure_cutoff_mid = None
-        self.auto_gain_exposure_cutoff_high = None
 
 
         self.image_save_hook_process = None  # used for both pre- and post-hooks
@@ -178,11 +185,6 @@ class ImageWorker(Process):
     @libcamera_raw.setter
     def libcamera_raw(self, new_libcamera_raw):
         self._libcamera_raw = bool(new_libcamera_raw)
-
-
-    @property
-    def gain_step(self):
-        return self._gain_step
 
 
     def sighup_handler_worker(self, signum, frame):
@@ -340,38 +342,6 @@ class ImageWorker(Process):
         if sqm_exposure:
             self.process_sqm_exposure(filename_p, exposure, gain, binning, exp_date, exp_elapsed, camera, libcamera_black_level)
             return
-
-
-        if isinstance(self.gain_step, type(None)):
-            # the gain steps cannot be calculated until the gain_av variable is populated
-            gain_range = self.gain_av[constants.GAIN_MAX_NIGHT] - self.gain_av[constants.GAIN_MIN_NIGHT]
-            auto_gain_levels = self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_LEVELS', 5)
-
-
-            self._gain_step = gain_range / (auto_gain_levels - 1)  # need divisions
-
-            self.auto_gain_step_list = [float(round((self.gain_step * x) + self.gain_av[constants.GAIN_MIN_NIGHT], 2)) for x in range(auto_gain_levels)]
-            self.auto_gain_step_list[-1] = float(round(self.gain_av[constants.GAIN_MAX_NIGHT], 2))  # replace last value, round is necessary
-
-
-            self.auto_gain_exposure_cutoff_high = self.exposure_av[constants.EXPOSURE_MAX] - 0.5
-
-            self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] * (self.auto_gain_exposure_cutoff_level_low / 100)
-            if self.exposure_av[constants.EXPOSURE_MAX] - self.auto_gain_exposure_cutoff_low > 10.0:
-                self.auto_gain_exposure_cutoff_low = self.exposure_av[constants.EXPOSURE_MAX] - 10.0
-
-            self.auto_gain_exposure_cutoff_mid = self.auto_gain_exposure_cutoff_high - ((self.auto_gain_exposure_cutoff_high - self.auto_gain_exposure_cutoff_low) / 2)
-
-
-            if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
-                logger.info('Gain Steps: %d @ %0.2f', auto_gain_levels, self.gain_step)
-                logger.info('Gain Step list: %s', str(self.auto_gain_step_list))
-                logger.info(
-                    'Auto-Gain Exposure cutoff: Low: %0.2fs - Mid: %0.2fs - High: %0.2fs',
-                    self.auto_gain_exposure_cutoff_low,
-                    self.auto_gain_exposure_cutoff_mid,
-                    self.auto_gain_exposure_cutoff_high,
-                )
 
 
         processing_start = time.time()
@@ -604,12 +574,12 @@ class ImageWorker(Process):
 
 
         # adu calculate (before processing)
-        adu, adu_average = self.calculate_exposure(adu, exposure, gain)
+        adu, adu_average = self.exposure_o.compare_exposure(adu, exposure, gain)
 
 
         # generate a new mask base once the target ADU is found
         # this should only only fire once per restart
-        if self.generate_mask_base and self.target_adu_found:
+        if self.generate_mask_base and self.exposure_o.target_adu_found:
             self.generate_mask_base = False
             self.write_mask_base_img(self.image_processor.image)
 
@@ -787,7 +757,7 @@ class ImageWorker(Process):
                 'binmode'         : int(binning),
                 'temp'            : self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
                 'adu'             : adu,
-                'stable'          : self.target_adu_found,
+                'stable'          : self.exposure_o.target_adu_found,
                 'moonmode'        : bool(self.night_av[constants.NIGHT_MOONMODE]),
                 'moonphase'       : self.image_processor.astrometric_data['moon_phase'],
                 'night'           : bool(self.night_av[constants.NIGHT_NIGHT]),
@@ -1107,9 +1077,9 @@ class ImageWorker(Process):
             'temp'                : self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
             'gain'                : i_ref.gain,
             'exposure'            : i_ref.exposure,
-            'stable_exposure'     : int(self.target_adu_found),
+            'stable_exposure'     : int(self.exposure_o.target_adu_found),
             'target_adu'          : i_ref.target_adu,
-            'current_adu_target'  : self.current_adu_target,
+            'current_adu_target'  : self.exposure_o.current_adu_target,
             'current_adu'         : adu,
             'adu_average'         : adu_average,
             'sqm'                 : i_ref.sqm_value,
@@ -1785,9 +1755,9 @@ class ImageWorker(Process):
             'temp'                : self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
             'gain'                : i_ref.gain,
             'exposure'            : i_ref.exposure,
-            'stable_exposure'     : int(self.target_adu_found),
+            'stable_exposure'     : int(self.exposure_o.target_adu_found),
             'target_adu'          : i_ref.target_adu,
-            'current_adu_target'  : self.current_adu_target,
+            'current_adu_target'  : self.exposure_o.current_adu_target,
             'current_adu'         : adu,
             'adu_average'         : adu_average,
             'sqm'                 : i_ref.sqm_value,
@@ -2148,253 +2118,6 @@ class ImageWorker(Process):
         tmpfile_name.unlink()
 
         self._miscUpload.upload_realtime_keogram(keogram_file, camera)
-
-
-    def calculate_exposure(self, adu, exposure, gain):
-        if adu <= 0.0:
-            # ensure we do not divide by zero
-            logger.warning('Zero average, setting a default of 0.1')
-            adu = 0.1
-
-
-        if self.night_av[constants.NIGHT_NIGHT]:
-            target_adu = self.config['TARGET_ADU']
-        else:
-            target_adu = self.config['TARGET_ADU_DAY']
-
-
-        # Brightness when the sun is in view (very short exposures) can change drastically when clouds pass through the view
-        # Setting a deviation that is too short can cause exposure flapping
-        if exposure < 0.001000:
-            # DAY
-            adu_dev = float(self.config.get('TARGET_ADU_DEV_DAY', 20))
-
-            target_adu_min = target_adu - adu_dev
-            target_adu_max = target_adu + adu_dev
-            current_adu_target_min = self.current_adu_target - adu_dev
-            current_adu_target_max = self.current_adu_target + adu_dev
-
-            exp_scale_factor = 0.50  # scale exposure calculation
-            history_max_vals = 6     # number of entries to use to calculate average
-        else:
-            # NIGHT
-            adu_dev = float(self.config.get('TARGET_ADU_DEV', 10))
-
-            target_adu_min = target_adu - adu_dev
-            target_adu_max = target_adu + adu_dev
-            current_adu_target_min = self.current_adu_target - adu_dev
-            current_adu_target_max = self.current_adu_target + adu_dev
-
-            exp_scale_factor = 1.0  # scale exposure calculation
-            history_max_vals = 6    # number of entries to use to calculate average
-
-
-
-        if not self.target_adu_found:
-            self.recalculate_exposure(exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor)
-            return adu, 0.0
-
-
-        self.hist_adu.append(adu)
-        self.hist_adu = self.hist_adu[(history_max_vals * -1):]  # remove oldest values, up to history_max_vals
-
-        adu_average = functools.reduce(lambda a, b: a + b, self.hist_adu) / len(self.hist_adu)
-
-        #logger.info('ADU average: %0.2f', adu_average)
-        #logger.info('Current target ADU: %0.2f (%0.2f/%0.2f)', self.current_adu_target, current_adu_target_min, current_adu_target_max)
-        #logger.info('Current ADU history: (%d) [%s]', len(self.hist_adu), ', '.join(['{0:0.2f}'.format(x) for x in self.hist_adu]))
-
-
-        ### Need at least x values to continue
-        if len(self.hist_adu) < history_max_vals:
-            return adu, 0.0
-
-
-        ### only change exposure when 70% of the values exceed the max or minimum
-        if adu_average > current_adu_target_max:
-            logger.warning('ADU increasing beyond limits, recalculating next exposure')
-            self.target_adu_found = False
-        elif adu_average < current_adu_target_min:
-            logger.warning('ADU decreasing beyond limits, recalculating next exposure')
-            self.target_adu_found = False
-
-        return adu, adu_average
-
-
-    def recalculate_exposure(self, exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor):
-        # There might be a race condition here if there is a day/night change but self.target_adu_found == True
-
-        # Until we reach a good starting point, do not calculate a moving average
-        if adu <= target_adu_max and adu >= target_adu_min:
-            logger.warning('Found target value for exposure')
-            self.current_adu_target = copy.copy(adu)
-            self.target_adu_found = True
-            self.hist_adu = []
-            return
-
-
-        if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
-            # moonmode settings are ignored with auto-gain
-
-            if self.night_av[constants.NIGHT_NIGHT]:
-                exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
-            else:
-                exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
-
-            gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
-            gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
-        else:
-            if self.night_av[constants.NIGHT_NIGHT]:
-                exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
-
-                if self.night_av[constants.NIGHT_MOONMODE]:
-                    gain_min = float(self.gain_av[constants.GAIN_MIN_MOONMODE])
-                    gain_max = float(self.gain_av[constants.GAIN_MAX_MOONMODE])
-                else:
-                    gain_min = float(self.gain_av[constants.GAIN_MIN_NIGHT])
-                    gain_max = float(self.gain_av[constants.GAIN_MAX_NIGHT])
-
-            else:
-                exposure_min = float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
-
-                gain_min = float(self.gain_av[constants.GAIN_MIN_DAY])
-                gain_max = float(self.gain_av[constants.GAIN_MAX_DAY])
-
-
-        # Scale the exposure up and down based on targets
-        if adu > target_adu_max:
-            next_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
-        elif adu < target_adu_min:
-            next_exposure = exposure - ((exposure - (exposure * (target_adu / adu))) * exp_scale_factor)
-        else:
-            next_exposure = exposure
-
-
-        # Do not exceed the exposure limits
-        if next_exposure < exposure_min:
-            next_exposure = float(exposure_min)
-        elif next_exposure > self.exposure_av[constants.EXPOSURE_MAX]:
-            next_exposure = float(self.exposure_av[constants.EXPOSURE_MAX])
-
-
-        if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
-            try:
-                auto_gain_idx = self.auto_gain_step_list.index(gain)
-            except ValueError:
-                # fallback to min if gain does not match
-                logger.error('Current gain not found in list, reset to minimum gain')
-                auto_gain_idx = 0
-
-
-            if next_exposure == exposure:
-                # no change
-                #logger.warning('Auto-Gain - no changes')
-                next_gain = gain
-                exposure_delta = 0.0
-                gain_delta = 0.0
-            elif next_exposure > exposure:
-                # exposure/gain needs to increase
-                if gain == self.auto_gain_step_list[-1]:
-                    # already at max gain, increase exposure
-                    next_gain = gain
-                    exposure_delta = next_exposure - exposure
-                    gain_delta = 0.0
-                    logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [max gain]', next_exposure, exposure_delta)
-                else:
-                    if exposure < self.auto_gain_exposure_cutoff_high:
-                        # maintain gain, increase exposure
-                        next_gain = gain
-                        next_exposure = min(next_exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
-                        exposure_delta = next_exposure - exposure
-                        gain_delta = 0.0
-                        logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
-                    else:
-                        # increase gain, maintain exposure
-                        next_gain = self.auto_gain_step_list[auto_gain_idx + 1]
-                        next_exposure = min(exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
-                        exposure_delta = 0.0
-                        gain_delta = next_gain - gain
-                        logger.info('Auto-Gain increasing gain to %0.2f (%+0.2f) [maintain exposure]', next_gain, gain_delta)
-
-            else:
-                # exposure/gain needs to decrease
-                if gain == self.auto_gain_step_list[0]:
-                    # already at minimum gain, decrease exposure
-                    next_gain = gain
-                    exposure_delta = next_exposure - exposure
-                    gain_delta = 0.0
-                    logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [minimum gain]', next_exposure, exposure_delta)
-                else:
-                    if exposure > self.auto_gain_exposure_cutoff_low:
-                        # maintain gain, decrease exposure
-                        next_gain = gain
-                        next_exposure = max(next_exposure, self.auto_gain_exposure_cutoff_low)
-                        exposure_delta = next_exposure - exposure
-                        gain_delta = 0.0
-                        logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
-                    else:
-                        # decrease gain, maintain exposure
-                        next_gain = self.auto_gain_step_list[auto_gain_idx - 1]
-                        #next_exposure = max(exposure, self.auto_gain_exposure_cutoff_low)
-                        next_exposure = max(exposure, self.auto_gain_exposure_cutoff_mid)
-                        exposure_delta = 0.0
-                        gain_delta = next_gain - gain
-                        logger.info('Auto-Gain decreasing gain to %0.2f (%+0.2f) [maintain exposure)', next_gain, gain_delta)
-
-        else:
-            # just set the gain to the max for the current mode
-            next_gain = gain_max
-            exposure_delta = next_exposure - exposure
-            gain_delta = 0.0
-
-
-        # Do not exceed the gain limits
-        if next_gain > gain_max:
-            next_gain = gain_max
-        elif next_gain < gain_min:
-            next_gain = gain_min
-
-
-        # Binning
-        if self.night_av[constants.NIGHT_NIGHT]:
-            if self.night_av[constants.NIGHT_MOONMODE]:
-                next_binning = self.binning_av[constants.BINNING_MOONMODE]
-            else:
-                next_binning = self.binning_av[constants.BINNING_NIGHT]
-        else:
-            next_binning = self.binning_av[constants.BINNING_DAY]
-
-
-        ### Check for exposure flapping
-        # Flapping is defined when the exposure increases then immediately decreases (or the opposite)
-        # and cannot find a stable value.  The result is the image brightness will flash
-        if self.exposure_av[constants.EXPOSURE_DELTA] > 0 and exposure_delta < 0:
-            # exposure is decreasing
-            exposure_offset = exposure_delta / 2
-            next_exposure -= exposure_offset  # offset will be negative
-            exposure_delta -= exposure_offset
-
-            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
-        elif self.exposure_av[constants.EXPOSURE_DELTA] < 0 and exposure_delta > 0:
-            # exposure is increasing
-            exposure_offset = exposure_delta / 2
-            next_exposure -= exposure_offset
-            exposure_delta -= exposure_offset
-
-            logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
-
-
-        logger.warning('New calculated exposure: %0.6fs (%+0.8f) @ gain %0.2f (%+0.2f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_NEXT] = float(next_exposure)
-            self.exposure_av[constants.EXPOSURE_DELTA] = float(exposure_delta)
-
-        with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_NEXT] = float(next_gain)
-            self.gain_av[constants.GAIN_DELTA] = float(gain_delta)
-
-        with self.binning_av.get_lock():
-            self.binning_av[constants.BINNING_NEXT] = int(next_binning)
 
 
     def save_longterm_keogram_data(self, exp_date, camera_id):

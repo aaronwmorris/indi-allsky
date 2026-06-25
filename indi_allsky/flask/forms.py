@@ -34,6 +34,7 @@ from wtforms.widgets import NumberInput
 from wtforms.validators import DataRequired
 #from wtforms.validators import regexp as validator_regexp
 from wtforms.validators import ValidationError
+from markupsafe import Markup
 
 #from sqlalchemy import extract
 #from sqlalchemy import asc
@@ -257,6 +258,11 @@ def SQM_MAGNITUDE_OFFSET_validator(form, field):
 
     if field.data < 0:
         raise ValidationError('Value must be 0 or more')
+
+
+def CCD_CONFIG__EXPOSURE_CLASSNAME_validator(form, field):
+    if field.data not in list(zip(*form.CCD_CONFIG__EXPOSURE_CLASSNAME_choices))[0]:
+        raise ValidationError('Invalid selection')
 
 
 def CCD_CONFIG__AUTO_GAIN_LEVELS_validator(form, field):
@@ -3536,6 +3542,14 @@ class IndiAllskyConfigForm(FlaskForm):
         ),
     }
 
+    CCD_CONFIG__EXPOSURE_CLASSNAME_choices = (
+        ('exposure_basic', 'Basic - Fixed Gains [Day, Night, & Moon Mode]'),
+        ('exposure_autogain_exp_prio_db_1_10', Markup('Auto-Gain - Exposure Priority - <sup>1</sup>&frasl;<sub>10</sub> dB [ZWO ASI, PlayerOne]')),
+        ('exposure_autogain_exp_prio_iso_1_100', Markup('Auto-Gain - Exposure Priority - <sup>1</sup>&frasl;<sub>100</sub> ISO [libcamera]')),
+        ('exposure_autogain_exp_prio_iso', 'Auto-Gain - Exposure Priority - Native ISO [ToupTek, Altair, Omegon, etc]'),
+        ('exposure_autogain_exp_prio_db', 'Auto-Gain - Exposure Priority - Native dB [QHY]'),
+        ('exposure_legacy_autogain', '[Legacy] - Auto-Gain'),
+    )
 
     CCD_CONFIG__AUTO_GAIN_LEVELS_choices = (
         ('12', '12'),
@@ -4340,8 +4354,8 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_CONFIG__MOONMODE__BINNING    = IntegerField('Moon Mode Bin Mode', validators=[DataRequired(), CCD_BINNING_validator])
     CCD_CONFIG__DAY__GAIN            = FloatField('Daytime Gain', validators=[CCD_GAIN_validator])
     CCD_CONFIG__DAY__BINNING         = IntegerField('Daytime Bin Mode', validators=[DataRequired(), CCD_BINNING_validator])
-    CCD_CONFIG__AUTO_GAIN_ENABLE     = BooleanField('Enable Exposure Priority Gain Mode [Auto-Gain]')
-    CCD_CONFIG__AUTO_GAIN_LEVELS     = SelectField('Auto-Gain Levels', choices=CCD_CONFIG__AUTO_GAIN_LEVELS_choices, validators=[CCD_CONFIG__AUTO_GAIN_LEVELS_validator])
+    CCD_CONFIG__EXPOSURE_CLASSNAME   = SelectField('Exposure Mode', choices=CCD_CONFIG__EXPOSURE_CLASSNAME_choices, validators=[CCD_CONFIG__EXPOSURE_CLASSNAME_validator])
+    CCD_CONFIG__AUTO_GAIN_LEVELS     = SelectField('Auto-Gain Levels [Legacy]', choices=CCD_CONFIG__AUTO_GAIN_LEVELS_choices, validators=[CCD_CONFIG__AUTO_GAIN_LEVELS_validator])
     CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_validator])
     CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_validator])
     CCD_EXPOSURE_MIN                 = FloatField('Min Exposure (Night)', validators=[CCD_EXPOSURE_validator])
