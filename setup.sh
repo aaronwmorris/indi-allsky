@@ -2737,6 +2737,8 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "r
     else
         sudo dpkg-reconfigure tzdata
     fi
+elif [[ "$DISTRO" == "arch" ]]; then
+    :
 else
     echo "Unable to set timezone for distribution"
     exit 1
