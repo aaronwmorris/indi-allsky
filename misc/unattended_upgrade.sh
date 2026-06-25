@@ -883,7 +883,7 @@ if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
 
             pip3 install rpi.lgpio
         fi
-    elif [[ "$DISTRO_ID" == "arch" ]]; then
+    elif [[ "$DISTRO" == "arch" ]]; then
         :
     fi
 fi

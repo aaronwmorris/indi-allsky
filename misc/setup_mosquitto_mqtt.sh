@@ -261,7 +261,7 @@ sudo chown root:${MOSQUITTO_GROUP} /etc/mosquitto/certs/indi-allsky_mosquitto.cr
 sudo chmod 644 /etc/mosquitto/certs/indi-allsky_mosquitto.crt
 
 
-if [[ "$DISTRO" == "debian_13" || "$DISTRO" == "debian_12" || "$DISTRO" == "ubuntu_24.04" || "$DISTRO" == "ubuntu_22.04" ]]; then
+if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
     # system certificate store
     sudo cp -f /etc/mosquitto/certs/indi-allsky_mosquitto.crt /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
     sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
