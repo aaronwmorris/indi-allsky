@@ -127,8 +127,9 @@ echo
 uname -a
 
 echo "Hostname"
+hostname -s
 hostname -f
-hostname -A
+hostnamectl status
 
 echo
 echo "Time"
