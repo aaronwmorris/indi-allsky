@@ -1738,10 +1738,10 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
             sudo chmod 644 /etc/httpd/ssl/indi-allsky_apache.pem
 
             # system certificate store
-            #sudo cp -f /etc/httpd/ssl/indi-allsky_apache.pem /usr/local/share/ca-certificates/indi-allsky_apache.crt
-            #sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_apache.crt
-            #sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_apache.crt
-            #sudo update-ca-certificates
+            sudo cp -f /etc/httpd/ssl/indi-allsky_apache.pem /etc/ca-certificates/trust-source/anchors/indi-allsky_apache.crt
+            sudo chown root:root /etc/ca-certificates/trust-source/anchors/indi-allsky_apache.crt
+            sudo chmod 644 /etc/ca-certificates/trust-source/anchors/indi-allsky_apache.crt
+            sudo update-ca-trust extract
 
 
             # Comment out the Listen 80 directives

@@ -267,6 +267,11 @@ if [[ "$DISTRO" == "debian_13" || "$DISTRO" == "debian_12" || "$DISTRO" == "ubun
     sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
     sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
     sudo update-ca-certificates
+elif [[ "$DISTRO" == "arch" ]]; then
+    sudo cp -f /etc/mosquitto/certs/indi-allsky_mosquitto.crt /etc/ca-certificates/trust-source/anchors/indi-allsky_mosquitto.crt
+    sudo chown root:root /etc/ca-certificates/trust-source/anchors/indi-allsky_mosquitto.crt
+    sudo chmod 644 /etc/ca-certificates/trust-source/anchors/indi-allsky_mosquitto.crt
+    sudo update-ca-trust extract
 fi
 
 
