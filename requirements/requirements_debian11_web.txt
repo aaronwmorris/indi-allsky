@@ -41,3 +41,4 @@ lxml >= 6.1.0
 shapely
 pytz
 mysql-connector-python
+systemd-python

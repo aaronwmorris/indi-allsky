@@ -10,6 +10,9 @@ set -o nounset
 PATH=/bin:/usr/bin
 export PATH
 
+PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
+export PKG_CONFIG_PATH
+
 
 # can be overridden by environment variables
 #BUILD_INDI_SETTINGS="manual"
@@ -350,6 +353,9 @@ elif [[ "$DISTRO_ID" == "linuxmint" ]]; then
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
         exit 1
     fi
+
+elif [[ "$DISTRO_ID" == "arch" ]]; then
+    DISTRO="arch"
 
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
@@ -775,6 +781,40 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         libusb-1.0-0-dev \
         libzmq3-dev \
         zlib1g-dev
+
+elif [[ "$DISTRO" == "arch" ]]; then
+    sudo pacman -Syu \
+        base-devel \
+        git \
+        ca-certificates \
+        cmake \
+        libnewt \
+        pkg-config \
+        systemd-libs \
+        ffmpeg \
+        boost \
+        boost-libs \
+        cfitsio \
+        libcurl-gnutls \
+        libdc1394 \
+        libev \
+        fftw \
+        libftdi \
+        gtest \
+        libgphoto2 \
+        gpsd \
+        gsl \
+        libjpeg-turbo \
+        limesuite \
+        libnova \
+        libraw \
+        rtl-sdr \
+        libtheora \
+        libtiff \
+        libusb \
+        zeromq \
+        zlib \
+        jack2
 
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"

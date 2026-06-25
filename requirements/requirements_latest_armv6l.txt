@@ -58,3 +58,4 @@ shapely
 requests-toolbelt
 pytz
 mysql-connector-python
+systemd-python

@@ -12,6 +12,9 @@ shopt -s nullglob
 PATH=/usr/bin:/bin
 export PATH
 
+PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
+export PKG_CONFIG_PATH
+
 
 #### config ####
 INDI_DRIVER_PATH="/usr/bin"
@@ -399,6 +402,9 @@ elif [[ "$DISTRO_ID" == "linuxmint" ]]; then
         exit 1
     fi
 
+elif [[ "$DISTRO_ID" == "arch" ]]; then
+    DISTRO="arch"
+
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
@@ -684,6 +690,18 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
             indi-gpsd \
             indi-gpsnmea
     fi
+
+elif [[ "$DISTRO" == "arch" ]]; then
+    INSTALL_INDI="false"
+
+    sudo pacman -Syu --noconfirm --needed \
+        libnewt \
+        dbus \
+        dbus-broker
+
+
+    # enable dbus user session
+    systemctl --user enable --now dbus.socket
 
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"

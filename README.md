@@ -204,10 +204,11 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Ubuntu 24.04 (noble)            | **RECOMMENDED**<br>Requires INDI 2.0.8 or newer for pyindi-client<br>INDI installed from ppa:mutlaqja/ppa<br>Compile libcamera with build_libcamera.sh |
 | Ubuntu 22.04 (focal)            | INDI installed from ppa:mutlaqja/ppa |
 | Ubuntu 20.04 (bionic)           | (NOT RECOMMENDED) INDI installed from ppa:mutlaqja/ppa |
-| Armbian                         | Compile INDI with build_indi.sh<br>https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
 | Linux Mint 22                   | INDI installed from ppa:mutlaqja/ppa |
 | Linux Mint 21                   | INDI installed from ppa:mutlaqja/ppa |
+| Arch Linux                      | Compile INDI with build_indi.sh |
 | LMDE 6 (Linux Mint)             | Compile INDI with build_indi.sh |
+| Armbian                         | Compile INDI with build_indi.sh<br>https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
 | Stellarmate 1.8.x               | INDI pre-installed |
 | Astroberry 3.0                  | |
 | ~~Astroberry Server 2.0~~       | (DO NOT USE) |
