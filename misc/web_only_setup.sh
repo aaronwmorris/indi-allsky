@@ -1564,7 +1564,7 @@ systemctl --user start "${GUNICORN_SERVICE_NAME}.socket"
 
 
 # final config syntax check
-json_pp < "${ALLSKY_ETC}/flask.json" > /dev/null
+jq < "${ALLSKY_ETC}/flask.json" > /dev/null
 
 
 USER_COUNT=$("${ALLSKY_DIRECTORY}/config.py" user_count)

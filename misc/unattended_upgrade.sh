@@ -887,7 +887,7 @@ TMP_CONFIG_DUMP=$(mktemp --suffix=.json)
 
 
 # final config syntax check
-json_pp < "$TMP_CONFIG_DUMP" > /dev/null
+jq < "$TMP_CONFIG_DUMP" > /dev/null
 
 
 # load all changes
@@ -896,7 +896,7 @@ json_pp < "$TMP_CONFIG_DUMP" > /dev/null
 
 
 # final config syntax check
-json_pp < "${ALLSKY_ETC}/flask.json" > /dev/null
+jq < "${ALLSKY_ETC}/flask.json" > /dev/null
 
 
 # ensure latest code is active

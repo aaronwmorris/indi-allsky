@@ -658,6 +658,8 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
+    APACHE_SERVICE_NAME="apache2.service"
+
     MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3.13
@@ -825,6 +827,8 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
+    APACHE_SERVICE_NAME="apache2.service"
+
     MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3.11
@@ -976,6 +980,8 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
 elif [[ "$DISTRO" == "debian_11" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
+
+    APACHE_SERVICE_NAME="apache2.service"
 
     MYSQL_ETC="/etc/mysql"
 
@@ -1130,6 +1136,8 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
+    APACHE_SERVICE_NAME="apache2.service"
+
     MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3.7
@@ -1260,6 +1268,8 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
 elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
+
+    APACHE_SERVICE_NAME="apache2.service"
 
     MYSQL_ETC="/etc/mysql"
 
@@ -1429,6 +1439,8 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
+    APACHE_SERVICE_NAME="apache2.service"
+
     MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3.11
@@ -1589,6 +1601,8 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
+    APACHE_SERVICE_NAME="apache2.service"
+
     MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3.9
@@ -1747,6 +1761,8 @@ elif [[ "$DISTRO" == "arch" ]]; then
     RSYSLOG_USER=na
     RSYSLOG_GROUP=na
 
+    APACHE_SERVICE_NAME="httpd.service"
+
     MYSQL_ETC="/etc/mysql"
 
     PYTHON_BIN=python3
@@ -1874,6 +1890,11 @@ else
             echo
 
             exit 1
+        fi
+    elif [[ "$DISTRO_ID" == "arch" ]]; then
+        if [ "$WEBSERVER" == "apache" ]; then
+            sudo pacman -Syu \
+                apache
         fi
     fi
 fi
@@ -2738,7 +2759,7 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "r
         sudo dpkg-reconfigure tzdata
     fi
 elif [[ "$DISTRO" == "arch" ]]; then
-    :
+    sudo tzselect
 else
     echo "Unable to set timezone for distribution"
     exit 1
@@ -2836,8 +2857,8 @@ if [[ "$WEBSERVER" == "caddy" && "$ASTROBERRY3" == "true" ]]; then
 
 elif [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY2" == "true" ]]; then
     #echo "**** Disabling apache web server (Astroberry) ****"
-    #sudo systemctl stop apache2 || true
-    #sudo systemctl disable apache2 || true
+    #sudo systemctl stop "$APACHE_SERVICE_NAME" || true
+    #sudo systemctl disable "$APACHE_SERVICE_NAME" || true
 
 
     echo "**** Setup nginx ****"
@@ -2862,7 +2883,7 @@ elif [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY2" == "true" ]]; then
     sudo systemctl restart nginx
 
 elif [[ "$WEBSERVER" == "nginx" ]]; then
-    if systemctl --quiet is-active apache2.service; then
+    if systemctl --quiet is-active "$APACHE_SERVICE_NAME"; then
         echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
         sleep 3
     fi
@@ -2983,33 +3004,33 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
     fi
 
 
-    if [ -e "/etc/apache2/sites-enabled/indi-allsky.conf" ]; then
-        while [ -z "${WEBSERVER_CONFIG:-}" ]; do
-            if whiptail --title "Web Server Configuration" --yesno "Do you want to update the web server configuration?\n\nIf you have performed customizations to the apache config, you should choose \"no\"\n\n(Hint: Most people should pick \"yes\")" 0 0; then
-                WEBSERVER_CONFIG="true"
-            else
-                WEBSERVER_CONFIG="false"
-            fi
-        done
-    else
-        WEBSERVER_CONFIG="true"
-    fi
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+        if [ -e "/etc/apache2/sites-enabled/indi-allsky.conf" ]; then
+            while [ -z "${WEBSERVER_CONFIG:-}" ]; do
+                if whiptail --title "Web Server Configuration" --yesno "Do you want to update the web server configuration?\n\nIf you have performed customizations to the apache config, you should choose \"no\"\n\n(Hint: Most people should pick \"yes\")" 0 0; then
+                    WEBSERVER_CONFIG="true"
+                else
+                    WEBSERVER_CONFIG="false"
+                fi
+            done
+        else
+            WEBSERVER_CONFIG="true"
+        fi
 
 
-    if [ "$WEBSERVER_CONFIG" == "true" ]; then
-        echo "**** Start apache2 service ****"
-        TMP_HTTP=$(mktemp)
-        sed \
-         -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
-         -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
-         -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
-         -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
-         -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
-         -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock\|http://localhost/indi-allsky|g" \
-         "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP_HTTP"
+        if [ "$WEBSERVER_CONFIG" == "true" ]; then
+            echo "**** Start apache2 service ****"
+            TMP_HTTP=$(mktemp)
+            sed \
+             -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+             -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+             -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+             -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
+             -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
+             -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock\|http://localhost/indi-allsky|g" \
+             "${ALLSKY_DIRECTORY}/service/apache_indi-allsky.conf" > "$TMP_HTTP"
 
 
-        if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
             if [ -f "/etc/apache2/sites-available/indi-allsky.conf" ]; then
                 # backup existing config
                 sudo cp -f "/etc/apache2/sites-available/indi-allsky.conf" "/etc/apache2/sites-available/indi-allsky.backup_$(date +%Y%m%d_%H%M%S)"
@@ -3101,11 +3122,15 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
             fi
         fi
 
-
-        # Always do this
-        sudo systemctl enable apache2
-        sudo systemctl restart apache2
+    elif [[ "$DISTRO" == "arch" ]]; then
+        :
+        # add arch apache setup
     fi
+
+
+    # Always do this
+    sudo systemctl enable "$APACHE_SERVICE_NAME"
+    sudo systemctl restart "$APACHE_SERVICE_NAME"
 
 elif [[ "$WEBSERVER" == "caddy" ]]; then
     if systemctl --quiet is-active nginx.service; then
@@ -3113,7 +3138,7 @@ elif [[ "$WEBSERVER" == "caddy" ]]; then
         sleep 3
     fi
 
-    if systemctl --quiet is-active apache2.service; then
+    if systemctl --quiet is-active "$APACHE_SERVICE_NAME"; then
         echo "!!! WARNING - apache2 is active - This might interfere with nginx !!!"
         sleep 3
     fi
@@ -3234,7 +3259,7 @@ cat "$TMP_INDI_PORT" > "$TMP_CONFIG_DUMP"
 
 
 # final config syntax check
-json_pp < "$TMP_CONFIG_DUMP" > /dev/null
+jq < "$TMP_CONFIG_DUMP" > /dev/null
 
 
 # load all changes
@@ -3243,7 +3268,7 @@ json_pp < "$TMP_CONFIG_DUMP" > /dev/null
 
 
 # final config syntax check
-json_pp < "${ALLSKY_ETC}/flask.json" > /dev/null
+jq < "${ALLSKY_ETC}/flask.json" > /dev/null
 
 
 USER_COUNT=$("${ALLSKY_DIRECTORY}/config.py" user_count)
