@@ -2842,9 +2842,8 @@ if [[ "$WEBSERVER" == "caddy" && "$ASTROBERRY3" == "true" ]]; then
     fi
 
 
-    if [ "$WEBSERVER_CONFIG" == "true" ]; then
-        if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
-
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+        if [ "$WEBSERVER_CONFIG" == "true" ]; then
             TMP_HTTP=$(mktemp)
             sed \
              -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
@@ -2874,11 +2873,18 @@ if [[ "$WEBSERVER" == "caddy" && "$ASTROBERRY3" == "true" ]]; then
             fi
         fi
 
+    elif [[ "$DISTRO" == "arch" ]]; then
+        echo
+        echo
+        echo "caddy not supported on Arch"
+        exit 1
 
-        # Always do this
-        sudo systemctl enable caddy
-        sudo systemctl restart caddy
     fi
+
+
+    # Always do this
+    sudo systemctl enable caddy
+    sudo systemctl restart caddy
 
 elif [[ "$WEBSERVER" == "nginx" && "$ASTROBERRY2" == "true" ]]; then
     #echo "**** Disabling apache web server (Astroberry) ****"
@@ -2932,21 +2938,21 @@ elif [[ "$WEBSERVER" == "nginx" ]]; then
     fi
 
 
-    if [ "$WEBSERVER_CONFIG" == "true" ]; then
-        echo "**** Setup nginx ****"
-        TMP_HTTP=$(mktemp)
-        sed \
-         -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
-         -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
-         -e "s|%DOCROOT_FOLDER%|$DOCROOT_FOLDER|g" \
-         -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
-         -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
-         -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
-         -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
-         "${ALLSKY_DIRECTORY}/service/nginx_indi-allsky.conf" > "$TMP_HTTP"
+    if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+        if [ "$WEBSERVER_CONFIG" == "true" ]; then
+            echo "**** Setup nginx ****"
+            TMP_HTTP=$(mktemp)
+            sed \
+             -e "s|%ALLSKY_DIRECTORY%|$ALLSKY_DIRECTORY|g" \
+             -e "s|%ALLSKY_ETC%|$ALLSKY_ETC|g" \
+             -e "s|%DOCROOT_FOLDER%|$DOCROOT_FOLDER|g" \
+             -e "s|%IMAGE_FOLDER%|$IMAGE_FOLDER|g" \
+             -e "s|%HTTP_PORT%|$HTTP_PORT|g" \
+             -e "s|%HTTPS_PORT%|$HTTPS_PORT|g" \
+             -e "s|%UPSTREAM_SERVER%|unix:$DB_FOLDER/$GUNICORN_SERVICE_NAME.sock|g" \
+             "${ALLSKY_DIRECTORY}/service/nginx_indi-allsky.conf" > "$TMP_HTTP"
 
 
-        if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
             if [ -f "/etc/nginx/sites-available/indi-allsky.conf" ]; then
                 # backup existing config
                 sudo cp -f "/etc/nginx/sites-available/indi-allsky.conf" "/etc/nginx/sites-available/indi-allsky.conf_backup_$(date +%Y%m%d_%H%M%S)"
@@ -3011,11 +3017,18 @@ elif [[ "$WEBSERVER" == "nginx" ]]; then
             sudo update-ca-certificates
         fi
 
+    elif [[ "$DISTRO" == "arch" ]]; then
+        echo
+        echo
+        echo "nginx not supported on Arch"
+        exit 1
 
-        # Always do this
-        sudo systemctl enable nginx
-        sudo systemctl restart nginx
     fi
+
+
+    # Always do this
+    sudo systemctl enable nginx
+    sudo systemctl restart nginx
 
 elif [[ "$WEBSERVER" == "apache" ]]; then
     if systemctl --quiet is-active nginx.service; then
