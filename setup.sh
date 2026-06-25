@@ -41,7 +41,6 @@ GUNICORN_SERVICE_NAME="gunicorn-indi-allsky"
 UPGRADE_ALLSKY_SERVICE_NAME="upgrade-indi-allsky"
 
 ALLSKY_ETC="/etc/indi-allsky"
-APACHE_ETC="/etc/apache2"
 
 DOCROOT_FOLDER="/var/www/html"
 HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
@@ -661,6 +660,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
+    APACHE_ETC="/etc/apache2"
     APACHE_SERVICE_NAME="apache2.service"
 
     MYSQL_ETC="/etc/mysql"
@@ -830,6 +830,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
+    APACHE_ETC="/etc/apache2"
     APACHE_SERVICE_NAME="apache2.service"
 
     MYSQL_ETC="/etc/mysql"
@@ -984,6 +985,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
+    APACHE_ETC="/etc/apache2"
     APACHE_SERVICE_NAME="apache2.service"
 
     MYSQL_ETC="/etc/mysql"
@@ -1139,6 +1141,7 @@ elif [[ "$DISTRO" == "debian_10" ]]; then
     RSYSLOG_USER=root
     RSYSLOG_GROUP=adm
 
+    APACHE_ETC="/etc/apache2"
     APACHE_SERVICE_NAME="apache2.service"
 
     MYSQL_ETC="/etc/mysql"
@@ -1272,6 +1275,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
+    APACHE_ETC="/etc/apache2"
     APACHE_SERVICE_NAME="apache2.service"
 
     MYSQL_ETC="/etc/mysql"
@@ -1442,6 +1446,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
+    APACHE_ETC="/etc/apache2"
     APACHE_SERVICE_NAME="apache2.service"
 
     MYSQL_ETC="/etc/mysql"
@@ -1604,6 +1609,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     RSYSLOG_USER=syslog
     RSYSLOG_GROUP=adm
 
+    APACHE_ETC="/etc/apache2"
     APACHE_SERVICE_NAME="apache2.service"
 
     MYSQL_ETC="/etc/mysql"
@@ -1761,7 +1767,6 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
     fi
 
 elif [[ "$DISTRO" == "arch" ]]; then
-    APACHE_ETC="/etc/httpd"
     DOCROOT_FOLDER="/srv/html"
     HTDOCS_FOLDER="${DOCROOT_FOLDER}/allsky"
     BOOTSTRAP_IMAGE_FOLDER="${HTDOCS_FOLDER}/images"
@@ -1769,6 +1774,7 @@ elif [[ "$DISTRO" == "arch" ]]; then
     RSYSLOG_USER=na
     RSYSLOG_GROUP=na
 
+    APACHE_ETC="/etc/httpd"
     APACHE_SERVICE_NAME="httpd.service"
 
     MYSQL_ETC="/etc/mysql"
@@ -1788,7 +1794,7 @@ elif [[ "$DISTRO" == "arch" ]]; then
         exit 1
     fi
 
-    sudo pacman -Syu \
+    sudo pacman -Syu --noconfirm --needed \
         base-devel \
         git \
         python3 \
@@ -1902,8 +1908,14 @@ else
         fi
     elif [[ "$DISTRO_ID" == "arch" ]]; then
         if [ "$WEBSERVER" == "apache" ]; then
-            sudo pacman -Syu \
+            sudo pacman -Syu --noconfirm --needed \
                 apache
+        else
+            echo
+            echo "Unknown webserver: $WEBSERVER"
+            echo
+
+            exit 1
         fi
     fi
 fi
@@ -3243,21 +3255,21 @@ elif [[ "$WEBSERVER" == "apache" ]]; then
 
         fi
 
+
+        # Ensure home directories are readable
+        TMP_SYSTEMD=$(mktemp)
+        sed \
+         -e 's|#\?ProtectHome=.*|ProtectHome=read-only|i' \
+         /etc/systemd/system/httpd.service.d/hardening.conf > "$TMP_SYSTEMD"
+
+        sudo cp -f "$TMP_SYSTEMD" /etc/systemd/system/httpd.service.d/hardening.conf
+        sudo chown root:root /etc/systemd/system/httpd.service.d/hardening.conf
+        sudo chmod 644 /etc/systemd/system/httpd.service.d/hardening.conf
+        [[ -f "$TMP_SYSTEMD" ]] && rm -f "$TMP_SYSTEMD"
+
+        sudo systemctl daemon-reload
+
     fi
-
-
-    # Ensure home directories are readable
-    TMP_SYSTEMD=$(mktemp)
-    sed \
-     -e 's|#\?ProtectHome=.*|ProtectHome=read-only|i' \
-     /etc/systemd/system/httpd.service.d/hardening.conf > "$TMP_SYSTEMD"
-
-    sudo cp -f "$TMP_SYSTEMD" /etc/systemd/system/httpd.service.d/hardening.conf
-    sudo chown root:root /etc/systemd/system/httpd.service.d/hardening.conf
-    sudo chmod 644 /etc/systemd/system/httpd.service.d/hardening.conf
-    [[ -f "$TMP_SYSTEMD" ]] && rm -f "$TMP_SYSTEMD"
-
-    sudo systemctl daemon-reload
 
 
     # Always do this
