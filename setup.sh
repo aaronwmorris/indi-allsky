@@ -8,6 +8,9 @@ shopt -s nullglob
 PATH=/usr/bin:/bin
 export PATH
 
+PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
+export PKG_CONFIG_PATH
+
 
 ### Non-interactive options example ###
 #export INDIALLSKY_CAMERA_INTERFACE=indi
@@ -633,6 +636,9 @@ elif [[ "$DISTRO_ID" == "linuxmint" ]]; then
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
         exit 1
     fi
+
+elif [[ "$DISTRO_ID" == "arch" ]]; then
+    DISTRO="arch"
 
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
@@ -1737,6 +1743,98 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
             indi-gpsnmea
     fi
 
+elif [[ "$DISTRO" == "arch" ]]; then
+    RSYSLOG_USER=na
+    RSYSLOG_GROUP=na
+
+    MYSQL_ETC="/etc/mysql"
+
+    PYTHON_BIN=python3
+
+
+    INSTALL_INDI="false"
+
+    if [[ ! -f "${INDI_DRIVER_PATH}/indiserver" && ! -f "/usr/local/bin/indiserver" ]]; then
+        echo
+        echo
+        echo "There are not prebuilt indi packages for this distribution"
+        echo "Please run ./misc/build_indi.sh before running setup.sh"
+        echo
+        echo
+        exit 1
+    fi
+
+    sudo pacman -Syu \
+        base-devel \
+        git \
+        python3 \
+        cmake \
+        libnewt \
+        pkg-config \
+        ffmpeg \
+        gcc-fortran \
+        bc \
+        procps-ng \
+        cronie \
+        cpio \
+        tzdata \
+        avahi \
+        nss-mdns \
+        swig \
+        gnutls \
+        libcurl-gnutls \
+        libnova \
+        cfitsio \
+        imath \
+        openexr \
+        gtk3 \
+        openssl \
+        libxml2 \
+        libxslt \
+        dbus \
+        glib2-devel \
+        libffi \
+        opencv \
+        blas \
+        libraw \
+        geos \
+        libtiff \
+        libjpeg-turbo \
+        openjpeg2 \
+        libpng \
+        zlib \
+        freetype2 \
+        lcms2 \
+        libwebp \
+        libcap \
+        tcl \
+        tk \
+        harfbuzz \
+        fribidi \
+        libxcb \
+        xcb-util-keysyms \
+        xcb-util-wm \
+        xorgproto \
+        mariadb-libs \
+        rust \
+        gifsicle \
+        jq \
+        sqlite3 \
+        libgpiod \
+        i2c-tools \
+        networkmanager \
+        dnsmasq \
+        udisks2 \
+        polkit \
+        dbus-broker
+
+
+    # enable avahi
+    sudo systemctl enable --now avahi-daemon.service
+
+    # enable dbus user session
+    systemctl --user enable --now dbus.socket
+
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
@@ -1789,6 +1887,13 @@ if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "r
             --msgbox "*** Configure system locales ***\n\nThe system locales have not yet been configured.  It will be necessary to configure the appropriate localization settings for proper data processing\n\nCommon selections: en_US.UTF8 or en_GB.UTF8\n\nNote: Multiple selections are allowed" 0 0
 
         sudo dpkg-reconfigure locales
+    fi
+elif [[ "$DISTRO_ID" == "arch"  ]]; then
+    if ! python3 -c "import locale; locale.setlocale(locale.LC_ALL, '');" >/dev/null 2>&1; then
+        echo
+        echo
+        echo "System locales not configured"
+        sleep 5
     fi
 else
     echo "Unable to configure locales for distribution"
@@ -2282,30 +2387,35 @@ echo "**** Ensure user is a member of the systemd-journal group ****"
 sudo usermod -a -G systemd-journal "$USER"
 
 
-echo "**** Setup rsyslog logging ****"
-[[ ! -d "/var/log/indi-allsky" ]] && sudo mkdir /var/log/indi-allsky
-sudo chmod 755 /var/log/indi-allsky
-sudo touch /var/log/indi-allsky/indi-allsky.log
-sudo chmod 644 /var/log/indi-allsky/indi-allsky.log
-sudo touch /var/log/indi-allsky/webapp-indi-allsky.log
-sudo chmod 644 /var/log/indi-allsky/webapp-indi-allsky.log
-sudo chown -R "$RSYSLOG_USER":"$RSYSLOG_GROUP" /var/log/indi-allsky
+if [[ "$DISTRO" == "arch" ]]; then
+    # no rsyslog for arch
+    :
+else
+    echo "**** Setup rsyslog logging ****"
+    [[ ! -d "/var/log/indi-allsky" ]] && sudo mkdir /var/log/indi-allsky
+    sudo chmod 755 /var/log/indi-allsky
+    sudo touch /var/log/indi-allsky/indi-allsky.log
+    sudo chmod 644 /var/log/indi-allsky/indi-allsky.log
+    sudo touch /var/log/indi-allsky/webapp-indi-allsky.log
+    sudo chmod 644 /var/log/indi-allsky/webapp-indi-allsky.log
+    sudo chown -R "$RSYSLOG_USER":"$RSYSLOG_GROUP" /var/log/indi-allsky
 
 
-# 10 prefix so they are process before the defaults in 50
-sudo cp -f "${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf" /etc/rsyslog.d/10-indi-allsky.conf
-sudo chown root:root /etc/rsyslog.d/10-indi-allsky.conf
-sudo chmod 644 /etc/rsyslog.d/10-indi-allsky.conf
+    # 10 prefix so they are process before the defaults in 50
+    sudo cp -f "${ALLSKY_DIRECTORY}/log/rsyslog_indi-allsky.conf" /etc/rsyslog.d/10-indi-allsky.conf
+    sudo chown root:root /etc/rsyslog.d/10-indi-allsky.conf
+    sudo chmod 644 /etc/rsyslog.d/10-indi-allsky.conf
 
-# remove old version
-[[ -f "/etc/rsyslog.d/indi-allsky.conf" ]] && sudo rm -f /etc/rsyslog.d/indi-allsky.conf
+    # remove old version
+    [[ -f "/etc/rsyslog.d/indi-allsky.conf" ]] && sudo rm -f /etc/rsyslog.d/indi-allsky.conf
 
-sudo systemctl restart rsyslog
+    sudo systemctl restart rsyslog
 
 
-sudo cp -f "${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky" /etc/logrotate.d/indi-allsky
-sudo chown root:root /etc/logrotate.d/indi-allsky
-sudo chmod 644 /etc/logrotate.d/indi-allsky
+    sudo cp -f "${ALLSKY_DIRECTORY}/log/logrotate_indi-allsky" /etc/logrotate.d/indi-allsky
+    sudo chown root:root /etc/logrotate.d/indi-allsky
+    sudo chmod 644 /etc/logrotate.d/indi-allsky
+fi
 
 
 echo "**** Indi-allsky config ****"

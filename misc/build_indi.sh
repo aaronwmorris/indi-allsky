@@ -10,6 +10,9 @@ set -o nounset
 PATH=/bin:/usr/bin
 export PATH
 
+PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
+export PKG_CONFIG_PATH
+
 
 # can be overridden by environment variables
 #BUILD_INDI_SETTINGS="manual"
@@ -350,6 +353,7 @@ elif [[ "$DISTRO_ID" == "linuxmint" ]]; then
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
         exit 1
     fi
+
 elif [[ "$DISTRO_ID" == "arch" ]]; then
     DISTRO="arch"
 
