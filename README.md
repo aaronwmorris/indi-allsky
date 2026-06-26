@@ -5,6 +5,8 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 *Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
 
 ## New Features
+* Auto-Gain Support
+    * Auto-Gain with Exposure Priority automatically tries to scale the exposure to the maximum setting and adjusts gain to maintain consistent image brightness.  Exposure is maximized to ensure you do not miss any events in the sky.
 * Real-Time Keogram
     * A keogram is generated in realtime with every image that is taken
 * Long Term Keogram
