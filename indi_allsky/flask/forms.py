@@ -261,7 +261,11 @@ def SQM_MAGNITUDE_OFFSET_validator(form, field):
 
 
 def CCD_CONFIG__EXPOSURE_CLASSNAME_validator(form, field):
-    if field.data not in list(zip(*form.CCD_CONFIG__EXPOSURE_CLASSNAME_choices))[0]:
+    exposure_classes = list()
+    for v in form.CCD_CONFIG__EXPOSURE_CLASSNAME_choices.values():
+        exposure_classes.extend(list(zip(*v))[0])
+
+    if field.data not in exposure_classes:
         raise ValidationError('Invalid selection')
 
 
