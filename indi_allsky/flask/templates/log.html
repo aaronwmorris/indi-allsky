@@ -45,14 +45,22 @@ function init() {
     // Listen for message events
     eventSource.onmessage = function(event) {
         logDiv.append(event.data + "\n");
-        logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll
+        //logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll
+        logDiv.scrollTo({
+          top: logDiv.scrollHeight,
+          behavior: 'smooth'
+        });
     };
 
     // Handle connection errors
     eventSource.onerror = function(error) {
         console.error("EventSource failed:", error);
         logDiv.append("Connection lost. Reconnecting...\n");
-        logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll
+        //logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll
+        logDiv.scrollTo({
+          top: logDiv.scrollHeight,
+          behavior: 'smooth'
+        });
     };
 }
 
