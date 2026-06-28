@@ -35,6 +35,7 @@ from flask import Response
 from flask import url_for
 from flask import send_from_directory
 from flask import send_file
+from flask import stream_with_context
 from flask import current_app as app
 
 from flask_login import login_required
@@ -99,7 +100,6 @@ from .forms import IndiAllskySetDateTimeForm
 from .forms import IndiAllskySetTimezoneForm
 from .forms import IndiAllskyTimelapseGeneratorForm
 from .forms import IndiAllskyFocusForm
-from .forms import IndiAllskyLogViewerForm
 from .forms import IndiAllskyUserInfoForm
 from .forms import IndiAllskyImageExcludeForm
 from .forms import IndiAllskyImageProcessingForm
@@ -8265,96 +8265,51 @@ class LogView(TemplateView):
     def get_context(self):
         context = super(LogView, self).get_context()
 
-        context['form_logviewer'] = IndiAllskyLogViewerForm()
 
         return context
 
 
-class JsonLogView(JsonView):
-    methods = ['POST']
+class StreamLogView(BaseView):
     decorators = [login_required]
+    methods = ['GET']
+
+    def __init__(self, **kwargs):
+        super(StreamLogView, self).__init__(**kwargs)
+
+        self.unit_name = app.config['ALLSKY_SERVICE_NAME']
+
 
     def dispatch_request(self):
-        log_file_p = Path('/var/log/indi-allsky/indi-allsky.log')
-        line_size = 150  # assuming lines have an average length
+        from systemd import journal
+        import select
 
 
-        lines = int(request.json.get('lines', 500))
-        filter_str = str(request.json.get('filter', ''))[:30]  # limit to 30 characters
+        def generate():
+            reader = journal.Reader()
+            reader.add_match(_SYSTEMD_USER_UNIT=self.unit_name)
+
+            reader.seek_tail()
+            reader.get_previous()  # Fixes edge-case pointer positioning
+
+            poller = select.poll()
+            poller.register(reader.fileno(), reader.get_events())
 
 
-        json_data = dict()
+            while True:
+                if poller.poll(500):  # Check every 500ms
+                    if reader.process() == journal.APPEND:
+                        for entry in reader:
+                            message = entry.get('MESSAGE', '')
+                            yield 'data: {0:s}\n\n'.format(message)
+                else:
+                    yield ': keep-alive\n\n'
 
 
-        filter_regex = r'^[a-zA-Z0-9_\.\-\\\ ]*$'
-        if not re.search(filter_regex, filter_str):
-            json_data['log'] = 'ERROR: Log filter has illegal characters'
-            return jsonify(json_data)
 
-
-        if lines > 5000:
-            # sanity check
-            lines = 5000
-
-
-        read_bytes = lines * line_size
-
-
-        if not log_file_p.exists():
-            # this can happen in docker
-            json_data['log'] = 'ERROR: Log file missing'
-            return jsonify(json_data)
-
-
-        log_file_size = log_file_p.stat().st_size
-        if log_file_size < read_bytes:
-            # just read the whole file
-            #app.logger.info('Returning %d bytes of log data', log_file_size)
-            log_file_seek = 0
-        else:
-            #app.logger.info('Returning %d bytes of log data', read_bytes)
-            log_file_seek = log_file_size - read_bytes
-
-
-        try:
-            with io.open(log_file_p, 'r') as log_file_f:
-                log_file_f.seek(log_file_seek)
-                log_lines = log_file_f.readlines()
-        except PermissionError as e:
-            log_lines = ['', 'PermissionError: {0:s}'.format(str(e))]
-
-
-        try:
-            log_lines.pop(0)  # skip the first partial line
-            log_lines.reverse()  # newer lines first
-        except IndexError:
-            app.logger.warning('indi-allsky log empty')
-            log_lines = list()
-
-
-        if len(log_lines) == 0:
-            log_lines.append('[indi-allsky log empty]')
-        elif filter_str:
-            filter_regex = re.compile(filter_str, re.IGNORECASE)
-
-            filtered_lines = list()
-            for line in log_lines:
-                ### this is probably insecure
-                if not re.search(filter_regex, line):
-                    continue
-
-                filtered_lines.append(line)
-
-            # replace original
-            log_lines = filtered_lines
-
-            if len(log_lines) == 0:
-                log_lines.append('[No matching lines]')
-
-
-        json_data['log'] = ''.join(log_lines)
-
-        return jsonify(json_data)
+        return Response(
+            stream_with_context(generate()),
+            mimetype='text/event-stream'
+        )
 
 
 class LogDownloadView(BaseView):
@@ -11964,7 +11919,7 @@ bp_allsky.add_url_rule('/manual_gpio', view_func=ManualGpioView.as_view('manual_
 bp_allsky.add_url_rule('/ajax/manual_gpio', view_func=AjaxManualGpioView.as_view('ajax_manual_gpio_view'))
 
 bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
-bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
+bp_allsky.add_url_rule('/stream/log', view_func=StreamLogView.as_view('stream_log_view'))
 bp_allsky.add_url_rule('/log/download', view_func=LogDownloadView.as_view('log_download_view'))
 bp_allsky.add_url_rule('/log/webapp_download', view_func=LogWebappDownloadView.as_view('log_webapp_download_view'))
 bp_allsky.add_url_rule('/log/syslog_download', view_func=LogSyslogDownloadView.as_view('log_syslog_download_view'))
