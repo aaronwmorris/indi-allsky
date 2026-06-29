@@ -8276,7 +8276,8 @@ class StreamLogView(BaseView):
     def __init__(self, **kwargs):
         super(StreamLogView, self).__init__(**kwargs)
 
-        self.unit_name = app.config['ALLSKY_SERVICE_NAME']
+        #self.unit_name = app.config['ALLSKY_SERVICE_NAME']
+        self.syslog_facility = '22'  # local6
 
 
     def dispatch_request(self):
@@ -8286,7 +8287,9 @@ class StreamLogView(BaseView):
 
         def generate():
             reader = journal.Reader()
-            reader.add_match(_SYSTEMD_USER_UNIT=self.unit_name)
+
+            #reader.add_match(_SYSTEMD_USER_UNIT=self.unit_name)
+            reader.add_match(SYSLOG_FACILITY=self.syslog_facility)
 
             reader.seek_tail()
             reader.get_previous()  # Fixes edge-case pointer positioning
