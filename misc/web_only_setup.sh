@@ -393,7 +393,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         jq \
         sqlite3 \
         polkitd \
-        systemd-dev \
+        libsystemd-dev \
         dbus-user-session
 
 
@@ -490,7 +490,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         jq \
         sqlite3 \
         polkitd \
-        systemd-dev \
+        libsystemd-dev \
         dbus-user-session
 
 
@@ -582,7 +582,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         jq \
         sqlite3 \
         policykit-1 \
-        systemd-dev \
+        libsystemd-dev \
         dbus-user-session
 
 
@@ -674,7 +674,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         jq \
         sqlite3 \
         polkitd \
-        systemd-dev \
+        libsystemd-dev \
         dbus-user-session
 
 
@@ -769,7 +769,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         jq \
         sqlite3 \
         policykit-1 \
-        systemd-dev \
+        libsystemd-dev \
         dbus-user-session
 
 
@@ -864,7 +864,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         jq \
         sqlite3 \
         policykit-1 \
-        systemd-dev \
+        libsystemd-dev \
         dbus-user-session
 
 
