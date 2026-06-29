@@ -5,133 +5,9 @@
 {% block head %}
 <meta charset="UTF-8">
 <style>
-pre {
-    white-space: pre-wrap;
-}
-
-.loader {
-  display: block;
-  border: 3px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
 </style>
 <script type="text/javascript">
 var camera_id = {{ camera_id }};
-var json_data = {
-    'log' : null,
-};
-var refreshInterval;  // set later
-
-function init() {
-    loadLog();
-    loop();
-}
-
-async function loop() {
-    console.log('Starting loop');
-
-    while(json_data['log'] == null) {
-        await sleep(100);
-    }
-
-    showLog(json_data['log']);
-
-    setTimeout(loop, refreshInterval);
-}
-
-
-function showLog(log_data) {
-    console.log('Updating log data');
-
-    if (log_data == null) {
-        console.log('No data');
-        return;
-    }
-
-    pre_div = $('<pre />');
-
-    $('<div />', {
-        'text'  : log_data,
-        'style' : "background-color:#cccccc;"
-    }).appendTo(pre_div);
-
-    $("#log_data").html(pre_div);
-}
-
-
-function loadLog() {
-    console.log('Loading log data');
-    $("#loader_log").css({'display' : 'block'});
-
-    var data = {
-        'lines' : $('#LINES_SELECT').val(),
-        'filter' : $('#FILTER').val(),
-    };
-
-    loadJS("{{ url_for('indi_allsky.js_log_view') }}", data, function() {});
-    setTimeout(loadLog, refreshInterval);
-}
-
-function sleep(time) {
-    return new Promise(resolve => setTimeout(resolve, time));
-}
-
-function loadJS(url, data, onDone, onError) {
-    if(!onDone)onDone=function(){};
-    if(!onError)onError=function(){};
-
-    $.ajax({
-        type: "POST",
-        url: url,
-        contentType: "application/json",
-        data: JSON.stringify(data),
-        success: function(rdata){
-            json_data = rdata;
-            $("#loader_log").css({'display' : 'none'});
-        },
-        error: function(rdata){
-            onError(data.status);
-        },
-    });
-}
-
-
-
-$( document ).ready(function() {
-    if(localStorage) {
-        log_settings = localStorage.getItem("log_settings");
-        if(log_settings) {
-            page_settings = JSON.parse(log_settings);
-        } else {
-            page_settings = new Object();
-            page_settings["refreshInterval"] = 15000;
-            page_settings["lines"] = 25;
-
-            localStorage.setItem("log_settings", JSON.stringify(page_settings));
-        }
-    }
-
-    if(typeof page_settings["refreshInterval"] !== "undefined") {
-        $("#REFRESH_SELECT").val(page_settings["refreshInterval"] / 1000);
-    }
-    if(typeof page_settings["lines"] !== "undefined") {
-        $("#LINES_SELECT").val(page_settings["lines"]);
-    }
-
-    refreshInterval = $('#REFRESH_SELECT').val() * 1000;
-
-    init();
-});
-
 </script>
 {% endblock %}
 
@@ -144,43 +20,12 @@ $( document ).ready(function() {
 {% endif %}
 
 
-<form id="form_logviewer" onSubmit="return false;">
-    <div class="form-group row">
-        <div class="col-sm-1">
-            {{ form_logviewer.REFRESH_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_logviewer.REFRESH_SELECT(class='form-select bg-secondary') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_logviewer.LINES_SELECT.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_logviewer.LINES_SELECT(class='form-select bg-secondary') }}
-        </div>
-        <div class="col-sm-1">
-            {{ form_logviewer.FILTER.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-3">
-            <div>
-                {{ form_logviewer.FILTER(class='form-control bg-secondary') }}
-            </div>
-            <div class="text-center" style="font-size:10px">
-                Limited to 30 characters [a-z] [A-Z] [0-9] [.-_]
-            </div>
-        </div>
-        <div class="col-sm-1">
-            <div class="col-sm-1 loader" id="loader_log"></div>
-        </div>
-    </div>
-</form>
-
-<hr>
-
 <div class="row">
-    <div class="col-sm-12">
-        <div id="log_data">
-        </div>
+    <div class="col-sm-12 text-center">
+      <span id="drive-loader" class="spinner-border" aria-hidden="false"></span><span> Streaming Capture Log...</span>
+      <pre>
+        <textarea id="log_data" rows="35" style="width:95%;background-color:#888888;"></textarea>
+      </pre>
     </div>
 
     <div class="col-12 text-center">
@@ -192,24 +37,37 @@ $( document ).ready(function() {
 </div>
 
 <script>
-$("#REFRESH_SELECT").on("change", function() {
-    refreshInterval = $('#REFRESH_SELECT').val() * 1000;
-    console.log('Changing refresh interval: ' + refreshInterval);
+function init() {
+    const eventSource = new EventSource("{{ url_for('indi_allsky.stream_log_view') }}");
+    const logDiv = document.getElementById("log_data");
 
-    if(localStorage) {
-        page_settings["refreshInterval"] = refreshInterval;
-        localStorage.setItem("log_settings", JSON.stringify(page_settings));
-    }
-});
+    logDiv.append("\n");  // Messages on new line
 
-$("#LINES_SELECT").on("change", function() {
-    var lines = $('#LINES_SELECT').val();
-    console.log('Changing lines: ' + lines);
+    // Listen for message events
+    eventSource.onmessage = function(event) {
+        logDiv.append(event.data + "\n");
+        //logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll
+        logDiv.scrollTo({
+          top: logDiv.scrollHeight,
+          behavior: 'smooth'
+        });
+    };
 
-    if(localStorage) {
-        page_settings["lines"] = lines;
-        localStorage.setItem("log_settings", JSON.stringify(page_settings));
-    }
+    // Handle connection errors
+    eventSource.onerror = function(error) {
+        console.error("EventSource failed:", error);
+        logDiv.append("Connection lost. Reconnecting...\n");
+        //logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll
+        logDiv.scrollTo({
+          top: logDiv.scrollHeight,
+          behavior: 'smooth'
+        });
+    };
+}
+
+
+$( document ).ready(function() {
+    init();
 });
 </script>
 
