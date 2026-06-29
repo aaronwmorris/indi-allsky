@@ -2,7 +2,7 @@
 
 import os
 import cv2
-import numpy
+#import numpy
 import argparse
 import logging
 import time
@@ -25,8 +25,8 @@ class VectorGenerator(object):
         inputdir_p = Path(inputdir)
         outputdir_p = Path(outputdir)
 
-        assert(inputdir_p.is_dir())
-        assert(outputdir_p.is_dir())
+        assert inputdir_p.is_dir()
+        assert outputdir_p.is_dir()
 
 
         file_list = list()

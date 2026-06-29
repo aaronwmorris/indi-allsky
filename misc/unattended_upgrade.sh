@@ -351,7 +351,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         udisks2 \
         dnsmasq-base \
         polkitd \
-        systemd-dev \
+        libsystemd-dev \
         dbus-user-session
 
 
@@ -445,7 +445,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         udisks2 \
         dnsmasq-base \
         polkitd \
-        systemd-dev \
+        libsystemd-dev \
         dbus-user-session
 
 elif [[ "$DISTRO" == "debian_11" ]]; then
@@ -527,7 +527,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         udisks2 \
         dnsmasq-base \
         policykit-1 \
-        systemd-dev \
+        libsystemd-dev \
         dbus-user-session
 
 elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
@@ -610,7 +610,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         udisks2 \
         dnsmasq-base \
         polkitd \
-        systemd-dev \
+        libsystemd-dev \
         dbus-user-session
 
 elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
@@ -696,7 +696,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         udisks2 \
         dnsmasq-base \
         policykit-1 \
-        systemd-dev \
+        libsystemd-dev \
         dbus-user-session
 
 elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
@@ -781,7 +781,7 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         network-manager \
         udisks2 \
         policykit-1 \
-        systemd-dev \
+        libsystemd-dev \
         dbus-user-session
 
 elif [[ "$DISTRO" == "arch" ]]; then
