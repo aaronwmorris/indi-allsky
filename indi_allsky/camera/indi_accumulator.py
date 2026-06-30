@@ -171,7 +171,7 @@ class IndiClientIndiAccumulator(IndiClient):
             self.exposure_remain -= sub_exposure
 
 
-        self.set_number(self.ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': sub_exposure}, sync=False, timeout=self.timeout)
+        self.set_number(self.ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': float(sub_exposure)}, sync=False, timeout=self.timeout)
 
         self.camera_ready = False
         self.exposure_state = 'BUSY'

@@ -241,9 +241,9 @@ class IndiClient(PyIndi.BaseClient):
     @gain.setter
     def gain(self, new_gain):
         if not isinstance(new_gain, Decimal):
-            self.gain = Decimal('{0:0.3f}'.format(float(new_gain)))
+            self._gain = Decimal('{0:0.3f}'.format(float(new_gain)))
         else:
-            self.gain = new_gain
+            self._gain = new_gain
 
 
     @property
@@ -1087,7 +1087,7 @@ class IndiClient(PyIndi.BaseClient):
 
         self.exposureStartTime = time.time()
 
-        ctl_ccd_exposure = self.set_number(self.ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': exposure_d}, sync=sync, timeout=timeout)
+        ctl_ccd_exposure = self.set_number(self.ccd_device, 'CCD_EXPOSURE', {'CCD_EXPOSURE_VALUE': float(exposure_d)}, sync=sync, timeout=timeout)
 
         self._ctl_ccd_exposure = ctl_ccd_exposure
 
@@ -1268,6 +1268,7 @@ class IndiClient(PyIndi.BaseClient):
         else:
             gain_d = new_gain
 
+
         logger.warning('Setting CCD gain to %0.2f', gain_d)
         indi_exec = self.ccd_device.getDriverExec()
 
@@ -1287,7 +1288,7 @@ class IndiClient(PyIndi.BaseClient):
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_CONTROLS" : {
-                        "Gain" : gain_d,
+                        "Gain" : float(gain_d),
                     },
                 },
             }
@@ -1301,7 +1302,7 @@ class IndiClient(PyIndi.BaseClient):
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_GAIN" : {
-                        "GAIN" : gain_d,
+                        "GAIN" : float(gain_d),
                     },
                 },
             }
@@ -1317,7 +1318,7 @@ class IndiClient(PyIndi.BaseClient):
                 gain_config = {
                     "PROPERTIES" : {
                         "CCD_CONTROLS" : {
-                            "Gain" : gain_d,
+                            "Gain" : float(gain_d),
                         },
                     },
                 }
@@ -1326,7 +1327,7 @@ class IndiClient(PyIndi.BaseClient):
                 gain_config = {
                     "PROPERTIES" : {
                         "CCD_GAIN" : {
-                            "GAIN" : gain_d,
+                            "GAIN" : float(gain_d),
                         },
                     },
                 }
@@ -1372,7 +1373,7 @@ class IndiClient(PyIndi.BaseClient):
                 gain_config = {
                     "PROPERTIES" : {
                         "Image Adjustments" : {
-                            "Gain" : gain_d,
+                            "Gain" : float(gain_d),
                         },
                     },
                 }
@@ -1389,7 +1390,7 @@ class IndiClient(PyIndi.BaseClient):
             gain_config = {
                 "PROPERTIES" : {
                     "CCD_GAIN" : {
-                        "GAIN" : gain_d,
+                        "GAIN" : float(gain_d),
                     },
                 },
             }
