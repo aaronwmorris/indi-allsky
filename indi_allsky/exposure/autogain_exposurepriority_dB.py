@@ -22,7 +22,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
 
     @property
     def exposure_max(self):
-        return self._expUtils.constants.EXPOSURE_MAX
+        return self._expUtils.EXPOSURE_MAX
 
 
     @property
@@ -239,11 +239,11 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_1_10(IndiAllSky_Exposure_
     ### ZWO, PlayerOne
 
 
-    def gain2dB(self, gain) -> Decimal:
-        return gain / 10.0
+    def gain2dB(self, gain) -> float:
+        return float(gain) / 10.0
 
-    def dB2gain(self, dB) -> Decimal:
-        return dB * 10.0
+    def dB2gain(self, dB) -> float:
+        return float(dB) * 10.0
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
@@ -251,11 +251,11 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB(IndiAllSky_Exposure_AutoG
     ### QHY
 
 
-    def gain2dB(self, gain) -> Decimal:
-        return gain
+    def gain2dB(self, gain) -> float:
+        return float(gain)
 
-    def dB2gain(self, dB) -> Decimal:
-        return dB
+    def dB2gain(self, dB) -> float:
+        return float(dB)
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
@@ -263,11 +263,11 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_Auto
     ### ToupTek, Altair, QHY, etc
 
 
-    def gain2dB(self, gain) -> Decimal:
-        return 20 * math.log10(gain / 100)
+    def gain2dB(self, gain) -> float:
+        return 20 * math.log10(float(gain) / 100)
 
-    def dB2gain(self, dB) -> Decimal:
-        return 100 * (10 ** (dB / 20))
+    def dB2gain(self, dB) -> float:
+        return 100 * (10 ** (float(dB) / 20))
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
@@ -275,8 +275,8 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100(IndiAllSky_Exposur
     ### libcamera
 
 
-    def gain2dB(self, gain) -> Decimal:
-        return 20 * math.log10(gain)
+    def gain2dB(self, gain) -> float:
+        return 20 * math.log10(float(gain))
 
-    def dB2gain(self, dB) -> Decimal:
-        return 10 ** (dB / 20)
+    def dB2gain(self, dB) -> float:
+        return 10 ** (float(dB) / 20)
