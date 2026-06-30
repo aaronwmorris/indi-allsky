@@ -1,8 +1,10 @@
 import copy
+from decimal import Decimal
 import functools
 import logging
 
 from .. import constants
+from ..utils import IndiAllSkyExposureUtils
 
 
 logger = logging.getLogger('indi_allsky')
@@ -17,6 +19,8 @@ class IndiAllSky_Exposure_Base(object):
         self.gain_av = args[2]
         self.binning_av = args[3]
         self.night_av = args[4]
+
+        self._expUtils = IndiAllSkyExposureUtils(self.config, self.exposure_av, self.gain_av, self.binning_av)
 
         self._target_adu_found = False
         self._current_adu_target = 0
@@ -38,6 +42,17 @@ class IndiAllSky_Exposure_Base(object):
 
 
     def compare_exposure(self, adu, exposure, gain):
+        if not isinstance(exposure, Decimal):
+            exposure_d = Decimal('{0:0.6f}'.format(float(exposure)))
+        else:
+            exposure_d = exposure
+
+        if not isinstance(gain, Decimal):
+            gain_d = Decimal('{0:0.3f}'.format(float(gain)))
+        else:
+            gain_d = gain
+
+
         if adu <= 0.0:
             # ensure we do not divide by zero
             logger.warning('Zero average, setting a default of 0.1')
@@ -52,7 +67,7 @@ class IndiAllSky_Exposure_Base(object):
 
         # Brightness when the sun is in view (very short exposures) can change drastically when clouds pass through the view
         # Setting a deviation that is too short can cause exposure flapping
-        if exposure < 0.001000:
+        if exposure_d < 0.001000:
             # DAY
             adu_dev = float(self.config.get('TARGET_ADU_DEV_DAY', 20))
 
@@ -78,7 +93,7 @@ class IndiAllSky_Exposure_Base(object):
 
 
         if not self.target_adu_found:
-            self.recalculate_exposure(exposure, gain, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor)
+            self.recalculate_exposure(exposure_d, gain_d, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor)
             return adu, 0.0
 
 
@@ -112,6 +127,7 @@ class IndiAllSky_Exposure_Base(object):
     def recalculate_exposure(self, current_exposure, current_gain, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor):
         # There might be a race condition here if there is a day/night change but self.target_adu_found == True
 
+
         # Until we reach a good starting point, do not calculate a moving average
         if adu <= target_adu_max and adu >= target_adu_min:
             logger.warning('Found target value for exposure')
@@ -143,24 +159,24 @@ class IndiAllSky_Exposure_Base(object):
         # Binning
         if self.night_av[constants.NIGHT_NIGHT]:
             if self.night_av[constants.NIGHT_MOONMODE]:
-                next_binning = self.binning_av[constants.BINNING_MOONMODE]
+                next_binning = self._expUtils.BINNING_MOONMODE
             else:
-                next_binning = self.binning_av[constants.BINNING_NIGHT]
+                next_binning = self._expUtils.BINNING_NIGHT
         else:
-            next_binning = self.binning_av[constants.BINNING_DAY]
+            next_binning = self._expUtils.BINNING_DAY
 
 
         ### Check for exposure flapping
         # Flapping is defined when the exposure increases then immediately decreases (or the opposite)
         # and cannot find a stable value.  The result is the image brightness will flash
-        #if self.exposure_av[constants.EXPOSURE_DELTA] > 0 and exposure_delta < 0:
+        #if self._expUtils.EXPOSURE_DELTA > 0 and exposure_delta < 0:
         #    # exposure is decreasing
         #    exposure_offset = exposure_delta / 2
         #    next_exposure -= exposure_offset  # offset will be negative
         #    exposure_delta -= exposure_offset
 
         #    logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
-        #elif self.exposure_av[constants.EXPOSURE_DELTA] < 0 and exposure_delta > 0:
+        #elif self._expUtils.EXPOSURE_DELTA < 0 and exposure_delta > 0:
         #    # exposure is increasing
         #    exposure_offset = exposure_delta / 2
         #    next_exposure -= exposure_offset
@@ -170,17 +186,13 @@ class IndiAllSky_Exposure_Base(object):
 
 
         logger.warning('New calculated exposure: %0.6fs (%+0.8f) @ gain %0.2f (%+0.2f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_NEXT] = float(next_exposure)
-            self.exposure_av[constants.EXPOSURE_DELTA] = float(exposure_delta)
+        self._expUtils.EXPOSURE_NEXT = next_exposure
+        self._expUtils.EXPOSURE_DELTA = exposure_delta
 
-        with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_NEXT] = float(next_gain)
-            self.gain_av[constants.GAIN_DELTA] = float(gain_delta)
+        self._expUtils.GAIN_NEXT = next_gain
+        self._expUtils.GAIN_DELTA = gain_delta
 
-        with self.binning_av.get_lock():
-            self.binning_av[constants.BINNING_NEXT] = int(next_binning)
-
+        self._expUtils.BINNING_NEXT = next_binning
 
 
     def adjust_exposure_gain(self, *args):

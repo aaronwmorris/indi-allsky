@@ -1,4 +1,5 @@
 import math
+from decimal import Decimal
 import logging
 
 from .. import constants
@@ -15,24 +16,22 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
     @property
     def exposure_min(self):
         if self.night_av[constants.NIGHT_NIGHT]:
-            return float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
+            return self._expUtils.EXPOSURE_MIN_NIGHT
         else:
-            return float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
+            return self._expUtils.EXPOSURE_MIN_DAY
 
     @property
     def exposure_max(self):
-        return float(self.exposure_av[constants.EXPOSURE_MAX])
+        return self._expUtils.constants.EXPOSURE_MAX
 
 
     @property
     def gain_min(self):
-        # prevent python/C float conversion errors
-        return math.ceil(float(self.gain_av[constants.GAIN_MIN_NIGHT]) * 100) / 100  # round up the hundredths spot
+        return self._expUtils.GAIN_MIN_NIGHT
 
     @property
     def gain_max(self):
-        # prevent python/C float conversion errors
-        return math.floor(float(self.gain_av[constants.GAIN_MAX_NIGHT]) * 100) / 100  # round down
+        return self._expUtils.GAIN_MAX_NIGHT
 
 
     @property
@@ -60,7 +59,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
 
 
 
-    def adjust_exposure_gain(self, current_exposure, current_gain, next_exposure) -> tuple[float, float, float, float]:
+    def adjust_exposure_gain(self, current_exposure, current_gain, next_exposure) -> tuple[Decimal, Decimal, Decimal, Decimal]:
         #if isinstance(self.auto_gain_exposure_cutoff_low, type(None)):
         #    self.post_init()
 
@@ -76,9 +75,9 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             # no change
             #logger.warning('Auto-Gain - no changes')
             next_gain_dB = current_gain_dB
-            gain_delta = 0.0
+            gain_delta = Decimal('0')
             #next_exposure = next_exposure
-            exposure_delta = 0.0
+            exposure_delta = Decimal('0')
         elif next_exposure > current_exposure:
             # exposure/gain needs to increase
             if current_exposure < self.exposure_max:
@@ -102,7 +101,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         return next_exposure, next_gain, exposure_delta, gain_delta
 
 
-    def increase_exposure(self, current_exposure, current_gain, next_exposure) -> tuple[float, float, float, float]:
+    def increase_exposure(self, current_exposure, current_gain, next_exposure) -> tuple[Decimal, Decimal, Decimal, Decimal]:
         current_gain_dB = self.gain2dB(current_gain)
 
         if next_exposure > self.exposure_max:
@@ -126,7 +125,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             exposure_delta = next_exposure - current_exposure
 
             next_gain_dB = current_gain_dB
-            gain_delta = 0.0
+            gain_delta = Decimal('0')
 
             logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
 
@@ -134,7 +133,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         return next_exposure, exposure_delta, next_gain_dB, gain_delta
 
 
-    def reduce_exposure(self, current_exposure, current_gain, next_exposure, exposure_low_cutoff) -> tuple[float, float, float, float]:
+    def reduce_exposure(self, current_exposure, current_gain, next_exposure, exposure_low_cutoff) -> tuple[Decimal, Decimal, Decimal, Decimal]:
         current_gain_dB = self.gain2dB(current_gain)
 
         if next_exposure >= exposure_low_cutoff:
@@ -142,7 +141,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
 
             #next_exposure = next_exposure
             exposure_delta = next_exposure - current_exposure
-            gain_delta = 0.0
+            gain_delta = Decimal('0')
             next_gain_dB = current_gain_dB
             logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
 
@@ -166,7 +165,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         return next_exposure, exposure_delta, next_gain_dB, gain_delta
 
 
-    def increase_gain(self, current_exposure, current_gain, next_exposure) -> tuple[float, float, float, float]:
+    def increase_gain(self, current_exposure, current_gain, next_exposure) -> tuple[Decimal, Decimal, Decimal, Decimal]:
         current_gain_dB = self.gain2dB(current_gain)
 
         next_gain_dB = current_gain_dB + (20 * math.log10(next_exposure / current_exposure))
@@ -190,7 +189,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         else:
             # increase gain only
             next_exposure = current_exposure
-            exposure_delta = 0.0
+            exposure_delta = Decimal('0')
             gain_delta = self.dB2gain(next_gain_dB) - current_gain
 
             logger.info('Auto-Gain increasing gain to %0.2f (%+0.2f) [maintain exposure]', self.dB2gain(next_gain_dB), gain_delta)
@@ -199,7 +198,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         return next_exposure, exposure_delta, next_gain_dB, gain_delta
 
 
-    def reduce_gain(self, current_exposure, current_gain, next_exposure) -> tuple[float, float, float, float]:
+    def reduce_gain(self, current_exposure, current_gain, next_exposure) -> tuple[Decimal, Decimal, Decimal, Decimal]:
         current_gain_dB = self.gain2dB(current_gain)
 
 
@@ -225,7 +224,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             # reduce only gain
             gain_delta = self.dB2gain(next_gain_dB) - current_gain
             next_exposure = current_exposure
-            exposure_delta = 0.0
+            exposure_delta = Decimal('0')
             logger.info('Auto-Gain decreasing gain to %0.2f dB (%+0.2f) [maintain exposure]', self.dB2gain(next_gain_dB), gain_delta)
 
         return next_exposure, exposure_delta, next_gain_dB, gain_delta
@@ -240,10 +239,10 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_1_10(IndiAllSky_Exposure_
     ### ZWO, PlayerOne
 
 
-    def gain2dB(self, gain) -> float:
+    def gain2dB(self, gain) -> Decimal:
         return gain / 10.0
 
-    def dB2gain(self, dB) -> float:
+    def dB2gain(self, dB) -> Decimal:
         return dB * 10.0
 
 
@@ -252,10 +251,10 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB(IndiAllSky_Exposure_AutoG
     ### QHY
 
 
-    def gain2dB(self, gain) -> float:
+    def gain2dB(self, gain) -> Decimal:
         return gain
 
-    def dB2gain(self, dB) -> float:
+    def dB2gain(self, dB) -> Decimal:
         return dB
 
 
@@ -264,10 +263,10 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_Auto
     ### ToupTek, Altair, QHY, etc
 
 
-    def gain2dB(self, gain) -> float:
+    def gain2dB(self, gain) -> Decimal:
         return 20 * math.log10(gain / 100)
 
-    def dB2gain(self, dB) -> float:
+    def dB2gain(self, dB) -> Decimal:
         return 100 * (10 ** (dB / 20))
 
 
@@ -276,8 +275,8 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100(IndiAllSky_Exposur
     ### libcamera
 
 
-    def gain2dB(self, gain) -> float:
+    def gain2dB(self, gain) -> Decimal:
         return 20 * math.log10(gain)
 
-    def dB2gain(self, dB) -> float:
+    def dB2gain(self, dB) -> Decimal:
         return 10 ** (dB / 20)
