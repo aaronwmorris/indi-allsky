@@ -12,12 +12,12 @@ logger = logging.getLogger('indi_allsky')
 
 
 class IndiAllSkyExposureUtils(object):
-    def __init__(self, config, exposure_av, gain_av):
+    def __init__(self, config, exposure_av, gain_av, binning_av):
         self.config = config
 
         self.exposure_av = exposure_av
         self.gain_av = gain_av
-
+        self.binning_av = binning_av
 
 
     ### Exposure
@@ -194,6 +194,70 @@ class IndiAllSkyExposureUtils(object):
     def GAIN_SQM(self, new_gain):
         with self.gain_av.get_lock():
             self.gain_av[constants.GAIN_SQM] = int(float(new_gain) * 1000)
+
+
+    ### Binning
+
+
+    @property
+    def BINNING_CURRENT(self):
+        return self.binning_av[constants.BINNING_CURRENT]
+
+    @BINNING_CURRENT.setter
+    def BINNING_CURRENT(self, new_binning):
+        with self.binning_av.get_lock():
+            self.binning_av[constants.BINNING_CURRENT] = int(new_binning)
+
+
+    @property
+    def BINNING_NEXT(self):
+        return self.binning_av[constants.BINNING_NEXT]
+
+    @BINNING_NEXT.setter
+    def BINNING_NEXT(self, new_binning):
+        with self.binning_av.get_lock():
+            self.binning_av[constants.BINNING_NEXT] = int(new_binning)
+
+
+    @property
+    def BINNING_DAY(self):
+        return self.binning_av[constants.BINNING_DAY]
+
+    @BINNING_DAY.setter
+    def BINNING_DAY(self, new_binning):
+        with self.binning_av.get_lock():
+            self.binning_av[constants.BINNING_DAY] = int(new_binning)
+
+
+    @property
+    def BINNING_NIGHT(self):
+        return self.binning_av[constants.BINNING_NIGHT]
+
+    @BINNING_NIGHT.setter
+    def BINNING_NIGHT(self, new_binning):
+        with self.binning_av.get_lock():
+            self.binning_av[constants.BINNING_NIGHT] = int(new_binning)
+
+
+    @property
+    def BINNING_MOONMODE(self):
+        return self.binning_av[constants.BINNING_MOONMODE]
+
+    @BINNING_MOONMODE.setter
+    def BINNING_MOONMODE(self, new_binning):
+        with self.binning_av.get_lock():
+            self.binning_av[constants.BINNING_MOONMODE] = int(new_binning)
+
+
+    @property
+    def BINNING_SQM(self):
+        return self.binning_av[constants.BINNING_SQM]
+
+    @BINNING_SQM.setter
+    def BINNING_SQM(self, new_binning):
+        with self.binning_av.get_lock():
+            self.binning_av[constants.BINNING_SQM] = int(new_binning)
+
 
 
 class IndiAllSkyDateCalcs(object):
