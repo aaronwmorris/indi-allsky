@@ -4,6 +4,7 @@ import numpy
 import logging
 
 from . import constants
+from .utils import IndiAllSkyExposureUtils
 
 
 logger = logging.getLogger('indi_allsky')
@@ -14,13 +15,19 @@ class IndiAllskySqm(object):
     def __init__(
         self,
         config,
+        exposure_av,
         gain_av,
+        binning_av,
         mask=None,
     ):
         self.config = config
+        self.exposure_av = exposure_av
         self.gain_av = gain_av
+        self.binning_av = binning_av
 
         self._magnitude_offset = self.config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 25.0)
+
+        self._expUtils = IndiAllSkyExposureUtils(self.config, self.exposure_av, self.gain_av, self.binning_av)
 
         # both masks will be combined
         self._external_mask_dict = mask

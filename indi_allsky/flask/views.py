@@ -4563,6 +4563,7 @@ class Fits2JpegView(BaseView):
 
 
     def dispatch_request(self):
+        import ctypes
         import cv2
         from astropy.io import fits
         #from PIL import Image
@@ -4594,7 +4595,7 @@ class Fits2JpegView(BaseView):
 
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
         gain = float(hdulist[0].header.get('GAIN', 0))
-        gain_av = Array('f', [gain])
+        gain_av = Array(ctypes.c_int32, [int(gain * 1000)])
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
         binning = int(hdulist[0].header.get('XBINNING', 1))
         binning_av = Array('i', [binning])
@@ -7736,6 +7737,7 @@ class JsonImageProcessingView(JsonView):
 
 
     def dispatch_request(self):
+        import ctypes
         import cv2
         from astropy.io import fits
         #from PIL import Image
@@ -7981,7 +7983,7 @@ class JsonImageProcessingView(JsonView):
 
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
         gain = float(hdulist[0].header.get('GAIN', 0))
-        gain_av = Array('f', [gain])
+        gain_av = Array(ctypes.c_int32, [int(gain * 1000)])
         binning = int(hdulist[0].header.get('XBINNING', 1))
         binning_av = Array('i', [binning])
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
