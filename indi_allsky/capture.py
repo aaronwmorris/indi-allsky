@@ -1473,7 +1473,7 @@ class CaptureWorker(Process):
             ccd_exposure_default = gain_day
 
 
-        if self._expUtils.EXPOSURE_CURRENT == -1.0:
+        if self._expUtils.EXPOSURE_CURRENT < 0:
             # only set this on first start
             self._expUtils.EXPOSURE_CURRENT = ccd_exposure_default
             self._expUtils.EXPOSURE_NEXT = ccd_exposure_default
