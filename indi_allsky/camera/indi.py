@@ -1266,7 +1266,7 @@ class IndiClient(PyIndi.BaseClient):
         if not isinstance(new_gain, Decimal):
             gain_d = Decimal('{0:0.3f}'.format(new_gain))  # limit gain to 3 decimals
         else:
-            gain_d - new_gain
+            gain_d = new_gain
 
         logger.warning('Setting CCD gain to %0.2f', gain_d)
         indi_exec = self.ccd_device.getDriverExec()

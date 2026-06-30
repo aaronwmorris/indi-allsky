@@ -98,7 +98,7 @@ class IndiAllSkyExposureUtils(object):
 
     @property
     def GAIN_CURRENT(self):
-        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_CURRENT] / 1000))
+        return Decimal('{0:0.3f}'.format(self.gain_av[constants.GAIN_CURRENT] / 1000))
 
     @GAIN_CURRENT.setter
     def GAIN_CURRENT(self, new_gain):
@@ -108,7 +108,7 @@ class IndiAllSkyExposureUtils(object):
 
     @property
     def GAIN_NEXT(self):
-        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_NEXT] / 1000))
+        return Decimal('{0:0.3f}'.format(self.gain_av[constants.GAIN_NEXT] / 1000))
 
     @GAIN_NEXT.setter
     def GAIN_NEXT(self, new_gain):
@@ -118,7 +118,7 @@ class IndiAllSkyExposureUtils(object):
 
     @property
     def GAIN_DELTA(self):
-        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_DELTA] / 1000))
+        return Decimal('{0:0.3f}'.format(self.gain_av[constants.GAIN_DELTA] / 1000))
 
     @GAIN_DELTA.setter
     def GAIN_DELTA(self, new_gain):
@@ -128,7 +128,7 @@ class IndiAllSkyExposureUtils(object):
 
     @property
     def GAIN_MIN_DAY(self):
-        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_MIN_DAY] / 1000))
+        return Decimal('{0:0.3f}'.format(self.gain_av[constants.GAIN_MIN_DAY] / 1000))
 
     @GAIN_MIN_DAY.setter
     def GAIN_MIN_DAY(self, new_gain):
@@ -138,7 +138,7 @@ class IndiAllSkyExposureUtils(object):
 
     @property
     def GAIN_MAX_DAY(self):
-        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_MAX_DAY] / 1000))
+        return Decimal('{0:0.3f}'.format(self.gain_av[constants.GAIN_MAX_DAY] / 1000))
 
     @GAIN_MAX_DAY.setter
     def GAIN_MAX_DAY(self, new_gain):
@@ -148,7 +148,7 @@ class IndiAllSkyExposureUtils(object):
 
     @property
     def GAIN_MIN_NIGHT(self):
-        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_MIN_NIGHT] / 1000))
+        return Decimal('{0:0.3f}'.format(self.gain_av[constants.GAIN_MIN_NIGHT] / 1000))
 
     @GAIN_MIN_NIGHT.setter
     def GAIN_MIN_NIGHT(self, new_gain):
@@ -158,7 +158,7 @@ class IndiAllSkyExposureUtils(object):
 
     @property
     def GAIN_MAX_NIGHT(self):
-        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_MAX_NIGHT] / 1000))
+        return Decimal('{0:0.3f}'.format(self.gain_av[constants.GAIN_MAX_NIGHT] / 1000))
 
     @GAIN_MAX_NIGHT.setter
     def GAIN_MAX_NIGHT(self, new_gain):
@@ -168,7 +168,7 @@ class IndiAllSkyExposureUtils(object):
 
     @property
     def GAIN_MIN_MOONMODE(self):
-        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_MIN_MOONMODE] / 1000))
+        return Decimal('{0:0.3f}'.format(self.gain_av[constants.GAIN_MIN_MOONMODE] / 1000))
 
     @GAIN_MIN_MOONMODE.setter
     def GAIN_MIN_MOONMODE(self, new_gain):
@@ -178,7 +178,7 @@ class IndiAllSkyExposureUtils(object):
 
     @property
     def GAIN_MAX_MOONMODE(self):
-        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_MAX_MOONMODE] / 1000))
+        return Decimal('{0:0.3f}'.format(self.gain_av[constants.GAIN_MAX_MOONMODE] / 1000))
 
     @GAIN_MAX_MOONMODE.setter
     def GAIN_MAX_MOONMODE(self, new_gain):
@@ -188,7 +188,7 @@ class IndiAllSkyExposureUtils(object):
 
     @property
     def GAIN_SQM(self):
-        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_SQM] / 1000))
+        return Decimal('{0:0.3f}'.format(self.gain_av[constants.GAIN_SQM] / 1000))
 
     @GAIN_SQM.setter
     def GAIN_SQM(self, new_gain):
