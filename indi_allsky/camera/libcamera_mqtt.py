@@ -2,6 +2,7 @@ import time
 from pathlib import Path
 import io
 import tempfile
+from decimal import Decimal
 import json
 import logging
 
@@ -118,7 +119,18 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
             return
 
 
-        self.exposure = exposure
+        if not isinstance(exposure, Decimal):
+            exposure_d = Decimal('{0:0.6f}'.format(float(exposure)))
+        else:
+            exposure_d = exposure
+
+        if not isinstance(gain, Decimal):
+            gain_d = Decimal('{0:0.3f}'.format(float(gain)))
+        else:
+            gain_d = gain
+
+
+        self.exposure = exposure_d
         self.sqm_exposure = sqm_exposure
 
 
@@ -157,14 +169,14 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.current_metadata_file_p = metadata_tmp_p
 
 
-        if self.gain != float(round(gain, 2)):
-            self.setCcdGain(gain)
+        if self.gain != gain_d:
+            self.setCcdGain(gain_d)
 
         if self.binning != int(binning):
             self.setCcdBinning(binning)
 
 
-        exposure_us = int(exposure * 1000000)
+        exposure_us = int(exposure_d * 1000000)
 
         if image_type in ['dng']:
             cmd = [
@@ -173,7 +185,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
                 '--denoise', 'off',
-                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
+                '--gain', '{0:0.2f}'.format(self._expUtils.GAIN_CURRENT),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', '{metadata:s}',
                 '--metadata-format', 'json',
@@ -186,7 +198,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
-                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
+                '--gain', '{0:0.2f}'.format(self._expUtils.GAIN_CURRENT),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', '{metadata:s}',
                 '--metadata-format', 'json',
@@ -296,8 +308,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         # Update shared exposure value
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+        self._expUtils.EXPOSURE_CURRENT = exposure
 
 
         if sync:

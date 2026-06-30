@@ -1,6 +1,7 @@
 import io
 from datetime import datetime
 import time
+from decimal import Decimal
 import tempfile
 import psutil
 from pathlib import Path
@@ -9,7 +10,7 @@ import logging
 from .indi import IndiClient
 from .fake_indi import FakeIndiCcd
 
-from .. import constants
+#from .. import constants
 
 #from ..exceptions import TimeOutException
 
@@ -169,17 +170,19 @@ class IndiClientPycurl(IndiClient):
 
 
     def getCcdGain(self):
-        return float(self.gain_av[constants.GAIN_CURRENT])
+        return self._expUtils.GAIN_CURRENT
 
 
-    def setCcdGain(self, new_gain_value):
-        gain_f = float(round(new_gain_value, 2))
+    def setCcdGain(self, new_gain):
+        if not isinstance(new_gain, Decimal):
+            gain_d = Decimal('{0:0.3f}'.format(float(new_gain)))
+        else:
+            gain_d = new_gain
 
         # Update shared gain value
-        with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_CURRENT] = gain_f
+        self._expUtils.GAIN_CURRENT = gain_d
 
-        self.gain = gain_f
+        self.gain = gain_d
 
 
     def setCcdBinning(self, bin_value):
@@ -189,8 +192,7 @@ class IndiClientPycurl(IndiClient):
 
 
         # Update shared bin value
-        with self.binning_av.get_lock():
-            self.binning_av[constants.BINNING_CURRENT] = int(bin_value)
+        self._expUtils.BINNING_CURRENT = bin_value
 
 
         self.binning = int(bin_value)
@@ -201,7 +203,18 @@ class IndiClientPycurl(IndiClient):
             return
 
 
-        self.exposure = exposure
+        if not isinstance(exposure, Decimal):
+            exposure_d = Decimal('{0:0.6f}'.format(float(exposure)))
+        else:
+            exposure_d = exposure
+
+        if not isinstance(gain, Decimal):
+            gain_d = Decimal('{0:0.3f}'.format(float(gain)))
+        else:
+            gain_d = gain
+
+
+        self.exposure = exposure_d
         self.sqm_exposure = sqm_exposure
 
 
@@ -222,8 +235,8 @@ class IndiClientPycurl(IndiClient):
         self.current_exposure_file_p = image_tmp_p
 
 
-        if self.gain != float(round(gain, 2)):
-            self.setCcdGain(gain)  # gain does not do anything
+        if self.gain != gain_d:
+            self.setCcdGain(gain_d)  # gain does not do anything
 
         if self.binning != int(binning):
             self.setCcdBinning(binning)  # binning does not do anything
@@ -243,8 +256,7 @@ class IndiClientPycurl(IndiClient):
 
 
         # Update shared exposure value
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+        self._expUtils.EXPOSURE_CURRENT = exposure
 
 
         if sync:

@@ -2,6 +2,7 @@ import time
 import copy
 import io
 import math
+from decimal import Decimal
 from datetime import datetime
 from pathlib import Path
 import tempfile
@@ -13,7 +14,7 @@ import PyIndi
 
 from .indi import IndiClient
 
-from .. import constants
+#from .. import constants
 
 from ..exceptions import TimeOutException
 
@@ -44,7 +45,7 @@ class IndiClientIndiAccumulator(IndiClient):
         self.data = None
         self.header = None
 
-        self.ccd_min_exp = None  # updated in getCcdInfo()
+        self._ccd_min_exp = None  # updated in getCcdInfo()
 
 
     @property
@@ -54,6 +55,16 @@ class IndiClientIndiAccumulator(IndiClient):
     @property
     def sub_exposure_base(self):
         return self._sub_exposure_base
+
+
+    @property
+    def ccd_min_exp(self):
+        return self._ccd_min_exp
+
+    @ccd_min_exp.setter
+    def ccd_min_exp(self, new_exposure):
+        self._ccd_min_exp = Decimal('{0:0.6f}'.format(float(new_exposure)))
+
 
     @property
     def even_exposures(self):
@@ -76,15 +87,27 @@ class IndiClientIndiAccumulator(IndiClient):
             timeout = self.timeout
 
 
-        self.exposure = exposure
+        if not isinstance(exposure, Decimal):
+            exposure_d = Decimal('{0:0.6f}'.format(float(exposure)))
+        else:
+            exposure_d = exposure
+
+
+        if not isinstance(gain, Decimal):
+            gain_d = Decimal('{0:0.3f}'.format(float(gain)))
+        else:
+            gain_d = gain
+
+
+        self.exposure = exposure_d
         self.sqm_exposure = sqm_exposure
 
 
-        self._total_sub_exposures = math.ceil(exposure / self.sub_exposure_max)
+        self._total_sub_exposures = math.ceil(exposure_d / self.sub_exposure_max)
 
         if self.even_exposures:
             # the sub exposure length should be even for all exposures
-            self._sub_exposure_base = exposure / self.total_sub_exposures
+            self._sub_exposure_base = exposure_d / self.total_sub_exposures
         else:
             # any remainder of exposure will result in a short final sub-exposure
             self._sub_exposure_base = self.sub_exposure_max
@@ -96,11 +119,11 @@ class IndiClientIndiAccumulator(IndiClient):
         self.header = None
         self.current_sub_exposure_count = 0  # reset
 
-        self.exposure_remain = float(exposure)
+        self.exposure_remain = exposure_d
 
 
-        if self.gain != float(round(gain, 2)):
-            self.setCcdGain(gain)
+        if self.gain != gain_d:
+            self.setCcdGain(gain_d)
 
         if self.binning != int(binning):
             self.setCcdBinning(binning)
@@ -112,8 +135,7 @@ class IndiClientIndiAccumulator(IndiClient):
 
 
         # Update shared exposure value
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+        self._expUtils.EXPOSURE_CURRENT = exposure_d
 
 
         if sync:
@@ -131,7 +153,7 @@ class IndiClientIndiAccumulator(IndiClient):
 
         if self.exposure_remain < self.ccd_min_exp:
             logger.warning('Last sub-exposure is below the minimum exposure (%0.6fs), increasing to minimum', self.exposure_remain)
-            sub_exposure = self.ccd_min_exp + 0.00000001  # offset to deal with conversion issues
+            #sub_exposure = self.ccd_min_exp + 0.00000001  # offset to deal with conversion issues
             self.exposure_remain = 0.0
         elif exp_count == 1:
             if self.even_exposures:
@@ -288,14 +310,14 @@ class IndiClientIndiAccumulator(IndiClient):
     def getCcdInfo(self):
         ccd_info = super(IndiClientIndiAccumulator, self).getCcdInfo()
 
-        ccd_max_exp = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max'])
+        ccd_max_exp = ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max']
 
         # if the camera has a low max exposure, return a higher value for the accumulator
         if ccd_max_exp < 600:
             ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max'] = 600.0
 
         # store for internal use
-        self.ccd_min_exp = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min'])
+        self.ccd_min_exp = ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
 
         return ccd_info
 

@@ -1,10 +1,11 @@
 import time
+from decimal import Decimal
 import logging
 #from pprint import pformat
 
 from .indi import IndiClient
 
-from .. import constants
+#from .. import constants
 
 #from ..flask import db
 from ..flask import create_app
@@ -85,11 +86,23 @@ class IndiClientPassive(IndiClient):
     def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
         self.exposureStartTime = time.time()
 
-        self.exposure = float(exposure)
+
+        if not isinstance(exposure, Decimal):
+            exposure_d = Decimal('{0:0.6f}'.format(float(exposure)))
+        else:
+            exposure_d = exposure
+
+        if not isinstance(gain, Decimal):
+            gain_d = Decimal('{0:0.3f}'.format(float(gain)))
+        else:
+            gain_d = gain
+
+
+        self.exposure = exposure_d
         self.sqm_exposure = sqm_exposure
 
-        if self.gain != float(round(gain, 2)):
-            self.setCcdGain(gain)
+        if self.gain != gain_d:
+            self.setCcdGain(gain_d)
 
         if self.binning != int(binning):
             self.setCcdBinning(binning)
@@ -100,8 +113,7 @@ class IndiClientPassive(IndiClient):
 
 
         # Update shared exposure value
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+        self._expUtils.EXPOSURE_CURRENT = exposure_d
 
 
     def getCcdExposureStatus(self):
@@ -114,14 +126,16 @@ class IndiClientPassive(IndiClient):
         pass
 
 
-    def setCcdGain(self, gain_value):
-        gain_f = float(round(gain_value, 2))
+    def setCcdGain(self, new_gain):
+        if not isinstance(new_gain, Decimal):
+            gain_d = Decimal('{0:0.3f}'.format(float(new_gain)))
+        else:
+            gain_d = new_gain
 
         # Update shared gain value
-        with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_CURRENT] = gain_f
+        self._expUtils.GAIN_CURRENT = gain_d
 
-        self.gain = gain_f
+        self.gain = gain_d
 
 
     def setCcdBinning(self, bin_value):
@@ -130,8 +144,7 @@ class IndiClientPassive(IndiClient):
             return
 
         # Update shared bin value
-        with self.binning_av.get_lock():
-            self.binning_av[constants.BINNING_CURRENT] = int(bin_value)
+        self._expUtils.BINNING_CURRENT = bin_value
 
         self.binning = int(bin_value)
 

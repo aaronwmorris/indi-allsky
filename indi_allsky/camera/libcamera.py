@@ -4,6 +4,7 @@ from datetime import datetime
 from collections import OrderedDict
 import time
 import tempfile
+from decimal import Decimal
 import json
 import subprocess
 import psutil
@@ -103,17 +104,19 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
     def getCcdGain(self):
-        return float(self.gain_av[constants.GAIN_CURRENT])
+        return self._expUtils.GAIN_CURRENT
 
 
-    def setCcdGain(self, new_gain_value):
-        gain_f = float(round(new_gain_value, 2))  # limit gain to 2 decimals
+    def setCcdGain(self, new_gain):
+        if not isinstance(new_gain, Decimal):
+            gain_d = Decimal('{0:0.3f}'.format(float(new_gain)))
+        else:
+            gain_d = new_gain
 
         # Update shared gain value
-        with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_CURRENT] = gain_f
+        self._expUtils.GAIN_CURRENT = gain_d
 
-        self.gain = gain_f
+        self.gain = gain_d
 
 
     def setCcdBinning(self, bin_value):
@@ -123,8 +126,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         # Update shared gin value
-        with self.binning_av.get_lock():
-            self.binning_av[constants.BINNING_CURRENT] = int(bin_value)
+        self._expUtils.BINNING_CURRENT = bin_value
 
 
         self.binning = int(bin_value)
@@ -144,7 +146,18 @@ class IndiClientLibCameraGeneric(IndiClient):
             return
 
 
-        self.exposure = exposure
+        if not isinstance(exposure, Decimal):
+            exposure_d = Decimal('{0:0.6f}'.format(float(exposure)))
+        else:
+            exposure_d = exposure
+
+        if not isinstance(gain, Decimal):
+            gain_d = Decimal('{0:0.3f}'.format(float(gain)))
+        else:
+            gain_d = gain
+
+
+        self.exposure = exposure_d
         self.sqm_exposure = sqm_exposure
 
 
@@ -187,14 +200,14 @@ class IndiClientLibCameraGeneric(IndiClient):
         self.current_metadata_file_p = metadata_tmp_p
 
 
-        if self.gain != float(round(gain, 2)):
-            self.setCcdGain(gain)
+        if self.gain != gain_d:
+            self.setCcdGain(gain_d)
 
         if self.binning != int(binning):
             self.setCcdBinning(binning)
 
 
-        exposure_us = int(exposure * 1000000)
+        exposure_us = int(exposure_d * 1000000)
 
         if image_type in ['dng']:
             cmd = [
@@ -203,7 +216,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
                 '--denoise', 'off',
-                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
+                '--gain', '{0:0.2f}'.format(self._expUtils.GAIN_CURRENT),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
@@ -216,7 +229,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
-                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
+                '--gain', '{0:0.2f}'.format(self._expUtils.GAIN_CURRENT),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
@@ -314,8 +327,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         # Update shared exposure value
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+        self._expUtils.EXPOSURE_CURRENT = exposure_d
 
 
         if sync:
