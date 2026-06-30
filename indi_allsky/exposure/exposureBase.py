@@ -137,11 +137,13 @@ class IndiAllSky_Exposure_Base(object):
             return
 
 
+        current_exposure_f = float(current_exposure)
+
         # Scale the exposure up and down based on targets
         if adu > target_adu_max:
-            next_exposure = current_exposure - ((current_exposure - (current_exposure * (target_adu / adu))) * exp_scale_factor)
+            next_exposure = Decimal('{0:0.6f}'.format(current_exposure_f - ((current_exposure_f - (current_exposure_f * (target_adu / adu))) * exp_scale_factor)))
         elif adu < target_adu_min:
-            next_exposure = current_exposure - ((current_exposure - (current_exposure * (target_adu / adu))) * exp_scale_factor)
+            next_exposure = Decimal('{0:0.6f}'.format(current_exposure_f - ((current_exposure_f - (current_exposure_f * (target_adu / adu))) * exp_scale_factor)))
         else:
             next_exposure = current_exposure
 
