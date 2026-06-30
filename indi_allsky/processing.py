@@ -105,6 +105,7 @@ class ImageProcessor(object):
         self,
         config,
         position_av,
+        exposure_av,
         gain_av,
         binning_av,
         sensors_temp_av,
@@ -115,6 +116,7 @@ class ImageProcessor(object):
         self.config = config
 
         self.position_av = position_av
+        self.exposure_av = exposure_av
         self.gain_av = gain_av  # only use index 0 in this class
         self.binning_av = binning_av
 

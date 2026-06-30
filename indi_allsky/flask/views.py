@@ -4594,6 +4594,7 @@ class Fits2JpegView(BaseView):
         hdulist = fits.open(filename_p)
 
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
+        exposure_av = Array(ctypes.c_int32, [int(exposure * 1000000)])
         gain = float(hdulist[0].header.get('GAIN', 0))
         gain_av = Array(ctypes.c_int32, [int(gain * 1000)])
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
@@ -4609,6 +4610,7 @@ class Fits2JpegView(BaseView):
         image_processor = ImageProcessor(
             p_config,
             position_av,
+            exposure_av,
             gain_av,
             binning_av,
             sensors_temp_av,
@@ -7982,6 +7984,7 @@ class JsonImageProcessingView(JsonView):
         hdulist = fits.open(filename_p)
 
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
+        exposure_av = Array(ctypes.c_int32, [int(exposure * 1000000)])
         gain = float(hdulist[0].header.get('GAIN', 0))
         gain_av = Array(ctypes.c_int32, [int(gain * 1000)])
         binning = int(hdulist[0].header.get('XBINNING', 1))
@@ -7999,6 +8002,7 @@ class JsonImageProcessingView(JsonView):
         image_processor = ImageProcessor(
             p_config,
             position_av,
+            exposure_av,
             gain_av,
             binning_av,
             sensors_temp_av,

@@ -119,6 +119,7 @@ class ImageWorker(Process):
         self.image_processor = ImageProcessor(
             self.config,
             self.position_av,
+            self.exposure_av,
             self.gain_av,
             self.binning_av,
             self.sensors_temp_av,

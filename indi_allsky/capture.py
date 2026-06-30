@@ -627,7 +627,7 @@ class CaptureWorker(Process):
 
                     if waiting_for_frame:
                         frame_elapsed = now_time - frame_start_time
-                        frame_delta = frame_elapsed - self._expUtils.EXPOSURE_CURRENT
+                        frame_delta = frame_elapsed - float(self._expUtils.EXPOSURE_CURRENT)
 
                         waiting_for_frame = False
                         waiting_for_sqm_frame = False
