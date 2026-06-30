@@ -14,6 +14,7 @@ from datetime import timedelta
 from datetime import timezone
 #from pprint import pformat
 import signal
+import ctypes
 import logging
 
 import queue
@@ -155,28 +156,30 @@ class IndiAllSky(object):
         self.sensors_user_av = Array('f', [0.0 for x in range(110)])
 
 
-        self.exposure_av = Array('f', [
-            -1.0,  # current exposure - these must be -1.0 to indicate unset
-            -1.0,  # next exposure
-            -1.0,  # exposure delta
-            -1.0,  # night minimum
-            -1.0,  # day minimum
-            -1.0,  # maximum
-            -1.0,  # sqm
+        ### all values in microseconds
+        self.exposure_av = Array(ctypes.c_int32, [
+            -1,  # current exposure - these must be -1.0 to indicate unset
+            -1,  # next exposure
+            -1,  # exposure delta
+            -1,  # night minimum
+            -1,  # day minimum
+            -1,  # maximum
+            -1,  # sqm
         ])
 
 
-        self.gain_av = Array('f', [
-            -1.0,  # current gain
-            -1.0,  # next gain
-            -1.0,  # gain delta
-            -1.0,  # day minimum
-            -1.0,  # day maximum
-            -1.0,  # night minimum
-            -1.0,  # night maximum
-            -1.0,  # moon mode minimum
-            -1.0,  # moon mode maximum
-            -1.0,  # sqm
+        ### milli-gain
+        self.gain_av = Array(ctypes.c_int32, [
+            -1,  # current gain
+            -1,  # next gain
+            -1,  # gain delta
+            -1,  # day minimum
+            -1,  # day maximum
+            -1,  # night minimum
+            -1,  # night maximum
+            -1,  # moon mode minimum
+            -1,  # moon mode maximum
+            -1,  # sqm
         ])
 
 

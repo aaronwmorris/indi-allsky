@@ -1,6 +1,7 @@
 import math
 from datetime import datetime
 from datetime import timedelta
+from decimal import Decimal
 import logging
 
 import ephem
@@ -8,6 +9,191 @@ import ephem
 from . import constants
 
 logger = logging.getLogger('indi_allsky')
+
+
+class IndiAllSkyExposureUtils(object):
+    def __init__(self, config, exposure_av, gain_av):
+        self.config = config
+
+        self.exposure_av = exposure_av
+        self.gain_av = gain_av
+
+
+
+    ### Exposure
+
+
+    @property
+    def EXPOSURE_CURRENT(self):
+        return Decimal('{0:0.6f}'.format(self.exposure_av[constants.EXPOSURE_CURRENT] / 1000000))
+
+    @EXPOSURE_CURRENT.setter
+    def EXPOSURE_CURRENT(self, new_exposure):
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_CURRENT] = int(float(new_exposure) * 1000000)
+
+
+    @property
+    def EXPOSURE_NEXT(self):
+        return Decimal('{0:0.6f}'.format(self.exposure_av[constants.EXPOSURE_NEXT] / 1000000))
+
+    @EXPOSURE_NEXT.setter
+    def EXPOSURE_NEXT(self, new_exposure):
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_NEXT] = int(float(new_exposure) * 1000000)
+
+
+    @property
+    def EXPOSURE_DELTA(self):
+        return Decimal('{0:0.6f}'.format(self.exposure_av[constants.EXPOSURE_DELTA] / 1000000))
+
+    @EXPOSURE_DELTA.setter
+    def EXPOSURE_DELTA(self, new_exposure):
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_DELTA] = int(float(new_exposure) * 1000000)
+
+
+    @property
+    def EXPOSURE_MIN_NIGHT(self):
+        return Decimal('{0:0.6f}'.format(self.exposure_av[constants.EXPOSURE_MIN_NIGHT] / 1000000))
+
+    @EXPOSURE_MIN_NIGHT.setter
+    def EXPOSURE_MIN_NIGHT(self, new_exposure):
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_MIN_NIGHT] = int(float(new_exposure) * 1000000)
+
+
+    @property
+    def EXPOSURE_MIN_DAY(self):
+        return Decimal('{0:0.6f}'.format(self.exposure_av[constants.EXPOSURE_MIN_DAY] / 1000000))
+
+    @EXPOSURE_MIN_DAY.setter
+    def EXPOSURE_MIN_DAY(self, new_exposure):
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_MIN_DAY] = int(float(new_exposure) * 1000000)
+
+
+    @property
+    def EXPOSURE_MAX(self):
+        return Decimal('{0:0.6f}'.format(self.exposure_av[constants.EXPOSURE_MAX] / 1000000))
+
+    @EXPOSURE_MAX.setter
+    def EXPOSURE_MAX(self, new_exposure):
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_MAX] = int(float(new_exposure) * 1000000)
+
+
+    @property
+    def EXPOSURE_SQM(self):
+        return Decimal('{0:0.6f}'.format(self.exposure_av[constants.EXPOSURE_SQM] / 1000000))
+
+    @EXPOSURE_SQM.setter
+    def EXPOSURE_SQM(self, new_exposure):
+        with self.exposure_av.get_lock():
+            self.exposure_av[constants.EXPOSURE_SQM] = int(float(new_exposure) * 1000000)
+
+
+    ### Gain
+
+
+    @property
+    def GAIN_CURRENT(self):
+        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_CURRENT] / 1000))
+
+    @GAIN_CURRENT.setter
+    def GAIN_CURRENT(self, new_gain):
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_CURRENT] = int(float(new_gain) * 1000)
+
+
+    @property
+    def GAIN_NEXT(self):
+        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_NEXT] / 1000))
+
+    @GAIN_NEXT.setter
+    def GAIN_NEXT(self, new_gain):
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_NEXT] = int(float(new_gain) * 1000)
+
+
+    @property
+    def GAIN_DELTA(self):
+        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_DELTA] / 1000))
+
+    @GAIN_DELTA.setter
+    def GAIN_DELTA(self, new_gain):
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_DELTA] = int(float(new_gain) * 1000)
+
+
+    @property
+    def GAIN_MIN_DAY(self):
+        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_MIN_DAY] / 1000))
+
+    @GAIN_MIN_DAY.setter
+    def GAIN_MIN_DAY(self, new_gain):
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_MIN_DAY] = int(float(new_gain) * 1000)
+
+
+    @property
+    def GAIN_MAX_DAY(self):
+        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_MAX_DAY] / 1000))
+
+    @GAIN_MAX_DAY.setter
+    def GAIN_MAX_DAY(self, new_gain):
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_MAX_DAY] = int(float(new_gain) * 1000)
+
+
+    @property
+    def GAIN_MIN_NIGHT(self):
+        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_MIN_NIGHT] / 1000))
+
+    @GAIN_MIN_NIGHT.setter
+    def GAIN_MIN_NIGHT(self, new_gain):
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_MIN_NIGHT] = int(float(new_gain) * 1000)
+
+
+    @property
+    def GAIN_MAX_NIGHT(self):
+        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_MAX_NIGHT] / 1000))
+
+    @GAIN_MAX_NIGHT.setter
+    def GAIN_MAX_NIGHT(self, new_gain):
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_MAX_NIGHT] = int(float(new_gain) * 1000)
+
+
+    @property
+    def GAIN_MIN_MOONMODE(self):
+        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_MIN_MOONMODE] / 1000))
+
+    @GAIN_MIN_MOONMODE.setter
+    def GAIN_MIN_MOONMODE(self, new_gain):
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_MIN_MOONMODE] = int(float(new_gain) * 1000)
+
+
+    @property
+    def GAIN_MAX_MOONMODE(self):
+        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_MAX_MOONMODE] / 1000))
+
+    @GAIN_MAX_MOONMODE.setter
+    def GAIN_MAX_MOONMODE(self, new_gain):
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_MAX_MOONMODE] = int(float(new_gain) * 1000)
+
+
+    @property
+    def GAIN_SQM(self):
+        return Decimal('{0:0.3f}'.format(self.exposure_av[constants.GAIN_SQM] / 1000))
+
+    @GAIN_SQM.setter
+    def GAIN_SQM(self, new_gain):
+        with self.gain_av.get_lock():
+            self.gain_av[constants.GAIN_SQM] = int(float(new_gain) * 1000)
 
 
 class IndiAllSkyDateCalcs(object):
