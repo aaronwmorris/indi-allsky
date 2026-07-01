@@ -215,7 +215,7 @@ class IndiAllSkyDarks(object):
             return
 
         try:
-            gain_list = [float(round(x, 2)) for x in new_list_str]
+            gain_list = [Decimal('{0:0.3f}'.format(float(round(x, 3)))) for x in new_list_str]
         except ValueError:
             logger.error('Invalid gain list: %s', str(new_list_str))
             sys.exit(1)
@@ -1073,7 +1073,7 @@ class IndiAllSkyDarks(object):
         total_time = 0
 
         # Add the time for each exposure plus overhead.
-        total_exposure_time = sum(remaining_exposures) * self.count + len(remaining_exposures) * overhead_per_exposure
+        total_exposure_time = float(sum(remaining_exposures)) * self.count + len(remaining_exposures) * overhead_per_exposure
         total_time += total_exposure_time * remaining_configs
 
         return total_time
@@ -1081,11 +1081,11 @@ class IndiAllSkyDarks(object):
 
     def _run(self, stacking_class):
         dark_exposures_set = set()  # prevent duplicate exposures
-        dark_exposures_set.add(1)  # 1s is the shortest exposure
+        dark_exposures_set.add(Decimal('1.0'))  # 1s is the shortest exposure
 
         x = math.ceil(self.config['CCD_EXPOSURE_MAX'])
         while x > 1:
-            dark_exposures_set.add(int(x))
+            dark_exposures_set.add(Decimal('{0:0.1f}'.format(float(int(x)))))
             x -= self.time_delta
 
 
@@ -1216,7 +1216,7 @@ class IndiAllSkyDarks(object):
                     completed_exposures += 1
 
                     # Calculate the overhead for this exposure
-                    overhead_per_exposure = exposure_time - exposure * float(self.count)
+                    overhead_per_exposure = exposure_time - float(exposure) * float(self.count)
                     estimated_time_left = self._estimate_runtime(remaining_exposures, remaining_configs, overhead_per_exposure)
                     logger.info(f"Exposure {completed_exposures}/{total_exposures} done. Estimated time left: {self._format_time(int(estimated_time_left))}")
 
@@ -1289,7 +1289,7 @@ class IndiAllSkyDarks(object):
                 completed_exposures += 1
 
                 # Calculate the overhead for this exposure
-                overhead_per_exposure = exposure_time - exposure * float(self.count)
+                overhead_per_exposure = exposure_time - float(exposure) * float(self.count)
                 estimated_time_left = self._estimate_runtime(remaining_exposures, remaining_configs, overhead_per_exposure)
                 logger.info(f"Exposure {completed_exposures}/{total_exposures} done. Estimated time left: {self._format_time(int(estimated_time_left))}")
 
@@ -1315,7 +1315,7 @@ class IndiAllSkyDarks(object):
             self.shoot(exposure, gain, binning, sync=True, timeout=180.0)  # flat 3 minute timeout
 
             frame_elapsed = time.time() - start
-            frame_delta = frame_elapsed - exposure
+            frame_delta = frame_elapsed - float(exposure)
 
             logger.info('Exposure received in %0.4fs (%+0.4fs)', frame_elapsed, frame_delta)
 
