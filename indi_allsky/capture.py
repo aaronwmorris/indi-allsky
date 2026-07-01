@@ -1195,13 +1195,13 @@ class CaptureWorker(Process):
             self._expUtils.EXPOSURE_MIN_DAY = config_exposure_min_day
         elif self.config.get('CCD_EXPOSURE_MIN_DAY') < ccd_min_exp:
             logger.warning(
-                'Minimum exposure (day) %0.8f too low, increasing to %0.8f',
+                'Minimum exposure (day) %0.6f too low, increasing to %0.6f',
                 config_exposure_min_day,
                 ccd_min_exp,
             )
             self._expUtils.EXPOSURE_MIN_DAY = ccd_min_exp
 
-        logger.info('Minimum CCD exposure: %0.8f (day)', self._expUtils.EXPOSURE_MIN_DAY)
+        logger.info('Minimum CCD exposure: %0.6f (day)', self._expUtils.EXPOSURE_MIN_DAY)
 
 
         if not self.config.get('CCD_EXPOSURE_MIN'):
@@ -1210,19 +1210,19 @@ class CaptureWorker(Process):
             self._expUtils.EXPOSURE_MIN_NIGHT = config_exposure_min
         elif self.config.get('CCD_EXPOSURE_MIN') < ccd_min_exp:
             logger.warning(
-                'Minimum exposure (night) %0.8f too low, increasing to %0.8f',
+                'Minimum exposure (night) %0.6f too low, increasing to %0.6f',
                 config_exposure_min,
                 ccd_min_exp,
             )
             self._expUtils.EXPOSURE_MIN_NIGHT = ccd_min_exp
 
-        logger.info('Minimum CCD exposure: %0.8f (night)', self._expUtils.EXPOSURE_MIN_NIGHT)
+        logger.info('Minimum CCD exposure: %0.6f (night)', self._expUtils.EXPOSURE_MIN_NIGHT)
 
 
         # set maximum exposure
         if config_exposure_max > ccd_max_exp:
             logger.warning(
-                'Maximum exposure %0.8f too high, decreasing to %0.8f',
+                'Maximum exposure %0.6f too high, decreasing to %0.6f',
                 config_exposure_max,
                 ccd_max_exp,
             )
@@ -1233,13 +1233,13 @@ class CaptureWorker(Process):
 
 
         self._expUtils.EXPOSURE_MAX = maximum_exposure
-        logger.info('Maximum CCD exposure: %0.8f', self._expUtils.EXPOSURE_MAX)
+        logger.info('Maximum CCD exposure: %0.6f', self._expUtils.EXPOSURE_MAX)
 
 
         # set SQM exposure
         if config_sqm_exposure < ccd_min_exp:
             logger.warning(
-                'SQM exposure %0.8f too low, increasing to %0.8f',
+                'SQM exposure %0.6f too low, increasing to %0.6f',
                 config_sqm_exposure,
                 ccd_min_exp,
             )
@@ -1248,7 +1248,7 @@ class CaptureWorker(Process):
 
         elif config_sqm_exposure > ccd_max_exp:
             logger.warning(
-                'SQM exposure %0.8f too high, decreasing to %0.8f',
+                'SQM exposure %0.6f too high, decreasing to %0.6f',
                 config_sqm_exposure,
                 ccd_max_exp,
             )
@@ -1260,7 +1260,7 @@ class CaptureWorker(Process):
 
 
         self._expUtils.EXPOSURE_SQM = sqm_exposure
-        logger.info('SQM CCD exposure: %0.8f', self._expUtils.EXPOSURE_SQM)
+        logger.info('SQM CCD exposure: %0.6f', self._expUtils.EXPOSURE_SQM)
 
 
         ### Validate gain settings
@@ -1480,7 +1480,7 @@ class CaptureWorker(Process):
             self._expUtils.EXPOSURE_DELTA = 0.0
 
 
-        logger.info('Default CCD exposure: %0.8f', ccd_exposure_default)
+        logger.info('Default CCD exposure: %0.6f', ccd_exposure_default)
 
 
         self._expUtils.GAIN_CURRENT = ccd_gain_default
@@ -2263,7 +2263,7 @@ class CaptureWorker(Process):
 
     def shoot(self, exposure, gain, binning, sync=True, timeout=None, sqm_exposure=False):
         # sqm used for an image taking at a specific exposure/gain for a controlled SQM measurement
-        logger.info('Taking %0.8fs exposure (gain %0.3f / bin %d)', exposure, gain, binning)
+        logger.info('Taking %0.6fs exposure (gain %0.3f / bin %d)', exposure, gain, binning)
 
         self.indiclient.setCcdExposure(exposure, gain, binning, sync=sync, timeout=timeout, sqm_exposure=sqm_exposure)
 

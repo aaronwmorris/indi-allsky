@@ -177,17 +177,17 @@ class IndiAllSky_Exposure_Base(object):
         #    next_exposure -= exposure_offset  # offset will be negative
         #    exposure_delta -= exposure_offset
 
-        #    logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
+        #    logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.6fs', exposure_offset * -1)
         #elif self._expUtils.EXPOSURE_DELTA < 0 and exposure_delta > 0:
         #    # exposure is increasing
         #    exposure_offset = exposure_delta / 2
         #    next_exposure -= exposure_offset
         #    exposure_delta -= exposure_offset
 
-        #    logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
+        #    logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.6fs', exposure_offset * -1)
 
 
-        logger.warning('New calculated exposure: %0.6fs (%+0.8f) @ gain %0.3f (%+0.3f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
+        logger.warning('New calculated exposure: %0.6fs (%+0.6f) @ gain %0.3f (%+0.3f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
         self._expUtils.EXPOSURE_NEXT = next_exposure
         self._expUtils.EXPOSURE_DELTA = exposure_delta
 

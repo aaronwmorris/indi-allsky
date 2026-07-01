@@ -463,7 +463,7 @@ class IndiAllSkyDarks(object):
         self._expUtils.EXPOSURE_SQM = config_sqm_exposure
 
 
-        logger.info('SQM CCD exposure: %0.8f', self._expUtils.EXPOSURE_SQM)
+        logger.info('SQM CCD exposure: %0.6f', self._expUtils.EXPOSURE_SQM)
 
 
         ### Validate gain settings
@@ -613,7 +613,7 @@ class IndiAllSkyDarks(object):
 
 
     def shoot(self, exposure, gain, binning, sync=True, timeout=None):
-        logger.info('Taking %0.8fs exposure (gain %0.3f / bin %d)', exposure, gain, binning)
+        logger.info('Taking %0.6fs exposure (gain %0.3f / bin %d)', exposure, gain, binning)
 
         self.indiclient.setCcdExposure(exposure, gain, binning, sync=sync, timeout=timeout)
 
