@@ -218,13 +218,13 @@ class CameraTest(object):
 
 
         frame_end_time = time.time() - frame_start_time
-        logger.info('%0.1fs second exposure received in %0.1fs', exposure, frame_end_time)
+        logger.info('%0.6fs second exposure received in %0.6fs', exposure, frame_end_time)
 
         filename_p.unlink()
 
 
     def shoot(self, exposure, gain, binning, sync=True, timeout=None):
-        logger.info('Taking %0.8fs exposure (gain %0.2f / bin %d)', exposure, gain, binning)
+        logger.info('Taking %0.6fs exposure (gain %0.3f / bin %d)', exposure, gain, binning)
 
         self.indiclient.setCcdExposure(exposure, gain, binning, sync=sync, timeout=timeout)
 
@@ -396,19 +396,19 @@ class CameraTest(object):
             self._expUtils.EXPOSURE_MIN_DAY = config_exposure_min_day
         elif self.config.get('CCD_EXPOSURE_MIN_DAY') < ccd_min_exp:
             logger.warning(
-                'Minimum exposure (day) %0.8f too low, increasing to %0.8f',
+                'Minimum exposure (day) %0.6f too low, increasing to %0.6f',
                 config_exposure_min_day,
                 ccd_min_exp,
             )
             self._expUtils.EXPOSURE_MIN_DAY = ccd_min_exp
 
-        logger.info('Minimum CCD exposure: %0.8f (day)', self._expUtils.EXPOSURE_MIN_DAY)
+        logger.info('Minimum CCD exposure: %0.6f (day)', self._expUtils.EXPOSURE_MIN_DAY)
 
 
         # set maximum exposure
         if config_exposure_max > ccd_max_exp:
             logger.warning(
-                'Maximum exposure %0.8f too high, decreasing to %0.8f',
+                'Maximum exposure %0.6f too high, decreasing to %0.6f',
                 config_exposure_max,
                 ccd_max_exp,
             )
@@ -420,13 +420,13 @@ class CameraTest(object):
 
 
         self._expUtils.EXPOSURE_MAX = maximum_exposure
-        logger.info('Maximum CCD exposure: %0.8f', self._expUtils.EXPOSURE_MAX)
+        logger.info('Maximum CCD exposure: %0.6f', self._expUtils.EXPOSURE_MAX)
 
 
         # set SQM exposure
         if config_sqm_exposure < ccd_min_exp:
             logger.warning(
-                'SQM exposure %0.8f too low, increasing to %0.8f',
+                'SQM exposure %0.6f too low, increasing to %0.6f',
                 config_sqm_exposure,
                 ccd_min_exp,
             )
@@ -435,7 +435,7 @@ class CameraTest(object):
 
         elif config_sqm_exposure > ccd_max_exp:
             logger.warning(
-                'SQM exposure %0.8f too high, decreasing to %0.8f',
+                'SQM exposure %0.6f too high, decreasing to %0.6f',
                 config_sqm_exposure,
                 ccd_max_exp,
             )
@@ -447,7 +447,7 @@ class CameraTest(object):
 
 
         self._expUtils.EXPOSURE_SQM = sqm_exposure
-        logger.info('SQM CCD exposure: %0.8f', self._expUtils.EXPOSURE_SQM)
+        logger.info('SQM CCD exposure: %0.6f', self._expUtils.EXPOSURE_SQM)
 
 
         # Validate gain settings
@@ -461,11 +461,11 @@ class CameraTest(object):
 
 
         if config_night_gain < ccd_min_gain:
-            logger.error('CCD night gain below minimum, changing to %0.1f', ccd_min_gain)
+            logger.error('CCD night gain below minimum, changing to %0.3f', ccd_min_gain)
             gain_night = ccd_min_gain
             time.sleep(3)
         elif config_night_gain > ccd_max_gain:
-            logger.error('CCD night gain above maximum, changing to %0.1f', ccd_max_gain)
+            logger.error('CCD night gain above maximum, changing to %0.3f', ccd_max_gain)
             gain_night = ccd_max_gain
             time.sleep(3)
         else:
@@ -473,11 +473,11 @@ class CameraTest(object):
 
 
         if config_moonmode_gain < ccd_min_gain:
-            logger.error('CCD moon mode gain below minimum, changing to %01.f', ccd_min_gain)
+            logger.error('CCD moon mode gain below minimum, changing to %0.3f', ccd_min_gain)
             gain_moonmode = ccd_min_gain
             time.sleep(3)
         elif config_moonmode_gain > ccd_max_gain:
-            logger.error('CCD moon mode gain above maximum, changing to %0.1f', ccd_max_gain)
+            logger.error('CCD moon mode gain above maximum, changing to %0.3f', ccd_max_gain)
             gain_moonmode = ccd_max_gain
             time.sleep(3)
         else:
@@ -485,11 +485,11 @@ class CameraTest(object):
 
 
         if config_day_gain < ccd_min_gain:
-            logger.error('CCD day gain below minimum, changing to %0.1f', ccd_min_gain)
+            logger.error('CCD day gain below minimum, changing to %0.3f', ccd_min_gain)
             gain_day = ccd_min_gain
             time.sleep(3)
         elif config_day_gain > ccd_max_gain:
-            logger.error('CCD day gain above maximum, changing to %0.1f', ccd_max_gain)
+            logger.error('CCD day gain above maximum, changing to %0.3f', ccd_max_gain)
             gain_day = ccd_max_gain
             time.sleep(3)
         else:
@@ -497,11 +497,11 @@ class CameraTest(object):
 
 
         if config_sqm_gain < ccd_min_gain:
-            logger.error('CCD sqm gain below minimum, changing to %0.2f', ccd_min_gain)
+            logger.error('CCD sqm gain below minimum, changing to %0.3f', ccd_min_gain)
             gain_sqm = ccd_min_gain
             time.sleep(3)
         elif config_sqm_gain > ccd_max_gain:
-            logger.error('CCD sqm gain above maximum, changing to %0.2f', ccd_max_gain)
+            logger.error('CCD sqm gain above maximum, changing to %0.3f', ccd_max_gain)
             gain_sqm = ccd_max_gain
             time.sleep(3)
         else:
@@ -524,13 +524,13 @@ class CameraTest(object):
         self._expUtils.GAIN_SQM = gain_sqm
 
 
-        logger.info('Minimum CCD gain: %0.2f (day)', self._expUtils.GAIN_MIN_DAY)
-        logger.info('Maximum CCD gain: %0.2f (day)', self._expUtils.GAIN_MAX_DAY)
-        logger.info('Minimum CCD gain: %0.2f (night)', self._expUtils.GAIN_MIN_NIGHT)
-        logger.info('Maximum CCD gain: %0.2f (night)', self._expUtils.GAIN_MAX_NIGHT)
-        logger.info('Minimum CCD gain: %0.2f (moonmode)', self._expUtils.GAIN_MIN_MOONMODE)
-        logger.info('Maximum CCD gain: %0.2f (moonmode)', self._expUtils.GAIN_MAX_MOONMODE)
-        logger.info('SQM CCD gain: %0.2f', self._expUtils.GAIN_SQM)
+        logger.info('Minimum CCD gain: %0.3f (day)', self._expUtils.GAIN_MIN_DAY)
+        logger.info('Maximum CCD gain: %0.3f (day)', self._expUtils.GAIN_MAX_DAY)
+        logger.info('Minimum CCD gain: %0.3f (night)', self._expUtils.GAIN_MIN_NIGHT)
+        logger.info('Maximum CCD gain: %0.3f (night)', self._expUtils.GAIN_MAX_NIGHT)
+        logger.info('Minimum CCD gain: %0.3f (moonmode)', self._expUtils.GAIN_MIN_MOONMODE)
+        logger.info('Maximum CCD gain: %0.3f (moonmode)', self._expUtils.GAIN_MAX_MOONMODE)
+        logger.info('SQM CCD gain: %0.3f', self._expUtils.GAIN_SQM)
 
 
         # Validate binning settings
