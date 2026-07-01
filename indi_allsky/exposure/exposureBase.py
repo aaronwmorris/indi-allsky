@@ -187,7 +187,7 @@ class IndiAllSky_Exposure_Base(object):
         #    logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
 
 
-        logger.warning('New calculated exposure: %0.6fs (%+0.8f) @ gain %0.2f (%+0.2f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
+        logger.warning('New calculated exposure: %0.6fs (%+0.8f) @ gain %0.3f (%+0.3f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
         self._expUtils.EXPOSURE_NEXT = next_exposure
         self._expUtils.EXPOSURE_DELTA = exposure_delta
 

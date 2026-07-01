@@ -106,7 +106,7 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
                     next_exposure = min(current_exposure, self.auto_gain_exposure_cutoff_high)  # prevent hitting max exposure
                     exposure_delta = Decimal('0')
                     gain_delta = next_gain - current_gain
-                    logger.info('Auto-Gain increasing gain to %0.2f (%+0.2f) [maintain exposure]', next_gain, gain_delta)
+                    logger.info('Auto-Gain increasing gain to %0.3f (%+0.3f) [maintain exposure]', next_gain, gain_delta)
 
         else:
             # exposure/gain needs to decrease
@@ -131,7 +131,7 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
                     next_exposure = max(current_exposure, self.auto_gain_exposure_cutoff_mid)
                     exposure_delta = Decimal('0')
                     gain_delta = next_gain - current_gain
-                    logger.info('Auto-Gain decreasing gain to %0.2f (%+0.2f) [maintain exposure)', next_gain, gain_delta)
+                    logger.info('Auto-Gain decreasing gain to %0.3f (%+0.3f) [maintain exposure)', next_gain, gain_delta)
 
 
         return next_exposure, next_gain, exposure_delta, gain_delta
@@ -158,10 +158,10 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
         self.auto_gain_exposure_cutoff_mid = self.auto_gain_exposure_cutoff_high - ((self.auto_gain_exposure_cutoff_high - self.auto_gain_exposure_cutoff_low) / 2)
 
 
-        logger.info('Gain Steps: %d @ %0.2f', auto_gain_levels, self.gain_step)
+        logger.info('Gain Steps: %d @ %0.3f', auto_gain_levels, self.gain_step)
         logger.info('Gain Step list: %s', str(self.auto_gain_step_list))
         logger.info(
-            'Auto-Gain Exposure cutoff: Low: %0.2fs - Mid: %0.2fs - High: %0.2fs',
+            'Auto-Gain Exposure cutoff: Low: %0.3fs - Mid: %0.3fs - High: %0.3fs',
             self.auto_gain_exposure_cutoff_low,
             self.auto_gain_exposure_cutoff_mid,
             self.auto_gain_exposure_cutoff_high,
