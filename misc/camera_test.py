@@ -154,7 +154,7 @@ class CameraTest(object):
         self.moonmode = False
         self.reconfigureCcd()
 
-        self.takeExposure(Decimal('0.1'), self.gain_av[constants.GAIN_MAX_DAY], self.binning_av[constants.BINNING_DAY])
+        self.takeExposure(Decimal('0.1'), self._expUtils.GAIN_MAX_DAY, self._expUtils.BINNING_DAY)
 
 
         logger.warning('TESTING 1.0s EXPOSURE WITH NIGHT SETTINGS')
@@ -162,7 +162,7 @@ class CameraTest(object):
         self.moonmode = False
         self.reconfigureCcd()
 
-        self.takeExposure(Decimal('1.0'), self.gain_av[constants.GAIN_MAX_NIGHT], self.binning_av[constants.BINNING_NIGHT])
+        self.takeExposure(Decimal('1.0'), self._expUtils.GAIN_MAX_NIGHT, self._expUtils.BINNING_NIGHT)
 
 
         logger.warning('TESTING 1.0s EXPOSURE WITH MOON MODE SETTINGS')
@@ -170,7 +170,7 @@ class CameraTest(object):
         self.moonmode = True
         self.reconfigureCcd()
 
-        self.takeExposure(Decimal('1.0'), self.gain_av[constants.GAIN_MAX_MOONMODE], self.binning_av[constants.BINNING_MOONMODE])
+        self.takeExposure(Decimal('1.0'), self._expUtils.GAIN_MAX_MOONMODE, self._expUtils.BINNING_MOONMODE)
 
 
         logger.warning('TESTING 1.0s EXPOSURE WITH SQM SETTINGS')
@@ -178,7 +178,7 @@ class CameraTest(object):
         self.moonmode = True
         self.reconfigureCcd()
 
-        self.takeExposure(1.0, self.gain_av[constants.GAIN_SQM], self.binning_av[constants.BINNING_SQM])
+        self.takeExposure(Decimal('1.0'), self._expUtils.GAIN_SQM, self._expUtils.BINNING_SQM)
 
 
     def takeExposure(self, exposure, gain, binning):
@@ -385,7 +385,7 @@ class CameraTest(object):
 
 
         config_exposure_min_day = Decimal('{0:0.6f}'.format(math.ceil(float(self.config.get('CCD_EXPOSURE_MIN_DAY', 0.0) * 1000000) / 1000000)))
-        config_exposure_min = Decimal('{0:0.6f}'.format(math.ceil(float(self.config.get('CCD_EXPOSURE_MIN', 0.0) * 1000000) / 1000000)))
+        #config_exposure_min = Decimal('{0:0.6f}'.format(math.ceil(float(self.config.get('CCD_EXPOSURE_MIN', 0.0) * 1000000) / 1000000)))
         config_exposure_max = Decimal('{0:0.6f}'.format(math.floor(float(self.config.get('CCD_EXPOSURE_MAX', 15.0) * 1000000) / 1000000)))
         config_sqm_exposure = Decimal('{0:0.6f}'.format(math.floor(float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 10.0) * 1000000) / 1000000)))
 
@@ -433,10 +433,10 @@ class CameraTest(object):
 
             sqm_exposure = ccd_min_exp
 
-        elif sqm_exposure > ccd_max_exp:
+        elif config_sqm_exposure > ccd_max_exp:
             logger.warning(
                 'SQM exposure %0.8f too high, decreasing to %0.8f',
-                sqm_exposure,
+                config_sqm_exposure,
                 ccd_max_exp,
             )
 
@@ -451,82 +451,86 @@ class CameraTest(object):
 
 
         # Validate gain settings
-        ccd_min_gain = math.ceil(float(ccd_info['GAIN_INFO']['min']) * 100) / 100  # round up the hundredths spot
-        ccd_max_gain = math.floor(float(ccd_info['GAIN_INFO']['max']) * 100) / 100  # round down
+        ccd_min_gain = Decimal('{0:0.3f}'.format(math.ceil(float(ccd_info['GAIN_INFO']['min']) * 1000) / 1000))  # round up the thousands spot
+        ccd_max_gain = Decimal('{0:0.3f}'.format(math.floor(float(ccd_info['GAIN_INFO']['max']) * 1000) / 1000))  # round down
+
+        config_night_gain = Decimal('{0:0.3f}'.format(math.floor(float(self.config['CCD_CONFIG']['NIGHT']['GAIN']) * 1000) / 1000))
+        config_moonmode_gain = Decimal('{0:0.3f}'.format(math.floor(float(self.config['CCD_CONFIG']['MOONMODE']['GAIN']) * 1000) / 1000))
+        config_day_gain = Decimal('{0:0.3f}'.format(math.ceil(float(self.config['CCD_CONFIG']['MOONMODE']['GAIN']) * 1000) / 1000))
+        config_sqm_gain = Decimal('{0:0.3f}'.format(math.floor(float(self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0)) * 1000) / 1000))
 
 
-        if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
-            logger.error('CCD night gain below minimum, changing to %0.1f', float(ccd_min_gain))
-            gain_night = float(ccd_min_gain)
+        if config_night_gain < ccd_min_gain:
+            logger.error('CCD night gain below minimum, changing to %0.1f', ccd_min_gain)
+            gain_night = ccd_min_gain
             time.sleep(3)
-        elif self.config['CCD_CONFIG']['NIGHT']['GAIN'] > ccd_max_gain:
-            logger.error('CCD night gain above maximum, changing to %0.1f', float(ccd_max_gain))
-            gain_night = float(ccd_max_gain)
-            time.sleep(3)
-        else:
-            gain_night = float(self.config['CCD_CONFIG']['NIGHT']['GAIN'])
-
-
-        if self.config['CCD_CONFIG']['MOONMODE']['GAIN'] < ccd_min_gain:
-            logger.error('CCD moon mode gain below minimum, changing to %01.f', float(ccd_min_gain))
-            gain_moonmode = float(ccd_min_gain)
-            time.sleep(3)
-        elif self.config['CCD_CONFIG']['MOONMODE']['GAIN'] > ccd_max_gain:
-            logger.error('CCD moon mode gain above maximum, changing to %0.1f', float(ccd_max_gain))
-            gain_moonmode = float(ccd_max_gain)
+        elif config_night_gain > ccd_max_gain:
+            logger.error('CCD night gain above maximum, changing to %0.1f', ccd_max_gain)
+            gain_night = ccd_max_gain
             time.sleep(3)
         else:
-            gain_moonmode = float(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
+            gain_night = config_night_gain
 
 
-        if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
-            logger.error('CCD day gain below minimum, changing to %0.1f', float(ccd_min_gain))
-            gain_day = float(ccd_min_gain)
+        if config_moonmode_gain < ccd_min_gain:
+            logger.error('CCD moon mode gain below minimum, changing to %01.f', ccd_min_gain)
+            gain_moonmode = ccd_min_gain
             time.sleep(3)
-        elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_max_gain:
-            logger.error('CCD day gain above maximum, changing to %0.1f', float(ccd_max_gain))
-            gain_day = float(ccd_max_gain)
-            time.sleep(3)
-        else:
-            gain_day = float(self.config['CCD_CONFIG']['DAY']['GAIN'])
-
-
-        if self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0) < ccd_min_gain:
-            logger.error('CCD sqm gain below minimum, changing to %0.2f', float(ccd_min_gain))
-            gain_sqm = float(ccd_min_gain)
-            time.sleep(3)
-        elif self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0) > ccd_max_gain:
-            logger.error('CCD sqm gain above maximum, changing to %0.2f', float(ccd_max_gain))
-            gain_sqm = float(ccd_max_gain)
+        elif config_moonmode_gain > ccd_max_gain:
+            logger.error('CCD moon mode gain above maximum, changing to %0.1f', ccd_max_gain)
+            gain_moonmode = ccd_max_gain
             time.sleep(3)
         else:
-            gain_sqm = self.config.get('CAMERA_SQM', {}).get('GAIN', 0.0)
+            gain_moonmode = config_moonmode_gain
 
 
-        with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_CURRENT] = float(gain_day)
-            self.gain_av[constants.GAIN_NEXT] = float(gain_day)
-
-            self.gain_av[constants.GAIN_MAX_NIGHT] = float(gain_night)
-            self.gain_av[constants.GAIN_MAX_MOONMODE] = float(gain_moonmode)
-
-            # day is always lowest gain
-            self.gain_av[constants.GAIN_MAX_DAY] = float(gain_day)
-            self.gain_av[constants.GAIN_MIN_DAY] = float(gain_day)
-
-            self.gain_av[constants.GAIN_MIN_NIGHT] = float(gain_night)
-            self.gain_av[constants.GAIN_MIN_MOONMODE] = float(gain_moonmode)
-
-            self.gain_av[constants.GAIN_SQM] = float(gain_sqm)
+        if config_day_gain < ccd_min_gain:
+            logger.error('CCD day gain below minimum, changing to %0.1f', ccd_min_gain)
+            gain_day = ccd_min_gain
+            time.sleep(3)
+        elif config_day_gain > ccd_max_gain:
+            logger.error('CCD day gain above maximum, changing to %0.1f', ccd_max_gain)
+            gain_day = ccd_max_gain
+            time.sleep(3)
+        else:
+            gain_day = config_day_gain
 
 
-        logger.info('Minimum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MIN_DAY])
-        logger.info('Maximum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MAX_DAY])
-        logger.info('Minimum CCD gain: %0.2f (night)', self.gain_av[constants.GAIN_MIN_NIGHT])
-        logger.info('Maximum CCD gain: %0.2f (night)', self.gain_av[constants.GAIN_MAX_NIGHT])
-        logger.info('Minimum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MIN_MOONMODE])
-        logger.info('Maximum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MAX_MOONMODE])
-        logger.info('SQM CCD gain: %0.2f', self.gain_av[constants.GAIN_SQM])
+        if config_sqm_gain < ccd_min_gain:
+            logger.error('CCD sqm gain below minimum, changing to %0.2f', ccd_min_gain)
+            gain_sqm = ccd_min_gain
+            time.sleep(3)
+        elif config_sqm_gain > ccd_max_gain:
+            logger.error('CCD sqm gain above maximum, changing to %0.2f', ccd_max_gain)
+            gain_sqm = ccd_max_gain
+            time.sleep(3)
+        else:
+            gain_sqm = config_sqm_gain
+
+
+        self._expUtils.GAIN_CURRENT = gain_day
+        self._expUtils.GAIN_NEXT = gain_day
+
+        self._expUtils.GAIN_MAX_NIGHT = gain_night
+        self._expUtils.GAIN_MAX_MOONMODE = gain_moonmode
+
+        # day is always lowest gain
+        self._expUtils.GAIN_MAX_DAY = gain_day
+        self._expUtils.GAIN_MIN_DAY = gain_day
+
+        self._expUtils.GAIN_MIN_NIGHT = gain_night
+        self._expUtils.GAIN_MIN_MOONMODE = gain_moonmode
+
+        self._expUtils.GAIN_SQM = gain_sqm
+
+
+        logger.info('Minimum CCD gain: %0.2f (day)', self._expUtils.GAIN_MIN_DAY)
+        logger.info('Maximum CCD gain: %0.2f (day)', self._expUtils.GAIN_MAX_DAY)
+        logger.info('Minimum CCD gain: %0.2f (night)', self._expUtils.GAIN_MIN_NIGHT)
+        logger.info('Maximum CCD gain: %0.2f (night)', self._expUtils.GAIN_MAX_NIGHT)
+        logger.info('Minimum CCD gain: %0.2f (moonmode)', self._expUtils.GAIN_MIN_MOONMODE)
+        logger.info('Maximum CCD gain: %0.2f (moonmode)', self._expUtils.GAIN_MAX_MOONMODE)
+        logger.info('SQM CCD gain: %0.2f', self._expUtils.GAIN_SQM)
 
 
         # Validate binning settings
@@ -535,64 +539,63 @@ class CameraTest(object):
 
 
         if self.config['CCD_CONFIG']['NIGHT']['BINNING'] < ccd_min_binning:
-            logger.error('CCD night binning below minimum, changing to %d', int(ccd_min_binning))
-            binning_night = int(ccd_min_binning)
+            logger.error('CCD night binning below minimum, changing to %d', ccd_min_binning)
+            binning_night = ccd_min_binning
             time.sleep(3)
         elif self.config['CCD_CONFIG']['NIGHT']['BINNING'] > ccd_max_binning:
-            logger.error('CCD night binning above maximum, changing to %d', int(ccd_max_binning))
-            binning_night = int(ccd_max_binning)
+            logger.error('CCD night binning above maximum, changing to %d', ccd_max_binning)
+            binning_night = ccd_max_binning
             time.sleep(3)
         else:
             binning_night = int(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
 
         if self.config['CCD_CONFIG']['MOONMODE']['BINNING'] < ccd_min_binning:
-            logger.error('CCD moonmode binning below minimum, changing to %d', int(ccd_min_binning))
-            binning_moonmode = int(ccd_min_binning)
+            logger.error('CCD moonmode binning below minimum, changing to %d', ccd_min_binning)
+            binning_moonmode = ccd_min_binning
             time.sleep(3)
         elif self.config['CCD_CONFIG']['MOONMODE']['BINNING'] > ccd_max_binning:
-            logger.error('CCD moonmode binning above maximum, changing to %d', int(ccd_max_binning))
-            binning_moonmode = int(ccd_max_binning)
+            logger.error('CCD moonmode binning above maximum, changing to %d', ccd_max_binning)
+            binning_moonmode = ccd_max_binning
             time.sleep(3)
         else:
             binning_moonmode = int(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
 
 
         if self.config['CCD_CONFIG']['DAY']['BINNING'] < ccd_min_binning:
-            logger.error('CCD day binning below minimum, changing to %d', int(ccd_min_binning))
-            binning_day = int(ccd_min_binning)
+            logger.error('CCD day binning below minimum, changing to %d', ccd_min_binning)
+            binning_day = ccd_min_binning
             time.sleep(3)
         elif self.config['CCD_CONFIG']['DAY']['BINNING'] > ccd_max_binning:
-            logger.error('CCD day binning above maximum, changing to %d', int(ccd_max_binning))
-            binning_day = int(ccd_max_binning)
+            logger.error('CCD day binning above maximum, changing to %d', ccd_max_binning)
+            binning_day = ccd_max_binning
             time.sleep(3)
         else:
             binning_day = int(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 
         if self.config.get('CAMERA_SQM', {}).get('BINNING', 1) < ccd_min_binning:
-            logger.error('CCD sqm binning below minimum, changing to %d', int(ccd_min_binning))
-            binning_sqm = int(ccd_min_binning)
+            logger.error('CCD sqm binning below minimum, changing to %d', ccd_min_binning)
+            binning_sqm = ccd_min_binning
             time.sleep(3)
         elif self.config.get('CAMERA_SQM', {}).get('BINNING', 1) > ccd_max_binning:
-            logger.error('CCD sqm binning above maximum, changing to %d', int(ccd_max_binning))
-            binning_sqm = int(ccd_max_binning)
+            logger.error('CCD sqm binning above maximum, changing to %d', ccd_max_binning)
+            binning_sqm = ccd_max_binning
             time.sleep(3)
         else:
             binning_sqm = int(self.config.get('CAMERA_SQM', {}).get('BINNING', 1))
 
 
-        with self.binning_av.get_lock():
-            self.binning_av[constants.BINNING_DAY] = int(binning_day)
-            self.binning_av[constants.BINNING_NIGHT] = int(binning_night)
-            self.binning_av[constants.BINNING_MOONMODE] = int(binning_moonmode)
-            self.binning_av[constants.BINNING_SQM] = int(binning_sqm)
+        self._expUtils.BINNING_DAY = binning_day
+        self._expUtils.BINNING_NIGHT = binning_night
+        self._expUtils.BINNING_MOONMODE = binning_moonmode
+        self._expUtils.BINNING_SQM = binning_sqm
 
 
-        logger.info('CCD binning: %d (day)', self.binning_av[constants.BINNING_DAY])
-        logger.info('CCD binning: %d (night)', self.binning_av[constants.BINNING_NIGHT])
-        logger.info('CCD binning: %d (moonmode)', self.binning_av[constants.BINNING_MOONMODE])
-        logger.info('CCD binning: %d (SQM)', self.binning_av[constants.BINNING_SQM])
+        logger.info('CCD binning: %d (day)', self._expUtils.BINNING_DAY)
+        logger.info('CCD binning: %d (night)', self._expUtils.BINNING_NIGHT)
+        logger.info('CCD binning: %d (moonmode)', self._expUtils.BINNING_MOONMODE)
+        logger.info('CCD binning: %d (SQM)', self._expUtils.BINNING_SQM)
 
 
     def reconfigureCcd(self):
