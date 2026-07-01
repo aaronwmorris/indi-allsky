@@ -118,7 +118,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             next_exposure = self.exposure_max
             exposure_delta = next_exposure - current_exposure
 
-            logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f), gain to %0.3f (%+0.23)', next_exposure, exposure_delta, self.dB2gain(next_gain_dB), gain_delta)
+            logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f), gain to %0.3f (%+0.3f)', next_exposure, exposure_delta, self.dB2gain(next_gain_dB), gain_delta)
         else:
             # increase exposure only
             #next_exposure = next_exposure
