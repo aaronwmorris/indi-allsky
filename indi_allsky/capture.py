@@ -1496,11 +1496,11 @@ class CaptureWorker(Process):
         self._expUtils.GAIN_SQM = gain_sqm
 
         if exposure_class_str == 'exposure_basic':
-            self._expUtils.GAIN_MIN_NIGHT = gain_day
-            self._expUtils.GAIN_MIN_MOONMODE = gain_day
-        else:
             self._expUtils.GAIN_MIN_NIGHT = gain_night
             self._expUtils.GAIN_MIN_MOONMODE = gain_moonmode
+        else:
+            self._expUtils.GAIN_MIN_NIGHT = gain_day
+            self._expUtils.GAIN_MIN_MOONMODE = gain_day
 
 
         logger.info('Minimum CCD gain: %0.3f (day)', self._expUtils.GAIN_MIN_DAY)
