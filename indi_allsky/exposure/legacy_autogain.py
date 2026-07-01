@@ -10,7 +10,7 @@ logger = logging.getLogger('indi_allsky')
 
 class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
 
-    auto_gain_exposure_cutoff_level_low = 80  # percent of max exposure
+    auto_gain_exposure_cutoff_level_low = Decimal('80.0')  # percent of max exposure
 
 
     def __init__(self, *args, **kwargs):
@@ -145,21 +145,21 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
 
         self._gain_step = gain_range / (auto_gain_levels - 1)  # need divisions
 
-        self.auto_gain_step_list = [float(round((self.gain_step * x) + self._expUtils.GAIN_MIN_NIGHT, 2)) for x in range(auto_gain_levels)]
-        self.auto_gain_step_list[-1] = float(round(self._expUtils.GAIN_MAX_NIGHT, 2))  # replace last value, round is necessary
+        self.auto_gain_step_list = [Decimal('{0:0.3f}'.format((self.gain_step * x) + self._expUtils.GAIN_MIN_NIGHT)) for x in range(auto_gain_levels)]
+        self.auto_gain_step_list[-1] = self._expUtils.GAIN_MAX_NIGHT  # replace last value, round is necessary
 
 
-        self.auto_gain_exposure_cutoff_high = self._expUtils.EXPOSURE_MAX - 0.5
+        self.auto_gain_exposure_cutoff_high = self._expUtils.EXPOSURE_MAX - Decimal('0.5')
 
         self.auto_gain_exposure_cutoff_low = self._expUtils.EXPOSURE_MAX * (self.auto_gain_exposure_cutoff_level_low / 100)
         if self._expUtils.EXPOSURE_MAX - self.auto_gain_exposure_cutoff_low > 10.0:
-            self.auto_gain_exposure_cutoff_low = self._expUtils.EXPOSURE_MAX - 10.0
+            self.auto_gain_exposure_cutoff_low = self._expUtils.EXPOSURE_MAX - Decimal('10.0')
 
         self.auto_gain_exposure_cutoff_mid = self.auto_gain_exposure_cutoff_high - ((self.auto_gain_exposure_cutoff_high - self.auto_gain_exposure_cutoff_low) / 2)
 
 
         logger.info('Gain Steps: %d @ %0.3f', auto_gain_levels, self.gain_step)
-        logger.info('Gain Step list: %s', str(self.auto_gain_step_list))
+        logger.info('Gain Step list: %s', ', '.join(['{0:0.3f}'.format(x) for x in self.auto_gain_step_list]))
         logger.info(
             'Auto-Gain Exposure cutoff: Low: %0.3fs - Mid: %0.3fs - High: %0.3fs',
             self.auto_gain_exposure_cutoff_low,
