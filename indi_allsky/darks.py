@@ -225,7 +225,7 @@ class IndiAllSkyDarks(object):
 
 
         self._gain_list = sorted(gain_list, reverse=True)
-        logger.warning('Using gain list: %s', ', '.join(['{0:0.2f}'.format(x) for x in self._gain_list]))
+        logger.warning('Using gain list: %s', ', '.join(['{0:0.3f}'.format(x) for x in self._gain_list]))
 
 
     @property
@@ -474,11 +474,11 @@ class IndiAllSkyDarks(object):
 
 
         if config_night_gain < ccd_min_gain:
-            logger.error('CCD night gain below minimum, changing to %0.2f', ccd_min_gain)
+            logger.error('CCD night gain below minimum, changing to %0.3f', ccd_min_gain)
             gain_night = ccd_min_gain
             time.sleep(3)
         elif config_night_gain > ccd_max_gain:
-            logger.error('CCD night gain above maximum, changing to %0.2f', ccd_max_gain)
+            logger.error('CCD night gain above maximum, changing to %0.3f', ccd_max_gain)
             gain_night = ccd_max_gain
             time.sleep(3)
         else:
@@ -486,11 +486,11 @@ class IndiAllSkyDarks(object):
 
 
         if config_moonmode_gain < ccd_min_gain:
-            logger.error('CCD moon mode gain below minimum, changing to %0.2f', ccd_min_gain)
+            logger.error('CCD moon mode gain below minimum, changing to %0.3f', ccd_min_gain)
             gain_moonmode = ccd_min_gain
             time.sleep(3)
         elif config_moonmode_gain > ccd_max_gain:
-            logger.error('CCD moon mode gain above maximum, changing to %0.2f', ccd_max_gain)
+            logger.error('CCD moon mode gain above maximum, changing to %0.3f', ccd_max_gain)
             gain_moonmode = ccd_max_gain
             time.sleep(3)
         else:
@@ -498,11 +498,11 @@ class IndiAllSkyDarks(object):
 
 
         if config_day_gain < ccd_min_gain:
-            logger.error('CCD day gain below minimum, changing to %0.12f', ccd_min_gain)
+            logger.error('CCD day gain below minimum, changing to %0.3f', ccd_min_gain)
             gain_day = ccd_min_gain
             time.sleep(3)
         elif config_day_gain > ccd_max_gain:
-            logger.error('CCD day gain above maximum, changing to %0.2f', ccd_max_gain)
+            logger.error('CCD day gain above maximum, changing to %0.3f', ccd_max_gain)
             gain_day = ccd_max_gain
             time.sleep(3)
         else:
@@ -510,11 +510,11 @@ class IndiAllSkyDarks(object):
 
 
         if config_sqm_gain < ccd_min_gain:
-            logger.error('CCD sqm gain below minimum, changing to %0.2f', ccd_min_gain)
+            logger.error('CCD sqm gain below minimum, changing to %0.3f', ccd_min_gain)
             gain_sqm = ccd_min_gain
             time.sleep(3)
         elif config_sqm_gain > ccd_max_gain:
-            logger.error('CCD sqm gain above maximum, changing to %0.2f', ccd_max_gain)
+            logger.error('CCD sqm gain above maximum, changing to %0.3f', ccd_max_gain)
             gain_sqm = ccd_max_gain
             time.sleep(3)
         else:
@@ -537,13 +537,13 @@ class IndiAllSkyDarks(object):
         self._expUtils.GAIN_SQM = gain_sqm
 
 
-        logger.info('Minimum CCD gain: %0.2f (day)', self._expUtils.GAIN_MIN_DAY)
-        logger.info('Maximum CCD gain: %0.2f (day)', self._expUtils.GAIN_MAX_DAY)
-        logger.info('Minimum CCD gain: %0.2f (night)', self._expUtils.GAIN_MIN_NIGHT)
-        logger.info('Maximum CCD gain: %0.2f (night)', self._expUtils.GAIN_MAX_NIGHT)
-        logger.info('Minimum CCD gain: %0.2f (moonmode)', self._expUtils.GAIN_MIN_MOONMODE)
-        logger.info('Maximum CCD gain: %0.2f (moonmode)', self._expUtils.GAIN_MAX_MOONMODE)
-        logger.info('SQM CCD gain: %0.2f', self._expUtils.GAIN_SQM)
+        logger.info('Minimum CCD gain: %0.3f (day)', self._expUtils.GAIN_MIN_DAY)
+        logger.info('Maximum CCD gain: %0.3f (day)', self._expUtils.GAIN_MAX_DAY)
+        logger.info('Minimum CCD gain: %0.3f (night)', self._expUtils.GAIN_MIN_NIGHT)
+        logger.info('Maximum CCD gain: %0.3f (night)', self._expUtils.GAIN_MAX_NIGHT)
+        logger.info('Minimum CCD gain: %0.3f (moonmode)', self._expUtils.GAIN_MIN_MOONMODE)
+        logger.info('Maximum CCD gain: %0.3f (moonmode)', self._expUtils.GAIN_MAX_MOONMODE)
+        logger.info('SQM CCD gain: %0.3f', self._expUtils.GAIN_SQM)
 
 
         # Validate binning settings
@@ -613,7 +613,7 @@ class IndiAllSkyDarks(object):
 
 
     def shoot(self, exposure, gain, binning, sync=True, timeout=None):
-        logger.info('Taking %0.8fs exposure (gain %0.2f / bin %d)', exposure, gain, binning)
+        logger.info('Taking %0.8fs exposure (gain %0.3f / bin %d)', exposure, gain, binning)
 
         self.indiclient.setCcdExposure(exposure, gain, binning, sync=sync, timeout=timeout)
 
@@ -1751,7 +1751,7 @@ class IndiAllSkyDarksProcessor(object):
     def buildBadPixelMap(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         from astropy.io import fits
 
-        logger.info('Building bad pixel map for exposure %0.1fs, gain %0.2f, bin %d', exposure, self._expUtils.GAIN_CURRENT, self._expUtils.BINNING_CURRENT)
+        logger.info('Building bad pixel map for exposure %0.1fs, gain %0.3f, bin %d', exposure, self._expUtils.GAIN_CURRENT, self._expUtils.BINNING_CURRENT)
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
@@ -1845,7 +1845,7 @@ class IndiAllSkyDarksAverage(IndiAllSkyDarksProcessor):
     def stack(self, tmp_fit_dir_p, filename_p, exposure, image_bitpix):
         from astropy.io import fits
 
-        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.2f, bin %d', exposure, self._expUtils.GAIN_CURRENT, self._expUtils.BINNING_CURRENT)
+        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.3f, bin %d', exposure, self._expUtils.GAIN_CURRENT, self._expUtils.BINNING_CURRENT)
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16
@@ -1934,7 +1934,7 @@ class IndiAllSkyDarksSigmaClip(IndiAllSkyDarksProcessor):
         from astropy.stats import mad_std
         import ccdproc
 
-        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.2f, bin %d', exposure, self._expUtils.GAIN_CURRENT, self._expUtils.BINNING_CURRENT)
+        logger.info('Stacking dark frames for exposure %0.1fs, gain %0.3f, bin %d', exposure, self._expUtils.GAIN_CURRENT, self._expUtils.BINNING_CURRENT)
 
         if image_bitpix == 16:
             numpy_type = numpy.uint16

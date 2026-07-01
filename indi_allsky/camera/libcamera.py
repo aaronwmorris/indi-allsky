@@ -216,7 +216,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
                 '--denoise', 'off',
-                '--gain', '{0:0.2f}'.format(self._expUtils.GAIN_CURRENT),
+                '--gain', '{0:0.3f}'.format(self._expUtils.GAIN_CURRENT),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
@@ -229,7 +229,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
-                '--gain', '{0:0.2f}'.format(self._expUtils.GAIN_CURRENT),
+                '--gain', '{0:0.3f}'.format(self._expUtils.GAIN_CURRENT),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
@@ -429,7 +429,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         if analogue_gain:
-            logger.info('libcamera reported gain: %0.2f/%0.2f', analogue_gain, digital_gain)
+            logger.info('libcamera reported gain: %0.3f/%0.3f', analogue_gain, digital_gain)
 
 
         ### Temperature

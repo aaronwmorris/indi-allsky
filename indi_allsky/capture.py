@@ -1276,11 +1276,11 @@ class CaptureWorker(Process):
 
 
         if config_night_gain < ccd_min_gain:
-            logger.error('CCD night gain below minimum, changing to %0.2f', ccd_min_gain)
+            logger.error('CCD night gain below minimum, changing to %0.3f', ccd_min_gain)
             gain_night = ccd_min_gain
             time.sleep(3)
         elif config_night_gain > ccd_max_gain:
-            logger.error('CCD night gain above maximum, changing to %0.2f', ccd_max_gain)
+            logger.error('CCD night gain above maximum, changing to %0.3f', ccd_max_gain)
             gain_night = ccd_max_gain
             time.sleep(3)
         else:
@@ -1288,11 +1288,11 @@ class CaptureWorker(Process):
 
 
         if config_moonmode_gain < ccd_min_gain:
-            logger.error('CCD moon mode gain below minimum, changing to %0.2f', ccd_min_gain)
+            logger.error('CCD moon mode gain below minimum, changing to %0.3f', ccd_min_gain)
             gain_moonmode = ccd_min_gain
             time.sleep(3)
         elif config_moonmode_gain > ccd_max_gain:
-            logger.error('CCD moon mode gain above maximum, changing to %0.2f', ccd_max_gain)
+            logger.error('CCD moon mode gain above maximum, changing to %0.3f', ccd_max_gain)
             gain_moonmode = ccd_max_gain
             time.sleep(3)
         else:
@@ -1300,11 +1300,11 @@ class CaptureWorker(Process):
 
 
         if config_day_gain < ccd_min_gain:
-            logger.error('CCD day gain below minimum, changing to %0.2f', ccd_min_gain)
+            logger.error('CCD day gain below minimum, changing to %0.3f', ccd_min_gain)
             gain_day = ccd_min_gain
             time.sleep(3)
         elif config_day_gain > ccd_max_gain:
-            logger.error('CCD day gain above maximum, changing to %0.2f', ccd_max_gain)
+            logger.error('CCD day gain above maximum, changing to %0.3f', ccd_max_gain)
             gain_day = ccd_max_gain
             time.sleep(3)
         else:
@@ -1312,11 +1312,11 @@ class CaptureWorker(Process):
 
 
         if config_sqm_gain < ccd_min_gain:
-            logger.error('CCD sqm gain below minimum, changing to %0.2f', ccd_min_gain)
+            logger.error('CCD sqm gain below minimum, changing to %0.3f', ccd_min_gain)
             gain_sqm = ccd_min_gain
             time.sleep(3)
         elif config_sqm_gain > ccd_max_gain:
-            logger.error('CCD sqm gain above maximum, changing to %0.2f', ccd_max_gain)
+            logger.error('CCD sqm gain above maximum, changing to %0.3f', ccd_max_gain)
             gain_sqm = ccd_max_gain
             time.sleep(3)
         else:
@@ -1413,7 +1413,7 @@ class CaptureWorker(Process):
                 ccd_exposure_default = Decimal('{0:0.6f}'.format(float(last_image.exposure)))
                 ccd_gain_default = Decimal('{0:0.3f}'.format(float(last_image.gain)))
                 ccd_binning_default = float(last_image.binmode)
-                logger.warning('Reusing last stable exposure: %0.6f, gain %0.2f, bin %d', ccd_exposure_default, ccd_gain_default, ccd_binning_default)
+                logger.warning('Reusing last stable exposure: %0.6f, gain %0.3f, bin %d', ccd_exposure_default, ccd_gain_default, ccd_binning_default)
 
                 # restore last sqm value
                 last_camera_sqm_mag = last_image.data.get('sensor_user_8', 0.0)
@@ -1503,14 +1503,14 @@ class CaptureWorker(Process):
             self._expUtils.GAIN_MIN_MOONMODE = gain_moonmode
 
 
-        logger.info('Minimum CCD gain: %0.2f (day)', self._expUtils.GAIN_MIN_DAY)
-        logger.info('Maximum CCD gain: %0.2f (day)', self._expUtils.GAIN_MAX_DAY)
-        logger.info('Minimum CCD gain: %0.2f (night)', self._expUtils.GAIN_MIN_NIGHT)
-        logger.info('Maximum CCD gain: %0.2f (night)', self._expUtils.GAIN_MAX_NIGHT)
-        logger.info('Minimum CCD gain: %0.2f (moonmode)', self._expUtils.GAIN_MIN_MOONMODE)
-        logger.info('Maximum CCD gain: %0.2f (moonmode)', self._expUtils.GAIN_MAX_MOONMODE)
-        logger.info('SQM CCD gain: %0.2f', self._expUtils.GAIN_SQM)
-        logger.info('Default CCD gain: %0.2f', ccd_gain_default)
+        logger.info('Minimum CCD gain: %0.3f (day)', self._expUtils.GAIN_MIN_DAY)
+        logger.info('Maximum CCD gain: %0.3f (day)', self._expUtils.GAIN_MAX_DAY)
+        logger.info('Minimum CCD gain: %0.3f (night)', self._expUtils.GAIN_MIN_NIGHT)
+        logger.info('Maximum CCD gain: %0.3f (night)', self._expUtils.GAIN_MAX_NIGHT)
+        logger.info('Minimum CCD gain: %0.3f (moonmode)', self._expUtils.GAIN_MIN_MOONMODE)
+        logger.info('Maximum CCD gain: %0.3f (moonmode)', self._expUtils.GAIN_MAX_MOONMODE)
+        logger.info('SQM CCD gain: %0.3f', self._expUtils.GAIN_SQM)
+        logger.info('Default CCD gain: %0.3f', ccd_gain_default)
 
 
         self._expUtils.BINNING_CURRENT = ccd_binning_default
@@ -1763,7 +1763,7 @@ class CaptureWorker(Process):
 
         # Communicate sensor values as environment variables
         cmd_env = {
-            'GAIN'     : '{0:0.2f}'.format(self._expUtils.GAIN_CURRENT),
+            'GAIN'     : '{0:0.3f}'.format(self._expUtils.GAIN_CURRENT),
             'BIN'      : '{0:d}'.format(self._expUtils.BINNING_CURRENT),
             'MOONMODE' : '{0:d}'.format(int(bool(self.night_av[constants.NIGHT_MOONMODE]))),
             'NIGHT'    : '{0:d}'.format(int(self.night_av[constants.NIGHT_NIGHT])),
@@ -2263,7 +2263,7 @@ class CaptureWorker(Process):
 
     def shoot(self, exposure, gain, binning, sync=True, timeout=None, sqm_exposure=False):
         # sqm used for an image taking at a specific exposure/gain for a controlled SQM measurement
-        logger.info('Taking %0.8fs exposure (gain %0.2f / bin %d)', exposure, gain, binning)
+        logger.info('Taking %0.8fs exposure (gain %0.3f / bin %d)', exposure, gain, binning)
 
         self.indiclient.setCcdExposure(exposure, gain, binning, sync=sync, timeout=timeout, sqm_exposure=sqm_exposure)
 

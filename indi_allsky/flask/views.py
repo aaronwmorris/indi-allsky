@@ -2244,11 +2244,11 @@ class ConfigView(FormView):
             'LENS_OFFSET_Y'                  : self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
             'LENS_ALTITUDE'                  : self.indi_allsky_config.get('LENS_ALTITUDE', 90.0),
             'LENS_AZIMUTH'                   : self.indi_allsky_config.get('LENS_AZIMUTH', 0.0),
-            'CCD_CONFIG__NIGHT__GAIN'        : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 100.0), 2),  # limit to 2 decimals
+            'CCD_CONFIG__NIGHT__GAIN'        : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 100.0), 3),  # limit to 3 decimals
             'CCD_CONFIG__NIGHT__BINNING'     : self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('BINNING', 1),
-            'CCD_CONFIG__MOONMODE__GAIN'     : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('GAIN', 75.0), 2),  # limit to 2 decimals
+            'CCD_CONFIG__MOONMODE__GAIN'     : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('GAIN', 75.0), 3),  # limit to 3 decimals
             'CCD_CONFIG__MOONMODE__BINNING'  : self.indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('BINNING', 1),
-            'CCD_CONFIG__DAY__GAIN'          : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('GAIN', 0.0), 2),  # limit to 2 decimals
+            'CCD_CONFIG__DAY__GAIN'          : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('GAIN', 0.0), 3),  # limit to 3 decimals
             'CCD_CONFIG__DAY__BINNING'       : self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('BINNING', 1),
             'CCD_CONFIG__EXPOSURE_CLASSNAME' : self.indi_allsky_config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME', 'exposure_basic'),
             'CCD_CONFIG__AUTO_GAIN_LEVELS'   : str(self.indi_allsky_config.get('CCD_CONFIG', {}).get('AUTO_GAIN_LEVELS', 8)),  # string in form, int in config
@@ -2263,7 +2263,7 @@ class ConfigView(FormView):
             'CAMERA_SQM__ENABLE'             : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE', False),
             'CAMERA_SQM__ENABLE_DAY'         : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE_DAY', False),
             'CAMERA_SQM__EXPOSURE'           : '{0:.6f}'.format(self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 10.0)),  # force 6 digits of precision
-            'CAMERA_SQM__GAIN'               : round(self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 10.0), 2),  # limit to 2 decimals
+            'CAMERA_SQM__GAIN'               : round(self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 10.0), 3),  # limit to 3 decimals
             'CAMERA_SQM__BINNING'            : self.indi_allsky_config.get('CAMERA_SQM', {}).get('BINNING', 1),
             'CAMERA_SQM__EXPOSURE_PERIOD'    : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900),
             'CAMERA_SQM__MAGNITUDE_OFFSET'   : self.indi_allsky_config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 25.0),

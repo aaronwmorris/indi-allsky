@@ -430,7 +430,7 @@ class ImageProcessor(object):
         self._check_astro_darkness()
 
 
-        #logger.info('Processing %s, exposure: %0.6f, gain, %0.2f, binning: %d', str(filename), exposure, gain, binning)
+        #logger.info('Processing %s, exposure: %0.6f, gain, %0.3f, binning: %d', str(filename), exposure, gain, binning)
 
         if self.night_av[constants.NIGHT_MOONMODE] and not self.config.get('IMAGE_STACK_MOONMODE'):
             # disable stacking during moonmode
@@ -998,7 +998,7 @@ class ImageProcessor(object):
 
         if self.config.get('IMAGE_CALIBRATE_BPM'):
             # pick a bad pixel map that is closest to the exposure and temperature
-            logger.info('Searching for bad pixel map: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
+            logger.info('Searching for bad pixel map: gain %0.3f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
             bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
                 .filter(IndiAllSkyDbBadPixelMapTable.camera_id == i_ref.camera_id)\
                 .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
@@ -1038,7 +1038,7 @@ class ImageProcessor(object):
 
                 if not bpm_entry:
                     logger.warning(
-                        'Bad Pixel Map not found: ccd%d %dbit %0.7fs gain %0.2f bin %d %0.2fc',
+                        'Bad Pixel Map not found: ccd%d %dbit %0.6fs gain %0.3f bin %d %0.2fc',
                         i_ref.camera_id,
                         i_ref.image_bitpix,
                         float(i_ref.exposure),
@@ -1051,7 +1051,7 @@ class ImageProcessor(object):
 
 
         # pick a dark frame that is closest to the exposure and temperature
-        logger.info('Searching for dark frame: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
+        logger.info('Searching for dark frame: gain %0.3f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
@@ -1091,7 +1091,7 @@ class ImageProcessor(object):
 
             if not dark_frame_entry:
                 logger.warning(
-                    'Dark not found: ccd%d %dbit %0.7fs gain %0.2f bin %d %0.2fc',
+                    'Dark not found: ccd%d %dbit %0.6fs gain %0.3f bin %d %0.2fc',
                     i_ref.camera_id,
                     i_ref.image_bitpix,
                     float(i_ref.exposure),

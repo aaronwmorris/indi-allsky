@@ -1269,7 +1269,7 @@ class IndiClient(PyIndi.BaseClient):
             gain_d = new_gain
 
 
-        logger.warning('Setting CCD gain to %0.2f', gain_d)
+        logger.warning('Setting CCD gain to %0.3f', gain_d)
         indi_exec = self.ccd_device.getDriverExec()
 
         if indi_exec in [
