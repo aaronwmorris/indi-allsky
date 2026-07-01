@@ -1329,48 +1329,48 @@ class CaptureWorker(Process):
 
 
         if self.config['CCD_CONFIG']['NIGHT']['BINNING'] < ccd_min_binning:
-            logger.error('CCD night binning below minimum, changing to %d', int(ccd_min_binning))
-            binning_night = int(ccd_min_binning)
+            logger.error('CCD night binning below minimum, changing to %d', ccd_min_binning)
+            binning_night = ccd_min_binning
             time.sleep(3)
         elif self.config['CCD_CONFIG']['NIGHT']['BINNING'] > ccd_max_binning:
-            logger.error('CCD night binning above maximum, changing to %d', int(ccd_max_binning))
-            binning_night = int(ccd_max_binning)
+            logger.error('CCD night binning above maximum, changing to %d', ccd_max_binning)
+            binning_night = ccd_max_binning
             time.sleep(3)
         else:
             binning_night = int(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
 
         if self.config['CCD_CONFIG']['MOONMODE']['BINNING'] < ccd_min_binning:
-            logger.error('CCD moonmode binning below minimum, changing to %d', int(ccd_min_binning))
-            binning_moonmode = int(ccd_min_binning)
+            logger.error('CCD moonmode binning below minimum, changing to %d', ccd_min_binning)
+            binning_moonmode = ccd_min_binning
             time.sleep(3)
         elif self.config['CCD_CONFIG']['MOONMODE']['BINNING'] > ccd_max_binning:
-            logger.error('CCD moonmode binning above maximum, changing to %d', int(ccd_max_binning))
-            binning_moonmode = int(ccd_max_binning)
+            logger.error('CCD moonmode binning above maximum, changing to %d', ccd_max_binning)
+            binning_moonmode = ccd_max_binning
             time.sleep(3)
         else:
             binning_moonmode = int(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
 
 
         if self.config['CCD_CONFIG']['DAY']['BINNING'] < ccd_min_binning:
-            logger.error('CCD day binning below minimum, changing to %d', int(ccd_min_binning))
-            binning_day = int(ccd_min_binning)
+            logger.error('CCD day binning below minimum, changing to %d', ccd_min_binning)
+            binning_day = ccd_min_binning
             time.sleep(3)
         elif self.config['CCD_CONFIG']['DAY']['BINNING'] > ccd_max_binning:
-            logger.error('CCD day binning above maximum, changing to %d', int(ccd_max_binning))
-            binning_day = int(ccd_max_binning)
+            logger.error('CCD day binning above maximum, changing to %d', ccd_max_binning)
+            binning_day = ccd_max_binning
             time.sleep(3)
         else:
             binning_day = int(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 
         if self.config.get('CAMERA_SQM', {}).get('BINNING', 1) < ccd_min_binning:
-            logger.error('CCD sqm binning below minimum, changing to %d', int(ccd_min_binning))
-            binning_sqm = int(ccd_min_binning)
+            logger.error('CCD sqm binning below minimum, changing to %d', ccd_min_binning)
+            binning_sqm = ccd_min_binning
             time.sleep(3)
         elif self.config.get('CAMERA_SQM', {}).get('BINNING', 1) > ccd_max_binning:
-            logger.error('CCD sqm binning above maximum, changing to %d', int(ccd_max_binning))
-            binning_sqm = int(ccd_max_binning)
+            logger.error('CCD sqm binning above maximum, changing to %d', ccd_max_binning)
+            binning_sqm = ccd_max_binning
             time.sleep(3)
         else:
             binning_sqm = int(self.config.get('CAMERA_SQM', {}).get('BINNING', 1))
