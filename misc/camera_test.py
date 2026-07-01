@@ -11,7 +11,9 @@ import platform
 import io
 import time
 import math
+from decimal import Decimal
 import psutil
+import ctypes
 import logging
 
 import queue
@@ -28,6 +30,7 @@ from indi_allsky import constants
 from indi_allsky.flask import create_app
 from indi_allsky.config import IndiAllSkyConfig
 from indi_allsky import camera as camera_module
+from indi_allsky.utils import IndiAllSkyExposureUtils
 from indi_allsky.version import __version__
 from indi_allsky.version import __config_level__
 
@@ -79,28 +82,30 @@ class CameraTest(object):
         ])
 
 
-        self.exposure_av = Array('f', [
-            -1.0,  # current exposure
-            -1.0,  # next exposure
-            -1.0,  # exposure delta
-            -1.0,  # night minimum
-            -1.0,  # day minimum
-            -1.0,  # maximum
-            -1.0,  # sqm
+        ### all values in microseconds
+        self.exposure_av = Array(ctypes.c_int32, [
+            -1,  # current exposure
+            -1,  # next exposure
+            -1,  # exposure delta
+            -1,  # night minimum
+            -1,  # day minimum
+            -1,  # maximum
+            -1,  # sqm
         ])
 
 
-        self.gain_av = Array('f', [
-            -1.0,  # current gain
-            -1.0,  # next gain
-            -1.0,  # gain delta
-            -1.0,  # day minimum
-            -1.0,  # day maximum
-            -1.0,  # night minimum
-            -1.0,  # night maximum
-            -1.0,  # moon mode minimum
-            -1.0,  # moon mode maximum
-            -1.0,  # sqm
+        ### milli-gain
+        self.gain_av = Array(ctypes.c_int32, [
+            -1,  # current gain
+            -1,  # next gain
+            -1,  # gain delta
+            -1,  # day minimum
+            -1,  # day maximum
+            -1,  # night minimum
+            -1,  # night maximum
+            -1,  # moon mode minimum
+            -1,  # moon mode maximum
+            -1,  # sqm
         ])
 
 
@@ -121,6 +126,9 @@ class CameraTest(object):
             0.0,  # Ra
             0.0,  # Dec
         ])
+
+
+        self._expUtils = IndiAllSkyExposureUtils(self.config, self.exposure_av, self.gain_av, self.binning_av)
 
 
         #self._camera_id = 0
@@ -146,7 +154,7 @@ class CameraTest(object):
         self.moonmode = False
         self.reconfigureCcd()
 
-        self.takeExposure(0.1, self.gain_av[constants.GAIN_MAX_DAY], self.binning_av[constants.BINNING_DAY])
+        self.takeExposure(Decimal('0.1'), self.gain_av[constants.GAIN_MAX_DAY], self.binning_av[constants.BINNING_DAY])
 
 
         logger.warning('TESTING 1.0s EXPOSURE WITH NIGHT SETTINGS')
@@ -154,7 +162,7 @@ class CameraTest(object):
         self.moonmode = False
         self.reconfigureCcd()
 
-        self.takeExposure(1.0, self.gain_av[constants.GAIN_MAX_NIGHT], self.binning_av[constants.BINNING_NIGHT])
+        self.takeExposure(Decimal('1.0'), self.gain_av[constants.GAIN_MAX_NIGHT], self.binning_av[constants.BINNING_NIGHT])
 
 
         logger.warning('TESTING 1.0s EXPOSURE WITH MOON MODE SETTINGS')
@@ -162,7 +170,7 @@ class CameraTest(object):
         self.moonmode = True
         self.reconfigureCcd()
 
-        self.takeExposure(1.0, self.gain_av[constants.GAIN_MAX_MOONMODE], self.binning_av[constants.BINNING_MOONMODE])
+        self.takeExposure(Decimal('1.0'), self.gain_av[constants.GAIN_MAX_MOONMODE], self.binning_av[constants.BINNING_MOONMODE])
 
 
         logger.warning('TESTING 1.0s EXPOSURE WITH SQM SETTINGS')
@@ -365,59 +373,61 @@ class CameraTest(object):
 
 
         # set minimum exposure
-        ccd_min_exp = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min'])
+        ccd_min_exp = Decimal('{0:0.6f}'.format(math.ceil(float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']) * 1000000) / 1000000))
+        ccd_max_exp = Decimal('{0:0.6f}'.format(math.floor(float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max']) * 1000000) / 1000000))
 
+
+        #ccd_min_exp = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min'])
 
         # Some CCD drivers will not accept their stated minimum exposure.
         # There might be some python -> C floating point conversion problem causing this.
-        ccd_min_exp += 0.00000001
+        #ccd_min_exp += 0.00000001
+
+
+        config_exposure_min_day = Decimal('{0:0.6f}'.format(math.ceil(float(self.config.get('CCD_EXPOSURE_MIN_DAY', 0.0) * 1000000) / 1000000)))
+        config_exposure_min = Decimal('{0:0.6f}'.format(math.ceil(float(self.config.get('CCD_EXPOSURE_MIN', 0.0) * 1000000) / 1000000)))
+        config_exposure_max = Decimal('{0:0.6f}'.format(math.floor(float(self.config.get('CCD_EXPOSURE_MAX', 15.0) * 1000000) / 1000000)))
+        config_sqm_exposure = Decimal('{0:0.6f}'.format(math.floor(float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 10.0) * 1000000) / 1000000)))
 
 
         if not self.config.get('CCD_EXPOSURE_MIN_DAY'):
-            with self.exposure_av.get_lock():
-                self.exposure_av[constants.EXPOSURE_MIN_DAY] = float(ccd_min_exp)
+            self._expUtils.EXPOSURE_MIN_DAY = ccd_min_exp
         elif self.config.get('CCD_EXPOSURE_MIN_DAY') > ccd_min_exp:
-            with self.exposure_av.get_lock():
-                self.exposure_av[constants.EXPOSURE_MIN_DAY] = float(self.config.get('CCD_EXPOSURE_MIN_DAY'))
+            self._expUtils.EXPOSURE_MIN_DAY = config_exposure_min_day
         elif self.config.get('CCD_EXPOSURE_MIN_DAY') < ccd_min_exp:
             logger.warning(
                 'Minimum exposure (day) %0.8f too low, increasing to %0.8f',
-                self.config.get('CCD_EXPOSURE_MIN_DAY'),
+                config_exposure_min_day,
                 ccd_min_exp,
             )
-            with self.exposure_av.get_lock():
-                self.exposure_av[constants.EXPOSURE_MIN_DAY] = float(ccd_min_exp)
+            self._expUtils.EXPOSURE_MIN_DAY = ccd_min_exp
 
-        logger.info('Minimum CCD exposure: %0.8f (day)', self.exposure_av[constants.EXPOSURE_MIN_DAY])
+        logger.info('Minimum CCD exposure: %0.8f (day)', self._expUtils.EXPOSURE_MIN_DAY)
 
 
         # set maximum exposure
-        ccd_max_exp = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max'])
-        maximum_exposure = self.config.get('CCD_EXPOSURE_MAX')
-
-        if self.config.get('CCD_EXPOSURE_MAX') > ccd_max_exp:
+        if config_exposure_max > ccd_max_exp:
             logger.warning(
                 'Maximum exposure %0.8f too high, decreasing to %0.8f',
-                self.config.get('CCD_EXPOSURE_MAX'),
+                config_exposure_max,
                 ccd_max_exp,
             )
 
             maximum_exposure = ccd_max_exp
 
+        else:
+            maximum_exposure = config_exposure_max
 
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_MAX] = float(maximum_exposure)
 
-
-        logger.info('Maximum CCD exposure: %0.8f', self.exposure_av[constants.EXPOSURE_MAX])
+        self._expUtils.EXPOSURE_MAX = maximum_exposure
+        logger.info('Maximum CCD exposure: %0.8f', self._expUtils.EXPOSURE_MAX)
 
 
         # set SQM exposure
-        sqm_exposure = float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 15.0))
-        if sqm_exposure < ccd_min_exp:
+        if config_sqm_exposure < ccd_min_exp:
             logger.warning(
                 'SQM exposure %0.8f too low, increasing to %0.8f',
-                sqm_exposure,
+                config_sqm_exposure,
                 ccd_min_exp,
             )
 
@@ -432,11 +442,12 @@ class CameraTest(object):
 
             sqm_exposure = ccd_max_exp
 
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_SQM] = float(sqm_exposure)
+        else:
+            sqm_exposure = config_sqm_exposure
 
 
-        logger.info('SQM CCD exposure: %0.8f', self.exposure_av[constants.EXPOSURE_SQM])
+        self._expUtils.EXPOSURE_SQM = sqm_exposure
+        logger.info('SQM CCD exposure: %0.8f', self._expUtils.EXPOSURE_SQM)
 
 
         # Validate gain settings

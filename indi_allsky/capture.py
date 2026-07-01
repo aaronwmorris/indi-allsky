@@ -1184,7 +1184,7 @@ class CaptureWorker(Process):
         #ccd_min_exp += 0.00000001
 
 
-        config_exposure_min_day = Decimal('{0:0.6f}'.format(math.ceil(float(self.config.get('CCD_EXPOSURE_MIN', 0.0) * 1000000) / 1000000)))
+        config_exposure_min_day = Decimal('{0:0.6f}'.format(math.ceil(float(self.config.get('CCD_EXPOSURE_MIN_DAY', 0.0) * 1000000) / 1000000)))
         config_exposure_min = Decimal('{0:0.6f}'.format(math.ceil(float(self.config.get('CCD_EXPOSURE_MIN', 0.0) * 1000000) / 1000000)))
         config_exposure_max = Decimal('{0:0.6f}'.format(math.floor(float(self.config.get('CCD_EXPOSURE_MAX', 15.0) * 1000000) / 1000000)))
         config_sqm_exposure = Decimal('{0:0.6f}'.format(math.floor(float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 10.0) * 1000000) / 1000000)))
