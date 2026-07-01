@@ -242,8 +242,8 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_1_10(IndiAllSky_Exposure_
     def gain2dB(self, gain) -> float:
         return float(gain) / 10.0
 
-    def dB2gain(self, dB) -> float:
-        return float(dB) * 10.0
+    def dB2gain(self, dB) -> Decimal:
+        return Decimal('{0:0.3f}'.format(float(dB) * 10.0))
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
@@ -254,8 +254,8 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB(IndiAllSky_Exposure_AutoG
     def gain2dB(self, gain) -> float:
         return float(gain)
 
-    def dB2gain(self, dB) -> float:
-        return float(dB)
+    def dB2gain(self, dB) -> Decimal:
+        return Decimal('{0:0.3f}'.format(float(dB)))
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
@@ -266,8 +266,8 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO(IndiAllSky_Exposure_Auto
     def gain2dB(self, gain) -> float:
         return 20 * math.log10(float(gain) / 100)
 
-    def dB2gain(self, dB) -> float:
-        return 100 * (10 ** (float(dB) / 20))
+    def dB2gain(self, dB) -> Decimal:
+        return Decimal('{0:0.3f}'.format(100 * (10 ** (float(dB) / 20))))
 
 
 class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100(IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base):
@@ -278,5 +278,5 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_ISO_1_100(IndiAllSky_Exposur
     def gain2dB(self, gain) -> float:
         return 20 * math.log10(float(gain))
 
-    def dB2gain(self, dB) -> float:
-        return 10 ** (float(dB) / 20)
+    def dB2gain(self, dB) -> Decimal:
+        return Decimal('{0:0.3f}'.format(10 ** (float(dB) / 20)))
