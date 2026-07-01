@@ -469,7 +469,7 @@ class IndiAllSkyDarks(object):
         ### Validate gain settings
         config_night_gain = Decimal('{0:0.3f}'.format(math.floor(float(self.config['CCD_CONFIG']['NIGHT']['GAIN']) * 1000) / 1000))
         config_moonmode_gain = Decimal('{0:0.3f}'.format(math.floor(float(self.config['CCD_CONFIG']['MOONMODE']['GAIN']) * 1000) / 1000))
-        config_day_gain = Decimal('{0:0.3f}'.format(math.ceil(float(self.config['CCD_CONFIG']['MOONMODE']['GAIN']) * 1000) / 1000))
+        config_day_gain = Decimal('{0:0.3f}'.format(math.ceil(float(self.config['CCD_CONFIG']['DAY']['GAIN']) * 1000) / 1000))
         config_sqm_gain = Decimal('{0:0.3f}'.format(math.floor(float(self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0)) * 1000) / 1000))
 
 
