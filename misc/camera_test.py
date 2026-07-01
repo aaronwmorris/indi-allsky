@@ -149,12 +149,12 @@ class CameraTest(object):
         self._initialize()
 
 
-        logger.warning('TESTING 0.1s EXPOSURE WITH DAY SETTINGS')
+        logger.warning('TESTING %0.6fs EXPOSURE WITH DAY SETTINGS', self._expUtils.EXPOSURE_MIN_DAY)
         self.night = False
         self.moonmode = False
         self.reconfigureCcd()
 
-        self.takeExposure(Decimal('0.1'), self._expUtils.GAIN_MAX_DAY, self._expUtils.BINNING_DAY)
+        self.takeExposure(self._expUtils.EXPOSURE_MIN_DAY, self._expUtils.GAIN_MAX_DAY, self._expUtils.BINNING_DAY)
 
 
         logger.warning('TESTING 1.0s EXPOSURE WITH NIGHT SETTINGS')
@@ -162,7 +162,7 @@ class CameraTest(object):
         self.moonmode = False
         self.reconfigureCcd()
 
-        self.takeExposure(Decimal('1.0'), self._expUtils.GAIN_MAX_NIGHT, self._expUtils.BINNING_NIGHT)
+        self.takeExposure(1.0, self._expUtils.GAIN_MAX_NIGHT, self._expUtils.BINNING_NIGHT)
 
 
         logger.warning('TESTING 1.0s EXPOSURE WITH MOON MODE SETTINGS')
@@ -170,7 +170,7 @@ class CameraTest(object):
         self.moonmode = True
         self.reconfigureCcd()
 
-        self.takeExposure(Decimal('1.0'), self._expUtils.GAIN_MAX_MOONMODE, self._expUtils.BINNING_MOONMODE)
+        self.takeExposure(1.0, self._expUtils.GAIN_MAX_MOONMODE, self._expUtils.BINNING_MOONMODE)
 
 
         logger.warning('TESTING 1.0s EXPOSURE WITH SQM SETTINGS')
@@ -178,7 +178,7 @@ class CameraTest(object):
         self.moonmode = True
         self.reconfigureCcd()
 
-        self.takeExposure(Decimal('1.0'), self._expUtils.GAIN_SQM, self._expUtils.BINNING_SQM)
+        self.takeExposure(1.0, self._expUtils.GAIN_SQM, self._expUtils.BINNING_SQM)
 
 
     def takeExposure(self, exposure, gain, binning):
