@@ -13,7 +13,7 @@ import PyIndi
 
 from .indi import IndiClient
 
-from .. import constants
+#from .. import constants
 
 from ..exceptions import TimeOutException
 
@@ -44,7 +44,7 @@ class IndiClientIndiAccumulator(IndiClient):
         self.data = None
         self.header = None
 
-        self.ccd_min_exp = None  # updated in getCcdInfo()
+        self._ccd_min_exp = None  # updated in getCcdInfo()
 
 
     @property
@@ -66,6 +66,15 @@ class IndiClientIndiAccumulator(IndiClient):
     @property
     def clamp_16bit(self):
         return self._clamp_16bit
+
+
+    @property
+    def ccd_min_exp(self):
+        return self._ccd_min_exp
+
+    @ccd_min_exp.setter
+    def ccd_min_exp(self, new_exposure):
+        self._ccd_min_exp = math.ceil(float(new_exposure) * 1000000) / 1000000  # round up
 
 
     def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
@@ -99,10 +108,10 @@ class IndiClientIndiAccumulator(IndiClient):
         self.exposure_remain = float(exposure)
 
 
-        if self.gain != float(round(gain, 2)):
+        if self.gain != gain:
             self.setCcdGain(gain)
 
-        if self.binning != int(binning):
+        if self.binning != binning:
             self.setCcdBinning(binning)
 
 
@@ -112,8 +121,7 @@ class IndiClientIndiAccumulator(IndiClient):
 
 
         # Update shared exposure value
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+        self._expUtils.EXPOSURE_CURRENT = exposure
 
 
         if sync:
@@ -295,7 +303,7 @@ class IndiClientIndiAccumulator(IndiClient):
             ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max'] = 600.0
 
         # store for internal use
-        self.ccd_min_exp = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min'])
+        self.ccd_min_exp = ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
 
         return ccd_info
 

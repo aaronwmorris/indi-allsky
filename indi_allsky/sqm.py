@@ -3,7 +3,8 @@ import cv2
 import numpy
 import logging
 
-from . import constants
+#from . import constants
+from .utils import IndiAllSkyExposureUtils
 
 
 logger = logging.getLogger('indi_allsky')
@@ -14,13 +15,19 @@ class IndiAllskySqm(object):
     def __init__(
         self,
         config,
+        exposure_av,
         gain_av,
+        binning_av,
         mask=None,
     ):
         self.config = config
+        self.exposure_av = exposure_av
         self.gain_av = gain_av
+        self.binning_av = binning_av
 
         self._magnitude_offset = self.config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 25.0)
+
+        self._expUtils = IndiAllSkyExposureUtils(self.config, self.exposure_av, self.gain_av, self.binning_av)
 
         # both masks will be combined
         self._external_mask_dict = mask
@@ -58,7 +65,7 @@ class IndiAllskySqm(object):
         sqm_avg = self.averageAdu(i_ref)
 
         # offset the sqm based on the exposure and gain
-        weighted_sqm_avg = (((self.config['CCD_EXPOSURE_MAX'] - i_ref.exposure) / 10) + 1) * (sqm_avg * (((float(self.gain_av[constants.GAIN_MAX_NIGHT]) - i_ref.gain) / 10) + 1))
+        weighted_sqm_avg = (((self.config['CCD_EXPOSURE_MAX'] - i_ref.exposure) / 10) + 1) * (sqm_avg * (((self._expUtils.GAIN_MAX_NIGHT - i_ref.gain) / 10) + 1))
 
         logger.info('Raw jSQM: %0.2f, Weighted jSQM: %0.2f', sqm_avg, weighted_sqm_avg)
 

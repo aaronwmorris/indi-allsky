@@ -119,6 +119,7 @@ class ImageWorker(Process):
         self.image_processor = ImageProcessor(
             self.config,
             self.position_av,
+            self.exposure_av,
             self.gain_av,
             self.binning_av,
             self.sensors_temp_av,
@@ -870,7 +871,7 @@ class ImageWorker(Process):
             mqtt_data = {
                 'exp_date' : exp_date.strftime('%Y-%m-%d %H:%M:%S'),
                 'exposure' : round(exposure, 6),
-                'gain'     : round(gain, 2),
+                'gain'     : round(gain, 3),
                 'bin'      : int(binning),
                 'temp'     : round(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP], 1),
                 'sunalt'   : round(self.image_processor.astrometric_data['sun_alt'], 1),
@@ -2190,7 +2191,7 @@ class ImageWorker(Process):
         cmd_env = {
             'DATA_JSON': str(self.pre_hook_datajson_name_p),  # the file used for the json data is communicated via environment variable
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
-            'GAIN'     : '{0:0.2f}'.format(gain),
+            'GAIN'     : '{0:0.3f}'.format(gain),
             'BIN'      : '{0:d}'.format(binning),
             'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
             'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),

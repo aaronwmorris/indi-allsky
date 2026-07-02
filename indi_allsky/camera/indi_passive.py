@@ -85,13 +85,13 @@ class IndiClientPassive(IndiClient):
     def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
         self.exposureStartTime = time.time()
 
-        self.exposure = float(exposure)
+        self.exposure = exposure
         self.sqm_exposure = sqm_exposure
 
-        if self.gain != float(round(gain, 2)):
+        if self.gain != gain:
             self.setCcdGain(gain)
 
-        if self.binning != int(binning):
+        if self.binning != binning:
             self.setCcdBinning(binning)
 
         ctl_ccd_exposure = self.get_control(self.ccd_device, 'CCD_EXPOSURE', 'number')
@@ -100,8 +100,7 @@ class IndiClientPassive(IndiClient):
 
 
         # Update shared exposure value
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+        self._expUtils.EXPOSURE_CURRENT = exposure
 
 
     def getCcdExposureStatus(self):
@@ -114,14 +113,11 @@ class IndiClientPassive(IndiClient):
         pass
 
 
-    def setCcdGain(self, gain_value):
-        gain_f = float(round(gain_value, 2))
-
+    def setCcdGain(self, new_gain):
         # Update shared gain value
-        with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_CURRENT] = gain_f
+        self._expUtils.GAIN_CURRENT = new_gain
 
-        self.gain = gain_f
+        self.gain = new_gain
 
 
     def setCcdBinning(self, bin_value):
