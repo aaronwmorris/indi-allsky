@@ -1487,11 +1487,12 @@ class CaptureWorker(Process):
             self.gain_av[constants.GAIN_SQM] = float(gain_sqm)
 
             if exposure_class_str == 'exposure_basic':
-                self.gain_av[constants.GAIN_MIN_NIGHT] = float(gain_day)
-                self.gain_av[constants.GAIN_MIN_MOONMODE] = float(gain_day)
-            else:
                 self.gain_av[constants.GAIN_MIN_NIGHT] = float(gain_night)
                 self.gain_av[constants.GAIN_MIN_MOONMODE] = float(gain_moonmode)
+            else:
+                # auto-gain
+                self.gain_av[constants.GAIN_MIN_NIGHT] = float(gain_day)
+                self.gain_av[constants.GAIN_MIN_MOONMODE] = float(gain_day)
 
 
         logger.info('Minimum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MIN_DAY])
