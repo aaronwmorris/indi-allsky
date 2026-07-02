@@ -56,45 +56,45 @@ class IndiAllSky_Exposure_Base(object):
         if adu <= 0.0:
             # ensure we do not divide by zero
             logger.warning('Zero average, setting a default of 0.1')
-            adu = 0.1
+            adu = Decimal('0.1')
 
 
         if self.night_av[constants.NIGHT_NIGHT]:
-            target_adu = self.config['TARGET_ADU']
+            target_adu = Decimal(self.config['TARGET_ADU'])
         else:
-            target_adu = self.config['TARGET_ADU_DAY']
+            target_adu = Decimal(self.config['TARGET_ADU_DAY'])
 
 
         # Brightness when the sun is in view (very short exposures) can change drastically when clouds pass through the view
         # Setting a deviation that is too short can cause exposure flapping
         if exposure_d < 0.001000:
             # DAY
-            adu_dev = float(self.config.get('TARGET_ADU_DEV_DAY', 20))
+            adu_dev = Decimal(self.config.get('TARGET_ADU_DEV_DAY', 20))
 
             target_adu_min = target_adu - adu_dev
             target_adu_max = target_adu + adu_dev
             current_adu_target_min = self.current_adu_target - adu_dev
             current_adu_target_max = self.current_adu_target + adu_dev
 
-            exp_scale_factor = 0.50  # scale exposure calculation
+            exp_scale_factor = Decimal('0.50')  # scale exposure calculation
             history_max_vals = 6     # number of entries to use to calculate average
         else:
             # NIGHT
-            adu_dev = float(self.config.get('TARGET_ADU_DEV', 10))
+            adu_dev = Decimal(self.config.get('TARGET_ADU_DEV', 10))
 
             target_adu_min = target_adu - adu_dev
             target_adu_max = target_adu + adu_dev
             current_adu_target_min = self.current_adu_target - adu_dev
             current_adu_target_max = self.current_adu_target + adu_dev
 
-            exp_scale_factor = 1.0  # scale exposure calculation
+            exp_scale_factor = Decimal('1.0')  # scale exposure calculation
             history_max_vals = 6    # number of entries to use to calculate average
 
 
 
         if not self.target_adu_found:
             self.recalculate_exposure(exposure_d, gain_d, adu, target_adu, target_adu_min, target_adu_max, exp_scale_factor)
-            return adu, 0.0
+            return adu, Decimal('0.0')
 
 
         self.hist_adu.append(adu)
@@ -109,7 +109,7 @@ class IndiAllSky_Exposure_Base(object):
 
         ### Need at least x values to continue
         if len(self.hist_adu) < history_max_vals:
-            return adu, 0.0
+            return adu, Decimal('0.0')
 
 
         ### only change exposure when 70% of the values exceed the max or minimum
@@ -137,13 +137,11 @@ class IndiAllSky_Exposure_Base(object):
             return
 
 
-        current_exposure_f = float(current_exposure)
-
         # Scale the exposure up and down based on targets
         if adu > target_adu_max:
-            next_exposure = Decimal('{0:0.6f}'.format(current_exposure_f - ((current_exposure_f - (current_exposure_f * (target_adu / adu))) * exp_scale_factor)))
+            next_exposure = Decimal('{0:0.6f}'.format(current_exposure - ((current_exposure - (current_exposure * (target_adu / adu))) * exp_scale_factor)))
         elif adu < target_adu_min:
-            next_exposure = Decimal('{0:0.6f}'.format(current_exposure_f - ((current_exposure_f - (current_exposure_f * (target_adu / adu))) * exp_scale_factor)))
+            next_exposure = Decimal('{0:0.6f}'.format(current_exposure - ((current_exposure - (current_exposure * (target_adu / adu))) * exp_scale_factor)))
         else:
             next_exposure = current_exposure
 
