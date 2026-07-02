@@ -224,7 +224,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             gain_delta = self.dB2gain(next_gain_dB) - current_gain
             next_exposure = current_exposure
             exposure_delta = 0.0
-            logger.info('Auto-Gain decreasing gain to %0.3f (%+3.2f) [maintain exposure]', self.dB2gain(next_gain_dB), gain_delta)
+            logger.info('Auto-Gain decreasing gain to %0.3f (%+0.3f) [maintain exposure]', self.dB2gain(next_gain_dB), gain_delta)
 
         return next_exposure, exposure_delta, next_gain_dB, gain_delta
 

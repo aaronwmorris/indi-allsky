@@ -217,7 +217,7 @@ class CameraTest(object):
 
 
         frame_end_time = time.time() - frame_start_time
-        logger.info('%0.1fs second exposure received in %0.1fs', exposure, frame_end_time)
+        logger.info('%0.6fs second exposure received in %0.3fs', exposure, frame_end_time)
 
         filename_p.unlink()
 
