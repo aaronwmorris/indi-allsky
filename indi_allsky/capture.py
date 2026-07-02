@@ -1246,16 +1246,17 @@ class CaptureWorker(Process):
 
             sqm_exposure = ccd_min_exp
 
-        elif sqm_exposure > ccd_max_exp:
+        elif config_sqm_exposure > ccd_max_exp:
             logger.warning(
                 'SQM exposure %0.6f too high, decreasing to %0.6f',
-                sqm_exposure,
+                config_sqm_exposure,
                 ccd_max_exp,
             )
 
             sqm_exposure = ccd_max_exp
         else:
             sqm_exposure = config_sqm_exposure
+
 
         self._expUtils.EXPOSURE_SQM = sqm_exposure
         logger.info('SQM CCD exposure: %0.6f', self._expUtils.EXPOSURE_SQM)

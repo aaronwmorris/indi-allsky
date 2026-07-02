@@ -21,7 +21,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
 
     @property
     def exposure_max(self):
-        return self._expUtilsEXPOSURE_MAX
+        return self._expUtils.EXPOSURE_MAX
 
 
     @property
