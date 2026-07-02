@@ -74,7 +74,7 @@ class IndiClientIndiAccumulator(IndiClient):
 
     @ccd_min_exp.setter
     def ccd_min_exp(self, new_exposure):
-        self._ccd_min_exp = math.ceil(float(new_exposure) * 1000000) / 1000000  # round up
+        self._ccd_min_exp = float(new_exposure)
 
 
     def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
@@ -139,7 +139,7 @@ class IndiClientIndiAccumulator(IndiClient):
 
         if self.exposure_remain < self.ccd_min_exp:
             logger.warning('Last sub-exposure is below the minimum exposure (%0.6fs), increasing to minimum', self.exposure_remain)
-            sub_exposure = self.ccd_min_exp + 0.00000001  # offset to deal with conversion issues
+            #sub_exposure = self.ccd_min_exp + 0.00000001  # offset to deal with conversion issues
             self.exposure_remain = 0.0
         elif exp_count == 1:
             if self.even_exposures:
@@ -303,7 +303,7 @@ class IndiClientIndiAccumulator(IndiClient):
             ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max'] = 600.0
 
         # store for internal use
-        self.ccd_min_exp = ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']
+        self.ccd_min_exp = math.ceil(float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']) * 1000000) / 1000000  # round up
 
         return ccd_info
 

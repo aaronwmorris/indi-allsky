@@ -4,7 +4,7 @@ import logging
 
 from .indi import IndiClient
 
-from .. import constants
+#from .. import constants
 
 #from ..flask import db
 from ..flask import create_app
@@ -126,8 +126,7 @@ class IndiClientPassive(IndiClient):
             return
 
         # Update shared bin value
-        with self.binning_av.get_lock():
-            self.binning_av[constants.BINNING_CURRENT] = int(bin_value)
+        self._expUtils.BINNING_CURRENT = bin_value
 
-        self.binning = int(bin_value)
+        self.binning = bin_value
 
