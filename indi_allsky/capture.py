@@ -643,11 +643,11 @@ class CaptureWorker(Process):
                                 ### camera does not obey expsoure values
                                 pass
                             else:
-                                logger.error('%0.4fs EXPOSURE RECEIVED IN %0.4fs.  POSSIBLE CAMERA PROBLEM.', self._expUtils.EXPOSURE_CURRENT, frame_elapsed)
+                                logger.error('%0.6fs EXPOSURE RECEIVED IN %0.3fs.  POSSIBLE CAMERA PROBLEM.', self._expUtils.EXPOSURE_CURRENT, frame_elapsed)
                                 self._miscDb.addNotification(
                                     NotificationCategory.CAMERA,
                                     'exposure_delta',
-                                    '{0:0.1f}s exposure received in {1:0.1f}s.  Possible camera problem.'.format(self._expUtils.EXPOSURE_CURRENT, frame_elapsed),
+                                    '{0:0.6f}s exposure received in {1:0.3f}s.  Possible camera problem.'.format(self._expUtils.EXPOSURE_CURRENT, frame_elapsed),
                                     expire=timedelta(minutes=60),
                                 )
 
@@ -1378,9 +1378,11 @@ class CaptureWorker(Process):
         exposure_class_str = self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME', 'exposure_basic')
 
 
+        config_exposure_def = math.ceil(float(self.config.get('CCD_EXPOSURE_DEF', 0.0)) * 1000000) / 1000000
+
         # set default exposure, gain
-        if self.config.get('CCD_EXPOSURE_DEF'):
-            ccd_exposure_default = self.config['CCD_EXPOSURE_DEF']
+        if config_exposure_def:
+            ccd_exposure_default = config_exposure_def
 
             if self.night_av[constants.NIGHT_NIGHT]:
                 if self.night_av[constants.NIGHT_MOONMODE]:

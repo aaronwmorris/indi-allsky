@@ -148,7 +148,7 @@ class CameraTest(object):
         self._initialize()
 
 
-        logger.warning('TESTING 0.1s EXPOSURE WITH DAY SETTINGS')
+        logger.warning('TESTING %0.6fs EXPOSURE WITH DAY SETTINGS', self._expUtils.EXPOSURE_MIN_DAY)
         self.night = False
         self.moonmode = False
         self.reconfigureCcd()
@@ -472,7 +472,7 @@ class CameraTest(object):
 
 
         if config_moonmode_gain < ccd_min_gain:
-            logger.error('CCD moon mode gain below minimum, changing to %03.f', ccd_min_gain)
+            logger.error('CCD moon mode gain below minimum, changing to %0.3f', ccd_min_gain)
             gain_moonmode = ccd_min_gain
             time.sleep(3)
         elif config_moonmode_gain > ccd_max_gain:

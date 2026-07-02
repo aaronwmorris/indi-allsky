@@ -158,9 +158,9 @@ class IndiAllSky_Exposure_Legacy_AutoGain(IndiAllSky_Exposure_Base):
 
 
         logger.info('Gain Steps: %d @ %0.3f', auto_gain_levels, self.gain_step)
-        logger.info('Gain Step list: %s', str(self.auto_gain_step_list))
+        logger.info('Gain Step list: %s', ', '.join(['{0:0.3f}'.format(x) for x in self.auto_gain_step_list]))
         logger.info(
-            'Auto-Gain Exposure cutoff: Low: %0.2fs - Mid: %0.2fs - High: %0.2fs',
+            'Auto-Gain Exposure cutoff: Low: %0.3fs - Mid: %0.3fs - High: %0.3fs',
             self.auto_gain_exposure_cutoff_low,
             self.auto_gain_exposure_cutoff_mid,
             self.auto_gain_exposure_cutoff_high,

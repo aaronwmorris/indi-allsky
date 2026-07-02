@@ -517,7 +517,7 @@ class IndiAllSkyDarks(object):
             gain_sqm = ccd_max_gain
             time.sleep(3)
         else:
-            gain_sqm = self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0)
+            gain_sqm = config_sqm_gain
 
 
         self._expUtils.GAIN_CURRENT = gain_day  # just need a valid value
@@ -1080,11 +1080,11 @@ class IndiAllSkyDarks(object):
 
     def _run(self, stacking_class):
         dark_exposures_set = set()  # prevent duplicate exposures
-        dark_exposures_set.add(1)  # 1s is the shortest exposure
+        dark_exposures_set.add(1.0)  # 1s is the shortest exposure
 
-        x = math.ceil(self.config['CCD_EXPOSURE_MAX'])
+        x = float(math.ceil(self.config['CCD_EXPOSURE_MAX']))
         while x > 1:
-            dark_exposures_set.add(int(x))
+            dark_exposures_set.add(float(int(x)))
             x -= self.time_delta
 
 
@@ -1121,7 +1121,7 @@ class IndiAllSkyDarks(object):
             for gain in self.gain_list:
                 night_darks_odict.update(
                     {
-                        (float(gain), self.binning) : None,
+                        (gain, self.binning) : None,
                     }
                 )
 
@@ -1296,8 +1296,6 @@ class IndiAllSkyDarks(object):
 
 
     def _take_exposures(self, exposure, gain, binning, dark_filename_t, bpm_filename_t, stacking_class):
-        exposure_f = float(exposure)
-
         tmp_fit_dir = tempfile.TemporaryDirectory()    # context manager automatically deletes files when finished
         tmp_fit_dir_p = Path(tmp_fit_dir.name)
 
@@ -1313,19 +1311,19 @@ class IndiAllSkyDarks(object):
 
             self._pre_shoot_reconfigure()
 
-            self.shoot(exposure_f, gain, binning, sync=True, timeout=180.0)  # flat 3 minute timeout
+            self.shoot(exposure, gain, binning, sync=True, timeout=180.0)  # flat 3 minute timeout
 
             frame_elapsed = time.time() - start
-            frame_delta = frame_elapsed - exposure_f
+            frame_delta = frame_elapsed - exposure
 
             logger.info('Exposure received in %0.4fs (%+0.4fs)', frame_elapsed, frame_delta)
 
             if frame_delta < 0:
-                logger.error('%0.1fs EXPOSURE RECEIVED IN %0.1fs.  POSSIBLE CAMERA PROBLEM.', exposure_f, frame_elapsed)
+                logger.error('%0.1fs EXPOSURE RECEIVED IN %0.1fs.  POSSIBLE CAMERA PROBLEM.', exposure, frame_elapsed)
 
 
             try:
-                hdulist = self._wait_for_image(exposure_f)
+                hdulist = self._wait_for_image(exposure)
             except BadImage as e:
                 logger.error('Bad Image: %s', str(e))
                 continue
@@ -1392,15 +1390,15 @@ class IndiAllSkyDarks(object):
 
 
         # build dark before BPM
-        dark_adu_avg, dark_hot_pixel_count = s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure_f, image_bitpix)
-        bpm_adu_avg, bpm_hot_pixel_count = s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure_f, image_bitpix)
+        dark_adu_avg, dark_hot_pixel_count = s.stack(tmp_fit_dir_p, full_dark_filename_p, exposure, image_bitpix)
+        bpm_adu_avg, bpm_hot_pixel_count = s.buildBadPixelMap(tmp_fit_dir_p, full_bpm_filename_p, exposure, image_bitpix)
 
 
         bpm_metadata = {
             'type'       : constants.BPM_FRAME,
             'createDate' : exp_date.timestamp(),
             'bitdepth'   : image_bitpix,
-            'exposure'   : exposure_f,
+            'exposure'   : exposure,
             'gain'       : self._expUtils.GAIN_CURRENT,
             'binmode'    : self._expUtils.BINNING_CURRENT,
             'temp'       : float(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]),
@@ -1420,7 +1418,7 @@ class IndiAllSkyDarks(object):
             'type'       : constants.DARK_FRAME,
             'createDate' : exp_date.timestamp(),
             'bitdepth'   : image_bitpix,
-            'exposure'   : exposure_f,
+            'exposure'   : exposure,
             'gain'       : self._expUtils.GAIN_CURRENT,
             'binmode'    : self._expUtils.BINNING_CURRENT,
             'temp'       : float(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP]),
