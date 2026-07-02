@@ -21,6 +21,7 @@ class IndiAllSkyExposureUtils(object):
 
 
     ### Exposure
+    # All exposure values are stored in the multiprocessing array as interger values in units of microseconds
 
 
     @property
@@ -94,6 +95,7 @@ class IndiAllSkyExposureUtils(object):
 
 
     ### Gain
+    # All exposure values are stored in the multiprocessing array as interger values in units of 1/1000 gain
 
 
     @property

@@ -110,7 +110,7 @@ class IndiAllSkyDarks(object):
         self.indi_config = self.config.get('INDI_CONFIG_DEFAULTS', {})
 
 
-        ### all values in microseconds
+        ### all values in microseconds (0.000001 second)
         self.exposure_av = Array(ctypes.c_int32, [
             -1,  # current exposure
             -1,  # next exposure
@@ -122,7 +122,7 @@ class IndiAllSkyDarks(object):
         ])
 
 
-        ### milli-gain
+        ### unit 1/1000 gain (0.001 gain)
         self.gain_av = Array(ctypes.c_int32, [
             -1,  # current gain
             -1,  # next gain

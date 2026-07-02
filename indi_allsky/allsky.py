@@ -156,7 +156,7 @@ class IndiAllSky(object):
         self.sensors_user_av = Array('f', [0.0 for x in range(110)])
 
 
-        ### all values in microseconds
+        ### all values in microseconds (0.000001 second)
         self.exposure_av = Array(ctypes.c_int32, [
             -1,  # current exposure - these must be -1.0 to indicate unset
             -1,  # next exposure
@@ -168,7 +168,7 @@ class IndiAllSky(object):
         ])
 
 
-        ### milli-gain
+        ### unit 1/1000 gain (0.001 gain)
         self.gain_av = Array(ctypes.c_int32, [
             -1,  # current gain
             -1,  # next gain
