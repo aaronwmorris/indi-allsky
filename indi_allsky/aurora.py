@@ -225,6 +225,11 @@ class IndiAllskyAuroraUpdate(object):
                 raise AuroraDataUpdateFailure from e
 
 
+        if isinstance(self.kpindex_json_data, type(None)):
+            logger.error('No kpindex data')
+            return
+
+
         kpindex, kpindex_poly = self.processKpindexPoly(self.kpindex_json_data)
         logger.info('kpindex: %0.2f', kpindex)
         logger.info('Data: x = %0.2f, b = %0.2f', kpindex_poly.coef[0], kpindex_poly.coef[1])
@@ -284,6 +289,11 @@ class IndiAllskyAuroraUpdate(object):
             except requests.exceptions.SSLError as e:
                 logger.error('Certificate error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
+
+
+        if isinstance(self.solar_wind_mag_json_data, type(None)):
+            logger.error('No solar wind data')
+            return
 
 
         try:
@@ -386,6 +396,11 @@ class IndiAllskyAuroraUpdate(object):
             except requests.exceptions.SSLError as e:
                 logger.error('Certificate error: %s', str(e))
                 raise AuroraDataUpdateFailure from e
+
+
+        if isinstance(self.solar_wind_plasma_json_data, type(None)):
+            logger.error('No solar wind plasma data')
+            return
 
 
         try:
