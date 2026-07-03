@@ -10,7 +10,7 @@ import logging
 from .indi import IndiClient
 from .fake_indi import FakeIndiCcd
 
-from .. import constants
+#from .. import constants
 
 #from ..exceptions import TimeOutException
 
@@ -92,17 +92,14 @@ class IndiClientTestCameraBase(IndiClient):
 
 
     def getCcdGain(self):
-        return float(self.gain_av[constants.GAIN_CURRENT])
+        return self._expUtils.GAIN_CURRENT
 
 
-    def setCcdGain(self, new_gain_value):
-        gain_f = float(round(new_gain_value, 2))
-
+    def setCcdGain(self, new_gain):
         # Update shared gain value
-        with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_CURRENT] = gain_f
+        self._expUtils.GAIN_CURRENT = new_gain
 
-        self.gain = gain_f
+        self.gain = new_gain
 
 
     def setCcdBinning(self, bin_value):
@@ -112,11 +109,10 @@ class IndiClientTestCameraBase(IndiClient):
 
 
         # Update shared bin value
-        with self.binning_av.get_lock():
-            self.binning_av[constants.BINNING_CURRENT] = int(bin_value)
+        self._expUtils.BINNING_CURRENT = bin_value
 
 
-        self.binning = int(bin_value)
+        self.binning = bin_value
 
 
     def setCcdExposure(self, exposure, gain, binning, sync=False, timeout=None, sqm_exposure=False):
@@ -128,10 +124,10 @@ class IndiClientTestCameraBase(IndiClient):
         self.sqm_exposure = sqm_exposure
 
 
-        if self.gain != float(round(gain, 2)):
+        if self.gain != gain:
             self.setCcdGain(gain)  # gain does not do anything
 
-        if self.binning != int(binning):
+        if self.binning != binning:
             self.setCcdBinning(binning)  # binning does not do anything
 
 
@@ -161,8 +157,7 @@ class IndiClientTestCameraBase(IndiClient):
 
 
         # Update shared exposure value
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+        self._expUtils.EXPOSURE_CURRENT = exposure
 
 
         if sync:

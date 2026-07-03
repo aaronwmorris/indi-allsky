@@ -103,17 +103,15 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
     def getCcdGain(self):
-        return float(self.gain_av[constants.GAIN_CURRENT])
+        return self._expUtils.GAIN_CURRENT
 
 
-    def setCcdGain(self, new_gain_value):
-        gain_f = float(round(new_gain_value, 2))  # limit gain to 2 decimals
+    def setCcdGain(self, new_gain):
 
         # Update shared gain value
-        with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_CURRENT] = gain_f
+        self._expUtils.GAIN_CURRENT = new_gain
 
-        self.gain = gain_f
+        self.gain = new_gain
 
 
     def setCcdBinning(self, bin_value):
@@ -123,11 +121,10 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         # Update shared gin value
-        with self.binning_av.get_lock():
-            self.binning_av[constants.BINNING_CURRENT] = int(bin_value)
+        self._expUtils.BINNING_CURRENT = bin_value
 
 
-        self.binning = int(bin_value)
+        self.binning = bin_value
 
 
     def _getBinModeOptions(self, bin_value):
@@ -187,10 +184,10 @@ class IndiClientLibCameraGeneric(IndiClient):
         self.current_metadata_file_p = metadata_tmp_p
 
 
-        if self.gain != float(round(gain, 2)):
+        if self.gain != gain:
             self.setCcdGain(gain)
 
-        if self.binning != int(binning):
+        if self.binning != binning:
             self.setCcdBinning(binning)
 
 
@@ -203,7 +200,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
                 '--denoise', 'off',
-                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
+                '--gain', '{0:0.3f}'.format(self._expUtils.GAIN_CURRENT),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
@@ -216,7 +213,7 @@ class IndiClientLibCameraGeneric(IndiClient):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
-                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
+                '--gain', '{0:0.3f}'.format(self._expUtils.GAIN_CURRENT),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', str(metadata_tmp_p),
                 '--metadata-format', 'json',
@@ -314,8 +311,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         # Update shared exposure value
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+        self._expUtils.EXPOSURE_CURRENT = exposure
 
 
         if sync:
@@ -417,7 +413,7 @@ class IndiClientLibCameraGeneric(IndiClient):
 
 
         if analogue_gain:
-            logger.info('libcamera reported gain: %0.2f/%0.2f', analogue_gain, digital_gain)
+            logger.info('libcamera reported gain: %0.3f/%0.3f', analogue_gain, digital_gain)
 
 
         ### Temperature
@@ -744,7 +740,7 @@ class IndiClientLibCameraImx477(IndiClientLibCameraGeneric):
             'height'        : 3040,
             'pixel'         : 1.55,
             'min_gain'      : 1.0,
-            'max_gain'      : 22.26,
+            'max_gain'      : 22.260870,
             'min_binning'   : 1,
             'max_binning'   : 4,
             'min_exposure'  : 0.000114,
@@ -774,7 +770,7 @@ class IndiClientLibCameraImx378(IndiClientLibCameraGeneric):
             'height'        : 3040,
             'pixel'         : 1.55,
             'min_gain'      : 1.0,
-            'max_gain'      : 22.26,
+            'max_gain'      : 22.260870,
             'min_binning'   : 1,
             'max_binning'   : 4,
             'min_exposure'  : 0.000114,
@@ -945,7 +941,7 @@ class IndiClientLibCameraImx708(IndiClientLibCameraGeneric):
             'width'         : 4608,
             'height'        : 2592,
             'pixel'         : 1.4,
-            'min_gain'      : 1.13,
+            'min_gain'      : 1.122807,
             'max_gain'      : 16.0,
             'min_binning'   : 1,
             'max_binning'   : 4,
@@ -975,7 +971,7 @@ class IndiClientLibCameraImx296(IndiClientLibCameraGeneric):
             'height'        : 1088,
             'pixel'         : 3.45,
             'min_gain'      : 1.0,
-            'max_gain'      : 251.18,
+            'max_gain'      : 251.188644,
             'min_binning'   : 1,
             'max_binning'   : 1,
             'min_exposure'  : 0.016562,
@@ -1031,7 +1027,7 @@ class IndiClientLibCameraImx290(IndiClientLibCameraGeneric):
             'height'        : 1080,
             'pixel'         : 2.9,
             'min_gain'      : 1.0,
-            'max_gain'      : 29.51,  # unverified
+            'max_gain'      : 29.512093,  # unverified
             'min_binning'   : 1,
             'max_binning'   : 2,
             'min_exposure'  : 0.000014,
@@ -1059,7 +1055,7 @@ class IndiClientLibCameraImx462(IndiClientLibCameraGeneric):
             'height'        : 1080,
             'pixel'         : 2.9,
             'min_gain'      : 1.0,
-            'max_gain'      : 29.51,
+            'max_gain'      : 29.512093,
             'min_binning'   : 1,
             'max_binning'   : 2,
             'min_exposure'  : 0.000014,
@@ -1087,7 +1083,7 @@ class IndiClientLibCameraImx327(IndiClientLibCameraGeneric):
             'height'        : 1080,
             'pixel'         : 2.9,
             'min_gain'      : 1.0,
-            'max_gain'      : 29.51,
+            'max_gain'      : 29.512093,
             'min_binning'   : 1,
             'max_binning'   : 1,
             'min_exposure'  : 0.000014,

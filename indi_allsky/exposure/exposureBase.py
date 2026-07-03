@@ -3,6 +3,7 @@ import functools
 import logging
 
 from .. import constants
+from ..utils import IndiAllSkyExposureUtils
 
 
 logger = logging.getLogger('indi_allsky')
@@ -17,6 +18,8 @@ class IndiAllSky_Exposure_Base(object):
         self.gain_av = args[2]
         self.binning_av = args[3]
         self.night_av = args[4]
+
+        self._expUtils = IndiAllSkyExposureUtils(self.config, self.exposure_av, self.gain_av, self.binning_av)
 
         self._target_adu_found = False
         self._current_adu_target = 0
@@ -143,43 +146,40 @@ class IndiAllSky_Exposure_Base(object):
         # Binning
         if self.night_av[constants.NIGHT_NIGHT]:
             if self.night_av[constants.NIGHT_MOONMODE]:
-                next_binning = self.binning_av[constants.BINNING_MOONMODE]
+                next_binning = self._expUtils.BINNING_MOONMODE
             else:
-                next_binning = self.binning_av[constants.BINNING_NIGHT]
+                next_binning = self._expUtils.BINNING_NIGHT
         else:
-            next_binning = self.binning_av[constants.BINNING_DAY]
+            next_binning = self._expUtils.BINNING_DAY
 
 
         ### Check for exposure flapping
         # Flapping is defined when the exposure increases then immediately decreases (or the opposite)
         # and cannot find a stable value.  The result is the image brightness will flash
-        #if self.exposure_av[constants.EXPOSURE_DELTA] > 0 and exposure_delta < 0:
+        #if self._expUtils.EXPOSURE_DELTA > 0 and exposure_delta < 0:
         #    # exposure is decreasing
         #    exposure_offset = exposure_delta / 2
         #    next_exposure -= exposure_offset  # offset will be negative
         #    exposure_delta -= exposure_offset
 
-        #    logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
-        #elif self.exposure_av[constants.EXPOSURE_DELTA] < 0 and exposure_delta > 0:
+        #    logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.6fs', exposure_offset * -1)
+        #elif self._expUtils.EXPOSURE_DELTA < 0 and exposure_delta > 0:
         #    # exposure is increasing
         #    exposure_offset = exposure_delta / 2
         #    next_exposure -= exposure_offset
         #    exposure_delta -= exposure_offset
 
-        #    logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.8fs', exposure_offset * -1)
+        #    logger.warning('DETECTED EXPOSURE FLAPPING - Attempting to mitigate by adjusting exposure by %+0.6fs', exposure_offset * -1)
 
 
-        logger.warning('New calculated exposure: %0.6fs (%+0.8f) @ gain %0.2f (%+0.2f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_NEXT] = float(next_exposure)
-            self.exposure_av[constants.EXPOSURE_DELTA] = float(exposure_delta)
+        logger.warning('New calculated exposure: %0.6fs (%+0.6f) @ gain %0.3f (%+0.3f) bin %d', next_exposure, exposure_delta, next_gain, gain_delta, next_binning)
+        self._expUtils.EXPOSURE_NEXT = next_exposure
+        self._expUtils.EXPOSURE_DELTA = exposure_delta
 
-        with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_NEXT] = float(next_gain)
-            self.gain_av[constants.GAIN_DELTA] = float(gain_delta)
+        self._expUtils.GAIN_NEXT = next_gain
+        self._expUtils.GAIN_DELTA = gain_delta
 
-        with self.binning_av.get_lock():
-            self.binning_av[constants.BINNING_NEXT] = int(next_binning)
+        self._expUtils.BINNING_NEXT = next_binning
 
 
 
