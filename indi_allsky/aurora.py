@@ -20,12 +20,30 @@ from .flask.miscDb import miscDb
 logger = logging.getLogger('indi_allsky')
 
 
+### Ovation home page
+# https://www.spaceweather.gov/products/aurora-30-minute-forecast
+
+
+### KP-Index home page
+# https://www.spaceweather.gov/products/planetary-k-index
+
+
+### Solar Wind home page
+# https://www.spaceweather.gov/products/solar-wind
+
+
 class IndiAllskyAuroraUpdate(object):
 
     ovation_json_url = 'https://services.swpc.noaa.gov/json/ovation_aurora_latest.json'
+
     kpindex_json_url = 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'
-    solar_wind_mag_json_url = 'https://services.swpc.noaa.gov/products/solar-wind/mag-2-hour.json'
-    solar_wind_plasma_json_url = 'https://services.swpc.noaa.gov/products/solar-wind/plasma-2-hour.json'
+
+    solar_wind_mag_json_url = 'https://services.swpc.noaa.gov/json/rtsw/rtsw_mag_1m.json'
+    solar_wind_mag_source = 'SOLAR1'  # SOLAR1 (active), ACE, IMAP, DSCOVR
+
+    solar_wind_plasma_json_url = 'https://services.swpc.noaa.gov/json/rtsw/rtsw_wind_1m.json'
+    solar_wind_plasma_source = 'SOLAR1'  # SOLAR1 (active), ACE, IMAP, DSCOVR
+
     hemi_power_url = 'https://services.swpc.noaa.gov/text/aurora-nowcast-hemi-power.txt'
 
 
@@ -226,8 +244,7 @@ class IndiAllskyAuroraUpdate(object):
 
 
         if isinstance(self.kpindex_json_data, type(None)):
-            logger.error('No kpindex data')
-            return
+            raise AuroraDataUpdateFailure('No kpindex data')
 
 
         kpindex, kpindex_poly = self.processKpindexPoly(self.kpindex_json_data)
@@ -292,8 +309,7 @@ class IndiAllskyAuroraUpdate(object):
 
 
         if isinstance(self.solar_wind_mag_json_data, type(None)):
-            logger.error('No solar wind data')
-            return
+            raise AuroraDataUpdateFailure('No solar wind data')
 
 
         try:
@@ -316,18 +332,14 @@ class IndiAllskyAuroraUpdate(object):
 
 
     def processSolarWindMagData(self, json_data):
-        data_index = json_data[0]
-
-        time_tag_idx = data_index.index('time_tag')
-        bt_idx = data_index.index('bt')
-        bz_gsm_idx = data_index.index('bz_gsm')
-
+        # Only entries from the correct source
+        solar_wing_mag_source_filtered = filter(lambda x: x['source'] == self.solar_wind_mag_source, json_data)
 
         mag_data_list = list()
-        for entry in json_data[1:]:
-            time_tag = entry[time_tag_idx]
-            bt = entry[bt_idx]
-            bz_gsm = entry[bz_gsm_idx]
+        for entry in solar_wing_mag_source_filtered:
+            time_tag = entry['time_tag']
+            bt = entry['bt']
+            bz_gsm = entry['bz_gsm']
 
 
             # skip entries with null values
@@ -337,12 +349,12 @@ class IndiAllskyAuroraUpdate(object):
             if isinstance(bt, type(None)):
                 continue
 
-            if isinstance(bt, type(None)):
+            if isinstance(bz_gsm, type(None)):
                 continue
 
 
             data = {
-                'time_tag'  : datetime.strptime(time_tag, '%Y-%m-%d %H:%M:%S.%f').replace(tzinfo=timezone.utc),
+                'time_tag'  : datetime.strptime(time_tag, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc),
                 'bt'        : float(bt),
                 'bz_gsm'    : float(bz_gsm),
             }
@@ -399,8 +411,7 @@ class IndiAllskyAuroraUpdate(object):
 
 
         if isinstance(self.solar_wind_plasma_json_data, type(None)):
-            logger.error('No solar wind plasma data')
-            return
+            raise AuroraDataUpdateFailure('No solar wind plasma data')
 
 
         try:
@@ -424,41 +435,36 @@ class IndiAllskyAuroraUpdate(object):
 
 
     def processSolarWindPlasmaData(self, json_data):
-        data_index = json_data[0]
-
-        time_tag_idx = data_index.index('time_tag')
-        density_idx = data_index.index('density')
-        speed_idx = data_index.index('speed')
-        temperature_idx = data_index.index('temperature')
-
+        # Only entries from the correct source
+        solar_wing_mag_source_filtered = filter(lambda x: x['source'] == self.solar_wind_mag_source, json_data)
 
         plasma_data_list = list()
-        for entry in json_data[1:]:
-            time_tag = entry[time_tag_idx]
-            density = entry[density_idx]
-            speed = entry[speed_idx]
-            temperature = entry[temperature_idx]
+        for entry in solar_wing_mag_source_filtered:
+            time_tag = entry['time_tag']
+            proton_density = entry['proton_density']
+            proton_speed = entry['proton_speed']
+            proton_temperature = entry['proton_temperature']
 
 
             # skip entries with null values
             if isinstance(time_tag, type(None)):
                 continue
 
-            if isinstance(density, type(None)):
+            if isinstance(proton_density, type(None)):
                 continue
 
-            if isinstance(speed, type(None)):
+            if isinstance(proton_speed, type(None)):
                 continue
 
-            if isinstance(temperature, type(None)):
+            if isinstance(proton_temperature, type(None)):
                 continue
 
 
             data = {
-                'time_tag'    : datetime.strptime(time_tag, '%Y-%m-%d %H:%M:%S.%f').replace(tzinfo=timezone.utc),
-                'density'     : float(density),
-                'speed'       : float(speed),
-                'temperature' : int(temperature),
+                'time_tag'    : datetime.strptime(time_tag, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc),
+                'density'     : float(proton_density),
+                'speed'       : float(proton_speed),
+                'temperature' : int(proton_temperature),
             }
 
             plasma_data_list.append(data)
@@ -513,8 +519,7 @@ class IndiAllskyAuroraUpdate(object):
 
 
         if isinstance(self.hemi_power_data, type(None)):
-            # HTTP error condition
-            raise AuroraDataUpdateFailure('HTTP error')
+            raise AuroraDataUpdateFailure('No hemispheric power data')
 
 
         try:
