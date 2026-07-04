@@ -47,7 +47,7 @@
     "OIDC_DISCOVERY_URL" : "",
     "OIDC_SCOPES" : "openid email profile offline_access",
     "OIDC_PKCE" : true,
-    "OIDC_GROUP_ADMIN" : "allsky_admins"
+    "OIDC_GROUP_ADMIN" : "allsky_admins",
     "OIDC_LOGO_URL" : "",
 
     "ADMIN_NETWORKS" : [
