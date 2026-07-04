@@ -32,7 +32,7 @@ werkzeug >= 3.1.6
 is-safe-url
 certifi >= 2023.7.22
 # https://www.wheelodex.org/projects/cryptography/
-cryptography >= 46.0.7
+cryptography >= 48.0.1
 dbus-python
 setuptools-rust
 # https://www.wheelodex.org/projects/bcrypt/
@@ -46,3 +46,4 @@ shapely >= 2.0.6
 pytz
 mysql-connector-python
 PyWavelets >= 1.4.0
+systemd-python

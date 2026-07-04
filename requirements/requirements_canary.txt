@@ -33,7 +33,7 @@ Authlib == 1.7.2
 werkzeug == 3.1.6
 is-safe-url
 certifi == 2024.7.4
-cryptography == 46.0.7
+cryptography == 48.0.1
 dbus-python == 1.4.0
 paho-mqtt == 2.0.0
 setuptools-rust
@@ -46,3 +46,4 @@ requests-toolbelt
 pytz
 mysql-connector-python == 9.6.0
 PyWavelets == 1.4.0
+systemd-python == 235

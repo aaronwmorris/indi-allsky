@@ -24,6 +24,7 @@ from . import constants
 from . import camera as camera_module
 
 from .utils import IndiAllSkyDateCalcs
+from .utils import IndiAllSkyExposureUtils
 
 from .flask.models import TaskQueueQueue
 from .flask.models import TaskQueueState
@@ -242,6 +243,7 @@ class CaptureWorker(Process):
         self.astro_av = astro_av
 
         self._miscDb = miscDb(self.config)
+        self._expUtils = IndiAllSkyExposureUtils(self.config, self.exposure_av, self.gain_av, self.binning_av)
         self._dateCalcs = IndiAllSkyDateCalcs(self.config, self.position_av)
 
         self.next_forced_transition_time = None
@@ -624,7 +626,7 @@ class CaptureWorker(Process):
 
                     if waiting_for_frame:
                         frame_elapsed = now_time - frame_start_time
-                        frame_delta = frame_elapsed - self.exposure_av[constants.EXPOSURE_CURRENT]
+                        frame_delta = frame_elapsed - self._expUtils.EXPOSURE_CURRENT
 
                         waiting_for_frame = False
                         waiting_for_sqm_frame = False
@@ -641,11 +643,11 @@ class CaptureWorker(Process):
                                 ### camera does not obey expsoure values
                                 pass
                             else:
-                                logger.error('%0.4fs EXPOSURE RECEIVED IN %0.4fs.  POSSIBLE CAMERA PROBLEM.', self.exposure_av[constants.EXPOSURE_CURRENT], frame_elapsed)
+                                logger.error('%0.6fs EXPOSURE RECEIVED IN %0.3fs.  POSSIBLE CAMERA PROBLEM.', self._expUtils.EXPOSURE_CURRENT, frame_elapsed)
                                 self._miscDb.addNotification(
                                     NotificationCategory.CAMERA,
                                     'exposure_delta',
-                                    '{0:0.1f}s exposure received in {1:0.1f}s.  Possible camera problem.'.format(self.exposure_av[constants.EXPOSURE_CURRENT], frame_elapsed),
+                                    '{0:0.6f}s exposure received in {1:0.3f}s.  Possible camera problem.'.format(self._expUtils.EXPOSURE_CURRENT, frame_elapsed),
                                     expire=timedelta(minutes=60),
                                 )
 
@@ -716,9 +718,9 @@ class CaptureWorker(Process):
                         if not self.sqm_camera_enable or self.focus_mode:
                             # Normal exposure
                             self.shoot(
-                                self.exposure_av[constants.EXPOSURE_NEXT],
-                                self.gain_av[constants.GAIN_NEXT],
-                                self.binning_av[constants.BINNING_NEXT],
+                                self._expUtils.EXPOSURE_NEXT,
+                                self._expUtils.GAIN_NEXT,
+                                self._expUtils.BINNING_NEXT,
                                 sync=False,
                             )
                         else:
@@ -730,9 +732,9 @@ class CaptureWorker(Process):
                                     # SQM exposure
                                     logger.warning('SQM exposure triggered')
                                     self.shoot(
-                                        self.exposure_av[constants.EXPOSURE_SQM],
-                                        self.gain_av[constants.GAIN_SQM],
-                                        self.binning_av[constants.BINNING_SQM],
+                                        self._expUtils.EXPOSURE_SQM,
+                                        self._expUtils.GAIN_SQM,
+                                        self._expUtils.BINNING_SQM,
                                         sync=False,
                                         sqm_exposure=True,
                                     )
@@ -744,9 +746,9 @@ class CaptureWorker(Process):
                                         # SQM exposure
                                         logger.warning('SQM exposure triggered')
                                         self.shoot(
-                                            self.exposure_av[constants.EXPOSURE_SQM],
-                                            self.gain_av[constants.GAIN_SQM],
-                                            self.binning_av[constants.BINNING_SQM],
+                                            self._expUtils.EXPOSURE_SQM,
+                                            self._expUtils.GAIN_SQM,
+                                            self._expUtils.BINNING_SQM,
                                             sync=False,
                                             sqm_exposure=True,
                                         )
@@ -755,9 +757,9 @@ class CaptureWorker(Process):
                                     else:
                                         # Normal exposure during day
                                         self.shoot(
-                                            self.exposure_av[constants.EXPOSURE_NEXT],
-                                            self.gain_av[constants.GAIN_NEXT],
-                                            self.binning_av[constants.BINNING_NEXT],
+                                            self._expUtils.EXPOSURE_NEXT,
+                                            self._expUtils.GAIN_NEXT,
+                                            self._expUtils.BINNING_NEXT,
                                             sync=False,
                                         )
 
@@ -767,9 +769,9 @@ class CaptureWorker(Process):
                             else:
                                 # Normal exposure
                                 self.shoot(
-                                    self.exposure_av[constants.EXPOSURE_NEXT],
-                                    self.gain_av[constants.GAIN_NEXT],
-                                    self.binning_av[constants.BINNING_NEXT],
+                                    self._expUtils.EXPOSURE_NEXT,
+                                    self._expUtils.GAIN_NEXT,
+                                    self._expUtils.BINNING_NEXT,
                                     sync=False,
                                 )
 
@@ -1169,148 +1171,154 @@ class CaptureWorker(Process):
         #self.indiclient.saveCcdConfig()
 
 
-        # set minimum exposure
-        ccd_min_exp = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min'])
+        # set exposure limits
+        # prevent python/C float conversion errors
+        ccd_min_exp = math.ceil(float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min']) * 1000000) / 1000000
+        ccd_max_exp = math.floor(float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max']) * 1000000) / 1000000
+
+
+        #ccd_min_exp = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['min'])
 
         # Some CCD drivers will not accept their stated minimum exposure.
         # There might be some python -> C floating point conversion problem causing this.
-        ccd_min_exp += 0.00000001
+        #ccd_min_exp += 0.00000001
 
 
-        if not self.config.get('CCD_EXPOSURE_MIN_DAY'):
-            with self.exposure_av.get_lock():
-                self.exposure_av[constants.EXPOSURE_MIN_DAY] = float(ccd_min_exp)
-        elif self.config.get('CCD_EXPOSURE_MIN_DAY') > ccd_min_exp:
-            with self.exposure_av.get_lock():
-                self.exposure_av[constants.EXPOSURE_MIN_DAY] = float(self.config.get('CCD_EXPOSURE_MIN_DAY'))
-        elif self.config.get('CCD_EXPOSURE_MIN_DAY') < ccd_min_exp:
+        config_exposure_min_day = math.ceil(float(self.config.get('CCD_EXPOSURE_MIN_DAY', 0.0) * 1000000)) / 1000000
+        config_exposure_min = math.ceil(float(self.config.get('CCD_EXPOSURE_MIN', 0.0) * 1000000)) / 1000000
+        config_exposure_max = math.floor(float(self.config.get('CCD_EXPOSURE_MAX', 15.0) * 1000000)) / 1000000
+        config_sqm_exposure = math.floor(float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 10.0) * 1000000)) / 1000000
+
+
+        if not config_exposure_min_day:
+            self._expUtils.EXPOSURE_MIN_DAY = ccd_min_exp
+        elif config_exposure_min_day < ccd_min_exp:
             logger.warning(
-                'Minimum exposure (day) %0.8f too low, increasing to %0.8f',
-                self.config.get('CCD_EXPOSURE_MIN_DAY'),
+                'Minimum exposure (day) %0.6f too low, increasing to %0.6f',
+                config_exposure_min_day,
                 ccd_min_exp,
             )
-            with self.exposure_av.get_lock():
-                self.exposure_av[constants.EXPOSURE_MIN_DAY] = float(ccd_min_exp)
+            self._expUtils.EXPOSURE_MIN_DAY = ccd_min_exp
+        else:
+            self._expUtils.EXPOSURE_MIN_DAY = config_exposure_min_day
 
-        logger.info('Minimum CCD exposure: %0.8f (day)', self.exposure_av[constants.EXPOSURE_MIN_DAY])
+        logger.info('Minimum CCD exposure: %0.6f (day)', self._expUtils.EXPOSURE_MIN_DAY)
 
 
-        if not self.config.get('CCD_EXPOSURE_MIN'):
-            with self.exposure_av.get_lock():
-                self.exposure_av[constants.EXPOSURE_MIN_NIGHT] = float(ccd_min_exp)
-        elif self.config.get('CCD_EXPOSURE_MIN') > ccd_min_exp:
-            with self.exposure_av.get_lock():
-                self.exposure_av[constants.EXPOSURE_MIN_NIGHT] = float(self.config.get('CCD_EXPOSURE_MIN'))
-        elif self.config.get('CCD_EXPOSURE_MIN') < ccd_min_exp:
+        if not config_exposure_min:
+            self._expUtils.EXPOSURE_MIN_NIGHT = ccd_min_exp
+        elif config_exposure_min < ccd_min_exp:
             logger.warning(
-                'Minimum exposure (night) %0.8f too low, increasing to %0.8f',
-                self.config.get('CCD_EXPOSURE_MIN'),
+                'Minimum exposure (night) %0.6f too low, increasing to %0.6f',
+                config_exposure_min,
                 ccd_min_exp,
             )
-            with self.exposure_av.get_lock():
-                self.exposure_av[constants.EXPOSURE_MIN_NIGHT] = float(ccd_min_exp)
+            self._expUtils.EXPOSURE_MIN_NIGHT = ccd_min_exp
+        else:
+            self._expUtils.EXPOSURE_MIN_NIGHT = config_exposure_min
 
-        logger.info('Minimum CCD exposure: %0.8f (night)', self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
+        logger.info('Minimum CCD exposure: %0.6f (night)', self._expUtils.EXPOSURE_MIN_NIGHT)
 
 
-        # set maximum exposure
-        ccd_max_exp = float(ccd_info['CCD_EXPOSURE']['CCD_EXPOSURE_VALUE']['max'])
-        maximum_exposure = self.config.get('CCD_EXPOSURE_MAX')
-
-        if self.config.get('CCD_EXPOSURE_MAX') > ccd_max_exp:
+        if config_exposure_max > ccd_max_exp:
             logger.warning(
-                'Maximum exposure %0.8f too high, decreasing to %0.8f',
-                self.config.get('CCD_EXPOSURE_MAX'),
+                'Maximum exposure %0.6f too high, decreasing to %0.6f',
+                config_exposure_max,
                 ccd_max_exp,
             )
 
             maximum_exposure = ccd_max_exp
+        else:
+            maximum_exposure = config_exposure_max
 
 
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_MAX] = float(maximum_exposure)
-
-
-        logger.info('Maximum CCD exposure: %0.8f', self.exposure_av[constants.EXPOSURE_MAX])
+        self._expUtils.EXPOSURE_MAX = maximum_exposure
+        logger.info('Maximum CCD exposure: %0.6f', self._expUtils.EXPOSURE_MAX)
 
 
         # set SQM exposure
-        sqm_exposure = float(self.config.get('CAMERA_SQM', {}).get('EXPOSURE', 10.0))
-        if sqm_exposure < ccd_min_exp:
+        if config_sqm_exposure < ccd_min_exp:
             logger.warning(
-                'SQM exposure %0.8f too low, increasing to %0.8f',
-                sqm_exposure,
+                'SQM exposure %0.6f too low, increasing to %0.6f',
+                config_sqm_exposure,
                 ccd_min_exp,
             )
 
             sqm_exposure = ccd_min_exp
 
-        elif sqm_exposure > ccd_max_exp:
+        elif config_sqm_exposure > ccd_max_exp:
             logger.warning(
-                'SQM exposure %0.8f too high, decreasing to %0.8f',
-                sqm_exposure,
+                'SQM exposure %0.6f too high, decreasing to %0.6f',
+                config_sqm_exposure,
                 ccd_max_exp,
             )
 
             sqm_exposure = ccd_max_exp
+        else:
+            sqm_exposure = config_sqm_exposure
 
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_SQM] = float(sqm_exposure)
 
-
-        logger.info('SQM CCD exposure: %0.8f', self.exposure_av[constants.EXPOSURE_SQM])
+        self._expUtils.EXPOSURE_SQM = sqm_exposure
+        logger.info('SQM CCD exposure: %0.6f', self._expUtils.EXPOSURE_SQM)
 
 
         ### Validate gain settings
-        ccd_min_gain = math.ceil(float(ccd_info['GAIN_INFO']['min']) * 100) / 100  # round up the hundredths spot
-        ccd_max_gain = math.floor(float(ccd_info['GAIN_INFO']['max']) * 100) / 100  # round down
+        # prevent python/C float conversion errors
+        ccd_min_gain = math.ceil(float(ccd_info['GAIN_INFO']['min']) * 1000) / 1000  # round up the thousands spot
+        ccd_max_gain = math.floor(float(ccd_info['GAIN_INFO']['max']) * 1000) / 1000  # round down
 
-        if self.config['CCD_CONFIG']['NIGHT']['GAIN'] < ccd_min_gain:
-            logger.error('CCD night gain below minimum, changing to %0.2f', float(ccd_min_gain))
-            gain_night = float(ccd_min_gain)
+        config_night_gain = math.floor(float(self.config['CCD_CONFIG']['NIGHT']['GAIN']) * 1000) / 1000
+        config_moonmode_gain = math.floor(float(self.config['CCD_CONFIG']['MOONMODE']['GAIN']) * 1000) / 1000
+        config_day_gain = math.ceil(float(self.config['CCD_CONFIG']['DAY']['GAIN']) * 1000) / 1000
+        config_sqm_gain = math.floor(float(self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0)) * 1000) / 1000
+
+
+        if config_night_gain < ccd_min_gain:
+            logger.error('CCD night gain below minimum, changing to %0.3f', ccd_min_gain)
+            gain_night = ccd_min_gain
             time.sleep(3)
-        elif self.config['CCD_CONFIG']['NIGHT']['GAIN'] > ccd_max_gain:
-            logger.error('CCD night gain above maximum, changing to %0.2f', float(ccd_max_gain))
-            gain_night = float(ccd_max_gain)
+        elif config_night_gain > ccd_max_gain:
+            logger.error('CCD night gain above maximum, changing to %0.3f', ccd_max_gain)
+            gain_night = ccd_max_gain
             time.sleep(3)
         else:
-            gain_night = float(self.config['CCD_CONFIG']['NIGHT']['GAIN'])
+            gain_night = config_night_gain
 
 
-        if self.config['CCD_CONFIG']['MOONMODE']['GAIN'] < ccd_min_gain:
-            logger.error('CCD moon mode gain below minimum, changing to %0.2f', float(ccd_min_gain))
-            gain_moonmode = float(ccd_min_gain)
+        if config_moonmode_gain < ccd_min_gain:
+            logger.error('CCD moon mode gain below minimum, changing to %0.3f', ccd_min_gain)
+            gain_moonmode = ccd_min_gain
             time.sleep(3)
-        elif self.config['CCD_CONFIG']['MOONMODE']['GAIN'] > ccd_max_gain:
-            logger.error('CCD moon mode gain above maximum, changing to %0.2f', float(ccd_max_gain))
-            gain_moonmode = float(ccd_max_gain)
-            time.sleep(3)
-        else:
-            gain_moonmode = float(self.config['CCD_CONFIG']['MOONMODE']['GAIN'])
-
-
-        if self.config['CCD_CONFIG']['DAY']['GAIN'] < ccd_min_gain:
-            logger.error('CCD day gain below minimum, changing to %0.2f', float(ccd_min_gain))
-            gain_day = float(ccd_min_gain)
-            time.sleep(3)
-        elif self.config['CCD_CONFIG']['DAY']['GAIN'] > ccd_max_gain:
-            logger.error('CCD day gain above maximum, changing to %0.2f', float(ccd_max_gain))
-            gain_day = float(ccd_max_gain)
+        elif config_moonmode_gain > ccd_max_gain:
+            logger.error('CCD moon mode gain above maximum, changing to %0.3f', ccd_max_gain)
+            gain_moonmode = ccd_max_gain
             time.sleep(3)
         else:
-            gain_day = float(self.config['CCD_CONFIG']['DAY']['GAIN'])
+            gain_moonmode = config_moonmode_gain
 
 
-        if self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0) < ccd_min_gain:
-            logger.error('CCD sqm gain below minimum, changing to %0.2f', float(ccd_min_gain))
-            gain_sqm = float(ccd_min_gain)
+        if config_day_gain < ccd_min_gain:
+            logger.error('CCD day gain below minimum, changing to %0.3f', ccd_min_gain)
+            gain_day = ccd_min_gain
             time.sleep(3)
-        elif self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0) > ccd_max_gain:
-            logger.error('CCD sqm gain above maximum, changing to %0.2f', float(ccd_max_gain))
-            gain_sqm = float(ccd_max_gain)
+        elif config_day_gain > ccd_max_gain:
+            logger.error('CCD day gain above maximum, changing to %0.3f', ccd_max_gain)
+            gain_day = ccd_max_gain
             time.sleep(3)
         else:
-            gain_sqm = self.config.get('CAMERA_SQM', {}).get('GAIN', 10.0)
+            gain_day = config_day_gain
+
+
+        if config_sqm_gain < ccd_min_gain:
+            logger.error('CCD sqm gain below minimum, changing to %0.3f', ccd_min_gain)
+            gain_sqm = ccd_min_gain
+            time.sleep(3)
+        elif config_sqm_gain > ccd_max_gain:
+            logger.error('CCD sqm gain above maximum, changing to %0.3f', ccd_max_gain)
+            gain_sqm = ccd_max_gain
+            time.sleep(3)
+        else:
+            gain_sqm = config_sqm_gain
 
 
         # Validate binning settings
@@ -1319,56 +1327,62 @@ class CaptureWorker(Process):
 
 
         if self.config['CCD_CONFIG']['NIGHT']['BINNING'] < ccd_min_binning:
-            logger.error('CCD night binning below minimum, changing to %d', int(ccd_min_binning))
-            binning_night = int(ccd_min_binning)
+            logger.error('CCD night binning below minimum, changing to %d', ccd_min_binning)
+            binning_night = ccd_min_binning
             time.sleep(3)
         elif self.config['CCD_CONFIG']['NIGHT']['BINNING'] > ccd_max_binning:
-            logger.error('CCD night binning above maximum, changing to %d', int(ccd_max_binning))
-            binning_night = int(ccd_max_binning)
+            logger.error('CCD night binning above maximum, changing to %d', ccd_max_binning)
+            binning_night = ccd_max_binning
             time.sleep(3)
         else:
             binning_night = int(self.config['CCD_CONFIG']['NIGHT']['BINNING'])
 
 
         if self.config['CCD_CONFIG']['MOONMODE']['BINNING'] < ccd_min_binning:
-            logger.error('CCD moonmode binning below minimum, changing to %d', int(ccd_min_binning))
-            binning_moonmode = int(ccd_min_binning)
+            logger.error('CCD moonmode binning below minimum, changing to %d', ccd_min_binning)
+            binning_moonmode = ccd_min_binning
             time.sleep(3)
         elif self.config['CCD_CONFIG']['MOONMODE']['BINNING'] > ccd_max_binning:
-            logger.error('CCD moonmode binning above maximum, changing to %d', int(ccd_max_binning))
-            binning_moonmode = int(ccd_max_binning)
+            logger.error('CCD moonmode binning above maximum, changing to %d', ccd_max_binning)
+            binning_moonmode = ccd_max_binning
             time.sleep(3)
         else:
             binning_moonmode = int(self.config['CCD_CONFIG']['MOONMODE']['BINNING'])
 
 
         if self.config['CCD_CONFIG']['DAY']['BINNING'] < ccd_min_binning:
-            logger.error('CCD day binning below minimum, changing to %d', int(ccd_min_binning))
-            binning_day = int(ccd_min_binning)
+            logger.error('CCD day binning below minimum, changing to %d', ccd_min_binning)
+            binning_day = ccd_min_binning
             time.sleep(3)
         elif self.config['CCD_CONFIG']['DAY']['BINNING'] > ccd_max_binning:
-            logger.error('CCD day binning above maximum, changing to %d', int(ccd_max_binning))
-            binning_day = int(ccd_max_binning)
+            logger.error('CCD day binning above maximum, changing to %d', ccd_max_binning)
+            binning_day = ccd_max_binning
             time.sleep(3)
         else:
             binning_day = int(self.config['CCD_CONFIG']['DAY']['BINNING'])
 
 
         if self.config.get('CAMERA_SQM', {}).get('BINNING', 1) < ccd_min_binning:
-            logger.error('CCD sqm binning below minimum, changing to %d', int(ccd_min_binning))
-            binning_sqm = int(ccd_min_binning)
+            logger.error('CCD sqm binning below minimum, changing to %d', ccd_min_binning)
+            binning_sqm = ccd_min_binning
             time.sleep(3)
         elif self.config.get('CAMERA_SQM', {}).get('BINNING', 1) > ccd_max_binning:
-            logger.error('CCD sqm binning above maximum, changing to %d', int(ccd_max_binning))
-            binning_sqm = int(ccd_max_binning)
+            logger.error('CCD sqm binning above maximum, changing to %d', ccd_max_binning)
+            binning_sqm = ccd_max_binning
             time.sleep(3)
         else:
             binning_sqm = int(self.config.get('CAMERA_SQM', {}).get('BINNING', 1))
 
 
+
+        exposure_class_str = self.config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME', 'exposure_basic')
+
+
+        config_exposure_def = math.ceil(float(self.config.get('CCD_EXPOSURE_DEF', 0.0)) * 1000000) / 1000000
+
         # set default exposure, gain
-        if self.config.get('CCD_EXPOSURE_DEF'):
-            ccd_exposure_default = self.config['CCD_EXPOSURE_DEF']
+        if config_exposure_def:
+            ccd_exposure_default = config_exposure_def
 
             if self.night_av[constants.NIGHT_NIGHT]:
                 if self.night_av[constants.NIGHT_MOONMODE]:
@@ -1397,7 +1411,7 @@ class CaptureWorker(Process):
                 ccd_exposure_default = float(last_image.exposure)
                 ccd_gain_default = float(last_image.gain)
                 ccd_binning_default = float(last_image.binmode)
-                logger.warning('Reusing last stable exposure: %0.6f, gain %0.2f, bin %d', ccd_exposure_default, ccd_gain_default, ccd_binning_default)
+                logger.warning('Reusing last stable exposure: %0.6f, gain %0.3f, bin %d', ccd_exposure_default, ccd_gain_default, ccd_binning_default)
 
                 # restore last sqm value
                 last_camera_sqm_mag = last_image.data.get('sensor_user_8', 0.0)
@@ -1415,13 +1429,12 @@ class CaptureWorker(Process):
                     self.sensors_user_av[constants.SENSOR_USER_CAMERA_SQM_ADU] = float(last_camera_sqm_adu)
 
             else:
-                #ccd_exposure_default = self.exposure_av[constants.EXPOSURE_MIN_NIGHT]
+                #ccd_exposure_default = self._expUtils.EXPOSURE_MIN_NIGHT
                 ccd_exposure_default = 0.01  # this should give better results for many cameras
 
+
                 # gain
-                if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
-                    ccd_gain_default = gain_day
-                else:
+                if exposure_class_str == 'exposure_basic':
                     if self.night_av[constants.NIGHT_NIGHT]:
                         if self.night_av[constants.NIGHT_MOONMODE]:
                             ccd_gain_default = gain_moonmode
@@ -1429,6 +1442,9 @@ class CaptureWorker(Process):
                             ccd_gain_default = gain_night
                     else:
                         ccd_gain_default = gain_day
+                else:
+                    # auto-gain
+                    ccd_gain_default = gain_day
 
 
                 # binning
@@ -1455,61 +1471,59 @@ class CaptureWorker(Process):
             ccd_exposure_default = gain_day
 
 
-        if self.exposure_av[constants.EXPOSURE_CURRENT] == -1.0:
+        if self._expUtils.EXPOSURE_CURRENT < 0:
             # only set this on first start
-            with self.exposure_av.get_lock():
-                self.exposure_av[constants.EXPOSURE_CURRENT] = float(ccd_exposure_default)
-                self.exposure_av[constants.EXPOSURE_NEXT] = float(ccd_exposure_default)
-                self.exposure_av[constants.EXPOSURE_DELTA] = 0.0
+            self._expUtils.EXPOSURE_CURRENT = ccd_exposure_default
+            self._expUtils.EXPOSURE_NEXT = ccd_exposure_default
+            self._expUtils.EXPOSURE_DELTA = 0.0
 
 
-        logger.info('Default CCD exposure: %0.8f', ccd_exposure_default)
+        logger.info('Default CCD exposure: %0.6f', ccd_exposure_default)
 
 
-        with self.gain_av.get_lock():
-            self.gain_av[constants.GAIN_CURRENT] = float(ccd_gain_default)
-            self.gain_av[constants.GAIN_NEXT] = float(ccd_gain_default)
+        self._expUtils.GAIN_CURRENT = ccd_gain_default
+        self._expUtils.GAIN_NEXT = ccd_gain_default
 
-            self.gain_av[constants.GAIN_MAX_NIGHT] = float(gain_night)
-            self.gain_av[constants.GAIN_MAX_MOONMODE] = float(gain_moonmode)
+        self._expUtils.GAIN_MAX_NIGHT = gain_night
+        self._expUtils.GAIN_MAX_MOONMODE = gain_moonmode
 
-            # day is always lowest gain
-            self.gain_av[constants.GAIN_MAX_DAY] = float(gain_day)
-            self.gain_av[constants.GAIN_MIN_DAY] = float(gain_day)
+        # day is always lowest gain
+        self._expUtils.GAIN_MAX_DAY = gain_day
+        self._expUtils.GAIN_MIN_DAY = gain_day
 
-            self.gain_av[constants.GAIN_SQM] = float(gain_sqm)
+        self._expUtils.GAIN_SQM = gain_sqm
 
-            if self.config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE'):
-                self.gain_av[constants.GAIN_MIN_NIGHT] = float(gain_day)
-                self.gain_av[constants.GAIN_MIN_MOONMODE] = float(gain_day)
-            else:
-                self.gain_av[constants.GAIN_MIN_NIGHT] = float(gain_night)
-                self.gain_av[constants.GAIN_MIN_MOONMODE] = float(gain_moonmode)
-
-
-        logger.info('Minimum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MIN_DAY])
-        logger.info('Maximum CCD gain: %0.2f (day)', self.gain_av[constants.GAIN_MAX_DAY])
-        logger.info('Minimum CCD gain: %0.2f (night)', self.gain_av[constants.GAIN_MIN_NIGHT])
-        logger.info('Maximum CCD gain: %0.2f (night)', self.gain_av[constants.GAIN_MAX_NIGHT])
-        logger.info('Minimum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MIN_MOONMODE])
-        logger.info('Maximum CCD gain: %0.2f (moonmode)', self.gain_av[constants.GAIN_MAX_MOONMODE])
-        logger.info('SQM CCD gain: %0.2f', self.gain_av[constants.GAIN_SQM])
-        logger.info('Default CCD gain: %0.2f', ccd_gain_default)
+        if exposure_class_str == 'exposure_basic':
+            self._expUtils.GAIN_MIN_NIGHT = gain_night
+            self._expUtils.GAIN_MIN_MOONMODE = gain_moonmode
+        else:
+            # auto-gain
+            self._expUtils.GAIN_MIN_NIGHT = gain_day
+            self._expUtils.GAIN_MIN_MOONMODE = gain_day
 
 
-        with self.binning_av.get_lock():
-            self.binning_av[constants.BINNING_CURRENT] = int(ccd_binning_default)
-            self.binning_av[constants.BINNING_NEXT] = int(ccd_binning_default)
-            self.binning_av[constants.BINNING_DAY] = int(binning_day)
-            self.binning_av[constants.BINNING_NIGHT] = int(binning_night)
-            self.binning_av[constants.BINNING_MOONMODE] = int(binning_moonmode)
-            self.binning_av[constants.BINNING_SQM] = int(binning_sqm)
+        logger.info('Minimum CCD gain: %0.3f (day)', self._expUtils.GAIN_MIN_DAY)
+        logger.info('Maximum CCD gain: %0.3f (day)', self._expUtils.GAIN_MAX_DAY)
+        logger.info('Minimum CCD gain: %0.3f (night)', self._expUtils.GAIN_MIN_NIGHT)
+        logger.info('Maximum CCD gain: %0.3f (night)', self._expUtils.GAIN_MAX_NIGHT)
+        logger.info('Minimum CCD gain: %0.3f (moonmode)', self._expUtils.GAIN_MIN_MOONMODE)
+        logger.info('Maximum CCD gain: %0.3f (moonmode)', self._expUtils.GAIN_MAX_MOONMODE)
+        logger.info('SQM CCD gain: %0.3f', self._expUtils.GAIN_SQM)
+        logger.info('Default CCD gain: %0.3f', ccd_gain_default)
 
 
-        logger.info('CCD binning: %d (day)', self.binning_av[constants.BINNING_DAY])
-        logger.info('CCD binning: %d (night)', self.binning_av[constants.BINNING_NIGHT])
-        logger.info('CCD binning: %d (moonmode)', self.binning_av[constants.BINNING_MOONMODE])
-        logger.info('CCD binning: %d (SQM)', self.binning_av[constants.BINNING_SQM])
+        self._expUtils.BINNING_CURRENT = ccd_binning_default
+        self._expUtils.BINNING_NEXT = ccd_binning_default
+        self._expUtils.BINNING_DAY = binning_day
+        self._expUtils.BINNING_NIGHT = binning_night
+        self._expUtils.BINNING_MOONMODE = binning_moonmode
+        self._expUtils.BINNING_SQM = binning_sqm
+
+
+        logger.info('CCD binning: %d (day)', self._expUtils.BINNING_DAY)
+        logger.info('CCD binning: %d (night)', self._expUtils.BINNING_NIGHT)
+        logger.info('CCD binning: %d (moonmode)', self._expUtils.BINNING_MOONMODE)
+        logger.info('CCD binning: %d (SQM)', self._expUtils.BINNING_SQM)
 
 
     def _sync_camera(self, camera, camera_metadata):
@@ -1549,7 +1563,7 @@ class CaptureWorker(Process):
             # Raspberry PI HQ Camera requires an initial throw away exposure of over 6s
             # in order to take exposures longer than 7s
             logger.info('Taking throw away exposure for rpicam')
-            self.shoot(7.0, self.gain_av[constants.GAIN_MIN], sync=True, timeout=20.0)
+            self.shoot(7.0, self._expUtils.GAIN_MIN, sync=True, timeout=20.0)
 
 
     def _periodic_tasks(self):
@@ -1748,8 +1762,8 @@ class CaptureWorker(Process):
 
         # Communicate sensor values as environment variables
         cmd_env = {
-            'GAIN'     : '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
-            'BIN'      : '{0:d}'.format(self.binning_av[constants.BINNING_CURRENT]),
+            'GAIN'     : '{0:0.3f}'.format(self._expUtils.GAIN_CURRENT),
+            'BIN'      : '{0:d}'.format(self._expUtils.BINNING_CURRENT),
             'MOONMODE' : '{0:d}'.format(int(bool(self.night_av[constants.NIGHT_MOONMODE]))),
             'NIGHT'    : '{0:d}'.format(int(self.night_av[constants.NIGHT_NIGHT])),
             'LATITUDE' : '{0:0.3f}'.format(self.position_av[constants.POSITION_LATITUDE]),
@@ -2248,7 +2262,7 @@ class CaptureWorker(Process):
 
     def shoot(self, exposure, gain, binning, sync=True, timeout=None, sqm_exposure=False):
         # sqm used for an image taking at a specific exposure/gain for a controlled SQM measurement
-        logger.info('Taking %0.8fs exposure (gain %0.2f / bin %d)', exposure, gain, binning)
+        logger.info('Taking %0.6fs exposure (gain %0.3f / bin %d)', exposure, gain, binning)
 
         self.indiclient.setCcdExposure(exposure, gain, binning, sync=sync, timeout=timeout, sqm_exposure=sqm_exposure)
 

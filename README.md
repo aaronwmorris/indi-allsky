@@ -4,8 +4,9 @@ indi-allsky is software used to manage a Linux-based All Sky Camera using the IN
 ![](./content/20210930_224951.jpg)
 *Pictured: SpaceX Cargo Dragon (over Georgia) headed for splashdown off the coast of Florida*
 
-
 ## New Features
+* Auto-Gain Support
+    * Auto-Gain with Exposure Priority automatically tries to scale the exposure to the maximum setting and adjusts gain to maintain consistent image brightness.  Exposure is maximized to ensure you do not miss any events in the sky.
 * Real-Time Keogram
     * A keogram is generated in realtime with every image that is taken
 * Long Term Keogram
@@ -207,10 +208,11 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 | Ubuntu 24.04 (noble)            | **RECOMMENDED**<br>Requires INDI 2.0.8 or newer for pyindi-client<br>INDI installed from ppa:mutlaqja/ppa<br>Compile libcamera with build_libcamera.sh |
 | Ubuntu 22.04 (focal)            | INDI installed from ppa:mutlaqja/ppa |
 | Ubuntu 20.04 (bionic)           | (NOT RECOMMENDED) INDI installed from ppa:mutlaqja/ppa |
-| Armbian                         | Compile INDI with build_indi.sh<br>https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
 | Linux Mint 22                   | INDI installed from ppa:mutlaqja/ppa |
 | Linux Mint 21                   | INDI installed from ppa:mutlaqja/ppa |
+| Arch Linux                      | Compile INDI with build_indi.sh |
 | LMDE 6 (Linux Mint)             | Compile INDI with build_indi.sh |
+| Armbian                         | Compile INDI with build_indi.sh<br>https://github.com/aaronwmorris/indi-allsky/wiki/Armbian-Tuning |
 | Stellarmate 1.8.x               | INDI pre-installed |
 | Astroberry 3.0                  | |
 | ~~Astroberry Server 2.0~~       | (DO NOT USE) |
@@ -229,7 +231,9 @@ https://github.com/aaronwmorris/indi-allsky/wiki/FAQ
 ## INDI support
 | Version         | Note |
 | --------------- | ---- |
-| v2.2.1          | **Recommended for new builds** |
+| v2.2.3          | **Recommended for new builds** |
+| v2.2.2          |      |
+| v2.2.1          |      |
 | v2.2.0          |      |
 | v2.1.9          | indi_libcamera_ccd is stable |
 | v2.1.8          | Minimum for rpicam-apps 1.10.1 (indi_libcamera_ccd)<br>Minimum for ASI676MM |
@@ -744,6 +748,15 @@ Please let me know if you want to make an addition or correction.
 * Alcor System
     * https://www.alcor-system.com/new/AllSky/Alphea_camera.html
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=aaronwmorris%2Findi-allsky&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=aaronwmorris/indi-allsky&type=date&theme=dark&legend=bottom-right" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=aaronwmorris/indi-allsky&type=date&legend=bottom-right" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=aaronwmorris/indi-allsky&type=date&legend=bottom-right" />
+ </picture>
+</a>
 
 ## Acknowledgements
 

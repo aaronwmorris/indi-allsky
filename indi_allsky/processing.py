@@ -105,6 +105,7 @@ class ImageProcessor(object):
         self,
         config,
         position_av,
+        exposure_av,
         gain_av,
         binning_av,
         sensors_temp_av,
@@ -115,6 +116,7 @@ class ImageProcessor(object):
         self.config = config
 
         self.position_av = position_av
+        self.exposure_av = exposure_av
         self.gain_av = gain_av  # only use index 0 in this class
         self.binning_av = binning_av
 
@@ -381,7 +383,7 @@ class ImageProcessor(object):
         self._detection_mask_dict = self._load_detection_mask()
         self._adu_mask_dict = self._detection_mask_dict  # reuse detection mask for ADU mask (if defined)
 
-        self._sqm = IndiAllskySqm(self.config, self.gain_av, mask=self._detection_mask_dict)
+        self._sqm = IndiAllskySqm(self.config, self.exposure_av, self.gain_av, self.binning_av, mask=self._detection_mask_dict)
         self._stars_detect = IndiAllSkyStars(self.config, mask=self._detection_mask_dict)
         self._lineDetect = IndiAllskyDetectLines(self.config, mask=self._detection_mask_dict)
         self._draw = IndiAllSkyDraw(self.config, mask=self._detection_mask_dict)
@@ -428,7 +430,7 @@ class ImageProcessor(object):
         self._check_astro_darkness()
 
 
-        #logger.info('Processing %s, exposure: %0.6f, gain, %0.2f, binning: %d', str(filename), exposure, gain, binning)
+        #logger.info('Processing %s, exposure: %0.6f, gain, %0.3f, binning: %d', str(filename), exposure, gain, binning)
 
         if self.night_av[constants.NIGHT_MOONMODE] and not self.config.get('IMAGE_STACK_MOONMODE'):
             # disable stacking during moonmode
@@ -996,7 +998,7 @@ class ImageProcessor(object):
 
         if self.config.get('IMAGE_CALIBRATE_BPM'):
             # pick a bad pixel map that is closest to the exposure and temperature
-            logger.info('Searching for bad pixel map: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
+            logger.info('Searching for bad pixel map: gain %0.3f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
             bpm_entry = IndiAllSkyDbBadPixelMapTable.query\
                 .filter(IndiAllSkyDbBadPixelMapTable.camera_id == i_ref.camera_id)\
                 .filter(IndiAllSkyDbBadPixelMapTable.active == sa_true())\
@@ -1036,7 +1038,7 @@ class ImageProcessor(object):
 
                 if not bpm_entry:
                     logger.warning(
-                        'Bad Pixel Map not found: ccd%d %dbit %0.7fs gain %0.2f bin %d %0.2fc',
+                        'Bad Pixel Map not found: ccd%d %dbit %0.6fs gain %0.3f bin %d %0.2fc',
                         i_ref.camera_id,
                         i_ref.image_bitpix,
                         float(i_ref.exposure),
@@ -1049,7 +1051,7 @@ class ImageProcessor(object):
 
 
         # pick a dark frame that is closest to the exposure and temperature
-        logger.info('Searching for dark frame: gain %0.2f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
+        logger.info('Searching for dark frame: gain %0.3f, exposure >= %0.1f, temp >= %0.1fc', i_ref.gain, i_ref.exposure, self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP])
         dark_frame_entry = IndiAllSkyDbDarkFrameTable.query\
             .filter(IndiAllSkyDbDarkFrameTable.camera_id == i_ref.camera_id)\
             .filter(IndiAllSkyDbDarkFrameTable.active == sa_true())\
@@ -1089,7 +1091,7 @@ class ImageProcessor(object):
 
             if not dark_frame_entry:
                 logger.warning(
-                    'Dark not found: ccd%d %dbit %0.7fs gain %0.2f bin %d %0.2fc',
+                    'Dark not found: ccd%d %dbit %0.6fs gain %0.3f bin %d %0.2fc',
                     i_ref.camera_id,
                     i_ref.image_bitpix,
                     float(i_ref.exposure),
@@ -2807,7 +2809,7 @@ class ImageProcessor(object):
 
     def get_image_label(self, i_ref, adsb_aircraft_list, custom_hook_data):
         # gain is int, gain_f is float
-        image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain_f:0.2f}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
+        image_label_tmpl = self.config.get('IMAGE_LABEL_TEMPLATE', '{timestamp:%Y%m%d %H:%M:%S}\nExposure {exposure:0.6f}\nGain {gain_f:0.3f}\nTemp {temp:0.1f}{temp_unit:s}\nStars {stars:d}')
 
         if self.config.get('TEMP_DISPLAY') == 'f':
             temp_unit = 'F'

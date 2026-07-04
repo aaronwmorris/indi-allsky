@@ -128,6 +128,36 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__EXPOSURE_CLASSNAME.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-4">
+            {{ form_config.CCD_CONFIG__EXPOSURE_CLASSNAME(class='form-select bg-secondary') }}
+            <div id="CCD_CONFIG__EXPOSURE_CLASSNAME-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-6">
+            <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Exposure-Mode" class="text-decoration-none link-info" target="_blank">Exposure Mode Wiki</a></div>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS.label(class='col-form-label') }}
+        </div>
+        <div class="col-sm-2">
+            {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS(class='form-select bg-secondary') }}
+            <div id="CCD_CONFIG__AUTO_GAIN_LEVELS-error" class="invalid-feedback text-danger" style="display: none;"></div>
+        </div>
+        <div class="col-sm-8">
+            <div><span class="badge rounded-pill bg-info text-dark">Note</span> This value is only used with the Legacy Auto-Gain selection</div>
+            <div>Gain will be divided into even levels between min and max</div>
+        </div>
+    </div>
+
+    <hr>
+
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.CCD_EXPOSURE_MAX.label(class='col-form-label') }}
         </div>
         <div class="col-sm-2">
@@ -223,6 +253,7 @@ var camera_id = {{ camera_id }};
 
     <div><span class="badge rounded-pill bg-info text-dark">Note</span> A full service restart (not reload) is recommended when changing gain controls</div>
     <div><span class="badge rounded-pill bg-info text-dark">Note </span> Many cameras will switch from analog to digital gain once the gain exceeds a certain value. For example, with ZWO cameras, you usually do not want to exceed gain 300</div>
+    <div><a href="https://github.com/aaronwmorris/indi-allsky/wiki/Camera-Gain-Reference" class="text-decoration-none link-info" target="_blank">Camera Gain Reference</a></div>
 
     <hr>
 
@@ -235,7 +266,7 @@ var camera_id = {{ camera_id }};
             <div id="CCD_CONFIG__NIGHT__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Maximum Gain permitted: <b>{{ "%0.2f"|format(camera_maxGain | float) }}</b></div>
+            <div>Maximum Gain permitted: <b>{{ "%0.3f"|format(camera_maxGain | float) }}</b></div>
         </div>
     </div>
     <div class="form-group row">
@@ -285,7 +316,7 @@ var camera_id = {{ camera_id }};
             <div id="CCD_CONFIG__DAY__GAIN-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-            <div>Minimum Gain permitted: <b>{{ "%0.2f"|format(camera_minGain | float) }}</b></div>
+            <div>Minimum Gain permitted: <b>{{ "%0.3f"|format(camera_minGain | float) }}</b></div>
         </div>
     </div>
     <div class="form-group row">
@@ -334,40 +365,6 @@ var camera_id = {{ camera_id }};
             <div id="CAMERA_SQM__BINNING-error" class="invalid-feedback text-danger" style="display: none;"></div>
         </div>
         <div class="col-sm-8">
-        </div>
-    </div>
-
-    <hr>
-
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__AUTO_GAIN_ENABLE.label }}
-        </div>
-        <div class="col-sm-2">
-            <div class="form-switch">
-                {{ form_config.CCD_CONFIG__AUTO_GAIN_ENABLE(class='form-check-input') }}
-                <div id="CCD_CONFIG__AUTO_GAIN_ENABLE-error" class="invalid-feedback text-danger" style="display: none;"></div>
-            </div>
-        </div>
-        <div class="col-sm-8">
-            <div>Exposure Priority Gain Mode dynamically adjusts the gain to maximize exposure times</div>
-            <div><span class="badge rounded-pill bg-info text-dark">Note</span> Maximum gain will be night gain, minimum will be daytime gain (Moon mode is ignored)</div>
-        </div>
-
-    </div>
-
-    <div class="form-group row">
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS.label(class='col-form-label') }}
-        </div>
-        <div class="col-sm-2">
-            {{ form_config.CCD_CONFIG__AUTO_GAIN_LEVELS(class='form-select bg-secondary') }}
-            <div id="CCD_CONFIG__AUTO_GAIN_LEVELS-error" class="invalid-feedback text-danger" style="display: none;"></div>
-        </div>
-        <div class="col-sm-8">
-            <div>Gain will be divided into even levels between min and max</div>
-            <div><span class="badge rounded-pill bg-warning text-dark">Warning</span> Setting this value too low will cause exposure/gain flapping</div>
         </div>
     </div>
 
@@ -8469,6 +8466,19 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT(class='form-check-input') }}
+                <div id="TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Divides gain by 14.5</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__SI1145_VIS_GAIN_DAY.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -8478,6 +8488,19 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-6">
             <div></div>
         </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY(class='form-check-input') }}
+                <div id="TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Divides gain by 14.5</div>
     </div>
 
     <div class="form-group row">
@@ -8495,6 +8518,19 @@ var camera_id = {{ camera_id }};
 
     <div class="form-group row">
         <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT(class='form-check-input') }}
+                <div id="TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Divides gain by 14.5</div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
             {{ form_config.TEMP_SENSOR__SI1145_IR_GAIN_DAY.label(class='col-form-label') }}
         </div>
         <div class="col-sm-4">
@@ -8504,6 +8540,19 @@ var camera_id = {{ camera_id }};
         <div class="col-sm-6">
             <div></div>
         </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            {{ form_config.TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY.label }}
+        </div>
+        <div class="col-sm-2">
+            <div class="form-switch">
+                {{ form_config.TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY(class='form-check-input') }}
+                <div id="TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY-error" class="invalid-feedback text-danger" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="col-sm-8">Divides gain by 14.5</div>
     </div>
 
     <hr>
@@ -9900,6 +9949,7 @@ const field_names = [
     'CCD_CONFIG__MOONMODE__BINNING',
     'CCD_CONFIG__DAY__GAIN',
     'CCD_CONFIG__DAY__BINNING',
+    'CCD_CONFIG__EXPOSURE_CLASSNAME',
     'CCD_CONFIG__AUTO_GAIN_LEVELS',
     'CCD_EXPOSURE_MAX',
     'CCD_EXPOSURE_DEF',
@@ -10449,7 +10499,6 @@ const checkbox_field_names = [
     'ENCRYPT_PASSWORDS',
     'LOCAL_AUTH_ENABLE',
     'OIDC__AUTO_LOGIN',
-    'CCD_CONFIG__AUTO_GAIN_ENABLE',
     'CAMERA_SQM__ENABLE',
     'CAMERA_SQM__ENABLE_DAY',
     'FOCUS_MODE',
@@ -10583,6 +10632,10 @@ const checkbox_field_names = [
     'TEMP_SENSOR__HTU31D_HEATER_DAY',
     'TEMP_SENSOR__TSL2561_DISABLE_DAY',
     'TEMP_SENSOR__TSL2591_DISABLE_DAY',
+    'TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT',
+    'TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT',
+    'TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY',
+    'TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY',
     'TEMP_SENSOR__INA3221_CH1_ENABLE',
     'TEMP_SENSOR__INA3221_CH2_ENABLE',
     'TEMP_SENSOR__INA3221_CH3_ENABLE',

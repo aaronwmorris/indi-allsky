@@ -34,6 +34,7 @@ from wtforms.widgets import NumberInput
 from wtforms.validators import DataRequired
 #from wtforms.validators import regexp as validator_regexp
 from wtforms.validators import ValidationError
+from markupsafe import Markup
 
 #from sqlalchemy import extract
 #from sqlalchemy import asc
@@ -257,6 +258,15 @@ def SQM_MAGNITUDE_OFFSET_validator(form, field):
 
     if field.data < 0:
         raise ValidationError('Value must be 0 or more')
+
+
+def CCD_CONFIG__EXPOSURE_CLASSNAME_validator(form, field):
+    exposure_classes = list()
+    for v in form.CCD_CONFIG__EXPOSURE_CLASSNAME_choices.values():
+        exposure_classes.extend(list(zip(*v))[0])
+
+    if field.data not in exposure_classes:
+        raise ValidationError('Invalid selection')
 
 
 def CCD_CONFIG__AUTO_GAIN_LEVELS_validator(form, field):
@@ -3548,6 +3558,20 @@ class IndiAllskyConfigForm(FlaskForm):
         ),
     }
 
+    CCD_CONFIG__EXPOSURE_CLASSNAME_choices = {
+        'Basic' : (
+            ('exposure_basic', 'Fixed Gains [Day, Night, & Moon Mode]'),
+        ),
+        'Exposure Priority - Auto-Gain' : (
+            ('exposure_autogain_exp_prio_db_1_10', Markup('<sup>1</sup>&frasl;<sub>10</sub> dB - ZWO ASI, PlayerOne [Gain: 0-300]')),
+            ('exposure_autogain_exp_prio_iso_1_100', Markup('<sup>1</sup>&frasl;<sub>100</sub> ISO - libcamera [Gain: 1-22.26]')),
+            ('exposure_autogain_exp_prio_iso', 'Native ISO - ToupTek, Altair, Omegon, Ogma [Gain: 100-10000]'),
+            ('exposure_autogain_exp_prio_db', 'Native dB - QHY [Gain: 0-30]'),
+        ),
+        'Legacy' : (
+            ('exposure_legacy_autogain', '[Legacy] - Auto-Gain'),
+        ),
+    }
 
     CCD_CONFIG__AUTO_GAIN_LEVELS_choices = (
         ('12', '12'),
@@ -4352,8 +4376,8 @@ class IndiAllskyConfigForm(FlaskForm):
     CCD_CONFIG__MOONMODE__BINNING    = IntegerField('Moon Mode Bin Mode', validators=[DataRequired(), CCD_BINNING_validator])
     CCD_CONFIG__DAY__GAIN            = FloatField('Daytime Gain', validators=[CCD_GAIN_validator])
     CCD_CONFIG__DAY__BINNING         = IntegerField('Daytime Bin Mode', validators=[DataRequired(), CCD_BINNING_validator])
-    CCD_CONFIG__AUTO_GAIN_ENABLE     = BooleanField('Enable Exposure Priority Gain Mode [Auto-Gain]')
-    CCD_CONFIG__AUTO_GAIN_LEVELS     = SelectField('Auto-Gain Levels', choices=CCD_CONFIG__AUTO_GAIN_LEVELS_choices, validators=[CCD_CONFIG__AUTO_GAIN_LEVELS_validator])
+    CCD_CONFIG__EXPOSURE_CLASSNAME   = SelectField('Exposure Mode', choices=CCD_CONFIG__EXPOSURE_CLASSNAME_choices, validators=[CCD_CONFIG__EXPOSURE_CLASSNAME_validator])
+    CCD_CONFIG__AUTO_GAIN_LEVELS     = SelectField('Auto-Gain Levels [Legacy]', choices=CCD_CONFIG__AUTO_GAIN_LEVELS_choices, validators=[CCD_CONFIG__AUTO_GAIN_LEVELS_validator])
     CCD_EXPOSURE_MAX                 = FloatField('Max Exposure', validators=[DataRequired(), CCD_EXPOSURE_validator])
     CCD_EXPOSURE_DEF                 = FloatField('Default Exposure', validators=[CCD_EXPOSURE_validator])
     CCD_EXPOSURE_MIN                 = FloatField('Min Exposure (Night)', validators=[CCD_EXPOSURE_validator])
@@ -5009,6 +5033,10 @@ class IndiAllskyConfigForm(FlaskForm):
     TEMP_SENSOR__SI1145_VIS_GAIN_DAY   = SelectField('SI1145 Visible Gain (Day)', choices=TEMP_SENSOR__SI1145_GAIN_choices, validators=[TEMP_SENSOR__SI1145_GAIN_validator])
     TEMP_SENSOR__SI1145_IR_GAIN_NIGHT  = SelectField('SI1145 IR Gain (Night)', choices=TEMP_SENSOR__SI1145_GAIN_choices, validators=[TEMP_SENSOR__SI1145_GAIN_validator])
     TEMP_SENSOR__SI1145_IR_GAIN_DAY    = SelectField('SI1145 IR Gain (Day)', choices=TEMP_SENSOR__SI1145_GAIN_choices, validators=[TEMP_SENSOR__SI1145_GAIN_validator])
+    TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT = BooleanField('SI1145 Visible Range High (Night)')
+    TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY   = BooleanField('SI1145 Visible Range High (Day)')
+    TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT  = BooleanField('SI1145 IR Range High (Night)')
+    TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY    = BooleanField('SI1145 IR Range High (Day)')
     TEMP_SENSOR__LTR390_GAIN_NIGHT     = SelectField('LTR390 Gain (Night)', choices=TEMP_SENSOR__LTR390_GAIN_choices, validators=[TEMP_SENSOR__LTR390_GAIN_validator])
     TEMP_SENSOR__LTR390_GAIN_DAY       = SelectField('LTR390 Gain (Day)', choices=TEMP_SENSOR__LTR390_GAIN_choices, validators=[TEMP_SENSOR__LTR390_GAIN_validator])
     TEMP_SENSOR__INA3221_CH1_ENABLE    = BooleanField('INA3221 Channel 1')
@@ -8891,29 +8919,6 @@ class IndiAllskyFocusForm(FlaskForm):
     REFRESH_SELECT    = SelectField('Refresh', choices=REFRESH_SELECT_choices, default=REFRESH_SELECT_choices[3][0], validators=[])
     X_OFFSET          = IntegerField('X Offset', default=0)
     Y_OFFSET          = IntegerField('Y Offset', default=0)
-
-
-class IndiAllskyLogViewerForm(FlaskForm):
-    LINES_SELECT_choices = (
-        (25, '25'),
-        (100, '100'),
-        (500, '500'),
-        (1000, '1000'),
-        (2000, '2000'),
-        (5000, '5000'),
-    )
-    REFRESH_SELECT_choices = (
-        (5, '5s'),
-        (15, '15s'),
-        (30, '30s'),
-        (60, '60s'),
-    )
-
-
-    LINES_SELECT      = SelectField('Lines', choices=LINES_SELECT_choices, default=LINES_SELECT_choices[0][0], validators=[])
-    REFRESH_SELECT    = SelectField('Refresh', choices=REFRESH_SELECT_choices, default=REFRESH_SELECT_choices[1][0], validators=[])
-    FILTER            = StringField('Filter', validators=[])
-
 
 
 def LOGIN__USERNAME_validator(form, field):

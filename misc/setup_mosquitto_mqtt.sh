@@ -97,6 +97,9 @@ elif [[ "$DISTRO_ID" == "linuxmint" ]]; then
         exit 1
     fi
 
+elif [[ "$DISTRO_ID" == "arch" ]]; then
+    DISTRO="arch"
+
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
@@ -188,6 +191,16 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         whiptail \
         ca-certificates
 
+elif [[ "$DISTRO" == "arch" ]]; then
+    #MOSQUITTO_USER=mosquitto
+    MOSQUITTO_GROUP=mosquitto
+
+    sudo pacman -Syu --noconfirm --needed \
+        ca-certificates \
+        ca-certificates-utils \
+        libnewt \
+        mosquitto
+
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
@@ -247,21 +260,50 @@ sudo chmod 640 /etc/mosquitto/certs/indi-allsky_mosquitto.key
 sudo chown root:${MOSQUITTO_GROUP} /etc/mosquitto/certs/indi-allsky_mosquitto.crt
 sudo chmod 644 /etc/mosquitto/certs/indi-allsky_mosquitto.crt
 
-# system certificate store
-sudo cp -f /etc/mosquitto/certs/indi-allsky_mosquitto.crt /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
-sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
-sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
-sudo update-ca-certificates
+
+if [[ "$DISTRO_ID" == "debian" || "$DISTRO_ID" == "ubuntu" || "$DISTRO_ID" == "raspbian" || "$DISTRO_ID" == "linuxmint" ]]; then
+    # system certificate store
+    sudo cp -f /etc/mosquitto/certs/indi-allsky_mosquitto.crt /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
+    sudo chown root:root /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
+    sudo chmod 644 /usr/local/share/ca-certificates/indi-allsky_mosquitto.crt
+    sudo update-ca-certificates
+elif [[ "$DISTRO" == "arch" ]]; then
+    sudo cp -f /etc/mosquitto/certs/indi-allsky_mosquitto.crt /etc/ca-certificates/trust-source/anchors/indi-allsky_mosquitto.crt
+    sudo chown root:root /etc/ca-certificates/trust-source/anchors/indi-allsky_mosquitto.crt
+    sudo chmod 644 /etc/ca-certificates/trust-source/anchors/indi-allsky_mosquitto.crt
+    sudo update-ca-trust extract
+fi
 
 
 echo "**** Setup mosquitto config ****"
-TMP1=$(mktemp)
-cat "${ALLSKY_DIRECTORY}/service/mosquitto_indi-allsky.conf" > "$TMP1"
 
-sudo cp -f "$TMP1" "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"
+
+if [[ "$DISTRO" == "arch" ]]; then
+    # setup include folder
+    [[ ! -d "/etc/mosquitto/conf.d" ]] && sudo mkdir "/etc/mosquitto/conf.d"
+    sudo chown root:root /etc/mosquitto/conf.d
+    sudo chmod 755 /etc/mosquitto/conf.d
+
+
+    TMP_INC=$(mktemp)
+    sed \
+     -e 's|#include_dir|include_dir\ \/etc\/mosquitto\/conf\.d|i' \
+     /etc/mosquitto/mosquitto.conf > "$TMP_INC"
+
+    sudo cp -f "$TMP_INC" /etc/mosquitto/mosquitto.conf
+    sudo chown root:root /etc/mosquitto/mosquitto.conf
+    sudo chmod 644 /etc/mosquitto/mosquitto.conf
+    [[ -f "$TMP_INC" ]] && rm -f "$TMP_INC"
+fi
+
+
+TMP_MOSQUITTO=$(mktemp)
+cat "${ALLSKY_DIRECTORY}/service/mosquitto_indi-allsky.conf" > "$TMP_MOSQUITTO"
+
+sudo cp -f "$TMP_MOSQUITTO" "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"
 sudo chown root:root "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"
 sudo chmod 644 "/etc/mosquitto/conf.d/mosquitto_indi-allsky.conf"
-[[ -f "$TMP1" ]] && rm -f "$TMP1"
+[[ -f "$TMP_MOSQUITTO" ]] && rm -f "$TMP_MOSQUITTO"
 
 
 

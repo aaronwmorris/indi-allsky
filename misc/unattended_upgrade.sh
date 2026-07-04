@@ -8,6 +8,9 @@ shopt -s nullglob
 PATH=/usr/bin:/bin
 export PATH
 
+#PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
+#export PKG_CONFIG_PATH
+
 
 #### config ####
 ALLSKY_SERVICE_NAME="indi-allsky"
@@ -197,6 +200,9 @@ elif [[ "$DISTRO_ID" == "linuxmint" ]]; then
         exit 1
     fi
 
+elif [[ "$DISTRO_ID" == "arch" ]]; then
+    DISTRO="arch"
+
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
@@ -345,6 +351,7 @@ if [[ "$DISTRO" == "debian_13" ]]; then
         udisks2 \
         dnsmasq-base \
         polkitd \
+        libsystemd-dev \
         dbus-user-session
 
 
@@ -438,6 +445,7 @@ elif [[ "$DISTRO" == "debian_12" ]]; then
         udisks2 \
         dnsmasq-base \
         polkitd \
+        libsystemd-dev \
         dbus-user-session
 
 elif [[ "$DISTRO" == "debian_11" ]]; then
@@ -519,6 +527,7 @@ elif [[ "$DISTRO" == "debian_11" ]]; then
         udisks2 \
         dnsmasq-base \
         policykit-1 \
+        libsystemd-dev \
         dbus-user-session
 
 elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
@@ -601,6 +610,7 @@ elif [[ "$DISTRO" == "ubuntu_24.04" ]]; then
         udisks2 \
         dnsmasq-base \
         polkitd \
+        libsystemd-dev \
         dbus-user-session
 
 elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
@@ -686,6 +696,7 @@ elif [[ "$DISTRO" == "ubuntu_22.04" ]]; then
         udisks2 \
         dnsmasq-base \
         policykit-1 \
+        libsystemd-dev \
         dbus-user-session
 
 elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
@@ -770,7 +781,77 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         network-manager \
         udisks2 \
         policykit-1 \
+        libsystemd-dev \
         dbus-user-session
+
+elif [[ "$DISTRO" == "arch" ]]; then
+    sudo pacman -Syu --noconfirm --needed \
+        base-devel \
+        git \
+        python3 \
+        ca-certificates \
+        ca-certificates-utils \
+        cmake \
+        inetutils \
+        libnewt \
+        pkg-config \
+        ffmpeg \
+        gcc-fortran \
+        bc \
+        procps-ng \
+        cronie \
+        cpio \
+        tzdata \
+        avahi \
+        nss-mdns \
+        swig \
+        gnutls \
+        libcurl-gnutls \
+        libnova \
+        cfitsio \
+        imath \
+        openexr \
+        gtk3 \
+        openssl \
+        libxml2 \
+        libxslt \
+        dbus \
+        glib2-devel \
+        libffi \
+        opencv \
+        blas \
+        libraw \
+        geos \
+        libtiff \
+        libjpeg-turbo \
+        openjpeg2 \
+        libpng \
+        zlib \
+        freetype2 \
+        lcms2 \
+        libwebp \
+        libcap \
+        tcl \
+        tk \
+        harfbuzz \
+        fribidi \
+        libxcb \
+        xcb-util-keysyms \
+        xcb-util-wm \
+        xorgproto \
+        mariadb-libs \
+        rust \
+        gifsicle \
+        jq \
+        sqlite3 \
+        libgpiod \
+        i2c-tools \
+        networkmanager \
+        dnsmasq \
+        udisks2 \
+        polkit \
+        systemd \
+        dbus-broker
 
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
@@ -809,6 +890,8 @@ if [ "${GPIO_PYTHON_MODULES}" == "true" ]; then
 
             pip3 install rpi.lgpio
         fi
+    elif [[ "$DISTRO" == "arch" ]]; then
+        :
     fi
 fi
 
@@ -887,7 +970,7 @@ TMP_CONFIG_DUMP=$(mktemp --suffix=.json)
 
 
 # final config syntax check
-json_pp < "$TMP_CONFIG_DUMP" > /dev/null
+jq < "$TMP_CONFIG_DUMP" > /dev/null
 
 
 # load all changes
@@ -896,7 +979,7 @@ json_pp < "$TMP_CONFIG_DUMP" > /dev/null
 
 
 # final config syntax check
-json_pp < "${ALLSKY_ETC}/flask.json" > /dev/null
+jq < "${ALLSKY_ETC}/flask.json" > /dev/null
 
 
 # ensure latest code is active

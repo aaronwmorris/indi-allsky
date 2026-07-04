@@ -52,6 +52,7 @@ RUN apt-get update \
         libunwind8 \
         libnova-dev \
         python3-dev \
+        libsystemd-dev \
         dbus-daemon \
         swig
 
@@ -84,6 +85,7 @@ RUN apt-get remove --purge -y \
         libunwind-dev \
         python3-dev \
         dbus-daemon \
+        libsystemd-dev \
         swig \
     && apt-get autoremove --purge -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \

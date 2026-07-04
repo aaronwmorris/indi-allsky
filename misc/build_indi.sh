@@ -10,6 +10,9 @@ set -o nounset
 PATH=/bin:/usr/bin
 export PATH
 
+PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
+export PKG_CONFIG_PATH
+
 
 # can be overridden by environment variables
 #BUILD_INDI_SETTINGS="manual"
@@ -27,9 +30,9 @@ OS_PACKAGE_UPGRADE=${BUILD_INDI_OS_PACKAGE_UPGRADE:-}
 ### config ###
 INDISERVER_SERVICE_NAME="indiserver"
 INDI_CORE_REPO="https://github.com/indilib/indi.git"
-INDI_CORE_AUTO_TAG="v2.2.1.1"
+INDI_CORE_AUTO_TAG="v2.2.3.1"
 INDI_3RDPARTY_REPO="https://github.com/indilib/indi-3rdparty.git"
-INDI_3RDPARTY_AUTO_TAG="v2.2.1.1"
+INDI_3RDPARTY_AUTO_TAG="v2.2.3.1"
 INDI_AUTO_DRIVERS="supported"
 MAKE_BUILD_TYPE="${BUILD_INDI_MAKE_BUILD_TYPE:-Debug}"
 ### end config ###
@@ -350,6 +353,9 @@ elif [[ "$DISTRO_ID" == "linuxmint" ]]; then
         echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
         exit 1
     fi
+
+elif [[ "$DISTRO_ID" == "arch" ]]; then
+    DISTRO="arch"
 
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
@@ -776,6 +782,40 @@ elif [[ "$DISTRO" == "ubuntu_20.04" ]]; then
         libzmq3-dev \
         zlib1g-dev
 
+elif [[ "$DISTRO" == "arch" ]]; then
+    sudo pacman -Syu \
+        base-devel \
+        git \
+        ca-certificates \
+        cmake \
+        libnewt \
+        pkg-config \
+        systemd-libs \
+        ffmpeg \
+        boost \
+        boost-libs \
+        cfitsio \
+        libcurl-gnutls \
+        libdc1394 \
+        libev \
+        fftw \
+        libftdi \
+        gtest \
+        libgphoto2 \
+        gpsd \
+        gsl \
+        libjpeg-turbo \
+        limesuite \
+        libnova \
+        libraw \
+        rtl-sdr \
+        libtheora \
+        libtiff \
+        libusb \
+        zeromq \
+        zlib \
+        jack2
+
 else
     echo "Unknown distribution $DISTRO_ID $DISTRO_VERSION_ID ($CPU_ARCH)"
     exit 1
@@ -848,8 +888,10 @@ if [ "$BUILD_INDI_CORE" == "true" ]; then
             --nocancel \
             --notags \
             --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
+                "v2.2.3.1" "v2.2.3.1 - Recommended" "ON" \
+                "v2.2.2" "v2.2.2" "OFF" \
                 "v2.2.1.1" "v2.2.1.1" "OFF" \
-                "v2.2.0" "v2.2.0 - Recommended" "ON" \
+                "v2.2.0" "v2.2.0" "OFF" \
                 "v2.1.9" "v2.1.9" "OFF" \
                 "v2.1.8" "v2.1.8" "OFF" \
                 "v2.1.7" "v2.1.7" "OFF" \
@@ -880,8 +922,10 @@ if [ "$BUILD_INDI_3RDPARTY" == "true" ]; then
             --nocancel \
             --notags \
             --radiolist "Select indilib version to build\n\nPress space to select" 0 0 0 \
+                "v2.2.3.1" "v2.2.3.1 - Recommended" "ON" \
+                "v2.2.2.1" "v2.2.2.1" "OFF" \
                 "v2.2.1.1" "v2.2.1.1" "OFF" \
-                "v2.2.0" "v2.2.0 - Recommended" "ON" \
+                "v2.2.0" "v2.2.0" "OFF" \
                 "v2.1.9" "v2.1.9" "OFF" \
                 "v2.1.8.2" "v2.1.8.2" "OFF" \
                 "v2.1.7.1" "v2.1.7.1" "OFF" \

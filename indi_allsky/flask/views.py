@@ -35,6 +35,7 @@ from flask import Response
 from flask import url_for
 from flask import send_from_directory
 from flask import send_file
+from flask import stream_with_context
 from flask import current_app as app
 
 from flask_login import login_required
@@ -99,7 +100,6 @@ from .forms import IndiAllskySetDateTimeForm
 from .forms import IndiAllskySetTimezoneForm
 from .forms import IndiAllskyTimelapseGeneratorForm
 from .forms import IndiAllskyFocusForm
-from .forms import IndiAllskyLogViewerForm
 from .forms import IndiAllskyUserInfoForm
 from .forms import IndiAllskyImageExcludeForm
 from .forms import IndiAllskyImageProcessingForm
@@ -2244,13 +2244,13 @@ class ConfigView(FormView):
             'LENS_OFFSET_Y'                  : self.indi_allsky_config.get('LENS_OFFSET_Y', 0),
             'LENS_ALTITUDE'                  : self.indi_allsky_config.get('LENS_ALTITUDE', 90.0),
             'LENS_AZIMUTH'                   : self.indi_allsky_config.get('LENS_AZIMUTH', 0.0),
-            'CCD_CONFIG__NIGHT__GAIN'        : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 100.0), 2),  # limit to 2 decimals
+            'CCD_CONFIG__NIGHT__GAIN'        : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('GAIN', 100.0), 3),  # limit to 3 decimals
             'CCD_CONFIG__NIGHT__BINNING'     : self.indi_allsky_config.get('CCD_CONFIG', {}).get('NIGHT', {}).get('BINNING', 1),
-            'CCD_CONFIG__MOONMODE__GAIN'     : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('GAIN', 75.0), 2),  # limit to 2 decimals
+            'CCD_CONFIG__MOONMODE__GAIN'     : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('GAIN', 75.0), 3),  # limit to 3 decimals
             'CCD_CONFIG__MOONMODE__BINNING'  : self.indi_allsky_config.get('CCD_CONFIG', {}).get('MOONMODE', {}).get('BINNING', 1),
-            'CCD_CONFIG__DAY__GAIN'          : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('GAIN', 0.0), 2),  # limit to 2 decimals
+            'CCD_CONFIG__DAY__GAIN'          : round(self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('GAIN', 0.0), 3),  # limit to 3 decimals
             'CCD_CONFIG__DAY__BINNING'       : self.indi_allsky_config.get('CCD_CONFIG', {}).get('DAY', {}).get('BINNING', 1),
-            'CCD_CONFIG__AUTO_GAIN_ENABLE'   : self.indi_allsky_config.get('CCD_CONFIG', {}).get('AUTO_GAIN_ENABLE', False),
+            'CCD_CONFIG__EXPOSURE_CLASSNAME' : self.indi_allsky_config.get('CCD_CONFIG', {}).get('EXPOSURE_CLASSNAME', 'exposure_basic'),
             'CCD_CONFIG__AUTO_GAIN_LEVELS'   : str(self.indi_allsky_config.get('CCD_CONFIG', {}).get('AUTO_GAIN_LEVELS', 8)),  # string in form, int in config
             'CCD_EXPOSURE_MAX'               : self.indi_allsky_config.get('CCD_EXPOSURE_MAX', 15.0),
             'CCD_EXPOSURE_DEF'               : '{0:.6f}'.format(self.indi_allsky_config.get('CCD_EXPOSURE_DEF', 0.0)),  # force 6 digits of precision
@@ -2262,8 +2262,8 @@ class ConfigView(FormView):
             'EXPOSURE_PERIOD_DAY'            : self.indi_allsky_config.get('EXPOSURE_PERIOD_DAY', 15.0),
             'CAMERA_SQM__ENABLE'             : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE', False),
             'CAMERA_SQM__ENABLE_DAY'         : self.indi_allsky_config.get('CAMERA_SQM', {}).get('ENABLE_DAY', False),
-            'CAMERA_SQM__EXPOSURE'           : '{0:.6f}'.format(self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 10.0)),  # force 6 digits of precision
-            'CAMERA_SQM__GAIN'               : round(self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 10.0), 2),  # limit to 2 decimals
+            'CAMERA_SQM__EXPOSURE'           : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE', 10.0),
+            'CAMERA_SQM__GAIN'               : round(self.indi_allsky_config.get('CAMERA_SQM', {}).get('GAIN', 10.0), 3),  # limit to 3 decimals
             'CAMERA_SQM__BINNING'            : self.indi_allsky_config.get('CAMERA_SQM', {}).get('BINNING', 1),
             'CAMERA_SQM__EXPOSURE_PERIOD'    : self.indi_allsky_config.get('CAMERA_SQM', {}).get('EXPOSURE_PERIOD', 900),
             'CAMERA_SQM__MAGNITUDE_OFFSET'   : self.indi_allsky_config.get('CAMERA_SQM', {}).get('MAGNITUDE_OFFSET', 25.0),
@@ -2867,6 +2867,10 @@ class ConfigView(FormView):
             'TEMP_SENSOR__SI1145_VIS_GAIN_DAY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_VIS_GAIN_DAY', 'GAIN_ADC_CLOCK_DIV_1'),
             'TEMP_SENSOR__SI1145_IR_GAIN_NIGHT'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_IR_GAIN_NIGHT', 'GAIN_ADC_CLOCK_DIV_32'),
             'TEMP_SENSOR__SI1145_IR_GAIN_DAY'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_IR_GAIN_DAY', 'GAIN_ADC_CLOCK_DIV_1'),
+            'TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT' : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_VIS_RANGE_HIGH_NIGHT', False),
+            'TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT'  : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_IR_RANGE_HIGH_NIGHT', False),
+            'TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY'   : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_VIS_RANGE_HIGH_DAY', True),
+            'TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('SI1145_IR_RANGE_HIGH_DAY', True),
             'TEMP_SENSOR__LTR390_GAIN_NIGHT'     : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('LTR390_GAIN_NIGHT', 'GAIN_9X'),
             'TEMP_SENSOR__LTR390_GAIN_DAY'       : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('LTR390_GAIN_DAY', 'GAIN_1X'),
             'TEMP_SENSOR__INA3221_CH1_ENABLE'    : self.indi_allsky_config.get('TEMP_SENSOR', {}).get('INA3221_CH1_ENABLE', True),
@@ -3270,13 +3274,13 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['LENS_OFFSET_Y']                        = int(request.json['LENS_OFFSET_Y'])
         self.indi_allsky_config['LENS_ALTITUDE']                        = float(request.json['LENS_ALTITUDE'])
         self.indi_allsky_config['LENS_AZIMUTH']                         = float(request.json['LENS_AZIMUTH'])
-        self.indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = float(round(float(request.json['CCD_CONFIG__NIGHT__GAIN']), 2))  # limit to 2 decimals
+        self.indi_allsky_config['CCD_CONFIG']['NIGHT']['GAIN']          = float(round(float(request.json['CCD_CONFIG__NIGHT__GAIN']), 3))  # limit to 3 decimals
         self.indi_allsky_config['CCD_CONFIG']['NIGHT']['BINNING']       = int(request.json['CCD_CONFIG__NIGHT__BINNING'])
-        self.indi_allsky_config['CCD_CONFIG']['MOONMODE']['GAIN']       = float(round(float(request.json['CCD_CONFIG__MOONMODE__GAIN']), 2))  # limit to 2 decimals
+        self.indi_allsky_config['CCD_CONFIG']['MOONMODE']['GAIN']       = float(round(float(request.json['CCD_CONFIG__MOONMODE__GAIN']), 3))  # limit to 3 decimals
         self.indi_allsky_config['CCD_CONFIG']['MOONMODE']['BINNING']    = int(request.json['CCD_CONFIG__MOONMODE__BINNING'])
-        self.indi_allsky_config['CCD_CONFIG']['DAY']['GAIN']            = float(round(float(request.json['CCD_CONFIG__DAY__GAIN']), 2))  # limit to 2 decimals
+        self.indi_allsky_config['CCD_CONFIG']['DAY']['GAIN']            = float(round(float(request.json['CCD_CONFIG__DAY__GAIN']), 3))  # limit to 3 decimals
         self.indi_allsky_config['CCD_CONFIG']['DAY']['BINNING']         = int(request.json['CCD_CONFIG__DAY__BINNING'])
-        self.indi_allsky_config['CCD_CONFIG']['AUTO_GAIN_ENABLE']       = bool(request.json['CCD_CONFIG__AUTO_GAIN_ENABLE'])
+        self.indi_allsky_config['CCD_CONFIG']['EXPOSURE_CLASSNAME']     = str(request.json['CCD_CONFIG__EXPOSURE_CLASSNAME'])
         self.indi_allsky_config['CCD_CONFIG']['AUTO_GAIN_LEVELS']       = int(request.json['CCD_CONFIG__AUTO_GAIN_LEVELS'])
         self.indi_allsky_config['CCD_EXPOSURE_MAX']                     = float(round(float(request.json['CCD_EXPOSURE_MAX']), 6))
         self.indi_allsky_config['CCD_EXPOSURE_DEF']                     = float(round(float(request.json['CCD_EXPOSURE_DEF']), 6))
@@ -3289,7 +3293,7 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['CAMERA_SQM']['ENABLE']                 = bool(request.json['CAMERA_SQM__ENABLE'])
         self.indi_allsky_config['CAMERA_SQM']['ENABLE_DAY']             = bool(request.json['CAMERA_SQM__ENABLE_DAY'])
         self.indi_allsky_config['CAMERA_SQM']['EXPOSURE']               = float(round(float(request.json['CAMERA_SQM__EXPOSURE']), 6))
-        self.indi_allsky_config['CAMERA_SQM']['GAIN']                   = float(round(float(request.json['CAMERA_SQM__GAIN']), 2))  # limit to 2 decimals
+        self.indi_allsky_config['CAMERA_SQM']['GAIN']                   = float(round(float(request.json['CAMERA_SQM__GAIN']), 3))  # limit to 3 decimals
         self.indi_allsky_config['CAMERA_SQM']['BINNING']                = int(request.json['CAMERA_SQM__BINNING'])
         self.indi_allsky_config['CAMERA_SQM']['EXPOSURE_PERIOD']        = int(request.json['CAMERA_SQM__EXPOSURE_PERIOD'])
         self.indi_allsky_config['CAMERA_SQM']['MAGNITUDE_OFFSET']       = float(request.json['CAMERA_SQM__MAGNITUDE_OFFSET'])
@@ -3905,6 +3909,10 @@ class AjaxConfigView(BaseView):
         self.indi_allsky_config['TEMP_SENSOR']['SI1145_VIS_GAIN_DAY']   = str(request.json['TEMP_SENSOR__SI1145_VIS_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['SI1145_IR_GAIN_NIGHT']  = str(request.json['TEMP_SENSOR__SI1145_IR_GAIN_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['SI1145_IR_GAIN_DAY']    = str(request.json['TEMP_SENSOR__SI1145_IR_GAIN_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['SI1145_VIS_RANGE_HIGH_NIGHT'] = bool(request.json['TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_NIGHT'])
+        self.indi_allsky_config['TEMP_SENSOR']['SI1145_IR_RANGE_HIGH_NIGHT']  = bool(request.json['TEMP_SENSOR__SI1145_IR_RANGE_HIGH_NIGHT'])
+        self.indi_allsky_config['TEMP_SENSOR']['SI1145_VIS_RANGE_HIGH_DAY']   = bool(request.json['TEMP_SENSOR__SI1145_VIS_RANGE_HIGH_DAY'])
+        self.indi_allsky_config['TEMP_SENSOR']['SI1145_IR_RANGE_HIGH_DAY']    = bool(request.json['TEMP_SENSOR__SI1145_IR_RANGE_HIGH_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['LTR390_GAIN_NIGHT']     = str(request.json['TEMP_SENSOR__LTR390_GAIN_NIGHT'])
         self.indi_allsky_config['TEMP_SENSOR']['LTR390_GAIN_DAY']       = str(request.json['TEMP_SENSOR__LTR390_GAIN_DAY'])
         self.indi_allsky_config['TEMP_SENSOR']['INA3221_CH1_ENABLE']    = bool(request.json['TEMP_SENSOR__INA3221_CH1_ENABLE'])
@@ -4563,6 +4571,7 @@ class Fits2JpegView(BaseView):
 
 
     def dispatch_request(self):
+        import ctypes
         import cv2
         from astropy.io import fits
         #from PIL import Image
@@ -4593,8 +4602,9 @@ class Fits2JpegView(BaseView):
         hdulist = fits.open(filename_p)
 
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
+        exposure_av = Array(ctypes.c_int32, [int(exposure * 1000000)])
         gain = float(hdulist[0].header.get('GAIN', 0))
-        gain_av = Array('f', [gain])
+        gain_av = Array(ctypes.c_int32, [int(gain * 1000)])
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
         binning = int(hdulist[0].header.get('XBINNING', 1))
         binning_av = Array('i', [binning])
@@ -4608,6 +4618,7 @@ class Fits2JpegView(BaseView):
         image_processor = ImageProcessor(
             p_config,
             position_av,
+            exposure_av,
             gain_av,
             binning_av,
             sensors_temp_av,
@@ -7736,6 +7747,7 @@ class JsonImageProcessingView(JsonView):
 
 
     def dispatch_request(self):
+        import ctypes
         import cv2
         from astropy.io import fits
         #from PIL import Image
@@ -7981,8 +7993,9 @@ class JsonImageProcessingView(JsonView):
         hdulist = fits.open(filename_p)
 
         exposure = float(hdulist[0].header.get('EXPTIME', 0))
+        exposure_av = Array(ctypes.c_int32, [int(exposure * 1000000)])
         gain = float(hdulist[0].header.get('GAIN', 0))
-        gain_av = Array('f', [gain])
+        gain_av = Array(ctypes.c_int32, [int(gain * 1000)])
         binning = int(hdulist[0].header.get('XBINNING', 1))
         binning_av = Array('i', [binning])
         position_av = Array('f', [self.camera.latitude, self.camera.longitude, self.camera.elevation])
@@ -7998,6 +8011,7 @@ class JsonImageProcessingView(JsonView):
         image_processor = ImageProcessor(
             p_config,
             position_av,
+            exposure_av,
             gain_av,
             binning_av,
             sensors_temp_av,
@@ -8266,96 +8280,54 @@ class LogView(TemplateView):
     def get_context(self):
         context = super(LogView, self).get_context()
 
-        context['form_logviewer'] = IndiAllskyLogViewerForm()
 
         return context
 
 
-class JsonLogView(JsonView):
-    methods = ['POST']
+class StreamLogView(BaseView):
     decorators = [login_required]
+    methods = ['GET']
+
+    def __init__(self, **kwargs):
+        super(StreamLogView, self).__init__(**kwargs)
+
+        #self.unit_name = app.config['ALLSKY_SERVICE_NAME']
+        self.syslog_facility = '22'  # local6
+
 
     def dispatch_request(self):
-        log_file_p = Path('/var/log/indi-allsky/indi-allsky.log')
-        line_size = 150  # assuming lines have an average length
+        from systemd import journal
+        import select
 
 
-        lines = int(request.json.get('lines', 500))
-        filter_str = str(request.json.get('filter', ''))[:30]  # limit to 30 characters
+        def generate():
+            reader = journal.Reader()
+
+            #reader.add_match(_SYSTEMD_USER_UNIT=self.unit_name)
+            reader.add_match(SYSLOG_FACILITY=self.syslog_facility)
+
+            reader.seek_tail()
+            reader.get_previous()  # Fixes edge-case pointer positioning
+
+            poller = select.poll()
+            poller.register(reader.fileno(), reader.get_events())
 
 
-        json_data = dict()
+            while True:
+                if poller.poll(500):  # Check every 500ms
+                    if reader.process() == journal.APPEND:
+                        for entry in reader:
+                            message = entry.get('MESSAGE', '')
+                            yield 'data: {0:s}\n\n'.format(message)
+                else:
+                    yield ': keep-alive\n\n'
 
 
-        filter_regex = r'^[a-zA-Z0-9_\.\-\\\ ]*$'
-        if not re.search(filter_regex, filter_str):
-            json_data['log'] = 'ERROR: Log filter has illegal characters'
-            return jsonify(json_data)
 
-
-        if lines > 5000:
-            # sanity check
-            lines = 5000
-
-
-        read_bytes = lines * line_size
-
-
-        if not log_file_p.exists():
-            # this can happen in docker
-            json_data['log'] = 'ERROR: Log file missing'
-            return jsonify(json_data)
-
-
-        log_file_size = log_file_p.stat().st_size
-        if log_file_size < read_bytes:
-            # just read the whole file
-            #app.logger.info('Returning %d bytes of log data', log_file_size)
-            log_file_seek = 0
-        else:
-            #app.logger.info('Returning %d bytes of log data', read_bytes)
-            log_file_seek = log_file_size - read_bytes
-
-
-        try:
-            with io.open(log_file_p, 'r') as log_file_f:
-                log_file_f.seek(log_file_seek)
-                log_lines = log_file_f.readlines()
-        except PermissionError as e:
-            log_lines = ['', 'PermissionError: {0:s}'.format(str(e))]
-
-
-        try:
-            log_lines.pop(0)  # skip the first partial line
-            log_lines.reverse()  # newer lines first
-        except IndexError:
-            app.logger.warning('indi-allsky log empty')
-            log_lines = list()
-
-
-        if len(log_lines) == 0:
-            log_lines.append('[indi-allsky log empty]')
-        elif filter_str:
-            filter_regex = re.compile(filter_str, re.IGNORECASE)
-
-            filtered_lines = list()
-            for line in log_lines:
-                ### this is probably insecure
-                if not re.search(filter_regex, line):
-                    continue
-
-                filtered_lines.append(line)
-
-            # replace original
-            log_lines = filtered_lines
-
-            if len(log_lines) == 0:
-                log_lines.append('[No matching lines]')
-
-
-        json_data['log'] = ''.join(log_lines)
-
-        return jsonify(json_data)
+        return Response(
+            stream_with_context(generate()),
+            mimetype='text/event-stream'
+        )
 
 
 class LogDownloadView(BaseView):
@@ -11965,7 +11937,7 @@ bp_allsky.add_url_rule('/manual_gpio', view_func=ManualGpioView.as_view('manual_
 bp_allsky.add_url_rule('/ajax/manual_gpio', view_func=AjaxManualGpioView.as_view('ajax_manual_gpio_view'))
 
 bp_allsky.add_url_rule('/log', view_func=LogView.as_view('log_view', template_name='log.html'))
-bp_allsky.add_url_rule('/js/log', view_func=JsonLogView.as_view('js_log_view'))
+bp_allsky.add_url_rule('/stream/log', view_func=StreamLogView.as_view('stream_log_view'))
 bp_allsky.add_url_rule('/log/download', view_func=LogDownloadView.as_view('log_download_view'))
 bp_allsky.add_url_rule('/log/webapp_download', view_func=LogWebappDownloadView.as_view('log_webapp_download_view'))
 bp_allsky.add_url_rule('/log/syslog_download', view_func=LogSyslogDownloadView.as_view('log_syslog_download_view'))

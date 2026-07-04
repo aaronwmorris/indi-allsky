@@ -54,6 +54,7 @@ RUN apt-get update \
         libglib2.0-0 \
         libxcb1-dev \
         libxcb1 \
+        libsystemd-dev \
         dbus-daemon
 
 
@@ -81,6 +82,7 @@ RUN apt-get remove --purge -y \
         libglib2.0-dev \
         libxcb1-dev \
         python3-dev \
+        libsystemd-dev \
         dbus-daemon \
     && apt-get autoremove --purge -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \

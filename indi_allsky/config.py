@@ -68,8 +68,8 @@ class IndiAllSkyConfigBase(object):
                 "GAIN"    : 0.0,
                 "BINNING" : 1,
             },
-            "AUTO_GAIN_ENABLE"  : False,
-            "AUTO_GAIN_LEVELS"  : 8,
+            "EXPOSURE_CLASSNAME"  : "exposure_basic",
+            "AUTO_GAIN_LEVELS"    : 8,  # legacy setting
         },
         "INDI_CONFIG_DEFAULTS" : {
             "SWITCHES" : {},
@@ -827,6 +827,10 @@ class IndiAllSkyConfigBase(object):
             "SI1145_VIS_GAIN_DAY"    : "GAIN_ADC_CLOCK_DIV_1",
             "SI1145_IR_GAIN_NIGHT"   : "GAIN_ADC_CLOCK_DIV_32",
             "SI1145_IR_GAIN_DAY"     : "GAIN_ADC_CLOCK_DIV_1",
+            "SI1145_VIS_RANGE_HIGH_NIGHT" : False,
+            "SI1145_VIS_RANGE_HIGH_DAY"   : True,
+            "SI1145_IR_RANGE_HIGH_NIGHT"  : False,
+            "SI1145_IR_RANGE_HIGH_DAY"    : True,
             "LTR390_GAIN_NIGHT"      : "GAIN_9X",
             "LTR390_GAIN_DAY"        : "GAIN_1X",
             "INA3221_CH1_ENABLE"     : True,
@@ -909,6 +913,7 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
         self._config.update(config_entry.data)
 
         self._config = self._decrypt_passwords()
+        self._image_folder = Path('/var/www/html/allsky/images')
 
 
     @property
@@ -935,6 +940,15 @@ class IndiAllSkyConfig(IndiAllSkyConfigBase):
     @property
     def createDate(self):
         return self._createDate
+
+
+    @property
+    def image_folder(self):
+        return self._image_folder
+
+    @image_folder.setter
+    def image_folder(self, new_image_folder):
+        self._image_folder = Path(str(new_image_folder))
 
 
     def _getConfigEntry(self, config_id=None):
@@ -1472,6 +1486,7 @@ class IndiAllSkyConfigUtil(IndiAllSkyConfig):
 
 
         logger.info('Creating initial configuration')
+        self.config['IMAGE_FOLDER'] = str(self.image_folder)
         self.save('system', 'Initial config')
 
 
