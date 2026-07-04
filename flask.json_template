@@ -45,6 +45,7 @@
     "OIDC_CLIENT_ID" : "",
     "OIDC_CLIENT_SECRET" : "",
     "OIDC_DISCOVERY_URL" : "",
+    "OIDC_USERINFO_ENDPOINT" : "",
     "OIDC_SCOPES" : "openid email profile offline_access",
     "OIDC_PKCE" : true,
     "OIDC_GROUP_ADMIN" : "allsky_admins",

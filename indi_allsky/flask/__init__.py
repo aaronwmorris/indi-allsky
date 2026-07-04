@@ -128,17 +128,27 @@ def create_app():
 
         with app.app_context():
             if app.config.get('OIDC_CLIENT_ID'):
-                client_kwargs = {'scope': app.config.get('OIDC_SCOPES', 'openid email profile offline_access')}
+                client_kwargs = {
+                    'scope': app.config.get('OIDC_SCOPES', 'openid email profile offline_access'),
+                }
+
                 if app.config.get('OIDC_PKCE', True):
                     client_kwargs['code_challenge_method'] = 'S256'
 
-                oauth.register(
-                    name='oidc',
-                    client_id=app.config.get('OIDC_CLIENT_ID').strip(),
-                    client_secret=app.config.get('OIDC_CLIENT_SECRET', '').strip() if app.config.get('OIDC_CLIENT_SECRET') else None,
-                    server_metadata_url=app.config.get('OIDC_DISCOVERY_URL', '').strip(),
-                    client_kwargs=client_kwargs,
-                )
+
+                oidc_register_kwargs = {
+                    'name' : 'oidc',
+                    'client_id' : app.config.get('OIDC_CLIENT_ID').strip(),
+                    'client_secret' : app.config.get('OIDC_CLIENT_SECRET', '').strip() if app.config.get('OIDC_CLIENT_SECRET') else None,
+                    'server_metadata_url' : app.config.get('OIDC_DISCOVERY_URL', '').strip(),
+                    'client_kwargs' : client_kwargs,
+                }
+
+                if app.config.get('OIDC_USERINFO_ENDPOINT'):
+                    oidc_register_kwargs['userinfo_endpoint'] = app.config['OIDC_USERINFO_ENDPOINT']
+
+
+                oauth.register(**oidc_register_kwargs)
 
 
     from .models import IndiAllSkyDbUserTable
