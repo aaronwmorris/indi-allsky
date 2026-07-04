@@ -12,8 +12,11 @@ from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager
 
 
-from authlib.integrations.flask_client import OAuth
-oauth = OAuth()
+try:
+    from authlib.integrations.flask_client import OAuth
+    oauth = OAuth()
+except ModuleNotFoundError:
+    oauth = None
 
 
 db = SQLAlchemy()
@@ -119,22 +122,23 @@ def create_app():
     login_manager.init_app(app)
 
 
-    oauth.init_app(app)
+    if not isinstance(oauth, type(None)):
+        oauth.init_app(app)
 
 
-    with app.app_context():
-        if app.config.get('OIDC_CLIENT_ID'):
-            client_kwargs = {'scope': app.config.get('OIDC_SCOPES', 'openid email profile offline_access')}
-            if app.config.get('OIDC_PKCE', True):
-                client_kwargs['code_challenge_method'] = 'S256'
+        with app.app_context():
+            if app.config.get('OIDC_CLIENT_ID'):
+                client_kwargs = {'scope': app.config.get('OIDC_SCOPES', 'openid email profile offline_access')}
+                if app.config.get('OIDC_PKCE', True):
+                    client_kwargs['code_challenge_method'] = 'S256'
 
-            oauth.register(
-                name='oidc',
-                client_id=app.config.get('OIDC_CLIENT_ID').strip(),
-                client_secret=app.config.get('OIDC_CLIENT_SECRET', '').strip() if app.config.get('OIDC_CLIENT_SECRET') else None,
-                server_metadata_url=app.config.get('OIDC_DISCOVERY_URL', '').strip(),
-                client_kwargs=client_kwargs,
-            )
+                oauth.register(
+                    name='oidc',
+                    client_id=app.config.get('OIDC_CLIENT_ID').strip(),
+                    client_secret=app.config.get('OIDC_CLIENT_SECRET', '').strip() if app.config.get('OIDC_CLIENT_SECRET') else None,
+                    server_metadata_url=app.config.get('OIDC_DISCOVERY_URL', '').strip(),
+                    client_kwargs=client_kwargs,
+                )
 
 
     from .models import IndiAllSkyDbUserTable
@@ -165,8 +169,11 @@ def create_app():
                 return
 
 
-        if current_user.data:
-            current_user_data = dict(current_user.data)
+        if current_user.is_authenticated:
+            if current_user.data:
+                current_user_data = dict(current_user.data)
+            else:
+                current_user_data = dict()
         else:
             current_user_data = dict()
 
