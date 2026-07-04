@@ -15,24 +15,22 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
     @property
     def exposure_min(self):
         if self.night_av[constants.NIGHT_NIGHT]:
-            return float(self.exposure_av[constants.EXPOSURE_MIN_NIGHT])
+            return self._expUtils.EXPOSURE_MIN_NIGHT
         else:
-            return float(self.exposure_av[constants.EXPOSURE_MIN_DAY])
+            return self._expUtils.EXPOSURE_MIN_DAY
 
     @property
     def exposure_max(self):
-        return float(self.exposure_av[constants.EXPOSURE_MAX])
+        return self._expUtils.EXPOSURE_MAX
 
 
     @property
     def gain_min(self):
-        # prevent python/C float conversion errors
-        return math.ceil(float(self.gain_av[constants.GAIN_MIN_NIGHT]) * 100) / 100  # round up the hundredths spot
+        return self._expUtils.GAIN_MIN_NIGHT
 
     @property
     def gain_max(self):
-        # prevent python/C float conversion errors
-        return math.floor(float(self.gain_av[constants.GAIN_MAX_NIGHT]) * 100) / 100  # round down
+        return self._expUtils.GAIN_MAX_NIGHT
 
 
     @property
@@ -64,7 +62,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
         #if isinstance(self.auto_gain_exposure_cutoff_low, type(None)):
         #    self.post_init()
 
-        #logger.warning('Next calculated exposure: %0.8f', next_exposure)
+        #logger.warning('Next calculated exposure: %0.6f', next_exposure)
 
         # the next exposure may be higher than the maximum exposure
         # this exposure will be used to calulate a gain adjustment instead
@@ -119,7 +117,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             next_exposure = self.exposure_max
             exposure_delta = next_exposure - current_exposure
 
-            logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f), gain to %0.2f (%+0.2f)', next_exposure, exposure_delta, self.dB2gain(next_gain_dB), gain_delta)
+            logger.info('Auto-Gain increasing exposure to %0.6f (%+0.6f), gain to %0.3f (%+0.3f)', next_exposure, exposure_delta, self.dB2gain(next_gain_dB), gain_delta)
         else:
             # increase exposure only
             #next_exposure = next_exposure
@@ -128,7 +126,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             next_gain_dB = current_gain_dB
             gain_delta = 0.0
 
-            logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
+            logger.info('Auto-Gain increasing exposure to %0.6f (%+0.6f) [maintain gain]', next_exposure, exposure_delta)
 
 
         return next_exposure, exposure_delta, next_gain_dB, gain_delta
@@ -144,7 +142,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             exposure_delta = next_exposure - current_exposure
             gain_delta = 0.0
             next_gain_dB = current_gain_dB
-            logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f) [maintain gain]', next_exposure, exposure_delta)
+            logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.6f) [maintain gain]', next_exposure, exposure_delta)
 
         else:
             # reduce exposure, then reduce gain
@@ -161,7 +159,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             next_exposure = exposure_low_cutoff
             exposure_delta = next_exposure - current_exposure
 
-            logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f), gain to %0.2f (%+0.2f)', next_exposure, exposure_delta, self.dB2gain(next_gain_dB), gain_delta)
+            logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.6f), gain to %0.3f (%+0.3f)', next_exposure, exposure_delta, self.dB2gain(next_gain_dB), gain_delta)
 
         return next_exposure, exposure_delta, next_gain_dB, gain_delta
 
@@ -185,7 +183,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             next_gain_dB = self.gain2dB(self.gain_max)
             gain_delta = self.dB2gain(next_gain_dB) - current_gain
 
-            logger.info('Auto-Gain increasing exposure to %0.6f (%+0.8f), gain to %0.2f (%+0.2f)', next_exposure, exposure_delta, self.dB2gain(next_gain_dB), gain_delta)
+            logger.info('Auto-Gain increasing exposure to %0.6f (%+0.6f), gain to %0.3f (%+0.3f)', next_exposure, exposure_delta, self.dB2gain(next_gain_dB), gain_delta)
 
         else:
             # increase gain only
@@ -193,7 +191,7 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             exposure_delta = 0.0
             gain_delta = self.dB2gain(next_gain_dB) - current_gain
 
-            logger.info('Auto-Gain increasing gain to %0.2f (%+0.2f) [maintain exposure]', self.dB2gain(next_gain_dB), gain_delta)
+            logger.info('Auto-Gain increasing gain to %0.3f (%+0.3f) [maintain exposure]', self.dB2gain(next_gain_dB), gain_delta)
 
 
         return next_exposure, exposure_delta, next_gain_dB, gain_delta
@@ -219,14 +217,14 @@ class IndiAllSky_Exposure_AutoGain_ExposurePriority_dB_Base(IndiAllSky_Exposure_
             next_gain_dB = self.gain2dB(self.gain_min)
             gain_delta = self.dB2gain(next_gain_dB) - current_gain
 
-            logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.8f), gain to %0.2f (%+0.2f)', next_exposure, exposure_delta, self.dB2gain(next_gain_dB), gain_delta)
+            logger.info('Auto-Gain decreasing exposure to %0.6f (%+0.6f), gain to %0.3f (%+0.3f)', next_exposure, exposure_delta, self.dB2gain(next_gain_dB), gain_delta)
 
         else:
             # reduce only gain
             gain_delta = self.dB2gain(next_gain_dB) - current_gain
             next_exposure = current_exposure
             exposure_delta = 0.0
-            logger.info('Auto-Gain decreasing gain to %0.2f dB (%+0.2f) [maintain exposure]', self.dB2gain(next_gain_dB), gain_delta)
+            logger.info('Auto-Gain decreasing gain to %0.3f (%+0.3f) [maintain exposure]', self.dB2gain(next_gain_dB), gain_delta)
 
         return next_exposure, exposure_delta, next_gain_dB, gain_delta
 

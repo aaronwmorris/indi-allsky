@@ -119,6 +119,7 @@ class ImageWorker(Process):
         self.image_processor = ImageProcessor(
             self.config,
             self.position_av,
+            self.exposure_av,
             self.gain_av,
             self.binning_av,
             self.sensors_temp_av,
@@ -751,10 +752,10 @@ class ImageWorker(Process):
                 'createDate'      : int(exp_date.timestamp()),
                 'dayDate'         : i_ref.day_date.strftime('%Y%m%d'),
                 'utc_offset'      : exp_date.astimezone().utcoffset().total_seconds(),
-                'exposure'        : exposure,
+                'exposure'        : i_ref.exposure,
                 'exp_elapsed'     : exp_elapsed,
-                'gain'            : float(gain),
-                'binmode'         : int(binning),
+                'gain'            : i_ref.gain,
+                'binmode'         : i_ref.binning,
                 'temp'            : self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP],
                 'adu'             : adu,
                 'stable'          : self.exposure_o.target_adu_found,
@@ -869,9 +870,9 @@ class ImageWorker(Process):
 
             mqtt_data = {
                 'exp_date' : exp_date.strftime('%Y-%m-%d %H:%M:%S'),
-                'exposure' : round(exposure, 6),
-                'gain'     : round(gain, 2),
-                'bin'      : int(binning),
+                'exposure' : round(i_ref.exposure, 6),
+                'gain'     : round(i_ref.gain, 3),
+                'bin'      : i_ref.binning,
                 'temp'     : round(self.sensors_temp_av[constants.SENSOR_TEMP_CCD_TEMP], 1),
                 'sunalt'   : round(self.image_processor.astrometric_data['sun_alt'], 1),
                 'moonalt'  : round(self.image_processor.astrometric_data['moon_alt'], 1),
@@ -2190,7 +2191,7 @@ class ImageWorker(Process):
         cmd_env = {
             'DATA_JSON': str(self.pre_hook_datajson_name_p),  # the file used for the json data is communicated via environment variable
             'EXPOSURE' : '{0:0.6f}'.format(exposure),
-            'GAIN'     : '{0:0.2f}'.format(gain),
+            'GAIN'     : '{0:0.3f}'.format(gain),
             'BIN'      : '{0:d}'.format(binning),
             'SUNALT'   : '{0:0.1f}'.format(self.image_processor.astrometric_data['sun_alt']),
             'MOONALT'  : '{0:0.1f}'.format(self.image_processor.astrometric_data['moon_alt']),

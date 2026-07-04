@@ -248,7 +248,7 @@ class MqttRemoteLibcamera(object):
 
 
         self.exposure_start_time = time.time()
-        logger.warning('Taking %0.8fs exposure (gain %0.2f / bin %d)', exposure, gain, binning)
+        logger.warning('Taking %0.8fs exposure (gain %0.3f / bin %d)', exposure, gain, binning)
 
         self.libcamera_process = subprocess.Popen(
             cmd,

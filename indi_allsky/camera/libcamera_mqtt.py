@@ -157,10 +157,10 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
         self.current_metadata_file_p = metadata_tmp_p
 
 
-        if self.gain != float(round(gain, 2)):
+        if self.gain != gain:
             self.setCcdGain(gain)
 
-        if self.binning != int(binning):
+        if self.binning != binning:
             self.setCcdBinning(binning)
 
 
@@ -173,7 +173,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--raw',
                 '--denoise', 'off',
-                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
+                '--gain', '{0:0.3f}'.format(self._expUtils.GAIN_CURRENT),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', '{metadata:s}',
                 '--metadata-format', 'json',
@@ -186,7 +186,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
                 '--camera', '{0:d}'.format(libcamera_camera_id),
                 '--encoding', '{0:s}'.format(image_type),
                 '--quality', '95',
-                '--gain', '{0:0.2f}'.format(self.gain_av[constants.GAIN_CURRENT]),
+                '--gain', '{0:0.3f}'.format(self._expUtils.GAIN_CURRENT),
                 '--shutter', '{0:d}'.format(exposure_us),
                 '--metadata', '{metadata:s}',
                 '--metadata-format', 'json',
@@ -296,8 +296,7 @@ class IndiClientLibCameraMqttGeneric(IndiClientLibCameraGeneric):
 
 
         # Update shared exposure value
-        with self.exposure_av.get_lock():
-            self.exposure_av[constants.EXPOSURE_CURRENT] = float(exposure)
+        self._expUtils.EXPOSURE_CURRENT = exposure
 
 
         if sync:
@@ -440,7 +439,7 @@ class IndiClientLibCameraImx477Mqtt(IndiClientLibCameraMqttGeneric):
             'height'        : 3040,
             'pixel'         : 1.55,
             'min_gain'      : 1.0,
-            'max_gain'      : 22.26,
+            'max_gain'      : 22.260870,
             'min_exposure'  : 0.000114,
             'max_exposure'  : 694.0,
             'cfa'           : 'BGGR',
@@ -468,7 +467,7 @@ class IndiClientLibCameraImx378Mqtt(IndiClientLibCameraMqttGeneric):
             'height'        : 3040,
             'pixel'         : 1.55,
             'min_gain'      : 1.0,
-            'max_gain'      : 22.26,
+            'max_gain'      : 22.260870,
             'min_binning'   : 1,
             'max_binning'   : 4,
             'min_exposure'  : 0.000114,
@@ -496,7 +495,7 @@ class IndiClientLibCameraImx708Mqtt(IndiClientLibCameraMqttGeneric):
             'width'         : 4608,
             'height'        : 2592,
             'pixel'         : 1.4,
-            'min_gain'      : 1.13,
+            'min_gain'      : 1.122807,
             'max_gain'      : 16.0,
             'min_binning'   : 1,
             'max_binning'   : 4,
