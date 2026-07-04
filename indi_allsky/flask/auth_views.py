@@ -131,9 +131,19 @@ class LoginView(TemplateView):
             remote_addr = request.remote_addr
 
 
+        if user.data:
+            user_data = dict(user.data)
+        else:
+            user_data = dict()
+
+
         now = datetime.now()
         user.loginDate = now
         user.loginIp = remote_addr
+
+        user_data['idp'] = 'local'
+        user.data = user_data
+
         db.session.commit()
 
 
@@ -279,22 +289,20 @@ class OIDCCallbackView(BaseView):
             remote_addr = request.remote_addr
 
 
+        session.permanent = True
+        login_user(user, remember=True)
+
+
         now = datetime.now()
         user.loginDate = now
         user.loginIp = remote_addr
-        db.session.commit()
-
-
-        session.permanent = True
-
 
         user_data['idp'] = 'oidc'
         user_data['oidc_token'] = token
         user.data = user_data
+
         db.session.commit()
 
-
-        login_user(user, remember=True)
 
         # Redirect to original destination
         next_url = session.pop('oidc_next', None)
