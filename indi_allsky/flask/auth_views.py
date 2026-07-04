@@ -213,34 +213,32 @@ class OIDCCallbackView(BaseView):
             app.logger.error('OIDC callback failed to exchange token: %s', error_msg)
             return redirect(url_for('auth_indi_allsky.login_view'))
 
-        email = user_info.get('email')
-        if not email:
-            app.logger.error('OIDC login failed: No email provided by identity provider')
+
+        oidc_login = user_info.get('login')
+
+        if not oidc_login:
+            app.logger.error('OIDC login failed: No login provided by identity provider')
             return redirect(url_for('auth_indi_allsky.login_view'))
 
+
         # Find or Create User
-        user = IndiAllSkyDbUserTable.query.filter_by(email=email).first()
+        user = IndiAllSkyDbUserTable.query.filter_by(username=oidc_login).first()
 
         if not user:
-            username = user_info.get('preferred_username') or email.split('@')[0]
-            base_username = username
-            counter = 1
-            while IndiAllSkyDbUserTable.query.filter_by(username=username).first():
-                username = f"{base_username}{counter}"
-                counter += 1
+            preferred_username = user_info.get('preferred_username') or oidc_login
 
             user = IndiAllSkyDbUserTable(
-                username=username,
-                email=email,
+                username=preferred_username,
+                email=user_info.get('email', ''),
                 password=argon2.hash(''.join(random.choices(string.ascii_letters + string.digits, k=32))),
                 name=user_info.get('name', ''),
                 active=True,
-                staff=True
+                staff=True,
             )
             db.session.add(user)
 
             user_data = dict()
-            app.logger.info('Created new OIDC user: %s', username)
+            app.logger.info('Created new OIDC user: %s', preferred_username)
         else:
             # user exists
             if user.data:
