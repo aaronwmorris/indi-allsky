@@ -138,9 +138,9 @@ def create_app():
 
                 oidc_register_kwargs = {
                     'name' : 'oidc',
-                    'client_id' : app.config.get('OIDC_CLIENT_ID').strip(),
-                    'client_secret' : app.config.get('OIDC_CLIENT_SECRET', '').strip() if app.config.get('OIDC_CLIENT_SECRET') else None,
-                    'server_metadata_url' : app.config.get('OIDC_DISCOVERY_URL', '').strip(),
+                    'client_id' : app.config.get('OIDC_CLIENT_ID'),
+                    'client_secret' : app.config.get('OIDC_CLIENT_SECRET', '') if app.config.get('OIDC_CLIENT_SECRET') else None,
+                    'server_metadata_url' : app.config.get('OIDC_DISCOVERY_ENDPOINT', ''),
                     'client_kwargs' : client_kwargs,
                 }
 
