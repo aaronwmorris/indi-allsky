@@ -20,6 +20,7 @@ var camera_id = {{ camera_id }};
     <thead>
       <tr>
         <th>Create</th>
+        <th>Login</th>
         <th>Username</th>
         <th>Name</th>
         <th>Active</th>
@@ -32,6 +33,13 @@ var camera_id = {{ camera_id }};
       {% for user in user_list %}
       <tr>
         <td>{{ user.createDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+
+        {% if user.loginDate %}
+            <td>{{ user.loginDate.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        {% else %}
+            <td>Never</td>
+        {% endif %}
+
         <td>{{ user.username }}</td>
         <td>{{ user.name }}</td>
         <td>{{ user.active }}</td>
