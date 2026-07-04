@@ -8709,10 +8709,7 @@ class UserInfoView(TemplateView):
             current_user_data = dict()
 
 
-        if current_user_data.get('oidc_token'):
-            idp = 'oidc'
-        else:
-            idp = 'local'
+        idp = current_user_data.get('idp', 'local')
 
 
         form_data = {

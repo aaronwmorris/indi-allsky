@@ -142,6 +142,10 @@ class UserManager(object):
 
         now = datetime.now()
 
+        user_data = {
+            'idp' : 'local',
+        }
+
         user = IndiAllSkyDbUserTable(
             username=username,
             password=hashed_password,
@@ -152,6 +156,7 @@ class UserManager(object):
             active=True,
             staff=True,
             admin=False,
+            data=user_data,
         )
 
         db.session.add(user)

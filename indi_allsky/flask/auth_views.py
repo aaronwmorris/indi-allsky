@@ -288,6 +288,7 @@ class OIDCCallbackView(BaseView):
         session.permanent = True
 
 
+        user_data['idp'] = 'oidc'
         user_data['oidc_token'] = token
         user.data = user_data
         db.session.commit()
