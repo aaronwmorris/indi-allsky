@@ -199,9 +199,9 @@ class OIDCCallbackView(BaseView):
             session['oidc_id_token'] = token.get('id_token')  # Store for logout hint
             session['oidc_expires_at'] = token.get('expires_at')
 
-            user_info = token.get('userinfo')
-            if not user_info:
-                user_info = oauth.oidc.userinfo()
+            oidc_user_info = token.get('userinfo')
+            if not oidc_user_info:
+                oidc_user_info = oauth.oidc.userinfo()
 
             #app.logger.info('User Info: %s', user_info)
 
@@ -214,24 +214,25 @@ class OIDCCallbackView(BaseView):
             return redirect(url_for('auth_indi_allsky.login_view'))
 
 
-        oidc_login = user_info.get('login')
+        oidc_login = oidc_user_info.get('login')
 
         if not oidc_login:
             app.logger.error('OIDC login failed: No login provided by identity provider')
             return redirect(url_for('auth_indi_allsky.login_view'))
 
 
+        preferred_username = oidc_user_info.get('preferred_username') or oidc_login
+
+
         # Find or Create User
-        user = IndiAllSkyDbUserTable.query.filter_by(username=oidc_login).first()
+        user = IndiAllSkyDbUserTable.query.filter_by(username=preferred_username).first()
 
         if not user:
-            preferred_username = user_info.get('preferred_username') or oidc_login
-
             user = IndiAllSkyDbUserTable(
                 username=preferred_username,
-                email=user_info.get('email', ''),
+                email=oidc_user_info.get('email', ''),
                 password=argon2.hash(''.join(random.choices(string.ascii_letters + string.digits, k=32))),
-                name=user_info.get('name', ''),
+                name=oidc_user_info.get('name', ''),
                 active=True,
                 staff=True,
             )
@@ -249,12 +250,18 @@ class OIDCCallbackView(BaseView):
 
         admin_group = app.config.get('OIDC_GROUP_ADMIN')
         if admin_group:
-            user_groups = user_info.get('groups', [])
+            user_groups = oidc_user_info.get('groups', [])
             if isinstance(user_groups, list):
                 user.admin = admin_group in user_groups
             elif isinstance(user_groups, str):
                 # Sometimes groups come as a space-separated string
                 user.admin = admin_group in user_groups.split()
+
+
+        # manual list of admin users
+        oidc_admin_users = app.config.get('OIDC_ADMIN_USERS')
+        if oidc_admin_users:
+            user.admin = preferred_username in oidc_admin_users
 
 
         if request.headers.get('X-Forwarded-For'):
