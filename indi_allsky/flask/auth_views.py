@@ -228,12 +228,8 @@ class OIDCCallbackView(BaseView):
         oidc_allowed_users = app.config.get('OIDC_ALLOWED_USERS')
         if oidc_allowed_users:
             if preferred_username not in oidc_allowed_users:
-                form_login = IndiAllskyLoginForm()
-
-                form_errors = form_login.errors  # this must be a property
-                form_errors['form_global'] = ['OIDC User %s not allowed to login']
-                app.logger.error('OIDC User %s not allowed to login', preferred_username)
-                return jsonify(form_errors), 400
+                app.logger.error('OIDC User not allowed to login: %s', preferred_username)
+                abort(400, 'OIDC User not allowed to login: {0:s}'.format(preferred_username))
 
 
         # Find or Create User
