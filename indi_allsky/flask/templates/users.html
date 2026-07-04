@@ -25,6 +25,7 @@ var camera_id = {{ camera_id }};
         <th>Active</th>
         <th>Staff</th>
         <th>Admin</th>
+        <th>Type</th>
       </tr>
     </thead>
     <tbody>
@@ -36,6 +37,13 @@ var camera_id = {{ camera_id }};
         <td>{{ user.active }}</td>
         <td>{{ user.staff }}</td>
         <td>{{ user.admin }}</td>
+
+        {% if user.data['oidc_token'] %}
+            <td>OIDC</td>
+        {% else %}
+            <td>Local</td>
+        {% endif %}
+
       </tr>
       {% endfor %}
     </tbody>

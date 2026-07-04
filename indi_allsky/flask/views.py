@@ -8702,11 +8702,25 @@ class UserInfoView(TemplateView):
     def get_context(self):
         context = super(UserInfoView, self).get_context()
 
+
+        if current_user.data:
+            current_user_data = dict(current_user.data)
+        else:
+            current_user_data = dict()
+
+
+        if current_user_data.get('oidc_token'):
+            idp = 'oidc'
+        else:
+            idp = 'local'
+
+
         form_data = {
             'USERNAME' : current_user.username,
             'NAME'     : current_user.name,
             'EMAIL'    : current_user.email,
             'ADMIN'    : current_user.admin,
+            'IDP'      : idp,
         }
 
         context['form_userinfo'] = IndiAllskyUserInfoForm(data=form_data)
