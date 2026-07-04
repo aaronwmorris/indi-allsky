@@ -4,12 +4,16 @@ from pathlib import Path
 from logging.config import dictConfig
 
 #from sqlalchemy.pool import NullPool
-from flask import Flask
+from flask import Flask, app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 
 from flask_login import LoginManager
+from authlib.integrations.flask_client import OAuth
+from cryptography.fernet import Fernet
+
+oauth = OAuth()
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -113,13 +117,87 @@ def create_app():
     login_manager.login_view = 'auth_indi_allsky.login_view'
     login_manager.init_app(app)
 
-    from .models import IndiAllSkyDbUserTable
+    oauth.init_app(app)
 
+    with app.app_context():
+        if app.config.get('OIDC_CLIENT_ID'):
+            client_kwargs = {'scope': app.config.get('OIDC_SCOPES', 'openid email profile offline_access')}
+            if app.config.get('OIDC_PKCE', True):
+                client_kwargs['code_challenge_method'] = 'S256'
+
+            oauth.register(
+                name='oidc',
+                client_id=app.config.get('OIDC_CLIENT_ID').strip(),
+                client_secret=app.config.get('OIDC_CLIENT_SECRET', '').strip() if app.config.get('OIDC_CLIENT_SECRET') else None,
+                server_metadata_url=app.config.get('OIDC_DISCOVERY_URL', '').strip(),
+                client_kwargs=client_kwargs,
+            )
+    from .models import IndiAllSkyDbUserTable
 
     @login_manager.user_loader
     def load_user(user_id):
         # since the user_id is just the primary key of our user table, use it in the query for the user
         return IndiAllSkyDbUserTable.query.get(int(user_id))
+
+
+    @app.before_request
+    def refresh_oidc_token():
+        from flask_login import current_user, logout_user
+        from flask import redirect, url_for, request, session
+        import time
+
+        # Skip for static files and common public assets to save DB hits
+        if request.path.startswith('/static') or request.path.endswith(('.png', '.jpg', '.jpeg', '.gif', '.ico', '.css', '.js')):
+            return
+
+        # Check session cache first to avoid DB hits
+        if current_user.is_authenticated and session.get('oidc_expires_at'):
+            if time.time() + 60 < session['oidc_expires_at']:
+                return
+
+        if current_user.is_authenticated and hasattr(current_user, 'oidc_token') and current_user.oidc_token:
+            token = current_user.oidc_token
+            # check expiration (with 60s buffer)
+            expires_at = token.get('expires_at')
+            if expires_at and expires_at < (time.time() + 60):
+                if 'refresh_token' in token and hasattr(oauth, 'oidc'):
+                    try:
+                        # Attempt refresh using the most compatible method
+                        if hasattr(oauth.oidc, 'refresh_token'):
+                            # Authlib 1.0+
+                            new_token = oauth.oidc.refresh_token(
+                                refresh_token=token['refresh_token']
+                            )
+                        else:
+                            # Fallback for older Authlib or when method is missing
+                            # We can use the internal session or fetch_access_token
+                            new_token = oauth.oidc.fetch_access_token(
+                                grant_type='refresh_token',
+                                refresh_token=token['refresh_token']
+                            )
+                        
+                        # Merge new token data into existing token to preserve id_token
+                        # as many IdPs do not return a new id_token on refresh
+                        token.update(new_token)
+                        
+                        # Use a copy to ensure SQLAlchemy detects the change
+                        current_user.oidc_token = dict(token)
+                        db.session.commit()
+                        
+                        session['oidc_expires_at'] = token.get('expires_at')
+                        app.logger.debug('OIDC token refreshed for user %s', current_user.username)
+                    except Exception as e:
+                        app.logger.error('OIDC token refresh failed for user %s: %s', current_user.username, str(e))
+                        logout_user()
+                        return redirect(url_for('auth_indi_allsky.login_view'))
+                else:
+                    # No refresh token, and token is expired. Force logout.
+                    app.logger.warning('OIDC token expired and no refresh token available for user %s', current_user.username)
+                    logout_user()
+                    return redirect(url_for('auth_indi_allsky.login_view'))
+            elif expires_at:
+                # Cache it if it was missing from session but present in DB
+                session['oidc_expires_at'] = expires_at
 
 
     with app.app_context():

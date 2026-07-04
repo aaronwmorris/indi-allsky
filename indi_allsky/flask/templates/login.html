@@ -27,6 +27,7 @@ html, body {
         {{ form_login.csrf_token }}
         <div class="text-danger my-2" id="csrf_token-error"></div>
 
+        {% if local_auth_enable %}
         <div class="form-group row">
             <div class="col-2 offset-1">
                 {{ form_login.USERNAME.label(class='col-form-label') }}
@@ -53,6 +54,23 @@ html, body {
                 <button class="btn btn-primary">Submit</button>
             </div>
         </div>
+        {% else %}
+        {{ form_login.NEXT(class='form-control bg-secondary', style='display: none;') }}
+        {% endif %}
+
+        {% if oidc_enabled %}
+        <div class="form-group mt-3">
+            <div class="text-center">
+                <hr class="text-white mx-5">
+                <a href="{{ url_for('auth_indi_allsky.oidc_login_view', next=request.args.get('next', '')) }}" class="btn btn-info text-dark">
+                    {% if oidc_logo_url %}
+                    <img src="{{ oidc_logo_url }}" height="24" class="me-2" alt="OIDC Logo">
+                    {% endif %}
+                    Login with OIDC
+                </a>
+            </div>
+        </div>
+        {% endif %}
 
         <div class="form-group">
             <div class="text-center">

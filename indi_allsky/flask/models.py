@@ -951,6 +951,7 @@ class IndiAllSkyDbUserTable(db.Model):
     active = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     staff = db.Column(db.Boolean, server_default=expression.true(), nullable=False, index=True)
     admin = db.Column(db.Boolean, server_default=expression.false(), nullable=False, index=True)
+    oidc_token = db.Column(db.JSON)
     data = db.Column(db.JSON, index=True)
     configs = db.relationship('IndiAllSkyDbConfigTable', back_populates='user')
 
