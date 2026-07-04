@@ -51,6 +51,7 @@
     "OIDC_GROUP_ADMIN" : "allsky_admins",
     "OIDC_LOGO_URL" : "",
     "OIDC_ADMIN_USERS" : [],
+    "OIDC_ALLOWED_USERS" : [],
 
     "ADMIN_NETWORKS" : [
         "10.0.0.0/8",
