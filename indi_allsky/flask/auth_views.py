@@ -53,6 +53,7 @@ class LoginView(TemplateView):
 
         context['form_login'] = IndiAllskyLoginForm(NEXT=request.args.get('next', ''))
         context['oidc_enabled'] = app.config.get('OIDC_ENABLE', False)
+        context['oidc_provider_name'] = app.config.get('OIDC_PROVIDER_NAME', '[Configure Provider Name]')
         context['oidc_logo_url'] = app.config.get('OIDC_LOGO_URL', '')
         context['local_auth_enable'] = app.config.get('LOCAL_AUTH_ENABLE', True)
 
