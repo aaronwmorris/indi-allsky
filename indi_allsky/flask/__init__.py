@@ -10,9 +10,11 @@ from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 
 from flask_login import LoginManager
-from authlib.integrations.flask_client import OAuth
 
+
+from authlib.integrations.flask_client import OAuth
 oauth = OAuth()
+
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -116,7 +118,9 @@ def create_app():
     login_manager.login_view = 'auth_indi_allsky.login_view'
     login_manager.init_app(app)
 
+
     oauth.init_app(app)
+
 
     with app.app_context():
         if app.config.get('OIDC_CLIENT_ID'):
@@ -156,8 +160,15 @@ def create_app():
             if time.time() + 60 < session['oidc_expires_at']:
                 return
 
-        if current_user.is_authenticated and hasattr(current_user, 'oidc_token') and current_user.oidc_token:
-            token = current_user.oidc_token
+
+        if current_user.data:
+            current_user_data = dict(current_user.data)
+        else:
+            current_user_data = dict()
+
+
+        if current_user.is_authenticated and current_user_data.get('oidc_token'):
+            token = current_user_data['oidc_token']
             # check expiration (with 60s buffer)
             expires_at = token.get('expires_at')
             if expires_at and expires_at < (time.time() + 60):
@@ -182,7 +193,8 @@ def create_app():
                         token.update(new_token)
 
                         # Use a copy to ensure SQLAlchemy detects the change
-                        current_user.oidc_token = dict(token)
+                        current_user_data['oidc_token'] = dict(token)
+                        current_user.data = current_user_data
                         db.session.commit()
 
                         session['oidc_expires_at'] = token.get('expires_at')
