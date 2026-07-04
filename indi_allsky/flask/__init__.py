@@ -151,9 +151,13 @@ def create_app():
         from flask import redirect, url_for, request, session
         import time
 
+
         # Skip for static files and common public assets to save DB hits
-        if request.path.startswith('/static') or request.path.endswith(('.png', '.jpg', '.jpeg', '.gif', '.ico', '.css', '.js')):
+        # Note: This should not be necessary since the web server serves static content and images directly, bypassing gunicorn
+        #app.logger.info('Request path: %s', request.path)
+        if '/static/' in request.path or request.path.endswith(('.png', '.jpg', '.jpeg', '.gif', '.ico', '.css', '.js', '.mp4')):
             return
+
 
         # Check session cache first to avoid DB hits
         if current_user.is_authenticated and session.get('oidc_expires_at'):
