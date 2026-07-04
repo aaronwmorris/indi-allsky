@@ -4,14 +4,13 @@ from pathlib import Path
 from logging.config import dictConfig
 
 #from sqlalchemy.pool import NullPool
-from flask import Flask, app
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 
 from flask_login import LoginManager
 from authlib.integrations.flask_client import OAuth
-from cryptography.fernet import Fernet
 
 oauth = OAuth()
 
@@ -132,6 +131,8 @@ def create_app():
                 server_metadata_url=app.config.get('OIDC_DISCOVERY_URL', '').strip(),
                 client_kwargs=client_kwargs,
             )
+
+
     from .models import IndiAllSkyDbUserTable
 
     @login_manager.user_loader
@@ -175,15 +176,15 @@ def create_app():
                                 grant_type='refresh_token',
                                 refresh_token=token['refresh_token']
                             )
-                        
+
                         # Merge new token data into existing token to preserve id_token
                         # as many IdPs do not return a new id_token on refresh
                         token.update(new_token)
-                        
+
                         # Use a copy to ensure SQLAlchemy detects the change
                         current_user.oidc_token = dict(token)
                         db.session.commit()
-                        
+
                         session['oidc_expires_at'] = token.get('expires_at')
                         app.logger.debug('OIDC token refreshed for user %s', current_user.username)
                     except Exception as e:

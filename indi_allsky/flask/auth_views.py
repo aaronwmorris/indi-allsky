@@ -52,9 +52,9 @@ class LoginView(TemplateView):
         context = super(LoginView, self).get_context()
 
         context['form_login'] = IndiAllskyLoginForm(NEXT=request.args.get('next', ''))
-        context['oidc_enabled'] = self.indi_allsky_config.get('OIDC', {}).get('ENABLE', False)
-        context['oidc_logo_url'] = self.indi_allsky_config.get('OIDC', {}).get('LOGO_URL', '')
-        context['local_auth_enable'] = self.indi_allsky_config.get('LOCAL_AUTH_ENABLE', True)
+        context['oidc_enabled'] = app.config.get('OIDC_ENABLE', False)
+        context['oidc_logo_url'] = app.config.get('OIDC_LOGO_URL', '')
+        context['local_auth_enable'] = app.config.get('LOCAL_AUTH_ENABLE', True)
 
         return context
 
@@ -72,8 +72,7 @@ class LoginView(TemplateView):
         if current_user.is_authenticated:
             return redirect(url_for('indi_allsky.index_view'))
 
-        oidc_config = self.indi_allsky_config.get('OIDC', {})
-        if oidc_config.get('ENABLE') and oidc_config.get('AUTO_LOGIN'):
+        if app.config.get('OIDC_ENABLE') and app.config.get('OIDC_AUTO_LOGIN'):
             return redirect(url_for('auth_indi_allsky.oidc_login_view', next=request.args.get('next', '')))
 
         return super(LoginView, self).dispatch_request()
@@ -233,7 +232,16 @@ class OIDCCallbackView(BaseView):
                 staff=True
             )
             db.session.add(user)
+
+            user_data = dict()
             app.logger.info('Created new OIDC user: %s', username)
+        else:
+            # user exists
+            if user.data:
+                user_data = dict(user.data)
+            else:
+                user_data = dict()
+
 
         admin_group = app.config.get('OIDC_GROUP_ADMIN')
         if admin_group:
@@ -244,19 +252,27 @@ class OIDCCallbackView(BaseView):
                 # Sometimes groups come as a space-separated string
                 user.admin = admin_group in user_groups.split()
 
+
         if request.headers.get('X-Forwarded-For'):
             remote_addr = request.headers.get('X-Forwarded-For')
         else:
             remote_addr = request.remote_addr
 
+
         now = datetime.now()
         user.loginDate = now
         user.loginIp = remote_addr
+        db.session.commit()
 
-        db.session.commit()
+
         session.permanent = True
-        user.oidc_token = token
+
+
+        user_data['oidc_token'] = token
+        user.data = user_data
         db.session.commit()
+
+
         login_user(user, remember=True)
 
         # Redirect to original destination
@@ -276,20 +292,29 @@ class LogoutView(BaseView):
         if not current_user.is_authenticated:
             return redirect(url_for('indi_allsky.index_view'))
 
+
+        if current_user.data:
+            current_user_data = dict(current_user.data)
+        else:
+            current_user_data = dict()
+
+
         # If session hint is missing, try to get it from the user record
-        if not id_token and hasattr(current_user, 'oidc_token') and current_user.oidc_token:
-            id_token = current_user.oidc_token.get('id_token')
+        if not id_token and current_user_data.get('oidc_token'):
+            id_token = current_user_data['oidc_token'].get('id_token')
 
         # Clear token from DB on logout for security
-        if hasattr(current_user, 'oidc_token'):
-            current_user.oidc_token = None
+        if current_user_data.get('oidc_token'):
+            current_user_data['oidc_token'] = None
+            current_user.data = current_user_data
             db.session.commit()
+
 
         logout_user()
 
+
         # Check if OIDC logout should be initiated
-        oidc_config = self.indi_allsky_config.get('OIDC', {})
-        if oidc_config.get('ENABLE') and id_token and hasattr(oauth, 'oidc'):
+        if app.config.get('OIDC_ENABLE') and id_token and hasattr(oauth, 'oidc'):
             try:
                 return oauth.oidc.logout_redirect(
                     post_logout_redirect_uri=url_for('auth_indi_allsky.oidc_callback_view', _external=True),
