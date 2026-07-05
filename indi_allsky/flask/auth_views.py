@@ -225,30 +225,27 @@ class OIDCCallbackView(BaseView):
             return redirect(url_for('auth_indi_allsky.login_view'))
 
 
-        oidc_login = oidc_user_info.get('login')
+        oidc_username = oidc_user_info.get(app.config.get('OIDC_USERNAME_ATTRIBUTE', 'email'))
 
-        if not oidc_login:
-            app.logger.error('OIDC login failed: No login provided by identity provider')
+        if not oidc_username:
+            app.logger.error('OIDC login failed: No username provided by identity provider')
             return redirect(url_for('auth_indi_allsky.login_view'))
-
-
-        preferred_username = oidc_user_info.get('preferred_username') or oidc_login
 
 
         # only allow these users to login (if defined)
         oidc_allowed_users = app.config.get('OIDC_ALLOWED_USERS')
         if oidc_allowed_users:
-            if preferred_username not in oidc_allowed_users:
-                app.logger.error('OIDC User not allowed to login: %s', preferred_username)
-                abort(400, 'OIDC User not allowed to login: {0:s}'.format(preferred_username))
+            if oidc_username not in oidc_allowed_users:
+                app.logger.error('OIDC User not allowed to login: %s', oidc_username)
+                abort(400, 'OIDC User not allowed to login: {0:s}'.format(oidc_username))
 
 
         # Find or Create User
-        user = IndiAllSkyDbUserTable.query.filter_by(username=preferred_username).first()
+        user = IndiAllSkyDbUserTable.query.filter_by(username=oidc_username).first()
 
         if not user:
             user = IndiAllSkyDbUserTable(
-                username=preferred_username,
+                username=oidc_username,
                 email=oidc_user_info.get('email', ''),
                 password=argon2.hash(''.join(random.choices(string.ascii_letters + string.digits, k=32))),
                 name=oidc_user_info.get('name', ''),
@@ -258,7 +255,7 @@ class OIDCCallbackView(BaseView):
             db.session.add(user)
 
             user_data = dict()
-            app.logger.info('Created new OIDC user: %s', preferred_username)
+            app.logger.info('Created new OIDC user: %s', oidc_username)
         else:
             # user exists
             if user.data:
@@ -280,7 +277,7 @@ class OIDCCallbackView(BaseView):
         # manual list of admin users
         oidc_admin_users = app.config.get('OIDC_ADMIN_USERS')
         if oidc_admin_users:
-            user.admin = preferred_username in oidc_admin_users
+            user.admin = oidc_username in oidc_admin_users
 
 
         if request.headers.get('X-Forwarded-For'):
