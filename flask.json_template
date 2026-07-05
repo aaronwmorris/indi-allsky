@@ -41,6 +41,7 @@
     "PASSWORD_KEY" : "CHANGEME",
 
     "LOCAL_AUTH_ENABLE" : true,
+    "OIDC_ENABLE_comment" : "https://github.com/aaronwmorris/indi-allsky/wiki/OIDC-OAuth2-SSO-Auth",
     "OIDC_ENABLE" : false,
     "OIDC_PROVIDER_NAME" : "[Configure Provider Name]",
     "OIDC_CLIENT_ID" : "",
@@ -48,7 +49,7 @@
     "OIDC_DISCOVERY_ENDPOINT" : "",
     "OIDC_USERINFO_ENDPOINT" : "",
     "OIDC_USERNAME_ATTRIBUTE" : "email",
-    "OIDC_SCOPES" : "openid email profile",
+    "OIDC_SCOPES" : "openid email profile offline_access",
     "OIDC_PKCE" : true,
     "OIDC_LOGO_URL" : "",
     "OIDC_ADMIN_GROUPS" : [],
