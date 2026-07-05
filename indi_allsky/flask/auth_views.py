@@ -226,10 +226,32 @@ class OIDCCallbackView(BaseView):
 
 
         oidc_username = oidc_user_info.get(app.config.get('OIDC_USERNAME_ATTRIBUTE', 'email'))
+        oidc_user_groups = oidc_user_info.get('groups', [])
+
 
         if not oidc_username:
             app.logger.error('OIDC login failed: No username provided by identity provider')
             return redirect(url_for('auth_indi_allsky.login_view'))
+
+
+        # only allow members of these groups to login (if defined)
+        oidc_allowed_groups = app.config.get('OIDC_ALLOWED_GROUPS', [])
+        if oidc_allowed_groups:
+            if isinstance(oidc_user_groups, list):
+                if not set(oidc_allowed_groups).intersection(set(oidc_user_groups)):
+                    session.clear()  # force delete session (prevents incomplete session
+                    app.logger.error('OIDC User not allowed to login: %s', oidc_username)
+                    return redirect(url_for('auth_indi_allsky.login_view'))
+            elif isinstance(oidc_user_groups, str):
+                # Sometimes groups come as a space-separated string
+                if not set(oidc_allowed_groups).intersection(set(oidc_user_groups.split())):
+                    session.clear()  # force delete session (prevents incomplete session
+                    app.logger.error('OIDC User not allowed to login: %s', oidc_username)
+                    return redirect(url_for('auth_indi_allsky.login_view'))
+            else:
+                session.clear()  # force delete session (prevents incomplete session
+                app.logger.error('Unhandled group variable type: %s', type(oidc_user_groups))
+                return redirect(url_for('auth_indi_allsky.login_view'))
 
 
         # only allow these users to login (if defined)
@@ -265,17 +287,16 @@ class OIDCCallbackView(BaseView):
                 user_data = dict()
 
 
+        # grant admin access to members of these groups (if defined)
         oidc_admin_groups = app.config.get('OIDC_ADMIN_GROUPS', [])
         if oidc_admin_groups:
-            user_groups = oidc_user_info.get('groups', [])
-
-            if isinstance(user_groups, list):
-                user.admin = bool(set(oidc_admin_groups).intersection(set(user_groups)))
-            elif isinstance(user_groups, str):
+            if isinstance(oidc_user_groups, list):
+                user.admin = bool(set(oidc_admin_groups).intersection(set(oidc_user_groups)))
+            elif isinstance(oidc_user_groups, str):
                 # Sometimes groups come as a space-separated string
-                user.admin = bool(set(oidc_admin_groups).intersection(set(user_groups.split())))
+                user.admin = bool(set(oidc_admin_groups).intersection(set(oidc_user_groups.split())))
             else:
-                app.logger.error('Unhandled group variable type: %s', type(user_groups))
+                app.logger.error('Unhandled group variable type: %s', type(oidc_user_groups))
 
 
         # manual list of admin users

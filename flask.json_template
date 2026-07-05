@@ -53,6 +53,7 @@
     "OIDC_PKCE" : true,
     "OIDC_LOGO_URL" : "",
     "OIDC_ADMIN_GROUPS" : [],
+    "OIDC_ALLOWED_GROUPS" : [],
     "OIDC_ADMIN_USERS" : [],
     "OIDC_ALLOWED_USERS" : [],
 
