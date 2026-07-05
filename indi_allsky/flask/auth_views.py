@@ -378,6 +378,6 @@ class LogoutView(BaseView):
 
 
 bp_auth_allsky.add_url_rule('/login', view_func=LoginView.as_view('login_view', template_name='login.html'))
-bp_auth_allsky.add_url_rule('/login/oidc', view_func=OIDCLoginView.as_view('oidc_login_view'))
-bp_auth_allsky.add_url_rule('/login/oidc/callback', view_func=OIDCCallbackView.as_view('oidc_callback_view'))
+bp_auth_allsky.add_url_rule('/oidc/login', view_func=OIDCLoginView.as_view('oidc_login_view'))
+bp_auth_allsky.add_url_rule('/oidc/callback', view_func=OIDCCallbackView.as_view('oidc_callback_view'))
 bp_auth_allsky.add_url_rule('/logout', view_func=LogoutView.as_view('logout_view'))
