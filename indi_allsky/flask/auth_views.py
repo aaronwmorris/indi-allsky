@@ -236,9 +236,9 @@ class OIDCCallbackView(BaseView):
         oidc_allowed_users = app.config.get('OIDC_ALLOWED_USERS')
         if oidc_allowed_users:
             if oidc_username not in oidc_allowed_users:
-                logout_user()  # force session logout
+                session.clear()  # force delete session (prevents incomplete session
                 app.logger.error('OIDC User not allowed to login: %s', oidc_username)
-                abort(400, 'OIDC User not allowed to login: {0:s}'.format(oidc_username))
+                return redirect(url_for('auth_indi_allsky.login_view'))
 
 
         # Find or Create User
