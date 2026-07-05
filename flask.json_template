@@ -52,10 +52,10 @@
     "OIDC_SCOPES" : "openid email profile offline_access",
     "OIDC_PKCE" : true,
     "OIDC_LOGO_URL" : "",
-    "OIDC_ADMIN_GROUPS" : [],
     "OIDC_ALLOWED_GROUPS" : [],
-    "OIDC_ADMIN_USERS" : [],
+    "OIDC_ADMIN_GROUPS" : [],
     "OIDC_ALLOWED_USERS" : [],
+    "OIDC_ADMIN_USERS" : [],
 
     "ADMIN_NETWORKS" : [
         "10.0.0.0/8",
