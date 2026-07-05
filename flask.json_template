@@ -50,8 +50,8 @@
     "OIDC_USERNAME_ATTRIBUTE" : "email",
     "OIDC_SCOPES" : "openid email profile",
     "OIDC_PKCE" : true,
-    "OIDC_GROUP_ADMIN" : "allsky_admins",
     "OIDC_LOGO_URL" : "",
+    "OIDC_ADMIN_GROUPS" : [],
     "OIDC_ADMIN_USERS" : [],
     "OIDC_ALLOWED_USERS" : [],
 

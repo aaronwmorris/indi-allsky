@@ -265,14 +265,17 @@ class OIDCCallbackView(BaseView):
                 user_data = dict()
 
 
-        admin_group = app.config.get('OIDC_GROUP_ADMIN')
-        if admin_group:
+        oidc_admin_groups = app.config.get('OIDC_ADMIN_GROUPS', [])
+        if oidc_admin_groups:
             user_groups = oidc_user_info.get('groups', [])
+
             if isinstance(user_groups, list):
-                user.admin = admin_group in user_groups
+                user.admin = bool(set(oidc_admin_groups).intersection(set(user_groups)))
             elif isinstance(user_groups, str):
                 # Sometimes groups come as a space-separated string
-                user.admin = admin_group in user_groups.split()
+                user.admin = bool(set(oidc_admin_groups).intersection(set(user_groups.split())))
+            else:
+                app.logger.error('Unhandled group variable type: %s', type(user_groups))
 
 
         # manual list of admin users
