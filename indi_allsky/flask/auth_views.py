@@ -214,7 +214,7 @@ class OIDCCallbackView(BaseView):
             if not oidc_user_info:
                 oidc_user_info = oauth.oidc.userinfo()
 
-            #app.logger.info('User Info: %s', user_info)
+            #app.logger.info('User Info: %s', oidc_user_info)
 
         except Exception as e:
             error_msg = str(e)
