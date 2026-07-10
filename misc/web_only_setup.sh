@@ -1235,7 +1235,7 @@ fi
 
 
 # OIDC Authentication Setup
-if "$WHIPTAIL_BIN" --title "OIDC Authentication" --yesno "Do you want to configure OIDC (OpenID Connect) authentication?\n\nThis allows you to use external identity providers like Keycloak, Google, or GitHub." 10 60 --defaultno; then
+if "$WHIPTAIL_BIN" --title "OIDC Single Sign-On Authentication" --yesno "Do you want to configure OIDC (OpenID Connect) SSO authentication?\n\nThis allows you to use external identity providers like Keycloak, Google, or GitHub." 10 60 --defaultno; then
     OIDC_PROVIDER_NAME=$(jq -r '.OIDC_PROVIDER_NAME // ""' "${ALLSKY_ETC}/flask.json")
     OIDC_CLIENT_ID=$(jq -r '.OIDC_CLIENT_ID // ""' "${ALLSKY_ETC}/flask.json")
     OIDC_CLIENT_SECRET=$(jq -r '.OIDC_CLIENT_SECRET // ""' "${ALLSKY_ETC}/flask.json")
