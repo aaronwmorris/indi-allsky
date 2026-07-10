@@ -225,7 +225,7 @@ class OIDCCallbackView(BaseView):
             return redirect(url_for('auth_indi_allsky.login_view'))
 
 
-        oidc_username = oidc_user_info.get(app.config.get('OIDC_USERNAME_ATTRIBUTE', 'email'))
+        oidc_username = oidc_user_info.get(app.config.get('OIDC_USERNAME_CLAIM', 'preferred_username'))
         oidc_user_groups = oidc_user_info.get('groups', [])
 
 

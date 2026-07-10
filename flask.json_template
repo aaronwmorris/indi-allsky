@@ -48,7 +48,7 @@
     "OIDC_CLIENT_SECRET" : "",
     "OIDC_DISCOVERY_ENDPOINT" : "",
     "OIDC_USERINFO_ENDPOINT" : "",
-    "OIDC_USERNAME_ATTRIBUTE" : "email",
+    "OIDC_USERNAME_CLAIM" : "preferred_username",
     "OIDC_SCOPES" : "openid email profile offline_access",
     "OIDC_PKCE" : true,
     "OIDC_LOGO_URL" : "",
